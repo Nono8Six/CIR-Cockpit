@@ -66,8 +66,8 @@ const Dashboard: React.FC<DashboardProps> = ({ interactions, onDataChange }) => 
   }, [period]);
 
   // Handle updates from the details panel
-  const handleInteractionUpdate = (id: string, event: TimelineEvent, updates?: Partial<Interaction>) => {
-    addTimelineEvent(id, event, updates);
+  const handleInteractionUpdate = async (id: string, event: TimelineEvent, updates?: Partial<Interaction>) => {
+    await addTimelineEvent(id, event, updates);
     
     // Update local selected state for immediate feedback in the panel
     if (selectedInteraction && selectedInteraction.id === id) {

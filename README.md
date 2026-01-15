@@ -18,3 +18,7 @@ View your app in AI Studio: https://ai.studio/apps/drive/1L0FebZQXVHxaz3oiOs5urs
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+
+## Supabase backend
+
+This project can use Supabase when `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set in `.env.local`. The app will fall back to local storage when those variables are missing. See `docs/supabase.md` for the draft schema and RLS outline.

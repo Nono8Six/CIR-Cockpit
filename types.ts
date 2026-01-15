@@ -41,6 +41,28 @@ export interface Interaction {
   timeline: TimelineEvent[]; // History of the dossier
 }
 
+export type UserRole = 'super_admin' | 'agency_admin' | 'tcs';
+
+export interface Agency {
+  id: string;
+  name: string;
+  created_at: string;
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  display_name?: string;
+}
+
+export interface AgencyMember {
+  id: string;
+  agency_id: string;
+  user_id: string;
+  role: UserRole;
+  created_at: string;
+}
+
 // --- DEFAULTS FOR INITIALIZATION ---
 
 export const DEFAULT_MEGA_FAMILIES = [
