@@ -20,9 +20,17 @@ const App: React.FC = () => {
 
   // Load initial data
   useEffect(() => {
-    setInteractions(getInteractions());
-    const statuses = getStoredStatuses();
-    if (statuses.length > 0) setFirstStatus(statuses[0]);
+    let isMounted = true;
+    const loadInteractions = async () => {
+      const data = await getInteractions();
+      if (isMounted) setInteractions(data);
+      const statuses = getStoredStatuses();
+      if (statuses.length > 0) setFirstStatus(statuses[0]);
+    };
+    loadInteractions();
+    return () => {
+      isMounted = false;
+    };
   }, [configVersion]);
 
   // Shortcuts
@@ -48,14 +56,15 @@ const App: React.FC = () => {
     }, 3000);
   };
 
-  const handleSaveInteraction = (newInteraction: Interaction) => {
-    const updated = saveInteraction(newInteraction);
+  const handleSaveInteraction = async (newInteraction: Interaction) => {
+    const updated = await saveInteraction(newInteraction);
     setInteractions(updated);
     showNotification("Interaction enregistrée avec succès");
   };
 
-  const handleDataChange = (message?: string) => {
-    setInteractions(getInteractions());
+  const handleDataChange = async (message?: string) => {
+    const updated = await getInteractions();
+    setInteractions(updated);
     if (message) showNotification(message);
   };
 

@@ -38,11 +38,21 @@ const CockpitForm: React.FC<CockpitFormProps> = ({ onSave, configVersion }) => {
   const [knownCompanies, setKnownCompanies] = useState<string[]>([]);
 
   useEffect(() => {
-    setAvailableFamilies(getStoredFamilies());
-    setAvailableServices(getStoredServices());
-    setAvailableEntities(getStoredEntities());
-    setAvailableStatuses(getStoredStatuses());
-    setKnownCompanies(getKnownCompanies());
+    let isMounted = true;
+    const loadConfig = async () => {
+      setAvailableFamilies(getStoredFamilies());
+      setAvailableServices(getStoredServices());
+      setAvailableEntities(getStoredEntities());
+      setAvailableStatuses(getStoredStatuses());
+      const companies = await getKnownCompanies();
+      if (isMounted) {
+        setKnownCompanies(companies);
+      }
+    };
+    loadConfig();
+    return () => {
+      isMounted = false;
+    };
   }, [configVersion]);
 
   // Default selections
