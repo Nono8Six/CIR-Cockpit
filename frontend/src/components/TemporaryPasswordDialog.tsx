@@ -1,0 +1,50 @@
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Button } from './ui/button';
+
+interface TemporaryPasswordDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  password: string;
+  title: string;
+  description?: string;
+}
+
+const TemporaryPasswordDialog = ({
+  open,
+  onOpenChange,
+  password,
+  title,
+  description
+}: TemporaryPasswordDialogProps) => {
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(password);
+    } catch {
+      // no-op
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        {description && <p className="text-sm text-slate-600">{description}</p>}
+        <div className="bg-slate-100 border border-slate-200 rounded-md p-3 font-mono text-sm text-slate-800">
+          {password}
+        </div>
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="outline" onClick={handleCopy}>
+            Copier
+          </Button>
+          <Button type="button" onClick={() => onOpenChange(false)}>
+            Fermer
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default TemporaryPasswordDialog;

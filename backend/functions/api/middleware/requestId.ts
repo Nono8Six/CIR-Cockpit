@@ -1,0 +1,11 @@
+import type { MiddlewareHandler } from 'https://deno.land/x/hono@4.6.10/mod.ts';
+
+import type { AppEnv } from '../types.ts';
+
+export const requestId: MiddlewareHandler<AppEnv> = async (c, next) => {
+  const incoming = c.req.header('x-request-id')?.trim();
+  const id = incoming && incoming.length > 0 ? incoming : crypto.randomUUID();
+  c.set('requestId', id);
+  c.header('x-request-id', id);
+  await next();
+};

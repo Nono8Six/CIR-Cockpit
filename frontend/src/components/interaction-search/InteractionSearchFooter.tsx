@@ -1,0 +1,42 @@
+type InteractionSearchFooterProps = {
+  entityHeading: string;
+  onCreateEntity?: () => void;
+  onOpenGlobalSearch?: () => void;
+};
+
+const InteractionSearchFooter = ({
+  entityHeading,
+  onCreateEntity,
+  onOpenGlobalSearch
+}: InteractionSearchFooterProps) => {
+  if (!onCreateEntity && !onOpenGlobalSearch) {
+    return null;
+  }
+
+  return (
+    <div className="flex items-center justify-between px-3 py-2 border-t border-slate-200 bg-slate-50/80 text-[11px] text-slate-500">
+      {onCreateEntity ? (
+        <button
+          type="button"
+          onClick={onCreateEntity}
+          className="text-cir-red font-semibold hover:text-red-700"
+        >
+          {`+ Creer ${entityHeading.toLowerCase()}`}
+        </button>
+      ) : (
+        <span />
+      )}
+      {onOpenGlobalSearch && (
+        <button
+          type="button"
+          onClick={onOpenGlobalSearch}
+          className="text-slate-500 hover:text-slate-700"
+        >
+          Voir tout (Ctrl+K)
+        </button>
+      )}
+    </div>
+  );
+};
+
+export default InteractionSearchFooter;

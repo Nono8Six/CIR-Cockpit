@@ -1,0 +1,31 @@
+import type { Agency, Client, ClientContact, Entity, UserRole } from '@/types';
+import type { ConvertClientEntity } from '@/components/ConvertClientDialog';
+import type { ClientsPanelViewMode } from './ClientsPanel.shared';
+
+export type ClientsPanelContentProps = {
+  viewMode: ClientsPanelViewMode;
+  clientsLoading: boolean;
+  clientsError: boolean;
+  filteredClients: Client[];
+  selectedClientId: string | null;
+  onSelectClient: (clientId: string | null) => void;
+  prospectsLoading: boolean;
+  prospectsError: boolean;
+  filteredProspects: Entity[];
+  selectedProspectId: string | null;
+  onSelectProspect: (prospectId: string | null) => void;
+  selectedClient: Client | null;
+  selectedProspect: Entity | null;
+  contacts: ClientContact[];
+  contactsLoading: boolean;
+  agencies: Agency[];
+  userRole: UserRole;
+  focusedContactId: string | null;
+  onEditClient: () => void;
+  onToggleArchive: (archived: boolean) => void;
+  onAddContact: () => void;
+  onEditContact: (contact: ClientContact) => void;
+  onDeleteContact: (contact: ClientContact) => void;
+  onRequestConvert: (entity: ConvertClientEntity) => void;
+  onEditProspect: () => void;
+};
