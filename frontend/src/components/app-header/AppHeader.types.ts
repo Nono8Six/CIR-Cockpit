@@ -11,6 +11,7 @@ export type NavigationTab = {
   value: AppTab;
   icon: ReactNode;
   label: ReactNode;
+  ariaLabel: string;
   badge?: ReactNode | null;
 };
 

@@ -29,16 +29,19 @@ const STATUS_CLASSES: Record<StepStatus, { circle: string; label: string; line: 
   }
 };
 
+const MOBILE_LABELS = ['Canal', 'Rel.', 'Ident.', 'Contact', 'Type'];
+
 const InteractionStepper = ({ steps }: InteractionStepperProps) => (
-  <ol className="flex items-center gap-3 overflow-x-auto" aria-label="Processus de saisie">
+  <ol data-testid="cockpit-stepper" className="grid grid-cols-5 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-2" aria-label="Processus de saisie">
     {steps.map((step, index) => {
       const styles = STATUS_CLASSES[step.status];
       const isComplete = step.status === 'complete';
       const isCurrent = step.status === 'current';
+      const mobileLabel = MOBILE_LABELS[index] ?? `Etape ${index + 1}`;
       return (
         <li
           key={step.label}
-          className="flex items-center gap-3"
+          className="min-w-0 flex flex-col items-center gap-1 text-center sm:flex-row sm:items-center sm:gap-2 sm:text-left"
           aria-current={isCurrent ? 'step' : undefined}
         >
           <span
@@ -47,11 +50,14 @@ const InteractionStepper = ({ steps }: InteractionStepperProps) => (
           >
             {isComplete ? <Check size={14} /> : index + 1}
           </span>
-          <span className={`text-xs font-semibold uppercase tracking-wide ${styles.label}`}>
+          <span className={`w-full truncate text-xs font-semibold uppercase tracking-wide sm:hidden ${styles.label}`}>
+            {mobileLabel}
+          </span>
+          <span className={`hidden text-xs font-semibold uppercase tracking-wide whitespace-nowrap sm:inline ${styles.label}`}>
             {step.label}
           </span>
           {index < steps.length - 1 && (
-            <span className={`h-px w-8 md:w-12 ${styles.line}`} aria-hidden="true" />
+            <span className={`hidden md:block h-px w-8 lg:w-12 ${styles.line}`} aria-hidden="true" />
           )}
         </li>
       );

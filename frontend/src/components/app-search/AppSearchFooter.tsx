@@ -6,7 +6,7 @@ type AppSearchFooterProps = {
 };
 
 const AppSearchFooter = ({ footerLeft, footerRight }: AppSearchFooterProps) => (
-  <div className="bg-slate-50 px-4 py-2 border-t border-slate-100 text-[10px] text-slate-400 flex justify-between">
+  <div className="bg-slate-50 px-4 py-2 border-t border-slate-100 text-xs text-slate-400 flex justify-between">
     <span>{footerLeft ?? <><strong>↑↓</strong> pour naviguer</>}</span>
     <span>{footerRight ?? <><strong>↵</strong> pour sélectionner</>}</span>
   </div>

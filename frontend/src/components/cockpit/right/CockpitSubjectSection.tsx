@@ -35,17 +35,17 @@ const CockpitSubjectSection = ({
         autoComplete="off"
       />
       {errors.subject ? (
-        <p className="text-[11px] text-red-600" role="status" aria-live="polite">
+        <p className="text-xs text-red-600" role="status" aria-live="polite">
           {errors.subject.message}
         </p>
       ) : null}
-      <div className="flex items-center gap-1.5 overflow-x-auto whitespace-nowrap pb-1">
+      <div data-testid="cockpit-family-tags" className="flex flex-wrap items-center gap-2 pb-1">
         {families.map((family) => (
           <button
             key={family}
             type="button"
             onClick={() => onToggleFamily(family)}
-            className={`shrink-0 px-2.5 py-1 text-xs uppercase font-bold rounded-md border transition-colors ${
+            className={`px-2.5 py-1 text-xs uppercase font-bold rounded-md border transition-colors ${
               megaFamilies.includes(family)
                 ? 'bg-cir-red text-white border-cir-red shadow-sm'
                 : 'bg-white text-slate-600 border-slate-200 hover:border-cir-red/40 hover:text-slate-700'

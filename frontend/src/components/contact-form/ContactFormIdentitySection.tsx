@@ -19,14 +19,14 @@ const ContactFormIdentitySection = ({
       <label className="text-xs font-medium text-slate-500" htmlFor="contact-first-name">Prenom</label>
       <Input {...firstNameField} id="contact-first-name" placeholder="Prenom" autoComplete="given-name" />
       {errors.first_name && (
-        <p className="text-[11px] text-red-600 mt-1">{errors.first_name.message}</p>
+        <p className="text-xs text-red-600 mt-1">{errors.first_name.message}</p>
       )}
     </div>
     <div>
       <label className="text-xs font-medium text-slate-500" htmlFor="contact-last-name">Nom</label>
       <Input {...lastNameField} id="contact-last-name" placeholder="Nom" autoComplete="family-name" />
       {errors.last_name && (
-        <p className="text-[11px] text-red-600 mt-1">{errors.last_name.message}</p>
+        <p className="text-xs text-red-600 mt-1">{errors.last_name.message}</p>
       )}
     </div>
   </div>

@@ -9,6 +9,7 @@ export const useCockpitFormRefs = () => {
   const companyInputRef = useRef<HTMLInputElement | null>(null);
   const contactFirstNameInputRef = useRef<HTMLInputElement | null>(null);
   const contactSelectRef = useRef<HTMLButtonElement | null>(null);
+  const statusTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   return {
     formRef,
@@ -18,6 +19,7 @@ export const useCockpitFormRefs = () => {
     interactionTypeRef,
     companyInputRef,
     contactFirstNameInputRef,
-    contactSelectRef
+    contactSelectRef,
+    statusTriggerRef
   };
 };

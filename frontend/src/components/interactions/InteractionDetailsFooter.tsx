@@ -44,7 +44,7 @@ const InteractionDetailsFooter = ({
       onSubmit={onSubmit}
       isSubmitDisabled={isSubmitDisabled}
     />
-    <div className="text-[10px] text-slate-400 mt-2 text-right">
+    <div className="text-xs text-slate-400 mt-2 text-right">
       <span className="font-bold">Ctrl + Enter</span> pour envoyer
     </div>
   </div>

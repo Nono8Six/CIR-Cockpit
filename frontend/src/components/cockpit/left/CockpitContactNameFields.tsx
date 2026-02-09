@@ -38,7 +38,7 @@ const CockpitContactNameFields = ({
         }}
         value={firstName}
         onChange={onFirstNameChange}
-        placeholder="Prenom\u2026"
+        placeholder="Prenom…"
         aria-label="Prenom"
         autoComplete="given-name"
       />
@@ -50,7 +50,7 @@ const CockpitContactNameFields = ({
         {...lastNameField}
         value={lastName}
         onChange={onLastNameChange}
-        placeholder="Nom\u2026"
+        placeholder="Nom…"
         aria-label="Nom"
         autoComplete="family-name"
       />

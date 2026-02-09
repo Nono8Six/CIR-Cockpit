@@ -31,7 +31,7 @@ const CockpitSelectedEntityCard = ({
               {selectedEntity.entity_type}
             </Badge>
           </div>
-          <p className="text-[11px] text-slate-500 truncate">
+          <p className="text-xs text-slate-500 truncate">
             {selectedEntityMeta || '-'}
           </p>
         </div>
@@ -41,7 +41,7 @@ const CockpitSelectedEntityCard = ({
           <button
             type="button"
             onClick={onOpenConvertDialog}
-            className="text-[11px] font-semibold text-cir-red hover:text-red-700"
+            className="text-xs font-semibold text-cir-red hover:text-red-700"
           >
             Convertir en client
           </button>
@@ -49,7 +49,7 @@ const CockpitSelectedEntityCard = ({
         <button
           type="button"
           onClick={onClearSelectedEntity}
-          className="text-[11px] font-semibold text-slate-500 hover:text-slate-700"
+          className="text-xs font-semibold text-slate-500 hover:text-slate-700"
         >
           Effacer
         </button>

@@ -17,7 +17,9 @@ const CockpitFormRightPane = ({
   statusMeta,
   statusCategoryLabel,
   statusCategoryBadges,
-  statusField,
+  statusTriggerRef,
+  statusValue,
+  onStatusChange,
   statusGroups,
   hasStatuses,
   statusHelpId,
@@ -25,7 +27,7 @@ const CockpitFormRightPane = ({
   onReset
 }: CockpitFormRightPaneProps) => {
   return (
-    <div className="col-span-12 md:col-span-7 p-5 flex flex-col gap-5 overflow-y-auto">
+    <div data-testid="cockpit-right-pane" className="col-span-12 md:col-span-7 min-w-0 p-4 sm:p-5 flex flex-col gap-4 sm:gap-5">
       <CockpitSubjectSection
         labelStyle={labelStyle}
         subjectField={subjectField}
@@ -44,7 +46,9 @@ const CockpitFormRightPane = ({
         statusMeta={statusMeta}
         statusCategoryLabel={statusCategoryLabel}
         statusCategoryBadges={statusCategoryBadges}
-        statusField={statusField}
+        statusTriggerRef={statusTriggerRef}
+        statusValue={statusValue}
+        onStatusChange={onStatusChange}
         statusGroups={statusGroups}
         hasStatuses={hasStatuses}
         statusHelpId={statusHelpId}
@@ -52,7 +56,7 @@ const CockpitFormRightPane = ({
         onReset={onReset}
       />
       {errors.status_id ? (
-        <p className="text-[11px] text-red-600" role="status" aria-live="polite">
+        <p className="text-xs text-red-600" role="status" aria-live="polite">
           {errors.status_id.message}
         </p>
       ) : null}

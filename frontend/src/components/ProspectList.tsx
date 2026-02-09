@@ -39,7 +39,7 @@ const ProspectList = ({ prospects, selectedProspectId, onSelect }: ProspectListP
                 <p className="text-xs text-slate-500 truncate">{prospect.city || 'Sans ville'}</p>
               </div>
               {prospect.archived_at && (
-                <span className="flex items-center gap-1 text-[10px] uppercase text-amber-600">
+                <span className="flex items-center gap-1 text-xs uppercase text-amber-600">
                   <Archive size={12} /> Archive
                 </span>
               )}

@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 
 interface TemporaryPasswordDialogProps {
@@ -29,8 +29,8 @@ const TemporaryPasswordDialog = ({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description ?? 'Mot de passe temporaire genere.'}</DialogDescription>
         </DialogHeader>
-        {description && <p className="text-sm text-slate-600">{description}</p>}
         <div className="bg-slate-100 border border-slate-200 rounded-md p-3 font-mono text-sm text-slate-800">
           {password}
         </div>

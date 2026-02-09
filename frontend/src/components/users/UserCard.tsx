@@ -42,11 +42,11 @@ const UserCard = ({
 
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
       <div>
-        <label className="text-[11px] font-semibold text-slate-400 uppercase">Role</label>
+        <label className="text-xs font-semibold text-slate-400 uppercase">Role</label>
         <UserRoleSelect role={user.role} onRoleChange={(role) => onRoleChange(user.id, role)} />
       </div>
       <div className="md:col-span-2">
-        <label className="text-[11px] font-semibold text-slate-400 uppercase">Agences</label>
+        <label className="text-xs font-semibold text-slate-400 uppercase">Agences</label>
         <UserMembershipPills memberships={user.memberships} onEdit={() => onEditMemberships(user)} />
       </div>
     </div>

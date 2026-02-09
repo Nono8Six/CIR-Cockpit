@@ -23,7 +23,7 @@ const DashboardListRow = ({
         <div className="flex justify-center items-center">{getChannelIcon(item.channel)}</div>
       </td>
       <td className="px-6 py-3">
-        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase whitespace-nowrap border ${getStatusBadgeClass(item)}`}>
+        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold uppercase whitespace-nowrap border ${getStatusBadgeClass(item)}`}>
           {item.status}
         </span>
       </td>

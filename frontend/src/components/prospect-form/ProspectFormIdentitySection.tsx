@@ -19,14 +19,14 @@ const ProspectFormIdentitySection = ({
       <label className="text-xs font-medium text-slate-500" htmlFor="prospect-name">Nom de la societe</label>
       <Input {...nameField} id="prospect-name" placeholder="Nom du prospect" autoComplete="organization" />
       {errors.name && (
-        <p className="text-[11px] text-red-600 mt-1">{errors.name.message}</p>
+        <p className="text-xs text-red-600 mt-1">{errors.name.message}</p>
       )}
     </div>
     <div>
       <label className="text-xs font-medium text-slate-500" htmlFor="prospect-city">Ville</label>
       <Input {...cityField} id="prospect-city" placeholder="Ville" autoComplete="address-level2" />
       {errors.city && (
-        <p className="text-[11px] text-red-600 mt-1">{errors.city.message}</p>
+        <p className="text-xs text-red-600 mt-1">{errors.city.message}</p>
       )}
     </div>
   </div>

@@ -24,7 +24,7 @@ const KanbanColumn = ({
         <h3 className="font-bold text-slate-800 flex items-center gap-2 text-xs uppercase tracking-wider">
           <span className={`w-2 h-2 rounded-full ${dotClassName}`}></span> {title}
         </h3>
-        <span className="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-200">
+        <span className="bg-slate-100 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full border border-slate-200">
           {interactions.length}
         </span>
       </div>

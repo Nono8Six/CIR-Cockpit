@@ -30,7 +30,7 @@ const AppSearchClientsSection = ({ clients, onFocusClient }: AppSearchClientsSec
             </span>
           </div>
           {client.archived_at && (
-            <span className="text-[10px] uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-1 rounded">
+            <span className="text-xs uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-1 rounded">
               Archivé
             </span>
           )}

@@ -17,7 +17,7 @@ const ClientFormIdentitySection = ({
       <label className="text-xs font-medium text-slate-500" htmlFor="client-name">Nom de la societe</label>
       <Input {...nameField} id="client-name" placeholder="Nom du client" autoComplete="organization" />
       {errors.name && (
-        <p className="text-[11px] text-red-600 mt-1">{errors.name.message}</p>
+        <p className="text-xs text-red-600 mt-1">{errors.name.message}</p>
       )}
     </div>
   </div>

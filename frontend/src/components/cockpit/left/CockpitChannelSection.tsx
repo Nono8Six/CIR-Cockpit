@@ -4,6 +4,15 @@ import { Car, Mail, Phone, Store } from 'lucide-react';
 
 import { Channel } from '@/types';
 import type { InteractionFormValues } from '@/schemas/interactionSchema';
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList
+} from '@/components/ui/combobox';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 type CockpitChannelSectionProps = {
   labelStyle: string;
@@ -27,30 +36,62 @@ const CockpitChannelSection = ({
   channel,
   channelButtonRef
 }: CockpitChannelSectionProps) => (
-  <div className="space-y-1">
-    <div className="flex items-center justify-between gap-3">
-      <label className={`${labelStyle} mb-0`}>Canal</label>
-      <div className="flex items-center gap-2">
-        {CHANNEL_OPTIONS.map((opt, index) => (
-          <button
-            key={opt.val}
-            type="button"
-            ref={index === 0 ? channelButtonRef : undefined}
-            onClick={() => setValue('channel', opt.val, { shouldValidate: true, shouldDirty: true })}
-            className={`flex items-center gap-1.5 px-2.5 h-8 rounded-md transition-colors text-[11px] font-semibold border ${
-              channel === opt.val
-                ? 'bg-cir-red text-white border-cir-red shadow-sm'
-                : 'bg-white text-slate-600 border-slate-200 hover:bg-cir-red/5 hover:border-cir-red/40 hover:text-slate-700'
-            }`}
-          >
-            <opt.icon size={14} />
-            {opt.val}
-          </button>
-        ))}
-      </div>
+  <div className="space-y-2">
+    <label className={`${labelStyle} mb-0`}>Canal</label>
+    <div className="min-[769px]:hidden">
+      <Combobox
+        items={CHANNEL_OPTIONS.map((option) => option.val)}
+        value={channel}
+        onValueChange={(value) => {
+          if (!value) return;
+          setValue('channel', value as Channel, { shouldValidate: true, shouldDirty: true });
+        }}
+      >
+        <ComboboxInput
+          data-testid="cockpit-channel-picker-trigger"
+          placeholder="Selectionner un canal"
+          searchPlaceholder="Rechercher un canal..."
+        />
+        <ComboboxContent>
+          <ComboboxEmpty>Aucun canal trouve.</ComboboxEmpty>
+          <ComboboxList>
+            {(item) => (
+              <ComboboxItem key={item} value={item}>
+                {item}
+              </ComboboxItem>
+            )}
+          </ComboboxList>
+        </ComboboxContent>
+      </Combobox>
     </div>
+    <ToggleGroup
+      type="single"
+      value={channel}
+      aria-label="Canal"
+      data-testid="cockpit-channel-group"
+      size="sm"
+      variant="outline"
+      spacing={2}
+      onValueChange={(value) => {
+        if (!value) return;
+        setValue('channel', value as Channel, { shouldValidate: true, shouldDirty: true });
+      }}
+      className="hidden flex-wrap items-center justify-start min-[769px]:flex"
+    >
+      {CHANNEL_OPTIONS.map((opt, index) => (
+        <ToggleGroupItem
+          key={opt.val}
+          ref={index === 0 ? channelButtonRef : undefined}
+          value={opt.val}
+          className="h-7 gap-1.5 rounded-md border px-2 text-xs font-normal data-[state=on]:border-cir-red data-[state=on]:bg-cir-red data-[state=on]:text-white"
+        >
+          <opt.icon size={12} className="shrink-0" aria-hidden="true" />
+          {opt.val}
+        </ToggleGroupItem>
+      ))}
+    </ToggleGroup>
     {errors.channel && (
-      <p className="text-[11px] text-red-600 mt-1" role="status" aria-live="polite">
+      <p className="text-xs text-red-600 mt-1" role="status" aria-live="polite">
         {errors.channel.message}
       </p>
     )}

@@ -8,7 +8,7 @@ const InteractionFooterReminderInput = ({
   onReminderChange
 }: InteractionFooterReminderInputProps) => (
   <div className="col-span-5">
-    <label htmlFor="interaction-reminder" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">
+    <label htmlFor="interaction-reminder" className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 block">
       Prochain Rappel
     </label>
     <input

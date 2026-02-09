@@ -12,7 +12,7 @@ const InteractionFooterStatusSelect = ({
   onStatusChange
 }: InteractionFooterStatusSelectProps) => (
   <div className="col-span-4">
-    <label htmlFor="interaction-status" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">
+    <label htmlFor="interaction-status" className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 block">
       Nouveau Statut
     </label>
     <div className="relative">

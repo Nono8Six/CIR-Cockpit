@@ -31,7 +31,7 @@ const CockpitContactPhoneEmailFields = ({
         value={phone}
         onChange={onPhoneChange}
         className="font-mono text-slate-600"
-        placeholder="06\u2026"
+        placeholder="06…"
         aria-label="Telephone"
         autoComplete="tel"
       />
@@ -40,7 +40,7 @@ const CockpitContactPhoneEmailFields = ({
         {...emailField}
         value={email}
         onChange={(event) => emailField.onChange(event)}
-        placeholder="Email\u2026"
+        placeholder="Email…"
         aria-label="Email"
         autoComplete="email"
         spellCheck={false}

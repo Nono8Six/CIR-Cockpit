@@ -1,23 +1,27 @@
 import type { UseFormSetValue } from 'react-hook-form';
 
 import type { InteractionFormValues } from '@/schemas/interactionSchema';
+import { cn } from '@/lib/utils';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 type CockpitServiceQuickTogglesProps = {
   quickServices: string[];
   contactService: string;
   setValue: UseFormSetValue<InteractionFormValues>;
+  className?: string;
 };
 
 const CockpitServiceQuickToggles = ({
   quickServices,
   contactService,
-  setValue
+  setValue,
+  className
 }: CockpitServiceQuickTogglesProps) => (
   <ToggleGroup
     type="single"
     value={contactService}
     aria-label="Service"
+    data-testid="cockpit-service-quick-group"
     size="sm"
     variant="outline"
     spacing={2}
@@ -25,13 +29,13 @@ const CockpitServiceQuickToggles = ({
       if (!value) return;
       setValue('contact_service', value, { shouldValidate: true, shouldDirty: true });
     }}
-    className="flex flex-wrap justify-start"
+    className={cn('flex flex-wrap items-center justify-start gap-2', className)}
   >
     {quickServices.map((service) => (
       <ToggleGroupItem
         key={service}
         value={service}
-        className="flex items-center gap-1.5 px-2.5 h-8 rounded-md transition-colors text-[11px] font-semibold border bg-white text-slate-600 border-slate-200 hover:bg-cir-red/5 hover:border-cir-red/40 hover:text-slate-700 data-[state=on]:bg-cir-red data-[state=on]:text-white data-[state=on]:border-cir-red data-[state=on]:shadow-sm"
+        className="h-7 gap-1.5 rounded-md border px-2 text-xs font-normal data-[state=on]:border-cir-red data-[state=on]:bg-cir-red data-[state=on]:text-white"
       >
         {service}
       </ToggleGroupItem>

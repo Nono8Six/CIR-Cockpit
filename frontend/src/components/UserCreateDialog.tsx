@@ -1,6 +1,6 @@
 import { Agency } from '@/types';
 import { CreateAdminUserPayload } from '@/services/admin/adminUsersCreate';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { useUserCreateDialog } from '@/hooks/useUserCreateDialog';
 import UserCreateIdentitySection from './user-create/UserCreateIdentitySection';
 import UserCreateRoleSection from './user-create/UserCreateRoleSection';
@@ -37,6 +37,9 @@ const UserCreateDialog = ({ open, onOpenChange, agencies, onCreate }: UserCreate
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Creer un utilisateur</DialogTitle>
+          <DialogDescription className="sr-only">
+            Renseignez les informations du nouvel utilisateur et ses droits.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-5">
           <UserCreateIdentitySection

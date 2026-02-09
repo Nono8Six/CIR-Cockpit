@@ -8,7 +8,7 @@ type InteractionDetailsSubjectCardProps = {
 
 const InteractionDetailsSubjectCard = ({ interaction }: InteractionDetailsSubjectCardProps) => (
   <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 mb-8">
-    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 block">
+    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 block">
       Sujet Initial
     </span>
     <p className="text-slate-800 font-medium text-lg leading-snug">{interaction.subject}</p>

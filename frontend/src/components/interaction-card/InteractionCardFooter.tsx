@@ -15,7 +15,7 @@ const InteractionCardFooter = ({ data, isDone, statusLabel }: InteractionCardFoo
     <div className="flex items-center gap-2">
       {data.reminder_at && (
         <span
-          className={`flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded ${
+          className={`flex items-center gap-1 text-xs font-bold px-1.5 py-0.5 rounded ${
             isBeforeNow(data.reminder_at) && !isDone
               ? 'bg-red-50 text-red-600'
               : 'bg-slate-50 text-slate-500'
@@ -26,7 +26,7 @@ const InteractionCardFooter = ({ data, isDone, statusLabel }: InteractionCardFoo
         </span>
       )}
       {data.order_ref && (
-        <span className="flex items-center gap-1 text-[10px] text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded font-mono">
+        <span className="flex items-center gap-1 text-xs text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded font-mono">
           <FileText size={10} />#{data.order_ref}
         </span>
       )}

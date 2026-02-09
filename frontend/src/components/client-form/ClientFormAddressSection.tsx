@@ -19,14 +19,14 @@ const ClientFormAddressSection = ({
       <label className="text-xs font-medium text-slate-500" htmlFor="client-address">Adresse</label>
       <Input {...addressField} id="client-address" placeholder="Adresse" autoComplete="street-address" />
       {errors.address && (
-        <p className="text-[11px] text-red-600 mt-1">{errors.address.message}</p>
+        <p className="text-xs text-red-600 mt-1">{errors.address.message}</p>
       )}
     </div>
     <div>
       <label className="text-xs font-medium text-slate-500" htmlFor="client-city">Ville</label>
       <Input {...cityField} id="client-city" placeholder="Ville" autoComplete="address-level2" />
       {errors.city && (
-        <p className="text-[11px] text-red-600 mt-1">{errors.city.message}</p>
+        <p className="text-xs text-red-600 mt-1">{errors.city.message}</p>
       )}
     </div>
   </div>

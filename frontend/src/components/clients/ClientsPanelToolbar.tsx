@@ -1,4 +1,5 @@
 import type { Agency, UserRole } from '@/types';
+import { ToolbarRow } from '@/components/ui/toolbar-row';
 import type { ClientsPanelViewMode } from './ClientsPanel.shared';
 import ClientsPanelSearchControls from './ClientsPanelSearchControls';
 import ClientsPanelTitle from './ClientsPanelTitle';
@@ -33,7 +34,7 @@ const ClientsPanelToolbar = ({
   onAgencyFilterChange
 }: ClientsPanelToolbarProps) => (
   <div className="bg-white border border-slate-200 rounded-lg shadow-sm p-4 flex flex-col gap-3">
-    <div className="flex flex-wrap items-center justify-between gap-3">
+    <ToolbarRow density="comfortable">
       <div className="flex flex-wrap items-center gap-4">
         <ClientsPanelTitle viewMode={viewMode} />
         <ClientsPanelViewModeTabs
@@ -47,7 +48,7 @@ const ClientsPanelToolbar = ({
         viewMode={viewMode}
         onCreateClient={onCreateClient}
       />
-    </div>
+    </ToolbarRow>
     <ClientsPanelSearchControls
       searchTerm={searchTerm}
       onSearchTermChange={onSearchTermChange}

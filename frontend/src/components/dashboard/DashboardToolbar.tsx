@@ -1,4 +1,5 @@
 import type { FilterPeriod } from '@/utils/date/getPresetDateRange';
+import { ToolbarRow } from '@/components/ui/toolbar-row';
 import DashboardViewModeSwitch from './toolbar/DashboardViewModeSwitch';
 import DashboardDateFilters from './toolbar/DashboardDateFilters';
 import DashboardSearchInput from './toolbar/DashboardSearchInput';
@@ -30,7 +31,10 @@ const DashboardToolbar = ({
   searchTerm,
   onSearchTermChange
 }: DashboardToolbarProps) => (
-  <div className="bg-white border-b border-slate-200 p-3 flex flex-col xl:flex-row gap-4 justify-between items-start xl:items-center shrink-0">
+  <ToolbarRow
+    className="bg-white border-b border-slate-200 p-3 xl:flex-nowrap xl:items-center shrink-0"
+    density="comfortable"
+  >
     <DashboardViewModeSwitch viewMode={viewMode} onViewModeChange={onViewModeChange} />
     <DashboardDateFilters
       period={period}
@@ -41,7 +45,7 @@ const DashboardToolbar = ({
       onEndDateChange={onEndDateChange}
     />
     <DashboardSearchInput searchTerm={searchTerm} onSearchTermChange={onSearchTermChange} />
-  </div>
+  </ToolbarRow>
 );
 
 export default DashboardToolbar;

@@ -18,6 +18,31 @@ if (!rootElement) {
   });
 }
 
+const MOBILE_TOAST_QUERY = '(max-width: 768px)';
+
+const ResponsiveToaster = () => {
+  const [isMobile, setIsMobile] = React.useState(() => {
+    if (typeof window === 'undefined' || !('matchMedia' in window)) return false;
+    return window.matchMedia(MOBILE_TOAST_QUERY).matches;
+  });
+
+  React.useEffect(() => {
+    if (!('matchMedia' in window)) return undefined;
+    const mediaQuery = window.matchMedia(MOBILE_TOAST_QUERY);
+    const handleChange = (event: MediaQueryListEvent) => {
+      setIsMobile(event.matches);
+    };
+
+    setIsMobile(mediaQuery.matches);
+    mediaQuery.addEventListener('change', handleChange);
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+    };
+  }, []);
+
+  return <Toaster position={isMobile ? 'top-center' : 'bottom-right'} richColors closeButton />;
+};
+
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
@@ -27,7 +52,7 @@ root.render(
           <App />
         </AppSessionProvider>
       </ErrorBoundary>
-      <Toaster position="bottom-right" richColors closeButton />
+      <ResponsiveToaster />
     </QueryClientProvider>
   </React.StrictMode>
 );

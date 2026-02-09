@@ -31,7 +31,7 @@ const AppSearchProspectsSection = ({
           </div>
           <Button
             type="button"
-            className="h-7 px-2 text-[11px]"
+            className="h-7 px-2 text-xs"
             onClick={() => onRequestConvert({
               id: entity.id,
               name: entity.name,

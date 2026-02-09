@@ -16,7 +16,7 @@ const CockpitContactPositionField = ({
     <Input
       type="text"
       {...positionField}
-      placeholder="Fonction\u2026"
+      placeholder="Fonction…"
       aria-label="Fonction"
       autoComplete="organization-title"
     />

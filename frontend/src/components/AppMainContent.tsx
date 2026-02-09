@@ -29,8 +29,8 @@ const AppMainContent = ({
   onReloadData
 }: AppMainContentProps) => {
   return (
-    <main id="main-content" className="flex-1 p-4 overflow-hidden relative">
-      <div className="h-full w-full max-w-[1600px] mx-auto transition-opacity duration-200">
+    <main id="main-content" className="relative flex-1 overflow-y-auto overflow-x-clip p-2 sm:p-4">
+      <div className="min-h-full w-full max-w-[1600px] mx-auto transition-opacity duration-200">
         <AppMainStateView
           isContextBlocking={isContextBlocking}
           isDataLoading={isDataLoading}

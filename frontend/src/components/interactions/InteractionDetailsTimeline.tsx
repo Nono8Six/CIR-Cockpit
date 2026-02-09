@@ -34,13 +34,13 @@ const InteractionDetailsTimeline = ({ timeline }: InteractionDetailsTimelineProp
         </div>
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-bold text-slate-500">
+            <span className="text-xs font-bold text-slate-500">
               {formatDate(event.date)} <span className="font-normal opacity-75">{formatTime(event.date)}</span>
             </span>
             {event.author ? (
               <>
-                <span className="text-[10px] text-slate-300">•</span>
-                <span className="text-[10px] font-medium text-slate-400">{event.author}</span>
+                <span className="text-xs text-slate-300">•</span>
+                <span className="text-xs font-medium text-slate-400">{event.author}</span>
               </>
             ) : null}
           </div>

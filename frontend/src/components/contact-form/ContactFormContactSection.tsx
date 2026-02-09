@@ -31,7 +31,7 @@ const ContactFormContactSection = ({
         spellCheck={false}
       />
       {errors.email && (
-        <p className="text-[11px] text-red-600 mt-1">{errors.email.message}</p>
+        <p className="text-xs text-red-600 mt-1">{errors.email.message}</p>
       )}
     </div>
     <div>
@@ -47,7 +47,7 @@ const ContactFormContactSection = ({
         autoComplete="tel"
       />
       {errors.phone && (
-        <p className="text-[11px] text-red-600 mt-1">{errors.phone.message}</p>
+        <p className="text-xs text-red-600 mt-1">{errors.phone.message}</p>
       )}
     </div>
   </div>

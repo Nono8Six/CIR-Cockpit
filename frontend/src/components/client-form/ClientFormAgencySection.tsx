@@ -41,7 +41,7 @@ const ClientFormAgencySection = ({
       </select>
     )}
     {errors.agency_id && (
-      <p className="text-[11px] text-red-600 mt-1">{errors.agency_id.message}</p>
+      <p className="text-xs text-red-600 mt-1">{errors.agency_id.message}</p>
     )}
   </div>
 );

@@ -3,19 +3,12 @@ type AppHeaderStatusSectionProps = {
   isContextRefreshing: boolean;
 };
 
-const AppHeaderStatusSection = ({ profileLoading, isContextRefreshing }: AppHeaderStatusSectionProps) => (
-  <>
-    {profileLoading && (
-      <span className="hidden md:inline text-[10px] uppercase tracking-widest text-slate-400">
-        Synchronisation…
-      </span>
-    )}
-    {isContextRefreshing && (
-      <span className="hidden md:inline text-[10px] uppercase tracking-widest text-slate-400">
-        Synchronisation agence…
-      </span>
-    )}
-  </>
-);
+const AppHeaderStatusSection = ({ profileLoading, isContextRefreshing }: AppHeaderStatusSectionProps) => {
+  const statusLabel = profileLoading ? 'Synchronisation du profil…' : isContextRefreshing ? 'Synchronisation agence…' : null;
+
+  if (!statusLabel) return null;
+
+  return <span className="hidden xl:inline text-xs uppercase tracking-widest text-slate-400">{statusLabel}</span>;
+};
 
 export default AppHeaderStatusSection;

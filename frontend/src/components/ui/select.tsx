@@ -1,5 +1,6 @@
 import * as React from "react"
 import * as SelectPrimitive from "@radix-ui/react-select"
+import { cva, type VariantProps } from "class-variance-authority"
 import { Check, ChevronDown, ChevronUp } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -10,16 +11,42 @@ const SelectGroup = SelectPrimitive.Group
 
 const SelectValue = SelectPrimitive.Value
 
+/**
+ * CIR select primitive.
+ * Use `density` for compactness and `tone` for semantic emphasis.
+ */
+const selectTriggerVariants = cva(
+  "flex w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-background shadow-sm ring-offset-background data-[placeholder]:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive/60 aria-invalid:focus-visible:ring-destructive/30 [&>span]:line-clamp-1",
+  {
+    variants: {
+      density: {
+        dense: "h-8 px-2.5 text-xs",
+        comfortable: "h-9 px-3 py-2 text-sm",
+      },
+      tone: {
+        default: "",
+        warning: "border-warning/50 focus-visible:ring-warning/30",
+        destructive: "border-destructive/50 focus-visible:ring-destructive/30",
+      },
+    },
+    defaultVariants: {
+      density: "comfortable",
+      tone: "default",
+    },
+  }
+)
+
+export interface SelectTriggerProps
+  extends React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>,
+    VariantProps<typeof selectTriggerVariants> {}
+
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
->(({ className, children, ...props }, ref) => (
+  SelectTriggerProps
+>(({ className, children, density, tone, ...props }, ref) => (
   <SelectPrimitive.Trigger
     ref={ref}
-    className={cn(
-      "flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background data-[placeholder]:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
-      className
-    )}
+    className={cn(selectTriggerVariants({ density, tone }), className)}
     {...props}
   >
     {children}
@@ -147,6 +174,7 @@ export {
   Select,
   SelectGroup,
   SelectValue,
+  selectTriggerVariants,
   SelectTrigger,
   SelectContent,
   SelectLabel,

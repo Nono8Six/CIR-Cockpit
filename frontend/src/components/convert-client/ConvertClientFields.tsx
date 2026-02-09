@@ -37,7 +37,7 @@ const ConvertClientFields = ({
           autoFocus
         />
         {errors.client_number && (
-          <p className="text-[11px] text-red-600 mt-1">{errors.client_number.message}</p>
+          <p className="text-xs text-red-600 mt-1">{errors.client_number.message}</p>
         )}
       </div>
       <div>
@@ -54,7 +54,7 @@ const ConvertClientFields = ({
           <option value="cash">Comptant</option>
         </select>
         {errors.account_type && (
-          <p className="text-[11px] text-red-600 mt-1">{errors.account_type.message}</p>
+          <p className="text-xs text-red-600 mt-1">{errors.account_type.message}</p>
         )}
       </div>
     </div>

@@ -1,19 +1,15 @@
-import { ChevronDown } from 'lucide-react';
 import type { UseFormSetValue } from 'react-hook-form';
 
 import type { InteractionFormValues } from '@/schemas/interactionSchema';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList
-} from '@/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ScrollArea } from '@/components/ui/scroll-area';
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList
+} from '@/components/ui/combobox';
 
 type CockpitServicePickerProps = {
   servicePickerOpen: boolean;
@@ -22,6 +18,8 @@ type CockpitServicePickerProps = {
   remainingServices: string[];
   contactService: string;
   setValue: UseFormSetValue<InteractionFormValues>;
+  forceVisible?: boolean;
+  fullWidth?: boolean;
 };
 
 const CockpitServicePicker = ({
@@ -30,60 +28,43 @@ const CockpitServicePicker = ({
   services,
   remainingServices,
   contactService,
-  setValue
+  setValue,
+  forceVisible = false,
+  fullWidth = false
 }: CockpitServicePickerProps) => {
-  if (remainingServices.length === 0) return null;
+  if (!forceVisible && remainingServices.length === 0) return null;
 
   return (
-    <Popover open={servicePickerOpen} onOpenChange={onServicePickerOpenChange}>
-      <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-8 px-2.5 text-xs gap-1.5"
-        >
-          Tous les services
-          <Badge variant="secondary" className="text-xs font-semibold">
-            {services.length}
-          </Badge>
-          <ChevronDown size={12} className="text-slate-400" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-[320px] p-0">
-        <Command>
-          <CommandInput placeholder="Rechercher un service..." />
-          <ScrollArea className="h-[240px]">
-            <CommandList>
-              <CommandEmpty>Aucun service trouve.</CommandEmpty>
-              <CommandGroup heading="Services">
-                {services.map((service) => (
-                  <CommandItem
-                    key={service}
-                    value={service}
-                    onSelect={(value) => {
-                      if (!value) return;
-                      setValue('contact_service', value, {
-                        shouldValidate: true,
-                        shouldDirty: true
-                      });
-                      onServicePickerOpenChange(false);
-                    }}
-                  >
-                    <span className="flex-1">{service}</span>
-                    {contactService === service && (
-                      <Badge variant="secondary" className="text-xs font-semibold">
-                        Actuel
-                      </Badge>
-                    )}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </ScrollArea>
-        </Command>
-      </PopoverContent>
-    </Popover>
+    <Combobox
+      items={services}
+      value={contactService}
+      open={servicePickerOpen}
+      onOpenChange={onServicePickerOpenChange}
+      onValueChange={(value) => {
+        if (!value) return;
+        setValue('contact_service', value, {
+          shouldValidate: true,
+          shouldDirty: true
+        });
+      }}
+      className={cn(fullWidth ? 'w-full' : 'w-[220px]')}
+    >
+      <ComboboxInput
+        data-testid="cockpit-service-picker-trigger"
+        placeholder="Selectionner un service"
+        searchPlaceholder="Rechercher un service..."
+      />
+      <ComboboxContent className={fullWidth ? 'w-[min(320px,calc(100vw-1.5rem))]' : ''}>
+        <ComboboxEmpty>Aucun service trouve.</ComboboxEmpty>
+        <ComboboxList>
+          {(service) => (
+            <ComboboxItem key={service} value={service}>
+              {service}
+            </ComboboxItem>
+          )}
+        </ComboboxList>
+      </ComboboxContent>
+    </Combobox>
   );
 };
 

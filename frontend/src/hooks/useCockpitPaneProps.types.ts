@@ -85,7 +85,9 @@ export type UseCockpitPanePropsParams = {
   statusMeta: CockpitFormRightPaneProps['statusMeta'];
   statusCategoryLabel: string | null;
   statusCategoryBadges: Record<StatusCategory, string>;
-  statusField: CockpitFormRightPaneProps['statusField'];
+  statusTriggerRef: CockpitFormRightPaneProps['statusTriggerRef'];
+  statusValue: string;
+  onStatusChange: (statusId: string) => void;
   statusGroups: CockpitFormRightPaneProps['statusGroups'];
   hasStatuses: boolean;
   statusHelpId: string;

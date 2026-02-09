@@ -5,7 +5,7 @@ const LoginScreenBrand = () => (
     </div>
     <div className="flex flex-col">
       <h1 className="font-bold text-slate-900 text-lg leading-none tracking-tight">COCKPIT</h1>
-      <span className="text-[10px] text-slate-500 font-medium uppercase tracking-widest">
+      <span className="text-xs text-slate-500 font-medium uppercase tracking-widest">
         Connexion
       </span>
     </div>

@@ -40,7 +40,7 @@ const ClientList = ({ clients, selectedClientId, onSelect }: ClientListProps) =>
                 <p className="text-xs text-slate-500 truncate">{client.city}</p>
               </div>
               {client.archived_at && (
-                <span className="flex items-center gap-1 text-[10px] uppercase text-amber-600">
+                <span className="flex items-center gap-1 text-xs uppercase text-amber-600">
                   <Archive size={12} /> Archive
                 </span>
               )}

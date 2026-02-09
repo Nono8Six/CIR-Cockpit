@@ -23,7 +23,7 @@ const CockpitSelectedContactCard = ({
           <p className="text-[13px] font-semibold text-slate-900 truncate">
             {(contact.first_name ?? '').trim()} {contact.last_name}
           </p>
-          <p className="text-[11px] text-slate-500 truncate">
+          <p className="text-xs text-slate-500 truncate">
             {contactMeta || 'Aucune information'}
           </p>
         </div>
@@ -31,7 +31,7 @@ const CockpitSelectedContactCard = ({
       <button
         type="button"
         onClick={onClear}
-        className="text-[11px] font-semibold text-slate-500 hover:text-slate-700"
+        className="text-xs font-semibold text-slate-500 hover:text-slate-700"
       >
         Changer
       </button>

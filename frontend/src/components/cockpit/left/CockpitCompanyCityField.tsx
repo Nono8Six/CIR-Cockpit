@@ -21,7 +21,7 @@ const CockpitCompanyCityField = ({
       {...field}
       value={value}
       onChange={(event: ChangeEvent<HTMLInputElement>) => field.onChange(event)}
-      placeholder="Ville\u2026"
+      placeholder="Ville…"
       aria-label="Ville"
       autoComplete="address-level2"
     />

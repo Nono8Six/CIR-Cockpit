@@ -34,7 +34,7 @@ const LoginScreen = ({ onSignIn }: LoginScreenProps) => {
           onSubmit={handleSubmit}
         />
 
-        <div className="mt-6 text-[11px] text-slate-500 leading-relaxed">
+        <div className="mt-6 text-xs text-slate-500 leading-relaxed">
           Comptes crees par un admin. Pas d&apos;inscription publique. Support interne uniquement.
         </div>
       </div>

@@ -10,7 +10,7 @@ const InteractionFooterOrderRefInput = ({
   onOrderRefChange
 }: InteractionFooterOrderRefInputProps) => (
   <div className="col-span-3">
-    <label htmlFor="interaction-order-ref" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">
+    <label htmlFor="interaction-order-ref" className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 block">
       N° Devis / Cmd
     </label>
     <div className="relative">

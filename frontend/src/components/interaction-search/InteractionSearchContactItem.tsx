@@ -28,7 +28,7 @@ const InteractionSearchContactItem = ({
         query={query}
       />
     </span>
-    <span className="text-[11px] text-slate-500 truncate">
+    <span className="text-xs text-slate-500 truncate">
       {contact.email ? (
         <HighlightedText value={contact.email} query={query} />
       ) : (

@@ -1,3 +1,5 @@
+import { Save } from 'lucide-react';
+
 import InteractionStepper from './InteractionStepper';
 import CockpitFormHeader from './cockpit/CockpitFormHeader';
 import CockpitFormLeftPane from './cockpit/CockpitFormLeftPane';
@@ -5,6 +7,7 @@ import CockpitFormRightPane from './cockpit/CockpitFormRightPane';
 import CockpitFormDialogs from './cockpit/CockpitFormDialogs';
 import type { CockpitFormProps } from './cockpit/CockpitForm.types';
 import { useCockpitFormController } from '@/hooks/useCockpitFormController';
+import { Button } from '@/components/ui/button';
 
 const EMPTY_ENTITIES: CockpitFormProps['recentEntities'] = [];
 
@@ -44,26 +47,48 @@ const CockpitForm = ({
   const formId = 'interaction-form';
 
   return (
-    <div className="h-full bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+    <div data-testid="cockpit-form-shell" className="min-h-full rounded-lg border border-slate-200 bg-white shadow-sm overflow-x-clip flex flex-col">
       <CockpitFormHeader
         canSave={canSave}
-        gateMessage={gateMessage}
-        formId={formId}
-        onFocusRequired={focusCurrentStep}
       />
       <form
         id={formId}
         ref={formRef}
         onSubmit={handleFormSubmit}
-        className="flex-1 flex flex-col min-h-0 bg-slate-50/30"
+        className="flex flex-1 flex-col bg-slate-50/30"
       >
-        <div className="shrink-0 border-b border-slate-200 bg-slate-50/50 px-5 py-2">
+        <div className="shrink-0 border-b border-slate-200 bg-slate-50/50 px-3 py-2 sm:px-5">
           <InteractionStepper steps={stepperSteps} />
         </div>
 
-        <div className="flex-1 min-h-0 grid grid-cols-12 gap-0 overflow-hidden">
+        <div className="grid min-w-0 grid-cols-12 gap-0">
           <CockpitFormLeftPane {...leftPaneProps} />
           <CockpitFormRightPane {...rightPaneProps} />
+        </div>
+        <div data-testid="cockpit-submit-bar" className="sticky bottom-0 z-10 border-t border-slate-200 bg-white/95 px-3 py-3 backdrop-blur sm:px-5">
+          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+            {!canSave && gateMessage ? (
+              <button
+                type="button"
+                onClick={focusCurrentStep}
+                className="h-9 w-full truncate rounded-md border border-amber-200 bg-amber-50 px-2.5 text-xs font-semibold text-amber-700 transition-colors hover:bg-amber-100 sm:h-8 sm:w-auto sm:max-w-[260px]"
+                aria-label="Aller au champ requis"
+              >
+                {gateMessage}
+              </button>
+            ) : null}
+            <Button
+              data-testid="cockpit-submit-button"
+              type="submit"
+              form={formId}
+              disabled={!canSave}
+              className="h-9 w-full gap-1.5 px-3 text-xs sm:h-8 sm:w-auto"
+              title={canSave ? 'Pret a enregistrer' : gateMessage ?? undefined}
+            >
+              <Save size={12} />
+              Enregistrer
+            </Button>
+          </div>
         </div>
       </form>
       <CockpitFormDialogs
@@ -87,5 +112,3 @@ const CockpitForm = ({
 };
 
 export default CockpitForm;
-
-

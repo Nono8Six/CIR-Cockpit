@@ -17,11 +17,11 @@ const CockpitReminderControl = ({
   onSetReminder
 }: CockpitReminderControlProps) => {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex min-w-0 flex-wrap items-center gap-2">
       <label className={footerLabelStyle} htmlFor="interaction-reminder">
         <span className="flex items-center gap-1"><Clock size={12} /> Rappel</span>
       </label>
-      <div className="flex items-center gap-2">
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
         <Input
           id="interaction-reminder"
           type="datetime-local"
@@ -30,7 +30,7 @@ const CockpitReminderControl = ({
           onChange={(event) => {
             reminderField.onChange(event);
           }}
-          className="h-9 text-xs text-slate-600"
+          className="h-9 w-full min-w-0 flex-1 text-xs text-slate-600 sm:max-w-[260px]"
           aria-label="Rappel"
           autoComplete="off"
         />

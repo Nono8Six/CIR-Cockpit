@@ -24,14 +24,18 @@ const AppHeaderProfileMenu = ({
   onOpenSettings,
   onSignOut
 }: AppHeaderProfileMenuProps) => (
-  <div className="flex items-center gap-3">
-    <span className="hidden md:inline text-xs text-slate-500 truncate max-w-[160px]">
+  <div className="flex items-center gap-2 sm:gap-3">
+    <span
+      title={sessionEmail}
+      className="hidden max-w-[220px] truncate text-xs text-slate-500 xl:inline"
+    >
       {sessionEmail}
     </span>
     <div className="relative" ref={profileMenuRef}>
       <button
         type="button"
-        className={`w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-600 border border-slate-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cir-red/30 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
+        data-testid="app-header-profile-button"
+        className={`h-9 w-9 rounded-full border border-slate-200 bg-slate-100 flex items-center justify-center text-slate-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cir-red/30 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
           hasProfileMenu ? 'hover:bg-slate-200' : 'cursor-default'
         }`}
         onClick={onToggleProfileMenu}
@@ -43,13 +47,13 @@ const AppHeaderProfileMenu = ({
       </button>
       {isProfileMenuOpen && hasProfileMenu && (
         <div
-          className="absolute right-0 mt-2 w-44 rounded-lg border border-slate-200 bg-white shadow-lg py-1 z-30"
+          className="absolute right-0 z-30 mt-2 w-44 rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
           role="menu"
         >
           <Button
             type="button"
             variant="ghost"
-            className={`w-full justify-start px-3 py-2 text-xs ${
+            className={`w-full justify-start px-3 py-2 text-sm ${
               isSettingsDisabled ? 'text-slate-300 cursor-not-allowed' : 'text-slate-600'
             }`}
             role="menuitem"
@@ -62,7 +66,7 @@ const AppHeaderProfileMenu = ({
           <Button
             type="button"
             variant="ghost"
-            className="w-full justify-start px-3 py-2 text-xs text-slate-600"
+            className="w-full justify-start px-3 py-2 text-sm text-slate-600"
             role="menuitem"
             onClick={onSignOut}
           >

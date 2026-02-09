@@ -2,7 +2,7 @@ import type { Agency, Client, UserRole } from '@/types';
 import type { ClientPayload } from '@/services/clients/saveClient';
 import { useClientFormDialog } from '@/hooks/useClientFormDialog';
 import { useClientFormDialogFields } from '@/hooks/useClientFormDialogFields';
-import { Dialog, DialogContent } from './ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from './ui/dialog';
 import ClientFormContent from './client-form/ClientFormContent';
 import ClientFormHeader from './client-form/ClientFormHeader';
 
@@ -67,6 +67,12 @@ const ClientFormDialog = ({
         overlayClassName="bg-slate-900/20 backdrop-blur-[2px]"
         className="w-[min(92vw,780px)] max-w-3xl p-0 overflow-hidden rounded-2xl border border-slate-200/70 shadow-2xl"
       >
+        <DialogTitle className="sr-only">
+          {isEdit ? 'Modifier un client' : 'Nouveau client'}
+        </DialogTitle>
+        <DialogDescription className="sr-only">
+          Formulaire de saisie client.
+        </DialogDescription>
         <ClientFormHeader isEdit={isEdit} />
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 px-6 py-5">
           <ClientFormContent

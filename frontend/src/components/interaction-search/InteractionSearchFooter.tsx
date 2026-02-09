@@ -14,7 +14,7 @@ const InteractionSearchFooter = ({
   }
 
   return (
-    <div className="flex items-center justify-between px-3 py-2 border-t border-slate-200 bg-slate-50/80 text-[11px] text-slate-500">
+    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 bg-slate-50/80 px-3 py-2 text-xs text-slate-500">
       {onCreateEntity ? (
         <button
           type="button"
@@ -32,7 +32,8 @@ const InteractionSearchFooter = ({
           onClick={onOpenGlobalSearch}
           className="text-slate-500 hover:text-slate-700"
         >
-          Voir tout (Ctrl+K)
+          <span className="sm:hidden">Voir tout</span>
+          <span className="hidden sm:inline">Voir tout (Ctrl+K)</span>
         </button>
       )}
     </div>

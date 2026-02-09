@@ -95,7 +95,9 @@ export type CockpitFormRightPaneProps = {
   statusMeta: AgencyStatus | null;
   statusCategoryLabel: string | null;
   statusCategoryBadges: Record<StatusCategory, string>;
-  statusField: UseFormRegisterReturn;
+  statusTriggerRef: RefObject<HTMLButtonElement | null>;
+  statusValue: string;
+  onStatusChange: (statusId: string) => void;
   statusGroups: Record<StatusCategory, AgencyConfig['statuses']>;
   hasStatuses: boolean;
   statusHelpId: string;

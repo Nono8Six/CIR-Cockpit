@@ -1,17 +1,41 @@
 import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * CIR card primitive.
+ * Use `variant` for surface style and `density` for spacing rhythm.
+ */
+const cardVariants = cva("rounded-xl border text-card-foreground", {
+  variants: {
+    variant: {
+      default: "bg-card shadow",
+      section: "bg-surface-1 shadow-sm",
+      ghost: "bg-transparent shadow-none",
+    },
+    density: {
+      dense: "rounded-lg",
+      comfortable: "rounded-xl",
+    },
+  },
+  defaultVariants: {
+    variant: "default",
+    density: "comfortable",
+  },
+})
+
+export interface CardProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof cardVariants> {}
+
 const Card = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
+  CardProps
+>(({ className, variant, density, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn(
-      "rounded-xl border bg-card text-card-foreground shadow",
-      className
-    )}
+    className={cn(cardVariants({ variant, density }), className)}
     {...props}
   />
 ))
@@ -61,6 +85,18 @@ const CardContent = React.forwardRef<
 ))
 CardContent.displayName = "CardContent"
 
+const CardSection = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("border-t border-border px-6 py-4 first:border-t-0", className)}
+    {...props}
+  />
+))
+CardSection.displayName = "CardSection"
+
 const CardFooter = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
@@ -73,4 +109,13 @@ const CardFooter = React.forwardRef<
 ))
 CardFooter.displayName = "CardFooter"
 
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
+export {
+  Card,
+  cardVariants,
+  CardHeader,
+  CardFooter,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardSection,
+}

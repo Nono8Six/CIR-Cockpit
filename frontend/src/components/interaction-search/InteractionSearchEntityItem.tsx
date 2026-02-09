@@ -29,11 +29,11 @@ const InteractionSearchEntityItem = ({
       <HighlightedText value={entity.name} query={query} />
     </span>
     {includeArchived && entity.archived_at && (
-      <span className="text-[10px] uppercase tracking-wide text-amber-700 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded">
+      <span className="text-xs uppercase tracking-wide text-amber-700 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded">
         Archive
       </span>
     )}
-    <span className="text-[11px] text-slate-500">
+    <span className="text-xs text-slate-500">
       <HighlightedDigits
         formatted={formatClientNumber(entity.client_number)}
         query={query}

@@ -1,7 +1,7 @@
 import type { EntityContact } from '@/types';
 import type { EntityContactPayload } from '@/services/entities/saveEntityContact';
 import { useClientContactDialog } from '@/hooks/useClientContactDialog';
-import { Dialog, DialogContent } from './ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from './ui/dialog';
 import ContactFormHeader from './contact-form/ContactFormHeader';
 import ContactFormIdentitySection from './contact-form/ContactFormIdentitySection';
 import ContactFormContactSection from './contact-form/ContactFormContactSection';
@@ -57,6 +57,12 @@ const ClientContactDialog = ({
         overlayClassName="bg-slate-900/20 backdrop-blur-[2px]"
         className="w-[min(92vw,620px)] max-w-2xl p-0 overflow-hidden rounded-2xl border border-slate-200/70 shadow-2xl"
       >
+        <DialogTitle className="sr-only">
+          {isEdit ? 'Modifier un contact' : 'Nouveau contact'}
+        </DialogTitle>
+        <DialogDescription className="sr-only">
+          Formulaire de saisie contact.
+        </DialogDescription>
         <ContactFormHeader isEdit={isEdit} />
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 px-6 py-5">
           <ContactFormIdentitySection

@@ -33,7 +33,7 @@ const StatusSection = ({
       Statuts Dossier
       <span className="text-xs font-normal text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">({statuses.length})</span>
     </h3>
-    <p className="text-[11px] text-slate-500 mb-4">
+    <p className="text-xs text-slate-500 mb-4">
       La categorie classe le Kanban (A traiter / En cours / Termine).
     </p>
 

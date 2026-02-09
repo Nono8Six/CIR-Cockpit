@@ -1,0 +1,75 @@
+{
+  "timestamp": "2026-02-07T15-11-03-643Z",
+  "metrics": {
+    "unicode_literals": 12,
+    "native_select": 11,
+    "tiny_typography_total": 92,
+    "tiny_typography_text_10px": 32,
+    "tiny_typography_text_11px": 60,
+    "overflow_y_auto": 11
+  },
+  "samples": {
+    "unicode_literals": [
+      "frontend/src\\components\\agencies\\AgenciesManagerSearch.tsx:15:        placeholder=\"Rechercher une agence\\u2026\"",
+      "frontend/src\\components\\audit-logs\\AuditLogsFilters.tsx:66:          placeholder=\"clients, interactions\\u2026\"",
+      "frontend/src\\components\\cockpit\\right\\CockpitFooterSection.tsx:61:            placeholder=\"N\\u00B0 Devis\\u2026\"",
+      "frontend/src\\components\\cockpit\\left\\CockpitCompanyCityField.tsx:24:      placeholder=\"Ville\\u2026\"",
+      "frontend/src\\components\\users\\UsersManagerSearch.tsx:14:      placeholder=\"Rechercher un utilisateur\\u2026\"",
+      "frontend/src\\components\\cockpit\\left\\CockpitContactNameFields.tsx:41:        placeholder=\"Prenom\\u2026\"",
+      "frontend/src\\components\\cockpit\\left\\CockpitContactNameFields.tsx:53:        placeholder=\"Nom\\u2026\"",
+      "frontend/src\\components\\cockpit\\left\\CockpitContactPhoneEmailFields.tsx:34:        placeholder=\"06\\u2026\"",
+      "frontend/src\\components\\cockpit\\left\\CockpitContactPhoneEmailFields.tsx:43:        placeholder=\"Email\\u2026\"",
+      "frontend/src\\components\\cockpit\\left\\CockpitContactPhoneField.tsx:27:      placeholder=\"Numero de telephone\\u2026\"",
+      "frontend/src\\components\\cockpit\\left\\CockpitCompanyInput.tsx:44:        placeholder=\"Nom de la societe\\u2026\"",
+      "frontend/src\\components\\cockpit\\left\\CockpitContactPositionField.tsx:19:      placeholder=\"Fonction\\u2026\""
+    ],
+    "native_select": [
+      "frontend/src\\components\\audit-logs\\AuditLogsFilters.tsx:34:        <select",
+      "frontend/src\\components\\audit-logs\\AuditLogsFilters.tsx:48:          <select",
+      "frontend/src\\components\\client-form\\ClientFormAgencySection.tsx:29:      <select",
+      "frontend/src\\components\\client-form\\ClientFormAccountSection.tsx:42:      <select",
+      "frontend/src\\components\\cockpit\\right\\CockpitStatusControl.tsx:38:        <select",
+      "frontend/src\\components\\clients\\ClientsPanelSearchControls.tsx:43:      <select",
+      "frontend/src\\components\\convert-client\\ConvertClientFields.tsx:47:        <select",
+      "frontend/src\\components\\dashboard\\toolbar\\DashboardDateFilters.tsx:13:        <select value={period} onChange={(event) => { if (isFilterPeriod(event.target.value)) onPeriodChange(event.target.value); }} className=\"bg-transparent text-sm font-medium text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cir-red/30 focus-visible:ring-offset-2 focus-visible:ring-offset-white cursor-pointer\" aria-label=\"Periode de filtrage\" name=\"dashboard-period\">",
+      "frontend/src\\components\\interactions\\footer\\InteractionFooterStatusSelect.tsx:19:      <select",
+      "frontend/src\\components\\settings\\status\\StatusRow.tsx:13:      <select value={status.category} onChange={(event) => { if (isStatusCategory(event.target.value)) onCategoryUpdate(index, event.target.value); }} className={`border border-slate-200 rounded-md px-2 py-1 text-[10px] font-bold uppercase bg-white text-slate-600 ${readOnly ? 'bg-slate-50 text-slate-400' : ''}`} disabled={readOnly} name={`status-category-${index}`} aria-label={`Categorie du statut ${index + 1}`}>",
+      "frontend/src\\components\\prospect-form\\ProspectFormMetaSection.tsx:36:        <select"
+    ],
+    "tiny_typography": [
+      "frontend/src\\app\\appConstants.tsx:38:      badge: pendingCount > 0 ? <span className=\"bg-cir-red text-white text-[10px] px-1.5 rounded-full font-bold ml-1 shadow-sm\">{pendingCount}</span> : null",
+      "frontend/src\\components\\app-header\\AppHeaderStatusSection.tsx:9:      <span className=\"hidden md:inline text-[10px] uppercase tracking-widest text-slate-400\">",
+      "frontend/src\\components\\app-header\\AppHeaderStatusSection.tsx:14:      <span className=\"hidden md:inline text-[10px] uppercase tracking-widest text-slate-400\">",
+      "frontend/src\\components\\app-header\\AppHeaderSearchButton.tsx:19:      <span className=\"text-[10px] bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 font-mono text-slate-500\">",
+      "frontend/src\\components\\app-search\\AppSearchFooter.tsx:9:  <div className=\"bg-slate-50 px-4 py-2 border-t border-slate-100 text-[10px] text-slate-400 flex justify-between\">",
+      "frontend/src\\components\\app-header\\AppHeaderBrandSection.tsx:65:          <span className=\"text-[10px] text-slate-400 font-medium uppercase tracking-widest\">Contexte…</span>",
+      "frontend/src\\components\\app-search\\AppSearchInteractionsSection.tsx:32:            <span className=\"text-[10px] text-slate-400\">{formatDate(interaction.created_at)}</span>",
+      "frontend/src\\components\\app-search\\AppSearchInteractionsSection.tsx:34:              <span className=\"text-[10px] bg-slate-100 px-1.5 rounded text-slate-600 font-mono\">",
+      "frontend/src\\components\\app-search\\AppSearchClientsSection.tsx:33:            <span className=\"text-[10px] uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-1 rounded\">",
+      "frontend/src\\components\\ClientList.tsx:43:                <span className=\"flex items-center gap-1 text-[10px] uppercase text-amber-600\">",
+      "frontend/src\\components\\dashboard\\list\\DashboardListRow.tsx:26:        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase whitespace-nowrap border ${getStatusBadgeClass(item)}`}>",
+      "frontend/src\\components\\dashboard\\kanban\\KanbanColumn.tsx:27:        <span className=\"bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-200\">",
+      "frontend/src\\components\\login\\LoginScreenBrand.tsx:8:      <span className=\"text-[10px] text-slate-500 font-medium uppercase tracking-widest\">",
+      "frontend/src\\components\\interaction-search\\InteractionSearchEntityItem.tsx:32:      <span className=\"text-[10px] uppercase tracking-wide text-amber-700 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded\">",
+      "frontend/src\\components\\interactions\\InteractionDetailsTimeline.tsx:42:                <span className=\"text-[10px] text-slate-300\">•</span>",
+      "frontend/src\\components\\interactions\\InteractionDetailsTimeline.tsx:43:                <span className=\"text-[10px] font-medium text-slate-400\">{event.author}</span>",
+      "frontend/src\\components\\interaction-card\\InteractionCardHeader.tsx:19:    <span className=\"text-[10px] text-slate-400 font-medium\">{formatTime(data.created_at)}</span>",
+      "frontend/src\\components\\interaction-search\\InteractionSearchRecents.tsx:12:      <span className=\"text-[10px] font-semibold uppercase tracking-wide text-slate-400 shrink-0\">",
+      "frontend/src\\components\\interaction-search\\InteractionSearchRecents.tsx:24:            <span className=\"text-[10px] font-mono text-slate-400\">",
+      "frontend/src\\components\\interactions\\InteractionDetailsSubjectCard.tsx:11:    <span className=\"text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 block\">"
+    ],
+    "overflow_y_auto": [
+      "frontend/src\\components\\AppSearchOverlay.tsx:50:        <div className=\"overflow-y-auto p-2 bg-white min-h-[100px]\">",
+      "frontend/src\\components\\audit-logs\\AuditLogsTable.tsx:20:      <div className=\"max-h-[420px] overflow-y-auto\">",
+      "frontend/src\\components\\InteractionDetails.tsx:47:      <div className=\"flex-1 overflow-y-auto p-6 bg-white\" ref={scrollRef}>",
+      "frontend/src\\components\\clients\\ClientsPanelListPane.tsx:33:  <div className=\"xl:col-span-4 min-h-0 overflow-y-auto bg-white border border-slate-200 rounded-lg p-4 shadow-sm\">",
+      "frontend/src\\components\\dashboard\\kanban\\KanbanColumn.tsx:31:      <div className=\"p-3 overflow-y-auto flex-1 scrollbar-hide space-y-3\">",
+      "frontend/src\\components\\UserMembershipDialog.tsx:53:          <div className=\"space-y-2 max-h-64 overflow-y-auto border border-slate-200 rounded-md p-3\">",
+      "frontend/src\\components\\clients\\ClientsPanelDetailPane.tsx:41:  <div className=\"xl:col-span-8 min-h-0 overflow-y-auto\">",
+      "frontend/src\\components\\ui\\command.tsx:61:    className={cn(\"max-h-[300px] overflow-y-auto overflow-x-hidden\", className)}",
+      "frontend/src\\components\\ui\\select.tsx:76:        \"relative z-50 max-h-[--radix-select-content-available-height] min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border bg-popover text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-[--radix-select-content-transform-origin]\",",
+      "frontend/src\\components\\cockpit\\CockpitFormRightPane.tsx:28:    <div className=\"col-span-12 md:col-span-7 p-5 flex flex-col gap-5 overflow-y-auto\">",
+      "frontend/src\\components\\cockpit\\CockpitFormLeftPane.tsx:15:    <div className=\"col-span-12 md:col-span-5 bg-white border-r border-slate-200 p-5 flex flex-col gap-4 overflow-y-auto\">"
+    ]
+  }
+}

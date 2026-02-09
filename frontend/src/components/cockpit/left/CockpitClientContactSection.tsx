@@ -26,7 +26,7 @@ const CockpitClientContactSection = ({
         <button
           type="button"
           onClick={onOpenContactDialog}
-          className="text-[11px] font-semibold text-slate-500 hover:text-slate-700"
+          className="text-xs font-semibold text-slate-500 hover:text-slate-700"
         >
           Ajouter un contact
         </button>

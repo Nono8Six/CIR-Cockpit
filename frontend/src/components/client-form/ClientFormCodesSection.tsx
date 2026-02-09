@@ -32,7 +32,7 @@ const ClientFormCodesSection = ({
         inputMode="numeric"
       />
       {errors.postal_code && (
-        <p className="text-[11px] text-red-600 mt-1">{errors.postal_code.message}</p>
+        <p className="text-xs text-red-600 mt-1">{errors.postal_code.message}</p>
       )}
     </div>
     <div>

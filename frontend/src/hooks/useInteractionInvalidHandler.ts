@@ -7,12 +7,14 @@ type InteractionInvalidHandlerInput = {
   setFocus: UseFormSetFocus<InteractionFormValues>;
   searchInputRef: RefObject<HTMLInputElement | null>;
   contactSelectRef: RefObject<HTMLButtonElement | null>;
+  statusTriggerRef: RefObject<HTMLButtonElement | null>;
 };
 
 export const useInteractionInvalidHandler = ({
   setFocus,
   searchInputRef,
-  contactSelectRef
+  contactSelectRef,
+  statusTriggerRef
 }: InteractionInvalidHandlerInput) =>
   useCallback(
     (formErrors: FieldErrors<InteractionFormValues>) => {
@@ -65,8 +67,8 @@ export const useInteractionInvalidHandler = ({
         return;
       }
       if (formErrors.status_id) {
-        setFocus('status_id');
+        statusTriggerRef.current?.focus();
       }
     },
-    [contactSelectRef, searchInputRef, setFocus]
+    [contactSelectRef, searchInputRef, setFocus, statusTriggerRef]
   );

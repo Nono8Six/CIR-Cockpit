@@ -21,23 +21,23 @@ const AppHeaderBrandSection = ({
   roleBadgeStyles,
   onAgencyChange
 }: AppHeaderBrandSectionProps) => (
-  <div className="flex items-center gap-3 min-w-0">
-    <div className="w-8 h-8 bg-cir-red rounded flex items-center justify-center text-white font-black tracking-tighter shadow-sm transform -skew-x-6">
+  <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+    <div className="flex h-7 w-7 items-center justify-center rounded bg-cir-red text-xs font-black tracking-tighter text-white shadow-sm -skew-x-6 sm:h-8 sm:w-8 sm:text-sm">
       CIR
     </div>
-    <div className="flex items-center gap-3 min-w-0">
-      <h1 className="font-bold text-slate-900 text-sm leading-none tracking-tight">COCKPIT</h1>
+    <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+      <h1 className="hidden text-sm font-bold leading-none tracking-tight text-slate-900 sm:block">COCKPIT</h1>
       {agencyContext ? (
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="hidden min-w-0 items-center gap-2 md:flex">
           <div className="h-4 w-px bg-slate-200" />
-          {hasMultipleAgencies ? (
-            <div className="relative max-w-[160px]">
+          <div className="min-w-0">
+            {hasMultipleAgencies ? (
               <Select
                 value={agencyContext.agency_id}
                 onValueChange={onAgencyChange}
               >
                 <SelectTrigger
-                  className="h-auto rounded-full px-2.5 py-1 text-[11px] font-semibold text-slate-700 truncate shadow-sm"
+                  className="h-7 max-w-[130px] rounded-full px-2.5 text-xs font-semibold text-slate-700 shadow-sm lg:max-w-[170px]"
                   aria-label="Agence active"
                 >
                   <SelectValue placeholder="Agence active" />
@@ -50,20 +50,20 @@ const AppHeaderBrandSection = ({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-          ) : (
-            <span className="max-w-[160px] truncate rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700 shadow-sm">
-              {agencyContext.agency_name}
-            </span>
-          )}
-          <Badge className={`shadow-sm whitespace-nowrap ${roleBadgeStyles[userRole]}`}>
+            ) : (
+              <span className="inline-flex h-7 max-w-[130px] items-center truncate rounded-full border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-700 shadow-sm lg:max-w-[170px]">
+                {agencyContext.agency_name}
+              </span>
+            )}
+          </div>
+          <Badge className={`hidden whitespace-nowrap shadow-sm lg:inline-flex ${roleBadgeStyles[userRole]}`}>
             {roleLabels[userRole]}
           </Badge>
         </div>
       ) : (
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] text-slate-400 font-medium uppercase tracking-widest">Contexte…</span>
-          <Badge className={`shadow-sm whitespace-nowrap ${roleBadgeStyles[userRole]}`}>
+        <div className="hidden items-center gap-2 md:flex">
+          <span className="text-xs text-slate-400 font-medium uppercase tracking-widest">Contexte…</span>
+          <Badge className={`hidden whitespace-nowrap shadow-sm lg:inline-flex ${roleBadgeStyles[userRole]}`}>
             {roleLabels[userRole]}
           </Badge>
         </div>

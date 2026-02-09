@@ -16,7 +16,7 @@ const InteractionCardHeader = ({ data }: InteractionCardHeaderProps) => (
         {data.company_name}
       </span>
     </div>
-    <span className="text-[10px] text-slate-400 font-medium">{formatTime(data.created_at)}</span>
+    <span className="text-xs text-slate-400 font-medium">{formatTime(data.created_at)}</span>
   </div>
 );
 

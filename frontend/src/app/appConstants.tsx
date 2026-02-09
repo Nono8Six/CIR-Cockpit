@@ -29,18 +29,21 @@ export const buildNavigationTabs = (canAccessAdmin: boolean, pendingCount: numbe
     {
       value: 'cockpit',
       icon: <PenTool size={14} />,
-      label: <span className="hidden sm:inline">Saisie (F1)</span>
+      label: <span className="hidden sm:inline">Saisie (F1)</span>,
+      ariaLabel: 'Saisie (F1)'
     },
     {
       value: 'dashboard',
       icon: <LayoutDashboard size={14} />,
       label: <span className="hidden sm:inline">Pilotage (F2)</span>,
-      badge: pendingCount > 0 ? <span className="bg-cir-red text-white text-[10px] px-1.5 rounded-full font-bold ml-1 shadow-sm">{pendingCount}</span> : null
+      ariaLabel: 'Pilotage (F2)',
+      badge: pendingCount > 0 ? <span className="bg-cir-red text-white text-xs px-1.5 rounded-full font-bold ml-1 shadow-sm">{pendingCount}</span> : null
     },
     {
       value: 'clients',
       icon: <Building2 size={14} />,
-      label: <span className="hidden sm:inline">Clients (F5)</span>
+      label: <span className="hidden sm:inline">Clients (F5)</span>,
+      ariaLabel: 'Clients (F5)'
     }
   ];
 
@@ -48,7 +51,8 @@ export const buildNavigationTabs = (canAccessAdmin: boolean, pendingCount: numbe
     tabs.push({
       value: 'admin',
       icon: <Shield size={14} />,
-      label: <span className="hidden sm:inline">Admin (F4)</span>
+      label: <span className="hidden sm:inline">Admin (F4)</span>,
+      ariaLabel: 'Admin (F4)'
     });
   }
 

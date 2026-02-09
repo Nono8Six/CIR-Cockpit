@@ -29,9 +29,9 @@ const AppSearchInteractionsSection = ({ interactions }: AppSearchInteractionsSec
             </div>
           </div>
           <div className="flex flex-col items-end gap-1">
-            <span className="text-[10px] text-slate-400">{formatDate(interaction.created_at)}</span>
+            <span className="text-xs text-slate-400">{formatDate(interaction.created_at)}</span>
             {interaction.order_ref && (
-              <span className="text-[10px] bg-slate-100 px-1.5 rounded text-slate-600 font-mono">
+              <span className="text-xs bg-slate-100 px-1.5 rounded text-slate-600 font-mono">
                 #{interaction.order_ref}
               </span>
             )}

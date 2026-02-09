@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { Agency } from '@/types';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 
 interface UserMembershipDialogProps {
@@ -48,6 +48,9 @@ const UserMembershipDialog = ({
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Modifier les agences</DialogTitle>
+          <DialogDescription className="sr-only">
+            Selectionnez les agences rattachees a cet utilisateur.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2 max-h-64 overflow-y-auto border border-slate-200 rounded-md p-3">

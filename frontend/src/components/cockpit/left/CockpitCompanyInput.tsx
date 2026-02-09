@@ -41,14 +41,14 @@ const CockpitCompanyInput = ({
           onShowSuggestionsChange(true);
         }}
         onBlur={() => onShowSuggestionsChange(false)}
-        placeholder="Nom de la societe\u2026"
+        placeholder="Nom de la societe…"
         className="font-semibold"
         aria-invalid={!!errors.company_name}
         aria-label="Nom de la societe"
         autoComplete="organization"
       />
       {errors.company_name && (
-        <p className="text-[11px] text-red-600 mt-1" role="status" aria-live="polite">
+        <p className="text-xs text-red-600 mt-1" role="status" aria-live="polite">
           {errors.company_name.message}
         </p>
       )}

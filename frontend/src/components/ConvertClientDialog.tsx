@@ -1,4 +1,4 @@
-import { Dialog, DialogContent } from './ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from './ui/dialog';
 import ConvertClientHeader from './convert-client/ConvertClientHeader';
 import ConvertClientCompanyCard from './convert-client/ConvertClientCompanyCard';
 import ConvertClientFields from './convert-client/ConvertClientFields';
@@ -41,6 +41,10 @@ const ConvertClientDialog = ({ open, onOpenChange, entity, onConvert }: ConvertC
         overlayClassName="bg-slate-900/20 backdrop-blur-[2px]"
         className="w-[min(92vw,640px)] max-w-2xl p-0 overflow-hidden rounded-2xl border border-slate-200/70 shadow-2xl"
       >
+        <DialogTitle className="sr-only">Convertir un prospect en client</DialogTitle>
+        <DialogDescription className="sr-only">
+          Confirmation et saisie des informations de conversion.
+        </DialogDescription>
         <ConvertClientHeader />
         <form onSubmit={handleConvert} className="space-y-5 px-6 py-5">
           <ConvertClientCompanyCard name={entity.name} />
