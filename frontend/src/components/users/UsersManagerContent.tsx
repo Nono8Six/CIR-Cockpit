@@ -40,6 +40,9 @@ const UsersManagerContent = ({ state }: UsersManagerContentProps) => {
       <UsersManagerList
         usersQuery={usersQuery}
         users={filteredUsers}
+        onRetry={() => {
+          void usersQuery.refetch();
+        }}
         onResetPassword={handleResetPassword}
         onArchiveToggle={handleArchiveToggle}
         onRoleChange={handleRoleChange}

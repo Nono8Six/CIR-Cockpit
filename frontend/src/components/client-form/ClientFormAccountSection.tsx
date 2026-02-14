@@ -3,6 +3,13 @@ import type { FieldErrors, UseFormRegisterReturn } from 'react-hook-form';
 
 import type { ClientFormValues } from '../../../../shared/schemas/client.schema';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
 import { formatClientNumber } from '@/utils/clients/formatClientNumber';
 
 type ClientFormAccountSectionProps = {
@@ -13,6 +20,10 @@ type ClientFormAccountSectionProps = {
   accountType: string;
   errors: FieldErrors<ClientFormValues>;
 };
+
+const buildFieldChangeEvent = (name: string, value: string) => ({
+  target: { name, value }
+});
 
 const ClientFormAccountSection = ({
   clientNumberField,
@@ -39,15 +50,31 @@ const ClientFormAccountSection = ({
     </div>
     <div>
       <label className="text-xs font-medium text-slate-500" htmlFor="client-account-type">Type de compte</label>
-      <select
-        id="client-account-type"
-        {...accountTypeField}
+      <input
+        type="hidden"
+        name={accountTypeField.name}
+        ref={accountTypeField.ref}
         value={accountType}
-        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+        onChange={accountTypeField.onChange}
+        onBlur={accountTypeField.onBlur}
+      />
+      <Select
+        value={accountType}
+        onValueChange={(value) => accountTypeField.onChange(buildFieldChangeEvent(accountTypeField.name, value))}
+        name={accountTypeField.name}
       >
-        <option value="term">Compte a terme</option>
-        <option value="cash">Comptant</option>
-      </select>
+        <SelectTrigger
+          id="client-account-type"
+          onBlur={accountTypeField.onBlur}
+          aria-invalid={Boolean(errors.account_type)}
+        >
+          <SelectValue placeholder="Selectionner un type de compte" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="term">Compte a terme</SelectItem>
+          <SelectItem value="cash">Comptant</SelectItem>
+        </SelectContent>
+      </Select>
       {errors.account_type && (
         <p className="text-xs text-red-600 mt-1">{errors.account_type.message}</p>
       )}

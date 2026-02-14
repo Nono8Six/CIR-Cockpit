@@ -2,9 +2,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { adminAgenciesRename } from '@/services/admin/adminAgenciesRename';
 import { agenciesKey } from '@/services/query/queryKeys';
-import { normalizeError } from '@/services/errors/normalizeError';
-import { notifyError } from '@/services/errors/notify';
-import { reportError } from '@/services/errors/reportError';
+import { handleUiError } from '@/services/errors/handleUiError';
+import { mapAdminDomainError } from '@/services/errors/mapAdminDomainError';
 
 export const useRenameAgency = () => {
   const queryClient = useQueryClient();
@@ -22,9 +21,11 @@ export const useRenameAgency = () => {
       queryClient.invalidateQueries({ queryKey: agenciesKey(false) });
     },
     onError: (err) => {
-      const appError = normalizeError(err, "Impossible de renommer l'agence.");
-      reportError(appError, { source: 'useRenameAgency' });
-      notifyError(appError);
+      const appError = mapAdminDomainError(err, {
+        action: 'update_agency',
+        fallbackMessage: "Impossible de renommer l'agence."
+      });
+      handleUiError(appError, appError.message, { source: 'useRenameAgency' });
     }
   });
 };

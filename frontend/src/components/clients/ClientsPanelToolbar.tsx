@@ -33,8 +33,11 @@ const ClientsPanelToolbar = ({
   agencyFilterId,
   onAgencyFilterChange
 }: ClientsPanelToolbarProps) => (
-  <div className="bg-white border border-slate-200 rounded-lg shadow-sm p-4 flex flex-col gap-3">
-    <ToolbarRow density="comfortable">
+  <div
+    className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
+    data-testid="clients-toolbar"
+  >
+    <ToolbarRow density="comfortable" className="gap-3">
       <div className="flex flex-wrap items-center gap-4">
         <ClientsPanelTitle viewMode={viewMode} />
         <ClientsPanelViewModeTabs
@@ -49,15 +52,17 @@ const ClientsPanelToolbar = ({
         onCreateClient={onCreateClient}
       />
     </ToolbarRow>
-    <ClientsPanelSearchControls
-      searchTerm={searchTerm}
-      onSearchTermChange={onSearchTermChange}
-      viewMode={viewMode}
-      userRole={userRole}
-      agencies={agencies}
-      agencyFilterId={agencyFilterId}
-      onAgencyFilterChange={onAgencyFilterChange}
-    />
+    <div className="mt-3">
+      <ClientsPanelSearchControls
+        searchTerm={searchTerm}
+        onSearchTermChange={onSearchTermChange}
+        viewMode={viewMode}
+        userRole={userRole}
+        agencies={agencies}
+        agencyFilterId={agencyFilterId}
+        onAgencyFilterChange={onAgencyFilterChange}
+      />
+    </div>
   </div>
 );
 

@@ -12,28 +12,28 @@ interface AdminPanelProps {
 const AdminPanel = ({ userRole }: AdminPanelProps) => {
   if (userRole !== 'super_admin') {
     return (
-      <div className="h-full">
+      <div className="h-full" data-testid="admin-panel">
         <AuditLogsPanel userRole={userRole} />
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col gap-4">
+    <div className="flex h-full flex-col gap-4" data-testid="admin-panel">
       <ErrorJournalExport />
-      <Tabs defaultValue="users">
-        <TabsList className="flex bg-slate-100 rounded-md p-1 gap-1 h-auto">
-          <TabsTrigger value="users" className="text-xs">Utilisateurs</TabsTrigger>
-          <TabsTrigger value="agencies" className="text-xs">Agences</TabsTrigger>
-          <TabsTrigger value="audit" className="text-xs">Audit logs</TabsTrigger>
+      <Tabs defaultValue="users" data-testid="admin-tabs-root">
+        <TabsList className="flex h-auto w-full flex-wrap gap-1 rounded-md bg-slate-100 p-1" data-testid="admin-tabs-list">
+          <TabsTrigger value="users" className="text-xs sm:text-sm" data-testid="admin-tab-users">Utilisateurs</TabsTrigger>
+          <TabsTrigger value="agencies" className="text-xs sm:text-sm" data-testid="admin-tab-agencies">Agences</TabsTrigger>
+          <TabsTrigger value="audit" className="text-xs sm:text-sm" data-testid="admin-tab-audit">Audit logs</TabsTrigger>
         </TabsList>
-        <TabsContent value="users">
+        <TabsContent value="users" className="mt-3" data-testid="admin-tab-panel-users">
           <UsersManager />
         </TabsContent>
-        <TabsContent value="agencies">
+        <TabsContent value="agencies" className="mt-3" data-testid="admin-tab-panel-agencies">
           <AgenciesManager />
         </TabsContent>
-        <TabsContent value="audit">
+        <TabsContent value="audit" className="mt-3" data-testid="admin-tab-panel-audit">
           <AuditLogsPanel userRole={userRole} />
         </TabsContent>
       </Tabs>

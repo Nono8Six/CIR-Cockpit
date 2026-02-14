@@ -1,4 +1,4 @@
-import type { MiddlewareHandler } from 'https://deno.land/x/hono@4.6.10/mod.ts';
+import type { MiddlewareHandler } from 'jsr:@hono/hono';
 
 import type { AppEnv } from '../types.ts';
 

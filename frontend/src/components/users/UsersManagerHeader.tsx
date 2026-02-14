@@ -13,7 +13,7 @@ const UsersManagerHeader = ({
   onToggleArchived,
   onOpenCreate
 }: UsersManagerHeaderProps) => (
-  <div className="flex flex-wrap items-center justify-between gap-3">
+  <div className="flex flex-wrap items-center justify-between gap-3" data-testid="admin-users-header">
     <div>
       <h2 className="text-sm font-semibold text-slate-900">Utilisateurs</h2>
       <p className="text-xs text-slate-500">Gestion des acces et roles globaux</p>
@@ -22,13 +22,14 @@ const UsersManagerHeader = ({
       <Button
         type="button"
         variant="outline"
-        className="h-8 px-3 text-xs"
+        className="h-9 px-3 text-xs sm:text-sm"
         onClick={onToggleArchived}
+        data-testid="admin-users-toggle-archived"
       >
         {showArchived ? <ArchiveRestore size={14} className="mr-1" /> : <Archive size={14} className="mr-1" />}
         {showArchived ? 'Masquer archives' : 'Voir archives'}
       </Button>
-      <Button type="button" className="h-8 px-3 text-xs" onClick={onOpenCreate}>
+      <Button type="button" className="h-9 px-3 text-xs sm:text-sm" onClick={onOpenCreate} data-testid="admin-users-create-button">
         <Plus size={14} className="mr-1" /> Nouvel utilisateur
       </Button>
     </div>

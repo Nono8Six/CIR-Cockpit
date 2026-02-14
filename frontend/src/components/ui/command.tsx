@@ -26,10 +26,15 @@ const Command = React.forwardRef<
 ))
 Command.displayName = CommandPrimitive.displayName
 
-const CommandDialog = ({ children, ...props }: DialogProps) => {
+type CommandDialogProps = DialogProps & {
+  className?: string
+  overlayClassName?: string
+}
+
+const CommandDialog = ({ children, className, overlayClassName, ...props }: CommandDialogProps) => {
   return (
     <Dialog {...props}>
-      <DialogContent className="overflow-hidden p-0">
+      <DialogContent className={cn("overflow-hidden p-0", className)} overlayClassName={overlayClassName}>
         <DialogTitle className="sr-only">Palette de commandes</DialogTitle>
         <DialogDescription className="sr-only">
           Rechercher rapidement des elements et executer une action.
@@ -73,6 +78,19 @@ const CommandList = React.forwardRef<
 ))
 
 CommandList.displayName = CommandPrimitive.List.displayName
+
+const CommandLoading = React.forwardRef<
+  React.ElementRef<typeof CommandPrimitive.Loading>,
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Loading>
+>(({ className, ...props }, ref) => (
+  <CommandPrimitive.Loading
+    ref={ref}
+    className={cn("py-6 text-center text-sm text-muted-foreground", className)}
+    {...props}
+  />
+))
+
+CommandLoading.displayName = CommandPrimitive.Loading.displayName
 
 const CommandEmpty = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Empty>,
@@ -152,6 +170,7 @@ export {
   CommandDialog,
   CommandInput,
   CommandList,
+  CommandLoading,
   CommandEmpty,
   CommandGroup,
   CommandItem,

@@ -18,10 +18,11 @@ const parseEdgeResponse = <T extends EdgeFunctionResponse>(payload: unknown): T 
 };
 
 export const invokeAdminFunction = <T extends EdgeFunctionResponse>(functionName: string, payload: Record<string, unknown>, fallbackMessage: string): ResultAsync<T, AppError> => {
-  const path = FUNCTION_PATHS[functionName];
-  if (!path) {
+  const apiPath = FUNCTION_PATHS[functionName];
+  if (!apiPath) {
     const error = createAppError({ code: 'CONFIG_INVALID', message: fallbackMessage, source: 'client' });
     return safeAsync(Promise.reject(error), () => error);
   }
-  return safeApiCall(safeInvoke(path, payload, parseEdgeResponse<T>), fallbackMessage);
+
+  return safeApiCall(safeInvoke(apiPath, payload, parseEdgeResponse<T>), fallbackMessage);
 };

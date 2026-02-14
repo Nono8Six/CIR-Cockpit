@@ -2,9 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { saveClient, ClientPayload } from '@/services/clients/saveClient';
 import { clientsKey, entitySearchIndexKey } from '@/services/query/queryKeys';
-import { normalizeError } from '@/services/errors/normalizeError';
-import { notifyError } from '@/services/errors/notify';
-import { reportError } from '@/services/errors/reportError';
+import { handleUiError } from '@/services/errors/handleUiError';
 
 export const useSaveClient = (agencyId: string | null, includeArchived: boolean) => {
   const queryClient = useQueryClient();
@@ -25,10 +23,10 @@ export const useSaveClient = (agencyId: string | null, includeArchived: boolean)
         queryKey: entitySearchIndexKey(agencyId, includeArchived)
       });
     },
-    onError: (err) => {
-      const appError = normalizeError(err, "Impossible d'enregistrer le client.");
-      reportError(appError, { source: 'useSaveClient' });
-      notifyError(appError);
+    onError: (error) => {
+      handleUiError(error, "Impossible d'enregistrer le client.", {
+        source: 'useSaveClient.onError'
+      });
     }
   });
 };

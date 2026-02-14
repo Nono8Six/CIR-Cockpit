@@ -19,6 +19,7 @@ const Dashboard = ({ interactions, statuses, agencyId, onRequestConvert }: Dashb
     searchTerm,
     selectedInteraction,
     period,
+    periodErrorMessage,
     effectiveStartDate,
     effectiveEndDate,
     filteredData,
@@ -30,6 +31,7 @@ const Dashboard = ({ interactions, statuses, agencyId, onRequestConvert }: Dashb
     setSearchTerm,
     setPeriod,
     setSelectedInteraction,
+    handleDateRangeChange,
     handleStartDateChange,
     handleEndDateChange,
     handleConvertRequest,
@@ -37,21 +39,26 @@ const Dashboard = ({ interactions, statuses, agencyId, onRequestConvert }: Dashb
   } = useDashboardState({ interactions, statuses, agencyId, onRequestConvert });
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden relative">
+    <div
+      className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
+      data-testid="dashboard-root"
+    >
       <DashboardToolbar
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         period={period}
         onPeriodChange={setPeriod}
+        periodErrorMessage={periodErrorMessage}
         effectiveStartDate={effectiveStartDate}
         effectiveEndDate={effectiveEndDate}
+        onDateRangeChange={handleDateRangeChange}
         onStartDateChange={handleStartDateChange}
         onEndDateChange={handleEndDateChange}
         searchTerm={searchTerm}
         onSearchTermChange={setSearchTerm}
       />
 
-      <div className="flex-1 overflow-hidden p-0 relative bg-slate-50">
+      <div className="relative flex-1 min-h-0 bg-slate-50">
         {viewMode === 'kanban' && kanbanColumns && (
           <DashboardKanban
             columns={kanbanColumns}

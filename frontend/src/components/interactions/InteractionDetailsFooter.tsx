@@ -28,7 +28,7 @@ const InteractionDetailsFooter = ({
   onSubmit,
   isSubmitDisabled
 }: InteractionDetailsFooterProps) => (
-  <div className="bg-slate-50 border-t border-slate-200 p-4 shrink-0">
+  <footer className="shrink-0 border-t border-slate-200 bg-slate-50 px-4 py-3 sm:px-5">
     <InteractionFooterTopFields
       statusOptions={statusOptions}
       statusId={statusId}
@@ -44,10 +44,10 @@ const InteractionDetailsFooter = ({
       onSubmit={onSubmit}
       isSubmitDisabled={isSubmitDisabled}
     />
-    <div className="text-xs text-slate-400 mt-2 text-right">
-      <span className="font-bold">Ctrl + Enter</span> pour envoyer
-    </div>
-  </div>
+    <p className="mt-2 text-right text-[11px] font-medium text-slate-500">
+      <span className="font-semibold">Ctrl + Entrée</span> pour envoyer
+    </p>
+  </footer>
 );
 
 export default InteractionDetailsFooter;

@@ -1,4 +1,7 @@
 import type { Entity } from '@/types';
+import { Building2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { CommandGroup, CommandItem } from '@/components/ui/command';
 import { formatClientNumber } from '@/utils/clients/formatClientNumber';
 
 type AppSearchClientsSectionProps = {
@@ -10,33 +13,32 @@ const AppSearchClientsSection = ({ clients, onFocusClient }: AppSearchClientsSec
   if (clients.length === 0) return null;
 
   return (
-    <div className="space-y-1">
-      <div className="px-2 py-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-        Clients
-      </div>
+    <CommandGroup heading="Clients">
       {clients.map((client) => (
-        <button
+        <CommandItem
           key={client.id}
-          type="button"
-          className="w-full flex items-center justify-between p-2.5 rounded-lg hover:bg-slate-50 text-left transition-colors"
-          onClick={() => onFocusClient(client.id)}
+          value={`${client.name} ${client.client_number ?? ''} ${client.city ?? ''}`}
+          onSelect={() => onFocusClient(client.id)}
+          className="gap-3 px-3 py-2"
+          data-testid={`app-search-client-${client.id}`}
         >
-          <div className="flex flex-col gap-0.5">
-            <span className="font-medium text-slate-900 text-sm">{client.name}</span>
-            <span className="text-xs text-slate-500">
+          <Building2 className="size-4 text-slate-500" aria-hidden="true" />
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="truncate text-sm font-medium text-slate-900">{client.name}</span>
+            <span className="truncate text-xs text-slate-500">
               {client.client_number
                 ? `${formatClientNumber(client.client_number)} • ${client.city ?? ''}`
                 : client.city}
             </span>
           </div>
           {client.archived_at && (
-            <span className="text-xs uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-1 rounded">
+            <Badge variant="warning" density="dense" className="shrink-0 uppercase tracking-wide">
               Archivé
-            </span>
+            </Badge>
           )}
-        </button>
+        </CommandItem>
       ))}
-    </div>
+    </CommandGroup>
   );
 };
 

@@ -1,6 +1,6 @@
 const SettingsReadOnlyBanner = () => {
   return (
-    <div className="bg-amber-50 text-amber-700 text-xs font-medium px-6 py-2 border-b border-amber-100">
+    <div className="border-b border-amber-100 bg-amber-50 px-4 py-2 text-xs font-medium text-amber-700 sm:px-6" data-testid="settings-read-only-banner">
       Mode lecture seule: les modifications sont reservees aux super_admin.
     </div>
   );

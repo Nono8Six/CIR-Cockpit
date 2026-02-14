@@ -22,21 +22,28 @@ const PASSWORD_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 const PASSWORD_DEFAULT_LENGTH = 12;
 const BANNED_UNTIL = '9999-12-31T00:00:00.000Z';
 
-export const normalizeDisplayName = (value?: string): string | undefined => {
+export const normalizePersonName = (value?: string): string | undefined => {
   if (value === undefined) return undefined;
   const trimmed = value.trim();
   return trimmed ? trimmed : undefined;
 };
 
+export const buildDisplayName = (lastName?: string, firstName?: string): string | undefined => {
+  const normalizedLastName = normalizePersonName(lastName);
+  const normalizedFirstName = normalizePersonName(firstName);
+  const displayName = [normalizedLastName, normalizedFirstName].filter(Boolean).join(' ').trim();
+  return displayName || undefined;
+};
+
 export const validatePasswordPolicy = (password: string): void => {
   if (password.length < 8) {
-    throw httpError(400, 'PASSWORD_TOO_SHORT', 'Password must be at least 8 characters');
+    throw httpError(400, 'PASSWORD_TOO_SHORT', 'Le mot de passe doit contenir au moins 8 caracteres.');
   }
   if (!/\d/.test(password)) {
-    throw httpError(400, 'PASSWORD_REQUIRES_DIGIT', 'Password must include a digit');
+    throw httpError(400, 'PASSWORD_REQUIRES_DIGIT', 'Le mot de passe doit contenir au moins un chiffre.');
   }
   if (!/[^a-zA-Z0-9]/.test(password)) {
-    throw httpError(400, 'PASSWORD_REQUIRES_SYMBOL', 'Password must include a symbol');
+    throw httpError(400, 'PASSWORD_REQUIRES_SYMBOL', 'Le mot de passe doit contenir au moins un symbole.');
   }
 };
 
@@ -95,14 +102,14 @@ const ensureAgenciesExist = async (db: DbClient, agencyIds: string[]): Promise<v
     .in('id', agencyIds);
 
   if (error) {
-    throw httpError(500, 'AGENCY_LOOKUP_FAILED', 'Failed to validate agency_ids');
+    throw httpError(500, 'AGENCY_LOOKUP_FAILED', 'Impossible de valider les agences.');
   }
 
   const existing = new Set((data ?? []).map((row) => row.id));
   const missing = agencyIds.filter((id) => !existing.has(id));
 
   if (missing.length > 0) {
-    throw httpError(400, 'AGENCY_NOT_FOUND', `agency_id not found: ${missing.join(', ')}`);
+    throw httpError(400, 'AGENCY_NOT_FOUND', `Agence introuvable: ${missing.join(', ')}`);
   }
 };
 
@@ -114,7 +121,7 @@ const getProfileByEmail = async (db: DbClient, email: string): Promise<ProfileSu
     .maybeSingle();
 
   if (error) {
-    throw httpError(500, 'PROFILE_LOOKUP_FAILED', 'Failed to lookup profile');
+    throw httpError(500, 'PROFILE_LOOKUP_FAILED', 'Impossible de charger le profil.');
   }
 
   return data ?? null;
@@ -128,7 +135,7 @@ const getProfileById = async (db: DbClient, userId: string): Promise<ProfileSumm
     .maybeSingle();
 
   if (error) {
-    throw httpError(500, 'PROFILE_LOOKUP_FAILED', 'Failed to lookup profile');
+    throw httpError(500, 'PROFILE_LOOKUP_FAILED', 'Impossible de charger le profil.');
   }
 
   return data ?? null;
@@ -143,7 +150,7 @@ const ensureProfileAvailable = async (db: DbClient, userId: string): Promise<Pro
     if (profile) return profile;
     await wait(150);
   }
-  throw httpError(500, 'PROFILE_CREATE_FAILED', 'Profile was not created after user creation');
+  throw httpError(500, 'PROFILE_CREATE_FAILED', "Le profil n'a pas ete cree apres la creation utilisateur.");
 };
 
 const updateProfile = async (
@@ -173,7 +180,7 @@ const listMemberships = async (db: DbClient, userId: string): Promise<string[]> 
     .eq('user_id', userId);
 
   if (error) {
-    throw httpError(500, 'MEMBERSHIP_LOOKUP_FAILED', 'Failed to list memberships');
+    throw httpError(500, 'MEMBERSHIP_LOOKUP_FAILED', 'Impossible de charger les appartenances.');
   }
 
   return (data ?? []).map((row) => row.agency_id);
@@ -223,15 +230,18 @@ const applyMemberships = async (
       return [];
     }
 
-    const inFilter = `(${agencyIds.map((id) => `"${id}"`).join(',')})`;
-    const { error } = await db
-      .from('agency_members')
-      .delete()
-      .eq('user_id', userId)
-      .not('agency_id', 'in', inFilter);
+    const currentIds = await listMemberships(db, userId);
+    const toDelete = currentIds.filter((id) => !agencyIds.includes(id));
+    if (toDelete.length > 0) {
+      const { error } = await db
+        .from('agency_members')
+        .delete()
+        .eq('user_id', userId)
+        .in('agency_id', toDelete);
 
-    if (error) {
-      throw httpError(500, 'MEMBERSHIP_DELETE_FAILED', error.message);
+      if (error) {
+        throw httpError(500, 'MEMBERSHIP_DELETE_FAILED', error.message);
+      }
     }
   }
 
@@ -241,7 +251,7 @@ const applyMemberships = async (
 const ensureUserExists = async (db: DbClient, userId: string): Promise<ProfileSummary> => {
   const profile = await getProfileById(db, userId);
   if (!profile) {
-    throw httpError(404, 'USER_NOT_FOUND', 'User not found');
+    throw httpError(404, 'USER_NOT_FOUND', 'Utilisateur introuvable.');
   }
   return profile;
 };
@@ -249,7 +259,8 @@ const ensureUserExists = async (db: DbClient, userId: string): Promise<ProfileSu
 const createUserAccount = async (
   db: DbClient,
   email: string,
-  displayName?: string,
+  firstName: string,
+  lastName: string,
   password?: string
 ): Promise<{ userId: string; state: 'created' | 'existing' }> => {
   const existing = await getProfileByEmail(db, email);
@@ -257,7 +268,12 @@ const createUserAccount = async (
     return { userId: existing.id, state: 'existing' };
   }
 
-  const userMetadata = displayName ? { full_name: displayName } : undefined;
+  const displayName = buildDisplayName(lastName, firstName);
+  const userMetadata = {
+    first_name: firstName,
+    last_name: lastName,
+    full_name: displayName
+  };
   const { data, error } = await getSupabaseAdmin().auth.admin.createUser({
     email,
     password,
@@ -266,7 +282,7 @@ const createUserAccount = async (
   });
 
   if (error || !data?.user) {
-    throw httpError(400, 'USER_CREATE_FAILED', error?.message ?? 'Failed to create user');
+    throw httpError(400, 'USER_CREATE_FAILED', error?.message ?? "Impossible de creer l'utilisateur.");
   }
 
   const profile = await ensureProfileAvailable(db, data.user.id);
@@ -299,13 +315,19 @@ export const handleAdminUsersAction = async (
 ): Promise<Record<string, unknown>> => {
   const allowed = await checkRateLimit('admin-users', callerId);
   if (!allowed) {
-    throw httpError(429, 'RATE_LIMITED', 'Too many requests');
+    throw httpError(429, 'RATE_LIMITED', 'Trop de requetes. Reessayez plus tard.');
   }
 
   switch (data.action) {
     case 'create': {
       const email = data.email;
-      const displayName = normalizeDisplayName(data.display_name);
+      const firstName = normalizePersonName(data.first_name);
+      const lastName = normalizePersonName(data.last_name);
+      if (!firstName || !lastName) {
+        throw httpError(400, 'INVALID_PAYLOAD', 'Nom et prenom requis.');
+      }
+
+      const displayName = buildDisplayName(lastName, firstName);
       const roleForCreate: UserRole = data.role ?? 'tcs';
       const agencyIds = normalizeAgencyIds(data.agency_ids);
       const { password, generated } = ensurePassword(data.password);
@@ -314,9 +336,11 @@ export const handleAdminUsersAction = async (
         await ensureAgenciesExist(db, agencyIds);
       }
 
-      const { userId, state } = await createUserAccount(db, email, displayName, password);
+      const { userId, state } = await createUserAccount(db, email, firstName, lastName, password);
 
       const updates: Partial<Database['public']['Tables']['profiles']['Update']> = {
+        first_name: firstName,
+        last_name: lastName,
         display_name: displayName,
         must_change_password: state === 'created' ? true : undefined
       };
@@ -393,6 +417,6 @@ export const handleAdminUsersAction = async (
       return { request_id: requestId, ok: true, user_id: userId, archived: false };
     }
     default:
-      throw httpError(400, 'ACTION_REQUIRED', 'action is required');
+      throw httpError(400, 'ACTION_REQUIRED', 'Action requise.');
   }
 };

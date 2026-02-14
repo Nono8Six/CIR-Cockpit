@@ -1,4 +1,4 @@
-import type { AgencyStatus, Interaction } from '@/types';
+import type { AgencyStatus, Interaction, StatusCategory } from '@/types';
 import { isBeforeNow } from '@/utils/date/isBeforeNow';
 import type { InteractionCardComputedState } from './InteractionCard.types';
 
@@ -13,14 +13,16 @@ export const getInteractionCardState = (
       : false;
 
   const isLate = data.reminder_at ? isBeforeNow(data.reminder_at) && !isDone : false;
+  const isTodo = Boolean(statusMeta?.category === 'todo' || statusMeta?.is_default);
   const statusLabel = statusMeta?.label ?? data.status;
+  const statusTone: StatusCategory = isDone ? 'done' : isTodo || isLate ? 'todo' : 'in_progress';
 
-  let statusClass = 'border-l-orange-400';
-  if (isLate || statusMeta?.category === 'todo' || statusMeta?.is_default) {
-    statusClass = 'border-l-red-500';
-  } else if (isDone) {
-    statusClass = 'border-l-emerald-500 opacity-60 hover:opacity-100';
-  }
+  const statusClass =
+    statusTone === 'todo'
+      ? 'border-red-300 border-l-4'
+      : statusTone === 'done'
+        ? 'border-emerald-300 border-l-4'
+        : 'border-amber-300 border-l-4';
 
-  return { isDone, isLate, statusLabel, statusClass };
+  return { isDone, isLate, statusTone, statusLabel, statusClass };
 };

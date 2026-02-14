@@ -1,4 +1,10 @@
-import { ChevronDown } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
 
 type InteractionFooterStatusSelectProps = {
   statusOptions: { id: string; label: string }[];
@@ -11,26 +17,30 @@ const InteractionFooterStatusSelect = ({
   statusId,
   onStatusChange
 }: InteractionFooterStatusSelectProps) => (
-  <div className="col-span-4">
-    <label htmlFor="interaction-status" className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 block">
-      Nouveau Statut
+  <div className="sm:col-span-2 lg:col-span-4">
+    <label
+      htmlFor="interaction-status-select"
+      className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+    >
+      Nouveau statut
     </label>
-    <div className="relative">
-      <select
-        id="interaction-status"
-        value={statusId}
-        onChange={(event) => onStatusChange(event.target.value)}
-        className="w-full text-xs font-semibold bg-white border border-slate-300 rounded-md py-2 pl-2 pr-6 focus:border-cir-red focus:outline-none appearance-none truncate"
-        name="interaction-status"
+    <Select value={statusId} onValueChange={onStatusChange}>
+      <SelectTrigger
+        id="interaction-status-select"
+        density="comfortable"
+        className="h-9 bg-white text-sm"
+        data-testid="interaction-details-status-select"
       >
+        <SelectValue placeholder="Selectionner un statut" />
+      </SelectTrigger>
+      <SelectContent>
         {statusOptions.map((option) => (
-          <option key={option.id} value={option.id}>
+          <SelectItem key={option.id} value={option.id}>
             {option.label}
-          </option>
+          </SelectItem>
         ))}
-      </select>
-      <ChevronDown size={14} className="absolute right-2 top-2.5 text-slate-400 pointer-events-none" />
-    </div>
+      </SelectContent>
+    </Select>
   </div>
 );
 

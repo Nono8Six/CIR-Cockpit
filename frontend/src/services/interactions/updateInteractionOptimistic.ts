@@ -1,45 +1,32 @@
-import { Interaction, InteractionUpdate } from '@/types';
+import { Interaction, InteractionUpdate, TimelineEvent } from '@/types';
+import { safeInvoke } from '@/services/api/client';
 import { createAppError } from '@/services/errors/AppError';
-import { mapPostgrestError } from '@/services/errors/mapPostgrestError';
-import { requireSupabaseClient } from '@/services/supabase/requireSupabaseClient';
+import { isRecord } from '@/utils/recordNarrowing';
 import { hydrateTimeline } from './hydrateTimeline';
+
+const parseInteractionResponse = (payload: unknown): Interaction => {
+  if (!isRecord(payload) || !isRecord(payload.interaction)) {
+    throw createAppError({ code: 'REQUEST_FAILED', message: 'Reponse serveur invalide.', source: 'edge' });
+  }
+  return hydrateTimeline(payload.interaction as Interaction);
+};
 
 export const updateInteractionOptimistic = async (
   interactionId: string,
   expectedUpdatedAt: string,
-  updates: InteractionUpdate
+  event: TimelineEvent,
+  updates?: InteractionUpdate
 ): Promise<Interaction> => {
-  if (!expectedUpdatedAt) {
-    throw createAppError({
-      code: 'CONFLICT',
-      message: "La version du dossier est indisponible. Rechargez et reessayez.",
-      source: 'client'
-    });
-  }
-
-  const supabase = requireSupabaseClient();
-  const { data, error, status } = await supabase
-    .from('interactions')
-    .update(updates)
-    .eq('id', interactionId)
-    .eq('updated_at', expectedUpdatedAt)
-    .select('*');
-
-  if (error) {
-    throw mapPostgrestError(error, {
-      operation: 'write',
-      resource: "l'interaction",
-      status
-    });
-  }
-
-  if (!data || data.length === 0) {
-    throw createAppError({
-      code: 'CONFLICT',
-      message: 'Ce dossier a ete modifie par un autre utilisateur. Rechargez pour continuer.',
-      source: 'db'
-    });
-  }
-
-  return hydrateTimeline(data[0]);
+  return safeInvoke('/data/interactions', {
+    action: 'add_timeline_event',
+    interaction_id: interactionId,
+    expected_updated_at: expectedUpdatedAt,
+    event: {
+      type: event.type,
+      content: event.content,
+      author: event.author,
+      date: event.date
+    },
+    updates
+  }, parseInteractionResponse);
 };

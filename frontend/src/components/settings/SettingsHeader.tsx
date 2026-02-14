@@ -1,4 +1,5 @@
 import { RotateCcw, Save } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 type SettingsHeaderProps = {
   readOnly: boolean;
@@ -9,29 +10,34 @@ type SettingsHeaderProps = {
 
 const SettingsHeader = ({ readOnly, isSaving, onReset, onSave }: SettingsHeaderProps) => {
   return (
-    <div className="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center shrink-0">
-      <h2 className="font-semibold text-slate-800 text-lg">Parametrage Agence</h2>
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={onReset}
-          className="flex items-center gap-2 text-xs bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 px-3 py-2 rounded-md transition font-medium"
-        >
-          <RotateCcw size={14} /> Recharger
-        </button>
-        <button
-          type="button"
-          onClick={onSave}
-          className={`flex items-center gap-2 text-sm px-4 py-2 rounded-md font-semibold transition shadow-sm ${
-            readOnly || isSaving
-              ? 'bg-slate-300 text-slate-600 cursor-not-allowed'
-              : 'bg-cir-red hover:bg-red-700 text-white'
-          }`}
-          disabled={readOnly || isSaving}
-          aria-disabled={readOnly || isSaving}
-        >
-          <Save size={16} /> {isSaving ? 'Enregistrement...' : 'Enregistrer'}
-        </button>
+    <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-3 sm:px-6 sm:py-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-base font-semibold text-slate-800 sm:text-lg">Parametrage agence</h2>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onReset}
+            className="h-9 text-xs sm:text-sm"
+          >
+            <RotateCcw size={14} className="mr-1" /> Recharger
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            onClick={onSave}
+            className="h-9 text-xs sm:text-sm"
+            disabled={readOnly || isSaving}
+            aria-disabled={readOnly || isSaving}
+            data-testid="settings-save-button"
+          >
+            <Save size={15} className="mr-1" /> {isSaving ? 'Enregistrement...' : 'Enregistrer'}
+          </Button>
+        </div>
+      </div>
+      <div className="sr-only" aria-live="polite">
+        {isSaving ? 'Enregistrement en cours.' : 'Aucun enregistrement en cours.'}
       </div>
     </div>
   );

@@ -28,7 +28,7 @@ const AuditLogsPanel = ({ userRole }: AuditLogsPanelProps) => {
   } = useAuditLogsPanel(userRole);
 
   return (
-    <div className="bg-white border border-slate-200 rounded-lg shadow-sm p-5 space-y-4">
+    <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-5" data-testid="admin-audit-panel">
       <AuditLogsHeader />
 
       <AuditLogsFilters
@@ -50,7 +50,14 @@ const AuditLogsPanel = ({ userRole }: AuditLogsPanelProps) => {
         onToDateChange={setToDate}
       />
 
-      <AuditLogsTable logs={logs} isLoading={auditQuery.isLoading} />
+      <AuditLogsTable
+        logs={logs}
+        isLoading={auditQuery.isLoading}
+        isError={auditQuery.isError}
+        onRetry={() => {
+          void auditQuery.refetch();
+        }}
+      />
     </div>
   );
 };

@@ -1,4 +1,6 @@
 import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 type ConfigSectionAddRowProps = {
   newItem: string;
@@ -19,29 +21,31 @@ const ConfigSectionAddRow = ({
   uppercase,
   readOnly
 }: ConfigSectionAddRowProps) => (
-  <div className="flex gap-2 mb-4">
-    <input
+  <div className="mb-4 flex flex-col gap-2 sm:flex-row">
+    <Input
       type="text"
       value={newItem}
       onChange={(event) => setNewItem(event.target.value)}
       onKeyDown={(event) => event.key === 'Enter' && !readOnly && onAdd()}
-      className={`flex-1 border border-slate-200 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-slate-300 focus:outline-none ${uppercase ? 'uppercase' : ''} ${readOnly ? 'bg-slate-50 text-slate-400' : ''}`}
+      className={`h-9 flex-1 border-slate-200 bg-white text-sm ${uppercase ? 'uppercase' : ''} ${readOnly ? 'text-slate-400' : ''}`}
       placeholder={placeholder}
       disabled={readOnly}
       name={`${namePrefix}-new`}
       aria-label={placeholder}
       autoComplete="off"
+      data-testid={`${namePrefix}-add-input`}
     />
-    <button
+    <Button
       type="button"
       onClick={onAdd}
-      className={`bg-cir-red text-white p-2 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cir-red/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${readOnly ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-700'}`}
+      className="h-9 px-3 sm:px-4"
       disabled={readOnly}
       aria-disabled={readOnly}
       aria-label="Ajouter un élément"
+      data-testid={`${namePrefix}-add-button`}
     >
-      <Plus size={18} />
-    </button>
+      <Plus size={16} className="mr-1" /> Ajouter
+    </Button>
   </div>
 );
 

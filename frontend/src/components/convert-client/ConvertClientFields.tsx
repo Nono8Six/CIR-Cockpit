@@ -3,6 +3,13 @@ import type { FieldErrors, UseFormRegisterReturn } from 'react-hook-form';
 
 import type { ConvertClientValues } from '../../../../shared/schemas/convert-client.schema';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
 
 type ConvertClientFieldsProps = {
   clientNumber: string;
@@ -12,6 +19,10 @@ type ConvertClientFieldsProps = {
   errors: FieldErrors<ConvertClientValues>;
   onClientNumberChange: (event: ChangeEvent<HTMLInputElement>) => void;
 };
+
+const buildFieldChangeEvent = (name: string, value: string) => ({
+  target: { name, value }
+});
 
 const ConvertClientFields = ({
   clientNumber,
@@ -34,7 +45,6 @@ const ConvertClientFields = ({
           onChange={onClientNumberChange}
           placeholder="Ex: 000123"
           inputMode="numeric"
-          autoFocus
         />
         {errors.client_number && (
           <p className="text-xs text-red-600 mt-1">{errors.client_number.message}</p>
@@ -44,15 +54,31 @@ const ConvertClientFields = ({
         <label className="text-xs font-medium text-slate-500" htmlFor="convert-account-type">
           Type de compte
         </label>
-        <select
-          id="convert-account-type"
-          {...accountTypeField}
+        <input
+          type="hidden"
+          name={accountTypeField.name}
+          ref={accountTypeField.ref}
           value={accountType}
-          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+          onChange={accountTypeField.onChange}
+          onBlur={accountTypeField.onBlur}
+        />
+        <Select
+          value={accountType}
+          onValueChange={(value) => accountTypeField.onChange(buildFieldChangeEvent(accountTypeField.name, value))}
+          name={accountTypeField.name}
         >
-          <option value="term">Compte a terme</option>
-          <option value="cash">Comptant</option>
-        </select>
+          <SelectTrigger
+            id="convert-account-type"
+            onBlur={accountTypeField.onBlur}
+            aria-invalid={Boolean(errors.account_type)}
+          >
+            <SelectValue placeholder="Selectionner un type de compte" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="term">Compte a terme</SelectItem>
+            <SelectItem value="cash">Comptant</SelectItem>
+          </SelectContent>
+        </Select>
         {errors.account_type && (
           <p className="text-xs text-red-600 mt-1">{errors.account_type.message}</p>
         )}

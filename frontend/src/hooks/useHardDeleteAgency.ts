@@ -2,9 +2,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { adminAgenciesHardDelete } from '@/services/admin/adminAgenciesHardDelete';
 import { agenciesKey } from '@/services/query/queryKeys';
-import { normalizeError } from '@/services/errors/normalizeError';
-import { notifyError } from '@/services/errors/notify';
-import { reportError } from '@/services/errors/reportError';
+import { handleUiError } from '@/services/errors/handleUiError';
+import { mapAdminDomainError } from '@/services/errors/mapAdminDomainError';
 
 export const useHardDeleteAgency = () => {
   const queryClient = useQueryClient();
@@ -22,9 +21,11 @@ export const useHardDeleteAgency = () => {
       queryClient.invalidateQueries({ queryKey: agenciesKey(false) });
     },
     onError: (err) => {
-      const appError = normalizeError(err, "Impossible de supprimer l'agence.");
-      reportError(appError, { source: 'useHardDeleteAgency' });
-      notifyError(appError);
+      const appError = mapAdminDomainError(err, {
+        action: 'delete_agency',
+        fallbackMessage: "Impossible de supprimer l'agence."
+      });
+      handleUiError(appError, appError.message, { source: 'useHardDeleteAgency' });
     }
   });
 };

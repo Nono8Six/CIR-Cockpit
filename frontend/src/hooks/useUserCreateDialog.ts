@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 
-import { Agency, UserRole } from '@/types';
+import { UserRole } from '@/types';
 import { CreateAdminUserPayload } from '@/services/admin/adminUsersCreate';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -13,22 +13,22 @@ type UseUserCreateDialogParams = {
 
 export const useUserCreateDialog = ({ onCreate, onOpenChange }: UseUserCreateDialogParams) => {
   const [email, setEmail] = useState('');
-  const [displayName, setDisplayName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [role, setRole] = useState<UserRole>('tcs');
   const [password, setPassword] = useState('');
   const [agencyIds, setAgencyIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const canSubmit = useMemo(() => Boolean(email.trim()), [email]);
+  const canSubmit = useMemo(
+    () => Boolean(email.trim() && firstName.trim() && lastName.trim()),
+    [email, firstName, lastName]
+  );
 
-  const handleToggleAgency = (agency: Agency) => {
-    setAgencyIds(prev =>
-      prev.includes(agency.id)
-        ? prev.filter(id => id !== agency.id)
-        : [...prev, agency.id]
-    );
-  };
+  const handleAgencyIdsChange = useCallback((nextAgencyIds: string[]) => {
+    setAgencyIds(Array.from(new Set(nextAgencyIds)));
+  }, []);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -37,31 +37,44 @@ export const useUserCreateDialog = ({ onCreate, onOpenChange }: UseUserCreateDia
       setError('Email invalide.');
       return;
     }
+    if (!firstName.trim() || !lastName.trim()) {
+      setError('Nom et prenom requis.');
+      return;
+    }
     if (role === 'tcs' && agencyIds.length === 0) {
       setError('Un utilisateur TCS doit etre assigne a au moins une agence.');
       return;
     }
     setError(null);
     setIsSubmitting(true);
-    await onCreate({
-      email: normalizedEmail,
-      display_name: displayName.trim() || undefined,
-      role,
-      agency_ids: agencyIds,
-      password: password.trim() || undefined
-    });
-    setIsSubmitting(false);
-    setEmail('');
-    setDisplayName('');
-    setPassword('');
-    setRole('tcs');
-    setAgencyIds([]);
-    onOpenChange(false);
+    const normalizedFirstName = firstName.trim();
+    const normalizedLastName = lastName.trim();
+
+    try {
+      await onCreate({
+        email: normalizedEmail,
+        first_name: normalizedFirstName,
+        last_name: normalizedLastName,
+        role,
+        agency_ids: agencyIds,
+        password: password.trim() || undefined
+      });
+      setEmail('');
+      setFirstName('');
+      setLastName('');
+      setPassword('');
+      setRole('tcs');
+      setAgencyIds([]);
+      onOpenChange(false);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return {
     email,
-    displayName,
+    firstName,
+    lastName,
     role,
     password,
     agencyIds,
@@ -69,10 +82,11 @@ export const useUserCreateDialog = ({ onCreate, onOpenChange }: UseUserCreateDia
     isSubmitting,
     canSubmit,
     setEmail,
-    setDisplayName,
+    setFirstName,
+    setLastName,
     setRole,
     setPassword,
-    handleToggleAgency,
+    handleAgencyIdsChange,
     handleSubmit
   };
 };

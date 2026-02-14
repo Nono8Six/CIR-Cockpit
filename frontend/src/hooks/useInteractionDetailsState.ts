@@ -4,7 +4,15 @@ import type { AgencyStatus, Interaction, InteractionUpdate, TimelineEvent } from
 import { isProspectRelationValue } from '@/constants/relations';
 import { buildInteractionEvents } from '@/utils/interactions/buildInteractionEvents';
 
-type InteractionDetailsStateInput = { interaction: Interaction; statuses: AgencyStatus[]; onUpdate: (interaction: Interaction, event: TimelineEvent, updates?: InteractionUpdate) => void };
+type InteractionDetailsStateInput = {
+  interaction: Interaction;
+  statuses: AgencyStatus[];
+  onUpdate: (
+    interaction: Interaction,
+    event: TimelineEvent,
+    updates?: InteractionUpdate
+  ) => Promise<void> | void;
+};
 
 export const useInteractionDetailsState = ({ interaction, statuses, onUpdate }: InteractionDetailsStateInput) => {
   const [note, setNote] = useState(''); const [statusId, setStatusId] = useState(interaction.status_id ?? ''); const [reminder, setReminder] = useState(interaction.reminder_at || ''); const [orderRef, setOrderRef] = useState(interaction.order_ref || ''); const scrollRef = useRef<HTMLDivElement>(null);

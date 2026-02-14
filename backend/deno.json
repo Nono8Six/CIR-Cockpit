@@ -2,6 +2,7 @@
   "nodeModulesDir": "auto",
   "imports": {
     "zod": "npm:zod@4.3.5",
+    "zod/v4": "npm:zod@4.3.5/v4",
     "zod/": "npm:zod@4.3.5/"
   }
 }

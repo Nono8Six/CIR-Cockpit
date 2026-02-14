@@ -2,9 +2,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { adminUsersCreate, CreateAdminUserPayload } from '@/services/admin/adminUsersCreate';
 import { adminUsersKey } from '@/services/query/queryKeys';
-import { normalizeError } from '@/services/errors/normalizeError';
-import { notifyError } from '@/services/errors/notify';
-import { reportError } from '@/services/errors/reportError';
+import { handleUiError } from '@/services/errors/handleUiError';
+import { mapAdminDomainError } from '@/services/errors/mapAdminDomainError';
 
 export const useCreateAdminUser = () => {
   const queryClient = useQueryClient();
@@ -21,9 +20,11 @@ export const useCreateAdminUser = () => {
       queryClient.invalidateQueries({ queryKey: adminUsersKey() });
     },
     onError: (err) => {
-      const appError = normalizeError(err, "Impossible de creer l'utilisateur.");
-      reportError(appError, { source: 'useCreateAdminUser' });
-      notifyError(appError);
+      const appError = mapAdminDomainError(err, {
+        action: 'create_user',
+        fallbackMessage: "Impossible de creer l'utilisateur."
+      });
+      handleUiError(appError, appError.message, { source: 'useCreateAdminUser' });
     }
   });
 };

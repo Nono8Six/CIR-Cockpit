@@ -1,5 +1,6 @@
 import js from "@eslint/js";
 import globals from "globals";
+import jsxA11y from "eslint-plugin-jsx-a11y";
 import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import tseslint from "typescript-eslint";
@@ -8,6 +9,7 @@ const reactFiles = ["**/*.{jsx,tsx}"];
 const tsRecommended = tseslint.configs.recommended;
 const reactRecommended = react.configs.flat.recommended;
 const reactJsxRuntime = react.configs.flat["jsx-runtime"];
+const jsxA11yRecommended = jsxA11y.flatConfigs.recommended;
 
 export default [
   {
@@ -75,12 +77,34 @@ export default [
     settings: {
       react: {
         version: "detect"
+      },
+      "jsx-a11y": {
+        components: {
+          Input: "input",
+          Textarea: "textarea",
+          SelectTrigger: "select"
+        }
       }
     }
   },
   {
     ...reactJsxRuntime,
     files: reactFiles
+  },
+  {
+    ...jsxA11yRecommended,
+    files: reactFiles,
+    languageOptions: {
+      ...jsxA11yRecommended.languageOptions,
+      globals: {
+        ...globals.browser
+      }
+    },
+    rules: {
+      ...jsxA11yRecommended.rules,
+      // Faux positifs frequents avec les wrappers shadcn/radix et libelles de groupes.
+      "jsx-a11y/label-has-associated-control": "off"
+    }
   },
   {
     files: reactFiles,
@@ -90,7 +114,9 @@ export default [
     rules: {
       ...reactHooks.configs.recommended.rules,
       "react-hooks/set-state-in-effect": "off",
-      "react-hooks/preserve-manual-memoization": "off"
+      "react-hooks/preserve-manual-memoization": "off",
+      // Pattern RHF `register()` volontaire sur certains champs custom.
+      "react-hooks/refs": "off"
     }
   }
 ];

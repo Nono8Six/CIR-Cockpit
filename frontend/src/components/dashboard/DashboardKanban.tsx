@@ -13,10 +13,18 @@ type DashboardKanbanProps = {
   getStatusMeta: (interaction: Interaction) => AgencyStatus | undefined;
 };
 
-const DashboardKanban = ({ columns, onSelectInteraction, getStatusMeta }: DashboardKanbanProps) => (
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full p-6 overflow-hidden">
+const DashboardKanban = ({
+  columns,
+  onSelectInteraction,
+  getStatusMeta
+}: DashboardKanbanProps) => (
+  <div
+    className="grid h-full min-h-0 grid-cols-1 gap-3 overflow-x-hidden p-3 sm:p-4 lg:grid-cols-2 xl:grid-cols-3"
+    data-testid="dashboard-kanban"
+  >
     <KanbanColumn
-      title="A Traiter / Urgent"
+      columnId="urgencies"
+      title="A traiter / urgent"
       dotClassName="bg-red-500"
       interactions={columns.urgencies}
       emptyLabel="Tout est a jour."
@@ -24,15 +32,17 @@ const DashboardKanban = ({ columns, onSelectInteraction, getStatusMeta }: Dashbo
       getStatusMeta={getStatusMeta}
     />
     <KanbanColumn
-      title="En Cours / Attente"
-      dotClassName="bg-orange-400"
+      columnId="in-progress"
+      title="En cours / attente"
+      dotClassName="bg-amber-500"
       interactions={columns.inProgress}
       emptyLabel="Aucun dossier en attente."
       onSelectInteraction={onSelectInteraction}
       getStatusMeta={getStatusMeta}
     />
     <KanbanColumn
-      title="Termines (Periode)"
+      columnId="completed"
+      title="Termines (periode)"
       dotClassName="bg-emerald-500"
       interactions={columns.completed}
       emptyLabel="Rien termine sur cette periode."

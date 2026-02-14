@@ -14,13 +14,14 @@ const AuditLogsDateRange = ({
   onToDateChange
 }: AuditLogsDateRangeProps) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-2" data-testid="admin-audit-date-range">
       <div>
         <label className="text-xs font-medium text-slate-500">Du</label>
         <Input
           type="date"
           value={fromDate}
           onChange={(event) => onFromDateChange(event.target.value)}
+          data-testid="admin-audit-date-from"
         />
       </div>
       <div>
@@ -29,6 +30,7 @@ const AuditLogsDateRange = ({
           type="date"
           value={toDate}
           onChange={(event) => onToDateChange(event.target.value)}
+          data-testid="admin-audit-date-to"
         />
       </div>
     </div>

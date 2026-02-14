@@ -4,7 +4,8 @@ import {
   handleAdminUsersAction,
   validatePasswordPolicy,
   generateTempPassword,
-  normalizeDisplayName,
+  normalizePersonName,
+  buildDisplayName,
   normalizeAgencyIds,
   ensurePassword
 } from './adminUsers.ts';
@@ -67,26 +68,36 @@ Deno.test('generateTempPassword passes password policy', () => {
   }
 });
 
-// --- normalizeDisplayName ---
+// --- normalizePersonName ---
 
-Deno.test('normalizeDisplayName trims whitespace', () => {
-  assertEquals(normalizeDisplayName('  Alice  '), 'Alice');
+Deno.test('normalizePersonName trims whitespace', () => {
+  assertEquals(normalizePersonName('  Alice  '), 'Alice');
 });
 
-Deno.test('normalizeDisplayName returns undefined for empty string', () => {
-  assertEquals(normalizeDisplayName(''), undefined);
+Deno.test('normalizePersonName returns undefined for empty string', () => {
+  assertEquals(normalizePersonName(''), undefined);
 });
 
-Deno.test('normalizeDisplayName returns undefined for whitespace-only', () => {
-  assertEquals(normalizeDisplayName('   '), undefined);
+Deno.test('normalizePersonName returns undefined for whitespace-only', () => {
+  assertEquals(normalizePersonName('   '), undefined);
 });
 
-Deno.test('normalizeDisplayName returns undefined for undefined input', () => {
-  assertEquals(normalizeDisplayName(undefined), undefined);
+Deno.test('normalizePersonName returns undefined for undefined input', () => {
+  assertEquals(normalizePersonName(undefined), undefined);
 });
 
-Deno.test('normalizeDisplayName preserves valid name', () => {
-  assertEquals(normalizeDisplayName('Bob'), 'Bob');
+Deno.test('normalizePersonName preserves valid name', () => {
+  assertEquals(normalizePersonName('Bob'), 'Bob');
+});
+
+// --- buildDisplayName ---
+
+Deno.test('buildDisplayName joins last name then first name', () => {
+  assertEquals(buildDisplayName('FERRON', 'Arnaud'), 'FERRON Arnaud');
+});
+
+Deno.test('buildDisplayName returns undefined when both values are empty', () => {
+  assertEquals(buildDisplayName('  ', ''), undefined);
 });
 
 // --- normalizeAgencyIds ---

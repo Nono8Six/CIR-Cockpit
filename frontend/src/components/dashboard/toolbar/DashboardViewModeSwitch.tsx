@@ -1,4 +1,6 @@
-import { Columns, LayoutList } from 'lucide-react';
+import { Columns3, LayoutList } from 'lucide-react';
+
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type ViewMode = 'kanban' | 'list';
 
@@ -7,33 +9,40 @@ type DashboardViewModeSwitchProps = {
   onViewModeChange: (mode: ViewMode) => void;
 };
 
-const DashboardViewModeSwitch = ({ viewMode, onViewModeChange }: DashboardViewModeSwitchProps) => {
-  return (
-    <div className="flex bg-slate-100 rounded-md p-1 gap-1 shrink-0">
-      <button
-        type="button"
-        onClick={() => onViewModeChange('kanban')}
-        className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cir-red/30 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
-          viewMode === 'kanban'
-            ? 'bg-white text-cir-red shadow-sm ring-1 ring-cir-red/20'
-            : 'text-slate-600 hover:text-cir-red hover:bg-cir-red/5'
-        }`}
+const isViewMode = (value: string): value is ViewMode => value === 'kanban' || value === 'list';
+
+const DashboardViewModeSwitch = ({
+  viewMode,
+  onViewModeChange
+}: DashboardViewModeSwitchProps) => (
+  <Tabs
+    value={viewMode}
+    onValueChange={(value) => {
+      if (isViewMode(value)) {
+        onViewModeChange(value);
+      }
+    }}
+  >
+    <TabsList
+      className="h-9 w-full rounded-md border border-slate-200 bg-slate-50 p-1 sm:w-auto"
+      data-testid="dashboard-view-mode-tabs"
+    >
+      <TabsTrigger
+        value="kanban"
+        className="h-7 flex-1 gap-1.5 px-3 text-sm data-[state=active]:bg-white data-[state=active]:text-cir-red sm:flex-none"
       >
-        <Columns size={14} /> TABLEAU
-      </button>
-      <button
-        type="button"
-        onClick={() => onViewModeChange('list')}
-        className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cir-red/30 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
-          viewMode === 'list'
-            ? 'bg-white text-cir-red shadow-sm ring-1 ring-cir-red/20'
-            : 'text-slate-600 hover:text-cir-red hover:bg-cir-red/5'
-        }`}
+        <Columns3 size={14} aria-hidden="true" />
+        Tableau
+      </TabsTrigger>
+      <TabsTrigger
+        value="list"
+        className="h-7 flex-1 gap-1.5 px-3 text-sm data-[state=active]:bg-white data-[state=active]:text-cir-red sm:flex-none"
       >
-        <LayoutList size={14} /> HISTORIQUE
-      </button>
-    </div>
-  );
-};
+        <LayoutList size={14} aria-hidden="true" />
+        Historique
+      </TabsTrigger>
+    </TabsList>
+  </Tabs>
+);
 
 export default DashboardViewModeSwitch;

@@ -3,9 +3,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminUsersSetRole } from '@/services/admin/adminUsersSetRole';
 import { adminUsersKey } from '@/services/query/queryKeys';
 import { UserRole } from '@/types';
-import { normalizeError } from '@/services/errors/normalizeError';
-import { notifyError } from '@/services/errors/notify';
-import { reportError } from '@/services/errors/reportError';
+import { handleUiError } from '@/services/errors/handleUiError';
+import { mapAdminDomainError } from '@/services/errors/mapAdminDomainError';
 
 export const useSetUserRole = () => {
   const queryClient = useQueryClient();
@@ -22,9 +21,11 @@ export const useSetUserRole = () => {
       queryClient.invalidateQueries({ queryKey: adminUsersKey() });
     },
     onError: (err) => {
-      const appError = normalizeError(err, "Impossible de mettre a jour le role.");
-      reportError(appError, { source: 'useSetUserRole' });
-      notifyError(appError);
+      const appError = mapAdminDomainError(err, {
+        action: 'update_user',
+        fallbackMessage: "Impossible de mettre a jour le role."
+      });
+      handleUiError(appError, appError.message, { source: 'useSetUserRole' });
     }
   });
 };

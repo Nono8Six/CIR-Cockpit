@@ -31,7 +31,7 @@ const AgenciesManager = () => {
   } = useAgenciesManager();
 
   return (
-    <div className="bg-white border border-slate-200 rounded-lg shadow-sm p-5 space-y-4">
+    <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-5" data-testid="admin-agencies-panel">
       <AgenciesManagerHeader
         showArchived={showArchived}
         onToggleArchived={() => setShowArchived(prev => !prev)}
@@ -43,6 +43,10 @@ const AgenciesManager = () => {
       <AgenciesManagerList
         agencies={filteredAgencies}
         isLoading={agenciesQuery.isLoading}
+        isError={agenciesQuery.isError}
+        onRetry={() => {
+          void agenciesQuery.refetch();
+        }}
         onRename={openRenameDialog}
         onToggleArchive={handleArchiveToggle}
         onDelete={handleHardDelete}

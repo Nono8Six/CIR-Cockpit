@@ -21,7 +21,7 @@ const InteractionFooterTopFields = ({
   orderRef,
   onOrderRefChange
 }: InteractionFooterTopFieldsProps) => (
-  <div className="grid grid-cols-12 gap-3 mb-4">
+  <div className="mb-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-12">
     <InteractionFooterStatusSelect
       statusOptions={statusOptions}
       statusId={statusId}

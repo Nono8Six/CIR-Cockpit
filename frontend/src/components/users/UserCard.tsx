@@ -20,22 +20,42 @@ const UserCard = ({
   onArchiveToggle,
   onRoleChange,
   onEditMemberships
-}: UserCardProps) => (
-  <div className="border border-slate-200 rounded-md p-3 flex flex-col gap-3">
+}: UserCardProps) => {
+  const identityLabel = `${user.last_name ?? ''} ${user.first_name ?? ''}`.trim()
+    || user.display_name
+    || user.email;
+
+  return (
+  <div className="flex flex-col gap-3 rounded-md border border-slate-200 p-3" data-testid={`admin-user-card-${user.id}`}>
     <div className="flex items-start justify-between gap-3">
       <div>
-        <p className="text-sm font-semibold text-slate-900">{user.display_name ?? user.email}</p>
+        <p className="text-sm font-semibold text-slate-900">{identityLabel}</p>
         <p className="text-xs text-slate-500">{user.email}</p>
         {user.archived_at && (
           <p className="text-xs text-amber-600">Archive</p>
         )}
       </div>
-      <div className="flex items-center gap-2">
-        <Button type="button" variant="outline" className="h-8 px-2" onClick={() => onResetPassword(user)}>
-          <KeyRound size={14} />
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          className="h-9 px-3 text-xs sm:text-sm"
+          onClick={() => onResetPassword(user)}
+          aria-label="Reinitialiser le mot de passe"
+          data-testid={`admin-user-reset-password-${user.id}`}
+        >
+          <KeyRound size={14} className="mr-1" /> Reinitialiser
         </Button>
-        <Button type="button" variant="outline" className="h-8 px-2" onClick={() => onArchiveToggle(user)}>
-          {user.archived_at ? <ArchiveRestore size={14} /> : <Archive size={14} />}
+        <Button
+          type="button"
+          variant="outline"
+          className="h-9 px-3 text-xs sm:text-sm"
+          onClick={() => onArchiveToggle(user)}
+          aria-label={user.archived_at ? "Restaurer l'utilisateur" : "Archiver l'utilisateur"}
+          data-testid={`admin-user-archive-toggle-${user.id}`}
+        >
+          {user.archived_at ? <ArchiveRestore size={14} className="mr-1" /> : <Archive size={14} className="mr-1" />}
+          {user.archived_at ? 'Restaurer' : 'Archiver'}
         </Button>
       </div>
     </div>
@@ -51,6 +71,7 @@ const UserCard = ({
       </div>
     </div>
   </div>
-);
+  );
+};
 
 export default UserCard;

@@ -32,7 +32,7 @@ describe('ProspectList', () => {
     expect(screen.getByText(/aucun prospect trouve/i)).toBeInTheDocument();
   });
 
-  it('calls onSelect when clicking a prospect and shows archive badge', async () => {
+  it('calls onSelect when clicking a prospect row and shows archive badge', async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
     const prospects = [
@@ -42,12 +42,23 @@ describe('ProspectList', () => {
 
     render(<ProspectList prospects={prospects} selectedProspectId={null} onSelect={onSelect} />);
 
-    const prospectButton = screen
-      .getAllByRole('button')
-      .find((button) => (button.textContent ?? '').includes('Prospect A'));
-    expect(prospectButton).toBeTruthy();
-    await user.click(prospectButton as HTMLElement);
+    await user.click(screen.getByTestId('prospects-list-row-p1'));
     expect(onSelect).toHaveBeenCalledWith('p1');
     expect(screen.getAllByText(/archive/i).length).toBeGreaterThan(0);
+  });
+
+  it('sorts prospects by name when header is clicked', async () => {
+    const user = userEvent.setup();
+    const prospects = [
+      buildProspect({ id: 'p1', name: 'Zeta Prospect' }),
+      buildProspect({ id: 'p2', name: 'Alpha Prospect' })
+    ];
+
+    render(<ProspectList prospects={prospects} selectedProspectId={null} onSelect={vi.fn()} />);
+
+    await user.click(screen.getByRole('button', { name: /prospect/i }));
+
+    const rows = screen.getAllByTestId(/prospects-list-row-/i);
+    expect(rows[0]).toHaveAttribute('data-testid', 'prospects-list-row-p2');
   });
 });

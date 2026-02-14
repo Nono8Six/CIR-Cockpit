@@ -1,5 +1,13 @@
 import { Search } from 'lucide-react';
 
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
 import type { Agency, UserRole } from '@/types';
 import type { ClientsPanelViewMode } from './ClientsPanel.shared';
 
@@ -13,6 +21,8 @@ type ClientsPanelSearchControlsProps = {
   onAgencyFilterChange: (value: string | null) => void;
 };
 
+const ALL_AGENCIES_VALUE = '__all__';
+
 const ClientsPanelSearchControls = ({
   searchTerm,
   onSearchTermChange,
@@ -22,37 +32,52 @@ const ClientsPanelSearchControls = ({
   agencyFilterId,
   onAgencyFilterChange
 }: ClientsPanelSearchControlsProps) => (
-  <div className="flex flex-wrap items-center gap-3">
-    <div className="flex items-center gap-2 flex-1 min-w-[240px]">
-      <div className="flex items-center gap-2 border border-slate-200 rounded-md px-3 py-2 w-full">
-        <Search size={14} className="text-slate-400" />
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(event) => onSearchTermChange(event.target.value)}
-          placeholder={
-            viewMode === 'clients'
-              ? 'Rechercher un client...'
-              : 'Rechercher un prospect...'
-          }
-          className="flex-1 text-sm focus:outline-none"
-        />
-      </div>
+  <div className="flex flex-col gap-3 md:flex-row md:items-center">
+    <div className="relative min-w-0 flex-1">
+      <Search
+        size={14}
+        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+        aria-hidden="true"
+      />
+      <Input
+        data-testid="clients-toolbar-search"
+        type="text"
+        value={searchTerm}
+        onChange={(event) => onSearchTermChange(event.target.value)}
+        placeholder={
+          viewMode === 'clients'
+            ? 'Rechercher un client...'
+            : 'Rechercher un prospect...'
+        }
+        className="h-9 pl-9 text-sm"
+      />
     </div>
     {userRole === 'super_admin' && (
-      <select
-        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 max-w-[220px]"
-        value={agencyFilterId ?? ''}
-        onChange={(event) => onAgencyFilterChange(event.target.value || null)}
+      <Select
+        value={agencyFilterId ?? ALL_AGENCIES_VALUE}
+        onValueChange={(value) =>
+          onAgencyFilterChange(
+            value === ALL_AGENCIES_VALUE ? null : value
+          )
+        }
       >
-        <option value="">Toutes les agences</option>
-        {agencies.map((agency) => (
-          <option key={agency.id} value={agency.id}>
-            {agency.name}
-          </option>
-        ))}
-        <option value="__orphans__">Non rattachés</option>
-      </select>
+        <SelectTrigger
+          data-testid="clients-toolbar-agency-filter"
+          className="w-full md:max-w-[240px]"
+          density="comfortable"
+        >
+          <SelectValue placeholder="Toutes les agences" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ALL_AGENCIES_VALUE}>Toutes les agences</SelectItem>
+          {agencies.map((agency) => (
+            <SelectItem key={agency.id} value={agency.id}>
+              {agency.name}
+            </SelectItem>
+          ))}
+          <SelectItem value="__orphans__">Non rattaches</SelectItem>
+        </SelectContent>
+      </Select>
     )}
   </div>
 );

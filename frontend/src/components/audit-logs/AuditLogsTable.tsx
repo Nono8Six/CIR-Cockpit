@@ -1,32 +1,80 @@
+import { Inbox, Loader2, TriangleAlert } from 'lucide-react';
+
 import { AuditLogEntry } from '@/services/admin/getAuditLogs';
+import { Button } from '@/components/ui/button';
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table';
 import AuditLogsRow from './AuditLogsRow';
 
 type AuditLogsTableProps = {
   logs: AuditLogEntry[];
   isLoading: boolean;
+  isError: boolean;
+  onRetry: () => void;
 };
 
-const AuditLogsTable = ({ logs, isLoading }: AuditLogsTableProps) => {
+const AuditLogsTable = ({ logs, isLoading, isError, onRetry }: AuditLogsTableProps) => {
   return (
-    <div className="border border-slate-200 rounded-lg overflow-hidden">
-      <div className="grid grid-cols-6 bg-slate-100 text-xs uppercase tracking-widest text-slate-500 p-2">
-        <span>Date</span>
-        <span>Action</span>
-        <span>Table</span>
-        <span>Agence</span>
-        <span>Acteur</span>
-        <span>Metadata</span>
-      </div>
-      <div className="max-h-[420px] overflow-y-auto">
-        {isLoading && (
-          <div className="p-4 text-sm text-slate-400">Chargement des audits...</div>
-        )}
-        {!isLoading && logs.length === 0 && (
-          <div className="p-4 text-sm text-slate-400">Aucun audit.</div>
-        )}
-        {logs.map(log => (
-          <AuditLogsRow key={log.id} log={log} />
-        ))}
+    <div className="overflow-hidden rounded-lg border border-slate-200" data-testid="admin-audit-table">
+      {isLoading && (
+        <div className="p-4 text-sm text-slate-500">
+          <span className="inline-flex items-center gap-2">
+            <Loader2 size={16} className="animate-spin" /> Chargement des audits...
+          </span>
+        </div>
+      )}
+      {isError && !isLoading && (
+        <div className="border-b border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          <p className="inline-flex items-center gap-2 font-medium">
+            <TriangleAlert size={16} /> La liste des audits est indisponible.
+          </p>
+          <Button type="button" variant="outline" size="sm" className="mt-3" onClick={onRetry}>
+            Reessayer
+          </Button>
+        </div>
+      )}
+      {!isLoading && !isError && logs.length === 0 && (
+        <div className="p-4 text-sm text-slate-500">
+          <span className="inline-flex items-center gap-2">
+            <Inbox size={16} /> Aucun audit.
+          </span>
+        </div>
+      )}
+      {!isLoading && !isError && logs.length > 0 && (
+        <>
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader className="bg-slate-100">
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Action</TableHead>
+                  <TableHead>Table</TableHead>
+                  <TableHead>Agence</TableHead>
+                  <TableHead>Acteur</TableHead>
+                  <TableHead>Metadata</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {logs.map((log) => (
+                  <AuditLogsRow key={log.id} log={log} variant="table" />
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <div className="space-y-2 p-3 md:hidden">
+            {logs.map((log) => (
+              <AuditLogsRow key={log.id} log={log} variant="card" />
+            ))}
+          </div>
+        </>
+      )}
+      <div className="sr-only" aria-live="polite">
+        {isLoading ? 'Chargement des audits.' : `${logs.length} audits affiches.`}
       </div>
     </div>
   );

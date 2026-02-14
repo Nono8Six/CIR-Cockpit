@@ -1,8 +1,10 @@
 import ConfigSectionAddRow from './ConfigSectionAddRow';
 import ConfigSectionItemsList from './ConfigSectionItemsList';
+import type { LucideIcon } from 'lucide-react';
 
 type ConfigSectionProps = {
   title: string;
+  icon: LucideIcon;
   namePrefix: string;
   count: number;
   list: string[];
@@ -18,6 +20,7 @@ type ConfigSectionProps = {
 
 const ConfigSection = ({
   title,
+  icon: Icon,
   namePrefix,
   count,
   list,
@@ -32,6 +35,7 @@ const ConfigSection = ({
 }: ConfigSectionProps) => (
   <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm flex flex-col h-full">
     <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
+      <Icon size={15} className="text-slate-500" aria-hidden="true" />
       {title}
       <span className="text-xs font-normal text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">({count})</span>
     </h3>

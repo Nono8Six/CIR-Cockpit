@@ -50,11 +50,17 @@ export const buildClientsPanelContentProps = ({
   viewMode: state.viewMode,
   clientsLoading: state.clientsQuery.isLoading,
   clientsError: state.clientsQuery.isError,
+  onRetryClients: () => {
+    void state.clientsQuery.refetch();
+  },
   filteredClients: state.filteredClients,
   selectedClientId: state.selectedClientId,
   onSelectClient: state.setSelectedClientId,
   prospectsLoading: state.prospectsQuery.isLoading,
   prospectsError: state.prospectsQuery.isError,
+  onRetryProspects: () => {
+    void state.prospectsQuery.refetch();
+  },
   filteredProspects: state.filteredProspects,
   selectedProspectId: state.selectedProspectId,
   onSelectProspect: state.setSelectedProspectId,

@@ -1,3 +1,5 @@
+import { Input } from '@/components/ui/input';
+
 type InteractionFooterReminderInputProps = {
   reminder: string;
   onReminderChange: (value: string) => void;
@@ -7,16 +9,19 @@ const InteractionFooterReminderInput = ({
   reminder,
   onReminderChange
 }: InteractionFooterReminderInputProps) => (
-  <div className="col-span-5">
-    <label htmlFor="interaction-reminder" className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 block">
-      Prochain Rappel
+  <div className="sm:col-span-1 lg:col-span-5">
+    <label
+      htmlFor="interaction-reminder"
+      className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+    >
+      Prochain rappel
     </label>
-    <input
+    <Input
       id="interaction-reminder"
       type="datetime-local"
       value={reminder}
       onChange={(event) => onReminderChange(event.target.value)}
-      className="w-full text-xs bg-white border border-slate-300 rounded-md py-1.5 px-2 focus:border-cir-red focus:outline-none"
+      className="h-9 bg-white text-sm"
       name="interaction-reminder"
       autoComplete="off"
     />

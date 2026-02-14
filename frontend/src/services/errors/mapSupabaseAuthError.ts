@@ -41,14 +41,43 @@ const AUTH_CODE_MESSAGES: Record<string, { code: AppError['code']; message: stri
   }
 };
 
+const normalizeMessage = (message: string | undefined): string => (message ?? '').trim().toLowerCase();
+
 export const mapSupabaseAuthError = (error: AuthError, fallbackMessage = 'Erreur d’authentification.'): AppError => {
   const entry = error.code ? AUTH_CODE_MESSAGES[error.code] : undefined;
   const status = error.status ?? undefined;
+  const message = normalizeMessage(error.message);
 
   if (entry) {
     return createAppError({
       code: entry.code,
       message: entry.message,
+      status,
+      source: 'auth',
+      details: error.message,
+      cause: error
+    });
+  }
+
+  if (
+    message.includes('invalid login credentials')
+    || message.includes('invalid credentials')
+    || message.includes('email or password')
+  ) {
+    return createAppError({
+      code: 'AUTH_INVALID_CREDENTIALS',
+      message: 'Identifiants invalides ou compte inactif.',
+      status,
+      source: 'auth',
+      details: error.message,
+      cause: error
+    });
+  }
+
+  if (status === 429 || message.includes('too many requests')) {
+    return createAppError({
+      code: 'RATE_LIMIT',
+      message: 'Trop de tentatives de connexion. Réessayez dans quelques instants.',
       status,
       source: 'auth',
       details: error.message,

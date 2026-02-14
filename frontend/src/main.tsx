@@ -1,5 +1,6 @@
 import React from 'react';
-import ReactDOM from 'react-dom/client';
+import * as ReactDOM from 'react-dom';
+import ReactDOMClient from 'react-dom/client';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 import App from '@/App';
@@ -7,6 +8,7 @@ import AppSessionProvider from '@/components/AppSessionProvider';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { createAppError } from '@/services/errors/AppError';
 import { queryClient } from '@/services/query/queryClient';
+import { reportError } from '@/services/errors/reportError';
 import './index.css';
 
 const rootElement = document.getElementById('root');
@@ -43,7 +45,28 @@ const ResponsiveToaster = () => {
   return <Toaster position={isMobile ? 'top-center' : 'bottom-right'} richColors closeButton />;
 };
 
-const root = ReactDOM.createRoot(rootElement);
+if (import.meta.env.DEV) {
+  void import('@axe-core/react')
+    .then(({ default: axe }) => {
+      axe(React, ReactDOM, 1000);
+    })
+    .catch((error) => {
+      const details = error instanceof Error ? error.message : 'Erreur inconnue.';
+      reportError(
+        createAppError({
+          code: 'UNKNOWN_ERROR',
+          message: "Impossible d'activer l'audit d'accessibilite en developpement.",
+          source: 'client'
+        }),
+        {
+          source: 'main.axe.init',
+          details
+        }
+      );
+    });
+}
+
+const root = ReactDOMClient.createRoot(rootElement);
 root.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>

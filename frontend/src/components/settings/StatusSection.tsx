@@ -1,3 +1,5 @@
+import { ListTodo } from 'lucide-react';
+
 import type { AgencyStatus, StatusCategory } from '@/types';
 import StatusAddBar from './status/StatusAddBar';
 import StatusCategoryTabs from './status/StatusCategoryTabs';
@@ -30,6 +32,7 @@ const StatusSection = ({
 }: StatusSectionProps) => (
   <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm flex flex-col h-full">
     <h3 className="font-semibold text-slate-800 mb-2 flex items-center gap-2">
+      <ListTodo size={15} className="text-slate-500" aria-hidden="true" />
       Statuts Dossier
       <span className="text-xs font-normal text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">({statuses.length})</span>
     </h3>

@@ -1,5 +1,7 @@
 import type { Entity } from '@/types';
-import { Button } from '@/components/ui/button';
+import { CircleArrowUp } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { CommandGroup, CommandItem } from '@/components/ui/command';
 import type { ConvertClientEntity } from '@/components/ConvertClientDialog';
 
 type AppSearchProspectsSectionProps = {
@@ -14,36 +16,33 @@ const AppSearchProspectsSection = ({
   if (prospects.length === 0) return null;
 
   return (
-    <div className="space-y-1">
-      <div className="px-2 py-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-        Prospects
-      </div>
+    <CommandGroup heading="Prospects">
       {prospects.map((entity) => (
-        <div
+        <CommandItem
           key={entity.id}
-          className="flex items-center justify-between p-2.5 rounded-lg hover:bg-slate-50 transition-colors"
+          value={`${entity.name} ${entity.city ?? ''} prospect convertir`}
+          onSelect={() => onRequestConvert({
+            id: entity.id,
+            name: entity.name,
+            client_number: entity.client_number ?? null,
+            account_type: entity.account_type ?? null
+          })}
+          className="gap-3 px-3 py-2"
+          data-testid={`app-search-prospect-${entity.id}`}
         >
-          <div className="flex flex-col gap-0.5">
-            <span className="font-medium text-slate-900 text-sm">{entity.name}</span>
-            <span className="text-xs text-slate-500">
+          <CircleArrowUp className="size-4 text-slate-500" aria-hidden="true" />
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="truncate text-sm font-medium text-slate-900">{entity.name}</span>
+            <span className="truncate text-xs text-slate-500">
               {entity.city || 'Sans ville'}
             </span>
           </div>
-          <Button
-            type="button"
-            className="h-7 px-2 text-xs"
-            onClick={() => onRequestConvert({
-              id: entity.id,
-              name: entity.name,
-              client_number: entity.client_number ?? null,
-              account_type: entity.account_type ?? null
-            })}
-          >
+          <Badge variant="outline" density="dense" className="shrink-0">
             Convertir
-          </Button>
-        </div>
+          </Badge>
+        </CommandItem>
       ))}
-    </div>
+    </CommandGroup>
   );
 };
 

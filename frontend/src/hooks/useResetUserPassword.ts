@@ -2,9 +2,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { adminUsersResetPassword } from '@/services/admin/adminUsersResetPassword';
 import { adminUsersKey } from '@/services/query/queryKeys';
-import { normalizeError } from '@/services/errors/normalizeError';
-import { notifyError } from '@/services/errors/notify';
-import { reportError } from '@/services/errors/reportError';
+import { handleUiError } from '@/services/errors/handleUiError';
+import { mapAdminDomainError } from '@/services/errors/mapAdminDomainError';
 
 export const useResetUserPassword = () => {
   const queryClient = useQueryClient();
@@ -21,9 +20,11 @@ export const useResetUserPassword = () => {
       queryClient.invalidateQueries({ queryKey: adminUsersKey() });
     },
     onError: (err) => {
-      const appError = normalizeError(err, 'Impossible de reinitialiser le mot de passe.');
-      reportError(appError, { source: 'useResetUserPassword' });
-      notifyError(appError);
+      const appError = mapAdminDomainError(err, {
+        action: 'reset_password',
+        fallbackMessage: 'Impossible de reinitialiser le mot de passe.'
+      });
+      handleUiError(appError, appError.message, { source: 'useResetUserPassword' });
     }
   });
 };

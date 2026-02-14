@@ -1,4 +1,5 @@
 import type { Interaction } from '@/types';
+import { formatDate } from '@/utils/date/formatDate';
 import { formatTime } from '@/utils/date/formatTime';
 import { getInteractionChannelIcon } from './getInteractionChannelIcon';
 
@@ -7,16 +8,22 @@ type InteractionCardHeaderProps = {
 };
 
 const InteractionCardHeader = ({ data }: InteractionCardHeaderProps) => (
-  <div className="flex justify-between items-start mb-2">
-    <div className="flex items-center gap-2">
-      <span className="w-5 h-5 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 border border-slate-200">
+  <div className="mb-2 flex items-start justify-between gap-2">
+    <div className="flex min-w-0 items-center gap-2">
+      <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-slate-600">
         {getInteractionChannelIcon(data.channel)}
       </span>
-      <span className="text-xs font-bold text-slate-700 truncate max-w-[120px]" title={data.company_name}>
+      <span
+        className="truncate text-sm font-semibold text-slate-900"
+        title={data.company_name}
+      >
         {data.company_name}
       </span>
     </div>
-    <span className="text-xs text-slate-400 font-medium">{formatTime(data.created_at)}</span>
+    <div className="shrink-0 text-right">
+      <p className="text-xs font-medium text-slate-600">{formatDate(data.last_action_at)}</p>
+      <p className="text-xs text-slate-500">{formatTime(data.last_action_at)}</p>
+    </div>
   </div>
 );
 

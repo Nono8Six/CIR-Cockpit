@@ -33,6 +33,8 @@ describe('LoginScreen', () => {
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'a@b.com' } });
     fireEvent.change(screen.getByLabelText(/mot de passe/i), { target: { value: 'secret' } });
     fireEvent.click(screen.getByRole('button', { name: /se connecter/i }));
-    expect(await screen.findByRole('status')).toBeInTheDocument();
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+    expect(screen.getByLabelText(/email/i)).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByLabelText(/mot de passe/i)).toHaveAttribute('aria-invalid', 'true');
   });
 });

@@ -2,9 +2,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { adminUsersUnarchive } from '@/services/admin/adminUsersUnarchive';
 import { adminUsersKey } from '@/services/query/queryKeys';
-import { normalizeError } from '@/services/errors/normalizeError';
-import { notifyError } from '@/services/errors/notify';
-import { reportError } from '@/services/errors/reportError';
+import { handleUiError } from '@/services/errors/handleUiError';
+import { mapAdminDomainError } from '@/services/errors/mapAdminDomainError';
 
 export const useUnarchiveUser = () => {
   const queryClient = useQueryClient();
@@ -21,9 +20,11 @@ export const useUnarchiveUser = () => {
       queryClient.invalidateQueries({ queryKey: adminUsersKey() });
     },
     onError: (err) => {
-      const appError = normalizeError(err, "Impossible de reactiver l'utilisateur.");
-      reportError(appError, { source: 'useUnarchiveUser' });
-      notifyError(appError);
+      const appError = mapAdminDomainError(err, {
+        action: 'update_user',
+        fallbackMessage: "Impossible de reactiver l'utilisateur."
+      });
+      handleUiError(appError, appError.message, { source: 'useUnarchiveUser' });
     }
   });
 };

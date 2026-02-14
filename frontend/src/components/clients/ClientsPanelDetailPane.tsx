@@ -38,7 +38,7 @@ const ClientsPanelDetailPane = ({
   onRequestConvert,
   onEditProspect
 }: ClientsPanelDetailPaneProps) => (
-  <div className="xl:col-span-8 min-h-0 overflow-y-auto">
+  <div className="lg:col-span-7 min-h-0" data-testid="clients-detail-pane">
     {viewMode === 'clients' ? (
       <ClientDetailPanel
         client={selectedClient}

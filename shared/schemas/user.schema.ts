@@ -1,6 +1,6 @@
 import { z } from 'zod/v4';
 
-import { displayNameSchema, emailSchema, passwordSchema, uuidSchema } from './auth.schema.ts';
+import { emailSchema, firstNameSchema, lastNameSchema, passwordSchema, uuidSchema } from './auth.schema.ts';
 
 export const userRoleSchema = z.enum(['super_admin', 'agency_admin', 'tcs']);
 export const membershipModeSchema = z.enum(['replace', 'add', 'remove']);
@@ -8,7 +8,8 @@ export const membershipModeSchema = z.enum(['replace', 'add', 'remove']);
 const createUserSchema = z.object({
   action: z.literal('create'),
   email: emailSchema,
-  display_name: displayNameSchema.optional(),
+  first_name: firstNameSchema,
+  last_name: lastNameSchema,
   role: userRoleSchema.optional(),
   agency_ids: z.array(uuidSchema).optional(),
   password: passwordSchema.optional()

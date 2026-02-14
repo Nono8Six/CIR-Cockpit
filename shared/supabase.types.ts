@@ -615,7 +615,9 @@ export type Database = {
           created_at: string
           display_name: string | null
           email: string
+          first_name: string | null
           id: string
+          last_name: string
           must_change_password: boolean
           password_changed_at: string | null
           role: Database["public"]["Enums"]["user_role"]
@@ -627,7 +629,9 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email: string
+          first_name?: string | null
           id: string
+          last_name: string
           must_change_password?: boolean
           password_changed_at?: string | null
           role?: Database["public"]["Enums"]["user_role"]
@@ -639,7 +643,9 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email?: string
+          first_name?: string | null
           id?: string
+          last_name?: string
           must_change_password?: boolean
           password_changed_at?: string | null
           role?: Database["public"]["Enums"]["user_role"]

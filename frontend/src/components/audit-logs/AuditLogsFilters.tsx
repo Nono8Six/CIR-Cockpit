@@ -1,8 +1,13 @@
 import type { Agency, UserRole } from '@/types';
 import type { AdminUserSummary } from '@/services/admin/getAdminUsers';
 import { Input } from '@/components/ui/input';
-
-const SELECT_STYLE = 'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
 
 type AuditLogsFiltersProps = {
   userRole: UserRole;
@@ -27,34 +32,49 @@ const AuditLogsFilters = ({
   onActorChange,
   onEntityTableChange
 }: AuditLogsFiltersProps) => {
+  const resolvedAgencyId = agencyId ?? 'all';
+  const resolvedActorId = actorId ?? 'all';
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-3" data-testid="admin-audit-filters">
       <div>
         <label className="text-xs font-medium text-slate-500">Agence</label>
-        <select
-          className={SELECT_STYLE}
-          value={agencyId ?? ''}
-          onChange={(event) => onAgencyChange(event.target.value || null)}
+        <Select
+          value={resolvedAgencyId}
+          onValueChange={(value) => onAgencyChange(value === 'all' ? null : value)}
         >
-          <option value="">Toutes</option>
-          {agencies.map(agency => (
-            <option key={agency.id} value={agency.id}>{agency.name}</option>
-          ))}
-        </select>
+          <SelectTrigger className="mt-1" data-testid="admin-audit-filter-agency-trigger">
+            <SelectValue placeholder="Toutes les agences" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Toutes les agences</SelectItem>
+            {agencies.map((agency) => (
+              <SelectItem key={agency.id} value={agency.id}>
+                {agency.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       {userRole === 'super_admin' ? (
         <div>
           <label className="text-xs font-medium text-slate-500">Utilisateur</label>
-          <select
-            className={SELECT_STYLE}
-            value={actorId ?? ''}
-            onChange={(event) => onActorChange(event.target.value || null)}
+          <Select
+            value={resolvedActorId}
+            onValueChange={(value) => onActorChange(value === 'all' ? null : value)}
           >
-            <option value="">Tous</option>
-            {users.map(user => (
-              <option key={user.id} value={user.id}>{user.display_name ?? user.email}</option>
-            ))}
-          </select>
+            <SelectTrigger className="mt-1" data-testid="admin-audit-filter-user-trigger">
+              <SelectValue placeholder="Tous les utilisateurs" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les utilisateurs</SelectItem>
+              {users.map((user) => (
+                <SelectItem key={user.id} value={user.id}>
+                  {user.display_name ?? user.email}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       ) : null}
       <div>
@@ -63,7 +83,8 @@ const AuditLogsFilters = ({
           type="text"
           value={entityTable}
           onChange={(event) => onEntityTableChange(event.target.value)}
-          placeholder="clients, interactions\u2026"
+          placeholder="clients, interactions..."
+          data-testid="admin-audit-filter-table-input"
         />
       </div>
     </div>

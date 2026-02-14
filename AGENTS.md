@@ -23,6 +23,17 @@ Invoquer le skill correspondant AVANT d'ecrire du code (voir liste dans CLAUDE.m
 - **Context7** : documentation a jour des librairies (React, TanStack Query, Zod, etc.)
 - **shadcn** : rechercher, visualiser et installer des composants UI
 
+## Runbook Edge Function api (prod)
+
+- Toujours diagnostiquer avec MCP Supabase avant action (`list_edge_functions`, logs, version/hash/entrypoint/import_map).
+- Ne jamais considerer l'editeur Dashboard comme source de verite du code.
+- Source de verite : `backend/functions/api/`.
+- Entree CLI obligatoire : `supabase/functions/api/index.ts` (wrapper vers `backend/functions/api/index.ts`).
+- Import map de deploy : utiliser `deno.json` racine avec mapping explicite `zod`, `zod/v4`, `zod/`.
+- Commande de deploy de reference :
+  - `supabase functions deploy api --project-ref <project_ref> --use-api --import-map deno.json --no-verify-jwt`
+- Si une action UI Supabase est requise, demander explicitement a l'utilisateur de la faire et attendre sa confirmation.
+
 ## Regles agents
 
 - Toujours verifier `typecheck` + `lint` + `tests` avant de considerer une tache terminee
@@ -46,3 +57,6 @@ Avant de considerer le travail termine :
 - [ ] Messages d'erreur en francais
 - [ ] Fichiers ~150 lignes max
 - [ ] Imports corrects (path alias `@/*`, ordre respecte, zero circulaire)
+- [ ] En prod, `POST /functions/v1/api/data/*` ne retourne plus aucun 404
+- [ ] En prod, preflight `OPTIONS` des routes impactees retourne 200 avec headers CORS
+- [ ] En prod, `list_edge_functions` confirme `api` deploye avec le bon entrypoint/import_map et `verify_jwt` attendu

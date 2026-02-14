@@ -1,4 +1,6 @@
 import type { EntityContact } from '@/types';
+import { UserRound } from 'lucide-react';
+import { CommandGroup, CommandItem } from '@/components/ui/command';
 
 type AppSearchContactsSectionProps = {
   contacts: EntityContact[];
@@ -14,28 +16,27 @@ const AppSearchContactsSection = ({
   if (contacts.length === 0) return null;
 
   return (
-    <div className="space-y-1">
-      <div className="px-2 py-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-        Contacts
-      </div>
+    <CommandGroup heading="Contacts">
       {contacts.map((contact) => (
-        <button
+        <CommandItem
           key={contact.id}
-          type="button"
-          className="w-full flex items-center justify-between p-2.5 rounded-lg hover:bg-slate-50 text-left transition-colors"
-          onClick={() => onFocusClient(contact.entity_id, contact.id)}
+          value={`${contact.first_name ?? ''} ${contact.last_name ?? ''} ${contact.position ?? ''} ${contact.email ?? ''} ${contact.phone ?? ''} ${entityNameById.get(contact.entity_id) ?? ''}`}
+          onSelect={() => onFocusClient(contact.entity_id, contact.id)}
+          className="gap-3 px-3 py-2"
+          data-testid={`app-search-contact-${contact.id}`}
         >
-          <div className="flex flex-col gap-0.5">
-            <span className="font-medium text-slate-900 text-sm">
+          <UserRound className="size-4 text-slate-500" aria-hidden="true" />
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="truncate text-sm font-medium text-slate-900">
               {(contact.first_name ?? '').trim()} {contact.last_name}
             </span>
-            <span className="text-xs text-slate-500">
+            <span className="truncate text-xs text-slate-500">
               {entityNameById.get(contact.entity_id) ?? 'Client'} • {contact.position ?? 'Contact'} • {contact.email ?? contact.phone ?? 'Coordonnées manquantes'}
             </span>
           </div>
-        </button>
+        </CommandItem>
       ))}
-    </div>
+    </CommandGroup>
   );
 };
 

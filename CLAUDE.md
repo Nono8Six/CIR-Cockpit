@@ -234,6 +234,33 @@ Voir `docs/testing.md` pour le detail complet.
 - Regeneration obligatoire apres toute modification du schema (migrations, RPC, MCP)
 - Commande : `supabase gen types typescript --project-id <id> --schema public > shared/supabase.types.ts`
 
+## Edge Functions (production)
+
+- Source de verite API : `backend/functions/api/`
+- Convention Supabase CLI : l'entree doit exister sous `supabase/functions/api/index.ts`
+- Maintenir un wrapper minimal dans `supabase/functions/api/index.ts` :
+  - `import '../../../backend/functions/api/index.ts';`
+- Maintenir `supabase/config.toml` avec `[functions.api] verify_jwt = false` (auth geree dans le code backend)
+- Maintenir `deno.json` a la racine avec import map explicite pour Zod :
+  - `"zod": "npm:zod@4.3.5"`
+  - `"zod/v4": "npm:zod@4.3.5/v4"`
+  - `"zod/": "npm:zod@4.3.5/"`
+- Ne pas deployer le code via l'editeur Dashboard (risque de divergence/stub). Deploy uniquement depuis le repo avec la CLI.
+- Commande de reference :
+  - `supabase functions deploy api --project-ref <project_ref> --use-api --import-map deno.json --no-verify-jwt`
+- Preuve runtime minimale apres deploy :
+  - verifier `api` via MCP `list_edge_functions` (version/hash/entrypoint/import_map/verify_jwt)
+  - verifier `POST /functions/v1/api/data/entities`
+  - verifier `POST /functions/v1/api/data/entity-contacts`
+  - verifier `POST /functions/v1/api/data/interactions`
+  - verifier preflight `OPTIONS` sur les memes routes avec `Origin` frontend
+  - attendu : plus aucun `404` sur `/functions/v1/api/data/*`
+
+## Regle Zod backend
+
+- `z.discriminatedUnion()` impose une valeur de discriminateur unique par variante.
+- Si plusieurs variantes partagent la meme action (ex: plusieurs payloads `action: "save"`), utiliser `z.union()` au lieu de `z.discriminatedUnion()` pour eviter les erreurs runtime.
+
 ## Skills obligatoires
 
 Invoquer le skill correspondant AVANT d'ecrire du code :

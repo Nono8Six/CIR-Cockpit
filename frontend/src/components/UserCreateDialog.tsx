@@ -17,7 +17,8 @@ interface UserCreateDialogProps {
 const UserCreateDialog = ({ open, onOpenChange, agencies, onCreate }: UserCreateDialogProps) => {
   const {
     email,
-    displayName,
+    firstName,
+    lastName,
     role,
     password,
     agencyIds,
@@ -25,10 +26,11 @@ const UserCreateDialog = ({ open, onOpenChange, agencies, onCreate }: UserCreate
     isSubmitting,
     canSubmit,
     setEmail,
-    setDisplayName,
+    setFirstName,
+    setLastName,
     setRole,
     setPassword,
-    handleToggleAgency,
+    handleAgencyIdsChange,
     handleSubmit
   } = useUserCreateDialog({ onCreate, onOpenChange });
 
@@ -44,9 +46,11 @@ const UserCreateDialog = ({ open, onOpenChange, agencies, onCreate }: UserCreate
         <form onSubmit={handleSubmit} className="space-y-5">
           <UserCreateIdentitySection
             email={email}
-            displayName={displayName}
+            firstName={firstName}
+            lastName={lastName}
             onEmailChange={setEmail}
-            onDisplayNameChange={setDisplayName}
+            onFirstNameChange={setFirstName}
+            onLastNameChange={setLastName}
           />
           <UserCreateRoleSection
             role={role}
@@ -57,7 +61,7 @@ const UserCreateDialog = ({ open, onOpenChange, agencies, onCreate }: UserCreate
           <UserCreateAgenciesSection
             agencies={agencies}
             selectedAgencyIds={agencyIds}
-            onToggleAgency={handleToggleAgency}
+            onAgencyIdsChange={handleAgencyIdsChange}
           />
 
           {error && <p className="text-sm text-red-600">{error}</p>}

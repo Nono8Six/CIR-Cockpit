@@ -4,9 +4,90 @@ import { requireSupabaseClient } from '@/services/supabase/requireSupabaseClient
 import { isRecord, readObject, readString } from '@/utils/recordNarrowing';
 
 export type AdminUserMembership = { agency_id: string; agency_name: string };
-export type AdminUserSummary = { id: string; email: string; display_name: string | null; role: UserRole; archived_at: string | null; created_at: string; memberships: AdminUserMembership[] };
+export type AdminUserSummary = {
+  id: string;
+  email: string;
+  display_name: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  role: UserRole;
+  archived_at: string | null;
+  created_at: string;
+  memberships: AdminUserMembership[];
+};
 
 type MembershipRow = { user_id: string; agency_id: string; agencies: { id: string; name: string } | null };
+type ProfileRow = Omit<AdminUserSummary, 'memberships'>;
+
+const PROFILES_SELECT_WITH_NAMES = 'id, email, display_name, first_name, last_name, role, archived_at, created_at';
+const PROFILES_SELECT_LEGACY = 'id, email, display_name, role, archived_at, created_at';
+
+const normalizeDisplayName = (displayName: string | null): string | null => {
+  if (!displayName) return null;
+  const normalized = displayName.trim().replace(/\s+/g, ' ');
+  return normalized.length > 0 ? normalized : null;
+};
+
+const splitLegacyDisplayName = (displayName: string | null): { first_name: string | null; last_name: string | null } => {
+  const normalized = normalizeDisplayName(displayName);
+  if (!normalized) return { first_name: null, last_name: null };
+  const [lastName, ...firstNameParts] = normalized.split(' ');
+  return {
+    last_name: lastName || null,
+    first_name: firstNameParts.length > 0 ? firstNameParts.join(' ') : null
+  };
+};
+
+const shouldFallbackToLegacyProfilesSelect = (errorMessage: string, errorDetails: string | null): boolean => {
+  const normalized = `${errorMessage} ${errorDetails ?? ''}`.toLowerCase();
+  return normalized.includes('first_name') || normalized.includes('last_name');
+};
+
+const loadProfiles = async (): Promise<ProfileRow[]> => {
+  const supabase = requireSupabaseClient();
+  const withNamesResult = await supabase
+    .from('profiles')
+    .select(PROFILES_SELECT_WITH_NAMES)
+    .order('created_at', { ascending: true });
+
+  if (!withNamesResult.error) {
+    return withNamesResult.data ?? [];
+  }
+
+  const canFallback =
+    (withNamesResult.error.code === 'PGRST204' || withNamesResult.error.code === '42703') &&
+    shouldFallbackToLegacyProfilesSelect(withNamesResult.error.message, withNamesResult.error.details);
+  if (!canFallback) {
+    throw mapPostgrestError(withNamesResult.error, {
+      operation: 'read',
+      resource: 'les utilisateurs',
+      status: withNamesResult.status
+    });
+  }
+
+  const legacyResult = await supabase
+    .from('profiles')
+    .select(PROFILES_SELECT_LEGACY)
+    .order('created_at', { ascending: true });
+  if (legacyResult.error) {
+    throw mapPostgrestError(legacyResult.error, {
+      operation: 'read',
+      resource: 'les utilisateurs',
+      status: legacyResult.status
+    });
+  }
+
+  return (legacyResult.data ?? []).map((profile) => {
+    const normalizedDisplayName = normalizeDisplayName(profile.display_name);
+    const nameParts = splitLegacyDisplayName(normalizedDisplayName);
+    return {
+      ...profile,
+      display_name: normalizedDisplayName,
+      first_name: nameParts.first_name,
+      last_name: nameParts.last_name
+    };
+  });
+};
 
 const toMembershipRow = (value: unknown): MembershipRow | null => {
   if (!isRecord(value)) return null;
@@ -22,11 +103,10 @@ const toMembershipRow = (value: unknown): MembershipRow | null => {
 export const getAdminUsers = async (): Promise<AdminUserSummary[]> => {
   const supabase = requireSupabaseClient();
   const [profilesResult, membershipsResult] = await Promise.all([
-    supabase.from('profiles').select('id, email, display_name, role, archived_at, created_at').order('created_at', { ascending: true }),
+    loadProfiles(),
     supabase.from('agency_members').select('user_id, agency_id, agencies ( id, name )')
   ]);
 
-  if (profilesResult.error) throw mapPostgrestError(profilesResult.error, { operation: 'read', resource: 'les utilisateurs', status: profilesResult.status });
   if (membershipsResult.error) throw mapPostgrestError(membershipsResult.error, { operation: 'read', resource: 'les agences', status: membershipsResult.status });
 
   const membershipsByUser = new Map<string, AdminUserMembership[]>();
@@ -37,10 +117,12 @@ export const getAdminUsers = async (): Promise<AdminUserSummary[]> => {
     membershipsByUser.set(item.user_id, list);
   });
 
-  return (profilesResult.data ?? []).map((profile) => ({
+  return profilesResult.map((profile) => ({
     id: profile.id,
     email: profile.email,
     display_name: profile.display_name,
+    first_name: profile.first_name,
+    last_name: profile.last_name,
     role: profile.role,
     archived_at: profile.archived_at,
     created_at: profile.created_at,

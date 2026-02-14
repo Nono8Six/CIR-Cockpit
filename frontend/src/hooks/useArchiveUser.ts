@@ -2,9 +2,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { adminUsersArchive } from '@/services/admin/adminUsersArchive';
 import { adminUsersKey } from '@/services/query/queryKeys';
-import { normalizeError } from '@/services/errors/normalizeError';
-import { notifyError } from '@/services/errors/notify';
-import { reportError } from '@/services/errors/reportError';
+import { handleUiError } from '@/services/errors/handleUiError';
+import { mapAdminDomainError } from '@/services/errors/mapAdminDomainError';
 
 export const useArchiveUser = () => {
   const queryClient = useQueryClient();
@@ -21,9 +20,11 @@ export const useArchiveUser = () => {
       queryClient.invalidateQueries({ queryKey: adminUsersKey() });
     },
     onError: (err) => {
-      const appError = normalizeError(err, "Impossible d'archiver l'utilisateur.");
-      reportError(appError, { source: 'useArchiveUser' });
-      notifyError(appError);
+      const appError = mapAdminDomainError(err, {
+        action: 'update_user',
+        fallbackMessage: "Impossible d'archiver l'utilisateur."
+      });
+      handleUiError(appError, appError.message, { source: 'useArchiveUser' });
     }
   });
 };

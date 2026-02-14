@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.91.0';
-import type { MiddlewareHandler } from 'https://deno.land/x/hono@4.6.10/mod.ts';
+import type { MiddlewareHandler } from 'jsr:@hono/hono';
 
 import type { Database } from '../../../../shared/supabase.types.ts';
 import type { AppEnv, DbClient } from '../types.ts';
@@ -9,6 +9,14 @@ type SupabaseConfig = {
   supabaseUrl: string;
   supabaseServiceRoleKey: string;
   supabaseAnonKey: string;
+};
+
+type AuthIdentity = {
+  userId: string;
+};
+
+type AuthGateway = {
+  verifyAccessToken: (token: string) => Promise<AuthIdentity | null>;
 };
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
@@ -34,6 +42,7 @@ const assertSupabaseConfig = (): SupabaseConfig => {
 };
 
 let supabaseAdmin: DbClient | null = null;
+let supabaseAuthGateway: AuthGateway | null = null;
 
 export const getSupabaseAdmin = (): DbClient => {
   const config = assertSupabaseConfig();
@@ -45,42 +54,94 @@ export const getSupabaseAdmin = (): DbClient => {
   return supabaseAdmin;
 };
 
-export const createUserClient = (token: string): DbClient => {
+const createAuthClient = (): DbClient => {
   const config = assertSupabaseConfig();
   return createClient<Database>(config.supabaseUrl, config.supabaseAnonKey, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-    global: { headers: { Authorization: `Bearer ${token}` } }
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
   });
 };
 
-const getBearerToken = (header: string | null): string => {
+const createSupabaseAuthGateway = (): AuthGateway => {
+  const client = createAuthClient();
+  return {
+    async verifyAccessToken(token: string): Promise<AuthIdentity | null> {
+      const { data, error } = await client.auth.getUser(token);
+      if (error || !data.user) {
+        return null;
+      }
+      return { userId: data.user.id };
+    }
+  };
+};
+
+const getSupabaseAuthGateway = (): AuthGateway => {
+  if (!supabaseAuthGateway) {
+    supabaseAuthGateway = createSupabaseAuthGateway();
+  }
+  return supabaseAuthGateway;
+};
+
+export const getBearerToken = (header: string | null): string => {
   if (!header) return '';
-  return header.startsWith('Bearer ') ? header.slice(7) : '';
+  return header.toLowerCase().startsWith('bearer ') ? header.slice(7).trim() : '';
+};
+
+export const getAccessTokenFromHeaders = (
+  authHeader: string | null,
+  clientAuthHeader: string | null
+): string => {
+  const clientToken = getBearerToken(clientAuthHeader);
+  if (clientToken) {
+    return clientToken;
+  }
+  return getBearerToken(authHeader);
+};
+
+export const requireAuth: MiddlewareHandler<AppEnv> = async (c, next) => {
+  const token = getAccessTokenFromHeaders(
+    c.req.header('Authorization'),
+    c.req.header('x-client-authorization')
+  );
+  if (!token) {
+    throw httpError(401, 'AUTH_REQUIRED', 'Authentification requise.');
+  }
+
+  const identity = await getSupabaseAuthGateway().verifyAccessToken(token);
+  if (!identity) {
+    throw httpError(401, 'AUTH_REQUIRED', 'Session invalide.');
+  }
+
+  c.set('callerId', identity.userId);
+  c.set('db', getSupabaseAdmin());
+  await next();
 };
 
 export const requireSuperAdmin: MiddlewareHandler<AppEnv> = async (c, next) => {
-  const token = getBearerToken(c.req.header('Authorization'));
+  const token = getAccessTokenFromHeaders(
+    c.req.header('Authorization'),
+    c.req.header('x-client-authorization')
+  );
   if (!token) {
-    throw httpError(403, 'AUTH_REQUIRED', 'Authorization required');
+    throw httpError(401, 'AUTH_REQUIRED', 'Authentification requise.');
   }
 
-  const supabaseUser = createUserClient(token);
-  const { data, error } = await supabaseUser.auth.getUser();
-  if (error || !data?.user) {
-    throw httpError(403, 'AUTH_REQUIRED', 'Authorization required');
+  const identity = await getSupabaseAuthGateway().verifyAccessToken(token);
+  if (!identity) {
+    throw httpError(401, 'AUTH_REQUIRED', 'Session invalide.');
   }
 
-  const { data: profile, error: profileError } = await supabaseUser
+  const db = getSupabaseAdmin();
+  const { data: profile, error: profileError } = await db
     .from('profiles')
     .select('role')
-    .eq('id', data.user.id)
+    .eq('id', identity.userId)
     .single();
 
   if (profileError || profile?.role !== 'super_admin') {
-    throw httpError(403, 'AUTH_FORBIDDEN', 'Forbidden');
+    throw httpError(403, 'AUTH_FORBIDDEN', 'Acces interdit.');
   }
 
-  c.set('callerId', data.user.id);
-  c.set('db', supabaseUser);
+  c.set('callerId', identity.userId);
+  c.set('db', db);
   await next();
 };

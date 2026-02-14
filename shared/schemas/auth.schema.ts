@@ -20,6 +20,18 @@ export const displayNameSchema = z
   .min(1, 'Nom requis')
   .max(120, 'Nom trop long');
 
+export const firstNameSchema = z
+  .string()
+  .trim()
+  .min(1, 'Prenom requis')
+  .max(120, 'Prenom trop long');
+
+export const lastNameSchema = z
+  .string()
+  .trim()
+  .min(1, 'Nom requis')
+  .max(120, 'Nom trop long');
+
 export const agencyNameSchema = z
   .string()
   .trim()

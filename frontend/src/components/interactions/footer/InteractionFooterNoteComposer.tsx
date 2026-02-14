@@ -1,4 +1,7 @@
-import { Paperclip, Send } from 'lucide-react';
+import { Paperclip, SendHorizontal } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 
 type InteractionFooterNoteComposerProps = {
   note: string;
@@ -14,36 +17,41 @@ const InteractionFooterNoteComposer = ({
   isSubmitDisabled
 }: InteractionFooterNoteComposerProps) => (
   <div className="relative">
-    <textarea
+    <Textarea
       value={note}
       onChange={(event) => onNoteChange(event.target.value)}
       placeholder="Ajouter une note de suivi, compte-rendu d'appel..."
-      className="w-full bg-white border border-slate-300 rounded-lg p-3 pr-12 text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-400 focus:outline-none resize-none h-24 shadow-sm"
+      className="min-h-[96px] resize-none bg-white pr-20 text-sm"
       onKeyDown={(event) => {
-        if (event.ctrlKey && event.key === 'Enter') onSubmit();
+        if (event.ctrlKey && event.key === 'Enter') {
+          onSubmit();
+        }
       }}
       aria-label="Ajouter une note de suivi"
       autoComplete="off"
       name="interaction-note"
     />
-    <div className="absolute bottom-3 right-3 flex gap-2">
-      <button
+    <div className="absolute bottom-2.5 right-2.5 flex gap-1.5">
+      <Button
         type="button"
-        className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cir-red/30"
+        variant="ghost"
+        size="icon"
+        className="size-8 text-slate-500 hover:text-slate-700"
         title="Joindre un fichier (Simulation)"
         aria-label="Joindre un fichier"
       >
-        <Paperclip size={18} />
-      </button>
-      <button
+        <Paperclip size={16} />
+      </Button>
+      <Button
         type="button"
+        size="icon"
+        className="size-8 bg-cir-red text-white hover:bg-red-700"
         onClick={onSubmit}
         disabled={isSubmitDisabled}
-        className="bg-cir-red text-white p-2 rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cir-red/30 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
         aria-label="Envoyer la mise a jour"
       >
-        <Send size={16} />
-      </button>
+        <SendHorizontal size={14} />
+      </Button>
     </div>
   </div>
 );

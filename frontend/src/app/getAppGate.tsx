@@ -19,7 +19,14 @@ type AppGateParams = {
 };
 
 const LoadingScreen = ({ message }: { message: string }) => (
-  <div className="min-h-screen w-full flex items-center justify-center bg-slate-50/70 text-slate-500 font-sans">{message}</div>
+  <main
+    role="main"
+    aria-busy="true"
+    className="min-h-screen w-full flex items-center justify-center bg-slate-50/70 text-slate-500 font-sans"
+  >
+    <h1 className="sr-only">Chargement de l&apos;application</h1>
+    <p>{message}</p>
+  </main>
 );
 
 const ProfileErrorScreen = ({ profileError, onProfileRetry, onSignOut }: {

@@ -8,7 +8,11 @@ import InteractionDetailsTimeline from './interactions/InteractionDetailsTimelin
 interface Props {
   interaction: Interaction;
   onClose: () => void;
-  onUpdate: (interaction: Interaction, event: TimelineEvent, updates?: InteractionUpdate) => void;
+  onUpdate: (
+    interaction: Interaction,
+    event: TimelineEvent,
+    updates?: InteractionUpdate
+  ) => Promise<void> | void;
   statuses: AgencyStatus[];
   onRequestConvert: (interaction: Interaction) => void;
 }
@@ -37,14 +41,14 @@ const InteractionDetails = ({
   } = useInteractionDetailsState({ interaction, statuses, onUpdate });
 
   return (
-    <div className="fixed inset-y-0 right-0 w-full md:w-[600px] bg-white shadow-2xl z-40 transform transition-transform duration-300 ease-in-out border-l border-slate-200 flex flex-col">
+    <div className="flex h-full min-h-0 flex-col bg-white">
       <InteractionDetailsHeader
         interaction={interaction}
         canConvert={canConvert}
         onRequestConvert={onRequestConvert}
         onClose={onClose}
       />
-      <div className="flex-1 overflow-y-auto p-6 bg-white" ref={scrollRef}>
+      <div className="flex-1 overflow-y-auto bg-white px-4 py-4 sm:px-5" ref={scrollRef}>
         <InteractionDetailsSubjectCard interaction={interaction} />
         <InteractionDetailsTimeline timeline={interaction.timeline} />
       </div>

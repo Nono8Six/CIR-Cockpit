@@ -2,9 +2,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { adminAgenciesArchive } from '@/services/admin/adminAgenciesArchive';
 import { agenciesKey } from '@/services/query/queryKeys';
-import { normalizeError } from '@/services/errors/normalizeError';
-import { notifyError } from '@/services/errors/notify';
-import { reportError } from '@/services/errors/reportError';
+import { handleUiError } from '@/services/errors/handleUiError';
+import { mapAdminDomainError } from '@/services/errors/mapAdminDomainError';
 
 export const useArchiveAgency = () => {
   const queryClient = useQueryClient();
@@ -22,9 +21,11 @@ export const useArchiveAgency = () => {
       queryClient.invalidateQueries({ queryKey: agenciesKey(false) });
     },
     onError: (err) => {
-      const appError = normalizeError(err, "Impossible d'archiver l'agence.");
-      reportError(appError, { source: 'useArchiveAgency' });
-      notifyError(appError);
+      const appError = mapAdminDomainError(err, {
+        action: 'update_agency',
+        fallbackMessage: "Impossible d'archiver l'agence."
+      });
+      handleUiError(appError, appError.message, { source: 'useArchiveAgency' });
     }
   });
 };

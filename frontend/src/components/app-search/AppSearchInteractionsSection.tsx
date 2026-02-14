@@ -1,44 +1,48 @@
 import type { Interaction } from '@/types';
+import { ClipboardList } from 'lucide-react';
+import { CommandGroup, CommandItem } from '@/components/ui/command';
 import { formatDate } from '@/utils/date/formatDate';
 
 type AppSearchInteractionsSectionProps = {
   interactions: Interaction[];
+  onOpenInteraction: (interaction: Interaction) => void;
 };
 
-const AppSearchInteractionsSection = ({ interactions }: AppSearchInteractionsSectionProps) => {
+const AppSearchInteractionsSection = ({ interactions, onOpenInteraction }: AppSearchInteractionsSectionProps) => {
   if (interactions.length === 0) return null;
 
   return (
-    <div className="space-y-1">
-      <div className="px-2 py-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-        Interactions
-      </div>
+    <CommandGroup heading="Interactions">
       {interactions.map((interaction) => (
-        <div
+        <CommandItem
           key={interaction.id}
-          className="flex items-center justify-between p-2.5 rounded-lg hover:bg-slate-50 cursor-pointer group transition-colors"
+          value={`${interaction.company_name} ${interaction.subject ?? ''} ${interaction.contact_name ?? ''} ${interaction.order_ref ?? ''}`}
+          onSelect={() => onOpenInteraction(interaction)}
+          className="gap-3 px-3 py-2"
+          data-testid={`app-search-interaction-${interaction.id}`}
         >
-          <div className="flex flex-col gap-0.5">
-            <span className="font-medium text-slate-900 text-sm group-hover:text-cir-red transition-colors">
+          <ClipboardList className="size-4 text-slate-500" aria-hidden="true" />
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="truncate text-sm font-medium text-slate-900">
               {interaction.company_name}
             </span>
             <div className="flex items-center gap-2 text-xs text-slate-500">
-              <span className="truncate max-w-[200px]">{interaction.subject}</span>
+              <span className="truncate">{interaction.subject}</span>
               <span>•</span>
-              <span>{interaction.contact_name}</span>
+              <span className="truncate">{interaction.contact_name}</span>
             </div>
           </div>
-          <div className="flex flex-col items-end gap-1">
+          <div className="flex shrink-0 flex-col items-end gap-1 text-right">
             <span className="text-xs text-slate-400">{formatDate(interaction.created_at)}</span>
             {interaction.order_ref && (
-              <span className="text-xs bg-slate-100 px-1.5 rounded text-slate-600 font-mono">
+              <span className="rounded bg-slate-100 px-1.5 text-xs font-mono text-slate-600">
                 #{interaction.order_ref}
               </span>
             )}
           </div>
-        </div>
+        </CommandItem>
       ))}
-    </div>
+    </CommandGroup>
   );
 };
 

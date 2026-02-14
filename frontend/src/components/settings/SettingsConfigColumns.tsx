@@ -1,3 +1,5 @@
+import { Boxes, PhoneCall, Tags, Users2 } from 'lucide-react';
+
 import ConfigSection from './ConfigSection';
 import type { SettingsConfigColumnsProps } from './SettingsConfigColumns.types';
 
@@ -25,7 +27,8 @@ const SettingsConfigColumns = ({
 }: SettingsConfigColumnsProps) => (
   <>
     <ConfigSection
-      title="📦 Familles Produits"
+      title="Familles produits"
+      icon={Boxes}
       namePrefix="families"
       count={families.length}
       list={families}
@@ -40,7 +43,8 @@ const SettingsConfigColumns = ({
     />
 
     <ConfigSection
-      title="👥 Services"
+      title="Services"
+      icon={Users2}
       namePrefix="services"
       count={services.length}
       list={services}
@@ -54,7 +58,8 @@ const SettingsConfigColumns = ({
     />
 
     <ConfigSection
-      title="🏷️ Types de Tiers"
+      title="Types de tiers"
+      icon={Tags}
       namePrefix="entities"
       count={entities.length}
       list={entities}
@@ -68,7 +73,8 @@ const SettingsConfigColumns = ({
     />
 
     <ConfigSection
-      title="☎️ Types d'interaction"
+      title="Types d'interaction"
+      icon={PhoneCall}
       namePrefix="interaction-types"
       count={interactionTypes.length}
       list={interactionTypes}

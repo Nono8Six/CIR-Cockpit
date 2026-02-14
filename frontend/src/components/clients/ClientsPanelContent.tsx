@@ -6,11 +6,13 @@ const ClientsPanelContent = ({
   viewMode,
   clientsLoading,
   clientsError,
+  onRetryClients,
   filteredClients,
   selectedClientId,
   onSelectClient,
   prospectsLoading,
   prospectsError,
+  onRetryProspects,
   filteredProspects,
   selectedProspectId,
   onSelectProspect,
@@ -29,16 +31,18 @@ const ClientsPanelContent = ({
   onRequestConvert,
   onEditProspect
 }: ClientsPanelContentProps) => (
-  <div className="flex-1 grid grid-cols-1 xl:grid-cols-12 gap-4 min-h-0">
+  <div className="grid flex-1 grid-cols-1 gap-4 lg:grid-cols-12">
     <ClientsPanelListPane
       viewMode={viewMode}
       clientsLoading={clientsLoading}
       clientsError={clientsError}
+      onRetryClients={onRetryClients}
       filteredClients={filteredClients}
       selectedClientId={selectedClientId}
       onSelectClient={onSelectClient}
       prospectsLoading={prospectsLoading}
       prospectsError={prospectsError}
+      onRetryProspects={onRetryProspects}
       filteredProspects={filteredProspects}
       selectedProspectId={selectedProspectId}
       onSelectProspect={onSelectProspect}

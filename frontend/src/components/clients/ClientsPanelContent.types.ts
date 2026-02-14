@@ -6,11 +6,13 @@ export type ClientsPanelContentProps = {
   viewMode: ClientsPanelViewMode;
   clientsLoading: boolean;
   clientsError: boolean;
+  onRetryClients: () => void;
   filteredClients: Client[];
   selectedClientId: string | null;
   onSelectClient: (clientId: string | null) => void;
   prospectsLoading: boolean;
   prospectsError: boolean;
+  onRetryProspects: () => void;
   filteredProspects: Entity[];
   selectedProspectId: string | null;
   onSelectProspect: (prospectId: string | null) => void;

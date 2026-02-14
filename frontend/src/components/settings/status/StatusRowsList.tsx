@@ -17,7 +17,7 @@ const StatusRowsList = ({
   onCategoryUpdate
 }: StatusRowsListProps) => {
   return (
-    <div className="flex-1 overflow-auto space-y-2 max-h-[300px] pr-2">
+    <div className="max-h-[300px] flex-1 space-y-2 overflow-auto pr-2" data-testid="settings-status-rows">
       {statuses.map((status, index) => (
         <StatusRow
           key={status.id ?? `new-${index}`}

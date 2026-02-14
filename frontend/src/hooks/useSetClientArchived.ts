@@ -2,9 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { setClientArchived } from '@/services/clients/setClientArchived';
 import { clientsKey } from '@/services/query/queryKeys';
-import { normalizeError } from '@/services/errors/normalizeError';
-import { notifyError } from '@/services/errors/notify';
-import { reportError } from '@/services/errors/reportError';
+import { handleUiError } from '@/services/errors/handleUiError';
 
 export const useSetClientArchived = (agencyId: string | null) => {
   const queryClient = useQueryClient();
@@ -25,10 +23,10 @@ export const useSetClientArchived = (agencyId: string | null) => {
         queryKey: clientsKey(agencyId, true)
       });
     },
-    onError: (err) => {
-      const appError = normalizeError(err, "Impossible de modifier l'archive du client.");
-      reportError(appError, { source: 'useSetClientArchived' });
-      notifyError(appError);
+    onError: (error) => {
+      handleUiError(error, "Impossible de modifier l'archive du client.", {
+        source: 'useSetClientArchived.onError'
+      });
     }
   });
 };

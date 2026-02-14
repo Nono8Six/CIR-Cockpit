@@ -12,10 +12,6 @@ export const addTimelineEvent = async (
     ...event,
     author: event.author?.trim() || userLabel || undefined
   };
-  const updatedInteraction: InteractionUpdate = {
-    ...updates,
-    timeline: [...interaction.timeline, enrichedEvent]
-  };
 
-  return updateInteractionOptimistic(interaction.id, interaction.updated_at, updatedInteraction);
+  return updateInteractionOptimistic(interaction.id, interaction.updated_at, enrichedEvent, updates);
 };

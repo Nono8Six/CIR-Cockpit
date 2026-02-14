@@ -3,7 +3,8 @@ import { UserRole } from '@/types';
 
 export type CreateAdminUserPayload = {
   email: string;
-  display_name?: string;
+  first_name: string;
+  last_name: string;
   role?: UserRole;
   agency_ids?: string[];
   password?: string;

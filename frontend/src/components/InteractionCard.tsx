@@ -6,15 +6,26 @@ import { getInteractionCardState } from './interaction-card/getInteractionCardSt
 import type { InteractionCardProps } from './interaction-card/InteractionCard.types';
 
 const InteractionCard = ({ data, statusMeta }: InteractionCardProps) => {
-  const { isDone, statusLabel, statusClass } = getInteractionCardState(data, statusMeta);
+  const { isDone, isLate, statusTone, statusLabel, statusClass } = getInteractionCardState(
+    data,
+    statusMeta
+  );
 
   return (
-    <div className={`p-3 rounded-md shadow-sm border border-slate-200 bg-white hover:shadow-md transition group border-l-[3px] ${statusClass} cursor-pointer hover:border-slate-300 relative`}>
+    <article
+      className={`group rounded-lg border bg-white p-3 shadow-sm transition hover:shadow-md ${statusClass}`}
+    >
       <InteractionCardHeader data={data} />
       <InteractionCardBody data={data} />
       <InteractionCardFamilies families={data.mega_families} />
-      <InteractionCardFooter data={data} isDone={isDone} statusLabel={statusLabel} />
-    </div>
+      <InteractionCardFooter
+        data={data}
+        isDone={isDone}
+        isLate={isLate}
+        statusTone={statusTone}
+        statusLabel={statusLabel}
+      />
+    </article>
   );
 };
 

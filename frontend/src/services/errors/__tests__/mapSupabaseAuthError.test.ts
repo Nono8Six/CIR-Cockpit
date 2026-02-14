@@ -18,6 +18,27 @@ describe('mapSupabaseAuthError', () => {
     expect(result.code).toBe('AUTH_INVALID_CREDENTIALS');
   });
 
+  it('maps invalid credentials from auth message when code is missing', () => {
+    const error = makeAuthError({
+      code: undefined,
+      status: 400,
+      message: 'Invalid login credentials'
+    });
+    const result = mapSupabaseAuthError(error);
+    expect(result.code).toBe('AUTH_INVALID_CREDENTIALS');
+    expect(result.message).toBe('Identifiants invalides ou compte inactif.');
+  });
+
+  it('maps rate limit auth errors to RATE_LIMIT', () => {
+    const error = makeAuthError({
+      code: undefined,
+      status: 429,
+      message: 'Too many requests'
+    });
+    const result = mapSupabaseAuthError(error);
+    expect(result.code).toBe('RATE_LIMIT');
+  });
+
   it('maps 401/403 to AUTH_FORBIDDEN', () => {
     const error = makeAuthError({ status: 401 });
     const result = mapSupabaseAuthError(error);

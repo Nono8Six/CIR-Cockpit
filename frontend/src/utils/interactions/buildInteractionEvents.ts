@@ -45,7 +45,8 @@ export const buildInteractionEvents = ({
 
   if (statusId && statusId !== (interaction.status_id ?? '')) {
     const previousLabel = statusById.get(interaction.status_id ?? '')?.label ?? interaction.status;
-    const nextLabel = statusById.get(statusId)?.label ?? interaction.status;
+    const nextStatus = statusById.get(statusId);
+    const nextLabel = nextStatus?.label ?? interaction.status;
     events.push({
       id: `${Date.now()}st`,
       date: now,
@@ -54,6 +55,9 @@ export const buildInteractionEvents = ({
     });
     updates.status_id = statusId;
     updates.status = nextLabel;
+    if (nextStatus) {
+      updates.status_is_terminal = nextStatus.is_terminal || nextStatus.category === 'done';
+    }
   }
 
   if (reminder !== safeReminder) {
@@ -74,6 +78,10 @@ export const buildInteractionEvents = ({
       type: 'note',
       content: note
     });
+  }
+
+  if (events.length > 0) {
+    updates.last_action_at = now;
   }
 
   return { events, updates };

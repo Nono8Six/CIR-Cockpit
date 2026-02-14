@@ -1,4 +1,4 @@
-import type { AgencyStatus, Interaction } from '@/types';
+import type { AgencyStatus, Interaction, StatusCategory } from '@/types';
 
 export type InteractionCardProps = {
   data: Interaction;
@@ -8,6 +8,7 @@ export type InteractionCardProps = {
 export type InteractionCardComputedState = {
   isDone: boolean;
   isLate: boolean;
+  statusTone: StatusCategory;
   statusLabel: string;
   statusClass: string;
 };

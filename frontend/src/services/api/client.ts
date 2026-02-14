@@ -9,16 +9,30 @@ const getApiBaseUrl = (): string => {
   return `${baseUrl}/functions/v1/api`;
 };
 
-const getAnonKey = (): string => {
+const getOptionalApiKeyHeader = (): string => {
   const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  if (!anonKey) throw createAppError({ code: 'CONFIG_MISSING', message: 'Configuration invalide.', source: 'client' });
-  return anonKey;
+  if (!anonKey) return '';
+  const trimmed = anonKey.trim();
+  if (!trimmed) return '';
+  // Edge gateway verify_jwt rejects publishable keys in apikey header.
+  if (trimmed.startsWith('sb_publishable_')) return '';
+  return trimmed;
 };
 
-const getAuthHeader = async (): Promise<string> => {
+const toBearerToken = (value: string): string => {
+  return value.toLowerCase().startsWith('bearer ') ? value : `Bearer ${value}`;
+};
+
+const getUserAccessToken = async (): Promise<string> => {
   const supabase = requireSupabaseClient();
   const { data } = await supabase.auth.getSession();
-  return data.session?.access_token ? `Bearer ${data.session.access_token}` : '';
+  return data.session?.access_token ? toBearerToken(data.session.access_token) : '';
+};
+
+const getGatewayAuthHeader = (): string => {
+  const gatewayToken = import.meta.env.VITE_SUPABASE_EDGE_GATEWAY_JWT;
+  if (!gatewayToken || !gatewayToken.trim()) return '';
+  return toBearerToken(gatewayToken.trim());
 };
 
 type ApiErrorPayload = { request_id?: string; ok?: boolean; code?: string; error?: string; details?: string };
@@ -35,13 +49,33 @@ const toApiPayload = (value: unknown): ApiErrorPayload | null => {
 };
 
 export const safeInvoke = async <TResponse>(path: string, body: unknown, parseResponse: (payload: unknown) => TResponse): Promise<TResponse> => {
-  const authHeader = await getAuthHeader();
-  const headers: Record<string, string> = { 'Content-Type': 'application/json', apikey: getAnonKey() };
-  if (authHeader) headers.Authorization = authHeader;
+  return safeInvokeUrl(`${getApiBaseUrl()}${path}`, body, parseResponse);
+};
+
+const safeInvokeUrl = async <TResponse>(
+  url: string,
+  body: unknown,
+  parseResponse: (payload: unknown) => TResponse
+): Promise<TResponse> => {
+  const userAuthHeader = await getUserAccessToken();
+  const gatewayAuthHeader = getGatewayAuthHeader();
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  const apiKeyHeader = getOptionalApiKeyHeader();
+  if (apiKeyHeader) {
+    headers.apikey = apiKeyHeader;
+  }
+  if (gatewayAuthHeader) {
+    headers.Authorization = gatewayAuthHeader;
+    if (userAuthHeader) {
+      headers['x-client-authorization'] = userAuthHeader;
+    }
+  } else if (userAuthHeader) {
+    headers.Authorization = userAuthHeader;
+  }
 
   let response: Response;
   try {
-    response = await fetch(`${getApiBaseUrl()}${path}`, { method: 'POST', headers, body: JSON.stringify(body) });
+    response = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
   } catch (error) {
     throw createAppError({ code: 'NETWORK_ERROR', message: 'Impossible de joindre le serveur. Verifiez votre connexion.', source: 'network', cause: error });
   }

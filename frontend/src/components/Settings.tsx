@@ -47,12 +47,12 @@ const Settings = ({ config, canEdit, agencyId }: SettingsProps) => {
   } = useSettingsState({ config, canEdit, agencyId });
 
   return (
-    <div className="h-full bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+    <div className="flex h-full flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm" data-testid="settings-root">
       <SettingsHeader readOnly={readOnly} isSaving={isSaving} onReset={handleReset} onSave={handleSave} />
 
       {readOnly && <SettingsReadOnlyBanner />}
 
-      <div className="flex-1 overflow-auto p-6 bg-slate-50/50">
+      <div className="flex-1 overflow-auto bg-slate-50/50 p-4 sm:p-6">
         <SettingsSections
           readOnly={readOnly}
           families={families}

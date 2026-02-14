@@ -12,3 +12,10 @@ export { clientFormSchema, clientNumberSchema, accountTypeSchema } from './clien
 export { clientContactFormSchema } from './client-contact.schema.ts';
 export { convertClientSchema } from './convert-client.schema.ts';
 export { prospectFormSchema } from './prospect.schema.ts';
+export {
+  dataEntitiesPayloadSchema,
+  dataEntityContactsPayloadSchema,
+  dataInteractionsPayloadSchema,
+  dataConfigPayloadSchema,
+  dataProfilePayloadSchema
+} from './data.schema.ts';

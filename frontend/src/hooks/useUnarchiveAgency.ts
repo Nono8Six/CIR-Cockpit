@@ -2,9 +2,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { adminAgenciesUnarchive } from '@/services/admin/adminAgenciesUnarchive';
 import { agenciesKey } from '@/services/query/queryKeys';
-import { normalizeError } from '@/services/errors/normalizeError';
-import { notifyError } from '@/services/errors/notify';
-import { reportError } from '@/services/errors/reportError';
+import { handleUiError } from '@/services/errors/handleUiError';
+import { mapAdminDomainError } from '@/services/errors/mapAdminDomainError';
 
 export const useUnarchiveAgency = () => {
   const queryClient = useQueryClient();
@@ -22,9 +21,11 @@ export const useUnarchiveAgency = () => {
       queryClient.invalidateQueries({ queryKey: agenciesKey(false) });
     },
     onError: (err) => {
-      const appError = normalizeError(err, "Impossible de reactiver l'agence.");
-      reportError(appError, { source: 'useUnarchiveAgency' });
-      notifyError(appError);
+      const appError = mapAdminDomainError(err, {
+        action: 'update_agency',
+        fallbackMessage: "Impossible de reactiver l'agence."
+      });
+      handleUiError(appError, appError.message, { source: 'useUnarchiveAgency' });
     }
   });
 };
