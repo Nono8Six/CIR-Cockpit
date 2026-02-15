@@ -3,6 +3,8 @@ import { mapEdgeError } from '@/services/errors/mapEdgeError';
 import { requireSupabaseClient } from '@/services/supabase/requireSupabaseClient';
 import { isRecord, readBoolean, readString } from '@/utils/recordNarrowing';
 
+const TOKEN_REFRESH_SAFETY_WINDOW_SECONDS = 30;
+
 const getApiBaseUrl = (): string => {
   const baseUrl = import.meta.env.VITE_SUPABASE_URL;
   if (!baseUrl) throw createAppError({ code: 'CONFIG_INVALID', message: 'Configuration invalide.', source: 'client' });
@@ -14,8 +16,6 @@ const getOptionalApiKeyHeader = (): string => {
   if (!anonKey) return '';
   const trimmed = anonKey.trim();
   if (!trimmed) return '';
-  // Edge gateway verify_jwt rejects publishable keys in apikey header.
-  if (trimmed.startsWith('sb_publishable_')) return '';
   return trimmed;
 };
 
@@ -23,16 +23,26 @@ const toBearerToken = (value: string): string => {
   return value.toLowerCase().startsWith('bearer ') ? value : `Bearer ${value}`;
 };
 
-const getUserAccessToken = async (): Promise<string> => {
-  const supabase = requireSupabaseClient();
-  const { data } = await supabase.auth.getSession();
-  return data.session?.access_token ? toBearerToken(data.session.access_token) : '';
+const isSessionExpiredOrNearExpiry = (expiresAt?: number): boolean => {
+  if (!expiresAt) return true;
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  return expiresAt <= (nowSeconds + TOKEN_REFRESH_SAFETY_WINDOW_SECONDS);
 };
 
-const getGatewayAuthHeader = (): string => {
-  const gatewayToken = import.meta.env.VITE_SUPABASE_EDGE_GATEWAY_JWT;
-  if (!gatewayToken || !gatewayToken.trim()) return '';
-  return toBearerToken(gatewayToken.trim());
+const getUserAccessToken = async (): Promise<string> => {
+  const supabase = requireSupabaseClient();
+  const { data: sessionData } = await supabase.auth.getSession();
+  let session = sessionData.session;
+
+  const shouldRefresh = !session?.access_token || isSessionExpiredOrNearExpiry(session.expires_at);
+  if (shouldRefresh) {
+    const { data: refreshedData } = await supabase.auth.refreshSession();
+    if (refreshedData.session?.access_token) {
+      session = refreshedData.session;
+    }
+  }
+
+  return session?.access_token ? toBearerToken(session.access_token) : '';
 };
 
 type ApiErrorPayload = { request_id?: string; ok?: boolean; code?: string; error?: string; details?: string };
@@ -58,18 +68,12 @@ const safeInvokeUrl = async <TResponse>(
   parseResponse: (payload: unknown) => TResponse
 ): Promise<TResponse> => {
   const userAuthHeader = await getUserAccessToken();
-  const gatewayAuthHeader = getGatewayAuthHeader();
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   const apiKeyHeader = getOptionalApiKeyHeader();
   if (apiKeyHeader) {
     headers.apikey = apiKeyHeader;
   }
-  if (gatewayAuthHeader) {
-    headers.Authorization = gatewayAuthHeader;
-    if (userAuthHeader) {
-      headers['x-client-authorization'] = userAuthHeader;
-    }
-  } else if (userAuthHeader) {
+  if (userAuthHeader) {
     headers.Authorization = userAuthHeader;
   }
 

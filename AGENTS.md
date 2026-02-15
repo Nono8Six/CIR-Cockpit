@@ -43,6 +43,13 @@ Invoquer le skill correspondant AVANT d'ecrire du code (voir liste dans CLAUDE.m
 - Ne pas ajouter de fonctionnalites, refactoring, ou documentation au-dela de ce qui est demande
 - Executer les commandes de verification depuis `frontend/` pour le front et depuis la racine pour le backend
 
+## Quality Gate manuel (sans CI)
+
+- Reference obligatoire: `docs/qa-runbook.md`
+- Lecture obligatoire de `docs/qa-runbook.md` avant chaque prompt de travail envoye au LLM.
+- Toute livraison doit suivre ce runbook de bout en bout (ordre strict, PASS/FAIL bloquant, rapport final).
+- Sans execution complete du runbook, une tache n'est pas consideree terminee.
+
 ## Checklist pre-commit
 
 Avant de considerer le travail termine :

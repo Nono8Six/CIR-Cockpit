@@ -1,7 +1,7 @@
 # Stack Technique - CIR Cockpit
 
 > Document de reference pour la stack technique du projet.
-> Derniere mise a jour: 05/02/2026 (versions du repo)
+> Derniere mise a jour: 15/02/2026 (versions du repo)
 
 ## Vue d'ensemble
 
@@ -148,6 +148,7 @@
 | **Provider** | Supabase Auth (GoTrue) |
 | **Methode** | Email + Password |
 | **Tokens** | JWT (access + refresh) |
+| **Signature JWT** | ES256 (ECC P-256) |
 | **Roles** | `super_admin`, `agency_admin`, `tcs` |
 
 **Flux:**
@@ -155,6 +156,11 @@
 2. JWT stocke automatiquement
 3. RLS utilise `auth.uid()` pour filtrer
 4. Refresh token automatique
+
+**Politique JWT backend (Edge Function `api`):**
+1. Verification JWT explicite via JWKS (`/auth/v1/.well-known/jwks.json`).
+2. Algorithme autorise par defaut: `ES256` (`SUPABASE_JWT_ALLOWED_ALGS=ES256`).
+3. Regle d'exploitation: la cle `Current key` Supabase doit rester en **ECC P-256** pour eviter les `401 AUTH_REQUIRED` dus a un mismatch algo.
 
 ### Edge Functions
 

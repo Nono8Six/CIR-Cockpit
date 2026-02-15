@@ -42,7 +42,7 @@ const LoginScreenForm = ({
           <Input
             id="email"
             type="email"
-            autoComplete="email"
+            autoComplete="username"
             name="email"
             className="pl-9"
             value={email}

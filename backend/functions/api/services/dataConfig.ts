@@ -143,7 +143,7 @@ const syncStatuses = async (
 
 export const handleDataConfigAction = async (
   db: DbClient,
-  callerId: string,
+  _callerId: string,
   requestId: string | undefined,
   agencyId: string,
   data: DataConfigPayload

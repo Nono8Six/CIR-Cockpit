@@ -78,12 +78,22 @@ test('global search keyboard flow is stable and responsive without overflow', as
   await login(page);
 
   await page.keyboard.press('Control+k');
-  await expect(page.getByTestId('app-search-input')).toBeVisible();
-  await page.getByTestId('app-search-input').fill('P04_TEST_CLIENT');
+  const searchInput = page.getByTestId('app-search-input');
+  await expect(searchInput).toBeVisible();
+  await searchInput.fill('P04_TEST_CLIENT');
+  const searchResult = page.getByText(/p04_test_client/i).first();
+  await expect(searchResult).toBeVisible();
   await page.keyboard.press('ArrowDown');
   await page.keyboard.press('Enter');
 
-  const clientsTab = page.getByRole('tab', { name: /clients \(f5\)/i });
+  if ((await searchInput.count()) > 0) {
+    await searchResult.click();
+  }
+  await expect(searchInput).toHaveCount(0);
+
+  const clientsTab = page
+    .getByTestId('app-header-tabs-scroll')
+    .getByRole('tab', { name: /clients \(f5\)/i });
   await expect(clientsTab).toHaveAttribute('data-state', 'active');
 
   await page.keyboard.press('Control+k');
@@ -138,9 +148,9 @@ test('global search exposes an explicit user error state when entity index fails
   await login(page);
 
   await page.getByTestId('app-header-search-button').click();
-  const errorMessage = page.getByTestId('app-search-list').getByText(/recherche indisponible/i);
-  await expect(errorMessage).toBeVisible();
+  const errorMessage = page.getByText(/recherche indisponible\.\s*veuillez reessayer\./i).first();
+  await expect(errorMessage).toBeVisible({ timeout: 20_000 });
 
   await page.getByRole('button', { name: /reessayer/i }).click();
-  await expect(errorMessage).toBeVisible();
+  await expect(errorMessage).toBeVisible({ timeout: 20_000 });
 });

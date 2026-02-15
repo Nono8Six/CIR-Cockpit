@@ -1,4 +1,4 @@
-import { Hono } from 'jsr:@hono/hono';
+import { Hono } from '@hono/hono';
 
 import type { AppEnv } from './types.ts';
 import { handleError } from './middleware/errorHandler.ts';
@@ -15,7 +15,7 @@ const allowedOrigin = Deno.env.get('CORS_ALLOWED_ORIGIN') ?? '*';
 
 const corsHeaders: Record<string, string> = {
   'Access-Control-Allow-Origin': allowedOrigin,
-  'Access-Control-Allow-Headers': 'authorization, x-client-authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Expose-Headers': 'x-request-id'
 };

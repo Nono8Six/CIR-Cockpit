@@ -1067,3 +1067,119 @@ Performance advisor:
 1. **Corrige en prod**: blocage principal `/functions/v1/api/data/*` en `404` elimine.
 2. **Reste non-bloquant constate**:
    - les tests e2e `admin-settings-p07` restent `skipped` (selecteur de tab admin), alors que les endpoints admin sont bien resolves en runtime (`/admin/users`, `/admin/agencies` -> `400 INVALID_PAYLOAD` avec session valide).
+
+### 10.7 Avancement P2 auth explicite + integration backend (2026-02-14)
+
+#### 10.7.1 Implementations P2
+
+1. Backend auth migre vers verification JWT explicite `jose + JWKS` dans `backend/functions/api/middleware/auth.ts`.
+2. Priorite headers mise a jour: `Authorization` prioritaire, fallback `x-client-authorization`.
+3. Frontend simplifie: suppression de `VITE_SUPABASE_EDGE_GATEWAY_JWT` et envoi direct du token utilisateur (`Authorization`).
+4. Suite integration backend ajoutee (mode opt-in) dans `backend/functions/api/integration/api_integration_test.ts`:
+   - CORS `OPTIONS` sur toutes les routes
+   - `401 AUTH_REQUIRED` sans token
+   - `403 AUTH_FORBIDDEN` utilisateur non-admin sur `/admin/*`
+   - `400 INVALID_PAYLOAD` avec token valide + body invalide
+   - parcours valides `/data/*` (profile/entities/entity-contacts/interactions/config)
+5. Execution locale documentee pour l'integration backend (sans dependance GitHub Actions).
+
+#### 10.7.2 Validations executees
+
+1. `cd frontend && npm run typecheck` -> OK
+2. `cd frontend && npm run lint -- --max-warnings=0` -> OK
+3. `cd frontend && npm run test -- --run` -> OK (101/101)
+4. `cd frontend && npm run test:e2e` -> OK (14 passed, 2 skipped)
+5. `cd frontend && npm run check:error-compliance` -> OK
+6. `deno test --allow-env --no-check --config backend/deno.json backend/functions/api` -> OK (43 passed, 7 ignored)
+
+### 10.8 Revalidation P0 fiabilite/lint (2026-02-15)
+
+#### 10.8.1 Correctifs appliques
+
+1. **Dette `deno lint` eliminee** sur `backend/functions/api`:
+   - imports inline (`https://`, `jsr:`) remplaces par imports bare specifier;
+   - import maps alignees dans `deno.json` et `backend/deno.json`;
+   - alias ajoutes: `@hono/hono`, `@supabase/supabase-js`, `@supabase/functions-js/`, `std/assert`.
+2. **Suppression des castings faibles dans les routes data**:
+   - retrait de `as any` sur `upsert` interactions;
+   - retrait des `as unknown as Record<string, unknown>` dans `dataEntities` et `dataInteractions`;
+   - normalisation explicite des updates optimistes interactions (`status`, `status_id`, `order_ref`, `reminder_at`, `notes`, `entity_id`, `contact_id`, `status_is_terminal`, `mega_families`).
+3. **Nettoyage lint no-unused-vars**:
+   - parametres non utilises renommes en `_callerId` dans `dataEntities`, `dataEntityContacts`, `dataConfig`.
+
+#### 10.8.2 Verifications executees (2026-02-15)
+
+1. Backend:
+   - `deno lint backend/functions/api` -> **OK** (`Checked 27 files`)
+   - `deno check --config backend/deno.json backend/functions/api/index.ts` -> **OK**
+   - `deno test --allow-env --no-check --config backend/deno.json backend/functions/api` -> **OK** (`43 passed, 0 failed, 7 ignored`)
+2. Frontend:
+   - `cd frontend && npm run typecheck` -> **OK**
+   - `cd frontend && npm run lint -- --max-warnings=0` -> **OK**
+   - `cd frontend && npm run test:run` -> **OK** (`106/106`)
+   - `cd frontend && npm run test:e2e` -> **OK** (`14 passed, 2 skipped`)
+   - `cd frontend && npm run check:error-compliance` -> **OK**
+   - `cd frontend && npm run build` -> **OK**
+3. Securite dependances:
+   - `cd frontend && npm audit --audit-level=high --omit=dev` -> **0 vuln**
+   - `npm audit --audit-level=high` (racine) -> **0 vuln**
+
+#### 10.8.3 Runtime Supabase (controle de coherence)
+
+1. `mcp__supabase__list_edge_functions`:
+   - slug actif: `api`
+   - version: `18`
+   - `verify_jwt=false`
+   - entrypoint: `source/supabase/functions/api/index.ts`
+2. Probes HTTP anonymes:
+   - `POST /functions/v1/api/{admin/users,admin/agencies,data/*}` -> `401` attendu (auth requise)
+   - `OPTIONS /functions/v1/api/{admin/users,admin/agencies,data/*}` -> `200` + CORS (`Access-Control-Allow-Origin=*`, `Allow-Methods=POST, OPTIONS`)
+
+#### 10.8.4 Statut roadmap (focus P0)
+
+1. **P0.1/P0.2/P0.3/P0.4/P0.5**: maintenus **OK**.
+2. **Nouveau P0 ferme**: gate `deno lint` backend passe.
+3. Prochain jalon recommande: attaquer **P1 integration backend sans CI** (runbook strict + execution manuelle des tests integration en environnement dedie).
+
+### 10.9 Mode sans CI active (2026-02-15)
+
+1. Politique active: quality gate manuel obligatoire via `docs/qa-runbook.md`.
+2. `AGENTS.md` impose la lecture du runbook avant chaque prompt de travail LLM.
+3. Chaque livraison doit contenir un "Rapport QA Manuel (Sans CI)" avec PASS/FAIL explicite.
+
+### 10.10 Cloture P2 - Contrat auth strict + E2E admin (2026-02-15)
+
+> Cette section complete les points historiques precedents et fait foi pour l'etat final P2.
+
+#### 10.10.1 Contrat auth HTTP final
+
+1. Backend `requireAuth` et `requireSuperAdmin` n'acceptent plus le fallback `x-client-authorization`.
+2. Le header supporte pour l'auth applicative est `Authorization: Bearer <token>`.
+3. CORS API aligne:
+   - `Access-Control-Allow-Headers` n'expose plus `x-client-authorization`.
+4. Frontend `safeInvoke` n'envoie plus `x-client-authorization`.
+
+#### 10.10.2 Couverture integration backend
+
+La suite `backend/functions/api/integration/api_integration_test.ts` couvre desormais explicitement:
+1. `OPTIONS` CORS sur toutes les routes, avec verification absence de `x-client-authorization` dans les headers autorises.
+2. `401 AUTH_REQUIRED` sans token.
+3. `401 AUTH_REQUIRED` avec seul `x-client-authorization`.
+4. `403 AUTH_FORBIDDEN` utilisateur non-admin sur `/admin/*`.
+5. `400 INVALID_PAYLOAD` avec token valide + payload invalide.
+6. Parcours valides `/data/*` (profile/entities/entity-contacts/interactions/config).
+
+#### 10.10.3 E2E admin dedie
+
+1. `frontend/e2e/admin-settings-p07.spec.ts` utilise un compte admin dedie:
+   - `E2E_ADMIN_EMAIL`
+   - `E2E_ADMIN_PASSWORD`
+2. Le `skip` conditionnel sur absence d'acces admin dans la spec a ete retire.
+3. Le pre-requis est explicite: les variables admin doivent etre configurees dans `frontend/.env.e2e`.
+
+#### 10.10.4 Statut roadmap P2
+
+1. P2 auth explicite: **FAIT**.
+2. P2 suppression fallback legacy `x-client-authorization`: **FAIT**.
+3. P2 integration backend route->service->db renforcee: **FAIT**.
+4. P2 durcissement E2E admin (compte dedie, plus de skip role silencieux): **FAIT**.

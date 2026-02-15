@@ -1,4 +1,4 @@
-import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.91.0';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '../../../shared/supabase.types.ts';
 
 export type DbClient = SupabaseClient<Database>;

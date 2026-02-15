@@ -21,7 +21,9 @@ const UsersManagerContent = ({ state }: UsersManagerContentProps) => {
     handleResetPassword,
     handleArchiveToggle,
     handleRoleChange,
-    openMembershipDialog
+    openMembershipDialog,
+    openEditIdentityDialog,
+    handleDeleteUser
   } = state;
 
   return (
@@ -47,6 +49,8 @@ const UsersManagerContent = ({ state }: UsersManagerContentProps) => {
         onArchiveToggle={handleArchiveToggle}
         onRoleChange={handleRoleChange}
         onEditMemberships={openMembershipDialog}
+        onEditIdentity={openEditIdentityDialog}
+        onDeleteUser={handleDeleteUser}
       />
     </>
   );

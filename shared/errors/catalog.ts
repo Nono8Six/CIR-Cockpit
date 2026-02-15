@@ -181,6 +181,52 @@ export const ERROR_CATALOG: Record<string, ErrorCatalogEntry> = {
   USER_NOT_FOUND: makeEntry('USER_NOT_FOUND', 'Utilisateur introuvable.', 'db', 'warning', 'reload'),
   USER_CREATE_FAILED: makeEntry('USER_CREATE_FAILED', 'Impossible de créer l’utilisateur.', 'db', 'error', 'retry', true),
   USER_UPDATE_FAILED: makeEntry('USER_UPDATE_FAILED', 'Impossible de modifier l’utilisateur.', 'db', 'error', 'retry', true),
+  USER_DELETE_FAILED: makeEntry('USER_DELETE_FAILED', 'Impossible de supprimer l’utilisateur.', 'db', 'error', 'retry', true),
+  USER_DELETE_SELF_FORBIDDEN: makeEntry(
+    'USER_DELETE_SELF_FORBIDDEN',
+    'Impossible de supprimer votre propre compte.',
+    'validation',
+    'warning',
+    'none'
+  ),
+  USER_DELETE_HAS_INTERACTIONS: makeEntry(
+    'USER_DELETE_HAS_INTERACTIONS',
+    'Impossible de supprimer cet utilisateur car il a cree des interactions.',
+    'db',
+    'warning',
+    'none'
+  ),
+  USER_DELETE_REFERENCED: makeEntry(
+    'USER_DELETE_REFERENCED',
+    'Impossible de supprimer cet utilisateur car des donnees y sont rattachees.',
+    'db',
+    'warning',
+    'none'
+  ),
+  SYSTEM_USER_PROVISION_FAILED: makeEntry(
+    'SYSTEM_USER_PROVISION_FAILED',
+    'Impossible de preparer le compte systeme pour la suppression.',
+    'db',
+    'error',
+    'retry',
+    true
+  ),
+  SYSTEM_USER_NOT_FOUND: makeEntry(
+    'SYSTEM_USER_NOT_FOUND',
+    'Compte systeme introuvable pour finaliser la suppression.',
+    'db',
+    'error',
+    'retry',
+    true
+  ),
+  USER_DELETE_ANONYMIZATION_FAILED: makeEntry(
+    'USER_DELETE_ANONYMIZATION_FAILED',
+    "Impossible d'anonymiser les interactions avant suppression.",
+    'db',
+    'error',
+    'retry',
+    true
+  ),
   VALIDATION_ERROR: makeEntry('VALIDATION_ERROR', 'Données invalides.', 'validation', 'warning', 'retry'),
   NETWORK_ERROR: makeEntry(
     'NETWORK_ERROR',

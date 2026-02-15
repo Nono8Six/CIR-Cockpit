@@ -3,8 +3,11 @@ import type { FormEvent } from 'react';
 
 import { UserRole } from '@/types';
 import { CreateAdminUserPayload } from '@/services/admin/adminUsersCreate';
+import { normalizeError } from '@/services/errors/normalizeError';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const HAS_DIGIT_REGEX = /\d/;
+const HAS_SYMBOL_REGEX = /[^a-zA-Z0-9]/;
 
 type UseUserCreateDialogParams = {
   onCreate: (payload: CreateAdminUserPayload) => Promise<void>;
@@ -33,6 +36,7 @@ export const useUserCreateDialog = ({ onCreate, onOpenChange }: UseUserCreateDia
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPassword = password.trim();
     if (!EMAIL_REGEX.test(normalizedEmail)) {
       setError('Email invalide.');
       return;
@@ -43,6 +47,18 @@ export const useUserCreateDialog = ({ onCreate, onOpenChange }: UseUserCreateDia
     }
     if (role === 'tcs' && agencyIds.length === 0) {
       setError('Un utilisateur TCS doit etre assigne a au moins une agence.');
+      return;
+    }
+    if (normalizedPassword.length > 0 && normalizedPassword.length < 8) {
+      setError('Le mot de passe doit contenir au moins 8 caracteres.');
+      return;
+    }
+    if (normalizedPassword.length > 0 && !HAS_DIGIT_REGEX.test(normalizedPassword)) {
+      setError('Le mot de passe doit contenir au moins un chiffre.');
+      return;
+    }
+    if (normalizedPassword.length > 0 && !HAS_SYMBOL_REGEX.test(normalizedPassword)) {
+      setError('Le mot de passe doit contenir au moins un symbole.');
       return;
     }
     setError(null);
@@ -57,7 +73,7 @@ export const useUserCreateDialog = ({ onCreate, onOpenChange }: UseUserCreateDia
         last_name: normalizedLastName,
         role,
         agency_ids: agencyIds,
-        password: password.trim() || undefined
+        password: normalizedPassword || undefined
       });
       setEmail('');
       setFirstName('');
@@ -66,6 +82,9 @@ export const useUserCreateDialog = ({ onCreate, onOpenChange }: UseUserCreateDia
       setRole('tcs');
       setAgencyIds([]);
       onOpenChange(false);
+    } catch (error) {
+      const appError = normalizeError(error, "Impossible de creer l'utilisateur.");
+      setError(appError.message);
     } finally {
       setIsSubmitting(false);
     }

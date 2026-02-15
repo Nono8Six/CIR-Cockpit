@@ -264,6 +264,42 @@ export type Database = {
           },
         ]
       }
+      agency_system_users: {
+        Row: {
+          agency_id: string
+          created_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agency_id: string
+          created_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agency_id?: string
+          created_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agency_system_users_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: true
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agency_system_users_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -617,6 +653,7 @@ export type Database = {
           email: string
           first_name: string | null
           id: string
+          is_system: boolean
           last_name: string
           must_change_password: boolean
           password_changed_at: string | null
@@ -631,6 +668,7 @@ export type Database = {
           email: string
           first_name?: string | null
           id: string
+          is_system?: boolean
           last_name: string
           must_change_password?: boolean
           password_changed_at?: string | null
@@ -645,6 +683,7 @@ export type Database = {
           email?: string
           first_name?: string | null
           id?: string
+          is_system?: boolean
           last_name?: string
           must_change_password?: boolean
           password_changed_at?: string | null
@@ -690,6 +729,7 @@ export type Database = {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }
         Returns: boolean
       }
+      hard_delete_agency: { Args: { p_agency_id: string }; Returns: undefined }
       has_agency_role: {
         Args: {
           roles: Database["public"]["Enums"]["user_role"][]

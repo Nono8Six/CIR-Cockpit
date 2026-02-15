@@ -1,4 +1,4 @@
-import type { Hono } from 'jsr:@hono/hono';
+import type { Hono } from '@hono/hono';
 
 import { adminAgenciesPayloadSchema } from '../../../../shared/schemas/agency.schema.ts';
 import type { AppEnv } from '../types.ts';

@@ -21,6 +21,14 @@ const setRoleSchema = z.object({
   role: userRoleSchema
 });
 
+const updateIdentitySchema = z.object({
+  action: z.literal('update_identity'),
+  user_id: uuidSchema,
+  email: emailSchema,
+  first_name: firstNameSchema,
+  last_name: lastNameSchema
+});
+
 const setMembershipsSchema = z.object({
   action: z.literal('set_memberships'),
   user_id: uuidSchema,
@@ -44,13 +52,20 @@ const unarchiveSchema = z.object({
   user_id: uuidSchema
 });
 
+const deleteUserSchema = z.object({
+  action: z.literal('delete'),
+  user_id: uuidSchema
+});
+
 export const adminUsersPayloadSchema = z.discriminatedUnion('action', [
   createUserSchema,
   setRoleSchema,
+  updateIdentitySchema,
   setMembershipsSchema,
   resetPasswordSchema,
   archiveSchema,
-  unarchiveSchema
+  unarchiveSchema,
+  deleteUserSchema
 ]);
 
 export type AdminUsersPayload = z.infer<typeof adminUsersPayloadSchema>;

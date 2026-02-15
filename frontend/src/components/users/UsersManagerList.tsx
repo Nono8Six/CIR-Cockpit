@@ -14,6 +14,8 @@ type UsersManagerListProps = {
   onArchiveToggle: (user: AdminUserSummary) => void;
   onRoleChange: (userId: string, role: UserRole) => void;
   onEditMemberships: (user: AdminUserSummary) => void;
+  onEditIdentity: (user: AdminUserSummary) => void;
+  onDeleteUser: (user: AdminUserSummary) => void;
 };
 
 const UsersManagerList = ({
@@ -23,7 +25,9 @@ const UsersManagerList = ({
   onResetPassword,
   onArchiveToggle,
   onRoleChange,
-  onEditMemberships
+  onEditMemberships,
+  onEditIdentity,
+  onDeleteUser
 }: UsersManagerListProps) => (
   <div className="space-y-2" data-testid="admin-users-list">
     {usersQuery.isLoading && (
@@ -58,6 +62,8 @@ const UsersManagerList = ({
         onArchiveToggle={onArchiveToggle}
         onRoleChange={onRoleChange}
         onEditMemberships={onEditMemberships}
+        onEditIdentity={onEditIdentity}
+        onDeleteUser={onDeleteUser}
       />
     ))}
   </div>

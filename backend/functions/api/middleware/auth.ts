@@ -1,5 +1,6 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.91.0';
-import type { MiddlewareHandler } from 'jsr:@hono/hono';
+import { createClient } from '@supabase/supabase-js';
+import type { MiddlewareHandler } from '@hono/hono';
+import { createRemoteJWKSet, decodeProtectedHeader, jwtVerify, type JWTVerifyGetKey } from 'jose';
 
 import type { Database } from '../../../../shared/supabase.types.ts';
 import type { AppEnv, DbClient } from '../types.ts';
@@ -9,6 +10,11 @@ type SupabaseConfig = {
   supabaseUrl: string;
   supabaseServiceRoleKey: string;
   supabaseAnonKey: string;
+  supabaseJwksUrl: string;
+  jwtIssuer: string;
+  jwtAudience: string | string[];
+  jwtAllowedAlgorithms: string[];
+  jwksCacheTtlMs: number;
 };
 
 type AuthIdentity = {
@@ -19,89 +25,205 @@ type AuthGateway = {
   verifyAccessToken: (token: string) => Promise<AuthIdentity | null>;
 };
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+type JwtGatewayDependencies = {
+  getKeyResolver: () => JWTVerifyGetKey;
+  issuer: string;
+  audience: string | string[];
+  allowedAlgorithms: readonly string[];
+};
 
-const getSupabaseConfig = (): SupabaseConfig => ({
-  supabaseUrl: SUPABASE_URL,
-  supabaseServiceRoleKey: SUPABASE_SERVICE_ROLE_KEY,
-  supabaseAnonKey: SUPABASE_ANON_KEY
-});
+const DEFAULT_AUDIENCE = 'authenticated';
+const DEFAULT_ALLOWED_ALGORITHM = 'ES256';
+const DEFAULT_JWKS_CACHE_TTL_MS = 10 * 60 * 1000;
+
+const normalizeBaseUrl = (value: string): string => value.replace(/\/+$/, '');
+
+const toList = (value: string | undefined, fallback: string[]): string[] => {
+  const parsed = (value ?? '')
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+  return parsed.length > 0 ? parsed : fallback;
+};
+
+const parseAudience = (value: string | undefined): string | string[] => {
+  const parsed = toList(value, [DEFAULT_AUDIENCE]);
+  return parsed.length === 1 ? parsed[0] : parsed;
+};
+
+const parsePositiveInt = (value: string | undefined, fallback: number): number => {
+  if (!value) return fallback;
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+  return parsed;
+};
+
+const getSupabaseConfig = (): SupabaseConfig => {
+  const rawUrl = (Deno.env.get('SUPABASE_URL') ?? '').trim();
+  const baseUrl = normalizeBaseUrl(rawUrl);
+  const jwtIssuerDefault = baseUrl ? `${baseUrl}/auth/v1` : '';
+  const jwksUrlDefault = baseUrl ? `${baseUrl}/auth/v1/.well-known/jwks.json` : '';
+
+  return {
+    supabaseUrl: baseUrl,
+    supabaseServiceRoleKey: (Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '').trim(),
+    supabaseAnonKey: (Deno.env.get('SUPABASE_ANON_KEY') ?? '').trim(),
+    supabaseJwksUrl: (Deno.env.get('SUPABASE_JWKS_URL') ?? jwksUrlDefault).trim(),
+    jwtIssuer: (Deno.env.get('SUPABASE_JWT_ISSUER') ?? jwtIssuerDefault).trim(),
+    jwtAudience: parseAudience(Deno.env.get('SUPABASE_JWT_AUDIENCE') ?? undefined),
+    jwtAllowedAlgorithms: toList(
+      Deno.env.get('SUPABASE_JWT_ALLOWED_ALGS') ?? undefined,
+      [DEFAULT_ALLOWED_ALGORITHM]
+    ),
+    jwksCacheTtlMs: parsePositiveInt(
+      Deno.env.get('SUPABASE_JWKS_CACHE_TTL_MS') ?? undefined,
+      DEFAULT_JWKS_CACHE_TTL_MS
+    )
+  };
+};
 
 const assertSupabaseConfig = (): SupabaseConfig => {
   const config = getSupabaseConfig();
-  if (!config.supabaseUrl || !config.supabaseServiceRoleKey || !config.supabaseAnonKey) {
+  if (
+    !config.supabaseUrl
+    || !config.supabaseServiceRoleKey
+    || !config.supabaseAnonKey
+    || !config.supabaseJwksUrl
+    || !config.jwtIssuer
+  ) {
     throw httpError(
       500,
       'CONFIG_MISSING',
-      'Missing SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, or SUPABASE_ANON_KEY'
+      'Configuration Supabase manquante.'
     );
   }
   return config;
 };
 
 let supabaseAdmin: DbClient | null = null;
+let supabaseAdminKey = '';
 let supabaseAuthGateway: AuthGateway | null = null;
+let supabaseAuthGatewayKey = '';
+let jwksResolver: JWTVerifyGetKey | null = null;
+let jwksResolverUrl = '';
+let jwksResolverCreatedAt = 0;
+
+const getAudienceCacheKey = (audience: string | string[]): string => {
+  return Array.isArray(audience) ? audience.join(',') : audience;
+};
 
 export const getSupabaseAdmin = (): DbClient => {
   const config = assertSupabaseConfig();
-  if (!supabaseAdmin) {
+  const nextKey = `${config.supabaseUrl}|${config.supabaseServiceRoleKey}`;
+  if (!supabaseAdmin || supabaseAdminKey !== nextKey) {
     supabaseAdmin = createClient<Database>(config.supabaseUrl, config.supabaseServiceRoleKey, {
       auth: { persistSession: false }
     });
+    supabaseAdminKey = nextKey;
   }
   return supabaseAdmin;
 };
 
-const createAuthClient = (): DbClient => {
-  const config = assertSupabaseConfig();
-  return createClient<Database>(config.supabaseUrl, config.supabaseAnonKey, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
-  });
+const getJwksResolver = (config: SupabaseConfig): JWTVerifyGetKey => {
+  const now = Date.now();
+  const hasFreshResolver = jwksResolver
+    && jwksResolverUrl === config.supabaseJwksUrl
+    && (now - jwksResolverCreatedAt) < config.jwksCacheTtlMs;
+
+  if (hasFreshResolver && jwksResolver) {
+    return jwksResolver;
+  }
+
+  jwksResolver = createRemoteJWKSet(new URL(config.supabaseJwksUrl));
+  jwksResolverUrl = config.supabaseJwksUrl;
+  jwksResolverCreatedAt = now;
+  return jwksResolver;
 };
 
-const createSupabaseAuthGateway = (): AuthGateway => {
-  const client = createAuthClient();
+export const createJwtAuthGateway = (dependencies: JwtGatewayDependencies): AuthGateway => {
   return {
     async verifyAccessToken(token: string): Promise<AuthIdentity | null> {
-      const { data, error } = await client.auth.getUser(token);
-      if (error || !data.user) {
+      const trimmedToken = token.trim();
+      if (!trimmedToken) return null;
+
+      const allowedAlgorithms = new Set(dependencies.allowedAlgorithms);
+
+      try {
+        const protectedHeader = decodeProtectedHeader(trimmedToken);
+        const algorithm = typeof protectedHeader.alg === 'string' ? protectedHeader.alg : '';
+        const keyId = typeof protectedHeader.kid === 'string' ? protectedHeader.kid.trim() : '';
+
+        if (!algorithm || !allowedAlgorithms.has(algorithm) || !keyId) {
+          return null;
+        }
+
+        const { payload } = await jwtVerify(trimmedToken, dependencies.getKeyResolver(), {
+          issuer: dependencies.issuer,
+          audience: dependencies.audience
+        });
+
+        const userId = typeof payload.sub === 'string' ? payload.sub.trim() : '';
+        if (!userId) {
+          return null;
+        }
+
+        return { userId };
+      } catch {
         return null;
       }
-      return { userId: data.user.id };
     }
   };
 };
 
+const createSupabaseAuthGateway = (config: SupabaseConfig): AuthGateway => {
+  return createJwtAuthGateway({
+    getKeyResolver: () => getJwksResolver(config),
+    issuer: config.jwtIssuer,
+    audience: config.jwtAudience,
+    allowedAlgorithms: config.jwtAllowedAlgorithms
+  });
+};
+
 const getSupabaseAuthGateway = (): AuthGateway => {
-  if (!supabaseAuthGateway) {
-    supabaseAuthGateway = createSupabaseAuthGateway();
+  const config = assertSupabaseConfig();
+  const nextKey = [
+    config.supabaseJwksUrl,
+    config.jwtIssuer,
+    getAudienceCacheKey(config.jwtAudience),
+    config.jwtAllowedAlgorithms.join(','),
+    String(config.jwksCacheTtlMs)
+  ].join('|');
+
+  if (!supabaseAuthGateway || supabaseAuthGatewayKey !== nextKey) {
+    supabaseAuthGateway = createSupabaseAuthGateway(config);
+    supabaseAuthGatewayKey = nextKey;
   }
   return supabaseAuthGateway;
 };
 
-export const getBearerToken = (header: string | null): string => {
+export const resetAuthCachesForTests = (): void => {
+  supabaseAdmin = null;
+  supabaseAdminKey = '';
+  supabaseAuthGateway = null;
+  supabaseAuthGatewayKey = '';
+  jwksResolver = null;
+  jwksResolverUrl = '';
+  jwksResolverCreatedAt = 0;
+};
+
+export const getBearerToken = (header: string | null | undefined): string => {
   if (!header) return '';
   return header.toLowerCase().startsWith('bearer ') ? header.slice(7).trim() : '';
 };
 
 export const getAccessTokenFromHeaders = (
-  authHeader: string | null,
-  clientAuthHeader: string | null
+  authHeader: string | null | undefined
 ): string => {
-  const clientToken = getBearerToken(clientAuthHeader);
-  if (clientToken) {
-    return clientToken;
-  }
   return getBearerToken(authHeader);
 };
 
 export const requireAuth: MiddlewareHandler<AppEnv> = async (c, next) => {
-  const token = getAccessTokenFromHeaders(
-    c.req.header('Authorization'),
-    c.req.header('x-client-authorization')
-  );
+  const token = getAccessTokenFromHeaders(c.req.header('Authorization'));
   if (!token) {
     throw httpError(401, 'AUTH_REQUIRED', 'Authentification requise.');
   }
@@ -117,10 +239,7 @@ export const requireAuth: MiddlewareHandler<AppEnv> = async (c, next) => {
 };
 
 export const requireSuperAdmin: MiddlewareHandler<AppEnv> = async (c, next) => {
-  const token = getAccessTokenFromHeaders(
-    c.req.header('Authorization'),
-    c.req.header('x-client-authorization')
-  );
+  const token = getAccessTokenFromHeaders(c.req.header('Authorization'));
   if (!token) {
     throw httpError(401, 'AUTH_REQUIRED', 'Authentification requise.');
   }

@@ -1,6 +1,7 @@
 import ConfirmDialog from '@/components/ConfirmDialog';
 import TemporaryPasswordDialog from '@/components/TemporaryPasswordDialog';
 import UserCreateDialog from '@/components/UserCreateDialog';
+import UserIdentityDialog from '@/components/UserIdentityDialog';
 import UserMembershipDialog from '@/components/UserMembershipDialog';
 import type { useUsersManager } from '@/hooks/useUsersManager';
 
@@ -22,13 +23,20 @@ const UsersManagerDialogs = ({ state }: UsersManagerDialogsProps) => {
     tempPassword,
     confirmResetUser,
     confirmArchive,
+    editIdentityOpen,
+    editIdentityUser,
+    confirmDeleteUser,
     agencies,
     handleCreateUser,
     handleMembershipSave,
+    handleIdentitySave,
     executeResetPassword,
     closeResetConfirm,
     closeArchiveConfirm,
-    executeArchiveToggle
+    executeArchiveToggle,
+    closeEditIdentityDialog,
+    closeDeleteConfirm,
+    executeDeleteUser
   } = state;
 
   return (
@@ -49,6 +57,16 @@ const UsersManagerDialogs = ({ state }: UsersManagerDialogsProps) => {
         agencies={agencies}
         selectedIds={selectedUser?.memberships.map((membership) => membership.agency_id) ?? []}
         onSave={handleMembershipSave}
+      />
+
+      <UserIdentityDialog
+        open={editIdentityOpen}
+        onOpenChange={(open) => {
+          if (open) return;
+          closeEditIdentityDialog();
+        }}
+        user={editIdentityUser}
+        onSave={handleIdentitySave}
       />
 
       <TemporaryPasswordDialog
@@ -88,6 +106,18 @@ const UsersManagerDialogs = ({ state }: UsersManagerDialogsProps) => {
         confirmLabel={confirmArchive?.nextArchived ? 'Archiver' : 'Restaurer'}
         variant={confirmArchive?.nextArchived ? 'destructive' : 'default'}
         onConfirm={executeArchiveToggle}
+      />
+
+      <ConfirmDialog
+        open={confirmDeleteUser !== null}
+        onOpenChange={(open) => {
+          if (!open) closeDeleteConfirm();
+        }}
+        title="Supprimer l'utilisateur"
+        description={`L'utilisateur ${confirmDeleteUser?.email ?? ''} sera definitivement supprime. Ses interactions resteront historisees et reattribuees a un compte systeme.`}
+        confirmLabel="Supprimer"
+        variant="destructive"
+        onConfirm={executeDeleteUser}
       />
     </>
   );

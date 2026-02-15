@@ -52,7 +52,7 @@ const deleteContact = async (db: DbClient, contactId: string): Promise<void> => 
 
 export const handleDataEntityContactsAction = async (
   db: DbClient,
-  callerId: string,
+  _callerId: string,
   requestId: string | undefined,
   data: DataEntityContactsPayload
 ): Promise<Record<string, unknown>> => {

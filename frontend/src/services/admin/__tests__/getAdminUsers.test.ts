@@ -60,7 +60,7 @@ describe('getAdminUsers', () => {
 
     expect(profilesSelect).toHaveBeenNthCalledWith(
       1,
-      'id, email, display_name, first_name, last_name, role, archived_at, created_at'
+      'id, email, display_name, first_name, last_name, role, archived_at, created_at, is_system'
     );
     expect(profilesSelect).toHaveBeenNthCalledWith(2, 'id, email, display_name, role, archived_at, created_at');
     expect(result).toEqual([
@@ -78,6 +78,57 @@ describe('getAdminUsers', () => {
     ]);
     expect(from).toHaveBeenCalledWith('profiles');
     expect(from).toHaveBeenCalledWith('agency_members');
+  });
+
+  it('filters out system users when is_system is available', async () => {
+    const profilesOrder = vi.fn().mockResolvedValue({
+      data: [
+        {
+          id: 'u1',
+          email: 'a.ferron@cir.fr',
+          display_name: 'FERRON Arnaud',
+          first_name: 'Arnaud',
+          last_name: 'FERRON',
+          role: 'super_admin',
+          archived_at: null,
+          created_at: '2026-02-10T10:00:00.000Z',
+          is_system: false
+        },
+        {
+          id: 'u-system',
+          email: 'system+agency-test@cir.invalid',
+          display_name: 'SYSTEME Agence',
+          first_name: 'Agence',
+          last_name: 'SYSTEME',
+          role: 'tcs',
+          archived_at: null,
+          created_at: '2026-02-10T10:00:00.000Z',
+          is_system: true
+        }
+      ],
+      error: null,
+      status: 200
+    });
+
+    const profilesSelect = vi.fn().mockReturnValue({ order: profilesOrder });
+    const membershipsSelect = vi.fn().mockResolvedValue({
+      data: [],
+      error: null,
+      status: 200
+    });
+
+    const from = vi.fn((table: string) => {
+      if (table === 'profiles') return { select: profilesSelect };
+      if (table === 'agency_members') return { select: membershipsSelect };
+      return { select: vi.fn() };
+    });
+
+    mockRequireSupabase.mockReturnValue({ from } as never);
+
+    const result = await getAdminUsers();
+
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('u1');
   });
 
   it('throws a mapped error when profile loading fails without fallback condition', async () => {

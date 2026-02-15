@@ -17,9 +17,9 @@ export type AdminUserSummary = {
 };
 
 type MembershipRow = { user_id: string; agency_id: string; agencies: { id: string; name: string } | null };
-type ProfileRow = Omit<AdminUserSummary, 'memberships'>;
+type ProfileRow = Omit<AdminUserSummary, 'memberships'> & { is_system: boolean };
 
-const PROFILES_SELECT_WITH_NAMES = 'id, email, display_name, first_name, last_name, role, archived_at, created_at';
+const PROFILES_SELECT_WITH_NAMES = 'id, email, display_name, first_name, last_name, role, archived_at, created_at, is_system';
 const PROFILES_SELECT_LEGACY = 'id, email, display_name, role, archived_at, created_at';
 
 const normalizeDisplayName = (displayName: string | null): string | null => {
@@ -40,7 +40,7 @@ const splitLegacyDisplayName = (displayName: string | null): { first_name: strin
 
 const shouldFallbackToLegacyProfilesSelect = (errorMessage: string, errorDetails: string | null): boolean => {
   const normalized = `${errorMessage} ${errorDetails ?? ''}`.toLowerCase();
-  return normalized.includes('first_name') || normalized.includes('last_name');
+  return normalized.includes('first_name') || normalized.includes('last_name') || normalized.includes('is_system');
 };
 
 const loadProfiles = async (): Promise<ProfileRow[]> => {
@@ -84,7 +84,8 @@ const loadProfiles = async (): Promise<ProfileRow[]> => {
       ...profile,
       display_name: normalizedDisplayName,
       first_name: nameParts.first_name,
-      last_name: nameParts.last_name
+      last_name: nameParts.last_name,
+      is_system: false
     };
   });
 };
@@ -117,7 +118,7 @@ export const getAdminUsers = async (): Promise<AdminUserSummary[]> => {
     membershipsByUser.set(item.user_id, list);
   });
 
-  return profilesResult.map((profile) => ({
+  return profilesResult.filter((profile) => !profile.is_system).map((profile) => ({
     id: profile.id,
     email: profile.email,
     display_name: profile.display_name,

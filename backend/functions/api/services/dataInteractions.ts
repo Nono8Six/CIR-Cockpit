@@ -4,31 +4,100 @@ import type { DbClient } from '../types.ts';
 import { httpError } from '../middleware/errorHandler.ts';
 
 type InteractionRow = Database['public']['Tables']['interactions']['Row'];
+type InteractionInsert = Database['public']['Tables']['interactions']['Insert'];
+type InteractionUpdate = Database['public']['Tables']['interactions']['Update'];
+type SaveInteractionPayload = Extract<DataInteractionsPayload, { action: 'save' }>;
+type AddTimelineEventPayload = Extract<DataInteractionsPayload, { action: 'add_timeline_event' }>;
+
+const toNullableString = (value: unknown): string | null | undefined => {
+  if (value === null) return null;
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+};
+
+const normalizeInteractionUpdates = (
+  updates: AddTimelineEventPayload['updates']
+): InteractionUpdate => {
+  if (!updates) return {};
+
+  const normalized: InteractionUpdate = {};
+
+  if (Object.hasOwn(updates, 'status')) {
+    const status = toNullableString(updates.status);
+    if (typeof status === 'string') normalized.status = status;
+  }
+  if (Object.hasOwn(updates, 'status_id')) {
+    const statusId = toNullableString(updates.status_id);
+    if (statusId !== undefined) normalized.status_id = statusId;
+  }
+  if (Object.hasOwn(updates, 'order_ref')) {
+    const orderRef = toNullableString(updates.order_ref);
+    if (orderRef !== undefined) normalized.order_ref = orderRef;
+  }
+  if (Object.hasOwn(updates, 'reminder_at')) {
+    const reminderAt = toNullableString(updates.reminder_at);
+    if (reminderAt !== undefined) normalized.reminder_at = reminderAt;
+  }
+  if (Object.hasOwn(updates, 'notes')) {
+    const notes = toNullableString(updates.notes);
+    if (notes !== undefined) normalized.notes = notes;
+  }
+  if (Object.hasOwn(updates, 'entity_id')) {
+    const entityId = toNullableString(updates.entity_id);
+    if (entityId !== undefined) normalized.entity_id = entityId;
+  }
+  if (Object.hasOwn(updates, 'contact_id')) {
+    const contactId = toNullableString(updates.contact_id);
+    if (contactId !== undefined) normalized.contact_id = contactId;
+  }
+  if (Object.hasOwn(updates, 'status_is_terminal') && typeof updates.status_is_terminal === 'boolean') {
+    normalized.status_is_terminal = updates.status_is_terminal;
+  }
+  if (Object.hasOwn(updates, 'mega_families')) {
+    const families = updates.mega_families;
+    if (Array.isArray(families) && families.every((item) => typeof item === 'string')) {
+      normalized.mega_families = families;
+    }
+  }
+
+  return normalized;
+};
 
 const saveInteraction = async (
   db: DbClient,
   callerId: string,
-  agencyId: string | undefined,
-  interaction: Record<string, unknown>
+  payload: SaveInteractionPayload
 ): Promise<InteractionRow> => {
-  const interactionId = interaction.id as string;
-  if (!interactionId) throw httpError(400, 'VALIDATION_ERROR', "Identifiant d'interaction manquant.");
-
-  const resolvedAgencyId = (agencyId ?? '').trim();
-
-  const row = {
-    ...interaction,
-    id: interactionId,
+  const { agency_id: agencyId, interaction } = payload;
+  const resolvedAgencyId = agencyId?.trim() ?? '';
+  const row: InteractionInsert = {
+    id: interaction.id,
     agency_id: resolvedAgencyId || null,
-    entity_id: (interaction.entity_id as string | undefined)?.trim() || null,
-    contact_id: (interaction.contact_id as string | undefined)?.trim() || null,
+    channel: interaction.channel,
+    entity_type: interaction.entity_type,
+    contact_service: interaction.contact_service,
+    company_name: interaction.company_name?.trim() ?? '',
+    contact_name: interaction.contact_name?.trim() ?? '',
+    contact_phone: interaction.contact_phone?.trim() || null,
+    contact_email: interaction.contact_email?.trim() || null,
+    subject: interaction.subject,
+    mega_families: interaction.mega_families ?? [],
+    status: '',
+    status_id: interaction.status_id.trim(),
+    interaction_type: interaction.interaction_type,
+    order_ref: interaction.order_ref?.trim() || null,
+    reminder_at: interaction.reminder_at?.trim() || null,
+    notes: interaction.notes?.trim() || null,
+    entity_id: interaction.entity_id ?? null,
+    contact_id: interaction.contact_id ?? null,
     created_by: callerId,
-    status: (interaction.status as string) ?? ''
+    timeline: interaction.timeline ?? []
   };
 
   const { data, error } = await db
     .from('interactions')
-    .upsert(row as any, { onConflict: 'id' })
+    .upsert(row, { onConflict: 'id' })
     .select('*');
 
   if (error) throw httpError(500, 'DB_WRITE_FAILED', "Impossible d'enregistrer l'interaction.");
@@ -39,11 +108,9 @@ const saveInteraction = async (
 
 const addTimelineEvent = async (
   db: DbClient,
-  interactionId: string,
-  expectedUpdatedAt: string,
-  event: Record<string, unknown>,
-  additionalUpdates?: Record<string, unknown>
+  payload: AddTimelineEventPayload
 ): Promise<InteractionRow> => {
+  const { interaction_id: interactionId, expected_updated_at: expectedUpdatedAt, event, updates } = payload;
   const { data: current, error: fetchError } = await db
     .from('interactions')
     .select('timeline')
@@ -55,14 +122,14 @@ const addTimelineEvent = async (
   const currentTimeline = Array.isArray(current.timeline) ? current.timeline : [];
   const updatedTimeline = [...currentTimeline, event];
 
-  const updates = {
-    ...(additionalUpdates ?? {}),
+  const rowUpdates: InteractionUpdate = {
+    ...normalizeInteractionUpdates(updates),
     timeline: updatedTimeline
   };
 
   const { data, error } = await db
     .from('interactions')
-    .update(updates)
+    .update(rowUpdates)
     .eq('id', interactionId)
     .eq('updated_at', expectedUpdatedAt)
     .select('*');
@@ -82,22 +149,11 @@ export const handleDataInteractionsAction = async (
 ): Promise<Record<string, unknown>> => {
   switch (data.action) {
     case 'save': {
-      const interaction = await saveInteraction(
-        db,
-        callerId,
-        data.agency_id,
-        data.interaction as unknown as Record<string, unknown>
-      );
+      const interaction = await saveInteraction(db, callerId, data);
       return { request_id: requestId, ok: true, interaction };
     }
     case 'add_timeline_event': {
-      const interaction = await addTimelineEvent(
-        db,
-        data.interaction_id,
-        data.expected_updated_at,
-        data.event as unknown as Record<string, unknown>,
-        data.updates as Record<string, unknown> | undefined
-      );
+      const interaction = await addTimelineEvent(db, data);
       return { request_id: requestId, ok: true, interaction };
     }
     default:

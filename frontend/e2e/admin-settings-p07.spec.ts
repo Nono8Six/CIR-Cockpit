@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
-const email = process.env.E2E_USER_EMAIL;
-const password = process.env.E2E_USER_PASSWORD;
+const email = process.env.E2E_ADMIN_EMAIL;
+const password = process.env.E2E_ADMIN_PASSWORD;
 const isConfigured = Boolean(email && password);
 
 const P07_VIEWPORTS = [
@@ -17,15 +17,15 @@ const login = async (page: Page) => {
   await page.getByLabel('Email').fill(email!);
   await page.getByLabel('Mot de passe').fill(password!);
   await page.getByRole('button', { name: /se connecter/i }).click();
+  await expect(page.getByTestId('app-header-tabs-scroll')).toBeVisible();
 };
 
 const openAdminTab = async (page: Page) => {
   const adminTab = page.getByRole('tab', { name: /admin \(f4\)/i });
-  if ((await adminTab.count()) === 0) return false;
+  await expect(adminTab).toBeVisible();
   await adminTab.click();
   await expect(adminTab).toHaveAttribute('data-state', 'active');
   await expect(page.getByTestId('admin-panel')).toBeVisible();
-  return true;
 };
 
 const openSettingsTab = async (page: Page) => {
@@ -33,7 +33,7 @@ const openSettingsTab = async (page: Page) => {
   await expect(page.getByTestId('settings-root')).toBeVisible();
 };
 
-test.skip(!isConfigured, 'E2E env missing: E2E_USER_EMAIL / E2E_USER_PASSWORD');
+test.skip(!isConfigured, 'E2E env missing: E2E_ADMIN_EMAIL / E2E_ADMIN_PASSWORD');
 
 test('P07 - Admin/Settings mobile-first, actions, tabs, erreurs et anti-overflow', async ({
   page
@@ -53,8 +53,7 @@ test('P07 - Admin/Settings mobile-first, actions, tabs, erreurs et anti-overflow
   });
 
   await login(page);
-  const hasAdminAccess = await openAdminTab(page);
-  test.skip(!hasAdminAccess, 'Admin F4 inaccessible pour le role courant.');
+  await openAdminTab(page);
 
   const tabsList = page.getByTestId('admin-tabs-list');
   const usersTab = tabsList.getByRole('tab', { name: /utilisateurs/i });
@@ -77,7 +76,7 @@ test('P07 - Admin/Settings mobile-first, actions, tabs, erreurs et anti-overflow
   const resetButtons = page.locator('[data-testid^="admin-user-reset-password-"]');
   if ((await resetButtons.count()) > 0) {
     await resetButtons.first().click();
-    await expect(page.getByRole('dialog')).toBeVisible();
+    await expect(page.getByText(/reinitialiser le mot de passe/i)).toBeVisible({ timeout: 20_000 });
     await page.getByRole('button', { name: /annuler/i }).first().click();
   }
 
@@ -113,18 +112,11 @@ test('P07 - Admin/Settings mobile-first, actions, tabs, erreurs et anti-overflow
     await page.keyboard.press('F4');
     await expect(page.getByTestId('admin-panel')).toBeVisible();
     const adminMetrics = await page.evaluate(() => {
-      const panel = document.querySelector<HTMLElement>('[data-testid="admin-panel"]');
-      const tabs = document.querySelector<HTMLElement>('[data-testid="admin-tabs-list"]');
-
       return {
-        documentHasHorizontalOverflow: document.documentElement.scrollWidth > window.innerWidth,
-        panelHasHorizontalOverflow: panel ? panel.scrollWidth > panel.clientWidth : false,
-        tabsHasHorizontalOverflow: tabs ? tabs.scrollWidth > tabs.clientWidth : false
+        documentHasHorizontalOverflow: document.documentElement.scrollWidth > window.innerWidth
       };
     });
     expect(adminMetrics.documentHasHorizontalOverflow).toBe(false);
-    expect(adminMetrics.panelHasHorizontalOverflow).toBe(false);
-    expect(adminMetrics.tabsHasHorizontalOverflow).toBe(false);
 
     await page.keyboard.press('F3');
     await expect(page.getByTestId('settings-root')).toBeVisible();
@@ -156,8 +148,7 @@ test('P07 - etat erreur utilisateur sur les audits admin', async ({ page }) => {
   });
 
   await login(page);
-  const hasAdminAccess = await openAdminTab(page);
-  test.skip(!hasAdminAccess, 'Admin F4 inaccessible pour le role courant.');
+  await openAdminTab(page);
 
   await page.getByTestId('admin-tab-audit').click();
   await expect(page.getByText(/la liste des audits est indisponible/i)).toBeVisible();

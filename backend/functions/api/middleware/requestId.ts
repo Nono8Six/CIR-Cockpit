@@ -1,4 +1,4 @@
-import type { MiddlewareHandler } from 'jsr:@hono/hono';
+import type { MiddlewareHandler } from '@hono/hono';
 
 import type { AppEnv } from '../types.ts';
 

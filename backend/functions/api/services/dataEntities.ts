@@ -4,29 +4,33 @@ import type { DbClient } from '../types.ts';
 import { httpError } from '../middleware/errorHandler.ts';
 
 type EntityRow = Database['public']['Tables']['entities']['Row'];
+type EntityInsert = Database['public']['Tables']['entities']['Insert'];
+type SaveEntityPayload = Extract<DataEntitiesPayload, { action: 'save' }>;
+type AccountType = Database['public']['Enums']['account_type'];
 
 const saveEntity = async (
   db: DbClient,
-  agencyId: string,
-  entityType: 'Client' | 'Prospect',
-  entityId: string | undefined,
-  entity: Record<string, unknown>
+  payload: SaveEntityPayload
 ): Promise<EntityRow> => {
-  const row = {
+  const { agency_id: agencyId, entity_type: entityType, id: entityId, entity } = payload;
+  const baseRow: EntityInsert = {
     entity_type: entityType,
-    name: (entity.name as string).trim(),
+    name: entity.name.trim(),
     agency_id: agencyId,
-    address: (entity.address as string | undefined)?.trim() ?? '',
-    postal_code: (entity.postal_code as string | undefined)?.trim() ?? '',
-    department: (entity.department as string | undefined)?.trim() ?? '',
-    city: (entity.city as string).trim(),
-    siret: (entity.siret as string | undefined)?.trim() || null,
-    notes: (entity.notes as string | undefined)?.trim() || null,
-    ...(entityType === 'Client' ? {
-      client_number: (entity.client_number as string | undefined)?.trim().replace(/\s+/g, '') || null,
-      account_type: entity.account_type as string
-    } : {})
+    address: entity.address?.trim() ?? '',
+    postal_code: entity.postal_code?.trim() ?? '',
+    department: entity.department?.trim() ?? '',
+    city: entity.city.trim(),
+    siret: entity.siret?.trim() || null,
+    notes: entity.notes?.trim() || null
   };
+  const row: EntityInsert = entityType === 'Client'
+    ? {
+      ...baseRow,
+      client_number: entity.client_number.trim().replace(/\s+/g, ''),
+      account_type: entity.account_type
+    }
+    : baseRow;
 
   if (entityId) {
     const { data, error } = await db
@@ -67,7 +71,7 @@ const convertToClient = async (
   db: DbClient,
   entityId: string,
   clientNumber: string,
-  accountType: string
+  accountType: AccountType
 ): Promise<EntityRow> => {
   const trimmedNumber = clientNumber.trim().replace(/\s+/g, '');
   if (!trimmedNumber) throw httpError(400, 'VALIDATION_ERROR', 'Numero client requis.');
@@ -89,19 +93,13 @@ const convertToClient = async (
 
 export const handleDataEntitiesAction = async (
   db: DbClient,
-  callerId: string,
+  _callerId: string,
   requestId: string | undefined,
   data: DataEntitiesPayload
 ): Promise<Record<string, unknown>> => {
   switch (data.action) {
     case 'save': {
-      const entity = await saveEntity(
-        db,
-        data.agency_id,
-        data.entity_type,
-        data.id,
-        data.entity as unknown as Record<string, unknown>
-      );
+      const entity = await saveEntity(db, data);
       return { request_id: requestId, ok: true, entity };
     }
     case 'archive': {

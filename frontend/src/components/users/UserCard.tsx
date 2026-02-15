@@ -1,4 +1,4 @@
-import { Archive, ArchiveRestore, KeyRound } from 'lucide-react';
+import { Archive, ArchiveRestore, KeyRound, Pencil, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import type { AdminUserSummary } from '@/services/admin/getAdminUsers';
@@ -12,6 +12,8 @@ type UserCardProps = {
   onArchiveToggle: (user: AdminUserSummary) => void;
   onRoleChange: (userId: string, role: UserRole) => void;
   onEditMemberships: (user: AdminUserSummary) => void;
+  onEditIdentity: (user: AdminUserSummary) => void;
+  onDeleteUser: (user: AdminUserSummary) => void;
 };
 
 const UserCard = ({
@@ -19,7 +21,9 @@ const UserCard = ({
   onResetPassword,
   onArchiveToggle,
   onRoleChange,
-  onEditMemberships
+  onEditMemberships,
+  onEditIdentity,
+  onDeleteUser
 }: UserCardProps) => {
   const identityLabel = `${user.last_name ?? ''} ${user.first_name ?? ''}`.trim()
     || user.display_name
@@ -40,6 +44,16 @@ const UserCard = ({
           type="button"
           variant="outline"
           className="h-9 px-3 text-xs sm:text-sm"
+          onClick={() => onEditIdentity(user)}
+          aria-label="Modifier l'utilisateur"
+          data-testid={`admin-user-edit-identity-${user.id}`}
+        >
+          <Pencil size={14} className="mr-1" /> Modifier
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="h-9 px-3 text-xs sm:text-sm"
           onClick={() => onResetPassword(user)}
           aria-label="Reinitialiser le mot de passe"
           data-testid={`admin-user-reset-password-${user.id}`}
@@ -56,6 +70,16 @@ const UserCard = ({
         >
           {user.archived_at ? <ArchiveRestore size={14} className="mr-1" /> : <Archive size={14} className="mr-1" />}
           {user.archived_at ? 'Restaurer' : 'Archiver'}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="h-9 border-red-200 px-3 text-xs text-red-600 hover:bg-red-50 sm:text-sm"
+          onClick={() => onDeleteUser(user)}
+          aria-label="Supprimer l'utilisateur"
+          data-testid={`admin-user-delete-${user.id}`}
+        >
+          <Trash2 size={14} className="mr-1" /> Supprimer
         </Button>
       </div>
     </div>

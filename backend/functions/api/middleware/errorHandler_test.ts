@@ -1,4 +1,4 @@
-import { assertEquals, assertMatch, assert } from 'https://deno.land/std@0.224.0/assert/mod.ts';
+import { assertEquals, assertMatch, assert } from 'std/assert';
 
 import { handleError, httpError } from './errorHandler.ts';
 import { getErrorCatalogEntry } from '../../../../shared/errors/catalog.ts';

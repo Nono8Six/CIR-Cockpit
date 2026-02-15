@@ -1,4 +1,4 @@
-import { assertEquals, assert } from 'https://deno.land/std@0.224.0/assert/mod.ts';
+import { assertEquals, assert } from 'std/assert';
 import { RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_SECONDS } from './rateLimit.ts';
 
 Deno.test('RATE_LIMIT_MAX is a positive number', () => {

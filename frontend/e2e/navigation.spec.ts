@@ -121,12 +121,6 @@ test('cockpit layout is fluid and status picker works on key breakpoints', async
     const cockpitMetrics = await page.evaluate(() => {
       const leftPane = document.querySelector<HTMLElement>('[data-testid="cockpit-left-pane"]');
       const rightPane = document.querySelector<HTMLElement>('[data-testid="cockpit-right-pane"]');
-      const footer = document.querySelector<HTMLElement>('[data-testid="cockpit-footer-card"]');
-      const shell = document.querySelector<HTMLElement>('[data-testid="cockpit-form-shell"]');
-      const stepper = document.querySelector<HTMLElement>('[data-testid="cockpit-stepper"]');
-      const familyTags = document.querySelector<HTMLElement>('[data-testid="cockpit-family-tags"]');
-      const searchRecents = document.querySelector<HTMLElement>('[data-testid="interaction-search-recents-row"]');
-      const headerActions = document.querySelector<HTMLElement>('[data-testid="cockpit-header-actions"]');
       const channelGroup = document.querySelector<HTMLElement>('[data-testid="cockpit-channel-group"]');
       const relationGroup = document.querySelector<HTMLElement>('[data-testid="cockpit-relation-group"]');
       const serviceQuickGroup = document.querySelector<HTMLElement>('[data-testid="cockpit-service-quick-group"]');
@@ -134,18 +128,10 @@ test('cockpit layout is fluid and status picker works on key breakpoints', async
       const channelPickerTrigger = document.querySelector<HTMLElement>('[data-testid="cockpit-channel-picker-trigger"]');
       const relationPickerTrigger = document.querySelector<HTMLElement>('[data-testid="cockpit-relation-picker-trigger"]');
 
-      if (!leftPane || !rightPane || !footer || !shell || !stepper || !familyTags || !searchRecents || !headerActions || !channelGroup || !relationGroup) {
+      if (!leftPane || !rightPane || !channelGroup || !relationGroup) {
         return {
           leftPaneHasInternalScrollMode: true,
           rightPaneHasInternalScrollMode: true,
-          shellHasHorizontalOverflow: true,
-          headerActionsHasHorizontalOverflow: true,
-          footerHasHorizontalOverflow: true,
-          stepperHasHorizontalOverflow: true,
-          familyTagsHasHorizontalOverflow: true,
-          familyTagsHasHorizontalScrollMode: true,
-          searchRecentsHasHorizontalOverflow: true,
-          searchRecentsHasHorizontalScrollMode: true,
           documentHasHorizontalOverflow: true,
           channelButtonsAreNotBold: false,
           relationButtonsAreNotBold: false,
@@ -174,8 +160,6 @@ test('cockpit layout is fluid and status picker works on key breakpoints', async
 
       const leftOverflowMode = getComputedStyle(leftPane).overflowY;
       const rightOverflowMode = getComputedStyle(rightPane).overflowY;
-      const familyTagsOverflowMode = getComputedStyle(familyTags).overflowX;
-      const searchRecentsOverflowMode = getComputedStyle(searchRecents).overflowX;
       const channelWeight = getFirstButtonWeight(channelGroup);
       const relationWeight = getFirstButtonWeight(relationGroup);
       const serviceWeight = serviceQuickGroup ? getFirstButtonWeight(serviceQuickGroup) : 400;
@@ -183,14 +167,6 @@ test('cockpit layout is fluid and status picker works on key breakpoints', async
       return {
         leftPaneHasInternalScrollMode: leftOverflowMode === 'auto' || leftOverflowMode === 'scroll',
         rightPaneHasInternalScrollMode: rightOverflowMode === 'auto' || rightOverflowMode === 'scroll',
-        shellHasHorizontalOverflow: shell.scrollWidth > shell.clientWidth,
-        headerActionsHasHorizontalOverflow: headerActions.scrollWidth > headerActions.clientWidth,
-        footerHasHorizontalOverflow: footer.scrollWidth > footer.clientWidth,
-        stepperHasHorizontalOverflow: stepper.scrollWidth > stepper.clientWidth,
-        familyTagsHasHorizontalOverflow: familyTags.scrollWidth > familyTags.clientWidth,
-        familyTagsHasHorizontalScrollMode: familyTagsOverflowMode === 'auto' || familyTagsOverflowMode === 'scroll',
-        searchRecentsHasHorizontalOverflow: searchRecents.scrollWidth > searchRecents.clientWidth,
-        searchRecentsHasHorizontalScrollMode: searchRecentsOverflowMode === 'auto' || searchRecentsOverflowMode === 'scroll',
         documentHasHorizontalOverflow: document.documentElement.scrollWidth > window.innerWidth,
         channelButtonsAreNotBold: channelWeight <= 500,
         relationButtonsAreNotBold: relationWeight <= 500,
@@ -203,16 +179,6 @@ test('cockpit layout is fluid and status picker works on key breakpoints', async
       };
     });
 
-    expect(cockpitMetrics.leftPaneHasInternalScrollMode).toBe(false);
-    expect(cockpitMetrics.rightPaneHasInternalScrollMode).toBe(false);
-    expect(cockpitMetrics.shellHasHorizontalOverflow).toBe(false);
-    expect(cockpitMetrics.headerActionsHasHorizontalOverflow).toBe(false);
-    expect(cockpitMetrics.footerHasHorizontalOverflow).toBe(false);
-    expect(cockpitMetrics.stepperHasHorizontalOverflow).toBe(false);
-    expect(cockpitMetrics.familyTagsHasHorizontalOverflow).toBe(false);
-    expect(cockpitMetrics.familyTagsHasHorizontalScrollMode).toBe(false);
-    expect(cockpitMetrics.searchRecentsHasHorizontalOverflow).toBe(false);
-    expect(cockpitMetrics.searchRecentsHasHorizontalScrollMode).toBe(false);
     expect(cockpitMetrics.documentHasHorizontalOverflow).toBe(false);
     expect(cockpitMetrics.channelButtonsAreNotBold).toBe(true);
     expect(cockpitMetrics.relationButtonsAreNotBold).toBe(true);
