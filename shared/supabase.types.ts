@@ -351,6 +351,57 @@ export type Database = {
           },
         ]
       }
+      audit_logs_archive: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_is_super_admin: boolean
+          agency_id: string | null
+          created_at: string
+          entity_id: string
+          entity_table: string
+          id: string
+          metadata: Json
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_is_super_admin?: boolean
+          agency_id?: string | null
+          created_at: string
+          entity_id: string
+          entity_table: string
+          id: string
+          metadata?: Json
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_is_super_admin?: boolean
+          agency_id?: string | null
+          created_at?: string
+          entity_id?: string
+          entity_table?: string
+          id?: string
+          metadata?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_archive_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_logs_archive_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       entities: {
         Row: {
           account_type: Database["public"]["Enums"]["account_type"] | null
@@ -724,6 +775,10 @@ export type Database = {
     }
     Functions: {
       app_actor_id: { Args: never; Returns: string }
+      archive_audit_logs_older_than: {
+        Args: { p_batch_size?: number; p_before?: string }
+        Returns: number
+      }
       audit_actor_id: { Args: never; Returns: string }
       check_rate_limit: {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }
@@ -744,6 +799,14 @@ export type Database = {
       is_member: { Args: { target_agency_id: string }; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
       jwt_sub: { Args: never; Returns: string }
+      run_audit_logs_retention: {
+        Args: {
+          p_batch_size?: number
+          p_before?: string
+          p_max_batches?: number
+        }
+        Returns: number
+      }
       safe_uuid: { Args: { p_value: string }; Returns: string }
       set_audit_actor: { Args: { p_actor_id: string }; Returns: undefined }
       user_role: {

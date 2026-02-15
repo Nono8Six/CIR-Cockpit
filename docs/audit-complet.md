@@ -1245,3 +1245,72 @@ La suite `backend/functions/api/integration/api_integration_test.ts` couvre deso
      - `POST` avec seul `x-client-authorization` -> `401 AUTH_REQUIRED`.
 4. Integration opt-in runtime:
    - `RUN_API_INTEGRATION=1 deno test .../integration/api_integration_test.ts` -> OK (9/9).
+
+### 10.12 Avancement P3.4/P3.6/P3.7 - stack 2026 + hardening DB retention (2026-02-15)
+
+#### 10.12.1 P3.4 Modernisation stack
+
+1. Frontend upgrades:
+   - `react` / `react-dom` -> `19.2.4`
+   - `@tanstack/react-query` -> `5.90.21`
+   - `zod` -> `4.3.6`
+   - `@supabase/supabase-js` -> `2.95.3`
+2. Deno import maps synchronisees:
+   - `deno.json`
+   - `backend/deno.json`
+3. Cohesion schema timeline:
+   - `shared/schemas/data.schema.ts` impose `id/date/type/content` sur les events timeline.
+   - test integration backend ajuste (`add_timeline_event` avec `id` UUID).
+
+#### 10.12.2 P3.6 Hardening RLS `agency_system_users`
+
+1. Migration ajoutee:
+   - `backend/migrations/20260215150000_agency_system_users_rls_policies.sql`
+2. Policies explicites en place:
+   - `SELECT`, `INSERT`, `UPDATE`, `DELETE` reservees au `super_admin`.
+3. Verification SQL:
+   - plus aucune table `public` avec RLS active et 0 policy.
+
+#### 10.12.3 P3.7 Retention `audit_logs` (> 1 an)
+
+1. Migration ajoutee:
+   - `backend/migrations/20260215153000_audit_logs_retention_policy.sql`
+2. Implementations:
+   - table archive `public.audit_logs_archive`,
+   - policy `audit_logs_archive_select` alignee au pattern admin/super_admin,
+   - fonction batch `public.archive_audit_logs_older_than(...)`,
+   - fonction orchestratrice `public.run_audit_logs_retention(...)`,
+   - grant d'execution limite a `service_role` (pas `anon` / pas `authenticated`),
+   - job `pg_cron` quotidien `audit_logs_retention_daily` (`20 3 * * *`).
+3. Verification runtime DB (MCP Supabase):
+   - migration `audit_logs_retention_policy` appliquee,
+   - extension `pg_cron` installee,
+   - job `cron.job` present,
+   - execution manuelle `select public.run_audit_logs_retention()` -> `0` ligne archivee (etat courant).
+
+#### 10.12.4 QA runbook executee (sans CI)
+
+1. Frontend:
+   - `npm run typecheck` -> OK
+   - `npm run lint -- --max-warnings=0` -> OK
+   - `npm run test:run` -> OK (107/107)
+   - `npm run check:error-compliance` -> OK
+   - `npm run build` -> OK
+   - `npm run test:e2e` -> OK (16/16)
+2. Backend:
+   - `deno lint backend/functions/api` -> OK
+   - `deno check --config backend/deno.json backend/functions/api/index.ts` -> OK
+   - `deno test --allow-env --no-check --config backend/deno.json backend/functions/api` -> OK (49 pass, 0 fail, 9 ignored)
+   - integration runtime opt-in:
+     - chargement env `backend/.env`
+     - `RUN_API_INTEGRATION=1 deno test .../integration/api_integration_test.ts` -> OK (9/9)
+3. Runtime API:
+   - `POST /functions/v1/api/data/entities` -> `401` (pas de `404`)
+   - `OPTIONS /functions/v1/api/data/entities` -> `200`
+   - `POST` avec seul `x-client-authorization` -> `401`
+   - `list_edge_functions` -> `api` actif, `verify_jwt=false`, version `21`.
+
+#### 10.12.5 Reste P3 recommande
+
+1. Activer la protection Supabase "Leaked Password Protection" (advisor security encore `WARN`).
+2. Revue indexes "unused" sur fenetre d'observation representative avant suppression (advisor performance en `INFO`).
