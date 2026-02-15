@@ -5,7 +5,7 @@ import { mapEdgeError } from '@/services/errors/mapEdgeError';
 describe('mapEdgeError', () => {
   it('uses payload.code when available', () => {
     const result = mapEdgeError(
-      { code: 'RATE_LIMITED', error: 'Too many requests', request_id: 'req-1' },
+      { ok: false, code: 'RATE_LIMITED', error: 'Too many requests', request_id: 'req-1' },
       'Fallback message',
       429
     );
@@ -16,12 +16,12 @@ describe('mapEdgeError', () => {
 
   it('falls back to statusMap when payload has no code', () => {
     const result = mapEdgeError(
-      { error: 'Bad request' },
+      { ok: false, error: 'Bad request', request_id: 'req-2' },
       'Fallback message',
       400
     );
     expect(result.code).toBe('INVALID_PAYLOAD');
-    expect(result.message).toBe('Bad request');
+    expect(result.message).toBe('Fallback message');
   });
 
   it('maps 401 to AUTH_REQUIRED', () => {
@@ -71,9 +71,15 @@ describe('mapEdgeError', () => {
     expect(result.code).toBe('EDGE_FUNCTION_ERROR');
   });
 
+  it('falls back to status mapping when payload does not match edge error contract', () => {
+    const result = mapEdgeError({ error: 'legacy payload sans ok' }, 'Fallback', 400);
+    expect(result.code).toBe('INVALID_PAYLOAD');
+    expect(result.message).toBe('Fallback');
+  });
+
   it('propagates request_id from payload', () => {
     const result = mapEdgeError(
-      { request_id: 'abc-123', error: 'fail' },
+      { ok: false, request_id: 'abc-123', error: 'fail', code: 'EDGE_FUNCTION_ERROR' },
       'Fallback',
       500
     );
@@ -82,7 +88,7 @@ describe('mapEdgeError', () => {
 
   it('propagates details from payload', () => {
     const result = mapEdgeError(
-      { error: 'fail', details: 'some detail' },
+      { ok: false, error: 'fail', details: 'some detail', code: 'EDGE_FUNCTION_ERROR', request_id: 'req-3' },
       'Fallback',
       500
     );

@@ -241,6 +241,7 @@ cd frontend && npm run check:error-compliance
 PASS:
 1. Pipeline erreurs coherent front/back/shared.
 2. Aucun contournement local des mappers.
+3. Tous les codes `httpError(...)` backend existent dans `shared/errors/types.ts` et `shared/errors/catalog.ts`.
 
 ## 10. Phase F - Verifications runtime Supabase (si backend impacte)
 

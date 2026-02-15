@@ -1,6 +1,7 @@
 import type { DataConfigPayload } from '../../../../shared/schemas/data.schema.ts';
-import type { DbClient } from '../types.ts';
+import type { AuthContext, DbClient } from '../types.ts';
 import { httpError } from '../middleware/errorHandler.ts';
+import { ensureAgencyAccess, ensureDataRateLimit } from './dataAccess.ts';
 
 type ConfigTable =
   | 'agency_statuses'
@@ -143,16 +144,19 @@ const syncStatuses = async (
 
 export const handleDataConfigAction = async (
   db: DbClient,
-  _callerId: string,
+  authContext: AuthContext,
   requestId: string | undefined,
   agencyId: string,
   data: DataConfigPayload
 ): Promise<Record<string, unknown>> => {
-  await syncStatuses(db, agencyId, data.statuses);
-  await syncLabelTable(db, 'agency_services', agencyId, data.services);
-  await syncLabelTable(db, 'agency_entities', agencyId, data.entities);
-  await syncLabelTable(db, 'agency_families', agencyId, data.families);
-  await syncLabelTable(db, 'agency_interaction_types', agencyId, data.interactionTypes);
+  await ensureDataRateLimit('data_config:sync', authContext.userId);
+  const resolvedAgencyId = ensureAgencyAccess(authContext, agencyId);
+
+  await syncStatuses(db, resolvedAgencyId, data.statuses);
+  await syncLabelTable(db, 'agency_services', resolvedAgencyId, data.services);
+  await syncLabelTable(db, 'agency_entities', resolvedAgencyId, data.entities);
+  await syncLabelTable(db, 'agency_families', resolvedAgencyId, data.families);
+  await syncLabelTable(db, 'agency_interaction_types', resolvedAgencyId, data.interactionTypes);
 
   return { request_id: requestId, ok: true };
 };

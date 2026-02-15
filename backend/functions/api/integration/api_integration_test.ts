@@ -84,6 +84,11 @@ const readBoolean = (value: unknown, key: string): boolean | null => {
   return typeof candidate === 'boolean' ? candidate : null;
 };
 
+const readValue = (value: unknown, key: string): unknown => {
+  if (!value || typeof value !== 'object') return null;
+  return (value as Record<string, unknown>)[key] ?? null;
+};
+
 const parseJsonOrNull = async (response: Response): Promise<unknown | null> => {
   try {
     return await response.json();
@@ -361,6 +366,44 @@ Deno.test({
 });
 
 Deno.test({
+  name: 'POST data routes forbid cross-agency mutations for non super-admin users',
+  ignore: !(RUN_FLAG && ENV_CONFIGURED),
+  fn: async () => {
+    const context = await getContext();
+    const foreignAgencyId = crypto.randomUUID();
+
+    const entitiesForbidden = await postApi('/data/entities', context.userToken, {
+      action: 'save',
+      agency_id: foreignAgencyId,
+      entity_type: 'Prospect',
+      entity: {
+        name: 'P3 cross agency blocked',
+        address: '2 rue de Test',
+        postal_code: '75001',
+        department: '75',
+        city: 'Paris',
+        siret: '',
+        notes: '',
+        agency_id: foreignAgencyId
+      }
+    });
+    assertEquals(entitiesForbidden.status, 403);
+    assertEquals(readString(entitiesForbidden.payload, 'code'), 'AUTH_FORBIDDEN');
+
+    const configForbidden = await postApi('/data/config', context.userToken, {
+      agency_id: foreignAgencyId,
+      statuses: context.configStatuses,
+      services: context.configServices,
+      entities: context.configEntities,
+      families: context.configFamilies,
+      interactionTypes: context.configInteractionTypes
+    });
+    assertEquals(configForbidden.status, 403);
+    assertEquals(readString(configForbidden.payload, 'code'), 'AUTH_FORBIDDEN');
+  }
+});
+
+Deno.test({
   name: 'data routes execute service + DB with valid payloads',
   ignore: !(RUN_FLAG && ENV_CONFIGURED),
   fn: async () => {
@@ -395,6 +438,33 @@ Deno.test({
     const entityId = readString(entity, 'id');
     assertEquals(Boolean(entityId), true);
 
+    const archivedEntity = await postApi('/data/entities', context.userToken, {
+      action: 'archive',
+      entity_id: entityId,
+      archived: true
+    });
+    assertEquals(archivedEntity.status, 200);
+    assertEquals(readBoolean(archivedEntity.payload, 'ok'), true);
+
+    const restoredEntity = await postApi('/data/entities', context.userToken, {
+      action: 'archive',
+      entity_id: entityId,
+      archived: false
+    });
+    assertEquals(restoredEntity.status, 200);
+    assertEquals(readBoolean(restoredEntity.payload, 'ok'), true);
+
+    const convertedEntity = await postApi('/data/entities', context.userToken, {
+      action: 'convert_to_client',
+      entity_id: entityId,
+      convert: {
+        client_number: String(Date.now()).slice(-10),
+        account_type: 'term'
+      }
+    });
+    assertEquals(convertedEntity.status, 200);
+    assertEquals(readBoolean(convertedEntity.payload, 'ok'), true);
+
     const createdContact = await postApi('/data/entity-contacts', context.userToken, {
       action: 'save',
       entity_id: entityId,
@@ -427,7 +497,7 @@ Deno.test({
       interaction: {
         id: crypto.randomUUID(),
         channel: 'Téléphone',
-        entity_type: 'Prospect',
+        entity_type: 'Client',
         contact_service: 'Accueil',
         company_name: '',
         contact_name: '',
@@ -445,6 +515,28 @@ Deno.test({
     });
     assertEquals(savedInteraction.status, 200);
     assertEquals(readBoolean(savedInteraction.payload, 'ok'), true);
+    const savedInteractionPayload = readValue(savedInteraction.payload, 'interaction');
+    const interactionId = readString(savedInteractionPayload, 'id');
+    const interactionUpdatedAt = readString(savedInteractionPayload, 'updated_at');
+    assertEquals(Boolean(interactionId), true);
+    assertEquals(Boolean(interactionUpdatedAt), true);
+
+    const updatedInteraction = await postApi('/data/interactions', context.userToken, {
+      action: 'add_timeline_event',
+      interaction_id: interactionId,
+      expected_updated_at: interactionUpdatedAt,
+      event: {
+        type: 'note',
+        content: 'Evenement integration P3',
+        author: 'integration',
+        date: new Date().toISOString()
+      },
+      updates: {
+        notes: 'note integration p3'
+      }
+    });
+    assertEquals(updatedInteraction.status, 200);
+    assertEquals(readBoolean(updatedInteraction.payload, 'ok'), true);
 
     const savedConfig = await postApi('/data/config', context.userToken, {
       agency_id: context.agencyId,
@@ -456,5 +548,16 @@ Deno.test({
     });
     assertEquals(savedConfig.status, 200);
     assertEquals(readBoolean(savedConfig.payload, 'ok'), true);
+
+    const invalidConfig = await postApi('/data/config', context.userToken, {
+      agency_id: context.agencyId,
+      statuses: [{ id: context.statusId, label: 'invalid status', category: 'invalid' }],
+      services: context.configServices,
+      entities: context.configEntities,
+      families: context.configFamilies,
+      interactionTypes: context.configInteractionTypes
+    });
+    assertEquals(invalidConfig.status, 400);
+    assertEquals(readString(invalidConfig.payload, 'code'), 'CONFIG_INVALID');
   }
 });

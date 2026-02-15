@@ -2,6 +2,7 @@ import { assertEquals, assertMatch, assert } from 'std/assert';
 
 import { handleError, httpError } from './errorHandler.ts';
 import { getErrorCatalogEntry } from '../../../../shared/errors/catalog.ts';
+import { edgeErrorPayloadSchema } from '../../../../shared/schemas/edge-error.schema.ts';
 
 type ContextLike = {
   get: (key: string) => string | undefined;
@@ -30,6 +31,8 @@ Deno.test('handleError uses catalog message when code is known', async () => {
   assertEquals(result.error, catalog?.message);
   assertEquals(result.details, 'bad_json');
   assertEquals(result.request_id, 'req-1');
+  const parsed = edgeErrorPayloadSchema.safeParse(result);
+  assertEquals(parsed.success, true);
 });
 
 Deno.test('handleError falls back to catalog REQUEST_FAILED for unknown errors', async () => {

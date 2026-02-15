@@ -10,8 +10,8 @@ export const registerDataProfileRoutes = (app: Hono<AppEnv>) => {
   app.post('/data/profile', requireAuth, async (c) => {
     const requestId = c.get('requestId');
     const db = c.get('db');
-    const callerId = c.get('callerId');
-    if (!db || !callerId) {
+    const authContext = c.get('authContext');
+    if (!db || !authContext) {
       throw httpError(403, 'AUTH_FORBIDDEN', 'Acces interdit.');
     }
 
@@ -24,7 +24,7 @@ export const registerDataProfileRoutes = (app: Hono<AppEnv>) => {
       throw httpError(400, 'INVALID_PAYLOAD', 'Payload invalide.', parsed.error.message);
     }
 
-    const result = await handleDataProfileAction(db, callerId, requestId, parsed.data);
+    const result = await handleDataProfileAction(db, authContext, requestId, parsed.data);
     return c.json(result);
   });
 };

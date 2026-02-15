@@ -1,7 +1,12 @@
 import type { Database } from '../../../../shared/supabase.types.ts';
 import type { DataInteractionsPayload } from '../../../../shared/schemas/data.schema.ts';
-import type { DbClient } from '../types.ts';
+import type { AuthContext, DbClient } from '../types.ts';
 import { httpError } from '../middleware/errorHandler.ts';
+import {
+  ensureAgencyAccess,
+  ensureDataRateLimit,
+  ensureOptionalAgencyAccess
+} from './dataAccess.ts';
 
 type InteractionRow = Database['public']['Tables']['interactions']['Row'];
 type InteractionInsert = Database['public']['Tables']['interactions']['Insert'];
@@ -66,14 +71,14 @@ const normalizeInteractionUpdates = (
 
 const saveInteraction = async (
   db: DbClient,
-  callerId: string,
+  authContext: AuthContext,
   payload: SaveInteractionPayload
 ): Promise<InteractionRow> => {
-  const { agency_id: agencyId, interaction } = payload;
-  const resolvedAgencyId = agencyId?.trim() ?? '';
+  const { interaction } = payload;
+  const resolvedAgencyId = ensureAgencyAccess(authContext, payload.agency_id);
   const row: InteractionInsert = {
     id: interaction.id,
-    agency_id: resolvedAgencyId || null,
+    agency_id: resolvedAgencyId,
     channel: interaction.channel,
     entity_type: interaction.entity_type,
     contact_service: interaction.contact_service,
@@ -91,7 +96,7 @@ const saveInteraction = async (
     notes: interaction.notes?.trim() || null,
     entity_id: interaction.entity_id ?? null,
     contact_id: interaction.contact_id ?? null,
-    created_by: callerId,
+    created_by: authContext.userId,
     timeline: interaction.timeline ?? []
   };
 
@@ -108,16 +113,18 @@ const saveInteraction = async (
 
 const addTimelineEvent = async (
   db: DbClient,
+  authContext: AuthContext,
   payload: AddTimelineEventPayload
 ): Promise<InteractionRow> => {
   const { interaction_id: interactionId, expected_updated_at: expectedUpdatedAt, event, updates } = payload;
   const { data: current, error: fetchError } = await db
     .from('interactions')
-    .select('timeline')
+    .select('timeline, agency_id')
     .eq('id', interactionId)
     .single();
 
   if (fetchError || !current) throw httpError(404, 'NOT_FOUND', 'Interaction introuvable.');
+  ensureOptionalAgencyAccess(authContext, current.agency_id);
 
   const currentTimeline = Array.isArray(current.timeline) ? current.timeline : [];
   const updatedTimeline = [...currentTimeline, event];
@@ -143,17 +150,19 @@ const addTimelineEvent = async (
 
 export const handleDataInteractionsAction = async (
   db: DbClient,
-  callerId: string,
+  authContext: AuthContext,
   requestId: string | undefined,
   data: DataInteractionsPayload
 ): Promise<Record<string, unknown>> => {
+  await ensureDataRateLimit(`data_interactions:${data.action}`, authContext.userId);
+
   switch (data.action) {
     case 'save': {
-      const interaction = await saveInteraction(db, callerId, data);
+      const interaction = await saveInteraction(db, authContext, data);
       return { request_id: requestId, ok: true, interaction };
     }
     case 'add_timeline_event': {
-      const interaction = await addTimelineEvent(db, data);
+      const interaction = await addTimelineEvent(db, authContext, data);
       return { request_id: requestId, ok: true, interaction };
     }
     default:

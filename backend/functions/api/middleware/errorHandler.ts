@@ -1,11 +1,12 @@
 import { getErrorCatalogEntry } from '../../../../shared/errors/catalog.ts';
 import type { ErrorCode } from '../../../../shared/errors/types.ts';
+import { edgeErrorPayloadSchema, type EdgeErrorPayload } from '../../../../shared/schemas/edge-error.schema.ts';
 
-export type HttpError = Error & { status?: number; code?: string; details?: string };
+export type HttpError = Error & { status?: number; code?: ErrorCode; details?: string };
 
 export const httpError = (
   status: number,
-  code: string,
+  code: ErrorCode,
   message: string,
   details?: string
 ): HttpError => {
@@ -17,7 +18,7 @@ export const httpError = (
 };
 
 const normalizeError = (err: unknown) => {
-  if (err && typeof err === 'object') {
+  if (err instanceof Error) {
     const maybe = err as HttpError;
     return {
       status: typeof maybe.status === 'number' ? maybe.status : 500,
@@ -41,11 +42,11 @@ type ContextLike = {
 export const handleError = (err: unknown, c: ContextLike) => {
   const requestId = c.get('requestId') ?? crypto.randomUUID();
   const { status, code, message, details } = normalizeError(err);
-  const catalogEntry = getErrorCatalogEntry(code as ErrorCode);
+  const catalogEntry = getErrorCatalogEntry(code);
   const fallbackEntry = getErrorCatalogEntry('REQUEST_FAILED');
   const resolvedCode = catalogEntry?.code ?? fallbackEntry?.code ?? 'REQUEST_FAILED';
   const resolvedMessage = catalogEntry?.message ?? fallbackEntry?.message ?? message;
-  const body: Record<string, unknown> = {
+  const body: EdgeErrorPayload = {
     request_id: requestId,
     ok: false,
     error: resolvedMessage,
@@ -54,5 +55,5 @@ export const handleError = (err: unknown, c: ContextLike) => {
   if (details) {
     body.details = details;
   }
-  return c.json(body, status);
+  return c.json(edgeErrorPayloadSchema.parse(body), status);
 };

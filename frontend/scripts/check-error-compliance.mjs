@@ -7,6 +7,9 @@ const TARGETS = [
   path.join(ROOT, 'backend', 'functions'),
   path.join(ROOT, 'shared')
 ];
+const BACKEND_API_ROOT = path.join(ROOT, 'backend', 'functions', 'api');
+const ERROR_TYPES_FILE = path.join(ROOT, 'shared', 'errors', 'types.ts');
+const ERROR_CATALOG_FILE = path.join(ROOT, 'shared', 'errors', 'catalog.ts');
 
 const ALLOWED_TOAST_ERROR_FILES = new Set([
   path.join(ROOT, 'frontend', 'src', 'services', 'errors', 'notify.ts')
@@ -51,6 +54,24 @@ const walk = (dirPath, acc = []) => {
 const getLineNumber = (input, index) => input.slice(0, index).split('\n').length;
 
 const violations = [];
+const knownErrorCodes = new Set();
+const catalogErrorCodes = new Set();
+
+if (statSync(ERROR_TYPES_FILE, { throwIfNoEntry: false })) {
+  const content = readFileSync(ERROR_TYPES_FILE, 'utf8');
+  const codePattern = /\|\s*['"`]([A-Z0-9_]+)['"`]/g;
+  for (const match of content.matchAll(codePattern)) {
+    knownErrorCodes.add(match[1]);
+  }
+}
+
+if (statSync(ERROR_CATALOG_FILE, { throwIfNoEntry: false })) {
+  const content = readFileSync(ERROR_CATALOG_FILE, 'utf8');
+  const codePattern = /^\s{2}([A-Z0-9_]+):\s*makeEntry\(/gm;
+  for (const match of content.matchAll(codePattern)) {
+    catalogErrorCodes.add(match[1]);
+  }
+}
 
 for (const target of TARGETS) {
   if (!statSync(target, { throwIfNoEntry: false })) {
@@ -100,6 +121,30 @@ for (const target of TARGETS) {
           line: getLineNumber(content, match.index ?? 0),
           message: `Source invalide "${sourceValue}". Format attendu: feature.action`
         });
+      }
+    }
+
+    if (filePath.startsWith(BACKEND_API_ROOT)) {
+      const httpErrorPattern = /\bhttpError\s*\(\s*\d{3}\s*,\s*['"`]([A-Z0-9_]+)['"`]/g;
+      for (const match of content.matchAll(httpErrorPattern)) {
+        const code = match[1];
+        if (!knownErrorCodes.has(code)) {
+          violations.push({
+            rule: 'http-error-code-missing-in-types',
+            filePath,
+            line: getLineNumber(content, match.index ?? 0),
+            message: `Code ${code} absent de shared/errors/types.ts`
+          });
+          continue;
+        }
+        if (!catalogErrorCodes.has(code)) {
+          violations.push({
+            rule: 'http-error-code-missing-in-catalog',
+            filePath,
+            line: getLineNumber(content, match.index ?? 0),
+            message: `Code ${code} absent de shared/errors/catalog.ts`
+          });
+        }
       }
     }
   }

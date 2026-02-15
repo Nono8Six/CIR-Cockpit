@@ -1,7 +1,7 @@
 import { createAppError } from '@/services/errors/AppError';
 import { mapEdgeError } from '@/services/errors/mapEdgeError';
 import { requireSupabaseClient } from '@/services/supabase/requireSupabaseClient';
-import { isRecord, readBoolean, readString } from '@/utils/recordNarrowing';
+import { isRecord, readBoolean } from '@/utils/recordNarrowing';
 
 const TOKEN_REFRESH_SAFETY_WINDOW_SECONDS = 30;
 
@@ -45,19 +45,6 @@ const getUserAccessToken = async (): Promise<string> => {
   return session?.access_token ? toBearerToken(session.access_token) : '';
 };
 
-type ApiErrorPayload = { request_id?: string; ok?: boolean; code?: string; error?: string; details?: string };
-
-const toApiPayload = (value: unknown): ApiErrorPayload | null => {
-  if (!isRecord(value)) return null;
-  return {
-    request_id: readString(value, 'request_id') ?? undefined,
-    ok: readBoolean(value, 'ok') ?? undefined,
-    code: readString(value, 'code') ?? undefined,
-    error: readString(value, 'error') ?? undefined,
-    details: readString(value, 'details') ?? undefined
-  };
-};
-
 export const safeInvoke = async <TResponse>(path: string, body: unknown, parseResponse: (payload: unknown) => TResponse): Promise<TResponse> => {
   return safeInvokeUrl(`${getApiBaseUrl()}${path}`, body, parseResponse);
 };
@@ -87,8 +74,8 @@ const safeInvokeUrl = async <TResponse>(
   let payload: unknown = null;
   try { payload = await response.json(); } catch { payload = null; }
 
-  const apiPayload = toApiPayload(payload);
-  if (!apiPayload) throw mapEdgeError(null, 'Reponse serveur invalide.', response.status);
-  if (!response.ok || apiPayload.ok === false) throw mapEdgeError(apiPayload, 'Erreur serveur.', response.status);
+  if (!response.ok) throw mapEdgeError(payload, 'Erreur serveur.', response.status);
+  if (!isRecord(payload)) throw mapEdgeError(null, 'Reponse serveur invalide.', response.status);
+  if (readBoolean(payload, 'ok') === false) throw mapEdgeError(payload, 'Erreur serveur.', response.status);
   return parseResponse(payload);
 };

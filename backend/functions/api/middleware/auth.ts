@@ -3,7 +3,7 @@ import type { MiddlewareHandler } from '@hono/hono';
 import { createRemoteJWKSet, decodeProtectedHeader, jwtVerify, type JWTVerifyGetKey } from 'jose';
 
 import type { Database } from '../../../../shared/supabase.types.ts';
-import type { AppEnv, DbClient } from '../types.ts';
+import type { AppEnv, AuthContext, DbClient } from '../types.ts';
 import { httpError } from './errorHandler.ts';
 
 type SupabaseConfig = {
@@ -110,6 +110,60 @@ let jwksResolverCreatedAt = 0;
 
 const getAudienceCacheKey = (audience: string | string[]): string => {
   return Array.isArray(audience) ? audience.join(',') : audience;
+};
+
+const toUniqueAgencyIds = (rows: Array<{ agency_id: string }>): string[] => {
+  const unique = new Set<string>();
+  for (const row of rows) {
+    const agencyId = row.agency_id.trim();
+    if (agencyId) {
+      unique.add(agencyId);
+    }
+  }
+  return [...unique];
+};
+
+const resolveAuthContext = async (
+  db: DbClient,
+  userId: string
+): Promise<AuthContext> => {
+  const { data: profile, error: profileError } = await db
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .single();
+
+  if (profileError) {
+    throw httpError(500, 'PROFILE_LOOKUP_FAILED', 'Impossible de charger le profil.');
+  }
+  if (!profile?.role) {
+    throw httpError(403, 'AUTH_FORBIDDEN', 'Acces interdit.');
+  }
+
+  if (profile.role === 'super_admin') {
+    return {
+      userId,
+      role: profile.role,
+      agencyIds: [],
+      isSuperAdmin: true
+    };
+  }
+
+  const { data: memberships, error: membershipsError } = await db
+    .from('agency_members')
+    .select('agency_id')
+    .eq('user_id', userId);
+
+  if (membershipsError) {
+    throw httpError(500, 'MEMBERSHIP_LOOKUP_FAILED', 'Impossible de charger les appartenances.');
+  }
+
+  return {
+    userId,
+    role: profile.role,
+    agencyIds: toUniqueAgencyIds(memberships ?? []),
+    isSuperAdmin: false
+  };
 };
 
 export const getSupabaseAdmin = (): DbClient => {
@@ -233,8 +287,12 @@ export const requireAuth: MiddlewareHandler<AppEnv> = async (c, next) => {
     throw httpError(401, 'AUTH_REQUIRED', 'Session invalide.');
   }
 
-  c.set('callerId', identity.userId);
-  c.set('db', getSupabaseAdmin());
+  const db = getSupabaseAdmin();
+  const authContext = await resolveAuthContext(db, identity.userId);
+
+  c.set('callerId', authContext.userId);
+  c.set('authContext', authContext);
+  c.set('db', db);
   await next();
 };
 
@@ -250,17 +308,13 @@ export const requireSuperAdmin: MiddlewareHandler<AppEnv> = async (c, next) => {
   }
 
   const db = getSupabaseAdmin();
-  const { data: profile, error: profileError } = await db
-    .from('profiles')
-    .select('role')
-    .eq('id', identity.userId)
-    .single();
-
-  if (profileError || profile?.role !== 'super_admin') {
+  const authContext = await resolveAuthContext(db, identity.userId);
+  if (!authContext.isSuperAdmin) {
     throw httpError(403, 'AUTH_FORBIDDEN', 'Acces interdit.');
   }
 
-  c.set('callerId', identity.userId);
+  c.set('callerId', authContext.userId);
+  c.set('authContext', authContext);
   c.set('db', db);
   await next();
 };

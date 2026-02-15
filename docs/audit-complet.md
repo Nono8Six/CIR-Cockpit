@@ -1183,3 +1183,65 @@ La suite `backend/functions/api/integration/api_integration_test.ts` couvre deso
 2. P2 suppression fallback legacy `x-client-authorization`: **FAIT**.
 3. P2 integration backend route->service->db renforcee: **FAIT**.
 4. P2 durcissement E2E admin (compte dedie, plus de skip role silencieux): **FAIT**.
+
+### 10.11 Avancement P3.1/P3.2/P3.3 - durcissement multi-tenant + contrat erreur strict (2026-02-15)
+
+#### 10.11.1 Durcissement auth/data backend
+
+1. `requireAuth` hydrate desormais un `authContext` complet (`userId`, `role`, `agencyIds`, `isSuperAdmin`) en plus de `callerId`.
+2. Les routes `/data/*` consomment `authContext` (plus seulement `callerId`).
+3. Nouveau module `backend/functions/api/services/dataAccess.ts`:
+   - `ensureAgencyAccess` / `ensureOptionalAgencyAccess` (controle d'appartenance agence),
+   - `ensureDataRateLimit` (rate limit data par action),
+   - resolution agence de ressource (`getEntityAgencyId`, `getContactEntityId`).
+4. Services data durcis:
+   - `dataEntities`: blocage cross-agence sur `save/archive/convert_to_client`.
+   - `dataEntityContacts`: blocage cross-agence sur `save/delete`.
+   - `dataInteractions`: blocage cross-agence sur `save/add_timeline_event`.
+   - `dataConfig`: blocage cross-agence sur sync config.
+   - `dataProfile`: rate limit applique.
+
+#### 10.11.2 Contrat d'erreur edge strict partage front/back
+
+1. Ajout schema partage `shared/schemas/edge-error.schema.ts`.
+2. `handleError()` backend aligne sur ce contrat et valide le payload erreur via schema.
+3. `mapEdgeError()` frontend parse desormais le payload via schema partage (fallback status map si payload legacy/invalide).
+4. `safeInvoke()` frontend passe le payload brut au mapper, avec detection stricte des reponses invalides.
+5. Script `frontend/scripts/check-error-compliance.mjs` etendu:
+   - verification que tous les `httpError('<CODE>')` backend existent dans `shared/errors/types.ts` et `shared/errors/catalog.ts`.
+
+#### 10.11.3 Couverture tests renforcee
+
+1. Integration backend:
+   - ajout test `POST data routes forbid cross-agency mutations for non super-admin users`.
+   - enrichissement du scenario valid data:
+     - `archive` entity,
+     - `convert_to_client`,
+     - `add_timeline_event`,
+     - validation `CONFIG_INVALID` categorie status invalide.
+2. Unit backend:
+   - ajout `backend/functions/api/services/dataAccess_test.ts`.
+3. Unit frontend:
+   - mise a jour `mapEdgeError.test.ts` + cas payload legacy hors contrat.
+
+#### 10.11.4 Verification execution (runbook manuel sans CI)
+
+1. Backend:
+   - `deno lint backend/functions/api` -> OK.
+   - `deno check --config backend/deno.json backend/functions/api/index.ts` -> OK.
+   - `deno test --allow-env --no-check --config backend/deno.json backend/functions/api` -> OK (49 pass, 0 fail, 9 ignored).
+2. Frontend:
+   - `npm run typecheck` -> OK.
+   - `npm run lint -- --max-warnings=0` -> OK.
+   - `npm run test:run` -> OK (107/107).
+   - `npm run check:error-compliance` -> OK.
+   - `npm run build` -> OK.
+   - `npm run test:e2e` -> OK (16/16).
+3. Runtime Supabase:
+   - deploy `api` effectue via CLI (`version 20`, `verify_jwt=false`).
+   - probes:
+     - `POST /functions/v1/api/data/{entities,entity-contacts,interactions}` -> `401` (pas de `404`),
+     - `OPTIONS /functions/v1/api/data/entities` -> `200` + CORS,
+     - `POST` avec seul `x-client-authorization` -> `401 AUTH_REQUIRED`.
+4. Integration opt-in runtime:
+   - `RUN_API_INTEGRATION=1 deno test .../integration/api_integration_test.ts` -> OK (9/9).

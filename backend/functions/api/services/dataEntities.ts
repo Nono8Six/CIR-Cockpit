@@ -1,7 +1,13 @@
 import type { Database } from '../../../../shared/supabase.types.ts';
 import type { DataEntitiesPayload } from '../../../../shared/schemas/data.schema.ts';
-import type { DbClient } from '../types.ts';
+import type { AuthContext, DbClient } from '../types.ts';
 import { httpError } from '../middleware/errorHandler.ts';
+import {
+  ensureAgencyAccess,
+  ensureDataRateLimit,
+  ensureOptionalAgencyAccess,
+  getEntityAgencyId
+} from './dataAccess.ts';
 
 type EntityRow = Database['public']['Tables']['entities']['Row'];
 type EntityInsert = Database['public']['Tables']['entities']['Insert'];
@@ -10,9 +16,10 @@ type AccountType = Database['public']['Enums']['account_type'];
 
 const saveEntity = async (
   db: DbClient,
-  payload: SaveEntityPayload
+  payload: SaveEntityPayload,
+  agencyId: string
 ): Promise<EntityRow> => {
-  const { agency_id: agencyId, entity_type: entityType, id: entityId, entity } = payload;
+  const { entity_type: entityType, id: entityId, entity } = payload;
   const baseRow: EntityInsert = {
     entity_type: entityType,
     name: entity.name.trim(),
@@ -93,20 +100,27 @@ const convertToClient = async (
 
 export const handleDataEntitiesAction = async (
   db: DbClient,
-  _callerId: string,
+  authContext: AuthContext,
   requestId: string | undefined,
   data: DataEntitiesPayload
 ): Promise<Record<string, unknown>> => {
+  await ensureDataRateLimit(`data_entities:${data.action}`, authContext.userId);
+
   switch (data.action) {
     case 'save': {
-      const entity = await saveEntity(db, data);
+      const agencyId = ensureAgencyAccess(authContext, data.agency_id);
+      const entity = await saveEntity(db, data, agencyId);
       return { request_id: requestId, ok: true, entity };
     }
     case 'archive': {
+      const agencyId = await getEntityAgencyId(db, data.entity_id);
+      ensureOptionalAgencyAccess(authContext, agencyId);
       const entity = await archiveEntity(db, data.entity_id, data.archived);
       return { request_id: requestId, ok: true, entity };
     }
     case 'convert_to_client': {
+      const agencyId = await getEntityAgencyId(db, data.entity_id);
+      ensureOptionalAgencyAccess(authContext, agencyId);
       const entity = await convertToClient(
         db,
         data.entity_id,

@@ -1,7 +1,13 @@
 import type { Database } from '../../../../shared/supabase.types.ts';
 import type { DataEntityContactsPayload } from '../../../../shared/schemas/data.schema.ts';
-import type { DbClient } from '../types.ts';
+import type { AuthContext, DbClient } from '../types.ts';
 import { httpError } from '../middleware/errorHandler.ts';
+import {
+  ensureDataRateLimit,
+  ensureOptionalAgencyAccess,
+  getContactEntityId,
+  getEntityAgencyId
+} from './dataAccess.ts';
 
 type ContactRow = Database['public']['Tables']['entity_contacts']['Row'];
 
@@ -52,16 +58,23 @@ const deleteContact = async (db: DbClient, contactId: string): Promise<void> => 
 
 export const handleDataEntityContactsAction = async (
   db: DbClient,
-  _callerId: string,
+  authContext: AuthContext,
   requestId: string | undefined,
   data: DataEntityContactsPayload
 ): Promise<Record<string, unknown>> => {
+  await ensureDataRateLimit(`data_entity_contacts:${data.action}`, authContext.userId);
+
   switch (data.action) {
     case 'save': {
+      const agencyId = await getEntityAgencyId(db, data.entity_id);
+      ensureOptionalAgencyAccess(authContext, agencyId);
       const contact = await saveContact(db, data.entity_id, data.id, data.contact);
       return { request_id: requestId, ok: true, contact };
     }
     case 'delete': {
+      const entityId = await getContactEntityId(db, data.contact_id);
+      const agencyId = await getEntityAgencyId(db, entityId);
+      ensureOptionalAgencyAccess(authContext, agencyId);
       await deleteContact(db, data.contact_id);
       return { request_id: requestId, ok: true, contact_id: data.contact_id };
     }

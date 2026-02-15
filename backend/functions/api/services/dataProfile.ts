@@ -1,19 +1,22 @@
 import type { DataProfilePayload } from '../../../../shared/schemas/data.schema.ts';
-import type { DbClient } from '../types.ts';
+import type { AuthContext, DbClient } from '../types.ts';
 import { httpError } from '../middleware/errorHandler.ts';
+import { ensureDataRateLimit } from './dataAccess.ts';
 
 export const handleDataProfileAction = async (
   db: DbClient,
-  callerId: string,
+  authContext: AuthContext,
   requestId: string | undefined,
   data: DataProfilePayload
 ): Promise<Record<string, unknown>> => {
+  await ensureDataRateLimit(`data_profile:${data.action}`, authContext.userId);
+
   switch (data.action) {
     case 'password_changed': {
       const { error } = await db
         .from('profiles')
         .update({ must_change_password: false })
-        .eq('id', callerId);
+        .eq('id', authContext.userId);
 
       if (error) {
         throw httpError(500, 'PROFILE_UPDATE_FAILED', 'Impossible de mettre a jour le profil.');
