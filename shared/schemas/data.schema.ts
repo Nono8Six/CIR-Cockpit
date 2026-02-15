@@ -72,10 +72,11 @@ export type DataEntityContactsPayload = z.infer<typeof dataEntityContactsPayload
 // --- Interactions ---
 
 const timelineEventSchema = z.object({
-  type: z.string().min(1, 'Type requis'),
-  content: z.string().optional(),
-  author: z.string().optional(),
-  date: z.string().optional()
+  id: z.string().trim().min(1, 'Identifiant evenement requis'),
+  date: z.string().trim().min(1, 'Date evenement requise'),
+  type: z.enum(['note', 'status_change', 'reminder_change', 'creation', 'file', 'order_ref_change']),
+  content: z.string().trim().min(1, 'Contenu evenement requis'),
+  author: z.string().trim().optional()
 });
 
 const saveInteractionSchema = z.object({

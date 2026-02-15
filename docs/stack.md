@@ -9,12 +9,12 @@
 ┌─────────────────────────────────────────────────────────┐
 │                      FRONTEND                           │
 ├─────────────────────────────────────────────────────────┤
-│  Framework:      React 19.2.3 + Vite 7.3.1               │
+│  Framework:      React 19.2.4 + Vite 7.3.1               │
 │  Styling:        Tailwind CSS 4.1.18                      │
 │  UI Components:  shadcn/ui (Radix + Tailwind)          │
 │  Icones:         Lucide React                           │
-│  Data fetching:  TanStack Query v5.90.19                │
-│  Formulaires:    React Hook Form v7.71.1 + Zod v4.3.5   │
+│  Data fetching:  TanStack Query v5.90.21                │
+│  Formulaires:    React Hook Form v7.71.1 + Zod v4.3.6   │
 │  Notifications:  Sonner v2.0.7                          │
 │  Dates:          date-fns v4.1.0 (locale FR)            │
 │  State global:   React Context + Zustand (erreurs)       │
@@ -25,7 +25,7 @@
 │  BaaS:           Supabase                               │
 │  Database:       PostgreSQL 15+ + RLS multi-tenant       │
 │  Auth:           Supabase Auth (JWT natif)              │
-│  API:            Supabase JS SDK v2.91.0 + Edge Functions (Hono RPC) │
+│  API:            Supabase JS SDK v2.95.3 + Edge Functions (Hono RPC) │
 │  Realtime:       Supabase Realtime (WebSocket)          │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -36,7 +36,7 @@
 
 | Technologie | Version | Role |
 |-------------|---------|------|
-| **React** | 19.2.3 | Framework UI |
+| **React** | 19.2.4 | Framework UI |
 | **Vite** | 7.3.1 | Build tool, dev server |
 | **TypeScript** | 5.9.3 | Typage statique |
 | **Tailwind CSS** | 4.1.18 | Utility-first CSS |
@@ -45,17 +45,17 @@
 
 | Librairie cible | Version | Peer deps / contraintes |
 |-----------------|---------|--------------------------|
-| **React** | 19.2.3 | Aucun peer dep declare |
-| **React DOM** | 19.2.3 | `react ^19.2.3` |
+| **React** | 19.2.4 | Aucun peer dep declare |
+| **React DOM** | 19.2.4 | `react ^19.2.4` |
 | **Vite** | 7.3.1 | Node `^20.19.0 || >=22.12.0`; peer deps optionnels: `@types/node`, `lightningcss`, `sass`, `sass-embedded`, `less`, `stylus`, `terser`, `yaml`, `sugarss`, `jiti`, `tsx` |
 | **Tailwind CSS** | 4.1.18 | Aucun peer dep declare |
-| **TanStack Query (React)** | 5.90.19 | `react ^18 || ^19` |
+| **TanStack Query (React)** | 5.90.21 | `react ^18 || ^19` |
 | **React Hook Form** | 7.71.1 | `react ^16.8.0 || ^17 || ^18 || ^19` |
-| **Zod** | 4.3.5 | Aucun peer dep declare |
+| **Zod** | 4.3.6 | Aucun peer dep declare |
 | **date-fns** | 4.1.0 | Aucun peer dep declare |
 | **Sonner** | 2.0.7 | `react ^18 || ^19` + `react-dom ^18 || ^19` |
-| **Lucide React** | 0.562.0 | `react ^16.5.1 || ^17 || ^18 || ^19` |
-| **Supabase JS** | 2.91.0 | Aucun peer dep declare |
+| **Lucide React** | 0.564.0 | `react ^16.5.1 || ^17 || ^18 || ^19` |
+| **Supabase JS** | 2.95.3 | Aucun peer dep declare |
 
 ### UI & Composants
 
@@ -109,7 +109,7 @@
 | Technologie | Role |
 |-------------|------|
 | **React Hook Form v7.71.1** | Gestion formulaires performante |
-| **Zod v4.3.5** | Validation de schemas TypeScript-first (schemas partages dans `shared/`) |
+| **Zod v4.3.6** | Validation de schemas TypeScript-first (schemas partages dans `shared/`) |
 | **@hookform/resolvers v5.2.2** | Bridge RHF + Zod |
 
 **Avantages:**
@@ -249,16 +249,16 @@ backend/
 ```json
 {
   "dependencies": {
-    "react": "19.2.3",
-    "react-dom": "19.2.3",
-    "@supabase/supabase-js": "2.91.0",
-    "@tanstack/react-query": "5.90.19",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "@supabase/supabase-js": "2.95.3",
+    "@tanstack/react-query": "5.90.21",
     "react-hook-form": "7.71.1",
-    "zod": "4.3.5",
+    "zod": "4.3.6",
     "@hookform/resolvers": "5.2.2",
     "sonner": "2.0.7",
     "date-fns": "4.1.0",
-    "lucide-react": "0.562.0",
+    "lucide-react": "0.564.0",
     "clsx": "2.1.1",
     "tailwind-merge": "3.4.0"
   },
@@ -307,3 +307,5 @@ backend/
 - [date-fns Docs](https://date-fns.org)
 - [Sonner Docs](https://sonner.emilkowal.ski)
 - [Tailwind CSS Docs](https://tailwindcss.com/docs)
+
+

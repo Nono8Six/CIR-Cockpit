@@ -526,6 +526,7 @@ Deno.test({
       interaction_id: interactionId,
       expected_updated_at: interactionUpdatedAt,
       event: {
+        id: crypto.randomUUID(),
         type: 'note',
         content: 'Evenement integration P3',
         author: 'integration',

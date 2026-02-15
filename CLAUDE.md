@@ -242,9 +242,9 @@ Voir `docs/testing.md` pour le detail complet.
   - `import '../../../backend/functions/api/index.ts';`
 - Maintenir `supabase/config.toml` avec `[functions.api] verify_jwt = false` (auth geree dans le code backend)
 - Maintenir `deno.json` a la racine avec import map explicite pour Zod :
-  - `"zod": "npm:zod@4.3.5"`
-  - `"zod/v4": "npm:zod@4.3.5/v4"`
-  - `"zod/": "npm:zod@4.3.5/"`
+  - `"zod": "npm:zod@4.3.6"`
+  - `"zod/v4": "npm:zod@4.3.6/v4"`
+  - `"zod/": "npm:zod@4.3.6/"`
 - Ne pas deployer le code via l'editeur Dashboard (risque de divergence/stub). Deploy uniquement depuis le repo avec la CLI.
 - Commande de reference :
   - `supabase functions deploy api --project-ref <project_ref> --use-api --import-map deno.json --no-verify-jwt`
