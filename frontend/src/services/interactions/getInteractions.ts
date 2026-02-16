@@ -7,10 +7,13 @@ import { hydrateTimeline } from './hydrateTimeline';
 export const getInteractions = async (agencyIdOverride?: string): Promise<Interaction[]> => {
   const supabase = requireSupabaseClient();
   const agencyId = agencyIdOverride ?? (await getActiveAgencyId());
+  if (!agencyId) {
+    return [];
+  }
   const { data, error, status } = await supabase
     .from('interactions')
     .select('*')
-    .or(`agency_id.eq.${agencyId},agency_id.is.null`)
+    .eq('agency_id', agencyId)
     .order('created_at', { ascending: false });
 
   if (error) {

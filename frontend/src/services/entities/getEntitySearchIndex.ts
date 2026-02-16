@@ -11,6 +11,10 @@ export const getEntitySearchIndex = async (
   agencyId: string | null,
   includeArchived = false
 ): Promise<EntitySearchIndex> => {
+  if (!agencyId) {
+    return { entities: [], contacts: [] };
+  }
+
   const supabase = requireSupabaseClient();
 
   const entitiesQuery = supabase
@@ -18,9 +22,7 @@ export const getEntitySearchIndex = async (
     .select('*')
     .order('name', { ascending: true });
 
-  const filteredEntitiesQuery = agencyId
-    ? entitiesQuery.or(`agency_id.eq.${agencyId},agency_id.is.null`)
-    : entitiesQuery;
+  const filteredEntitiesQuery = entitiesQuery.eq('agency_id', agencyId);
 
   const finalEntitiesQuery = includeArchived
     ? filteredEntitiesQuery

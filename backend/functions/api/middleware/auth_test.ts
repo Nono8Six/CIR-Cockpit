@@ -7,7 +7,12 @@ import {
   type JWK
 } from 'jose';
 
-import { createJwtAuthGateway, getAccessTokenFromHeaders, getBearerToken } from './auth.ts';
+import {
+  createJwtAuthGateway,
+  getAccessTokenFromHeaders,
+  getBearerToken,
+  isProfileAccessRevoked
+} from './auth.ts';
 
 Deno.test('getBearerToken returns empty string when header is missing', () => {
   assertEquals(getBearerToken(null), '');
@@ -31,6 +36,20 @@ Deno.test('getAccessTokenFromHeaders prioritizes Authorization', () => {
 
 Deno.test('getAccessTokenFromHeaders returns empty when Authorization is missing', () => {
   assertEquals(getAccessTokenFromHeaders(null), '');
+});
+
+Deno.test('isProfileAccessRevoked returns true for archived profiles', () => {
+  assertEquals(
+    isProfileAccessRevoked({ role: 'tcs', archived_at: '2026-02-16T00:00:00.000Z', is_system: false }),
+    true
+  );
+});
+
+Deno.test('isProfileAccessRevoked returns true for system profiles', () => {
+  assertEquals(
+    isProfileAccessRevoked({ role: 'tcs', archived_at: null, is_system: true }),
+    true
+  );
 });
 
 Deno.test('createJwtAuthGateway verifies a valid token and extracts sub', async () => {

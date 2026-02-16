@@ -64,6 +64,7 @@ export const buildClientsPanelContentProps = ({
   filteredProspects: state.filteredProspects,
   selectedProspectId: state.selectedProspectId,
   onSelectProspect: state.setSelectedProspectId,
+  isOrphansFilter: state.isOrphansFilter,
   selectedClient: state.selectedClient,
   selectedProspect: state.selectedProspect,
   contacts: state.contacts,
@@ -76,6 +77,8 @@ export const buildClientsPanelContentProps = ({
   onAddContact: state.handleAddContact,
   onEditContact: state.handleEditContact,
   onDeleteContact: state.handleDeleteContact,
+  onReassignEntity: state.handleReassignEntity,
+  isReassignPending: state.isReassignPending,
   onRequestConvert,
   onEditProspect: state.handleEditProspect
 });

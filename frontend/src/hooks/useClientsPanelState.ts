@@ -7,6 +7,7 @@ import { useAgencies } from './useAgencies';
 import { useSaveClient } from './useSaveClient';
 import { useSaveProspect } from './useSaveProspect';
 import { useSetClientArchived } from './useSetClientArchived';
+import { useReassignEntity } from './useReassignEntity';
 import { useEntityContacts } from './useEntityContacts';
 import { useSaveEntityContact } from './useSaveEntityContact';
 import { useDeleteEntityContact } from './useDeleteEntityContact';
@@ -162,6 +163,7 @@ export const useClientsPanelState = ({
   const saveClientMutation = useSaveClient(effectiveAgencyId ?? null, showArchived);
   const saveProspectMutation = useSaveProspect(effectiveAgencyId ?? null, showArchived, isOrphansFilter);
   const archiveClientMutation = useSetClientArchived(effectiveAgencyId ?? null);
+  const reassignEntityMutation = useReassignEntity();
   const saveContactMutation = useSaveEntityContact(activeEntity?.id ?? null, false, effectiveAgencyId);
   const deleteContactMutation = useDeleteEntityContact(activeEntity?.id ?? null, false);
 
@@ -302,6 +304,23 @@ export const useClientsPanelState = ({
     }
   }, [confirmDeleteContact, deleteContactMutation]);
 
+  const handleReassignEntity = useCallback(
+    async (entityId: string, targetAgencyId: string) => {
+      try {
+        const result = await reassignEntityMutation.mutateAsync({
+          entity_id: entityId,
+          target_agency_id: targetAgencyId
+        });
+        notifySuccess(
+          `Entite reattribuee. ${result.propagated_interactions_count} interaction(s) mise(s) a jour.`
+        );
+      } catch {
+        return;
+      }
+    },
+    [reassignEntityMutation]
+  );
+
   const getConvertEntityFromSelectedProspect = useCallback((): ConvertClientEntity | null => {
     if (!selectedProspect) {
       return null;
@@ -324,6 +343,7 @@ export const useClientsPanelState = ({
     clientDialogOpen,
     prospectDialogOpen,
     contactDialogOpen,
+    isOrphansFilter,
     clientToEdit,
     contactToEdit,
     prospectToEdit,
@@ -363,6 +383,8 @@ export const useClientsPanelState = ({
     handleSaveContact,
     handleDeleteContact,
     executeDeleteContact,
-    getConvertEntityFromSelectedProspect
+    handleReassignEntity,
+    getConvertEntityFromSelectedProspect,
+    isReassignPending: reassignEntityMutation.isPending
   };
 };

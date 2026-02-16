@@ -16,6 +16,7 @@ export type ClientsPanelContentProps = {
   filteredProspects: Entity[];
   selectedProspectId: string | null;
   onSelectProspect: (prospectId: string | null) => void;
+  isOrphansFilter: boolean;
   selectedClient: Client | null;
   selectedProspect: Entity | null;
   contacts: ClientContact[];
@@ -28,6 +29,8 @@ export type ClientsPanelContentProps = {
   onAddContact: () => void;
   onEditContact: (contact: ClientContact) => void;
   onDeleteContact: (contact: ClientContact) => void;
+  onReassignEntity: (entityId: string, targetAgencyId: string) => Promise<void>;
+  isReassignPending: boolean;
   onRequestConvert: (entity: ConvertClientEntity) => void;
   onEditProspect: () => void;
 };

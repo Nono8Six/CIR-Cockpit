@@ -29,8 +29,11 @@ const ensureAgencyExists = async (db: DbClient, agencyId: string): Promise<Agenc
   return agency;
 };
 
-const handleAgencyNameConflict = (error: { code?: string; message: string }) => {
-  if (error.code === '23505' || error.message.includes('agencies_name_unique_idx')) {
+export const isAgencyNameConflictError = (error: { code?: string; message: string }): boolean =>
+  error.code === '23505' || error.message.includes('agencies_name_unique_idx');
+
+export const handleAgencyNameConflict = (error: { code?: string; message: string }) => {
+  if (isAgencyNameConflictError(error)) {
     throw httpError(409, 'AGENCY_NAME_EXISTS', 'Nom d\'agence deja utilise.');
   }
   throw httpError(400, 'AGENCY_UPDATE_FAILED', error.message);

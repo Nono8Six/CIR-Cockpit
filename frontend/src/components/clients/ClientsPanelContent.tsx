@@ -16,6 +16,7 @@ const ClientsPanelContent = ({
   filteredProspects,
   selectedProspectId,
   onSelectProspect,
+  isOrphansFilter,
   selectedClient,
   selectedProspect,
   contacts,
@@ -28,6 +29,8 @@ const ClientsPanelContent = ({
   onAddContact,
   onEditContact,
   onDeleteContact,
+  onReassignEntity,
+  isReassignPending,
   onRequestConvert,
   onEditProspect
 }: ClientsPanelContentProps) => (
@@ -46,6 +49,10 @@ const ClientsPanelContent = ({
       filteredProspects={filteredProspects}
       selectedProspectId={selectedProspectId}
       onSelectProspect={onSelectProspect}
+      isOrphansFilter={isOrphansFilter}
+      agencies={agencies}
+      onReassignEntity={onReassignEntity}
+      isReassignPending={isReassignPending}
     />
     <ClientsPanelDetailPane
       viewMode={viewMode}

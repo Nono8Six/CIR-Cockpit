@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useDeferredValue, useMemo } from 'react';
 
 import { isProspectRelationValue } from '@/constants/relations';
 import type { AgencyConfig } from '@/services/config';
@@ -17,8 +17,9 @@ type UseAppSearchDataParams = {
 };
 
 export const useAppSearchData = ({ searchQuery, interactions, entitySearchIndex, defaultStatusId }: UseAppSearchDataParams) => {
-  const lowerQuery = searchQuery.toLowerCase();
-  const rawQuery = searchQuery.replace(/\s/g, '');
+  const deferredSearchQuery = useDeferredValue(searchQuery);
+  const lowerQuery = deferredSearchQuery.toLowerCase();
+  const rawQuery = deferredSearchQuery.replace(/\s/g, '');
 
   const clientEntities = useMemo(() => entitySearchIndex.entities.filter(entity => entity.entity_type === 'Client'), [entitySearchIndex.entities]);
   const prospectEntities = useMemo(() => entitySearchIndex.entities.filter(entity => isProspectRelationValue(entity.entity_type)), [entitySearchIndex.entities]);
@@ -26,19 +27,19 @@ export const useAppSearchData = ({ searchQuery, interactions, entitySearchIndex,
   const entityNameById = useMemo(() => new Map(entitySearchIndex.entities.map(entity => [entity.id, entity.name])), [entitySearchIndex.entities]);
 
   const filteredInteractions = useMemo(() => {
-    if (!searchQuery) return [];
+    if (!deferredSearchQuery) return [];
     return interactions.filter(interaction => (
       interaction.company_name.toLowerCase().includes(lowerQuery)
       || interaction.contact_name.toLowerCase().includes(lowerQuery)
       || interaction.subject.toLowerCase().includes(lowerQuery)
-      || (interaction.order_ref && interaction.order_ref.includes(searchQuery))
-      || (interaction.contact_phone ?? '').includes(searchQuery)
+      || (interaction.order_ref && interaction.order_ref.includes(deferredSearchQuery))
+      || (interaction.contact_phone ?? '').includes(deferredSearchQuery)
       || (interaction.contact_email ?? '').toLowerCase().includes(lowerQuery)
     ));
-  }, [interactions, lowerQuery, searchQuery]);
+  }, [deferredSearchQuery, interactions, lowerQuery]);
 
   const filterEntities = (list: Entity[]) => {
-    if (!searchQuery) return [];
+    if (!deferredSearchQuery) return [];
     return list.filter(entity => (
       entity.name.toLowerCase().includes(lowerQuery)
       || (entity.client_number ?? '').includes(rawQuery)
@@ -47,11 +48,11 @@ export const useAppSearchData = ({ searchQuery, interactions, entitySearchIndex,
     ));
   };
 
-  const filteredClients = useMemo(() => filterEntities(clientEntities), [clientEntities, lowerQuery, rawQuery, searchQuery]);
-  const filteredProspects = useMemo(() => filterEntities(prospectEntities), [lowerQuery, prospectEntities, rawQuery, searchQuery]);
+  const filteredClients = useMemo(() => filterEntities(clientEntities), [clientEntities, deferredSearchQuery, lowerQuery, rawQuery]);
+  const filteredProspects = useMemo(() => filterEntities(prospectEntities), [deferredSearchQuery, lowerQuery, prospectEntities, rawQuery]);
 
   const filteredContacts = useMemo(() => {
-    if (!searchQuery) return [];
+    if (!deferredSearchQuery) return [];
     return entitySearchIndex.contacts.filter(contact => {
       const entity = entitiesById.get(contact.entity_id);
       if (!entity || entity.entity_type !== 'Client') return false;
@@ -62,7 +63,7 @@ export const useAppSearchData = ({ searchQuery, interactions, entitySearchIndex,
         || (contact.position ?? '').toLowerCase().includes(lowerQuery)
       );
     });
-  }, [entitiesById, entitySearchIndex.contacts, lowerQuery, searchQuery]);
+  }, [deferredSearchQuery, entitiesById, entitySearchIndex.contacts, lowerQuery]);
 
   const recentEntities = useMemo(() => {
     if (interactions.length === 0 || entitySearchIndex.entities.length === 0) return [];

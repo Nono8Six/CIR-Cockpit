@@ -3,7 +3,7 @@ import type { FormEvent } from 'react';
 
 import { UserRole } from '@/types';
 import { CreateAdminUserPayload } from '@/services/admin/adminUsersCreate';
-import { normalizeError } from '@/services/errors/normalizeError';
+import { handleUiError } from '@/services/errors/handleUiError';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const HAS_DIGIT_REGEX = /\d/;
@@ -83,7 +83,9 @@ export const useUserCreateDialog = ({ onCreate, onOpenChange }: UseUserCreateDia
       setAgencyIds([]);
       onOpenChange(false);
     } catch (error) {
-      const appError = normalizeError(error, "Impossible de creer l'utilisateur.");
+      const appError = handleUiError(error, "Impossible de creer l'utilisateur.", {
+        source: 'useUserCreateDialog'
+      });
       setError(appError.message);
     } finally {
       setIsSubmitting(false);

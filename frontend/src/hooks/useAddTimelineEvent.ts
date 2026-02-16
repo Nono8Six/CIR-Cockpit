@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
+import { handleUiError } from '@/services/errors/handleUiError';
 import { addTimelineEvent } from '@/services/interactions/addTimelineEvent';
 import { interactionsKey } from '@/services/query/queryKeys';
 import { Interaction, InteractionUpdate, TimelineEvent } from '@/types';
@@ -22,6 +23,11 @@ export const useAddTimelineEvent = (agencyId: string | null) => {
       queryClient.setQueryData<Interaction[]>(interactionsKey(agencyId), (current) =>
         upsertInteractionInList(current, interaction)
       );
+    },
+    onError: (error) => {
+      handleUiError(error, "Impossible d'ajouter l'evenement.", {
+        source: 'useAddTimelineEvent'
+      });
     }
   });
 };

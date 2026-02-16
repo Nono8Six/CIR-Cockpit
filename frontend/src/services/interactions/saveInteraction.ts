@@ -20,6 +20,14 @@ export const saveInteraction = (interaction: InteractionDraft): ResultAsync<Inte
   safeApiCall(
     (async () => {
       validateInteractionDraft(interaction);
+      const agencyId = interaction.agency_id?.trim();
+      if (!agencyId) {
+        throw createAppError({
+          code: 'AGENCY_ID_INVALID',
+          message: 'Agence active invalide.',
+          source: 'validation'
+        });
+      }
       const userLabel = await getCurrentUserLabel();
       const timeline = interaction.timeline.map((event) => ({
         ...event,
@@ -28,7 +36,7 @@ export const saveInteraction = (interaction: InteractionDraft): ResultAsync<Inte
 
       return safeInvoke('/data/interactions', {
         action: 'save',
-        agency_id: interaction.agency_id,
+        agency_id: agencyId,
         interaction: {
           ...interaction,
           id: interaction.id,

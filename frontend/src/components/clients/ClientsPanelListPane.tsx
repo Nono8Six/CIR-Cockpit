@@ -20,6 +20,10 @@ type ClientsPanelListPaneProps = Pick<
   | 'filteredProspects'
   | 'selectedProspectId'
   | 'onSelectProspect'
+  | 'isOrphansFilter'
+  | 'agencies'
+  | 'onReassignEntity'
+  | 'isReassignPending'
 >;
 
 const ClientsPanelListPane = ({
@@ -35,7 +39,11 @@ const ClientsPanelListPane = ({
   onRetryProspects,
   filteredProspects,
   selectedProspectId,
-  onSelectProspect
+  onSelectProspect,
+  isOrphansFilter,
+  agencies,
+  onReassignEntity,
+  isReassignPending
 }: ClientsPanelListPaneProps) => {
   const loadingState = (
     <div className="flex min-h-[260px] flex-col items-center justify-center gap-3 rounded-md border border-dashed border-slate-200 bg-slate-50/60 p-4 text-center">
@@ -99,6 +107,10 @@ const ClientsPanelListPane = ({
             clients={filteredClients}
             selectedClientId={selectedClientId}
             onSelect={onSelectClient}
+            isOrphansFilterActive={isOrphansFilter}
+            agencies={agencies}
+            onReassignEntity={onReassignEntity}
+            isReassignPending={isReassignPending}
           />
         )
       ) : prospectsLoading ? (
@@ -112,6 +124,10 @@ const ClientsPanelListPane = ({
           prospects={filteredProspects}
           selectedProspectId={selectedProspectId}
           onSelect={onSelectProspect}
+          isOrphansFilterActive={isOrphansFilter}
+          agencies={agencies}
+          onReassignEntity={onReassignEntity}
+          isReassignPending={isReassignPending}
         />
       )}
     </div>

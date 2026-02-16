@@ -123,20 +123,40 @@ const toUniqueAgencyIds = (rows: Array<{ agency_id: string }>): string[] => {
   return [...unique];
 };
 
+type ProfileAuthState = {
+  role: AuthContext['role'] | null;
+  archived_at: string | null;
+  is_system: boolean;
+};
+
+type MembershipLookupRow = {
+  agency_id: string | null;
+};
+
+type ProfileLookupRow = ProfileAuthState & {
+  agency_members?: MembershipLookupRow[] | null;
+};
+
+export const isProfileAccessRevoked = (profile: ProfileAuthState): boolean =>
+  Boolean(profile.archived_at) || profile.is_system;
+
 const resolveAuthContext = async (
   db: DbClient,
   userId: string
 ): Promise<AuthContext> => {
   const { data: profile, error: profileError } = await db
     .from('profiles')
-    .select('role')
+    .select('role, archived_at, is_system, agency_members(agency_id)')
     .eq('id', userId)
-    .single();
+    .single<ProfileLookupRow>();
 
   if (profileError) {
     throw httpError(500, 'PROFILE_LOOKUP_FAILED', 'Impossible de charger le profil.');
   }
   if (!profile?.role) {
+    throw httpError(403, 'AUTH_FORBIDDEN', 'Acces interdit.');
+  }
+  if (isProfileAccessRevoked(profile)) {
     throw httpError(403, 'AUTH_FORBIDDEN', 'Acces interdit.');
   }
 
@@ -149,14 +169,10 @@ const resolveAuthContext = async (
     };
   }
 
-  const { data: memberships, error: membershipsError } = await db
-    .from('agency_members')
-    .select('agency_id')
-    .eq('user_id', userId);
-
-  if (membershipsError) {
-    throw httpError(500, 'MEMBERSHIP_LOOKUP_FAILED', 'Impossible de charger les appartenances.');
-  }
+  const memberships = Array.isArray(profile.agency_members)
+    ? profile.agency_members
+      .filter((membership): membership is { agency_id: string } => typeof membership.agency_id === 'string')
+    : [];
 
   return {
     userId,

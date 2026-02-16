@@ -12,7 +12,22 @@ type ConfigTable =
 
 const STATUS_CATEGORIES = ['todo', 'in_progress', 'done'] as const;
 
-const normalizeLabelList = (labels: string[]): string[] => {
+type ExistingStatusRow = {
+  id: string;
+  label: string;
+};
+
+type StatusUpsertRow = {
+  id?: string;
+  agency_id: string;
+  label: string;
+  sort_order: number;
+  is_default: boolean;
+  category: string;
+  is_terminal: boolean;
+};
+
+export const normalizeLabelList = (labels: string[]): string[] => {
   const seen = new Set<string>();
   const result: string[] = [];
   for (const label of labels) {
@@ -22,6 +37,41 @@ const normalizeLabelList = (labels: string[]): string[] => {
     result.push(trimmed);
   }
   return result;
+};
+
+const isStatusCategory = (value: string): value is typeof STATUS_CATEGORIES[number] =>
+  STATUS_CATEGORIES.includes(value as typeof STATUS_CATEGORIES[number]);
+
+export const assertValidStatusCategories = (statuses: DataConfigPayload['statuses']): void => {
+  for (const status of statuses) {
+    if (!isStatusCategory(status.category)) {
+      throw httpError(400, 'CONFIG_INVALID', `Categorie de statut invalide: ${status.category}`);
+    }
+  }
+};
+
+export const buildStatusUpsertRows = (
+  statuses: DataConfigPayload['statuses'],
+  agencyId: string,
+  existingRows: ExistingStatusRow[]
+): StatusUpsertRow[] => {
+  const existingByLabel = new Map(
+    existingRows.map((row) => [row.label.toLowerCase(), row.id])
+  );
+
+  return statuses.map((status, index) => {
+    const resolvedId =
+      status.id ?? existingByLabel.get(status.label.toLowerCase()) ?? undefined;
+    return {
+      ...(resolvedId ? { id: resolvedId } : {}),
+      agency_id: agencyId,
+      label: status.label.trim(),
+      sort_order: index + 1,
+      is_default: index === 0,
+      category: status.category,
+      is_terminal: status.category === 'done'
+    };
+  });
 };
 
 const syncLabelTable = async (
@@ -80,12 +130,7 @@ const syncStatuses = async (
   if (statuses.length === 0) {
     throw httpError(400, 'CONFIG_INVALID', 'Au moins un statut est requis.');
   }
-
-  for (const s of statuses) {
-    if (!STATUS_CATEGORIES.includes(s.category as typeof STATUS_CATEGORIES[number])) {
-      throw httpError(400, 'CONFIG_INVALID', `Categorie de statut invalide: ${s.category}`);
-    }
-  }
+  assertValidStatusCategories(statuses);
 
   const { data: existing, error: readError } = await db
     .from('agency_statuses')
@@ -97,23 +142,7 @@ const syncStatuses = async (
   }
 
   const existingRows = existing ?? [];
-  const existingByLabel = new Map(
-    existingRows.map((row) => [row.label.toLowerCase(), row.id])
-  );
-
-  const rows = statuses.map((status, index) => {
-    const resolvedId =
-      status.id ?? existingByLabel.get(status.label.toLowerCase()) ?? undefined;
-    return {
-      ...(resolvedId ? { id: resolvedId } : {}),
-      agency_id: agencyId,
-      label: status.label.trim(),
-      sort_order: index + 1,
-      is_default: index === 0,
-      category: status.category,
-      is_terminal: status.category === 'done'
-    };
-  });
+  const rows = buildStatusUpsertRows(statuses, agencyId, existingRows);
 
   const { error: upsertError } = await db
     .from('agency_statuses')

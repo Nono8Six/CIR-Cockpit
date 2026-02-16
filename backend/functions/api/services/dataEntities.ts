@@ -11,7 +11,9 @@ import {
 
 type EntityRow = Database['public']['Tables']['entities']['Row'];
 type EntityInsert = Database['public']['Tables']['entities']['Insert'];
+type AgencyLookupRow = Pick<Database['public']['Tables']['agencies']['Row'], 'id' | 'archived_at'>;
 type SaveEntityPayload = Extract<DataEntitiesPayload, { action: 'save' }>;
+type ReassignEntityPayload = Extract<DataEntitiesPayload, { action: 'reassign' }>;
 type AccountType = Database['public']['Enums']['account_type'];
 
 const saveEntity = async (
@@ -98,6 +100,84 @@ const convertToClient = async (
   return data;
 };
 
+export const ensureReassignSuperAdmin = (authContext: AuthContext): void => {
+  if (!authContext.isSuperAdmin) {
+    throw httpError(403, 'AUTH_FORBIDDEN', 'Acces interdit.');
+  }
+};
+
+const ensureTargetAgencyIsActive = async (db: DbClient, targetAgencyId: string): Promise<void> => {
+  const { data, error } = await db
+    .from('agencies')
+    .select('id, archived_at')
+    .eq('id', targetAgencyId)
+    .maybeSingle<AgencyLookupRow>();
+
+  if (error) {
+    throw httpError(500, 'DB_READ_FAILED', "Impossible de verifier l'agence cible.");
+  }
+  if (!data) {
+    throw httpError(404, 'NOT_FOUND', 'Agence cible introuvable.');
+  }
+  if (data.archived_at) {
+    throw httpError(400, 'VALIDATION_ERROR', 'Agence cible archivee.');
+  }
+};
+
+const ensureEntityExists = async (db: DbClient, entityId: string): Promise<void> => {
+  const { data, error } = await db
+    .from('entities')
+    .select('id')
+    .eq('id', entityId)
+    .maybeSingle<{ id: string }>();
+
+  if (error) {
+    throw httpError(500, 'DB_READ_FAILED', "Impossible de verifier l'entite.");
+  }
+  if (!data) {
+    throw httpError(404, 'NOT_FOUND', 'Entite introuvable.');
+  }
+};
+
+export const reassignEntity = async (
+  db: DbClient,
+  payload: ReassignEntityPayload
+): Promise<{ entity: EntityRow; propagatedInteractionsCount: number }> => {
+  await ensureTargetAgencyIsActive(db, payload.target_agency_id);
+
+  const { data: entity, error: entityError } = await db
+    .from('entities')
+    .update({ agency_id: payload.target_agency_id })
+    .eq('id', payload.entity_id)
+    .is('agency_id', null)
+    .select('*')
+    .maybeSingle<EntityRow>();
+
+  if (entityError) {
+    throw httpError(500, 'DB_WRITE_FAILED', "Impossible de reassigner l'entite.");
+  }
+  if (!entity) {
+    await ensureEntityExists(db, payload.entity_id);
+    throw httpError(400, 'VALIDATION_ERROR', "Seules les entites orphelines peuvent etre reattribuees.");
+  }
+
+  const { data: propagatedRows, error: propagationError } = await db
+    .from('interactions')
+    .update({ agency_id: payload.target_agency_id })
+    .eq('entity_id', payload.entity_id)
+    .is('agency_id', null)
+    .select('id');
+
+  if (propagationError) {
+    throw httpError(500, 'DB_WRITE_FAILED', "Impossible de propager l'agence aux interactions.");
+  }
+
+  return {
+    entity,
+    propagatedInteractionsCount: propagatedRows?.length ?? 0
+  };
+};
+
 export const handleDataEntitiesAction = async (
   db: DbClient,
   authContext: AuthContext,
@@ -128,6 +208,16 @@ export const handleDataEntitiesAction = async (
         data.convert.account_type
       );
       return { request_id: requestId, ok: true, entity };
+    }
+    case 'reassign': {
+      ensureReassignSuperAdmin(authContext);
+      const { entity, propagatedInteractionsCount } = await reassignEntity(db, data);
+      return {
+        request_id: requestId,
+        ok: true,
+        entity,
+        propagated_interactions_count: propagatedInteractionsCount
+      };
     }
     default:
       throw httpError(400, 'ACTION_REQUIRED', 'Action requise.');

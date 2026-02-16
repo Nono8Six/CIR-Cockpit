@@ -58,3 +58,83 @@ Deno.test('handleError generates request_id when absent', async () => {
   assert(result.request_id);
   assertMatch(String(result.request_id), /^[0-9a-fA-F-]{36}$/);
 });
+
+Deno.test('app.notFound returns JSON payload with CORS headers', async () => {
+  const previousOrigin = Deno.env.get('CORS_ALLOWED_ORIGIN');
+  try {
+    Deno.env.set('CORS_ALLOWED_ORIGIN', 'https://app.cir.test');
+    const appModule = await import('../app.ts');
+    const response = await appModule.default.request('/unknown-route', {
+      method: 'POST',
+      headers: {
+        origin: 'https://app.cir.test',
+        'content-type': 'application/json'
+      },
+      body: '{}'
+    });
+
+    const payload = (await response.json()) as Record<string, unknown>;
+    assertEquals(response.status, 404);
+    assertEquals(payload.code, 'NOT_FOUND');
+    assertEquals(response.headers.get('access-control-allow-origin'), 'https://app.cir.test');
+  } finally {
+    if (previousOrigin === undefined) {
+      Deno.env.delete('CORS_ALLOWED_ORIGIN');
+    } else {
+      Deno.env.set('CORS_ALLOWED_ORIGIN', previousOrigin);
+    }
+  }
+});
+
+Deno.test('OPTIONS request returns CORS headers for allowed origin', async () => {
+  const previousOrigin = Deno.env.get('CORS_ALLOWED_ORIGIN');
+  try {
+    Deno.env.set('CORS_ALLOWED_ORIGIN', 'https://app.cir.test');
+    const appModule = await import('../app.ts');
+    const response = await appModule.default.request('/data/entities', {
+      method: 'OPTIONS',
+      headers: {
+        origin: 'https://app.cir.test',
+        'access-control-request-method': 'POST'
+      }
+    });
+
+    assertEquals(response.status, 200);
+    assertEquals(response.headers.get('access-control-allow-origin'), 'https://app.cir.test');
+    assertEquals(response.headers.get('x-content-type-options'), 'nosniff');
+  } finally {
+    if (previousOrigin === undefined) {
+      Deno.env.delete('CORS_ALLOWED_ORIGIN');
+    } else {
+      Deno.env.set('CORS_ALLOWED_ORIGIN', previousOrigin);
+    }
+  }
+});
+
+Deno.test('POST request rejects oversized payload', async () => {
+  const previousOrigin = Deno.env.get('CORS_ALLOWED_ORIGIN');
+  try {
+    Deno.env.set('CORS_ALLOWED_ORIGIN', 'https://app.cir.test');
+    const appModule = await import('../app.ts');
+    const response = await appModule.default.request('/data/entities', {
+      method: 'POST',
+      headers: {
+        origin: 'https://app.cir.test',
+        authorization: 'Bearer fake-token',
+        'content-type': 'application/json',
+        'content-length': '1000001'
+      },
+      body: '{}'
+    });
+
+    const payload = (await response.json()) as Record<string, unknown>;
+    assertEquals(response.status, 413);
+    assertEquals(payload.code, 'INVALID_PAYLOAD');
+  } finally {
+    if (previousOrigin === undefined) {
+      Deno.env.delete('CORS_ALLOWED_ORIGIN');
+    } else {
+      Deno.env.set('CORS_ALLOWED_ORIGIN', previousOrigin);
+    }
+  }
+});

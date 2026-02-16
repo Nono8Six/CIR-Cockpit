@@ -21,7 +21,7 @@ const toNullableString = (value: unknown): string | null | undefined => {
   return trimmed.length > 0 ? trimmed : null;
 };
 
-const normalizeInteractionUpdates = (
+export const normalizeInteractionUpdates = (
   updates: AddTimelineEventPayload['updates']
 ): InteractionUpdate => {
   if (!updates) return {};
@@ -47,6 +47,15 @@ const normalizeInteractionUpdates = (
   if (Object.hasOwn(updates, 'notes')) {
     const notes = toNullableString(updates.notes);
     if (notes !== undefined) normalized.notes = notes;
+  }
+  if (Object.hasOwn(updates, 'last_action_at')) {
+    const lastActionAt = updates.last_action_at;
+    if (typeof lastActionAt === 'string') {
+      const trimmed = lastActionAt.trim();
+      if (trimmed.length > 0) {
+        normalized.last_action_at = trimmed;
+      }
+    }
   }
   if (Object.hasOwn(updates, 'entity_id')) {
     const entityId = toNullableString(updates.entity_id);

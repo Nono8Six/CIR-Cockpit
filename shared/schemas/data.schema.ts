@@ -7,6 +7,10 @@ import { convertClientSchema } from './convert-client.schema.ts';
 import { interactionBaseSchema } from './interaction.schema.ts';
 import { prospectFormSchema } from './prospect.schema.ts';
 
+const MAX_TIMELINE_CONTENT_LENGTH = 5000;
+const MAX_TIMELINE_AUTHOR_LENGTH = 120;
+const MAX_CONFIG_LABEL_LENGTH = 120;
+
 // --- Entities ---
 
 const saveClientEntitySchema = z.object({
@@ -37,13 +41,20 @@ const convertEntitySchema = z.object({
   convert: convertClientSchema
 });
 
+const reassignEntitySchema = z.object({
+  action: z.literal('reassign'),
+  entity_id: uuidSchema,
+  target_agency_id: uuidSchema
+});
+
 // Keep z.union here because two branches intentionally share action="save"
 // (Client vs Prospect), which is incompatible with discriminatedUnion.
 export const dataEntitiesPayloadSchema = z.union([
   saveClientEntitySchema,
   saveProspectEntitySchema,
   archiveEntitySchema,
-  convertEntitySchema
+  convertEntitySchema,
+  reassignEntitySchema
 ]);
 
 export type DataEntitiesPayload = z.infer<typeof dataEntitiesPayloadSchema>;
@@ -75,25 +86,38 @@ const timelineEventSchema = z.object({
   id: z.string().trim().min(1, 'Identifiant evenement requis'),
   date: z.string().trim().min(1, 'Date evenement requise'),
   type: z.enum(['note', 'status_change', 'reminder_change', 'creation', 'file', 'order_ref_change']),
-  content: z.string().trim().min(1, 'Contenu evenement requis'),
-  author: z.string().trim().optional()
+  content: z.string().trim().min(1, 'Contenu evenement requis').max(MAX_TIMELINE_CONTENT_LENGTH, 'Contenu trop long'),
+  author: z.string().trim().max(MAX_TIMELINE_AUTHOR_LENGTH, 'Auteur trop long').optional()
 });
 
 const saveInteractionSchema = z.object({
   action: z.literal('save'),
-  agency_id: uuidSchema.optional(),
+  agency_id: uuidSchema,
   interaction: interactionBaseSchema.extend({
     id: uuidSchema,
     timeline: z.array(timelineEventSchema).optional()
   })
 });
 
+const timelineUpdatesSchema = z.object({
+  status: z.string().trim().optional(),
+  status_id: z.union([uuidSchema, z.null()]).optional(),
+  order_ref: z.union([z.string().trim(), z.null()]).optional(),
+  reminder_at: z.union([z.string().trim(), z.null()]).optional(),
+  notes: z.union([z.string(), z.null()]).optional(),
+  entity_id: z.union([uuidSchema, z.null()]).optional(),
+  contact_id: z.union([uuidSchema, z.null()]).optional(),
+  last_action_at: z.string().trim().optional(),
+  status_is_terminal: z.boolean().optional(),
+  mega_families: z.array(z.string()).optional()
+}).strict();
+
 const addTimelineEventSchema = z.object({
   action: z.literal('add_timeline_event'),
   interaction_id: uuidSchema,
   expected_updated_at: z.string().min(1, 'Version requise'),
   event: timelineEventSchema,
-  updates: z.record(z.string(), z.unknown()).optional()
+  updates: timelineUpdatesSchema.optional()
 });
 
 export const dataInteractionsPayloadSchema = z.discriminatedUnion('action', [
@@ -107,17 +131,17 @@ export type DataInteractionsPayload = z.infer<typeof dataInteractionsPayloadSche
 
 const statusItemSchema = z.object({
   id: z.string().optional(),
-  label: z.string().min(1, 'Label requis'),
-  category: z.string().min(1, 'Categorie requise')
+  label: z.string().trim().min(1, 'Label requis').max(MAX_CONFIG_LABEL_LENGTH, 'Label trop long'),
+  category: z.string().trim().min(1, 'Categorie requise').max(32, 'Categorie trop longue')
 });
 
 export const dataConfigPayloadSchema = z.object({
   agency_id: uuidSchema,
   statuses: z.array(statusItemSchema).min(1, 'Au moins un statut requis'),
-  services: z.array(z.string()),
-  entities: z.array(z.string()),
-  families: z.array(z.string()),
-  interactionTypes: z.array(z.string())
+  services: z.array(z.string().trim().max(MAX_CONFIG_LABEL_LENGTH, 'Label service trop long')),
+  entities: z.array(z.string().trim().max(MAX_CONFIG_LABEL_LENGTH, 'Label entite trop long')),
+  families: z.array(z.string().trim().max(MAX_CONFIG_LABEL_LENGTH, 'Label famille trop long')),
+  interactionTypes: z.array(z.string().trim().max(MAX_CONFIG_LABEL_LENGTH, "Label type d'interaction trop long"))
 });
 
 export type DataConfigPayload = z.infer<typeof dataConfigPayloadSchema>;

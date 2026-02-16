@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import ClientList from './ClientList';
-import { Client } from '@/types';
+import { Agency, Client } from '@/types';
 
 const buildClient = (overrides: Partial<Client> = {}): Client => ({
   id: 'client-1',
@@ -60,5 +60,42 @@ describe('ClientList', () => {
 
     const rows = screen.getAllByTestId(/clients-list-row-/i);
     expect(rows[0]).toHaveAttribute('data-testid', 'clients-list-row-c2');
+  });
+
+  it('shows reassign controls only in orphan view and calls onReassignEntity', async () => {
+    const user = userEvent.setup();
+    const onReassignEntity = vi.fn().mockResolvedValue(undefined);
+    const orphanClient = buildClient({ id: 'c-orphan', agency_id: null });
+    const agencies = [{ id: 'agency-2', name: 'Agence Beta', archived_at: null } as Agency];
+
+    const { rerender } = render(
+      <ClientList
+        clients={[orphanClient]}
+        selectedClientId={null}
+        onSelect={vi.fn()}
+        agencies={agencies}
+        isOrphansFilterActive={false}
+        onReassignEntity={onReassignEntity}
+      />
+    );
+
+    expect(screen.queryByTestId('client-reassign-button-c-orphan')).toBeNull();
+
+    rerender(
+      <ClientList
+        clients={[orphanClient]}
+        selectedClientId={null}
+        onSelect={vi.fn()}
+        agencies={agencies}
+        isOrphansFilterActive
+        onReassignEntity={onReassignEntity}
+      />
+    );
+
+    await user.click(screen.getByTestId('client-reassign-select-c-orphan'));
+    await user.click(screen.getByRole('option', { name: /agence beta/i }));
+    await user.click(screen.getByTestId('client-reassign-button-c-orphan'));
+
+    expect(onReassignEntity).toHaveBeenCalledWith('c-orphan', 'agency-2');
   });
 });

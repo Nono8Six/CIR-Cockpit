@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { KeyboardEvent } from 'react';
 import {
   type ColumnDef,
   flexRender,
@@ -12,6 +13,13 @@ import { Archive, ArrowUpDown } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import {
   Table,
   TableBody,
   TableCell,
@@ -19,109 +27,203 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table';
-import { Client } from '@/types';
+import { Agency, Client } from '@/types';
 import { formatClientNumber } from '@/utils/clients/formatClientNumber';
 
 interface ClientListProps {
   clients: Client[];
   selectedClientId: string | null;
   onSelect: (clientId: string) => void;
+  agencies?: Agency[];
+  isOrphansFilterActive?: boolean;
+  onReassignEntity?: (entityId: string, targetAgencyId: string) => Promise<void>;
+  isReassignPending?: boolean;
 }
 
 const ROW_ESTIMATED_SIZE = 64;
 const ROW_OVERSCAN = 8;
 
-const ClientList = ({ clients, selectedClientId, onSelect }: ClientListProps) => {
+const ClientList = ({
+  clients,
+  selectedClientId,
+  onSelect,
+  agencies = [],
+  isOrphansFilterActive = false,
+  onReassignEntity,
+  isReassignPending = false
+}: ClientListProps) => {
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [targetAgencyByEntityId, setTargetAgencyByEntityId] = useState<Record<string, string>>({});
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const availableAgencies = useMemo(
+    () => agencies.filter((agency) => !agency.archived_at),
+    [agencies]
+  );
+  const showReassignAction = isOrphansFilterActive
+    && Boolean(onReassignEntity)
+    && availableAgencies.length > 0;
 
   const columns = useMemo<ColumnDef<Client>[]>(
-    () => [
-      {
-        accessorFn: (client) => formatClientNumber(client.client_number),
-        id: 'client_number',
-        header: ({ column }) => (
-          <Button
-            type="button"
-            variant="ghost"
-            className="-ml-3 h-8 px-3 text-xs text-slate-600"
-            onClick={column.getToggleSortingHandler()}
-          >
-            No client
-            <ArrowUpDown size={14} className="ml-1 text-slate-400" />
-          </Button>
-        ),
-        cell: ({ row }) => (
-          <span className="text-xs uppercase tracking-wider text-slate-500">
-            {formatClientNumber(row.original.client_number)}
-          </span>
-        )
-      },
-      {
-        accessorKey: 'name',
-        header: ({ column }) => (
-          <Button
-            type="button"
-            variant="ghost"
-            className="-ml-3 h-8 px-3 text-xs text-slate-600"
-            onClick={column.getToggleSortingHandler()}
-          >
-            Client
-            <ArrowUpDown size={14} className="ml-1 text-slate-400" />
-          </Button>
-        ),
-        cell: ({ row }) => (
-          <span className="block truncate font-semibold text-slate-900">
-            {row.original.name}
-          </span>
-        )
-      },
-      {
-        accessorFn: (client) => client.city ?? '',
-        id: 'city',
-        header: ({ column }) => (
-          <Button
-            type="button"
-            variant="ghost"
-            className="-ml-3 h-8 px-3 text-xs text-slate-600"
-            onClick={column.getToggleSortingHandler()}
-          >
-            Ville
-            <ArrowUpDown size={14} className="ml-1 text-slate-400" />
-          </Button>
-        ),
-        cell: ({ row }) => (
-          <span className="block truncate text-xs text-slate-600">
-            {row.original.city || 'Sans ville'}
-          </span>
-        )
-      },
-      {
-        accessorFn: (client) =>
-          client.account_type === 'cash' ? 'Comptant' : 'Compte a terme',
-        id: 'account_type',
-        header: 'Compte',
-        cell: ({ row }) => (
-          <span className="hidden text-xs text-slate-600 sm:inline">
-            {row.original.account_type === 'cash' ? 'Comptant' : 'Compte a terme'}
-          </span>
-        )
-      },
-      {
-        id: 'archived',
-        header: 'Etat',
-        enableSorting: false,
-        cell: ({ row }) =>
-          row.original.archived_at ? (
-            <span className="inline-flex items-center gap-1 text-xs uppercase text-amber-600">
-              <Archive size={12} /> Archive
+    () => {
+      const baseColumns: ColumnDef<Client>[] = [
+        {
+          accessorFn: (client) => formatClientNumber(client.client_number),
+          id: 'client_number',
+          header: ({ column }) => (
+            <Button
+              type="button"
+              variant="ghost"
+              className="-ml-3 h-8 px-3 text-xs text-slate-600"
+              onClick={column.getToggleSortingHandler()}
+            >
+              No client
+              <ArrowUpDown size={14} className="ml-1 text-slate-400" />
+            </Button>
+          ),
+          cell: ({ row }) => (
+            <span className="text-xs uppercase tracking-wider text-slate-500">
+              {formatClientNumber(row.original.client_number)}
             </span>
-          ) : (
-            <span className="text-xs text-emerald-700">Actif</span>
           )
+        },
+        {
+          accessorKey: 'name',
+          header: ({ column }) => (
+            <Button
+              type="button"
+              variant="ghost"
+              className="-ml-3 h-8 px-3 text-xs text-slate-600"
+              onClick={column.getToggleSortingHandler()}
+            >
+              Client
+              <ArrowUpDown size={14} className="ml-1 text-slate-400" />
+            </Button>
+          ),
+          cell: ({ row }) => (
+            <span className="block truncate font-semibold text-slate-900">
+              {row.original.name}
+            </span>
+          )
+        },
+        {
+          accessorFn: (client) => client.city ?? '',
+          id: 'city',
+          header: ({ column }) => (
+            <Button
+              type="button"
+              variant="ghost"
+              className="-ml-3 h-8 px-3 text-xs text-slate-600"
+              onClick={column.getToggleSortingHandler()}
+            >
+              Ville
+              <ArrowUpDown size={14} className="ml-1 text-slate-400" />
+            </Button>
+          ),
+          cell: ({ row }) => (
+            <span className="block truncate text-xs text-slate-600">
+              {row.original.city || 'Sans ville'}
+            </span>
+          )
+        },
+        {
+          accessorFn: (client) =>
+            client.account_type === 'cash' ? 'Comptant' : 'Compte a terme',
+          id: 'account_type',
+          header: 'Compte',
+          cell: ({ row }) => (
+            <span className="hidden text-xs text-slate-600 sm:inline">
+              {row.original.account_type === 'cash' ? 'Comptant' : 'Compte a terme'}
+            </span>
+          )
+        },
+        {
+          id: 'archived',
+          header: 'Etat',
+          enableSorting: false,
+          cell: ({ row }) =>
+            row.original.archived_at ? (
+              <span className="inline-flex items-center gap-1 text-xs uppercase text-amber-600">
+                <Archive size={12} /> Archive
+              </span>
+            ) : (
+              <span className="text-xs text-emerald-700">Actif</span>
+            )
+        }
+      ];
+
+      if (!showReassignAction) {
+        return baseColumns;
       }
-    ],
-    []
+
+      baseColumns.push({
+        id: 'reassign',
+        header: 'Reassignation',
+        enableSorting: false,
+        cell: ({ row }) => {
+          if (row.original.agency_id !== null || !onReassignEntity) {
+            return null;
+          }
+
+          const selectedAgencyId = targetAgencyByEntityId[row.original.id];
+          const handleReassignClick = () => {
+            if (!selectedAgencyId || isReassignPending) {
+              return;
+            }
+
+            void onReassignEntity(row.original.id, selectedAgencyId).then(() => {
+              setTargetAgencyByEntityId((current) => {
+                const next = { ...current };
+                delete next[row.original.id];
+                return next;
+              });
+            });
+          };
+
+          return (
+            <div className="flex min-w-[220px] items-center gap-2">
+              <Select
+                value={selectedAgencyId}
+                onValueChange={(agencyId) =>
+                  setTargetAgencyByEntityId((current) => ({ ...current, [row.original.id]: agencyId }))}
+              >
+                <SelectTrigger
+                  className="h-8 w-[150px] text-xs"
+                  density="dense"
+                  onPointerDown={(event) => event.stopPropagation()}
+                  onClick={(event) => event.stopPropagation()}
+                  data-testid={`client-reassign-select-${row.original.id}`}
+                >
+                  <SelectValue placeholder="Agence cible" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableAgencies.map((agency) => (
+                    <SelectItem key={agency.id} value={agency.id}>
+                      {agency.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                type="button"
+                className="h-8 px-2 text-xs"
+                disabled={!selectedAgencyId || isReassignPending}
+                onPointerDown={(event) => event.stopPropagation()}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  handleReassignClick();
+                }}
+                data-testid={`client-reassign-button-${row.original.id}`}
+              >
+                Reassigner
+              </Button>
+            </div>
+          );
+        }
+      });
+
+      return baseColumns;
+    },
+    [availableAgencies, isReassignPending, onReassignEntity, showReassignAction, targetAgencyByEntityId]
   );
 
   // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Table is required for P05 data grid and intentionally opts out of React Compiler memoization.
@@ -211,6 +313,12 @@ const ClientList = ({ clients, selectedClientId, onSelect }: ClientListProps) =>
             )}
             {visibleRows.map(({ key, size, row }) => {
               const isSelected = row.original.id === selectedClientId;
+              const handleRowKeyDown = (event: KeyboardEvent<HTMLTableRowElement>) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  onSelect(row.original.id);
+                }
+              };
 
               return (
                 <TableRow
@@ -220,7 +328,10 @@ const ClientList = ({ clients, selectedClientId, onSelect }: ClientListProps) =>
                   className={`cursor-pointer ${
                     isSelected ? 'border-cir-red/40 bg-cir-red/5' : 'hover:bg-slate-50'
                   }`}
+                  tabIndex={0}
+                  aria-selected={isSelected}
                   onClick={() => onSelect(row.original.id)}
+                  onKeyDown={handleRowKeyDown}
                   style={{ height: `${size}px` }}
                 >
                   {row.getVisibleCells().map((cell) => (
