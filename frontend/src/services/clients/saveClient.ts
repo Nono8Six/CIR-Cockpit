@@ -1,9 +1,8 @@
 import { ResultAsync } from 'neverthrow';
 
 import { AccountType, Client } from '@/types';
-import { safeApiCall } from '@/lib/result';
 import { createAppError, type AppError } from '@/services/errors/AppError';
-import { safeInvoke } from '@/services/api/client';
+import { safeRpc } from '@/services/api/safeRpc';
 import { isRecord } from '@/utils/recordNarrowing';
 
 export type ClientPayload = {
@@ -28,24 +27,27 @@ const parseEntityResponse = (payload: unknown): Client => {
 };
 
 export const saveClient = (payload: ClientPayload): ResultAsync<Client, AppError> =>
-  safeApiCall(
-    safeInvoke('/data/entities', {
-      action: 'save',
-      agency_id: payload.agency_id,
-      entity_type: 'Client',
-      id: payload.id,
-      entity: {
-        client_number: payload.client_number,
-        account_type: payload.account_type,
-        name: payload.name,
-        address: payload.address,
-        postal_code: payload.postal_code,
-        department: payload.department,
-        city: payload.city,
-        siret: payload.siret,
-        notes: payload.notes,
-        agency_id: payload.agency_id
+  safeRpc(
+    (api, init) => api.data.entities.$post({
+      json: {
+        action: 'save',
+        agency_id: payload.agency_id,
+        entity_type: 'Client',
+        id: payload.id,
+        entity: {
+          client_number: payload.client_number,
+          account_type: payload.account_type,
+          name: payload.name,
+          address: payload.address,
+          postal_code: payload.postal_code,
+          department: payload.department,
+          city: payload.city,
+          siret: payload.siret,
+          notes: payload.notes,
+          agency_id: payload.agency_id
+        }
       }
-    }, parseEntityResponse),
+    }, init),
+    parseEntityResponse,
     "Impossible de sauvegarder le client."
   );

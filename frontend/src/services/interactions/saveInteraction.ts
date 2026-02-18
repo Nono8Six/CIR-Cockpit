@@ -1,10 +1,9 @@
 import { ResultAsync } from 'neverthrow';
 
 import type { Interaction, InteractionDraft } from '@/types';
-import { safeApiCall } from '@/lib/result';
+import { safeRpc } from '@/services/api/safeRpc';
 import { getCurrentUserLabel } from '@/services/auth/getCurrentUserLabel';
 import { createAppError, type AppError } from '@/services/errors/AppError';
-import { safeInvoke } from '@/services/api/client';
 import { isRecord } from '@/utils/recordNarrowing';
 import { hydrateTimeline } from './hydrateTimeline';
 import { validateInteractionDraft } from './validateInteractionDraft';
@@ -17,8 +16,8 @@ const parseInteractionResponse = (payload: unknown): Interaction => {
 };
 
 export const saveInteraction = (interaction: InteractionDraft): ResultAsync<Interaction, AppError> =>
-  safeApiCall(
-    (async () => {
+  safeRpc(
+    async (api, init) => {
       validateInteractionDraft(interaction);
       const agencyId = interaction.agency_id?.trim();
       if (!agencyId) {
@@ -34,15 +33,18 @@ export const saveInteraction = (interaction: InteractionDraft): ResultAsync<Inte
         author: event.author?.trim() || userLabel || undefined
       }));
 
-      return safeInvoke('/data/interactions', {
-        action: 'save',
-        agency_id: agencyId,
-        interaction: {
-          ...interaction,
-          id: interaction.id,
-          timeline
+      return api.data.interactions.$post({
+        json: {
+          action: 'save',
+          agency_id: agencyId,
+          interaction: {
+            ...interaction,
+            id: interaction.id,
+            timeline
+          }
         }
-      }, parseInteractionResponse);
-    })(),
+      }, init);
+    },
+    parseInteractionResponse,
     "Impossible d'enregistrer l'interaction."
   );

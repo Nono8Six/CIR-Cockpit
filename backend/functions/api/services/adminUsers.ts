@@ -1,4 +1,5 @@
 import type { Database } from '../../../../shared/supabase.types.ts';
+import type { AdminUsersResponse } from '../../../../shared/schemas/api-responses.ts';
 import type { AdminUsersPayload } from '../../../../shared/schemas/user.schema.ts';
 import type { DbClient } from '../types.ts';
 import { httpError } from '../middleware/errorHandler.ts';
@@ -708,7 +709,7 @@ export const handleAdminUsersAction = async (
   callerId: string,
   requestId: string | undefined,
   data: AdminUsersPayload
-): Promise<Record<string, unknown>> => {
+): Promise<AdminUsersResponse> => {
   const allowed = await checkRateLimit('admin-users', callerId);
   if (!allowed) {
     throw httpError(429, 'RATE_LIMITED', 'Trop de requetes. Reessayez plus tard.');
@@ -780,6 +781,9 @@ export const handleAdminUsersAction = async (
       }
 
       const displayName = buildDisplayName(lastName, firstName);
+      if (!displayName) {
+        throw httpError(400, 'INVALID_PAYLOAD', 'Nom et prenom requis.');
+      }
 
       await ensureUserExists(db, userId);
       await ensureEmailAvailableForUser(db, userId, email);

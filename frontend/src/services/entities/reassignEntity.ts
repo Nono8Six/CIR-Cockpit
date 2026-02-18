@@ -1,9 +1,8 @@
 import { ResultAsync } from 'neverthrow';
 
 import { Entity } from '@/types';
-import { safeApiCall } from '@/lib/result';
 import { createAppError, type AppError } from '@/services/errors/AppError';
-import { safeInvoke } from '@/services/api/client';
+import { safeRpc } from '@/services/api/safeRpc';
 import { isRecord } from '@/utils/recordNarrowing';
 
 export type ReassignEntityPayload = {
@@ -35,16 +34,14 @@ const parseReassignEntityResponse = (payload: unknown): ReassignEntityResponse =
 export const reassignEntity = (
   payload: ReassignEntityPayload
 ): ResultAsync<ReassignEntityResponse, AppError> =>
-  safeApiCall(
-    safeInvoke(
-      '/data/entities',
-      {
+  safeRpc(
+    (api, init) => api.data.entities.$post({
+      json: {
         action: 'reassign',
         entity_id: payload.entity_id,
         target_agency_id: payload.target_agency_id
       },
-      parseReassignEntityResponse
-    ),
+    }, init),
+    parseReassignEntityResponse,
     "Impossible de reassigner l'entite."
   );
-

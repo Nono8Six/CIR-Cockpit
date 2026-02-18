@@ -1,4 +1,5 @@
 import type { Database } from '../../../../shared/supabase.types.ts';
+import type { DataInteractionsResponse } from '../../../../shared/schemas/api-responses.ts';
 import type { DataInteractionsPayload } from '../../../../shared/schemas/data.schema.ts';
 import type { AuthContext, DbClient } from '../types.ts';
 import { httpError } from '../middleware/errorHandler.ts';
@@ -162,7 +163,7 @@ export const handleDataInteractionsAction = async (
   authContext: AuthContext,
   requestId: string | undefined,
   data: DataInteractionsPayload
-): Promise<Record<string, unknown>> => {
+): Promise<DataInteractionsResponse> => {
   await ensureDataRateLimit(`data_interactions:${data.action}`, authContext.userId);
 
   switch (data.action) {

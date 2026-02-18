@@ -1,4 +1,5 @@
 import type { Database } from '../../../../shared/supabase.types.ts';
+import type { DataEntitiesResponse } from '../../../../shared/schemas/api-responses.ts';
 import type { DataEntitiesPayload } from '../../../../shared/schemas/data.schema.ts';
 import type { AuthContext, DbClient } from '../types.ts';
 import { httpError } from '../middleware/errorHandler.ts';
@@ -183,7 +184,7 @@ export const handleDataEntitiesAction = async (
   authContext: AuthContext,
   requestId: string | undefined,
   data: DataEntitiesPayload
-): Promise<Record<string, unknown>> => {
+): Promise<DataEntitiesResponse> => {
   await ensureDataRateLimit(`data_entities:${data.action}`, authContext.userId);
 
   switch (data.action) {

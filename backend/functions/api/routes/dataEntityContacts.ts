@@ -1,30 +1,28 @@
-import type { Hono } from '@hono/hono';
+import { Hono } from '@hono/hono';
 
 import { dataEntityContactsPayloadSchema } from '../../../../shared/schemas/data.schema.ts';
 import type { AppEnv } from '../types.ts';
 import { httpError } from '../middleware/errorHandler.ts';
 import { requireAuth } from '../middleware/auth.ts';
+import { zValidator } from '../middleware/zodValidator.ts';
 import { handleDataEntityContactsAction } from '../services/dataEntityContacts.ts';
 
-export const registerDataEntityContactsRoutes = (app: Hono<AppEnv>) => {
-  app.post('/data/entity-contacts', requireAuth, async (c) => {
+const dataEntityContactsRoutes = new Hono<AppEnv>().post(
+  '/data/entity-contacts',
+  requireAuth,
+  zValidator('json', dataEntityContactsPayloadSchema),
+  async (c) => {
     const requestId = c.get('requestId');
-    const db = c.get('db');
+    const userDb = c.get('userDb');
     const authContext = c.get('authContext');
-    if (!db || !authContext) {
+    if (!userDb || !authContext) {
       throw httpError(403, 'AUTH_FORBIDDEN', 'Acces interdit.');
     }
 
-    const payload = await c.req.json().catch(() => {
-      throw httpError(400, 'INVALID_JSON', 'Corps JSON invalide.');
-    });
-
-    const parsed = dataEntityContactsPayloadSchema.safeParse(payload);
-    if (!parsed.success) {
-      throw httpError(400, 'INVALID_PAYLOAD', 'Payload invalide.', parsed.error.message);
-    }
-
-    const result = await handleDataEntityContactsAction(db, authContext, requestId, parsed.data);
+    const payload = c.req.valid('json');
+    const result = await handleDataEntityContactsAction(userDb, authContext, requestId, payload);
     return c.json(result);
-  });
-};
+  }
+);
+
+export default dataEntityContactsRoutes;

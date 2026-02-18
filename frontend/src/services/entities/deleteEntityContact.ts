@@ -1,16 +1,18 @@
 import { ResultAsync } from 'neverthrow';
 
-import { safeApiCall } from '@/lib/result';
 import { type AppError } from '@/services/errors/AppError';
-import { safeInvoke } from '@/services/api/client';
+import { safeRpc } from '@/services/api/safeRpc';
 
 const parseVoidResponse = (): void => undefined;
 
 export const deleteEntityContact = (contactId: string): ResultAsync<void, AppError> =>
-  safeApiCall(
-    safeInvoke('/data/entity-contacts', {
-      action: 'delete',
-      contact_id: contactId
-    }, parseVoidResponse),
+  safeRpc(
+    (api, init) => api.data['entity-contacts'].$post({
+      json: {
+        action: 'delete',
+        contact_id: contactId
+      }
+    }, init),
+    parseVoidResponse,
     'Impossible de supprimer le contact.'
   );

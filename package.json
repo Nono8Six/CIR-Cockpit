@@ -1,4 +1,5 @@
 {
+  "private": true,
   "dependencies": {
     "supabase": "^2.76.8"
   }

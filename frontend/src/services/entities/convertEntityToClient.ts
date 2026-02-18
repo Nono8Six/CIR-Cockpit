@@ -1,9 +1,8 @@
 import { ResultAsync } from 'neverthrow';
 
 import { AccountType, Entity } from '@/types';
-import { safeApiCall } from '@/lib/result';
 import { createAppError, type AppError } from '@/services/errors/AppError';
-import { safeInvoke } from '@/services/api/client';
+import { safeRpc } from '@/services/api/safeRpc';
 import { isRecord } from '@/utils/recordNarrowing';
 
 export type ConvertClientPayload = {
@@ -20,14 +19,17 @@ const parseEntityResponse = (payload: unknown): Entity => {
 };
 
 export const convertEntityToClient = (payload: ConvertClientPayload): ResultAsync<Entity, AppError> =>
-  safeApiCall(
-    safeInvoke('/data/entities', {
-      action: 'convert_to_client',
-      entity_id: payload.id,
-      convert: {
-        client_number: payload.client_number,
-        account_type: payload.account_type
+  safeRpc(
+    (api, init) => api.data.entities.$post({
+      json: {
+        action: 'convert_to_client',
+        entity_id: payload.id,
+        convert: {
+          client_number: payload.client_number,
+          account_type: payload.account_type
+        }
       }
-    }, parseEntityResponse),
+    }, init),
+    parseEntityResponse,
     'Impossible de convertir en client.'
   );

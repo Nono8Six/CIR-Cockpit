@@ -25,6 +25,14 @@ const readStatus = (value: unknown): number | undefined => {
   return typeof candidate === 'number' ? candidate : undefined;
 };
 
+const readCode = (value: unknown): string | undefined => {
+  if (!value || typeof value !== 'object') {
+    return undefined;
+  }
+  const candidate = Reflect.get(value, 'code');
+  return typeof candidate === 'string' ? candidate : undefined;
+};
+
 Deno.test('ensureAgencyAccess returns normalized agency id for member users', () => {
   const agencyId = ensureAgencyAccess(memberContext, ' agency-a ');
   assertEquals(agencyId, 'agency-a');
@@ -35,9 +43,10 @@ Deno.test('ensureAgencyAccess allows super admin even without memberships', () =
   assertEquals(agencyId, 'agency-z');
 });
 
-Deno.test('ensureAgencyAccess rejects unknown agencies for member users', () => {
+Deno.test('ensureAgencyAccess rejects cross-agency access for member users', () => {
   const error = assertThrows(() => ensureAgencyAccess(memberContext, 'agency-z'));
   assertEquals(readStatus(error), 403);
+  assertEquals(readCode(error), 'AUTH_FORBIDDEN');
 });
 
 Deno.test('ensureAgencyAccess rejects empty agency ids', () => {

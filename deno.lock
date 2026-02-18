@@ -1,0 +1,25 @@
+{
+  "version": "5",
+  "specifiers": {
+    "jsr:@hono/hono@4.11.9": "4.11.9"
+  },
+  "jsr": {
+    "@hono/hono@4.11.9": {
+      "integrity": "c82c6b846abc3c1879d921d8365287d77cdef8073019f509ff80bf53033bdcba"
+    }
+  },
+  "workspace": {
+    "dependencies": [
+      "jsr:@hono/hono@4.11.9",
+      "jsr:@supabase/functions-js@2.92.0",
+      "npm:@supabase/supabase-js@2.95.3",
+      "npm:jose@5.9.6",
+      "npm:zod@4.3.6"
+    ],
+    "packageJson": {
+      "dependencies": [
+        "npm:supabase@^2.76.8"
+      ]
+    }
+  }
+}

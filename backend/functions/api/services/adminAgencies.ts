@@ -1,4 +1,5 @@
 import type { Database } from '../../../../shared/supabase.types.ts';
+import type { AdminAgenciesResponse } from '../../../../shared/schemas/api-responses.ts';
 import type { AdminAgenciesPayload } from '../../../../shared/schemas/agency.schema.ts';
 import type { DbClient } from '../types.ts';
 import { httpError } from '../middleware/errorHandler.ts';
@@ -86,7 +87,7 @@ export const handleAdminAgenciesAction = async (
   callerId: string,
   requestId: string | undefined,
   data: AdminAgenciesPayload
-): Promise<Record<string, unknown>> => {
+): Promise<AdminAgenciesResponse> => {
   const allowed = await checkRateLimit('admin-agencies', callerId);
   if (!allowed) {
     throw httpError(429, 'RATE_LIMITED', 'Trop de requetes.');

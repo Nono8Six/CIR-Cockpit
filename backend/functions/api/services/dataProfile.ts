@@ -1,3 +1,4 @@
+import type { DataProfileResponse } from '../../../../shared/schemas/api-responses.ts';
 import type { DataProfilePayload } from '../../../../shared/schemas/data.schema.ts';
 import type { AuthContext, DbClient } from '../types.ts';
 import { httpError } from '../middleware/errorHandler.ts';
@@ -8,7 +9,7 @@ export const handleDataProfileAction = async (
   authContext: AuthContext,
   requestId: string | undefined,
   data: DataProfilePayload
-): Promise<Record<string, unknown>> => {
+): Promise<DataProfileResponse> => {
   await ensureDataRateLimit(`data_profile:${data.action}`, authContext.userId);
 
   switch (data.action) {

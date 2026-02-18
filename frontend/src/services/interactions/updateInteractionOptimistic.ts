@@ -1,5 +1,5 @@
 import { Interaction, InteractionUpdate, TimelineEvent } from '@/types';
-import { safeInvoke } from '@/services/api/client';
+import { invokeRpc } from '@/services/api/safeRpc';
 import { createAppError } from '@/services/errors/AppError';
 import { isRecord } from '@/utils/recordNarrowing';
 import { hydrateTimeline } from './hydrateTimeline';
@@ -17,16 +17,21 @@ export const updateInteractionOptimistic = async (
   event: TimelineEvent,
   updates?: InteractionUpdate
 ): Promise<Interaction> => {
-  return safeInvoke('/data/interactions', {
-    action: 'add_timeline_event',
-    interaction_id: interactionId,
-    expected_updated_at: expectedUpdatedAt,
-    event: {
-      type: event.type,
-      content: event.content,
-      author: event.author,
-      date: event.date
-    },
-    updates
-  }, parseInteractionResponse);
+  return invokeRpc(
+    (api, init) => api.data.interactions.$post({
+      json: {
+        action: 'add_timeline_event',
+        interaction_id: interactionId,
+        expected_updated_at: expectedUpdatedAt,
+        event: {
+          type: event.type,
+          content: event.content,
+          author: event.author,
+          date: event.date
+        },
+        updates
+      }
+    }, init),
+    parseInteractionResponse
+  );
 };

@@ -194,6 +194,23 @@ export const getSupabaseAdmin = (): DbClient => {
   return supabaseAdmin;
 };
 
+export const createUserScopedClient = (accessToken: string): DbClient => {
+  const config = assertSupabaseConfig();
+  const normalizedToken = accessToken.trim();
+  return createClient<Database>(config.supabaseUrl, config.supabaseAnonKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false
+    },
+    global: {
+      headers: {
+        Authorization: `Bearer ${normalizedToken}`
+      }
+    }
+  });
+};
+
 const getJwksResolver = (config: SupabaseConfig): JWTVerifyGetKey => {
   const now = Date.now();
   const hasFreshResolver = jwksResolver
@@ -304,11 +321,13 @@ export const requireAuth: MiddlewareHandler<AppEnv> = async (c, next) => {
   }
 
   const db = getSupabaseAdmin();
+  const userDb = createUserScopedClient(token);
   const authContext = await resolveAuthContext(db, identity.userId);
 
   c.set('callerId', authContext.userId);
   c.set('authContext', authContext);
   c.set('db', db);
+  c.set('userDb', userDb);
   await next();
 };
 

@@ -1,9 +1,14 @@
-import { safeInvoke } from '@/services/api/client';
+import { invokeRpc } from '@/services/api/safeRpc';
 
 const parseVoidResponse = (): void => undefined;
 
 export async function setProfilePasswordChanged(): Promise<void> {
-  await safeInvoke('/data/profile', {
-    action: 'password_changed'
-  }, parseVoidResponse);
+  await invokeRpc(
+    (api, init) => api.data.profile.$post({
+      json: {
+        action: 'password_changed'
+      }
+    }, init),
+    parseVoidResponse
+  );
 }

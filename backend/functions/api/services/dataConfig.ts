@@ -1,3 +1,4 @@
+import type { DataConfigResponse } from '../../../../shared/schemas/api-responses.ts';
 import type { DataConfigPayload } from '../../../../shared/schemas/data.schema.ts';
 import type { AuthContext, DbClient } from '../types.ts';
 import { httpError } from '../middleware/errorHandler.ts';
@@ -177,7 +178,7 @@ export const handleDataConfigAction = async (
   requestId: string | undefined,
   agencyId: string,
   data: DataConfigPayload
-): Promise<Record<string, unknown>> => {
+): Promise<DataConfigResponse> => {
   await ensureDataRateLimit('data_config:sync', authContext.userId);
   const resolvedAgencyId = ensureAgencyAccess(authContext, agencyId);
 

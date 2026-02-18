@@ -1,9 +1,8 @@
 import { ResultAsync } from 'neverthrow';
 
 import { AccountType, Entity } from '@/types';
-import { safeApiCall } from '@/lib/result';
 import { createAppError, type AppError } from '@/services/errors/AppError';
-import { safeInvoke } from '@/services/api/client';
+import { safeRpc } from '@/services/api/safeRpc';
 import { isRecord } from '@/utils/recordNarrowing';
 
 export type EntityPayload = {
@@ -29,26 +28,29 @@ const parseEntityResponse = (payload: unknown): Entity => {
 };
 
 export const saveEntity = (payload: EntityPayload): ResultAsync<Entity, AppError> =>
-  safeApiCall(
-    safeInvoke('/data/entities', {
-      action: 'save',
-      agency_id: payload.agency_id,
-      entity_type: payload.entity_type === 'Client' ? 'Client' : 'Prospect',
-      id: payload.id,
-      entity: {
-        name: payload.name,
-        city: payload.city ?? '',
-        address: payload.address,
-        postal_code: payload.postal_code,
-        department: payload.department,
-        siret: payload.siret,
-        notes: payload.notes,
+  safeRpc(
+    (api, init) => api.data.entities.$post({
+      json: {
+        action: 'save',
         agency_id: payload.agency_id,
-        ...(payload.entity_type === 'Client' ? {
-          client_number: payload.client_number,
-          account_type: payload.account_type
-        } : {})
+        entity_type: payload.entity_type === 'Client' ? 'Client' : 'Prospect',
+        id: payload.id,
+        entity: {
+          name: payload.name,
+          city: payload.city ?? '',
+          address: payload.address,
+          postal_code: payload.postal_code,
+          department: payload.department,
+          siret: payload.siret,
+          notes: payload.notes,
+          agency_id: payload.agency_id,
+          ...(payload.entity_type === 'Client' ? {
+            client_number: payload.client_number,
+            account_type: payload.account_type
+          } : {})
+        }
       }
-    }, parseEntityResponse),
+    }, init),
+    parseEntityResponse,
     "Impossible d'enregistrer l'entite."
   );

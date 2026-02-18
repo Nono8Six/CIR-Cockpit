@@ -17,5 +17,6 @@ export type AppEnv = {
     callerId?: string;
     authContext?: AuthContext;
     db?: DbClient;
+    userDb?: DbClient;
   };
 };

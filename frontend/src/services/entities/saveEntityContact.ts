@@ -1,9 +1,8 @@
 import { ResultAsync } from 'neverthrow';
 
 import { EntityContact } from '@/types';
-import { safeApiCall } from '@/lib/result';
 import { createAppError, type AppError } from '@/services/errors/AppError';
-import { safeInvoke } from '@/services/api/client';
+import { safeRpc } from '@/services/api/safeRpc';
 import { isRecord } from '@/utils/recordNarrowing';
 
 export type EntityContactPayload = {
@@ -25,19 +24,22 @@ const parseContactResponse = (payload: unknown): EntityContact => {
 };
 
 export const saveEntityContact = (payload: EntityContactPayload): ResultAsync<EntityContact, AppError> =>
-  safeApiCall(
-    safeInvoke('/data/entity-contacts', {
-      action: 'save',
-      entity_id: payload.entity_id,
-      id: payload.id,
-      contact: {
-        first_name: payload.first_name,
-        last_name: payload.last_name,
-        email: payload.email,
-        phone: payload.phone,
-        position: payload.position,
-        notes: payload.notes
+  safeRpc(
+    (api, init) => api.data['entity-contacts'].$post({
+      json: {
+        action: 'save',
+        entity_id: payload.entity_id,
+        id: payload.id,
+        contact: {
+          first_name: payload.first_name,
+          last_name: payload.last_name,
+          email: payload.email,
+          phone: payload.phone,
+          position: payload.position,
+          notes: payload.notes
+        }
       }
-    }, parseContactResponse),
+    }, init),
+    parseContactResponse,
     "Impossible d'enregistrer le contact."
   );

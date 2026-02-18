@@ -1,4 +1,6 @@
-import { invokeAdminFunction } from './invokeAdminFunction';
+import { safeRpc } from '@/services/api/safeRpc';
+import { createAppError } from '@/services/errors/AppError';
+import { isRecord } from '@/utils/recordNarrowing';
 
 export type UpdateUserIdentityPayload = {
   user_id: string;
@@ -16,12 +18,21 @@ export type UpdateUserIdentityResponse = {
   display_name?: string;
 };
 
+const parseUpdateUserIdentityResponse = (payload: unknown): UpdateUserIdentityResponse => {
+  if (!isRecord(payload)) {
+    throw createAppError({ code: 'EDGE_INVALID_RESPONSE', message: 'Reponse serveur invalide.', source: 'edge' });
+  }
+  return payload as UpdateUserIdentityResponse;
+};
+
 export const adminUsersUpdateIdentity = (payload: UpdateUserIdentityPayload) =>
-  invokeAdminFunction<UpdateUserIdentityResponse>(
-    'admin-users',
-    {
+  safeRpc(
+    (api, init) => api.admin.users.$post({
+      json: {
       action: 'update_identity',
       ...payload
-    },
+      }
+    }, init),
+    parseUpdateUserIdentityResponse,
     "Impossible de mettre a jour l'identite de l'utilisateur."
   );
