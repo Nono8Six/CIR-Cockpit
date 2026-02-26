@@ -75,6 +75,6 @@ Avant de considerer le travail termine :
 - [ ] Messages d'erreur en francais
 - [ ] Fichiers ~150 lignes max
 - [ ] Imports corrects (path alias `@/*`, ordre respecte, zero circulaire)
-- [ ] En prod, `POST /functions/v1/api/data/*` ne retourne plus aucun 404
+- [ ] En prod, `POST /functions/v1/api/trpc/*` ne retourne plus aucun 404
 - [ ] En prod, preflight `OPTIONS` des routes impactees retourne 200 avec headers CORS
 - [ ] En prod, `list_edge_functions` confirme `api` deploye avec le bon entrypoint/import_map et `verify_jwt` attendu

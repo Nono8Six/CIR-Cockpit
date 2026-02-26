@@ -250,11 +250,11 @@ Voir `docs/testing.md` pour le detail complet.
   - `supabase functions deploy api --project-ref <project_ref> --use-api --import-map deno.json --no-verify-jwt`
 - Preuve runtime minimale apres deploy :
   - verifier `api` via MCP `list_edge_functions` (version/hash/entrypoint/import_map/verify_jwt)
-  - verifier `POST /functions/v1/api/data/entities`
-  - verifier `POST /functions/v1/api/data/entity-contacts`
-  - verifier `POST /functions/v1/api/data/interactions`
+  - verifier `POST /functions/v1/api/trpc/data.entities`
+  - verifier `POST /functions/v1/api/trpc/data.entity-contacts`
+  - verifier `POST /functions/v1/api/trpc/data.interactions`
   - verifier preflight `OPTIONS` sur les memes routes avec `Origin` frontend
-  - attendu : plus aucun `404` sur `/functions/v1/api/data/*`
+  - attendu : plus aucun `404` sur `/functions/v1/api/trpc/*`
 
 ## Regle Zod backend
 

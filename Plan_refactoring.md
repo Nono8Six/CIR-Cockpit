@@ -150,15 +150,16 @@ Statut global: En cours
 
 ### Couche 11 - Runtime backend (consolidation Deno)
 
-- [ ] A faire
-- [ ] Verifier import maps `deno.json` coherents
-- [ ] Verifier entrypoint wrapper Supabase conforme
-- [ ] Valider deploy command reference + flags
-- [ ] Verifier runtime probes post-deploy
+- [x] Fait
+- [x] Verifier import maps `deno.json` coherents
+- [x] Verifier entrypoint wrapper Supabase conforme
+- [x] Valider deploy command reference + flags
+- [x] Verifier runtime probes post-deploy
 
 ### Couche 5 - UI components (composition)
 
 - [ ] A faire
+- [ ] Aide toi notament du skill taste-skill
 - [ ] Reduire props booleennes proliferees
 - [ ] Clarifier composants orchestrateurs vs presentatifs
 - [ ] Standardiser patterns composition (sections, slots, variants)
@@ -167,6 +168,7 @@ Statut global: En cours
 ### Couche 4 - Styling (coherence design/tokens)
 
 - [ ] A faire
+- [ ] Aide toi notament du skill taste-skill
 - [ ] Uniformiser tokens classes utilitaires
 - [ ] Eliminer incoherences visuelles inter-pages
 - [ ] Verifier contrastes et states focus
@@ -183,6 +185,7 @@ Statut global: En cours
 ### Couche 1 - React 19 (optimisation finale)
 
 - [ ] A faire
+- [ ] Aide toi notament du skill taste-skill
 - [ ] Nettoyer effets inutiles et derives en render
 - [ ] Optimiser re-renders hotspots identifies
 - [ ] Verifier architecture finale lisible et stable
@@ -841,3 +844,42 @@ Utiliser ce template a chaque couche:
 - Decision:
   - Couche 10 validee sur le code et les gates QA locales, avec override acte de la gouvernance runtime vers `/trpc/*`
   - Passage a la couche suivante autorise; consolidation runtime/deploy a finaliser en Couche 11
+
+### [2026-02-26] Couche 11 - Runtime backend (consolidation Deno)
+
+- Statut: TERMINEE
+- Scope:
+  - Consolidation runtime prod de l'Edge Function `api` apres bascule tRPC-only
+  - Validation des prerequis Deno/Supabase (import maps, wrapper entrypoint, flags de deploy)
+  - Alignement documentaire runtime `/trpc/*` dans les regles projet
+- Fichiers modifies:
+  - `AGENTS.md`
+  - `CLAUDE.md`
+  - `Plan_refactoring.md`
+- Commandes executees:
+  - `git add -A && git commit -m "chore: snapshot global avant couche 11"` (aucun changement a committer)
+  - `git push origin main`
+  - `supabase functions list --project-ref rbjtrcorlezvocayluok --output pretty`
+  - `supabase functions deploy api --project-ref rbjtrcorlezvocayluok --use-api --import-map deno.json --no-verify-jwt`
+  - Probes runtime HTTP (`POST`/`OPTIONS`) via shell sur `/functions/v1/api/trpc/data.entities|data.entity-contacts|data.interactions`
+  - Probe contrat auth via shell: `POST /functions/v1/api/trpc/data.entities` avec seul header `x-client-authorization`
+  - Probe legacy informative via shell: `POST /functions/v1/api/data/entities`
+  - MCP Supabase: `list_edge_functions`
+- Resultats:
+  - Baseline avant deploy: `POST /functions/v1/api/trpc/*` en `404`, `OPTIONS` en `200`
+  - Deploy runtime execute avec la commande de reference et flags attendus
+  - Runtime apres deploy:
+    - `POST /functions/v1/api/trpc/data.entities` => `401` (plus de `404`)
+    - `POST /functions/v1/api/trpc/data.entity-contacts` => `401` (plus de `404`)
+    - `POST /functions/v1/api/trpc/data.interactions` => `401` (plus de `404`)
+    - `OPTIONS /functions/v1/api/trpc/*` => `200` + `Access-Control-Allow-Origin=http://localhost:3000`
+    - `POST /functions/v1/api/trpc/data.entities` avec seul `x-client-authorization` => `401`
+  - Probe informative: `POST /functions/v1/api/data/entities` => `404` (surface legacy retiree en runtime)
+- Preuves Supabase MCP (si applicable):
+  - `list_edge_functions` (project `rbjtrcorlezvocayluok`): `api` active, version `24`, `verify_jwt=false`, `entrypoint_path=source/supabase/functions/api/index.ts`, `import_map=true`
+- Risques restants:
+  - Aucun risque bloquant couche 11 identifie
+  - Warning non bloquant: version locale Supabase CLI (`2.54.11`) en retard vs derniere version proposee
+- Decision:
+  - Couche 11 validee et terminee
+  - Passage a la couche suivante autorise selon ordre officiel
