@@ -1,11 +1,15 @@
-import { useState } from 'react';
-import type { FormEvent } from 'react';
+import { useCallback, useState } from 'react';
+import type { FormEventHandler } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod/v4';
 import type { Session } from '@supabase/supabase-js';
 
 import { createAppError } from '@/services/errors/AppError';
 import { signInWithPassword } from '@/services/auth/signInWithPassword';
 import { handleUiError } from '@/services/errors/handleUiError';
 import { normalizeError } from '@/services/errors/normalizeError';
+import { emailSchema } from '../../../shared/schemas/auth.schema';
 
 type UseLoginScreenFormArgs = {
   onSignIn?: (session: Session) => void;
@@ -13,15 +17,39 @@ type UseLoginScreenFormArgs = {
 
 export type LoginSubmitState = 'idle' | 'submitting' | 'success' | 'error';
 
+const loginFormSchema = z.object({
+  email: emailSchema,
+  password: z.string().min(1, 'Mot de passe requis')
+}).strict();
+
+type LoginFormValues = z.infer<typeof loginFormSchema>;
+
 export const useLoginScreenForm = ({ onSignIn }: UseLoginScreenFormArgs) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginFormSchema),
+    defaultValues: {
+      email: '',
+      password: ''
+    },
+    mode: 'onChange'
+  });
+
+  const { control, setValue, handleSubmit: handleFormSubmit } = form;
+  const email = useWatch({ control, name: 'email' }) ?? '';
+  const password = useWatch({ control, name: 'password' }) ?? '';
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitState, setSubmitState] = useState<LoginSubmitState>('idle');
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const setEmail = useCallback((value: string) => {
+    setValue('email', value, { shouldDirty: true, shouldValidate: true });
+  }, [setValue]);
+
+  const setPassword = useCallback((value: string) => {
+    setValue('password', value, { shouldDirty: true, shouldValidate: true });
+  }, [setValue]);
+
+  const handleSubmit = handleFormSubmit(async (values) => {
     if (isSubmitting) return;
 
     setError(null);
@@ -30,8 +58,8 @@ export const useLoginScreenForm = ({ onSignIn }: UseLoginScreenFormArgs) => {
 
     try {
       const session = await signInWithPassword({
-        email: email.trim(),
-        password
+        email: values.email,
+        password: values.password
       });
       setSubmitState('success');
       onSignIn?.(session);
@@ -55,7 +83,13 @@ export const useLoginScreenForm = ({ onSignIn }: UseLoginScreenFormArgs) => {
     } finally {
       setIsSubmitting(false);
     }
+  });
+
+  const onSubmit: FormEventHandler<HTMLFormElement> = (event) => {
+    void handleSubmit(event);
   };
+
+  const fieldError = form.formState.errors.email?.message ?? form.formState.errors.password?.message ?? null;
 
   return {
     email,
@@ -65,6 +99,7 @@ export const useLoginScreenForm = ({ onSignIn }: UseLoginScreenFormArgs) => {
     isSubmitting,
     submitState,
     error,
-    handleSubmit
+    fieldError,
+    handleSubmit: onSubmit
   };
 };

@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { adminUsersCreate, CreateAdminUserPayload } from '@/services/admin/adminUsersCreate';
-import { adminUsersKey } from '@/services/query/queryKeys';
+import { invalidateAdminUsersQuery } from '@/services/query/queryInvalidation';
 import { mapAdminDomainError } from '@/services/errors/mapAdminDomainError';
 
 export const useCreateAdminUser = () => {
@@ -19,7 +19,7 @@ export const useCreateAdminUser = () => {
         }
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminUsersKey() });
+      void invalidateAdminUsersQuery(queryClient);
     }
   });
 };

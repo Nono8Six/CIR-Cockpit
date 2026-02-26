@@ -1,7 +1,10 @@
+import {
+  adminUsersCreateResponseSchema,
+  type AdminUsersCreateResponse
+} from '../../../../shared/schemas/api-responses';
 import { safeRpc } from '@/services/api/safeRpc';
 import { createAppError } from '@/services/errors/AppError';
 import { UserRole } from '@/types';
-import { isRecord } from '@/utils/recordNarrowing';
 
 export type CreateAdminUserPayload = {
   email: string;
@@ -12,20 +15,19 @@ export type CreateAdminUserPayload = {
   password?: string;
 };
 
-export type CreateAdminUserResponse = {
-  ok: true;
-  user_id: string;
-  account_state: 'created' | 'existing';
-  role: UserRole;
-  agency_ids: string[];
-  temporary_password?: string;
-};
+export type CreateAdminUserResponse = AdminUsersCreateResponse;
 
 const parseCreateAdminUserResponse = (payload: unknown): CreateAdminUserResponse => {
-  if (!isRecord(payload)) {
-    throw createAppError({ code: 'EDGE_INVALID_RESPONSE', message: 'Reponse serveur invalide.', source: 'edge' });
+  const parsed = adminUsersCreateResponseSchema.safeParse(payload);
+  if (!parsed.success) {
+    throw createAppError({
+      code: 'EDGE_INVALID_RESPONSE',
+      message: 'Reponse serveur invalide.',
+      source: 'edge',
+      details: parsed.error.message
+    });
   }
-  return payload as CreateAdminUserResponse;
+  return parsed.data;
 };
 
 export const adminUsersCreate = (payload: CreateAdminUserPayload) =>

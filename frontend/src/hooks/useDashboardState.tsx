@@ -8,7 +8,7 @@ import { isProspectRelationValue } from '@/constants/relations';
 import { createAppError, isAppError } from '@/services/errors/AppError';
 import { handleUiError } from '@/services/errors/handleUiError';
 import { notifySuccess } from '@/services/errors/notify';
-import { interactionsKey } from '@/services/query/queryKeys';
+import { invalidateInteractionsQuery } from '@/services/query/queryInvalidation';
 import type {
   AgencyStatus,
   Interaction,
@@ -422,9 +422,7 @@ export const useDashboardState = ({
       } catch (error) {
         if (isAppError(error) && error.code === 'CONFLICT') {
           setSelectedInteraction(null);
-          if (agencyId) {
-            void queryClient.invalidateQueries({ queryKey: interactionsKey(agencyId) });
-          }
+          void invalidateInteractionsQuery(queryClient, agencyId);
           handleUiError(
             error,
             'Ce dossier a ete modifie par un autre utilisateur. Rechargez les donnees.',

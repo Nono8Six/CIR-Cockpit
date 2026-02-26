@@ -10,8 +10,6 @@ import { useSetUserMemberships } from '@/hooks/useSetUserMemberships';
 import { useSetUserRole } from '@/hooks/useSetUserRole';
 import { useUnarchiveUser } from '@/hooks/useUnarchiveUser';
 import { useUpdateUserIdentity } from '@/hooks/useUpdateUserIdentity';
-import { createAppError } from '@/services/errors/AppError';
-import { handleUiError } from '@/services/errors/handleUiError';
 import { notifySuccess } from '@/services/errors/notify';
 import type { CreateAdminUserPayload } from '@/services/admin/adminUsersCreate';
 import type { UpdateUserIdentityPayload } from '@/services/admin/adminUsersUpdateIdentity';
@@ -85,25 +83,8 @@ export const useUsersManager = () => {
 
   const handleMembershipSave = async (agencyIds: string[]) => {
     if (!selectedUser) return;
-    if (selectedUser.role === 'tcs' && agencyIds.length === 0) {
-      handleUiError(
-        createAppError({
-          code: 'VALIDATION_ERROR',
-          message: 'Un utilisateur TCS doit avoir au moins une agence.',
-          source: 'client'
-        }),
-        'Un utilisateur TCS doit avoir au moins une agence.',
-        { source: 'UsersManager.memberships' }
-      );
-      return;
-    }
-
-    try {
-      await setMembershipMutation.mutateAsync({ userId: selectedUser.id, agencyIds });
-      notifySuccess('Agences mises a jour.');
-    } catch {
-      return;
-    }
+    await setMembershipMutation.mutateAsync({ userId: selectedUser.id, agencyIds });
+    notifySuccess('Agences mises a jour.');
   };
 
   const executeResetPassword = async () => {
@@ -133,12 +114,8 @@ export const useUsersManager = () => {
   };
 
   const handleIdentitySave = async (payload: UpdateUserIdentityPayload) => {
-    try {
-      await updateIdentityMutation.mutateAsync(payload);
-      notifySuccess('Utilisateur mis a jour.');
-    } catch {
-      return;
-    }
+    await updateIdentityMutation.mutateAsync(payload);
+    notifySuccess('Utilisateur mis a jour.');
   };
 
   const executeDeleteUser = async () => {

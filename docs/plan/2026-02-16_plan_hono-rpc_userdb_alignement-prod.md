@@ -101,9 +101,9 @@ Ne pas passer au gate suivant si le gate courant n'est pas vert.
 - [x] Identifier les fichiers cibles de la migration (liste ci-dessous).
 
 ### G0.2 Baseline qualite locale
-- [x] `frontend`: `npm run typecheck`
-- [x] `frontend`: `npm run lint -- --max-warnings=0`
-- [x] `frontend`: `npm run test:run`
+- [x] `frontend`: `pnpm run typecheck`
+- [x] `frontend`: `pnpm run lint -- --max-warnings=0`
+- [x] `frontend`: `pnpm run test:run`
 - [x] `backend`: `deno lint backend/functions/api`
 - [x] `backend`: `deno check --config backend/deno.json backend/functions/api/index.ts`
 - [x] `backend`: `deno test --allow-env --no-check --config backend/deno.json backend/functions/api`
@@ -129,9 +129,9 @@ Statut global G0.x execute: `G0.1` + `G0.2` + `G0.3` completes.
 
 #### G0.2 - Baseline qualite locale
 Toutes les commandes demandees ont retourne `PASS`:
-- `frontend`: `npm run typecheck`
-- `frontend`: `npm run lint -- --max-warnings=0`
-- `frontend`: `npm run test:run` -> `37` fichiers de tests passes, `109` tests passes, `0` echec
+- `frontend`: `pnpm run typecheck`
+- `frontend`: `pnpm run lint -- --max-warnings=0`
+- `frontend`: `pnpm run test:run` -> `37` fichiers de tests passes, `109` tests passes, `0` echec
 - `backend`: `deno lint backend/functions/api` -> `Checked 32 files`
 - `backend`: `deno check --config backend/deno.json backend/functions/api/index.ts`
 - `backend`: `deno test --allow-env --no-check --config backend/deno.json backend/functions/api` -> `66` passes, `0` echec, `9` ignores
@@ -483,7 +483,7 @@ Implementation:
 - Durcissement `frontend/tsconfig.json` pour exclure `../backend/functions/api/**` et eviter un include global backend dans le frontend.
 
 Preuves:
-- `npm run typecheck` (frontend) execute `pretypecheck` puis `generate:rpc-types` avant `tsc --noEmit`.
+- `pnpm run typecheck` (frontend) execute `pretypecheck` puis `generate:rpc-types` avant `tsc --noEmit`.
 - Fichier genere present: `shared/api/generated/rpc-app.ts`.
 - Verification import frontend:
   - `rg -n \"from ['\\\"][^'\\\"]*backend/functions/api\" frontend/src` -> aucun resultat.
@@ -520,8 +520,8 @@ Implementation:
   - mapping `paths` pour `hono`/`hono/*` vers `frontend/node_modules` afin d'eviter un conflit de types entre resolutions `hono` (racine vs frontend) lors du `typecheck`.
 
 Preuves:
-- `npm run typecheck` (frontend) passe avec generation RPC (`pretypecheck`) puis compilation TS stricte.
-- `npm run lint -- --max-warnings=0`, `npm run test:run`, `npm run check:error-compliance`, `npm run build` passent.
+- `pnpm run typecheck` (frontend) passe avec generation RPC (`pretypecheck`) puis compilation TS stricte.
+- `pnpm run lint -- --max-warnings=0`, `pnpm run test:run`, `pnpm run check:error-compliance`, `pnpm run build` passent.
 
 ### [Rectificatif G4 - 2026-02-18]
 
@@ -537,7 +537,7 @@ Correction appliquee:
 
 Preuves:
 - `rg -n \"AppType = Hono|as unknown as RpcClient|hono/client\" shared/api/generated frontend/src/services/api/rpcClient.ts frontend/src/services/api/safeRpc.ts` -> aucun resultat.
-- `npm run typecheck` (frontend) regenere `rpc-app.ts` puis compile sans erreur.
+- `pnpm run typecheck` (frontend) regenere `rpc-app.ts` puis compile sans erreur.
 
 Critere G4 PASS:
 - [x] Client RPC compile.

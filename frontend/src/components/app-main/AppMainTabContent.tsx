@@ -1,12 +1,21 @@
-import CockpitForm from '@/components/CockpitForm';
-import Dashboard from '@/components/Dashboard';
-import Settings from '@/components/Settings';
-import ClientsPanel from '@/components/ClientsPanel';
-import AdminPanel from '@/components/AdminPanel';
+import { Suspense, lazy } from 'react';
+
 import type { AgencyConfig } from '@/services/config';
 import type { AppTab, Entity, Interaction, InteractionDraft, UserRole } from '@/types';
 import type { ConvertClientEntity } from '@/components/ConvertClientDialog';
 import type { EntityContact } from '@/types';
+
+const CockpitForm = lazy(() => import('@/components/CockpitForm'));
+const Dashboard = lazy(() => import('@/components/Dashboard'));
+const Settings = lazy(() => import('@/components/Settings'));
+const ClientsPanel = lazy(() => import('@/components/ClientsPanel'));
+const AdminPanel = lazy(() => import('@/components/AdminPanel'));
+
+const ROUTE_LOADING_FALLBACK = (
+  <div className="h-full flex items-center justify-center text-slate-400 text-sm">
+    Chargement de la vue...
+  </div>
+);
 
 type AppMainTabContentProps = {
   activeTab: AppTab;
@@ -54,50 +63,64 @@ const AppMainTabContent = ({
 }: AppMainTabContentProps) => {
   if (activeTab === 'cockpit') {
     return (
-      <CockpitForm
-        onSave={onSaveInteraction}
-        config={config}
-        activeAgencyId={activeAgencyId}
-        userId={userId}
-        userRole={userRole}
-        recentEntities={recentEntities}
-        entitySearchIndex={entitySearchIndex}
-        entitySearchLoading={entitySearchLoading}
-        onOpenGlobalSearch={onOpenGlobalSearch}
-      />
+      <Suspense fallback={ROUTE_LOADING_FALLBACK}>
+        <CockpitForm
+          onSave={onSaveInteraction}
+          config={config}
+          activeAgencyId={activeAgencyId}
+          userId={userId}
+          userRole={userRole}
+          recentEntities={recentEntities}
+          entitySearchIndex={entitySearchIndex}
+          entitySearchLoading={entitySearchLoading}
+          onOpenGlobalSearch={onOpenGlobalSearch}
+        />
+      </Suspense>
     );
   }
 
   if (activeTab === 'dashboard') {
     return (
-      <Dashboard
-        interactions={interactions}
-        statuses={config.statuses}
-        agencyId={activeAgencyId}
-        onRequestConvert={onRequestConvert}
-      />
+      <Suspense fallback={ROUTE_LOADING_FALLBACK}>
+        <Dashboard
+          interactions={interactions}
+          statuses={config.statuses}
+          agencyId={activeAgencyId}
+          onRequestConvert={onRequestConvert}
+        />
+      </Suspense>
     );
   }
 
   if (activeTab === 'settings' && canAccessSettings) {
-    return <Settings config={config} canEdit={canEditSettings} agencyId={activeAgencyId} />;
+    return (
+      <Suspense fallback={ROUTE_LOADING_FALLBACK}>
+        <Settings config={config} canEdit={canEditSettings} agencyId={activeAgencyId} />
+      </Suspense>
+    );
   }
 
   if (activeTab === 'clients') {
     return (
-      <ClientsPanel
-        activeAgencyId={activeAgencyId}
-        userRole={userRole}
-        focusedClientId={focusedClientId}
-        focusedContactId={focusedContactId}
-        onFocusHandled={onFocusHandled}
-        onRequestConvert={onRequestConvert}
-      />
+      <Suspense fallback={ROUTE_LOADING_FALLBACK}>
+        <ClientsPanel
+          activeAgencyId={activeAgencyId}
+          userRole={userRole}
+          focusedClientId={focusedClientId}
+          focusedContactId={focusedContactId}
+          onFocusHandled={onFocusHandled}
+          onRequestConvert={onRequestConvert}
+        />
+      </Suspense>
     );
   }
 
   if (activeTab === 'admin' && canAccessAdmin) {
-    return <AdminPanel userRole={userRole} />;
+    return (
+      <Suspense fallback={ROUTE_LOADING_FALLBACK}>
+        <AdminPanel userRole={userRole} />
+      </Suspense>
+    );
   }
 
   return null;

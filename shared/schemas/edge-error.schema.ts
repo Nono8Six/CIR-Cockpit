@@ -6,6 +6,6 @@ export const edgeErrorPayloadSchema = z.object({
   error: z.string().min(1),
   code: z.string().min(1),
   details: z.string().min(1).optional()
-});
+}).strict();
 
 export type EdgeErrorPayload = z.infer<typeof edgeErrorPayloadSchema>;

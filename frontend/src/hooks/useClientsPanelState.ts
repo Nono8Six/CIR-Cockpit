@@ -163,7 +163,7 @@ export const useClientsPanelState = ({
   const saveClientMutation = useSaveClient(effectiveAgencyId ?? null, showArchived);
   const saveProspectMutation = useSaveProspect(effectiveAgencyId ?? null, showArchived, isOrphansFilter);
   const archiveClientMutation = useSetClientArchived(effectiveAgencyId ?? null);
-  const reassignEntityMutation = useReassignEntity();
+  const reassignEntityMutation = useReassignEntity(effectiveAgencyId ?? null, isOrphansFilter);
   const saveContactMutation = useSaveEntityContact(activeEntity?.id ?? null, false, effectiveAgencyId);
   const deleteContactMutation = useDeleteEntityContact(activeEntity?.id ?? null, false);
 
@@ -212,24 +212,16 @@ export const useClientsPanelState = ({
 
   const handleSaveClient = useCallback(
     async (payload: Parameters<typeof saveClientMutation.mutateAsync>[0]) => {
-      try {
-        await saveClientMutation.mutateAsync(payload);
-        notifySuccess(clientToEdit ? 'Client mis a jour.' : 'Client cree.');
-      } catch {
-        return;
-      }
+      await saveClientMutation.mutateAsync(payload);
+      notifySuccess(clientToEdit ? 'Client mis a jour.' : 'Client cree.');
     },
     [clientToEdit, saveClientMutation]
   );
 
   const handleSaveProspect = useCallback(
     async (payload: Parameters<typeof saveProspectMutation.mutateAsync>[0]) => {
-      try {
-        await saveProspectMutation.mutateAsync(payload);
-        notifySuccess(prospectToEdit ? 'Prospect mis a jour.' : 'Prospect cree.');
-      } catch {
-        return;
-      }
+      await saveProspectMutation.mutateAsync(payload);
+      notifySuccess(prospectToEdit ? 'Prospect mis a jour.' : 'Prospect cree.');
     },
     [prospectToEdit, saveProspectMutation]
   );
@@ -277,12 +269,8 @@ export const useClientsPanelState = ({
 
   const handleSaveContact = useCallback(
     async (payload: Parameters<typeof saveContactMutation.mutateAsync>[0]) => {
-      try {
-        await saveContactMutation.mutateAsync(payload);
-        notifySuccess(contactToEdit ? 'Contact mis a jour.' : 'Contact ajoute.');
-      } catch {
-        return;
-      }
+      await saveContactMutation.mutateAsync(payload);
+      notifySuccess(contactToEdit ? 'Contact mis a jour.' : 'Contact ajoute.');
     },
     [contactToEdit, saveContactMutation]
   );

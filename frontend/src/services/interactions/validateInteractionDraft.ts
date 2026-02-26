@@ -17,6 +17,22 @@ const FIELD_LABELS: Record<string, string> = {
   contact_email: 'Email'
 };
 
+const formatIssuePath = (path: PropertyKey[]): string =>
+  path.length === 0 ? 'payload' : path.map(String).join('.');
+
+const formatZodDetailsFr = (
+  issues: Array<{ code: string; path: PropertyKey[]; message: string; keys?: string[] }>
+): string =>
+  issues
+    .map((issue) => {
+      const location = formatIssuePath(issue.path);
+      if (issue.code === 'unrecognized_keys' && Array.isArray(issue.keys) && issue.keys.length > 0) {
+        return `${location}: champs non autorises (${issue.keys.join(', ')}).`;
+      }
+      return `${location}: ${issue.message}`;
+    })
+    .join(' | ');
+
 export const validateInteractionDraft = (draft: InteractionDraft): void => {
   const result = interactionDraftSchema.safeParse(draft);
   if (result.success) return;
@@ -37,6 +53,6 @@ export const validateInteractionDraft = (draft: InteractionDraft): void => {
     code: 'VALIDATION_ERROR',
     message,
     source: 'client',
-    details: result.error.message
+    details: formatZodDetailsFr(result.error.issues)
   });
 };

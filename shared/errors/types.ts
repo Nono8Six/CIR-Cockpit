@@ -57,6 +57,7 @@ export type ErrorCode =
   | 'REQUEST_FAILED'
   | 'INVALID_JSON'
   | 'INVALID_PAYLOAD'
+  | 'PAYLOAD_TOO_LARGE'
   | 'ACTION_REQUIRED'
   | 'ROLE_INVALID'
   | 'USER_NOT_FOUND'

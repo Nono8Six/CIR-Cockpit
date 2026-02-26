@@ -7,7 +7,7 @@ import { useNotifyError } from './useNotifyError';
 
 export const useInteractions = (agencyId: string | null, enabled: boolean) => {
   const query = useQuery({
-    queryKey: agencyId ? interactionsKey(agencyId) : ['interactions', 'none'],
+    queryKey: interactionsKey(agencyId),
     queryFn: () => {
       if (!agencyId) {
         return Promise.reject(createAppError({

@@ -25,6 +25,7 @@ const LoginScreen = ({ onSignIn }: LoginScreenProps) => {
     isSubmitting,
     submitState,
     error,
+    fieldError,
     handleSubmit
   } = useLoginScreenForm({ onSignIn });
 
@@ -48,6 +49,7 @@ const LoginScreen = ({ onSignIn }: LoginScreenProps) => {
             password={password}
             onPasswordChange={setPassword}
             submitState={submitState}
+            fieldError={fieldError}
             error={error}
             isSubmitting={isSubmitting}
             onSubmit={handleSubmit}

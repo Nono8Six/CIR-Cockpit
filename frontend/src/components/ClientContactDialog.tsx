@@ -79,6 +79,7 @@ const ClientContactDialog = ({
           />
           <ContactFormPositionSection positionField={positionField} />
           <ContactFormNotesSection notesField={notesField} />
+          {errors.root?.message ? <p className="text-sm text-red-600">{errors.root.message}</p> : null}
           <ContactFormFooter
             isEdit={isEdit}
             isSubmitting={isSubmitting}

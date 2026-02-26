@@ -9,6 +9,7 @@ import { requireSupabaseClient } from '@/services/supabase/requireSupabaseClient
 import { normalizeError } from '@/services/errors/normalizeError';
 import { notifyError } from '@/services/errors/notify';
 import { reportError } from '@/services/errors/reportError';
+import { invalidateInteractionsQuery } from '@/services/query/queryInvalidation';
 import { upsertInteractionInList } from '@/utils/interactions/upsertInteractionInList';
 
 const removeInteractionFromList = (list: Interaction[], id: string): Interaction[] => list.filter(item => item.id !== id);
@@ -46,7 +47,7 @@ export const useRealtimeInteractions = (agencyId: string | null, enabled: boolea
           notifyError(appError);
           notifiedRef.current = true;
         }
-        void queryClient.invalidateQueries({ queryKey: interactionsKey(agencyId) });
+        void invalidateInteractionsQuery(queryClient, agencyId);
       }
     };
 

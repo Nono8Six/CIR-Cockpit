@@ -90,6 +90,7 @@ const ProspectFormDialog = ({
             notesField={notesField}
             onCancel={() => onOpenChange(false)}
           />
+          {errors.root?.message ? <p className="text-sm text-red-600">{errors.root.message}</p> : null}
         </form>
       </DialogContent>
     </Dialog>

@@ -1,19 +1,24 @@
+import {
+  adminUsersSetRoleResponseSchema,
+  type AdminUsersSetRoleResponse
+} from '../../../../shared/schemas/api-responses';
 import { safeRpc } from '@/services/api/safeRpc';
 import { createAppError } from '@/services/errors/AppError';
 import { UserRole } from '@/types';
-import { isRecord } from '@/utils/recordNarrowing';
 
-export type SetUserRoleResponse = {
-  ok: true;
-  user_id: string;
-  role: UserRole;
-};
+export type SetUserRoleResponse = AdminUsersSetRoleResponse;
 
 const parseSetUserRoleResponse = (payload: unknown): SetUserRoleResponse => {
-  if (!isRecord(payload)) {
-    throw createAppError({ code: 'EDGE_INVALID_RESPONSE', message: 'Reponse serveur invalide.', source: 'edge' });
+  const parsed = adminUsersSetRoleResponseSchema.safeParse(payload);
+  if (!parsed.success) {
+    throw createAppError({
+      code: 'EDGE_INVALID_RESPONSE',
+      message: 'Reponse serveur invalide.',
+      source: 'edge',
+      details: parsed.error.message
+    });
   }
-  return payload as SetUserRoleResponse;
+  return parsed.data;
 };
 
 export const adminUsersSetRole = (userId: string, role: UserRole) =>

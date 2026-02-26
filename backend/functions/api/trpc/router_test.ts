@@ -1,7 +1,8 @@
 import { assertStrictEquals } from 'std/assert';
 
+import { dataEntitiesPayloadSchema } from '../../../../shared/schemas/data.schema.ts';
 import type { DbClient } from '../types.ts';
-import { selectDataEntitiesDb } from './dataEntities.ts';
+import { selectDataEntitiesDb } from './router.ts';
 
 Deno.test('selectDataEntitiesDb uses userDb for regular data actions', () => {
   const serviceRoleDb = { marker: 'service-role' } as unknown as DbClient;
@@ -19,4 +20,16 @@ Deno.test('selectDataEntitiesDb keeps service-role db for reassign', () => {
   const selectedDb = selectDataEntitiesDb({ action: 'reassign' }, serviceRoleDb, userScopedDb);
 
   assertStrictEquals(selectedDb, serviceRoleDb);
+});
+
+Deno.test('dataEntitiesPayloadSchema rejects unknown keys', () => {
+  const payload = {
+    action: 'archive',
+    entity_id: '11111111-1111-1111-1111-111111111111',
+    archived: true,
+    unexpected: 'forbidden'
+  };
+
+  const parsed = dataEntitiesPayloadSchema.safeParse(payload);
+  assertStrictEquals(parsed.success, false);
 });

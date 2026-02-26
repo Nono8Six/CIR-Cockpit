@@ -925,7 +925,7 @@ deno test --allow-env --no-check --config backend/deno.json backend/functions/ap
 cd frontend && npx vitest run
 
 # Lint + types
-cd frontend && npm run lint && npm run typecheck
+pnpm --dir frontend run lint && pnpm run typecheck
 
 # Test d'integration (avec Supabase local)
 RUN_API_INTEGRATION=1 deno test --allow-env --no-check --config backend/deno.json backend/functions/api

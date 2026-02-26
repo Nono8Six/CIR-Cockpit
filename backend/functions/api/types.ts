@@ -1,7 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+
+import type { DbClient as DrizzleDbClient } from '../../drizzle/index.ts';
 import type { Database } from '../../../shared/supabase.types.ts';
 
-export type DbClient = SupabaseClient<Database>;
+export type SupabaseDbClient = SupabaseClient<Database>;
+export type DbClient = DrizzleDbClient;
 export type UserRole = Database['public']['Enums']['user_role'];
 
 export type AuthContext = {

@@ -1,21 +1,25 @@
+import {
+  adminUsersSetMembershipsResponseSchema,
+  type AdminUsersSetMembershipsResponse
+} from '../../../../shared/schemas/api-responses';
 import { safeRpc } from '@/services/api/safeRpc';
 import { createAppError } from '@/services/errors/AppError';
-import { isRecord } from '@/utils/recordNarrowing';
 
 export type MembershipMode = 'replace' | 'add' | 'remove';
 
-export type SetUserMembershipsResponse = {
-  ok: true;
-  user_id: string;
-  agency_ids: string[];
-  membership_mode: MembershipMode;
-};
+export type SetUserMembershipsResponse = AdminUsersSetMembershipsResponse;
 
 const parseSetUserMembershipsResponse = (payload: unknown): SetUserMembershipsResponse => {
-  if (!isRecord(payload)) {
-    throw createAppError({ code: 'EDGE_INVALID_RESPONSE', message: 'Reponse serveur invalide.', source: 'edge' });
+  const parsed = adminUsersSetMembershipsResponseSchema.safeParse(payload);
+  if (!parsed.success) {
+    throw createAppError({
+      code: 'EDGE_INVALID_RESPONSE',
+      message: 'Reponse serveur invalide.',
+      source: 'edge',
+      details: parsed.error.message
+    });
   }
-  return payload as SetUserMembershipsResponse;
+  return parsed.data;
 };
 
 export const adminUsersSetMemberships = (

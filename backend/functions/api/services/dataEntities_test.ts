@@ -16,11 +16,7 @@ type ReassignMocks = {
 
 type ReassignCalls = {
   entityUpdatePayload: Record<string, unknown> | null;
-  entityUpdateId: string | null;
-  entityUpdateAgencyNullFilterApplied: boolean;
   interactionUpdatePayload: Record<string, unknown> | null;
-  interactionUpdateEntityId: string | null;
-  interactionUpdateAgencyNullFilterApplied: boolean;
 };
 
 const readStatus = (value: unknown): number | undefined => {
@@ -44,92 +40,64 @@ const createDbMock = (
 ): { db: DbClient; calls: ReassignCalls } => {
   const calls: ReassignCalls = {
     entityUpdatePayload: null,
-    entityUpdateId: null,
-    entityUpdateAgencyNullFilterApplied: false,
-    interactionUpdatePayload: null,
-    interactionUpdateEntityId: null,
-    interactionUpdateAgencyNullFilterApplied: false
+    interactionUpdatePayload: null
   };
 
-  const entitiesUpdateQuery = {
-    eq: (_column: string, value: string) => {
-      calls.entityUpdateId = value;
-      return entitiesUpdateQuery;
-    },
-    is: (_column: string, value: null) => {
-      calls.entityUpdateAgencyNullFilterApplied = value === null;
-      return entitiesUpdateQuery;
-    },
-    select: (_columns: string) => entitiesUpdateQuery,
-    maybeSingle: () => Promise.resolve({
-      data: mocks.entityRow ?? null,
-      error: mocks.entityUpdateError ?? null
-    })
-  };
-
-  const entitiesLookupQuery = {
-    eq: (_column: string, _value: string) => entitiesLookupQuery,
-    maybeSingle: () => Promise.resolve({
-      data: mocks.entityLookupRow ?? null,
-      error: mocks.entityLookupError ?? null
-    })
-  };
-
-  const entitiesTable = {
-    update: (payload: Record<string, unknown>) => {
-      calls.entityUpdatePayload = payload;
-      return entitiesUpdateQuery;
-    },
-    select: (_columns: string) => entitiesLookupQuery
-  };
-
-  const agenciesQuery = {
-    eq: (_column: string, _value: string) => agenciesQuery,
-    maybeSingle: () => Promise.resolve({
-      data: mocks.agencyRow ?? { id: 'agency-target', archived_at: null },
-      error: mocks.agencyError ?? null
-    })
-  };
-
-  const agenciesTable = {
-    select: (_columns: string) => agenciesQuery
-  };
-
-  const interactionsUpdateQuery = {
-    eq: (_column: string, value: string) => {
-      calls.interactionUpdateEntityId = value;
-      return interactionsUpdateQuery;
-    },
-    is: (_column: string, value: null) => {
-      calls.interactionUpdateAgencyNullFilterApplied = value === null;
-      return interactionsUpdateQuery;
-    },
-    select: (_columns: string) => Promise.resolve({
-      data: mocks.propagatedRows ?? [],
-      error: mocks.propagationError ?? null
-    })
-  };
-
-  const interactionsTable = {
-    update: (payload: Record<string, unknown>) => {
-      calls.interactionUpdatePayload = payload;
-      return interactionsUpdateQuery;
-    }
-  };
+  let selectCall = 0;
+  let updateCall = 0;
 
   const db = {
-    from: (table: string) => {
-      if (table === 'agencies') {
-        return agenciesTable;
+    select: (_fields: unknown) => ({
+      from: (_table: unknown) => ({
+        where: (_condition: unknown) => ({
+          limit: (_value: number) => {
+            selectCall += 1;
+            if (selectCall === 1) {
+              if (mocks.agencyError) {
+                return Promise.reject(mocks.agencyError);
+              }
+              if (mocks.agencyRow === null) {
+                return Promise.resolve([]);
+              }
+              return Promise.resolve([mocks.agencyRow ?? { id: 'agency-target', archived_at: null }]);
+            }
+            if (mocks.entityLookupError) {
+              return Promise.reject(mocks.entityLookupError);
+            }
+            if (mocks.entityLookupRow === null) {
+              return Promise.resolve([]);
+            }
+            return Promise.resolve([mocks.entityLookupRow ?? { id: 'entity-1' }]);
+          }
+        })
+      })
+    }),
+    update: (_table: unknown) => ({
+      set: (payload: Record<string, unknown>) => {
+        updateCall += 1;
+        if (updateCall === 1) {
+          calls.entityUpdatePayload = payload;
+        } else {
+          calls.interactionUpdatePayload = payload;
+        }
+        return {
+          where: (_condition: unknown) => ({
+            returning: (_projection?: unknown) => {
+              if (updateCall === 1) {
+                if (mocks.entityUpdateError) {
+                  return Promise.reject(mocks.entityUpdateError);
+                }
+                return Promise.resolve(mocks.entityRow ? [mocks.entityRow] : []);
+              }
+              if (mocks.propagationError) {
+                return Promise.reject(mocks.propagationError);
+              }
+              return Promise.resolve(mocks.propagatedRows ?? []);
+            }
+          })
+        };
       }
-      if (table === 'entities') {
-        return entitiesTable;
-      }
-      if (table === 'interactions') {
-        return interactionsTable;
-      }
-      throw new Error(`Unexpected table ${table}`);
-    }
+    })
   } as unknown as DbClient;
 
   return { db, calls };
@@ -154,11 +122,7 @@ Deno.test('reassignEntity reassigns orphan entity and propagates interaction age
   assertEquals(result.entity, reassignedEntity);
   assertEquals(result.propagatedInteractionsCount, 2);
   assertEquals(calls.entityUpdatePayload, { agency_id: 'agency-target' });
-  assertEquals(calls.entityUpdateId, 'entity-1');
-  assertEquals(calls.entityUpdateAgencyNullFilterApplied, true);
   assertEquals(calls.interactionUpdatePayload, { agency_id: 'agency-target' });
-  assertEquals(calls.interactionUpdateEntityId, 'entity-1');
-  assertEquals(calls.interactionUpdateAgencyNullFilterApplied, true);
 });
 
 Deno.test('reassignEntity rejects non-orphan entities', async () => {

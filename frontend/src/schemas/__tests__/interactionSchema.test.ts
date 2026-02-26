@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { dataInteractionsPayloadSchema } from '../../../../shared/schemas/data.schema';
 import { interactionFormSchema } from '@/schemas/interactionSchema';
 import { Channel } from '@/types';
 
@@ -48,5 +49,35 @@ describe('interactionFormSchema', () => {
       contact_phone: '0612345678'
     };
     expect(() => interactionFormSchema.parse(solicitation)).not.toThrow();
+  });
+
+  it('keeps backend data payload rules aligned with form schema', () => {
+    const payload = {
+      action: 'save',
+      agency_id: '11111111-1111-1111-1111-111111111111',
+      interaction: {
+        ...base,
+        id: '22222222-2222-2222-2222-222222222222',
+        contact_email: '',
+        contact_phone: ''
+      }
+    };
+    const result = dataInteractionsPayloadSchema.safeParse(payload);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects unknown keys in shared interaction payloads', () => {
+    const payload = {
+      action: 'save',
+      agency_id: '11111111-1111-1111-1111-111111111111',
+      interaction: {
+        ...base,
+        id: '22222222-2222-2222-2222-222222222222',
+        extra_field: 'forbidden'
+      },
+      extra_field: 'forbidden'
+    };
+    const result = dataInteractionsPayloadSchema.safeParse(payload);
+    expect(result.success).toBe(false);
   });
 });

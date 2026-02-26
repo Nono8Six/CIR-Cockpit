@@ -26,6 +26,7 @@ const ChangePasswordScreen = ({
     showConfirm,
     setShowConfirm,
     isSubmitting,
+    fieldError,
     error,
     profileError,
     ruleResults,
@@ -64,6 +65,7 @@ const ChangePasswordScreen = ({
             passwordInputRef={passwordInputRef}
           />
           <ChangePasswordRules rules={ruleResults} />
+          <ChangePasswordError message={fieldError} />
           <ChangePasswordError message={error} />
           <ChangePasswordActions
             profileError={profileError}

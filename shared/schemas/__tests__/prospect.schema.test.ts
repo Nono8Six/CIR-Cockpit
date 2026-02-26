@@ -12,7 +12,7 @@ describe('prospectFormSchema', () => {
       city: 'Paris',
       siret: '',
       notes: '',
-      agency_id: null
+      agency_id: '11111111-1111-1111-1111-111111111111'
     });
 
     expect(result.success).toBe(true);
@@ -24,7 +24,8 @@ describe('prospectFormSchema', () => {
       address: '',
       postal_code: '7500',
       department: '',
-      city: 'Paris'
+      city: 'Paris',
+      agency_id: '11111111-1111-1111-1111-111111111111'
     });
 
     expect(result.success).toBe(false);

@@ -37,6 +37,7 @@ const InteractionDetails = ({
     canConvert,
     scrollRef,
     isSubmitDisabled,
+    errorMessage,
     handleSubmit
   } = useInteractionDetailsState({ interaction, statuses, onUpdate });
 
@@ -64,6 +65,7 @@ const InteractionDetails = ({
         onNoteChange={setNote}
         onSubmit={handleSubmit}
         isSubmitDisabled={isSubmitDisabled}
+        errorMessage={errorMessage}
       />
     </div>
   );

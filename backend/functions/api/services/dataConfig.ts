@@ -1,15 +1,23 @@
+import { and, eq, inArray, sql } from 'drizzle-orm';
+
+import {
+  agency_entities,
+  agency_families,
+  agency_interaction_types,
+  agency_services,
+  agency_statuses
+} from '../../../drizzle/schema.ts';
 import type { DataConfigResponse } from '../../../../shared/schemas/api-responses.ts';
 import type { DataConfigPayload } from '../../../../shared/schemas/data.schema.ts';
 import type { AuthContext, DbClient } from '../types.ts';
 import { httpError } from '../middleware/errorHandler.ts';
 import { ensureAgencyAccess, ensureDataRateLimit } from './dataAccess.ts';
 
-type ConfigTable =
-  | 'agency_statuses'
-  | 'agency_services'
-  | 'agency_entities'
-  | 'agency_families'
-  | 'agency_interaction_types';
+type LabelTable =
+  | typeof agency_services
+  | typeof agency_entities
+  | typeof agency_families
+  | typeof agency_interaction_types;
 
 const STATUS_CATEGORIES = ['todo', 'in_progress', 'done'] as const;
 
@@ -77,19 +85,20 @@ export const buildStatusUpsertRows = (
 
 const syncLabelTable = async (
   db: DbClient,
-  table: ConfigTable,
+  table: LabelTable,
   agencyId: string,
   labels: string[]
 ): Promise<void> => {
   const desired = normalizeLabelList(labels);
   const desiredSet = new Set(desired.map((l) => l.toLowerCase()));
 
-  const { data: existing, error: readError } = await db
-    .from(table)
-    .select('label')
-    .eq('agency_id', agencyId);
-
-  if (readError) {
+  let existing: Array<{ label: string }> = [];
+  try {
+    existing = await db
+      .select({ label: table.label })
+      .from(table)
+      .where(eq(table.agency_id, agencyId));
+  } catch {
     throw httpError(500, 'DB_READ_FAILED', 'Impossible de charger la configuration.');
   }
 
@@ -103,21 +112,29 @@ const syncLabelTable = async (
       label,
       sort_order: index + 1
     }));
-    const { error } = await db
-      .from(table)
-      .upsert(rows, { onConflict: 'agency_id,label' });
-    if (error) {
+
+    try {
+      await db
+        .insert(table)
+        .values(rows)
+        .onConflictDoUpdate({
+          target: [table.agency_id, table.label],
+          set: { sort_order: sql`excluded.sort_order` }
+        });
+    } catch {
       throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de mettre a jour la configuration.');
     }
   }
 
   if (toDelete.length > 0) {
-    const { error } = await db
-      .from(table)
-      .delete()
-      .eq('agency_id', agencyId)
-      .in('label', toDelete);
-    if (error) {
+    try {
+      await db
+        .delete(table)
+        .where(and(
+          eq(table.agency_id, agencyId),
+          inArray(table.label, toDelete)
+        ));
+    } catch {
       throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de mettre a jour la configuration.');
     }
   }
@@ -133,23 +150,57 @@ const syncStatuses = async (
   }
   assertValidStatusCategories(statuses);
 
-  const { data: existing, error: readError } = await db
-    .from('agency_statuses')
-    .select('id, label')
-    .eq('agency_id', agencyId);
-
-  if (readError) {
+  let existing: ExistingStatusRow[] = [];
+  try {
+    existing = await db
+      .select({
+        id: agency_statuses.id,
+        label: agency_statuses.label
+      })
+      .from(agency_statuses)
+      .where(eq(agency_statuses.agency_id, agencyId));
+  } catch {
     throw httpError(500, 'DB_READ_FAILED', 'Impossible de charger les statuts.');
   }
 
   const existingRows = existing ?? [];
   const rows = buildStatusUpsertRows(statuses, agencyId, existingRows);
 
-  const { error: upsertError } = await db
-    .from('agency_statuses')
-    .upsert(rows, { onConflict: 'id' });
+  const rowsWithId = rows.filter((row): row is StatusUpsertRow & { id: string } => typeof row.id === 'string');
+  const rowsWithoutId = rows.filter((row) => typeof row.id !== 'string');
 
-  if (upsertError) {
+  try {
+    if (rowsWithId.length > 0) {
+      await db
+        .insert(agency_statuses)
+        .values(rowsWithId)
+        .onConflictDoUpdate({
+          target: agency_statuses.id,
+          set: {
+            label: sql`excluded.label`,
+            sort_order: sql`excluded.sort_order`,
+            is_default: sql`excluded.is_default`,
+            category: sql`excluded.category`,
+            is_terminal: sql`excluded.is_terminal`
+          }
+        });
+    }
+
+    if (rowsWithoutId.length > 0) {
+      await db
+        .insert(agency_statuses)
+        .values(rowsWithoutId)
+        .onConflictDoUpdate({
+          target: [agency_statuses.agency_id, agency_statuses.label],
+          set: {
+            sort_order: sql`excluded.sort_order`,
+            is_default: sql`excluded.is_default`,
+            category: sql`excluded.category`,
+            is_terminal: sql`excluded.is_terminal`
+          }
+        });
+    }
+  } catch {
     throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de mettre a jour les statuts.');
   }
 
@@ -161,12 +212,14 @@ const syncStatuses = async (
     .filter((id) => !desiredIds.has(id));
 
   if (toDeleteIds.length > 0) {
-    const { error } = await db
-      .from('agency_statuses')
-      .delete()
-      .eq('agency_id', agencyId)
-      .in('id', toDeleteIds);
-    if (error) {
+    try {
+      await db
+        .delete(agency_statuses)
+        .where(and(
+          eq(agency_statuses.agency_id, agencyId),
+          inArray(agency_statuses.id, toDeleteIds)
+        ));
+    } catch {
       throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de supprimer les statuts obsoletes.');
     }
   }
@@ -183,10 +236,10 @@ export const handleDataConfigAction = async (
   const resolvedAgencyId = ensureAgencyAccess(authContext, agencyId);
 
   await syncStatuses(db, resolvedAgencyId, data.statuses);
-  await syncLabelTable(db, 'agency_services', resolvedAgencyId, data.services);
-  await syncLabelTable(db, 'agency_entities', resolvedAgencyId, data.entities);
-  await syncLabelTable(db, 'agency_families', resolvedAgencyId, data.families);
-  await syncLabelTable(db, 'agency_interaction_types', resolvedAgencyId, data.interactionTypes);
+  await syncLabelTable(db, agency_services, resolvedAgencyId, data.services);
+  await syncLabelTable(db, agency_entities, resolvedAgencyId, data.entities);
+  await syncLabelTable(db, agency_families, resolvedAgencyId, data.families);
+  await syncLabelTable(db, agency_interaction_types, resolvedAgencyId, data.interactionTypes);
 
   return { request_id: requestId, ok: true };
 };

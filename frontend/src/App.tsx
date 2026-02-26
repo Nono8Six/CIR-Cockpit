@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useRouterState } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
 
 import AppHeader from './components/AppHeader';
@@ -12,6 +13,7 @@ import { useInteractions } from './hooks/useInteractions';
 import { useRealtimeInteractions } from './hooks/useRealtimeInteractions';
 import { useSaveInteraction } from './hooks/useSaveInteraction';
 import { getAppGate } from './app/getAppGate';
+import { getPathForTab, getTabFromPathname, isInteractionTab } from './app/appRoutes';
 import { EMPTY_CONFIG, ROLE_BADGE_STYLES, ROLE_LABELS, buildNavigationTabs } from './app/appConstants';
 import { getDefaultStatusId, useAppSearchData } from './app/useAppSearchData';
 import { useAppShortcuts } from './app/useAppShortcuts';
@@ -19,12 +21,15 @@ import { useProfileMenuDismiss } from './app/useProfileMenuDismiss';
 import { convertEntityToClient, type ConvertClientPayload } from './services/entities/convertEntityToClient';
 import { handleUiError } from './services/errors/handleUiError';
 import { notifySuccess } from './services/errors/notify';
-import { clientsKey, entitySearchIndexKey } from './services/query/queryKeys';
+import { invalidateClientsQueries, invalidateEntitySearchIndexQueries } from './services/query/queryInvalidation';
+import { prefetchAdminPanelQueries, prefetchClientsPanelQueries } from './services/query/queryPrefetch';
 import type { AppTab, InteractionDraft } from './types';
 
 const App = () => {
+  const navigate = useNavigate();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
   const sessionState = useAppSession();
-  const [activeTab, setActiveTab] = useState<AppTab>('cockpit');
+  const activeTab = useMemo<AppTab>(() => getTabFromPathname(pathname), [pathname]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -50,12 +55,30 @@ const App = () => {
   const entitySearchIndex = useMemo(() => entitySearchQuery.data ?? { entities: [], contacts: [] }, [entitySearchQuery.data]);
   const searchData = useAppSearchData({ searchQuery, interactions, entitySearchIndex, defaultStatusId: getDefaultStatusId(config.statuses) });
 
-  useAppShortcuts({ canAccessAdmin, canAccessSettings, setActiveTab, setIsSearchOpen });
+  const handleTabChange = useCallback(
+    (tab: AppTab) => {
+      void navigate({ to: getPathForTab(tab) });
+    },
+    [navigate]
+  );
+
+  useAppShortcuts({ canAccessAdmin, canAccessSettings, setActiveTab: handleTabChange, setIsSearchOpen });
   useProfileMenuDismiss(profileMenuRef, isProfileMenuOpen, setIsProfileMenuOpen);
 
   useEffect(() => {
-    if ((activeTab === 'settings' && !canAccessSettings) || (activeTab === 'admin' && !canAccessAdmin)) setActiveTab('cockpit');
-  }, [activeTab, canAccessAdmin, canAccessSettings]);
+    if ((activeTab === 'settings' && !canAccessSettings) || (activeTab === 'admin' && !canAccessAdmin)) {
+      void navigate({ to: getPathForTab('cockpit'), replace: true });
+    }
+  }, [activeTab, canAccessAdmin, canAccessSettings, navigate]);
+
+  useEffect(() => {
+    if (activeTab === 'clients' && sessionState.activeAgencyId) {
+      void prefetchClientsPanelQueries(queryClient, sessionState.activeAgencyId);
+    }
+    if (activeTab === 'admin' && canAccessAdmin) {
+      void prefetchAdminPanelQueries(queryClient);
+    }
+  }, [activeTab, canAccessAdmin, queryClient, sessionState.activeAgencyId]);
 
   const handleSaveInteraction = useCallback(async (draft: InteractionDraft) => {
     try {
@@ -68,8 +91,10 @@ const App = () => {
   }, [saveInteractionMutation]);
 
   const handleSignOut = useCallback(async () => {
-    if (await sessionState.signOutUser()) setActiveTab('cockpit');
-  }, [sessionState]);
+    if (await sessionState.signOutUser()) {
+      void navigate({ to: getPathForTab('cockpit'), replace: true });
+    }
+  }, [navigate, sessionState]);
 
   const gate = getAppGate({
     authReady: sessionState.authReady,
@@ -88,9 +113,76 @@ const App = () => {
 
   return (
     <div className="h-screen w-screen flex flex-col bg-slate-50/50 overflow-hidden text-slate-900 font-sans">
-      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:rounded-md focus:bg-white focus:px-3 focus:py-2 focus:text-xs focus:font-semibold focus:text-slate-700 focus:shadow-md">Passer au contenu</a>
-      <AppHeader agencyContext={sessionState.agencyContext} agencyMemberships={sessionState.agencyMemberships} hasMultipleAgencies={sessionState.agencyMemberships.length > 1} userRole={userRole} sessionEmail={sessionState.session?.user?.email ?? 'Utilisateur'} profileLoading={sessionState.profileLoading} isContextRefreshing={sessionState.isContextLoading && Boolean(sessionState.agencyContext)} activeTab={activeTab} navigationTabs={navigationTabs} isSettingsDisabled={!canAccessSettings} isProfileMenuOpen={isProfileMenuOpen} profileMenuRef={profileMenuRef} hasProfileMenu roleLabels={ROLE_LABELS} roleBadgeStyles={ROLE_BADGE_STYLES} onTabChange={setActiveTab} onAgencyChange={async agencyId => { if (await sessionState.changeActiveAgency(agencyId)) notifySuccess('Agence active mise à jour'); }} onOpenSearch={() => setIsSearchOpen(true)} onToggleProfileMenu={() => setIsProfileMenuOpen(prev => !prev)} onOpenSettings={() => { setActiveTab('settings'); setIsProfileMenuOpen(false); }} onSignOut={() => void handleSignOut()} />
-      <AppMainContent activeTab={activeTab} isInteractionTab={activeTab === 'cockpit' || activeTab === 'dashboard' || activeTab === 'settings'} isContextBlocking={sessionState.isContextLoading && !sessionState.agencyContext} isDataLoading={sessionState.canLoadData && (configQuery.isLoading || interactionsQuery.isLoading)} hasDataError={configQuery.isError || interactionsQuery.isError} activeAgencyId={sessionState.activeAgencyId} contextError={sessionState.contextError} config={config} interactions={interactions} userId={sessionState.session?.user?.id ?? null} userRole={userRole} recentEntities={searchData.recentEntities} entitySearchIndex={entitySearchIndex} entitySearchLoading={entitySearchQuery.isLoading} canAccessSettings={canAccessSettings} canEditSettings={canEditSettings} canAccessAdmin={canAccessAdmin} focusedClientId={focusedClientId} focusedContactId={focusedContactId} onFocusHandled={() => { setFocusedClientId(null); setFocusedContactId(null); }} onSaveInteraction={handleSaveInteraction} onRequestConvert={entity => { setConvertTarget(entity); setIsSearchOpen(false); setSearchQuery(''); }} onOpenGlobalSearch={() => setIsSearchOpen(true)} onReloadData={() => { void configQuery.refetch(); void interactionsQuery.refetch(); }} />
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:rounded-md focus:bg-white focus:px-3 focus:py-2 focus:text-xs focus:font-semibold focus:text-slate-700 focus:shadow-md"
+      >
+        Passer au contenu
+      </a>
+      <AppHeader
+        agencyContext={sessionState.agencyContext}
+        agencyMemberships={sessionState.agencyMemberships}
+        hasMultipleAgencies={sessionState.agencyMemberships.length > 1}
+        userRole={userRole}
+        sessionEmail={sessionState.session?.user?.email ?? 'Utilisateur'}
+        profileLoading={sessionState.profileLoading}
+        isContextRefreshing={sessionState.isContextLoading && Boolean(sessionState.agencyContext)}
+        activeTab={activeTab}
+        navigationTabs={navigationTabs}
+        isSettingsDisabled={!canAccessSettings}
+        isProfileMenuOpen={isProfileMenuOpen}
+        profileMenuRef={profileMenuRef}
+        hasProfileMenu
+        roleLabels={ROLE_LABELS}
+        roleBadgeStyles={ROLE_BADGE_STYLES}
+        onTabChange={handleTabChange}
+        onAgencyChange={async (agencyId) => {
+          if (await sessionState.changeActiveAgency(agencyId)) notifySuccess('Agence active mise à jour');
+        }}
+        onOpenSearch={() => setIsSearchOpen(true)}
+        onToggleProfileMenu={() => setIsProfileMenuOpen((prev) => !prev)}
+        onOpenSettings={() => {
+          handleTabChange('settings');
+          setIsProfileMenuOpen(false);
+        }}
+        onSignOut={() => void handleSignOut()}
+      />
+      <AppMainContent
+        activeTab={activeTab}
+        isInteractionTab={isInteractionTab(activeTab)}
+        isContextBlocking={sessionState.isContextLoading && !sessionState.agencyContext}
+        isDataLoading={sessionState.canLoadData && (configQuery.isLoading || interactionsQuery.isLoading)}
+        hasDataError={configQuery.isError || interactionsQuery.isError}
+        activeAgencyId={sessionState.activeAgencyId}
+        contextError={sessionState.contextError}
+        config={config}
+        interactions={interactions}
+        userId={sessionState.session?.user?.id ?? null}
+        userRole={userRole}
+        recentEntities={searchData.recentEntities}
+        entitySearchIndex={entitySearchIndex}
+        entitySearchLoading={entitySearchQuery.isLoading}
+        canAccessSettings={canAccessSettings}
+        canEditSettings={canEditSettings}
+        canAccessAdmin={canAccessAdmin}
+        focusedClientId={focusedClientId}
+        focusedContactId={focusedContactId}
+        onFocusHandled={() => {
+          setFocusedClientId(null);
+          setFocusedContactId(null);
+        }}
+        onSaveInteraction={handleSaveInteraction}
+        onRequestConvert={(entity) => {
+          setConvertTarget(entity);
+          setIsSearchOpen(false);
+          setSearchQuery('');
+        }}
+        onOpenGlobalSearch={() => setIsSearchOpen(true)}
+        onReloadData={() => {
+          void configQuery.refetch();
+          void interactionsQuery.refetch();
+        }}
+      />
       <AppSearchOverlay
         open={isSearchOpen}
         onOpenChange={setIsSearchOpen}
@@ -106,13 +198,13 @@ const App = () => {
         onRetrySearch={async () => entitySearchQuery.refetch()}
         entityNameById={searchData.entityNameById}
         onOpenInteraction={() => {
-          setActiveTab('dashboard');
+          handleTabChange('dashboard');
           setIsSearchOpen(false);
         }}
         onFocusClient={(clientId, contactId) => {
           setFocusedClientId(clientId);
           setFocusedContactId(contactId ?? null);
-          setActiveTab('clients');
+          handleTabChange('clients');
           setIsSearchOpen(false);
         }}
         onRequestConvert={(entity) => {
@@ -121,16 +213,29 @@ const App = () => {
           setSearchQuery('');
         }}
       />
-      <ConvertClientDialog open={Boolean(convertTarget)} onOpenChange={open => { if (!open) setConvertTarget(null); }} entity={convertTarget} onConvert={async (payload: ConvertClientPayload) => {
-        const result = await convertEntityToClient(payload).match(updated => updated, error => { handleUiError(error, 'Impossible de convertir en client.', { source: 'App.convertEntityToClient' }); return null; });
-        if (!result) return;
-        void queryClient.invalidateQueries({ queryKey: clientsKey(sessionState.activeAgencyId, false) });
-        void queryClient.invalidateQueries({ queryKey: clientsKey(sessionState.activeAgencyId, true) });
-        void queryClient.invalidateQueries({ queryKey: entitySearchIndexKey(sessionState.activeAgencyId, false) });
-        void queryClient.invalidateQueries({ queryKey: entitySearchIndexKey(sessionState.activeAgencyId, true) });
-        setConvertTarget(null);
-        notifySuccess('Prospect converti en client');
-      }} />
+      <ConvertClientDialog
+        open={Boolean(convertTarget)}
+        onOpenChange={(open) => {
+          if (!open) setConvertTarget(null);
+        }}
+        entity={convertTarget}
+        onConvert={async (payload: ConvertClientPayload) => {
+          const result = await convertEntityToClient(payload).match(
+            (updated) => updated,
+            (error) => {
+              handleUiError(error, 'Impossible de convertir en client.', {
+                source: 'App.convertEntityToClient'
+              });
+              return null;
+            }
+          );
+          if (!result) return;
+          void invalidateClientsQueries(queryClient, sessionState.activeAgencyId);
+          void invalidateEntitySearchIndexQueries(queryClient, sessionState.activeAgencyId);
+          setConvertTarget(null);
+          notifySuccess('Prospect converti en client');
+        }}
+      />
     </div>
   );
 };

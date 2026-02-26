@@ -1,18 +1,23 @@
+import {
+  adminUsersResetPasswordResponseSchema,
+  type AdminUsersResetPasswordResponse
+} from '../../../../shared/schemas/api-responses';
 import { safeRpc } from '@/services/api/safeRpc';
 import { createAppError } from '@/services/errors/AppError';
-import { isRecord } from '@/utils/recordNarrowing';
 
-export type ResetPasswordResponse = {
-  ok: true;
-  user_id: string;
-  temporary_password: string;
-};
+export type ResetPasswordResponse = AdminUsersResetPasswordResponse;
 
 const parseResetPasswordResponse = (payload: unknown): ResetPasswordResponse => {
-  if (!isRecord(payload)) {
-    throw createAppError({ code: 'EDGE_INVALID_RESPONSE', message: 'Reponse serveur invalide.', source: 'edge' });
+  const parsed = adminUsersResetPasswordResponseSchema.safeParse(payload);
+  if (!parsed.success) {
+    throw createAppError({
+      code: 'EDGE_INVALID_RESPONSE',
+      message: 'Reponse serveur invalide.',
+      source: 'edge',
+      details: parsed.error.message
+    });
   }
-  return payload as ResetPasswordResponse;
+  return parsed.data;
 };
 
 export const adminUsersResetPassword = (userId: string, password?: string) =>

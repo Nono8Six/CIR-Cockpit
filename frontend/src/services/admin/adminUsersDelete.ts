@@ -1,21 +1,23 @@
+import {
+  adminUsersDeleteResponseSchema,
+  type AdminUsersDeleteResponse
+} from '../../../../shared/schemas/api-responses';
 import { safeRpc } from '@/services/api/safeRpc';
 import { createAppError } from '@/services/errors/AppError';
-import { isRecord } from '@/utils/recordNarrowing';
 
-export type DeleteUserResponse = {
-  ok: true;
-  user_id: string;
-  deleted: boolean;
-  anonymized_interactions?: number;
-  anonymized_agency_ids?: string[];
-  anonymized_orphan_interactions?: number;
-};
+export type DeleteUserResponse = AdminUsersDeleteResponse;
 
 const parseDeleteUserResponse = (payload: unknown): DeleteUserResponse => {
-  if (!isRecord(payload)) {
-    throw createAppError({ code: 'EDGE_INVALID_RESPONSE', message: 'Reponse serveur invalide.', source: 'edge' });
+  const parsed = adminUsersDeleteResponseSchema.safeParse(payload);
+  if (!parsed.success) {
+    throw createAppError({
+      code: 'EDGE_INVALID_RESPONSE',
+      message: 'Reponse serveur invalide.',
+      source: 'edge',
+      details: parsed.error.message
+    });
   }
-  return payload as DeleteUserResponse;
+  return parsed.data;
 };
 
 export const adminUsersDelete = (userId: string) =>

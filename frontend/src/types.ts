@@ -1,11 +1,13 @@
 import { Enums, Json, Tables, TablesInsert, TablesUpdate } from './types/supabase';
 
-export enum Channel {
-  PHONE = 'Téléphone',
-  EMAIL = 'Email',
-  COUNTER = 'Comptoir',
-  VISIT = 'Visite'
-}
+export const Channel = {
+  PHONE: 'Téléphone',
+  EMAIL: 'Email',
+  COUNTER: 'Comptoir',
+  VISIT: 'Visite'
+} as const;
+
+export type Channel = (typeof Channel)[keyof typeof Channel];
 
 export type StatusCategory = 'todo' | 'in_progress' | 'done';
 export type AppTab = 'cockpit' | 'dashboard' | 'settings' | 'clients' | 'admin';

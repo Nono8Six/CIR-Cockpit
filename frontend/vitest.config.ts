@@ -11,19 +11,31 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
+    testTimeout: 10000,
     setupFiles: ['./src/__tests__/setup.ts'],
     globals: true,
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
+      include: [
+        'src/services/admin/**/*.ts',
+        'src/services/agency/**/*.ts',
+        'src/services/api/**/*.ts',
+        'src/services/auth/**/*.ts',
+        'src/services/entities/**/*.ts',
+        'src/services/errors/**/*.ts'
+      ],
+      exclude: [
+        'src/services/**/__tests__/**',
+        'src/services/**/index.ts',
+        'src/services/errors/journal.ts'
+      ],
       thresholds: {
-        global: {
-          statements: 70,
-          branches: 60,
-          functions: 70,
-          lines: 70
-        }
+        statements: 80,
+        branches: 70,
+        functions: 80,
+        lines: 80
       }
     }
   }

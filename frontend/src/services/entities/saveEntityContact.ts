@@ -1,9 +1,9 @@
 import { ResultAsync } from 'neverthrow';
 
+import { dataEntityContactsResponseSchema } from '../../../../shared/schemas/api-responses';
 import { EntityContact } from '@/types';
 import { createAppError, type AppError } from '@/services/errors/AppError';
 import { safeRpc } from '@/services/api/safeRpc';
-import { isRecord } from '@/utils/recordNarrowing';
 
 export type EntityContactPayload = {
   id?: string;
@@ -17,10 +17,16 @@ export type EntityContactPayload = {
 };
 
 const parseContactResponse = (payload: unknown): EntityContact => {
-  if (!isRecord(payload) || !isRecord(payload.contact)) {
-    throw createAppError({ code: 'REQUEST_FAILED', message: 'Reponse serveur invalide.', source: 'edge' });
+  const parsed = dataEntityContactsResponseSchema.safeParse(payload);
+  if (!parsed.success || !('contact' in parsed.data)) {
+    throw createAppError({
+      code: 'REQUEST_FAILED',
+      message: 'Reponse serveur invalide.',
+      source: 'edge',
+      details: parsed.success ? undefined : parsed.error.message
+    });
   }
-  return payload.contact as EntityContact;
+  return parsed.data.contact;
 };
 
 export const saveEntityContact = (payload: EntityContactPayload): ResultAsync<EntityContact, AppError> =>

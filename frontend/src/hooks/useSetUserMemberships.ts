@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { adminUsersSetMemberships, MembershipMode } from '@/services/admin/adminUsersSetMemberships';
-import { adminUsersKey } from '@/services/query/queryKeys';
+import { invalidateAdminUsersQuery } from '@/services/query/queryInvalidation';
 import { handleUiError } from '@/services/errors/handleUiError';
 import { mapAdminDomainError } from '@/services/errors/mapAdminDomainError';
 
@@ -17,7 +17,7 @@ export const useSetUserMemberships = () => {
         }
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminUsersKey() });
+      void invalidateAdminUsersQuery(queryClient);
     },
     onError: (err) => {
       const appError = mapAdminDomainError(err, {

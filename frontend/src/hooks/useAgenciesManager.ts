@@ -39,22 +39,14 @@ export const useAgenciesManager = () => {
   const deleteMutation = useHardDeleteAgency();
 
   const handleCreate = useCallback(async (name: string) => {
-    try {
-      await createMutation.mutateAsync(name);
-      notifySuccess('Agence creee.');
-    } catch {
-      return;
-    }
+    await createMutation.mutateAsync(name);
+    notifySuccess('Agence creee.');
   }, [createMutation]);
 
   const handleRename = useCallback(async (name: string) => {
     if (!selectedAgency) return;
-    try {
-      await renameMutation.mutateAsync({ agencyId: selectedAgency.id, name });
-      notifySuccess('Agence renommee.');
-    } catch {
-      return;
-    }
+    await renameMutation.mutateAsync({ agencyId: selectedAgency.id, name });
+    notifySuccess('Agence renommee.');
   }, [renameMutation, selectedAgency]);
 
   const openRenameDialog = useCallback((agency: Agency) => {

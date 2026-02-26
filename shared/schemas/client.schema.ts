@@ -22,7 +22,7 @@ export const clientFormSchema = z.object({
   city: z.string().trim().min(1, 'Ville requise'),
   siret: z.string().trim().optional().nullable(),
   notes: z.string().trim().optional().nullable(),
-  agency_id: uuidSchema.optional().nullable()
-});
+  agency_id: uuidSchema
+}).strict();
 
 export type ClientFormValues = z.infer<typeof clientFormSchema>;

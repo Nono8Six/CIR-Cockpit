@@ -1,20 +1,20 @@
 {
   "version": "5",
   "specifiers": {
-    "jsr:@hono/hono@*": "4.11.9",
-    "jsr:@hono/hono@4.11.9": "4.11.9",
     "jsr:@supabase/functions-js@*": "2.92.0",
     "jsr:@supabase/functions-js@2.92.0": "2.92.0",
+    "npm:@hono/trpc-server@0.4.0": "0.4.0_@trpc+server@11.10.0__typescript@5.9.3_hono@4.11.9",
     "npm:@supabase/supabase-js@2.95.3": "2.95.3",
+    "npm:@trpc/server@11.10.0": "11.10.0_typescript@5.9.3",
     "npm:@types/node@*": "24.2.0",
+    "npm:drizzle-orm@0.45.1": "0.45.1_postgres@3.4.8",
+    "npm:hono@4.11.9": "4.11.9",
     "npm:jose@5.9.6": "5.9.6",
-    "npm:openai@^4.52.5": "4.104.0",
+    "npm:openai@^4.52.5": "4.104.0_zod@4.3.6",
+    "npm:postgres@3.4.8": "3.4.8",
     "npm:zod@4.3.6": "4.3.6"
   },
   "jsr": {
-    "@hono/hono@4.11.9": {
-      "integrity": "c82c6b846abc3c1879d921d8365287d77cdef8073019f509ff80bf53033bdcba"
-    },
     "@supabase/functions-js@2.92.0": {
       "integrity": "8b72ff85c14f96114500632e94156870f8a58b4173116e5102533cb5b1b13eae",
       "dependencies": [
@@ -23,6 +23,13 @@
     }
   },
   "npm": {
+    "@hono/trpc-server@0.4.0_@trpc+server@11.10.0__typescript@5.9.3_hono@4.11.9": {
+      "integrity": "sha512-LGlJfCmNIGMwcknZEIYdujVMs9OkNVazhpOhaz3kTWOXvNL660VOHpvvktosCiJrajyBY1RtIJKQ+IKaQvNuSg==",
+      "dependencies": [
+        "@trpc/server",
+        "hono"
+      ]
+    },
     "@supabase/auth-js@2.95.3": {
       "integrity": "sha512-vD2YoS8E2iKIX0F7EwXTmqhUpaNsmbU6X2R0/NdFcs02oEfnHyNP/3M716f3wVJ2E5XHGiTFXki6lRckhJ0Thg==",
       "dependencies": [
@@ -65,6 +72,12 @@
         "@supabase/postgrest-js",
         "@supabase/realtime-js",
         "@supabase/storage-js"
+      ]
+    },
+    "@trpc/server@11.10.0_typescript@5.9.3": {
+      "integrity": "sha512-zZjTrR6He61e5TiT7e/bQqab/jRcXBZM8Fg78Yoo8uh5pz60dzzbYuONNUCOkafv5ppXVMms4NHYfNZgzw50vg==",
+      "dependencies": [
+        "typescript"
       ]
     },
     "@types/node-fetch@2.6.13": {
@@ -125,6 +138,15 @@
     },
     "delayed-stream@1.0.0": {
       "integrity": "sha512-ZySD7Nf91aLB0RxL4KGrKHBXl7Eds1DAmEdcoVawXnLD7SDhpNgtuII2aAkg7a7QS41jxPSZ17p4VdGnMHk3MQ=="
+    },
+    "drizzle-orm@0.45.1_postgres@3.4.8": {
+      "integrity": "sha512-Te0FOdKIistGNPMq2jscdqngBRfBpC8uMFVwqjf6gtTVJHIQ/dosgV/CLBU2N4ZJBsXL5savCba9b0YJskKdcA==",
+      "dependencies": [
+        "postgres"
+      ],
+      "optionalPeers": [
+        "postgres"
+      ]
     },
     "dunder-proto@1.0.1": {
       "integrity": "sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==",
@@ -221,6 +243,9 @@
         "function-bind"
       ]
     },
+    "hono@4.11.9": {
+      "integrity": "sha512-Eaw2YTGM6WOxA6CXbckaEvslr2Ne4NFsKrvc0v97JD5awbmeBLO5w9Ho9L9kmKonrwF9RJlW6BxT1PVv/agBHQ=="
+    },
     "humanize-ms@1.2.1": {
       "integrity": "sha512-Fl70vYtsAFb/C06PTS9dZBo7ihau+Tu/DNCk/OyHhea07S+aeMWpFFkUaXRa8fI+ScZbEI8dfSxwY7gxZ9SAVQ==",
       "dependencies": [
@@ -258,7 +283,7 @@
         "whatwg-url"
       ]
     },
-    "openai@4.104.0": {
+    "openai@4.104.0_zod@4.3.6": {
       "integrity": "sha512-p99EFNsA/yX6UhVO93f5kJsDRLAg+CTA2RBqdHK4RtK8u5IJw32Hyb2dTGKbnnFmnuoBv5r7Z2CURI9sGZpSuA==",
       "dependencies": [
         "@types/node@18.19.130",
@@ -267,15 +292,26 @@
         "agentkeepalive",
         "form-data-encoder",
         "formdata-node",
-        "node-fetch"
+        "node-fetch",
+        "zod"
+      ],
+      "optionalPeers": [
+        "zod"
       ],
       "bin": true
+    },
+    "postgres@3.4.8": {
+      "integrity": "sha512-d+JFcLM17njZaOLkv6SCev7uoLaBtfK86vMUXhW1Z4glPWh4jozno9APvW/XKFJ3CCxVoC7OL38BqRydtu5nGg=="
     },
     "tr46@0.0.3": {
       "integrity": "sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw=="
     },
     "tslib@2.8.1": {
       "integrity": "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="
+    },
+    "typescript@5.9.3": {
+      "integrity": "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==",
+      "bin": true
     },
     "undici-types@5.26.5": {
       "integrity": "sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA=="
@@ -354,10 +390,14 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@hono/hono@4.11.9",
       "jsr:@supabase/functions-js@2.92.0",
+      "npm:@hono/trpc-server@0.4.0",
       "npm:@supabase/supabase-js@2.95.3",
+      "npm:@trpc/server@11.10.0",
+      "npm:drizzle-orm@0.45.1",
+      "npm:hono@4.11.9",
       "npm:jose@5.9.6",
+      "npm:postgres@3.4.8",
       "npm:zod@4.3.6"
     ]
   }

@@ -1,6 +1,31 @@
 {
+  "name": "cir-cockpit-workspace",
   "private": true,
-  "dependencies": {
-    "supabase": "^2.76.8"
+  "packageManager": "pnpm@10.30.2+sha512.36cdc707e7b7940a988c9c1ecf88d084f8514b5c3f085f53a2e244c2921d3b2545bc20dd4ebe1fc245feec463bb298aecea7a63ed1f7680b877dc6379d8d0cb4",
+  "scripts": {
+    "prepare": "husky",
+    "typecheck": "pnpm run frontend:typecheck && pnpm run backend:typecheck",
+    "lint": "pnpm run frontend:lint && pnpm run backend:lint",
+    "test": "pnpm run frontend:test && pnpm run backend:test",
+    "build": "pnpm run frontend:build",
+    "frontend:typecheck": "pnpm --dir frontend run typecheck",
+    "frontend:lint": "pnpm --dir frontend run lint -- --max-warnings=0",
+    "frontend:test": "pnpm --dir frontend run test:run",
+    "frontend:error-compliance": "pnpm --dir frontend run check:error-compliance",
+    "frontend:build": "pnpm --dir frontend run build",
+    "backend:lint": "deno lint backend/functions/api",
+    "backend:typecheck": "deno check --config backend/deno.json backend/functions/api/index.ts",
+    "backend:test": "deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api",
+    "backend:test:integration": "deno test --env-file=backend/.env --allow-env --allow-net --no-check --config backend/deno.json backend/functions/api/integration/api_integration_test.ts",
+    "qa": "pwsh -NoLogo -File scripts/qa-gate.ps1"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2"
+  },
+  "lint-staged": {
+    "frontend/src/**/*.{ts,tsx}": [
+      "pnpm --dir frontend exec eslint --max-warnings=0"
+    ]
   }
 }

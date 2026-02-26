@@ -2,6 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 
 const email = process.env.E2E_USER_EMAIL;
 const password = process.env.E2E_USER_PASSWORD;
+const role = process.env.E2E_USER_ROLE || 'tcs';
 const isConfigured = Boolean(email && password);
 const KEY_VIEWPORTS = [
   { width: 390, height: 844 },
@@ -21,6 +22,7 @@ const login = async (page: Page) => {
   await page.getByLabel('Email').fill(email!);
   await page.getByLabel('Mot de passe').fill(password!);
   await page.getByRole('button', { name: /se connecter/i }).click();
+  await expect(page.getByRole('button', { name: /recherche rapide/i })).toBeVisible();
 };
 
 test.skip(!isConfigured, 'E2E env missing: E2E_USER_EMAIL / E2E_USER_PASSWORD');
@@ -34,6 +36,37 @@ test('switch tabs between Cockpit and Dashboard', async ({ page }) => {
   await expect(cockpitTab).toBeVisible();
   await dashboardTab.click();
   await expect(dashboardTab).toHaveAttribute('data-state', 'active');
+  await expect(page).toHaveURL(/\/dashboard$/);
+});
+
+test('deep links, refresh and browser history remain consistent', async ({ page }) => {
+  await login(page);
+
+  await page.getByRole('tab', { name: /clients/i }).click();
+  await expect(page).toHaveURL(/\/clients$/);
+
+  await page.getByRole('tab', { name: /pilotage/i }).click();
+  await expect(page).toHaveURL(/\/dashboard$/);
+
+  await page.goBack();
+  await expect(page).toHaveURL(/\/clients$/);
+
+  await page.goForward();
+  await expect(page).toHaveURL(/\/dashboard$/);
+
+  await page.goto('/clients');
+  await expect(page).toHaveURL(/\/clients$/);
+
+  await page.reload();
+  await expect(page).toHaveURL(/\/clients$/);
+});
+
+test('unauthorized admin deep link redirects to cockpit', async ({ page }) => {
+  test.skip(role !== 'tcs', 'scenario cible uniquement les profils tcs');
+
+  await login(page);
+  await page.goto('/admin');
+  await expect(page).toHaveURL(/\/cockpit$/);
 });
 
 test('header layout is collision-free on key breakpoints', async ({ page }) => {

@@ -2,8 +2,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { reassignEntity, type ReassignEntityPayload } from '@/services/entities/reassignEntity';
 import { handleUiError } from '@/services/errors/handleUiError';
+import { invalidateEntityDirectoryQueries } from '@/services/query/queryInvalidation';
 
-export const useReassignEntity = () => {
+export const useReassignEntity = (currentAgencyId: string | null, currentOrphansOnly = false) => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -14,9 +15,16 @@ export const useReassignEntity = () => {
           throw error;
         }
       ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['clients'] });
-      queryClient.invalidateQueries({ queryKey: ['prospects'] });
+    onSuccess: (_, payload) => {
+      void invalidateEntityDirectoryQueries(queryClient, {
+        agencyId: payload.target_agency_id
+      });
+
+      if (currentAgencyId === payload.target_agency_id && !currentOrphansOnly) return;
+      void invalidateEntityDirectoryQueries(queryClient, {
+        agencyId: currentAgencyId,
+        orphansOnly: currentOrphansOnly
+      });
     },
     onError: (error) => {
       handleUiError(error, "Impossible de reassigner l'entite.", {
@@ -25,4 +33,3 @@ export const useReassignEntity = () => {
     }
   });
 };
-

@@ -892,7 +892,7 @@ Selon les bonnes pratiques Hono (`app.route()`), la trajectoire recommandee est 
 ### 8.7 Completion: findings live Supabase (advisors)
 
 Security advisor:
-1. `auth_leaked_password_protection` = WARN (protection mots de passe compromis desactivee).
+1. `auth_leaked_password_protection` = WARN (constat conserve, accepte hors scope produit intranet B2B depuis le 2026-02-22).
 2. Remediation officielle:  
    https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection
 
@@ -963,10 +963,10 @@ Performance advisor:
 
 ### 10.3 Validation commandes executees
 
-1. `cd frontend && npm run typecheck` -> OK
-2. `cd frontend && npm run lint -- --max-warnings=0` -> OK
-3. `cd frontend && npm run test -- --run` -> OK (101/101)
-4. `cd frontend && npm run check:error-compliance` -> OK
+1. `pnpm --dir frontend run typecheck` -> OK
+2. `pnpm --dir frontend run lint -- --max-warnings=0` -> OK
+3. `pnpm --dir frontend run test -- --run` -> OK (101/101)
+4. `pnpm --dir frontend run check:error-compliance` -> OK
 5. `deno test --allow-env --no-check --config backend/deno.json backend/functions/api` -> OK (40/40)
 
 ### 10.4 Conclusion operationnelle
@@ -1009,11 +1009,11 @@ Performance advisor:
 
 #### 10.5.4 Validations qualite executees
 
-1. `cd frontend && npm run typecheck` -> OK
-2. `cd frontend && npm run lint -- --max-warnings=0` -> OK
-3. `cd frontend && npm run test -- --run` -> OK (101/101)
-4. `cd frontend && npm run test:e2e` -> OK (14 passed, 2 skipped)
-5. `cd frontend && npm run check:error-compliance` -> OK
+1. `pnpm --dir frontend run typecheck` -> OK
+2. `pnpm --dir frontend run lint -- --max-warnings=0` -> OK
+3. `pnpm --dir frontend run test -- --run` -> OK (101/101)
+4. `pnpm --dir frontend run test:e2e` -> OK (14 passed, 2 skipped)
+5. `pnpm --dir frontend run check:error-compliance` -> OK
 6. `deno test --allow-env --no-check --config backend/deno.json backend/functions/api` -> OK (40/40)
 
 #### 10.5.5 Verdict consolide
@@ -1030,7 +1030,7 @@ Performance advisor:
 |---|---|---|
 | Deploiement `/functions/v1/api/data/*` | OK | `mcp__supabase__list_edge_functions` -> `api` version `13`, hash `466380feaf6c60b2afde095c62ca8988eed264160d891cb5d6cb3a54ddfac654`, entrypoint `source/supabase/functions/api/index.ts`; `curl POST /api/data/{entities,entity-contacts,interactions}` -> `401 AUTH_REQUIRED` (plus de `404`) |
 | RPC `hard_delete_agency(uuid)` | OK | `mcp__supabase__list_migrations` -> `20260211150816 hard_delete_agency_rpc`; `select to_regprocedure('public.hard_delete_agency(uuid)')` -> `hard_delete_agency(uuid)` |
-| Conformite erreurs frontend | OK | `cd frontend && npm run check:error-compliance` -> `Error compliance check passed.` |
+| Conformite erreurs frontend | OK | `pnpm --dir frontend run check:error-compliance` -> `Error compliance check passed.` |
 | Decommission legacy (`admin-users`, `admin-agencies`, `create-user-and-membership`) | OK | `mcp__supabase__list_edge_functions` -> seul slug `api` actif; legacy absentes |
 
 #### 10.6.2 Runtime HTTP/CORS (prod)
@@ -1051,11 +1051,11 @@ Performance advisor:
 
 #### 10.6.3 Validations techniques executees (re-run 2026-02-12)
 
-1. `cd frontend && npm run typecheck` -> OK
-2. `cd frontend && npm run lint -- --max-warnings=0` -> OK
-3. `cd frontend && npm run test -- --run` -> OK (101/101)
-4. `cd frontend && npm run test:e2e` -> OK (14 passed, 2 skipped)
-5. `cd frontend && npm run check:error-compliance` -> OK
+1. `pnpm --dir frontend run typecheck` -> OK
+2. `pnpm --dir frontend run lint -- --max-warnings=0` -> OK
+3. `pnpm --dir frontend run test -- --run` -> OK (101/101)
+4. `pnpm --dir frontend run test:e2e` -> OK (14 passed, 2 skipped)
+5. `pnpm --dir frontend run check:error-compliance` -> OK
 6. `rg -n "console\\.error\\(|toast\\.error\\(|throw new Error\\(" frontend/src` -> 5 matches attendus (tests + `notify.ts` autorise)
 7. `rg -n -s "<select(\\s|>)" frontend/src` -> `NO_NATIVE_SELECT_MATCH`
 8. `deno test --allow-env --no-check --config backend/deno.json backend/functions/api` -> OK (40/40)
@@ -1085,11 +1085,11 @@ Performance advisor:
 
 #### 10.7.2 Validations executees
 
-1. `cd frontend && npm run typecheck` -> OK
-2. `cd frontend && npm run lint -- --max-warnings=0` -> OK
-3. `cd frontend && npm run test -- --run` -> OK (101/101)
-4. `cd frontend && npm run test:e2e` -> OK (14 passed, 2 skipped)
-5. `cd frontend && npm run check:error-compliance` -> OK
+1. `pnpm --dir frontend run typecheck` -> OK
+2. `pnpm --dir frontend run lint -- --max-warnings=0` -> OK
+3. `pnpm --dir frontend run test -- --run` -> OK (101/101)
+4. `pnpm --dir frontend run test:e2e` -> OK (14 passed, 2 skipped)
+5. `pnpm --dir frontend run check:error-compliance` -> OK
 6. `deno test --allow-env --no-check --config backend/deno.json backend/functions/api` -> OK (43 passed, 7 ignored)
 
 ### 10.8 Revalidation P0 fiabilite/lint (2026-02-15)
@@ -1114,15 +1114,15 @@ Performance advisor:
    - `deno check --config backend/deno.json backend/functions/api/index.ts` -> **OK**
    - `deno test --allow-env --no-check --config backend/deno.json backend/functions/api` -> **OK** (`43 passed, 0 failed, 7 ignored`)
 2. Frontend:
-   - `cd frontend && npm run typecheck` -> **OK**
-   - `cd frontend && npm run lint -- --max-warnings=0` -> **OK**
-   - `cd frontend && npm run test:run` -> **OK** (`106/106`)
-   - `cd frontend && npm run test:e2e` -> **OK** (`14 passed, 2 skipped`)
-   - `cd frontend && npm run check:error-compliance` -> **OK**
-   - `cd frontend && npm run build` -> **OK**
+   - `pnpm --dir frontend run typecheck` -> **OK**
+   - `pnpm --dir frontend run lint -- --max-warnings=0` -> **OK**
+   - `pnpm --dir frontend run test:run` -> **OK** (`106/106`)
+   - `pnpm --dir frontend run test:e2e` -> **OK** (`14 passed, 2 skipped`)
+   - `pnpm --dir frontend run check:error-compliance` -> **OK**
+   - `pnpm --dir frontend run build` -> **OK**
 3. Securite dependances:
-   - `cd frontend && npm audit --audit-level=high --omit=dev` -> **0 vuln**
-   - `npm audit --audit-level=high` (racine) -> **0 vuln**
+   - `cd frontend && pnpm audit --audit-level=high --omit=dev` -> **0 vuln**
+   - `pnpm audit --audit-level=high` (racine) -> **0 vuln**
 
 #### 10.8.3 Runtime Supabase (controle de coherence)
 
@@ -1231,12 +1231,12 @@ La suite `backend/functions/api/integration/api_integration_test.ts` couvre deso
    - `deno check --config backend/deno.json backend/functions/api/index.ts` -> OK.
    - `deno test --allow-env --no-check --config backend/deno.json backend/functions/api` -> OK (49 pass, 0 fail, 9 ignored).
 2. Frontend:
-   - `npm run typecheck` -> OK.
-   - `npm run lint -- --max-warnings=0` -> OK.
-   - `npm run test:run` -> OK (107/107).
-   - `npm run check:error-compliance` -> OK.
-   - `npm run build` -> OK.
-   - `npm run test:e2e` -> OK (16/16).
+   - `pnpm run typecheck` -> OK.
+   - `pnpm run lint -- --max-warnings=0` -> OK.
+   - `pnpm run test:run` -> OK (107/107).
+   - `pnpm run check:error-compliance` -> OK.
+   - `pnpm run build` -> OK.
+   - `pnpm run test:e2e` -> OK (16/16).
 3. Runtime Supabase:
    - deploy `api` effectue via CLI (`version 20`, `verify_jwt=false`).
    - probes:
@@ -1291,12 +1291,12 @@ La suite `backend/functions/api/integration/api_integration_test.ts` couvre deso
 #### 10.12.4 QA runbook executee (sans CI)
 
 1. Frontend:
-   - `npm run typecheck` -> OK
-   - `npm run lint -- --max-warnings=0` -> OK
-   - `npm run test:run` -> OK (107/107)
-   - `npm run check:error-compliance` -> OK
-   - `npm run build` -> OK
-   - `npm run test:e2e` -> OK (16/16)
+   - `pnpm run typecheck` -> OK
+   - `pnpm run lint -- --max-warnings=0` -> OK
+   - `pnpm run test:run` -> OK (107/107)
+   - `pnpm run check:error-compliance` -> OK
+   - `pnpm run build` -> OK
+   - `pnpm run test:e2e` -> OK (16/16)
 2. Backend:
    - `deno lint backend/functions/api` -> OK
    - `deno check --config backend/deno.json backend/functions/api/index.ts` -> OK
@@ -1312,5 +1312,5 @@ La suite `backend/functions/api/integration/api_integration_test.ts` couvre deso
 
 #### 10.12.5 Reste P3 recommande
 
-1. Activer la protection Supabase "Leaked Password Protection" (advisor security encore `WARN`).
+1. Conserver la preuve `WARN` advisor pour `auth_leaked_password_protection` comme risque accepte hors scope (intranet B2B, decision 2026-02-22).
 2. Revue indexes "unused" sur fenetre d'observation representative avant suppression (advisor performance en `INFO`).

@@ -38,7 +38,7 @@ export const useClientFormDialog = ({
       city: '',
       siret: '',
       notes: '',
-      agency_id: activeAgencyId ?? null
+      agency_id: activeAgencyId ?? ''
     }
   });
 
@@ -56,7 +56,7 @@ export const useClientFormDialog = ({
       city: client?.city ?? '',
       siret: client?.siret ?? '',
       notes: client?.notes ?? '',
-      agency_id: client?.agency_id ?? activeAgencyId ?? null
+      agency_id: client?.agency_id ?? activeAgencyId ?? ''
     });
   }, [activeAgencyId, client, open, reset]);
 
@@ -82,13 +82,8 @@ export const useClientFormDialog = ({
 
   const onSubmit = async (values: ClientFormValues) => {
     const resolvedAgencyId = userRole === 'tcs'
-      ? activeAgencyId
-      : (values.agency_id ?? activeAgencyId ?? null);
-
-    if (!resolvedAgencyId) {
-      setError('agency_id', { type: 'manual', message: 'Agence requise.' });
-      return;
-    }
+      ? (activeAgencyId ?? values.agency_id)
+      : values.agency_id;
 
     const payload: ClientPayload = {
       id: client?.id,
@@ -104,8 +99,12 @@ export const useClientFormDialog = ({
       agency_id: resolvedAgencyId
     };
 
-    await onSave(payload);
-    onOpenChange(false);
+    try {
+      await onSave(payload);
+      onOpenChange(false);
+    } catch {
+      setError('root', { type: 'server', message: "Impossible d'enregistrer le client." });
+    }
   };
 
   const agencyLabel = agencies.find((agency) => agency.id === activeAgencyId)?.name ?? 'Aucune agence';

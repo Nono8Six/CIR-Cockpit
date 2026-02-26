@@ -1,9 +1,12 @@
 import { ResultAsync } from 'neverthrow';
 
+import {
+  dataEntitiesReassignResponseSchema,
+  type DataEntitiesReassignResponse
+} from '../../../../shared/schemas/api-responses';
 import { Entity } from '@/types';
 import { createAppError, type AppError } from '@/services/errors/AppError';
 import { safeRpc } from '@/services/api/safeRpc';
-import { isRecord } from '@/utils/recordNarrowing';
 
 export type ReassignEntityPayload = {
   entity_id: string;
@@ -16,19 +19,17 @@ export type ReassignEntityResponse = {
 };
 
 const parseReassignEntityResponse = (payload: unknown): ReassignEntityResponse => {
-  if (!isRecord(payload) || !isRecord(payload.entity)) {
-    throw createAppError({ code: 'REQUEST_FAILED', message: 'Reponse serveur invalide.', source: 'edge' });
+  const parsed = dataEntitiesReassignResponseSchema.safeParse(payload);
+  if (!parsed.success) {
+    throw createAppError({
+      code: 'REQUEST_FAILED',
+      message: 'Reponse serveur invalide.',
+      source: 'edge',
+      details: parsed.error.message
+    });
   }
-
-  const propagatedCount = Reflect.get(payload, 'propagated_interactions_count');
-  if (typeof propagatedCount !== 'number' || !Number.isFinite(propagatedCount)) {
-    throw createAppError({ code: 'REQUEST_FAILED', message: 'Reponse serveur invalide.', source: 'edge' });
-  }
-
-  return {
-    entity: payload.entity as Entity,
-    propagated_interactions_count: propagatedCount
-  };
+  const response: DataEntitiesReassignResponse = parsed.data;
+  return { entity: response.entity, propagated_interactions_count: response.propagated_interactions_count };
 };
 
 export const reassignEntity = (

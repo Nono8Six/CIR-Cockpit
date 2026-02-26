@@ -91,7 +91,7 @@ Deno.test('OPTIONS request returns CORS headers for allowed origin', async () =>
   try {
     Deno.env.set('CORS_ALLOWED_ORIGIN', 'https://app.cir.test');
     const appModule = await import('../app.ts');
-    const response = await appModule.default.request('/data/entities', {
+    const response = await appModule.default.request('/trpc/data.entities', {
       method: 'OPTIONS',
       headers: {
         origin: 'https://app.cir.test',
@@ -116,7 +116,7 @@ Deno.test('POST request rejects oversized payload', async () => {
   try {
     Deno.env.set('CORS_ALLOWED_ORIGIN', 'https://app.cir.test');
     const appModule = await import('../app.ts');
-    const response = await appModule.default.request('/data/entities', {
+    const response = await appModule.default.request('/trpc/data.entities', {
       method: 'POST',
       headers: {
         origin: 'https://app.cir.test',
@@ -129,7 +129,35 @@ Deno.test('POST request rejects oversized payload', async () => {
 
     const payload = (await response.json()) as Record<string, unknown>;
     assertEquals(response.status, 413);
-    assertEquals(payload.code, 'INVALID_PAYLOAD');
+    assertEquals(payload.code, 'PAYLOAD_TOO_LARGE');
+    assertEquals(response.headers.get('access-control-allow-origin'), 'https://app.cir.test');
+  } finally {
+    if (previousOrigin === undefined) {
+      Deno.env.delete('CORS_ALLOWED_ORIGIN');
+    } else {
+      Deno.env.set('CORS_ALLOWED_ORIGIN', previousOrigin);
+    }
+  }
+});
+
+Deno.test('legacy REST routes return NOT_FOUND after consolidation', async () => {
+  const previousOrigin = Deno.env.get('CORS_ALLOWED_ORIGIN');
+  try {
+    Deno.env.set('CORS_ALLOWED_ORIGIN', 'https://app.cir.test');
+    const appModule = await import('../app.ts');
+    const response = await appModule.default.request('/data/entities', {
+      method: 'POST',
+      headers: {
+        origin: 'https://app.cir.test',
+        'content-type': 'application/json'
+      },
+      body: '{}'
+    });
+
+    const payload = (await response.json()) as Record<string, unknown>;
+    assertEquals(response.status, 404);
+    assertEquals(payload.code, 'NOT_FOUND');
+    assertEquals(response.headers.get('access-control-allow-origin'), 'https://app.cir.test');
   } finally {
     if (previousOrigin === undefined) {
       Deno.env.delete('CORS_ALLOWED_ORIGIN');

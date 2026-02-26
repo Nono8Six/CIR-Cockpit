@@ -17,7 +17,7 @@ export const prospectFormSchema = z.object({
   city: z.string().trim().min(1, 'Ville requise'),
   siret: optionalText,
   notes: optionalText,
-  agency_id: uuidSchema.optional().nullable()
-});
+  agency_id: uuidSchema
+}).strict();
 
 export type ProspectFormValues = z.infer<typeof prospectFormSchema>;

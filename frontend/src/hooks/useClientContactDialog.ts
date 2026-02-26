@@ -34,7 +34,7 @@ export const useClientContactDialog = ({
     }
   });
 
-  const { control, reset, setValue } = form;
+  const { control, reset, setValue, setError } = form;
 
   useEffect(() => {
     if (!open) return;
@@ -66,8 +66,12 @@ export const useClientContactDialog = ({
       notes: values.notes?.trim() || null
     };
 
-    await onSave(payload);
-    onOpenChange(false);
+    try {
+      await onSave(payload);
+      onOpenChange(false);
+    } catch {
+      setError('root', { type: 'server', message: "Impossible d'enregistrer le contact." });
+    }
   };
 
   return {

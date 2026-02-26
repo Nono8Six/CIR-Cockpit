@@ -1,21 +1,23 @@
+import {
+  adminAgenciesAgencyResponseSchema,
+  type AdminAgenciesAgencyResponse
+} from '../../../../shared/schemas/api-responses';
 import { safeRpc } from '@/services/api/safeRpc';
 import { createAppError } from '@/services/errors/AppError';
-import { isRecord } from '@/utils/recordNarrowing';
 
-export type AdminAgencyResponse = {
-  ok: true;
-  agency: {
-    id: string;
-    name: string;
-    archived_at: string | null;
-  };
-};
+export type AdminAgencyResponse = AdminAgenciesAgencyResponse;
 
 const parseAdminAgencyResponse = (payload: unknown): AdminAgencyResponse => {
-  if (!isRecord(payload)) {
-    throw createAppError({ code: 'EDGE_INVALID_RESPONSE', message: 'Reponse serveur invalide.', source: 'edge' });
+  const parsed = adminAgenciesAgencyResponseSchema.safeParse(payload);
+  if (!parsed.success) {
+    throw createAppError({
+      code: 'EDGE_INVALID_RESPONSE',
+      message: 'Reponse serveur invalide.',
+      source: 'edge',
+      details: parsed.error.message
+    });
   }
-  return payload as AdminAgencyResponse;
+  return parsed.data;
 };
 
 export const adminAgenciesRename = (agencyId: string, name: string) =>

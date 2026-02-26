@@ -1,14 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
-import type { FormEvent } from 'react';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 import type { UpdateUserIdentityPayload } from '@/services/admin/adminUsersUpdateIdentity';
 import type { AdminUserSummary } from '@/services/admin/getAdminUsers';
-import { normalizeError } from '@/services/errors/normalizeError';
+import { handleUiError } from '@/services/errors/handleUiError';
+import { userIdentityFormSchema, type UserIdentityFormValues } from '../../../shared/schemas/user.schema';
 import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Input } from './ui/input';
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type UserIdentityDialogProps = {
   open: boolean;
@@ -18,59 +18,56 @@ type UserIdentityDialogProps = {
 };
 
 const UserIdentityDialog = ({ open, onOpenChange, user, onSave }: UserIdentityDialogProps) => {
-  const [email, setEmail] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
+  const {
+    register,
+    reset,
+    handleSubmit,
+    formState: { errors, isSubmitting, isValid }
+  } = useForm<UserIdentityFormValues>({
+    resolver: zodResolver(userIdentityFormSchema),
+    defaultValues: {
+      email: '',
+      first_name: '',
+      last_name: ''
+    },
+    mode: 'onChange'
+  });
 
   useEffect(() => {
     if (!open || !user) return;
-    setEmail(user.email);
-    setFirstName(user.first_name ?? '');
-    setLastName(user.last_name ?? '');
-    setError(null);
-  }, [open, user]);
+    setServerError(null);
+    reset({
+      email: user.email,
+      first_name: user.first_name ?? '',
+      last_name: user.last_name ?? ''
+    });
+  }, [open, reset, user]);
 
-  const canSubmit = useMemo(
-    () => Boolean(email.trim() && firstName.trim() && lastName.trim()),
-    [email, firstName, lastName]
-  );
+  const emailField = register('email');
+  const lastNameField = register('last_name');
+  const firstNameField = register('first_name');
+  const fieldError = errors.email?.message ?? errors.last_name?.message ?? errors.first_name?.message;
 
-  const handleSubmit = async (event: FormEvent) => {
-    event.preventDefault();
+  const handleFormSubmit = handleSubmit(async (values) => {
     if (!user) return;
 
-    const normalizedEmail = email.trim().toLowerCase();
-    const normalizedFirstName = firstName.trim();
-    const normalizedLastName = lastName.trim();
-
-    if (!EMAIL_REGEX.test(normalizedEmail)) {
-      setError('Email invalide.');
-      return;
-    }
-    if (!normalizedFirstName || !normalizedLastName) {
-      setError('Nom et prenom requis.');
-      return;
-    }
-
-    setError(null);
-    setIsSubmitting(true);
+    setServerError(null);
     try {
       await onSave({
         user_id: user.id,
-        email: normalizedEmail,
-        first_name: normalizedFirstName,
-        last_name: normalizedLastName
+        email: values.email,
+        first_name: values.first_name,
+        last_name: values.last_name
       });
       onOpenChange(false);
     } catch (err) {
-      const appError = normalizeError(err, "Impossible de mettre a jour l'utilisateur.");
-      setError(appError.message);
-    } finally {
-      setIsSubmitting(false);
+      const appError = handleUiError(err, "Impossible de mettre a jour l'utilisateur.", {
+        source: 'UserIdentityDialog.submit'
+      });
+      setServerError(appError.message);
     }
-  };
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -81,7 +78,7 @@ const UserIdentityDialog = ({ open, onOpenChange, user, onSave }: UserIdentityDi
             Modifiez les informations de profil de cet utilisateur.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleFormSubmit} className="space-y-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="md:col-span-3">
               <label htmlFor="edit-user-email" className="text-xs font-medium text-slate-500">
@@ -90,8 +87,7 @@ const UserIdentityDialog = ({ open, onOpenChange, user, onSave }: UserIdentityDi
               <Input
                 id="edit-user-email"
                 type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
+                {...emailField}
                 placeholder="email@entreprise.fr"
               />
             </div>
@@ -101,8 +97,7 @@ const UserIdentityDialog = ({ open, onOpenChange, user, onSave }: UserIdentityDi
               </label>
               <Input
                 id="edit-user-last-name"
-                value={lastName}
-                onChange={(event) => setLastName(event.target.value)}
+                {...lastNameField}
                 placeholder="FERRON"
               />
             </div>
@@ -112,20 +107,20 @@ const UserIdentityDialog = ({ open, onOpenChange, user, onSave }: UserIdentityDi
               </label>
               <Input
                 id="edit-user-first-name"
-                value={firstName}
-                onChange={(event) => setFirstName(event.target.value)}
+                {...firstNameField}
                 placeholder="Arnaud"
               />
             </div>
           </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {fieldError ? <p className="text-sm text-red-600">{fieldError}</p> : null}
+          {serverError ? <p className="text-sm text-red-600">{serverError}</p> : null}
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
-            <Button type="submit" disabled={!canSubmit || isSubmitting}>
+            <Button type="submit" disabled={!isValid || isSubmitting}>
               Enregistrer
             </Button>
           </div>

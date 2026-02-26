@@ -1,17 +1,23 @@
+import {
+  adminAgenciesDeleteResponseSchema,
+  type AdminAgenciesDeleteResponse
+} from '../../../../shared/schemas/api-responses';
 import { safeRpc } from '@/services/api/safeRpc';
 import { createAppError } from '@/services/errors/AppError';
-import { isRecord } from '@/utils/recordNarrowing';
 
-export type AdminAgencyDeleteResponse = {
-  ok: true;
-  agency_id: string;
-};
+export type AdminAgencyDeleteResponse = AdminAgenciesDeleteResponse;
 
 const parseAdminAgencyDeleteResponse = (payload: unknown): AdminAgencyDeleteResponse => {
-  if (!isRecord(payload)) {
-    throw createAppError({ code: 'EDGE_INVALID_RESPONSE', message: 'Reponse serveur invalide.', source: 'edge' });
+  const parsed = adminAgenciesDeleteResponseSchema.safeParse(payload);
+  if (!parsed.success) {
+    throw createAppError({
+      code: 'EDGE_INVALID_RESPONSE',
+      message: 'Reponse serveur invalide.',
+      source: 'edge',
+      details: parsed.error.message
+    });
   }
-  return payload as AdminAgencyDeleteResponse;
+  return parsed.data;
 };
 
 export const adminAgenciesHardDelete = (agencyId: string) =>

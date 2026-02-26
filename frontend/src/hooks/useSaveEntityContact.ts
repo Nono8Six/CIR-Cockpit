@@ -1,7 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { saveEntityContact, EntityContactPayload } from '@/services/entities/saveEntityContact';
-import { clientContactsKey, entitySearchIndexKey } from '@/services/query/queryKeys';
+import {
+  invalidateClientContactsQuery,
+  invalidateEntitySearchIndexQueries
+} from '@/services/query/queryInvalidation';
 import { handleUiError } from '@/services/errors/handleUiError';
 
 export const useSaveEntityContact = (
@@ -20,9 +23,8 @@ export const useSaveEntityContact = (
         }
       ),
     onSuccess: () => {
-      if (!entityId) return;
-      queryClient.invalidateQueries({ queryKey: clientContactsKey(entityId, includeArchived) });
-      queryClient.invalidateQueries({ queryKey: entitySearchIndexKey(agencyId, includeArchived) });
+      void invalidateClientContactsQuery(queryClient, entityId, includeArchived);
+      void invalidateEntitySearchIndexQueries(queryClient, agencyId, includeArchived);
     },
     onError: (error) => {
       handleUiError(error, "Impossible d'enregistrer le contact.", {

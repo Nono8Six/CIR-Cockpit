@@ -1,3 +1,6 @@
+import { eq } from 'drizzle-orm';
+
+import { entity_contacts } from '../../../drizzle/schema.ts';
 import type { Database } from '../../../../shared/supabase.types.ts';
 import type { DataEntityContactsResponse } from '../../../../shared/schemas/api-responses.ts';
 import type { DataEntityContactsPayload } from '../../../../shared/schemas/data.schema.ts';
@@ -30,31 +33,59 @@ const saveContact = async (
   };
 
   if (contactId) {
-    const { data, error } = await db
-      .from('entity_contacts')
-      .update(normalized)
-      .eq('id', contactId)
-      .select('*')
-      .single();
-    if (error || !data) throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de mettre a jour le contact.');
-    return data;
+    try {
+      const rows = await db
+        .update(entity_contacts)
+        .set(normalized)
+        .where(eq(entity_contacts.id, contactId))
+        .returning();
+      const data = rows[0];
+      if (!data) {
+        throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de mettre a jour le contact.');
+      }
+      return data;
+    } catch (error) {
+      if (
+        typeof error === 'object'
+        && error !== null
+        && Reflect.get(error, 'code') === 'DB_WRITE_FAILED'
+      ) {
+        throw error;
+      }
+      throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de mettre a jour le contact.');
+    }
   }
 
-  const { data, error } = await db
-    .from('entity_contacts')
-    .insert({ entity_id: entityId, ...normalized })
-    .select('*')
-    .single();
-  if (error || !data) throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de creer le contact.');
-  return data;
+  try {
+    const rows = await db
+      .insert(entity_contacts)
+      .values({ entity_id: entityId, ...normalized })
+      .returning();
+    const data = rows[0];
+    if (!data) {
+      throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de creer le contact.');
+    }
+    return data;
+  } catch (error) {
+    if (
+      typeof error === 'object'
+      && error !== null
+      && Reflect.get(error, 'code') === 'DB_WRITE_FAILED'
+    ) {
+      throw error;
+    }
+    throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de creer le contact.');
+  }
 };
 
 const deleteContact = async (db: DbClient, contactId: string): Promise<void> => {
-  const { error } = await db
-    .from('entity_contacts')
-    .delete()
-    .eq('id', contactId);
-  if (error) throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de supprimer le contact.');
+  try {
+    await db
+      .delete(entity_contacts)
+      .where(eq(entity_contacts.id, contactId));
+  } catch {
+    throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de supprimer le contact.');
+  }
 };
 
 export const handleDataEntityContactsAction = async (

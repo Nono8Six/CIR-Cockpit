@@ -1,3 +1,6 @@
+import { and, eq, isNull, ne } from 'drizzle-orm';
+
+import { agencies, entities, interactions } from '../../../drizzle/schema.ts';
 import type { Database } from '../../../../shared/supabase.types.ts';
 import type { DataEntitiesResponse } from '../../../../shared/schemas/api-responses.ts';
 import type { DataEntitiesPayload } from '../../../../shared/schemas/data.schema.ts';
@@ -43,23 +46,45 @@ const saveEntity = async (
     : baseRow;
 
   if (entityId) {
-    const { data, error } = await db
-      .from('entities')
-      .update(row)
-      .eq('id', entityId)
-      .select('*')
-      .single();
-    if (error || !data) throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de mettre a jour l\'entite.');
-    return data;
+    try {
+      const rows = await db
+        .update(entities)
+        .set(row)
+        .where(eq(entities.id, entityId))
+        .returning();
+      const data = rows[0];
+      if (!data) throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de mettre a jour l\'entite.');
+      return data;
+    } catch (error) {
+      if (
+        typeof error === 'object'
+        && error !== null
+        && Reflect.get(error, 'code') === 'DB_WRITE_FAILED'
+      ) {
+        throw error;
+      }
+      throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de mettre a jour l\'entite.');
+    }
   }
 
-  const { data, error } = await db
-    .from('entities')
-    .insert(row)
-    .select('*')
-    .single();
-  if (error || !data) throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de creer l\'entite.');
-  return data;
+  try {
+    const rows = await db
+      .insert(entities)
+      .values(row)
+      .returning();
+    const data = rows[0];
+    if (!data) throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de creer l\'entite.');
+    return data;
+  } catch (error) {
+    if (
+      typeof error === 'object'
+      && error !== null
+      && Reflect.get(error, 'code') === 'DB_WRITE_FAILED'
+    ) {
+      throw error;
+    }
+    throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de creer l\'entite.');
+  }
 };
 
 const archiveEntity = async (
@@ -67,14 +92,25 @@ const archiveEntity = async (
   entityId: string,
   archived: boolean
 ): Promise<EntityRow> => {
-  const { data, error } = await db
-    .from('entities')
-    .update({ archived_at: archived ? new Date().toISOString() : null })
-    .eq('id', entityId)
-    .select('*')
-    .single();
-  if (error || !data) throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de mettre a jour l\'entite.');
-  return data;
+  try {
+    const rows = await db
+      .update(entities)
+      .set({ archived_at: archived ? new Date().toISOString() : null })
+      .where(eq(entities.id, entityId))
+      .returning();
+    const data = rows[0];
+    if (!data) throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de mettre a jour l\'entite.');
+    return data;
+  } catch (error) {
+    if (
+      typeof error === 'object'
+      && error !== null
+      && Reflect.get(error, 'code') === 'DB_WRITE_FAILED'
+    ) {
+      throw error;
+    }
+    throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de mettre a jour l\'entite.');
+  }
 };
 
 const convertToClient = async (
@@ -86,19 +122,32 @@ const convertToClient = async (
   const trimmedNumber = clientNumber.trim().replace(/\s+/g, '');
   if (!trimmedNumber) throw httpError(400, 'VALIDATION_ERROR', 'Numero client requis.');
 
-  const { data, error } = await db
-    .from('entities')
-    .update({
-      entity_type: 'Client',
-      client_number: trimmedNumber,
-      account_type: accountType
-    })
-    .eq('id', entityId)
-    .neq('entity_type', 'Client')
-    .select('*')
-    .single();
-  if (error || !data) throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de convertir en client.');
-  return data;
+  try {
+    const rows = await db
+      .update(entities)
+      .set({
+        entity_type: 'Client',
+        client_number: trimmedNumber,
+        account_type: accountType
+      })
+      .where(and(
+        eq(entities.id, entityId),
+        ne(entities.entity_type, 'Client')
+      ))
+      .returning();
+    const data = rows[0];
+    if (!data) throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de convertir en client.');
+    return data;
+  } catch (error) {
+    if (
+      typeof error === 'object'
+      && error !== null
+      && Reflect.get(error, 'code') === 'DB_WRITE_FAILED'
+    ) {
+      throw error;
+    }
+    throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de convertir en client.');
+  }
 };
 
 export const ensureReassignSuperAdmin = (authContext: AuthContext): void => {
@@ -108,13 +157,18 @@ export const ensureReassignSuperAdmin = (authContext: AuthContext): void => {
 };
 
 const ensureTargetAgencyIsActive = async (db: DbClient, targetAgencyId: string): Promise<void> => {
-  const { data, error } = await db
-    .from('agencies')
-    .select('id, archived_at')
-    .eq('id', targetAgencyId)
-    .maybeSingle<AgencyLookupRow>();
-
-  if (error) {
+  let data: AgencyLookupRow | undefined;
+  try {
+    const rows = await db
+      .select({
+        id: agencies.id,
+        archived_at: agencies.archived_at
+      })
+      .from(agencies)
+      .where(eq(agencies.id, targetAgencyId))
+      .limit(1);
+    data = rows[0];
+  } catch {
     throw httpError(500, 'DB_READ_FAILED', "Impossible de verifier l'agence cible.");
   }
   if (!data) {
@@ -126,13 +180,15 @@ const ensureTargetAgencyIsActive = async (db: DbClient, targetAgencyId: string):
 };
 
 const ensureEntityExists = async (db: DbClient, entityId: string): Promise<void> => {
-  const { data, error } = await db
-    .from('entities')
-    .select('id')
-    .eq('id', entityId)
-    .maybeSingle<{ id: string }>();
-
-  if (error) {
+  let data: { id: string } | undefined;
+  try {
+    const rows = await db
+      .select({ id: entities.id })
+      .from(entities)
+      .where(eq(entities.id, entityId))
+      .limit(1);
+    data = rows[0];
+  } catch {
     throw httpError(500, 'DB_READ_FAILED', "Impossible de verifier l'entite.");
   }
   if (!data) {
@@ -146,15 +202,18 @@ export const reassignEntity = async (
 ): Promise<{ entity: EntityRow; propagatedInteractionsCount: number }> => {
   await ensureTargetAgencyIsActive(db, payload.target_agency_id);
 
-  const { data: entity, error: entityError } = await db
-    .from('entities')
-    .update({ agency_id: payload.target_agency_id })
-    .eq('id', payload.entity_id)
-    .is('agency_id', null)
-    .select('*')
-    .maybeSingle<EntityRow>();
-
-  if (entityError) {
+  let entity: EntityRow | undefined;
+  try {
+    const rows = await db
+      .update(entities)
+      .set({ agency_id: payload.target_agency_id })
+      .where(and(
+        eq(entities.id, payload.entity_id),
+        isNull(entities.agency_id)
+      ))
+      .returning();
+    entity = rows[0];
+  } catch {
     throw httpError(500, 'DB_WRITE_FAILED', "Impossible de reassigner l'entite.");
   }
   if (!entity) {
@@ -162,14 +221,17 @@ export const reassignEntity = async (
     throw httpError(400, 'VALIDATION_ERROR', "Seules les entites orphelines peuvent etre reattribuees.");
   }
 
-  const { data: propagatedRows, error: propagationError } = await db
-    .from('interactions')
-    .update({ agency_id: payload.target_agency_id })
-    .eq('entity_id', payload.entity_id)
-    .is('agency_id', null)
-    .select('id');
-
-  if (propagationError) {
+  let propagatedRows: Array<{ id: string }> = [];
+  try {
+    propagatedRows = await db
+      .update(interactions)
+      .set({ agency_id: payload.target_agency_id })
+      .where(and(
+        eq(interactions.entity_id, payload.entity_id),
+        isNull(interactions.agency_id)
+      ))
+      .returning({ id: interactions.id });
+  } catch {
     throw httpError(500, 'DB_WRITE_FAILED', "Impossible de propager l'agence aux interactions.");
   }
 

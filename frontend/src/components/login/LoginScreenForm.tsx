@@ -11,6 +11,7 @@ type LoginScreenFormProps = {
   password: string;
   onPasswordChange: (value: string) => void;
   submitState: LoginSubmitState;
+  fieldError: string | null;
   error: string | null;
   isSubmitting: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
@@ -22,6 +23,7 @@ const LoginScreenForm = ({
   password,
   onPasswordChange,
   submitState,
+  fieldError,
   error,
   isSubmitting,
   onSubmit
@@ -90,6 +92,18 @@ const LoginScreenForm = ({
           <span className="inline-flex items-center gap-2 text-emerald-700">Connexion réussie. Redirection...</span>
         ) : null}
       </div>
+
+      {fieldError ? (
+        <div
+          className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700"
+          role="alert"
+        >
+          <span className="inline-flex items-center gap-2">
+            <CircleAlert aria-hidden className="h-3.5 w-3.5 shrink-0" />
+            {fieldError}
+          </span>
+        </div>
+      ) : null}
 
       {hasError && (
         <div

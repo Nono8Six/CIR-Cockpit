@@ -1,3 +1,6 @@
+import { eq } from 'drizzle-orm';
+
+import { profiles } from '../../../drizzle/schema.ts';
 import type { DataProfileResponse } from '../../../../shared/schemas/api-responses.ts';
 import type { DataProfilePayload } from '../../../../shared/schemas/data.schema.ts';
 import type { AuthContext, DbClient } from '../types.ts';
@@ -14,12 +17,12 @@ export const handleDataProfileAction = async (
 
   switch (data.action) {
     case 'password_changed': {
-      const { error } = await db
-        .from('profiles')
-        .update({ must_change_password: false })
-        .eq('id', authContext.userId);
-
-      if (error) {
+      try {
+        await db
+          .update(profiles)
+          .set({ must_change_password: false })
+          .where(eq(profiles.id, authContext.userId));
+      } catch {
         throw httpError(500, 'PROFILE_UPDATE_FAILED', 'Impossible de mettre a jour le profil.');
       }
 

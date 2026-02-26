@@ -23,6 +23,7 @@ const UserCreateDialog = ({ open, onOpenChange, agencies, onCreate }: UserCreate
     password,
     agencyIds,
     error,
+    fieldError,
     isSubmitting,
     canSubmit,
     setEmail,
@@ -32,7 +33,7 @@ const UserCreateDialog = ({ open, onOpenChange, agencies, onCreate }: UserCreate
     setPassword,
     handleAgencyIdsChange,
     handleSubmit
-  } = useUserCreateDialog({ onCreate, onOpenChange });
+  } = useUserCreateDialog({ open, onCreate, onOpenChange });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -64,7 +65,8 @@ const UserCreateDialog = ({ open, onOpenChange, agencies, onCreate }: UserCreate
             onAgencyIdsChange={handleAgencyIdsChange}
           />
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {fieldError ? <p className="text-sm text-red-600">{fieldError}</p> : null}
+          {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
           <UserCreateFooter
             canSubmit={canSubmit}

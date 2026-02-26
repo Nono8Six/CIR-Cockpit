@@ -1,6 +1,6 @@
 # QA Runbook Ultra Complet (Sans CI)
 
-Date de reference: 2026-02-15
+Date de reference: 2026-02-22
 Portee par defaut: tout le repo (`frontend/`, `backend/`, `shared/`, docs critiques)
 Mode: manuel strict, bloquant
 
@@ -28,9 +28,10 @@ Objectifs obligatoires:
 Par defaut: full repo.
 
 Skips autorises uniquement si justifies dans le rapport final:
-1. `npm run test:e2e` peut etre saute si aucun parcours UI n'est impacte.
+1. `RUN_E2E=1 pnpm run test:e2e` peut etre saute si aucun parcours UI n'est impacte.
 2. Les probes runtime Supabase peuvent etre sautees si aucun changement backend API/DB n'est livre.
 3. Les tests d'integration backend opt-in peuvent etre ignores si variables d'env absentes.
+4. Exception: avant validation des couches 9 et 12, `RUN_API_INTEGRATION=1` devient obligatoire.
 
 ## 3.1 Matrice d'impact (obligatoire)
 
@@ -57,14 +58,13 @@ Pour chaque cycle "demande -> modification -> livraison":
 
 ## 4.1 Outils
 
-1. Node/NPM installes.
+1. Node + pnpm installes.
 2. Deno installe.
 3. `rg` (ripgrep) disponible.
 4. Dependances installees:
 
 ```bash
-cd frontend && npm install
-cd ..
+pnpm --dir frontend install
 ```
 
 ## 4.2 Variables
@@ -111,23 +111,32 @@ FAIL:
 Executer depuis `frontend/`:
 
 ```bash
-npm run typecheck
-npm run lint -- --max-warnings=0
-npm run test:run
-npm run check:error-compliance
-npm run build
+pnpm run typecheck
+pnpm run lint -- --max-warnings=0
+pnpm run test:coverage
+pnpm run check:error-compliance
+pnpm run build
 ```
+
+Portee actuelle de la gate couverture (Vitest):
+1. `src/services/admin/**`
+2. `src/services/agency/**`
+3. `src/services/api/**`
+4. `src/services/auth/**`
+5. `src/services/entities/**`
+6. `src/services/errors/**`
 
 Si UI/parcours impacte:
 
 ```bash
-npm run test:e2e
+RUN_E2E=1 pnpm run test:e2e
 ```
 
 PASS:
 1. Toutes les commandes retournent exit code 0.
 2. `check:error-compliance` retourne `Error compliance check passed.`
 3. Build Vite termine sans erreur.
+4. Couverture Vitest respecte les seuils bloquants `80/70/80/80`.
 
 FAIL:
 1. Un seul echec bloque la livraison.
@@ -235,7 +244,7 @@ Checklist manuelle obligatoire:
 Commande de securite additionnelle:
 
 ```bash
-cd frontend && npm run check:error-compliance
+pnpm --dir frontend run check:error-compliance
 ```
 
 PASS:
@@ -261,23 +270,43 @@ Avec MCP Supabase:
 ## 10.2 Probes HTTP minimales
 
 Attendus minimaux:
-1. `POST /functions/v1/api/data/entities` ne retourne pas `404`.
-2. `POST /functions/v1/api/data/entity-contacts` ne retourne pas `404`.
-3. `POST /functions/v1/api/data/interactions` ne retourne pas `404`.
+1. `POST /functions/v1/api/trpc/data.entities` ne retourne pas `404`.
+2. `POST /functions/v1/api/trpc/data.entity-contacts` ne retourne pas `404`.
+3. `POST /functions/v1/api/trpc/data.interactions` ne retourne pas `404`.
 4. `OPTIONS` sur routes impactees retourne `200` avec headers CORS.
-5. `POST` avec seul header `x-client-authorization` retourne `401 AUTH_REQUIRED`.
+5. `POST` avec seul header `x-client-authorization` retourne `401 AUTH_REQUIRED` sur une route tRPC protegee.
 
 Exemple de probe (anonyme):
 
 ```bash
-curl -i -X POST "$SUPABASE_URL/functions/v1/api/data/entities" -H "Content-Type: application/json" -d "{}"
-curl -i -X OPTIONS "$SUPABASE_URL/functions/v1/api/data/entities" -H "Origin: http://localhost:3000" -H "Access-Control-Request-Method: POST"
+curl -i -X POST "$SUPABASE_URL/functions/v1/api/trpc/data.entities" -H "Content-Type: application/json" -d "{}"
+curl -i -X OPTIONS "$SUPABASE_URL/functions/v1/api/trpc/data.entities" -H "Origin: http://localhost:3000" -H "Access-Control-Request-Method: POST"
 ```
 
 PASS:
-1. Plus aucun `404` sur `/functions/v1/api/data/*`.
+1. Plus aucun `404` sur `/functions/v1/api/trpc/*` (routes impactees).
 2. Preflight `OPTIONS` = `200` sur routes impactees.
 3. Contrat `Authorization-only` respecte en runtime.
+
+## 10.3 Controles DB/RLS supplementaires (obligatoire si migrations SQL)
+
+Executer via MCP Supabase ou SQL equivalent:
+1. Baseline avant/apres:
+   - `get_advisors` (`performance`, `security`)
+   - `pg_stat_user_indexes` (au minimum indexes cibles)
+   - `pg_policies` sur tables impactees
+2. Si routines sensibles impactees:
+   - `information_schema.routine_privileges` sur routines ciblees
+   - `pg_proc.proconfig` pour confirmer `search_path` attendu
+3. Si suppression d'indexes:
+   - classifier `supprimer` vs `garder` avec justification explicite
+   - verifier qu'aucune contrainte PK/UNIQUE/FK n'est censee etre couverte par erreur
+   - documenter un rollback SQL pret a l'emploi
+
+PASS:
+1. Preuves before/after ecrites dans le rapport final.
+2. Aucun nouveau risque critique non traite (security/performance).
+3. Matrice roles `anon/authenticated/service_role` revalidee pour les routes impactees.
 
 ## 11. Matrice PASS/FAIL (bloquante)
 
@@ -314,7 +343,7 @@ Copier-coller ce bloc dans PR, ticket, ou message de livraison:
 ### Resultats commandes
 - [ ] frontend typecheck
 - [ ] frontend lint --max-warnings=0
-- [ ] frontend test:run
+- [ ] frontend test:coverage
 - [ ] frontend test:e2e (ou justification skip)
 - [ ] frontend check:error-compliance
 - [ ] frontend build
@@ -333,7 +362,7 @@ Copier-coller ce bloc dans PR, ticket, ou message de livraison:
 
 ### Runtime Supabase (si backend impacte)
 - [ ] list_edge_functions valide
-- [ ] POST /functions/v1/api/data/* sans 404
+- [ ] POST /functions/v1/api/trpc/* sans 404
 - [ ] OPTIONS routes impactees = 200 + CORS
 
 ### Ecarts connus / justifications

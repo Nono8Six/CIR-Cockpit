@@ -1,6 +1,8 @@
 import { assertEquals } from 'std/assert';
 
 const RUN_FLAG = Deno.env.get('RUN_API_INTEGRATION') === '1';
+const NET_PERMISSION = await Deno.permissions.query({ name: 'net' });
+const HAS_NET_PERMISSION = NET_PERMISSION.state === 'granted';
 const REQUIRED_ENV = [
   'SUPABASE_URL',
   'SUPABASE_ANON_KEY',
@@ -12,14 +14,14 @@ const REQUIRED_ENV = [
 
 type RequiredEnvKey = (typeof REQUIRED_ENV)[number];
 type ApiPayload = Record<string, unknown>;
-type RoutePath =
-  | '/admin/users'
-  | '/admin/agencies'
-  | '/data/entities'
-  | '/data/entity-contacts'
-  | '/data/interactions'
-  | '/data/config'
-  | '/data/profile';
+type ProcedurePath =
+  | 'admin.users'
+  | 'admin.agencies'
+  | 'data.entities'
+  | 'data.entity-contacts'
+  | 'data.interactions'
+  | 'data.config'
+  | 'data.profile';
 
 type AuthSession = {
   accessToken: string;
@@ -47,6 +49,7 @@ type IntegrationContext = {
 
 const missingEnv = REQUIRED_ENV.filter((key) => !Deno.env.get(key)?.trim());
 const ENV_CONFIGURED = missingEnv.length === 0;
+const CAN_RUN_NETWORK_INTEGRATION = RUN_FLAG && ENV_CONFIGURED && HAS_NET_PERMISSION;
 
 const baseUrl = (Deno.env.get('SUPABASE_URL') ?? '').trim().replace(/\/+$/, '');
 const anonKey = (Deno.env.get('SUPABASE_ANON_KEY') ?? '').trim();
@@ -60,17 +63,17 @@ const apiBaseUrl = `${baseUrl}/functions/v1/api`;
 const restBaseUrl = `${baseUrl}/rest/v1`;
 const authBaseUrl = `${baseUrl}/auth/v1`;
 
-const DATA_ROUTES: RoutePath[] = [
-  '/data/entities',
-  '/data/entity-contacts',
-  '/data/interactions',
-  '/data/config',
-  '/data/profile'
+const DATA_ROUTES: ProcedurePath[] = [
+  'data.entities',
+  'data.entity-contacts',
+  'data.interactions',
+  'data.config',
+  'data.profile'
 ];
 
-const ADMIN_ROUTES: RoutePath[] = ['/admin/users', '/admin/agencies'];
+const ADMIN_ROUTES: ProcedurePath[] = ['admin.users', 'admin.agencies'];
 
-const ALL_ROUTES: RoutePath[] = [...ADMIN_ROUTES, ...DATA_ROUTES];
+const ALL_ROUTES: ProcedurePath[] = [...ADMIN_ROUTES, ...DATA_ROUTES];
 
 const readString = (value: unknown, key: string): string => {
   if (!value || typeof value !== 'object') return '';
@@ -82,6 +85,14 @@ const readBoolean = (value: unknown, key: string): boolean | null => {
   if (!value || typeof value !== 'object') return null;
   const candidate = (value as Record<string, unknown>)[key];
   return typeof candidate === 'boolean' ? candidate : null;
+};
+
+const readObject = (value: unknown, key: string): Record<string, unknown> | null => {
+  if (!value || typeof value !== 'object') return null;
+  const candidate = (value as Record<string, unknown>)[key];
+  return candidate && typeof candidate === 'object' && !Array.isArray(candidate)
+    ? candidate as Record<string, unknown>
+    : null;
 };
 
 const readValue = (value: unknown, key: string): unknown => {
@@ -97,8 +108,31 @@ const parseJsonOrNull = async (response: Response): Promise<unknown | null> => {
   }
 };
 
+const parseTrpcPayload = (payload: unknown): unknown | null => {
+  if (!payload || typeof payload !== 'object') return payload;
+  const result = readObject(payload, 'result');
+  const resultData = result ? readObject(result, 'data') : null;
+  const jsonData = resultData ? readValue(resultData, 'json') : null;
+  if (jsonData !== null && jsonData !== undefined) {
+    return jsonData;
+  }
+
+  const error = readObject(payload, 'error');
+  if (!error) {
+    return payload;
+  }
+
+  const errorData = readObject(error, 'data');
+  return {
+    code: readString(errorData, 'appCode') || readString(errorData, 'code'),
+    error: readString(error, 'message'),
+    details: readString(errorData, 'details'),
+    request_id: readString(errorData, 'requestId')
+  };
+};
+
 const postApi = async (
-  path: RoutePath,
+  path: ProcedurePath,
   token: string,
   body: unknown,
   extraHeaders?: Record<string, string>
@@ -117,15 +151,16 @@ const postApi = async (
     }
   }
 
-  const response = await fetch(`${apiBaseUrl}${path}`, {
+  const response = await fetch(`${apiBaseUrl}/trpc/${path}`, {
     method: 'POST',
     headers,
     body: JSON.stringify(body)
   });
 
+  const payload = parseTrpcPayload(await parseJsonOrNull(response));
   return {
     status: response.status,
-    payload: await parseJsonOrNull(response)
+    payload
   };
 };
 
@@ -257,10 +292,10 @@ Deno.test({
 
 Deno.test({
   name: 'OPTIONS returns 200 with CORS headers on all API routes',
-  ignore: !(RUN_FLAG && ENV_CONFIGURED),
+  ignore: !CAN_RUN_NETWORK_INTEGRATION,
   fn: async () => {
     for (const path of ALL_ROUTES) {
-      const response = await fetch(`${apiBaseUrl}${path}`, {
+      const response = await fetch(`${apiBaseUrl}/trpc/${path}`, {
         method: 'OPTIONS',
         headers: {
           Origin: corsOrigin,
@@ -282,7 +317,7 @@ Deno.test({
 
 Deno.test({
   name: 'POST without token returns 401 AUTH_REQUIRED on all API routes',
-  ignore: !(RUN_FLAG && ENV_CONFIGURED),
+  ignore: !CAN_RUN_NETWORK_INTEGRATION,
   fn: async () => {
     for (const path of ALL_ROUTES) {
       const { status, payload } = await postApi(path, '', {});
@@ -294,7 +329,7 @@ Deno.test({
 
 Deno.test({
   name: 'POST with x-client-authorization only returns 401 AUTH_REQUIRED on all API routes',
-  ignore: !(RUN_FLAG && ENV_CONFIGURED),
+  ignore: !CAN_RUN_NETWORK_INTEGRATION,
   fn: async () => {
     const context = await getContext();
     const clientAuthHeader = `Bearer ${context.userToken}`;
@@ -311,7 +346,7 @@ Deno.test({
 
 Deno.test({
   name: 'POST with user token on admin routes returns 403 AUTH_FORBIDDEN',
-  ignore: !(RUN_FLAG && ENV_CONFIGURED),
+  ignore: !CAN_RUN_NETWORK_INTEGRATION,
   fn: async () => {
     const context = await getContext();
     for (const path of ADMIN_ROUTES) {
@@ -324,7 +359,7 @@ Deno.test({
 
 Deno.test({
   name: 'POST with valid token and invalid payload returns 400 INVALID_PAYLOAD',
-  ignore: !(RUN_FLAG && ENV_CONFIGURED),
+  ignore: !CAN_RUN_NETWORK_INTEGRATION,
   fn: async () => {
     const context = await getContext();
 
@@ -344,11 +379,11 @@ Deno.test({
 
 Deno.test({
   name: 'admin routes reach service layer and return domain errors on unknown targets',
-  ignore: !(RUN_FLAG && ENV_CONFIGURED),
+  ignore: !CAN_RUN_NETWORK_INTEGRATION,
   fn: async () => {
     const context = await getContext();
 
-    const missingUser = await postApi('/admin/users', context.adminToken, {
+    const missingUser = await postApi('admin.users', context.adminToken, {
       action: 'set_role',
       user_id: crypto.randomUUID(),
       role: 'tcs'
@@ -356,7 +391,7 @@ Deno.test({
     assertEquals(missingUser.status, 404);
     assertEquals(readString(missingUser.payload, 'code'), 'USER_NOT_FOUND');
 
-    const missingAgency = await postApi('/admin/agencies', context.adminToken, {
+    const missingAgency = await postApi('admin.agencies', context.adminToken, {
       action: 'hard_delete',
       agency_id: crypto.randomUUID()
     });
@@ -367,12 +402,12 @@ Deno.test({
 
 Deno.test({
   name: 'POST data routes forbid cross-agency mutations for non super-admin users',
-  ignore: !(RUN_FLAG && ENV_CONFIGURED),
+  ignore: !CAN_RUN_NETWORK_INTEGRATION,
   fn: async () => {
     const context = await getContext();
     const foreignAgencyId = crypto.randomUUID();
 
-    const entitiesForbidden = await postApi('/data/entities', context.userToken, {
+    const entitiesForbidden = await postApi('data.entities', context.userToken, {
       action: 'save',
       agency_id: foreignAgencyId,
       entity_type: 'Prospect',
@@ -390,7 +425,7 @@ Deno.test({
     assertEquals(entitiesForbidden.status, 403);
     assertEquals(readString(entitiesForbidden.payload, 'code'), 'AUTH_FORBIDDEN');
 
-    const configForbidden = await postApi('/data/config', context.userToken, {
+    const configForbidden = await postApi('data.config', context.userToken, {
       agency_id: foreignAgencyId,
       statuses: context.configStatuses,
       services: context.configServices,
@@ -405,18 +440,18 @@ Deno.test({
 
 Deno.test({
   name: 'data routes execute service + DB with valid payloads',
-  ignore: !(RUN_FLAG && ENV_CONFIGURED),
+  ignore: !CAN_RUN_NETWORK_INTEGRATION,
   fn: async () => {
     const context = await getContext();
 
-    const profileUpdate = await postApi('/data/profile', context.userToken, {
+    const profileUpdate = await postApi('data.profile', context.userToken, {
       action: 'password_changed'
     });
     assertEquals(profileUpdate.status, 200);
     assertEquals(readBoolean(profileUpdate.payload, 'ok'), true);
 
     const entityName = `P2 integration prospect ${Date.now()}`;
-    const createdEntity = await postApi('/data/entities', context.userToken, {
+    const createdEntity = await postApi('data.entities', context.userToken, {
       action: 'save',
       agency_id: context.agencyId,
       entity_type: 'Prospect',
@@ -438,7 +473,7 @@ Deno.test({
     const entityId = readString(entity, 'id');
     assertEquals(Boolean(entityId), true);
 
-    const archivedEntity = await postApi('/data/entities', context.userToken, {
+    const archivedEntity = await postApi('data.entities', context.userToken, {
       action: 'archive',
       entity_id: entityId,
       archived: true
@@ -446,7 +481,7 @@ Deno.test({
     assertEquals(archivedEntity.status, 200);
     assertEquals(readBoolean(archivedEntity.payload, 'ok'), true);
 
-    const restoredEntity = await postApi('/data/entities', context.userToken, {
+    const restoredEntity = await postApi('data.entities', context.userToken, {
       action: 'archive',
       entity_id: entityId,
       archived: false
@@ -454,7 +489,7 @@ Deno.test({
     assertEquals(restoredEntity.status, 200);
     assertEquals(readBoolean(restoredEntity.payload, 'ok'), true);
 
-    const convertedEntity = await postApi('/data/entities', context.userToken, {
+    const convertedEntity = await postApi('data.entities', context.userToken, {
       action: 'convert_to_client',
       entity_id: entityId,
       convert: {
@@ -465,7 +500,7 @@ Deno.test({
     assertEquals(convertedEntity.status, 200);
     assertEquals(readBoolean(convertedEntity.payload, 'ok'), true);
 
-    const createdContact = await postApi('/data/entity-contacts', context.userToken, {
+    const createdContact = await postApi('data.entity-contacts', context.userToken, {
       action: 'save',
       entity_id: entityId,
       contact: {
@@ -484,14 +519,14 @@ Deno.test({
     const contactId = readString(contact, 'id');
     assertEquals(Boolean(contactId), true);
 
-    const deletedContact = await postApi('/data/entity-contacts', context.userToken, {
+    const deletedContact = await postApi('data.entity-contacts', context.userToken, {
       action: 'delete',
       contact_id: contactId
     });
     assertEquals(deletedContact.status, 200);
     assertEquals(readBoolean(deletedContact.payload, 'ok'), true);
 
-    const savedInteraction = await postApi('/data/interactions', context.userToken, {
+    const savedInteraction = await postApi('data.interactions', context.userToken, {
       action: 'save',
       agency_id: context.agencyId,
       interaction: {
@@ -521,7 +556,7 @@ Deno.test({
     assertEquals(Boolean(interactionId), true);
     assertEquals(Boolean(interactionUpdatedAt), true);
 
-    const updatedInteraction = await postApi('/data/interactions', context.userToken, {
+    const updatedInteraction = await postApi('data.interactions', context.userToken, {
       action: 'add_timeline_event',
       interaction_id: interactionId,
       expected_updated_at: interactionUpdatedAt,
@@ -539,7 +574,7 @@ Deno.test({
     assertEquals(updatedInteraction.status, 200);
     assertEquals(readBoolean(updatedInteraction.payload, 'ok'), true);
 
-    const savedConfig = await postApi('/data/config', context.userToken, {
+    const savedConfig = await postApi('data.config', context.userToken, {
       agency_id: context.agencyId,
       statuses: context.configStatuses,
       services: context.configServices,
@@ -550,7 +585,7 @@ Deno.test({
     assertEquals(savedConfig.status, 200);
     assertEquals(readBoolean(savedConfig.payload, 'ok'), true);
 
-    const invalidConfig = await postApi('/data/config', context.userToken, {
+    const invalidConfig = await postApi('data.config', context.userToken, {
       agency_id: context.agencyId,
       statuses: [{ id: context.statusId, label: 'invalid status', category: 'invalid' }],
       services: context.configServices,

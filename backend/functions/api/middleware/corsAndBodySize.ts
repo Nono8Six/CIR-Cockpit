@@ -58,6 +58,11 @@ const buildResponseHeaders = (allowedOrigin: string): Record<string, string> => 
 export const corsAndBodySize: MiddlewareHandler<AppEnv> = async (c, next) => {
   const requestOrigin = c.req.header('Origin');
   const allowedOrigin = resolveAllowedOrigin(requestOrigin, getAllowedOrigins());
+  const responseHeaders = buildResponseHeaders(allowedOrigin);
+  for (const [key, value] of Object.entries(responseHeaders)) {
+    c.header(key, value);
+  }
+
   const contentLengthHeader = c.req.header('Content-Length');
   const contentLength = contentLengthHeader ? Number.parseInt(contentLengthHeader, 10) : null;
 
@@ -71,15 +76,12 @@ export const corsAndBodySize: MiddlewareHandler<AppEnv> = async (c, next) => {
     && Number.isFinite(contentLength)
     && contentLength > MAX_REQUEST_BODY_BYTES
   ) {
-    throw httpError(413, 'INVALID_PAYLOAD', 'Payload trop volumineux.');
+    throw httpError(413, 'PAYLOAD_TOO_LARGE', 'Payload trop volumineux.');
   }
 
   if (c.req.method === 'OPTIONS') {
-    return c.text('ok', 200, buildResponseHeaders(allowedOrigin));
+    return c.text('ok', 200, responseHeaders);
   }
 
   await next();
-  for (const [key, value] of Object.entries(buildResponseHeaders(allowedOrigin))) {
-    c.header(key, value);
-  }
 };

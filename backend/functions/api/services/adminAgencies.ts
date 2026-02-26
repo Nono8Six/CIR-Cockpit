@@ -1,7 +1,11 @@
+import { eq } from 'drizzle-orm';
+
+import { agencies } from '../../../drizzle/schema.ts';
 import type { Database } from '../../../../shared/supabase.types.ts';
 import type { AdminAgenciesResponse } from '../../../../shared/schemas/api-responses.ts';
 import type { AdminAgenciesPayload } from '../../../../shared/schemas/agency.schema.ts';
 import type { DbClient } from '../types.ts';
+import { getSupabaseAdmin } from '../middleware/auth.ts';
 import { httpError } from '../middleware/errorHandler.ts';
 import { checkRateLimit } from './rateLimit.ts';
 
@@ -9,17 +13,20 @@ type AgencyRow = Database['public']['Tables']['agencies']['Row'];
 type AgencySummary = Pick<AgencyRow, 'id' | 'name' | 'archived_at'>;
 
 const getAgencyById = async (db: DbClient, agencyId: string): Promise<AgencySummary | null> => {
-  const { data, error } = await db
-    .from('agencies')
-    .select('id, name, archived_at')
-    .eq('id', agencyId)
-    .maybeSingle();
-
-  if (error) {
+  try {
+    const rows = await db
+      .select({
+        id: agencies.id,
+        name: agencies.name,
+        archived_at: agencies.archived_at
+      })
+      .from(agencies)
+      .where(eq(agencies.id, agencyId))
+      .limit(1);
+    return rows[0] ?? null;
+  } catch {
     throw httpError(500, 'AGENCY_LOOKUP_FAILED', 'Impossible de charger l\'agence.');
   }
-
-  return data ?? null;
 };
 
 const ensureAgencyExists = async (db: DbClient, agencyId: string): Promise<AgencySummary> => {
@@ -41,18 +48,29 @@ export const handleAgencyNameConflict = (error: { code?: string; message: string
 };
 
 const createAgency = async (db: DbClient, name: string): Promise<AgencySummary> => {
-  const { data, error } = await db
-    .from('agencies')
-    .insert({ name })
-    .select('id, name, archived_at')
-    .single();
-
-  if (error || !data) {
-    if (error) handleAgencyNameConflict(error);
+  try {
+    const rows = await db
+      .insert(agencies)
+      .values({ name })
+      .returning({
+        id: agencies.id,
+        name: agencies.name,
+        archived_at: agencies.archived_at
+      });
+    const data = rows[0];
+    if (!data) {
+      throw httpError(400, 'AGENCY_CREATE_FAILED', 'Impossible de creer l\'agence.');
+    }
+    return data;
+  } catch (error) {
+    if (typeof error === 'object' && error !== null) {
+      const dbError = error as { code?: string; message?: string };
+      if (typeof dbError.message === 'string') {
+        handleAgencyNameConflict({ code: dbError.code, message: dbError.message });
+      }
+    }
     throw httpError(400, 'AGENCY_CREATE_FAILED', 'Impossible de creer l\'agence.');
   }
-
-  return data;
 };
 
 const updateAgency = async (
@@ -60,23 +78,35 @@ const updateAgency = async (
   agencyId: string,
   updates: Partial<Database['public']['Tables']['agencies']['Update']>
 ): Promise<AgencySummary> => {
-  const { data, error } = await db
-    .from('agencies')
-    .update(updates)
-    .eq('id', agencyId)
-    .select('id, name, archived_at')
-    .single();
-
-  if (error || !data) {
-    if (error) handleAgencyNameConflict(error);
+  try {
+    const rows = await db
+      .update(agencies)
+      .set(updates)
+      .where(eq(agencies.id, agencyId))
+      .returning({
+        id: agencies.id,
+        name: agencies.name,
+        archived_at: agencies.archived_at
+      });
+    const data = rows[0];
+    if (!data) {
+      throw httpError(400, 'AGENCY_UPDATE_FAILED', 'Impossible de modifier l\'agence.');
+    }
+    return data;
+  } catch (error) {
+    if (typeof error === 'object' && error !== null) {
+      const dbError = error as { code?: string; message?: string };
+      if (typeof dbError.message === 'string') {
+        handleAgencyNameConflict({ code: dbError.code, message: dbError.message });
+      }
+    }
     throw httpError(400, 'AGENCY_UPDATE_FAILED', 'Impossible de modifier l\'agence.');
   }
-
-  return data;
 };
 
 const hardDeleteAgency = async (db: DbClient, agencyId: string): Promise<void> => {
-  const { error } = await db.rpc('hard_delete_agency', { p_agency_id: agencyId });
+  void db;
+  const { error } = await getSupabaseAdmin().rpc('hard_delete_agency', { p_agency_id: agencyId });
   if (error) {
     throw httpError(500, 'AGENCY_DELETE_FAILED', 'Impossible de supprimer l\'agence.');
   }

@@ -2,8 +2,9 @@ import { createClient } from '@supabase/supabase-js';
 import type { MiddlewareHandler } from '@hono/hono';
 import { createRemoteJWKSet, decodeProtectedHeader, jwtVerify, type JWTVerifyGetKey } from 'jose';
 
+import { getDbClient } from '../../../drizzle/index.ts';
 import type { Database } from '../../../../shared/supabase.types.ts';
-import type { AppEnv, AuthContext, DbClient } from '../types.ts';
+import type { AppEnv, AuthContext, DbClient, SupabaseDbClient } from '../types.ts';
 import { httpError } from './errorHandler.ts';
 
 type SupabaseConfig = {
@@ -100,7 +101,7 @@ const assertSupabaseConfig = (): SupabaseConfig => {
   return config;
 };
 
-let supabaseAdmin: DbClient | null = null;
+let supabaseAdmin: SupabaseDbClient | null = null;
 let supabaseAdminKey = '';
 let supabaseAuthGateway: AuthGateway | null = null;
 let supabaseAuthGatewayKey = '';
@@ -140,8 +141,8 @@ type ProfileLookupRow = ProfileAuthState & {
 export const isProfileAccessRevoked = (profile: ProfileAuthState): boolean =>
   Boolean(profile.archived_at) || profile.is_system;
 
-const resolveAuthContext = async (
-  db: DbClient,
+export const resolveAuthContext = async (
+  db: SupabaseDbClient,
   userId: string
 ): Promise<AuthContext> => {
   const { data: profile, error: profileError } = await db
@@ -182,7 +183,7 @@ const resolveAuthContext = async (
   };
 };
 
-export const getSupabaseAdmin = (): DbClient => {
+export const getSupabaseAdmin = (): SupabaseDbClient => {
   const config = assertSupabaseConfig();
   const nextKey = `${config.supabaseUrl}|${config.supabaseServiceRoleKey}`;
   if (!supabaseAdmin || supabaseAdminKey !== nextKey) {
@@ -192,23 +193,6 @@ export const getSupabaseAdmin = (): DbClient => {
     supabaseAdminKey = nextKey;
   }
   return supabaseAdmin;
-};
-
-export const createUserScopedClient = (accessToken: string): DbClient => {
-  const config = assertSupabaseConfig();
-  const normalizedToken = accessToken.trim();
-  return createClient<Database>(config.supabaseUrl, config.supabaseAnonKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-      detectSessionInUrl: false
-    },
-    global: {
-      headers: {
-        Authorization: `Bearer ${normalizedToken}`
-      }
-    }
-  });
 };
 
 const getJwksResolver = (config: SupabaseConfig): JWTVerifyGetKey => {
@@ -288,6 +272,19 @@ const getSupabaseAuthGateway = (): AuthGateway => {
   return supabaseAuthGateway;
 };
 
+type AuthenticatedRequestContext = {
+  callerId: string;
+  authContext: AuthContext;
+  db: DbClient;
+  userDb: DbClient;
+};
+
+type SuperAdminRequestContext = {
+  callerId: string;
+  authContext: AuthContext;
+  db: DbClient;
+};
+
 export const resetAuthCachesForTests = (): void => {
   supabaseAdmin = null;
   supabaseAdminKey = '';
@@ -309,47 +306,78 @@ export const getAccessTokenFromHeaders = (
   return getBearerToken(authHeader);
 };
 
-export const requireAuth: MiddlewareHandler<AppEnv> = async (c, next) => {
-  const token = getAccessTokenFromHeaders(c.req.header('Authorization'));
-  if (!token) {
+export const authenticateAccessToken = async (token: string): Promise<AuthenticatedRequestContext> => {
+  const normalizedToken = token.trim();
+  if (!normalizedToken) {
     throw httpError(401, 'AUTH_REQUIRED', 'Authentification requise.');
   }
 
-  const identity = await getSupabaseAuthGateway().verifyAccessToken(token);
+  const identity = await getSupabaseAuthGateway().verifyAccessToken(normalizedToken);
   if (!identity) {
     throw httpError(401, 'AUTH_REQUIRED', 'Session invalide.');
   }
 
-  const db = getSupabaseAdmin();
-  const userDb = createUserScopedClient(token);
-  const authContext = await resolveAuthContext(db, identity.userId);
+  const supabaseAdmin = getSupabaseAdmin();
+  const authContext = await resolveAuthContext(supabaseAdmin, identity.userId);
+  const db = getDbClient();
+  if (!db) {
+    throw httpError(500, 'CONFIG_MISSING', 'Configuration Supabase manquante.');
+  }
 
-  c.set('callerId', authContext.userId);
-  c.set('authContext', authContext);
-  c.set('db', db);
-  c.set('userDb', userDb);
+  return {
+    callerId: authContext.userId,
+    authContext,
+    db,
+    userDb: db
+  };
+};
+
+export const authenticateSuperAdminAccessToken = async (token: string): Promise<SuperAdminRequestContext> => {
+  const normalizedToken = token.trim();
+  if (!normalizedToken) {
+    throw httpError(401, 'AUTH_REQUIRED', 'Authentification requise.');
+  }
+
+  const identity = await getSupabaseAuthGateway().verifyAccessToken(normalizedToken);
+  if (!identity) {
+    throw httpError(401, 'AUTH_REQUIRED', 'Session invalide.');
+  }
+
+  const supabaseAdmin = getSupabaseAdmin();
+  const authContext = await resolveAuthContext(supabaseAdmin, identity.userId);
+  if (!authContext.isSuperAdmin) {
+    throw httpError(403, 'AUTH_FORBIDDEN', 'Acces interdit.');
+  }
+
+  const db = getDbClient();
+  if (!db) {
+    throw httpError(500, 'CONFIG_MISSING', 'Configuration Supabase manquante.');
+  }
+
+  return {
+    callerId: authContext.userId,
+    authContext,
+    db
+  };
+};
+
+export const requireAuth: MiddlewareHandler<AppEnv> = async (c, next) => {
+  const token = getAccessTokenFromHeaders(c.req.header('Authorization'));
+  const authenticatedContext = await authenticateAccessToken(token);
+
+  c.set('callerId', authenticatedContext.callerId);
+  c.set('authContext', authenticatedContext.authContext);
+  c.set('db', authenticatedContext.db);
+  c.set('userDb', authenticatedContext.userDb);
   await next();
 };
 
 export const requireSuperAdmin: MiddlewareHandler<AppEnv> = async (c, next) => {
   const token = getAccessTokenFromHeaders(c.req.header('Authorization'));
-  if (!token) {
-    throw httpError(401, 'AUTH_REQUIRED', 'Authentification requise.');
-  }
+  const authenticatedContext = await authenticateSuperAdminAccessToken(token);
 
-  const identity = await getSupabaseAuthGateway().verifyAccessToken(token);
-  if (!identity) {
-    throw httpError(401, 'AUTH_REQUIRED', 'Session invalide.');
-  }
-
-  const db = getSupabaseAdmin();
-  const authContext = await resolveAuthContext(db, identity.userId);
-  if (!authContext.isSuperAdmin) {
-    throw httpError(403, 'AUTH_FORBIDDEN', 'Acces interdit.');
-  }
-
-  c.set('callerId', authContext.userId);
-  c.set('authContext', authContext);
-  c.set('db', db);
+  c.set('callerId', authenticatedContext.callerId);
+  c.set('authContext', authenticatedContext.authContext);
+  c.set('db', authenticatedContext.db);
   await next();
 };

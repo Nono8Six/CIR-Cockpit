@@ -1,10 +1,11 @@
 import React from 'react';
 import * as ReactDOM from 'react-dom';
 import ReactDOMClient from 'react-dom/client';
+import { RouterProvider } from '@tanstack/react-router';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
-import App from '@/App';
 import AppSessionProvider from '@/components/AppSessionProvider';
+import { appRouter } from '@/app/router';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { createAppError } from '@/services/errors/AppError';
 import { queryClient } from '@/services/query/queryClient';
@@ -72,7 +73,7 @@ root.render(
     <QueryClientProvider client={queryClient}>
       <ErrorBoundary>
         <AppSessionProvider>
-          <App />
+          <RouterProvider router={appRouter} />
         </AppSessionProvider>
       </ErrorBoundary>
       <ResponsiveToaster />

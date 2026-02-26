@@ -568,11 +568,11 @@ Parcours minimaux:
 
 Frontend (depuis `frontend/`):
 
-- `npm run typecheck`
-- `npm run lint -- --max-warnings=0`
-- `npm run test -- --run`
-- `npm run test:e2e`
-- `npm run check:error-compliance`
+- `pnpm run typecheck`
+- `pnpm run lint -- --max-warnings=0`
+- `pnpm run test -- --run`
+- `pnpm run test:e2e`
+- `pnpm run check:error-compliance`
 
 Backend (depuis racine):
 

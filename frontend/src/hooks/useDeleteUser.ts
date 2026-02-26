@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminUsersDelete } from '@/services/admin/adminUsersDelete';
 import { handleUiError } from '@/services/errors/handleUiError';
 import { mapAdminDomainError } from '@/services/errors/mapAdminDomainError';
-import { adminUsersKey } from '@/services/query/queryKeys';
+import { invalidateAdminUsersQuery } from '@/services/query/queryInvalidation';
 
 export const useDeleteUser = () => {
   const queryClient = useQueryClient();
@@ -17,7 +17,7 @@ export const useDeleteUser = () => {
         }
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminUsersKey() });
+      void invalidateAdminUsersQuery(queryClient);
     },
     onError: (err) => {
       const appError = mapAdminDomainError(err, {

@@ -45,6 +45,11 @@ describe('mapEdgeError', () => {
     expect(result.code).toBe('CONFLICT');
   });
 
+  it('maps 413 to PAYLOAD_TOO_LARGE', () => {
+    const result = mapEdgeError(null, 'Fallback', 413);
+    expect(result.code).toBe('PAYLOAD_TOO_LARGE');
+  });
+
   it('maps 429 to RATE_LIMIT', () => {
     const result = mapEdgeError(null, 'Fallback', 429);
     expect(result.code).toBe('RATE_LIMIT');

@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod/v4';
 
 import { updateUserPassword } from '@/services/auth/updateUserPassword';
 import { setProfilePasswordChanged } from '@/services/auth/setProfilePasswordChanged';
 import { createAppError } from '@/services/errors/AppError';
 import { handleUiError } from '@/services/errors/handleUiError';
+import { passwordSchema } from '../../../shared/schemas/auth.schema';
 
 type PasswordRule = {
   id: string;
@@ -17,18 +21,42 @@ const PASSWORD_RULES: PasswordRule[] = [
   { id: 'symbol', label: 'Au moins 1 symbole (!@#$…)', test: (pw) => /[^a-zA-Z0-9]/.test(pw) }
 ];
 
+const changePasswordFormSchema = z.object({
+  password: passwordSchema,
+  confirmPassword: z.string().min(1, 'Confirmation requise')
+}).superRefine((values, ctx) => {
+  if (values.password !== values.confirmPassword) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Les mots de passe ne correspondent pas.',
+      path: ['confirmPassword']
+    });
+  }
+});
+
+type ChangePasswordFormValues = z.infer<typeof changePasswordFormSchema>;
+
 type UseChangePasswordStateInput = {
   onComplete: () => void;
 };
 
 export const useChangePasswordState = ({ onComplete }: UseChangePasswordStateInput) => {
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [profileError, setProfileError] = useState(false);
+  const form = useForm<ChangePasswordFormValues>({
+    resolver: zodResolver(changePasswordFormSchema),
+    defaultValues: {
+      password: '',
+      confirmPassword: ''
+    },
+    mode: 'onChange'
+  });
+  const { control, setValue, handleSubmit: handleFormSubmit } = form;
+  const password = useWatch({ control, name: 'password' }) ?? '';
+  const confirmPassword = useWatch({ control, name: 'confirmPassword' }) ?? '';
 
   const passwordInputRef = useRef<HTMLInputElement>(null);
 
@@ -44,23 +72,27 @@ export const useChangePasswordState = ({ onComplete }: UseChangePasswordStateInp
       })),
     [password]
   );
-  const allRulesPassed = useMemo(() => ruleResults.every((rule) => rule.passed), [ruleResults]);
   const passwordsMatch = useMemo(
     () => password === confirmPassword && confirmPassword.length > 0,
     [confirmPassword, password]
   );
-  const canSubmit = allRulesPassed && passwordsMatch && !isSubmitting;
+  const canSubmit = form.formState.isValid && passwordsMatch && !isSubmitting;
 
-  const handleSubmit = useCallback(async () => {
-    if (!canSubmit) return;
+  const setPassword = useCallback((value: string) => {
+    setValue('password', value, { shouldDirty: true, shouldValidate: true });
+  }, [setValue]);
+  const setConfirmPassword = useCallback((value: string) => {
+    setValue('confirmPassword', value, { shouldDirty: true, shouldValidate: true });
+  }, [setValue]);
 
+  const submitChangePassword = handleFormSubmit(async (values) => {
     setError(null);
     setProfileError(false);
     setIsSubmitting(true);
 
     try {
       try {
-        await updateUserPassword(password);
+        await updateUserPassword(values.password);
       } catch (err) {
         const appError = handleUiError(err, 'Impossible de changer le mot de passe.', {
           source: 'ChangePasswordScreen.updateUserPassword'
@@ -70,7 +102,7 @@ export const useChangePasswordState = ({ onComplete }: UseChangePasswordStateInp
           || appError.code === 'AUTH_REQUIRED'
           || appError.code === 'AUTH_FORBIDDEN'
         ) {
-          setError('Votre session a expiré. Veuillez vous reconnecter.');
+          setError('Votre session a expir\u00e9. Veuillez vous reconnecter.');
           return;
         }
         setError(appError.message);
@@ -102,7 +134,12 @@ export const useChangePasswordState = ({ onComplete }: UseChangePasswordStateInp
     } finally {
       setIsSubmitting(false);
     }
-  }, [canSubmit, onComplete, password]);
+  });
+
+  const handleSubmit = useCallback(() => {
+    if (isSubmitting) return;
+    void submitChangePassword();
+  }, [isSubmitting, submitChangePassword]);
 
   const handleRetryProfile = useCallback(async () => {
     setIsSubmitting(true);
@@ -122,7 +159,12 @@ export const useChangePasswordState = ({ onComplete }: UseChangePasswordStateInp
     }
   }, [onComplete]);
 
+  const fieldError = form.formState.errors.password?.message
+    ?? form.formState.errors.confirmPassword?.message
+    ?? null;
+
   return {
+    form,
     password,
     setPassword,
     confirmPassword,
@@ -133,6 +175,7 @@ export const useChangePasswordState = ({ onComplete }: UseChangePasswordStateInp
     setShowConfirm,
     isSubmitting,
     error,
+    fieldError,
     profileError,
     ruleResults,
     passwordsMatch,

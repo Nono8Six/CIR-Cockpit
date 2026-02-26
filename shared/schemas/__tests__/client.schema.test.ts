@@ -14,7 +14,7 @@ describe('clientFormSchema', () => {
       city: 'Paris',
       siret: null,
       notes: null,
-      agency_id: null
+      agency_id: '11111111-1111-1111-1111-111111111111'
     });
 
     expect(result.success).toBe(true);
@@ -31,7 +31,8 @@ describe('clientFormSchema', () => {
       address: 'Rue de Paris',
       postal_code: '7500',
       department: '75',
-      city: 'Paris'
+      city: 'Paris',
+      agency_id: '11111111-1111-1111-1111-111111111111'
     });
 
     expect(result.success).toBe(false);

@@ -15,6 +15,18 @@ Invoquer le skill correspondant AVANT d'ecrire du code (voir liste dans CLAUDE.m
 - `web-design-guidelines` pour tout audit UI / accessibilite
 - `supabase-postgres-best-practices` pour toute modification DB
 - `cir-error-handling` pour toute modification du systeme d'erreurs
+- `systematic-debugging` pour tout bug, echec test, ou comportement inattendu (avant correction)
+- `vitest` pour creation/mise a jour des tests unitaires/integration front
+- `playwright-cli` pour verification des parcours UI/E2E
+- `pnpm` pour toute modification package manager/workspace/dependances
+- `trpc-type-safety` pour toute creation/migration tRPC
+- `drizzle-orm` pour toute creation/migration Drizzle
+- `find-skills` quand une capability manque ou doit etre cherchee
+
+## Regle Context7 (obligatoire)
+
+- Pour toute decision d'implementation sur une librairie/framework (React, TanStack Router/Query, tRPC, Drizzle, Vitest, Playwright), consulter Context7 avant de coder.
+- Prioriser les snippets/doc officielles compatibles avec les versions du repo.
 
 ## MCPs disponibles
 
@@ -36,12 +48,13 @@ Invoquer le skill correspondant AVANT d'ecrire du code (voir liste dans CLAUDE.m
 
 ## Regles agents
 
-- Toujours verifier `typecheck` + `lint` + `tests` avant de considerer une tache terminee
+- Toujours verifier `pnpm run qa` avant de considerer une tache terminee
 - Zero donnees mockees, hardcodees, ou commentaires TODO non resolus dans le code livre
 - Ne pas creer de fichiers non demandes (README, CHANGELOG, docs, fichiers vides)
 - Preferer modifier un fichier existant plutot que d'en creer un nouveau
 - Ne pas ajouter de fonctionnalites, refactoring, ou documentation au-dela de ce qui est demande
-- Executer les commandes de verification depuis `frontend/` pour le front et depuis la racine pour le backend
+- Utiliser `pnpm run qa` depuis la racine comme gate par defaut; n'executer des commandes ciblees que pour diagnostic local
+- Zod: source unique dans `shared/schemas`, payloads API en `.strict()`, `safeParse` obligatoire sur les entrees/sorties externes, et details de validation en francais.
 
 ## Quality Gate manuel (sans CI)
 
@@ -54,9 +67,7 @@ Invoquer le skill correspondant AVANT d'ecrire du code (voir liste dans CLAUDE.m
 
 Avant de considerer le travail termine :
 
-- [ ] `npm run typecheck` passe sans erreur
-- [ ] `npm run lint` passe avec `--max-warnings=0`
-- [ ] `npm run test` — les tests impactes passent
+- [ ] `pnpm run qa` passe
 - [ ] Zero `any`, `@ts-ignore`, `@ts-expect-error` non documentes
 - [ ] Zero `console.error` direct (utiliser `reportError`)
 - [ ] Zero `toast.error()` direct (utiliser `notifyError`)

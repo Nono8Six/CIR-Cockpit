@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminUsersUpdateIdentity, UpdateUserIdentityPayload } from '@/services/admin/adminUsersUpdateIdentity';
 import { handleUiError } from '@/services/errors/handleUiError';
 import { mapAdminDomainError } from '@/services/errors/mapAdminDomainError';
-import { adminUsersKey } from '@/services/query/queryKeys';
+import { invalidateAdminUsersQuery } from '@/services/query/queryInvalidation';
 
 export const useUpdateUserIdentity = () => {
   const queryClient = useQueryClient();
@@ -17,7 +17,7 @@ export const useUpdateUserIdentity = () => {
         }
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminUsersKey() });
+      void invalidateAdminUsersQuery(queryClient);
     },
     onError: (err) => {
       const appError = mapAdminDomainError(err, {

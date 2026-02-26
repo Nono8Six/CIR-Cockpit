@@ -56,6 +56,7 @@ const ConvertClientDialog = ({ open, onOpenChange, entity, onConvert }: ConvertC
             errors={errors}
             onClientNumberChange={handleClientNumberChange}
           />
+          {errors.root?.message ? <p className="text-sm text-red-600">{errors.root.message}</p> : null}
           <ConvertClientFooter isSubmitting={isSubmitting} onCancel={() => onOpenChange(false)} />
         </form>
       </DialogContent>

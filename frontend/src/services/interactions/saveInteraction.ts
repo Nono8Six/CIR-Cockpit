@@ -1,18 +1,24 @@
 import { ResultAsync } from 'neverthrow';
 
+import { dataInteractionsResponseSchema } from '../../../../shared/schemas/api-responses';
 import type { Interaction, InteractionDraft } from '@/types';
 import { safeRpc } from '@/services/api/safeRpc';
 import { getCurrentUserLabel } from '@/services/auth/getCurrentUserLabel';
 import { createAppError, type AppError } from '@/services/errors/AppError';
-import { isRecord } from '@/utils/recordNarrowing';
 import { hydrateTimeline } from './hydrateTimeline';
 import { validateInteractionDraft } from './validateInteractionDraft';
 
 const parseInteractionResponse = (payload: unknown): Interaction => {
-  if (!isRecord(payload) || !isRecord(payload.interaction)) {
-    throw createAppError({ code: 'REQUEST_FAILED', message: 'Reponse serveur invalide.', source: 'edge' });
+  const parsed = dataInteractionsResponseSchema.safeParse(payload);
+  if (!parsed.success) {
+    throw createAppError({
+      code: 'REQUEST_FAILED',
+      message: 'Reponse serveur invalide.',
+      source: 'edge',
+      details: parsed.error.message
+    });
   }
-  return hydrateTimeline(payload.interaction as Interaction);
+  return hydrateTimeline(parsed.data.interaction);
 };
 
 export const saveInteraction = (interaction: InteractionDraft): ResultAsync<Interaction, AppError> =>

@@ -1,8 +1,14 @@
 {
   "imports": {
-    "@hono/hono": "jsr:@hono/hono@4.11.9",
+    "@hono/hono": "npm:hono@4.11.9",
+    "@hono/hono/validator": "npm:hono@4.11.9/validator",
+    "@hono/trpc-server": "npm:@hono/trpc-server@0.4.0",
+    "@trpc/server": "npm:@trpc/server@11.10.0",
     "@supabase/functions-js/edge-runtime.d.ts": "jsr:@supabase/functions-js@2.92.0/edge-runtime.d.ts",
     "@supabase/supabase-js": "npm:@supabase/supabase-js@2.95.3",
+    "drizzle-orm": "npm:drizzle-orm@0.45.1",
+    "drizzle-orm/": "npm:/drizzle-orm@0.45.1/",
+    "postgres": "npm:postgres@3.4.8",
     "std/assert": "https://deno.land/std@0.224.0/assert/mod.ts",
     "jose": "npm:jose@5.9.6",
     "zod": "npm:zod@4.3.6",

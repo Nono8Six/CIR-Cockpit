@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { adminAgenciesUnarchive } from '@/services/admin/adminAgenciesUnarchive';
-import { agenciesKey } from '@/services/query/queryKeys';
+import { invalidateAgenciesQueries } from '@/services/query/queryInvalidation';
 import { handleUiError } from '@/services/errors/handleUiError';
 import { mapAdminDomainError } from '@/services/errors/mapAdminDomainError';
 
@@ -17,8 +17,7 @@ export const useUnarchiveAgency = () => {
         }
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: agenciesKey(true) });
-      queryClient.invalidateQueries({ queryKey: agenciesKey(false) });
+      void invalidateAgenciesQueries(queryClient);
     },
     onError: (err) => {
       const appError = mapAdminDomainError(err, {

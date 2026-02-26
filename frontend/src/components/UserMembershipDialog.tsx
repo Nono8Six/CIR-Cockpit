@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { FormEvent } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 import { Check, ChevronsUpDown, X } from 'lucide-react';
 
 import { Agency } from '@/types';
+import { handleUiError } from '@/services/errors/handleUiError';
+import { userMembershipsFormSchema, type UserMembershipsFormValues } from '../../../shared/schemas/user.schema';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -25,14 +28,28 @@ const UserMembershipDialog = ({
   selectedIds,
   onSave
 }: UserMembershipDialogProps) => {
-  const [current, setCurrent] = useState<string[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
   const [openCombobox, setOpenCombobox] = useState(false);
+  const {
+    control,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors, isSubmitting }
+  } = useForm<UserMembershipsFormValues>({
+    resolver: zodResolver(userMembershipsFormSchema),
+    defaultValues: {
+      agency_ids: selectedIds
+    },
+    mode: 'onChange'
+  });
+  const current = useWatch({ control, name: 'agency_ids', defaultValue: [] as string[] });
 
   useEffect(() => {
     if (!open) return;
-    setCurrent(selectedIds);
-  }, [open, selectedIds]);
+    setServerError(null);
+    reset({ agency_ids: selectedIds });
+  }, [open, reset, selectedIds]);
 
   const selectedSet = useMemo(() => new Set(current), [current]);
   const selectedAgencies = useMemo(
@@ -45,26 +62,37 @@ const UserMembershipDialog = ({
 
   const toggleAgency = (agencyId: string) => {
     if (selectedSet.has(agencyId)) {
-      setCurrent((prev) => prev.filter((id) => id !== agencyId));
+      setValue('agency_ids', current.filter((id) => id !== agencyId), {
+        shouldDirty: true,
+        shouldValidate: true
+      });
       return;
     }
-    setCurrent((prev) => [...prev, agencyId]);
+    setValue('agency_ids', [...current, agencyId], {
+      shouldDirty: true,
+      shouldValidate: true
+    });
   };
 
   const removeAgency = (agencyId: string) => {
-    setCurrent((prev) => prev.filter((id) => id !== agencyId));
+    setValue('agency_ids', current.filter((id) => id !== agencyId), {
+      shouldDirty: true,
+      shouldValidate: true
+    });
   };
 
-  const handleSubmit = async (event: FormEvent) => {
-    event.preventDefault();
-    setIsSubmitting(true);
+  const handleFormSubmit = handleSubmit(async (values) => {
+    setServerError(null);
     try {
-      await onSave(current);
+      await onSave(values.agency_ids);
       onOpenChange(false);
-    } finally {
-      setIsSubmitting(false);
+    } catch (error) {
+      const appError = handleUiError(error, 'Impossible de mettre a jour les agences.', {
+        source: 'UserMembershipDialog.submit'
+      });
+      setServerError(appError.message);
     }
-  };
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -75,7 +103,7 @@ const UserMembershipDialog = ({
             Selectionnez les agences rattachees a cet utilisateur.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleFormSubmit} className="space-y-4">
           <div className="space-y-2" data-testid="admin-user-membership-list">
             <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
               <PopoverTrigger asChild>
@@ -141,6 +169,8 @@ const UserMembershipDialog = ({
               )}
             </div>
           </div>
+          {errors.agency_ids?.message ? <p className="text-sm text-red-600">{errors.agency_ids.message}</p> : null}
+          {serverError ? <p className="text-sm text-red-600">{serverError}</p> : null}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler

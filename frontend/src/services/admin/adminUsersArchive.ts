@@ -1,18 +1,23 @@
+import {
+  adminUsersArchiveResponseSchema,
+  type AdminUsersArchiveResponse
+} from '../../../../shared/schemas/api-responses';
 import { safeRpc } from '@/services/api/safeRpc';
 import { createAppError } from '@/services/errors/AppError';
-import { isRecord } from '@/utils/recordNarrowing';
 
-export type ArchiveUserResponse = {
-  ok: true;
-  user_id: string;
-  archived: boolean;
-};
+export type ArchiveUserResponse = AdminUsersArchiveResponse;
 
 const parseArchiveUserResponse = (payload: unknown): ArchiveUserResponse => {
-  if (!isRecord(payload)) {
-    throw createAppError({ code: 'EDGE_INVALID_RESPONSE', message: 'Reponse serveur invalide.', source: 'edge' });
+  const parsed = adminUsersArchiveResponseSchema.safeParse(payload);
+  if (!parsed.success) {
+    throw createAppError({
+      code: 'EDGE_INVALID_RESPONSE',
+      message: 'Reponse serveur invalide.',
+      source: 'edge',
+      details: parsed.error.message
+    });
   }
-  return payload as ArchiveUserResponse;
+  return parsed.data;
 };
 
 export const adminUsersArchive = (userId: string) =>

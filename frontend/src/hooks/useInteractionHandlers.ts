@@ -4,7 +4,7 @@ import { buildReminderDateTime } from '@/utils/date/buildReminderDateTime';
 import { formatFrenchPhone } from '@/utils/formatFrenchPhone';
 import { handleUiError } from '@/services/errors/handleUiError';
 import { convertEntityToClient } from '@/services/entities/convertEntityToClient';
-import { clientsKey, entitySearchIndexKey } from '@/services/query/queryKeys';
+import { invalidateClientsQueries, invalidateEntitySearchIndexQueries } from '@/services/query/queryInvalidation';
 import type { ClientPayload } from '@/services/clients/saveClient';
 import type { EntityContactPayload } from '@/services/entities/saveEntityContact';
 import type { Entity, EntityContact } from '@/types';
@@ -46,7 +46,8 @@ export const useInteractionHandlers = ({ setValue, clearErrors, normalizedRelati
   const handleConvertClient = useCallback(async (payload: Parameters<typeof convertEntityToClient>[0]) => {
     const updated = await convertEntityToClient(payload).match(entity => entity, error => { handleUiError(error, 'Impossible de convertir en client.', { source: 'CockpitForm.convertEntityToClient' }); return null; });
     if (!updated) return;
-    void queryClient.invalidateQueries({ queryKey: clientsKey(activeAgencyId, false) }); void queryClient.invalidateQueries({ queryKey: clientsKey(activeAgencyId, true) }); void queryClient.invalidateQueries({ queryKey: entitySearchIndexKey(activeAgencyId, false) }); void queryClient.invalidateQueries({ queryKey: entitySearchIndexKey(activeAgencyId, true) });
+    void invalidateClientsQueries(queryClient, activeAgencyId);
+    void invalidateEntitySearchIndexQueries(queryClient, activeAgencyId);
     handleSelectEntity(updated); onConvertComplete();
   }, [activeAgencyId, handleSelectEntity, onConvertComplete, queryClient]);
 

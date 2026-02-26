@@ -176,6 +176,7 @@ export const ERROR_CATALOG: Record<string, ErrorCatalogEntry> = {
   REQUEST_FAILED: makeEntry('REQUEST_FAILED', 'La requête a échoué.', 'edge', 'error', 'retry', true),
   INVALID_JSON: makeEntry('INVALID_JSON', 'Payload JSON invalide.', 'validation', 'warning', 'retry'),
   INVALID_PAYLOAD: makeEntry('INVALID_PAYLOAD', 'Payload invalide.', 'validation', 'warning', 'retry'),
+  PAYLOAD_TOO_LARGE: makeEntry('PAYLOAD_TOO_LARGE', 'Payload trop volumineux.', 'validation', 'warning', 'retry'),
   ACTION_REQUIRED: makeEntry('ACTION_REQUIRED', 'Action requise.', 'validation', 'warning', 'retry'),
   ROLE_INVALID: makeEntry('ROLE_INVALID', 'Rôle invalide.', 'validation', 'warning', 'retry'),
   USER_NOT_FOUND: makeEntry('USER_NOT_FOUND', 'Utilisateur introuvable.', 'db', 'warning', 'reload'),

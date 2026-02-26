@@ -1,3 +1,6 @@
+import { eq } from 'drizzle-orm';
+
+import { entities, entity_contacts } from '../../../drizzle/schema.ts';
 import type { AuthContext, DbClient } from '../types.ts';
 import { httpError } from '../middleware/errorHandler.ts';
 import { checkRateLimit } from './rateLimit.ts';
@@ -50,36 +53,52 @@ export const getEntityAgencyId = async (
   db: DbClient,
   entityId: string
 ): Promise<string | null> => {
-  const { data, error } = await db
-    .from('entities')
-    .select('agency_id')
-    .eq('id', entityId)
-    .maybeSingle();
-
-  if (error) {
+  try {
+    const rows = await db
+      .select({ agency_id: entities.agency_id })
+      .from(entities)
+      .where(eq(entities.id, entityId))
+      .limit(1);
+    const data = rows[0];
+    if (!data) {
+      throw httpError(404, 'NOT_FOUND', 'Entite introuvable.');
+    }
+    return data.agency_id;
+  } catch (error) {
+    if (
+      typeof error === 'object'
+      && error !== null
+      && Reflect.get(error, 'code') === 'NOT_FOUND'
+    ) {
+      throw error;
+    }
     throw httpError(500, 'DB_READ_FAILED', "Impossible de charger l'entite.");
   }
-  if (!data) {
-    throw httpError(404, 'NOT_FOUND', 'Entite introuvable.');
-  }
-  return data.agency_id;
 };
 
 export const getContactEntityId = async (
   db: DbClient,
   contactId: string
 ): Promise<string> => {
-  const { data, error } = await db
-    .from('entity_contacts')
-    .select('entity_id')
-    .eq('id', contactId)
-    .maybeSingle();
-
-  if (error) {
+  try {
+    const rows = await db
+      .select({ entity_id: entity_contacts.entity_id })
+      .from(entity_contacts)
+      .where(eq(entity_contacts.id, contactId))
+      .limit(1);
+    const data = rows[0];
+    if (!data?.entity_id) {
+      throw httpError(404, 'NOT_FOUND', 'Contact introuvable.');
+    }
+    return data.entity_id;
+  } catch (error) {
+    if (
+      typeof error === 'object'
+      && error !== null
+      && Reflect.get(error, 'code') === 'NOT_FOUND'
+    ) {
+      throw error;
+    }
     throw httpError(500, 'DB_READ_FAILED', 'Impossible de charger le contact.');
   }
-  if (!data?.entity_id) {
-    throw httpError(404, 'NOT_FOUND', 'Contact introuvable.');
-  }
-  return data.entity_id;
 };

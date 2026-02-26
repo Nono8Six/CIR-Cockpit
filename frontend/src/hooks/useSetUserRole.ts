@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { adminUsersSetRole } from '@/services/admin/adminUsersSetRole';
-import { adminUsersKey } from '@/services/query/queryKeys';
+import { invalidateAdminUsersQuery } from '@/services/query/queryInvalidation';
 import { UserRole } from '@/types';
 import { handleUiError } from '@/services/errors/handleUiError';
 import { mapAdminDomainError } from '@/services/errors/mapAdminDomainError';
@@ -18,7 +18,7 @@ export const useSetUserRole = () => {
         }
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminUsersKey() });
+      void invalidateAdminUsersQuery(queryClient);
     },
     onError: (err) => {
       const appError = mapAdminDomainError(err, {

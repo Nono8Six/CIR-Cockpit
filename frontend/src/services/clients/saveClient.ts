@@ -1,9 +1,9 @@
 import { ResultAsync } from 'neverthrow';
 
+import { dataEntitiesResponseSchema } from '../../../../shared/schemas/api-responses';
 import { AccountType, Client } from '@/types';
 import { createAppError, type AppError } from '@/services/errors/AppError';
 import { safeRpc } from '@/services/api/safeRpc';
-import { isRecord } from '@/utils/recordNarrowing';
 
 export type ClientPayload = {
   id?: string;
@@ -20,10 +20,16 @@ export type ClientPayload = {
 };
 
 const parseEntityResponse = (payload: unknown): Client => {
-  if (!isRecord(payload) || !isRecord(payload.entity)) {
-    throw createAppError({ code: 'REQUEST_FAILED', message: 'Reponse serveur invalide.', source: 'edge' });
+  const parsed = dataEntitiesResponseSchema.safeParse(payload);
+  if (!parsed.success) {
+    throw createAppError({
+      code: 'REQUEST_FAILED',
+      message: 'Reponse serveur invalide.',
+      source: 'edge',
+      details: parsed.error.message
+    });
   }
-  return payload.entity as Client;
+  return parsed.data.entity;
 };
 
 export const saveClient = (payload: ClientPayload): ResultAsync<Client, AppError> =>

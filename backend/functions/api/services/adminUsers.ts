@@ -1,3 +1,6 @@
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
+
+import { agencies, agency_members, agency_system_users, interactions, profiles } from '../../../drizzle/schema.ts';
 import type { Database } from '../../../../shared/supabase.types.ts';
 import type { AdminUsersResponse } from '../../../../shared/schemas/api-responses.ts';
 import type { AdminUsersPayload } from '../../../../shared/schemas/user.schema.ts';
@@ -123,12 +126,13 @@ const buildOrphanSystemEmail = (): string => {
 const ensureAgenciesExist = async (db: DbClient, agencyIds: string[]): Promise<void> => {
   if (agencyIds.length === 0) return;
 
-  const { data, error } = await db
-    .from('agencies')
-    .select('id')
-    .in('id', agencyIds);
-
-  if (error) {
+  let data: Array<{ id: string }> = [];
+  try {
+    data = await db
+      .select({ id: agencies.id })
+      .from(agencies)
+      .where(inArray(agencies.id, agencyIds));
+  } catch {
     throw httpError(500, 'AGENCY_LOOKUP_FAILED', 'Impossible de valider les agences.');
   }
 
@@ -136,36 +140,62 @@ const ensureAgenciesExist = async (db: DbClient, agencyIds: string[]): Promise<v
   const missing = agencyIds.filter((id) => !existing.has(id));
 
   if (missing.length > 0) {
-    throw httpError(400, 'AGENCY_NOT_FOUND', `Agence introuvable: ${missing.join(', ')}`);
+    throw httpError(404, 'AGENCY_NOT_FOUND', `Agence introuvable: ${missing.join(', ')}`);
   }
 };
 
 const getProfileByEmail = async (db: DbClient, email: string): Promise<ProfileSummary | null> => {
-  const { data, error } = await db
-    .from('profiles')
-    .select('id, email, role, archived_at')
-    .eq('email', email)
-    .maybeSingle();
-
-  if (error) {
+  try {
+    const rows = await db
+      .select({
+        id: profiles.id,
+        email: profiles.email,
+        role: profiles.role,
+        archived_at: profiles.archived_at
+      })
+      .from(profiles)
+      .where(eq(profiles.email, email))
+      .limit(1);
+    const data = rows[0];
+    if (!data?.email || !data.role) {
+      return null;
+    }
+    return {
+      id: data.id,
+      email: data.email,
+      role: data.role,
+      archived_at: data.archived_at
+    };
+  } catch {
     throw httpError(500, 'PROFILE_LOOKUP_FAILED', 'Impossible de charger le profil.');
   }
-
-  return data ?? null;
 };
 
 const getProfileById = async (db: DbClient, userId: string): Promise<ProfileSummary | null> => {
-  const { data, error } = await db
-    .from('profiles')
-    .select('id, email, role, archived_at')
-    .eq('id', userId)
-    .maybeSingle();
-
-  if (error) {
+  try {
+    const rows = await db
+      .select({
+        id: profiles.id,
+        email: profiles.email,
+        role: profiles.role,
+        archived_at: profiles.archived_at
+      })
+      .from(profiles)
+      .where(eq(profiles.id, userId))
+      .limit(1);
+    const data = rows[0];
+    if (!data?.email || !data.role) {
+      return null;
+    }
+    return {
+      id: data.id,
+      email: data.email,
+      role: data.role,
+      archived_at: data.archived_at
+    };
+  } catch {
     throw httpError(500, 'PROFILE_LOOKUP_FAILED', 'Impossible de charger le profil.');
   }
-
-  return data ?? null;
 };
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -187,26 +217,27 @@ const updateProfile = async (
 ): Promise<void> => {
   const cleaned = Object.fromEntries(
     Object.entries(updates).filter(([, value]) => value !== undefined)
-  );
+  ) as Partial<Database['public']['Tables']['profiles']['Update']>;
   if (Object.keys(cleaned).length === 0) return;
 
-  const { error } = await db
-    .from('profiles')
-    .update(cleaned)
-    .eq('id', userId);
-
-  if (error) {
-    throw httpError(500, 'PROFILE_UPDATE_FAILED', error.message);
+  try {
+    await db
+      .update(profiles)
+      .set(cleaned)
+      .where(eq(profiles.id, userId));
+  } catch (error) {
+    throw httpError(500, 'PROFILE_UPDATE_FAILED', getErrorDetails(error) ?? 'Impossible de mettre a jour le profil.');
   }
 };
 
 const listMemberships = async (db: DbClient, userId: string): Promise<string[]> => {
-  const { data, error } = await db
-    .from('agency_members')
-    .select('agency_id')
-    .eq('user_id', userId);
-
-  if (error) {
+  let data: Array<{ agency_id: string }> = [];
+  try {
+    data = await db
+      .select({ agency_id: agency_members.agency_id })
+      .from(agency_members)
+      .where(eq(agency_members.user_id, userId));
+  } catch {
     throw httpError(500, 'MEMBERSHIP_LOOKUP_FAILED', 'Impossible de charger les appartenances.');
   }
 
@@ -221,38 +252,39 @@ const applyMemberships = async (
 ): Promise<string[]> => {
   if (mode === 'remove') {
     if (agencyIds.length === 0) return listMemberships(db, userId);
-    const { error } = await db
-      .from('agency_members')
-      .delete()
-      .eq('user_id', userId)
-      .in('agency_id', agencyIds);
-
-    if (error) {
-      throw httpError(500, 'MEMBERSHIP_DELETE_FAILED', error.message);
+    try {
+      await db
+        .delete(agency_members)
+        .where(and(
+          eq(agency_members.user_id, userId),
+          inArray(agency_members.agency_id, agencyIds)
+        ));
+    } catch (error) {
+      throw httpError(500, 'MEMBERSHIP_DELETE_FAILED', getErrorDetails(error) ?? 'Impossible de supprimer les appartenances.');
     }
     return listMemberships(db, userId);
   }
 
   if (agencyIds.length > 0) {
     const rows = agencyIds.map((agencyId) => ({ agency_id: agencyId, user_id: userId }));
-    const { error } = await db
-      .from('agency_members')
-      .upsert(rows, { onConflict: 'agency_id,user_id', ignoreDuplicates: true });
-
-    if (error) {
-      throw httpError(500, 'MEMBERSHIP_UPSERT_FAILED', error.message);
+    try {
+      await db
+        .insert(agency_members)
+        .values(rows)
+        .onConflictDoNothing({ target: [agency_members.agency_id, agency_members.user_id] });
+    } catch (error) {
+      throw httpError(500, 'MEMBERSHIP_UPSERT_FAILED', getErrorDetails(error) ?? 'Impossible de mettre a jour les appartenances.');
     }
   }
 
   if (mode === 'replace') {
     if (agencyIds.length === 0) {
-      const { error } = await db
-        .from('agency_members')
-        .delete()
-        .eq('user_id', userId);
-
-      if (error) {
-        throw httpError(500, 'MEMBERSHIP_DELETE_FAILED', error.message);
+      try {
+        await db
+          .delete(agency_members)
+          .where(eq(agency_members.user_id, userId));
+      } catch (error) {
+        throw httpError(500, 'MEMBERSHIP_DELETE_FAILED', getErrorDetails(error) ?? 'Impossible de supprimer les appartenances.');
       }
       return [];
     }
@@ -260,14 +292,15 @@ const applyMemberships = async (
     const currentIds = await listMemberships(db, userId);
     const toDelete = currentIds.filter((id) => !agencyIds.includes(id));
     if (toDelete.length > 0) {
-      const { error } = await db
-        .from('agency_members')
-        .delete()
-        .eq('user_id', userId)
-        .in('agency_id', toDelete);
-
-      if (error) {
-        throw httpError(500, 'MEMBERSHIP_DELETE_FAILED', error.message);
+      try {
+        await db
+          .delete(agency_members)
+          .where(and(
+            eq(agency_members.user_id, userId),
+            inArray(agency_members.agency_id, toDelete)
+          ));
+      } catch (error) {
+        throw httpError(500, 'MEMBERSHIP_DELETE_FAILED', getErrorDetails(error) ?? 'Impossible de supprimer les appartenances.');
       }
     }
   }
@@ -454,38 +487,38 @@ const ensureSystemProfileState = async (
 };
 
 const getAgencySystemUserId = async (db: DbClient, agencyId: string): Promise<string | null> => {
-  const { data, error } = await db
-    .from('agency_system_users')
-    .select('user_id')
-    .eq('agency_id', agencyId)
-    .maybeSingle();
-
-  if (error) {
+  try {
+    const rows = await db
+      .select({ user_id: agency_system_users.user_id })
+      .from(agency_system_users)
+      .where(eq(agency_system_users.agency_id, agencyId))
+      .limit(1);
+    return rows[0]?.user_id ?? null;
+  } catch (error) {
     throw httpError(
       500,
       'SYSTEM_USER_PROVISION_FAILED',
       "Impossible de charger le compte systeme de l'agence.",
-      error.message
+      getErrorDetails(error)
     );
   }
-
-  return data?.user_id ?? null;
 };
 
 const upsertAgencySystemUser = async (db: DbClient, agencyId: string, userId: string): Promise<void> => {
-  const { error } = await db
-    .from('agency_system_users')
-    .upsert(
-      { agency_id: agencyId, user_id: userId },
-      { onConflict: 'agency_id', ignoreDuplicates: true }
-    );
-
-  if (error) {
+  try {
+    await db
+      .insert(agency_system_users)
+      .values({ agency_id: agencyId, user_id: userId })
+      .onConflictDoUpdate({
+        target: agency_system_users.agency_id,
+        set: { user_id: sql`excluded.user_id` }
+      });
+  } catch (error) {
     throw httpError(
       500,
       'SYSTEM_USER_PROVISION_FAILED',
       "Impossible d'associer le compte systeme a l'agence.",
-      error.message
+      getErrorDetails(error)
     );
   }
 };
@@ -493,17 +526,18 @@ const upsertAgencySystemUser = async (db: DbClient, agencyId: string, userId: st
 const loadAgencyNames = async (db: DbClient, agencyIds: string[]): Promise<Map<string, string>> => {
   if (agencyIds.length === 0) return new Map();
 
-  const { data, error } = await db
-    .from('agencies')
-    .select('id, name')
-    .in('id', agencyIds);
-
-  if (error) {
+  let data: Array<{ id: string; name: string }> = [];
+  try {
+    data = await db
+      .select({ id: agencies.id, name: agencies.name })
+      .from(agencies)
+      .where(inArray(agencies.id, agencyIds));
+  } catch (error) {
     throw httpError(
       500,
       'SYSTEM_USER_PROVISION_FAILED',
       'Impossible de charger les agences pour la suppression utilisateur.',
-      error.message
+      getErrorDetails(error)
     );
   }
 
@@ -554,17 +588,18 @@ const listUserInteractionOwnership = async (
   db: DbClient,
   userId: string
 ): Promise<{ agencyIds: string[]; hasOrphanInteractions: boolean }> => {
-  const { data, error } = await db
-    .from('interactions')
-    .select('agency_id')
-    .eq('created_by', userId);
-
-  if (error) {
+  let data: Array<{ agency_id: string | null }> = [];
+  try {
+    data = await db
+      .select({ agency_id: interactions.agency_id })
+      .from(interactions)
+      .where(eq(interactions.created_by, userId));
+  } catch (error) {
     throw httpError(
       500,
       'USER_DELETE_ANONYMIZATION_FAILED',
       "Impossible d'analyser les interactions de l'utilisateur.",
-      error.message
+      getErrorDetails(error)
     );
   }
 
@@ -590,27 +625,23 @@ const countUserInteractions = async (
   userId: string,
   agencyId: string | null
 ): Promise<number> => {
-  let query = db
-    .from('interactions')
-    .select('id', { count: 'exact', head: true })
-    .eq('created_by', userId);
-
-  if (agencyId) {
-    query = query.eq('agency_id', agencyId);
-  } else {
-    query = query.is('agency_id', null);
-  }
-
-  const { count, error } = await query;
-  if (error) {
+  try {
+    const whereClause = agencyId
+      ? and(eq(interactions.created_by, userId), eq(interactions.agency_id, agencyId))
+      : and(eq(interactions.created_by, userId), isNull(interactions.agency_id));
+    const rows = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(interactions)
+      .where(whereClause);
+    return Number(rows[0]?.count ?? 0);
+  } catch (error) {
     throw httpError(
       500,
       'USER_DELETE_ANONYMIZATION_FAILED',
       "Impossible de compter les interactions a anonymiser.",
-      error.message
+      getErrorDetails(error)
     );
   }
-  return count ?? 0;
 };
 
 const reassignUserInteractions = async (
@@ -622,24 +653,20 @@ const reassignUserInteractions = async (
   const interactionCount = await countUserInteractions(db, userId, agencyId);
   if (interactionCount === 0) return 0;
 
-  let query = db
-    .from('interactions')
-    .update({ created_by: targetUserId })
-    .eq('created_by', userId);
-
-  if (agencyId) {
-    query = query.eq('agency_id', agencyId);
-  } else {
-    query = query.is('agency_id', null);
-  }
-
-  const { error } = await query;
-  if (error) {
+  try {
+    const whereClause = agencyId
+      ? and(eq(interactions.created_by, userId), eq(interactions.agency_id, agencyId))
+      : and(eq(interactions.created_by, userId), isNull(interactions.agency_id));
+    await db
+      .update(interactions)
+      .set({ created_by: targetUserId })
+      .where(whereClause);
+  } catch (error) {
     throw httpError(
       500,
       'USER_DELETE_ANONYMIZATION_FAILED',
       "Impossible de reattribuer les interactions de l'utilisateur.",
-      error.message
+      getErrorDetails(error)
     );
   }
 

@@ -26,6 +26,7 @@ export const useConvertClientDialog = ({ open, entity, onConvert }: UseConvertCl
     control,
     handleSubmit,
     setValue,
+    setError,
     reset,
     formState: { errors, isSubmitting }
   } = useForm<ConvertClientValues>({
@@ -57,11 +58,15 @@ export const useConvertClientDialog = ({ open, entity, onConvert }: UseConvertCl
 
   const handleConvert = handleSubmit(async (values) => {
     if (!entity?.id) return;
-    await onConvert({
-      id: entity.id,
-      client_number: values.client_number,
-      account_type: values.account_type
-    });
+    try {
+      await onConvert({
+        id: entity.id,
+        client_number: values.client_number,
+        account_type: values.account_type
+      });
+    } catch {
+      setError('root', { type: 'server', message: 'Impossible de convertir en client.' });
+    }
   });
 
   const formattedClientNumber = formatClientNumber(clientNumber);

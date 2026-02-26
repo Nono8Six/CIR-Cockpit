@@ -1,1385 +1,1360 @@
-# Audit Complet CIR Cockpit - Stack Technique & Recommandations
+# AUDIT TECHNIQUE CIR Cockpit - Stack Definitive 2026
 
-> **Date :** 16 fevrier 2026
-> **Scope :** Audit exhaustif de l'architecture, des choix techniques, et recommandations pour la stack ideale.
-> **Projet :** CIR Cockpit - CRM B2B multi-tenant (gestion interactions clients/prospects/contacts)
-
----
-
-## Table des matieres
-
-1. [Vue d'ensemble du projet](#1-vue-densemble-du-projet)
-2. [Evaluation couche par couche](#2-evaluation-couche-par-couche)
-   - 2.1 [Framework Frontend : React 19](#21-framework-frontend--react-19)
-   - 2.2 [Build Tool / Meta-framework : Vite 7 SPA](#22-build-tool--meta-framework--vite-7-spa)
-   - 2.3 [Styling : Tailwind CSS 4](#23-styling--tailwind-css-4)
-   - 2.4 [Composants UI : shadcn/ui + Radix](#24-composants-ui--shadcnui--radix)
-   - 2.5 [State Management : TanStack Query v5 + Context + Zustand](#25-state-management--tanstack-query-v5--context--zustand)
-   - 2.6 [Formulaires : React Hook Form v7](#26-formulaires--react-hook-form-v7)
-   - 2.7 [Validation : Zod v4](#27-validation--zod-v4)
-   - 2.8 [Routing : Aucun](#28-routing--aucun)
-   - 2.9 [Backend : Hono sur Supabase Edge Functions](#29-backend--hono-sur-supabase-edge-functions)
-   - 2.10 [Runtime : Deno](#210-runtime--deno)
-   - 2.11 [Database : PostgreSQL via Supabase](#211-database--postgresql-via-supabase)
-   - 2.12 [ORM / Query Layer : Raw Supabase Client](#212-orm--query-layer--raw-supabase-client)
-   - 2.13 [Auth : Supabase Auth](#213-auth--supabase-auth)
-   - 2.14 [Testing : Vitest + Deno test + Playwright](#214-testing--vitest--deno-test--playwright)
-   - 2.15 [Package Manager : npm](#215-package-manager--npm)
-   - 2.16 [Monorepo : Aucun](#216-monorepo--aucun)
-   - 2.17 [CI/CD : GitHub Actions](#217-cicd--github-actions)
-3. [Stack ideale recommandee](#3-stack-ideale-recommandee)
-4. [Classement par effort/valeur](#4-classement-par-effortvaleur)
-5. [Strategie de migration detaillee](#5-strategie-de-migration-detaillee)
-6. [Fichiers critiques pour l'implementation](#6-fichiers-critiques-pour-limplementation)
-7. [Checklist de verification](#7-checklist-de-verification)
-8. [Validation factuelle de cet audit (17/02/2026)](#8-validation-factuelle-de-cet-audit-17022026)
-9. [Grand chapitre: Sortir de Supabase vers une stack PostgreSQL plus ouverte](#9-grand-chapitre-sortir-de-supabase-vers-une-stack-postgresql-plus-ouverte)
-10. [Sources et references](#10-sources-et-references)
+Date : 2026-02-19
+Perimetre : `frontend/` + `backend/` + `shared/` + projet Supabase `CIR_Cockpit` (`rbjtrcorlezvocayluok`)
 
 ---
 
-## 1. Vue d'ensemble du projet
+## 1. Contraintes & Metriques
 
-### Ce qu'est CIR Cockpit
+### 1.1 Contraintes fermes
 
-CRM B2B multi-tenant pour la gestion des interactions clients, prospects et contacts. Utilise par des agences avec 3 niveaux de roles :
+| # | Contrainte | Impact |
+|---|-----------|--------|
+| C1 | **Rester sur Supabase** (Postgres, Auth, Edge Functions, Realtime, Storage) | Exclut toute migration vers Neon, PlanetScale, Firebase, self-hosted Postgres |
+| C2 | **Pas de CI GitHub** (QA locale uniquement) | La quality gate est un script local + pre-commit hook, pas un pipeline distant |
+| C3 | **Zero compromis sur la stack cible** | On ne "differe" rien. Chaque couche recoit sa technologie optimale, meme si le refactoring est lourd |
 
-- **super_admin** : acces global, gestion agences et utilisateurs
-- **agency_admin** : gestion de son agence, parametrage, clients
-- **tcs** : operateur terrain, creation d'interactions et consultation
-
-### Metriques du projet
+### 1.2 Metriques projet actuelles
 
 | Metrique | Valeur |
 |----------|--------|
-| Fichiers frontend | ~484 |
-| Fichiers backend | ~32 |
-| Tables PostgreSQL | 14 |
-| Migrations SQL | 53 (50 appliquees) |
-| Triggers | 30 |
-| Functions SQL | 23 |
-| Tests frontend (Vitest) | ~101 |
-| Tests backend (Deno) | ~40 |
-| Composants React | ~100+ .tsx |
-| Custom hooks | ~76 |
-| Fonctions service | ~80+ |
-| Bundle estime | ~140KB gzip |
+| Fichiers `.tsx` (frontend/src) | 233 (hors tests) |
+| Fichiers `.ts` (frontend/src) | 214 (hors tests) |
+| Tests frontend (Vitest) | 37 fichiers |
+| Tests backend (Deno) | 11 fichiers |
+| Migrations SQL | 57 fichiers |
+| Tables publiques | 14 |
+| Fonctions publiques | 23 |
+| Triggers | 30 objets |
+| Schemas partages (shared/schemas) | 12 fichiers |
+| Routes backend (Hono) | 7 fichiers |
+| Services backend | 10 fichiers |
+| Onglets/pages applicatifs | 5 (cockpit, dashboard, settings, clients, admin) |
+| Routeur URL | **Aucun** (navigation par `useState<AppTab>` dans App.tsx) |
+| Package manager | npm (frontend) + pnpm workspaces (racine) |
+| Bundle splitting | Manuel (tanstack, supabase, forms, icons, react, vendor) |
 
-### Stack actuelle resumee
+---
+
+## 2. Stack Actuelle vs Stack Cible (vue synthetique)
+
+| # | Couche | Actuel | Note /10 | Cible | Decision |
+|---|--------|--------|----------|-------|----------|
+| 1 | Framework Frontend | React 19 | 9 | React 19 | GARDER |
+| 2 | Build Tool | Vite 7 | 9 | Vite 7 | GARDER |
+| 3 | Routing | `useState<AppTab>` | 2 | **TanStack Router** | CHANGER |
+| 4 | Styling | Tailwind CSS 4 | 9 | Tailwind CSS 4 | GARDER |
+| 5 | UI Components | shadcn/ui + Radix | 9 | shadcn/ui + Radix | GARDER |
+| 6 | State Management | TanStack Query v5 + Zustand | 8 | TanStack Query v5 + Zustand | GARDER |
+| 7 | Forms | React Hook Form v7 | 8 | React Hook Form v7 | GARDER |
+| 8 | Validation | Zod v4 | 9 | Zod v4 | GARDER |
+| 9 | API Layer | Fetch manuel + types manuels | 3 | **tRPC + Hono adapter** | CHANGER |
+| 10 | Backend Framework | Hono | 8 | Hono | GARDER |
+| 11 | Runtime Backend | Deno | 7 | Deno | GARDER (impose par Supabase) |
+| 12 | Database ORM | Supabase Client brut | 4 | **Drizzle ORM** (backend) | CHANGER |
+| 13 | Database | Supabase PostgreSQL 17 | 8 | Supabase PostgreSQL 17 | GARDER |
+| 14 | Auth | Supabase Auth | 7 | Supabase Auth + hardening | AMELIORER |
+| 15 | Testing | Vitest + Deno test | 7 | Vitest + Deno test + Playwright | GARDER |
+| 16 | Package Manager | npm (frontend) | 5 | **pnpm** | CHANGER |
+| 17 | Monorepo | pnpm-workspace partiel | 4 | **pnpm workspaces complet** | CHANGER |
+| 18 | QA Gate | Runbook manuel | 3 | **Script local + Husky pre-commit** | CHANGER |
+
+---
+
+## 3. Evaluation detaillee couche par couche
+
+---
+
+### Couche 1 : Framework Frontend - React 19
+
+**Note actuelle : 9/10**
+
+**Problemes identifies :** Aucun bloquant. React 19 apporte les Server Components, le compilateur React, `use()`, Actions. Le projet n'utilise pas encore le compilateur React mais ca n'est pas bloquant.
+
+**Comparatif :**
+
+| Framework | Bundle (gzip) | Perf (TTI) | DX | Ecosysteme | Fit Supabase |
+|-----------|---------------|------------|-----|-----------|-------------|
+| **React 19** | ~45 kB | Excellent | Mature, hooks, JSX natif | Immense | Parfait (SDK officiel) |
+| Solid.js | ~7 kB | Superieur | Signaux, JSX different | Moyen | SDK communautaire |
+| Svelte 5 | ~2 kB | Superieur | Runes, fichiers `.svelte` | Moyen | SDK communautaire |
+| Vue 3.5 | ~33 kB | Tres bon | Composition API, SFC | Grand | SDK communautaire |
+
+**Verdict : GARDER React 19.**
+
+Raisons :
+- SDK Supabase officiel (`@supabase/supabase-js`) cible React en priorite
+- shadcn/ui + Radix sont natifs React
+- TanStack Query, React Hook Form, Zustand : tous React-first
+- Equipe existante formee React
+- React 19 corrige les pain points historiques (pas de memo, compilateur, Actions)
+- Migrer vers Solid/Svelte/Vue impliquerait reecrire 233 composants + tous les hooks pour zero gain mesurable sur ce projet
+
+---
+
+### Couche 2 : Build Tool - Vite 7
+
+**Note actuelle : 9/10**
+
+**Problemes identifies :** Aucun. Le HMR est instantane, le build production est rapide, le chunk splitting est deja configure manuellement.
+
+**Comparatif :**
+
+| Outil | Build speed | HMR | Config | Ecosysteme | Fit React |
+|-------|------------|-----|--------|-----------|----------|
+| **Vite 7** | Rapide (Rolldown) | Instantane | Minimal | Enorme | Natif |
+| Turbopack | Rapide | Instantane | Next.js only | Next.js | Next.js only |
+| Rspack | Tres rapide | Rapide | Webpack-compat | Croissant | Plugin |
+| esbuild | Ultra rapide | Non natif | Programmatique | Limite | Manuel |
+
+**Verdict : GARDER Vite 7.**
+
+Raisons :
+- Vite 7 utilise Rolldown (Rust) en interne : performances build au niveau Rspack
+- Plugin React officiel (`@vitejs/plugin-react`)
+- TanStack Router a un plugin Vite natif pour le code-gen des routes
+- Le chunk splitting manuel fonctionne bien
+- Zero raison de migrer
+
+---
+
+### Couche 3 : Routing - AUCUN -> TanStack Router
+
+**Note actuelle : 2/10**
+
+**Problemes identifies :**
+- Navigation geree par `useState<AppTab>` dans `App.tsx` ligne 27
+- Zero URL : impossible de partager un lien vers un client ou un dashboard filtre
+- Pas de deep linking : refresh = retour a l'onglet cockpit
+- Pas de code splitting : tous les onglets charges simultanement
+- Pas de back/forward browser fonctionnel
+- Pas de state URL (filtres dashboard, recherche, pagination)
+- Le composant `App.tsx` concentre trop de responsabilites (routing + state global + handlers)
+
+**Comparatif :**
+
+| Router | Type-safety | Bundle (gzip) | Code splitting | URL state | Search params | Loader/Action | Fit Vite |
+|--------|------------|---------------|---------------|-----------|-------------|---------------|---------|
+| **TanStack Router** | Natif (inferred) | ~12 kB | Natif (lazy) | Natif | Schema Zod | Natif | Plugin Vite |
+| React Router v7 | Partiel (generics) | ~14 kB | Lazy routes | Partiel | Manuel | Natif | Manuel |
+| Wouter | Zero | ~1.5 kB | Non | Non | Non | Non | N/A |
+| Next.js App Router | Partiel | N/A (full fw) | Natif | Natif | Partiel | Server Components | Non applicable |
+
+**Verdict : TanStack Router. Non negociable.**
+
+Ce que ca change :
+- Chaque vue metier a une URL typee (`/clients/:clientId`, `/dashboard?from=2026-01-01&to=2026-02-19`)
+- Les search params sont valides par Zod schemas (meme stack que le reste du projet)
+- Code splitting automatique : chaque route = lazy import
+- `App.tsx` passe de ~250 lignes a un simple `<RouterProvider>`
+- Back/forward/refresh fonctionnent nativement
+- Les loaders TanStack Router s'integrent avec TanStack Query (prefetch sur hover)
+- Le plugin Vite genere les types de routes automatiquement
+
+Migration estimee : la plus impactante du projet car touche `App.tsx`, tous les composants qui recoivent `activeTab`/`setActiveTab`, et la structure des dossiers.
+
+---
+
+### Couche 4 : Styling - Tailwind CSS 4
+
+**Note actuelle : 9/10**
+
+**Problemes identifies :** Aucun. Tailwind CSS 4 est deja en place avec le plugin Vite natif.
+
+**Comparatif :**
+
+| Solution | Perf runtime | DX | Bundle | Ecosysteme |
+|----------|-------------|-----|--------|-----------|
+| **Tailwind CSS 4** | Zero runtime | Excellent | Arbre secoue | Immense |
+| CSS Modules | Zero runtime | Correct | Scoped | Standard |
+| Panda CSS | Build-time | Bon | Arbre secoue | Croissant |
+| StyleX (Meta) | Build-time | Bon | Atomique | Naissant |
+
+**Verdict : GARDER Tailwind CSS 4.**
+
+Raisons :
+- Tailwind CSS 4 = nouvelle engine Rust, scan automatique, zero config PostCSS
+- shadcn/ui est construit sur Tailwind
+- `tailwind-merge` + `class-variance-authority` deja en place
+- Aucune alternative ne justifie une migration
+
+---
+
+### Couche 5 : UI Components - shadcn/ui + Radix
+
+**Note actuelle : 9/10**
+
+**Problemes identifies :** Aucun. Les primitives Radix sont accessibles (WAI-ARIA), les composants shadcn/ui sont copy-paste et modifiables.
+
+**Comparatif :**
+
+| Librairie | Accessibilite | Personnalisation | Bundle | Maintenance |
+|-----------|-------------|----------------|--------|------------|
+| **shadcn/ui + Radix** | WAI-ARIA natif | Totale (code source) | Arbre secoue | Active |
+| Headless UI | WAI-ARIA | Totale | Leger | Tailwind Labs |
+| Mantine | Partiel | Theme + overrides | Plus lourd | Active |
+| Ant Design | Partiel | Theme | Lourd | Active |
+| Ark UI | WAI-ARIA | Totale | Leger | Active |
+
+**Verdict : GARDER shadcn/ui + Radix.**
+
+Raisons :
+- Le code source des composants est dans le projet (`components/ui/`), pas une dependance
+- WAI-ARIA complet via Radix primitives
+- Integre nativement avec Tailwind CSS
+- Aucune raison de migrer
+
+---
+
+### Couche 6 : State Management - TanStack Query v5 + Zustand
+
+**Note actuelle : 8/10**
+
+**Problemes identifies :**
+- Quelques query keys non centralisees (la majorite sont dans `queryKeys.ts`)
+- Certaines invalidations pourraient etre plus granulaires
+
+**Comparatif :**
+
+| Solution | Server state | Client state | Bundle | DX |
+|----------|-------------|-------------|--------|-----|
+| **TanStack Query + Zustand** | Excellent | Minimal, cible | ~35 kB + ~2 kB | Excellent |
+| TanStack Query + Jotai | Excellent | Atomique | ~35 kB + ~3 kB | Bon |
+| SWR + Zustand | Bon | Minimal | ~10 kB + ~2 kB | Simple |
+| Redux Toolkit + RTK Query | Bon | Complet mais verbose | ~40 kB | Moyen |
+
+**Verdict : GARDER TanStack Query v5 + Zustand.**
+
+Raisons :
+- TanStack Query v5 est le standard pour le server state React
+- Zustand est utilise uniquement pour l'error store (scope minimal, correct)
+- Les query keys sont deja largement centralisees dans `queryKeys.ts`
+- L'integration TanStack Query + TanStack Router (loaders, prefetch) sera un bonus majeur
+
+Amelioration a faire : centraliser les dernieres query keys restantes et ajouter des prefetch dans les loaders TanStack Router.
+
+---
+
+### Couche 7 : Forms - React Hook Form v7
+
+**Note actuelle : 8/10**
+
+**Problemes identifies :** Aucun bloquant. RHF v7 est performant (zero re-render par champ) et integre avec Zod via `@hookform/resolvers`.
+
+**Comparatif :**
+
+| Solution | Perf (re-renders) | Bundle | Validation | DX |
+|----------|-------------------|--------|-----------|-----|
+| **React Hook Form v7** | Excellent (uncontrolled) | ~9 kB | Zod natif | Mature |
+| TanStack Form | Bon | ~10 kB | Zod natif | Nouveau |
+| Formik | Moyen (controlled) | ~13 kB | Yup/Zod | Mature |
+| Conform | Bon | ~5 kB | Zod natif | Server-first |
+
+**Verdict : GARDER React Hook Form v7.**
+
+Raisons :
+- RHF + Zod est le standard etabli pour les formulaires React type-safe
+- TanStack Form est plus recent et moins stable (v0)
+- Les schemas Zod partages (`shared/schemas/`) s'integrent directement avec `@hookform/resolvers`
+- Aucun gain mesurable a migrer
+
+---
+
+### Couche 8 : Validation - Zod v4
+
+**Note actuelle : 9/10**
+
+**Problemes identifies :** Aucun. Zod v4 est deja en place frontend + backend avec import map Deno correct.
+
+**Comparatif :**
+
+| Solution | Bundle (gzip) | Perf | DX | Ecosysteme |
+|----------|---------------|------|-----|-----------|
+| **Zod v4** | ~13 kB | Bon | Excellent | Immense |
+| Valibot | ~1 kB (tree-shake) | Superieur | Bon | Croissant |
+| ArkType | ~5 kB | Excellent | Tres bon | Naissant |
+| TypeBox | ~10 kB | Tres bon | Moyen | Niche |
+
+**Verdict : GARDER Zod v4.**
+
+Raisons :
+- 12 schemas partages front/back dans `shared/schemas/`
+- Integration native avec React Hook Form (`@hookform/resolvers`)
+- Integration native avec TanStack Router (search params validation)
+- Integration native avec tRPC (input/output validation)
+- Zod est le denominateur commun de toute la stack cible
+- Valibot a un meilleur tree-shaking mais l'ecosysteme d'integration est moins mature
+- Le bundle Zod (~13 kB) est acceptable pour un SPA metier
+
+---
+
+### Couche 9 : API Layer - Manuel -> tRPC + Hono
+
+**Note actuelle : 3/10**
+
+**Problemes identifies :**
+- Les appels Edge Function sont faits via `fetch` manuel ou `supabase.functions.invoke()`
+- Les types de requete/reponse sont maintenus manuellement des deux cotes
+- Un changement d'API backend peut casser le frontend silencieusement (aucune erreur au compile-time)
+- Le contrat API n'est verifie qu'au runtime
+- Il existe deja un client Hono RPC partiel (`services/api/`) mais il ne couvre pas toutes les routes
+- 10 services frontend font encore des mutations directes via Supabase Client au lieu de passer par l'Edge Function
+
+**Comparatif :**
+
+| Solution | Type-safety E2E | Bundle client | Perf | Backend fit | Validation |
+|----------|----------------|---------------|------|-----------|-----------|
+| **tRPC + Hono adapter** | Compile-time, infere | ~8 kB | Excellent | Natif (@trpc/server/adapters/hono) | Zod natif |
+| Hono RPC client | Compile-time, infere | Inclus dans hono/client | Excellent | Natif | Manuel |
+| GraphQL (Relay/urql) | Schema-first + codegen | ~30-50 kB | Bon (cache normalise) | Separate | Schema SDL |
+| OpenAPI + codegen | Schema-first + codegen | ~5 kB genere | Bon | Separate | JSON Schema |
+| REST + types manuels | Zero | Zero | Bon | N/A | Manuel |
+
+**Verdict : tRPC + Hono adapter. Non negociable.**
+
+Pourquoi tRPC plutot que Hono RPC client (deja partiellement en place) :
+
+| Critere | Hono RPC | tRPC |
+|---------|----------|------|
+| Validation input | Manuelle (middleware) | Zod schema sur chaque procedure |
+| Validation output | Aucune | Zod schema sur chaque procedure |
+| Middleware typees | Non | Oui (context inferee) |
+| Subscription (Realtime) | Non | Natif (via WebSocket adapter) |
+| Batching requetes | Non | Natif |
+| TanStack Query integration | Manuelle | `@trpc/react-query` (hooks generes) |
+| Communaute / docs | Limitee | Mature, large communaute |
+
+Ce que ca change :
+- Chaque route backend est une procedure tRPC avec input/output Zod
+- Le frontend importe les types directement depuis le router tRPC (zero duplication)
+- Erreur compile-time si le contrat API change
+- Les hooks TanStack Query sont generes automatiquement (`trpc.data.entities.useQuery()`)
+- Le batching reduit le nombre de requetes HTTP
+- Hono reste le framework HTTP, tRPC s'y monte via `@trpc/server/adapters/hono`
+
+---
+
+### Couche 10 : Backend Framework - Hono
+
+**Note actuelle : 8/10**
+
+**Problemes identifies :** Aucun bloquant. Hono est leger, rapide, et concu pour les edge runtimes.
+
+**Comparatif :**
+
+| Framework | Bundle | Perf | Middleware | Deno support | Edge support |
+|-----------|--------|------|-----------|-------------|-------------|
+| **Hono** | ~14 kB | Ultra rapide | Chain natif | Natif | Natif |
+| Express | ~200 kB | Bon | Immense ecosysteme | Via npm compat | Non |
+| Fastify | ~100 kB | Excellent | Plugin system | Via npm compat | Non |
+| Elysia | ~20 kB | Ultra rapide | Natif | Non (Bun only) | Bun |
+| oak (Deno) | ~30 kB | Bon | Middleware chain | Natif | Non |
+
+**Verdict : GARDER Hono.**
+
+Raisons :
+- Concu pour Deno et les edge runtimes (Supabase Edge Functions)
+- Adapter tRPC natif (`@trpc/server/adapters/hono`)
+- Middleware chain propre (requestId, auth, errorHandler deja en place)
+- Ultra leger pour le cold start des Edge Functions
+
+---
+
+### Couche 11 : Runtime Backend - Deno
+
+**Note actuelle : 7/10**
+
+**Problemes identifies :**
+- Impose par Supabase Edge Functions (pas de choix)
+- Necessite `--no-check` pour les tests a cause des imports URL Hono
+- L'import map (`deno.json`) doit etre maintenue manuellement
+
+**Verdict : GARDER Deno (impose par Supabase).**
+
+Pas de comparatif : Supabase Edge Functions ne supportent que Deno. C'est une contrainte ferme.
+
+Amelioration : garder l'import map `deno.json` a jour, utiliser les imports JSR quand disponibles (deja en place pour `@hono/hono` et `@supabase/functions-js`).
+
+---
+
+### Couche 12 : Database ORM - Raw Supabase Client -> Drizzle ORM
+
+**Note actuelle : 4/10**
+
+**Problemes identifies :**
+- Les queries backend utilisent `supabase.from('table').select(...)` : les colonnes sont des strings, pas typees au compile-time
+- Renommer une colonne en base casse le backend silencieusement (erreur runtime uniquement)
+- Les jointures complexes necessitent du SQL brut (`supabase.rpc()`)
+- Pas de schema-as-code : le schema DB est defini dans les migrations SQL, mais le code TypeScript ne le refleteque via les types generes Supabase (lecture seule, pas de query building)
+- Les types `supabase.types.ts` generes couvrent le typage des resultats mais pas la construction des queries
+
+**Comparatif :**
+
+| ORM | Type-safety queries | Migrations | Bundle | Perf | Deno support | Supabase Postgres |
+|-----|-------------------|-----------|--------|------|-------------|------------------|
+| **Drizzle ORM** | Compile-time, infere | Drizzle Kit | ~30 kB | Proche du SQL brut | Natif (postgres.js) | Oui (direct connect) |
+| Prisma | Codegen (prisma generate) | Prisma Migrate | ~800 kB engine | Bon | Experimental | Oui |
+| Kysely | Compile-time, infere | Externe | ~15 kB | Proche du SQL brut | Oui | Oui |
+| TypeORM | Decorators, partial | Natif | ~200 kB | Moyen | Non | Oui |
+| Supabase Client | Types generes (lecture) | N/A (SQL) | Inclus | Bon | Oui | Natif |
+
+**Verdict : Drizzle ORM (backend uniquement). Non negociable.**
+
+Pourquoi Drizzle et pas Kysely :
+
+| Critere | Drizzle | Kysely |
+|---------|---------|--------|
+| Schema-as-code | Oui (TypeScript) | Non (types manuels ou introspection) |
+| Migrations | Drizzle Kit (auto-generate) | Externe |
+| Query builder | SQL-like, infere | SQL-like, infere |
+| Relations/jointures | Drizzle Relations API | Jointures manuelles |
+| Ecosysteme | Plus large, croissance rapide | Mature, stable |
+| Supabase docs | Mentionne dans docs officielles | Non mentionne |
+
+Ce que ca change :
+- Le schema DB est defini en TypeScript (`drizzle/schema.ts`), single source of truth
+- Les queries sont type-safe au compile-time : `db.select().from(clients).where(eq(clients.agencyId, agencyId))`
+- Renommer une colonne = erreur TypeScript immediate partout
+- Drizzle Kit genere les migrations SQL automatiquement a partir du diff schema
+- Le frontend n'est PAS affecte : Drizzle est backend-only, le frontend passe par tRPC
+- Le Supabase Client reste utilise pour Auth et Realtime (pas de remplacement)
+
+**Perimetre Drizzle :**
+
+| Utilisation | Outil |
+|------------|-------|
+| Queries backend (SELECT, INSERT, UPDATE, DELETE) | Drizzle ORM |
+| Migrations | Drizzle Kit (genere le SQL) |
+| Auth (signIn, signOut, getUser) | Supabase Client (inchange) |
+| Realtime subscriptions | Supabase Client (inchange) |
+| Storage (fichiers) | Supabase Client (inchange) |
+| Frontend data fetching | tRPC (qui appelle Drizzle cote backend) |
+
+---
+
+### Couche 13 : Database - Supabase PostgreSQL 17
+
+**Note actuelle : 8/10**
+
+**Problemes identifies :**
+- RLS activee mais certaines policies pourraient utiliser `(select auth.uid())` pour eviter la reevaluation
+- Indexes "unused" signales par les advisors Supabase (a auditer avant suppression)
+- `auth_leaked_password_protection` desactive (`WARN` advisor accepte hors scope produit intranet B2B, decision 2026-02-22)
+
+**Verdict : GARDER Supabase PostgreSQL 17.**
+
+Contrainte ferme C1. Postgres 17 est excellent. Les ameliorations sont dans la configuration et les policies, pas dans le moteur.
+
+---
+
+### Couche 14 : Auth - Supabase Auth
+
+**Note actuelle : 7/10**
+
+**Problemes identifies :**
+- `auth_leaked_password_protection` desactive (hors scope produit intranet B2B, decision 2026-02-22)
+- Le password policy est valide cote backend (`validatePasswordPolicy`) mais pas renforce cote Supabase Auth nativement
+- Les sessions sont gerees via `memoryStorage` (correct, pas de localStorage)
+
+**Verdict : GARDER Supabase Auth + hardening pragmatique (intranet B2B).**
+
+Actions :
+1. Documenter explicitement l'arbitrage produit: `auth_leaked_password_protection` hors scope pour ce projet intranet B2B.
+2. Configurer et maintenir le password strength minimum dans les settings Auth Supabase.
+3. Maintenir la verification JWT explicite dans le middleware backend.
+
+---
+
+### Couche 15 : Testing - Vitest + Deno test + Playwright
+
+**Note actuelle : 7/10**
+
+**Problemes identifies :**
+- 37 fichiers de tests frontend pour 233 composants = couverture partielle
+- Pas de tests E2E automatises en local (Playwright configure mais pas execute regulierement)
+- Backend : 11 fichiers de tests pour 10 services = bonne couverture unitaire
+
+**Comparatif :**
+
+| Solution | Vitesse | DX | Ecosysteme | Fit |
+|----------|---------|-----|-----------|-----|
+| **Vitest** (frontend) | Ultra rapide | Excellent (Vite natif) | Large | Parfait |
+| Jest | Rapide | Bon | Immense | Compatible |
+| **Deno test** (backend) | Rapide | Natif Deno | Deno std | Impose |
+| **Playwright** (E2E) | Bon | Excellent | Large | Parfait |
+
+**Verdict : GARDER Vitest + Deno test + Playwright.**
+
+Raisons :
+- Vitest est natif Vite (meme config, meme transforms) : aucune raison de migrer
+- Deno test est impose par l'environnement backend
+- Playwright est le meilleur choix E2E pour un SPA React
+- Priorite : augmenter la couverture, pas changer les outils
+
+---
+
+### Couche 16 : Package Manager - npm -> pnpm
+
+**Note actuelle : 5/10**
+
+**Problemes identifies :**
+- `pnpm-workspace.yaml` existe a la racine mais le frontend utilise encore npm (`package-lock.json`)
+- Incoherence : le monorepo est pnpm mais le package manager effectif est npm
+- npm utilise un flat `node_modules` (phantom dependencies possibles)
+- npm est plus lent que pnpm pour l'installation
+
+**Comparatif :**
+
+| Manager | Install speed | Disk usage | Strictness | Workspaces | Monorepo |
+|---------|-------------|-----------|-----------|-----------|---------|
+| **pnpm** | Rapide | Faible (content-addressable) | Strict (pas de phantom deps) | Natif | Excellent |
+| npm | Moyen | Eleve (flat) | Laxiste | Natif | Correct |
+| Yarn Berry (PnP) | Rapide | Faible | Strict | Natif | Bon |
+| Bun | Ultra rapide | Faible | Laxiste | Natif | Bon |
+
+**Verdict : pnpm. Aligner le frontend sur le monorepo existant.**
+
+Ce que ca change :
+- Supprimer `frontend/package-lock.json`, utiliser `pnpm-lock.yaml` a la racine
+- `node_modules` en mode symlink (pas de phantom dependencies)
+- Un seul lockfile pour tout le projet
+- Installation plus rapide, moins d'espace disque
+
+---
+
+### Couche 17 : Monorepo - pnpm workspaces complet
+
+**Note actuelle : 4/10**
+
+**Problemes identifies :**
+- `pnpm-workspace.yaml` ne liste que `frontend`
+- `shared/` n'est pas un workspace : il est inclus via `tsconfig.json paths` et `vite.config.ts fs.allow`
+- Le backend (Deno) ne peut pas etre un workspace npm/pnpm (runtime different)
+- Pas de scripts monorepo a la racine (build all, test all, lint all)
+
+**Comparatif :**
+
+| Solution | Config | Multi-runtime | Scripts | Caching |
+|----------|--------|-------------|---------|---------|
+| **pnpm workspaces** | `pnpm-workspace.yaml` | Via scripts custom | `pnpm -r run` | Non natif |
+| Turborepo | `turbo.json` | Via pipelines | `turbo run` | Natif (local + remote) |
+| Nx | `nx.json` | Via plugins | `nx run` | Natif |
+| Lerna | `lerna.json` | Non | `lerna run` | Via Nx |
+
+**Verdict : pnpm workspaces (sans Turborepo/Nx).**
+
+Raisons :
+- Le projet a 2 workspaces effectifs : `frontend` et `shared` (le backend est Deno, hors npm)
+- Turborepo/Nx ajoutent de la complexite pour un mono-repo de 2 packages
+- pnpm workspaces suffit largement avec des scripts racine
+- Si le projet grossit (3+ packages npm), reevaluer Turborepo
+
+Ce que ca change :
+- `shared/` devient un workspace pnpm avec son `package.json`
+- Les imports `shared/` passent par le workspace protocol (`workspace:*`)
+- Un `package.json` racine avec scripts : `pnpm run -r build`, `pnpm run -r test`, `pnpm run -r lint`
+
+---
+
+### Couche 18 : QA Gate - Script local + pre-commit hook
+
+**Note actuelle : 3/10**
+
+**Problemes identifies :**
+- La CI GitHub a ete supprimee (fichier `.github/workflows/ci.yml` deleted)
+- Le runbook QA est manuel : aucune garantie qu'il est execute avant chaque commit/push
+- Pas de pre-commit hook : un commit peut passer sans typecheck ni lint
+- Le risque de regression est entierement porte par la discipline humaine
+
+**Comparatif :**
+
+| Solution | Automatisation | Fiabilite | Setup | Overhead |
+|----------|-------------|----------|-------|---------|
+| CI GitHub Actions | Totale (serveur) | Haute | Medium | Temps pipeline |
+| **Husky + lint-staged** | Pre-commit local | Haute | Simple | ~5s par commit |
+| Lefthook | Pre-commit local | Haute | Simple | ~5s par commit |
+| Script manuel | Zero | Basse | Zero | Discipline humaine |
+
+**Verdict : Husky + lint-staged + script QA complet.**
+
+Ce que ca change :
+- **Pre-commit hook** (Husky) : lint-staged execute ESLint + Prettier sur les fichiers modifies
+- **Pre-push hook** (Husky) : execute le script QA complet (typecheck + lint + tests + build)
+- **Script `scripts/qa-gate.sh`** : enchaine toutes les verifications front + back en un seul appel
+- Garantie : aucun push ne part sans QA verte
+
+---
+
+## 4. Stack Cible Definitive
 
 ```
-Frontend:         React 19.2.4 + Vite 7.3.1 + TypeScript 5.9.3
-Styling:          Tailwind CSS 4.1.18 + shadcn/ui (Radix UI)
-State:            TanStack Query v5.90.21 + Zustand 5.0.11 + React Context
-Forms:            React Hook Form 7.71.1 + @hookform/resolvers 5.2.2 + Zod 4.3.6
-Backend:          Hono (Deno) sur Supabase Edge Functions - slug unique "api"
-Database:         PostgreSQL 15+ via Supabase avec RLS multi-tenant
-Auth:             Supabase Auth (JWT, admin-only creation, password policies)
-Testing:          Vitest (frontend) + Deno test (backend) + Playwright (E2E local)
-CI:               GitHub Actions (lint + typecheck + build)
-Package Manager:  npm
-Monorepo:         Aucun (shared/ manuel via tsconfig paths)
-Routing:          Aucun (tab-based useState)
-SSR/SSG:          Aucun (SPA pure)
+Frontend
+  Framework          React 19
+  Build              Vite 7 (Rolldown)
+  Routing            TanStack Router (file-based, type-safe)
+  Styling            Tailwind CSS 4
+  UI Components      shadcn/ui + Radix
+  State (server)     TanStack Query v5
+  State (client)     Zustand (error store)
+  Forms              React Hook Form v7
+  Validation         Zod v4
+  API Client         tRPC (@trpc/react-query)
+
+Backend
+  Framework          Hono (Edge Function unique)
+  Runtime            Deno (Supabase Edge Functions)
+  API Layer          tRPC (@trpc/server/adapters/hono)
+  ORM                Drizzle ORM (queries type-safe)
+  Database           Supabase PostgreSQL 17
+  Auth               Supabase Auth (policy locale + settings standards; leaked password hors scope)
+  Validation         Zod v4 (schemas partages)
+
+Shared
+  Schemas            Zod v4 (shared/schemas/)
+  Errors             AppError + catalog (shared/errors/)
+  Types              Supabase types generes + overrides
+  tRPC Router Type   Exporte depuis backend, importe par frontend
+
+Tooling
+  Package Manager    pnpm
+  Monorepo           pnpm workspaces (frontend + shared)
+  Testing            Vitest (frontend) + Deno test (backend) + Playwright (E2E)
+  QA Gate            scripts/qa-gate.sh + Husky pre-commit/pre-push
+  Linting            ESLint (strict, --max-warnings=0)
+  TypeScript         5.9 (strict: true)
 ```
 
-### Patterns architecturaux en place
+---
 
-- Single Edge Function avec Hono routing (`app.route()` sub-routers)
-- Service layer avec pure functions exportees pour testabilite
-- Systeme AppError avec catalog de codes + fingerprint + severity
-- Result types via `neverthrow` (`ResultAsync<T, AppError>`)
-- Multi-tenancy via RLS (`agency_id` sur toutes les tables)
-- Rate limiting au niveau API
-- Audit logging avec archivage
-- Code splitting vendor (manualChunks dans vite.config.ts)
-- Error pipeline : `normalizeError()` -> `reportError()` -> `notifyError()`
+## 5. Plan de migration en 5 phases
 
 ---
 
-## 2. Evaluation couche par couche
+### Phase 1 : Fondations (pnpm, workspaces, QA gate)
 
----
+**Duree estimee : 1 jour**
 
-### 2.1 Framework Frontend : React 19
+#### Packages a installer
 
-**Note : 9/10 -- GARDER**
-
-React 19 est le choix optimal pour ce projet. L'ecosysteme pour un CRM B2B est inegalable : TanStack Query, React Hook Form, Radix, shadcn/ui ciblent React en priorite. Le codebase l'utilise de maniere idiomatique : composants fonctionnels uniquement, TypeScript strict (`strict: true`, `noUnusedLocals`, `noUnusedParameters`), hooks-based architecture avec 76+ custom hooks, separation nette composants/hooks/services.
-
-React 19 apporte :
-- Hook `use()` pour lire des promesses et du contexte dans le rendu
-- Suspense ameliore
-- Actions et `useOptimistic` pour les mutations optimistes
-- Meilleure gestion du server state
-
-**Alternatives considerees en detail :**
-
-| Framework | Forces | Faiblesses pour CE projet | Ecosysteme B2B |
-|-----------|--------|--------------------------|----------------|
-| **React 19** | Ecosysteme le plus large, shadcn/ui, TanStack, Radix, RHF, communaute massive | Virtual DOM overhead (negligeable ici) | 10/10 |
-| **Solid.js 2** | Pas de virtual DOM, reactivite fine, performances brutes superieures | Ecosysteme 10x plus petit, pas de shadcn/ui, pas de Radix, pas de RHF | 4/10 |
-| **Svelte 5 (Runes)** | Syntaxe elegante, bundle plus petit, reactivite compile-time | Ecosysteme B2B insuffisant, pas d'equivalent TanStack Query mature | 5/10 |
-| **Vue 3.5** | Composition API solide, bon outillage | Ecosysteme CRM/admin inferieur (Radix, shadcn inexistants nativement) | 6/10 |
-
-**Pourquoi pas Solid.js malgre les performances ?**
-Le delta de performance avec Solid est negligeable pour un CRM. Le projet n'affiche pas de listes a 10K+ items dans le viewport (virtualisation via `@tanstack/react-virtual` est deja en place). Solid.js forcerait a réécrire TOUT : les 100+ composants, 76 hooks, et a trouver des alternatives pour shadcn/ui, Radix, React Hook Form, TanStack Query (qui a un adaptateur Solid mais moins mature).
-
-**Pourquoi pas Svelte 5 ?**
-Le systeme Runes est elegant mais le projet perdrait l'integration shadcn/ui (qui est la colonne vertebrale UI), TanStack Query (adapter Svelte moins teste), et React Hook Form (pas d'equivalent Svelte aussi mature). L'ecosysteme de composants accessibles pour Svelte est en retard vs Radix.
-
-**Verdict :** React 19 est le bon choix. Le cout de migration vers un autre framework serait enorme pour un gain marginal sur ce type de projet.
-
----
-
-### 2.2 Build Tool / Meta-framework : Vite 7 SPA
-
-**Note : 6/10 -- Vite est excellent, mais l'absence de meta-framework/routeur est un probleme**
-
-Vite 7 est le meilleur bundler pour un SPA React en 2026 :
-- HMR quasi-instantane via ESM natif
-- Plugin React fast refresh
-- Code splitting via Rollup
-- Support TypeScript natif
-- Plugin Tailwind CSS integre
-
-Le projet l'utilise bien : port 3000, filesystem whitelist pour `shared/`, chunks manuels pour les vendors (`tanstack`, `supabase`, `forms`, `icons`, `react`, `vendor`).
-
-**Le vrai probleme :** pas de meta-framework ni de routeur. Toute la navigation repose sur `useState<AppTab>('cockpit')` dans `App.tsx` avec du rendu conditionnel.
-
-**Comparaison meta-frameworks :**
-
-| Option | Pour | Contre | Note /10 |
-|--------|------|--------|----------|
-| **Vite SPA actuel** | Simple, DX rapide, zero config | Pas de routing, pas de code splitting par route, pas d'URL state | 6/10 |
-| **Vite + TanStack Router** | Routing type-safe, search params types, code splitting built-in, reste SPA, devtools | Effort de migration (~2-3 jours) | **9/10** |
-| **Next.js 15 App Router** | SSR, RSC, routing fichiers, ecosysteme Vercel, image optimization | Overkill pour CRM authentifie, complexite RSC avec Supabase client SDK, vendor lock-in Vercel, overhead RSC inutile | 5/10 |
-| **TanStack Start** | Full-stack type-safe, SSR optionnel, base TanStack Router + Vinxi, loaders | Encore en beta/early 2026, ecosysteme plus petit, docs en cours | 7/10 |
-| **Remix / React Router v7** | Routes nestees, loaders/actions, progressive enhancement | En fusion avec React Router v7, phase transitoire, communaute fragmentee | 6/10 |
-
-**Pourquoi PAS Next.js pour ce projet ?**
-
-Next.js 15 est un excellent framework pour les sites publics avec SEO, les e-commerces, les dashboards avec SSR. Mais pour CIR Cockpit :
-
-1. **100% du contenu est derriere auth** - SSR et RSC n'apportent rien. Le premier rendu utile est TOUJOURS apres le login.
-2. **Complexite RSC + Supabase** - Le client Supabase utilise `localStorage` pour les sessions. RSC tourne cote serveur ou il n'y a pas de `localStorage`. Ca force a dupliquer la logique auth (server + client).
-3. **Vendor lock-in** - Next.js est optimise pour Vercel. Le deployer ailleurs (Cloudflare, Fly.io) est possible mais degrade l'experience.
-4. **Overhead de bundle** - Next.js ajoute ~80-100KB de runtime framework (router, hydration, RSC runtime).
-5. **Le backend existe deja** - L'API Hono sur Supabase Edge est en place. Next.js API routes seraient une duplication.
-
-**Pourquoi TanStack Router est la solution ideale :**
-
-1. **Type-safety complete** - Params de route et search params inferes par TypeScript
-2. **Code splitting natif** - `route.lazy(() => import('./pages/Clients'))` decoupe automatiquement
-3. **Search params types** - `focusedClientId` devient un search param type-safe au lieu d'un useState
-4. **Loaders** - Pre-chargement de donnees avant le rendu (integre avec TanStack Query)
-5. **Devtools** - Visualisation de l'arbre de routes et du state
-6. **Zero opinion sur le backend** - Fonctionne avec n'importe quel backend (Hono, tRPC, etc.)
-7. **Meme ecosysteme** - TanStack Router + TanStack Query + TanStack Virtual = stack coherente
-
-**Verdict :** Garder Vite 7. Ajouter TanStack Router. Ne PAS adopter Next.js.
-
----
-
-### 2.3 Styling : Tailwind CSS 4
-
-**Note : 9.5/10 -- GARDER**
-
-Etat de l'art absolu du utility-first CSS en 2026. Tailwind CSS 4 apporte :
-- **Lightning CSS engine** : compilation CSS 100x plus rapide que PostCSS
-- **Config native CSS** : plus besoin de `tailwind.config.js` (le projet utilise encore le format JS mais migrable)
-- **Cascade layers** : meilleure isolation des styles
-- **Container queries** : responsive au niveau composant (pas seulement viewport)
-
-Le projet l'utilise correctement :
-- Zero CSS custom sauf `index.css`
-- `tailwind-merge` pour la composition conditionnelle de classes
-- `class-variance-authority` pour les variants (utilise par shadcn/ui)
-- `clsx` pour le className conditionnel
-- Design tokens via CSS variables HSL : `--primary`, `--secondary`, `--destructive`, etc.
-- Couleurs custom brand : `cir-red`, `cir-dark`, `cir-gray`
-
-**Alternatives detaillees :**
-
-| Option | Bundle | DX | Vitesse build | Ecosysteme | Specificite |
-|--------|--------|-----|--------------|-----------|------------|
-| **Tailwind CSS 4** | ~10KB gzip | Excellent (autocomplete VS Code, docs massives) | Le plus rapide (Lightning CSS) | Massif (shadcn, templates, plugins) | Utility-first, classes dans le JSX |
-| **UnoCSS** | Plus petit (~8KB, a la demande) | Bon, plus de config, presets | Rapide (Vite-native) | Grandissant | Utility-first, compatible Tailwind via preset |
-| **Panda CSS** | Comparable (~12KB) | Type-safe design tokens, plus de setup initial | Bon | Petit, jeune | CSS-in-JS compile-time, recipe pattern |
-| **vanilla-extract** | Zero-runtime | Type-safety complete, verbeux | Compile-time | Petit, stable | CSS Modules types, sprinkles API |
-| **CSS Modules** | Zero overhead | Basique | Natif | Universel | Scope local, pas de tokens |
-
-**Pourquoi UnoCSS n'est pas un upgrade suffisant :**
-UnoCSS offre un bundle marginalement plus petit et un systeme de presets flexible. Mais shadcn/ui est construit pour Tailwind -- chaque composant utilise les classes Tailwind directement. Migrer vers UnoCSS necessiterait de valider chaque composant UI manuellement. Le gain (~2KB) ne justifie pas l'effort.
-
-**Pourquoi Panda CSS est interessant mais pas pour ce projet :**
-Panda CSS apporte des design tokens type-safe et un pattern "recipe" elegant pour les variants. C'est conceptuellement superieur a CVA + tailwind-merge. Mais le projet a deja 100+ composants styles avec Tailwind, et Panda est incompatible avec shadcn/ui out of the box.
-
-**Verdict :** Tailwind CSS 4 est le meilleur choix. Aucun changement necessaire.
-
----
-
-### 2.4 Composants UI : shadcn/ui + Radix
-
-**Note : 9/10 -- GARDER**
-
-shadcn/ui est le standard de facto pour React + Tailwind en 2025-2026. Le modele "copy-paste" (les composants sont dans `components/ui/`, pas dans `node_modules`) donne un controle total sur le styling et le comportement.
-
-Composants utilises dans le projet :
-- `button`, `input`, `select`, `dialog`, `alert-dialog`
-- `card`, `table`, `tabs`, `toggle`, `toggle-group`
-- `badge`, `popover`, `tooltip`, `scroll-area`
-- Primitives Radix sous-jacentes : accessibilite WCAG 2.1 AA native
-
-**Alternatives detaillees :**
-
-| Option | Accessibilite | Personnalisation | React 19 | Framework | Approche |
-|--------|--------------|-----------------|----------|-----------|---------|
-| **shadcn/ui + Radix** | WCAG 2.1 AA (Radix) | Totale (on possede le code) | Oui | React only | Copy-paste, Tailwind |
-| **Radix Themes** | WCAG 2.1 AA (memes primitives) | Moindre (couche theme opinionated) | Oui | React only | Package npm, theme system |
-| **Ark UI (Zag.js)** | Excellent (state machines) | Bonne, framework-agnostique | Oui | React, Solid, Vue | Package npm, Tailwind/Panda |
-| **Park UI** | Excellent (base Ark) | Bonne (variant Tailwind dispo) | Oui | Multi-framework | Copy-paste comme shadcn |
-| **Mantine** | Bonne | Bonne mais opinionated | Oui | React only | Package npm, theme |
-| **Ant Design** | Bonne | Limitee (design system fixe) | Oui | React only | Package npm, Less/CSS-in-JS |
-
-**Pourquoi Ark UI est une alternative credible :**
-Ark UI utilise Zag.js (state machines) au lieu de Radix pour les comportements accessibles. L'avantage : framework-agnostique (si migration vers Solid/Vue un jour) et state machines plus predictibles. L'inconvenient : communaute 10x plus petite que Radix, moins de composants disponibles, documentation moins fournie.
-
-**Pourquoi rester sur shadcn/ui :**
-- Communaute la plus large (100K+ stars GitHub)
-- Templates et blocks pre-faits (dashboards, formulaires, tables)
-- Integration parfaite avec Tailwind CSS 4
-- Radix sous le capot = accessibilite garantie
-- Le projet a deja tous les composants necessaires installes et fonctionnels
-
-**Verdict :** shadcn/ui est optimal. Pas de changement.
-
----
-
-### 2.5 State Management : TanStack Query v5 + Context + Zustand
-
-**Note : 9/10 -- GARDER**
-
-L'architecture state est exemplaire, conforme aux best practices 2026 :
-
-| Type de state | Solution | Usage dans le projet |
-|---------------|----------|---------------------|
-| Server state (donnees API) | TanStack Query v5 | Toutes les queries et mutations |
-| Session/auth | React Context | `AppSessionProvider` (user, agence active, role) |
-| Error store | Zustand | `stores/errorStore.ts` uniquement |
-| Form state | React Hook Form | Formulaires (cockpit, client, prospect, contact) |
-
-**Ce qui est bien fait :**
-- Zero `useState` pour du server state (enforce par CLAUDE.md)
-- Zero `useEffect` pour du data fetching (toujours `useQuery`)
-- Query keys centralises dans `services/query/queryKeys.ts` (factory pattern)
-- `useNotifyError(query.error, fallbackMessage, source)` pour notifier les erreurs de queries
-- `handleUiError(error, fallbackMessage)` dans `onError` des mutations
-- Zustand strictement scope au error store (pas de feature creep)
-
-**Alternatives detaillees :**
-
-| Option | Server State | Client State | Type Safety | Bundle | DX |
-|--------|-------------|-------------|-------------|--------|-----|
-| **TanStack Query v5 + Zustand** | Best-in-class (cache, retry, invalidation, optimistic, infinite) | Leger, simple | Bon | ~25KB | Excellent (devtools) |
-| **SWR** | Plus simple, moins de features (pas d'optimistic, pas de mutations aussi riches) | N/A | Bon | ~15KB | Bon |
-| **tRPC + TanStack Query** | End-to-end type-safe (infere les types depuis le backend) | Meme | Le meilleur | ~30KB | Excellent |
-| **Jotai** | Pas concu pour le server state | Atomique, composable | Bon | ~5KB | Bon |
-| **Nanostores** | Pas concu pour le server state | Tiny, framework-agnostique | Decent | ~1KB | Correct |
-| **Redux Toolkit + RTK Query** | Bon (RTK Query) | Complet mais verbeux | Bon | ~40KB | Moyen (boilerplate) |
-| **Zustand + React Query** | Combinaison actuelle | Simple | Bon | ~25KB | Excellent |
-
-**Pourquoi SWR n'est pas suffisant :**
-SWR de Vercel est plus leger mais manque des features critiques pour un CRM : mutations structurees (`useMutation` avec `onSuccess`/`onError`/`onSettled`), invalidation granulaire (`invalidateQueries`), updates optimistes, infinite queries, query cancellation. TanStack Query v5 est strictement superieur pour un CRUD complexe.
-
-**Pourquoi Redux est de trop :**
-Redux Toolkit est un bon outil mais ajoute du boilerplate inutile quand TanStack Query gere deja le server state. Le projet n'a pas de client state complexe (juste un error store). Ajouter Redux serait de l'over-engineering.
-
-**Evolution potentielle :**
-Ajouter tRPC entre le frontend et le backend donnerait la type-safety end-to-end : le frontend "sait" au compile-time quels endpoints existent et quels types ils retournent. Ca remplace le pattern `safeInvoke` manuel actuel. Voir section 2.9 (Backend).
-
-**Verdict :** Architecture state parfaite. Garder tel quel.
-
----
-
-### 2.6 Formulaires : React Hook Form v7
-
-**Note : 8.5/10 -- GARDER**
-
-Le projet utilise RHF v7 avec `@hookform/resolvers` et Zod. Architecture propre :
-
-- Schemas partages dans `shared/schemas/` (client, prospect, contact, interaction, user, agency, auth)
-- Schemas locaux RHF dans `frontend/src/schemas/interactionSchema.ts`
-- Hooks dedies : `useCockpitFormController`, `useCockpitRegisterFields`, `useClientFormDialog`
-- `useWatch()` pour le rendu conditionnel base sur les valeurs
-- Decomposition en sections (IdentitySection, AddressSection, CodesSection, NotesSection)
-
-**Alternatives :**
-
-| Option | Performance | DX | Maturite | Bundle | Validation |
-|--------|-----------|-----|---------|--------|-----------|
-| **React Hook Form v7** | Excellent (uncontrolled by default, minimal re-renders) | Mature, bien documente, communaute massive | Tres mature | ~9KB | Via resolvers (Zod, Yup, etc.) |
-| **TanStack Form** | Bon (controlled) | Plus recent, API plus propre, moins de docs | En maturation | ~12KB | Adaptateurs built-in (Zod, Valibot) |
-| **Conform** | Bon (progressive enhancement, form actions) | Bon pour Remix/Next | Mature | ~8KB | Zod natif |
-| **Formik** | Mauvais (controlled, re-renders massifs) | Date, API vieillissante | En declin | ~15KB | Via Yup |
-
-**Pourquoi TanStack Form n'est pas encore le choix :**
-TanStack Form a une API plus elegante et s'integre mieux dans l'ecosysteme TanStack. Mais en 2026, RHF reste plus mature pour les formulaires complexes imbriques (le cockpit d'interactions a 15+ champs avec logique conditionnelle, draft auto-save, et timeline events). TanStack Form rattrape son retard mais les edge cases sont moins couverts.
-
-**Pourquoi Conform n'est pas pertinent :**
-Conform est optimise pour les form actions (Remix, Next.js). Le projet est un SPA sans server actions. Pas de valeur ajoutee.
-
-**Verdict :** Garder React Hook Form v7. Surveiller TanStack Form pour une future migration (v2+).
-
----
-
-### 2.7 Validation : Zod v4
-
-**Note : 8/10 -- GARDER**
-
-Zod v4 est utilise sur tout le stack :
-- Frontend : schemas de formulaires, validation input
-- Backend : validation des payloads Edge Function
-- Partage : `shared/schemas/` (client, prospect, contact, interaction, user, agency, auth, data)
-
-La gestion import map pour Deno est correcte (`deno.json` avec `"zod": "npm:zod@4.3.6"`, `"zod/v4"`, `"zod/"`).
-
-**Alternatives detaillees :**
-
-| Option | Bundle (min+gzip) | Vitesse validation | DX | Ecosysteme | Particularite |
-|--------|-------------------|-------------------|-----|-----------|--------------|
-| **Zod v4** | ~14KB | Bon (~1x baseline) | Excellent (methodes chainees, infer, transform) | Le meilleur (RHF, tRPC, TanStack Form, Conform) | Standard de facto |
-| **ArkType** | ~5KB | Le plus rapide (revendique 100x Zod pour certains schemas) | Bon, syntaxe string-based | Grandissant | Syntaxe type-string unique |
-| **Valibot** | ~1-5KB (tree-shakable) | Rapide (~5-10x Zod) | Bon, API modulaire (pas de methodes chainees) | Grandissant | Modulaire, chaque validator est importable |
-| **TypeBox** | ~8KB | Rapide | JSON Schema natif | Niche (Fastify) | Genere JSON Schema + types TS |
-| **Effect Schema** | ~20KB+ (avec Effect runtime) | Bon | Excellent si deja dans l'ecosysteme Effect | Niche | Partie du framework Effect |
-
-**Pourquoi Valibot est tentant mais pas justifie :**
-Valibot economiserait 9-13KB gzip grace au tree-shaking modulaire. Impressionnant. Mais le cout de migration est enorme :
-1. Reecrire TOUS les schemas dans `shared/schemas/` (8+ fichiers)
-2. Remplacer tous les `@hookform/resolvers/zod` par `@hookform/resolvers/valibot`
-3. Mettre a jour les imports backend Deno
-4. Valibot a une API differente (`pipe()` au lieu de `.refine()`)
-5. L'ecosysteme d'adaptateurs est plus petit
-
-Pour un CRM avec ~20 schemas et des formulaires complexes, le risque de regression vs le gain de 10KB ne vaut pas le coup.
-
-**Pourquoi ArkType est fascinant mais risque :**
-ArkType utilise une syntaxe string-based : `const user = type({ name: "string", age: "number > 0" })`. C'est elegamment concis mais :
-1. Perte de l'autocomplete TypeScript dans les strings
-2. Ecosysteme trop jeune pour un projet en production
-3. Pas de resolver RHF officiel
-
-**Verdict :** Garder Zod v4. L'ecosysteme prime sur le bundle size a cette echelle.
-
----
-
-### 2.8 Routing : Aucun
-
-**Note : 3/10 -- LACUNE CRITIQUE, PRIORITE #1**
-
-C'est la **faiblesse architecturale majeure** du projet. Toute la navigation repose sur :
-
-```typescript
-// App.tsx
-const [activeTab, setActiveTab] = useState<AppTab>('cockpit');
-const [focusedClientId, setFocusedClientId] = useState<string | null>(null);
-const [focusedContactId, setFocusedContactId] = useState<string | null>(null);
+```bash
+# A la racine
+pnpm add -Dw husky lint-staged
 ```
 
-Tabs : `cockpit`, `dashboard`, `clients`, `settings`, `admin`. Sous-navigation via des `useState` supplementaires et des modales.
+#### Etapes
 
-**Problemes concrets :**
+1. **Aligner sur pnpm**
+   - Supprimer `frontend/package-lock.json`
+   - Ajouter `shared/package.json` minimal :
+     ```json
+     {
+       "name": "@cir/shared",
+       "version": "0.0.0",
+       "private": true,
+       "type": "module",
+       "exports": {
+         "./errors": "./errors/index.ts",
+         "./errors/*": "./errors/*.ts",
+         "./schemas": "./schemas/index.ts",
+         "./schemas/*": "./schemas/*.ts"
+       }
+     }
+     ```
+   - Mettre a jour `pnpm-workspace.yaml` :
+     ```yaml
+     packages:
+       - 'frontend'
+       - 'shared'
+     ```
+   - Ajouter `@cir/shared` comme dependance dans `frontend/package.json` :
+     ```json
+     "@cir/shared": "workspace:*"
+     ```
+   - Executer `pnpm install` depuis la racine
+   - Verifier que tout compile et que les tests passent
 
-| Probleme | Impact utilisateur | Impact technique |
-|----------|-------------------|-----------------|
-| **Pas d'URLs** | Impossible de bookmarker un client ou une interaction | Pas de deep linking, pas de partage de liens |
-| **Pas d'historique navigateur** | Boutons retour/avance du navigateur inutiles | UX degradee, confusion utilisateur |
-| **Pas de code splitting par route** | Tout le code charge d'un coup (~140KB+) | TTI (Time to Interactive) degrade |
-| **Etat perdu au refresh** | F5 ramene toujours au cockpit | Perte de contexte, frustration |
-| **Pas de liens partageables** | Un admin ne peut pas envoyer un lien vers un dossier a un TCS | Perte de productivite equipe |
-| **Pas de pre-chargement** | Chaque onglet charge les donnees au clic | Perception de lenteur |
+2. **Scripts racine**
+   - Ajouter dans `package.json` racine :
+     ```json
+     {
+       "scripts": {
+         "build": "pnpm -r run build",
+         "test": "pnpm --filter frontend run test:run",
+         "lint": "pnpm -r run lint",
+         "typecheck": "pnpm -r run typecheck",
+         "qa": "bash scripts/qa-gate.sh"
+       }
+     }
+     ```
 
-**Comparaison detaillee des routeurs :**
+3. **Script QA**
+   - Creer `scripts/qa-gate.sh` :
+     ```bash
+     #!/usr/bin/env bash
+     set -euo pipefail
 
-| Option | Type Safety | Code Splitting | Search Params | Devtools | Loaders | Maturite |
-|--------|-----------|---------------|--------------|---------|---------|---------|
-| **Aucun (actuel)** | N/A | Non | Non | Non | Non | N/A |
-| **TanStack Router** | Le meilleur (params inferes, search params types) | `lazy()` built-in | Type-safe, serialisation auto | Oui (TanStack Devtools) | Oui (integres avec TanStack Query) | Mature (v1.x stable) |
-| **React Router v7** | Bon (mais casting necessaire) | `lazy()` built-in | `useSearchParams` (parsing manuel) | Non officiel | Oui (loaders/actions Remix) | Tres mature |
-| **Wouter** | Minimal | Non built-in | Manuel | Non | Non | Stable, minimaliste |
+     echo "=== QA Gate ==="
 
-**Pourquoi TanStack Router est le choix evident :**
+     echo "[1/6] Frontend typecheck"
+     pnpm --filter frontend run typecheck
 
-1. **Type-safety native** : Les params de route sont inferes par TypeScript. Si la route est `/clients/$clientId`, le composant recoit `{ clientId: string }` automatiquement.
+     echo "[2/6] Frontend lint"
+     pnpm --filter frontend run lint
 
-2. **Search params types** : Au lieu de `useState<string | null>` pour `focusedClientId`, on declare :
-   ```typescript
-   // Validation Zod du search param
-   const clientsSearchSchema = z.object({
-     clientId: z.string().optional(),
-     tab: z.enum(['info', 'contacts', 'history']).optional(),
+     echo "[3/6] Frontend tests"
+     pnpm --filter frontend run test:run
+
+     echo "[4/6] Frontend build"
+     pnpm --filter frontend run build
+
+     echo "[5/6] Backend lint"
+     deno lint backend/functions/api
+
+     echo "[6/6] Backend tests"
+     deno test --allow-env --no-check --config backend/deno.json backend/functions/api
+
+     echo "=== QA Gate PASS ==="
+     ```
+
+4. **Husky + lint-staged**
+   - `pnpm exec husky init`
+   - Pre-commit hook (`.husky/pre-commit`) :
+     ```bash
+     pnpm exec lint-staged
+     ```
+   - Pre-push hook (`.husky/pre-push`) :
+     ```bash
+     bash scripts/qa-gate.sh
+     ```
+   - Config lint-staged dans `package.json` racine :
+     ```json
+     "lint-staged": {
+       "frontend/src/**/*.{ts,tsx}": [
+         "eslint --max-warnings=0"
+       ]
+     }
+     ```
+
+#### Checklist de verification
+
+- [ ] `pnpm install` fonctionne depuis la racine
+- [ ] `pnpm --filter frontend run build` produit un build valide
+- [ ] `pnpm --filter frontend run test:run` passe
+- [ ] `bash scripts/qa-gate.sh` passe integralement
+- [ ] Un commit declenche lint-staged
+- [ ] Un push declenche le script QA complet
+
+---
+
+### Phase 2 : TanStack Router
+
+**Duree estimee : 2-3 jours**
+
+#### Packages a installer
+
+```bash
+cd frontend
+pnpm add @tanstack/react-router @tanstack/router-devtools
+pnpm add -D @tanstack/router-plugin
+```
+
+#### Fichiers a creer
+
+```
+frontend/src/
+  routes/
+    __root.tsx              # Layout racine (AppHeader, ErrorBoundary, Providers)
+    index.tsx               # Redirect vers /cockpit
+    cockpit.tsx             # Route /cockpit
+    dashboard.tsx           # Route /dashboard (search params Zod)
+    clients/
+      index.tsx             # Route /clients (liste)
+      $clientId.tsx         # Route /clients/:clientId (detail)
+    settings.tsx            # Route /settings
+    admin.tsx               # Route /admin
+  routeTree.gen.ts          # Auto-genere par le plugin Vite
+```
+
+#### Etapes
+
+1. **Ajouter le plugin Vite**
+   ```ts
+   // vite.config.ts
+   import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
+
+   export default defineConfig({
+     plugins: [
+       TanStackRouterVite(),
+       react(),
+       tailwindcss(),
+     ],
    })
    ```
-   Et TanStack Router valide + serialise automatiquement dans l'URL.
 
-3. **Integration TanStack Query** : Les loaders de route peuvent pre-charger les queries :
-   ```typescript
-   loader: ({ params }) => queryClient.ensureQueryData(clientQueryOptions(params.clientId))
+2. **Creer le router**
+   ```ts
+   // frontend/src/router.ts
+   import { createRouter } from '@tanstack/react-router'
+   import { routeTree } from './routeTree.gen'
+
+   export const router = createRouter({ routeTree })
+
+   declare module '@tanstack/react-router' {
+     interface Register {
+       router: typeof router
+     }
+   }
    ```
 
-4. **Code splitting** : Chaque route peut etre `lazy` :
-   ```typescript
-   const clientsRoute = createRoute({ path: '/clients', component: lazy(() => import('./pages/Clients')) })
+3. **Migrer `App.tsx`**
+   - Remplacer le `useState<AppTab>` par `<RouterProvider router={router} />`
+   - Deplacer la logique de gate (login, change-password) dans `__root.tsx`
+   - Deplacer chaque contenu d'onglet dans sa route
+
+4. **Migrer les search params**
+   - Dashboard : filtres date, statut, type -> search params Zod
+   - Clients : recherche, pagination -> search params Zod
+   - Admin : onglet actif -> search params
+
+5. **Ajouter le code splitting**
+   ```ts
+   // frontend/src/routes/dashboard.tsx
+   import { createFileRoute } from '@tanstack/react-router'
+   import { z } from 'zod/v4'
+
+   const dashboardSearchSchema = z.object({
+     from: z.string().optional(),
+     to: z.string().optional(),
+     status: z.string().optional(),
+   })
+
+   export const Route = createFileRoute('/dashboard')({
+     validateSearch: dashboardSearchSchema,
+     component: () => import('../components/Dashboard'),
+   })
    ```
 
-5. **Devtools** : Visualisation de l'arbre de routes, des search params, des pending navigations.
+6. **Supprimer l'ancien routing**
+   - Supprimer le type `AppTab` de `types.ts`
+   - Supprimer `setActiveTab` et toutes les props de navigation state
+   - Simplifier `AppHeader` pour utiliser `<Link>` TanStack Router
 
-**Verdict :** Adopter TanStack Router. C'est l'upgrade a **plus forte valeur ajoutee** de tout l'audit.
+#### Checklist de verification
+
+- [ ] Chaque ancienne "tab" a une URL dedie
+- [ ] Back/forward navigateur fonctionne
+- [ ] Refresh conserve la page et les filtres
+- [ ] Le code splitting fonctionne (verifier les chunks dans `dist/assets/`)
+- [ ] Les search params sont valides par Zod
+- [ ] `App.tsx` est reduit a <30 lignes
+- [ ] Tous les tests existants passent
+- [ ] QA gate passe
 
 ---
 
-### 2.9 Backend : Hono sur Supabase Edge Functions
+### Phase 3 : tRPC
 
-**Note : 7.5/10 -- GARDER le framework, AMELIORER la type-safety**
+**Duree estimee : 2-3 jours**
 
-L'architecture Hono est propre :
-- `app.ts` : config Hono, CORS, security headers, payload limits
-- Middleware chain : `requestId` -> `auth` -> `errorHandler`
-- Routes : `adminUsers.ts`, `adminAgencies.ts`, `dataEntities.ts`, `dataInteractions.ts`, etc.
-- Services : pure functions avec `DbClient` et `AuthContext` en parametres
-- Rate limiting centralise dans `rateLimit.ts`
-- Error handling via `httpError()` + middleware `handleError()`
+#### Packages a installer
 
-**Contraintes Supabase Edge Functions :**
+```bash
+# Frontend
+cd frontend
+pnpm add @trpc/client @trpc/react-query @trpc/server
 
-| Contrainte | Impact | Workaround |
-|-----------|--------|-----------|
-| Cold start (Deno Deploy) | Latence premiere requete ~200-500ms | Keep-alive cron, warm-up |
-| Pas de connexions persistantes | Pas de connection pooling PostgreSQL | Supabase gere via pgBouncer |
-| Pas de WebSockets sortants | Pas de push notifications depuis Edge | Supabase Realtime cote client |
-| Pas de cron | Pas de taches planifiees | pg_cron via Supabase, ou service externe |
-| Deploy CLI uniquement | Pas de git-push deploy | Script CI/CD |
-| Pas de filesystem | Pas de fichiers temporaires | Supabase Storage |
-| Timeout 150s max | Pas de taches longues | Background tasks via pg_net |
-
-**Comparaison frameworks backend :**
-
-| Option | Type Safety | Perf (req/s) | DX | Edge | Runtime | Ecosysteme |
-|--------|-----------|-------------|-----|------|---------|-----------|
-| **Hono** | Manuel (schemas Zod) | ~150K req/s | Bon (simple, leger) | Oui (multi-runtime) | Deno, Bun, Node, CF Workers | Grandissant rapidement |
-| **tRPC + Hono adapter** | End-to-end (infere les types backend -> frontend) | Meme (wrapper Hono) | Excellent | Oui | Meme | Mature |
-| **ElysiaJS** | Bon (Eden Treaty = type-safe client) | Le plus rapide (~300K req/s sur Bun) | Bon, API declarative | Limite | Bun uniquement | Plus petit |
-| **Fastify** | Plugin-based, JSON Schema | ~100K req/s | Tres mature, excellents plugins | Non (pas edge-native) | Node.js | Tres large |
-| **Nitro** | Framework-agnostique | Bon | Bon (base de Nuxt) | Oui (multi-platform) | Node, Deno, Bun, CF | Moyen |
-| **Next.js API Routes** | Co-located avec frontend | Bon | Excellent (meme projet) | Oui (Vercel Edge) | Node.js (Vercel) | Massif |
-
-**Ce que tRPC apporterait concretement :**
-
-Actuellement, le frontend appelle le backend via `safeInvoke()` dans `services/api/client.ts` :
-
-```typescript
-// Actuel : typage manuel, pas de verification compile-time
-const result = await safeInvoke<{ interaction: InteractionRow }>(
-  'data/interactions',
-  { action: 'save', interaction: data, agency_id: agencyId }
-);
+# Backend (deno.json imports)
+# Ajouter dans backend/deno.json :
+# "@trpc/server": "npm:@trpc/server@11"
+# "@trpc/server/": "npm:@trpc/server@11/"
 ```
 
-Avec tRPC :
+#### Fichiers a creer/modifier
 
-```typescript
-// Futur : typage automatique, erreur compile-time si le payload est faux
-const result = await trpc.data.interactions.save.mutate({
-  interaction: data,
-  agency_id: agencyId
-});
-// TypeScript SAIT que result.interaction est InteractionRow
+```
+backend/functions/api/
+  trpc/
+    context.ts              # Contexte tRPC (user, supabase client, agency_id)
+    router.ts               # Router racine
+    procedures.ts           # publicProcedure, protectedProcedure, adminProcedure
+  routes/
+    dataEntities.trpc.ts    # Procedures entities (migration depuis REST)
+    dataInteractions.trpc.ts
+    dataEntityContacts.trpc.ts
+    dataConfig.trpc.ts
+    dataProfile.trpc.ts
+    adminUsers.trpc.ts
+    adminAgencies.trpc.ts
+
+frontend/src/
+  services/api/
+    trpc.ts                 # Client tRPC + hooks
 ```
 
-**Les avantages concrets de tRPC :**
-1. **Zero runtime overhead** : tRPC ne genere pas de code, c'est du typage compile-time
-2. **Erreurs attrapees au build** : si le backend change un type de retour, le frontend ne compile plus
-3. **Autocomplete complet** : le frontend "voit" tous les endpoints du backend dans l'IDE
-4. **Schemas partages** : les schemas Zod actuels dans `shared/schemas/` deviennent les input validators tRPC
-5. **Adaptateur Hono** : `@trpc/server/adapters/fetch` fonctionne nativement avec Hono
+#### Etapes
 
-**Pourquoi ElysiaJS n'est pas viable ici :**
-ElysiaJS est le framework le plus rapide (Bun-native), et Eden Treaty offre une type-safety similaire a tRPC. Mais :
-1. Il tourne uniquement sur Bun -- Supabase Edge utilise Deno
-2. Migration = changer de runtime + framework + deploiement
-3. L'ecosysteme est plus petit que Hono
+1. **Creer le contexte tRPC backend**
+   ```ts
+   // backend/functions/api/trpc/context.ts
+   import type { Context } from '@hono/hono'
 
-**Verdict :** Garder Hono. Ajouter tRPC comme couche de type-safety. Garder Supabase Edge comme plateforme de deploiement.
-
----
-
-### 2.10 Runtime : Deno
-
-**Note : 7/10 -- Impose par Supabase Edge, adequat**
-
-Deno n'est pas un choix ici : il est impose par Supabase Edge Functions. Le projet gere bien l'impedance mismatch Deno/Node : import maps dans `deno.json`, `--no-check` pour les imports URL Hono dans les tests.
-
-**Comparaison runtimes :**
-
-| Runtime | Demarrage | npm Compat | TypeScript | Securite | Edge Deploy | Outillage |
-|---------|-----------|-----------|-----------|---------|------------|----------|
-| **Deno 2** | Rapide (~50ms) | Bon (`npm:` prefix, `node_modules` optionnel) | Natif (zero config) | Permissions granulaires | Deno Deploy, Supabase | Bon (fmt, lint, test built-in) |
-| **Bun 1.2+** | Le plus rapide (~10ms) | Excellent (drop-in Node replacement) | Natif | Standard (comme Node) | Limite (pas de platform edge majeure) | Rapide mais moins mature |
-| **Node.js 22+** | Modere (~100ms) | Natif | Via tsc/tsx/ts-node | Standard | Vercel, Cloudflare (via wrangler) | Le plus mature (npm, npx, nvm) |
-
-**Si on devait migrer hors Supabase Edge un jour :**
-- **Pour rester edge** : Cloudflare Workers (Hono est compatible nativement)
-- **Pour du self-hosted** : Bun avec ElysiaJS ou Hono, ou Node.js avec Fastify
-- **Pour du serverless** : Vercel Functions (Node.js) ou AWS Lambda
-
-**Verdict :** Deno est adequat tant qu'on reste sur Supabase Edge. Pas d'action requise.
-
----
-
-### 2.11 Database : PostgreSQL via Supabase
-
-**Note : 8.5/10 -- GARDER**
-
-Supabase PostgreSQL est bien utilise :
-- **14 tables** : `agencies`, `entities`, `entity_contacts`, `interactions`, `profiles`, `agency_memberships`, `agency_statuses`, `agency_services`, `agency_entities`, `agency_families`, `agency_interaction_types`, `agency_system_users`, `audit_logs`, `audit_logs_archive`
-- **30 triggers** : audit logging automatique, timestamps, cascades
-- **23 functions** : logique metier cote SQL
-- **RLS** : toutes les tables filtrees par `agency_id` via `auth.uid()` -> `profiles` -> `agency_memberships`
-- **53 migrations** : SQL versionne dans `backend/migrations/`
-- **Realtime** : utilise pour les interactions (subscriptions cote client)
-
-**Alternatives de base de donnees :**
-
-| Option | Type | Multi-tenant | Realtime | Auth integree | Scaling | Branching | Prix |
-|--------|------|-------------|----------|--------------|---------|-----------|------|
-| **Supabase (Postgres)** | PostgreSQL manage | RLS natif | Oui (Realtime) | Oui (Supabase Auth) | Vertical + read replicas | Non | Free tier genereux, puis $25/mois |
-| **Neon** | PostgreSQL serverless | RLS ou schema-based | Non (replication logique) | Non (externe) | Serverless auto-scaling, branching | Oui (killer feature) | Usage-based |
-| **PlanetScale** | MySQL (Vitess) | App-level | Non | Non | Sharding horizontal | Oui | $39/mois+ |
-| **Turso** | libSQL (SQLite fork) | Possible | Non | Non | Edge replication | Oui | Free tier, puis usage |
-| **CockroachDB** | PostgreSQL-compatible | RLS | Non | Non | Horizontale (distribue) | Non | $0/mois (free) a $$$ |
-| **Raw Postgres (self-hosted)** | PostgreSQL | RLS | Via LISTEN/NOTIFY | Non | Manuel | Non | Infra only |
-
-**Pourquoi Neon est seduisant :**
-Neon offre le **branching** : creer une copie instantanee de la DB pour tester des migrations ou des features. C'est un workflow de dev inegalable. Mais :
-1. Pas de Realtime built-in (le projet utilise les subscriptions Supabase)
-2. Pas d'Auth built-in (il faudrait ajouter Better Auth ou Clerk)
-3. Pas d'Edge Functions built-in (il faudrait un hosting separe)
-4. Migration = reconstruire 3 services (auth + realtime + edge functions)
-
-**Pourquoi Turso/SQLite n'est pas pertinent :**
-Turso est excellent pour les applications edge avec replication distribuee. Mais un CRM B2B necessite des transactions, des relations complexes, et des requetes analytiques que PostgreSQL gere nativement. SQLite est limite sur les jointures complexes et le multi-utilisateur concurrent.
-
-**Verdict :** Garder Supabase PostgreSQL. L'integration auth + RLS + realtime + Edge Functions dans une seule plateforme est un avantage decisif pour ce type de projet.
-
----
-
-### 2.12 ORM / Query Layer : Raw Supabase Client
-
-**Note : 6.5/10 -- A AMELIORER (backend uniquement)**
-
-Le projet utilise le Supabase client SDK directement pour les queries :
-- Frontend : `getSupabaseClient()` pour les queries directes (drafts, preferences)
-- Backend : Supabase admin client dans les services (bypass RLS)
-- Wrapper : `safeSupabaseCall()` dans `frontend/src/lib/result.ts`
-
-**Problemes :**
-
-| Probleme | Exemple | Impact |
-|----------|---------|--------|
-| Pas de validation compile-time | Typo dans un nom de colonne = erreur runtime | Bugs en production |
-| Types generes mais pas enforces | `supabase.from('entities').select('nme')` compile (devrait etre `name`) | Faux sentiment de securite |
-| Gestion manuelle des joins | Pas de `.include()` ou `.with()` type-safe | Code verbose, erreurs de relation |
-| Pas de type-check migrations | Un `ALTER TABLE` peut casser des queries sans que TypeScript le detecte | Regressions silencieuses |
-
-**Comparaison ORM/Query builders :**
-
-| Option | Type Safety | Migrations | Bundle | DX | Supabase compat |
-|--------|-----------|-----------|--------|-----|----------------|
-| **Raw Supabase client** | Types generes (post-hoc) | SQL manuel | 0KB (inclus) | Correct | Natif |
-| **Drizzle ORM** | Excellent (schema = source de verite) | Built-in (SQL pur) | ~7KB | Excellent (SQL-like API) | Bon (driver pg) |
-| **Prisma** | Bon (schema .prisma genere) | Built-in (Prisma Migrate) | ~500KB (query engine!) | Bon (mais lourd) | Bon |
-| **Kysely** | Bon (SQL type-safe) | Externe | ~5KB | Bon (SQL builder) | Bon |
-
-**Pourquoi Drizzle ORM est l'upgrade ideal pour le backend :**
-
-1. **Schema = source de verite** : Le schema Drizzle definit les tables ET les types TypeScript. Pas besoin de `supabase gen types`.
-
-2. **SQL-like API** : Drizzle genere du SQL lisible, pas un ORM opaque :
-   ```typescript
-   // Drizzle : SQL-like, type-safe
-   const clients = await db.select()
-     .from(entities)
-     .where(and(
-       eq(entities.agency_id, agencyId),
-       eq(entities.entity_type, 'client')
-     ));
-   // TypeScript SAIT que clients[0].name est string, .email est string|null, etc.
+   export async function createContext(c: Context) {
+     // Extraire user du middleware auth existant
+     return {
+       user: c.get('user'),
+       supabase: c.get('supabase'),
+       agencyId: c.get('agencyId'),
+     }
+   }
    ```
 
-3. **Zero overhead runtime** : Drizzle compile les queries en SQL, pas d'engine comme Prisma.
+2. **Creer les procedures de base**
+   ```ts
+   // backend/functions/api/trpc/procedures.ts
+   import { initTRPC, TRPCError } from '@trpc/server'
+   import { z } from 'zod/v4'
 
-4. **Migrations** : `drizzle-kit generate` genere des migrations SQL a partir des changements de schema. Compatible avec les 53 migrations existantes (on peut introspect la DB actuelle).
+   const t = initTRPC.context<Context>().create()
 
-5. **Operateur & relations** : Jointures type-safe, `with` pour l'eager loading.
+   export const publicProcedure = t.procedure
+   export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
+     if (!ctx.user) throw new TRPCError({ code: 'UNAUTHORIZED' })
+     return next({ ctx: { ...ctx, user: ctx.user } })
+   })
+   export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+     if (ctx.user.role === 'tcs') throw new TRPCError({ code: 'FORBIDDEN' })
+     return next({ ctx })
+   })
+   ```
 
-**Pourquoi PAS Prisma :**
-Prisma ajoute ~500KB de query engine (un binaire natif). C'est incompatible avec Supabase Edge Functions (Deno, pas de binaire natif). De plus, Prisma genere un client opaque -- Drizzle genere du SQL lisible.
+3. **Migrer les routes une par une**
+   - Commencer par `dataEntities` (la plus utilisee)
+   - Chaque route Hono REST devient une procedure tRPC avec input/output Zod
+   - Les schemas partages (`shared/schemas/`) deviennent les inputs/outputs tRPC
+   - Garder les routes Hono REST en parallele pendant la migration
 
-**Scope recommande :**
-- Backend uniquement (les services dans `backend/functions/api/services/`)
-- Le frontend continue d'utiliser le Supabase client pour les 3 services directs (drafts, preferences, active agency)
-- Utiliser `drizzle-kit introspect` pour generer le schema initial depuis la DB existante
+4. **Monter tRPC sur Hono**
+   ```ts
+   // backend/functions/api/app.ts
+   import { trpcServer } from '@trpc/server/adapters/hono'
+   import { appRouter } from './trpc/router'
+   import { createContext } from './trpc/context'
 
-**Verdict :** Ajouter Drizzle ORM pour le backend. Garder le Supabase client pour le frontend.
+   app.use('/trpc/*', trpcServer({ router: appRouter, createContext }))
+   ```
 
----
+5. **Client tRPC frontend**
+   ```ts
+   // frontend/src/services/api/trpc.ts
+   import { createTRPCReact } from '@trpc/react-query'
+   import type { AppRouter } from '../../../backend/functions/api/trpc/router'
 
-### 2.13 Auth : Supabase Auth
+   export const trpc = createTRPCReact<AppRouter>()
+   ```
 
-**Note : 8/10 -- GARDER**
+6. **Migrer les hooks frontend**
+   - Remplacer les `useQuery` manuels par `trpc.data.entities.useQuery()`
+   - Remplacer les `useMutation` manuels par `trpc.data.entities.save.useMutation()`
+   - Supprimer les types manuels de requete/reponse
 
-Le modele d'authentification est solide et specifique au domaine :
-- **Admin-only account creation** : pas d'inscription publique, pas de verification email
-- **Password policies** : min 8 caracteres, au moins 1 chiffre et 1 symbole
-- **First login** : changement de mot de passe obligatoire (`must_change_password` flag)
-- **JWT-based** : tokens dans la session Supabase
-- **Role-based access** : `super_admin`, `agency_admin`, `tcs` (stockes dans `profiles`)
-- **Multi-tenant** : RLS policies qui referencent `auth.uid()` -> `agency_memberships`
+#### Checklist de verification
 
-**Alternatives detaillees :**
-
-| Option | Self-hosted | MFA | Social Login | Admin API | Multi-tenant | Integration RLS |
-|--------|-----------|-----|-------------|-----------|-------------|----------------|
-| **Supabase Auth** | Non (manage) | Oui (TOTP, SMS) | Oui (Google, GitHub, etc.) | Oui (via admin SDK) | Manuel (RLS) | Natif (`auth.uid()`) |
-| **Better Auth** | Oui (open-source, self-hosted) | Oui (plugin) | Oui (plugins) | Oui | Plugin-based | Manuel (adaptateur) |
-| **Clerk** | Non (SaaS $$$) | Oui | Oui | Excellent | Built-in (organizations) | Manuel |
-| **Auth.js (NextAuth)** | Oui | Limite | Le meilleur (50+ providers) | Limite | Manuel | Manuel |
-| **Lucia** | Oui | Manuel | Manuel | Manuel | Manuel | Manuel |
-| **Keycloak** | Oui | Oui | Oui | Complet (admin console) | Realms | Manuel |
-
-**Pourquoi Better Auth est l'alternative la plus credible :**
-Better Auth est un framework d'auth open-source TypeScript-first avec un systeme de plugins (MFA, organizations, rate limiting). Il est self-hosted et ne depend d'aucun cloud. Si le projet devait quitter Supabase un jour, Better Auth serait le remplacant naturel.
-
-**Pourquoi ne PAS changer maintenant :**
-Supabase Auth est integre au coeur du systeme :
-1. Les RLS policies referencent `auth.uid()` directement en SQL
-2. Le `profiles` table est liee a `auth.users` via trigger
-3. Le middleware backend verifie les JWT Supabase
-4. `onAuthStateChange()` est utilise pour le listener session
-5. Le token refresh est integre au client Supabase
-
-Changer d'auth = reecrire toutes les RLS policies + le middleware + le provider session + le login/logout. Cout estime : 1-2 semaines. Valeur ajoutee : quasi-nulle (Supabase Auth fonctionne bien).
-
-**Verdict :** Garder Supabase Auth. Considerer Better Auth uniquement si migration hors Supabase.
-
----
-
-### 2.14 Testing : Vitest + Deno test + Playwright
-
-**Note : 7/10 -- GARDER, mais CORRIGER le CI**
-
-**Frontend (Vitest) :**
-- ~101 tests
-- Environnement jsdom
-- Setup : Testing Library, ResizeObserver mock, cleanup auto
-- Coverage V8 avec seuils (70% statements/functions/lines, 60% branches)
-- UI mode disponible (`vitest --ui`)
-
-**Backend (Deno test) :**
-- ~40 tests dans 10 fichiers `*_test.ts`
-- Pure function testing (pas de mock DB, tests des fonctions exportees)
-- `--no-check` requis pour les imports URL Hono
-
-**E2E (Playwright) :**
-- Configure mais marque "local uniquement"
-- Pas dans le CI
-
-**LACUNE CRITIQUE :**
-Le CI frontend (`.github/workflows/ci.yml`) execute `lint` + `typecheck` + `build` mais **PAS les tests Vitest**. Les 101 tests frontend ne tournent pas en CI. Un bug qui casse un test passe en production sans detection.
-
-**Alternatives :**
-
-| Option | Vitesse | DX | Ecosysteme | Coverage |
-|--------|---------|-----|-----------|----------|
-| **Vitest** | Le plus rapide (Vite-natif, HMR des tests) | Excellent (API compatible Jest, UI mode) | Grandissant vite | V8/Istanbul |
-| **Jest** | Lent (transformation, config) | Mature mais complexe | Le plus large | Istanbul |
-| **Bun test** | Tres rapide | Minimal, basique | Tiny | Basique |
-| **Playwright** | N/A (E2E) | Excellent (auto-wait, trace viewer, codegen) | Best-in-class E2E | N/A |
-| **Cypress** | N/A (E2E) | Bon (time-travel debugging) | Large mais en declin | N/A |
-
-**Verdict :** Garder Vitest + Playwright. **Ajouter `pnpm run test:run` au CI frontend** (correction 30 minutes).
+- [ ] Chaque procedure tRPC a un input ET output Zod
+- [ ] Le type `AppRouter` est exporte et importe par le frontend sans erreur
+- [ ] Modifier un champ dans un schema backend casse le frontend au compile-time
+- [ ] Les anciennes routes REST sont supprimees apres migration complete
+- [ ] Les tests backend couvrent les nouvelles procedures
+- [ ] QA gate passe
 
 ---
 
-### 2.15 Package Manager : npm
+### Phase 4 : Drizzle ORM
 
-**Note : 6/10 -- CHANGER**
+**Duree estimee : 3-5 jours**
 
-| Critere | npm | pnpm | bun | yarn |
-|---------|-----|------|-----|------|
-| **Vitesse install** | Le plus lent | 2-3x plus rapide | 5-10x plus rapide | 1.5-2x plus rapide |
-| **Espace disque** | Le plus gros (flat `node_modules`, duplication deps) | Le plus petit (content-addressable store, liens symboliques) | Petit | Modere (PnP optionnel) |
-| **Resolution deps** | Laxiste (phantom deps possibles) | Strict (pas de phantom deps) | Laxiste | Strict (PnP) |
-| **Monorepo workspaces** | Basique | Les meilleurs (filtering, --filter, recursive) | Bon | Bon |
-| **Lockfile** | `package-lock.json` (verbose) | `pnpm-lock.yaml` (compact) | `bun.lockb` (binaire) | `yarn.lock` |
-| **Ecosysteme** | Universel, default Node | Excellent, adoption rapide | Grandissant | Mature, stable |
-| **CI time** | Le plus long | Rapide (cache efficace) | Le plus rapide | Modere |
+#### Packages a installer
 
-**Pourquoi pnpm et pas bun :**
-Bun est le plus rapide mais son gestionnaire de packages a des edge cases avec certaines dependances Node (binaires natifs, postinstall scripts). pnpm est mature, stricte, et universellement supporte. C'est le choix pragmatique.
+```bash
+# Backend (deno.json imports)
+# "drizzle-orm": "npm:drizzle-orm@latest"
+# "drizzle-orm/": "npm:drizzle-orm@latest/"
+# "postgres": "npm:postgres@3"
 
-**Impact concret du switch npm -> pnpm :**
-- `npm ci` en CI : ~45-60s -> `pnpm install --frozen-lockfile` : ~15-25s
-- Espace `node_modules` : ~500MB+ -> ~200MB (liens symboliques vers le store)
-- Phantom deps : detectees et bloquees
-- Workspace support : `pnpm-workspace.yaml` + `--filter` pour cibler frontend/backend/shared
-
-**Verdict :** Passer a pnpm. Effort : 2 heures (supprimer `package-lock.json`, `node_modules`, creer `pnpm-workspace.yaml`, `pnpm install`, maj CI).
-
----
-
-### 2.16 Monorepo : Aucun
-
-**Note : 5/10 -- A AMELIORER**
-
-Le `shared/` est reference via :
-- `tsconfig.json` : `include: ["src", "../shared"]`
-- `vite.config.ts` : `server.fs.allow: ['..']`
-- Backend Deno : imports relatifs avec extension `.ts`
-
-**Problemes :**
-1. Pas de graphe de dependances entre packages
-2. Pas de builds incrementaux (tout recompile a chaque changement)
-3. Friction Deno (`.ts` obligatoire) vs Vite (bare specifiers) pour `shared/`
-4. Pas d'orchestration de scripts workspace (pas de `pnpm run -r test`)
-5. Si `shared/` change, ni frontend ni backend ne sont automatiquement reverifies
-
-**Alternatives :**
-
-| Option | Incremental | Cache distant | DX | Setup | Quand l'utiliser |
-|--------|-----------|-------------|-----|-------|-----------------|
-| **Rien (actuel)** | Non | Non | Simple | Zero | Projet a 2 packages |
-| **pnpm workspaces** | Non | Non | Bon (--filter, links) | Minimal (1 fichier YAML) | 2-5 packages |
-| **Turborepo** | Oui (hash-based) | Oui (Vercel Remote Cache) | Excellent (zero-config tasks) | Modere (turbo.json) | 5+ packages, CI long |
-| **Nx** | Oui (computation cache) | Oui (Nx Cloud) | Bon mais plus de config | Lourd (nx.json, project.json) | Enterprise, 10+ packages |
-| **Moon** | Oui | Oui | Bon | Modere | Rust-based, rapide |
-
-**Recommandation :**
-1. **Maintenant** : pnpm workspaces (formalise frontend/backend/shared comme packages)
-2. **Plus tard (si >5 packages)** : Ajouter Turborepo par-dessus pnpm workspaces
-
-**Structure cible :**
-```yaml
-# pnpm-workspace.yaml
-packages:
-  - 'frontend'
-  - 'backend'
-  - 'shared'
+# Dev (racine, pour drizzle-kit)
+pnpm add -Dw drizzle-kit
 ```
 
+#### Fichiers a creer
+
+```
+backend/
+  drizzle/
+    schema.ts               # Schema Drizzle (toutes les tables)
+    relations.ts            # Relations entre tables
+    index.ts                # Export db instance
+    migrate.ts              # Script migration
+  drizzle.config.ts         # Config Drizzle Kit
+```
+
+#### Etapes
+
+1. **Introspection du schema existant**
+   ```bash
+   pnpm drizzle-kit introspect --dialect=postgresql --url=$DATABASE_URL
+   ```
+   Cela genere le schema Drizzle a partir de la base existante.
+
+2. **Definir le schema TypeScript**
+   ```ts
+   // backend/drizzle/schema.ts
+   import { pgTable, uuid, text, timestamp, boolean, jsonb } from 'drizzle-orm/pg-core'
+
+   export const agencies = pgTable('agencies', {
+     id: uuid('id').primaryKey().defaultRandom(),
+     name: text('name').notNull(),
+     createdAt: timestamp('created_at').defaultNow(),
+     // ...
+   })
+
+   export const clients = pgTable('clients', {
+     id: uuid('id').primaryKey().defaultRandom(),
+     agencyId: uuid('agency_id').notNull().references(() => agencies.id),
+     firstName: text('first_name').notNull(),
+     lastName: text('last_name').notNull(),
+     // ...
+   })
+   // ... toutes les 14 tables
+   ```
+
+3. **Creer l'instance DB**
+   ```ts
+   // backend/drizzle/index.ts
+   import { drizzle } from 'drizzle-orm/postgres-js'
+   import postgres from 'postgres'
+   import * as schema from './schema'
+
+   export function createDb(connectionString: string) {
+     const client = postgres(connectionString)
+     return drizzle(client, { schema })
+   }
+   ```
+
+4. **Migrer les services backend**
+   - Remplacer `supabase.from('clients').select(...)` par `db.select().from(clients).where(...)`
+   - Migrer service par service (commencer par `dataEntities`, puis `dataInteractions`, etc.)
+   - Les procedures tRPC appellent Drizzle au lieu du Supabase Client pour les queries
+   - Le Supabase Client reste pour Auth et Realtime
+
+5. **Gerer les migrations**
+   - Les futures migrations sont generees par `drizzle-kit generate`
+   - Elles produisent des fichiers SQL dans `backend/migrations/` (meme format actuel)
+   - Les migrations existantes (57 fichiers) restent telles quelles
+   - Drizzle Kit s'appuie sur le schema TypeScript pour generer les diff
+
+6. **Gerer la connexion DB dans Edge Functions**
+   - Supabase Edge Functions ont acces a `Deno.env.get('SUPABASE_DB_URL')`
+   - Utiliser `postgres` (postgres.js) pour la connexion directe
+   - Alternative : utiliser le pooler Supabase (port 6543) pour le connection pooling
+
+7. **Mode d'autorisation Drizzle (obligatoire)**
+   - Drizzle ne doit jamais affaiblir la securite multi-tenant.
+   - Toute procedure/backend route doit recevoir un `authContext` valide (middleware auth) avant toute query.
+   - Interdire toute query Drizzle sans garde explicite (`ensureAgencyAccess`, `ensureOptionalAgencyAccess`, controle role).
+   - Tant que la propagation "user-scoped SQL" n'est pas prouvee pour un parcours, conserver `userDb` (Supabase client scope utilisateur) sur ce parcours.
+   - Exiger des tests de parite d'autorisation avant migration complete d'un service vers Drizzle.
+
+#### Checklist de verification
+
+- [ ] Le schema Drizzle couvre les 14 tables publiques
+- [ ] Les queries backend sont type-safe (erreur TypeScript si colonne incorrecte)
+- [ ] Les migrations existantes ne sont pas affectees
+- [ ] `drizzle-kit generate` produit des migrations correctes pour les changements futurs
+- [ ] Les performances des queries sont equivalentes ou meilleures
+- [ ] Le Supabase Client est toujours utilise pour Auth et Realtime
+- [ ] Aucune query Drizzle n'est executee sans controle `authContext`/`agency_id`
+- [ ] Les parcours user-scoped gardent `userDb` tant que la parite d'autorisation n'est pas demontree
+- [ ] QA gate passe
+
+---
+
+### Phase 5 : Securite Supabase (scope intranet B2B)
+
+**Duree estimee : 1-2 jours**
+
+#### Etapes
+
+1. **Arbitrage produit: leaked password protection hors scope**
+   - Decision explicite: application B2B intranet, critere non bloquant.
+   - Conserver la preuve advisor `WARN` dans le journal de suivi.
+   - Reevaluer uniquement en cas de changement de contexte (exposition internet / nouvelles exigences securite).
+
+2. **Audit RLS complet**
+   ```sql
+   -- Verifier que toutes les tables publiques ont RLS activee
+   SELECT schemaname, tablename, rowsecurity
+   FROM pg_tables
+   WHERE schemaname = 'public';
+
+   -- Lister toutes les policies
+   SELECT tablename, policyname, permissive, roles, cmd, qual
+   FROM pg_policies
+   WHERE schemaname = 'public';
+   ```
+
+3. **Optimiser les policies RLS**
+   - Remplacer `auth.uid()` par `(select auth.uid())` dans les policies pour eviter la reevaluation par ligne :
+     ```sql
+     -- Avant (reevalue auth.uid() pour chaque ligne)
+     CREATE POLICY "select_own" ON clients
+       FOR SELECT USING (agency_id IN (
+         SELECT agency_id FROM agency_system_users WHERE user_id = auth.uid()
+       ));
+
+     -- Apres (evalue auth.uid() une seule fois)
+     CREATE POLICY "select_own" ON clients
+       FOR SELECT USING (agency_id IN (
+         SELECT agency_id FROM agency_system_users WHERE user_id = (select auth.uid())
+       ));
+     ```
+
+4. **Auditer les indexes**
+   ```sql
+   -- Indexes jamais utilises
+   SELECT
+     schemaname, relname, indexrelname,
+     idx_scan, idx_tup_read, idx_tup_fetch,
+     pg_size_pretty(pg_relation_size(indexrelid)) AS size
+   FROM pg_stat_user_indexes
+   WHERE idx_scan = 0
+   ORDER BY pg_relation_size(indexrelid) DESC;
+   ```
+   - Pour chaque index unused : verifier avec `EXPLAIN ANALYZE` sur les requetes critiques
+   - Supprimer uniquement si aucune requete ne l'utilise
+
+5. **Verifier les policies avec les 3 roles**
+   ```sql
+   -- En tant que anon (pas d'acces)
+   SET ROLE anon;
+   SELECT * FROM clients; -- doit etre vide ou erreur
+
+   -- En tant que authenticated (filtre par agency_id)
+   SET ROLE authenticated;
+   SET request.jwt.claims = '{"sub": "user-id"}';
+   SELECT * FROM clients; -- doit etre filtre
+
+   -- En tant que service_role (acces total)
+   SET ROLE service_role;
+   SELECT * FROM clients; -- acces complet
+   ```
+
+6. **Service Role Key hygiene**
+   - Verifier que la `service_role` key n'est jamais exposee cote frontend
+   - Verifier qu'aucune variable `VITE_*` ne contient de secret serveur
+   - Limiter l'usage service role au backend/Edge Functions
+
+7. **Separation `anon` / `authenticated`**
+   - Verifier qu'aucune table metier n'accorde de lecture a `anon`
+   - Verifier que les endpoints publics sont strictement limites aux flux auth necessaires
+
+#### Checklist de verification
+
+- [x] Arbitrage scope documente: `auth_leaked_password_protection` non requis pour ce projet intranet B2B (decision 2026-02-22)
+- [ ] Toutes les tables publiques ont RLS activee
+- [ ] Les policies utilisent `(select auth.uid())` (pas `auth.uid()` nu)
+- [ ] Les indexes unused sont documentes (gardes ou supprimes avec justification)
+- [ ] Les 3 roles (anon, authenticated, service_role) sont testes sur chaque table
+- [ ] La `service_role` key n'est exposee nulle part cote frontend
+- [ ] Le role `anon` n'a aucun acces lecture aux tables metier
+
+---
+
+## 6. QA sans CI (strategie complete)
+
+### 7.1 Script QA Gate
+
+```bash
+#!/usr/bin/env bash
+# scripts/qa-gate.sh
+set -euo pipefail
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+pass() { echo -e "${GREEN}PASS${NC} $1"; }
+fail() { echo -e "${RED}FAIL${NC} $1"; exit 1; }
+
+echo "=========================================="
+echo "  CIR Cockpit - QA Gate"
+echo "=========================================="
+echo ""
+
+echo "[1/7] Frontend typecheck..."
+pnpm --filter frontend run typecheck && pass "typecheck" || fail "typecheck"
+
+echo "[2/7] Frontend lint..."
+pnpm --filter frontend run lint && pass "lint" || fail "lint"
+
+echo "[3/7] Frontend tests..."
+pnpm --filter frontend run test:run && pass "tests frontend" || fail "tests frontend"
+
+echo "[4/7] Frontend error compliance..."
+pnpm --filter frontend run check:error-compliance && pass "error compliance" || fail "error compliance"
+
+echo "[5/7] Frontend build..."
+pnpm --filter frontend run build && pass "build" || fail "build"
+
+echo "[6/7] Backend lint..."
+deno lint backend/functions/api && pass "backend lint" || fail "backend lint"
+
+echo "[7/7] Backend tests..."
+deno test --allow-env --no-check --config backend/deno.json backend/functions/api && pass "backend tests" || fail "backend tests"
+
+echo ""
+echo "=========================================="
+echo -e "  ${GREEN}QA Gate PASS${NC}"
+echo "=========================================="
+```
+
+### 7.2 Pre-commit Hook (Husky + lint-staged)
+
+`.husky/pre-commit` :
+```bash
+pnpm exec lint-staged
+```
+
+Config `lint-staged` (dans `package.json` racine) :
 ```json
-// shared/package.json
 {
-  "name": "@cir/shared",
-  "version": "0.0.0",
-  "private": true,
-  "exports": {
-    "./errors": "./errors/index.ts",
-    "./schemas": "./schemas/index.ts",
-    "./types": "./supabase.types.ts"
+  "lint-staged": {
+    "frontend/src/**/*.{ts,tsx}": [
+      "eslint --max-warnings=0"
+    ]
   }
 }
 ```
 
-**Verdict :** Adopter pnpm workspaces. Effort minimal, valeur significative.
+Effet : chaque `git commit` lint les fichiers modifies. Rapide (~5s), non intrusif.
 
----
+### 7.3 Pre-push Hook (QA complete)
 
-### 2.17 CI/CD : GitHub Actions
-
-**Note : 7/10 -- CORRIGER**
-
-Le CI actuel (`.github/workflows/ci.yml`) execute pour le frontend :
-1. `npm ci` (install)
-2. `npm run lint` (ESLint --max-warnings=0)
-3. `npm run typecheck` (tsc --noEmit)
-4. `npm run build` (Vite build)
-
-**Ce qui manque :**
-- `npm run test:run` (les 101 tests Vitest ne tournent PAS en CI)
-- E2E Playwright (compliqu mais souhaitable)
-- Verification backend Deno tests en CI (potentiellement deja present)
-
-**Correction recommandee :**
-Ajouter `pnpm run test:run` entre `typecheck` et `build` dans le job frontend.
-
----
-
-## 3. Stack ideale recommandee
-
-```
-Frontend:         React 19 + Vite 7                    GARDER
-Router:           TanStack Router                       AJOUTER (priorite #1)
-Styling:          Tailwind CSS 4                        GARDER
-UI:               shadcn/ui + Radix                     GARDER
-State:            TanStack Query v5 + Zustand           GARDER
-Forms:            React Hook Form v7 + Zod v4           GARDER
-API Layer:        tRPC + adaptateur Hono                AJOUTER (priorite #2)
-Backend:          Hono sur Supabase Edge Functions      GARDER
-Database:         Supabase PostgreSQL + RLS             GARDER
-ORM:              Drizzle ORM (backend uniquement)      AJOUTER (priorite #3)
-Auth:             Supabase Auth                         GARDER
-Testing:          Vitest + Playwright                   GARDER (corriger CI)
-Package Manager:  pnpm                                  CHANGER
-Monorepo:         pnpm workspaces                       AJOUTER
-CI:               GitHub Actions                        GARDER (corriger gap tests)
-```
-
----
-
-## 4. Classement par effort/valeur
-
-### GARDER TEL QUEL (11 couches deja optimales)
-
-| Couche | Technologie | Score | Raison |
-|--------|-----------|-------|--------|
-| Framework frontend | React 19 | 9/10 | Ecosysteme, shadcn/ui, TanStack, equipe |
-| Styling | Tailwind CSS 4 | 9.5/10 | Best-in-class, Lightning CSS |
-| UI | shadcn/ui + Radix | 9/10 | Controle total, accessibilite WCAG |
-| Server state | TanStack Query v5 | 9/10 | Meilleur pour le server state |
-| Client state | Zustand (error store) | 9/10 | Minimaliste, bien scope |
-| Session state | React Context | 9/10 | Simple et adapte |
-| Formulaires | React Hook Form v7 | 8.5/10 | Mature, performant |
-| Validation | Zod v4 | 8/10 | Ecosysteme, schemas partages |
-| Database | Supabase PostgreSQL | 8.5/10 | RLS multi-tenant, realtime, manage |
-| Auth | Supabase Auth | 8/10 | Integration RLS native |
-| Systeme d'erreurs | AppError + catalog | 9/10 | Bien concu, specifique au projet |
-
-### QUICK WINS (3 actions, 1 jour max)
-
-| # | Changement | Effort | Valeur | Pourquoi |
-|---|-----------|--------|--------|----------|
-| 1 | **pnpm au lieu de npm** | 2h | Haute | CI 2-3x plus rapide, deps strictes, workspaces, disque -60% |
-| 2 | **Ajouter Vitest au CI** | 30min | Haute | 101 tests frontend ne tournent PAS en CI actuellement |
-| 3 | **pnpm workspaces** | 4h | Moyenne | Formalise shared/, gestion deps propre, base pour Turborepo |
-
-### EFFORT MOYEN (3 chantiers, 1-2 semaines)
-
-| # | Changement | Effort | Valeur | Ce que ca change |
-|---|-----------|--------|--------|-----------------|
-| 1 | **TanStack Router** | 2-3 jours | **TRES HAUTE** | URLs, code splitting, historique, deep links, search params types, loaders, devtools |
-| 2 | **tRPC (adaptateur Hono)** | 2-3 jours | Haute | Type-safety end-to-end, elimine `safeInvoke` manuel, autocomplete API dans l'IDE |
-| 3 | **Drizzle ORM (backend)** | 3-5 jours | Moyenne-Haute | Queries type-safe, migrations generees, zero overhead, SQL lisible |
-
-### REFACTOR MAJEUR (si necessaire un jour)
-
-| Changement | Effort | Quand le considerer |
-|-----------|--------|-------------------|
-| **Self-hosted Hono sur Fly.io/Railway** | 1-2 semaines | Besoin de cron, background jobs, WebSockets backend, observabilite avancee |
-| **Migration vers Bun** | 1 semaine | Quand Bun mature et Supabase n'est plus la cible de deploy |
-| **Turborepo ou Nx** | 2-3 jours | Quand le projet depasse 5 packages |
-| **Better Auth** | 1-2 semaines | Si migration hors Supabase (reecrire toutes les RLS policies) |
-| **Neon (DB)** | 2-3 semaines | Si besoin de branching DB ou serverless scaling (mais perd realtime + auth + edge) |
-
----
-
-## 5. Strategie de migration detaillee
-
-### Phase 1 : Fondations (1 jour)
-
-**Objectif :** Moderniser l'outillage sans toucher au code applicatif.
-
-**Etape 1.1 : Switch npm -> pnpm (2h)**
-1. Supprimer `package-lock.json` et tous les `node_modules/`
-2. Installer pnpm : `npm install -g pnpm`
-3. Creer `pnpm-workspace.yaml` a la racine :
-   ```yaml
-   packages:
-     - 'frontend'
-     - 'shared'
-   ```
-4. Ajouter `shared/package.json` :
-   ```json
-   {
-     "name": "@cir/shared",
-     "version": "0.0.0",
-     "private": true
-   }
-   ```
-5. Lancer `pnpm install` depuis la racine
-6. Verifier : `cd frontend && pnpm run lint && pnpm run typecheck && pnpm run build`
-7. Mettre a jour CI : `npm ci` -> `pnpm install --frozen-lockfile`
-
-**Etape 1.2 : Ajouter Vitest au CI (30min)**
-1. Dans `.github/workflows/ci.yml`, job frontend, ajouter :
-   ```yaml
-   - name: Run tests
-     run: pnpm run test:run
-   ```
-   Entre `typecheck` et `build`.
-2. Verifier que le CI passe (les 101 tests doivent etre verts).
-
----
-
-### Phase 2 : Routing avec TanStack Router (2-3 jours)
-
-**Objectif :** URL addressability, code splitting, historique navigateur, deep links.
-
-**Etape 2.1 : Installation**
+`.husky/pre-push` :
 ```bash
-cd frontend
-pnpm add @tanstack/react-router @tanstack/router-devtools
+bash scripts/qa-gate.sh
 ```
 
-**Etape 2.2 : Definition de l'arbre de routes**
-```
-/                        -> redirect vers /cockpit
-/cockpit                 -> CockpitForm + entites recentes
-/cockpit/new             -> Nouveau formulaire interaction
-/dashboard               -> InteractionDashboard (liste interactions)
-/dashboard?status=open   -> Filtre par statut (search param type-safe)
-/clients                 -> ClientsPanel (liste clients)
-/clients/$clientId       -> ClientDetailPanel (remplace focusedClientId state)
-/clients/$clientId/contacts/$contactId -> Detail contact
-/prospects               -> ProspectsPanel
-/prospects/$prospectId   -> ProspectDetailPanel
-/settings                -> SettingsPanel (guarde par role >= agency_admin)
-/admin                   -> AdminPanel (guarde par role = super_admin)
-/admin/users             -> Gestion utilisateurs
-/admin/agencies          -> Gestion agences
-/change-password         -> Changement mot de passe (premiere connexion)
-```
+Effet : chaque `git push` execute la QA complete. Bloque le push si un check echoue.
 
-**Etape 2.3 : Refactoring App.tsx**
-- Supprimer `useState<AppTab>` et `setActiveTab`
-- Supprimer `focusedClientId`, `focusedContactId` (deviennent des params de route)
-- Remplacer le rendu conditionnel par `<RouterProvider>`
-- Les gardes de role deviennent des `beforeLoad` sur les routes
+### 7.4 Runbook Deploy Backend
 
-**Etape 2.4 : Code splitting**
-- Chaque route majeure utilise `lazy()` :
-  ```typescript
-  const cockpitRoute = createRoute({
-    getParentRoute: () => rootRoute,
-    path: '/cockpit',
-    component: lazy(() => import('./pages/CockpitPage')),
-  })
-  ```
+Procedure obligatoire pour deployer l'Edge Function `api` :
 
-**Etape 2.5 : Integration TanStack Query**
-- Les loaders de route pre-chargent les queries :
-  ```typescript
-  loader: ({ params }) =>
-    queryClient.ensureQueryData(clientQueryOptions(params.clientId))
-  ```
-
-**Verification Phase 2 :**
-- [ ] Toutes les routes fonctionnent
-- [ ] Deep links marchent (copier URL -> coller dans nouvel onglet -> meme vue)
-- [ ] Boutons retour/avance du navigateur fonctionnent
-- [ ] Code splitting verifie via `pnpm run build` + analyse taille des chunks
-- [ ] `typecheck` + `lint` + `test` + `build` verts
-
----
-
-### Phase 3 : API Type-Safe avec tRPC (2-3 jours)
-
-**Objectif :** Type-safety end-to-end entre frontend et backend.
-
-**Etape 3.1 : Installation backend**
 ```bash
-# Dans le backend (Deno), ajouter au deno.json imports
-"@trpc/server": "npm:@trpc/server@11"
+# 1. QA gate verte
+bash scripts/qa-gate.sh
+
+# 2. Deploy
+supabase functions deploy api \
+  --project-ref rbjtrcorlezvocayluok \
+  --use-api \
+  --import-map deno.json \
+  --no-verify-jwt
+
+# 3. Verification post-deploy
+# Via MCP ou curl :
+# - GET /functions/v1/api/health -> 200
+# - POST /functions/v1/api/data/entities -> 200 (avec token valide)
+# - OPTIONS /functions/v1/api/data/entities -> CORS headers presents
+# - Verifier version/hash via list_edge_functions
 ```
 
-**Etape 3.2 : Installation frontend**
-```bash
-cd frontend
-pnpm add @trpc/client @trpc/react-query
-```
+---
 
-**Etape 3.3 : Creer le routeur tRPC backend**
-- Creer `backend/functions/api/trpc/router.ts`
-- Wrapper les fonctions service existantes en procedures tRPC :
-  ```typescript
-  import { initTRPC } from '@trpc/server';
-  import { DataInteractionsSchema } from '../../../../shared/schemas/data.schema.ts';
+## 7. Fichiers critiques & checklist finale
 
-  const t = initTRPC.context<{ db: DbClient; auth: AuthContext }>().create();
+### 8.1 Fichiers a creer (par phase)
 
-  export const appRouter = t.router({
-    data: t.router({
-      interactions: t.router({
-        save: t.procedure
-          .input(DataInteractionsSchema)
-          .mutation(({ input, ctx }) =>
-            handleDataInteractionsAction(ctx.db, ctx.auth, undefined, input)
-          ),
-      }),
-    }),
-  });
+| Phase | Fichier | Role |
+|-------|---------|------|
+| 1 | `shared/package.json` | Workspace package pour shared |
+| 1 | `scripts/qa-gate.sh` | Script QA complet |
+| 1 | `.husky/pre-commit` | Hook lint-staged |
+| 1 | `.husky/pre-push` | Hook QA gate |
+| 2 | `frontend/src/routes/__root.tsx` | Layout racine TanStack Router |
+| 2 | `frontend/src/routes/cockpit.tsx` | Route /cockpit |
+| 2 | `frontend/src/routes/dashboard.tsx` | Route /dashboard |
+| 2 | `frontend/src/routes/clients/index.tsx` | Route /clients |
+| 2 | `frontend/src/routes/clients/$clientId.tsx` | Route /clients/:id |
+| 2 | `frontend/src/routes/settings.tsx` | Route /settings |
+| 2 | `frontend/src/routes/admin.tsx` | Route /admin |
+| 2 | `frontend/src/router.ts` | Config router |
+| 3 | `backend/functions/api/trpc/context.ts` | Contexte tRPC |
+| 3 | `backend/functions/api/trpc/router.ts` | Router tRPC racine |
+| 3 | `backend/functions/api/trpc/procedures.ts` | Procedures de base |
+| 3 | `frontend/src/services/api/trpc.ts` | Client tRPC |
+| 4 | `backend/drizzle/schema.ts` | Schema Drizzle |
+| 4 | `backend/drizzle/relations.ts` | Relations |
+| 4 | `backend/drizzle/index.ts` | Instance DB |
+| 4 | `backend/drizzle.config.ts` | Config Drizzle Kit |
 
-  export type AppRouter = typeof appRouter;
-  ```
+### 8.2 Fichiers a modifier (principaux)
 
-**Etape 3.4 : Monter l'adaptateur dans Hono**
-- Dans `app.ts`, ajouter le handler tRPC :
-  ```typescript
-  import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
-  app.all('/trpc/*', (c) => fetchRequestHandler({ ... }));
-  ```
+| Fichier | Modification |
+|---------|-------------|
+| `pnpm-workspace.yaml` | Ajouter `shared` |
+| `package.json` (racine) | Scripts monorepo + lint-staged + devDeps |
+| `frontend/package.json` | Nouvelles deps (TanStack Router, tRPC client) |
+| `backend/deno.json` | Imports tRPC, Drizzle, postgres |
+| `frontend/vite.config.ts` | Plugin TanStack Router |
+| `frontend/src/App.tsx` | Remplacer par RouterProvider |
+| `frontend/src/types.ts` | Supprimer AppTab |
+| `frontend/src/components/AppHeader.tsx` | Links TanStack Router |
+| `frontend/src/components/AppMainContent.tsx` | Supprimer (remplace par routes) |
+| `backend/functions/api/app.ts` | Monter tRPC sur Hono |
+| `backend/functions/api/services/*.ts` | Migrer vers Drizzle |
 
-**Etape 3.5 : Client tRPC frontend**
-- Creer `frontend/src/services/api/trpc.ts` :
-  ```typescript
-  import { createTRPCReact } from '@trpc/react-query';
-  import type { AppRouter } from '../../../../backend/functions/api/trpc/router';
-  export const trpc = createTRPCReact<AppRouter>();
-  ```
+### 8.3 Fichiers a supprimer
 
-**Etape 3.6 : Migration progressive**
-- Remplacer les appels `safeInvoke` un par un par des appels tRPC
-- Garder `safeInvoke` comme fallback pendant la migration
-- Supprimer `safeInvoke` une fois tous les endpoints portes
+| Fichier | Raison |
+|---------|--------|
+| `frontend/package-lock.json` | Remplace par pnpm-lock.yaml racine |
+| `.github/workflows/ci.yml` | CI GitHub supprimee (deja deleted) |
+| `frontend/src/components/AppMainContent.tsx` | Remplace par le routing TanStack Router |
+| `frontend/src/app/appConstants.tsx` (partiel) | `buildNavigationTabs()` remplace par config router |
 
-**Verification Phase 3 :**
-- [ ] Tous les endpoints migres vers tRPC
-- [ ] Autocomplete dans l'IDE pour les appels API
-- [ ] Erreur TypeScript si le backend change un type
-- [ ] Tests frontend et backend passent
-- [ ] `typecheck` + `lint` + `test` + `build` verts
+### 8.4 Checklist finale
+
+- [ ] **Phase 1** : pnpm install fonctionne, QA gate passe, hooks Husky actifs
+- [ ] **Phase 2** : chaque page a une URL, back/forward/refresh OK, code splitting OK
+- [ ] **Phase 3** : type-safety end-to-end (modifier un schema backend = erreur TypeScript frontend)
+- [ ] **Phase 4** : queries backend type-safe (renommer une colonne = erreur TypeScript)
+- [ ] **Phase 5** : scope intranet applique, RLS auditee, indexes audites
+- [ ] **Global** : QA gate passe a chaque phase, zero regression, zero `any`
 
 ---
 
-### Phase 4 : Drizzle ORM backend (3-5 jours, optionnel)
-
-**Objectif :** Queries backend type-safe, meilleur DX migrations.
-
-**Etape 4.1 : Installation**
-```bash
-# deno.json imports
-"drizzle-orm": "npm:drizzle-orm@0.39"
-"drizzle-orm/pg-core": "npm:drizzle-orm@0.39/pg-core"
-```
-
-**Etape 4.2 : Introspection DB existante**
-```bash
-npx drizzle-kit introspect --driver pg --url $DATABASE_URL
-```
-Genere le schema Drizzle initial miroir des 14 tables.
-
-**Etape 4.3 : Migration progressive des services**
-- Commencer par les services les plus simples (dataConfig, dataProfile)
-- Puis migrer dataEntities, dataEntityContacts, dataInteractions
-- Puis adminUsers, adminAgencies
-- Garder le client Supabase pour les operations auth et realtime
-
-**Etape 4.4 : Ajustements RLS**
-- Drizzle se connecte directement a PostgreSQL (pas via le client Supabase)
-- Les services backend utilisent deja le Supabase admin client (bypass RLS)
-- Avec Drizzle, utiliser un role service avec les memes privileges
-
-**Verification Phase 4 :**
-- [ ] Toutes les queries backend type-safe
-- [ ] Zero regression sur les tests existants
-- [ ] Migrations Drizzle compatibles avec les 53 migrations existantes
-- [ ] `deno test` passe
-- [ ] Performance identique ou meilleure
-
----
-
-## 6. Fichiers critiques pour l'implementation
-
-| Fichier | Phase | Changement |
-|---------|-------|-----------|
-| `pnpm-workspace.yaml` | 1 | Creer (workspaces) |
-| `shared/package.json` | 1 | Creer (package workspace) |
-| `.github/workflows/ci.yml` | 1 | Ajouter `test:run`, changer npm -> pnpm |
-| `frontend/src/App.tsx` | 2 | Refactorer : remplacer useState tabs par RouterProvider |
-| `frontend/src/routes/` | 2 | Creer : arbre de routes TanStack Router |
-| `frontend/src/pages/` | 2 | Creer : composants page (extraction depuis App.tsx) |
-| `backend/functions/api/trpc/router.ts` | 3 | Creer : routeur tRPC |
-| `backend/functions/api/app.ts` | 3 | Modifier : monter adaptateur tRPC |
-| `frontend/src/services/api/trpc.ts` | 3 | Creer : client tRPC |
-| `frontend/src/services/api/client.ts` | 3 | Deprecier : `safeInvoke` remplace par tRPC |
-| `backend/functions/api/db/schema.ts` | 4 | Creer : schema Drizzle |
-| `backend/functions/api/services/*.ts` | 4 | Modifier : queries Drizzle |
-
----
-
-## 7. Checklist de verification
-
-### Apres Phase 1 (Fondations)
-- [ ] `pnpm install` fonctionne depuis la racine
-- [ ] `pnpm --filter frontend run lint` passe
-- [ ] `pnpm --filter frontend run typecheck` passe
-- [ ] `pnpm --filter frontend run test:run` passe (101 tests)
-- [ ] `pnpm --filter frontend run build` passe
-- [ ] CI GitHub Actions passe avec pnpm + tests
-- [ ] `deno test --allow-env --no-check --config backend/deno.json backend/functions/api` passe (40 tests)
-
-### Apres Phase 2 (Routing)
-- [ ] Toutes les routes definies et fonctionnelles
-- [ ] Deep links fonctionnent (URL -> vue correcte)
-- [ ] Historique navigateur fonctionne (retour/avance)
-- [ ] Code splitting verifie (chunks separes par route)
-- [ ] Aucune regression fonctionnelle
-- [ ] `typecheck` + `lint` + `test` + `build` verts
-
-### Apres Phase 3 (tRPC)
-- [ ] Tous les endpoints migres vers tRPC
-- [ ] Autocomplete IDE pour les appels API
-- [ ] Erreur compile-time si le backend change un type
-- [ ] `safeInvoke` supprime
-- [ ] Tests adaptes
-- [ ] `typecheck` + `lint` + `test` + `build` verts
-
-### Apres Phase 4 (Drizzle ORM)
-- [ ] Schema Drizzle couvre les 14 tables
-- [ ] Toutes les queries backend migrees
-- [ ] Migrations compatibles
-- [ ] Zero regression
-- [ ] Performance identique ou meilleure
-- [ ] Tous les tests passent
-
----
-
-## 8. Validation factuelle de cet audit (17/02/2026)
-
-Cette section sert de correctif officiel quand elle contredit une affirmation precedente.
-
-### 8.1 Points verifies et confirmes
-
-- Routing actuel sans routeur URL: confirme dans `frontend/src/App.tsx` (`activeTab`, `focusedClientId`, `focusedContactId` en `useState`).
-- CI frontend sans execution des tests Vitest: confirme dans `.github/workflows/ci.yml` (lint + typecheck + check:error-compliance + build, mais pas `test:run`).
-- Backend Hono sur Edge Function Supabase unique: confirme dans `backend/functions/api/app.ts`, `backend/functions/api/index.ts`, `supabase/functions/api/index.ts`.
-- Contrat auth runtime `Authorization: Bearer`: confirme dans `backend/functions/api/middleware/auth.ts` et `frontend/src/services/api/client.ts`.
-
-### 8.2 Points a corriger dans la version initiale
-
-1. **Monorepo "Aucun"**: inexact.
-- Un workspace pnpm existe deja (`pnpm-workspace.yaml`) mais ne couvre que `frontend`.
-- Etat reel: monorepo **partiel/non finalise**, pas "absent".
-
-2. **Package manager "npm uniquement"**: incomplet.
-- Le projet est actuellement mixte: `npm` operant, mais presence d'un `pnpm-workspace.yaml` racine.
-
-3. **CI backend "potentiellement deja present"**: deja present.
-- Le job backend execute bien `deno test` dans `.github/workflows/ci.yml`.
-
-4. **Certaines metriques globales** (`tables`, `triggers`, `functions SQL`, `migrations appliquees`) ne sont pas demontrees dans ce fichier.
-- Elles doivent etre traitees comme estimations tant qu'elles ne sont pas prouvees par extraction SQL/MCP.
-
-### 8.3 Repriorisation des recommandations
-
-Ordre reel recommande apres verification:
-
-1. Ajouter `frontend test:run` au CI.
-2. Introduire un routeur URL (TanStack Router ou React Router data mode).
-3. Normaliser le package management (npm ou pnpm), puis seulement etendre les workspaces.
-4. Reporter les chantiers tRPC/Drizzle tant qu'un besoin concret (contrat API cassant, dette SQL) n'est pas constate.
-
----
-
-## 9. Grand chapitre: Sortir de Supabase vers une stack PostgreSQL plus ouverte
-
-### 9.1 Pourquoi envisager cette bascule
-
-Supabase couvre aujourd'hui plusieurs couches d'un coup (DB, Auth, Storage, Realtime, Edge Functions). Migrer vers une stack plus ouverte peut apporter:
-
-- plus de souverainete (infra, reseau, secrets, politiques de retention),
-- plus de controle de version/upgrade PostgreSQL,
-- plus de flexibilite d'architecture (choix des briques une par une),
-- reduction du lock-in produit.
-
-Contrepartie: vous remplacez une plateforme integree par plusieurs services a operer.
-
-### 9.2 Ce que "quitter Supabase" implique vraiment
-
-Sortir de Supabase ne signifie pas seulement deplacer PostgreSQL:
-
-1. Base de donnees (schema, migrations, RLS, fonctions SQL, extensions).
-2. Authentification (JWT, rotation, sessions, MFA eventuelle, lifecycle utilisateur).
-3. API (Edge Functions Hono, routage, secret management, cold starts).
-4. Storage objet (si utilise).
-5. Realtime/subscriptions (si utilise).
-6. Tooling types/schema (aujourd'hui base sur `shared/supabase.types.ts`).
-
-La bonne approche est donc "decomposition du platform coupling", pas migration brute d'une DB.
-
-### 9.3 Options cibles comparees
-
-| Option | Ouverture | Effort ops | Effort migration | Performance/scaling | Lock-in |
-|---|---|---:|---:|---|---|
-| A. PostgreSQL self-host (local/VM/K8s) | Maximum | Eleve | Eleve | Excellent si bien opere | Faible |
-| B. Neon + services complementaires | Moyen/eleve cote DB | Faible a moyen | Moyen | Tres bon, serverless natif | Moyen |
-| C. Supabase self-host | Eleve (open source) | Moyen a eleve | Faible a moyen | Bon | Moyen-faible |
-| D. Hybride progressif | Eleve progressif | Moyen | Moyen | Bon a tres bon | Faible a moyen |
-
-### 9.4 Option A - PostgreSQL self-host (local / cloud IaaS)
-
-#### Stack type "ouverte maximale"
-
-- PostgreSQL 17/18.
-- API: Hono (Node ou Deno) en service dedie (Fly.io, Railway, Render, VM, K8s).
-- Auth: Better Auth (ou Authentik/Keycloak selon exigence IAM).
-- Storage: MinIO (S3-compatible) ou bucket cloud standard.
-- Realtime: service WS dedie + LISTEN/NOTIFY, ou CDC (Debezium/Kafka/NATS) selon charge.
-- Observabilite: OpenTelemetry + Grafana/Loki/Tempo/Prometheus.
-
-#### Ce que ca apporte
-
-- Controle complet infra + reseau.
-- Chiffrement, sauvegardes, PITR et retention totalement parametrables.
-- Choix libre des versions, extensions, HA, replication.
-
-#### Ce que ca coute
-
-- Runbook SRE/DBA obligatoire (backup restore tests, failover, alerting, patching).
-- Plus de responsabilite securite.
-- Delai de mise en place sensiblement plus long.
-
-### 9.5 Option B - Neon (PostgreSQL serverless) + briques open source
-
-#### Profil
-
-- Excellent compromis si vous voulez quitter un BaaS integre sans gerer toute l'infra DB.
-- Vous gardez PostgreSQL standard avec scaling compute/storage decouples.
-
-#### Stack type
-
-- DB: Neon.
-- API: Hono deploye separement.
-- Auth: Better Auth ou equivalent.
-- Storage/Realtime: choisis a la carte.
-
-#### Points forts
-
-- Time-to-market rapide.
-- Branching DB tres utile pour tests/migrations.
-- Moins d'ops que self-host pur.
-
-#### Points de vigilance
-
-- Toujours une dependance fournisseur sur la couche DB managée.
-- Migration auth/realtime/storage reste a traiter car Neon ne remplace pas Supabase Auth/Storage/Realtime.
-- Verifier les extensions et besoins reseau prives selon contraintes.
-
-### 9.6 Option C - Supabase self-host (etape intermediaire pragmatique)
-
-Cette option est souvent oubliee: elle preserve l'API mentale Supabase tout en augmentant l'ouverture/controle.
-
-#### Avantages
-
-- Impact applicatif reduit (vos appels `@supabase/supabase-js`, politiques RLS, flux existants restent proches).
-- Bascule plus douce avant eventuelle decomposition complete.
-
-#### Limites
-
-- Vous gardez une plateforme composee de multiples services a operer.
-- Le lock-in produit baisse, mais ne disparait pas autant qu'avec stack DB/API/Auth totalement decouplee.
-
-### 9.7 Option D - Hybride progressif (recommande par defaut)
-
-Recommandation neutre et robuste pour votre contexte: migration en couches, sans big-bang.
-
-1. Stabiliser l'API Hono et le contrat d'erreurs (deja en bonne voie).
-2. Introduire une couche d'abstraction autour des appels Supabase (front/back).
-3. Migrer d'abord la DB (vers Neon ou self-host) avec compatibilite SQL/RLS.
-4. Migrer ensuite Auth, puis Storage/Realtime si necessaire.
-5. Decommissionner Supabase seulement apres validation complete multi-agence.
-
-### 9.8 Différences concretes pour CIR Cockpit
-
-| Domaine | Etat actuel Supabase | Cible ouverte | Gain attendu | Risque principal |
-|---|---|---|---|---|
-| DB + RLS | PostgreSQL Supabase + policies | PostgreSQL ouvert (Neon/self-host) | Souverainete + flexibilite ops | Ecarts extensions/perf/ops |
-| Auth | Supabase Auth JWT | Better Auth/Keycloak/Auth service | Controle des flux IAM | Migration utilisateurs/tokens |
-| API | Hono sur Edge Function | Hono service dedie | Observabilite et controle runtime | Ops deploy/reliability |
-| Types DB | `supabase gen types` | schema-first (Drizzle/Kysely/codegen SQL) | Contrat type plus explicite | Cout de transition outillage |
-| Realtime | Supabase Realtime | WS custom / CDC / polling intelligent | Decouplage fournisseur | Complexite implementation |
-
-### 9.9 Plan de migration detaille (decision-complete)
-
-#### Phase 0 - Cadrage et anti-regression
-
-1. Cartographier toutes les dependances Supabase par fonctionnalite (DB/Auth/Storage/Realtime/Edge).
-2. Figer les contrats API (`/data/*`, `/admin/*`) et messages d'erreur.
-3. Ajouter une suite de non-regression metier (multi-agence, roles, CRUD critique).
-
-#### Phase 1 - DB portability first
-
-1. Verifier compatibilite schema/migrations/extensions avec cible PostgreSQL.
-2. Mettre en place migration donnees (`pg_dump`/`pg_restore` ou replication logique selon downtime accepte).
-3. Rejouer RLS + fonctions SQL + indexes sur cible.
-4. Executer tests de charge et plans d'execution sur parcours critiques.
-
-#### Phase 2 - API/runtime decoupling
-
-1. Deployer Hono hors Edge Supabase (ou garder Deno mais hors plateforme).
-2. Remplacer acces DB via client Supabase admin par driver/service DB cible.
-3. Conserver le contrat HTTP actuel pour eviter une migration front immediate.
-
-#### Phase 3 - Auth migration
-
-1. Definir modele claims JWT: `sub`, role, scopes, `agency_ids` selon besoin.
-2. Migrer comptes et policy reset/password-change.
-3. Adapter middleware auth backend.
-4. Realiser double validation temporaire des tokens pendant cutover.
-
-#### Phase 4 - Storage/realtime (si impacte)
-
-1. Migrer les assets vers S3-compatible.
-2. Remplacer subscriptions par WS/CDC seulement si necessaire produit.
-3. Mettre en place monitoring + alerting dedies.
-
-#### Phase 5 - Cutover et rollback
-
-1. Fenetre de bascule avec freeze ecriture court.
-2. Verification smoke test complete.
-3. Rollback explicite documente (restore snapshot + reroutage DNS/ingress).
-4. Decommission progressive des composants Supabase non utilises.
-
-### 9.10 Decision recommandee pour votre projet
-
-Si votre priorite est "ouvert + scalable + puissant" sans exploser le risque:
-
-1. **Court terme**: garder Supabase en production, corriger le socle applicatif (routing, CI tests).
-2. **Moyen terme**: lancer un POC DB portability vers Neon **ou** PostgreSQL self-host.
-3. **Long terme**: converger vers architecture hybride decouplee (DB + API + Auth maitrisables independamment).
-
-Ce chemin est plus sur qu'une re-ecriture totale immediate et preserve la valeur deja investie.
-
----
-
-## 10. Sources et references
-
-Sources de reference a utiliser pour les decisions infra/stack:
-
-1. PostgreSQL Versioning Policy (version courante et cycles de support):
-   https://www.postgresql.org/support/versioning/
-2. Supabase Architecture (plateforme composee autour de PostgreSQL):
-   https://supabase.com/docs/guides/getting-started/architecture
-3. Supabase self-hosting overview (options auto-hebergees):
-   https://supabase.com/docs/guides/hosting/overview
-4. Neon PostgreSQL version support:
-   https://neon.com/docs/postgresql/postgresql-versions
-
----
-
-## Resume executif
-
-**Score global de la stack actuelle : 7.8/10**
-
-Le projet est bien construit. La majorite des choix techniques sont optimaux (React 19, Tailwind, shadcn/ui, TanStack Query, Zod, Supabase). Les 3 points d'amelioration majeurs par ordre de priorite :
-
-1. **Routing (3/10 -> 9/10)** : Ajouter TanStack Router. C'est le changement a plus fort impact utilisateur (URLs, deep links, historique, code splitting).
-
-2. **Type-safety API (7.5/10 -> 9.5/10)** : Ajouter tRPC. Elimine les erreurs runtime de contrat API et ameliore massivement le DX.
-
-3. **Queries backend (6.5/10 -> 9/10)** : Ajouter Drizzle ORM. Queries type-safe, migrations generees, zero overhead.
-
-**Quick wins immediats :** tests frontend en CI (30min), routing URL type-safe (2-3 jours), normalisation package manager/workspaces.
-
-**Position strategique revue :** inutile de recommencer a zero. La bonne trajectoire est incrementale, avec un chapitre dedie a la sortie progressive de Supabase vers une stack PostgreSQL plus ouverte (self-host, Neon ou hybride selon priorites reelles).
+## 8. Sources
+
+Supabase :
+- https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection
+- https://supabase.com/docs/guides/database/postgres/row-level-security
+- https://supabase.com/docs/guides/functions/auth
+- https://supabase.com/docs/guides/api/api-keys
+
+TanStack :
+- https://tanstack.com/router/latest
+- https://tanstack.com/query/latest
+
+tRPC :
+- https://trpc.io/docs
+- https://trpc.io/docs/server/adapters/hono
+
+Drizzle :
+- https://orm.drizzle.team/docs/overview
+- https://orm.drizzle.team/docs/get-started/supabase-new
+
+Tooling :
+- https://pnpm.io/workspaces
+- https://typicode.github.io/husky/
+- https://github.com/lint-staged/lint-staged

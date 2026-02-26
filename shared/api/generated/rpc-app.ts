@@ -1,5 +1,5 @@
 // GENERATED FILE - DO NOT EDIT
-// Source of truth: backend/functions/api/app.ts and backend/functions/api/routes/*.ts
+// Source of truth: backend/functions/api/app.ts
 
 export type RpcJsonRequest = { json: unknown };
 export type RpcPost = (request: RpcJsonRequest, init?: RequestInit) => Promise<Response>;
@@ -20,15 +20,15 @@ type RpcTreeToClient<T extends RpcPathTree> = {
 
 export const RPC_POST_PATHS = {
   "admin": {
-    "users": "/admin/users",
-    "agencies": "/admin/agencies"
+    "users": "/trpc/admin.users",
+    "agencies": "/trpc/admin.agencies"
   },
   "data": {
-    "entities": "/data/entities",
-    "entity-contacts": "/data/entity-contacts",
-    "interactions": "/data/interactions",
-    "config": "/data/config",
-    "profile": "/data/profile"
+    "entities": "/trpc/data.entities",
+    "entity-contacts": "/trpc/data.entity-contacts",
+    "interactions": "/trpc/data.interactions",
+    "config": "/trpc/data.config",
+    "profile": "/trpc/data.profile"
   }
 } as const satisfies RpcPathTree;
 

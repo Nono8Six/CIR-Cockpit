@@ -1,6 +1,9 @@
+import {
+  adminUsersUpdateIdentityResponseSchema,
+  type AdminUsersUpdateIdentityResponse
+} from '../../../../shared/schemas/api-responses';
 import { safeRpc } from '@/services/api/safeRpc';
 import { createAppError } from '@/services/errors/AppError';
-import { isRecord } from '@/utils/recordNarrowing';
 
 export type UpdateUserIdentityPayload = {
   user_id: string;
@@ -9,20 +12,19 @@ export type UpdateUserIdentityPayload = {
   last_name: string;
 };
 
-export type UpdateUserIdentityResponse = {
-  ok: true;
-  user_id: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  display_name?: string;
-};
+export type UpdateUserIdentityResponse = AdminUsersUpdateIdentityResponse;
 
 const parseUpdateUserIdentityResponse = (payload: unknown): UpdateUserIdentityResponse => {
-  if (!isRecord(payload)) {
-    throw createAppError({ code: 'EDGE_INVALID_RESPONSE', message: 'Reponse serveur invalide.', source: 'edge' });
+  const parsed = adminUsersUpdateIdentityResponseSchema.safeParse(payload);
+  if (!parsed.success) {
+    throw createAppError({
+      code: 'EDGE_INVALID_RESPONSE',
+      message: 'Reponse serveur invalide.',
+      source: 'edge',
+      details: parsed.error.message
+    });
   }
-  return payload as UpdateUserIdentityResponse;
+  return parsed.data;
 };
 
 export const adminUsersUpdateIdentity = (payload: UpdateUserIdentityPayload) =>

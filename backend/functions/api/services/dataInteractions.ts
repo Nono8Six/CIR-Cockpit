@@ -1,3 +1,6 @@
+import { and, eq } from 'drizzle-orm';
+
+import { interactions } from '../../../drizzle/schema.ts';
 import type { Database } from '../../../../shared/supabase.types.ts';
 import type { DataInteractionsResponse } from '../../../../shared/schemas/api-responses.ts';
 import type { DataInteractionsPayload } from '../../../../shared/schemas/data.schema.ts';
@@ -10,8 +13,8 @@ import {
 } from './dataAccess.ts';
 
 type InteractionRow = Database['public']['Tables']['interactions']['Row'];
-type InteractionInsert = Database['public']['Tables']['interactions']['Insert'];
 type InteractionUpdate = Database['public']['Tables']['interactions']['Update'];
+type InteractionInsert = typeof interactions.$inferInsert;
 type SaveInteractionPayload = Extract<DataInteractionsPayload, { action: 'save' }>;
 type AddTimelineEventPayload = Extract<DataInteractionsPayload, { action: 'add_timeline_event' }>;
 
@@ -109,16 +112,33 @@ const saveInteraction = async (
     created_by: authContext.userId,
     timeline: interaction.timeline ?? []
   };
+  const {
+    id: _rowId,
+    ...rowForUpdate
+  } = row;
 
-  const { data, error } = await db
-    .from('interactions')
-    .upsert(row, { onConflict: 'id' })
-    .select('*');
-
-  if (error) throw httpError(500, 'DB_WRITE_FAILED', "Impossible d'enregistrer l'interaction.");
-  const saved = data?.[0];
-  if (!saved) throw httpError(500, 'DB_WRITE_FAILED', "Impossible d'enregistrer l'interaction.");
-  return saved;
+  try {
+    const savedRows = await db
+      .insert(interactions)
+      .values(row)
+      .onConflictDoUpdate({
+        target: interactions.id,
+        set: rowForUpdate
+      })
+      .returning();
+    const saved = savedRows[0];
+    if (!saved) throw httpError(500, 'DB_WRITE_FAILED', "Impossible d'enregistrer l'interaction.");
+    return saved;
+  } catch (error) {
+    if (
+      typeof error === 'object'
+      && error !== null
+      && Reflect.get(error, 'code') === 'DB_WRITE_FAILED'
+    ) {
+      throw error;
+    }
+    throw httpError(500, 'DB_WRITE_FAILED', "Impossible d'enregistrer l'interaction.");
+  }
 };
 
 const addTimelineEvent = async (
@@ -127,14 +147,28 @@ const addTimelineEvent = async (
   payload: AddTimelineEventPayload
 ): Promise<InteractionRow> => {
   const { interaction_id: interactionId, expected_updated_at: expectedUpdatedAt, event, updates } = payload;
-  const { data: current, error: fetchError } = await db
-    .from('interactions')
-    .select('timeline, agency_id')
-    .eq('id', interactionId)
-    .single();
+  let current:
+    | {
+      timeline: Database['public']['Tables']['interactions']['Row']['timeline'];
+      agency_id: string | null;
+    }
+    | undefined;
+  try {
+    const rows = await db
+      .select({
+        timeline: interactions.timeline,
+        agency_id: interactions.agency_id
+      })
+      .from(interactions)
+      .where(eq(interactions.id, interactionId))
+      .limit(1);
+    current = rows[0];
+  } catch {
+    throw httpError(500, 'DB_READ_FAILED', 'Impossible de charger l\'interaction.');
+  }
 
-  if (fetchError || !current) throw httpError(404, 'NOT_FOUND', 'Interaction introuvable.');
-  ensureOptionalAgencyAccess(authContext, current.agency_id);
+  if (!current) throw httpError(404, 'NOT_FOUND', 'Interaction introuvable.');
+  ensureOptionalAgencyAccess(authContext, current.agency_id ?? null);
 
   const currentTimeline = Array.isArray(current.timeline) ? current.timeline : [];
   const updatedTimeline = [...currentTimeline, event];
@@ -144,18 +178,34 @@ const addTimelineEvent = async (
     timeline: updatedTimeline
   };
 
-  const { data, error } = await db
-    .from('interactions')
-    .update(rowUpdates)
-    .eq('id', interactionId)
-    .eq('updated_at', expectedUpdatedAt)
-    .select('*');
+  const sanitizedUpdates = Object.fromEntries(
+    Object.entries(rowUpdates).filter(([, value]) => value !== undefined)
+  ) as InteractionUpdate;
 
-  if (error) throw httpError(500, 'DB_WRITE_FAILED', "Impossible de mettre a jour l'interaction.");
-  if (!data || data.length === 0) {
-    throw httpError(409, 'CONFLICT', 'Ce dossier a ete modifie par un autre utilisateur. Rechargez pour continuer.');
+  try {
+    const rows = await db
+      .update(interactions)
+      .set(sanitizedUpdates)
+      .where(and(
+        eq(interactions.id, interactionId),
+        eq(interactions.updated_at, expectedUpdatedAt)
+      ))
+      .returning();
+
+    if (rows.length === 0) {
+      throw httpError(409, 'CONFLICT', 'Ce dossier a ete modifie par un autre utilisateur. Rechargez pour continuer.');
+    }
+    return rows[0];
+  } catch (error) {
+    if (
+      typeof error === 'object'
+      && error !== null
+      && Reflect.get(error, 'code') === 'CONFLICT'
+    ) {
+      throw error;
+    }
+    throw httpError(500, 'DB_WRITE_FAILED', "Impossible de mettre a jour l'interaction.");
   }
-  return data[0];
 };
 
 export const handleDataInteractionsAction = async (

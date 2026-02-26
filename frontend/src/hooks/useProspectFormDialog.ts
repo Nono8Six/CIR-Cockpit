@@ -35,7 +35,7 @@ export const useProspectFormDialog = ({
       city: '',
       siret: '',
       notes: '',
-      agency_id: activeAgencyId ?? null
+      agency_id: activeAgencyId ?? ''
     }
   });
 
@@ -51,7 +51,7 @@ export const useProspectFormDialog = ({
       city: prospect?.city ?? '',
       siret: prospect?.siret ?? '',
       notes: prospect?.notes ?? '',
-      agency_id: prospect?.agency_id ?? activeAgencyId ?? null
+      agency_id: prospect?.agency_id ?? activeAgencyId ?? ''
     });
   }, [activeAgencyId, open, prospect, reset]);
 
@@ -70,13 +70,8 @@ export const useProspectFormDialog = ({
 
   const onSubmit = async (values: ProspectFormValues) => {
     const resolvedAgencyId = userRole === 'tcs'
-      ? activeAgencyId
-      : (values.agency_id ?? activeAgencyId ?? null);
-
-    if (!resolvedAgencyId) {
-      setError('agency_id', { type: 'manual', message: 'Agence requise.' });
-      return;
-    }
+      ? (activeAgencyId ?? values.agency_id)
+      : values.agency_id;
 
     const payload: EntityPayload = {
       id: prospect?.id,
@@ -91,8 +86,12 @@ export const useProspectFormDialog = ({
       notes: values.notes?.trim() || null
     };
 
-    await onSave(payload);
-    onOpenChange(false);
+    try {
+      await onSave(payload);
+      onOpenChange(false);
+    } catch {
+      setError('root', { type: 'server', message: "Impossible d'enregistrer le prospect." });
+    }
   };
 
   const agencyLabel = agencies.find((agency) => agency.id === activeAgencyId)?.name ?? 'Aucune agence';

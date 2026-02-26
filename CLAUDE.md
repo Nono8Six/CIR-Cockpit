@@ -7,14 +7,14 @@ Guide pour Claude Code. Ce fichier est la source unique des regles du projet.
 Frontend (depuis `frontend/`) :
 
 ```bash
-npm install                # Installer les dependances
-npm run dev                # Serveur de dev (port 3000)
-npm run build              # Build production dans dist/
-npm run lint               # ESLint (strict: --max-warnings=0)
-npm run typecheck          # TypeScript (noEmit)
-npm run test               # Vitest (run)
-npm run test:coverage      # Vitest avec couverture
-npm run test:e2e           # Playwright (local uniquement)
+pnpm install                # Installer les dependances
+pnpm run dev                # Serveur de dev (port 3000)
+pnpm run build              # Build production dans dist/
+pnpm run lint               # ESLint (strict: --max-warnings=0)
+pnpm run typecheck          # TypeScript (noEmit)
+pnpm run test               # Vitest (run)
+pnpm run test:coverage      # Vitest avec couverture
+pnpm run test:e2e           # Playwright (local uniquement)
 ```
 
 Backend (depuis la racine) :
@@ -86,7 +86,7 @@ Resume : React 19 + Vite 7 + TypeScript 5.9 + TanStack Query v5 + React Hook For
 ## ESLint
 
 - `--max-warnings=0` : zero tolerance, zero warning
-- Lancer `npm run lint` avant tout commit
+- Lancer `pnpm run lint` avant tout commit
 - Ne jamais desactiver une regle avec `eslint-disable` sauf cas documente en commentaire justificatif
 
 ## Conventions de nommage
@@ -270,6 +270,19 @@ Invoquer le skill correspondant AVANT d'ecrire du code :
 - **Web Design** : `web-design-guidelines` — pour audit UI, accessibilite, UX
 - **Supabase / Postgres** : `supabase-postgres-best-practices` — avant toute modification DB (migrations, queries, RLS, indexes, Edge Functions accedant a la DB)
 - **Erreurs** : `cir-error-handling` — avant toute modification du systeme d'erreurs (catalog, mappers, AppError, normalizeError, handleUiError, codes d'erreur)
+- **Debug / test failure** : `systematic-debugging` — obligatoire avant toute tentative de correction
+- **Tests unitaires/integration front** : `vitest` — pour creer/mettre a jour les tests
+- **E2E / parcours UI** : `playwright-cli` — pour verification de parcours navigateur
+- **Package manager / workspace** : `pnpm` — pour toute modification deps, scripts, workspace
+- **API contract type-safe** : `trpc-type-safety` — pour toute creation/migration de procedure tRPC
+- **ORM type-safe** : `drizzle-orm` — pour toute creation/migration de schema/queries Drizzle
+- **Decouverte de capabilities** : `find-skills` — quand une competence manque ou une action est inconnue
+
+## Usage MCP / Context7
+
+- Pour toute decision technique sur une librairie/framework (React, TanStack Router/Query, tRPC, Drizzle, Vitest, Playwright), consulter Context7 avant implementation.
+- Prioriser les sources officielles et snippets compatibles avec les versions du repo.
+- Si la doc du repo et Context7 divergent, signaler la divergence et choisir explicitement l'arbitrage.
 
 ## Architecture cle
 
