@@ -37,7 +37,7 @@ const ClientFormAgencySection = ({
 
   return (
     <div>
-      <label className="text-xs font-medium text-slate-500" htmlFor="client-agency">Agence</label>
+      <label className="text-xs font-medium text-muted-foreground" htmlFor="client-agency">Agence</label>
       {userRole === 'tcs' ? (
         <Input value={agencyLabel} disabled />
       ) : (
@@ -77,7 +77,7 @@ const ClientFormAgencySection = ({
         </>
       )}
       {errors.agency_id && (
-        <p className="text-xs text-red-600 mt-1">{errors.agency_id.message}</p>
+        <p className="text-xs text-destructive mt-1">{errors.agency_id.message}</p>
       )}
     </div>
   );

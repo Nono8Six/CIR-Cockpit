@@ -24,19 +24,19 @@ const DashboardViewModeSwitch = ({
     }}
   >
     <TabsList
-      className="h-9 w-full rounded-md border border-slate-200 bg-slate-50 p-1 sm:w-auto"
+      className="h-9 w-full rounded-md border border-border bg-surface-1 p-1 sm:w-auto"
       data-testid="dashboard-view-mode-tabs"
     >
       <TabsTrigger
         value="kanban"
-        className="h-7 flex-1 gap-1.5 px-3 text-sm data-[state=active]:bg-white data-[state=active]:text-cir-red sm:flex-none"
+        className="h-7 flex-1 gap-1.5 px-3 text-sm data-[state=active]:bg-card data-[state=active]:text-primary sm:flex-none"
       >
         <Columns3 size={14} aria-hidden="true" />
         Tableau
       </TabsTrigger>
       <TabsTrigger
         value="list"
-        className="h-7 flex-1 gap-1.5 px-3 text-sm data-[state=active]:bg-white data-[state=active]:text-cir-red sm:flex-none"
+        className="h-7 flex-1 gap-1.5 px-3 text-sm data-[state=active]:bg-card data-[state=active]:text-primary sm:flex-none"
       >
         <LayoutList size={14} aria-hidden="true" />
         Historique

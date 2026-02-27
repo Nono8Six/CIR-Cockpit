@@ -47,7 +47,7 @@ const CockpitForm = ({
   const formId = 'interaction-form';
 
   return (
-    <div data-testid="cockpit-form-shell" className="min-h-full rounded-lg border border-slate-200 bg-white shadow-sm overflow-x-clip flex flex-col">
+    <div data-testid="cockpit-form-shell" className="min-h-full rounded-lg border border-border bg-card shadow-sm overflow-x-clip flex flex-col">
       <CockpitFormHeader
         canSave={canSave}
       />
@@ -55,9 +55,9 @@ const CockpitForm = ({
         id={formId}
         ref={formRef}
         onSubmit={handleFormSubmit}
-        className="flex flex-1 flex-col bg-slate-50/30"
+        className="flex flex-1 flex-col bg-surface-1/30"
       >
-        <div className="shrink-0 border-b border-slate-200 bg-slate-50/50 px-3 py-2 sm:px-5">
+        <div className="shrink-0 border-b border-border bg-surface-1/70 px-3 py-2 sm:px-5">
           <InteractionStepper steps={stepperSteps} />
         </div>
 
@@ -65,13 +65,13 @@ const CockpitForm = ({
           <CockpitFormLeftPane {...leftPaneProps} />
           <CockpitFormRightPane {...rightPaneProps} />
         </div>
-        <div data-testid="cockpit-submit-bar" className="sticky bottom-0 z-10 border-t border-slate-200 bg-white/95 px-3 py-3 backdrop-blur sm:px-5">
+        <div data-testid="cockpit-submit-bar" className="sticky bottom-0 z-10 border-t border-border bg-card/95 px-3 py-3 backdrop-blur sm:px-5">
           <div className="flex flex-wrap items-center gap-2 sm:justify-end">
             {!canSave && gateMessage ? (
               <button
                 type="button"
                 onClick={focusCurrentStep}
-                className="h-9 w-full truncate rounded-md border border-amber-200 bg-amber-50 px-2.5 text-xs font-semibold text-amber-700 transition-colors hover:bg-amber-100 sm:h-8 sm:w-auto sm:max-w-[260px]"
+                className="h-9 w-full truncate rounded-md border border-warning/35 bg-warning/15 px-2.5 text-xs font-semibold text-warning-foreground transition-colors hover:bg-warning/20 sm:h-8 sm:w-auto sm:max-w-[260px]"
                 aria-label="Aller au champ requis"
               >
                 {gateMessage}

@@ -1,5 +1,6 @@
 import type { RefObject } from 'react';
 
+import type { RelationMode } from '@/constants/relations';
 import type { Entity, EntityContact } from '@/types';
 import InteractionSearchBar from '@/components/InteractionSearchBar';
 
@@ -12,9 +13,7 @@ type CockpitSearchSectionProps = {
   };
   entitySearchLoading: boolean;
   recentEntities: Entity[];
-  isInternalRelation: boolean;
-  isSolicitationRelation: boolean;
-  isClientRelation: boolean;
+  relationMode: RelationMode;
   onSelectEntityFromSearch: (entity: Entity) => void;
   onSelectContactFromSearch: (contact: EntityContact, entity: Entity | null) => void;
   onOpenClientDialog: () => void;
@@ -28,16 +27,14 @@ const CockpitSearchSection = ({
   entitySearchIndex,
   entitySearchLoading,
   recentEntities,
-  isInternalRelation,
-  isSolicitationRelation,
-  isClientRelation,
+  relationMode,
   onSelectEntityFromSearch,
   onSelectContactFromSearch,
   onOpenClientDialog,
   onOpenGlobalSearch,
   searchInputRef
 }: CockpitSearchSectionProps) => {
-  if (isInternalRelation || isSolicitationRelation) {
+  if (relationMode === 'internal' || relationMode === 'solicitation') {
     return null;
   }
 
@@ -50,7 +47,7 @@ const CockpitSearchSection = ({
       isLoading={entitySearchLoading}
       onSelectEntity={onSelectEntityFromSearch}
       onSelectContact={onSelectContactFromSearch}
-      onCreateEntity={isClientRelation ? onOpenClientDialog : undefined}
+      onCreateEntity={relationMode === 'client' ? onOpenClientDialog : undefined}
       onOpenGlobalSearch={onOpenGlobalSearch}
       recentEntities={recentEntities}
       inputRef={searchInputRef}

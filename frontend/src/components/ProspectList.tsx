@@ -70,7 +70,7 @@ const ProspectList = ({
           id: 'entity_type',
           header: 'Type',
           cell: ({ row }) => (
-            <span className="text-xs uppercase tracking-wider text-slate-500">
+            <span className="text-xs uppercase tracking-wider text-muted-foreground">
               {row.original.entity_type || 'Prospect'}
             </span>
           )
@@ -81,15 +81,15 @@ const ProspectList = ({
             <Button
               type="button"
               variant="ghost"
-              className="-ml-3 h-8 px-3 text-xs text-slate-600"
+              className="-ml-3 h-8 px-3 text-xs text-muted-foreground"
               onClick={column.getToggleSortingHandler()}
             >
               Prospect
-              <ArrowUpDown size={14} className="ml-1 text-slate-400" />
+              <ArrowUpDown size={14} className="ml-1 text-muted-foreground/80" />
             </Button>
           ),
           cell: ({ row }) => (
-            <span className="block truncate font-semibold text-slate-900">
+            <span className="block truncate font-semibold text-foreground">
               {row.original.name}
             </span>
           )
@@ -101,15 +101,15 @@ const ProspectList = ({
             <Button
               type="button"
               variant="ghost"
-              className="-ml-3 h-8 px-3 text-xs text-slate-600"
+              className="-ml-3 h-8 px-3 text-xs text-muted-foreground"
               onClick={column.getToggleSortingHandler()}
             >
               Ville
-              <ArrowUpDown size={14} className="ml-1 text-slate-400" />
+              <ArrowUpDown size={14} className="ml-1 text-muted-foreground/80" />
             </Button>
           ),
           cell: ({ row }) => (
-            <span className="block truncate text-xs text-slate-600">
+            <span className="block truncate text-xs text-muted-foreground">
               {row.original.city || 'Sans ville'}
             </span>
           )
@@ -119,7 +119,7 @@ const ProspectList = ({
           id: 'siret',
           header: 'Siret',
           cell: ({ row }) => (
-            <span className="hidden text-xs text-slate-600 md:inline">
+            <span className="hidden text-xs text-muted-foreground md:inline">
               {row.original.siret || '-'}
             </span>
           )
@@ -130,11 +130,11 @@ const ProspectList = ({
           enableSorting: false,
           cell: ({ row }) =>
             row.original.archived_at ? (
-              <span className="inline-flex items-center gap-1 text-xs uppercase text-amber-600">
+              <span className="inline-flex items-center gap-1 text-xs uppercase text-warning">
                 <Archive size={12} /> Archive
               </span>
             ) : (
-              <span className="text-xs text-emerald-700">Actif</span>
+              <span className="text-xs text-success">Actif</span>
             )
         }
       ];
@@ -245,7 +245,7 @@ const ProspectList = ({
 
   if (prospects.length === 0) {
     return (
-      <div className="text-sm text-slate-400 border border-dashed border-slate-200 rounded-lg p-4">
+      <div className="text-sm text-muted-foreground/80 border border-dashed border-border rounded-lg p-4">
         Aucun prospect trouve.
       </div>
     );
@@ -271,7 +271,7 @@ const ProspectList = ({
     }));
 
   return (
-    <div className="rounded-md border border-slate-200">
+    <div className="rounded-md border border-border">
       <Table className="table-fixed">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -314,7 +314,7 @@ const ProspectList = ({
                   data-state={isSelected ? 'selected' : undefined}
                   data-testid={`prospects-list-row-${row.original.id}`}
                   className={`cursor-pointer ${
-                    isSelected ? 'border-cir-red/40 bg-cir-red/5' : 'hover:bg-slate-50'
+                    isSelected ? 'border-ring/40 bg-primary/5' : 'hover:bg-surface-1'
                   }`}
                   tabIndex={0}
                   aria-selected={isSelected}

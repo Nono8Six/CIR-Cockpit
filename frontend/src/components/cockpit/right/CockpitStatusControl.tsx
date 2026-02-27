@@ -107,10 +107,10 @@ const CockpitStatusControl = ({
             size="sm"
             disabled={!hasStatuses}
             aria-describedby={hasStatuses ? undefined : statusHelpId}
-            className="h-9 w-full justify-between gap-2 px-2.5 text-xs font-semibold text-slate-700 sm:w-[260px]"
+            className="h-9 w-full justify-between gap-2 px-2.5 text-xs font-semibold text-foreground sm:w-[260px]"
           >
             <span className="truncate text-left">{statusLabel}</span>
-            <ChevronDown size={14} className="shrink-0 text-slate-400" />
+            <ChevronDown size={14} className="shrink-0 text-muted-foreground/80" />
           </Button>
         </PopoverTrigger>
         <PopoverContent align="start" sideOffset={6} className="w-[min(92vw,420px)] p-0">
@@ -139,7 +139,7 @@ const CockpitStatusControl = ({
                         onSelect={() => handleSelectStatus(nextStatusId)}
                       >
                         <span className="flex-1">{statusItem.label}</span>
-                        {isCurrentStatus ? <span className="text-xs font-semibold text-cir-red">Actuel</span> : null}
+                        {isCurrentStatus ? <span className="text-xs font-semibold text-primary">Actuel</span> : null}
                       </CommandItem>
                     );
                   })}

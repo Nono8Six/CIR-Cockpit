@@ -1,6 +1,7 @@
 import type { ChangeEvent, RefObject } from 'react';
 import type { FieldErrors, UseFormSetValue } from 'react-hook-form';
 
+import type { RelationMode } from '@/constants/relations';
 import type { AgencyConfig } from '@/services/config';
 import type { InteractionFormValues } from '@/schemas/interactionSchema';
 import type { CockpitFormLeftPaneProps, CockpitFormRightPaneProps } from '@/components/cockpit/CockpitPaneTypes';
@@ -16,11 +17,7 @@ export type UseCockpitPanePropsParams = {
   relationOptions: string[];
   entityType: string;
   relationButtonRef: RefObject<HTMLButtonElement | null>;
-  isInternalRelation: boolean;
-  isSolicitationRelation: boolean;
-  isClientRelation: boolean;
-  isProspectRelation: boolean;
-  isSupplierRelation: boolean;
+  relationMode: RelationMode;
   activeAgencyId: string | null;
   entitySearchIndex: { entities: Entity[]; contacts: EntityContact[] };
   entitySearchLoading: boolean;

@@ -23,7 +23,7 @@ const ChangePasswordActions = ({
         type="button"
         onClick={onRetryProfile}
         disabled={isSubmitting}
-        className="w-full rounded-md bg-cir-red text-white text-sm font-semibold py-2.5 shadow-sm hover:bg-red-700 disabled:opacity-60"
+        className="w-full rounded-md bg-primary text-white text-sm font-semibold py-2.5 shadow-sm hover:bg-primary/90 disabled:opacity-60"
       >
         {isSubmitting ? 'Validation…' : 'Reessayer la validation'}
       </button>
@@ -32,7 +32,7 @@ const ChangePasswordActions = ({
         type="submit"
         disabled={!canSubmit}
         onClick={onSubmit}
-        className="w-full rounded-md bg-cir-red text-white text-sm font-semibold py-2.5 shadow-sm hover:bg-red-700 disabled:opacity-60 disabled:cursor-not-allowed"
+        className="w-full rounded-md bg-primary text-white text-sm font-semibold py-2.5 shadow-sm hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {isSubmitting ? 'Mise a jour…' : 'Mettre a jour le mot de passe'}
       </button>
@@ -42,7 +42,7 @@ const ChangePasswordActions = ({
       type="button"
       onClick={onSignOut}
       disabled={isSubmitting}
-      className="w-full flex items-center justify-center gap-2 rounded-md border border-slate-200 bg-white text-slate-600 text-sm font-medium py-2 hover:bg-slate-50 disabled:opacity-60"
+      className="w-full flex items-center justify-center gap-2 rounded-md border border-border bg-card text-muted-foreground text-sm font-medium py-2 hover:bg-surface-1 disabled:opacity-60"
     >
       <LogOut size={14} />
       Se deconnecter

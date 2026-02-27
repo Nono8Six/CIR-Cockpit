@@ -21,7 +21,7 @@ const InteractionFooterNoteComposer = ({
       value={note}
       onChange={(event) => onNoteChange(event.target.value)}
       placeholder="Ajouter une note de suivi, compte-rendu d'appel..."
-      className="min-h-[96px] resize-none bg-white pr-20 text-sm"
+      className="min-h-[96px] resize-none bg-card pr-20 text-sm"
       onKeyDown={(event) => {
         if (event.ctrlKey && event.key === 'Enter') {
           onSubmit();
@@ -36,7 +36,7 @@ const InteractionFooterNoteComposer = ({
         type="button"
         variant="ghost"
         size="icon"
-        className="size-8 text-slate-500 hover:text-slate-700"
+        className="size-8 text-muted-foreground hover:text-foreground"
         title="Joindre un fichier (Simulation)"
         aria-label="Joindre un fichier"
       >
@@ -45,7 +45,7 @@ const InteractionFooterNoteComposer = ({
       <Button
         type="button"
         size="icon"
-        className="size-8 bg-cir-red text-white hover:bg-red-700"
+        className="size-8 bg-primary text-white hover:bg-primary/90"
         onClick={onSubmit}
         disabled={isSubmitDisabled}
         aria-label="Envoyer la mise a jour"

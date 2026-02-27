@@ -36,11 +36,11 @@ const LoginScreenForm = ({
   return (
     <form className="space-y-4" onSubmit={onSubmit} noValidate>
       <div className="space-y-2">
-        <label className="text-xs font-semibold uppercase tracking-wide text-slate-600" htmlFor="email">
+        <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground" htmlFor="email">
           Email
         </label>
         <div className="relative">
-          <Mail aria-hidden className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Mail aria-hidden className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/80" />
           <Input
             id="email"
             type="email"
@@ -59,11 +59,11 @@ const LoginScreenForm = ({
         </div>
       </div>
       <div className="space-y-2">
-        <label className="text-xs font-semibold uppercase tracking-wide text-slate-600" htmlFor="password">
+        <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground" htmlFor="password">
           Mot de passe
         </label>
         <div className="relative">
-          <LockKeyhole aria-hidden className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <LockKeyhole aria-hidden className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/80" />
           <Input
             id="password"
             type="password"
@@ -81,7 +81,7 @@ const LoginScreenForm = ({
         </div>
       </div>
 
-      <div id={statusId} className="min-h-5 text-xs text-slate-600" role="status" aria-live="polite">
+      <div id={statusId} className="min-h-5 text-xs text-muted-foreground" role="status" aria-live="polite">
         {isSubmitting ? (
           <span className="inline-flex items-center gap-2">
             <LoaderCircle aria-hidden className="h-3.5 w-3.5 animate-spin" />
@@ -89,13 +89,13 @@ const LoginScreenForm = ({
           </span>
         ) : null}
         {!isSubmitting && isSuccess ? (
-          <span className="inline-flex items-center gap-2 text-emerald-700">Connexion réussie. Redirection...</span>
+          <span className="inline-flex items-center gap-2 text-success">Connexion réussie. Redirection...</span>
         ) : null}
       </div>
 
       {fieldError ? (
         <div
-          className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700"
+          className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive"
           role="alert"
         >
           <span className="inline-flex items-center gap-2">
@@ -108,7 +108,7 @@ const LoginScreenForm = ({
       {hasError && (
         <div
           id={errorId}
-          className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700"
+          className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive"
           role="alert"
         >
           <span className="inline-flex items-center gap-2">

@@ -10,9 +10,9 @@ type SettingsHeaderProps = {
 
 const SettingsHeader = ({ readOnly, isSaving, onReset, onSave }: SettingsHeaderProps) => {
   return (
-    <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-3 sm:px-6 sm:py-4">
+    <div className="shrink-0 border-b border-border bg-card px-4 py-3 sm:px-6 sm:py-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-base font-semibold text-slate-800 sm:text-lg">Parametrage agence</h2>
+        <h2 className="text-base font-semibold text-foreground sm:text-lg">Parametrage agence</h2>
         <div className="flex flex-wrap gap-2">
           <Button
             type="button"

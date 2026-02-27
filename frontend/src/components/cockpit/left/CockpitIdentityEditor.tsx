@@ -1,6 +1,7 @@
 import type { RefObject } from 'react';
 import type { FieldErrors, UseFormRegisterReturn, UseFormSetValue } from 'react-hook-form';
 
+import type { RelationMode } from '@/constants/relations';
 import type { InteractionFormValues } from '@/schemas/interactionSchema';
 import CockpitCompanyCityField from './CockpitCompanyCityField';
 import CockpitCompanyInput from './CockpitCompanyInput';
@@ -8,10 +9,7 @@ import CockpitIdentityHints from './CockpitIdentityHints';
 
 type CockpitIdentityEditorProps = {
   errors: FieldErrors<InteractionFormValues>;
-  isInternalRelation: boolean;
-  isSolicitationRelation: boolean;
-  isClientRelation: boolean;
-  isProspectRelation: boolean;
+  relationMode: RelationMode;
   companyField: UseFormRegisterReturn;
   companyCityField: UseFormRegisterReturn;
   companyName: string;
@@ -25,10 +23,7 @@ type CockpitIdentityEditorProps = {
 
 const CockpitIdentityEditor = ({
   errors,
-  isInternalRelation,
-  isSolicitationRelation,
-  isClientRelation,
-  isProspectRelation,
+  relationMode,
   companyField,
   companyCityField,
   companyName,
@@ -41,11 +36,9 @@ const CockpitIdentityEditor = ({
 }: CockpitIdentityEditorProps) => (
   <div className="space-y-2">
     <CockpitIdentityHints
-      isInternalRelation={isInternalRelation}
-      isSolicitationRelation={isSolicitationRelation}
-      isClientRelation={isClientRelation}
+      relationMode={relationMode}
     />
-    {!isInternalRelation && !isSolicitationRelation && !isClientRelation && (
+    {relationMode !== 'internal' && relationMode !== 'solicitation' && relationMode !== 'client' && (
       <>
         <CockpitCompanyInput
           errors={errors}
@@ -57,7 +50,7 @@ const CockpitIdentityEditor = ({
           companyInputRef={companyInputRef}
           setValue={setValue}
         />
-        {isProspectRelation && (
+        {relationMode === 'prospect' && (
           <CockpitCompanyCityField
             field={companyCityField}
             value={companyCity}

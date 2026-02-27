@@ -81,7 +81,7 @@ const UserIdentityDialog = ({ open, onOpenChange, user, onSave }: UserIdentityDi
         <form onSubmit={handleFormSubmit} className="space-y-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="md:col-span-3">
-              <label htmlFor="edit-user-email" className="text-xs font-medium text-slate-500">
+              <label htmlFor="edit-user-email" className="text-xs font-medium text-muted-foreground">
                 Email
               </label>
               <Input
@@ -92,7 +92,7 @@ const UserIdentityDialog = ({ open, onOpenChange, user, onSave }: UserIdentityDi
               />
             </div>
             <div>
-              <label htmlFor="edit-user-last-name" className="text-xs font-medium text-slate-500">
+              <label htmlFor="edit-user-last-name" className="text-xs font-medium text-muted-foreground">
                 Nom
               </label>
               <Input
@@ -102,7 +102,7 @@ const UserIdentityDialog = ({ open, onOpenChange, user, onSave }: UserIdentityDi
               />
             </div>
             <div>
-              <label htmlFor="edit-user-first-name" className="text-xs font-medium text-slate-500">
+              <label htmlFor="edit-user-first-name" className="text-xs font-medium text-muted-foreground">
                 Prenom
               </label>
               <Input
@@ -113,8 +113,8 @@ const UserIdentityDialog = ({ open, onOpenChange, user, onSave }: UserIdentityDi
             </div>
           </div>
 
-          {fieldError ? <p className="text-sm text-red-600">{fieldError}</p> : null}
-          {serverError ? <p className="text-sm text-red-600">{serverError}</p> : null}
+          {fieldError ? <p className="text-sm text-destructive">{fieldError}</p> : null}
+          {serverError ? <p className="text-sm text-destructive">{serverError}</p> : null}
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

@@ -38,11 +38,11 @@ const ChangePasswordScreen = ({
   } = useChangePasswordState({ onComplete });
 
   return (
-    <div className="min-h-screen bg-slate-50/70 flex items-center justify-center p-6 font-sans">
-      <div className="w-full max-w-md bg-white shadow-xl border border-slate-200 rounded-2xl p-8">
+    <div className="min-h-[100dvh] bg-surface-1/80 flex items-center justify-center p-6 font-sans">
+      <div className="w-full max-w-md bg-card shadow-xl border border-border rounded-2xl p-8">
         <ChangePasswordHeader userEmail={userEmail} />
 
-        <p className="text-sm text-slate-600 mb-6 leading-relaxed">
+        <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
           Pour des raisons de securite, vous devez definir un nouveau mot de passe
           avant d&apos;acceder a l&apos;application.
         </p>

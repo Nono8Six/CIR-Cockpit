@@ -1,33 +1,31 @@
+import type { RelationMode } from '@/constants/relations';
+
 type CockpitIdentityHintsProps = {
-  isInternalRelation: boolean;
-  isSolicitationRelation: boolean;
-  isClientRelation: boolean;
+  relationMode: RelationMode;
 };
 
 const CockpitIdentityHints = ({
-  isInternalRelation,
-  isSolicitationRelation,
-  isClientRelation
+  relationMode
 }: CockpitIdentityHintsProps) => {
-  if (isInternalRelation) {
+  if (relationMode === 'internal') {
     return (
-      <div className="rounded-md border border-dashed border-slate-200 bg-white px-3 py-2 text-xs text-slate-500">
+      <div className="rounded-md border border-dashed border-border bg-card px-3 py-2 text-xs text-muted-foreground">
         Interne CIR : aucune entreprise a renseigner, passez au contact.
       </div>
     );
   }
 
-  if (isSolicitationRelation) {
+  if (relationMode === 'solicitation') {
     return (
-      <div className="rounded-md border border-dashed border-slate-200 bg-white px-3 py-2 text-xs text-slate-500">
+      <div className="rounded-md border border-dashed border-border bg-card px-3 py-2 text-xs text-muted-foreground">
         Sollicitation : renseignez le nom de la societe et le numero de telephone.
       </div>
     );
   }
 
-  if (isClientRelation) {
+  if (relationMode === 'client') {
     return (
-      <p className="text-xs text-slate-400">
+      <p className="text-xs text-muted-foreground/80">
         Selectionnez un client via la recherche pour continuer.
       </p>
     );

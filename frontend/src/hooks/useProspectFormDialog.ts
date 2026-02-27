@@ -58,14 +58,10 @@ export const useProspectFormDialog = ({
   const postalCode = useWatch({ control, name: 'postal_code' }) ?? '';
   const agencyValue = useWatch({ control, name: 'agency_id' }) ?? '';
 
-  useEffect(() => {
-    const dept = postalCode.slice(0, 2);
-    setValue('department', dept, { shouldDirty: true });
-  }, [postalCode, setValue]);
-
   const handlePostalCodeChange = (event: ChangeEvent<HTMLInputElement>) => {
     const digits = event.target.value.replace(/\D/g, '').slice(0, 5);
     setValue('postal_code', digits, { shouldDirty: true, shouldValidate: true });
+    setValue('department', digits.slice(0, 2), { shouldDirty: true });
   };
 
   const onSubmit = async (values: ProspectFormValues) => {

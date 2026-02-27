@@ -21,7 +21,7 @@ const HighlightedDigits = ({ formatted, query }: HighlightedDigitsProps) => {
       return <span key={`d-${index}`}>{char}</span>;
     }
     return (
-      <span key={`d-${index}`} className="bg-amber-100 text-slate-900 px-0.5 rounded-sm">
+      <span key={`d-${index}`} className="bg-warning/20 text-foreground px-0.5 rounded-sm">
         {char}
       </span>
     );

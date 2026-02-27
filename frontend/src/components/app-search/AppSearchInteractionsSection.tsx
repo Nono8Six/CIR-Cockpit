@@ -21,21 +21,21 @@ const AppSearchInteractionsSection = ({ interactions, onOpenInteraction }: AppSe
           className="gap-3 px-3 py-2"
           data-testid={`app-search-interaction-${interaction.id}`}
         >
-          <ClipboardList className="size-4 text-slate-500" aria-hidden="true" />
+          <ClipboardList className="size-4 text-muted-foreground" aria-hidden="true" />
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <span className="truncate text-sm font-medium text-slate-900">
+            <span className="truncate text-sm font-medium text-foreground">
               {interaction.company_name}
             </span>
-            <div className="flex items-center gap-2 text-xs text-slate-500">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <span className="truncate">{interaction.subject}</span>
               <span>•</span>
               <span className="truncate">{interaction.contact_name}</span>
             </div>
           </div>
           <div className="flex shrink-0 flex-col items-end gap-1 text-right">
-            <span className="text-xs text-slate-400">{formatDate(interaction.created_at)}</span>
+            <span className="text-xs text-muted-foreground/80">{formatDate(interaction.created_at)}</span>
             {interaction.order_ref && (
-              <span className="rounded bg-slate-100 px-1.5 text-xs font-mono text-slate-600">
+              <span className="rounded bg-muted px-1.5 text-xs font-mono text-muted-foreground">
                 #{interaction.order_ref}
               </span>
             )}

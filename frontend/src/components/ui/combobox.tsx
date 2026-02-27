@@ -138,15 +138,15 @@ function ComboboxInput({
         aria-expanded={open}
         disabled={resolvedDisabled}
         className={cn(
-          "h-8 w-full justify-between rounded-md border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-cir-red/5 hover:border-cir-red/40",
-          !value && "text-slate-500",
+          "h-8 w-full justify-between rounded-md border-border bg-card px-2.5 text-xs font-medium text-foreground shadow-sm hover:bg-primary/10 hover:border-ring/40",
+          !value && "text-muted-foreground",
           className
         )}
         title={searchPlaceholder}
         {...props}
       >
         <span className="truncate">{label}</span>
-        <ChevronsUpDown className="size-3.5 shrink-0 text-slate-400" aria-hidden="true" />
+        <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground/80" aria-hidden="true" />
       </Button>
     </PopoverTrigger>
   )
@@ -215,7 +215,7 @@ function ComboboxItem({ value, children, className }: ComboboxItemProps) {
       <span className="flex-1">{children}</span>
       <Check
         className={cn(
-          "size-4 text-cir-red transition-opacity",
+          "size-4 text-primary transition-opacity",
           isSelected ? "opacity-100" : "opacity-0"
         )}
         aria-hidden="true"

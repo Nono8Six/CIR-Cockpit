@@ -38,12 +38,12 @@ const DashboardListMobileCard = ({
   <article className="space-y-2 px-3 py-3">
     <div className="flex items-center justify-between gap-2">
       <div className="flex min-w-0 items-center gap-2">
-        <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-slate-600">
+        <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-muted-foreground">
           {getChannelIcon(item.channel)}
         </span>
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-slate-900">{item.company_name}</p>
-          <p className="truncate text-xs text-slate-600">{item.contact_name}</p>
+          <p className="truncate text-sm font-semibold text-foreground">{item.company_name}</p>
+          <p className="truncate text-xs text-muted-foreground">{item.contact_name}</p>
         </div>
       </div>
       <span
@@ -52,13 +52,13 @@ const DashboardListMobileCard = ({
         {item.status}
       </span>
     </div>
-    <p className="line-clamp-2 text-sm text-slate-700">{item.subject}</p>
+    <p className="line-clamp-2 text-sm text-foreground">{item.subject}</p>
     <div className="flex items-center justify-between gap-2">
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-muted-foreground">
         {formatDate(item.last_action_at)} a {formatTime(item.last_action_at)}
       </p>
       {item.order_ref && (
-        <span className="truncate rounded border border-slate-200 bg-slate-100 px-1.5 py-0.5 font-mono text-xs text-slate-600">
+        <span className="truncate rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-xs text-muted-foreground">
           #{item.order_ref}
         </span>
       )}
@@ -68,7 +68,7 @@ const DashboardListMobileCard = ({
       type="button"
       variant="ghost"
       size="dense"
-      className="h-8 w-full justify-between text-cir-red hover:text-red-700"
+      className="h-8 w-full justify-between text-primary hover:text-primary"
       onClick={() => onSelectInteraction(item)}
       aria-label={`Ouvrir ${item.company_name}`}
     >
@@ -85,10 +85,10 @@ const DashboardList = ({
   onSelectInteraction
 }: DashboardListProps) => (
   <div className="h-full min-h-0 overflow-y-auto p-3 sm:p-4" data-testid="dashboard-list">
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-      <div className="divide-y divide-slate-100 md:hidden">
+    <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+      <div className="divide-y divide-border/70 md:hidden">
         {rows.length === 0 ? (
-          <div className="px-3 py-10 text-center text-sm text-slate-500">
+          <div className="px-3 py-10 text-center text-sm text-muted-foreground">
             Aucune interaction trouvee.
           </div>
         ) : (
@@ -109,7 +109,7 @@ const DashboardList = ({
           <TableHeader>
             <DashboardListHeader />
           </TableHeader>
-          <TableBody className="divide-y divide-slate-100">
+          <TableBody className="divide-y divide-border/70">
             {rows.length === 0 ? (
               <DashboardListEmptyRow />
             ) : (

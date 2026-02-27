@@ -3,7 +3,7 @@ import type { Session } from '@supabase/supabase-js';
 import type { UserProfile } from '@/services/auth/getProfile';
 import type { AgencyContext, AgencyMembershipSummary } from '@/types';
 
-export type AppSessionContextValue = {
+export type AppSessionState = {
   authReady: boolean;
   session: Session | null;
   profile: UserProfile | null;
@@ -16,8 +16,13 @@ export type AppSessionContextValue = {
   isContextLoading: boolean;
   contextError: string | null;
   canLoadData: boolean;
+};
+
+export type AppSessionActions = {
   refreshProfile: () => Promise<void>;
   retryProfile: () => void;
   changeActiveAgency: (agencyId: string) => Promise<boolean>;
   signOutUser: () => Promise<boolean>;
 };
+
+export type AppSessionContextValue = AppSessionState & AppSessionActions;

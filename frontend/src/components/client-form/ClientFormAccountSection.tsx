@@ -35,7 +35,7 @@ const ClientFormAccountSection = ({
 }: ClientFormAccountSectionProps) => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div>
-      <label className="text-xs font-medium text-slate-500" htmlFor="client-number">Numero de compte</label>
+      <label className="text-xs font-medium text-muted-foreground" htmlFor="client-number">Numero de compte</label>
       <Input
         {...clientNumberField}
         id="client-number"
@@ -45,11 +45,11 @@ const ClientFormAccountSection = ({
         inputMode="numeric"
       />
       {errors.client_number && (
-        <p className="text-xs text-red-600 mt-1">{errors.client_number.message}</p>
+        <p className="text-xs text-destructive mt-1">{errors.client_number.message}</p>
       )}
     </div>
     <div>
-      <label className="text-xs font-medium text-slate-500" htmlFor="client-account-type">Type de compte</label>
+      <label className="text-xs font-medium text-muted-foreground" htmlFor="client-account-type">Type de compte</label>
       <input
         type="hidden"
         name={accountTypeField.name}
@@ -76,7 +76,7 @@ const ClientFormAccountSection = ({
         </SelectContent>
       </Select>
       {errors.account_type && (
-        <p className="text-xs text-red-600 mt-1">{errors.account_type.message}</p>
+        <p className="text-xs text-destructive mt-1">{errors.account_type.message}</p>
       )}
     </div>
   </div>

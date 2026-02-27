@@ -149,7 +149,7 @@ describe('InteractionSearchBar', () => {
     const archivedOption = findOptionByText('Archive Client');
     expect(archivedOption).toBeTruthy();
     const archiveLabels = within(archivedOption as HTMLElement).getAllByText('Archive');
-    expect(archiveLabels.some((label) => label.className.includes('bg-amber-50'))).toBe(true);
+    expect(archiveLabels.some((label) => label.className.includes('bg-warning/15'))).toBe(true);
 
     await user.click(screen.getByRole('button', { name: /voir tout/i }));
     expect(onOpenGlobalSearch).toHaveBeenCalledTimes(1);

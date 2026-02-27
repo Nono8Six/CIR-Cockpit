@@ -30,10 +30,10 @@ const AppSearchProspectsSection = ({
           className="gap-3 px-3 py-2"
           data-testid={`app-search-prospect-${entity.id}`}
         >
-          <CircleArrowUp className="size-4 text-slate-500" aria-hidden="true" />
+          <CircleArrowUp className="size-4 text-muted-foreground" aria-hidden="true" />
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <span className="truncate text-sm font-medium text-slate-900">{entity.name}</span>
-            <span className="truncate text-xs text-slate-500">
+            <span className="truncate text-sm font-medium text-foreground">{entity.name}</span>
+            <span className="truncate text-xs text-muted-foreground">
               {entity.city || 'Sans ville'}
             </span>
           </div>

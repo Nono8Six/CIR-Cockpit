@@ -32,13 +32,13 @@ const LoginScreen = ({ onSignIn }: LoginScreenProps) => {
   return (
     <main
       role="main"
-      className="min-h-screen bg-slate-100/90 text-slate-900 flex items-center justify-center p-4 sm:p-6 font-sans"
+      className="min-h-[100dvh] bg-muted/90 text-foreground flex items-center justify-center p-4 sm:p-6 font-sans"
       data-testid="login-screen-root"
     >
-      <Card className="w-full max-w-md border-slate-200/80 shadow-xl shadow-slate-900/5">
+      <Card className="w-full max-w-md border-border/80 shadow-xl shadow-slate-900/5">
         <CardHeader className="space-y-3 pb-4">
           <LoginScreenBrand />
-          <CardDescription className="text-sm text-slate-600">
+          <CardDescription className="text-sm text-muted-foreground">
             Connectez-vous pour accéder au cockpit CIR et poursuivre vos actions en toute sécurité.
           </CardDescription>
         </CardHeader>
@@ -55,8 +55,8 @@ const LoginScreen = ({ onSignIn }: LoginScreenProps) => {
             onSubmit={handleSubmit}
           />
         </CardContent>
-        <CardFooter className="border-t border-slate-200/70 pt-4">
-          <p className="text-xs leading-relaxed text-slate-500">
+        <CardFooter className="border-t border-border/70 pt-4">
+          <p className="text-xs leading-relaxed text-muted-foreground">
             Comptes créés par un administrateur. Pas d&apos;inscription publique. Support interne
             uniquement.
           </p>

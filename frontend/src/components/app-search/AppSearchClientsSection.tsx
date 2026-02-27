@@ -22,10 +22,10 @@ const AppSearchClientsSection = ({ clients, onFocusClient }: AppSearchClientsSec
           className="gap-3 px-3 py-2"
           data-testid={`app-search-client-${client.id}`}
         >
-          <Building2 className="size-4 text-slate-500" aria-hidden="true" />
+          <Building2 className="size-4 text-muted-foreground" aria-hidden="true" />
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <span className="truncate text-sm font-medium text-slate-900">{client.name}</span>
-            <span className="truncate text-xs text-slate-500">
+            <span className="truncate text-sm font-medium text-foreground">{client.name}</span>
+            <span className="truncate text-xs text-muted-foreground">
               {client.client_number
                 ? `${formatClientNumber(client.client_number)} • ${client.city ?? ''}`
                 : client.city}

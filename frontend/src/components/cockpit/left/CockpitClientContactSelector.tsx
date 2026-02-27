@@ -38,10 +38,10 @@ const CockpitClientContactSelector = ({
         </SelectContent>
       </Select>
       {contactsLoading && (
-        <p className="text-xs text-slate-400">Chargement des contacts...</p>
+        <p className="text-xs text-muted-foreground/80">Chargement des contacts...</p>
       )}
       {!contactsLoading && contacts.length === 0 && (
-        <p className="text-xs text-slate-400">Aucun contact associe.</p>
+        <p className="text-xs text-muted-foreground/80">Aucun contact associe.</p>
       )}
     </div>
   );

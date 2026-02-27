@@ -1,6 +1,7 @@
 import type { ChangeEvent, RefObject } from 'react';
 import type { FieldErrors, UseFormRegisterReturn } from 'react-hook-form';
 
+import type { RelationMode } from '@/constants/relations';
 import type { InteractionFormValues } from '@/schemas/interactionSchema';
 import type { Entity, EntityContact } from '@/types';
 
@@ -24,9 +25,7 @@ export type CockpitClientContactProps = CockpitContactCommonProps & {
 
 export type CockpitManualContactProps = CockpitContactCommonProps & {
   errors: FieldErrors<InteractionFormValues>;
-  isSolicitationRelation: boolean;
-  isSupplierRelation: boolean;
-  isInternalRelation: boolean;
+  relationMode: RelationMode;
   contactFirstNameField: UseFormRegisterReturn;
   contactLastNameField: UseFormRegisterReturn;
   contactPositionField: UseFormRegisterReturn;
@@ -43,6 +42,4 @@ export type CockpitManualContactProps = CockpitContactCommonProps & {
 };
 
 export type CockpitContactSectionProps = CockpitClientContactProps &
-  CockpitManualContactProps & {
-    isClientRelation: boolean;
-  };
+  CockpitManualContactProps;

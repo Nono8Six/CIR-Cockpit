@@ -6,10 +6,10 @@ type ClientsPanelTitleProps = {
 
 const ClientsPanelTitle = ({ viewMode }: ClientsPanelTitleProps) => (
   <div>
-    <h2 className="text-sm font-semibold text-slate-900">
+    <h2 className="text-sm font-semibold text-foreground">
       {viewMode === 'clients' ? 'Clients' : 'Prospects'}
     </h2>
-    <p className="text-xs text-slate-500">
+    <p className="text-xs text-muted-foreground">
       {viewMode === 'clients' ? 'Gestion du portefeuille clients' : 'Suivi des prospects'}
     </p>
   </div>

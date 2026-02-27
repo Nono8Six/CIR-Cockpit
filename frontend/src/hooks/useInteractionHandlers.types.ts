@@ -15,6 +15,8 @@ export type InteractionHandlersInput = {
   normalizedRelation: string;
   contacts: EntityContact[];
   megaFamilies: string[];
+  contactFirstName: string;
+  contactLastName: string;
   activeAgencyId: string | null;
   queryClient: QueryClient;
   setSelectedEntity: (entity: Entity | null) => void;

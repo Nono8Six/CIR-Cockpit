@@ -15,12 +15,12 @@ const AuditLogsRow = ({ log, variant }: AuditLogsRowProps) => {
   if (variant === 'table') {
     return (
       <TableRow data-testid={`admin-audit-row-${log.id}`}>
-        <TableCell className="text-xs text-slate-600">{formatDate(log.created_at)}</TableCell>
-        <TableCell className="text-xs font-semibold text-slate-800">{log.action}</TableCell>
-        <TableCell className="text-xs text-slate-600">{log.entity_table}</TableCell>
-        <TableCell className="text-xs text-slate-600">{log.agency?.name ?? '-'}</TableCell>
-        <TableCell className="text-xs text-slate-600">{actorLabel}</TableCell>
-        <TableCell className="max-w-[260px] truncate text-xs text-slate-600" title={metadataLabel}>
+        <TableCell className="text-xs text-muted-foreground">{formatDate(log.created_at)}</TableCell>
+        <TableCell className="text-xs font-semibold text-foreground">{log.action}</TableCell>
+        <TableCell className="text-xs text-muted-foreground">{log.entity_table}</TableCell>
+        <TableCell className="text-xs text-muted-foreground">{log.agency?.name ?? '-'}</TableCell>
+        <TableCell className="text-xs text-muted-foreground">{actorLabel}</TableCell>
+        <TableCell className="max-w-[260px] truncate text-xs text-muted-foreground" title={metadataLabel}>
           {metadataLabel}
         </TableCell>
       </TableRow>
@@ -28,20 +28,20 @@ const AuditLogsRow = ({ log, variant }: AuditLogsRowProps) => {
   }
 
   return (
-    <div className="space-y-2 rounded-md border border-slate-200 bg-white p-3 text-xs text-slate-600" data-testid={`admin-audit-card-${log.id}`}>
-      <p className="font-semibold text-slate-800">{log.action}</p>
+    <div className="space-y-2 rounded-md border border-border bg-card p-3 text-xs text-muted-foreground" data-testid={`admin-audit-card-${log.id}`}>
+      <p className="font-semibold text-foreground">{log.action}</p>
       <p>{formatDate(log.created_at)}</p>
       <p>
-        <span className="font-medium text-slate-700">Table:</span> {log.entity_table}
+        <span className="font-medium text-foreground">Table:</span> {log.entity_table}
       </p>
       <p>
-        <span className="font-medium text-slate-700">Agence:</span> {log.agency?.name ?? '-'}
+        <span className="font-medium text-foreground">Agence:</span> {log.agency?.name ?? '-'}
       </p>
       <p>
-        <span className="font-medium text-slate-700">Acteur:</span> {actorLabel}
+        <span className="font-medium text-foreground">Acteur:</span> {actorLabel}
       </p>
       <p className="break-words">
-        <span className="font-medium text-slate-700">Metadata:</span> {metadataLabel}
+        <span className="font-medium text-foreground">Metadata:</span> {metadataLabel}
       </p>
     </div>
   );

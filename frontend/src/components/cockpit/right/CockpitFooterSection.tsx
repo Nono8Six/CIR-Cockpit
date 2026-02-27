@@ -44,7 +44,7 @@ const CockpitFooterSection = ({
   onReset
 }: CockpitFooterSectionProps) => {
   return (
-    <div data-testid="cockpit-footer-card" className="mt-2 rounded-xl border border-slate-200 bg-white p-3 sm:p-4 space-y-3">
+    <div data-testid="cockpit-footer-card" className="mt-2 rounded-xl border border-border bg-card p-3 sm:p-4 space-y-3">
       <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_auto]">
         <div className="space-y-3">
           <CockpitStatusControl
@@ -67,7 +67,7 @@ const CockpitFooterSection = ({
               {...orderRefField}
               maxLength={6}
               placeholder="N° Devis…"
-              className="h-9 w-full sm:w-[130px] text-xs font-mono text-slate-700"
+              className="h-9 w-full sm:w-[130px] text-xs font-mono text-foreground"
               aria-label="Reference dossier"
               autoComplete="off"
               spellCheck={false}
@@ -86,7 +86,7 @@ const CockpitFooterSection = ({
           <button
             type="button"
             onClick={onReset}
-            className="h-9 w-9 shrink-0 rounded-md border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:bg-slate-50 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cir-red/30"
+            className="h-9 w-9 shrink-0 rounded-md border border-border bg-card text-muted-foreground shadow-sm transition hover:bg-surface-1 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             title="Effacer"
             aria-label="Effacer le formulaire"
           >
@@ -95,7 +95,7 @@ const CockpitFooterSection = ({
         </div>
       </div>
       {!hasStatuses ? (
-        <p id={statusHelpId} className="text-xs text-amber-600">
+        <p id={statusHelpId} className="text-xs text-warning">
           Ajoutez des statuts dans Parametres.
         </p>
       ) : null}

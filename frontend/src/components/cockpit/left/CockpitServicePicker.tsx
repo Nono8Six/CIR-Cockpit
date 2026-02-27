@@ -18,6 +18,7 @@ type CockpitServicePickerProps = {
   remainingServices: string[];
   contactService: string;
   setValue: UseFormSetValue<InteractionFormValues>;
+  triggerLabelledBy?: string;
   forceVisible?: boolean;
   fullWidth?: boolean;
 };
@@ -29,6 +30,7 @@ const CockpitServicePicker = ({
   remainingServices,
   contactService,
   setValue,
+  triggerLabelledBy,
   forceVisible = false,
   fullWidth = false
 }: CockpitServicePickerProps) => {
@@ -50,6 +52,8 @@ const CockpitServicePicker = ({
       className={cn(fullWidth ? 'w-full' : 'w-[220px]')}
     >
       <ComboboxInput
+        id="cockpit-service-picker-input"
+        aria-labelledby={triggerLabelledBy}
         data-testid="cockpit-service-picker-trigger"
         placeholder="Selectionner un service"
         searchPlaceholder="Rechercher un service..."

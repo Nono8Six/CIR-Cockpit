@@ -1,42 +1,41 @@
 import { CommandEmpty } from '@/components/ui/command';
 
+export type InteractionSearchStatus =
+  | 'loading'
+  | 'error'
+  | 'idle'
+  | 'empty'
+  | 'results';
+
 type InteractionSearchStatusMessageProps = {
-  resolvedLoading: boolean;
-  showSearchError: boolean;
-  showResults: boolean;
-  showRecents: boolean;
-  hasResults: boolean;
+  status: InteractionSearchStatus;
 };
 
 const InteractionSearchStatusMessage = ({
-  resolvedLoading,
-  showSearchError,
-  showResults,
-  showRecents,
-  hasResults
+  status
 }: InteractionSearchStatusMessageProps) => {
-  if (resolvedLoading) {
-    return <CommandEmpty className="text-xs text-slate-400 py-5">Chargement...</CommandEmpty>;
+  if (status === 'loading') {
+    return <CommandEmpty className="text-xs text-muted-foreground/80 py-5">Chargement...</CommandEmpty>;
   }
 
-  if (showSearchError) {
+  if (status === 'error') {
     return (
-      <CommandEmpty className="text-xs text-amber-600 py-5">
+      <CommandEmpty className="text-xs text-warning py-5">
         Recherche indisponible.
       </CommandEmpty>
     );
   }
 
-  if (!showResults && !showRecents) {
+  if (status === 'idle') {
     return (
-      <CommandEmpty className="text-xs text-slate-400 py-5">
+      <CommandEmpty className="text-xs text-muted-foreground/80 py-5">
         Commencez a taper pour rechercher.
       </CommandEmpty>
     );
   }
 
-  if (showResults && !hasResults) {
-    return <CommandEmpty className="text-xs text-slate-400 py-5">Aucun resultat.</CommandEmpty>;
+  if (status === 'empty') {
+    return <CommandEmpty className="text-xs text-muted-foreground/80 py-5">Aucun resultat.</CommandEmpty>;
   }
 
   return null;

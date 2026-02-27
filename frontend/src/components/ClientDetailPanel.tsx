@@ -27,7 +27,7 @@ const ClientDetailPanel = ({
   const isArchived = Boolean(client.archived_at);
 
   return (
-    <div className="h-full bg-white border border-slate-200 rounded-lg shadow-sm p-6 flex flex-col gap-6">
+    <div className="h-full bg-card border border-border rounded-lg shadow-sm p-6 flex flex-col gap-6">
       <ClientDetailHeader
         client={client}
         agencyName={agencyName}
@@ -46,7 +46,7 @@ const ClientDetailPanel = ({
       />
 
       {userRole === 'tcs' && isArchived && (
-        <p className="text-xs text-amber-600">Client archive - lecture seule.</p>
+        <p className="text-xs text-warning">Client archive - lecture seule.</p>
       )}
     </div>
   );

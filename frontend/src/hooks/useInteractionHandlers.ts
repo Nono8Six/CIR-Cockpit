@@ -13,17 +13,26 @@ import type { InteractionHandlersInput } from './useInteractionHandlers.types';
 
 type StringField = Exclude<keyof InteractionFormValues, 'mega_families'>;
 
-export const useInteractionHandlers = ({ setValue, clearErrors, normalizedRelation, contacts, megaFamilies, activeAgencyId, queryClient, setSelectedEntity, setSelectedContact, saveClientMutation, saveContactMutation, onConvertComplete }: InteractionHandlersInput) => {
+export const useInteractionHandlers = ({ setValue, clearErrors, normalizedRelation, contacts, megaFamilies, contactFirstName, contactLastName, activeAgencyId, queryClient, setSelectedEntity, setSelectedContact, saveClientMutation, saveContactMutation, onConvertComplete }: InteractionHandlersInput) => {
   const setStringField = useCallback((field: StringField, value: string) => setValue(field, value, { shouldValidate: true, shouldDirty: true }), [setValue]);
   const setFamiliesField = useCallback((value: string[]) => setValue('mega_families', value, { shouldValidate: true, shouldDirty: true }), [setValue]);
+  const setContactIdentity = useCallback((firstName: string, lastName: string) => {
+    setStringField('contact_first_name', firstName);
+    setStringField('contact_last_name', lastName);
+    setStringField('contact_name', `${firstName} ${lastName}`.trim());
+  }, [setStringField]);
 
   const resetContactFields = useCallback(() => {
     setStringField('contact_first_name', ''); setStringField('contact_last_name', ''); setStringField('contact_position', ''); setStringField('contact_name', ''); setStringField('contact_phone', ''); setStringField('contact_email', '');
   }, [setStringField]);
 
   const handlePhoneChange = useCallback((event: ChangeEvent<HTMLInputElement>) => setStringField('contact_phone', formatFrenchPhone(event.target.value)), [setStringField]);
-  const handleContactFirstNameChange = useCallback((event: ChangeEvent<HTMLInputElement>) => setStringField('contact_first_name', event.target.value), [setStringField]);
-  const handleContactLastNameChange = useCallback((event: ChangeEvent<HTMLInputElement>) => setStringField('contact_last_name', event.target.value), [setStringField]);
+  const handleContactFirstNameChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    setContactIdentity(event.target.value, contactLastName);
+  }, [contactLastName, setContactIdentity]);
+  const handleContactLastNameChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    setContactIdentity(contactFirstName, event.target.value);
+  }, [contactFirstName, setContactIdentity]);
 
   const handleSelectEntity = useCallback((entity: Entity | null) => {
     setSelectedEntity(entity); setSelectedContact(null); setStringField('entity_id', entity?.id ?? ''); setStringField('contact_id', ''); setStringField('company_name', entity?.name ?? ''); setStringField('company_city', entity?.city ?? ''); resetContactFields();
@@ -34,8 +43,9 @@ export const useInteractionHandlers = ({ setValue, clearErrors, normalizedRelati
   const handleSelectContact = useCallback((contact: EntityContact | null) => {
     setSelectedContact(contact); setStringField('contact_id', contact?.id ?? '');
     if (!contact) return resetContactFields();
-    setStringField('contact_first_name', contact.first_name ?? ''); setStringField('contact_last_name', contact.last_name ?? ''); setStringField('contact_position', contact.position ?? ''); setStringField('contact_name', `${contact.first_name ?? ''} ${contact.last_name}`.trim()); setStringField('contact_phone', contact.phone ?? ''); setStringField('contact_email', contact.email ?? '');
-  }, [resetContactFields, setSelectedContact, setStringField]);
+    setContactIdentity(contact.first_name ?? '', contact.last_name ?? '');
+    setStringField('contact_position', contact.position ?? ''); setStringField('contact_phone', contact.phone ?? ''); setStringField('contact_email', contact.email ?? '');
+  }, [resetContactFields, setContactIdentity, setSelectedContact, setStringField]);
 
   const handleContactSelect = useCallback((value: string) => handleSelectContact(value === 'none' ? null : (contacts.find(contact => contact.id === value) ?? null)), [contacts, handleSelectContact]);
   const handleSelectEntityFromSearch = useCallback((entity: Entity) => handleSelectEntity(entity), [handleSelectEntity]);

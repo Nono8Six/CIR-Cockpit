@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { AppHeaderProps } from './app-header/AppHeader.types';
 import AppHeaderBrandSection from './app-header/AppHeaderBrandSection';
 import AppHeaderTabsSection from './app-header/AppHeaderTabsSection';
@@ -24,12 +25,13 @@ const AppHeader = ({
   onTabChange,
   onAgencyChange,
   onOpenSearch,
+  onSearchIntent,
   onToggleProfileMenu,
   onOpenSettings,
   onSignOut
 }: AppHeaderProps) => {
   return (
-    <header className="z-20 flex h-14 shrink-0 items-center border-b border-slate-200 bg-white px-3 shadow-sm sm:px-4 lg:px-6">
+    <header className="z-20 flex h-14 shrink-0 items-center border-b border-border bg-card px-3 shadow-sm sm:px-4 lg:px-6">
       <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3 lg:gap-4">
         <div className="shrink-0">
           <AppHeaderBrandSection
@@ -56,7 +58,7 @@ const AppHeader = ({
           profileLoading={profileLoading}
           isContextRefreshing={isContextRefreshing}
         />
-        <AppHeaderSearchButton onOpenSearch={onOpenSearch} />
+        <AppHeaderSearchButton onOpenSearch={onOpenSearch} onSearchIntent={onSearchIntent} />
         <AppHeaderProfileMenu
           sessionEmail={sessionEmail}
           profileMenuRef={profileMenuRef}
@@ -72,5 +74,5 @@ const AppHeader = ({
   );
 };
 
-export default AppHeader;
+export default memo(AppHeader);
 export type { NavigationTab } from './app-header/AppHeader.types';

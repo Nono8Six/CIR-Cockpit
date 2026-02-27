@@ -74,4 +74,24 @@ describe('AuditLogsFilters', () => {
 
     expect(onEntityTableChange).toHaveBeenCalled();
   });
+
+  it('associates labels with controls for accessibility', () => {
+    render(
+      <AuditLogsFilters
+        userRole="super_admin"
+        agencies={agencies}
+        users={users}
+        agencyId={null}
+        actorId={null}
+        entityTable=""
+        onAgencyChange={vi.fn()}
+        onActorChange={vi.fn()}
+        onEntityTableChange={vi.fn()}
+      />
+    );
+
+    expect(screen.getByLabelText(/agence/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/utilisateur/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/table/i)).toBeInTheDocument();
+  });
 });

@@ -12,7 +12,7 @@ type ErrorBoundaryProps = {
 
 const ErrorFallback = ({ resetErrorBoundary }: FallbackProps) => {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-slate-50/70 text-slate-500 font-sans p-6">
+    <div className="min-h-[100dvh] w-full flex items-center justify-center bg-surface-1/80 text-muted-foreground font-sans p-6">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Erreur inattendue</CardTitle>
@@ -21,7 +21,7 @@ const ErrorFallback = ({ resetErrorBoundary }: FallbackProps) => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-muted-foreground">
             Si le probleme persiste, exportez le journal d&apos;erreurs depuis l&apos;admin.
           </p>
         </CardContent>

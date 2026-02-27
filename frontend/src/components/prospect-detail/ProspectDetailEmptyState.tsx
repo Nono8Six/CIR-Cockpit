@@ -1,5 +1,5 @@
 const ProspectDetailEmptyState = () => (
-  <div className="h-full flex items-center justify-center text-slate-400 text-sm border border-dashed border-slate-200 rounded-lg">
+  <div className="h-full flex items-center justify-center text-muted-foreground/80 text-sm border border-dashed border-border rounded-lg">
     Selectionnez un prospect pour afficher la fiche.
   </div>
 );

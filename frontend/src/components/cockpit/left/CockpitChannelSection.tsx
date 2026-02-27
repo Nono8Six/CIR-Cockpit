@@ -83,7 +83,7 @@ const CockpitChannelSection = ({
           key={opt.val}
           ref={index === 0 ? channelButtonRef : undefined}
           value={opt.val}
-          className="h-7 gap-1.5 rounded-md border px-2 text-xs font-normal data-[state=on]:border-cir-red data-[state=on]:bg-cir-red data-[state=on]:text-white"
+          className="h-7 gap-1.5 rounded-md border px-2 text-xs font-normal data-[state=on]:border-ring data-[state=on]:bg-primary data-[state=on]:text-white"
         >
           <opt.icon size={12} className="shrink-0" aria-hidden="true" />
           {opt.val}
@@ -91,7 +91,7 @@ const CockpitChannelSection = ({
       ))}
     </ToggleGroup>
     {errors.channel && (
-      <p className="text-xs text-red-600 mt-1" role="status" aria-live="polite">
+      <p className="text-xs text-destructive mt-1" role="status" aria-live="polite">
         {errors.channel.message}
       </p>
     )}

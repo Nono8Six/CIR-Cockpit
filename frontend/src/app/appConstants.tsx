@@ -19,9 +19,9 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 };
 
 export const ROLE_BADGE_STYLES: Record<UserRole, string> = {
-  super_admin: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  agency_admin: 'bg-amber-50 text-amber-700 border-amber-200',
-  tcs: 'bg-slate-100 text-slate-600 border-slate-200'
+  super_admin: 'bg-success/12 text-success border-success/35',
+  agency_admin: 'bg-warning/15 text-warning-foreground border-warning/35',
+  tcs: 'bg-muted text-muted-foreground border-border'
 };
 
 export const buildNavigationTabs = (canAccessAdmin: boolean, pendingCount: number): NavigationTab[] => {
@@ -37,7 +37,7 @@ export const buildNavigationTabs = (canAccessAdmin: boolean, pendingCount: numbe
       icon: <LayoutDashboard size={14} />,
       label: <span className="hidden sm:inline">Pilotage (F2)</span>,
       ariaLabel: 'Pilotage (F2)',
-      badge: pendingCount > 0 ? <span className="bg-cir-red text-white text-xs px-1.5 rounded-full font-bold ml-1 shadow-sm">{pendingCount}</span> : null
+      badge: pendingCount > 0 ? <span className="bg-primary text-white text-xs px-1.5 rounded-full font-bold ml-1 shadow-sm">{pendingCount}</span> : null
     },
     {
       value: 'clients',

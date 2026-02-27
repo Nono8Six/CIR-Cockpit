@@ -36,7 +36,7 @@ const ClientsPanelSearchControls = ({
     <div className="relative min-w-0 flex-1">
       <Search
         size={14}
-        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/80"
         aria-hidden="true"
       />
       <Input

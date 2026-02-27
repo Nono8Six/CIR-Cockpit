@@ -1,45 +1,36 @@
 import { Button } from '@/components/ui/button';
+import type { AppMainViewState } from './AppMainContent.types';
 
 type AppMainStateViewProps = {
-  isContextBlocking: boolean;
-  isDataLoading: boolean;
-  hasDataError: boolean;
-  isInteractionTab: boolean;
-  activeAgencyId: string | null;
-  contextError: string | null;
+  mainViewState: AppMainViewState;
   onReloadData: () => void;
 };
 
 const AppMainStateView = ({
-  isContextBlocking,
-  isDataLoading,
-  hasDataError,
-  isInteractionTab,
-  activeAgencyId,
-  contextError,
+  mainViewState,
   onReloadData
 }: AppMainStateViewProps) => {
-  if (isContextBlocking && isInteractionTab) {
+  if (mainViewState.kind === 'context-loading') {
     return (
-      <div className="h-full flex items-center justify-center text-slate-400 text-sm">
+      <div className="h-full flex items-center justify-center text-muted-foreground/80 text-sm">
         Chargement du contexte agence...
       </div>
     );
   }
 
-  if (!isContextBlocking && isDataLoading && isInteractionTab) {
+  if (mainViewState.kind === 'data-loading') {
     return (
-      <div className="h-full flex items-center justify-center text-slate-400 text-sm">
+      <div className="h-full flex items-center justify-center text-muted-foreground/80 text-sm">
         Chargement des donnees...
       </div>
     );
   }
 
-  if (!isContextBlocking && !isDataLoading && hasDataError && isInteractionTab) {
+  if (mainViewState.kind === 'data-error') {
     return (
       <div className="h-full flex items-center justify-center">
-        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm text-center max-w-md">
-          <p className="text-sm text-slate-600">
+        <div className="bg-card border border-border rounded-xl p-6 shadow-sm text-center max-w-md">
+          <p className="text-sm text-muted-foreground">
             Impossible de charger les donnees. Verifiez votre connexion puis reessayez.
           </p>
           <Button className="mt-4 w-full" onClick={onReloadData}>
@@ -50,13 +41,13 @@ const AppMainStateView = ({
     );
   }
 
-  if (!isContextBlocking && !isDataLoading && isInteractionTab && !activeAgencyId) {
+  if (mainViewState.kind === 'missing-agency') {
     return (
       <div className="h-full flex items-center justify-center">
-        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm text-center max-w-md">
-          <h2 className="text-sm font-semibold text-slate-900">Aucune agence active</h2>
-          <p className="text-sm text-slate-600 mt-2">
-            {contextError ?? "Vous n'etes associe a aucune agence. Contactez un administrateur."}
+        <div className="bg-card border border-border rounded-xl p-6 shadow-sm text-center max-w-md">
+          <h2 className="text-sm font-semibold text-foreground">Aucune agence active</h2>
+          <p className="text-sm text-muted-foreground mt-2">
+            {mainViewState.contextError ?? "Vous n'etes associe a aucune agence. Contactez un administrateur."}
           </p>
         </div>
       </div>

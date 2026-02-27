@@ -22,7 +22,7 @@ const AdminPanel = ({ userRole }: AdminPanelProps) => {
     <div className="flex h-full flex-col gap-4" data-testid="admin-panel">
       <ErrorJournalExport />
       <Tabs defaultValue="users" data-testid="admin-tabs-root">
-        <TabsList className="flex h-auto w-full flex-wrap gap-1 rounded-md bg-slate-100 p-1" data-testid="admin-tabs-list">
+        <TabsList className="flex h-auto w-full flex-wrap gap-1 rounded-md bg-muted p-1" data-testid="admin-tabs-list">
           <TabsTrigger value="users" className="text-xs sm:text-sm" data-testid="admin-tab-users">Utilisateurs</TabsTrigger>
           <TabsTrigger value="agencies" className="text-xs sm:text-sm" data-testid="admin-tab-agencies">Agences</TabsTrigger>
           <TabsTrigger value="audit" className="text-xs sm:text-sm" data-testid="admin-tab-audit">Audit logs</TabsTrigger>

@@ -15,6 +15,8 @@ type InteractionSearchInput = {
   onOpenGlobalSearch?: () => void;
 };
 
+type InteractionSearchStatus = 'loading' | 'error' | 'idle' | 'empty' | 'results';
+
 const normalizeQuery = (value: string) => value.trim().toLowerCase();
 const normalizePhone = (value?: string | null) => (value ?? '').replace(/\s/g, '');
 
@@ -109,6 +111,17 @@ export const useInteractionSearch = ({
   const limitedEntities = matchedEntities.slice(0, 3);
   const remainingSlots = 5 - limitedEntities.length;
   const limitedContacts = matchedContacts.slice(0, Math.min(2, remainingSlots));
+  const hasResults = limitedEntities.length > 0 || limitedContacts.length > 0;
+  let status: InteractionSearchStatus = 'results';
+  if (resolvedLoading) {
+    status = 'loading';
+  } else if (showSearchError) {
+    status = 'error';
+  } else if (!showResults && !showRecents) {
+    status = 'idle';
+  } else if (showResults && !hasResults) {
+    status = 'empty';
+  }
   const entityHeading = entityType.trim() ? entityType.trim() : 'Entites';
 
   const handleSelectEntity = useCallback((entity: Entity) => {
@@ -137,12 +150,12 @@ export const useInteractionSearch = ({
     setIsOpen,
     includeArchived,
     setIncludeArchived,
-    resolvedLoading,
-    showSearchError,
     filteredRecents,
-    showResults,
-    showRecents,
-    showList,
+    panelState: {
+      showRecents,
+      showList,
+      status
+    },
     limitedEntities,
     limitedContacts,
     entityHeading,

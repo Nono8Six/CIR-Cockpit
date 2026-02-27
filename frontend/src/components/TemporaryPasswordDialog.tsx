@@ -31,7 +31,7 @@ const TemporaryPasswordDialog = ({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description ?? 'Mot de passe temporaire genere.'}</DialogDescription>
         </DialogHeader>
-        <div className="bg-slate-100 border border-slate-200 rounded-md p-3 font-mono text-sm text-slate-800">
+        <div className="bg-muted border border-border rounded-md p-3 font-mono text-sm text-foreground">
           {password}
         </div>
         <div className="flex justify-end gap-2">

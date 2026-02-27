@@ -2,13 +2,10 @@ import type { Entity, EntityContact } from '@/types';
 import { CommandGroup, CommandList, CommandSeparator } from '@/components/ui/command';
 import InteractionSearchContactItem from './InteractionSearchContactItem';
 import InteractionSearchEntityItem from './InteractionSearchEntityItem';
-import InteractionSearchStatusMessage from './InteractionSearchStatusMessage';
+import InteractionSearchStatusMessage, { type InteractionSearchStatus } from './InteractionSearchStatusMessage';
 
 type InteractionSearchResultsProps = {
-  resolvedLoading: boolean;
-  showSearchError: boolean;
-  showResults: boolean;
-  showRecents: boolean;
+  status: InteractionSearchStatus;
   limitedEntities: Entity[];
   limitedContacts: EntityContact[];
   query: string;
@@ -19,10 +16,7 @@ type InteractionSearchResultsProps = {
 };
 
 const InteractionSearchResults = ({
-  resolvedLoading,
-  showSearchError,
-  showResults,
-  showRecents,
+  status,
   limitedEntities,
   limitedContacts,
   query,
@@ -32,15 +26,9 @@ const InteractionSearchResults = ({
   onSelectContact
 }: InteractionSearchResultsProps) => (
   <div className="px-3 pb-3">
-    <CommandList className="max-h-[220px] rounded-lg border border-slate-200 bg-white shadow-[0_12px_30px_rgba(15,23,42,0.12)] overflow-hidden">
-      <InteractionSearchStatusMessage
-        resolvedLoading={resolvedLoading}
-        showSearchError={showSearchError}
-        showResults={showResults}
-        showRecents={showRecents}
-        hasResults={limitedEntities.length > 0 || limitedContacts.length > 0}
-      />
-      {!resolvedLoading && !showSearchError && limitedEntities.length > 0 && (
+    <CommandList className="max-h-[220px] rounded-lg border border-border bg-card shadow-[0_12px_30px_rgba(15,23,42,0.12)] overflow-hidden">
+      <InteractionSearchStatusMessage status={status} />
+      {status === 'results' && limitedEntities.length > 0 && (
         <CommandGroup heading={entityHeading} className="p-2">
           {limitedEntities.map((entity) => (
             <InteractionSearchEntityItem
@@ -53,7 +41,7 @@ const InteractionSearchResults = ({
           ))}
         </CommandGroup>
       )}
-      {!resolvedLoading && !showSearchError && limitedContacts.length > 0 && (
+      {status === 'results' && limitedContacts.length > 0 && (
         <>
           <CommandSeparator className="mx-2" />
           <CommandGroup heading="Contacts" className="p-2">

@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useWatch } from 'react-hook-form';
 
 import { STATUS_CATEGORY_LABELS } from '@/constants/statusCategories';
-import { ensureInternalRelation, isInternalRelationValue, isProspectRelationValue, isSolicitationRelationValue } from '@/constants/relations';
+import { ensureInternalRelation, getRelationMode, isProspectRelationValue } from '@/constants/relations';
 import { Channel, type StatusCategory } from '@/types';
 import { formatClientNumber } from '@/utils/clients/formatClientNumber';
 import { useAgencies } from '@/hooks/useAgencies';
@@ -34,11 +34,12 @@ export const useInteractionFormState = ({ control, config, activeAgencyId, entit
   const relationOptions = useMemo(() => ensureInternalRelation(config.entities), [config.entities]);
   const defaultStatusId = useMemo(() => getDefaultStatusId(config.statuses), [config.statuses]);
   const normalizedRelation = entityType.trim().toLowerCase();
-  const isClientRelation = normalizedRelation === 'client';
-  const isProspectRelation = isProspectRelationValue(entityType);
-  const isSupplierRelation = normalizedRelation === 'fournisseur';
-  const isInternalRelation = isInternalRelationValue(entityType);
-  const isSolicitationRelation = isSolicitationRelationValue(entityType);
+  const relationMode = getRelationMode(entityType);
+  const isClientRelation = relationMode === 'client';
+  const isProspectRelation = relationMode === 'prospect';
+  const isSupplierRelation = relationMode === 'supplier';
+  const isInternalRelation = relationMode === 'internal';
+  const isSolicitationRelation = relationMode === 'solicitation';
 
   const statusMeta = useMemo(() => config.statuses.find(item => item.id === statusId) ?? config.statuses.find(item => item.label === statusId), [config.statuses, statusId]);
   const statusCategoryLabel = statusMeta ? STATUS_CATEGORY_LABELS[statusMeta.category] : null;
@@ -89,6 +90,7 @@ export const useInteractionFormState = ({ control, config, activeAgencyId, entit
     relationOptions,
     defaultStatusId,
     normalizedRelation,
+    relationMode,
     isClientRelation,
     isProspectRelation,
     isSupplierRelation,

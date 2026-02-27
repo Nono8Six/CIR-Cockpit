@@ -12,8 +12,8 @@ const AgenciesManagerHeader = ({ showArchived, onToggleArchived, onCreate }: Age
   return (
     <div className="flex flex-wrap items-center justify-between gap-3" data-testid="admin-agencies-header">
       <div>
-        <h2 className="text-sm font-semibold text-slate-900">Agences</h2>
-        <p className="text-xs text-slate-500">Gestion des agences et archivage</p>
+        <h2 className="text-sm font-semibold text-foreground">Agences</h2>
+        <p className="text-xs text-muted-foreground">Gestion des agences et archivage</p>
       </div>
       <div className="flex items-center gap-2">
         <Button

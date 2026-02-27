@@ -42,14 +42,14 @@ const InteractionDetails = ({
   } = useInteractionDetailsState({ interaction, statuses, onUpdate });
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-white">
+    <div className="flex h-full min-h-0 flex-col bg-card">
       <InteractionDetailsHeader
         interaction={interaction}
         canConvert={canConvert}
         onRequestConvert={onRequestConvert}
         onClose={onClose}
       />
-      <div className="flex-1 overflow-y-auto bg-white px-4 py-4 sm:px-5" ref={scrollRef}>
+      <div className="flex-1 overflow-y-auto bg-card px-4 py-4 sm:px-5" ref={scrollRef}>
         <InteractionDetailsSubjectCard interaction={interaction} />
         <InteractionDetailsTimeline timeline={interaction.timeline} />
       </div>

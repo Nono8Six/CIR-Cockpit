@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import ClientsPanelContent from './ClientsPanelContent';
 import ClientsPanelDialogs from './ClientsPanelDialogs';
 import ClientsPanelToolbar from './ClientsPanelToolbar';
@@ -37,4 +38,4 @@ const ClientsPanelLayout = ({
   );
 };
 
-export default ClientsPanelLayout;
+export default memo(ClientsPanelLayout);

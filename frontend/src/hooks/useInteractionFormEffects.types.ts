@@ -20,9 +20,6 @@ export type InteractionFormEffectsParams = {
   setSelectedEntity: (entity: Entity | null) => void;
   setSelectedContact: (contact: EntityContact | null) => void;
   entityId: string;
-  contactFirstName: string;
-  contactLastName: string;
-  contactName: string;
   isInternalRelation: boolean;
   isSolicitationRelation: boolean;
   onCloseContactDialog: () => void;

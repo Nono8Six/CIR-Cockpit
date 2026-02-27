@@ -12,18 +12,18 @@ const ProspectDetailHeader = ({
 }: ProspectDetailHeaderProps) => (
   <div className="flex items-start justify-between gap-4">
     <div className="flex items-start gap-4">
-      <div className="w-12 h-12 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500">
+      <div className="w-12 h-12 rounded-lg bg-muted border border-border flex items-center justify-center text-muted-foreground">
         <Building2 size={20} />
       </div>
       <div>
-        <p className="text-xs uppercase tracking-widest text-slate-400">
+        <p className="text-xs uppercase tracking-widest text-muted-foreground/80">
           {prospect.entity_type || 'Prospect'}
         </p>
-        <h2 className="text-lg font-semibold text-slate-900">{prospect.name}</h2>
-        <p className="text-sm text-slate-500 mt-1">
+        <h2 className="text-lg font-semibold text-foreground">{prospect.name}</h2>
+        <p className="text-sm text-muted-foreground mt-1">
           {addressLine || 'Adresse non renseignee'}
         </p>
-        <p className="text-xs text-slate-400 mt-1">Agence: {agencyName}</p>
+        <p className="text-xs text-muted-foreground/80 mt-1">Agence: {agencyName}</p>
       </div>
     </div>
     <div className="flex items-center gap-2">

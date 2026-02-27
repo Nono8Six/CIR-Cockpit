@@ -44,7 +44,7 @@ const UserCreateAgenciesSection = ({
 
   return (
     <div data-testid="admin-user-create-agencies">
-      <label htmlFor="create-user-agencies-trigger" className="text-xs font-medium text-slate-500">
+      <label htmlFor="create-user-agencies-trigger" className="text-xs font-medium text-muted-foreground">
         Agences
       </label>
       <Popover open={open} onOpenChange={setOpen}>
@@ -59,7 +59,7 @@ const UserCreateAgenciesSection = ({
             className="mt-2 w-full justify-between"
           >
             <span className="truncate text-left">{triggerLabel}</span>
-            <ChevronsUpDown className="size-4 text-slate-400" aria-hidden="true" />
+            <ChevronsUpDown className="size-4 text-muted-foreground/80" aria-hidden="true" />
           </Button>
         </PopoverTrigger>
         <PopoverContent align="start" className="w-[--radix-popover-trigger-width] p-0">
@@ -80,7 +80,7 @@ const UserCreateAgenciesSection = ({
                     >
                       <span className="flex-1">{agency.name}</span>
                       <Check
-                        className={`size-4 text-cir-red transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0'}`}
+                        className={`size-4 text-primary transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0'}`}
                         aria-hidden="true"
                       />
                     </CommandItem>
@@ -99,7 +99,7 @@ const UserCreateAgenciesSection = ({
             <button
               type="button"
               onClick={() => removeAgency(agency.id)}
-              className="rounded-sm p-0.5 text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="rounded-sm p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               aria-label={`Retirer l'agence ${agency.name}`}
             >
               <X className="size-3" aria-hidden="true" />
@@ -107,7 +107,7 @@ const UserCreateAgenciesSection = ({
           </Badge>
         ))}
         {selectedAgencies.length === 0 && (
-          <p className="text-xs text-slate-400">Aucune agence selectionnee.</p>
+          <p className="text-xs text-muted-foreground/80">Aucune agence selectionnee.</p>
         )}
       </div>
     </div>

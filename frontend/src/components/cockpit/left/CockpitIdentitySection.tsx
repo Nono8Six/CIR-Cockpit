@@ -1,6 +1,7 @@
 import type { RefObject } from 'react';
 import type { FieldErrors, UseFormRegisterReturn, UseFormSetValue } from 'react-hook-form';
 
+import type { RelationMode } from '@/constants/relations';
 import type { Entity } from '@/types';
 import type { InteractionFormValues } from '@/schemas/interactionSchema';
 import CockpitFieldError from './CockpitFieldError';
@@ -15,10 +16,7 @@ type CockpitIdentitySectionProps = {
   canConvertToClient: boolean;
   onOpenConvertDialog: () => void;
   onClearSelectedEntity: () => void;
-  isInternalRelation: boolean;
-  isSolicitationRelation: boolean;
-  isClientRelation: boolean;
-  isProspectRelation: boolean;
+  relationMode: RelationMode;
   companyField: UseFormRegisterReturn;
   companyCityField: UseFormRegisterReturn;
   companyName: string;
@@ -38,10 +36,7 @@ const CockpitIdentitySection = ({
   canConvertToClient,
   onOpenConvertDialog,
   onClearSelectedEntity,
-  isInternalRelation,
-  isSolicitationRelation,
-  isClientRelation,
-  isProspectRelation,
+  relationMode,
   companyField,
   companyCityField,
   companyName,
@@ -65,10 +60,7 @@ const CockpitIdentitySection = ({
     ) : (
       <CockpitIdentityEditor
         errors={errors}
-        isInternalRelation={isInternalRelation}
-        isSolicitationRelation={isSolicitationRelation}
-        isClientRelation={isClientRelation}
-        isProspectRelation={isProspectRelation}
+        relationMode={relationMode}
         companyField={companyField}
         companyCityField={companyCityField}
         companyName={companyName}

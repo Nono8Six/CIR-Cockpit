@@ -17,7 +17,7 @@ const StatusAddBar = ({ newStatus, readOnly, onStatusChange, onAdd }: StatusAddB
         value={newStatus}
         onChange={(event) => onStatusChange(event.target.value)}
         onKeyDown={(event) => event.key === 'Enter' && !readOnly && onAdd()}
-        className={`h-9 flex-1 border-slate-200 bg-white text-sm ${readOnly ? 'text-slate-400' : ''}`}
+        className={`h-9 flex-1 border-border bg-card text-sm ${readOnly ? 'text-muted-foreground/80' : ''}`}
         disabled={readOnly}
         placeholder="Nouveau statut"
         name="status-new-label"

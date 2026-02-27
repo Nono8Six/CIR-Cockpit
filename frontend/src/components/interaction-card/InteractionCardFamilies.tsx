@@ -10,13 +10,13 @@ const InteractionCardFamilies = ({ families }: InteractionCardFamiliesProps) => 
       <Badge
         key={family}
         variant="outline"
-        className="border-slate-200 bg-slate-50 px-1.5 py-0.5 text-xs font-medium uppercase tracking-wide text-slate-600"
+        className="border-border bg-surface-1 px-1.5 py-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground"
       >
         {family}
       </Badge>
     ))}
     {families.length > 3 && (
-      <span className="px-1 text-xs font-medium text-slate-500">
+      <span className="px-1 text-xs font-medium text-muted-foreground">
         +{families.length - 3}
       </span>
     )}

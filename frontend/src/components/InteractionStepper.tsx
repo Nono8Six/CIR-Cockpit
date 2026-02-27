@@ -13,19 +13,19 @@ interface InteractionStepperProps {
 
 const STATUS_CLASSES: Record<StepStatus, { circle: string; label: string; line: string }> = {
   complete: {
-    circle: 'bg-cir-red text-white border-cir-red',
-    label: 'text-slate-700',
-    line: 'bg-cir-red'
+    circle: 'bg-primary text-white border-ring',
+    label: 'text-foreground',
+    line: 'bg-primary'
   },
   current: {
-    circle: 'bg-white text-cir-red border-cir-red ring-2 ring-cir-red/20',
-    label: 'text-slate-900',
-    line: 'bg-slate-200'
+    circle: 'bg-card text-primary border-ring ring-2 ring-ring/20',
+    label: 'text-foreground',
+    line: 'bg-muted'
   },
   upcoming: {
-    circle: 'bg-slate-100 text-slate-400 border-slate-200',
-    label: 'text-slate-400',
-    line: 'bg-slate-200'
+    circle: 'bg-muted text-muted-foreground/80 border-border',
+    label: 'text-muted-foreground/80',
+    line: 'bg-muted'
   }
 };
 

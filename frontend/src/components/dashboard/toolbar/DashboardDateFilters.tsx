@@ -116,15 +116,9 @@ const DashboardDateFilters = ({
     return () => media.removeEventListener('change', handleChange);
   }, []);
 
-  useEffect(() => {
-    if (!isRangePopoverOpen) {
-      setPendingRange(selectedRange);
-    }
-  }, [isRangePopoverOpen, selectedRange]);
-
   return (
     <div
-      className="w-full rounded-md border border-slate-200 bg-slate-50 p-1"
+      className="w-full rounded-md border border-border bg-surface-1 p-1"
       data-testid="dashboard-date-filters"
     >
       <div className="grid gap-1 sm:grid-cols-[minmax(150px,190px)_minmax(0,1fr)_auto] lg:grid-cols-[minmax(170px,210px)_minmax(0,1fr)_auto] lg:items-center">
@@ -139,7 +133,7 @@ const DashboardDateFilters = ({
           <SelectTrigger
             data-testid="dashboard-period-select"
             density="dense"
-            className="h-8 bg-white px-2 text-sm"
+            className="h-8 bg-card px-2 text-sm"
             aria-label="Periode de filtrage"
           >
             <SelectValue placeholder="Periode de filtrage" />
@@ -159,24 +153,26 @@ const DashboardDateFilters = ({
             setIsRangePopoverOpen(open);
             if (open) {
               setPendingRange(selectedRange);
+              return;
             }
+            setPendingRange(undefined);
           }}
         >
           <PopoverTrigger asChild>
             <Button
               type="button"
               variant="outline"
-              className="h-8 justify-start border-slate-200 bg-white px-2 text-left text-xs font-medium text-slate-700 sm:text-sm"
+              className="h-8 justify-start border-border bg-card px-2 text-left text-xs font-medium text-foreground sm:text-sm"
               data-testid="dashboard-date-range-trigger"
               aria-label="Selectionner la plage de dates"
               title={formatRangeLabel(activeRange)}
             >
-              <CalendarIcon size={14} className="shrink-0 text-slate-500" />
+              <CalendarIcon size={14} className="shrink-0 text-muted-foreground" />
               <span className="truncate">{formatRangeLabel(activeRange)}</span>
             </Button>
           </PopoverTrigger>
           <PopoverContent
-            className="w-auto border-slate-200 p-2"
+            className="w-auto border-border p-2"
             align="start"
             sideOffset={6}
             data-testid="dashboard-date-range-popover"
@@ -193,21 +189,21 @@ const DashboardDateFilters = ({
                 setPendingRange(nextRange);
               }}
               numberOfMonths={isDesktop ? 2 : 1}
-              className="rounded-lg border border-slate-200 bg-white"
+              className="rounded-lg border border-border bg-card"
               classNames={{
-                day_selected: 'bg-cir-red text-white hover:bg-cir-red focus:bg-cir-red',
-                range_start: 'bg-cir-red text-white',
-                range_end: 'bg-cir-red text-white',
-                range_middle: 'bg-red-50 text-cir-red',
-                today: 'border border-cir-red text-cir-red'
+                day_selected: 'bg-primary text-white hover:bg-primary focus:bg-primary',
+                range_start: 'bg-primary text-white',
+                range_end: 'bg-primary text-white',
+                range_middle: 'bg-destructive/10 text-primary',
+                today: 'border border-ring text-primary'
               }}
             />
-            <div className="mt-2 flex items-center justify-between gap-2 border-t border-slate-200 pt-2">
+            <div className="mt-2 flex items-center justify-between gap-2 border-t border-border pt-2">
               <Button
                 type="button"
                 size="sm"
                 variant="ghost"
-                className="h-8 px-2 text-xs text-slate-600 hover:text-slate-800"
+                className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
                 onClick={() => {
                   setPendingRange(selectedRange);
                   setIsRangePopoverOpen(false);
@@ -245,7 +241,7 @@ const DashboardDateFilters = ({
               <TooltipTrigger asChild>
                 <button
                   type="button"
-                  className="inline-flex h-8 items-center justify-center gap-1 rounded-md border border-slate-200 bg-white px-2 text-xs font-medium text-slate-600 transition-colors hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  className="inline-flex h-8 items-center justify-center gap-1 rounded-md border border-border bg-card px-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   aria-label="Aide filtre periode"
                   data-testid="dashboard-date-range-help-trigger"
                 >
@@ -285,7 +281,7 @@ const DashboardDateFilters = ({
       </div>
       {periodErrorMessage && (
         <p
-          className="mt-2 text-xs font-medium text-red-700"
+          className="mt-2 text-xs font-medium text-destructive"
           role="alert"
           data-testid="dashboard-period-error"
         >

@@ -21,7 +21,7 @@ const ClientFormCodesSection = ({
 }: ClientFormCodesSectionProps) => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div>
-      <label className="text-xs font-medium text-slate-500" htmlFor="client-postal-code">Code postal</label>
+      <label className="text-xs font-medium text-muted-foreground" htmlFor="client-postal-code">Code postal</label>
       <Input
         {...postalCodeField}
         id="client-postal-code"
@@ -32,11 +32,11 @@ const ClientFormCodesSection = ({
         inputMode="numeric"
       />
       {errors.postal_code && (
-        <p className="text-xs text-red-600 mt-1">{errors.postal_code.message}</p>
+        <p className="text-xs text-destructive mt-1">{errors.postal_code.message}</p>
       )}
     </div>
     <div>
-      <label className="text-xs font-medium text-slate-500" htmlFor="client-siret">SIRET (optionnel)</label>
+      <label className="text-xs font-medium text-muted-foreground" htmlFor="client-siret">SIRET (optionnel)</label>
       <Input {...siretField} id="client-siret" placeholder="SIRET" inputMode="numeric" />
     </div>
   </div>

@@ -22,18 +22,18 @@ const InteractionSearchEntityItem = ({
   <CommandItem
     value={`entity-${entity.id}`}
     onSelect={() => onSelectEntity(entity)}
-    className="rounded-md px-2.5 py-1.5 text-[12px] text-slate-700 hover:bg-slate-50 data-[selected=true]:bg-slate-100 data-[selected=true]:text-slate-900"
+    className="rounded-md px-2.5 py-1.5 text-[12px] text-foreground hover:bg-surface-1 data-[selected=true]:bg-muted data-[selected=true]:text-foreground"
   >
-    <Building2 className="text-slate-400" />
+    <Building2 className="text-muted-foreground/80" />
     <span className="flex-1 truncate">
       <HighlightedText value={entity.name} query={query} />
     </span>
     {includeArchived && entity.archived_at && (
-      <span className="text-xs uppercase tracking-wide text-amber-700 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded">
+      <span className="text-xs uppercase tracking-wide text-warning-foreground bg-warning/15 border border-warning/25 px-1.5 py-0.5 rounded">
         Archive
       </span>
     )}
-    <span className="text-xs text-slate-500">
+    <span className="text-xs text-muted-foreground">
       <HighlightedDigits
         formatted={formatClientNumber(entity.client_number)}
         query={query}

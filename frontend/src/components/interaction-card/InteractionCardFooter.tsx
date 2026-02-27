@@ -20,15 +20,15 @@ const InteractionCardFooter = ({
   statusTone,
   statusLabel
 }: InteractionCardFooterProps) => (
-  <div className="mt-3 flex items-end justify-between gap-2 border-t border-slate-100 pt-2">
+  <div className="mt-3 flex items-end justify-between gap-2 border-t border-border/70 pt-2">
     <div className="flex min-w-0 flex-wrap items-center gap-1.5">
       {data.reminder_at && (
         <Badge
           variant="outline"
           className={`gap-1 px-1.5 py-0.5 text-xs font-semibold ${
             isBeforeNow(data.reminder_at) && !isDone
-              ? 'border-red-300 bg-red-100 text-red-800'
-              : 'border-slate-200 bg-slate-50 text-slate-600'
+              ? 'border-destructive/40 bg-destructive/15 text-destructive'
+              : 'border-border bg-surface-1 text-muted-foreground'
           }`}
         >
           <Clock3 size={11} aria-hidden="true" />
@@ -38,7 +38,7 @@ const InteractionCardFooter = ({
       {data.order_ref && (
         <Badge
           variant="outline"
-          className="gap-1 border-slate-200 bg-slate-50 px-1.5 py-0.5 font-mono text-xs text-slate-700"
+          className="gap-1 border-border bg-surface-1 px-1.5 py-0.5 font-mono text-xs text-foreground"
         >
           <FileText size={11} aria-hidden="true" />
           #{data.order_ref}
@@ -49,10 +49,10 @@ const InteractionCardFooter = ({
       variant="outline"
       className={`px-2 py-0.5 text-xs font-semibold uppercase tracking-wide ${
         statusTone === 'done'
-          ? 'border-emerald-300 bg-emerald-100 text-emerald-800'
+          ? 'border-success/40 bg-success/18 text-success'
           : statusTone === 'todo' || isLate
-            ? 'border-red-300 bg-red-100 text-red-800'
-            : 'border-amber-300 bg-amber-100 text-amber-800'
+            ? 'border-destructive/40 bg-destructive/15 text-destructive'
+            : 'border-warning/40 bg-warning/20 text-warning-foreground'
       }`}
     >
       {statusLabel}

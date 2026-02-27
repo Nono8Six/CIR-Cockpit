@@ -26,14 +26,14 @@ const AgenciesManagerList = ({
   return (
     <div className="space-y-2" data-testid="admin-agencies-list">
       {isLoading && (
-        <div className="rounded-md border border-dashed border-slate-200 p-4 text-sm text-slate-500">
+        <div className="rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground">
           <span className="inline-flex items-center gap-2">
             <Loader2 size={16} className="animate-spin" /> Chargement des agences...
           </span>
         </div>
       )}
       {isError && !isLoading && (
-        <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+        <div className="rounded-md border border-warning/35 bg-warning/15 p-4 text-sm text-warning-foreground">
           <p className="inline-flex items-center gap-2 font-medium">
             <TriangleAlert size={16} /> La liste des agences est indisponible.
           </p>
@@ -43,7 +43,7 @@ const AgenciesManagerList = ({
         </div>
       )}
       {!isLoading && !isError && agencies.length === 0 && (
-        <div className="rounded-md border border-dashed border-slate-200 p-4 text-sm text-slate-500">
+        <div className="rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground">
           <span className="inline-flex items-center gap-2">
             <Inbox size={16} /> Aucune agence.
           </span>

@@ -8,7 +8,7 @@ type ContactFormPositionSectionProps = {
 
 const ContactFormPositionSection = ({ positionField }: ContactFormPositionSectionProps) => (
   <div>
-    <label className="text-xs font-medium text-slate-500" htmlFor="contact-position">Poste</label>
+    <label className="text-xs font-medium text-muted-foreground" htmlFor="contact-position">Poste</label>
     <Input {...positionField} id="contact-position" placeholder="Responsable maintenance" />
   </div>
 );

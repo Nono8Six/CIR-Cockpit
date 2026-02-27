@@ -29,7 +29,7 @@ const ProspectDetailPanel = ({
   ].filter(Boolean).join(', ');
 
   return (
-    <div className="h-full bg-white border border-slate-200 rounded-lg shadow-sm p-6 flex flex-col gap-6">
+    <div className="h-full bg-card border border-border rounded-lg shadow-sm p-6 flex flex-col gap-6">
       <ProspectDetailHeader
         prospect={prospect}
         agencyName={agencyName}

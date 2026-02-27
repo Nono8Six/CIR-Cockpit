@@ -11,12 +11,12 @@ type UserMembershipPillsProps = {
 const UserMembershipPills = ({ memberships, onEdit }: UserMembershipPillsProps) => (
   <div className="flex flex-wrap gap-2 mt-2">
     {memberships.length === 0 && (
-      <span className="text-xs text-slate-400">Aucune agence</span>
+      <span className="text-xs text-muted-foreground/80">Aucune agence</span>
     )}
     {memberships.map((membership) => (
       <span
         key={membership.agency_id}
-        className="text-xs bg-slate-100 border border-slate-200 rounded-full px-2 py-1"
+        className="text-xs bg-muted border border-border rounded-full px-2 py-1"
       >
         {membership.agency_name}
       </span>

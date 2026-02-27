@@ -31,7 +31,7 @@ export const buildClientsPanelToolbarProps = (
   viewMode: state.viewMode,
   onViewModeChange: state.setViewMode,
   showArchived: state.showArchived,
-  onToggleArchived: () => state.setShowArchived((prev) => !prev),
+  onToggleArchived: state.toggleShowArchived,
   onCreateClient: state.handleCreateClient,
   searchTerm: state.searchTerm,
   onSearchTermChange: state.setSearchTerm,
@@ -50,17 +50,13 @@ export const buildClientsPanelContentProps = ({
   viewMode: state.viewMode,
   clientsLoading: state.clientsQuery.isLoading,
   clientsError: state.clientsQuery.isError,
-  onRetryClients: () => {
-    void state.clientsQuery.refetch();
-  },
+  onRetryClients: state.retryClients,
   filteredClients: state.filteredClients,
   selectedClientId: state.selectedClientId,
   onSelectClient: state.setSelectedClientId,
   prospectsLoading: state.prospectsQuery.isLoading,
   prospectsError: state.prospectsQuery.isError,
-  onRetryProspects: () => {
-    void state.prospectsQuery.refetch();
-  },
+  onRetryProspects: state.retryProspects,
   filteredProspects: state.filteredProspects,
   selectedProspectId: state.selectedProspectId,
   onSelectProspect: state.setSelectedProspectId,

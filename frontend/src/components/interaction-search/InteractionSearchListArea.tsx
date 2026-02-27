@@ -1,14 +1,17 @@
 import type { Entity, EntityContact } from '@/types';
 import InteractionSearchRecents from './InteractionSearchRecents';
 import InteractionSearchResults from './InteractionSearchResults';
+import type { InteractionSearchStatus } from './InteractionSearchStatusMessage';
+
+type InteractionSearchPanelState = {
+  showRecents: boolean;
+  showList: boolean;
+  status: InteractionSearchStatus;
+};
 
 type InteractionSearchListAreaProps = {
-  showRecents: boolean;
+  panelState: InteractionSearchPanelState;
   filteredRecents: Entity[];
-  showList: boolean;
-  resolvedLoading: boolean;
-  showSearchError: boolean;
-  showResults: boolean;
   limitedEntities: Entity[];
   limitedContacts: EntityContact[];
   query: string;
@@ -19,12 +22,8 @@ type InteractionSearchListAreaProps = {
 };
 
 const InteractionSearchListArea = ({
-  showRecents,
+  panelState,
   filteredRecents,
-  showList,
-  resolvedLoading,
-  showSearchError,
-  showResults,
   limitedEntities,
   limitedContacts,
   query,
@@ -34,18 +33,15 @@ const InteractionSearchListArea = ({
   onSelectContact
 }: InteractionSearchListAreaProps) => (
   <>
-    {showRecents && (
+    {panelState.showRecents && (
       <InteractionSearchRecents
         recents={filteredRecents}
         onSelectEntity={onSelectEntity}
       />
     )}
-    {showList && (
+    {panelState.showList && (
       <InteractionSearchResults
-        resolvedLoading={resolvedLoading}
-        showSearchError={showSearchError}
-        showResults={showResults}
-        showRecents={showRecents}
+        status={panelState.status}
         limitedEntities={limitedEntities}
         limitedContacts={limitedContacts}
         query={query}

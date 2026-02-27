@@ -1,13 +1,12 @@
 import type { ChangeEvent, RefObject } from 'react';
 import type { FieldErrors, UseFormRegisterReturn } from 'react-hook-form';
 
+import type { RelationMode } from '@/constants/relations';
 import type { InteractionFormValues } from '@/schemas/interactionSchema';
 
 export type CockpitManualContactFormProps = {
   errors: FieldErrors<InteractionFormValues>;
-  isSolicitationRelation: boolean;
-  isSupplierRelation: boolean;
-  isInternalRelation: boolean;
+  relationMode: RelationMode;
   contactFirstNameField: UseFormRegisterReturn;
   contactLastNameField: UseFormRegisterReturn;
   contactPositionField: UseFormRegisterReturn;

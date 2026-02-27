@@ -50,7 +50,7 @@ const ErrorJournalExport = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-muted-foreground">
           Le journal est stocke localement dans le navigateur. Aucun envoi externe n&apos;est effectue.
         </p>
       </CardContent>

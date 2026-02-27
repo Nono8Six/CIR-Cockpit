@@ -19,10 +19,10 @@ export const getInteractionCardState = (
 
   const statusClass =
     statusTone === 'todo'
-      ? 'border-red-300 border-l-4'
+      ? 'border-destructive/40 border-l-4'
       : statusTone === 'done'
-        ? 'border-emerald-300 border-l-4'
-        : 'border-amber-300 border-l-4';
+        ? 'border-success/40 border-l-4'
+        : 'border-warning/40 border-l-4';
 
   return { isDone, isLate, statusTone, statusLabel, statusClass };
 };

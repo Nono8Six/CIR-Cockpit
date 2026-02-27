@@ -30,7 +30,7 @@ const CockpitContactPhoneEmailFields = ({
         {...phoneField}
         value={phone}
         onChange={onPhoneChange}
-        className="font-mono text-slate-600"
+        className="font-mono text-muted-foreground"
         placeholder="06…"
         aria-label="Telephone"
         autoComplete="tel"

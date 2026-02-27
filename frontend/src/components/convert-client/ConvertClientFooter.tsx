@@ -10,7 +10,7 @@ type ConvertClientFooterProps = {
 const ConvertClientFooter = ({ isSubmitting, onCancel }: ConvertClientFooterProps) => {
   return (
     <div className="flex items-center justify-between gap-2 pt-1">
-      <div className="flex items-center gap-2 text-xs text-slate-400">
+      <div className="flex items-center gap-2 text-xs text-muted-foreground/80">
         <ClipboardList size={13} />
         <span>Le numero client est obligatoire pour activer le compte.</span>
       </div>

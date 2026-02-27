@@ -25,7 +25,7 @@ const DashboardKanban = ({
     <KanbanColumn
       columnId="urgencies"
       title="A traiter / urgent"
-      dotClassName="bg-red-500"
+      dotClassName="bg-destructive"
       interactions={columns.urgencies}
       emptyLabel="Tout est a jour."
       onSelectInteraction={onSelectInteraction}
@@ -34,7 +34,7 @@ const DashboardKanban = ({
     <KanbanColumn
       columnId="in-progress"
       title="En cours / attente"
-      dotClassName="bg-amber-500"
+      dotClassName="bg-warning"
       interactions={columns.inProgress}
       emptyLabel="Aucun dossier en attente."
       onSelectInteraction={onSelectInteraction}
@@ -43,7 +43,7 @@ const DashboardKanban = ({
     <KanbanColumn
       columnId="completed"
       title="Termines (periode)"
-      dotClassName="bg-emerald-500"
+      dotClassName="bg-success"
       interactions={columns.completed}
       emptyLabel="Rien termine sur cette periode."
       onSelectInteraction={onSelectInteraction}

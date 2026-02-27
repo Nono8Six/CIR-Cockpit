@@ -15,8 +15,8 @@ const ClientDetailContactsSection = ({
   <>
     <div className="flex items-center justify-between">
       <div>
-        <p className="text-xs uppercase tracking-widest text-slate-400">Contacts</p>
-        <p className="text-sm text-slate-600">{contacts.length} contact(s)</p>
+        <p className="text-xs uppercase tracking-widest text-muted-foreground/80">Contacts</p>
+        <p className="text-sm text-muted-foreground">{contacts.length} contact(s)</p>
       </div>
       <Button type="button" className="h-8 px-3 text-xs" onClick={onAddContact}>
         <Plus size={14} className="mr-1" /> Ajouter un contact
@@ -24,7 +24,7 @@ const ClientDetailContactsSection = ({
     </div>
 
     {isContactsLoading ? (
-      <div className="text-sm text-slate-400">Chargement des contacts...</div>
+      <div className="text-sm text-muted-foreground/80">Chargement des contacts...</div>
     ) : (
       <ClientContactsList
         contacts={contacts}

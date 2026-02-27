@@ -40,6 +40,7 @@ const CockpitServiceSection = ({
   services,
   setValue
 }: CockpitServiceSectionProps) => {
+  const serviceLabelId = 'cockpit-service-label';
   const [isMobileViewport, setIsMobileViewport] = useState<boolean>(() => {
     if (typeof window === 'undefined' || !('matchMedia' in window)) return false;
     return window.matchMedia(MOBILE_SERVICE_QUERY).matches;
@@ -99,7 +100,7 @@ const CockpitServiceSection = ({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-3">
-        <label className={labelStyle}>Service</label>
+        <label id={serviceLabelId} className={labelStyle}>Service</label>
         {!shouldUseComboboxOnly ? (
           <CockpitServicePicker
             servicePickerOpen={servicePickerOpen}
@@ -108,6 +109,7 @@ const CockpitServiceSection = ({
             remainingServices={remainingServices}
             contactService={contactService}
             setValue={setValue}
+            triggerLabelledBy={serviceLabelId}
           />
         ) : null}
       </div>
@@ -119,6 +121,7 @@ const CockpitServiceSection = ({
           remainingServices={remainingServices}
           contactService={contactService}
           setValue={setValue}
+          triggerLabelledBy={serviceLabelId}
           forceVisible
           fullWidth
         />

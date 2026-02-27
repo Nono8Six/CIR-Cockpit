@@ -13,7 +13,7 @@ const InteractionCard = ({ data, statusMeta }: InteractionCardProps) => {
 
   return (
     <article
-      className={`group rounded-lg border bg-white p-3 shadow-sm transition hover:shadow-md ${statusClass}`}
+      className={`group rounded-lg border bg-card p-3 shadow-sm transition hover:shadow-md ${statusClass}`}
     >
       <InteractionCardHeader data={data} />
       <InteractionCardBody data={data} />

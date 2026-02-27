@@ -9,14 +9,17 @@ import type {
 } from '@/types';
 import type { ConvertClientEntity } from '@/components/ConvertClientDialog';
 
+export type AppMainViewState =
+  | { kind: 'context-loading' }
+  | { kind: 'data-loading' }
+  | { kind: 'data-error' }
+  | { kind: 'missing-agency'; contextError: string | null }
+  | { kind: 'ready' };
+
 export type AppMainContentProps = {
   activeTab: AppTab;
-  isInteractionTab: boolean;
-  isContextBlocking: boolean;
-  isDataLoading: boolean;
-  hasDataError: boolean;
+  mainViewState: AppMainViewState;
   activeAgencyId: string | null;
-  contextError: string | null;
   config: AgencyConfig;
   interactions: Interaction[];
   userId: string | null;

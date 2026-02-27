@@ -6,9 +6,7 @@ import type { CockpitManualContactFormProps } from './CockpitManualContactForm.t
 
 const CockpitManualContactForm = ({
   errors,
-  isSolicitationRelation,
-  isSupplierRelation,
-  isInternalRelation,
+  relationMode,
   contactFirstNameField,
   contactLastNameField,
   contactPositionField,
@@ -25,7 +23,7 @@ const CockpitManualContactForm = ({
 }: CockpitManualContactFormProps) => {
   return (
     <div className="space-y-2">
-      {!isSolicitationRelation && (
+      {relationMode !== 'solicitation' && (
         <CockpitContactNameFields
           firstNameField={contactFirstNameField}
           lastNameField={contactLastNameField}
@@ -38,13 +36,13 @@ const CockpitManualContactForm = ({
           lastNameError={errors.contact_last_name?.message}
         />
       )}
-      {isSupplierRelation && (
+      {relationMode === 'supplier' && (
         <CockpitContactPositionField
           positionField={contactPositionField}
           positionError={errors.contact_position?.message}
         />
       )}
-      {!isInternalRelation && !isSolicitationRelation && (
+      {relationMode !== 'internal' && relationMode !== 'solicitation' && (
         <CockpitContactPhoneEmailFields
           phoneField={contactPhoneField}
           emailField={contactEmailField}
@@ -55,7 +53,7 @@ const CockpitManualContactForm = ({
           emailError={errors.contact_email?.message}
         />
       )}
-      {isSolicitationRelation && (
+      {relationMode === 'solicitation' && (
         <CockpitContactPhoneField
           phoneField={contactPhoneField}
           phone={contactPhone}

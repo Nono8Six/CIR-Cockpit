@@ -12,11 +12,11 @@ type AgencyCardProps = {
 
 const AgencyCard = ({ agency, onRename, onToggleArchive, onDelete }: AgencyCardProps) => {
   return (
-    <div className="flex flex-col gap-3 rounded-md border border-slate-200 p-3 sm:flex-row sm:items-center sm:justify-between" data-testid={`admin-agency-card-${agency.id}`}>
+    <div className="flex flex-col gap-3 rounded-md border border-border p-3 sm:flex-row sm:items-center sm:justify-between" data-testid={`admin-agency-card-${agency.id}`}>
       <div>
-        <p className="text-sm font-semibold text-slate-900">{agency.name}</p>
+        <p className="text-sm font-semibold text-foreground">{agency.name}</p>
         {agency.archived_at && (
-          <p className="text-xs text-amber-600">Archivee</p>
+          <p className="text-xs text-warning">Archivee</p>
         )}
       </div>
       <div className="flex flex-wrap items-center gap-2">
@@ -44,7 +44,7 @@ const AgencyCard = ({ agency, onRename, onToggleArchive, onDelete }: AgencyCardP
         <Button
           type="button"
           variant="outline"
-          className="h-9 border-red-200 px-3 text-xs text-red-600 hover:bg-red-50 sm:text-sm"
+          className="h-9 border-destructive/30 px-3 text-xs text-destructive hover:bg-destructive/10 sm:text-sm"
           onClick={() => onDelete(agency)}
           aria-label="Supprimer l'agence"
           data-testid={`admin-agency-delete-${agency.id}`}

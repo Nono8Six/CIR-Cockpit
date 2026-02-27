@@ -8,7 +8,7 @@ const AppHeaderStatusSection = ({ profileLoading, isContextRefreshing }: AppHead
 
   if (!statusLabel) return null;
 
-  return <span className="hidden xl:inline text-xs uppercase tracking-widest text-slate-400">{statusLabel}</span>;
+  return <span className="hidden xl:inline text-xs uppercase tracking-widest text-muted-foreground/80">{statusLabel}</span>;
 };
 
 export default AppHeaderStatusSection;

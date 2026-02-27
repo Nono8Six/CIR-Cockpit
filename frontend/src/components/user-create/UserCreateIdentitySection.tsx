@@ -20,7 +20,7 @@ const UserCreateIdentitySection = ({
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
       <div>
-        <label htmlFor="create-user-email" className="text-xs font-medium text-slate-500">
+        <label htmlFor="create-user-email" className="text-xs font-medium text-muted-foreground">
           Email
         </label>
         <Input
@@ -32,7 +32,7 @@ const UserCreateIdentitySection = ({
         />
       </div>
       <div>
-        <label htmlFor="create-user-last-name" className="text-xs font-medium text-slate-500">
+        <label htmlFor="create-user-last-name" className="text-xs font-medium text-muted-foreground">
           Nom
         </label>
         <Input
@@ -43,7 +43,7 @@ const UserCreateIdentitySection = ({
         />
       </div>
       <div>
-        <label htmlFor="create-user-first-name" className="text-xs font-medium text-slate-500">
+        <label htmlFor="create-user-first-name" className="text-xs font-medium text-muted-foreground">
           Prenom
         </label>
         <Input

@@ -33,11 +33,11 @@ const ConfigSection = ({
   uppercase = false,
   readOnly = false
 }: ConfigSectionProps) => (
-  <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm flex flex-col h-full">
-    <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
-      <Icon size={15} className="text-slate-500" aria-hidden="true" />
+  <div className="bg-card p-6 rounded-lg border border-border shadow-sm flex flex-col h-full">
+    <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+      <Icon size={15} className="text-muted-foreground" aria-hidden="true" />
       {title}
-      <span className="text-xs font-normal text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">({count})</span>
+      <span className="text-xs font-normal text-muted-foreground/80 bg-muted px-2 py-0.5 rounded-full">({count})</span>
     </h3>
 
     <ConfigSectionAddRow

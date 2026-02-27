@@ -117,7 +117,7 @@ const UserMembershipDialog = ({
                   className="w-full justify-between"
                 >
                   <span className="truncate text-left">{triggerLabel}</span>
-                  <ChevronsUpDown className="size-4 text-slate-400" aria-hidden="true" />
+                  <ChevronsUpDown className="size-4 text-muted-foreground/80" aria-hidden="true" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent align="start" className="w-[--radix-popover-trigger-width] p-0">
@@ -138,7 +138,7 @@ const UserMembershipDialog = ({
                           >
                             <span className="flex-1">{agency.name}</span>
                             <Check
-                              className={`size-4 text-cir-red transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0'}`}
+                              className={`size-4 text-primary transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0'}`}
                               aria-hidden="true"
                             />
                           </CommandItem>
@@ -150,14 +150,14 @@ const UserMembershipDialog = ({
               </PopoverContent>
             </Popover>
 
-            <div className="flex min-h-8 flex-wrap gap-2 rounded-md border border-slate-200 p-3">
+            <div className="flex min-h-8 flex-wrap gap-2 rounded-md border border-border p-3">
               {selectedAgencies.map((agency) => (
                 <Badge key={agency.id} variant="secondary" className="flex items-center gap-1 pr-1 text-xs">
                   <span>{agency.name}</span>
                   <button
                     type="button"
                     onClick={() => removeAgency(agency.id)}
-                    className="rounded-sm p-0.5 text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    className="rounded-sm p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     aria-label={`Retirer l'agence ${agency.name}`}
                   >
                     <X className="size-3" aria-hidden="true" />
@@ -165,12 +165,12 @@ const UserMembershipDialog = ({
                 </Badge>
               ))}
               {selectedAgencies.length === 0 && (
-                <p className="text-xs text-slate-400">Aucune agence selectionnee.</p>
+                <p className="text-xs text-muted-foreground/80">Aucune agence selectionnee.</p>
               )}
             </div>
           </div>
-          {errors.agency_ids?.message ? <p className="text-sm text-red-600">{errors.agency_ids.message}</p> : null}
-          {serverError ? <p className="text-sm text-red-600">{serverError}</p> : null}
+          {errors.agency_ids?.message ? <p className="text-sm text-destructive">{errors.agency_ids.message}</p> : null}
+          {serverError ? <p className="text-sm text-destructive">{serverError}</p> : null}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler

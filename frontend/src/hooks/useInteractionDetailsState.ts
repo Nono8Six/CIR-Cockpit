@@ -47,6 +47,10 @@ export const useInteractionDetailsState = ({ interaction, statuses, onUpdate }: 
   const orderRef = useWatch({ control, name: 'orderRef' }) ?? '';
 
   const statusById = useMemo(() => { const map = new Map<string, AgencyStatus>(); statuses.forEach(status => { if (status.id) map.set(status.id, status); }); return map; }, [statuses]);
+  const resolvedStatusId = useMemo(
+    () => interaction.status_id ?? statuses.find((status) => status.label === interaction.status)?.id ?? '',
+    [interaction.status, interaction.status_id, statuses]
+  );
   const statusOptions = useMemo(() => {
     const options = statuses.filter((status): status is AgencyStatus & { id: string } => typeof status.id === 'string').map(status => ({ id: status.id, label: status.label }));
     if (interaction.status_id && !statusById.has(interaction.status_id)) options.push({ id: interaction.status_id, label: interaction.status });
@@ -59,12 +63,12 @@ export const useInteractionDetailsState = ({ interaction, statuses, onUpdate }: 
   useEffect(() => {
     reset({
       note: '',
-      statusId: interaction.status_id ?? statuses.find(status => status.label === interaction.status)?.id ?? '',
+      statusId: resolvedStatusId,
       reminder: interaction.reminder_at || '',
       orderRef: interaction.order_ref || ''
     });
     setErrorMessage(null);
-  }, [interaction, reset, statuses]);
+  }, [interaction.id, interaction.order_ref, interaction.reminder_at, reset, resolvedStatusId]);
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [interaction.timeline]);
 
   const submitUpdates = handleSubmit((values) => {

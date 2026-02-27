@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { INTERNAL_COMPANY_NAME } from '@/constants/relations';
 import type { InteractionFormEffectsParams } from './useInteractionFormEffects.types';
 
-export const useInteractionFormEffects = ({ register, setValue, clearErrors, config, relationOptions, defaultStatusId, entityType, statusId, contactService, interactionType, normalizedRelation, selectedEntity, setSelectedEntity, setSelectedContact, entityId, contactFirstName, contactLastName, contactName, isInternalRelation, isSolicitationRelation, onCloseContactDialog }: InteractionFormEffectsParams) => {
+export const useInteractionFormEffects = ({ register, setValue, clearErrors, config, relationOptions, defaultStatusId, entityType, statusId, contactService, interactionType, normalizedRelation, selectedEntity, setSelectedEntity, setSelectedContact, entityId, isInternalRelation, isSolicitationRelation, onCloseContactDialog }: InteractionFormEffectsParams) => {
   useEffect(() => {
     register('channel'); register('entity_type'); register('contact_service'); register('interaction_type'); register('mega_families'); register('entity_id'); register('contact_id'); register('contact_email'); register('contact_name'); register('contact_first_name'); register('contact_last_name'); register('contact_position'); register('company_city');
   }, [register]);
@@ -19,7 +19,6 @@ export const useInteractionFormEffects = ({ register, setValue, clearErrors, con
     if (selectedEntity.entity_type.trim().toLowerCase() !== normalizedRelation) { setSelectedEntity(null); setSelectedContact(null); setValue('entity_id', '', { shouldValidate: true, shouldDirty: true }); setValue('contact_id', '', { shouldValidate: true, shouldDirty: true }); clearErrors('entity_id'); }
   }, [clearErrors, entityId, normalizedRelation, selectedEntity, setSelectedContact, setSelectedEntity, setValue]);
   useEffect(() => { if (!selectedEntity) onCloseContactDialog(); }, [onCloseContactDialog, selectedEntity]);
-  useEffect(() => { const label = `${contactFirstName} ${contactLastName}`.trim(); if (label !== contactName) setValue('contact_name', label, { shouldDirty: true, shouldValidate: true }); }, [contactFirstName, contactLastName, contactName, setValue]);
   useEffect(() => {
     if (!isInternalRelation) return;
     setSelectedEntity(null); setSelectedContact(null); setValue('entity_id', '', { shouldValidate: true, shouldDirty: true }); setValue('contact_id', '', { shouldValidate: true, shouldDirty: true }); setValue('company_name', INTERNAL_COMPANY_NAME, { shouldValidate: true, shouldDirty: true }); setValue('company_city', '', { shouldValidate: true, shouldDirty: true }); setValue('contact_first_name', '', { shouldValidate: true, shouldDirty: true }); setValue('contact_last_name', '', { shouldValidate: true, shouldDirty: true }); setValue('contact_position', '', { shouldValidate: true, shouldDirty: true }); setValue('contact_phone', '', { shouldValidate: true, shouldDirty: true }); setValue('contact_email', '', { shouldValidate: true, shouldDirty: true });

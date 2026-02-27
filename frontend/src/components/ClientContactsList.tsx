@@ -20,7 +20,7 @@ const ClientContactsList = ({
 }: ClientContactsListProps) => {
   if (contacts.length === 0) {
     return (
-      <div className="text-sm text-slate-400 border border-dashed border-slate-200 rounded-md p-4">
+      <div className="text-sm text-muted-foreground/80 border border-dashed border-border rounded-md p-4">
         {emptyLabel ?? 'Aucun contact pour ce client.'}
       </div>
     );
@@ -35,12 +35,12 @@ const ClientContactsList = ({
           <div
             key={contact.id}
             className={`flex items-center justify-between gap-3 rounded-md border px-3 py-2 ${
-              isFocused ? 'border-cir-red bg-cir-red/5' : 'border-slate-200'
+              isFocused ? 'border-ring bg-primary/5' : 'border-border'
             }`}
           >
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-slate-900 truncate">{label}</p>
-              <p className="text-xs text-slate-500 truncate">
+              <p className="text-sm font-semibold text-foreground truncate">{label}</p>
+              <p className="text-xs text-muted-foreground truncate">
                 {contact.position ?? 'Contact'}
                 {contact.email ? ` - ${contact.email}` : ''}
                 {contact.phone ? ` - ${contact.phone}` : ''}
@@ -59,7 +59,7 @@ const ClientContactsList = ({
               <Button
                 type="button"
                 variant="outline"
-                className="h-8 px-2 text-red-600 border-red-200 hover:bg-red-50"
+                className="h-8 px-2 text-destructive border-destructive/30 hover:bg-destructive/10"
                 onClick={() => onDelete(contact)}
                 aria-label="Supprimer le contact"
               >

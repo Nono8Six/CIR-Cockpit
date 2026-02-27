@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { AgencyStatus, Interaction } from '@/types';
 import { ConvertClientEntity } from './ConvertClientDialog';
 import DashboardToolbar from './dashboard/DashboardToolbar';
@@ -40,7 +41,7 @@ const Dashboard = ({ interactions, statuses, agencyId, onRequestConvert }: Dashb
 
   return (
     <div
-      className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
+      className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card shadow-sm"
       data-testid="dashboard-root"
     >
       <DashboardToolbar
@@ -58,7 +59,7 @@ const Dashboard = ({ interactions, statuses, agencyId, onRequestConvert }: Dashb
         onSearchTermChange={setSearchTerm}
       />
 
-      <div className="relative flex-1 min-h-0 bg-slate-50">
+      <div className="relative flex-1 min-h-0 bg-surface-1">
         {viewMode === 'kanban' && kanbanColumns && (
           <DashboardKanban
             columns={kanbanColumns}
@@ -91,5 +92,5 @@ const Dashboard = ({ interactions, statuses, agencyId, onRequestConvert }: Dashb
   );
 };
 
-export default Dashboard;
+export default memo(Dashboard);
 

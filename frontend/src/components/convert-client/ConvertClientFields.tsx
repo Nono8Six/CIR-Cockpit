@@ -35,7 +35,7 @@ const ConvertClientFields = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <label className="text-xs font-medium text-slate-500" htmlFor="convert-client-number">
+        <label className="text-xs font-medium text-muted-foreground" htmlFor="convert-client-number">
           Numero de compte
         </label>
         <Input
@@ -47,11 +47,11 @@ const ConvertClientFields = ({
           inputMode="numeric"
         />
         {errors.client_number && (
-          <p className="text-xs text-red-600 mt-1">{errors.client_number.message}</p>
+          <p className="text-xs text-destructive mt-1">{errors.client_number.message}</p>
         )}
       </div>
       <div>
-        <label className="text-xs font-medium text-slate-500" htmlFor="convert-account-type">
+        <label className="text-xs font-medium text-muted-foreground" htmlFor="convert-account-type">
           Type de compte
         </label>
         <input
@@ -80,7 +80,7 @@ const ConvertClientFields = ({
           </SelectContent>
         </Select>
         {errors.account_type && (
-          <p className="text-xs text-red-600 mt-1">{errors.account_type.message}</p>
+          <p className="text-xs text-destructive mt-1">{errors.account_type.message}</p>
         )}
       </div>
     </div>

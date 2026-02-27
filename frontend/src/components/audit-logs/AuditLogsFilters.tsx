@@ -34,16 +34,19 @@ const AuditLogsFilters = ({
 }: AuditLogsFiltersProps) => {
   const resolvedAgencyId = agencyId ?? 'all';
   const resolvedActorId = actorId ?? 'all';
+  const agencySelectId = 'admin-audit-filter-agency';
+  const actorSelectId = 'admin-audit-filter-user';
+  const tableInputId = 'admin-audit-filter-table';
 
   return (
     <div className="grid grid-cols-1 gap-3 md:grid-cols-3" data-testid="admin-audit-filters">
       <div>
-        <label className="text-xs font-medium text-slate-500">Agence</label>
+        <label htmlFor={agencySelectId} className="text-xs font-medium text-muted-foreground">Agence</label>
         <Select
           value={resolvedAgencyId}
           onValueChange={(value) => onAgencyChange(value === 'all' ? null : value)}
         >
-          <SelectTrigger className="mt-1" data-testid="admin-audit-filter-agency-trigger">
+          <SelectTrigger id={agencySelectId} className="mt-1" data-testid="admin-audit-filter-agency-trigger">
             <SelectValue placeholder="Toutes les agences" />
           </SelectTrigger>
           <SelectContent>
@@ -58,12 +61,12 @@ const AuditLogsFilters = ({
       </div>
       {userRole === 'super_admin' ? (
         <div>
-          <label className="text-xs font-medium text-slate-500">Utilisateur</label>
+          <label htmlFor={actorSelectId} className="text-xs font-medium text-muted-foreground">Utilisateur</label>
           <Select
             value={resolvedActorId}
             onValueChange={(value) => onActorChange(value === 'all' ? null : value)}
           >
-            <SelectTrigger className="mt-1" data-testid="admin-audit-filter-user-trigger">
+            <SelectTrigger id={actorSelectId} className="mt-1" data-testid="admin-audit-filter-user-trigger">
               <SelectValue placeholder="Tous les utilisateurs" />
             </SelectTrigger>
             <SelectContent>
@@ -78,8 +81,9 @@ const AuditLogsFilters = ({
         </div>
       ) : null}
       <div>
-        <label className="text-xs font-medium text-slate-500">Table</label>
+        <label htmlFor={tableInputId} className="text-xs font-medium text-muted-foreground">Table</label>
         <Input
+          id={tableInputId}
           type="text"
           value={entityTable}
           onChange={(event) => onEntityTableChange(event.target.value)}

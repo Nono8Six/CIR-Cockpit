@@ -24,8 +24,8 @@ const StatusCategoryTabs = ({ category, readOnly, onCategoryChange }: StatusCate
             aria-pressed={isActive}
             className={`whitespace-nowrap rounded-md px-3 text-xs font-semibold uppercase tracking-wide ${
               isActive
-                ? 'bg-cir-red text-white hover:bg-red-700'
-                : 'text-slate-600 hover:text-slate-900 hover:border-slate-300'
+                ? 'bg-primary text-white hover:bg-primary/90'
+                : 'text-muted-foreground hover:text-foreground hover:border-border'
             }`}
           >
             {STATUS_CATEGORY_LABELS[item]}

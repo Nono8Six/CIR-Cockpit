@@ -34,7 +34,7 @@ const ClientsPanelToolbar = ({
   onAgencyFilterChange
 }: ClientsPanelToolbarProps) => (
   <div
-    className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
+    className="rounded-lg border border-border bg-card p-4 shadow-sm"
     data-testid="clients-toolbar"
   >
     <ToolbarRow density="comfortable" className="gap-3">

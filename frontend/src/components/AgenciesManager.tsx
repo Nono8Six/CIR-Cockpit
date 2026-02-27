@@ -31,7 +31,7 @@ const AgenciesManager = () => {
   } = useAgenciesManager();
 
   return (
-    <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-5" data-testid="admin-agencies-panel">
+    <div className="space-y-4 rounded-lg border border-border bg-card p-3 shadow-sm sm:p-5" data-testid="admin-agencies-panel">
       <AgenciesManagerHeader
         showArchived={showArchived}
         onToggleArchived={() => setShowArchived(prev => !prev)}

@@ -7,7 +7,7 @@ const ChangePasswordError = ({ message }: ChangePasswordErrorProps) => {
 
   return (
     <div
-      className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600"
+      className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive"
       role="status"
       aria-live="polite"
     >

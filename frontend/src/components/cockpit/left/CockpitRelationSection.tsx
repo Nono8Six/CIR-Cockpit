@@ -37,10 +37,13 @@ const CockpitRelationSection = ({
   relationOptions,
   entityType,
   relationButtonRef
-}: CockpitRelationSectionProps) => (
-  <div className="space-y-2">
-    <label className={labelStyle}>Relation</label>
-    <div className="min-[769px]:hidden">
+}: CockpitRelationSectionProps) => {
+  const relationLabelId = 'cockpit-relation-label';
+
+  return (
+    <div className="space-y-2">
+      <label id={relationLabelId} className={labelStyle}>Relation</label>
+      <div className="min-[769px]:hidden">
       <Combobox
         items={relationOptions}
         value={entityType}
@@ -50,6 +53,8 @@ const CockpitRelationSection = ({
         }}
       >
         <ComboboxInput
+          id="cockpit-relation-picker-input"
+          aria-labelledby={relationLabelId}
           data-testid="cockpit-relation-picker-trigger"
           placeholder="Selectionner une relation"
           searchPlaceholder="Rechercher une relation..."
@@ -69,7 +74,7 @@ const CockpitRelationSection = ({
     <ToggleGroup
       type="single"
       value={entityType}
-      aria-label="Relation"
+      aria-labelledby={relationLabelId}
       data-testid="cockpit-relation-group"
       size="sm"
       variant="outline"
@@ -88,7 +93,7 @@ const CockpitRelationSection = ({
             key={option}
             ref={index === 0 ? relationButtonRef : undefined}
             value={option}
-            className="h-7 max-w-full gap-1.5 whitespace-nowrap rounded-md border px-2 text-xs font-normal data-[state=on]:border-cir-red data-[state=on]:bg-cir-red data-[state=on]:text-white"
+            className="h-7 max-w-full gap-1.5 whitespace-nowrap rounded-md border px-2 text-xs font-normal data-[state=on]:border-ring data-[state=on]:bg-primary data-[state=on]:text-white"
           >
             <RelationIcon size={12} className="shrink-0" aria-hidden="true" />
             {option}
@@ -97,11 +102,12 @@ const CockpitRelationSection = ({
       })}
     </ToggleGroup>
     {errors.entity_type ? (
-      <p className="text-xs text-red-600" role="status" aria-live="polite">
+      <p className="text-xs text-destructive" role="status" aria-live="polite">
         {errors.entity_type.message}
       </p>
     ) : null}
-  </div>
-);
+    </div>
+  );
+};
 
 export default CockpitRelationSection;

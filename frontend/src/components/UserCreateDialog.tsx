@@ -65,8 +65,8 @@ const UserCreateDialog = ({ open, onOpenChange, agencies, onCreate }: UserCreate
             onAgencyIdsChange={handleAgencyIdsChange}
           />
 
-          {fieldError ? <p className="text-sm text-red-600">{fieldError}</p> : null}
-          {error ? <p className="text-sm text-red-600">{error}</p> : null}
+          {fieldError ? <p className="text-sm text-destructive">{fieldError}</p> : null}
+          {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
           <UserCreateFooter
             canSubmit={canSubmit}

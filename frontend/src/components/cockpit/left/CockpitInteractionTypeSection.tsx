@@ -38,7 +38,7 @@ const CockpitInteractionTypeSection = ({
         id="interaction-type"
         ref={interactionTypeRef}
         aria-describedby={hasInteractionTypes ? undefined : interactionTypeHelpId}
-        className="h-8 w-fit min-w-[180px] max-w-[260px] rounded-md border-slate-200 bg-white text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:border-cir-red/40 hover:bg-cir-red/5 focus:ring-2 focus:ring-cir-red/30 data-[state=open]:border-cir-red/50"
+        className="h-8 w-fit min-w-[180px] max-w-[260px] rounded-md border-border bg-card text-xs font-semibold text-foreground shadow-sm transition-colors hover:border-ring/40 hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background data-[state=open]:border-ring/50"
       >
         <SelectValue placeholder="Choisir..." />
       </SelectTrigger>
@@ -51,12 +51,12 @@ const CockpitInteractionTypeSection = ({
       </SelectContent>
     </Select>
     {!hasInteractionTypes && (
-      <p id={interactionTypeHelpId} className="text-xs text-amber-600 mt-1">
+      <p id={interactionTypeHelpId} className="text-xs text-warning mt-1">
         Ajoutez des types d&apos;interaction dans Parametres.
       </p>
     )}
     {errors.interaction_type && (
-      <p className="text-xs text-red-600 mt-1" role="status" aria-live="polite">
+      <p className="text-xs text-destructive mt-1" role="status" aria-live="polite">
         {errors.interaction_type.message}
       </p>
     )}

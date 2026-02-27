@@ -48,20 +48,20 @@ const CockpitCompanyInput = ({
         autoComplete="organization"
       />
       {errors.company_name && (
-        <p className="text-xs text-red-600 mt-1" role="status" aria-live="polite">
+        <p className="text-xs text-destructive mt-1" role="status" aria-live="polite">
           {errors.company_name.message}
         </p>
       )}
       {showSuggestions && companyName.length > 1 && (
-        <div className="absolute z-50 w-full bg-white border border-slate-200 shadow-lg rounded-md mt-1 max-h-40 overflow-auto py-1">
+        <div className="absolute z-50 w-full bg-card border border-border shadow-lg rounded-md mt-1 max-h-40 overflow-auto py-1">
           {companySuggestions.length === 0 ? (
-            <div className="px-3 py-2 text-xs text-slate-400 italic">Nouvelle entree</div>
+            <div className="px-3 py-2 text-xs text-muted-foreground/80 italic">Nouvelle entree</div>
           ) : (
             companySuggestions.map((company) => (
               <button
                 key={company}
                 type="button"
-                className="w-full text-left px-3 py-1.5 text-sm hover:bg-slate-50 text-slate-700 focus-visible:outline-none focus-visible:bg-slate-50"
+                className="w-full text-left px-3 py-1.5 text-sm hover:bg-surface-1 text-foreground focus-visible:outline-none focus-visible:bg-surface-1"
                 onMouseDown={(event) => {
                   // Keep focus on the input until click runs, avoiding close/open race.
                   event.preventDefault();

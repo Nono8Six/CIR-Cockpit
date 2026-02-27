@@ -17,18 +17,18 @@ const InteractionDetailsHeader = ({
   onRequestConvert,
   onClose
 }: InteractionDetailsHeaderProps) => (
-  <header className="shrink-0 border-b border-slate-200 bg-slate-50 px-4 py-3 sm:px-5">
+  <header className="shrink-0 border-b border-border bg-surface-1 px-4 py-3 sm:px-5">
     <div className="flex items-start justify-between gap-3">
       <div className="min-w-0 space-y-1">
-        <h2 className="truncate text-base font-semibold text-slate-900 sm:text-lg">
+        <h2 className="truncate text-base font-semibold text-foreground sm:text-lg">
           {interaction.company_name}
         </h2>
-        <p className="flex min-w-0 items-center gap-1.5 text-sm text-slate-600">
-          <UserRound size={14} className="shrink-0 text-slate-400" aria-hidden="true" />
+        <p className="flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground">
+          <UserRound size={14} className="shrink-0 text-muted-foreground/80" aria-hidden="true" />
           <span className="truncate">{interaction.contact_name}</span>
         </p>
         {(interaction.contact_phone || interaction.contact_email) && (
-          <p className="truncate text-xs font-medium text-slate-500">
+          <p className="truncate text-xs font-medium text-muted-foreground">
             {interaction.contact_phone ?? interaction.contact_email}
           </p>
         )}
@@ -37,7 +37,7 @@ const InteractionDetailsHeader = ({
         type="button"
         variant="ghost"
         size="icon"
-        className="size-8 text-slate-500 hover:text-slate-700"
+        className="size-8 text-muted-foreground hover:text-foreground"
         onClick={onClose}
         aria-label="Fermer le panneau"
       >
@@ -47,19 +47,19 @@ const InteractionDetailsHeader = ({
     <div className="mt-3 flex flex-wrap items-center gap-2">
       <Badge
         variant="outline"
-        className="border-slate-200 bg-white px-2 py-0.5 text-[10px] uppercase tracking-wide text-slate-600"
+        className="border-border bg-card px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground"
       >
         {interaction.entity_type}
       </Badge>
       <Badge
         variant="outline"
-        className="border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] uppercase tracking-wide text-amber-700"
+        className="border-warning/35 bg-warning/15 px-2 py-0.5 text-[10px] uppercase tracking-wide text-warning-foreground"
       >
         {interaction.interaction_type}
       </Badge>
       <Badge
         variant="outline"
-        className="border-slate-200 bg-white px-2 py-0.5 text-[10px] text-slate-600"
+        className="border-border bg-card px-2 py-0.5 text-[10px] text-muted-foreground"
       >
         {interaction.contact_service}
       </Badge>
@@ -69,7 +69,7 @@ const InteractionDetailsHeader = ({
           variant="outline"
           size="dense"
           onClick={() => onRequestConvert(interaction)}
-          className="h-7 border-cir-red/30 text-[11px] text-cir-red hover:bg-cir-red/5 hover:text-red-700"
+          className="h-7 border-ring/30 text-[11px] text-primary hover:bg-primary/10 hover:text-primary"
         >
           Convertir en client
         </Button>

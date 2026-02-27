@@ -11,18 +11,18 @@ type ChangePasswordRulesProps = {
 };
 
 const ChangePasswordRules = ({ rules }: ChangePasswordRulesProps) => (
-  <div className="bg-slate-50 rounded-lg p-3 space-y-1.5">
+  <div className="bg-surface-1 rounded-lg p-3 space-y-1.5">
     {rules.map((rule) => (
       <div
         key={rule.id}
         className={`flex items-center gap-2 text-xs ${
-          rule.passed ? 'text-emerald-600' : 'text-slate-500'
+          rule.passed ? 'text-success' : 'text-muted-foreground'
         }`}
       >
         {rule.passed ? (
-          <Check size={14} className="text-emerald-500" />
+          <Check size={14} className="text-success/90" />
         ) : (
-          <X size={14} className="text-slate-400" />
+          <X size={14} className="text-muted-foreground/80" />
         )}
         <span>{rule.label}</span>
       </div>

@@ -27,7 +27,7 @@ const ConfigSectionAddRow = ({
       value={newItem}
       onChange={(event) => setNewItem(event.target.value)}
       onKeyDown={(event) => event.key === 'Enter' && !readOnly && onAdd()}
-      className={`h-9 flex-1 border-slate-200 bg-white text-sm ${uppercase ? 'uppercase' : ''} ${readOnly ? 'text-slate-400' : ''}`}
+      className={`h-9 flex-1 border-border bg-card text-sm ${uppercase ? 'uppercase' : ''} ${readOnly ? 'text-muted-foreground/80' : ''}`}
       placeholder={placeholder}
       disabled={readOnly}
       name={`${namePrefix}-new`}

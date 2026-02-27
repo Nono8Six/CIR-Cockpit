@@ -1,4 +1,4 @@
-import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useDeferredValue, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Car, Mail, Phone, Store } from 'lucide-react';
 
@@ -135,19 +135,11 @@ export const useDashboardState = ({
     startDate: today,
     endDate: today
   });
-  const startDateRef = useRef(startDate);
-  const endDateRef = useRef(endDate);
+  const startDateRef = useRef(today);
+  const endDateRef = useRef(today);
   const deferredSearchTerm = useDeferredValue(searchTerm);
   const normalizedSearchTerm = useMemo(() => deferredSearchTerm.trim().toLowerCase(), [deferredSearchTerm]);
   const compactSearchTerm = useMemo(() => normalizedSearchTerm.replace(/\s/g, ''), [normalizedSearchTerm]);
-
-  useEffect(() => {
-    startDateRef.current = startDate;
-  }, [startDate]);
-
-  useEffect(() => {
-    endDateRef.current = endDate;
-  }, [endDate]);
 
   const queryClient = useQueryClient();
   const addTimelineMutation = useAddTimelineEvent(agencyId);
@@ -243,14 +235,14 @@ export const useDashboardState = ({
       const inferredCategory = inferStatusCategoryFromLabel(interaction.status);
 
       if (meta?.category === 'todo' || meta?.is_default || inferredCategory === 'todo') {
-        return 'border-red-400 bg-red-100 text-red-800';
+        return 'border-destructive/50 bg-destructive/15 text-destructive';
       }
 
       if (meta?.category === 'done' || isTerminal || inferredCategory === 'done') {
-        return 'border-emerald-400 bg-emerald-100 text-emerald-800';
+        return 'border-success/45 bg-success/18 text-success';
       }
 
-      return 'border-amber-400 bg-amber-100 text-amber-800';
+      return 'border-warning/45 bg-warning/20 text-warning-foreground';
     },
     [getStatusMeta]
   );
@@ -333,15 +325,15 @@ export const useDashboardState = ({
   const getChannelIcon = useCallback((channel: string) => {
     switch (channel) {
       case 'Téléphone':
-        return <Phone size={14} className="text-slate-600" />;
+        return <Phone size={14} className="text-muted-foreground" />;
       case 'Email':
-        return <Mail size={14} className="text-slate-600" />;
+        return <Mail size={14} className="text-muted-foreground" />;
       case 'Comptoir':
-        return <Store size={14} className="text-slate-600" />;
+        return <Store size={14} className="text-muted-foreground" />;
       case 'Visite':
-        return <Car size={14} className="text-slate-600" />;
+        return <Car size={14} className="text-muted-foreground" />;
       default:
-        return <Phone size={14} className="text-slate-600" />;
+        return <Phone size={14} className="text-muted-foreground" />;
     }
   }, []);
 

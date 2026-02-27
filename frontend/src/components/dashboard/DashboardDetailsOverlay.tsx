@@ -43,7 +43,7 @@ const DashboardDetailsOverlay = ({
     <SheetContent
       side="right"
       showCloseButton={false}
-      className="w-full border-l border-slate-200 p-0 sm:max-w-2xl"
+      className="w-full border-l border-border p-0 sm:max-w-2xl"
       data-testid="dashboard-details-sheet"
     >
       <SheetHeader className="sr-only">

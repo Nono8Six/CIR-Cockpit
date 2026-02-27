@@ -158,48 +158,48 @@ Statut global: En cours
 
 ### Couche 5 - UI components (composition)
 
-- [ ] A faire
-- [ ] Aide toi notament du skill taste-skill
-- [ ] Reduire props booleennes proliferees
-- [ ] Clarifier composants orchestrateurs vs presentatifs
-- [ ] Standardiser patterns composition (sections, slots, variants)
-- [ ] Revalider accessibilite clavier/labels/focus
+- [x] Fait
+- [x] Aide toi notament du skill taste-skill
+- [x] Reduire props booleennes proliferees
+- [x] Clarifier composants orchestrateurs vs presentatifs
+- [x] Standardiser patterns composition (sections, slots, variants)
+- [x] Revalider accessibilite clavier/labels/focus
 
 ### Couche 4 - Styling (coherence design/tokens)
 
-- [ ] A faire
-- [ ] Aide toi notament du skill taste-skill
-- [ ] Uniformiser tokens classes utilitaires
-- [ ] Eliminer incoherences visuelles inter-pages
-- [ ] Verifier contrastes et states focus
-- [ ] Stabiliser patterns responsive desktop/mobile
+- [x] Fait
+- [x] Aide toi notament du skill taste-skill
+- [x] Uniformiser tokens classes utilitaires
+- [x] Eliminer incoherences visuelles inter-pages
+- [x] Verifier contrastes et states focus
+- [x] Stabiliser patterns responsive desktop/mobile
 
 ### Couche 2 - Build tool (optimisation Vite/chunks)
 
-- [ ] A faire
-- [ ] Reauditer `manualChunks` post-routing/tRPC/Drizzle
-- [ ] Comparer tailles avant/apres par chunk
-- [ ] Ajuster split points a impact reel
-- [ ] Verifier build time et DX dev server
+- [x] Fait
+- [x] Reauditer `manualChunks` post-routing/tRPC/Drizzle
+- [x] Comparer tailles avant/apres par chunk
+- [x] Ajuster split points a impact reel
+- [x] Verifier build time et DX dev server
 
 ### Couche 1 - React 19 (optimisation finale)
 
-- [ ] A faire
-- [ ] Aide toi notament du skill taste-skill
-- [ ] Nettoyer effets inutiles et derives en render
-- [ ] Optimiser re-renders hotspots identifies
-- [ ] Verifier architecture finale lisible et stable
-- [ ] Valider regression complete produit
+- [x] Fait
+- [x] Aide toi notament du skill taste-skill
+- [x] Nettoyer effets inutiles et derives en render
+- [x] Optimiser re-renders hotspots identifies
+- [x] Verifier architecture finale lisible et stable
+- [x] Valider regression complete produit
 
 ## 5) Definition of Done globale
 
-- [ ] Toutes les couches cochees
-- [ ] Tous les gates QA verts sur la tranche finale
-- [ ] Zero `any` non justifie / zero `@ts-ignore` non documente
-- [ ] Zero `throw new Error` hors tests
-- [ ] Zero `console.error` hors tests
-- [ ] Zero `toast.error` hors `notify.ts`
-- [ ] Supabase runtime probes OK sur routes impactees
+- [x] Toutes les couches cochees
+- [x] Tous les gates QA verts sur la tranche finale
+- [x] Zero `any` non justifie / zero `@ts-ignore` non documente
+- [x] Zero `throw new Error` hors tests
+- [x] Zero `console.error` hors tests
+- [x] Zero `toast.error` hors `notify.ts`
+- [x] Supabase runtime probes OK sur routes impactees
 
 ## 6) Journal d'execution (preuves)
 
@@ -883,3 +883,293 @@ Utiliser ce template a chaque couche:
 - Decision:
   - Couche 11 validee et terminee
   - Passage a la couche suivante autorise selon ordre officiel
+
+### [2026-02-26] Couche 5 - UI components (composition)
+
+- Statut: TERMINEE
+- Scope:
+  - Reduction de la proliferation de props booleennes sur les flux UI critiques (`AppMain`, `InteractionSearch`, `Cockpit left`)
+  - Clarification orchestration/presentation via etats de vue explicites (`mainViewState`, `search status`, `relationMode`)
+  - Standardisation de composition par patterns `variant`/sections/slots sans changement visuel
+  - Revalidation accessibilite clavier/labels/focus sur composants impactes
+- Fichiers modifies:
+  - `frontend/src/App.tsx`
+  - `frontend/src/components/AppMainContent.tsx`
+  - `frontend/src/components/app-main/AppMainContent.types.ts`
+  - `frontend/src/components/app-main/AppMainStateView.tsx`
+  - `frontend/src/components/AppSearchOverlay.tsx`
+  - `frontend/src/components/InteractionSearchBar.tsx`
+  - `frontend/src/components/interaction-search/InteractionSearchListArea.tsx`
+  - `frontend/src/components/interaction-search/InteractionSearchResults.tsx`
+  - `frontend/src/components/interaction-search/InteractionSearchStatusMessage.tsx`
+  - `frontend/src/hooks/useInteractionSearch.ts`
+  - `frontend/src/constants/relations.ts`
+  - `frontend/src/hooks/useInteractionFormState.ts`
+  - `frontend/src/hooks/useCockpitPaneProps.types.ts`
+  - `frontend/src/hooks/useCockpitPaneProps.ts`
+  - `frontend/src/hooks/useCockpitFormController.ts`
+  - `frontend/src/components/cockpit/CockpitPaneTypes.ts`
+  - `frontend/src/components/cockpit/buildCockpitLeftEntitySectionsProps.ts`
+  - `frontend/src/components/cockpit/left/CockpitSearchSection.tsx`
+  - `frontend/src/components/cockpit/left/CockpitIdentitySection.tsx`
+  - `frontend/src/components/cockpit/left/CockpitIdentityEditor.tsx`
+  - `frontend/src/components/cockpit/left/CockpitIdentityHints.tsx`
+  - `frontend/src/components/cockpit/left/CockpitContactSection.tsx`
+  - `frontend/src/components/cockpit/left/CockpitContactSection.types.ts`
+  - `frontend/src/components/cockpit/left/CockpitManualContactSection.tsx`
+  - `frontend/src/components/cockpit/left/CockpitManualContactForm.tsx`
+  - `frontend/src/components/cockpit/left/CockpitManualContactForm.types.ts`
+  - `frontend/src/components/cockpit/left/CockpitRelationSection.tsx`
+  - `frontend/src/components/cockpit/left/CockpitServicePicker.tsx`
+  - `frontend/src/components/cockpit/left/CockpitServiceSection.tsx`
+  - `frontend/src/components/app-header/AppHeaderProfileMenu.tsx`
+  - `frontend/src/components/audit-logs/AuditLogsFilters.tsx`
+  - `frontend/src/components/audit-logs/AuditLogsDateRange.tsx`
+  - `frontend/src/components/__tests__/AppMainStateView.test.tsx`
+  - `frontend/src/components/audit-logs/__tests__/AuditLogsFilters.test.tsx`
+  - `frontend/src/components/audit-logs/__tests__/AuditLogsDateRange.test.tsx`
+  - `Plan_refactoring.md`
+- Commandes executees:
+  - `pnpm --dir frontend run typecheck`
+  - `pnpm --dir frontend run lint -- --max-warnings=0`
+  - `pnpm --dir frontend run test:run -- src/components/__tests__/AppMainStateView.test.tsx src/components/audit-logs/__tests__/AuditLogsFilters.test.tsx src/components/audit-logs/__tests__/AuditLogsDateRange.test.tsx`
+  - `pnpm --dir frontend run test:coverage`
+  - `pnpm --dir frontend run check:error-compliance`
+  - `pnpm --dir frontend run build`
+  - `RUN_E2E=1 pnpm --dir frontend run test:e2e`
+  - `pnpm run qa`
+- Resultats:
+  - Etats de vue explicites introduits sur `AppMain` et `InteractionSearch` (reduction des combinaisons booleennes)
+  - `relationMode` introduit et propage sur le cockpit gauche pour simplifier les branches de rendu
+  - Accessibilite renforcee sur labels lies aux controles (`audit logs`, `relation`, `service`) et icone decorative profil
+  - Tests ajoutes et verts sur les nouveaux comportements (`AppMainStateView`, labels audit)
+  - Gates frontend PASS:
+    - coverage: statements `91.37`, branches `74.52`, functions `95.27`, lines `93.73`
+    - e2e: `17` passes, `1` skipped, `0` fail
+  - Gate globale PASS (`pnpm run qa`): frontend + backend verts
+- Preuves Supabase MCP (si applicable):
+  - N/A (couche frontend UI components, sans impact backend/DB/runtime Supabase)
+- Risques restants:
+  - Aucun risque bloquant identifie sur la couche 5
+  - Observation non bloquante: artefacts `frontend/coverage/**` regenes par la gate coverage locale
+- Decision:
+  - Couche 5 validee et terminee
+  - Passage a la couche suivante autorise selon ordre officiel
+
+### [2026-02-26] Couche 4 - Styling (coherence design/tokens)
+
+- Statut: TERMINEE
+- Scope:
+  - Uniformisation globale des classes utilitaires vers tokens semantiques (`background/foreground/card/muted/border/primary/warning/destructive/success`)
+  - Elimination des incoherences visuelles inter-pages (cockpit, dashboard, clients, admin, settings, login/gates)
+  - Harmonisation des states focus (`focus-visible`, ring, ring-offset) sur composants metier et primitives UI
+  - Stabilisation responsive viewport mobile (`min-h-[100dvh]` sur ecrans plein viewport)
+- Fichiers modifies:
+  - `frontend/src/index.css`
+  - `frontend/tailwind.config.cjs`
+  - `frontend/src/components/ui/{button,badge,combobox,dialog,sheet,switch,toggle}.tsx`
+  - `frontend/src/app/{appConstants,getAppGate}.tsx`
+  - `frontend/src/App.tsx`
+  - `frontend/src/components/**/*` (harmonisation styling couche 4)
+  - `frontend/src/hooks/{useCockpitFormController,useDashboardState}.ts*`
+  - `Plan_refactoring.md`
+- Commandes executees:
+  - Audit style/focus/responsive (rg):
+    - `hardcoded_color_matches` baseline `572` -> final `0`
+    - `focus_non_visible_matches` baseline `12` -> final `3` (skip-link + cas librairie)
+    - `h_screen_matches` baseline `7` -> final `0`
+  - `pnpm --dir frontend run typecheck`
+  - `pnpm --dir frontend run lint -- --max-warnings=0`
+  - `pnpm --dir frontend run test:coverage`
+  - `pnpm --dir frontend run check:error-compliance`
+  - `pnpm --dir frontend run build`
+  - `RUN_E2E=1 pnpm --dir frontend run test:e2e`
+  - `pnpm run qa`
+- Resultats:
+  - Design tokens et classes utilitaires unifies sur les surfaces principales et composants transverses
+  - Nouveau token `success` ajoute et integre dans Tailwind + primitives (`Badge`, `Button`)
+  - Focus clavier homogene et renforce (rings/offsets), avec maintien du skip-link accessibilite
+  - Responsive viewport stabilise (`min-h-[100dvh]`) sur les ecrans gate/login/error et shell principal
+  - Gates frontend PASS:
+    - `typecheck`, `lint`, `test:coverage`, `check:error-compliance`, `build`
+    - couverture: statements `91.37`, branches `74.52`, functions `95.27`, lines `93.73`
+  - E2E PASS: `17` passed, `1` skipped, `0` failed
+  - Gate globale PASS (`pnpm run qa`): frontend + backend verts
+- Preuves Supabase MCP (si applicable):
+  - N/A (couche frontend styling, sans impact backend/DB/runtime Supabase)
+- Risques restants:
+  - Delta visuel large mais non fonctionnel sur de nombreux ecrans (normalisation globale des classes)
+  - Artefacts coverage regenes localement (`frontend/coverage/**`)
+- Decision:
+  - Couche 4 validee et terminee
+  - Passage a la couche suivante autorise selon ordre officiel
+
+### [2026-02-26] Couche 2 - Build tool (optimisation Vite/chunks)
+
+- Statut: TERMINEE
+- Scope:
+  - Reaudit complet du split Vite post-routing/tRPC/Drizzle avec mesures factuelles avant/apres
+  - Recomposition `manualChunks` par domaines techniques a impact reel (`react-core`, `tanstack-core`, `tanstack-query`, `supabase`, `trpc`, `forms`, `data-grid`, `date-utils`, `calendar`, `ui-primitives`)
+  - Exception validee sur la couche: lazy-load des ecrans de gate auth (`LoginScreen`, `ChangePasswordScreen`) pour reduire le cout du shell initial
+  - Verification du build time et de la DX dev server (`vite ready`)
+- Fichiers modifies:
+  - `frontend/vite.config.ts`
+  - `frontend/src/app/getAppGate.tsx`
+  - `Plan_refactoring.md`
+- Commandes executees:
+  - `pnpm --dir frontend run typecheck`
+  - `pnpm --dir frontend run lint -- --max-warnings=0`
+  - `pnpm --dir frontend run build`
+  - `pnpm --dir frontend exec vite build --manifest`
+  - `pnpm --dir frontend run test:coverage`
+  - `pnpm --dir frontend run check:error-compliance`
+  - `RUN_E2E=1 pnpm --dir frontend run test:e2e`
+  - `pnpm run qa`
+  - `pnpm --dir frontend run dev -- --host 127.0.0.1 --port 4173 --strictPort`
+  - `rg` controles stricts (`throw new Error`, `console.error`, `toast.error`, `@ts-ignore|@ts-expect-error`, `any`, `x-client-authorization`)
+- Resultats:
+  - Chunking Vite reequilibre:
+    - `vendor` passe de `471.14 kB` (gzip `143.84 kB`) a `28.99 kB` (gzip `9.66 kB`)
+    - introduction de chunks metier dedies (`tanstack-core`, `tanstack-query`, `trpc`, `data-grid`, `date-utils`, `calendar`, `ui-primitives`)
+  - Payload JS initial (entry + imports manifest):
+    - avant: `1,060,320` bytes raw / `316,625` bytes gzip (`7` fichiers)
+    - apres: `940,782` bytes raw / `283,386` bytes gzip (`11` fichiers)
+    - gain net: `-119,538` bytes raw et `-33,239` bytes gzip
+  - Build time:
+    - baseline mesuree: `~9.94s`
+    - apres optimisation: `~7.65s` (build final)
+  - DX dev server:
+    - baseline: `ready in 545 ms`
+    - apres optimisation: `ready in 519 ms`
+  - Exception auth gate livree:
+    - `LoginScreen` et `ChangePasswordScreen` sont des chunks dynamiques dedies
+  - QA:
+    - frontend gates PASS (`typecheck`, `lint`, `test:coverage`, `check:error-compliance`, `build`)
+    - E2E PASS: `17 passed`, `1 skipped`, `0 failed`
+    - gate globale PASS (`pnpm run qa`)
+  - Conformite regles:
+    - `throw new Error` hors tests: `NO_MATCH`
+    - `console.error` hors tests: `NO_MATCH`
+    - `toast.error` uniquement `frontend/src/services/errors/notify.ts`: OK
+    - `@ts-ignore`/`@ts-expect-error`: `NO_MATCH`
+    - `any` hors tests: `NO_MATCH`
+    - `x-client-authorization` dans code applicatif: `NO_MATCH`
+- Preuves Supabase MCP (si applicable):
+  - N/A (couche frontend build tool, sans impact backend/DB/runtime Supabase)
+- Risques restants:
+  - Le nombre de chunks initiaux augmente (`7` -> `11`) malgre la baisse du poids total; risque de latence reseau accru en contexte tres contraint
+  - Le chunk `ui-primitives` reste volumineux et charge au boot car le shell importe des composants UI transverses; optimisation complementaire potentielle hors scope strict Couche 2
+- Decision:
+  - Couche 2 validee et terminee
+  - Passage a la couche suivante autorise selon ordre officiel
+
+### [2026-02-26] Couche 2 - Build tool (optimisation complementaire post-risques)
+
+- Statut: TERMINEE
+- Scope:
+  - Mitigation ciblee des risques residuels de la couche 2 (`chunks initiaux` et `ui-primitives` au boot)
+  - Lazy-load de `AppSearchOverlay` et `ConvertClientDialog` avec prefetch sur intention utilisateur (hover/focus/pointerdown + ouverture clavier)
+  - Reequilibrage `manualChunks` pour reduire le nombre de requetes initiales sans reintroduire un vendor monolithique
+- Fichiers modifies:
+  - `frontend/src/App.tsx`
+  - `frontend/src/components/AppHeader.tsx`
+  - `frontend/src/components/app-header/AppHeader.types.ts`
+  - `frontend/src/components/app-header/AppHeaderSearchButton.tsx`
+  - `frontend/vite.config.ts`
+  - `Plan_refactoring.md`
+- Commandes executees:
+  - `pnpm --dir frontend run typecheck`
+  - `pnpm --dir frontend run lint -- --max-warnings=0`
+  - `pnpm --dir frontend run test:coverage`
+  - `pnpm --dir frontend run check:error-compliance`
+  - `pnpm --dir frontend run build`
+  - `RUN_E2E=1 pnpm --dir frontend run test:e2e`
+  - `pnpm --dir frontend exec vite build --manifest --sourcemap`
+  - `node -e "<mesure initial payload depuis manifest>"`
+  - `rg` controles stricts (`throw new Error`, `console.error`, `toast.error`, `@ts-ignore|@ts-expect-error`, `any`, `x-client-authorization`)
+  - `pnpm run qa`
+- Resultats:
+  - Payload JS initial (entry + imports manifest) apres optimisation complementaire:
+    - `923,700` bytes raw / `279,434` bytes gzip (`7` fichiers)
+  - Delta vs precedent etat couche 2 (`11` fichiers, `940,782` raw, `283,386` gzip):
+    - `-4` chunks initiaux
+    - `-17,082` bytes raw
+    - `-3,952` bytes gzip
+  - `ui-primitives` reste le plus gros chunk (`246.02 kB`, gzip `78.09 kB`) mais la surface chargee au boot est mieux contenue par l'extraction lazy des overlays non critiques
+  - QA complete PASS:
+    - Frontend: `typecheck`, `lint`, `test:coverage` (`61` fichiers, `203` tests), `check:error-compliance`, `build`, `test:e2e` (`17` passed, `1` skipped, `0` failed)
+    - Gate globale: `pnpm run qa` PASS (frontend + backend)
+  - Conformite regles:
+    - `throw new Error` hors tests: `NO_MATCH`
+    - `console.error` hors tests: `NO_MATCH`
+    - `toast.error` uniquement `frontend/src/services/errors/notify.ts`: OK
+    - `@ts-ignore`/`@ts-expect-error`: `NO_MATCH`
+    - `any` hors tests: `NO_MATCH`
+    - `x-client-authorization` dans code applicatif: `NO_MATCH`
+- Preuves Supabase MCP (si applicable):
+  - N/A (couche frontend build tool, sans impact backend/DB/runtime Supabase)
+- Risques restants:
+  - `ui-primitives` demeure un hotspot de poids initial; gain additionnel possible via segmentation plus fine des primitives transverses, a arbitrer en couche 1 pour eviter une fragmentation excessive
+  - Build avec `--sourcemap --manifest` est plus lent (`19.78s`) que le build gate standard (`~7.75s`), sans impact runtime utilisateur
+- Decision:
+  - Risques initiaux de latence reseau lies a la hausse de chunks (`7 -> 11`) traites avec retour a `7` chunks initiaux
+  - Couche 2 reste validee et terminee
+  - Passage a la couche suivante autorise selon ordre officiel
+
+### [2026-02-26] Couche 1 - React 19 (optimisation finale)
+
+- Statut: TERMINEE
+- Scope:
+  - Nettoyage des effets derives inutiles et reduction des mises a jour post-render
+  - Optimisation des frontieres de re-render sur `App`, `cockpit`, `clients`, `dashboard`
+  - Consolidation architecture React finale: split context session (`state`/`actions`) et keep-alive des onglets metier
+  - Validation de non-regression produit via gates frontend + e2e + gate globale
+- Fichiers modifies:
+  - `frontend/src/hooks/useInteractionFormEffects.types.ts`
+  - `frontend/src/hooks/useInteractionFormEffects.ts`
+  - `frontend/src/hooks/useInteractionHandlers.types.ts`
+  - `frontend/src/hooks/useInteractionHandlers.ts`
+  - `frontend/src/hooks/useCockpitFormController.ts`
+  - `frontend/src/hooks/useClientFormDialog.ts`
+  - `frontend/src/hooks/useProspectFormDialog.ts`
+  - `frontend/src/hooks/useInteractionDetailsState.ts`
+  - `frontend/src/hooks/useClientsPanelState.ts`
+  - `frontend/src/hooks/useDashboardState.tsx`
+  - `frontend/src/types/app-session.ts`
+  - `frontend/src/components/AppSessionProvider.tsx`
+  - `frontend/src/hooks/useAppSession.ts`
+  - `frontend/src/App.tsx`
+  - `frontend/src/components/app-main/AppMainTabContent.tsx`
+  - `frontend/src/components/AppHeader.tsx`
+  - `frontend/src/components/AppMainContent.tsx`
+  - `frontend/src/components/AppSearchOverlay.tsx`
+  - `frontend/src/components/Dashboard.tsx`
+  - `frontend/src/components/clients/ClientsPanelLayout.tsx`
+  - `frontend/src/components/clients/buildClientsPanelSectionProps.ts`
+  - `frontend/src/components/dashboard/toolbar/DashboardDateFilters.tsx`
+  - `Plan_refactoring.md`
+- Commandes executees:
+  - `pnpm --dir frontend run typecheck`
+  - `pnpm --dir frontend run lint -- --max-warnings=0`
+  - `pnpm --dir frontend run test:run -- src/hooks/__tests__/useDashboardState.test.tsx src/components/__tests__/AppSearchOverlay.test.tsx src/app/__tests__/useAppShortcuts.test.tsx`
+  - `pnpm --dir frontend run test:coverage`
+  - `pnpm --dir frontend run check:error-compliance`
+  - `pnpm --dir frontend run build`
+  - `RUN_E2E=1 pnpm --dir frontend run test:e2e`
+  - `RUN_E2E=1 pnpm run qa`
+- Resultats:
+  - Gates frontend completes PASS (`typecheck`, `lint`, `test:coverage`, `check:error-compliance`, `build`)
+  - E2E PASS: `17 passed`, `1 skipped`, `0 failed`
+  - Gate globale PASS (`RUN_E2E=1 pnpm run qa`)
+  - Backend QA dans gate globale: `74 passed`, `0 failed`, `8 ignored`
+  - Nettoyage des effets derives realise sur formulaires/hooks cibles
+  - Hotspots de re-render reduits via stabilisation props/callbacks et memoisation des frontieres couteuses
+  - Keep-alive des onglets metier actif avec garde d'acces conservee (`admin`/`settings`)
+- Preuves Supabase MCP (si applicable):
+  - N/A (couche React frontend, sans impact backend/DB/runtime Supabase)
+- Risques restants:
+  - Aucune regression bloquante detectee par les gates QA et E2E
+  - Les artefacts `frontend/coverage/**` restent regeneres localement par la gate coverage
+- Decision:
+  - Couche 1 validee et terminee
+  - Passage a la couche suivante autorise

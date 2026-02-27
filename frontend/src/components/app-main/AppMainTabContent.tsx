@@ -1,4 +1,4 @@
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 
 import type { AgencyConfig } from '@/services/config';
 import type { AppTab, Entity, Interaction, InteractionDraft, UserRole } from '@/types';
@@ -12,7 +12,7 @@ const ClientsPanel = lazy(() => import('@/components/ClientsPanel'));
 const AdminPanel = lazy(() => import('@/components/AdminPanel'));
 
 const ROUTE_LOADING_FALLBACK = (
-  <div className="h-full flex items-center justify-center text-slate-400 text-sm">
+  <div className="h-full flex items-center justify-center text-muted-foreground/80 text-sm">
     Chargement de la vue...
   </div>
 );
@@ -41,6 +41,8 @@ type AppMainTabContentProps = {
   onOpenGlobalSearch: () => void;
 };
 
+const KEEP_ALIVE_TABS: AppTab[] = ['cockpit', 'dashboard', 'clients', 'settings', 'admin'];
+
 const AppMainTabContent = ({
   activeTab,
   activeAgencyId,
@@ -61,69 +63,113 @@ const AppMainTabContent = ({
   onRequestConvert,
   onOpenGlobalSearch
 }: AppMainTabContentProps) => {
-  if (activeTab === 'cockpit') {
-    return (
-      <Suspense fallback={ROUTE_LOADING_FALLBACK}>
-        <CockpitForm
-          onSave={onSaveInteraction}
-          config={config}
-          activeAgencyId={activeAgencyId}
-          userId={userId}
-          userRole={userRole}
-          recentEntities={recentEntities}
-          entitySearchIndex={entitySearchIndex}
-          entitySearchLoading={entitySearchLoading}
-          onOpenGlobalSearch={onOpenGlobalSearch}
-        />
-      </Suspense>
-    );
-  }
+  const [visitedTabs, setVisitedTabs] = useState<Record<AppTab, boolean>>({
+    cockpit: activeTab === 'cockpit',
+    dashboard: activeTab === 'dashboard',
+    clients: activeTab === 'clients',
+    settings: activeTab === 'settings' && canAccessSettings,
+    admin: activeTab === 'admin' && canAccessAdmin
+  });
 
-  if (activeTab === 'dashboard') {
-    return (
-      <Suspense fallback={ROUTE_LOADING_FALLBACK}>
-        <Dashboard
-          interactions={interactions}
-          statuses={config.statuses}
-          agencyId={activeAgencyId}
-          onRequestConvert={onRequestConvert}
-        />
-      </Suspense>
-    );
-  }
+  useEffect(() => {
+    if (activeTab === 'settings' && !canAccessSettings) {
+      return;
+    }
 
-  if (activeTab === 'settings' && canAccessSettings) {
-    return (
-      <Suspense fallback={ROUTE_LOADING_FALLBACK}>
-        <Settings config={config} canEdit={canEditSettings} agencyId={activeAgencyId} />
-      </Suspense>
-    );
-  }
+    if (activeTab === 'admin' && !canAccessAdmin) {
+      return;
+    }
 
-  if (activeTab === 'clients') {
-    return (
-      <Suspense fallback={ROUTE_LOADING_FALLBACK}>
-        <ClientsPanel
-          activeAgencyId={activeAgencyId}
-          userRole={userRole}
-          focusedClientId={focusedClientId}
-          focusedContactId={focusedContactId}
-          onFocusHandled={onFocusHandled}
-          onRequestConvert={onRequestConvert}
-        />
-      </Suspense>
-    );
-  }
+    setVisitedTabs((previous) => {
+      if (previous[activeTab]) {
+        return previous;
+      }
 
-  if (activeTab === 'admin' && canAccessAdmin) {
-    return (
-      <Suspense fallback={ROUTE_LOADING_FALLBACK}>
-        <AdminPanel userRole={userRole} />
-      </Suspense>
-    );
-  }
+      return {
+        ...previous,
+        [activeTab]: true
+      };
+    });
+  }, [activeTab, canAccessAdmin, canAccessSettings]);
 
-  return null;
+  return (
+    <>
+      {KEEP_ALIVE_TABS.map((tab) => {
+        const isActive = activeTab === tab;
+        const isAllowed =
+          tab === 'settings'
+            ? canAccessSettings
+            : tab === 'admin'
+              ? canAccessAdmin
+              : true;
+
+        if (!isAllowed || !visitedTabs[tab]) {
+          return null;
+        }
+
+        return (
+          <section
+            key={tab}
+            className={isActive ? 'h-full' : 'hidden'}
+            aria-hidden={!isActive}
+            data-testid={`app-main-tab-${tab}`}
+          >
+            {tab === 'cockpit' ? (
+              <Suspense fallback={ROUTE_LOADING_FALLBACK}>
+                <CockpitForm
+                  onSave={onSaveInteraction}
+                  config={config}
+                  activeAgencyId={activeAgencyId}
+                  userId={userId}
+                  userRole={userRole}
+                  recentEntities={recentEntities}
+                  entitySearchIndex={entitySearchIndex}
+                  entitySearchLoading={entitySearchLoading}
+                  onOpenGlobalSearch={onOpenGlobalSearch}
+                />
+              </Suspense>
+            ) : null}
+
+            {tab === 'dashboard' ? (
+              <Suspense fallback={ROUTE_LOADING_FALLBACK}>
+                <Dashboard
+                  interactions={interactions}
+                  statuses={config.statuses}
+                  agencyId={activeAgencyId}
+                  onRequestConvert={onRequestConvert}
+                />
+              </Suspense>
+            ) : null}
+
+            {tab === 'settings' ? (
+              <Suspense fallback={ROUTE_LOADING_FALLBACK}>
+                <Settings config={config} canEdit={canEditSettings} agencyId={activeAgencyId} />
+              </Suspense>
+            ) : null}
+
+            {tab === 'clients' ? (
+              <Suspense fallback={ROUTE_LOADING_FALLBACK}>
+                <ClientsPanel
+                  activeAgencyId={activeAgencyId}
+                  userRole={userRole}
+                  focusedClientId={focusedClientId}
+                  focusedContactId={focusedContactId}
+                  onFocusHandled={onFocusHandled}
+                  onRequestConvert={onRequestConvert}
+                />
+              </Suspense>
+            ) : null}
+
+            {tab === 'admin' ? (
+              <Suspense fallback={ROUTE_LOADING_FALLBACK}>
+                <AdminPanel userRole={userRole} />
+              </Suspense>
+            ) : null}
+          </section>
+        );
+      })}
+    </>
+  );
 };
 
 export default AppMainTabContent;

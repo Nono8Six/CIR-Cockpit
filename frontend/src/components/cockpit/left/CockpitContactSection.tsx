@@ -5,10 +5,7 @@ import type { CockpitContactSectionProps } from './CockpitContactSection.types';
 const CockpitContactSection = ({
   labelStyle,
   errors,
-  isClientRelation,
-  isSolicitationRelation,
-  isSupplierRelation,
-  isInternalRelation,
+  relationMode,
   selectedEntity,
   selectedContact,
   selectedContactMeta,
@@ -33,7 +30,7 @@ const CockpitContactSection = ({
   onContactLastNameChange,
   onContactPhoneChange
 }: CockpitContactSectionProps) => {
-  if (isClientRelation) {
+  if (relationMode === 'client') {
     return (
       <CockpitClientContactSection
         labelStyle={labelStyle}
@@ -59,9 +56,7 @@ const CockpitContactSection = ({
       selectedContact={selectedContact}
       selectedContactMeta={selectedContactMeta}
       onClearSelectedContact={onClearSelectedContact}
-      isSolicitationRelation={isSolicitationRelation}
-      isSupplierRelation={isSupplierRelation}
-      isInternalRelation={isInternalRelation}
+      relationMode={relationMode}
       contactFirstNameField={contactFirstNameField}
       contactLastNameField={contactLastNameField}
       contactPositionField={contactPositionField}

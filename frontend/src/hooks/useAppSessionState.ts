@@ -13,9 +13,9 @@ import { setProfileActiveAgencyId } from '@/services/agency/setProfileActiveAgen
 import { setActiveAgencyId } from '@/services/agency/getActiveAgencyContext';
 import { createAppError } from '@/services/errors/AppError';
 import { handleUiError } from '@/services/errors/handleUiError';
-import type { AppSessionContextValue } from '@/types/app-session';
+import type { AppSessionActions, AppSessionContextValue, AppSessionState } from '@/types/app-session';
 
-export const useAppSessionState = (): AppSessionContextValue => {
+export const useAppSessionState = (): { state: AppSessionState; actions: AppSessionActions; value: AppSessionContextValue } => {
   const [session, setSession] = useState<Session | null>(null); const [authReady, setAuthReady] = useState(false); const [profile, setProfile] = useState<UserProfile | null>(null); const [profileLoading, setProfileLoading] = useState(false); const [profileError, setProfileError] = useState<string | null>(null); const [profileReloadToken, setProfileReloadToken] = useState(0);
   const [agencyContext, setAgencyContext] = useState<AgencyContext | null>(null); const [agencyMemberships, setAgencyMemberships] = useState<AgencyMembershipSummary[]>([]); const [contextLoading, setContextLoading] = useState(false); const [contextError, setContextError] = useState<string | null>(null);
   const sessionRef = useRef<Session | null>(null); const queryClient = useQueryClient(); const handleAppError = useCallback((error: unknown, fallbackMessage: string, context?: Record<string, unknown>) => handleUiError(error, fallbackMessage, context), []);
@@ -103,5 +103,27 @@ export const useAppSessionState = (): AppSessionContextValue => {
   }, [handleAppError, queryClient]);
 
   const mustChangePassword = Boolean(profile?.must_change_password); const activeAgencyId = agencyContext?.agency_id ?? null; const isContextLoading = contextLoading; const canLoadData = Boolean(session && profile && !mustChangePassword && activeAgencyId);
-  return useMemo<AppSessionContextValue>(() => ({ authReady, session, profile, profileLoading, profileError, agencyContext, agencyMemberships, activeAgencyId, mustChangePassword, isContextLoading, contextError, canLoadData, refreshProfile, retryProfile, changeActiveAgency, signOutUser }), [activeAgencyId, agencyContext, agencyMemberships, authReady, canLoadData, changeActiveAgency, contextError, isContextLoading, mustChangePassword, profile, profileError, profileLoading, refreshProfile, retryProfile, session, signOutUser]);
+  const state = useMemo<AppSessionState>(() => ({
+    authReady,
+    session,
+    profile,
+    profileLoading,
+    profileError,
+    agencyContext,
+    agencyMemberships,
+    activeAgencyId,
+    mustChangePassword,
+    isContextLoading,
+    contextError,
+    canLoadData
+  }), [activeAgencyId, agencyContext, agencyMemberships, authReady, canLoadData, contextError, isContextLoading, mustChangePassword, profile, profileError, profileLoading, session]);
+  const actions = useMemo<AppSessionActions>(() => ({
+    refreshProfile,
+    retryProfile,
+    changeActiveAgency,
+    signOutUser
+  }), [changeActiveAgency, refreshProfile, retryProfile, signOutUser]);
+  const value = useMemo<AppSessionContextValue>(() => ({ ...state, ...actions }), [actions, state]);
+
+  return { state, actions, value };
 };

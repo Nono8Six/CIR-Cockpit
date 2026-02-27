@@ -26,12 +26,8 @@ const InteractionSearchBar = ({
     setIsOpen,
     includeArchived,
     setIncludeArchived,
-    resolvedLoading,
-    showSearchError,
     filteredRecents,
-    showResults,
-    showRecents,
-    showList,
+    panelState,
     limitedEntities,
     limitedContacts,
     entityHeading,
@@ -64,12 +60,8 @@ const InteractionSearchBar = ({
       <Command className="rounded-none overflow-visible h-auto bg-transparent" shouldFilter={false}>
         <InteractionSearchInput query={query} onQueryChange={setQuery} inputRef={inputRef} />
         <InteractionSearchListArea
-          showRecents={showRecents}
+          panelState={panelState}
           filteredRecents={filteredRecents}
-          showList={showList}
-          resolvedLoading={resolvedLoading}
-          showSearchError={showSearchError}
-          showResults={showResults}
           limitedEntities={limitedEntities}
           limitedContacts={limitedContacts}
           query={query}

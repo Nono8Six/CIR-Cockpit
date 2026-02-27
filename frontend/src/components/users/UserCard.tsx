@@ -30,13 +30,13 @@ const UserCard = ({
     || user.email;
 
   return (
-  <div className="flex flex-col gap-3 rounded-md border border-slate-200 p-3" data-testid={`admin-user-card-${user.id}`}>
+  <div className="flex flex-col gap-3 rounded-md border border-border p-3" data-testid={`admin-user-card-${user.id}`}>
     <div className="flex items-start justify-between gap-3">
       <div>
-        <p className="text-sm font-semibold text-slate-900">{identityLabel}</p>
-        <p className="text-xs text-slate-500">{user.email}</p>
+        <p className="text-sm font-semibold text-foreground">{identityLabel}</p>
+        <p className="text-xs text-muted-foreground">{user.email}</p>
         {user.archived_at && (
-          <p className="text-xs text-amber-600">Archive</p>
+          <p className="text-xs text-warning">Archive</p>
         )}
       </div>
       <div className="flex flex-wrap items-center justify-end gap-2">
@@ -74,7 +74,7 @@ const UserCard = ({
         <Button
           type="button"
           variant="outline"
-          className="h-9 border-red-200 px-3 text-xs text-red-600 hover:bg-red-50 sm:text-sm"
+          className="h-9 border-destructive/30 px-3 text-xs text-destructive hover:bg-destructive/10 sm:text-sm"
           onClick={() => onDeleteUser(user)}
           aria-label="Supprimer l'utilisateur"
           data-testid={`admin-user-delete-${user.id}`}
@@ -86,11 +86,11 @@ const UserCard = ({
 
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
       <div>
-        <label className="text-xs font-semibold text-slate-400 uppercase">Role</label>
+        <label className="text-xs font-semibold text-muted-foreground/80 uppercase">Role</label>
         <UserRoleSelect role={user.role} onRoleChange={(role) => onRoleChange(user.id, role)} />
       </div>
       <div className="md:col-span-2">
-        <label className="text-xs font-semibold text-slate-400 uppercase">Agences</label>
+        <label className="text-xs font-semibold text-muted-foreground/80 uppercase">Agences</label>
         <UserMembershipPills memberships={user.memberships} onEdit={() => onEditMemberships(user)} />
       </div>
     </div>

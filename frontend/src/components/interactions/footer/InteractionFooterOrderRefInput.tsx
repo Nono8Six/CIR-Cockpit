@@ -14,14 +14,14 @@ const InteractionFooterOrderRefInput = ({
   <div className="sm:col-span-1 lg:col-span-3">
     <label
       htmlFor="interaction-order-ref"
-      className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+      className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground"
     >
       N° devis / cmd
     </label>
     <div className="relative">
       <Hash
         size={12}
-        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/80"
         aria-hidden="true"
       />
       <Input
@@ -30,7 +30,7 @@ const InteractionFooterOrderRefInput = ({
         value={orderRef}
         onChange={(event) => onOrderRefChange(event.target.value)}
         placeholder="Reference dossier"
-        className="h-9 bg-white pl-8 font-mono text-xs"
+        className="h-9 bg-card pl-8 font-mono text-xs"
         name="interaction-order-ref"
         autoComplete="off"
         spellCheck={false}

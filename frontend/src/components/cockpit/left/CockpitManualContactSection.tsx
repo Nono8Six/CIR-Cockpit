@@ -8,9 +8,7 @@ const CockpitManualContactSection = ({
   selectedContact,
   selectedContactMeta,
   onClearSelectedContact,
-  isSolicitationRelation,
-  isSupplierRelation,
-  isInternalRelation,
+  relationMode,
   contactFirstNameField,
   contactLastNameField,
   contactPositionField,
@@ -36,9 +34,7 @@ const CockpitManualContactSection = ({
     ) : (
       <CockpitManualContactForm
         errors={errors}
-        isSolicitationRelation={isSolicitationRelation}
-        isSupplierRelation={isSupplierRelation}
-        isInternalRelation={isInternalRelation}
+        relationMode={relationMode}
         contactFirstNameField={contactFirstNameField}
         contactLastNameField={contactLastNameField}
         contactPositionField={contactPositionField}

@@ -34,6 +34,7 @@ export type AppHeaderProps = {
   onTabChange: (tab: AppTab) => void;
   onAgencyChange: (agencyId: string) => void;
   onOpenSearch: () => void;
+  onSearchIntent?: () => void;
   onToggleProfileMenu: () => void;
   onOpenSettings: () => void;
   onSignOut: () => void;

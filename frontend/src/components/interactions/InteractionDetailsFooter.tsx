@@ -30,7 +30,7 @@ const InteractionDetailsFooter = ({
   isSubmitDisabled,
   errorMessage
 }: InteractionDetailsFooterProps) => (
-  <footer className="shrink-0 border-t border-slate-200 bg-slate-50 px-4 py-3 sm:px-5">
+  <footer className="shrink-0 border-t border-border bg-surface-1 px-4 py-3 sm:px-5">
     <InteractionFooterTopFields
       statusOptions={statusOptions}
       statusId={statusId}
@@ -46,8 +46,8 @@ const InteractionDetailsFooter = ({
       onSubmit={onSubmit}
       isSubmitDisabled={isSubmitDisabled}
     />
-    {errorMessage ? <p className="mt-2 text-xs font-medium text-red-600">{errorMessage}</p> : null}
-    <p className="mt-2 text-right text-[11px] font-medium text-slate-500">
+    {errorMessage ? <p className="mt-2 text-xs font-medium text-destructive">{errorMessage}</p> : null}
+    <p className="mt-2 text-right text-[11px] font-medium text-muted-foreground">
       <span className="font-semibold">Ctrl + Entrée</span> pour envoyer
     </p>
   </footer>

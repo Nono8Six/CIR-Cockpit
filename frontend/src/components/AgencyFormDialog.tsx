@@ -63,11 +63,11 @@ const AgencyFormDialog = ({
         </DialogHeader>
         <form onSubmit={handleFormSubmit} className="space-y-4">
           <div>
-            <label htmlFor="agency-name" className="text-xs font-medium text-slate-500">Nom de l&apos;agence</label>
+            <label htmlFor="agency-name" className="text-xs font-medium text-muted-foreground">Nom de l&apos;agence</label>
             <Input id="agency-name" {...nameField} placeholder="Nom" />
-            {errors.name?.message ? <p className="mt-1 text-xs text-red-600">{errors.name.message}</p> : null}
+            {errors.name?.message ? <p className="mt-1 text-xs text-destructive">{errors.name.message}</p> : null}
           </div>
-          {rootError ? <p className="text-sm text-red-600">{rootError}</p> : null}
+          {rootError ? <p className="text-sm text-destructive">{rootError}</p> : null}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler

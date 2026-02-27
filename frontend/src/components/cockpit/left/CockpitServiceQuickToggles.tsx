@@ -35,7 +35,7 @@ const CockpitServiceQuickToggles = ({
       <ToggleGroupItem
         key={service}
         value={service}
-        className="h-7 gap-1.5 rounded-md border px-2 text-xs font-normal data-[state=on]:border-cir-red data-[state=on]:bg-cir-red data-[state=on]:text-white"
+        className="h-7 gap-1.5 rounded-md border px-2 text-xs font-normal data-[state=on]:border-ring data-[state=on]:bg-primary data-[state=on]:text-white"
       >
         {service}
       </ToggleGroupItem>

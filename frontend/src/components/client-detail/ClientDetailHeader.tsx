@@ -13,18 +13,18 @@ const ClientDetailHeader = ({
 }: ClientDetailHeaderProps) => (
   <div className="flex items-start justify-between gap-4">
     <div className="flex items-start gap-4">
-      <div className="w-12 h-12 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500">
+      <div className="w-12 h-12 rounded-lg bg-muted border border-border flex items-center justify-center text-muted-foreground">
         <Building2 size={20} />
       </div>
       <div>
-        <p className="text-xs uppercase tracking-widest text-slate-400">
+        <p className="text-xs uppercase tracking-widest text-muted-foreground/80">
           {formatClientNumber(client.client_number)} · {client.account_type === 'cash' ? 'Comptant' : 'Compte a terme'}
         </p>
-        <h2 className="text-lg font-semibold text-slate-900">{client.name}</h2>
-        <p className="text-sm text-slate-500 mt-1">
+        <h2 className="text-lg font-semibold text-foreground">{client.name}</h2>
+        <p className="text-sm text-muted-foreground mt-1">
           {client.address}, {client.postal_code} {client.city}
         </p>
-        <p className="text-xs text-slate-400 mt-1">Agence: {agencyName}</p>
+        <p className="text-xs text-muted-foreground/80 mt-1">Agence: {agencyName}</p>
       </div>
     </div>
     <div className="flex items-center gap-2">

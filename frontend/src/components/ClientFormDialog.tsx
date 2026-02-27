@@ -64,8 +64,8 @@ const ClientFormDialog = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        overlayClassName="bg-slate-900/20 backdrop-blur-[2px]"
-        className="w-[min(92vw,780px)] max-w-3xl p-0 overflow-hidden rounded-2xl border border-slate-200/70 shadow-2xl"
+        overlayClassName="bg-foreground/20 backdrop-blur-[2px]"
+        className="w-[min(92vw,780px)] max-w-3xl p-0 overflow-hidden rounded-2xl border border-border/70 shadow-2xl"
       >
         <DialogTitle className="sr-only">
           {isEdit ? 'Modifier un client' : 'Nouveau client'}
@@ -99,7 +99,7 @@ const ClientFormDialog = ({
             notesField={notesField}
             onCancel={() => onOpenChange(false)}
           />
-          {errors.root?.message ? <p className="text-sm text-red-600">{errors.root.message}</p> : null}
+          {errors.root?.message ? <p className="text-sm text-destructive">{errors.root.message}</p> : null}
         </form>
       </DialogContent>
     </Dialog>

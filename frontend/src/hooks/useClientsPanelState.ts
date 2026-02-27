@@ -55,12 +55,6 @@ export const useClientsPanelState = ({
   const agenciesQuery = useAgencies(false, userRole !== 'tcs' || Boolean(activeAgencyId));
   const agencies = agenciesQuery.data ?? [];
 
-  useEffect(() => {
-    if (userRole !== 'super_admin') {
-      setAgencyFilterId(activeAgencyId);
-    }
-  }, [activeAgencyId, userRole]);
-
   const effectiveAgencyId = userRole === 'super_admin' ? agencyFilterId : activeAgencyId;
   const isOrphansFilter = agencyFilterId === '__orphans__';
   const clientsQuery = useClients(
@@ -125,41 +119,28 @@ export const useClientsPanelState = ({
     onFocusHandled();
   }, [focusedClientId, onFocusHandled]);
 
-  useEffect(() => {
-    if (viewMode !== 'clients') {
-      return;
-    }
-
-    if (selectedClientId && !clients.some((client) => client.id === selectedClientId)) {
-      setSelectedClientId(null);
-      return;
-    }
-
-    if (!selectedClientId && clients.length > 0) {
-      setSelectedClientId(clients[0].id);
-    }
-  }, [clients, selectedClientId, viewMode]);
-
-  useEffect(() => {
-    if (viewMode !== 'prospects') {
-      return;
-    }
-
-    if (selectedProspectId && !prospects.some((prospect) => prospect.id === selectedProspectId)) {
-      setSelectedProspectId(null);
-      return;
-    }
-
-    if (!selectedProspectId && prospects.length > 0) {
-      setSelectedProspectId(prospects[0].id);
-    }
-  }, [prospects, selectedProspectId, viewMode]);
-
-  const selectedClient = clients.find((client) => client.id === selectedClientId) ?? null;
-  const selectedProspect = prospects.find((prospect) => prospect.id === selectedProspectId) ?? null;
+  const selectedClient = useMemo(
+    () => clients.find((client) => client.id === selectedClientId) ?? clients[0] ?? null,
+    [clients, selectedClientId]
+  );
+  const selectedProspect = useMemo(
+    () => prospects.find((prospect) => prospect.id === selectedProspectId) ?? prospects[0] ?? null,
+    [prospects, selectedProspectId]
+  );
+  const effectiveSelectedClientId = selectedClient?.id ?? null;
+  const effectiveSelectedProspectId = selectedProspect?.id ?? null;
   const activeEntity = viewMode === 'clients' ? selectedClient : selectedProspect;
   const contactsQuery = useEntityContacts(activeEntity?.id ?? null, false, Boolean(activeEntity));
   const contacts = contactsQuery.data ?? [];
+  const toggleShowArchived = useCallback(() => {
+    setShowArchived((previous) => !previous);
+  }, []);
+  const retryClients = useCallback(() => {
+    void clientsQuery.refetch();
+  }, [clientsQuery]);
+  const retryProspects = useCallback(() => {
+    void prospectsQuery.refetch();
+  }, [prospectsQuery]);
   const saveClientMutation = useSaveClient(effectiveAgencyId ?? null, showArchived);
   const saveProspectMutation = useSaveProspect(effectiveAgencyId ?? null, showArchived, isOrphansFilter);
   const archiveClientMutation = useSetClientArchived(effectiveAgencyId ?? null);
@@ -167,12 +148,19 @@ export const useClientsPanelState = ({
   const saveContactMutation = useSaveEntityContact(activeEntity?.id ?? null, false, effectiveAgencyId);
   const deleteContactMutation = useDeleteEntityContact(activeEntity?.id ?? null, false);
 
-  useEffect(() => {
+  const handleViewModeChange = useCallback((nextViewMode: 'clients' | 'prospects') => {
+    setViewMode(nextViewMode);
     setContactDialogOpen(false);
     setContactToEdit(null);
     setClientDialogOpen(false);
     setProspectDialogOpen(false);
-  }, [viewMode]);
+  }, []);
+  const handleAgencyFilterIdChange = useCallback((nextAgencyId: string | null) => {
+    if (userRole !== 'super_admin') {
+      return;
+    }
+    setAgencyFilterId(nextAgencyId);
+  }, [userRole]);
 
   const handleCreateClient = useCallback(() => {
     if (userRole === 'tcs' && !activeAgencyId) {
@@ -326,8 +314,8 @@ export const useClientsPanelState = ({
     viewMode,
     searchTerm,
     showArchived,
-    selectedClientId,
-    selectedProspectId,
+    selectedClientId: effectiveSelectedClientId,
+    selectedProspectId: effectiveSelectedProspectId,
     clientDialogOpen,
     prospectDialogOpen,
     contactDialogOpen,
@@ -348,7 +336,10 @@ export const useClientsPanelState = ({
     selectedProspect,
     activeEntity,
     contacts,
-    setViewMode,
+    toggleShowArchived,
+    retryClients,
+    retryProspects,
+    setViewMode: handleViewModeChange,
     setSearchTerm,
     setShowArchived,
     setSelectedClientId,
@@ -356,7 +347,7 @@ export const useClientsPanelState = ({
     setClientDialogOpen,
     setProspectDialogOpen,
     setContactDialogOpen,
-    setAgencyFilterId,
+    setAgencyFilterId: handleAgencyFilterIdChange,
     setConfirmArchive,
     setConfirmDeleteContact,
     handleCreateClient,

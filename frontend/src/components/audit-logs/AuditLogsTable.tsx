@@ -20,16 +20,16 @@ type AuditLogsTableProps = {
 
 const AuditLogsTable = ({ logs, isLoading, isError, onRetry }: AuditLogsTableProps) => {
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200" data-testid="admin-audit-table">
+    <div className="overflow-hidden rounded-lg border border-border" data-testid="admin-audit-table">
       {isLoading && (
-        <div className="p-4 text-sm text-slate-500">
+        <div className="p-4 text-sm text-muted-foreground">
           <span className="inline-flex items-center gap-2">
             <Loader2 size={16} className="animate-spin" /> Chargement des audits...
           </span>
         </div>
       )}
       {isError && !isLoading && (
-        <div className="border-b border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+        <div className="border-b border-warning/35 bg-warning/15 p-4 text-sm text-warning-foreground">
           <p className="inline-flex items-center gap-2 font-medium">
             <TriangleAlert size={16} /> La liste des audits est indisponible.
           </p>
@@ -39,7 +39,7 @@ const AuditLogsTable = ({ logs, isLoading, isError, onRetry }: AuditLogsTablePro
         </div>
       )}
       {!isLoading && !isError && logs.length === 0 && (
-        <div className="p-4 text-sm text-slate-500">
+        <div className="p-4 text-sm text-muted-foreground">
           <span className="inline-flex items-center gap-2">
             <Inbox size={16} /> Aucun audit.
           </span>
@@ -49,7 +49,7 @@ const AuditLogsTable = ({ logs, isLoading, isError, onRetry }: AuditLogsTablePro
         <>
           <div className="hidden md:block">
             <Table>
-              <TableHeader className="bg-slate-100">
+              <TableHeader className="bg-muted">
                 <TableRow>
                   <TableHead>Date</TableHead>
                   <TableHead>Action</TableHead>

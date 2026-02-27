@@ -22,14 +22,14 @@ const AppHeaderBrandSection = ({
   onAgencyChange
 }: AppHeaderBrandSectionProps) => (
   <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-    <div className="flex h-7 w-7 items-center justify-center rounded bg-cir-red text-xs font-black tracking-tighter text-white shadow-sm -skew-x-6 sm:h-8 sm:w-8 sm:text-sm">
+    <div className="flex h-7 w-7 items-center justify-center rounded bg-primary text-xs font-black tracking-tighter text-white shadow-sm -skew-x-6 sm:h-8 sm:w-8 sm:text-sm">
       CIR
     </div>
     <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-      <h1 className="hidden text-sm font-bold leading-none tracking-tight text-slate-900 sm:block">COCKPIT</h1>
+      <h1 className="hidden text-sm font-bold leading-none tracking-tight text-foreground sm:block">COCKPIT</h1>
       {agencyContext ? (
         <div className="hidden min-w-0 items-center gap-2 md:flex">
-          <div className="h-4 w-px bg-slate-200" />
+          <div className="h-4 w-px bg-muted" />
           <div className="min-w-0">
             {hasMultipleAgencies ? (
               <Select
@@ -37,7 +37,7 @@ const AppHeaderBrandSection = ({
                 onValueChange={onAgencyChange}
               >
                 <SelectTrigger
-                  className="h-7 max-w-[130px] rounded-full px-2.5 text-xs font-semibold text-slate-700 shadow-sm lg:max-w-[170px]"
+                  className="h-7 max-w-[130px] rounded-full px-2.5 text-xs font-semibold text-foreground shadow-sm lg:max-w-[170px]"
                   aria-label="Agence active"
                 >
                   <SelectValue placeholder="Agence active" />
@@ -51,7 +51,7 @@ const AppHeaderBrandSection = ({
                 </SelectContent>
               </Select>
             ) : (
-              <span className="inline-flex h-7 max-w-[130px] items-center truncate rounded-full border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-700 shadow-sm lg:max-w-[170px]">
+              <span className="inline-flex h-7 max-w-[130px] items-center truncate rounded-full border border-border bg-card px-2.5 text-xs font-semibold text-foreground shadow-sm lg:max-w-[170px]">
                 {agencyContext.agency_name}
               </span>
             )}
@@ -62,7 +62,7 @@ const AppHeaderBrandSection = ({
         </div>
       ) : (
         <div className="hidden items-center gap-2 md:flex">
-          <span className="text-xs text-slate-400 font-medium uppercase tracking-widest">Contexte…</span>
+          <span className="text-xs text-muted-foreground/80 font-medium uppercase tracking-widest">Contexte…</span>
           <Badge className={`hidden whitespace-nowrap shadow-sm lg:inline-flex ${roleBadgeStyles[userRole]}`}>
             {roleLabels[userRole]}
           </Badge>

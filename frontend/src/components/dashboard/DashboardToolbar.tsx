@@ -35,7 +35,7 @@ const DashboardToolbar = ({
   onSearchTermChange
 }: DashboardToolbarProps) => (
   <div
-    className="shrink-0 border-b border-slate-200 bg-white p-2 sm:p-3"
+    className="shrink-0 border-b border-border bg-card p-2 sm:p-3"
     data-testid="dashboard-toolbar"
   >
     <div className="grid gap-2 lg:grid-cols-[auto_minmax(0,1fr)_minmax(16rem,20rem)] lg:items-center">

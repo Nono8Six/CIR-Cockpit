@@ -56,7 +56,7 @@ const CockpitFormRightPane = ({
         onReset={onReset}
       />
       {errors.status_id ? (
-        <p className="text-xs text-red-600" role="status" aria-live="polite">
+        <p className="text-xs text-destructive" role="status" aria-live="polite">
           {errors.status_id.message}
         </p>
       ) : null}

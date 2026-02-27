@@ -12,7 +12,7 @@ const CockpitFormLeftPane = (props: CockpitFormLeftPaneProps) => {
   const entityProps = buildCockpitLeftEntitySectionsProps(props);
 
   return (
-    <div data-testid="cockpit-left-pane" className="col-span-12 md:col-span-5 min-w-0 bg-white p-4 sm:p-5 flex flex-col gap-4 border-b border-slate-200 md:border-b-0 md:border-r">
+    <div data-testid="cockpit-left-pane" className="col-span-12 md:col-span-5 min-w-0 bg-card p-4 sm:p-5 flex flex-col gap-4 border-b border-border md:border-b-0 md:border-r">
       {/* Groupe Contexte */}
       <CockpitChannelSection
         labelStyle={props.labelStyle}

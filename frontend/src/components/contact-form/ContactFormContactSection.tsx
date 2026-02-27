@@ -21,7 +21,7 @@ const ContactFormContactSection = ({
 }: ContactFormContactSectionProps) => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div>
-      <label className="text-xs font-medium text-slate-500" htmlFor="contact-email">Email</label>
+      <label className="text-xs font-medium text-muted-foreground" htmlFor="contact-email">Email</label>
       <Input
         {...emailField}
         id="contact-email"
@@ -31,11 +31,11 @@ const ContactFormContactSection = ({
         spellCheck={false}
       />
       {errors.email && (
-        <p className="text-xs text-red-600 mt-1">{errors.email.message}</p>
+        <p className="text-xs text-destructive mt-1">{errors.email.message}</p>
       )}
     </div>
     <div>
-      <label className="text-xs font-medium text-slate-500" htmlFor="contact-phone">Telephone</label>
+      <label className="text-xs font-medium text-muted-foreground" htmlFor="contact-phone">Telephone</label>
       <Input
         {...phoneField}
         id="contact-phone"
@@ -47,7 +47,7 @@ const ContactFormContactSection = ({
         autoComplete="tel"
       />
       {errors.phone && (
-        <p className="text-xs text-red-600 mt-1">{errors.phone.message}</p>
+        <p className="text-xs text-destructive mt-1">{errors.phone.message}</p>
       )}
     </div>
   </div>

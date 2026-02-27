@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { memo, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 
@@ -16,6 +16,8 @@ import {
 import type { ConvertClientEntity } from './ConvertClientDialog';
 import AppSearchResults from './app-search/AppSearchResults';
 import AppSearchFooter from './app-search/AppSearchFooter';
+
+type AppSearchViewState = 'loading' | 'error' | 'idle' | 'empty' | 'results';
 
 type AppSearchOverlayProps = {
   open: boolean;
@@ -38,6 +40,24 @@ type AppSearchOverlayProps = {
   footerRight?: ReactNode;
 };
 
+const getAppSearchViewState = ({
+  query,
+  isLoading,
+  hasError,
+  hasResults
+}: {
+  query: string;
+  isLoading: boolean;
+  hasError: boolean;
+  hasResults: boolean;
+}): AppSearchViewState => {
+  if (isLoading) return 'loading';
+  if (hasError) return 'error';
+  if (query.trim().length === 0) return 'idle';
+  if (!hasResults) return 'empty';
+  return 'results';
+};
+
 const AppSearchOverlay = ({
   open,
   onOpenChange,
@@ -58,16 +78,21 @@ const AppSearchOverlay = ({
   footerLeft,
   footerRight
 }: AppSearchOverlayProps) => {
-  const hasQuery = searchQuery.trim().length > 0;
   const isErrorState = Boolean(entitySearchError);
+  const viewState = getAppSearchViewState({
+    query: searchQuery,
+    isLoading: isEntitySearchLoading,
+    hasError: isErrorState,
+    hasResults: hasSearchResults
+  });
 
-  const statusMessage = isEntitySearchLoading
+  const statusMessage = viewState === 'loading'
     ? 'Chargement de la recherche globale.'
-    : isErrorState
+    : viewState === 'error'
       ? 'Recherche indisponible.'
-      : !hasQuery
+      : viewState === 'idle'
         ? 'Commencez a taper pour rechercher.'
-        : hasSearchResults
+        : viewState === 'results'
           ? 'Resultats disponibles.'
           : 'Aucun resultat trouve.';
 
@@ -114,13 +139,13 @@ const AppSearchOverlay = ({
     <CommandDialog
       open={open}
       onOpenChange={onOpenChange}
-      className="w-[calc(100vw-1rem)] max-w-3xl border-slate-200 p-0 shadow-xl sm:w-[min(100vw-2rem,48rem)]"
-      overlayClassName="bg-slate-900/30 backdrop-blur-[2px]"
+      className="w-[calc(100vw-1rem)] max-w-3xl border-border p-0 shadow-xl sm:w-[min(100vw-2rem,48rem)]"
+      overlayClassName="bg-foreground/30 backdrop-blur-[2px]"
     >
       <Command
         shouldFilter={false}
         loop
-        className="rounded-none bg-white"
+        className="rounded-none bg-card"
         data-testid="app-search-command"
       >
         <CommandInput
@@ -137,15 +162,15 @@ const AppSearchOverlay = ({
           {statusMessage}
         </span>
         <CommandList className="max-h-[min(66vh,30rem)] overflow-x-hidden px-1 py-2" data-testid="app-search-list">
-          {isEntitySearchLoading && (
-            <CommandLoading className="flex items-center justify-center gap-2 text-sm text-slate-500">
+          {viewState === 'loading' && (
+            <CommandLoading className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="size-4 animate-spin" aria-hidden="true" />
               Chargement des resultats…
             </CommandLoading>
           )}
-          {!isEntitySearchLoading && isErrorState && (
+          {viewState === 'error' && (
             <CommandEmpty className="space-y-3 px-4 py-8">
-              <div className="flex items-center justify-center gap-2 text-sm text-amber-700">
+              <div className="flex items-center justify-center gap-2 text-sm text-warning-foreground">
                 <AlertTriangle className="size-4" aria-hidden="true" />
                 Recherche indisponible. Veuillez reessayer.
               </div>
@@ -156,17 +181,17 @@ const AppSearchOverlay = ({
               )}
             </CommandEmpty>
           )}
-          {!isEntitySearchLoading && !isErrorState && !hasQuery && (
-            <CommandEmpty className="px-4 py-8 text-sm text-slate-500">
+          {viewState === 'idle' && (
+            <CommandEmpty className="px-4 py-8 text-sm text-muted-foreground">
               Commencez a taper pour rechercher…
             </CommandEmpty>
           )}
-          {!isEntitySearchLoading && !isErrorState && hasQuery && !hasSearchResults && (
-            <CommandEmpty className="px-4 py-8 text-sm text-slate-500">
+          {viewState === 'empty' && (
+            <CommandEmpty className="px-4 py-8 text-sm text-muted-foreground">
               Aucun resultat trouve.
             </CommandEmpty>
           )}
-          {!isEntitySearchLoading && !isErrorState && hasQuery && hasSearchResults && (
+          {viewState === 'results' && (
             <AppSearchResults
               filteredInteractions={filteredInteractions}
               filteredClients={filteredClients}
@@ -179,7 +204,7 @@ const AppSearchOverlay = ({
             />
           )}
         </CommandList>
-        <div className="border-t border-slate-100 bg-slate-50/90">
+        <div className="border-t border-border/70 bg-surface-1/90">
           <AppSearchFooter footerLeft={footerLeft} footerRight={footerRight} />
         </div>
       </Command>
@@ -187,4 +212,4 @@ const AppSearchOverlay = ({
   );
 };
 
-export default AppSearchOverlay;
+export default memo(AppSearchOverlay);
