@@ -3,6 +3,7 @@ node_modules/
 
 # Build output
 frontend/dist/
+frontend/coverage/
 
 # Environment files
 .env
