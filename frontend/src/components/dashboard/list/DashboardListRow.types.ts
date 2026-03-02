@@ -7,4 +7,5 @@ export type DashboardListRowProps = {
   getChannelIcon: (channel: string) => ReactNode;
   getStatusBadgeClass: (interaction: Interaction) => string;
   onSelectInteraction: (interaction: Interaction) => void;
+  onDeleteInteraction: (interaction: Interaction) => void;
 };

@@ -1,7 +1,7 @@
 import {
   adminUsersUpdateIdentityResponseSchema,
   type AdminUsersUpdateIdentityResponse
-} from '../../../../shared/schemas/api-responses';
+} from 'shared/schemas/api-responses';
 import { safeRpc } from '@/services/api/safeRpc';
 import { createAppError } from '@/services/errors/AppError';
 

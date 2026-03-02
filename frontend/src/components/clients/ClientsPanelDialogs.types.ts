@@ -23,6 +23,14 @@ export type ClientsPanelDialogsProps = {
   confirmArchive: { nextArchived: boolean } | null;
   onConfirmArchiveChange: (value: { nextArchived: boolean } | null) => void;
   onConfirmArchive: () => Promise<void>;
+  confirmDeleteClient: Client | null;
+  onConfirmDeleteClientChange: (value: Client | null) => void;
+  confirmDeleteProspect: Entity | null;
+  onConfirmDeleteProspectChange: (value: Entity | null) => void;
+  deleteRelatedInteractions: boolean;
+  onDeleteRelatedInteractionsChange: (value: boolean) => void;
+  onConfirmDeleteClient: () => Promise<void>;
+  onConfirmDeleteProspect: () => Promise<void>;
   confirmDeleteContact: ClientContact | null;
   onConfirmDeleteContactChange: (value: ClientContact | null) => void;
   onConfirmDeleteContact: () => Promise<void>;

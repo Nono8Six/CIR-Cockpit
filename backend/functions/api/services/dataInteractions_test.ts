@@ -1,6 +1,6 @@
 import { assertEquals } from 'std/assert';
 
-import { normalizeInteractionUpdates } from './dataInteractions.ts';
+import { normalizeInteractionUpdates, resolvePagination } from './dataInteractions.ts';
 
 Deno.test('normalizeInteractionUpdates keeps only whitelisted keys', () => {
   const normalized = normalizeInteractionUpdates({
@@ -49,5 +49,26 @@ Deno.test('normalizeInteractionUpdates drops invalid or empty values', () => {
     order_ref: null,
     reminder_at: null,
     notes: null
+  });
+});
+
+Deno.test('resolvePagination applies defaults when page and page_size are omitted', () => {
+  const pagination = resolvePagination({});
+  assertEquals(pagination, {
+    page: 1,
+    pageSize: 20,
+    offset: 0
+  });
+});
+
+Deno.test('resolvePagination computes offset from page and page_size', () => {
+  const pagination = resolvePagination({
+    page: 3,
+    page_size: 10
+  });
+  assertEquals(pagination, {
+    page: 3,
+    pageSize: 10,
+    offset: 20
   });
 });

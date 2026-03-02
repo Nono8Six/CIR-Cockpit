@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 
 import { interactions } from '../../../drizzle/schema.ts';
 import type { Database } from '../../../../shared/supabase.types.ts';
@@ -9,7 +9,8 @@ import { httpError } from '../middleware/errorHandler.ts';
 import {
   ensureAgencyAccess,
   ensureDataRateLimit,
-  ensureOptionalAgencyAccess
+  ensureOptionalAgencyAccess,
+  getEntityAgencyId
 } from './dataAccess.ts';
 
 type InteractionRow = Database['public']['Tables']['interactions']['Row'];
@@ -17,6 +18,11 @@ type InteractionUpdate = Database['public']['Tables']['interactions']['Update'];
 type InteractionInsert = typeof interactions.$inferInsert;
 type SaveInteractionPayload = Extract<DataInteractionsPayload, { action: 'save' }>;
 type AddTimelineEventPayload = Extract<DataInteractionsPayload, { action: 'add_timeline_event' }>;
+type ListByEntityPayload = Extract<DataInteractionsPayload, { action: 'list_by_entity' }>;
+type DeleteInteractionPayload = Extract<DataInteractionsPayload, { action: 'delete' }>;
+
+const DEFAULT_INTERACTIONS_PAGE = 1;
+const DEFAULT_INTERACTIONS_PAGE_SIZE = 20;
 
 const toNullableString = (value: unknown): string | null | undefined => {
   if (value === null) return null;
@@ -208,6 +214,125 @@ const addTimelineEvent = async (
   }
 };
 
+export const resolvePagination = (payload: Pick<ListByEntityPayload, 'page' | 'page_size'>): {
+  page: number;
+  pageSize: number;
+  offset: number;
+} => {
+  const page = payload.page ?? DEFAULT_INTERACTIONS_PAGE;
+  const pageSize = payload.page_size ?? DEFAULT_INTERACTIONS_PAGE_SIZE;
+  return {
+    page,
+    pageSize,
+    offset: (page - 1) * pageSize
+  };
+};
+
+const listInteractionsByEntity = async (
+  db: DbClient,
+  authContext: AuthContext,
+  payload: ListByEntityPayload
+): Promise<{
+  interactions: InteractionRow[];
+  page: number;
+  page_size: number;
+  total: number;
+}> => {
+  const agencyId = await getEntityAgencyId(db, payload.entity_id);
+  ensureOptionalAgencyAccess(authContext, agencyId);
+
+  const {
+    page,
+    pageSize,
+    offset
+  } = resolvePagination(payload);
+
+  try {
+    const [rows, countRows] = await Promise.all([
+      db
+        .select()
+        .from(interactions)
+        .where(eq(interactions.entity_id, payload.entity_id))
+        .orderBy(desc(interactions.last_action_at), desc(interactions.created_at))
+        .limit(pageSize)
+        .offset(offset),
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(interactions)
+        .where(eq(interactions.entity_id, payload.entity_id))
+    ]);
+
+    return {
+      interactions: rows,
+      page,
+      page_size: pageSize,
+      total: Number(countRows[0]?.count ?? 0)
+    };
+  } catch {
+    throw httpError(500, 'DB_READ_FAILED', "Impossible de charger les interactions du client.");
+  }
+};
+
+const deleteInteraction = async (
+  db: DbClient,
+  authContext: AuthContext,
+  payload: DeleteInteractionPayload
+): Promise<string> => {
+  let current:
+    | {
+      id: string;
+      agency_id: string | null;
+      entity_id: string | null;
+    }
+    | undefined;
+  try {
+    const rows = await db
+      .select({
+        id: interactions.id,
+        agency_id: interactions.agency_id,
+        entity_id: interactions.entity_id
+      })
+      .from(interactions)
+      .where(eq(interactions.id, payload.interaction_id))
+      .limit(1);
+    current = rows[0];
+  } catch {
+    throw httpError(500, 'DB_READ_FAILED', "Impossible de charger l'interaction.");
+  }
+
+  if (!current) {
+    throw httpError(404, 'NOT_FOUND', 'Interaction introuvable.');
+  }
+
+  if (current.entity_id) {
+    const agencyId = await getEntityAgencyId(db, current.entity_id);
+    ensureOptionalAgencyAccess(authContext, agencyId);
+  } else {
+    ensureOptionalAgencyAccess(authContext, current.agency_id ?? null);
+  }
+
+  try {
+    const rows = await db
+      .delete(interactions)
+      .where(eq(interactions.id, payload.interaction_id))
+      .returning({ id: interactions.id });
+    const deleted = rows[0];
+    if (!deleted) {
+      throw httpError(404, 'NOT_FOUND', 'Interaction introuvable.');
+    }
+    return deleted.id;
+  } catch (error) {
+    if (
+      typeof error === 'object'
+      && error !== null
+      && Reflect.get(error, 'code') === 'NOT_FOUND'
+    ) {
+      throw error;
+    }
+    throw httpError(500, 'DB_WRITE_FAILED', "Impossible de supprimer l'interaction.");
+  }
+};
+
 export const handleDataInteractionsAction = async (
   db: DbClient,
   authContext: AuthContext,
@@ -224,6 +349,14 @@ export const handleDataInteractionsAction = async (
     case 'add_timeline_event': {
       const interaction = await addTimelineEvent(db, authContext, data);
       return { request_id: requestId, ok: true, interaction };
+    }
+    case 'list_by_entity': {
+      const result = await listInteractionsByEntity(db, authContext, data);
+      return { request_id: requestId, ok: true, ...result };
+    }
+    case 'delete': {
+      const interactionId = await deleteInteraction(db, authContext, data);
+      return { request_id: requestId, ok: true, interaction_id: interactionId };
     }
     default:
       throw httpError(400, 'ACTION_REQUIRED', 'Action requise.');

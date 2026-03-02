@@ -7,7 +7,7 @@ import { handleUiError } from '@/services/errors/handleUiError';
 import { normalizeError } from '@/services/errors/normalizeError';
 import { reportError } from '@/services/errors/reportError';
 import { INTERNAL_COMPANY_NAME, isInternalRelationValue } from '@/constants/relations';
-import type { InteractionFormValues } from '@/schemas/interactionSchema';
+import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
 import { deleteInteractionDraft } from '@/services/interactions/deleteInteractionDraft';
 import { getInteractionDraft } from '@/services/interactions/getInteractionDraft';
 import type { InteractionDraftPayload } from '@/services/interactions/interactionDraftPayload';

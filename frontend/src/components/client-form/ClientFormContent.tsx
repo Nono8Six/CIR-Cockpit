@@ -2,7 +2,7 @@ import type { ChangeEvent } from 'react';
 import type { FieldErrors, UseFormRegisterReturn } from 'react-hook-form';
 
 import type { Agency, UserRole } from '@/types';
-import type { ClientFormValues } from '../../../../shared/schemas/client.schema';
+import type { ClientFormValues } from 'shared/schemas/client.schema';
 import ClientFormAccountSection from './ClientFormAccountSection';
 import ClientFormAddressSection from './ClientFormAddressSection';
 import ClientFormAgencySection from './ClientFormAgencySection';

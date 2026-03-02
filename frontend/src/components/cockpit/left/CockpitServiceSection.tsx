@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FieldErrors, UseFormSetValue } from 'react-hook-form';
 
-import type { InteractionFormValues } from '@/schemas/interactionSchema';
+import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
 import CockpitFieldError from './CockpitFieldError';
 import CockpitServicePicker from './CockpitServicePicker';
 import CockpitServiceQuickToggles from './CockpitServiceQuickToggles';
@@ -45,7 +45,7 @@ const CockpitServiceSection = ({
     if (typeof window === 'undefined' || !('matchMedia' in window)) return false;
     return window.matchMedia(MOBILE_SERVICE_QUERY).matches;
   });
-  const [isQuickServicesWrapped, setIsQuickServicesWrapped] = useState(false);
+  const [quickServicesWrappedByLayout, setQuickServicesWrappedByLayout] = useState(false);
   const quickServicesWrapRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -54,14 +54,12 @@ const CockpitServiceSection = ({
     const mediaQuery = window.matchMedia(MOBILE_SERVICE_QUERY);
     const onChange = (event: MediaQueryListEvent) => setIsMobileViewport(event.matches);
 
-    setIsMobileViewport(mediaQuery.matches);
     mediaQuery.addEventListener('change', onChange);
     return () => mediaQuery.removeEventListener('change', onChange);
   }, []);
 
   useEffect(() => {
     if (!quickServices.length) {
-      setIsQuickServicesWrapped(false);
       return undefined;
     }
 
@@ -71,11 +69,11 @@ const CockpitServiceSection = ({
     const evaluateWrap = () => {
       const group = container.querySelector<HTMLElement>('[data-testid="cockpit-service-quick-group"]');
       if (!group) {
-        setIsQuickServicesWrapped(false);
+        setQuickServicesWrappedByLayout(false);
         return;
       }
 
-      setIsQuickServicesWrapped(hasMultipleRows(group));
+      setQuickServicesWrappedByLayout(hasMultipleRows(group));
     };
 
     evaluateWrap();
@@ -95,12 +93,13 @@ const CockpitServiceSection = ({
     };
   }, [quickServices]);
 
+  const isQuickServicesWrapped = quickServices.length > 0 && quickServicesWrappedByLayout;
   const shouldUseComboboxOnly = isMobileViewport || isQuickServicesWrapped || quickServices.length === 0;
 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-3">
-        <label id={serviceLabelId} className={labelStyle}>Service</label>
+        <p id={serviceLabelId} className={labelStyle}>Service</p>
         {!shouldUseComboboxOnly ? (
           <CockpitServicePicker
             servicePickerOpen={servicePickerOpen}

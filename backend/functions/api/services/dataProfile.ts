@@ -7,13 +7,22 @@ import type { AuthContext, DbClient } from '../types.ts';
 import { httpError } from '../middleware/errorHandler.ts';
 import { ensureDataRateLimit } from './dataAccess.ts';
 
+type DataProfileDependencies = {
+  ensureRateLimit: (scope: string, callerId: string) => Promise<void>;
+};
+
+const defaultDependencies: DataProfileDependencies = {
+  ensureRateLimit: ensureDataRateLimit
+};
+
 export const handleDataProfileAction = async (
   db: DbClient,
   authContext: AuthContext,
   requestId: string | undefined,
-  data: DataProfilePayload
+  data: DataProfilePayload,
+  dependencies: DataProfileDependencies = defaultDependencies
 ): Promise<DataProfileResponse> => {
-  await ensureDataRateLimit(`data_profile:${data.action}`, authContext.userId);
+  await dependencies.ensureRateLimit(`data_profile:${data.action}`, authContext.userId);
 
   switch (data.action) {
     case 'password_changed': {

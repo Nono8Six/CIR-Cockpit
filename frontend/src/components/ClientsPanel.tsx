@@ -4,6 +4,7 @@ import type { ClientsPanelProps } from './clients/ClientsPanel.types';
 
 const ClientsPanel = ({
   activeAgencyId,
+  statuses,
   userRole,
   focusedClientId,
   focusedContactId,
@@ -20,6 +21,7 @@ const ClientsPanel = ({
   return (
     <ClientsPanelLayout
       activeAgencyId={activeAgencyId}
+      statuses={statuses}
       userRole={userRole}
       focusedContactId={focusedContactId}
       onRequestConvert={onRequestConvert}

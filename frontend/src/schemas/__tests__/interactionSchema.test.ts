@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { dataInteractionsPayloadSchema } from '../../../../shared/schemas/data.schema';
-import { interactionFormSchema } from '@/schemas/interactionSchema';
+import { dataInteractionsPayloadSchema } from 'shared/schemas/data.schema';
+import { interactionFormSchema } from 'shared/schemas/interaction.schema';
 import { Channel } from '@/types';
 
 const base = {
@@ -79,5 +79,27 @@ describe('interactionFormSchema', () => {
     };
     const result = dataInteractionsPayloadSchema.safeParse(payload);
     expect(result.success).toBe(false);
+  });
+
+  it('accepts list_by_entity interaction payload', () => {
+    const payload = {
+      action: 'list_by_entity',
+      entity_id: '11111111-1111-4111-8111-111111111111',
+      page: 1,
+      page_size: 20
+    };
+
+    const result = dataInteractionsPayloadSchema.safeParse(payload);
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts delete interaction payload', () => {
+    const payload = {
+      action: 'delete',
+      interaction_id: '22222222-2222-4222-8222-222222222222'
+    };
+
+    const result = dataInteractionsPayloadSchema.safeParse(payload);
+    expect(result.success).toBe(true);
   });
 });

@@ -20,8 +20,10 @@ const LoginScreen = ({ onSignIn }: LoginScreenProps) => {
   const {
     email,
     setEmail,
+    handleEmailBlur,
     password,
     setPassword,
+    handlePasswordBlur,
     isSubmitting,
     submitState,
     error,
@@ -46,8 +48,10 @@ const LoginScreen = ({ onSignIn }: LoginScreenProps) => {
           <LoginScreenForm
             email={email}
             onEmailChange={setEmail}
+            onEmailBlur={handleEmailBlur}
             password={password}
             onPasswordChange={setPassword}
+            onPasswordBlur={handlePasswordBlur}
             submitState={submitState}
             fieldError={fieldError}
             error={error}

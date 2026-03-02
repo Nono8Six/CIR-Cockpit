@@ -1,6 +1,6 @@
 import { ResultAsync } from 'neverthrow';
 
-import { dataInteractionsResponseSchema } from '../../../../shared/schemas/api-responses';
+import { dataInteractionsMutationResponseSchema } from 'shared/schemas/api-responses';
 import type { Interaction, InteractionDraft } from '@/types';
 import { safeRpc } from '@/services/api/safeRpc';
 import { getCurrentUserLabel } from '@/services/auth/getCurrentUserLabel';
@@ -9,7 +9,7 @@ import { hydrateTimeline } from './hydrateTimeline';
 import { validateInteractionDraft } from './validateInteractionDraft';
 
 const parseInteractionResponse = (payload: unknown): Interaction => {
-  const parsed = dataInteractionsResponseSchema.safeParse(payload);
+  const parsed = dataInteractionsMutationResponseSchema.safeParse(payload);
   if (!parsed.success) {
     throw createAppError({
       code: 'REQUEST_FAILED',
@@ -34,6 +34,8 @@ export const saveInteraction = (interaction: InteractionDraft): ResultAsync<Inte
         });
       }
       const userLabel = await getCurrentUserLabel();
+      const interactionPayload = { ...interaction };
+      delete interactionPayload.agency_id;
       const timeline = interaction.timeline.map((event) => ({
         ...event,
         author: event.author?.trim() || userLabel || undefined
@@ -44,7 +46,7 @@ export const saveInteraction = (interaction: InteractionDraft): ResultAsync<Inte
           action: 'save',
           agency_id: agencyId,
           interaction: {
-            ...interaction,
+            ...interactionPayload,
             id: interaction.id,
             timeline
           }

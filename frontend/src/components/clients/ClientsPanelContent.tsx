@@ -21,20 +21,24 @@ const ClientsPanelContent = ({
   selectedProspect,
   contacts,
   contactsLoading,
+  activeAgencyId,
+  statuses,
   agencies,
   userRole,
   focusedContactId,
   onEditClient,
   onToggleArchive,
+  onDeleteClient,
   onAddContact,
   onEditContact,
   onDeleteContact,
   onReassignEntity,
   isReassignPending,
   onRequestConvert,
-  onEditProspect
+  onEditProspect,
+  onDeleteProspect
 }: ClientsPanelContentProps) => (
-  <div className="grid flex-1 grid-cols-1 gap-4 lg:grid-cols-12">
+  <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:auto-rows-fr lg:grid-cols-12">
     <ClientsPanelListPane
       viewMode={viewMode}
       clientsLoading={clientsLoading}
@@ -60,16 +64,20 @@ const ClientsPanelContent = ({
       selectedProspect={selectedProspect}
       contacts={contacts}
       contactsLoading={contactsLoading}
+      activeAgencyId={activeAgencyId}
+      statuses={statuses}
       agencies={agencies}
       userRole={userRole}
       focusedContactId={focusedContactId}
       onEditClient={onEditClient}
       onToggleArchive={onToggleArchive}
+      onDeleteClient={onDeleteClient}
       onAddContact={onAddContact}
       onEditContact={onEditContact}
       onDeleteContact={onDeleteContact}
       onRequestConvert={onRequestConvert}
       onEditProspect={onEditProspect}
+      onDeleteProspect={onDeleteProspect}
     />
   </div>
 );

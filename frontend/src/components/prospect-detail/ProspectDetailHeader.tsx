@@ -1,4 +1,4 @@
-import { ArrowRightLeft, Building2, Pencil } from 'lucide-react';
+import { ArrowRightLeft, Building2, Pencil, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import type { ProspectDetailHeaderProps } from './ProspectDetailPanel.types';
@@ -7,8 +7,10 @@ const ProspectDetailHeader = ({
   prospect,
   agencyName,
   addressLine,
+  canDeleteProspect,
   onRequestConvert,
-  onEditProspect
+  onEditProspect,
+  onDeleteProspect
 }: ProspectDetailHeaderProps) => (
   <div className="flex items-start justify-between gap-4">
     <div className="flex items-start gap-4">
@@ -36,6 +38,17 @@ const ProspectDetailHeader = ({
       >
         <Pencil size={14} />
       </Button>
+      {canDeleteProspect && (
+        <Button
+          type="button"
+          variant="outline"
+          className="h-8 px-2 text-destructive border-destructive/30 hover:bg-destructive/10"
+          onClick={onDeleteProspect}
+          aria-label="Supprimer le prospect"
+        >
+          <Trash2 size={14} />
+        </Button>
+      )}
       <Button
         type="button"
         className="h-8 px-3 text-xs"

@@ -23,6 +23,7 @@ type DashboardDetailsOverlayProps = {
     updates?: InteractionUpdate
   ) => Promise<void>;
   onRequestConvert: (interaction: Interaction) => void;
+  onDeleteInteraction: (interaction: Interaction) => void;
 };
 
 const DashboardDetailsOverlay = ({
@@ -30,7 +31,8 @@ const DashboardDetailsOverlay = ({
   statuses,
   onClose,
   onUpdate,
-  onRequestConvert
+  onRequestConvert,
+  onDeleteInteraction
 }: DashboardDetailsOverlayProps) => (
   <Sheet
     open
@@ -58,6 +60,7 @@ const DashboardDetailsOverlay = ({
         onUpdate={onUpdate}
         statuses={statuses}
         onRequestConvert={onRequestConvert}
+        onDeleteInteraction={onDeleteInteraction}
       />
     </SheetContent>
   </Sheet>

@@ -6,7 +6,8 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src')
+      '@': path.resolve(__dirname, 'src'),
+      shared: path.resolve(__dirname, '../shared')
     }
   },
   test: {
@@ -23,19 +24,87 @@ export default defineConfig({
         'src/services/agency/**/*.ts',
         'src/services/api/**/*.ts',
         'src/services/auth/**/*.ts',
+        'src/services/clients/**/*.ts',
+        'src/services/config/**/*.ts',
         'src/services/entities/**/*.ts',
-        'src/services/errors/**/*.ts'
+        'src/services/errors/**/*.ts',
+        'src/services/interactions/**/*.ts',
+        'src/services/query/**/*.ts',
+        'src/services/supabase/**/*.ts',
+        'src/hooks/**/*.ts',
+        'src/hooks/**/*.tsx'
       ],
       exclude: [
         'src/services/**/__tests__/**',
         'src/services/**/index.ts',
-        'src/services/errors/journal.ts'
+        'src/services/errors/journal.ts',
+        'src/hooks/**/__tests__/**'
       ],
       thresholds: {
-        statements: 80,
-        branches: 70,
-        functions: 80,
-        lines: 80
+        statements: 0,
+        branches: 0,
+        functions: 0,
+        lines: 0,
+        'src/services/admin/**/*.ts': {
+          statements: 80,
+          branches: 70,
+          functions: 80,
+          lines: 80
+        },
+        'src/services/agency/**/*.ts': {
+          statements: 80,
+          branches: 70,
+          functions: 80,
+          lines: 80
+        },
+        'src/services/api/**/*.ts': {
+          statements: 80,
+          branches: 70,
+          functions: 80,
+          lines: 80
+        },
+        'src/services/auth/**/*.ts': {
+          statements: 80,
+          branches: 70,
+          functions: 80,
+          lines: 80
+        },
+        'src/services/entities/**/*.ts': {
+          statements: 80,
+          branches: 70,
+          functions: 80,
+          lines: 80
+        },
+        'src/services/errors/**/*.ts': {
+          statements: 80,
+          branches: 70,
+          functions: 80,
+          lines: 80
+        },
+        'src/hooks/**/*.{ts,tsx}': {
+          statements: 0,
+          branches: 0,
+          functions: 0,
+          lines: 0
+        },
+        'src/hooks/{useInteractionDraft,useClientsPanelState,useCockpitFormController}.ts': {
+          statements: 0,
+          branches: 0,
+          functions: 0,
+          lines: 80
+        },
+        'src/hooks/{useSettingsState,useInteractionSearch,useInteractionSubmit,useUsersManager,useAgenciesManager,useChangePasswordState}.ts': {
+          statements: 0,
+          branches: 0,
+          functions: 0,
+          lines: 70
+        },
+        'src/hooks/{useClients,useProspects,useInteractions,useLoginScreenForm,useAuditLogs,useAppSessionState}.ts': {
+          statements: 0,
+          branches: 0,
+          functions: 0,
+          lines: 50
+        }
       }
     }
   }

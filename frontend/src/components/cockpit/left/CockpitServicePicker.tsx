@@ -1,6 +1,6 @@
 import type { UseFormSetValue } from 'react-hook-form';
 
-import type { InteractionFormValues } from '@/schemas/interactionSchema';
+import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
 import { cn } from '@/lib/utils';
 import {
   Combobox,

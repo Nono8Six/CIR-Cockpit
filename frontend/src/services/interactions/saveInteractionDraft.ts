@@ -1,10 +1,13 @@
-import { interactionFormSchema } from '@/schemas/interactionSchema';
 import { createAppError } from '@/services/errors/AppError';
 import { mapPostgrestError } from '@/services/errors/mapPostgrestError';
 import { requireSupabaseClient } from '@/services/supabase/requireSupabaseClient';
 import { readObject, readString } from '@/utils/recordNarrowing';
 import { toJsonValue } from '@/utils/toJsonValue';
-import type { InteractionDraftPayload, InteractionDraftRecord } from './interactionDraftPayload';
+import {
+  parseInteractionDraftPayload,
+  type InteractionDraftPayload,
+  type InteractionDraftRecord
+} from './interactionDraftPayload';
 
 type SaveInteractionDraftInput = { userId: string; agencyId: string; payload: InteractionDraftPayload; formType?: string };
 
@@ -15,11 +18,9 @@ const toDraftRecord = (value: unknown): InteractionDraftRecord | null => {
   const updatedAt = readString(row, 'updated_at');
   const payload = readObject(row, 'payload');
   if (!id || !updatedAt || !payload) return null;
-  const values = readObject(payload, 'values');
-  if (!values) return null;
-  const parsed = interactionFormSchema.safeParse(values);
-  if (!parsed.success) return null;
-  return { id, updated_at: updatedAt, payload: { values: parsed.data } };
+  const parsedPayload = parseInteractionDraftPayload(payload);
+  if (!parsedPayload) return null;
+  return { id, updated_at: updatedAt, payload: parsedPayload };
 };
 
 export const saveInteractionDraft = async ({ userId, agencyId, payload, formType = 'interaction' }: SaveInteractionDraftInput): Promise<InteractionDraftRecord> => {

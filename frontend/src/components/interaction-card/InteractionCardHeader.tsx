@@ -1,3 +1,6 @@
+import { Trash2 } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
 import type { Interaction } from '@/types';
 import { formatDate } from '@/utils/date/formatDate';
 import { formatTime } from '@/utils/date/formatTime';
@@ -5,9 +8,10 @@ import { getInteractionChannelIcon } from './getInteractionChannelIcon';
 
 type InteractionCardHeaderProps = {
   data: Interaction;
+  onDeleteInteraction?: (interaction: Interaction) => void;
 };
 
-const InteractionCardHeader = ({ data }: InteractionCardHeaderProps) => (
+const InteractionCardHeader = ({ data, onDeleteInteraction }: InteractionCardHeaderProps) => (
   <div className="mb-2 flex items-start justify-between gap-2">
     <div className="flex min-w-0 items-center gap-2">
       <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-muted-foreground">
@@ -20,7 +24,25 @@ const InteractionCardHeader = ({ data }: InteractionCardHeaderProps) => (
         {data.company_name}
       </span>
     </div>
-    <div className="shrink-0 text-right">
+    <div className="shrink-0">
+      <div className="flex items-center justify-end gap-1">
+        {onDeleteInteraction && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="size-7 text-destructive hover:text-destructive"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              onDeleteInteraction(data);
+            }}
+            aria-label={`Supprimer ${data.company_name}`}
+          >
+            <Trash2 size={13} aria-hidden="true" />
+          </Button>
+        )}
+      </div>
       <p className="text-xs font-medium text-muted-foreground">{formatDate(data.last_action_at)}</p>
       <p className="text-xs text-muted-foreground">{formatTime(data.last_action_at)}</p>
     </div>

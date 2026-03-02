@@ -9,7 +9,7 @@ import { createAppError } from '@/services/errors/AppError';
 import { signInWithPassword } from '@/services/auth/signInWithPassword';
 import { handleUiError } from '@/services/errors/handleUiError';
 import { normalizeError } from '@/services/errors/normalizeError';
-import { emailSchema } from '../../../shared/schemas/auth.schema';
+import { emailSchema } from 'shared/schemas/auth.schema';
 
 type UseLoginScreenFormArgs = {
   onSignIn?: (session: Session) => void;
@@ -31,7 +31,8 @@ export const useLoginScreenForm = ({ onSignIn }: UseLoginScreenFormArgs) => {
       email: '',
       password: ''
     },
-    mode: 'onChange'
+    mode: 'onSubmit',
+    reValidateMode: 'onBlur'
   });
 
   const { control, setValue, handleSubmit: handleFormSubmit } = form;
@@ -42,12 +43,26 @@ export const useLoginScreenForm = ({ onSignIn }: UseLoginScreenFormArgs) => {
   const [error, setError] = useState<string | null>(null);
 
   const setEmail = useCallback((value: string) => {
-    setValue('email', value, { shouldDirty: true, shouldValidate: true });
+    setValue('email', value, { shouldDirty: true });
   }, [setValue]);
 
+  const handleEmailBlur = useCallback(() => {
+    setValue('email', email, {
+      shouldTouch: true,
+      shouldValidate: email.trim().length > 0
+    });
+  }, [email, setValue]);
+
   const setPassword = useCallback((value: string) => {
-    setValue('password', value, { shouldDirty: true, shouldValidate: true });
+    setValue('password', value, { shouldDirty: true });
   }, [setValue]);
+
+  const handlePasswordBlur = useCallback(() => {
+    setValue('password', password, {
+      shouldTouch: true,
+      shouldValidate: password.trim().length > 0
+    });
+  }, [password, setValue]);
 
   const handleSubmit = handleFormSubmit(async (values) => {
     if (isSubmitting) return;
@@ -89,13 +104,17 @@ export const useLoginScreenForm = ({ onSignIn }: UseLoginScreenFormArgs) => {
     void handleSubmit(event);
   };
 
-  const fieldError = form.formState.errors.email?.message ?? form.formState.errors.password?.message ?? null;
+  const emailError = email.trim().length > 0 ? form.formState.errors.email?.message : null;
+  const passwordError = password.trim().length > 0 ? form.formState.errors.password?.message : null;
+  const fieldError = emailError ?? passwordError ?? null;
 
   return {
     email,
     setEmail,
+    handleEmailBlur,
     password,
     setPassword,
+    handlePasswordBlur,
     isSubmitting,
     submitState,
     error,

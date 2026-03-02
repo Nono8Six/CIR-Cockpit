@@ -5,6 +5,7 @@ export const QUERY_ROOTS = {
   prospects: 'prospects',
   client: 'client',
   clientContacts: 'client-contacts',
+  entityInteractions: 'entity-interactions',
   entitySearchIndex: 'entity-search-index',
   agencies: 'agencies',
   adminUsers: 'admin-users',
@@ -40,6 +41,14 @@ export const clientContactsKey = (clientId: string, includeArchived: boolean) =>
   QUERY_ROOTS.clientContacts,
   clientId,
   archiveScope(includeArchived)
+] as const;
+
+export const entityInteractionsRootKey = () => [QUERY_ROOTS.entityInteractions] as const;
+export const entityInteractionsKey = (entityId: string | null, page: number, pageSize: number) => [
+  QUERY_ROOTS.entityInteractions,
+  entityId ?? 'none',
+  page,
+  pageSize
 ] as const;
 
 export const entitySearchIndexRootKey = () => [QUERY_ROOTS.entitySearchIndex] as const;

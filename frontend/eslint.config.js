@@ -103,7 +103,7 @@ export default [
     rules: {
       ...jsxA11yRecommended.rules,
       // Faux positifs frequents avec les wrappers shadcn/radix et libelles de groupes.
-      "jsx-a11y/label-has-associated-control": "off"
+      "jsx-a11y/label-has-associated-control": "error"
     }
   },
   {
@@ -113,8 +113,8 @@ export default [
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      "react-hooks/set-state-in-effect": "off",
-      "react-hooks/preserve-manual-memoization": "off",
+      "react-hooks/set-state-in-effect": "error",
+      "react-hooks/preserve-manual-memoization": "error",
       // Pattern RHF `register()` volontaire sur certains champs custom.
       "react-hooks/refs": "off"
     }

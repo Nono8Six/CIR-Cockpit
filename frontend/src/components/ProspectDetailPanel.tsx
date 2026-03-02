@@ -12,8 +12,10 @@ const ProspectDetailPanel = ({
   isContactsLoading,
   agencies,
   focusedContactId,
+  canDeleteProspect,
   onRequestConvert,
   onEditProspect,
+  onDeleteProspect,
   onAddContact,
   onEditContact,
   onDeleteContact
@@ -29,13 +31,15 @@ const ProspectDetailPanel = ({
   ].filter(Boolean).join(', ');
 
   return (
-    <div className="h-full bg-card border border-border rounded-lg shadow-sm p-6 flex flex-col gap-6">
+    <div className="flex h-full min-h-0 flex-col gap-6 overflow-hidden rounded-lg border border-border bg-card p-6 shadow-sm">
       <ProspectDetailHeader
         prospect={prospect}
         agencyName={agencyName}
         addressLine={addressLine}
+        canDeleteProspect={canDeleteProspect}
         onRequestConvert={onRequestConvert}
         onEditProspect={onEditProspect}
+        onDeleteProspect={onDeleteProspect}
       />
       <ProspectDetailInfoGrid prospect={prospect} />
       <ProspectDetailContactsSection

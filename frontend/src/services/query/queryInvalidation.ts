@@ -6,6 +6,7 @@ import {
   clientContactsKey,
   clientsKey,
   clientsRootKey,
+  entityInteractionsRootKey,
   entitySearchIndexKey,
   entitySearchIndexRootKey,
   interactionsKey,
@@ -108,6 +109,23 @@ export const invalidateClientContactsQuery = async (
 ): Promise<void> => {
   if (!entityId) return;
   await queryClient.invalidateQueries({ queryKey: clientContactsKey(entityId, includeArchived) });
+};
+
+export const invalidateEntityInteractionsQueries = async (
+  queryClient: QueryClient,
+  entityId: string | null
+): Promise<void> => {
+  if (!entityId) {
+    await queryClient.invalidateQueries({ queryKey: entityInteractionsRootKey() });
+    return;
+  }
+
+  await queryClient.invalidateQueries({
+    predicate: (query) =>
+      Array.isArray(query.queryKey)
+      && query.queryKey[0] === entityInteractionsRootKey()[0]
+      && query.queryKey[1] === entityId
+  });
 };
 
 export const invalidateEntityDirectoryQueries = async (

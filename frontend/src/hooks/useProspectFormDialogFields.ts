@@ -1,6 +1,6 @@
 import type { UseFormReturn } from 'react-hook-form';
 
-import type { ProspectFormValues } from '../../../shared/schemas/prospect.schema';
+import type { ProspectFormValues } from 'shared/schemas/prospect.schema';
 
 type UseProspectFormDialogFieldsResult = {
   nameField: ReturnType<UseFormReturn<ProspectFormValues>['register']>;

@@ -3,7 +3,7 @@ import type { FieldErrors, UseFormSetValue } from 'react-hook-form';
 import { Car, Mail, Phone, Store } from 'lucide-react';
 
 import { Channel } from '@/types';
-import type { InteractionFormValues } from '@/schemas/interactionSchema';
+import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
 import {
   Combobox,
   ComboboxContent,
@@ -37,7 +37,7 @@ const CockpitChannelSection = ({
   channelButtonRef
 }: CockpitChannelSectionProps) => (
   <div className="space-y-2">
-    <label className={`${labelStyle} mb-0`}>Canal</label>
+    <p id="cockpit-channel-label" className={`${labelStyle} mb-0`}>Canal</p>
     <div className="min-[769px]:hidden">
       <Combobox
         items={CHANNEL_OPTIONS.map((option) => option.val)}
@@ -48,6 +48,7 @@ const CockpitChannelSection = ({
         }}
       >
         <ComboboxInput
+          aria-labelledby="cockpit-channel-label"
           data-testid="cockpit-channel-picker-trigger"
           placeholder="Selectionner un canal"
           searchPlaceholder="Rechercher un canal..."
@@ -67,7 +68,7 @@ const CockpitChannelSection = ({
     <ToggleGroup
       type="single"
       value={channel}
-      aria-label="Canal"
+      aria-labelledby="cockpit-channel-label"
       data-testid="cockpit-channel-group"
       size="sm"
       variant="outline"

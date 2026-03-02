@@ -8,6 +8,7 @@ type KanbanColumnProps = {
   interactions: Interaction[];
   emptyLabel: string;
   onSelectInteraction: (interaction: Interaction) => void;
+  onDeleteInteraction: (interaction: Interaction) => void;
   getStatusMeta: (interaction: Interaction) => AgencyStatus | undefined;
 };
 
@@ -18,6 +19,7 @@ const KanbanColumn = ({
   interactions,
   emptyLabel,
   onSelectInteraction,
+  onDeleteInteraction,
   getStatusMeta
 }: KanbanColumnProps) => (
   <section
@@ -38,16 +40,30 @@ const KanbanColumn = ({
       data-testid={`dashboard-kanban-column-body-${columnId}`}
     >
       {interactions.map((interaction) => (
-        <button
+        <div
           key={interaction.id}
-          type="button"
+          role="button"
+          tabIndex={0}
           onClick={() => onSelectInteraction(interaction)}
+          onKeyDown={(event) => {
+            if (event.target !== event.currentTarget) {
+              return;
+            }
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              onSelectInteraction(interaction);
+            }
+          }}
           className="w-full rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           aria-label={`Ouvrir ${interaction.company_name}`}
           data-testid={`dashboard-kanban-card-${interaction.id}`}
         >
-          <InteractionCard data={interaction} statusMeta={getStatusMeta(interaction)} />
-        </button>
+          <InteractionCard
+            data={interaction}
+            statusMeta={getStatusMeta(interaction)}
+            onDeleteInteraction={onDeleteInteraction}
+          />
+        </div>
       ))}
       {interactions.length === 0 && (
         <div className="rounded-md border border-dashed border-border bg-surface-1 px-3 py-8 text-center text-sm text-muted-foreground">

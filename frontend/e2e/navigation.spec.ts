@@ -4,6 +4,7 @@ const email = process.env.E2E_USER_EMAIL;
 const password = process.env.E2E_USER_PASSWORD;
 const role = process.env.E2E_USER_ROLE || 'tcs';
 const isConfigured = Boolean(email && password);
+const SKIP_REASON = 'E2E env missing: E2E_USER_EMAIL / E2E_USER_PASSWORD';
 const KEY_VIEWPORTS = [
   { width: 390, height: 844 },
   { width: 768, height: 1024 },
@@ -25,7 +26,7 @@ const login = async (page: Page) => {
   await expect(page.getByRole('button', { name: /recherche rapide/i })).toBeVisible();
 };
 
-test.skip(!isConfigured, 'E2E env missing: E2E_USER_EMAIL / E2E_USER_PASSWORD');
+test.skip(!isConfigured, SKIP_REASON);
 
 test('switch tabs between Cockpit and Dashboard', async ({ page }) => {
   await login(page);

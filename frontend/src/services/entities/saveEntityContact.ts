@@ -1,6 +1,6 @@
 import { ResultAsync } from 'neverthrow';
 
-import { dataEntityContactsResponseSchema } from '../../../../shared/schemas/api-responses';
+import { dataEntityContactsResponseSchema } from 'shared/schemas/api-responses';
 import { EntityContact } from '@/types';
 import { createAppError, type AppError } from '@/services/errors/AppError';
 import { safeRpc } from '@/services/api/safeRpc';
@@ -15,6 +15,9 @@ export type EntityContactPayload = {
   position?: string | null;
   notes?: string | null;
 };
+
+const normalizeOptionalField = (value: string | null | undefined): string =>
+  value?.trim() ?? '';
 
 const parseContactResponse = (payload: unknown): EntityContact => {
   const parsed = dataEntityContactsResponseSchema.safeParse(payload);
@@ -37,12 +40,12 @@ export const saveEntityContact = (payload: EntityContactPayload): ResultAsync<En
         entity_id: payload.entity_id,
         id: payload.id,
         contact: {
-          first_name: payload.first_name,
-          last_name: payload.last_name,
-          email: payload.email,
-          phone: payload.phone,
-          position: payload.position,
-          notes: payload.notes
+          first_name: payload.first_name.trim(),
+          last_name: payload.last_name.trim(),
+          email: normalizeOptionalField(payload.email),
+          phone: normalizeOptionalField(payload.phone),
+          position: normalizeOptionalField(payload.position),
+          notes: normalizeOptionalField(payload.notes)
         }
       }
     }, init),

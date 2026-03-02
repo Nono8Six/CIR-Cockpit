@@ -2,7 +2,7 @@ import type { ChangeEvent } from 'react';
 import type { FieldErrors, UseFormRegisterReturn } from 'react-hook-form';
 
 import type { Agency, UserRole } from '@/types';
-import type { ProspectFormValues } from '../../../../shared/schemas/prospect.schema';
+import type { ProspectFormValues } from 'shared/schemas/prospect.schema';
 import ProspectFormAddressSection from './ProspectFormAddressSection';
 import ProspectFormFooter from './ProspectFormFooter';
 import ProspectFormIdentitySection from './ProspectFormIdentitySection';

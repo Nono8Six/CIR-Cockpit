@@ -7,8 +7,10 @@ export type ProspectDetailPanelProps = {
   isContactsLoading: boolean;
   agencies: Agency[];
   focusedContactId: string | null;
+  canDeleteProspect: boolean;
   onRequestConvert: (entity: ConvertClientEntity) => void;
   onEditProspect: () => void;
+  onDeleteProspect: () => void;
   onAddContact: () => void;
   onEditContact: (contact: ClientContact) => void;
   onDeleteContact: (contact: ClientContact) => void;
@@ -18,8 +20,10 @@ export type ProspectDetailHeaderProps = {
   prospect: Entity;
   agencyName: string;
   addressLine: string;
+  canDeleteProspect: boolean;
   onRequestConvert: (entity: ConvertClientEntity) => void;
   onEditProspect: () => void;
+  onDeleteProspect: () => void;
 };
 
 export type ProspectDetailContactsSectionProps = {

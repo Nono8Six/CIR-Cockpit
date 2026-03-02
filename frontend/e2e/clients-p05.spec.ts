@@ -3,6 +3,7 @@ import { expect, test, type Page } from '@playwright/test';
 const email = process.env.E2E_USER_EMAIL;
 const password = process.env.E2E_USER_PASSWORD;
 const isConfigured = Boolean(email && password);
+const SKIP_REASON = 'E2E env missing: E2E_USER_EMAIL / E2E_USER_PASSWORD';
 
 const CLIENTS_VIEWPORTS = [
   { width: 320, height: 568 },
@@ -63,7 +64,7 @@ const setupDeepFocusFixture = async (page: Page) => {
   });
 };
 
-test.skip(!isConfigured, 'E2E env missing: E2E_USER_EMAIL / E2E_USER_PASSWORD');
+test.skip(!isConfigured, SKIP_REASON);
 
 test('P05 - toolbar clients, selection list/detail, clavier et responsive anti-overflow', async ({
   page
@@ -112,6 +113,9 @@ test('P05 - toolbar clients, selection list/detail, clavier et responsive anti-o
       const toolbar = document.querySelector<HTMLElement>('[data-testid="clients-toolbar"]');
       const listPane = document.querySelector<HTMLElement>('[data-testid="clients-list-pane"]');
       const detailPane = document.querySelector<HTMLElement>('[data-testid="clients-detail-pane"]');
+      const detailCard = detailPane?.firstElementChild instanceof HTMLElement
+        ? detailPane.firstElementChild
+        : null;
       const clientsList = document.querySelector<HTMLElement>('[data-testid="clients-list"]');
       const prospectsList = document.querySelector<HTMLElement>('[data-testid="prospects-list"]');
       const activeList = clientsList ?? prospectsList;
@@ -121,6 +125,12 @@ test('P05 - toolbar clients, selection list/detail, clavier et responsive anti-o
         toolbarHasHorizontalOverflow: toolbar ? toolbar.scrollWidth > toolbar.clientWidth : false,
         listPaneHasHorizontalOverflow: listPane ? listPane.scrollWidth > listPane.clientWidth : false,
         detailPaneHasHorizontalOverflow: detailPane ? detailPane.scrollWidth > detailPane.clientWidth : false,
+        detailPaneHasVerticalAutoScroll: detailPane
+          ? ['auto', 'scroll'].includes(getComputedStyle(detailPane).overflowY)
+          : false,
+        detailCardHasVerticalAutoScroll: detailCard
+          ? ['auto', 'scroll'].includes(getComputedStyle(detailCard).overflowY)
+          : false,
         listHasHorizontalOverflow: activeList ? activeList.scrollWidth > activeList.clientWidth : false
       };
     });
@@ -129,6 +139,8 @@ test('P05 - toolbar clients, selection list/detail, clavier et responsive anti-o
     expect(metrics.toolbarHasHorizontalOverflow).toBe(false);
     expect(metrics.listPaneHasHorizontalOverflow).toBe(false);
     expect(metrics.detailPaneHasHorizontalOverflow).toBe(false);
+    expect(metrics.detailPaneHasVerticalAutoScroll).toBe(false);
+    expect(metrics.detailCardHasVerticalAutoScroll).toBe(false);
     expect(metrics.listHasHorizontalOverflow).toBe(false);
   }
 

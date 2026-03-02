@@ -16,16 +16,33 @@
     "backend:lint": "deno lint backend/functions/api",
     "backend:typecheck": "deno check --config backend/deno.json backend/functions/api/index.ts",
     "backend:test": "deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api",
-    "backend:test:integration": "deno test --env-file=backend/.env --allow-env --allow-net --no-check --config backend/deno.json backend/functions/api/integration/api_integration_test.ts",
+    "backend:test:integration": "deno test --env-file=backend/.env --allow-env --allow-net --no-check --config backend/deno.json backend/functions/api/integration",
+    "qa:fast": "pnpm --dir frontend run typecheck && pnpm --dir frontend run lint && pnpm --dir frontend run test:run && deno lint backend/functions/api && deno check --config backend/deno.json backend/functions/api/index.ts && deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api",
     "qa": "pwsh -NoLogo -File scripts/qa-gate.ps1"
   },
   "devDependencies": {
     "husky": "^9.1.7",
     "lint-staged": "^15.5.2"
   },
+  "pnpm": {
+    "overrides": {
+      "ajv": "6.14.0",
+      "rollup": "4.59.0",
+      "eslint>minimatch": "3.1.4",
+      "eslint-plugin-jsx-a11y>minimatch": "3.1.4",
+      "eslint-plugin-react>minimatch": "3.1.4",
+      "@typescript-eslint/typescript-estree>minimatch": "9.0.7"
+    }
+  },
   "lint-staged": {
     "frontend/src/**/*.{ts,tsx}": [
       "pnpm --dir frontend exec eslint --max-warnings=0"
+    ],
+    "shared/**/*.ts": [
+      "pnpm --dir frontend exec eslint --max-warnings=0"
+    ],
+    "backend/functions/api/**/*.ts": [
+      "deno lint"
     ]
   }
 }

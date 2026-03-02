@@ -3,6 +3,7 @@ import { expect, test, type Page } from '@playwright/test';
 const email = process.env.E2E_USER_EMAIL;
 const password = process.env.E2E_USER_PASSWORD;
 const isConfigured = Boolean(email && password);
+const SKIP_REASON = 'E2E env missing: E2E_USER_EMAIL / E2E_USER_PASSWORD';
 
 const DASHBOARD_VIEWPORTS = [
   { width: 320, height: 568 },
@@ -87,7 +88,7 @@ const setupDashboardFixture = async (page: Page) => {
   });
 };
 
-test.skip(!isConfigured, 'E2E env missing: E2E_USER_EMAIL / E2E_USER_PASSWORD');
+test.skip(!isConfigured, SKIP_REASON);
 
 test('P06 - toolbar pilotage, vue kanban/liste, overlay detail, erreur utilisateur et responsive anti-overflow', async ({
   page

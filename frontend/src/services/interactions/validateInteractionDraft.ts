@@ -1,5 +1,5 @@
 import { InteractionDraft } from '@/types';
-import { interactionDraftSchema } from '@/schemas/interactionSchema';
+import { interactionDraftSchema } from 'shared/schemas/interaction.schema';
 import { createAppError } from '@/services/errors/AppError';
 
 const FIELD_LABELS: Record<string, string> = {

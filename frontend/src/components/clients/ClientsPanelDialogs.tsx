@@ -22,6 +22,14 @@ const ClientsPanelDialogs = ({
   confirmArchive,
   onConfirmArchiveChange,
   onConfirmArchive,
+  confirmDeleteClient,
+  onConfirmDeleteClientChange,
+  confirmDeleteProspect,
+  onConfirmDeleteProspectChange,
+  deleteRelatedInteractions,
+  onDeleteRelatedInteractionsChange,
+  onConfirmDeleteClient,
+  onConfirmDeleteProspect,
   confirmDeleteContact,
   onConfirmDeleteContactChange,
   onConfirmDeleteContact
@@ -51,6 +59,14 @@ const ClientsPanelDialogs = ({
         confirmArchive={confirmArchive}
         onConfirmArchiveChange={onConfirmArchiveChange}
         onConfirmArchive={onConfirmArchive}
+        confirmDeleteClient={confirmDeleteClient}
+        onConfirmDeleteClientChange={onConfirmDeleteClientChange}
+        confirmDeleteProspect={confirmDeleteProspect}
+        onConfirmDeleteProspectChange={onConfirmDeleteProspectChange}
+        deleteRelatedInteractions={deleteRelatedInteractions}
+        onDeleteRelatedInteractionsChange={onDeleteRelatedInteractionsChange}
+        onConfirmDeleteClient={onConfirmDeleteClient}
+        onConfirmDeleteProspect={onConfirmDeleteProspect}
         confirmDeleteContact={confirmDeleteContact}
         onConfirmDeleteContactChange={onConfirmDeleteContactChange}
         onConfirmDeleteContact={onConfirmDeleteContact}

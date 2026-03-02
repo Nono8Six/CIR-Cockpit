@@ -20,7 +20,7 @@ const DashboardListHeader = () => (
     <TableHead className="w-[110px] px-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
       Ref
     </TableHead>
-    <TableHead className="w-[110px] px-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+    <TableHead className="w-[170px] px-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
       Action
     </TableHead>
   </TableRow>

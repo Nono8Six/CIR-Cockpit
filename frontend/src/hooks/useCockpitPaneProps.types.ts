@@ -3,7 +3,7 @@ import type { FieldErrors, UseFormSetValue } from 'react-hook-form';
 
 import type { RelationMode } from '@/constants/relations';
 import type { AgencyConfig } from '@/services/config';
-import type { InteractionFormValues } from '@/schemas/interactionSchema';
+import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
 import type { CockpitFormLeftPaneProps, CockpitFormRightPaneProps } from '@/components/cockpit/CockpitPaneTypes';
 import type { Entity, EntityContact, StatusCategory } from '@/types';
 

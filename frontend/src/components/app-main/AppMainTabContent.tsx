@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useState } from 'react';
+import { Suspense, lazy, useRef } from 'react';
 
 import type { AgencyConfig } from '@/services/config';
 import type { AppTab, Entity, Interaction, InteractionDraft, UserRole } from '@/types';
@@ -63,7 +63,7 @@ const AppMainTabContent = ({
   onRequestConvert,
   onOpenGlobalSearch
 }: AppMainTabContentProps) => {
-  const [visitedTabs, setVisitedTabs] = useState<Record<AppTab, boolean>>({
+  const visitedTabsRef = useRef<Record<AppTab, boolean>>({
     cockpit: activeTab === 'cockpit',
     dashboard: activeTab === 'dashboard',
     clients: activeTab === 'clients',
@@ -71,26 +71,12 @@ const AppMainTabContent = ({
     admin: activeTab === 'admin' && canAccessAdmin
   });
 
-  useEffect(() => {
-    if (activeTab === 'settings' && !canAccessSettings) {
-      return;
-    }
-
-    if (activeTab === 'admin' && !canAccessAdmin) {
-      return;
-    }
-
-    setVisitedTabs((previous) => {
-      if (previous[activeTab]) {
-        return previous;
-      }
-
-      return {
-        ...previous,
-        [activeTab]: true
-      };
-    });
-  }, [activeTab, canAccessAdmin, canAccessSettings]);
+  const isAllowedActiveTab =
+    (activeTab !== 'settings' || canAccessSettings)
+    && (activeTab !== 'admin' || canAccessAdmin);
+  if (isAllowedActiveTab) {
+    visitedTabsRef.current[activeTab] = true;
+  }
 
   return (
     <>
@@ -103,67 +89,78 @@ const AppMainTabContent = ({
               ? canAccessAdmin
               : true;
 
-        if (!isAllowed || !visitedTabs[tab]) {
+        if (!isAllowed || !visitedTabsRef.current[tab]) {
           return null;
         }
 
         return (
           <section
             key={tab}
-            className={isActive ? 'h-full' : 'hidden'}
+            className={isActive ? 'flex h-full min-h-0 flex-col' : 'hidden'}
             aria-hidden={!isActive}
             data-testid={`app-main-tab-${tab}`}
           >
             {tab === 'cockpit' ? (
-              <Suspense fallback={ROUTE_LOADING_FALLBACK}>
-                <CockpitForm
-                  onSave={onSaveInteraction}
-                  config={config}
-                  activeAgencyId={activeAgencyId}
-                  userId={userId}
-                  userRole={userRole}
-                  recentEntities={recentEntities}
-                  entitySearchIndex={entitySearchIndex}
-                  entitySearchLoading={entitySearchLoading}
-                  onOpenGlobalSearch={onOpenGlobalSearch}
-                />
-              </Suspense>
+              <div className="min-h-0 flex-1">
+                <Suspense fallback={ROUTE_LOADING_FALLBACK}>
+                  <CockpitForm
+                    onSave={onSaveInteraction}
+                    config={config}
+                    activeAgencyId={activeAgencyId}
+                    userId={userId}
+                    userRole={userRole}
+                    recentEntities={recentEntities}
+                    entitySearchIndex={entitySearchIndex}
+                    entitySearchLoading={entitySearchLoading}
+                    onOpenGlobalSearch={onOpenGlobalSearch}
+                  />
+                </Suspense>
+              </div>
             ) : null}
 
             {tab === 'dashboard' ? (
-              <Suspense fallback={ROUTE_LOADING_FALLBACK}>
-                <Dashboard
-                  interactions={interactions}
-                  statuses={config.statuses}
-                  agencyId={activeAgencyId}
-                  onRequestConvert={onRequestConvert}
-                />
-              </Suspense>
+              <div className="min-h-0 flex-1">
+                <Suspense fallback={ROUTE_LOADING_FALLBACK}>
+                  <Dashboard
+                    interactions={interactions}
+                    statuses={config.statuses}
+                    agencyId={activeAgencyId}
+                    onRequestConvert={onRequestConvert}
+                  />
+                </Suspense>
+              </div>
             ) : null}
 
             {tab === 'settings' ? (
-              <Suspense fallback={ROUTE_LOADING_FALLBACK}>
-                <Settings config={config} canEdit={canEditSettings} agencyId={activeAgencyId} />
-              </Suspense>
+              <div className="min-h-0 flex-1">
+                <Suspense fallback={ROUTE_LOADING_FALLBACK}>
+                  <Settings config={config} canEdit={canEditSettings} agencyId={activeAgencyId} />
+                </Suspense>
+              </div>
             ) : null}
 
             {tab === 'clients' ? (
-              <Suspense fallback={ROUTE_LOADING_FALLBACK}>
-                <ClientsPanel
-                  activeAgencyId={activeAgencyId}
-                  userRole={userRole}
-                  focusedClientId={focusedClientId}
-                  focusedContactId={focusedContactId}
-                  onFocusHandled={onFocusHandled}
-                  onRequestConvert={onRequestConvert}
-                />
-              </Suspense>
+              <div className="min-h-0 flex-1">
+                <Suspense fallback={ROUTE_LOADING_FALLBACK}>
+                  <ClientsPanel
+                    activeAgencyId={activeAgencyId}
+                    statuses={config.statuses}
+                    userRole={userRole}
+                    focusedClientId={focusedClientId}
+                    focusedContactId={focusedContactId}
+                    onFocusHandled={onFocusHandled}
+                    onRequestConvert={onRequestConvert}
+                  />
+                </Suspense>
+              </div>
             ) : null}
 
             {tab === 'admin' ? (
-              <Suspense fallback={ROUTE_LOADING_FALLBACK}>
-                <AdminPanel userRole={userRole} />
-              </Suspense>
+              <div className="min-h-0 flex-1">
+                <Suspense fallback={ROUTE_LOADING_FALLBACK}>
+                  <AdminPanel userRole={userRole} />
+                </Suspense>
+              </div>
             ) : null}
           </section>
         );

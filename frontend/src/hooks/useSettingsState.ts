@@ -8,7 +8,7 @@ import type { AgencyStatus, StatusCategory } from '@/types';
 import { notifyInfo, notifySuccess } from '@/services/errors/notify';
 import { useSaveAgencyConfig } from './useSaveAgencyConfig';
 import { addUniqueItem, createStatus, normalizeStatusesForUi, removeItemAt, updateItemAt } from './useSettingsState.helpers';
-import { uuidSchema } from '../../../shared/schemas/auth.schema';
+import { uuidSchema } from 'shared/schemas/auth.schema';
 
 type UseSettingsStateParams = { config: AgencyConfig; canEdit: boolean; agencyId: string | null };
 

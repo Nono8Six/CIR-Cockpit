@@ -84,12 +84,15 @@ export type InteractionUpdate = Omit<
 
 export type InteractionDraft = Omit<
   InteractionInsert,
-  'id' | 'agency_id' | 'created_by' | 'timeline'
+  'agency_id' | 'created_by' | 'created_at' | 'updated_at'
 > & {
-  id?: string;
   agency_id?: string;
   created_by?: string;
   timeline: TimelineEvent[];
+  company_city?: string;
+  contact_first_name?: string;
+  contact_last_name?: string;
+  contact_position?: string;
 };
 
 export type AgencyMembershipSummary = {

@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import type { UpdateUserIdentityPayload } from '@/services/admin/adminUsersUpdateIdentity';
 import type { AdminUserSummary } from '@/services/admin/getAdminUsers';
 import { handleUiError } from '@/services/errors/handleUiError';
-import { userIdentityFormSchema, type UserIdentityFormValues } from '../../../shared/schemas/user.schema';
+import { userIdentityFormSchema, type UserIdentityFormValues } from 'shared/schemas/user.schema';
 import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Input } from './ui/input';
@@ -36,13 +36,19 @@ const UserIdentityDialog = ({ open, onOpenChange, user, onSave }: UserIdentityDi
 
   useEffect(() => {
     if (!open || !user) return;
-    setServerError(null);
     reset({
       email: user.email,
       first_name: user.first_name ?? '',
       last_name: user.last_name ?? ''
     });
   }, [open, reset, user]);
+
+  const handleDialogOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      setServerError(null);
+    }
+    onOpenChange(nextOpen);
+  };
 
   const emailField = register('email');
   const lastNameField = register('last_name');
@@ -60,7 +66,7 @@ const UserIdentityDialog = ({ open, onOpenChange, user, onSave }: UserIdentityDi
         first_name: values.first_name,
         last_name: values.last_name
       });
-      onOpenChange(false);
+      handleDialogOpenChange(false);
     } catch (err) {
       const appError = handleUiError(err, "Impossible de mettre a jour l'utilisateur.", {
         source: 'UserIdentityDialog.submit'
@@ -70,7 +76,7 @@ const UserIdentityDialog = ({ open, onOpenChange, user, onSave }: UserIdentityDi
   });
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Modifier un utilisateur</DialogTitle>
@@ -117,7 +123,7 @@ const UserIdentityDialog = ({ open, onOpenChange, user, onSave }: UserIdentityDi
           {serverError ? <p className="text-sm text-destructive">{serverError}</p> : null}
 
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => handleDialogOpenChange(false)}>
               Annuler
             </Button>
             <Button type="submit" disabled={!isValid || isSubmitting}>

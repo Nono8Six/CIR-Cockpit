@@ -22,6 +22,15 @@ Deno.test('selectDataEntitiesDb keeps service-role db for reassign', () => {
   assertStrictEquals(selectedDb, serviceRoleDb);
 });
 
+Deno.test('selectDataEntitiesDb keeps service-role db for delete', () => {
+  const serviceRoleDb = { marker: 'service-role' } as unknown as DbClient;
+  const userScopedDb = { marker: 'user-scoped' } as unknown as DbClient;
+
+  const selectedDb = selectDataEntitiesDb({ action: 'delete' }, serviceRoleDb, userScopedDb);
+
+  assertStrictEquals(selectedDb, serviceRoleDb);
+});
+
 Deno.test('dataEntitiesPayloadSchema rejects unknown keys', () => {
   const payload = {
     action: 'archive',

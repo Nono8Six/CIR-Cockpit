@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { agencyFormSchema, type AgencyFormValues } from '../../../shared/schemas/agency.schema';
+import { agencyFormSchema, type AgencyFormValues } from 'shared/schemas/agency.schema';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';

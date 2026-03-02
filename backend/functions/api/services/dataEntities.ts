@@ -18,12 +18,49 @@ type EntityInsert = Database['public']['Tables']['entities']['Insert'];
 type AgencyLookupRow = Pick<Database['public']['Tables']['agencies']['Row'], 'id' | 'archived_at'>;
 type SaveEntityPayload = Extract<DataEntitiesPayload, { action: 'save' }>;
 type ReassignEntityPayload = Extract<DataEntitiesPayload, { action: 'reassign' }>;
+type DeleteEntityPayload = Extract<DataEntitiesPayload, { action: 'delete' }>;
 type AccountType = Database['public']['Enums']['account_type'];
+
+const readErrorField = (value: unknown, key: string): string | undefined => {
+  if (!value || typeof value !== 'object') {
+    return undefined;
+  }
+  const field = Reflect.get(value, key);
+  if (typeof field !== 'string') {
+    return undefined;
+  }
+  const trimmed = field.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+};
+
+const extractDbErrorDetails = (error: unknown): string | undefined => {
+  const code = readErrorField(error, 'code');
+  const message = readErrorField(error, 'message');
+  const detail = readErrorField(error, 'detail');
+  const hint = readErrorField(error, 'hint');
+
+  const details: string[] = [];
+  if (code) {
+    details.push(`code=${code}`);
+  }
+  if (message) {
+    details.push(message);
+  }
+  if (detail) {
+    details.push(`detail=${detail}`);
+  }
+  if (hint) {
+    details.push(`hint=${hint}`);
+  }
+
+  return details.length > 0 ? details.join(' | ') : undefined;
+};
 
 const saveEntity = async (
   db: DbClient,
   payload: SaveEntityPayload,
-  agencyId: string
+  agencyId: string,
+  createdBy: string
 ): Promise<EntityRow> => {
   const { entity_type: entityType, id: entityId, entity } = payload;
   const baseRow: EntityInsert = {
@@ -37,19 +74,23 @@ const saveEntity = async (
     siret: entity.siret?.trim() || null,
     notes: entity.notes?.trim() || null
   };
-  const row: EntityInsert = entityType === 'Client'
+  const updateRow: EntityInsert = entityType === 'Client'
     ? {
       ...baseRow,
       client_number: entity.client_number.trim().replace(/\s+/g, ''),
       account_type: entity.account_type
     }
     : baseRow;
+  const insertRow: EntityInsert = {
+    ...updateRow,
+    created_by: createdBy
+  };
 
   if (entityId) {
     try {
       const rows = await db
         .update(entities)
-        .set(row)
+        .set(updateRow)
         .where(eq(entities.id, entityId))
         .returning();
       const data = rows[0];
@@ -63,14 +104,19 @@ const saveEntity = async (
       ) {
         throw error;
       }
-      throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de mettre a jour l\'entite.');
+      throw httpError(
+        500,
+        'DB_WRITE_FAILED',
+        'Impossible de mettre a jour l\'entite.',
+        extractDbErrorDetails(error)
+      );
     }
   }
 
   try {
     const rows = await db
       .insert(entities)
-      .values(row)
+      .values(insertRow)
       .returning();
     const data = rows[0];
     if (!data) throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de creer l\'entite.');
@@ -83,7 +129,12 @@ const saveEntity = async (
     ) {
       throw error;
     }
-    throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de creer l\'entite.');
+    throw httpError(
+      500,
+      'DB_WRITE_FAILED',
+      'Impossible de creer l\'entite.',
+      extractDbErrorDetails(error)
+    );
   }
 };
 
@@ -153,6 +204,64 @@ const convertToClient = async (
 export const ensureReassignSuperAdmin = (authContext: AuthContext): void => {
   if (!authContext.isSuperAdmin) {
     throw httpError(403, 'AUTH_FORBIDDEN', 'Acces interdit.');
+  }
+};
+
+export const ensureDeleteSuperAdmin = (authContext: AuthContext): void => {
+  if (!authContext.isSuperAdmin) {
+    throw httpError(403, 'AUTH_FORBIDDEN', 'Acces interdit.');
+  }
+};
+
+const deleteEntity = async (
+  db: DbClient,
+  payload: DeleteEntityPayload
+): Promise<{ entity: EntityRow; deletedInteractionsCount: number }> => {
+  let deletedInteractionsCount = 0;
+
+  if (payload.delete_related_interactions === true) {
+    try {
+      const deletedRows = await db
+        .delete(interactions)
+        .where(eq(interactions.entity_id, payload.entity_id))
+        .returning({ id: interactions.id });
+      deletedInteractionsCount = deletedRows.length;
+    } catch {
+      throw httpError(
+        500,
+        'DB_WRITE_FAILED',
+        "Impossible de supprimer les interactions de l'entite."
+      );
+    }
+  }
+
+  try {
+    const rows = await db
+      .delete(entities)
+      .where(eq(entities.id, payload.entity_id))
+      .returning();
+    const data = rows[0];
+    if (!data) {
+      throw httpError(404, 'NOT_FOUND', 'Entite introuvable.');
+    }
+    return {
+      entity: data,
+      deletedInteractionsCount
+    };
+  } catch (error) {
+    if (
+      typeof error === 'object'
+      && error !== null
+      && Reflect.get(error, 'code') === 'NOT_FOUND'
+    ) {
+      throw error;
+    }
+    throw httpError(
+      500,
+      'DB_WRITE_FAILED',
+      "Impossible de supprimer l'entite.",
+      extractDbErrorDetails(error)
+    );
   }
 };
 
@@ -252,7 +361,7 @@ export const handleDataEntitiesAction = async (
   switch (data.action) {
     case 'save': {
       const agencyId = ensureAgencyAccess(authContext, data.agency_id);
-      const entity = await saveEntity(db, data, agencyId);
+      const entity = await saveEntity(db, data, agencyId, authContext.userId);
       return { request_id: requestId, ok: true, entity };
     }
     case 'archive': {
@@ -260,6 +369,16 @@ export const handleDataEntitiesAction = async (
       ensureOptionalAgencyAccess(authContext, agencyId);
       const entity = await archiveEntity(db, data.entity_id, data.archived);
       return { request_id: requestId, ok: true, entity };
+    }
+    case 'delete': {
+      ensureDeleteSuperAdmin(authContext);
+      const { entity, deletedInteractionsCount } = await deleteEntity(db, data);
+      return {
+        request_id: requestId,
+        ok: true,
+        entity,
+        deleted_interactions_count: deletedInteractionsCount
+      };
     }
     case 'convert_to_client': {
       const agencyId = await getEntityAgencyId(db, data.entity_id);

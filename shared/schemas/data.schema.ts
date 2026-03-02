@@ -47,6 +47,12 @@ const archiveEntitySchema = z.object({
   archived: z.boolean()
 }).strict();
 
+const deleteEntitySchema = z.object({
+  action: z.literal('delete'),
+  entity_id: uuidSchema,
+  delete_related_interactions: z.boolean().optional()
+}).strict();
+
 const convertEntitySchema = z.object({
   action: z.literal('convert_to_client'),
   entity_id: uuidSchema,
@@ -65,6 +71,7 @@ export const dataEntitiesPayloadSchema = z.union([
   saveClientEntitySchema,
   saveProspectEntitySchema,
   archiveEntitySchema,
+  deleteEntitySchema,
   convertEntitySchema,
   reassignEntitySchema
 ]);
@@ -135,9 +142,23 @@ const addTimelineEventSchema = z.object({
   updates: timelineUpdatesSchema.optional()
 }).strict();
 
+const listByEntitySchema = z.object({
+  action: z.literal('list_by_entity'),
+  entity_id: uuidSchema,
+  page: z.number().int().min(1, 'Page invalide').optional(),
+  page_size: z.number().int().min(1, 'Taille de page invalide').max(50, 'Taille de page trop grande').optional()
+}).strict();
+
+const deleteInteractionSchema = z.object({
+  action: z.literal('delete'),
+  interaction_id: uuidSchema
+}).strict();
+
 export const dataInteractionsPayloadSchema = z.discriminatedUnion('action', [
   saveInteractionSchema,
-  addTimelineEventSchema
+  addTimelineEventSchema,
+  listByEntitySchema,
+  deleteInteractionSchema
 ]);
 
 export type DataInteractionsPayload = z.infer<typeof dataInteractionsPayloadSchema>;

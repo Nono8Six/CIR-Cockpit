@@ -11,6 +11,7 @@ import type { ClientsPanelLayoutProps } from './ClientsPanel.types';
 
 const ClientsPanelLayout = ({
   activeAgencyId,
+  statuses,
   userRole,
   focusedContactId,
   onRequestConvert,
@@ -19,6 +20,8 @@ const ClientsPanelLayout = ({
   const toolbarProps = buildClientsPanelToolbarProps(state, userRole);
   const contentProps = buildClientsPanelContentProps({
     state,
+    activeAgencyId,
+    statuses,
     focusedContactId,
     onRequestConvert,
     userRole
@@ -30,7 +33,7 @@ const ClientsPanelLayout = ({
   });
 
   return (
-    <div className="h-full flex flex-col gap-4">
+    <div className="flex h-full min-h-0 flex-col gap-4">
       <ClientsPanelToolbar {...toolbarProps} />
       <ClientsPanelContent {...contentProps} />
       <ClientsPanelDialogs {...dialogsProps} />

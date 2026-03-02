@@ -14,7 +14,11 @@ echo "[3/8] Frontend tests + coverage thresholds..."
 pnpm --dir frontend run test:coverage
 echo "[4/8] Frontend error compliance..."
 pnpm --dir frontend run check:error-compliance
-echo "[5/8] Frontend build..."
+
+echo "[5/9] Frontend audit..."
+pnpm --dir frontend exec pnpm audit --audit-level=high
+
+echo "[6/9] Frontend build..."
 pnpm --dir frontend run build
 
 if [[ "${RUN_E2E:-0}" == "1" ]]; then
@@ -22,11 +26,11 @@ if [[ "${RUN_E2E:-0}" == "1" ]]; then
   pnpm --dir frontend run test:e2e
 fi
 
-echo "[6/8] Backend lint..."
+echo "[7/9] Backend lint..."
 deno lint backend/functions/api
-echo "[7/8] Backend typecheck..."
+echo "[8/9] Backend typecheck..."
 deno check --config backend/deno.json backend/functions/api/index.ts
-echo "[8/8] Backend tests..."
+echo "[9/9] Backend tests..."
 deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api
 
 echo

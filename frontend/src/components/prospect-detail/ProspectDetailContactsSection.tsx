@@ -12,7 +12,7 @@ const ProspectDetailContactsSection = ({
   onEditContact,
   onDeleteContact
 }: ProspectDetailContactsSectionProps) => (
-  <>
+  <section className="flex flex-col gap-3">
     <div className="flex items-center justify-between">
       <div>
         <p className="text-xs uppercase tracking-widest text-muted-foreground/80">Contacts</p>
@@ -22,18 +22,20 @@ const ProspectDetailContactsSection = ({
         <Plus size={14} className="mr-1" /> Ajouter un contact
       </Button>
     </div>
-    {isContactsLoading ? (
-      <div className="text-sm text-muted-foreground/80">Chargement des contacts...</div>
-    ) : (
-      <ClientContactsList
-        contacts={contacts}
-        focusedContactId={focusedContactId}
-        onEdit={onEditContact}
-        onDelete={onDeleteContact}
-        emptyLabel="Aucun contact pour ce prospect."
-      />
-    )}
-  </>
+    <div className="max-h-[46vh] overflow-y-auto pr-1">
+      {isContactsLoading ? (
+        <div className="text-sm text-muted-foreground/80">Chargement des contacts...</div>
+      ) : (
+        <ClientContactsList
+          contacts={contacts}
+          focusedContactId={focusedContactId}
+          onEdit={onEditContact}
+          onDelete={onDeleteContact}
+          emptyLabel="Aucun contact pour ce prospect."
+        />
+      )}
+    </div>
+  </section>
 );
 
 export default ProspectDetailContactsSection;

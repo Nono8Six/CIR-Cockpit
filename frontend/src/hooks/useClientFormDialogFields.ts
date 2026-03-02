@@ -1,6 +1,6 @@
 import type { UseFormReturn } from 'react-hook-form';
 
-import type { ClientFormValues } from '../../../shared/schemas/client.schema';
+import type { ClientFormValues } from 'shared/schemas/client.schema';
 
 type UseClientFormDialogFieldsResult = {
   clientNumberField: ReturnType<UseFormReturn<ClientFormValues>['register']>;

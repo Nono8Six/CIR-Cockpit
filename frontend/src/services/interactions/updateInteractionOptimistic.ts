@@ -1,11 +1,11 @@
-import { dataInteractionsResponseSchema } from '../../../../shared/schemas/api-responses';
+import { dataInteractionsMutationResponseSchema } from 'shared/schemas/api-responses';
 import { Interaction, InteractionUpdate, TimelineEvent } from '@/types';
 import { invokeRpc } from '@/services/api/safeRpc';
 import { createAppError } from '@/services/errors/AppError';
 import { hydrateTimeline } from './hydrateTimeline';
 
 const parseInteractionResponse = (payload: unknown): Interaction => {
-  const parsed = dataInteractionsResponseSchema.safeParse(payload);
+  const parsed = dataInteractionsMutationResponseSchema.safeParse(payload);
   if (!parsed.success) {
     throw createAppError({
       code: 'REQUEST_FAILED',

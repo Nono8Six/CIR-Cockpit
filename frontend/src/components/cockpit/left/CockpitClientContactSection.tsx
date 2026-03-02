@@ -22,7 +22,7 @@ const CockpitClientContactSection = ({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <label className={labelStyle}>Contact</label>
+        <p className={labelStyle}>Contact</p>
         <button
           type="button"
           onClick={onOpenContactDialog}

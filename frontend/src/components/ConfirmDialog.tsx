@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,6 +22,7 @@ interface ConfirmDialogProps {
   cancelLabel?: string;
   variant?: 'default' | 'destructive';
   onConfirm: () => void;
+  children?: ReactNode;
 }
 
 const ConfirmDialog = ({
@@ -30,7 +33,8 @@ const ConfirmDialog = ({
   confirmLabel = 'Confirmer',
   cancelLabel = 'Annuler',
   variant = 'default',
-  onConfirm
+  onConfirm,
+  children
 }: ConfirmDialogProps) => {
   const handleConfirm = () => {
     onConfirm();
@@ -44,6 +48,7 @@ const ConfirmDialog = ({
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
+        {children}
         <AlertDialogFooter>
           <AlertDialogCancel>{cancelLabel}</AlertDialogCancel>
           <AlertDialogAction

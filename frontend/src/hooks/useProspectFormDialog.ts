@@ -3,7 +3,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import type { Agency, Entity, UserRole } from '@/types';
-import { prospectFormSchema, type ProspectFormValues } from '../../../shared/schemas/prospect.schema';
+import { prospectFormSchema, type ProspectFormValues } from 'shared/schemas/prospect.schema';
 import type { EntityPayload } from '@/services/entities/saveEntity';
 
 type UseProspectFormDialogInput = {

@@ -2,14 +2,13 @@ import React from 'react';
 import * as ReactDOM from 'react-dom';
 import ReactDOMClient from 'react-dom/client';
 import { RouterProvider } from '@tanstack/react-router';
-import { QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
-import AppSessionProvider from '@/components/AppSessionProvider';
+
 import { appRouter } from '@/app/router';
-import ErrorBoundary from '@/components/ErrorBoundary';
+import AppProviders from '@/components/AppProviders';
 import { createAppError } from '@/services/errors/AppError';
-import { queryClient } from '@/services/query/queryClient';
 import { reportError } from '@/services/errors/reportError';
+import { initErrorReporter } from '@/services/errors/sentryStub';
 import './index.css';
 
 const rootElement = document.getElementById('root');
@@ -67,16 +66,14 @@ if (import.meta.env.DEV) {
     });
 }
 
+initErrorReporter();
+
 const root = ReactDOMClient.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <ErrorBoundary>
-        <AppSessionProvider>
-          <RouterProvider router={appRouter} />
-        </AppSessionProvider>
-      </ErrorBoundary>
+    <AppProviders>
+      <RouterProvider router={appRouter} />
       <ResponsiveToaster />
-    </QueryClientProvider>
+    </AppProviders>
   </React.StrictMode>
 );

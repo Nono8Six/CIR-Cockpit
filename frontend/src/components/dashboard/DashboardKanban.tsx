@@ -10,12 +10,14 @@ export type KanbanColumns = {
 type DashboardKanbanProps = {
   columns: KanbanColumns;
   onSelectInteraction: (interaction: Interaction) => void;
+  onDeleteInteraction: (interaction: Interaction) => void;
   getStatusMeta: (interaction: Interaction) => AgencyStatus | undefined;
 };
 
 const DashboardKanban = ({
   columns,
   onSelectInteraction,
+  onDeleteInteraction,
   getStatusMeta
 }: DashboardKanbanProps) => (
   <div
@@ -29,6 +31,7 @@ const DashboardKanban = ({
       interactions={columns.urgencies}
       emptyLabel="Tout est a jour."
       onSelectInteraction={onSelectInteraction}
+      onDeleteInteraction={onDeleteInteraction}
       getStatusMeta={getStatusMeta}
     />
     <KanbanColumn
@@ -38,6 +41,7 @@ const DashboardKanban = ({
       interactions={columns.inProgress}
       emptyLabel="Aucun dossier en attente."
       onSelectInteraction={onSelectInteraction}
+      onDeleteInteraction={onDeleteInteraction}
       getStatusMeta={getStatusMeta}
     />
     <KanbanColumn
@@ -47,6 +51,7 @@ const DashboardKanban = ({
       interactions={columns.completed}
       emptyLabel="Rien termine sur cette periode."
       onSelectInteraction={onSelectInteraction}
+      onDeleteInteraction={onDeleteInteraction}
       getStatusMeta={getStatusMeta}
     />
   </div>

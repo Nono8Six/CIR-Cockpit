@@ -1,4 +1,4 @@
-import type { Agency, Client, ClientContact, Entity, UserRole } from '@/types';
+import type { Agency, AgencyStatus, Client, ClientContact, Entity, UserRole } from '@/types';
 import type { ConvertClientEntity } from '@/components/ConvertClientDialog';
 import type { ClientsPanelViewMode } from './ClientsPanel.shared';
 
@@ -21,11 +21,14 @@ export type ClientsPanelContentProps = {
   selectedProspect: Entity | null;
   contacts: ClientContact[];
   contactsLoading: boolean;
+  activeAgencyId: string | null;
+  statuses: AgencyStatus[];
   agencies: Agency[];
   userRole: UserRole;
   focusedContactId: string | null;
   onEditClient: () => void;
   onToggleArchive: (archived: boolean) => void;
+  onDeleteClient: () => void;
   onAddContact: () => void;
   onEditContact: (contact: ClientContact) => void;
   onDeleteContact: (contact: ClientContact) => void;
@@ -33,4 +36,5 @@ export type ClientsPanelContentProps = {
   isReassignPending: boolean;
   onRequestConvert: (entity: ConvertClientEntity) => void;
   onEditProspect: () => void;
+  onDeleteProspect: () => void;
 };

@@ -3,7 +3,7 @@ import type { ChangeEvent } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { convertClientSchema, type ConvertClientValues } from '../../../shared/schemas/convert-client.schema';
+import { convertClientSchema, type ConvertClientValues } from 'shared/schemas/convert-client.schema';
 import { ConvertClientPayload } from '@/services/entities/convertEntityToClient';
 import { formatClientNumber, stripClientNumber } from '@/utils/clients/formatClientNumber';
 

@@ -5,7 +5,7 @@ import InteractionCardHeader from './interaction-card/InteractionCardHeader';
 import { getInteractionCardState } from './interaction-card/getInteractionCardState';
 import type { InteractionCardProps } from './interaction-card/InteractionCard.types';
 
-const InteractionCard = ({ data, statusMeta }: InteractionCardProps) => {
+const InteractionCard = ({ data, statusMeta, onDeleteInteraction }: InteractionCardProps) => {
   const { isDone, isLate, statusTone, statusLabel, statusClass } = getInteractionCardState(
     data,
     statusMeta
@@ -15,7 +15,7 @@ const InteractionCard = ({ data, statusMeta }: InteractionCardProps) => {
     <article
       className={`group rounded-lg border bg-card p-3 shadow-sm transition hover:shadow-md ${statusClass}`}
     >
-      <InteractionCardHeader data={data} />
+      <InteractionCardHeader data={data} onDeleteInteraction={onDeleteInteraction} />
       <InteractionCardBody data={data} />
       <InteractionCardFamilies families={data.mega_families} />
       <InteractionCardFooter

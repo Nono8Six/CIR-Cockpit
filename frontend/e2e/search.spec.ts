@@ -3,6 +3,7 @@ import { test, expect, type Page } from '@playwright/test';
 const email = process.env.E2E_USER_EMAIL;
 const password = process.env.E2E_USER_PASSWORD;
 const isConfigured = Boolean(email && password);
+const SKIP_REASON = 'E2E env missing: E2E_USER_EMAIL / E2E_USER_PASSWORD';
 
 const SEARCH_VIEWPORTS = [
   { width: 320, height: 568 },
@@ -57,7 +58,7 @@ const setupSearchIndexFixture = async (page: Page) => {
   });
 };
 
-test.skip(!isConfigured, 'E2E env missing: E2E_USER_EMAIL / E2E_USER_PASSWORD');
+test.skip(!isConfigured, SKIP_REASON);
 
 test('global search keyboard flow is stable and responsive without overflow', async ({ page }) => {
   const criticalRadixWarnings: string[] = [];

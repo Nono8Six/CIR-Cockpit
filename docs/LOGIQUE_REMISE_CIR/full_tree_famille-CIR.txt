@@ -1,0 +1,576 @@
+### 1 - ROULEMENTS
+- **Famille 0 : PRESTATION**
+  - Sous-famille 10 : MAIN D'OEUVRE ET PRESTATION
+  - Sous-famille 20 : MAIN D'OEUVRE RECURRENTE
+  - Sous-famille 40 : MONTAGE & USINAGE POUR GUIDAGE
+  - Sous-famille 50 : SOUS-TRAITANCE
+  - Sous-famille 70 : LOCATION
+  - Sous-famille 80 : FORMATION
+  - Sous-famille 99 : DIVERS
+- **Famille 10 : STANDARDS**
+  - Sous-famille 10 : RIGIDES A BILLES 6000
+  - Sous-famille 20 : ROTULE SUR ROULEAUX 22000
+  - Sous-famille 30 : ROULEAUX CONIQUES 30000 ISO
+  - Sous-famille 40 : ROULEAUX CONIQUES 30000 COTE POUCE
+  - Sous-famille 50 : ROULEAUX CYLINDRIQUES NU
+  - Sous-famille 60 : AIGUILLES
+  - Sous-famille 70 : CONTACT OBLIQUE 7000 3000
+  - Sous-famille 80 : ROTULES SUR BILLES 1200 2200
+  - Sous-famille 90 : BUTEES A ROULEAUX
+- **Famille 20 : SPECIFIQUES**
+  - Sous-famille 10 : RIGIDES A BILLES INOX 
+  - Sous-famille 20 : RIGIDES A BILLES COTE POUCE
+  - Sous-famille 30 : ROTULES
+  - Sous-famille 40 : BILLES ET ROULEAUX
+  - Sous-famille 50 : PRECISION
+  - Sous-famille 60 : MINIATURES
+  - Sous-famille 70 : AUTOMOBILE
+  - Sous-famille 80 : AEROSPACE
+  - Sous-famille 99 : DIVERS
+- **Famille 30 : PALIERS**
+  - Sous-famille 10 : FONTE
+  - Sous-famille 20 : ACCESSOIRES DE PALIERS FONTE
+  - Sous-famille 30 : AUTO-ALIGNEUR ISO
+  - Sous-famille 40 : AUTO-ALIGNEUR JIS
+  - Sous-famille 50 : QM ET SYNT
+  - Sous-famille 60 : REVOLVO ET COOPER
+  - Sous-famille 70 : AUTO-ALIGNEUR COTE POUCE
+  - Sous-famille 80 : AUTO-ALIGNEUR INOX
+  - Sous-famille 99 : DIVERS
+- **Famille 40 : GUIDAGES**
+  - Sous-famille 10 : DOUILLES A BILLES
+  - Sous-famille 20 : PRISMATIQUES BILLES
+  - Sous-famille 30 : PRISMATIQUES ROULEAUX
+  - Sous-famille 40 : VERINS ELECTRIQUES
+  - Sous-famille 50 : VERINS A GAZ
+  - Sous-famille 60 : VIS
+  - Sous-famille 70 : GALETS
+  - Sous-famille 80 : MODULES
+  - Sous-famille 90 : GLISSIERES A BILLES
+  - Sous-famille 99 : DIVERS
+- **Famille 99 : DIVERS**
+  - Sous-famille 10 : BAGUES LISSES
+  - Sous-famille 20 : OUTILLAGES
+  - Sous-famille 30 : ROULETTES
+  - Sous-famille 40 : PROFILES ALU, TAPIS ET HABILLAGES
+  - Sous-famille 99 : DIVERS
+
+### 2 - ETANCHEITE
+- **Famille 0 : PRESTATION**
+  - Sous-famille 10 : MAIN D'OEUVRE ET PRESTATION
+  - Sous-famille 20 : MAIN D'OEUVRE RECURRENTE
+  - Sous-famille 50 : SOUS-TRAITANCE
+  - Sous-famille 60 : REPARATION GARNITURE MECANIQUE
+  - Sous-famille 70 : LOCATION
+  - Sous-famille 80 : FORMATION
+  - Sous-famille 99 : DIVERS
+- **Famille 10 : JOINTS POUR ARBRE TOURNANT**
+  - Sous-famille 10 : BAGUES A LEVRES
+  - Sous-famille 20 : MANCHONS DE REPARATION
+  - Sous-famille 30 : VRING ET AXIAL
+  - Sous-famille 99 : DIVERS
+- **Famille 20 : JOINTS HYDRAULIQUES ET PNEUMATIQUES**
+  - Sous-famille 10 : RACLEURS
+  - Sous-famille 20 : TIGES ET PISTONS
+  - Sous-famille 30 : GUIDAGES
+  - Sous-famille 40 : USINES
+  - Sous-famille 99 : DIVERS
+- **Famille 30 : JOINTS STATIQUES**
+  - Sous-famille 10 : TORIQUES ET QUADRING
+  - Sous-famille 20 : PROFILES ET CORDES
+  - Sous-famille 30 : BAGUES BS
+  - Sous-famille 40 : PLATS DECOUPES
+  - Sous-famille 50 : FEUILLES
+  - Sous-famille 60 : ASEPTIQUES ET RACCORDS
+  - Sous-famille 70 : METALLIQUES
+  - Sous-famille 99 : DIVERS
+- **Famille 40 : GARNITURES**
+  - Sous-famille 10 : GARNITURES MECANIQUES
+  - Sous-famille 20 : TRESSES
+  - Sous-famille 30 : OUTILLAGES
+  - Sous-famille 99 : DIVERS
+- **Famille 50 : ANTI-VIBRATOIRE**
+  - Sous-famille 10 : PLOTS ELASTOMERES
+  - Sous-famille 20 : PLOTS METALLIQUES
+  - Sous-famille 30 : PLAQUES
+  - Sous-famille 99 : DIVERS
+- **Famille 60 : PROTECTION**
+  - Sous-famille 10 : SOUFFLETS
+  - Sous-famille 20 : ISOLANTS PHONIQUES
+  - Sous-famille 30 : MATELAS THERMIQUES
+  - Sous-famille 99 : DIVERS
+- **Famille 70 : AEROSPACE**
+  - Sous-famille 10 : JOINTS
+  - Sous-famille 99 : DIVERS
+- **Famille 99 : DIVERS**
+  - Sous-famille 10 : COFFRETS ET OUTILLAGES
+  - Sous-famille 99 : DIVERS
+
+### 3 - HYDRAULIQUE
+- **Famille 0 : PRESTATION**
+  - Sous-famille 10 : MAIN D'OEUVRE ET PRESTATION
+  - Sous-famille 20 : MAIN D'OEUVRE RECURRENTE
+  - Sous-famille 50 : SOUS-TRAITANCE
+  - Sous-famille 60 : REPARATION
+  - Sous-famille 70 : LOCATION
+  - Sous-famille 80 : FORMATION
+  - Sous-famille 95 : ENSEMBLES EAT
+  - Sous-famille 99 : DIVERS
+- **Famille 10 : CONNECTIQUE**
+  - Sous-famille 10 : TUYAUX TRESSES
+  - Sous-famille 15 : TUYAUX NAPPES
+  - Sous-famille 20 : TUYAUX INDUSTRIELS
+  - Sous-famille 25 : TUYAUX DIVERS
+  - Sous-famille 30 : EMBOUTS A SERTIR TUYAUX TRESSES
+  - Sous-famille 35 : EMBOUTS A SERTIR TUYAUX NAPPES
+  - Sous-famille 40 : EMBOUTS A SERTIR DIVERS
+  - Sous-famille 45 : EQUIPEMENTS DE SERTISSAGE
+  - Sous-famille 50 : ROBINET HP
+  - Sous-famille 55 : RACCORDS DIN
+  - Sous-famille 60 : RACCORDS N
+  - Sous-famille 65 : RACCORDS JIC
+  - Sous-famille 70 : RACCORDS BSP
+  - Sous-famille 75 : RACCORDS ORFS
+  - Sous-famille 80 : ADAPTEURS
+  - Sous-famille 85 : RACCORDS INOX
+  - Sous-famille 90 : COUPLEURS
+  - Sous-famille 95 : RACCORDS DIVERS
+  - Sous-famille 99 : DIVERS
+- **Famille 30 : COMPOSANTS**
+  - Sous-famille 10 : VALVES EN LIGNE/EN CARTOUCHE
+  - Sous-famille 20 : VALVES MODULAIRES
+  - Sous-famille 30 : PROPORTIONNELS
+  - Sous-famille 40 : MECANIQUES
+  - Sous-famille 50 : CENTRALES
+  - Sous-famille 60 : MINI CENTRALES
+  - Sous-famille 70 : BOBINES
+  - Sous-famille 99 : DIVERS
+- **Famille 32 : MOTEURS**
+  - Sous-famille 10 : PISTONS
+  - Sous-famille 20 : PALETTES
+  - Sous-famille 30 : ENGRENAGES
+  - Sous-famille 40 : ORBITAUX
+  - Sous-famille 99 : DIVERS
+- **Famille 35 : POMPES**
+  - Sous-famille 10 : PISTONS
+  - Sous-famille 20 : PALETTES
+  - Sous-famille 30 : ENGRENAGES
+  - Sous-famille 40 : POMPES A MAIN
+  - Sous-famille 99 : DIVERS
+- **Famille 37 : VERINS**
+  - Sous-famille 10 : INDUSTIELS
+  - Sous-famille 20 : AGRICOLES
+  - Sous-famille 30 : TELESCOPIQUES
+  - Sous-famille 99 : DIVERS
+- **Famille 40 : DISTRIBUTEURS**
+  - Sous-famille 10 : ELECTRODISTRIBUTEURS
+  - Sous-famille 20 : MANUELS
+  - Sous-famille 30 : CLAPETS
+  - Sous-famille 40 : SERVOVALVES
+  - Sous-famille 50 : EMBASES
+  - Sous-famille 99 : DIVERS
+- **Famille 45 : ACCUMULATEURS**
+  - Sous-famille 10 : VESSIES
+  - Sous-famille 20 : MEMBRANES
+  - Sous-famille 30 : PISTONS
+  - Sous-famille 40 : BLOCS SECURITE
+  - Sous-famille 99 : DIVERS
+- **Famille 50 : ELECTRONIQUE**
+  - Sous-famille 10 : CAPTEURS
+  - Sous-famille 20 : PIECES DETACHEES
+  - Sous-famille 99 : DIVERS
+- **Famille 55 : OUTILLAGE 700 BARS**
+  - Sous-famille 10 : VERINS
+  - Sous-famille 20 : POMPES
+  - Sous-famille 30 : PRESSES
+  - Sous-famille 40 : ACCESSOIRES
+  - Sous-famille 50 : BRIDAGE
+  - Sous-famille 60 : SERRAGE
+  - Sous-famille 70 : PIECES DETACHEES
+  - Sous-famille 99 : DIVERS
+- **Famille 60 : ACCESSOIRES**
+  - Sous-famille 10 : TUBES ACIER
+  - Sous-famille 20 : TUBES INOX
+  - Sous-famille 30 : COLLIERS
+  - Sous-famille 50 : BRIDES
+  - Sous-famille 70 : LANTERNES ET ACCOUPLEMENTS
+  - Sous-famille 80 : MESURE DE PRESSION
+  - Sous-famille 90 : REFROIDISSEURS
+  - Sous-famille 99 : DIVERS
+- **Famille 70 : FILTRES**
+  - Sous-famille 10 : EN LIGNE
+  - Sous-famille 20 : SPIN ON
+  - Sous-famille 30 : PROCESS
+  - Sous-famille 40 : MONITORING
+  - Sous-famille 50 : ACCESSOIRES
+  - Sous-famille 99 : DIVERS
+- **Famille 80 : HUILES**
+  - Sous-famille 10 : HYDRAULIQUES
+  - Sous-famille 20 : ACCESSOIRES
+  - Sous-famille 99 : DIVERS
+- **Famille 90 : LUBRIFICATION**
+  - Sous-famille 10 : CONNECTIQUE
+  - Sous-famille 20 : COMPOSANTS
+  - Sous-famille 30 : EQUIPEMENTS
+  - Sous-famille 40 : ACCESSOIRES
+  - Sous-famille 99 : DIVERS
+- **Famille 99 : DIVERS**
+  - Sous-famille 90 : PIECES DETACHEES
+  - Sous-famille 99 : DIVERS
+
+### 4 - PNEUMATIQUE
+- **Famille 0 : PRESTATION**
+  - Sous-famille 10 : MAIN D'OEUVRE ET PRESTATION
+  - Sous-famille 20 : MAIN D'OEUVRE RECURRENTE
+  - Sous-famille 30 : AUDIT ENERGETIQUE
+  - Sous-famille 50 : SOUS-TRAITANCE
+  - Sous-famille 70 : LOCATION
+  - Sous-famille 80 : FORMATION
+  - Sous-famille 99 : DIVERS
+- **Famille 10 : CONNECTIQUE**
+  - Sous-famille 10 : RACCORDS INSTANTANE
+  - Sous-famille 20 : RACCORDS A FONCTION
+  - Sous-famille 30 : RACCORDS A COMPRESSION
+  - Sous-famille 35 : RACCORDS INOX
+  - Sous-famille 40 : ACCESSOIRES / CONNECTIQUE
+  - Sous-famille 50 : COLLIERS
+  - Sous-famille 60 : COUPLEURS
+  - Sous-famille 65 : COUPLEURS DE SECURITE
+  - Sous-famille 70 : TUYAUX PA/PU
+  - Sous-famille 75 : TUYAUX
+  - Sous-famille 80 : GAINES
+  - Sous-famille 90 : ACCESSOIRES
+  - Sous-famille 91 : SILENCIEUX
+  - Sous-famille 99 : DIVERS
+- **Famille 20 : ACCESSOIRES**
+  - Sous-famille 10 : ENROULEURS
+  - Sous-famille 20 : SOUFFLETTES
+  - Sous-famille 30 : ROBINETS
+  - Sous-famille 35 : RACCORDS TOURNANTS
+  - Sous-famille 40 : AMORTISSEURS HYDRAULIQUES
+  - Sous-famille 99 : DIVERS
+- **Famille 30 : COMPOSANTS**
+  - Sous-famille 10 : VERINS CNOMO
+  - Sous-famille 15 : VERINS NORMALISES
+  - Sous-famille 20 : VERINS NON NORMALISES
+  - Sous-famille 25 : ACTIONNEURS DIVERS
+  - Sous-famille 30 : DETECTEURS / CAPTEURS VERIN
+  - Sous-famille 35 : DISTRIBUTEURS/ELECTRODISTRIBUTEURS
+  - Sous-famille 40 : BOBINES
+  - Sous-famille 45 : ILOTS DISTRIBUTEUR ET ACCESSOIRES
+  - Sous-famille 50 : TRAITEMENT D'AIR
+  - Sous-famille 55 : PIECES DETACHEES FRL
+  - Sous-famille 60 : ACTIONNEURS ELECTRIQUES
+  - Sous-famille 65 : MOTEURS ET VARIATEURS
+  - Sous-famille 70 : VIBRATEURS
+  - Sous-famille 80 : ACCESSOIRES
+  - Sous-famille 99 : DIVERS
+- **Famille 40 : VIDE**
+  - Sous-famille 10 : VENTOUSES
+  - Sous-famille 20 : POMPES A VIDE
+  - Sous-famille 30 : TRANSPORTEURS PNEUMATIQUES
+  - Sous-famille 40 : PIECES DETACHEES TRANSPORTEUR PNEU
+  - Sous-famille 50 : ACCESSOIRES
+  - Sous-famille 99 : DIVERS
+- **Famille 99 : DIVERS**
+  - Sous-famille 99 : DIVERS
+
+### 5 - TRANSMISSION
+- **Famille 0 : PRESTATION**
+  - Sous-famille 10 : MAIN D'OEUVRE ET PRESTATION
+  - Sous-famille 20 : MAIN D'OEUVRE RECURRENTE
+  - Sous-famille 50 : SOUS-TRAITANCE
+  - Sous-famille 70 : LOCATION
+  - Sous-famille 80 : FORMATION
+  - Sous-famille 99 : DIVERS
+- **Famille 10 : CHAINES**
+  - Sous-famille 10 : CHAINES DE TRANSMISSION
+  - Sous-famille 20 : CHAINES AGRICOLES
+  - Sous-famille 30 : CHAINES DE MANUTENTION
+  - Sous-famille 40 : CHAINES DE LEVAGE
+  - Sous-famille 50 : CHAINES PORTE CABLE
+  - Sous-famille 99 : DIVERS
+- **Famille 20 : COURROIES**
+  - Sous-famille 10 : COURROIES TRAPEZOIDALES
+  - Sous-famille 20 : COURROIES SYNCHRONES
+  - Sous-famille 30 : COURROIES DE VARIATEUR
+  - Sous-famille 40 : COURROIES MOTOCULTURE
+  - Sous-famille 50 : COURROIES STRIEES
+  - Sous-famille 60 : COURROIES PLATES
+  - Sous-famille 99 : DIVERS
+- **Famille 30 : PIECES MECANIQUES**
+  - Sous-famille 10 : ACCOUPLEMENTS
+  - Sous-famille 20 : PIGNONS ET DISQUES
+  - Sous-famille 30 : POULIES TRAPEZOIDALES
+  - Sous-famille 40 : POULIES SYNCHRONES
+  - Sous-famille 50 : MOYEUX AMOVIBLES
+  - Sous-famille 55 : OUTILLAGES
+  - Sous-famille 60 : ROUES LIBRES
+  - Sous-famille 70 : ENGRENAGES ET CREMAILLERES
+  - Sous-famille 80 : MANCHONS EXPANSIBLES
+  - Sous-famille 99 : DIVERS
+- **Famille 99 : DIVERS**
+  - Sous-famille 99 : DIVERS
+
+### 6 - AUTOMATISME
+- **Famille 0 : PRESTATION**
+  - Sous-famille 10 : MAIN D'OEUVRE ET PRESTATION
+  - Sous-famille 20 : MAIN D'OEUVRE RECURRENTE
+  - Sous-famille 50 : SOUS-TRAITANCE
+  - Sous-famille 70 : LOCATION
+  - Sous-famille 80 : FORMATION
+  - Sous-famille 99 : DIVERS
+- **Famille 10 : COFFRETS ET COMPOSANTS D'ARMOIRE**
+  - Sous-famille 10 : COFFRETS
+  - Sous-famille 15 : REFROIDISSEURS
+  - Sous-famille 20 : DISJONCTEURS
+  - Sous-famille 25 : CONTACTEURS
+  - Sous-famille 26 : RELAIS THERMIQUES
+  - Sous-famille 30 : INTERRUPTEURS DIFFERENTIELS
+  - Sous-famille 35 : RELAIS
+  - Sous-famille 40 : ALIMENTATIONS
+  - Sous-famille 45 : BORNES
+  - Sous-famille 50 : BOUTONS
+  - Sous-famille 55 : COLONNES LUMINEUSES
+  - Sous-famille 60 : CONNECTIQUE
+  - Sous-famille 65 : SWITCH
+  - Sous-famille 70 : CENTRALES DE MESURE
+  - Sous-famille 75 : TRANSFORMATEURS
+  - Sous-famille 80 : PRESSE ETOUPE
+  - Sous-famille 85 : ECLAIRAGE
+  - Sous-famille 99 : DIVERS
+- **Famille 20 : CONTROLE COMMANDE**
+  - Sous-famille 10 : MICRO-AUTOMATES
+  - Sous-famille 20 : AUTOMATES
+  - Sous-famille 30 : ENTREES / SORTIES
+  - Sous-famille 40 : AFFICHEURS
+  - Sous-famille 50 : IHM
+  - Sous-famille 60 : PC INDUSTRIEL
+  - Sous-famille 70 : LOGICIELS
+  - Sous-famille 80 : POWER MONITOR
+  - Sous-famille 99 : DIVERS
+- **Famille 30 : CAPTEURS ET CODEURS**
+  - Sous-famille 10 : CAPTEURS INDUCTIFS
+  - Sous-famille 15 : CAPTEURS CAPACITIFS
+  - Sous-famille 20 : CELLULES PHOTO-ELECTRIQUES
+  - Sous-famille 25 : FIBRES OPTIQUES
+  - Sous-famille 30 : CAPTEURS LASER
+  - Sous-famille 40 : CAPTEURS ULTRASON
+  - Sous-famille 45 : CAPTEURS MECANIQUE
+  - Sous-famille 50 : CAPTEURS VERINS
+  - Sous-famille 55 : REGLES DE MESURE
+  - Sous-famille 60 : CODEURS
+  - Sous-famille 65 : INCLINAISON ET VIBRATION
+  - Sous-famille 70 : VISION
+  - Sous-famille 75 : RFID
+  - Sous-famille 90 : TECHNIQUE FIXATION
+  - Sous-famille 99 : DIVERS
+- **Famille 40 : SECURITE MACHINE**
+  - Sous-famille 10 : AUTOMATES DE SECURITE
+  - Sous-famille 20 : RELAIS DE SECURITE
+  - Sous-famille 30 : INTERRUPTEURS DE SECURITE
+  - Sous-famille 40 : BARRIERES IMMATERIELLES
+  - Sous-famille 50 : SCRUTATEURS
+  - Sous-famille 60 : CLES CAPTIVES
+  - Sous-famille 70 : CONNECTIQUE DE SECURITE
+  - Sous-famille 99 : DIVERS
+- **Famille 50 : VARIATEURS, SERVO-VAR ET DEMARREURS**
+  - Sous-famille 10 : DEMARREURS
+  - Sous-famille 20 : VARIATEURS
+  - Sous-famille 30 : SERVO-VARIATEURS
+  - Sous-famille 99 : DIVERS
+- **Famille 60 : COBOTIQUE**
+  - Sous-famille 10 : COBOTS
+  - Sous-famille 20 : SAV ET PIECES DETACHEES
+  - Sous-famille 30 : ACCESSOIRES COBOTIQUES
+  - Sous-famille 99 : DIVERS
+- **Famille 99 : DIVERS**
+  - Sous-famille 99 : DIVERS
+
+### 7 - MOTORISATION
+- **Famille 0 : PRESTATION**
+  - Sous-famille 10 : MAIN D'OEUVRE ET PRESTATION
+  - Sous-famille 20 : MAIN D'OEUVRE RECURRENTE
+  - Sous-famille 50 : SOUS-TRAITANCE
+  - Sous-famille 70 : LOCATION
+  - Sous-famille 80 : FORMATION
+  - Sous-famille 99 : DIVERS
+- **Famille 10 : MOTEURS**
+  - Sous-famille 10 : ASYNCHRONES
+  - Sous-famille 20 : SYNCHRONES
+  - Sous-famille 30 : CONDENSATEURS
+  - Sous-famille 99 : DIVERS
+- **Famille 20 : MOTOREDUCTEURS ET REDUCTEURS**
+  - Sous-famille 10 : ROUES ET VIS
+  - Sous-famille 20 : COUPLES CONIQUES
+  - Sous-famille 30 : ENGRENAGES PARALLELES
+  - Sous-famille 40 : PLANETAIRES
+  - Sous-famille 50 : REDUCTEURS ARBRE PARALLELE
+  - Sous-famille 60 : VARIATEURS MECANIQUES
+  - Sous-famille 99 : DIVERS
+- **Famille 99 : DIVERS**
+  - Sous-famille 99 : DIVERS
+
+### 8 - AIR COMPRIME
+- **Famille 0 : PRESTATION**
+  - Sous-famille 10 : MAIN D'OEUVRE ET PRESTATION
+  - Sous-famille 20 : MAIN D'OEUVRE RECURRENTE
+  - Sous-famille 30 : AUDIT ENERGETIQUE
+  - Sous-famille 50 : SOUS-TRAITANCE
+  - Sous-famille 70 : LOCATION
+  - Sous-famille 80 : FORMATION
+  - Sous-famille 99 : DIVERS
+- **Famille 10 : COMPRESSEURS**
+  - Sous-famille 10 : VIS
+  - Sous-famille 20 : PISTONS
+  - Sous-famille 30 : PALETTES
+  - Sous-famille 40 : SURPRESSEURS
+  - Sous-famille 99 : DIVERS
+- **Famille 20 : TRAITEMENT D'AIR**
+  - Sous-famille 10 : FILTRES
+  - Sous-famille 20 : SECHEURS FRIGORIFIQUES
+  - Sous-famille 30 : SECHEURS ADSORPTION
+  - Sous-famille 40 : RESERVOIRS
+  - Sous-famille 50 : PURGEURS
+  - Sous-famille 60 : GENERATEURS D'AZOTE
+  - Sous-famille 70 : GENERATEURS D'OXYGENE
+  - Sous-famille 80 : GROUPES EAU GLACEE
+  - Sous-famille 99 : DIVERS
+- **Famille 30 : RESEAUX D'AIR**
+  - Sous-famille 10 : TUBES ALU
+  - Sous-famille 20 : RACCORDS POUR TUBE ALU
+  - Sous-famille 30 : TUBES INOX
+  - Sous-famille 40 : RACCORDS POUR TUBE INOX
+  - Sous-famille 99 : DIVERS
+- **Famille 40 : PIECES DETACHEES**
+  - Sous-famille 99 : DIVERS
+- **Famille 99 : DIVERS**
+  - Sous-famille 99 : DIVERS
+
+### 9 - FLUIDES PROCESS
+- **Famille 0 : PRESTATION**
+  - Sous-famille 10 : MAIN D'OEUVRE ET PRESTATION
+  - Sous-famille 15 : AUDITS PURGEURS
+  - Sous-famille 20 : MAIN D'OEUVRE RECURRENTE
+  - Sous-famille 50 : SOUS-TRAITANCE
+  - Sous-famille 70 : LOCATION
+  - Sous-famille 80 : FORMATION
+  - Sous-famille 99 : DIVERS
+- **Famille 10 : COMPOSANTS**
+  - Sous-famille 10 : PURGEURS
+  - Sous-famille 20 : CLAPETS
+  - Sous-famille 30 : ROBINETS A SOUPAPE
+  - Sous-famille 40 : FILTRES
+  - Sous-famille 50 : DETENDEURS
+  - Sous-famille 60 : SOUPAPES
+  - Sous-famille 70 : CONTROLEURS DE CIRCULATION
+  - Sous-famille 80 : ACCESSOIRES
+  - Sous-famille 90 : CERTIFICATS
+  - Sous-famille 99 : DIVERS
+- **Famille 20 : CONNECTIQUE**
+  - Sous-famille 10 : RACCORDS DOUBLE BAGUE
+  - Sous-famille 20 : RACCORDS TOURNANTS
+  - Sous-famille 25 : RACCORDS INOX
+  - Sous-famille 40 : RACCORDS DIVERS
+  - Sous-famille 80 : MANIFOLDS
+  - Sous-famille 90 : ACCESSOIRES
+  - Sous-famille 99 : DIVERS
+- **Famille 30 : ELECTROVANNES**
+  - Sous-famille 10 : ELECTROVANNES
+  - Sous-famille 25 : VANNES DE REGULATION
+  - Sous-famille 30 : BOBINES
+  - Sous-famille 40 : PIECES DETACHES
+  - Sous-famille 50 : ACCESSOIRES
+  - Sous-famille 99 : DIVERS
+- **Famille 35 : VANNES**
+  - Sous-famille 5 : A SIEGE INCLINE
+  - Sous-famille 10 : BOISSEAU SPHERIQUE (BS)
+  - Sous-famille 20 : PAPILLON
+  - Sous-famille 30 : A MEMBRANE
+  - Sous-famille 40 : GUILLOTINE
+  - Sous-famille 50 : MOTORISEES
+  - Sous-famille 99 : DIVERS
+- **Famille 40 : INSTRUMENTATION ET MESURE**
+  - Sous-famille 10 : MANOMETRES
+  - Sous-famille 11 : ACCESSOIRES MANOMETRE
+  - Sous-famille 15 : SEPARATEURS
+  - Sous-famille 20 : PRESSION
+  - Sous-famille 25 : ACCESSOIRES PRESSION
+  - Sous-famille 30 : DEBIT
+  - Sous-famille 35 : ACCESOIRES DEBIT
+  - Sous-famille 40 : TEMPERATURE
+  - Sous-famille 45 : ACCESSOIRES TEMPERATURE
+  - Sous-famille 50 : NIVEAU
+  - Sous-famille 55 : ACCESSOIRES NIVEAU
+  - Sous-famille 60 : PESAGE
+  - Sous-famille 65 : ACCESSOIRES PESAGE
+  - Sous-famille 99 : DIVERS
+- **Famille 50 : POMPES**
+  - Sous-famille 10 : CENTRIFUGES
+  - Sous-famille 20 : VOLUMETRIQUES
+  - Sous-famille 99 : DIVERS
+- **Famille 99 : DIVERS**
+  - Sous-famille 99 : DIVERS
+
+### 10 - PRODUITS DE MAINTENANCE
+- **Famille 0 : PRESTATION**
+  - Sous-famille 10 : MAIN D'OEUVRE ET PRESTATION
+  - Sous-famille 20 : MAIN D'OEUVRE RECURRENTE
+  - Sous-famille 50 : SOUS-TRAITANCE
+  - Sous-famille 70 : LOCATION
+  - Sous-famille 80 : FORMATION
+- **Famille 10 : ADHESIFS**
+  - Sous-famille 10 : COLLES
+  - Sous-famille 20 : MASTICS
+  - Sous-famille 99 : DIVERS
+- **Famille 20 : LUBRIFIANTS**
+  - Sous-famille 10 : GRAISSES
+  - Sous-famille 20 : HUILES
+  - Sous-famille 30 : PATES DE MONTAGE
+  - Sous-famille 40 : DEGRAISSANTS
+  - Sous-famille 50 : DEGRIPPANTS
+  - Sous-famille 60 : FLUIDES DE COUPE
+  - Sous-famille 99 : DIVERS
+- **Famille 30 : EQUIPEMENTS DE GRAISSAGE**
+  - Sous-famille 10 : GRAISSEURS AUTOMATIQUES
+  - Sous-famille 20 : MATERIEL
+  - Sous-famille 30 : ACCESSOIRES
+  - Sous-famille 99 : DIVERS
+- **Famille 40 : PRODUITS DE COMMODITE**
+  - Sous-famille 10 : PLASTIQUES TECHNIQUES
+  - Sous-famille 20 : MANUTENTION
+  - Sous-famille 30 : PRODUITS D'ENTRETIEN
+  - Sous-famille 40 : STOCKAGES ET EQUIPEMENTS
+  - Sous-famille 99 : DIVERS
+- **Famille 50 : ELEMENTS DE FIXATION**
+  - Sous-famille 10 : CIRCLIPS
+  - Sous-famille 20 : RONDELLES
+  - Sous-famille 30 : VISSERIE ET BOULONNERIE
+  - Sous-famille 40 : AEROSPACE
+  - Sous-famille 99 : DIVERS
+- **Famille 99 : DIVERS**
+  - Sous-famille 99 : DIVERS
+
+### 99 - DIVERS
+- **Famille 0 : PRESTATION**
+  - Sous-famille 10 : MAIN D'OEUVRE ET PRESTATION
+  - Sous-famille 20 : MAIN D'OEUVRE RECURRENTE
+  - Sous-famille 50 : SOUS-TRAITANCE
+  - Sous-famille 70 : LOCATION
+  - Sous-famille 80 : FORMATION
+  - Sous-famille 99 : DIVERS
+- **Famille 10 : RISTOURNE**
+  - Sous-famille 99 : DIVERS
+- **Famille 20 : PORTS**
+  - Sous-famille 10 : PORTS ET EMBALLAGES
+  - Sous-famille 20 : PORTS USINE
+- **Famille 30 : REGULARISATION**
+  - Sous-famille 99 : DIVERS
+- **Famille 40 : FOURNITURE**
+  - Sous-famille 99 : DIVERS
+- **Famille 50 : ENSEMBLES**
+  - Sous-famille 99 : DIVERS
+- **Famille 60 : COMMENTAIRES**
+  - Sous-famille 99 : DIVERS
+- **Famille 99 : DIVERS**
+  - Sous-famille 99 : DIVERS

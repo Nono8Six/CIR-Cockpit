@@ -1,6 +1,6 @@
 import type { FieldErrors, UseFormRegisterReturn } from 'react-hook-form';
 
-import type { InteractionFormValues } from '@/schemas/interactionSchema';
+import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
 
 type CockpitSubjectSectionProps = {
   labelStyle: string;

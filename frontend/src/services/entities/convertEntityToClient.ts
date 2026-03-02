@@ -1,6 +1,6 @@
 import { ResultAsync } from 'neverthrow';
 
-import { dataEntitiesResponseSchema } from '../../../../shared/schemas/api-responses';
+import { dataEntitiesResponseSchema } from 'shared/schemas/api-responses';
 import { AccountType, Entity } from '@/types';
 import { createAppError, type AppError } from '@/services/errors/AppError';
 import { safeRpc } from '@/services/api/safeRpc';

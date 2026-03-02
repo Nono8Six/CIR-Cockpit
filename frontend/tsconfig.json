@@ -25,6 +25,9 @@
       "@/*": [
         "./src/*"
       ],
+      "shared/*": [
+        "../shared/*"
+      ],
       "zod": [
         "./node_modules/zod"
       ],

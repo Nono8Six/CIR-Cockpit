@@ -6,7 +6,7 @@ import { Check, ChevronsUpDown, X } from 'lucide-react';
 
 import { Agency } from '@/types';
 import { handleUiError } from '@/services/errors/handleUiError';
-import { userMembershipsFormSchema, type UserMembershipsFormValues } from '../../../shared/schemas/user.schema';
+import { userMembershipsFormSchema, type UserMembershipsFormValues } from 'shared/schemas/user.schema';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -47,9 +47,15 @@ const UserMembershipDialog = ({
 
   useEffect(() => {
     if (!open) return;
-    setServerError(null);
     reset({ agency_ids: selectedIds });
   }, [open, reset, selectedIds]);
+
+  const handleDialogOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      setServerError(null);
+    }
+    onOpenChange(nextOpen);
+  };
 
   const selectedSet = useMemo(() => new Set(current), [current]);
   const selectedAgencies = useMemo(
@@ -85,7 +91,7 @@ const UserMembershipDialog = ({
     setServerError(null);
     try {
       await onSave(values.agency_ids);
-      onOpenChange(false);
+      handleDialogOpenChange(false);
     } catch (error) {
       const appError = handleUiError(error, 'Impossible de mettre a jour les agences.', {
         source: 'UserMembershipDialog.submit'
@@ -95,7 +101,7 @@ const UserMembershipDialog = ({
   });
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Modifier les agences</DialogTitle>
@@ -172,7 +178,7 @@ const UserMembershipDialog = ({
           {errors.agency_ids?.message ? <p className="text-sm text-destructive">{errors.agency_ids.message}</p> : null}
           {serverError ? <p className="text-sm text-destructive">{serverError}</p> : null}
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => handleDialogOpenChange(false)}>
               Annuler
             </Button>
             <Button type="submit" disabled={isSubmitting}>

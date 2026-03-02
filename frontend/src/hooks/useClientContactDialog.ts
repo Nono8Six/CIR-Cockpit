@@ -3,7 +3,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import type { EntityContact } from '@/types';
-import { clientContactFormSchema, type ClientContactFormValues } from '../../../shared/schemas/client-contact.schema';
+import { clientContactFormSchema, type ClientContactFormValues } from 'shared/schemas/client-contact.schema';
 import type { EntityContactPayload } from '@/services/entities/saveEntityContact';
 import { formatFrenchPhone } from '@/utils/formatFrenchPhone';
 

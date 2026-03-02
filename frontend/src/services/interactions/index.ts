@@ -1,6 +1,8 @@
 export { addTimelineEvent } from './addTimelineEvent';
+export { deleteInteraction } from './deleteInteraction';
 export { generateId } from './generateId';
 export { getInteractions } from './getInteractions';
+export { getInteractionsByEntity } from './getInteractionsByEntity';
 export { getKnownCompanies } from './getKnownCompanies';
 export { saveInteraction } from './saveInteraction';
 export { deleteInteractionDraft } from './deleteInteractionDraft';

@@ -8,7 +8,7 @@ import { invalidateClientsQueries, invalidateEntitySearchIndexQueries } from '@/
 import type { ClientPayload } from '@/services/clients/saveClient';
 import type { EntityContactPayload } from '@/services/entities/saveEntityContact';
 import type { Entity, EntityContact } from '@/types';
-import type { InteractionFormValues } from '@/schemas/interactionSchema';
+import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
 import type { InteractionHandlersInput } from './useInteractionHandlers.types';
 
 type StringField = Exclude<keyof InteractionFormValues, 'mega_families'>;

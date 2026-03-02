@@ -92,7 +92,7 @@ const ClientsPanelListPane = ({
 
   return (
     <div
-      className="lg:col-span-5 rounded-lg border border-border bg-card p-4 shadow-sm"
+      className="h-full min-h-0 rounded-lg border border-border bg-card p-4 shadow-sm lg:col-span-5"
       data-testid="clients-list-pane"
     >
       {viewMode === 'clients' ? (

@@ -3,6 +3,7 @@ import { expect, test, type Page } from '@playwright/test';
 const email = process.env.E2E_ADMIN_EMAIL;
 const password = process.env.E2E_ADMIN_PASSWORD;
 const isConfigured = Boolean(email && password);
+const SKIP_REASON = 'E2E env missing: E2E_ADMIN_EMAIL / E2E_ADMIN_PASSWORD';
 
 const P07_VIEWPORTS = [
   { width: 320, height: 568 },
@@ -33,7 +34,7 @@ const openSettingsTab = async (page: Page) => {
   await expect(page.getByTestId('settings-root')).toBeVisible();
 };
 
-test.skip(!isConfigured, 'E2E env missing: E2E_ADMIN_EMAIL / E2E_ADMIN_PASSWORD');
+test.skip(!isConfigured, SKIP_REASON);
 
 test('P07 - Admin/Settings mobile-first, actions, tabs, erreurs et anti-overflow', async ({
   page

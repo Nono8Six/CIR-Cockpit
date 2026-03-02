@@ -48,12 +48,14 @@ Invoquer le skill correspondant AVANT d'ecrire du code (voir liste dans CLAUDE.m
 
 ## Regles agents
 
-- Toujours verifier `pnpm run qa` avant de considerer une tache terminee
+- Pendant l'implementation, executer des checks cibles selon l'impact (front/back) ou `pnpm run qa:fast` pour une validation intermediaire.
+- `pnpm run qa` reste obligatoire SELON ta décision en fonction de la tâche qu'on a réalisé, certaine fois ce n'est pas justifié avant de considerer une tache terminee (livraison/merge).
+- Ne lance pas forcement de test e2e automatiquement a chaque modification, demande moi de vérifier si c'est une feature que je t'ai demandé.
 - Zero donnees mockees, hardcodees, ou commentaires TODO non resolus dans le code livre
 - Ne pas creer de fichiers non demandes (README, CHANGELOG, docs, fichiers vides)
 - Preferer modifier un fichier existant plutot que d'en creer un nouveau
 - Ne pas ajouter de fonctionnalites, refactoring, ou documentation au-dela de ce qui est demande
-- Utiliser `pnpm run qa` depuis la racine comme gate par defaut; n'executer des commandes ciblees que pour diagnostic local
+- Utiliser `pnpm run qa:fast`/commandes ciblees pendant la boucle de dev, puis `pnpm run qa` en gate final depuis la racine
 - Zod: source unique dans `shared/schemas`, payloads API en `.strict()`, `safeParse` obligatoire sur les entrees/sorties externes, et details de validation en francais.
 
 ## Quality Gate manuel (sans CI)
@@ -67,6 +69,7 @@ Invoquer le skill correspondant AVANT d'ecrire du code (voir liste dans CLAUDE.m
 
 Avant de considerer le travail termine :
 
+- [ ] Validation intermediaire executee (`pnpm run qa:fast` ou checks cibles equivalents)
 - [ ] `pnpm run qa` passe
 - [ ] Zero `any`, `@ts-ignore`, `@ts-expect-error` non documentes
 - [ ] Zero `console.error` direct (utiliser `reportError`)

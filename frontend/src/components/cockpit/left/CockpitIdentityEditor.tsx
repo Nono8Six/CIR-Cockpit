@@ -2,7 +2,7 @@ import type { RefObject } from 'react';
 import type { FieldErrors, UseFormRegisterReturn, UseFormSetValue } from 'react-hook-form';
 
 import type { RelationMode } from '@/constants/relations';
-import type { InteractionFormValues } from '@/schemas/interactionSchema';
+import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
 import CockpitCompanyCityField from './CockpitCompanyCityField';
 import CockpitCompanyInput from './CockpitCompanyInput';
 import CockpitIdentityHints from './CockpitIdentityHints';

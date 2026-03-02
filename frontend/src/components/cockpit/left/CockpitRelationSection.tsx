@@ -2,7 +2,7 @@ import type { RefObject } from 'react';
 import { Building2, Circle, Factory, Megaphone, UserRound } from 'lucide-react';
 import type { FieldErrors, UseFormSetValue } from 'react-hook-form';
 
-import type { InteractionFormValues } from '@/schemas/interactionSchema';
+import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
 import {
   Combobox,
   ComboboxContent,
@@ -40,9 +40,9 @@ const CockpitRelationSection = ({
 }: CockpitRelationSectionProps) => {
   const relationLabelId = 'cockpit-relation-label';
 
-  return (
+    return (
     <div className="space-y-2">
-      <label id={relationLabelId} className={labelStyle}>Relation</label>
+      <p id={relationLabelId} className={labelStyle}>Relation</p>
       <div className="min-[769px]:hidden">
       <Combobox
         items={relationOptions}

@@ -3,8 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { useClientFormDialog } from '@/hooks/useClientFormDialog';
 import { useProspectFormDialog } from '@/hooks/useProspectFormDialog';
-import type { ClientFormValues } from '../../../../shared/schemas/client.schema';
-import type { ProspectFormValues } from '../../../../shared/schemas/prospect.schema';
+import type { ClientFormValues } from 'shared/schemas/client.schema';
+import type { ProspectFormValues } from 'shared/schemas/prospect.schema';
 
 const AGENCY_ID = '11111111-1111-1111-1111-111111111111';
 const agency = {

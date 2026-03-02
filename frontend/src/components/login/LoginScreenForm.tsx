@@ -8,8 +8,10 @@ import type { LoginSubmitState } from '@/hooks/useLoginScreenForm';
 type LoginScreenFormProps = {
   email: string;
   onEmailChange: (value: string) => void;
+  onEmailBlur: () => void;
   password: string;
   onPasswordChange: (value: string) => void;
+  onPasswordBlur: () => void;
   submitState: LoginSubmitState;
   fieldError: string | null;
   error: string | null;
@@ -20,8 +22,10 @@ type LoginScreenFormProps = {
 const LoginScreenForm = ({
   email,
   onEmailChange,
+  onEmailBlur,
   password,
   onPasswordChange,
+  onPasswordBlur,
   submitState,
   fieldError,
   error,
@@ -29,9 +33,20 @@ const LoginScreenForm = ({
   onSubmit
 }: LoginScreenFormProps) => {
   const statusId = 'login-form-status';
+  const fieldErrorId = 'login-form-field-error';
   const errorId = 'login-form-error';
   const hasError = Boolean(error);
+  const hasFieldError = Boolean(fieldError);
+  const hasAnyError = hasError || hasFieldError;
   const isSuccess = submitState === 'success';
+  const showStatus = isSubmitting || isSuccess;
+  const describedBy = hasError
+    ? errorId
+    : hasFieldError
+      ? fieldErrorId
+      : showStatus
+        ? statusId
+        : undefined;
 
   return (
     <form className="space-y-4" onSubmit={onSubmit} noValidate>
@@ -49,11 +64,12 @@ const LoginScreenForm = ({
             className="pl-9"
             value={email}
             onChange={(event) => onEmailChange(event.target.value)}
+            onBlur={onEmailBlur}
             spellCheck={false}
             required
-            tone={hasError ? 'destructive' : 'default'}
-            aria-invalid={hasError}
-            aria-describedby={hasError ? errorId : statusId}
+            tone={hasAnyError ? 'destructive' : 'default'}
+            aria-invalid={hasAnyError}
+            aria-describedby={describedBy}
             data-testid="login-email-input"
           />
         </div>
@@ -72,29 +88,33 @@ const LoginScreenForm = ({
             className="pl-9"
             value={password}
             onChange={(event) => onPasswordChange(event.target.value)}
+            onBlur={onPasswordBlur}
             required
-            tone={hasError ? 'destructive' : 'default'}
-            aria-invalid={hasError}
-            aria-describedby={hasError ? errorId : statusId}
+            tone={hasAnyError ? 'destructive' : 'default'}
+            aria-invalid={hasAnyError}
+            aria-describedby={describedBy}
             data-testid="login-password-input"
           />
         </div>
       </div>
 
-      <div id={statusId} className="min-h-5 text-xs text-muted-foreground" role="status" aria-live="polite">
-        {isSubmitting ? (
-          <span className="inline-flex items-center gap-2">
-            <LoaderCircle aria-hidden className="h-3.5 w-3.5 animate-spin" />
-            Connexion en cours...
-          </span>
-        ) : null}
-        {!isSubmitting && isSuccess ? (
-          <span className="inline-flex items-center gap-2 text-success">Connexion réussie. Redirection...</span>
-        ) : null}
-      </div>
+      {showStatus ? (
+        <div id={statusId} className="text-xs text-muted-foreground" role="status" aria-live="polite">
+          {isSubmitting ? (
+            <span className="inline-flex items-center gap-2">
+              <LoaderCircle aria-hidden className="h-3.5 w-3.5 animate-spin" />
+              Connexion en cours...
+            </span>
+          ) : null}
+          {!isSubmitting && isSuccess ? (
+            <span className="inline-flex items-center gap-2 text-success">Connexion réussie. Redirection...</span>
+          ) : null}
+        </div>
+      ) : null}
 
       {fieldError ? (
         <div
+          id={fieldErrorId}
           className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive"
           role="alert"
         >

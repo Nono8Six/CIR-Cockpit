@@ -1,7 +1,7 @@
 # Stack Technique - CIR Cockpit
 
 > Document de reference pour la stack technique du projet.
-> Derniere mise a jour: 15/02/2026 (versions du repo)
+> Derniere mise a jour: 28/02/2026 (versions du repo)
 
 ## Vue d'ensemble
 
@@ -157,10 +157,68 @@
 3. RLS utilise `auth.uid()` pour filtrer
 4. Refresh token automatique
 
+**Note securite (decision produit):**
+1. `auth_leaked_password_protection` n'est pas active sur ce projet.
+2. Motif: plan Supabase non Pro + fonctionnalite non retenue pour cette application.
+3. Controles compensatoires conserves: creation de compte admin-only, mot de passe fort minimal, changement obligatoire au premier login, RLS multi-tenant strict.
+
 **Politique JWT backend (Edge Function `api`):**
 1. Verification JWT explicite via JWKS (`/auth/v1/.well-known/jwks.json`).
 2. Algorithme autorise par defaut: `ES256` (`SUPABASE_JWT_ALLOWED_ALGS=ES256`).
 3. Regle d'exploitation: la cle `Current key` Supabase doit rester en **ECC P-256** pour eviter les `401 AUTH_REQUIRED` dus a un mismatch algo.
+
+### tRPC (Hono RPC)
+
+| Aspect | Implementation |
+|--------|----------------|
+| **Version** | `@trpc/server` `11.10.0` (Deno import map) + `@trpc/client` `^11.10.0` (frontend) |
+| **Transport** | tRPC over HTTP via `httpBatchLink` |
+| **Backend** | Router principal `backend/functions/api/trpc/router.ts` |
+| **Frontend** | Client `frontend/src/services/api/trpcClient.ts` vers `/functions/v1/api/trpc` |
+
+Pattern d'appel:
+1. Frontend: mutation/query tRPC via `callTrpcMutation(...)` sur le client configure avec `httpBatchLink`.
+2. Backend: validation Zod sur `.input()` et `.output()` dans les procedures.
+3. Contexte auth: fourni par middleware Hono (pas de fallback custom hors header `Authorization`).
+
+### jose (verification JWT backend)
+
+| Aspect | Implementation |
+|--------|----------------|
+| **Dependance** | `jose@5.9.6` |
+| **Import map Deno** | `deno.json` (`"jose": "npm:jose@5.9.6"`) |
+| **Usage** | `backend/functions/api/middleware/auth/verifyToken.ts` (orchestre depuis `backend/functions/api/middleware/auth.ts`) |
+
+Utilisation actuelle:
+1. `createRemoteJWKSet(...)` pour resoudre la JWKS Supabase.
+2. `decodeProtectedHeader(...)` pour controler `alg` et `kid`.
+3. `jwtVerify(...)` pour verifier signature, issuer et audience.
+
+### Data Access Layer
+
+Le backend `api` utilise un mode hybride pour conserver la securite RLS et le typage des operations SQL:
+
+1. **`@supabase/supabase-js` (user-scoped auth context)**:
+   - verification JWT et chargement du profil/membership (`middleware/auth`),
+   - operations Auth Admin (`createUser`, `updateUserById`, `deleteUser`) via `getSupabaseAdmin()`.
+2. **Drizzle ORM (queries metier PostgreSQL)**:
+   - source des requetes metier dans `backend/functions/api/services/**`,
+   - type de reference `DbClient` dans `backend/functions/api/types.ts`.
+
+Pattern de client:
+1. `db`: client de service (operations admin/globales).
+2. `userDb`: client scope utilisateur (RLS applique selon `authContext`).
+
+Dans le code actuel, `db` et `userDb` pointent sur le meme client Drizzle (`getDbClient()`), mais la separation de contrat est volontaire pour maintenir la distinction d'intention (admin vs user-scoped) et preparer une evolution future sans casser les handlers.
+
+### Error pipeline (shared/front/back)
+
+Source de verite partagee: `shared/errors/` (`types.ts`, `catalog.ts`, `fingerprint.ts`).
+
+Pipeline:
+1. Frontend: `normalizeError()` -> `reportError()` -> `notifyError()` via `handleUiError()`.
+2. Backend: `httpError()` -> middleware `handleError()` avec mapping sur `shared/errors/catalog.ts`.
+3. Contrat: messages utilisateur en francais et codes d'erreur centralises.
 
 ### Edge Functions
 
@@ -187,6 +245,15 @@
 - Sync liste interactions entre TCS
 - Detection conflits d'edition
 - Timeline live
+
+### CI/CD et QA
+
+1. Le projet n'utilise pas de CI GitHub Actions en production.
+2. Le chemin de workflow standard `.github/workflows/ci.yml` est **N/A** (fichier non present par decision produit).
+3. Le gate qualite est local et obligatoire via:
+   - `scripts/qa-gate.ps1`
+   - `docs/qa-runbook.md`
+   - `pnpm run qa`
 
 ## Ce qu'on n'utilise PAS
 
@@ -218,7 +285,7 @@ frontend/
 │   │   ├── useAgencyConfig.ts
 │   │   └── ...
 │   ├── schemas/
-│   │   ├── interactionSchema.ts   # base partagee + regles locales
+│   │   ├── ...                    # schemas strictement frontend si necessaire
 │   │   └── ...
 │   ├── services/
 │   │   ├── auth/
@@ -235,7 +302,7 @@ frontend/
 
 shared/
 ├── errors/                  # AppError + catalog + fingerprint
-├── schemas/                 # Zod partages (front/back)
+├── schemas/                 # Zod partages (front/back) - ex: interaction.schema.ts
 └── supabase.types.ts         # Types Supabase
 
 backend/

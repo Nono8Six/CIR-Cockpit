@@ -5,6 +5,7 @@ import DashboardToolbar from './dashboard/DashboardToolbar';
 import DashboardKanban from './dashboard/DashboardKanban';
 import DashboardList from './dashboard/DashboardList';
 import DashboardDetailsOverlay from './dashboard/DashboardDetailsOverlay';
+import ConfirmDialog from './ConfirmDialog';
 import { useDashboardState } from '@/hooks/useDashboardState';
 
 interface DashboardProps {
@@ -36,7 +37,12 @@ const Dashboard = ({ interactions, statuses, agencyId, onRequestConvert }: Dashb
     handleStartDateChange,
     handleEndDateChange,
     handleConvertRequest,
-    handleInteractionUpdate
+    handleInteractionUpdate,
+    interactionToDelete,
+    isDeleteInteractionPending,
+    setInteractionToDelete,
+    handleRequestDeleteInteraction,
+    handleConfirmDeleteInteraction
   } = useDashboardState({ interactions, statuses, agencyId, onRequestConvert });
 
   return (
@@ -65,6 +71,7 @@ const Dashboard = ({ interactions, statuses, agencyId, onRequestConvert }: Dashb
             columns={kanbanColumns}
             onSelectInteraction={setSelectedInteraction}
             getStatusMeta={getStatusMeta}
+            onDeleteInteraction={handleRequestDeleteInteraction}
           />
         )}
 
@@ -74,6 +81,7 @@ const Dashboard = ({ interactions, statuses, agencyId, onRequestConvert }: Dashb
             getChannelIcon={getChannelIcon}
             getStatusBadgeClass={getStatusBadgeClass}
             onSelectInteraction={setSelectedInteraction}
+            onDeleteInteraction={handleRequestDeleteInteraction}
           />
         )}
       </div>
@@ -85,8 +93,25 @@ const Dashboard = ({ interactions, statuses, agencyId, onRequestConvert }: Dashb
           onUpdate={handleInteractionUpdate}
           statuses={statuses}
           onRequestConvert={handleConvertRequest}
+          onDeleteInteraction={handleRequestDeleteInteraction}
         />
       )}
+
+      <ConfirmDialog
+        open={interactionToDelete !== null}
+        onOpenChange={(open) => {
+          if (!open && !isDeleteInteractionPending) {
+            setInteractionToDelete(null);
+          }
+        }}
+        title="Supprimer cette interaction"
+        description={`L'interaction "${interactionToDelete?.subject ?? ''}" sera definitivement supprimee.`}
+        confirmLabel={isDeleteInteractionPending ? 'Suppression...' : 'Supprimer'}
+        variant="destructive"
+        onConfirm={() => {
+          void handleConfirmDeleteInteraction();
+        }}
+      />
 
     </div>
   );

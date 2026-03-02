@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -20,6 +20,7 @@ type DashboardListProps = {
   getChannelIcon: (channel: string) => ReactNode;
   getStatusBadgeClass: (interaction: Interaction) => string;
   onSelectInteraction: (interaction: Interaction) => void;
+  onDeleteInteraction: (interaction: Interaction) => void;
 };
 
 type DashboardListMobileCardProps = {
@@ -27,13 +28,15 @@ type DashboardListMobileCardProps = {
   getChannelIcon: (channel: string) => ReactNode;
   getStatusBadgeClass: (interaction: Interaction) => string;
   onSelectInteraction: (interaction: Interaction) => void;
+  onDeleteInteraction: (interaction: Interaction) => void;
 };
 
 const DashboardListMobileCard = ({
   item,
   getChannelIcon,
   getStatusBadgeClass,
-  onSelectInteraction
+  onSelectInteraction,
+  onDeleteInteraction
 }: DashboardListMobileCardProps) => (
   <article className="space-y-2 px-3 py-3">
     <div className="flex items-center justify-between gap-2">
@@ -64,17 +67,29 @@ const DashboardListMobileCard = ({
       )}
     </div>
     <DashboardFamilyBadges families={item.mega_families} />
-    <Button
-      type="button"
-      variant="ghost"
-      size="dense"
-      className="h-8 w-full justify-between text-primary hover:text-primary"
-      onClick={() => onSelectInteraction(item)}
-      aria-label={`Ouvrir ${item.company_name}`}
-    >
-      Ouvrir les details
-      <ChevronRight size={14} aria-hidden="true" />
-    </Button>
+    <div className="flex items-center gap-2">
+      <Button
+        type="button"
+        variant="ghost"
+        size="dense"
+        className="h-8 flex-1 justify-between text-primary hover:text-primary"
+        onClick={() => onSelectInteraction(item)}
+        aria-label={`Ouvrir ${item.company_name}`}
+      >
+        Ouvrir les details
+        <ChevronRight size={14} aria-hidden="true" />
+      </Button>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="size-8 text-destructive hover:text-destructive"
+        onClick={() => onDeleteInteraction(item)}
+        aria-label={`Supprimer ${item.company_name}`}
+      >
+        <Trash2 size={14} aria-hidden="true" />
+      </Button>
+    </div>
   </article>
 );
 
@@ -82,7 +97,8 @@ const DashboardList = ({
   rows,
   getChannelIcon,
   getStatusBadgeClass,
-  onSelectInteraction
+  onSelectInteraction,
+  onDeleteInteraction
 }: DashboardListProps) => (
   <div className="h-full min-h-0 overflow-y-auto p-3 sm:p-4" data-testid="dashboard-list">
     <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
@@ -99,6 +115,7 @@ const DashboardList = ({
               getChannelIcon={getChannelIcon}
               getStatusBadgeClass={getStatusBadgeClass}
               onSelectInteraction={onSelectInteraction}
+              onDeleteInteraction={onDeleteInteraction}
             />
           ))
         )}
@@ -120,6 +137,7 @@ const DashboardList = ({
                   getChannelIcon={getChannelIcon}
                   getStatusBadgeClass={getStatusBadgeClass}
                   onSelectInteraction={onSelectInteraction}
+                  onDeleteInteraction={onDeleteInteraction}
                 />
               ))
             )}

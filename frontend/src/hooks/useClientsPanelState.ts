@@ -6,7 +6,7 @@ import { useProspects } from './useProspects';
 import { useAgencies } from './useAgencies';
 import { useSaveClient } from './useSaveClient';
 import { useSaveProspect } from './useSaveProspect';
-import { useSetClientArchived } from './useSetClientArchived';
+import { useDeleteClient, useSetClientArchived } from './useSetClientArchived';
 import { useReassignEntity } from './useReassignEntity';
 import { useEntityContacts } from './useEntityContacts';
 import { useSaveEntityContact } from './useSaveEntityContact';
@@ -50,6 +50,9 @@ export const useClientsPanelState = ({
   const [prospectToEdit, setProspectToEdit] = useState<Entity | null>(null);
   const [agencyFilterId, setAgencyFilterId] = useState<string | null>(activeAgencyId);
   const [confirmArchive, setConfirmArchive] = useState<{ nextArchived: boolean } | null>(null);
+  const [confirmDeleteClient, setConfirmDeleteClient] = useState<Client | null>(null);
+  const [confirmDeleteProspect, setConfirmDeleteProspect] = useState<Entity | null>(null);
+  const [deleteRelatedInteractions, setDeleteRelatedInteractions] = useState(true);
   const [confirmDeleteContact, setConfirmDeleteContact] = useState<ClientContact | null>(null);
 
   const agenciesQuery = useAgencies(false, userRole !== 'tcs' || Boolean(activeAgencyId));
@@ -144,6 +147,8 @@ export const useClientsPanelState = ({
   const saveClientMutation = useSaveClient(effectiveAgencyId ?? null, showArchived);
   const saveProspectMutation = useSaveProspect(effectiveAgencyId ?? null, showArchived, isOrphansFilter);
   const archiveClientMutation = useSetClientArchived(effectiveAgencyId ?? null);
+  const deleteMutationAgencyId = isOrphansFilter ? null : effectiveAgencyId;
+  const deleteClientMutation = useDeleteClient(deleteMutationAgencyId, isOrphansFilter);
   const reassignEntityMutation = useReassignEntity(effectiveAgencyId ?? null, isOrphansFilter);
   const saveContactMutation = useSaveEntityContact(activeEntity?.id ?? null, false, effectiveAgencyId);
   const deleteContactMutation = useDeleteEntityContact(activeEntity?.id ?? null, false);
@@ -241,6 +246,62 @@ export const useClientsPanelState = ({
     }
   }, [archiveClientMutation, confirmArchive, selectedClient]);
 
+  const handleDeleteClient = useCallback(() => {
+    if (!selectedClient || userRole !== 'super_admin') {
+      return;
+    }
+
+    setDeleteRelatedInteractions(true);
+    setConfirmDeleteClient(selectedClient);
+  }, [selectedClient, userRole]);
+
+  const executeDeleteClient = useCallback(async () => {
+    if (!confirmDeleteClient) {
+      return;
+    }
+
+    try {
+      await deleteClientMutation.mutateAsync({
+        clientId: confirmDeleteClient.id,
+        deleteRelatedInteractions
+      });
+      if (selectedClientId === confirmDeleteClient.id) {
+        setSelectedClientId(null);
+      }
+      notifySuccess('Client supprime definitivement.');
+    } catch {
+      return;
+    }
+  }, [confirmDeleteClient, deleteClientMutation, deleteRelatedInteractions, selectedClientId]);
+
+  const handleDeleteProspect = useCallback(() => {
+    if (!selectedProspect || userRole !== 'super_admin') {
+      return;
+    }
+
+    setDeleteRelatedInteractions(true);
+    setConfirmDeleteProspect(selectedProspect);
+  }, [selectedProspect, userRole]);
+
+  const executeDeleteProspect = useCallback(async () => {
+    if (!confirmDeleteProspect) {
+      return;
+    }
+
+    try {
+      await deleteClientMutation.mutateAsync({
+        clientId: confirmDeleteProspect.id,
+        deleteRelatedInteractions
+      });
+      if (selectedProspectId === confirmDeleteProspect.id) {
+        setSelectedProspectId(null);
+      }
+      notifySuccess('Prospect supprime definitivement.');
+    } catch {
+      return;
+    }
+  }, [confirmDeleteProspect, deleteClientMutation, deleteRelatedInteractions, selectedProspectId]);
+
   const handleAddContact = useCallback(() => {
     if (!activeEntity) {
       return;
@@ -325,6 +386,9 @@ export const useClientsPanelState = ({
     prospectToEdit,
     agencyFilterId,
     confirmArchive,
+    confirmDeleteClient,
+    confirmDeleteProspect,
+    deleteRelatedInteractions,
     confirmDeleteContact,
     agencies,
     clientsQuery,
@@ -349,6 +413,9 @@ export const useClientsPanelState = ({
     setContactDialogOpen,
     setAgencyFilterId: handleAgencyFilterIdChange,
     setConfirmArchive,
+    setConfirmDeleteClient,
+    setConfirmDeleteProspect,
+    setDeleteRelatedInteractions,
     setConfirmDeleteContact,
     handleCreateClient,
     handleEditClient,
@@ -357,6 +424,10 @@ export const useClientsPanelState = ({
     handleSaveProspect,
     handleToggleArchive,
     executeToggleArchive,
+    handleDeleteClient,
+    executeDeleteClient,
+    handleDeleteProspect,
+    executeDeleteProspect,
     handleAddContact,
     handleEditContact,
     handleSaveContact,

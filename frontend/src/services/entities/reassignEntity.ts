@@ -3,7 +3,7 @@ import { ResultAsync } from 'neverthrow';
 import {
   dataEntitiesReassignResponseSchema,
   type DataEntitiesReassignResponse
-} from '../../../../shared/schemas/api-responses';
+} from 'shared/schemas/api-responses';
 import { Entity } from '@/types';
 import { createAppError, type AppError } from '@/services/errors/AppError';
 import { safeRpc } from '@/services/api/safeRpc';

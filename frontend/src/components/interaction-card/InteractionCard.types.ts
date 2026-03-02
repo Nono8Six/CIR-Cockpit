@@ -3,6 +3,7 @@ import type { AgencyStatus, Interaction, StatusCategory } from '@/types';
 export type InteractionCardProps = {
   data: Interaction;
   statusMeta?: AgencyStatus;
+  onDeleteInteraction?: (interaction: Interaction) => void;
 };
 
 export type InteractionCardComputedState = {

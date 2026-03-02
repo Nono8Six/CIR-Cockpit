@@ -13,8 +13,9 @@ const P08_LOGIN_VIEWPORTS = [
 ] as const;
 
 const isConfigured = Boolean(email && password);
+const SKIP_REASON = 'E2E env missing: E2E_USER_EMAIL / E2E_USER_PASSWORD';
 
-test.skip(!isConfigured, 'E2E env missing: E2E_USER_EMAIL / E2E_USER_PASSWORD');
+test.skip(!isConfigured, SKIP_REASON);
 
 const login = async (page: Page, credentials: { email: string; password: string }) => {
   await page.goto('/');

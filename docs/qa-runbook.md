@@ -1,8 +1,8 @@
 # QA Runbook Ultra Complet (Sans CI)
 
-Date de reference: 2026-02-22
+Date de reference: 2026-02-28
 Portee par defaut: tout le repo (`frontend/`, `backend/`, `shared/`, docs critiques)
-Mode: manuel strict, bloquant
+Mode: manuel strict, bloquant (gate final) + boucle rapide intermediaire
 
 ## 1. Objectif
 
@@ -18,10 +18,11 @@ Objectifs obligatoires:
 ## 2. Regles d'execution
 
 0. Avant chaque prompt de travail envoye au LLM: lire ce runbook puis appliquer la matrice d'impact ci-dessous.
-1. Ordre strict: executer les phases dans l'ordre.
-2. Si une commande KO: STOP, corriger, puis relancer la phase.
-3. Aucune livraison sans preuve ecrite en fin de runbook.
-4. Les exceptions doivent etre explicites et justifiees.
+1. Pendant l'implementation: utiliser des checks cibles par impact ou `pnpm run qa:fast` (validation intermediaire, non livrable).
+2. Avant livraison/merge: ordre strict, executer les phases dans l'ordre selon la matrice d'impact.
+3. Si une commande KO: STOP, corriger, puis relancer la phase.
+4. Aucune livraison sans preuve ecrite en fin de runbook.
+5. Les exceptions doivent etre explicites et justifiees.
 
 ## 3. Perimetre et conditions de skip
 
@@ -45,14 +46,17 @@ Appliquer la matrice la plus stricte en cas de doute:
 4. Changement docs uniquement:
    - Phase A + relecture coherente des references docs + rapport final.
 
-## 3.2 Protocole standard par cycle LLM
+## 3.2 Protocole standard par cycle LLM (2 vitesses)
 
 Pour chaque cycle "demande -> modification -> livraison":
-1. Identifier le perimetre exact (front/back/transversal/docs).
-2. Choisir la matrice d'impact correspondante.
-3. Executer les phases requises.
-4. Produire un rapport QA manuel dans la reponse de livraison.
-5. Si une etape bloquante est KO: ne pas livrer.
+1. Boucle intermediaire (pendant implementation, non livrable):
+   - Identifier le perimetre exact (front/back/transversal/docs).
+   - Lancer des checks cibles selon la matrice d'impact, ou `pnpm run qa:fast` depuis la racine.
+   - Si KO: corriger immediatement avant de continuer.
+2. Gate final (avant livraison/merge, livrable):
+   - Re-executer les phases requises par la matrice d'impact en ordre strict (A -> ...).
+   - Produire un rapport QA manuel dans la reponse de livraison.
+   - Si une etape bloquante est KO: ne pas livrer.
 
 ## 4. Pre-requis
 
@@ -106,7 +110,14 @@ PASS:
 FAIL:
 1. Changements inattendus non analyses.
 
-## 6. Phase B - Validation frontend obligatoire
+## 6. Phase B - Validation frontend obligatoire (gate final)
+
+Note boucle intermediaire (optionnelle, non suffisante pour livrer):
+```bash
+pnpm --dir frontend run typecheck
+pnpm --dir frontend run lint
+pnpm --dir frontend run test:run
+```
 
 Executer depuis `frontend/`:
 
@@ -141,7 +152,14 @@ PASS:
 FAIL:
 1. Un seul echec bloque la livraison.
 
-## 7. Phase C - Validation backend obligatoire
+## 7. Phase C - Validation backend obligatoire (gate final)
+
+Note boucle intermediaire (optionnelle, non suffisante pour livrer):
+```bash
+deno lint backend/functions/api
+deno check --config backend/deno.json backend/functions/api/index.ts
+deno test --allow-env --no-check --config backend/deno.json backend/functions/api
+```
 
 Executer depuis la racine:
 
@@ -337,6 +355,7 @@ Copier-coller ce bloc dans PR, ticket, ou message de livraison:
 - Date:
 - Branche/commit:
 - Perimetre:
+- Validation intermediaire: `qa:fast` ou checks cibles (details)
 - Backend impacte: oui/non
 - UI impactee: oui/non
 

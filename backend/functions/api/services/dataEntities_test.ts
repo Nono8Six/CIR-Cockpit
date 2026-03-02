@@ -1,7 +1,11 @@
 import { assertEquals, assertThrows } from 'std/assert';
 
 import type { AuthContext, DbClient } from '../types.ts';
-import { ensureReassignSuperAdmin, reassignEntity } from './dataEntities.ts';
+import {
+  ensureDeleteSuperAdmin,
+  ensureReassignSuperAdmin,
+  reassignEntity
+} from './dataEntities.ts';
 
 type ReassignMocks = {
   agencyRow?: { id: string; archived_at: string | null } | null;
@@ -179,6 +183,19 @@ Deno.test('ensureReassignSuperAdmin rejects non-super-admin callers', () => {
   };
 
   const error = assertThrows(() => ensureReassignSuperAdmin(memberContext));
+  assertEquals(readStatus(error), 403);
+  assertEquals(readCode(error), 'AUTH_FORBIDDEN');
+});
+
+Deno.test('ensureDeleteSuperAdmin rejects non-super-admin callers', () => {
+  const memberContext: AuthContext = {
+    userId: 'user-1',
+    role: 'agency_admin',
+    agencyIds: ['agency-a'],
+    isSuperAdmin: false
+  };
+
+  const error = assertThrows(() => ensureDeleteSuperAdmin(memberContext));
   assertEquals(readStatus(error), 403);
   assertEquals(readCode(error), 'AUTH_FORBIDDEN');
 });

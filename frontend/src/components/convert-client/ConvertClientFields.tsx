@@ -1,7 +1,7 @@
 import type { ChangeEvent } from 'react';
 import type { FieldErrors, UseFormRegisterReturn } from 'react-hook-form';
 
-import type { ConvertClientValues } from '../../../../shared/schemas/convert-client.schema';
+import type { ConvertClientValues } from 'shared/schemas/convert-client.schema';
 import { Input } from '@/components/ui/input';
 import {
   Select,

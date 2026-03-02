@@ -1,6 +1,6 @@
 import { ResultAsync } from 'neverthrow';
 
-import { dataEntitiesResponseSchema } from '../../../../shared/schemas/api-responses';
+import { dataEntitiesResponseSchema } from 'shared/schemas/api-responses';
 import { Client } from '@/types';
 import { createAppError, type AppError } from '@/services/errors/AppError';
 import { safeRpc } from '@/services/api/safeRpc';
@@ -29,4 +29,20 @@ export const setClientArchived = (clientId: string, archived: boolean): ResultAs
     }, init),
     parseEntityResponse,
     "Impossible de mettre a jour le client."
+  );
+
+export const deleteClient = (
+  clientId: string,
+  deleteRelatedInteractions: boolean
+): ResultAsync<Client, AppError> =>
+  safeRpc(
+    (api, init) => api.data.entities.$post({
+      json: {
+        action: 'delete',
+        entity_id: clientId,
+        delete_related_interactions: deleteRelatedInteractions
+      }
+    }, init),
+    parseEntityResponse,
+    'Impossible de supprimer le client.'
   );

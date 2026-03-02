@@ -24,7 +24,7 @@ const CockpitManualContactSection = ({
   onContactPhoneChange
 }: CockpitManualContactProps) => (
   <div className="space-y-2">
-    <label className={labelStyle}>Contact</label>
+    <p className={labelStyle}>Contact</p>
     {selectedContact ? (
       <CockpitSelectedContactCard
         contact={selectedContact}

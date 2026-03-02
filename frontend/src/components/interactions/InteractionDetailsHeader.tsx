@@ -1,4 +1,4 @@
-import { UserRound, X } from 'lucide-react';
+import { Trash2, UserRound, X } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ type InteractionDetailsHeaderProps = {
   interaction: Interaction;
   canConvert: boolean;
   onRequestConvert: (interaction: Interaction) => void;
+  onDeleteInteraction: (interaction: Interaction) => void;
   onClose: () => void;
 };
 
@@ -15,6 +16,7 @@ const InteractionDetailsHeader = ({
   interaction,
   canConvert,
   onRequestConvert,
+  onDeleteInteraction,
   onClose
 }: InteractionDetailsHeaderProps) => (
   <header className="shrink-0 border-b border-border bg-surface-1 px-4 py-3 sm:px-5">
@@ -74,6 +76,16 @@ const InteractionDetailsHeader = ({
           Convertir en client
         </Button>
       )}
+      <Button
+        type="button"
+        variant="outline"
+        size="dense"
+        onClick={() => onDeleteInteraction(interaction)}
+        className="h-7 border-destructive/35 text-[11px] text-destructive hover:bg-destructive/10 hover:text-destructive"
+      >
+        <Trash2 size={12} />
+        Supprimer
+      </Button>
     </div>
   </header>
 );

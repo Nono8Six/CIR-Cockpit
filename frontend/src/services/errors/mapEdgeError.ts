@@ -1,5 +1,5 @@
 import { createAppError, type AppError, type ErrorCode } from './AppError';
-import { edgeErrorPayloadSchema } from '../../../../shared/schemas/edge-error.schema';
+import { edgeErrorPayloadSchema } from 'shared/schemas/edge-error.schema';
 
 const isErrorCode = (value: string): value is ErrorCode => value.length > 0;
 

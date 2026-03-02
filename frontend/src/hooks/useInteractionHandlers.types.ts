@@ -2,7 +2,7 @@ import type { ChangeEvent } from 'react';
 import type { QueryClient } from '@tanstack/react-query';
 import type { UseFormClearErrors, UseFormSetValue } from 'react-hook-form';
 
-import type { InteractionFormValues } from '@/schemas/interactionSchema';
+import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
 import type { Entity, EntityContact } from '@/types';
 import type { ClientPayload } from '@/services/clients/saveClient';
 import type { EntityContactPayload } from '@/services/entities/saveEntityContact';

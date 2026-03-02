@@ -3,7 +3,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import type { Agency, Client, UserRole } from '@/types';
-import { clientFormSchema, type ClientFormValues } from '../../../shared/schemas/client.schema';
+import { clientFormSchema, type ClientFormValues } from 'shared/schemas/client.schema';
 import type { ClientPayload } from '@/services/clients/saveClient';
 import { stripClientNumber } from '@/utils/clients/formatClientNumber';
 

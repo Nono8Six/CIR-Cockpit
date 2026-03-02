@@ -1,4 +1,4 @@
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
@@ -11,7 +11,8 @@ const DashboardListRow = ({
   item,
   getChannelIcon,
   getStatusBadgeClass,
-  onSelectInteraction
+  onSelectInteraction,
+  onDeleteInteraction
 }: DashboardListRowProps) => (
   <TableRow className="hover:bg-surface-1">
     <TableCell className="px-3 py-2 text-xs font-medium text-muted-foreground">
@@ -53,17 +54,29 @@ const DashboardListRow = ({
       )}
     </TableCell>
     <TableCell className="px-3 py-2 text-right">
-      <Button
-        type="button"
-        variant="ghost"
-        size="dense"
-        className="h-8 text-primary hover:text-primary"
-        onClick={() => onSelectInteraction(item)}
-        aria-label={`Ouvrir ${item.company_name}`}
-      >
-        Ouvrir
-        <ChevronRight size={14} aria-hidden="true" />
-      </Button>
+      <div className="flex justify-end gap-1">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-8 text-destructive hover:text-destructive"
+          onClick={() => onDeleteInteraction(item)}
+          aria-label={`Supprimer ${item.company_name}`}
+        >
+          <Trash2 size={14} aria-hidden="true" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="dense"
+          className="h-8 text-primary hover:text-primary"
+          onClick={() => onSelectInteraction(item)}
+          aria-label={`Ouvrir ${item.company_name}`}
+        >
+          Ouvrir
+          <ChevronRight size={14} aria-hidden="true" />
+        </Button>
+      </div>
     </TableCell>
   </TableRow>
 );

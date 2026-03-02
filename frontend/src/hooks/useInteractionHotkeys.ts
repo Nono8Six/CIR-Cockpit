@@ -1,7 +1,7 @@
 import { useEffect, type RefObject } from 'react';
 import type { UseFormSetFocus } from 'react-hook-form';
 
-import type { InteractionFormValues } from '@/schemas/interactionSchema';
+import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
 
 type InteractionHotkeysInput = {
   formRef: RefObject<HTMLFormElement | null>;

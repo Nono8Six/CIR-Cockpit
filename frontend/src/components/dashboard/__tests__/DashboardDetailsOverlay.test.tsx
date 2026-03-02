@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import DashboardDetailsOverlay from '@/components/dashboard/DashboardDetailsOverlay';
+import KanbanColumn from '@/components/dashboard/kanban/KanbanColumn';
 import { Channel, type Interaction } from '@/types';
 
 const buildInteraction = (): Interaction => ({
@@ -53,6 +54,7 @@ describe('DashboardDetailsOverlay', () => {
         onClose={onClose}
         onUpdate={vi.fn(async () => undefined)}
         onRequestConvert={vi.fn()}
+        onDeleteInteraction={vi.fn()}
       />
     );
 
@@ -63,5 +65,44 @@ describe('DashboardDetailsOverlay', () => {
 
     await user.click(screen.getByRole('button', { name: /fermer le panneau/i }));
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('KanbanColumn', () => {
+  it("ouvre la carte au clic/clavier sans imbriquer de bouton dans un bouton", async () => {
+    const user = userEvent.setup();
+    const interaction = buildInteraction();
+    const onSelectInteraction = vi.fn();
+    const onDeleteInteraction = vi.fn();
+
+    render(
+      <KanbanColumn
+        columnId="urgencies"
+        title="A traiter"
+        dotClassName="bg-destructive"
+        interactions={[interaction]}
+        emptyLabel="Aucune interaction"
+        onSelectInteraction={onSelectInteraction}
+        onDeleteInteraction={onDeleteInteraction}
+        getStatusMeta={() => undefined}
+      />
+    );
+
+    const card = screen.getByTestId(`dashboard-kanban-card-${interaction.id}`);
+    expect(card.tagName).toBe('DIV');
+    expect(card).toHaveAttribute('role', 'button');
+
+    await user.click(card);
+    expect(onSelectInteraction).toHaveBeenCalledTimes(1);
+
+    const deleteButton = screen.getByRole('button', { name: /supprimer p06 overlay client/i });
+    await user.click(deleteButton);
+    expect(onDeleteInteraction).toHaveBeenCalledTimes(1);
+    expect(onSelectInteraction).toHaveBeenCalledTimes(1);
+
+    card.focus();
+    await user.keyboard('{Enter}');
+    await user.keyboard(' ');
+    expect(onSelectInteraction).toHaveBeenCalledTimes(3);
   });
 });

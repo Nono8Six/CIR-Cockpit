@@ -2,7 +2,7 @@ import type { ChangeEvent, RefObject } from 'react';
 import type { FieldErrors, UseFormRegisterReturn } from 'react-hook-form';
 
 import type { RelationMode } from '@/constants/relations';
-import type { InteractionFormValues } from '@/schemas/interactionSchema';
+import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
 import type { Entity, EntityContact } from '@/types';
 
 export type CockpitContactCommonProps = {

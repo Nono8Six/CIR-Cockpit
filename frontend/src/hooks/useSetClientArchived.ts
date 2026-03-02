@@ -1,7 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { setClientArchived } from '@/services/clients/setClientArchived';
-import { invalidateClientsQueries } from '@/services/query/queryInvalidation';
+import { deleteClient, setClientArchived } from '@/services/clients/setClientArchived';
+import {
+  invalidateClientsQueries,
+  invalidateEntitySearchIndexQueries,
+  invalidateProspectsQueries
+} from '@/services/query/queryInvalidation';
 import { handleUiError } from '@/services/errors/handleUiError';
 
 export const useSetClientArchived = (agencyId: string | null) => {
@@ -21,6 +25,32 @@ export const useSetClientArchived = (agencyId: string | null) => {
     onError: (error) => {
       handleUiError(error, "Impossible de modifier l'archive du client.", {
         source: 'useSetClientArchived.onError'
+      });
+    }
+  });
+};
+
+export const useDeleteClient = (agencyId: string | null, orphansOnly = false) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: { clientId: string; deleteRelatedInteractions: boolean }) =>
+      deleteClient(payload.clientId, payload.deleteRelatedInteractions).match(
+        (client) => client,
+        (error) => {
+          throw error;
+        }
+      ),
+    onSuccess: () => {
+      void Promise.all([
+        invalidateClientsQueries(queryClient, agencyId),
+        invalidateProspectsQueries(queryClient, { agencyId, orphansOnly }),
+        invalidateEntitySearchIndexQueries(queryClient, agencyId)
+      ]);
+    },
+    onError: (error) => {
+      handleUiError(error, 'Impossible de supprimer le client.', {
+        source: 'useDeleteClient.onError'
       });
     }
   });

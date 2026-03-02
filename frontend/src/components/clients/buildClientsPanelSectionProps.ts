@@ -5,7 +5,7 @@ import ClientsPanelDialogs from './ClientsPanelDialogs';
 import ClientsPanelToolbar from './ClientsPanelToolbar';
 import type { ClientsPanelState } from './ClientsPanel.types';
 import type { ConvertClientEntity } from '@/components/ConvertClientDialog';
-import type { UserRole } from '@/types';
+import type { AgencyStatus, UserRole } from '@/types';
 
 type ToolbarProps = ComponentProps<typeof ClientsPanelToolbar>;
 type ContentProps = ComponentProps<typeof ClientsPanelContent>;
@@ -13,6 +13,8 @@ type DialogsProps = ComponentProps<typeof ClientsPanelDialogs>;
 
 type BuildContentPropsArgs = {
   state: ClientsPanelState;
+  activeAgencyId: string | null;
+  statuses: AgencyStatus[];
   focusedContactId: string | null;
   onRequestConvert: (entity: ConvertClientEntity) => void;
   userRole: UserRole;
@@ -43,6 +45,8 @@ export const buildClientsPanelToolbarProps = (
 
 export const buildClientsPanelContentProps = ({
   state,
+  activeAgencyId,
+  statuses,
   focusedContactId,
   onRequestConvert,
   userRole
@@ -65,18 +69,22 @@ export const buildClientsPanelContentProps = ({
   selectedProspect: state.selectedProspect,
   contacts: state.contacts,
   contactsLoading: state.contactsQuery.isLoading,
+  activeAgencyId,
+  statuses,
   agencies: state.agencies,
   userRole,
   focusedContactId,
   onEditClient: state.handleEditClient,
   onToggleArchive: state.handleToggleArchive,
+  onDeleteClient: state.handleDeleteClient,
   onAddContact: state.handleAddContact,
   onEditContact: state.handleEditContact,
   onDeleteContact: state.handleDeleteContact,
   onReassignEntity: state.handleReassignEntity,
   isReassignPending: state.isReassignPending,
   onRequestConvert,
-  onEditProspect: state.handleEditProspect
+  onEditProspect: state.handleEditProspect,
+  onDeleteProspect: state.handleDeleteProspect
 });
 
 export const buildClientsPanelDialogsProps = ({
@@ -103,6 +111,14 @@ export const buildClientsPanelDialogsProps = ({
   confirmArchive: state.confirmArchive,
   onConfirmArchiveChange: state.setConfirmArchive,
   onConfirmArchive: state.executeToggleArchive,
+  confirmDeleteClient: state.confirmDeleteClient,
+  onConfirmDeleteClientChange: state.setConfirmDeleteClient,
+  confirmDeleteProspect: state.confirmDeleteProspect,
+  onConfirmDeleteProspectChange: state.setConfirmDeleteProspect,
+  deleteRelatedInteractions: state.deleteRelatedInteractions,
+  onDeleteRelatedInteractionsChange: state.setDeleteRelatedInteractions,
+  onConfirmDeleteClient: state.executeDeleteClient,
+  onConfirmDeleteProspect: state.executeDeleteProspect,
   confirmDeleteContact: state.confirmDeleteContact,
   onConfirmDeleteContactChange: state.setConfirmDeleteContact,
   onConfirmDeleteContact: state.executeDeleteContact

@@ -45,7 +45,8 @@ const adminAgencySummarySchema = z.object({
 
 export const dataEntitiesResponseSchema = apiSuccessSchema.extend({
   entity: entityRowSchema,
-  propagated_interactions_count: z.number().int().nonnegative().optional()
+  propagated_interactions_count: z.number().int().nonnegative().optional(),
+  deleted_interactions_count: z.number().int().nonnegative().optional()
 }).strict();
 
 export const dataEntitiesReassignResponseSchema = dataEntitiesResponseSchema.extend({
@@ -65,9 +66,26 @@ export const dataEntityContactsResponseSchema = z.union([
   dataEntityContactsDeleteResponseSchema
 ]);
 
-export const dataInteractionsResponseSchema = apiSuccessSchema.extend({
+export const dataInteractionsMutationResponseSchema = apiSuccessSchema.extend({
   interaction: interactionRowSchema
 }).strict();
+
+export const dataInteractionsListResponseSchema = apiSuccessSchema.extend({
+  interactions: z.array(interactionRowSchema),
+  page: z.number().int().positive(),
+  page_size: z.number().int().positive(),
+  total: z.number().int().nonnegative()
+}).strict();
+
+export const dataInteractionsDeleteResponseSchema = apiSuccessSchema.extend({
+  interaction_id: z.string().trim().min(1, 'Identifiant interaction requis')
+}).strict();
+
+export const dataInteractionsResponseSchema = z.union([
+  dataInteractionsMutationResponseSchema,
+  dataInteractionsListResponseSchema,
+  dataInteractionsDeleteResponseSchema
+]);
 
 export const dataConfigResponseSchema = apiSuccessSchema;
 export const dataProfileResponseSchema = apiSuccessSchema;
@@ -144,6 +162,9 @@ export type ApiSuccess = z.infer<typeof apiSuccessSchema>;
 export type DataEntitiesResponse = z.infer<typeof dataEntitiesResponseSchema>;
 export type DataEntitiesReassignResponse = z.infer<typeof dataEntitiesReassignResponseSchema>;
 export type DataEntityContactsResponse = z.infer<typeof dataEntityContactsResponseSchema>;
+export type DataInteractionsMutationResponse = z.infer<typeof dataInteractionsMutationResponseSchema>;
+export type DataInteractionsListResponse = z.infer<typeof dataInteractionsListResponseSchema>;
+export type DataInteractionsDeleteResponse = z.infer<typeof dataInteractionsDeleteResponseSchema>;
 export type DataInteractionsResponse = z.infer<typeof dataInteractionsResponseSchema>;
 export type DataConfigResponse = z.infer<typeof dataConfigResponseSchema>;
 export type DataProfileResponse = z.infer<typeof dataProfileResponseSchema>;

@@ -1,6 +1,6 @@
 import type { FieldErrors, UseFormRegisterReturn } from 'react-hook-form';
 
-import type { ClientContactFormValues } from '../../../../shared/schemas/client-contact.schema';
+import type { ClientContactFormValues } from 'shared/schemas/client-contact.schema';
 import { Input } from '@/components/ui/input';
 
 type ContactFormIdentitySectionProps = {

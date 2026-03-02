@@ -6,7 +6,7 @@ import {
   type ErrorDomain,
   type ErrorSeverity,
   type RecoveryAction
-} from '../../../../shared/errors';
+} from 'shared/errors';
 
 export type { AppError, ErrorCode, ErrorDomain, ErrorSeverity, RecoveryAction };
 

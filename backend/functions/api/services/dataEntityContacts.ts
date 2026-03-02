@@ -17,6 +17,20 @@ type ContactRow = Database['public']['Tables']['entity_contacts']['Row'];
 
 type SaveContactData = Extract<DataEntityContactsPayload, { action: 'save' }>;
 
+type DataEntityContactsDependencies = {
+  ensureRateLimit: (scope: string, callerId: string) => Promise<void>;
+  getEntityAgencyId: (db: DbClient, entityId: string) => Promise<string | null>;
+  getContactEntityId: (db: DbClient, contactId: string) => Promise<string>;
+  ensureAgencyAccess: (authContext: AuthContext, agencyId: string | null | undefined) => string | null;
+};
+
+const defaultDependencies: DataEntityContactsDependencies = {
+  ensureRateLimit: ensureDataRateLimit,
+  getEntityAgencyId,
+  getContactEntityId,
+  ensureAgencyAccess: ensureOptionalAgencyAccess
+};
+
 const saveContact = async (
   db: DbClient,
   entityId: string,
@@ -92,21 +106,22 @@ export const handleDataEntityContactsAction = async (
   db: DbClient,
   authContext: AuthContext,
   requestId: string | undefined,
-  data: DataEntityContactsPayload
+  data: DataEntityContactsPayload,
+  dependencies: DataEntityContactsDependencies = defaultDependencies
 ): Promise<DataEntityContactsResponse> => {
-  await ensureDataRateLimit(`data_entity_contacts:${data.action}`, authContext.userId);
+  await dependencies.ensureRateLimit(`data_entity_contacts:${data.action}`, authContext.userId);
 
   switch (data.action) {
     case 'save': {
-      const agencyId = await getEntityAgencyId(db, data.entity_id);
-      ensureOptionalAgencyAccess(authContext, agencyId);
+      const agencyId = await dependencies.getEntityAgencyId(db, data.entity_id);
+      dependencies.ensureAgencyAccess(authContext, agencyId);
       const contact = await saveContact(db, data.entity_id, data.id, data.contact);
       return { request_id: requestId, ok: true, contact };
     }
     case 'delete': {
-      const entityId = await getContactEntityId(db, data.contact_id);
-      const agencyId = await getEntityAgencyId(db, entityId);
-      ensureOptionalAgencyAccess(authContext, agencyId);
+      const entityId = await dependencies.getContactEntityId(db, data.contact_id);
+      const agencyId = await dependencies.getEntityAgencyId(db, entityId);
+      dependencies.ensureAgencyAccess(authContext, agencyId);
       await deleteContact(db, data.contact_id);
       return { request_id: requestId, ok: true, contact_id: data.contact_id };
     }

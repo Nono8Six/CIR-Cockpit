@@ -3,7 +3,7 @@ import type { FieldErrors, UseFormRegisterReturn, UseFormSetValue } from 'react-
 
 import type { RelationMode } from '@/constants/relations';
 import type { Entity } from '@/types';
-import type { InteractionFormValues } from '@/schemas/interactionSchema';
+import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
 import CockpitFieldError from './CockpitFieldError';
 import CockpitIdentityEditor from './CockpitIdentityEditor';
 import CockpitSelectedEntityCard from './CockpitSelectedEntityCard';
@@ -48,7 +48,7 @@ const CockpitIdentitySection = ({
   setValue
 }: CockpitIdentitySectionProps) => (
   <div className="space-y-2">
-    <label className={labelStyle}>Identite</label>
+    <p className={labelStyle}>Identite</p>
     {selectedEntity ? (
       <CockpitSelectedEntityCard
         selectedEntity={selectedEntity}

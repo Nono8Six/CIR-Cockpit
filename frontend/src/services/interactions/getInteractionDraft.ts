@@ -1,9 +1,11 @@
-import { interactionFormSchema } from '@/schemas/interactionSchema';
 import { createAppError } from '@/services/errors/AppError';
 import { mapPostgrestError } from '@/services/errors/mapPostgrestError';
 import { requireSupabaseClient } from '@/services/supabase/requireSupabaseClient';
 import { readObject, readString } from '@/utils/recordNarrowing';
-import type { InteractionDraftRecord } from './interactionDraftPayload';
+import {
+  parseInteractionDraftPayload,
+  type InteractionDraftRecord
+} from './interactionDraftPayload';
 
 type GetInteractionDraftInput = { userId: string; agencyId: string; formType?: string };
 
@@ -14,11 +16,9 @@ const toDraftRecord = (value: unknown): InteractionDraftRecord | null => {
   const updatedAt = readString(row, 'updated_at');
   const payload = readObject(row, 'payload');
   if (!id || !updatedAt || !payload) return null;
-  const values = readObject(payload, 'values');
-  if (!values) return null;
-  const parsed = interactionFormSchema.safeParse(values);
-  if (!parsed.success) return null;
-  return { id, updated_at: updatedAt, payload: { values: parsed.data } };
+  const parsedPayload = parseInteractionDraftPayload(payload);
+  if (!parsedPayload) return null;
+  return { id, updated_at: updatedAt, payload: parsedPayload };
 };
 
 export const getInteractionDraft = async ({ userId, agencyId, formType = 'interaction' }: GetInteractionDraftInput): Promise<InteractionDraftRecord | null> => {

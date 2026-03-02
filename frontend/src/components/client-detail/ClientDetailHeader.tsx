@@ -1,4 +1,4 @@
-import { Archive, ArchiveRestore, Building2, Pencil } from 'lucide-react';
+import { Archive, ArchiveRestore, Building2, Pencil, Trash2 } from 'lucide-react';
 
 import { formatClientNumber } from '@/utils/clients/formatClientNumber';
 import { Button } from '@/components/ui/button';
@@ -8,8 +8,10 @@ const ClientDetailHeader = ({
   client,
   agencyName,
   isArchived,
+  canDeleteClient,
   onEditClient,
-  onToggleArchive
+  onToggleArchive,
+  onDeleteClient
 }: ClientDetailHeaderProps) => (
   <div className="flex items-start justify-between gap-4">
     <div className="flex items-start gap-4">
@@ -39,6 +41,16 @@ const ClientDetailHeader = ({
       >
         {isArchived ? <ArchiveRestore size={14} /> : <Archive size={14} />}
       </Button>
+      {canDeleteClient && (
+        <Button
+          type="button"
+          variant="outline"
+          className="h-8 px-2 text-destructive hover:text-destructive"
+          onClick={onDeleteClient}
+        >
+          <Trash2 size={14} />
+        </Button>
+      )}
     </div>
   </div>
 );

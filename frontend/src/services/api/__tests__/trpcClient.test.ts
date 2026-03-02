@@ -49,7 +49,9 @@ describe('trpcClient', () => {
       }
     } as never);
 
-    const fetchMock = vi.fn().mockResolvedValue(makeTrpcSuccessResponse({ ok: true }));
+    const fetchMock = vi.fn().mockImplementation(() =>
+      Promise.resolve(makeTrpcSuccessResponse({ ok: true }))
+    );
     vi.stubGlobal('fetch', fetchMock);
 
     const module = await import('../trpcClient');
@@ -91,7 +93,9 @@ describe('trpcClient', () => {
       }
     } as never);
 
-    const fetchMock = vi.fn().mockResolvedValue(makeTrpcSuccessResponse({ ok: true }));
+    const fetchMock = vi.fn().mockImplementation(() =>
+      Promise.resolve(makeTrpcSuccessResponse({ ok: true }))
+    );
     vi.stubGlobal('fetch', fetchMock);
 
     const module = await import('../trpcClient');
@@ -121,5 +125,80 @@ describe('trpcClient', () => {
       error = caught;
     }
     expect(error).toMatchObject({ code: 'CONFIG_INVALID' });
+  });
+
+  it('reuses cached client instance across calls', async () => {
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://demo.supabase.co');
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'anon-key');
+
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    mockRequireSupabase.mockReturnValue({
+      auth: {
+        getSession: vi.fn().mockResolvedValue({
+          data: { session: makeSession('token-cache', nowSeconds + 3600) }
+        }),
+        refreshSession: vi.fn()
+      }
+    } as never);
+
+    const fetchMock = vi.fn().mockImplementation(() =>
+      Promise.resolve(makeTrpcSuccessResponse({ ok: true }))
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const module = await import('../trpcClient');
+    await module.callTrpcMutation('data.entities', { action: 'list' });
+    await module.callTrpcMutation('data.entities', { action: 'list' }, {
+      headers: new Headers([['x-request-id', 'req-cache']])
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('buildRpcRequestInit enforces JSON content type and keeps custom headers', async () => {
+    const module = await import('../trpcClient');
+
+    const init = await module.buildRpcRequestInit({
+      method: 'POST',
+      headers: {
+        'x-request-id': 'req-3'
+      }
+    });
+
+    const headers = new Headers(init.headers);
+    expect(init.method).toBe('POST');
+    expect(headers.get('x-request-id')).toBe('req-3');
+    expect(headers.get('Content-Type')).toBe('application/json');
+  });
+
+  it('supports tuple headers without apikey and keeps existing bearer token', async () => {
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://demo.supabase.co');
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', '');
+
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    mockRequireSupabase.mockReturnValue({
+      auth: {
+        getSession: vi.fn().mockResolvedValue({
+          data: { session: makeSession('Bearer token-inline', nowSeconds + 3600) }
+        }),
+        refreshSession: vi.fn()
+      }
+    } as never);
+
+    const fetchMock = vi.fn().mockImplementation(() =>
+      Promise.resolve(makeTrpcSuccessResponse({ ok: true }))
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const module = await import('../trpcClient');
+    await module.callTrpcMutation('data.entities', { action: 'list' }, {
+      headers: [['x-request-id', 'req-array']]
+    });
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const headers = new Headers(init.headers);
+    expect(headers.has('apikey')).toBe(false);
+    expect(headers.get('Authorization')).toBe('Bearer token-inline');
+    expect(headers.get('x-request-id')).toBe('req-array');
   });
 });

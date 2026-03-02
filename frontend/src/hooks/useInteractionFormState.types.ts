@@ -1,7 +1,7 @@
 import type { Control } from 'react-hook-form';
 
 import type { AgencyConfig } from '@/services/config';
-import type { InteractionFormValues } from '@/schemas/interactionSchema';
+import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
 import type { Entity, EntityContact } from '@/types';
 
 export type InteractionFormStateInput = {

@@ -1,0 +1,270 @@
+STATUT DU DOCUMENT: HISTORIQUE (NON NORMATIF)
+SOURCE DE VERITE PROJET: docs/LOGIQUE_REMISE_CIR/cahier-des-charges/**
+REGLE: en cas de divergence, le cahier des charges v3+ prevaut.
+
+Je travail en tant que technico-commercial dans la société CIR, sur l’agence de Bordeaux.
+
+Voici ci-dessous une présentation de la société.
+
+Présentation de la société CIR :
+
+L’architecture corporative de la Compagnie Industrielle du Roulement s’est construite sur une maîtrise historique de la transmission mécanique depuis sa création en 1933 à Toulouse. Le développement stratégique a connu une accélération décisive avec l’acquisition de l’entreprise en 1979 par la famille Clericy, suivie de l’intégration de la société FASE en 2013, qui a élargi significativement le spectre des compétences vers les environnements industriels critiques.
+La gouvernance est assurée par une direction expérimentée : Mme Isabelle Filhastre-Clericy occupe la présidence et la gérance, épaulée par M. Jean-Jayme Ramon en qualité de co-gérant. Cette continuité familiale garantit l’alignement permanent sur le slogan historique de l’entreprise : « L’écoute, le conseil, la solution ». Les valeurs fondamentales reposent sur la confiance pour des partenariats pérennes, le respect au sein de l’écosystème et la compétence technique de haut niveau.
+Sur le plan financier, l’envergure du Groupe CIR est substantielle. Pour l’exercice 2024, le chiffre d’affaires consolidé s’élève à 109 millions d’euros. L’entité légale principale (SIREN 570 800 375, SARL au capital social de 271 800 €) a réalisé 81,34 millions d’euros de chiffre d’affaires, dégageant un résultat net de 1,95 million d’euros et une trésorerie excédentaire de 1,25 million d’euros. Le moteur de cette performance réside dans un capital humain de 380 collaborateurs au niveau du Groupe. L’organisation des ressources humaines est précisément calibrée : 40 technico-commerciaux itinérants qualifient les besoins sur site, 150 technico-commerciaux sédentaires assurent le suivi quotidien, et 7 services d’expertise produits apportent un appui technique spécialisé.
+Le maillage territorial confirme le statut de multi-spécialiste du négoce au service des industries du Grand Sud. Le Groupe déploie 14 agences de proximité en Occitanie et Nouvelle-Aquitaine : Toulouse (siège et centre logistique), Mérignac (Bordeaux), Colomiers, Tarbes, Pau, Béziers, Sète, Montauban, Albi, Castres, Carcassonne, Perpignan, Rodez et Agen. La disponibilité immédiate des composants critiques s’appuie sur le centre logistique régional de Toulouse, qui s’étend sur 4 000 m² au sol pour une capacité de stockage globale de 10 000 m². Il abrite 70 000 références en stock (immobilisation financière de 12 millions d’euros) et gère dynamiquement 30 000 références actives au service de 12 000 clients. L’efficience logistique est optimisée par des magasins automatisés verticaux de type Modula Lift, permettant de traiter 400 colis par jour et d’assurer des livraisons régionales biquotidiennes.
+Pour renforcer sa compétitivité face aux grands acteurs mondiaux, la CIR s’appuie sur deux alliances stratégiques majeures. Au niveau national, elle est membre fondateur du réseau FAIR (créé en 1993), qui réunit sept sociétés indépendantes totalisant 1 416 collaborateurs, 410 millions d’euros de chiffre d’affaires, 80 agences, 50 000 clients et un stock combiné de 60 millions d’euros. Au niveau continental, elle appartient au réseau ONE (One4Europe), qui couvre dix pays partenaires, rassemble 3 200 collaborateurs pour un chiffre d’affaires cumulé de 950 millions d’euros, sert 163 000 clients et propose un catalogue commun de 1,5 million de références expédiables.
+La numérisation des processus d’approvisionnement passe par le portail WebPro CIR (accès 24/7 aux tarifs négociés et à la disponibilité en temps réel) et l’application mobile ScanCIR (gestion simplifiée des stocks déportés de type Kanban par lecture de codes-barres). L’ensemble de l’activité de négoce technique est certifié ISO 9001 version 2015 par AFAQ AFNOR. L’entité FASE bénéficie de la certification MASE, indispensable pour les interventions sur sites industriels classés. L’excellence opérationnelle culmine avec le département CIR Aero, dédié aux secteurs aéronautique, spatial et défense, qui gère des flux autonomes et sécurisés et est certifié EN/AS 9120 version 2016, affichant un taux de conformité qualité (OQD) de 99,7 % et un taux de respect des délais (OTD) de 95 %.
+ROULEMENTS > GUIDAGES > Éléments Roulants et Paliers Cœur de métier historique, cette méga-famille représente 18,7 % du chiffre d’affaires global. Elle couvre l’intégralité des solutions de rotation et de translation industrielles. Les partenariats incluent les leaders mondiaux du secteur. Les équipes réalisent des prestations à haute valeur ajoutée : audits de parcs machines, diagnostics de pannes, accompagnement au montage/démontage et services de maintenance prédictive.
+TRANSMISSION > TRANSMISSION MÉCANIQUE > Entraînements Cinématiques Première source de revenus avec 23 % du chiffre d’affaires, cette division englobe toutes les solutions de transfert de couple et de puissance. Les partenariats avec les principaux constructeurs permettent des prestations d’optimisation énergétique et d’usinage sur mesure.
+PNEUMATIQUE > ACTIONNEURS ET DISTRIBUTEURS > Traitement de l’Air et Mouvement Générant 14,7 % du chiffre d’affaires, ce pôle couvre l’ensemble des solutions de mouvement et de traitement d’air. Les équipes maîtrisent le dimensionnement et l’intégration dans les environnements industriels, y compris les zones à risques.
+AUTOMATISME > MÉCATRONIQUE & CAPTEURS > Contrôle-Commande et E/S Représentant 9,4 % du chiffre d’affaires, cette famille structure l’intelligence des machines. Elle intègre capteurs, automates, variateurs, sécurité machine et infrastructures d’armoires, avec des partenaires leaders en automatisme et robotique collaborative.
+HYDRAULIQUE > PUISSANCE FLUIDE > Centrales et Composants Haute Pression Contribuant à 8,8 % du chiffre d’affaires, cette méga-famille propose la conception, l’assemblage et la maintenance de centrales et circuits haute pression. Les ateliers régionaux et espaces « Flexible Minute » garantissent une réactivité immédiate.
+FLUIDES PROCESS > CONTRÔLE DES FLUIDES > Électrovannes et Instrumentation Pesant 5,3 % du chiffre d’affaires, ce domaine gère l’interception et la régulation des fluides industriels, avec une expertise en matériaux et en solutions adaptées aux contraintes chimiques et thermiques.
+MOTORISATION > ENTRAÎNEMENTS ÉLECTRIQUES > Centre de Montage et Moto-réducteurs Constituant 4,1 % du chiffre d’affaires, cette famille bénéficie d’un Centre de Montage exclusif à Toulouse, permettant l’assemblage sur mesure de moteurs et moto-réducteurs avec une grande flexibilité de stocks et de délais.
+ÉTANCHÉITÉ, AIR COMPRIMÉ ET PRODUITS DE MAINTENANCE Ces trois familles complètent l’offre MRO : étanchéité (6,5 % du CA) avec découpe sur mesure, air comprimé (6,3 % du CA) pour la production et le traitement d’air propre, et produits de maintenance (3,2 % du CA) pour les solutions chimiques et lubrifiantes.
+
+Je suis affligé car la société est dirigé par des seniors 55 ans + ; et dans les 5 années a venir + de 60 cadres vont partir à la retraire. Actuellement la société est sur des bases vieillissante : Toutes l’informatique interne tourne sous AS400, nous avons un webshop pas terrible : https://webpro.cir.fr/ ; ou les clients ne peuvent pas voir l’intégralité des produits disponible sur l’AS400, ils ne peuvent pas suivre leurs colis, voir leur facture etc.. ils peuvent seulement faire un devis avec les produits présent, voir si les produits sont en stocks dans les différentes agences, et passer commandes.
+
+Nous avons donc 14 agences. Chaque agence a entre 15 et 25 personnes réparti comme suit : Des technico-commercial comptoir : Nous avons un comptoir ouvert pour les clients qui peuvent venir s’approvisionner via notre stock (chaque agence a un stock qui a une valeur total (chaque agence) entre 100k et 600k€. Donc les clients peuvent venir directement au comptoir pour venir trouver le matériel dont ils ont besoin, nous proposons également un service de fabrication de flexible hydraulique. Il y a également des technico commercial sédentaire : pour répondre aux appels/mails aux clients de l’agence afin de répondre a leurs besoin/gérer les problèmes logistiques/approvisionner du matériel/négocier des prix avec les fournisseurs/définir des produits ou solutions. Il y a également une assistante commercial. Un ROI (Responsable organisation interne) son but est de gérer les process interne et les équipes interne. Il y a également dans certaine agences une partie « Système » ou nous réalisons de la préstation sur les familles suivantes : hydraulique et air comprimé. Donc avec un bureau d’étude de 2 ou 3 personnes et 4-5 techniciens. Et également la logistique qui est géré par un sédentaire ou comptoir 1 personne qui tourne chaque jour.
+
+Si je t’explique tout ça c’est qu’actuellement j’aimerai proposer une refonte du système de remise commercial a la CIR. Effectivement le système actuel est vraiment inutilisable et très mal fait je vais tout t’expliquer et tu vas me dire ce que tu en penses.
+Nous avons donc 10 familles de produits a la CIR.
+Nous avons également plus d’une centaine de fournisseur / fabricant dont nous sommes distributeurs et chacun de ces fabricant/fournisseur a des centaines de familles de produits, et dans ces familles de produits des milliers de références produits.
+Ce qui représente en tout des millions de référence produits.
+
+La CIR a créer une classification interne. Il normalise l'offre technique sur trois niveaux de profondeur : Méga-Famille (Code FSMEGA) > Famille (Code FSFAM) > Sous-famille (Code FSSFA). La concaténation de ces identifiants crée une clé unique (ex: 1_0_10 pour ROULEMENTS > PRESTATION > MAIN D'OEUVRE ET PRESTATION). Nous avons également créé une table de transcodage (mapping). Il relie la codification native du fabricant (Marque, catégorie CAT_FAB) à la nomenclature CIR (les codes FSMEGA, FSFAM, FSSFA).
+
+Il y a :
+- 11 Méga-Familles (ex: ROULEMENTS, PNEUMATIQUE, HYDRAULIQUE, etc.)
+- 82 Familles
+- 473 Sous-familles
+
+Ou sont classés/mappés les 7548 segments
+
+Un "segment" (ou segment tarifaire) est une clé de gestion administrative, logistique et de tarification interne. Il matérialise le croisement entre :
+- Une marque fournisseur (ex: SKF, FESTO, TIMK).
+- Une famille de remise ou catégorie de produits propre à ce fabricant (ex: "Z16", "Roulements à Rouleaux Sphériques").
+- C'est ce segment qui fait le pont : il traduit l'offre spécifique et les conditions d'achats du fournisseur pour les affecter de manière standardisée dans l'une des 473 sous-familles CIR.
+
+Une même sous-famille CIR (ex: Méga-Famille > Famille > Sous-famille : PNEUMATIQUE > VERINS > VERINS ISO) peut agréger de multiples segments de différents fabricants.
+
+Tu peux voir dans le fichier "\docs\LOGIQUE_REMISE_CIR\full_tree_famille-CIR.txt" l'arbre de classement des familles CIR.
+
+Egalement dans : "\docs\LOGIQUE_REMISE_CIR\Classification_produits.xlsx" le fichier excel avec la classifications produits CIR.
+Dans le fichier : "\docs\LOGIQUE_REMISE_CIR\SEGMENTS TARIFAIRES.xlsx" c'est doc le mapping entre les familles fabricant et la classification produit CIR.
+
+Alors on a donc des clients, ces clients sont rangés dans des groupements. Exemple : Groupement intégrateur.
+
+Et donc il y a plusieurs niveaux de remises, schéma clair des ordres de priorité de calcul des prix clients dont voici le descriptif :
+
+? D’où provient la condition d’un client ?
+
+Voici les différentes possibilités de calculer les prix client
+avec l’ordre de priorité (du plus prioritaire au moins prioritaire) :
+
+PRIORITÉ DE CALCUL DU PRIX NET CLIENT EN FONCTION DES CONDITIONS
+
+1. Prix marché CLIENT
+   ? Priorité absolue
+
+2. Prix marché GRPT
+
+3. Prix PROMO
+   GEN : PRIX NET TOUT CLIENT
+   ? Appliqué uniquement s’il est plus favorable au client
+
+4. Remise / Colonne Client
+   CLT SG : %
+   CLT SG : DEMARRAGE COLONNE
+
+5. Remise / Colonne GRPT
+   GRP SG : %
+   GRP SG : DEMARRAGE COLONNE
+
+6. Remise Catégorie tarifaire
+   CAT.TAR SG : %
+
+7. Remise mini
+   MINI SG : %
+
+8. Coef mini
+   SG - COEF MINI
+
+9. Prix TARIF
+   (Prix tarif fabricant ou tarif CIR calculé à partir du prix d’achat)
+
+Distinction claire entre :
+Prix Tarif fourni par le fabricant
+Prix Tarif CIR (calculé à partir du prix d’achat lorsque le fabricant ne publie pas de tarif public)
+
+Un **segment tarifaire** materialise le croisement entre :
+- Une **marque** fournisseur (ex: SKF)
+- Une **categorie fabricant** (CAT_FAB) propre a ce fournisseur (ex: Z16)
+
+C'est l'unite atomique de tarification chez CIR. Il y en a **7 548**.
+
+Chaque segment est **mappe** vers exactement une sous-famille CIR via une table de transcodage usage.
+
+**Exemple de mapping** :
+
+| Segment ID | Marque | CAT_FAB | Libelle fabricant | ? FSMEGA | FSFAM | FSSFA |
+|-----------|--------|---------|-------------------|----------|-------|-------|
+| 1001 | SKF | Z16 | Roulements rigides a billes | ? 1 | 10 | 10 |
+| 1002 | SKF | Z18 | Roulements a rouleaux coniques | ? 1 | 10 | 30 |
+| 1003 | TIMKEN | SET_BR | Bearing Sets | ? 1 | 10 | 40 |
+| 2001 | FESTO | VER_ISO | Verins ISO | ? 4 | 30 | 15 |
+| 2002 | SMC | ACT_CYL | Pneumatic Cylinders | ? 4 | 30 | 15 |
+| 3001 | PARKER | HYD_FLEX | Flexible hydrauliques | ? 3 | 10 | 10 |
+
+> **Note** : Plusieurs segments de fabricants differents peuvent pointer vers la meme sous-famille CIR. Par exemple, les verins ISO de FESTO (segment 2001) et de SMC (segment 2002) convergent tous deux vers `4_30_15`.
+
+### 3.3 - Catalogue produit (references fabricant)
+
+Chaque fabricant fournit un **fichier tarif** (Excel) contenant ses references produit. Ce fichier est la source de verite pour les prix publics et les conditions d'achat CIR.
+
+**Donnees par reference produit** :
+
+| Champ | Type | Description | Exemple |
+|-------|------|-------------|---------|
+| `marque` | string | Code fabricant | "SKF" |
+| `reference` | string | Reference unique fabricant | "6205-2RSH" |
+| `cat_fab` | string | Categorie/famille de remise fabricant | "Z16" |
+| `description` | string | Designation du produit | "Rlt rigide a billes 25x52x15 2RS" |
+| `description_famille` | string | Libelle de la categorie fabricant | "Roulements rigides a billes etanches" |
+| `prix_public` | decimal | Prix tarif public HT | 12.50 EUR |
+| `remise_standard_fab` | decimal | Remise d'achat negociee CIR | 64.0% |
+
+**Prix d'achat calcule** :
+```
+PA = Prix Public x (1 - Remise Standard Fabricant / 100)
+```
+
+**Exemple** :
+```
+SKF 6205-2RSH :
+  Prix public    = 12.50 EUR
+  Remise fab     = 64%
+  PA             = 12.50 x (1 - 0.64) = 4.50 EUR
+```
+
+### 3.4 - Remise fabricant : deux modes
+
+Les fabricants gerent leurs remises d'achat de deux manieres :
+
+**Mode 1 : Remise par famille (CAT_FAB)**
+Toutes les references d'une meme categorie fabricant partagent la meme remise.
+```
+SKF CAT_FAB "Z16" : remise 64% ? s'applique a toutes les references Z16
+  - SKF 6205-2RSH : 12.50 EUR tarif ? PA = 4.50 EUR
+  - SKF 6206-2RSH : 15.80 EUR tarif ? PA = 5.69 EUR
+  - SKF 6207-2RSH : 19.20 EUR tarif ? PA = 6.91 EUR
+```
+
+**Mode 2 : Remise par reference**
+Chaque reference a sa propre remise d'achat.
+```
+TIMKEN (remises variables par reference) :
+  - TIMKEN 32205 : 35.00 EUR tarif, remise 58% ? PA = 14.70 EUR
+  - TIMKEN 32206 : 42.00 EUR tarif, remise 55% ? PA = 18.90 EUR
+  - TIMKEN 32210 : 68.00 EUR tarif, remise 52% ? PA = 32.64 EUR
+```
+
+L'outil doit gerer les deux modes de maniere transparente.
+
+### 3.5 - Import des fichiers tarifs fabricant
+
+Chaque fabricant fournit son fichier tarif dans **son propre format Excel** (colonnes differentes, nommage different, structure differente).
+
+**Exemples de formats reels** :
+
+Fichier SKF :
+| Art. No. | Product Description | Product Group | List Price EUR |
+|----------|-------------------|---------------|---------------|
+| 6205-2RSH | Deep groove ball bearing | Z16 | 12.50 |
+
+Fichier FESTO :
+| Ref | Designation | Famille | PU HT |
+|-----|------------|---------|-------|
+| DSBC-40-100-PPVA-N3 | Verin normalise | VER_ISO | 185.00 |
+
+Fichier Parker :
+| PART_NUMBER | DESCRIPTION | CATEGORY | PRICE_EUR | DISCOUNT_PCT |
+|-------------|------------|----------|-----------|--------------|
+| 421-8-BLK | Flexible 1/2" | HYD_FLEX | 28.50 | 45 |
+
+> L'interface d'import doit permettre de **mapper dynamiquement** les colonnes du fichier source vers les champs attendus par le systeme, et de **sauvegarder ce mapping** pour les reimports futurs du meme fabricant.
+
+---
+
+## 4. Moteur de calcul des prix
+
+### 4.1 - Cascade de priorite
+
+Le prix net client est determine par une cascade de **10 niveaux de priorite**, du plus specifique au plus generique. Le moteur descend la cascade et **s'arrete au premier niveau qui produit un resultat**.
+
+| Prio | Code | Intitule | Portee | Type de valeur |
+|------|------|---------|--------|---------------|
+| **0** | `PRIX_MARCHE_REF_CLT` | Prix marche client par reference | 1 client x 1 reference produit | Prix fixe EUR |
+| **1** | `PRIX_MARCHE_CLT` | Prix marche client par segment | 1 client x 1 segment | Prix fixe EUR |
+| **2** | `PRIX_MARCHE_GRPT` | Prix marche groupement | 1 groupement x 1 segment | Prix fixe EUR |
+| **3** | `PRIX_PROMO` | Prix promotionnel | Tous clients x 1 segment | Prix fixe EUR |
+| **4** | `REMISE_CLT` | Remise client | 1 client x 1 segment | % sur tarif |
+| **5** | `REMISE_GRPT` | Remise groupement | 1 groupement x 1 segment | % sur tarif |
+| **6** | `REMISE_CAT_TAR` | Remise categorie tarifaire | 1 categorie x 1 segment | % sur tarif |
+| **7** | `REMISE_MINI` | Remise minimum | 1 segment (globale) | % sur tarif |
+| **8** | `COEF_MINI` | Coefficient minimum | 1 segment (globale) | Multiplicateur PA |
+| **9** | `PRIX_TARIF` | Prix tarif | 1 segment (base) | Prix EUR |
+
+### 4.2 - Regle speciale du prix PROMO (niveau 3)
+
+Le prix promo est une **exception** dans la cascade : il ne s'applique que s'il est **plus favorable au client** que le prix issu des niveaux 4 a 9.
+
+**Algorithme** :
+```
+prix_cascade_4_plus = resoudre_cascade(niveaux 4 a 9)
+si prix_promo existe ET prix_promo < prix_cascade_4_plus :
+    prix_final = prix_promo
+sinon :
+    prix_final = prix_cascade_4_plus
+```
+
+### 4.3 - Regle du coefficient mini (niveau 8)
+
+Le coef mini est un **plancher absolu** qui ne peut etre viole par aucune condition :
+```
+Prix Vente >= PA x Coef Mini
+```
+
+Si une condition (ex: remise client 50%) produit un prix inferieur au plancher coef mini, le moteur **refuse** la condition ou **alerte** l'utilisateur.
+
+### 4.4 - Formules de conversion
+
+#### Marge commerciale (formule CIR)
+```
+Marge % = (PV - PA) / PV x 100
+```
+
+#### Prix de vente depuis une marge cible
+```
+PV = PA / (1 - Marge% / 100)
+```
+
+#### Remise depuis un prix de vente
+```
+Remise % = (1 - PV / Prix Tarif) x 100
+```
+
+#### Conversion directe Marge -> Remise
+```
+Remise % = (1 - (PA / (1 - Marge%/100)) / Prix Tarif) x 100
+```
+
+#### Conversion directe Remise -> Marge
+```
+PV = Prix Tarif x (1 - Remise%/100)
+Marge % = (PV - PA) / PV x 100
+       = (1 - PA / (Prix Tarif x (1 - Remise%/100))) x 100
+
+Pour toi si on devais construire un outils de A à Z qui se concentre sur ce système de remise. 
+Ca doit être une interface web intuitive, pour 400 collaborateurs. Vraiment facile, avec possibilité de modifié les remises etc... trier pour voir si le client a déjà consommer dans cette famille/sous-famille/segemnt etc... alors on entre en marge exemple 25% de marge et c'est traduis dérrière dans le backend en % de remise. Mais du coup on peux également choisir de rentrer une remise si on veut. Que pourrais tu me proposer ? On brainstorm. Pose moi des questions. Je te rappelle c'est pour un BtoB industriel. On doit vraiment creuser pour créer un cahier des charges ultra complet.
+On dois pouvoir absolument tout filtrer, modifier les remises/marge par mega/famille/sous famille / famille fabricant  / référence etc... vraiment avec le max de clarté.

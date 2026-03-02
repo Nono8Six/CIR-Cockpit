@@ -7,7 +7,7 @@ import { updateUserPassword } from '@/services/auth/updateUserPassword';
 import { setProfilePasswordChanged } from '@/services/auth/setProfilePasswordChanged';
 import { createAppError } from '@/services/errors/AppError';
 import { handleUiError } from '@/services/errors/handleUiError';
-import { passwordSchema } from '../../../shared/schemas/auth.schema';
+import { passwordSchema } from 'shared/schemas/auth.schema';
 
 type PasswordRule = {
   id: string;

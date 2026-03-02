@@ -26,33 +26,35 @@ const AppMainContent = ({
   onReloadData
 }: AppMainContentProps) => {
   return (
-    <main id="main-content" className="relative flex-1 overflow-y-auto overflow-x-clip p-2 sm:p-4">
-      <div className="min-h-full w-full max-w-[1600px] mx-auto transition-opacity duration-200">
+    <main id="main-content" className="relative flex-1 min-h-0 overflow-hidden p-2 sm:p-4">
+      <div className="mx-auto flex h-full min-h-0 w-full max-w-[1600px] flex-col transition-opacity duration-200">
         <AppMainStateView
           mainViewState={mainViewState}
           onReloadData={onReloadData}
         />
         {mainViewState.kind === 'ready' && (
-          <AppMainTabContent
-            activeTab={activeTab}
-            activeAgencyId={activeAgencyId}
-            config={config}
-            interactions={interactions}
-            userId={userId}
-            userRole={userRole}
-            recentEntities={recentEntities}
-            entitySearchIndex={entitySearchIndex}
-            entitySearchLoading={entitySearchLoading}
-            canAccessSettings={canAccessSettings}
-            canEditSettings={canEditSettings}
-            canAccessAdmin={canAccessAdmin}
-            focusedClientId={focusedClientId}
-            focusedContactId={focusedContactId}
-            onFocusHandled={onFocusHandled}
-            onSaveInteraction={onSaveInteraction}
-            onRequestConvert={onRequestConvert}
-            onOpenGlobalSearch={onOpenGlobalSearch}
-          />
+          <div className="min-h-0 flex-1">
+            <AppMainTabContent
+              activeTab={activeTab}
+              activeAgencyId={activeAgencyId}
+              config={config}
+              interactions={interactions}
+              userId={userId}
+              userRole={userRole}
+              recentEntities={recentEntities}
+              entitySearchIndex={entitySearchIndex}
+              entitySearchLoading={entitySearchLoading}
+              canAccessSettings={canAccessSettings}
+              canEditSettings={canEditSettings}
+              canAccessAdmin={canAccessAdmin}
+              focusedClientId={focusedClientId}
+              focusedContactId={focusedContactId}
+              onFocusHandled={onFocusHandled}
+              onSaveInteraction={onSaveInteraction}
+              onRequestConvert={onRequestConvert}
+              onOpenGlobalSearch={onOpenGlobalSearch}
+            />
+          </div>
         )}
       </div>
     </main>

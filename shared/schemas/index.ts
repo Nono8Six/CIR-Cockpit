@@ -48,6 +48,9 @@ export {
   dataEntitiesReassignResponseSchema,
   dataEntitiesResponseSchema,
   dataEntityContactsResponseSchema,
+  dataInteractionsDeleteResponseSchema,
+  dataInteractionsListResponseSchema,
+  dataInteractionsMutationResponseSchema,
   dataInteractionsResponseSchema,
   dataProfileResponseSchema
 } from './api-responses.ts';

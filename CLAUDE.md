@@ -23,6 +23,22 @@ Backend (depuis la racine) :
 deno test --allow-env --no-check --config backend/deno.json backend/functions/api
 ```
 
+Racine (depuis `/`) :
+
+```bash
+pnpm run qa:fast           # Boucle rapide: typecheck + lint + tests front (sans coverage) + checks backend
+pnpm run qa                # Gate complet de livraison (coverage, audit, build, checks backend)
+```
+
+## Politique CI/CD
+
+- Pas de workflow GitHub Actions sur ce projet.
+- La qualite est validee en local via `pnpm run qa` et le runbook manuel `docs/qa-runbook.md`.
+- Les E2E restent hors CI et sont executes localement avec un environnement Supabase de test.
+- Methodologie locale:
+  - pendant l'implementation: commandes ciblees ou `pnpm run qa:fast` selon l'impact.
+  - avant livraison/merge: `pnpm run qa` obligatoire.
+
 ## Structure projet
 
 ```
@@ -215,6 +231,7 @@ Voir skill `cir-error-handling` pour le guide complet.
 - Multi-tenant : RLS filtre par `agency_id` sur toutes les tables
 - Roles : `super_admin`, `agency_admin`, `tcs`
 - Logs d'audit consultables par `super_admin` et `agency_admin`
+- `auth_leaked_password_protection` : ne pas activer sur ce projet (plan non Pro, fonctionnalite non retenue produit). Considerer ce point comme N/A documente dans les plans/CR.
 
 ## Tests
 

@@ -15,6 +15,7 @@ interface Props {
   ) => Promise<void> | void;
   statuses: AgencyStatus[];
   onRequestConvert: (interaction: Interaction) => void;
+  onDeleteInteraction: (interaction: Interaction) => void;
 }
 
 const InteractionDetails = ({
@@ -22,7 +23,8 @@ const InteractionDetails = ({
   onClose,
   onUpdate,
   statuses,
-  onRequestConvert
+  onRequestConvert,
+  onDeleteInteraction
 }: Props) => {
   const {
     note,
@@ -47,6 +49,7 @@ const InteractionDetails = ({
         interaction={interaction}
         canConvert={canConvert}
         onRequestConvert={onRequestConvert}
+        onDeleteInteraction={onDeleteInteraction}
         onClose={onClose}
       />
       <div className="flex-1 overflow-y-auto bg-card px-4 py-4 sm:px-5" ref={scrollRef}>

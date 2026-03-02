@@ -53,14 +53,7 @@ const buildInteraction = (): Interaction => ({
   status_id: null,
   status_is_terminal: false,
   subject: 'Demande de devis',
-  timeline: [
-    {
-      id: 'event-1',
-      date: '2026-02-01T09:00:00.000Z',
-      type: 'creation',
-      content: 'Creation'
-    }
-  ],
+  timeline: [],
   updated_at: '2026-02-01T09:00:00.000Z',
   updated_by: null
 });

@@ -1,10 +1,11 @@
-import { useCallback, useDeferredValue, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Car, Mail, Phone, Store } from 'lucide-react';
 
 import type { ConvertClientEntity } from '@/components/ConvertClientDialog';
 import type { KanbanColumns } from '@/components/dashboard/DashboardKanban';
 import { isProspectRelationValue } from '@/constants/relations';
+import { useDashboardFilters } from '@/hooks/useDashboardFilters';
 import { createAppError, isAppError } from '@/services/errors/AppError';
 import { handleUiError } from '@/services/errors/handleUiError';
 import { notifySuccess } from '@/services/errors/notify';
@@ -13,16 +14,13 @@ import type {
   AgencyStatus,
   Interaction,
   InteractionUpdate,
-  StatusCategory,
   TimelineEvent
 } from '@/types';
-import { getEndOfDay } from '@/utils/date/getEndOfDay';
-import { getPresetDateRange, type FilterPeriod } from '@/utils/date/getPresetDateRange';
-import { getStartOfDay } from '@/utils/date/getStartOfDay';
-import { getTodayIsoDate } from '@/utils/date/getTodayIsoDate';
+import { inferStatusCategoryFromLabel, buildKanbanColumns } from '@/utils/dashboard/dashboardAggregates';
 import { isBeforeNow } from '@/utils/date/isBeforeNow';
-import { toTimestamp } from '@/utils/date/toTimestamp';
+
 import { useAddTimelineEvent } from './useAddTimelineEvent';
+import { useDeleteInteraction } from './useDeleteInteraction';
 
 type ViewMode = 'kanban' | 'list';
 
@@ -31,63 +29,6 @@ type UseDashboardStateParams = {
   statuses: AgencyStatus[];
   agencyId: string | null;
   onRequestConvert: (entity: ConvertClientEntity) => void;
-};
-
-type DateBounds = {
-  start: number;
-  end: number;
-};
-
-const resolveActivityTimestamp = (interaction: Interaction): number =>
-  toTimestamp(interaction.last_action_at ?? interaction.updated_at ?? interaction.created_at);
-
-const isTimestampWithinBounds = (timestamp: number, bounds: DateBounds): boolean =>
-  timestamp >= bounds.start && timestamp <= bounds.end;
-
-const DONE_STATUS_TOKENS = ['termine', 'cloture', 'clos', 'finalise', 'resolu', 'archive'];
-const TODO_STATUS_TOKENS = ['a traiter', 'urgent', 'a faire', 'nouveau', 'nouvelle', 'ouverte'];
-
-const normalizeStatusLabel = (value: string): string =>
-  value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-
-const includesAnyToken = (value: string, tokens: string[]): boolean =>
-  tokens.some((token) => value.includes(token));
-
-const inferStatusCategoryFromLabel = (statusLabel: string): StatusCategory => {
-  const normalizedLabel = normalizeStatusLabel(statusLabel);
-
-  if (includesAnyToken(normalizedLabel, DONE_STATUS_TOKENS)) {
-    return 'done';
-  }
-
-  if (includesAnyToken(normalizedLabel, TODO_STATUS_TOKENS)) {
-    return 'todo';
-  }
-
-  return 'in_progress';
-};
-
-const buildDateBounds = (startDate: string, endDate: string): DateBounds | null => {
-  const start = getStartOfDay(startDate).getTime();
-  const end = getEndOfDay(endDate).getTime();
-
-  if (Number.isNaN(start) || Number.isNaN(end) || start > end) {
-    return null;
-  }
-
-  return { start, end };
-};
-
-const validateCustomDateRange = (startDate: string, endDate: string): string | null => {
-  if (!startDate || !endDate) {
-    return 'Renseignez une date de debut et de fin.';
-  }
-
-  if (startDate > endDate) {
-    return 'La date de debut doit preceder la date de fin.';
-  }
-
-  return null;
 };
 
 const buildTimelineSuccessMessage = (
@@ -120,53 +61,14 @@ export const useDashboardState = ({
   agencyId,
   onRequestConvert
 }: UseDashboardStateParams) => {
-  const today = getTodayIsoDate();
   const [viewMode, setViewMode] = useState<ViewMode>('kanban');
-  const [searchTerm, setSearchTerm] = useState('');
   const [selectedInteraction, setSelectedInteraction] = useState<Interaction | null>(null);
-  const [period, setPeriod] = useState<FilterPeriod>('today');
-  const [startDate, setStartDate] = useState(today);
-  const [endDate, setEndDate] = useState(today);
-  const [periodErrorMessage, setPeriodErrorMessage] = useState<string | null>(null);
-  const [lastValidCustomRange, setLastValidCustomRange] = useState<{
-    startDate: string;
-    endDate: string;
-  }>({
-    startDate: today,
-    endDate: today
-  });
-  const startDateRef = useRef(today);
-  const endDateRef = useRef(today);
-  const deferredSearchTerm = useDeferredValue(searchTerm);
-  const normalizedSearchTerm = useMemo(() => deferredSearchTerm.trim().toLowerCase(), [deferredSearchTerm]);
-  const compactSearchTerm = useMemo(() => normalizedSearchTerm.replace(/\s/g, ''), [normalizedSearchTerm]);
+  const [interactionToDelete, setInteractionToDelete] = useState<Interaction | null>(null);
 
   const queryClient = useQueryClient();
   const addTimelineMutation = useAddTimelineEvent(agencyId);
-
-  const presetDates = useMemo(
-    () => getPresetDateRange(period, startDate, endDate),
-    [period, startDate, endDate]
-  );
-
-  const customRangeError = useMemo(
-    () => validateCustomDateRange(startDate, endDate),
-    [startDate, endDate]
-  );
-
-  const effectiveStartDate =
-    period === 'custom'
-      ? customRangeError
-        ? lastValidCustomRange.startDate
-        : startDate
-      : presetDates.startDate;
-
-  const effectiveEndDate =
-    period === 'custom'
-      ? customRangeError
-        ? lastValidCustomRange.endDate
-        : endDate
-      : presetDates.endDate;
+  const deleteInteractionMutation = useDeleteInteraction({ agencyId });
+  const lastPeriodErrorMessageRef = useRef<string | null>(null);
 
   const statusById = useMemo(() => {
     const map = new Map<string, AgencyStatus>();
@@ -225,6 +127,46 @@ export const useDashboardState = ({
     [getStatusMeta]
   );
 
+  const {
+    searchTerm,
+    setSearchTerm,
+    period,
+    setPeriod,
+    periodErrorMessage,
+    effectiveStartDate,
+    effectiveEndDate,
+    filteredData,
+    handleDateRangeChange,
+    handleStartDateChange,
+    handleEndDateChange
+  } = useDashboardFilters({
+    interactions,
+    viewMode,
+    isStatusDone
+  });
+
+  useEffect(() => {
+    if (!periodErrorMessage) {
+      lastPeriodErrorMessageRef.current = null;
+      return;
+    }
+
+    if (periodErrorMessage === lastPeriodErrorMessageRef.current) {
+      return;
+    }
+
+    lastPeriodErrorMessageRef.current = periodErrorMessage;
+    handleUiError(
+      createAppError({
+        code: 'VALIDATION_ERROR',
+        message: periodErrorMessage,
+        source: 'validation'
+      }),
+      periodErrorMessage,
+      { source: 'dashboard.filters' }
+    );
+  }, [periodErrorMessage]);
+
   const getStatusBadgeClass = useCallback(
     (interaction: Interaction) => {
       const meta = getStatusMeta(interaction);
@@ -247,80 +189,24 @@ export const useDashboardState = ({
     [getStatusMeta]
   );
 
-  const dateBounds = useMemo(
-    () => buildDateBounds(effectiveStartDate, effectiveEndDate),
-    [effectiveStartDate, effectiveEndDate]
+  const isReminderOverdue = useCallback(
+    (interaction: Interaction) =>
+      Boolean(interaction.reminder_at && isBeforeNow(interaction.reminder_at) && !isStatusDone(interaction)),
+    [isStatusDone]
   );
-
-  const filteredData = useMemo(() => {
-    let data = interactions;
-
-    if (normalizedSearchTerm) {
-      data = data.filter((interaction) =>
-        interaction.company_name.toLowerCase().includes(normalizedSearchTerm)
-        || interaction.contact_name.toLowerCase().includes(normalizedSearchTerm)
-        || interaction.subject.toLowerCase().includes(normalizedSearchTerm)
-        || Boolean(interaction.order_ref && interaction.order_ref.includes(compactSearchTerm))
-        || Boolean(interaction.contact_phone && interaction.contact_phone.includes(compactSearchTerm))
-        || Boolean(
-          interaction.contact_email
-          && interaction.contact_email.toLowerCase().includes(normalizedSearchTerm)
-        )
-        || interaction.mega_families.some((family) =>
-          family.toLowerCase().includes(normalizedSearchTerm)
-        )
-      );
-    }
-
-    if (!dateBounds) {
-      if (viewMode === 'list') {
-        return [...data].sort(
-          (first, second) => resolveActivityTimestamp(second) - resolveActivityTimestamp(first)
-        );
-      }
-
-      return data.filter((interaction) => !isStatusDone(interaction));
-    }
-
-    if (viewMode === 'list') {
-      return data
-        .filter((interaction) => {
-          const lastActivityAt = resolveActivityTimestamp(interaction);
-          return isTimestampWithinBounds(lastActivityAt, dateBounds);
-        })
-        .sort((first, second) => resolveActivityTimestamp(second) - resolveActivityTimestamp(first));
-    }
-
-    return data.filter((interaction) => {
-      const lastActivityAt = resolveActivityTimestamp(interaction);
-      return isTimestampWithinBounds(lastActivityAt, dateBounds);
-    });
-  }, [compactSearchTerm, dateBounds, interactions, isStatusDone, normalizedSearchTerm, viewMode]);
 
   const kanbanColumns = useMemo<KanbanColumns | null>(() => {
     if (viewMode === 'list') {
       return null;
     }
 
-    return {
-      urgencies: filteredData.filter(
-        (interaction) =>
-          isStatusTodo(interaction)
-          || Boolean(
-            interaction.reminder_at
-            && isBeforeNow(interaction.reminder_at)
-            && !isStatusDone(interaction)
-          )
-      ),
-      inProgress: filteredData.filter(
-        (interaction) =>
-          !isStatusTodo(interaction)
-          && !isStatusDone(interaction)
-          && !(interaction.reminder_at && isBeforeNow(interaction.reminder_at))
-      ),
-      completed: filteredData.filter((interaction) => isStatusDone(interaction))
-    };
-  }, [filteredData, isStatusDone, isStatusTodo, viewMode]);
+    return buildKanbanColumns({
+      interactions: filteredData,
+      isStatusTodo,
+      isStatusDone,
+      isReminderOverdue
+    });
+  }, [filteredData, isReminderOverdue, isStatusDone, isStatusTodo, viewMode]);
 
   const getChannelIcon = useCallback((channel: string) => {
     switch (channel) {
@@ -334,54 +220,6 @@ export const useDashboardState = ({
         return <Car size={14} className="text-muted-foreground" />;
       default:
         return <Phone size={14} className="text-muted-foreground" />;
-    }
-  }, []);
-
-  const setCustomDateRange = useCallback(
-    (nextStartDate: string, nextEndDate: string) => {
-      startDateRef.current = nextStartDate;
-      endDateRef.current = nextEndDate;
-      setPeriod('custom');
-      setStartDate(nextStartDate);
-      setEndDate(nextEndDate);
-
-      const validationMessage = validateCustomDateRange(nextStartDate, nextEndDate);
-      if (validationMessage) {
-        setPeriodErrorMessage(validationMessage);
-        if (periodErrorMessage !== validationMessage) {
-          handleUiError(
-            createAppError({
-              code: 'VALIDATION_ERROR',
-              message: validationMessage,
-              source: 'validation'
-            }),
-            validationMessage,
-            { source: 'dashboard.filters' }
-          );
-        }
-        return;
-      }
-
-      setPeriodErrorMessage(null);
-      setLastValidCustomRange({
-        startDate: nextStartDate,
-        endDate: nextEndDate
-      });
-    },
-    [periodErrorMessage]
-  );
-
-  const handleDateRangeChange = useCallback(
-    (nextStartDate: string, nextEndDate: string) => {
-      setCustomDateRange(nextStartDate, nextEndDate);
-    },
-    [setCustomDateRange]
-  );
-
-  const handlePeriodChange = useCallback((nextPeriod: FilterPeriod) => {
-    setPeriod(nextPeriod);
-    if (nextPeriod !== 'custom') {
-      setPeriodErrorMessage(null);
     }
   }, []);
 
@@ -431,6 +269,27 @@ export const useDashboardState = ({
     [addTimelineMutation, agencyId, queryClient, selectedInteraction, statusById]
   );
 
+  const handleRequestDeleteInteraction = useCallback((interaction: Interaction) => {
+    setInteractionToDelete(interaction);
+  }, []);
+
+  const handleConfirmDeleteInteraction = useCallback(async () => {
+    if (!interactionToDelete) {
+      return;
+    }
+
+    try {
+      const deletedInteractionId = await deleteInteractionMutation.mutateAsync(interactionToDelete.id);
+      if (selectedInteraction?.id === deletedInteractionId) {
+        setSelectedInteraction(null);
+      }
+      setInteractionToDelete(null);
+      notifySuccess('Interaction supprimee.');
+    } catch {
+      return;
+    }
+  }, [deleteInteractionMutation, interactionToDelete, selectedInteraction]);
+
   return {
     viewMode,
     searchTerm,
@@ -446,12 +305,17 @@ export const useDashboardState = ({
     getChannelIcon,
     setViewMode,
     setSearchTerm,
-    setPeriod: handlePeriodChange,
+    setPeriod,
     setSelectedInteraction,
+    setInteractionToDelete,
     handleDateRangeChange,
-    handleStartDateChange: (value: string) => setCustomDateRange(value, endDateRef.current),
-    handleEndDateChange: (value: string) => setCustomDateRange(startDateRef.current, value),
+    handleStartDateChange,
+    handleEndDateChange,
     handleConvertRequest,
-    handleInteractionUpdate
+    handleInteractionUpdate,
+    interactionToDelete,
+    isDeleteInteractionPending: deleteInteractionMutation.isPending,
+    handleRequestDeleteInteraction,
+    handleConfirmDeleteInteraction
   };
 };

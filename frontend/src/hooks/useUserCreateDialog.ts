@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { UserRole } from '@/types';
 import { CreateAdminUserPayload } from '@/services/admin/adminUsersCreate';
 import { handleUiError } from '@/services/errors/handleUiError';
-import { userCreateFormSchema, type UserCreateFormValues } from '../../../shared/schemas/user.schema';
+import { userCreateFormSchema, type UserCreateFormValues } from 'shared/schemas/user.schema';
 
 type UseUserCreateDialogParams = {
   open: boolean;

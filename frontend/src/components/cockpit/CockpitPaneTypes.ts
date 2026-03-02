@@ -3,7 +3,7 @@ import type { FieldErrors, UseFormRegisterReturn, UseFormSetValue } from 'react-
 
 import type { RelationMode } from '@/constants/relations';
 import type { Entity, EntityContact } from '@/types';
-import type { InteractionFormValues } from '@/schemas/interactionSchema';
+import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
 import type { AgencyConfig } from '@/services/config';
 import type { AgencyStatus, StatusCategory } from '@/types';
 
