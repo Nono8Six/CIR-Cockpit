@@ -17,7 +17,7 @@ import {
   TableRow
 } from '@/components/ui/table';
 import { Agency, Client } from '@/types';
-import { createClientColumns } from '@/components/ClientList/columns';
+import { createClientColumns } from '@/components/client-list/columns';
 
 interface ClientListProps {
   clients: Client[];

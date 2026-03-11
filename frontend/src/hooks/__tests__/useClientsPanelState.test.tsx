@@ -319,4 +319,58 @@ describe('useClientsPanelState', () => {
     });
     expect(notifySuccess).toHaveBeenCalledWith('Prospect supprime definitivement.');
   });
+
+  it('returns conversion data for prospects and swallows contact/reassign failures', async () => {
+    const deleteContactMutation = vi.fn().mockRejectedValue(new Error('delete failed'));
+    const reassignMutation = vi.fn().mockRejectedValue(new Error('reassign failed'));
+
+    panelMocks.useDeleteEntityContact.mockReturnValue({ mutateAsync: deleteContactMutation });
+    panelMocks.useReassignEntity.mockReturnValue({
+      mutateAsync: reassignMutation,
+      isPending: false
+    });
+
+    const contact = createContact();
+    const { result } = renderHook(() =>
+      useClientsPanelState({
+        activeAgencyId: 'agency-1',
+        userRole: 'super_admin',
+        focusedClientId: null,
+        onFocusHandled: vi.fn()
+      })
+    );
+
+    act(() => {
+      result.current.setViewMode('prospects');
+    });
+
+    expect(result.current.getConvertEntityFromSelectedProspect()).toEqual({
+      id: 'prospect-1',
+      name: 'Prospect One',
+      client_number: 'C-001',
+      account_type: null
+    });
+
+    await act(async () => {
+      await result.current.executeDeleteContact();
+      await result.current.handleReassignEntity('prospect-1', 'agency-2');
+    });
+
+    expect(deleteContactMutation).not.toHaveBeenCalled();
+    expect(reassignMutation).toHaveBeenCalledWith({
+      entity_id: 'prospect-1',
+      target_agency_id: 'agency-2'
+    });
+
+    act(() => {
+      result.current.handleDeleteContact(contact);
+    });
+
+    await act(async () => {
+      await result.current.executeDeleteContact();
+    });
+
+    expect(deleteContactMutation).toHaveBeenCalledWith(contact.id);
+    expect(notifySuccess).not.toHaveBeenCalledWith('Contact supprime.');
+  });
 });

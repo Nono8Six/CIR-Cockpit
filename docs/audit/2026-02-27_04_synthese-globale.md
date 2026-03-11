@@ -52,9 +52,9 @@ Ponderation utilisee: Front 30%, Back 30%, Supabase 30%, Docs/Gouvernance 10%.
 - Edge `api` deployee et active (version 24), entrypoint/import_map conformes.
 - Point bloquant securite: grants trop larges sur tables publiques.
 
-### Phase E - Validation stack cible vs `stack.md` et `Plan_refactoring.md`
+### Phase E - Validation stack cible vs `stack.md` et `docs/plan/refactoring-history.md`
 
-#### `Plan_refactoring.md`
+#### `docs/plan/refactoring-history.md`
 
 - Etat "couches completees" globalement coherent avec le code observe.
 - Les jalons tRPC (couche 9), Drizzle (12), Hono runtime (10/11) sont bien materialises.

@@ -2,13 +2,13 @@
 
 **Date :** 27 Février 2026
 **Périmètre :** `frontend/`, `backend/`, `shared/`, CI/QA Locale, Configuration Globale.
-**Objectif :** Évaluer l'adéquation du projet avec la stack cible définie dans `Plan_refactoring.md` et `docs/stack.md`, et analyser la qualité, la cohérence et les bonnes pratiques avec les standards de l'industrie.
+**Objectif :** Évaluer l'adéquation du projet avec la stack cible définie dans `docs/plan/refactoring-history.md` et `docs/stack.md`, et analyser la qualité, la cohérence et les bonnes pratiques avec les standards de l'industrie.
 
 ---
 
 ## 1. Vue d'Ensemble & Synthèse
 
-Le dépôt a subi un refactoring massif et réussi. Toutes les exigences strictes et les migrations majeures documentées dans `Plan_refactoring.md` ont été implémentées avec succès :
+Le dépôt a subi un refactoring massif et réussi. Toutes les exigences strictes et les migrations majeures documentées dans `docs/plan/refactoring-history.md` ont été implémentées avec succès :
 - **tRPC** est utilisé pour le contrat API typé de bout en bout.
 - **Drizzle ORM** est en place sur le backend pour garantir un "schema-as-code" robuste.
 - Le routage frontend utilise **TanStack Router**.

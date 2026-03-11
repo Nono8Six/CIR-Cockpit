@@ -1,16 +1,12 @@
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import type { Client, ClientContact, Entity, UserRole } from '@/types';
 import { useClients } from './useClients';
 import { useProspects } from './useProspects';
 import { useAgencies } from './useAgencies';
-import { useSaveClient } from './useSaveClient';
-import { useSaveProspect } from './useSaveProspect';
-import { useDeleteClient, useSetClientArchived } from './useSetClientArchived';
-import { useReassignEntity } from './useReassignEntity';
 import { useEntityContacts } from './useEntityContacts';
-import { useSaveEntityContact } from './useSaveEntityContact';
-import { useDeleteEntityContact } from './useDeleteEntityContact';
+import { toConvertClientEntity, useClientsPanelDerivedState } from './useClientsPanelDerivedState';
+import { useClientsPanelMutations } from './useClientsPanelMutations';
 import { notifySuccess } from '@/services/errors/notify';
 import { createAppError } from '@/services/errors/AppError';
 import { handleUiError } from '@/services/errors/handleUiError';
@@ -21,14 +17,6 @@ type UseClientsPanelStateParams = {
   userRole: UserRole;
   focusedClientId: string | null;
   onFocusHandled: () => void;
-};
-
-const normalizeSearchTerm = (value: string): { term: string; compact: string } => {
-  const term = value.trim().toLowerCase();
-  return {
-    term,
-    compact: term.replace(/\s/g, '')
-  };
 };
 
 export const useClientsPanelState = ({
@@ -79,57 +67,20 @@ export const useClientsPanelState = ({
 
   const clients = clientsQuery.data ?? [];
   const prospects = prospectsQuery.data ?? [];
-  const deferredSearchTerm = useDeferredValue(searchTerm);
-  const normalizedSearch = useMemo(
-    () => normalizeSearchTerm(deferredSearchTerm),
-    [deferredSearchTerm]
-  );
+  const { filteredClients, filteredProspects, selectedClient, selectedProspect } =
+    useClientsPanelDerivedState({
+      clients,
+      prospects,
+      searchTerm,
+      focusedClientId,
+      onFocusHandled,
+      selectedClientId,
+      selectedProspectId,
+      setViewMode,
+      setSearchTerm,
+      setSelectedClientId
+    });
 
-  const filteredClients = useMemo(() => {
-    if (!normalizedSearch.term) {
-      return clients;
-    }
-
-    return clients.filter((client) =>
-      client.name.toLowerCase().includes(normalizedSearch.term)
-      || (client.client_number ?? '').includes(normalizedSearch.compact)
-      || (client.city?.toLowerCase().includes(normalizedSearch.term) ?? false)
-    );
-  }, [clients, normalizedSearch.compact, normalizedSearch.term]);
-
-  const filteredProspects = useMemo(() => {
-    if (!normalizedSearch.term) {
-      return prospects;
-    }
-
-    return prospects.filter((prospect) =>
-      prospect.name.toLowerCase().includes(normalizedSearch.term)
-      || (prospect.client_number ?? '').includes(normalizedSearch.compact)
-      || (prospect.city ?? '').toLowerCase().includes(normalizedSearch.term)
-      || (prospect.siret ?? '').includes(normalizedSearch.compact)
-      || (prospect.postal_code ?? '').includes(normalizedSearch.compact)
-    );
-  }, [normalizedSearch.compact, normalizedSearch.term, prospects]);
-
-  useEffect(() => {
-    if (!focusedClientId) {
-      return;
-    }
-
-    setViewMode('clients');
-    setSearchTerm('');
-    setSelectedClientId(focusedClientId);
-    onFocusHandled();
-  }, [focusedClientId, onFocusHandled]);
-
-  const selectedClient = useMemo(
-    () => clients.find((client) => client.id === selectedClientId) ?? clients[0] ?? null,
-    [clients, selectedClientId]
-  );
-  const selectedProspect = useMemo(
-    () => prospects.find((prospect) => prospect.id === selectedProspectId) ?? prospects[0] ?? null,
-    [prospects, selectedProspectId]
-  );
   const effectiveSelectedClientId = selectedClient?.id ?? null;
   const effectiveSelectedProspectId = selectedProspect?.id ?? null;
   const activeEntity = viewMode === 'clients' ? selectedClient : selectedProspect;
@@ -144,14 +95,22 @@ export const useClientsPanelState = ({
   const retryProspects = useCallback(() => {
     void prospectsQuery.refetch();
   }, [prospectsQuery]);
-  const saveClientMutation = useSaveClient(effectiveAgencyId ?? null, showArchived);
-  const saveProspectMutation = useSaveProspect(effectiveAgencyId ?? null, showArchived, isOrphansFilter);
-  const archiveClientMutation = useSetClientArchived(effectiveAgencyId ?? null);
   const deleteMutationAgencyId = isOrphansFilter ? null : effectiveAgencyId;
-  const deleteClientMutation = useDeleteClient(deleteMutationAgencyId, isOrphansFilter);
-  const reassignEntityMutation = useReassignEntity(effectiveAgencyId ?? null, isOrphansFilter);
-  const saveContactMutation = useSaveEntityContact(activeEntity?.id ?? null, false, effectiveAgencyId);
-  const deleteContactMutation = useDeleteEntityContact(activeEntity?.id ?? null, false);
+  const {
+    saveClientMutation,
+    saveProspectMutation,
+    archiveClientMutation,
+    deleteClientMutation,
+    reassignEntityMutation,
+    saveContactMutation,
+    deleteContactMutation
+  } = useClientsPanelMutations({
+    effectiveAgencyId: effectiveAgencyId ?? null,
+    deleteMutationAgencyId,
+    showArchived,
+    isOrphansFilter,
+    activeEntityId: activeEntity?.id ?? null
+  });
 
   const handleViewModeChange = useCallback((nextViewMode: 'clients' | 'prospects') => {
     setViewMode(nextViewMode);
@@ -359,16 +318,7 @@ export const useClientsPanelState = ({
   );
 
   const getConvertEntityFromSelectedProspect = useCallback((): ConvertClientEntity | null => {
-    if (!selectedProspect) {
-      return null;
-    }
-
-    return {
-      id: selectedProspect.id,
-      name: selectedProspect.name,
-      client_number: selectedProspect.client_number,
-      account_type: selectedProspect.account_type
-    };
+    return toConvertClientEntity(selectedProspect);
   }, [selectedProspect]);
 
   return {

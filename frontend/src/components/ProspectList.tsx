@@ -17,7 +17,7 @@ import {
   TableRow
 } from '@/components/ui/table';
 import { Agency, Entity } from '@/types';
-import { createProspectColumns } from '@/components/ProspectList/columns';
+import { createProspectColumns } from '@/components/prospect-list/columns';
 
 interface ProspectListProps {
   prospects: Entity[];

@@ -17,6 +17,7 @@ backend/.env
 .codex/
 .agents/
 .agent/
+.tmp/
 .mcp.json
 .local-credentials.json
 
@@ -30,3 +31,6 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# Test artifacts
+frontend/test-results/

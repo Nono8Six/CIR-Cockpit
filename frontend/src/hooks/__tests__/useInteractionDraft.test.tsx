@@ -1,5 +1,5 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useInteractionDraft } from '@/hooks/useInteractionDraft';
 import { Channel, type Entity, type EntityContact } from '@/types';
@@ -138,6 +138,10 @@ const buildContext = (overrides?: Partial<Parameters<typeof useInteractionDraft>
 describe('useInteractionDraft', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('restores draft values and resolves pending entity/contact selection', async () => {
@@ -293,6 +297,82 @@ describe('useInteractionDraft', () => {
         userId: 'user-1',
         agencyId: 'agency-1'
       });
+    });
+  });
+
+  it('debounces autosave updates and clears the saved draft when content becomes empty', async () => {
+    vi.useFakeTimers();
+    vi.mocked(getInteractionDraft).mockResolvedValue(null);
+    vi.mocked(saveInteractionDraft).mockResolvedValue({
+      id: 'draft-3',
+      updated_at: '2026-02-28T09:00:00.000Z',
+      payload: { values: DEFAULT_VALUES }
+    });
+    vi.mocked(deleteInteractionDraft).mockResolvedValue(undefined);
+
+    const initialContext = buildContext({ hasDraftContent: false });
+    const { rerender } = renderHook(
+      (props: ReturnType<typeof buildContext>) => useInteractionDraft(props),
+      { initialProps: initialContext }
+    );
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    rerender({
+      ...initialContext,
+      hasDraftContent: true,
+      draftPayload: {
+        values: {
+          ...DEFAULT_VALUES,
+          subject: 'Sujet 1'
+        }
+      }
+    });
+
+    rerender({
+      ...initialContext,
+      hasDraftContent: true,
+      draftPayload: {
+        values: {
+          ...DEFAULT_VALUES,
+          subject: 'Sujet 2'
+        }
+      }
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(900);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(saveInteractionDraft).toHaveBeenCalledTimes(1);
+    expect(saveInteractionDraft).toHaveBeenCalledWith({
+      userId: 'user-1',
+      agencyId: 'agency-1',
+      payload: {
+        values: {
+          ...DEFAULT_VALUES,
+          subject: 'Sujet 2'
+        }
+      }
+    });
+
+    rerender({
+      ...initialContext,
+      hasDraftContent: false
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(deleteInteractionDraft).toHaveBeenCalledWith({
+      userId: 'user-1',
+      agencyId: 'agency-1'
     });
   });
 });

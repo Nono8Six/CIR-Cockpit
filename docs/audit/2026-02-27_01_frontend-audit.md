@@ -118,7 +118,7 @@ References externes: React docs (Context7), TanStack Query docs (Context7), Verc
 ### Alignement OK
 
 - React 19 + Vite 7 + TS 5.9 + TanStack Query v5 + RHF + Zod v4: en place.
-- Refactor orientee hooks/services/query cache: coherent avec `Plan_refactoring.md`.
+- Refactor orientee hooks/services/query cache: coherent avec `docs/plan/refactoring-history.md`.
 
 ### Ecarts a corriger
 
