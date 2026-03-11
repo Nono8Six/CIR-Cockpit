@@ -1,22 +1,44 @@
-import type { Agency, Entity, UserRole } from '@/types';
+import type { Agency, UserRole } from '@/types';
+import type { ClientPayload } from '@/services/clients/saveClient';
 import type { EntityPayload } from '@/services/entities/saveEntity';
 import { useProspectFormDialog } from '@/hooks/useProspectFormDialog';
 import { useProspectFormDialogFields } from '@/hooks/useProspectFormDialogFields';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from './ui/dialog';
+import EntityOnboardingDialog from './EntityOnboardingDialog';
 import ProspectFormContent from './prospect-form/ProspectFormContent';
 import ProspectFormHeader from './prospect-form/ProspectFormHeader';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from './ui/dialog';
 
-interface ProspectFormDialogProps {
+type ProspectDialogValue = {
+  id: string;
+  entity_type: string;
+  name: string;
+  address: string | null;
+  postal_code: string | null;
+  department: string | null;
+  city: string | null;
+  siret?: string | null;
+  siren?: string | null;
+  naf_code?: string | null;
+  official_name?: string | null;
+  official_data_source?: string | null;
+  official_data_synced_at?: string | null;
+  notes: string | null;
+  agency_id: string | null;
+};
+
+type ProspectFormDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  prospect: Entity | null;
+  prospect: ProspectDialogValue | null;
   agencies: Agency[];
   userRole: UserRole;
   activeAgencyId: string | null;
   onSave: (payload: EntityPayload) => Promise<void>;
-}
+};
 
-const ProspectFormDialog = ({
+const createClientFallback = async (): Promise<void> => undefined;
+
+const ProspectFormDialogLegacy = ({
   open,
   onOpenChange,
   prospect,
@@ -24,8 +46,7 @@ const ProspectFormDialog = ({
   userRole,
   activeAgencyId,
   onSave
-}: ProspectFormDialogProps) => {
-  const isEdit = Boolean(prospect);
+}: ProspectFormDialogProps & { prospect: ProspectDialogValue }) => {
   const {
     form,
     postalCode,
@@ -54,25 +75,21 @@ const ProspectFormDialog = ({
     notesField,
     errors,
     isSubmitting,
-    handleSubmit,
+    handleSubmit
   } = useProspectFormDialogFields(form);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         overlayClassName="bg-foreground/20 backdrop-blur-[2px]"
-        className="w-[min(92vw,780px)] max-w-3xl p-0 overflow-hidden rounded-2xl border border-border/70 shadow-2xl"
+        className="w-[min(92vw,780px)] max-w-3xl overflow-hidden rounded-2xl border border-border/70 p-0 shadow-2xl"
       >
-        <DialogTitle className="sr-only">
-          {isEdit ? 'Modifier un prospect' : 'Nouveau prospect'}
-        </DialogTitle>
-        <DialogDescription className="sr-only">
-          Formulaire de saisie prospect.
-        </DialogDescription>
-        <ProspectFormHeader isEdit={isEdit} relationLabel={relationLabel} />
+        <DialogTitle className="sr-only">Modifier un prospect</DialogTitle>
+        <DialogDescription className="sr-only">Formulaire de saisie prospect.</DialogDescription>
+        <ProspectFormHeader isEdit relationLabel={relationLabel} />
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 px-6 py-5">
           <ProspectFormContent
-            isEdit={isEdit}
+            isEdit
             isSubmitting={isSubmitting}
             errors={errors}
             nameField={nameField}
@@ -95,6 +112,27 @@ const ProspectFormDialog = ({
       </DialogContent>
     </Dialog>
   );
+};
+
+const ProspectFormDialog = (props: ProspectFormDialogProps) => {
+  if (!props.prospect) {
+    return (
+      <EntityOnboardingDialog
+        open={props.open}
+        onOpenChange={props.onOpenChange}
+        agencies={props.agencies}
+        userRole={props.userRole}
+        activeAgencyId={props.activeAgencyId}
+        allowedIntents={['prospect']}
+        defaultIntent="prospect"
+        sourceLabel="Creation"
+        onSaveClient={createClientFallback as (payload: ClientPayload) => Promise<void>}
+        onSaveProspect={props.onSave}
+      />
+    );
+  }
+
+  return <ProspectFormDialogLegacy {...props} prospect={props.prospect} />;
 };
 
 export default ProspectFormDialog;

@@ -6,6 +6,10 @@ type AppHeaderSearchButtonProps = {
 };
 
 const AppHeaderSearchButton = ({ onOpenSearch, onSearchIntent }: AppHeaderSearchButtonProps) => {
+  const isApplePlatform = typeof navigator !== 'undefined'
+    && /(Mac|iPhone|iPad|iPod)/i.test(navigator.platform);
+  const shortcutLabel = isApplePlatform ? '⌘\u00A0K' : 'Ctrl+\u00A0K';
+
   const handleSearchIntent = () => {
     onSearchIntent?.();
   };
@@ -24,13 +28,13 @@ const AppHeaderSearchButton = ({ onOpenSearch, onSearchIntent }: AppHeaderSearch
       <Search size={14} className="shrink-0 group-hover:text-foreground" />
       <span
         data-testid="app-header-search-label"
-        className="hidden text-xs font-medium text-muted-foreground/80 group-hover:text-muted-foreground lg:inline"
+        className="hidden text-xs font-medium text-muted-foreground group-hover:text-foreground lg:inline"
       >
         Recherche rapide…
       </span>
       <span className="ml-auto hidden items-center gap-1 lg:inline-flex">
-        <span className="text-xs bg-muted px-1.5 py-0.5 rounded border border-border font-mono text-muted-foreground">
-          ⌘{"\u00A0"}K
+        <span className="rounded border border-border/80 bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground/80">
+          {shortcutLabel}
         </span>
       </span>
     </button>

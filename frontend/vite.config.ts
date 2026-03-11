@@ -1,13 +1,29 @@
 import path from 'path';
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
-export default defineConfig(() => {
+export default defineConfig(({ mode }) => {
+    const env = loadEnv(mode, __dirname, '');
+    const supabaseUrl = env.VITE_SUPABASE_URL?.trim();
+
     return {
       server: {
         port: 3000,
+        strictPort: true,
         host: '0.0.0.0',
+        proxy: supabaseUrl ? {
+          '/functions/v1': {
+            target: supabaseUrl,
+            changeOrigin: true,
+            secure: true,
+            configure: (proxy) => {
+              proxy.on('proxyReq', (proxyReq) => {
+                proxyReq.removeHeader('origin');
+              });
+            }
+          }
+        } : undefined,
         fs: {
           allow: [path.resolve(__dirname, '..')]
         }

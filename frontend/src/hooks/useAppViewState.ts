@@ -17,7 +17,6 @@ type UseAppViewStateParams = {
   canAccessAdmin: boolean;
   canAccessSettings: boolean;
   onSearchOpen?: () => void;
-  onConvertOpen?: () => void;
 };
 
 export const useAppViewState = ({
@@ -27,8 +26,7 @@ export const useAppViewState = ({
   activeAgencyId,
   canAccessAdmin,
   canAccessSettings,
-  onSearchOpen,
-  onConvertOpen
+  onSearchOpen
 }: UseAppViewStateParams) => {
   const activeTab = useMemo<AppTab>(() => getTabFromPathname(pathname), [pathname]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -36,7 +34,6 @@ export const useAppViewState = ({
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [focusedClientId, setFocusedClientId] = useState<string | null>(null);
   const [focusedContactId, setFocusedContactId] = useState<string | null>(null);
-  const [convertTarget, setConvertTarget] = useState<ConvertClientEntity | null>(null);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
 
   const handleTabChange = useCallback(
@@ -63,12 +60,18 @@ export const useAppViewState = ({
 
   const handleRequestConvert = useCallback(
     (entity: ConvertClientEntity) => {
-      onConvertOpen?.();
-      setConvertTarget(entity);
       setIsSearchOpen(false);
       setSearchQuery('');
+      if (!entity.id) {
+        return;
+      }
+
+      void navigate({
+        to: '/clients/prospects/$prospectId/convert',
+        params: { prospectId: entity.id }
+      });
     },
-    [onConvertOpen]
+    [navigate]
   );
 
   useAppShortcuts({
@@ -101,13 +104,11 @@ export const useAppViewState = ({
     isProfileMenuOpen,
     focusedClientId,
     focusedContactId,
-    convertTarget,
     profileMenuRef,
     setSearchQuery,
     setIsProfileMenuOpen,
     setFocusedClientId,
     setFocusedContactId,
-    setConvertTarget,
     handleTabChange,
     handleSearchOpenChange,
     handleOpenSearch,

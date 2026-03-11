@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 
+import { APP_TAB_SHORTCUTS } from '@/app/appConstants';
 import type { AppTab } from '@/types';
 
 type UseAppShortcutsParams = {
@@ -16,32 +17,34 @@ export const useAppShortcuts = ({
   setIsSearchOpen
 }: UseAppShortcutsParams) => {
   useEffect(() => {
+    const keyToTab = new Map<string, AppTab>([
+      [APP_TAB_SHORTCUTS.cockpit, 'cockpit'],
+      [APP_TAB_SHORTCUTS.dashboard, 'dashboard'],
+      [APP_TAB_SHORTCUTS.settings, 'settings'],
+      [APP_TAB_SHORTCUTS.admin, 'admin'],
+      [APP_TAB_SHORTCUTS.clients, 'clients']
+    ]);
+
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.ctrlKey && event.key === 'k') {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
         setIsSearchOpen(true);
       }
       if (event.key === 'Escape') setIsSearchOpen(false);
-      if (event.key === 'F1') {
-        event.preventDefault();
-        setActiveTab('cockpit');
+      const mappedTab = keyToTab.get(event.key.toUpperCase());
+      if (!mappedTab) {
+        return;
       }
-      if (event.key === 'F2') {
-        event.preventDefault();
-        setActiveTab('dashboard');
+
+      event.preventDefault();
+      if (mappedTab === 'settings' && !canAccessSettings) {
+        return;
       }
-      if (event.key === 'F3') {
-        event.preventDefault();
-        if (canAccessSettings) setActiveTab('settings');
+      if (mappedTab === 'admin' && !canAccessAdmin) {
+        return;
       }
-      if (event.key === 'F4') {
-        event.preventDefault();
-        if (canAccessAdmin) setActiveTab('admin');
-      }
-      if (event.key === 'F5') {
-        event.preventDefault();
-        setActiveTab('clients');
-      }
+
+      setActiveTab(mappedTab);
     };
 
     window.addEventListener('keydown', handleKeyDown);

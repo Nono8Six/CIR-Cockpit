@@ -3,7 +3,6 @@ import { useCallback, type ChangeEvent } from 'react';
 import { buildReminderDateTime } from '@/utils/date/buildReminderDateTime';
 import { formatFrenchPhone } from '@/utils/formatFrenchPhone';
 import { handleUiError } from '@/services/errors/handleUiError';
-import { convertEntityToClient } from '@/services/entities/convertEntityToClient';
 import { invalidateClientsQueries, invalidateEntitySearchIndexQueries } from '@/services/query/queryInvalidation';
 import type { ClientPayload } from '@/services/clients/saveClient';
 import type { EntityContactPayload } from '@/services/entities/saveEntityContact';
@@ -53,13 +52,18 @@ export const useInteractionHandlers = ({ setValue, clearErrors, normalizedRelati
   const handleSaveClient = useCallback(async (payload: ClientPayload) => handleSelectEntity(await saveClientMutation.mutateAsync(payload)), [handleSelectEntity, saveClientMutation]);
   const handleSaveContact = useCallback(async (payload: EntityContactPayload) => handleSelectContact(await saveContactMutation.mutateAsync(payload)), [handleSelectContact, saveContactMutation]);
 
-  const handleConvertClient = useCallback(async (payload: Parameters<typeof convertEntityToClient>[0]) => {
-    const updated = await convertEntityToClient(payload).match(entity => entity, error => { handleUiError(error, 'Impossible de convertir en client.', { source: 'CockpitForm.convertEntityToClient' }); return null; });
-    if (!updated) return;
+  const handleConvertClient = useCallback(async (payload: ClientPayload) => {
+    let updated: Entity | null = null;
+    try {
+      updated = await saveClientMutation.mutateAsync(payload);
+    } catch (error) {
+      handleUiError(error, 'Impossible de convertir en client.', { source: 'CockpitForm.convertEntityToClient' });
+      return;
+    }
     void invalidateClientsQueries(queryClient, activeAgencyId);
     void invalidateEntitySearchIndexQueries(queryClient, activeAgencyId);
     handleSelectEntity(updated); onConvertComplete();
-  }, [activeAgencyId, handleSelectEntity, onConvertComplete, queryClient]);
+  }, [activeAgencyId, handleSelectEntity, onConvertComplete, queryClient, saveClientMutation]);
 
   const toggleFamily = useCallback((family: string) => setFamiliesField((megaFamilies ?? []).includes(family) ? megaFamilies.filter(item => item !== family) : [...megaFamilies, family]), [megaFamilies, setFamiliesField]);
   const setReminder = useCallback((type: '1h' | 'tomorrow' | '3days' | 'nextWeek') => setStringField('reminder_at', buildReminderDateTime(type)), [setStringField]);

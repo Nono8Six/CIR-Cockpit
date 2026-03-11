@@ -185,6 +185,44 @@ export type Database = {
           },
         ]
       }
+      directory_saved_views: {
+        Row: {
+          created_at: string
+          id: string
+          is_default: boolean
+          name: string
+          state: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name: string
+          state: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+          state?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "directory_saved_views_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agency_services: {
         Row: {
           agency_id: string
@@ -409,6 +447,8 @@ export type Database = {
           agency_id: string | null
           archived_at: string | null
           city: string | null
+          client_kind: string | null
+          cir_commercial_id: string | null
           client_number: string | null
           country: string
           created_at: string
@@ -416,9 +456,14 @@ export type Database = {
           department: string | null
           entity_type: string
           id: string
+          naf_code: string | null
           name: string
           notes: string | null
+          official_data_source: string | null
+          official_data_synced_at: string | null
+          official_name: string | null
           postal_code: string | null
+          siren: string | null
           siret: string | null
           updated_at: string
         }
@@ -428,6 +473,8 @@ export type Database = {
           agency_id?: string | null
           archived_at?: string | null
           city?: string | null
+          client_kind?: string | null
+          cir_commercial_id?: string | null
           client_number?: string | null
           country?: string
           created_at?: string
@@ -435,9 +482,14 @@ export type Database = {
           department?: string | null
           entity_type: string
           id?: string
+          naf_code?: string | null
           name: string
           notes?: string | null
+          official_data_source?: string | null
+          official_data_synced_at?: string | null
+          official_name?: string | null
           postal_code?: string | null
+          siren?: string | null
           siret?: string | null
           updated_at?: string
         }
@@ -447,6 +499,8 @@ export type Database = {
           agency_id?: string | null
           archived_at?: string | null
           city?: string | null
+          client_kind?: string | null
+          cir_commercial_id?: string | null
           client_number?: string | null
           country?: string
           created_at?: string
@@ -454,9 +508,14 @@ export type Database = {
           department?: string | null
           entity_type?: string
           id?: string
+          naf_code?: string | null
           name?: string
           notes?: string | null
+          official_data_source?: string | null
+          official_data_synced_at?: string | null
+          official_name?: string | null
           postal_code?: string | null
+          siren?: string | null
           siret?: string | null
           updated_at?: string
         }
@@ -471,6 +530,13 @@ export type Database = {
           {
             foreignKeyName: "entities_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entities_cir_commercial_id_fkey"
+            columns: ["cir_commercial_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]

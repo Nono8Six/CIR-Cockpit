@@ -1,15 +1,24 @@
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from './ui/dialog';
-import ConvertClientHeader from './convert-client/ConvertClientHeader';
-import ConvertClientCompanyCard from './convert-client/ConvertClientCompanyCard';
-import ConvertClientFields from './convert-client/ConvertClientFields';
-import ConvertClientFooter from './convert-client/ConvertClientFooter';
-import { useConvertClientDialog } from '@/hooks/useConvertClientDialog';
+import type { ClientPayload } from '@/services/clients/saveClient';
 import { AccountType } from '@/types';
-import { ConvertClientPayload } from '@/services/entities/convertEntityToClient';
+import EntityOnboardingDialog from './EntityOnboardingDialog';
 
 export type ConvertClientEntity = {
   id: string;
   name: string;
+  address?: string | null;
+  postal_code?: string | null;
+  department?: string | null;
+  city?: string | null;
+  siret?: string | null;
+  siren?: string | null;
+  naf_code?: string | null;
+  official_name?: string | null;
+  official_data_source?: 'api-recherche-entreprises' | null;
+  official_data_synced_at?: string | null;
+  notes?: string | null;
+  agency_id?: string | null;
+  cir_commercial_id?: string | null;
+  entity_type?: string | null;
   client_number?: string | null;
   account_type?: AccountType | null;
 };
@@ -18,49 +27,31 @@ interface ConvertClientDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   entity: ConvertClientEntity | null;
-  onConvert: (payload: ConvertClientPayload) => Promise<void>;
+  onConvert: (payload: ClientPayload) => Promise<void>;
 }
 
 const ConvertClientDialog = ({ open, onOpenChange, entity, onConvert }: ConvertClientDialogProps) => {
-  const {
-    errors,
-    isSubmitting,
-    clientNumber,
-    accountType,
-    clientNumberField,
-    accountTypeField,
-    handleClientNumberChange,
-    handleConvert
-  } = useConvertClientDialog({ open, entity, onConvert });
-
   if (!entity) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        overlayClassName="bg-foreground/20 backdrop-blur-[2px]"
-        className="w-[min(92vw,640px)] max-w-2xl p-0 overflow-hidden rounded-2xl border border-border/70 shadow-2xl"
-      >
-        <DialogTitle className="sr-only">Convertir un prospect en client</DialogTitle>
-        <DialogDescription className="sr-only">
-          Confirmation et saisie des informations de conversion.
-        </DialogDescription>
-        <ConvertClientHeader />
-        <form onSubmit={handleConvert} className="space-y-5 px-6 py-5">
-          <ConvertClientCompanyCard name={entity.name} />
-          <ConvertClientFields
-            clientNumber={clientNumber}
-            accountType={accountType}
-            clientNumberField={clientNumberField}
-            accountTypeField={accountTypeField}
-            errors={errors}
-            onClientNumberChange={handleClientNumberChange}
-          />
-          {errors.root?.message ? <p className="text-sm text-destructive">{errors.root.message}</p> : null}
-          <ConvertClientFooter isSubmitting={isSubmitting} onCancel={() => onOpenChange(false)} />
-        </form>
-      </DialogContent>
-    </Dialog>
+    <EntityOnboardingDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      agencies={[]}
+      userRole="tcs"
+      activeAgencyId={entity.agency_id ?? null}
+      mode="convert"
+      allowedIntents={['client']}
+      initialEntity={entity}
+      sourceLabel="Conversion"
+      onSaveClient={onConvert}
+      onSaveProspect={async () => undefined}
+      onComplete={({ client_number }) => {
+        if (!client_number) {
+          return;
+        }
+      }}
+    />
   );
 };
 

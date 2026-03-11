@@ -1,8 +1,8 @@
 {
   "nodeModulesDir": "auto",
   "imports": {
-    "@hono/hono": "npm:hono@4.11.9",
-    "@hono/hono/validator": "npm:hono@4.11.9/validator",
+    "@hono/hono": "npm:hono@4.12.4",
+    "@hono/hono/validator": "npm:hono@4.12.4/validator",
     "@hono/trpc-server": "npm:@hono/trpc-server@0.4.0",
     "@trpc/server": "npm:@trpc/server@11.10.0",
     "@supabase/functions-js/edge-runtime.d.ts": "jsr:@supabase/functions-js@2.92.0/edge-runtime.d.ts",

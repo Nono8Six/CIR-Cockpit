@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { deleteClient, setClientArchived } from '@/services/clients/setClientArchived';
 import {
   invalidateClientsQueries,
+  invalidateDirectoryQueries,
   invalidateEntitySearchIndexQueries,
   invalidateProspectsQueries
 } from '@/services/query/queryInvalidation';
@@ -21,6 +22,7 @@ export const useSetClientArchived = (agencyId: string | null) => {
       ),
     onSuccess: () => {
       void invalidateClientsQueries(queryClient, agencyId);
+      void invalidateDirectoryQueries(queryClient);
     },
     onError: (error) => {
       handleUiError(error, "Impossible de modifier l'archive du client.", {
@@ -45,7 +47,8 @@ export const useDeleteClient = (agencyId: string | null, orphansOnly = false) =>
       void Promise.all([
         invalidateClientsQueries(queryClient, agencyId),
         invalidateProspectsQueries(queryClient, { agencyId, orphansOnly }),
-        invalidateEntitySearchIndexQueries(queryClient, agencyId)
+        invalidateEntitySearchIndexQueries(queryClient, agencyId),
+        invalidateDirectoryQueries(queryClient)
       ]);
     },
     onError: (error) => {

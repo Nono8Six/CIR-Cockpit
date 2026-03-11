@@ -2,17 +2,41 @@ import { useEffect, type ChangeEvent } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import type { Agency, Client, UserRole } from '@/types';
-import { clientFormSchema, type ClientFormValues } from 'shared/schemas/client.schema';
+import type { Agency, UserRole } from '@/types';
+import type { DirectoryCommercialOption } from 'shared/schemas/directory.schema';
+import {
+  clientCompanyFormSchema,
+  type ClientCompanyFormValues
+} from 'shared/schemas/client.schema';
 import type { ClientPayload } from '@/services/clients/saveClient';
 import { stripClientNumber } from '@/utils/clients/formatClientNumber';
 
 type UseClientFormDialogInput = {
   open: boolean;
-  client: Client | null;
+  client: {
+    id: string;
+    client_kind?: string | null;
+    client_number: string | null;
+    account_type: ClientPayload['account_type'] | null;
+    name: string;
+    address: string | null;
+    postal_code: string | null;
+    department: string | null;
+    city: string | null;
+    siret?: string | null;
+    siren?: string | null;
+    naf_code?: string | null;
+    official_name?: string | null;
+    official_data_source?: string | null;
+    official_data_synced_at?: string | null;
+    notes: string | null;
+    agency_id: string | null;
+    cir_commercial_id?: string | null;
+  } | null;
   agencies: Agency[];
   userRole: UserRole;
   activeAgencyId: string | null;
+  commercials?: DirectoryCommercialOption[];
   onSave: (payload: ClientPayload) => Promise<void>;
   onOpenChange: (open: boolean) => void;
 };
@@ -23,13 +47,15 @@ export const useClientFormDialog = ({
   agencies,
   userRole,
   activeAgencyId,
+  commercials,
   onSave,
   onOpenChange
 }: UseClientFormDialogInput) => {
-  const form = useForm<ClientFormValues>({
-    resolver: zodResolver(clientFormSchema),
+  const form = useForm<ClientCompanyFormValues>({
+    resolver: zodResolver(clientCompanyFormSchema),
     defaultValues: {
       client_number: '',
+      client_kind: 'company',
       account_type: 'term',
       name: '',
       address: '',
@@ -37,7 +63,13 @@ export const useClientFormDialog = ({
       department: '',
       city: '',
       siret: '',
+      siren: '',
+      naf_code: '',
+      official_name: '',
+      official_data_source: null,
+      official_data_synced_at: null,
       notes: '',
+      cir_commercial_id: null,
       agency_id: activeAgencyId ?? ''
     }
   });
@@ -48,6 +80,7 @@ export const useClientFormDialog = ({
     if (!open) return;
     reset({
       client_number: client?.client_number ?? '',
+      client_kind: 'company',
       account_type: client?.account_type ?? 'term',
       name: client?.name ?? '',
       address: client?.address ?? '',
@@ -55,7 +88,15 @@ export const useClientFormDialog = ({
       department: client?.department ?? '',
       city: client?.city ?? '',
       siret: client?.siret ?? '',
+      siren: client?.siren ?? '',
+      naf_code: client?.naf_code ?? '',
+      official_name: client?.official_name ?? '',
+      official_data_source: client?.official_data_source === 'api-recherche-entreprises'
+        ? 'api-recherche-entreprises'
+        : null,
+      official_data_synced_at: client?.official_data_synced_at ?? null,
       notes: client?.notes ?? '',
+      cir_commercial_id: client?.cir_commercial_id ?? null,
       agency_id: client?.agency_id ?? activeAgencyId ?? ''
     });
   }, [activeAgencyId, client, open, reset]);
@@ -76,7 +117,7 @@ export const useClientFormDialog = ({
     setValue('department', digits.slice(0, 2), { shouldDirty: true });
   };
 
-  const onSubmit = async (values: ClientFormValues) => {
+  const onSubmit = async (values: ClientCompanyFormValues) => {
     const resolvedAgencyId = userRole === 'tcs'
       ? (activeAgencyId ?? values.agency_id)
       : values.agency_id;
@@ -84,6 +125,7 @@ export const useClientFormDialog = ({
     const payload: ClientPayload = {
       id: client?.id,
       client_number: values.client_number,
+      client_kind: 'company',
       account_type: values.account_type,
       name: values.name,
       address: values.address,
@@ -91,7 +133,15 @@ export const useClientFormDialog = ({
       department: values.department,
       city: values.city,
       siret: values.siret?.trim() || null,
+      siren: values.siren?.trim() || null,
+      naf_code: values.naf_code?.trim() || null,
+      official_name: values.official_name?.trim() || null,
+      official_data_source: values.official_data_source === 'api-recherche-entreprises'
+        ? 'api-recherche-entreprises'
+        : null,
+      official_data_synced_at: values.official_data_synced_at?.trim() || null,
       notes: values.notes?.trim() || null,
+      cir_commercial_id: values.cir_commercial_id ?? null,
       agency_id: resolvedAgencyId
     };
 
@@ -104,6 +154,15 @@ export const useClientFormDialog = ({
   };
 
   const agencyLabel = agencies.find((agency) => agency.id === activeAgencyId)?.name ?? 'Aucune agence';
+  const hasSelectedCommercial = commercials?.some((commercial) => commercial.id === form.getValues('cir_commercial_id')) ?? false;
+
+  useEffect(() => {
+    if (hasSelectedCommercial) {
+      return;
+    }
+
+    setValue('cir_commercial_id', null, { shouldDirty: false, shouldValidate: true });
+  }, [commercials, hasSelectedCommercial, setValue]);
 
   return {
     form,

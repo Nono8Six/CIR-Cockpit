@@ -2,13 +2,29 @@ import { useEffect, type ChangeEvent } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import type { Agency, Entity, UserRole } from '@/types';
+import type { Agency, UserRole } from '@/types';
 import { prospectFormSchema, type ProspectFormValues } from 'shared/schemas/prospect.schema';
 import type { EntityPayload } from '@/services/entities/saveEntity';
 
 type UseProspectFormDialogInput = {
   open: boolean;
-  prospect: Entity | null;
+  prospect: {
+    id: string;
+    entity_type: string;
+    name: string;
+    address: string | null;
+    postal_code: string | null;
+    department: string | null;
+    city: string | null;
+    siret?: string | null;
+    siren?: string | null;
+    naf_code?: string | null;
+    official_name?: string | null;
+    official_data_source?: string | null;
+    official_data_synced_at?: string | null;
+    notes: string | null;
+    agency_id: string | null;
+  } | null;
   agencies: Agency[];
   userRole: UserRole;
   activeAgencyId: string | null;
@@ -34,6 +50,11 @@ export const useProspectFormDialog = ({
       department: '',
       city: '',
       siret: '',
+      siren: '',
+      naf_code: '',
+      official_name: '',
+      official_data_source: null,
+      official_data_synced_at: null,
       notes: '',
       agency_id: activeAgencyId ?? ''
     }
@@ -50,6 +71,13 @@ export const useProspectFormDialog = ({
       department: prospect?.department ?? '',
       city: prospect?.city ?? '',
       siret: prospect?.siret ?? '',
+      siren: prospect?.siren ?? '',
+      naf_code: prospect?.naf_code ?? '',
+      official_name: prospect?.official_name ?? '',
+      official_data_source: prospect?.official_data_source === 'api-recherche-entreprises'
+        ? 'api-recherche-entreprises'
+        : null,
+      official_data_synced_at: prospect?.official_data_synced_at ?? null,
       notes: prospect?.notes ?? '',
       agency_id: prospect?.agency_id ?? activeAgencyId ?? ''
     });
@@ -79,6 +107,13 @@ export const useProspectFormDialog = ({
       postal_code: values.postal_code?.trim() || null,
       department: values.department?.trim() || null,
       siret: values.siret?.trim() || null,
+      siren: values.siren?.trim() || null,
+      naf_code: values.naf_code?.trim() || null,
+      official_name: values.official_name?.trim() || null,
+      official_data_source: values.official_data_source === 'api-recherche-entreprises'
+        ? 'api-recherche-entreprises'
+        : null,
+      official_data_synced_at: values.official_data_synced_at?.trim() || null,
       notes: values.notes?.trim() || null
     };
 

@@ -38,7 +38,24 @@ export type AccountType = Enums<'account_type'>;
 export type Agency = Tables<'agencies'>;
 export type UserProfile = Tables<'profiles'>;
 export type AgencyMember = Tables<'agency_members'>;
-export type Entity = Tables<'entities'>;
+export type Entity = Omit<
+  Tables<'entities'>,
+  | 'client_kind'
+  | 'cir_commercial_id'
+  | 'siren'
+  | 'naf_code'
+  | 'official_name'
+  | 'official_data_source'
+  | 'official_data_synced_at'
+> & {
+  client_kind?: Tables<'entities'>['client_kind'];
+  cir_commercial_id?: Tables<'entities'>['cir_commercial_id'];
+  siren?: Tables<'entities'>['siren'];
+  naf_code?: Tables<'entities'>['naf_code'];
+  official_name?: Tables<'entities'>['official_name'];
+  official_data_source?: Tables<'entities'>['official_data_source'];
+  official_data_synced_at?: Tables<'entities'>['official_data_synced_at'];
+};
 export type EntityContact = Tables<'entity_contacts'>;
 
 export type EntityInsert = TablesInsert<'entities'>;

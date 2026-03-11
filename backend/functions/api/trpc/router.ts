@@ -5,7 +5,16 @@ import {
   dataEntitiesResponseSchema,
   dataEntityContactsResponseSchema,
   dataInteractionsResponseSchema,
-  dataProfileResponseSchema
+  dataProfileResponseSchema,
+  directoryCitySuggestionsResponseSchema,
+  directoryCompanySearchResponseSchema,
+  directoryDuplicatesResponseSchema,
+  directoryListResponseSchema,
+  directoryOptionsResponseSchema,
+  directoryRecordResponseSchema,
+  directorySavedViewDeleteResponseSchema,
+  directorySavedViewResponseSchema,
+  directorySavedViewsListResponseSchema
 } from '../../../../shared/schemas/api-responses.ts';
 import { adminAgenciesPayloadSchema } from '../../../../shared/schemas/agency.schema.ts';
 import {
@@ -16,6 +25,18 @@ import {
   dataProfilePayloadSchema,
   type DataEntitiesPayload
 } from '../../../../shared/schemas/data.schema.ts';
+import {
+  directoryCitySuggestionsInputSchema,
+  directoryCompanySearchInputSchema,
+  directoryDuplicatesInputSchema,
+  directoryListInputSchema,
+  directoryOptionsInputSchema,
+  directoryRouteRefSchema,
+  directorySavedViewDeleteInputSchema,
+  directorySavedViewSaveInputSchema,
+  directorySavedViewSetDefaultInputSchema,
+  directorySavedViewsListInputSchema
+} from '../../../../shared/schemas/directory.schema.ts';
 import { adminUsersPayloadSchema } from '../../../../shared/schemas/user.schema.ts';
 import { handleAdminAgenciesAction } from '../services/adminAgencies.ts';
 import { handleAdminUsersAction } from '../services/adminUsers.ts';
@@ -24,6 +45,20 @@ import { handleDataEntitiesAction } from '../services/dataEntities.ts';
 import { handleDataEntityContactsAction } from '../services/dataEntityContacts.ts';
 import { handleDataInteractionsAction } from '../services/dataInteractions.ts';
 import { handleDataProfileAction } from '../services/dataProfile.ts';
+import {
+  getDirectoryCitySuggestions,
+  getDirectoryCompanySearch,
+  getDirectoryDuplicates,
+  getDirectoryOptions,
+  getDirectoryRecord,
+  listDirectory
+} from '../services/directory.ts';
+import {
+  deleteDirectorySavedView,
+  listDirectorySavedViews,
+  saveDirectorySavedView,
+  setDefaultDirectorySavedView
+} from '../services/directorySavedViews.ts';
 import type { DbClient } from '../types.ts';
 import { authedProcedure, router, superAdminProcedure } from './procedures.ts';
 import { withAuthedDualDbHandler, withAuthedHandler, withSuperAdminHandler } from './procedureHelpers.ts';
@@ -72,6 +107,50 @@ export const appRouter = router({
       .input(adminAgenciesPayloadSchema)
       .output(adminAgenciesResponseSchema)
       .mutation(withSuperAdminHandler(handleAdminAgenciesAction))
+  }),
+  directory: router({
+    list: authedProcedure
+      .input(directoryListInputSchema)
+      .output(directoryListResponseSchema)
+      .query(withAuthedHandler(listDirectory)),
+    options: authedProcedure
+      .input(directoryOptionsInputSchema)
+      .output(directoryOptionsResponseSchema)
+      .query(withAuthedHandler(getDirectoryOptions)),
+    'city-suggestions': authedProcedure
+      .input(directoryCitySuggestionsInputSchema)
+      .output(directoryCitySuggestionsResponseSchema)
+      .query(withAuthedHandler(getDirectoryCitySuggestions)),
+    'company-search': authedProcedure
+      .input(directoryCompanySearchInputSchema)
+      .output(directoryCompanySearchResponseSchema)
+      .query(withAuthedHandler(getDirectoryCompanySearch)),
+    duplicates: authedProcedure
+      .input(directoryDuplicatesInputSchema)
+      .output(directoryDuplicatesResponseSchema)
+      .query(withAuthedHandler(getDirectoryDuplicates)),
+    record: authedProcedure
+      .input(directoryRouteRefSchema)
+      .output(directoryRecordResponseSchema)
+      .query(withAuthedHandler(getDirectoryRecord)),
+    'saved-views': router({
+      list: authedProcedure
+        .input(directorySavedViewsListInputSchema)
+        .output(directorySavedViewsListResponseSchema)
+        .query(withAuthedHandler(listDirectorySavedViews)),
+      save: authedProcedure
+        .input(directorySavedViewSaveInputSchema)
+        .output(directorySavedViewResponseSchema)
+        .mutation(withAuthedHandler(saveDirectorySavedView)),
+      delete: authedProcedure
+        .input(directorySavedViewDeleteInputSchema)
+        .output(directorySavedViewDeleteResponseSchema)
+        .mutation(withAuthedHandler(deleteDirectorySavedView)),
+      'set-default': authedProcedure
+        .input(directorySavedViewSetDefaultInputSchema)
+        .output(directorySavedViewResponseSchema)
+        .mutation(withAuthedHandler(setDefaultDirectorySavedView))
+    })
   })
 });
 

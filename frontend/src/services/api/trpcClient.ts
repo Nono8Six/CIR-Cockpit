@@ -8,6 +8,10 @@ import { isRecord } from '@/utils/recordNarrowing';
 const TOKEN_REFRESH_SAFETY_WINDOW_SECONDS = 30;
 
 const getTrpcBaseUrl = (): string => {
+  if (import.meta.env.DEV && import.meta.env.MODE !== 'test') {
+    return '/functions/v1/api/trpc';
+  }
+
   const baseUrl = import.meta.env.VITE_SUPABASE_URL;
   if (!baseUrl) {
     throw createAppError({
@@ -143,6 +147,15 @@ export const callTrpcMutation = (
   init?: RequestInit
 ): Promise<unknown> =>
   getTrpcClient().mutation(path, input, {
+    context: init?.headers ? { headers: init.headers } : undefined
+  });
+
+export const callTrpcQuery = (
+  path: string,
+  input: unknown,
+  init?: RequestInit
+): Promise<unknown> =>
+  getTrpcClient().query(path, input, {
     context: init?.headers ? { headers: init.headers } : undefined
   });
 

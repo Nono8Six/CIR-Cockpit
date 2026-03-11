@@ -1,8 +1,9 @@
 import type { ChangeEvent } from 'react';
 import type { FieldErrors, UseFormRegisterReturn } from 'react-hook-form';
 
+import type { DirectoryCommercialOption } from 'shared/schemas/directory.schema';
 import type { Agency, UserRole } from '@/types';
-import type { ClientFormValues } from 'shared/schemas/client.schema';
+import type { ClientCompanyFormValues } from 'shared/schemas/client.schema';
 import ClientFormAccountSection from './ClientFormAccountSection';
 import ClientFormAddressSection from './ClientFormAddressSection';
 import ClientFormAgencySection from './ClientFormAgencySection';
@@ -21,8 +22,11 @@ type ClientFormContentProps = {
   onClientNumberChange: (event: ChangeEvent<HTMLInputElement>) => void;
   accountTypeField: UseFormRegisterReturn;
   accountType: 'cash' | 'term';
-  errors: FieldErrors<ClientFormValues>;
+  errors: FieldErrors<ClientCompanyFormValues>;
   nameField: UseFormRegisterReturn;
+  commercials: DirectoryCommercialOption[];
+  cirCommercialField: UseFormRegisterReturn;
+  cirCommercialValue: ClientCompanyFormValues['cir_commercial_id'];
   addressField: UseFormRegisterReturn;
   cityField: UseFormRegisterReturn;
   postalCodeField: UseFormRegisterReturn;
@@ -48,6 +52,9 @@ const ClientFormContent = ({
   accountType,
   errors,
   nameField,
+  commercials,
+  cirCommercialField,
+  cirCommercialValue,
   addressField,
   cityField,
   postalCodeField,
@@ -69,7 +76,13 @@ const ClientFormContent = ({
       accountType={accountType}
       errors={errors}
     />
-    <ClientFormIdentitySection nameField={nameField} errors={errors} />
+    <ClientFormIdentitySection
+      nameField={nameField}
+      commercials={commercials}
+      cirCommercialField={cirCommercialField}
+      cirCommercialValue={cirCommercialValue}
+      errors={errors}
+    />
     <ClientFormAddressSection
       addressField={addressField}
       cityField={cityField}

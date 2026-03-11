@@ -1,12 +1,12 @@
 import type { FieldErrors, UseFormRegisterReturn } from 'react-hook-form';
 
-import type { ClientFormValues } from 'shared/schemas/client.schema';
+import type { ClientCompanyFormValues } from 'shared/schemas/client.schema';
 import { Input } from '@/components/ui/input';
 
 type ClientFormAddressSectionProps = {
   addressField: UseFormRegisterReturn;
   cityField: UseFormRegisterReturn;
-  errors: FieldErrors<ClientFormValues>;
+  errors: FieldErrors<ClientCompanyFormValues>;
 };
 
 const ClientFormAddressSection = ({

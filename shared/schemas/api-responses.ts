@@ -1,6 +1,16 @@
 import { z } from 'zod/v4';
 
 import type { Database } from '../supabase.types.ts';
+import {
+  directoryAgencyOptionSchema,
+  directoryCompanySearchResultSchema,
+  directoryCommercialOptionSchema,
+  directoryDuplicateMatchSchema,
+  directoryListRowSchema,
+  directoryRecordSchema,
+  directorySavedViewSchema,
+  directorySuggestionOptionSchema
+} from './directory.schema.ts';
 import { membershipModeSchema, userRoleSchema } from './user.schema.ts';
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -89,6 +99,46 @@ export const dataInteractionsResponseSchema = z.union([
 
 export const dataConfigResponseSchema = apiSuccessSchema;
 export const dataProfileResponseSchema = apiSuccessSchema;
+export const directoryListResponseSchema = apiSuccessSchema.extend({
+  rows: z.array(directoryListRowSchema),
+  total: z.number().int().nonnegative(),
+  page: z.number().int().positive(),
+  page_size: z.number().int().positive()
+}).strict();
+
+export const directoryOptionsResponseSchema = apiSuccessSchema.extend({
+  agencies: z.array(directoryAgencyOptionSchema),
+  commercials: z.array(directoryCommercialOptionSchema),
+  departments: z.array(z.string().trim().min(1, 'Departement requis'))
+}).strict();
+
+export const directoryCitySuggestionsResponseSchema = apiSuccessSchema.extend({
+  cities: z.array(directorySuggestionOptionSchema)
+}).strict();
+
+export const directoryRecordResponseSchema = apiSuccessSchema.extend({
+  record: directoryRecordSchema
+}).strict();
+
+export const directoryCompanySearchResponseSchema = apiSuccessSchema.extend({
+  companies: z.array(directoryCompanySearchResultSchema)
+}).strict();
+
+export const directoryDuplicatesResponseSchema = apiSuccessSchema.extend({
+  matches: z.array(directoryDuplicateMatchSchema)
+}).strict();
+
+export const directorySavedViewsListResponseSchema = apiSuccessSchema.extend({
+  views: z.array(directorySavedViewSchema)
+}).strict();
+
+export const directorySavedViewResponseSchema = apiSuccessSchema.extend({
+  view: directorySavedViewSchema
+}).strict();
+
+export const directorySavedViewDeleteResponseSchema = apiSuccessSchema.extend({
+  view_id: z.string().trim().min(1, 'Identifiant vue requis')
+}).strict();
 
 export const adminAgenciesAgencyResponseSchema = apiSuccessSchema.extend({
   agency: adminAgencySummarySchema
@@ -168,6 +218,15 @@ export type DataInteractionsDeleteResponse = z.infer<typeof dataInteractionsDele
 export type DataInteractionsResponse = z.infer<typeof dataInteractionsResponseSchema>;
 export type DataConfigResponse = z.infer<typeof dataConfigResponseSchema>;
 export type DataProfileResponse = z.infer<typeof dataProfileResponseSchema>;
+export type DirectoryListResponse = z.infer<typeof directoryListResponseSchema>;
+export type DirectoryOptionsResponse = z.infer<typeof directoryOptionsResponseSchema>;
+export type DirectoryCitySuggestionsResponse = z.infer<typeof directoryCitySuggestionsResponseSchema>;
+export type DirectoryRecordResponse = z.infer<typeof directoryRecordResponseSchema>;
+export type DirectoryCompanySearchResponse = z.infer<typeof directoryCompanySearchResponseSchema>;
+export type DirectoryDuplicatesResponse = z.infer<typeof directoryDuplicatesResponseSchema>;
+export type DirectorySavedViewsListResponse = z.infer<typeof directorySavedViewsListResponseSchema>;
+export type DirectorySavedViewResponse = z.infer<typeof directorySavedViewResponseSchema>;
+export type DirectorySavedViewDeleteResponse = z.infer<typeof directorySavedViewDeleteResponseSchema>;
 export type AdminAgencySummary = z.infer<typeof adminAgencySummarySchema>;
 export type AdminAgenciesAgencyResponse = z.infer<typeof adminAgenciesAgencyResponseSchema>;
 export type AdminAgenciesDeleteResponse = z.infer<typeof adminAgenciesDeleteResponseSchema>;

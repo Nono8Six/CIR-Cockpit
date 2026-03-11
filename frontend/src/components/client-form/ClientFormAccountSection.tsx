@@ -1,7 +1,7 @@
 import type { ChangeEvent } from 'react';
 import type { FieldErrors, UseFormRegisterReturn } from 'react-hook-form';
 
-import type { ClientFormValues } from 'shared/schemas/client.schema';
+import type { ClientCompanyFormValues } from 'shared/schemas/client.schema';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -18,7 +18,7 @@ type ClientFormAccountSectionProps = {
   onClientNumberChange: (event: ChangeEvent<HTMLInputElement>) => void;
   accountTypeField: UseFormRegisterReturn;
   accountType: string;
-  errors: FieldErrors<ClientFormValues>;
+  errors: FieldErrors<ClientCompanyFormValues>;
 };
 
 const buildFieldChangeEvent = (name: string, value: string) => ({

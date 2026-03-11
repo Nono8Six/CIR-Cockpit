@@ -1,4 +1,5 @@
 import { Suspense, lazy, useRef } from 'react';
+import { Outlet } from '@tanstack/react-router';
 
 import type { AgencyConfig } from '@/services/config';
 import type { AppTab, Entity, Interaction, InteractionDraft, UserRole } from '@/types';
@@ -8,7 +9,6 @@ import type { EntityContact } from '@/types';
 const CockpitForm = lazy(() => import('@/components/CockpitForm'));
 const Dashboard = lazy(() => import('@/components/Dashboard'));
 const Settings = lazy(() => import('@/components/Settings'));
-const ClientsPanel = lazy(() => import('@/components/ClientsPanel'));
 const AdminPanel = lazy(() => import('@/components/AdminPanel'));
 
 const ROUTE_LOADING_FALLBACK = (
@@ -43,26 +43,24 @@ type AppMainTabContentProps = {
 
 const KEEP_ALIVE_TABS: AppTab[] = ['cockpit', 'dashboard', 'clients', 'settings', 'admin'];
 
-const AppMainTabContent = ({
-  activeTab,
-  activeAgencyId,
-  config,
-  interactions,
-  userId,
-  userRole,
-  recentEntities,
-  entitySearchIndex,
-  entitySearchLoading,
-  canAccessSettings,
-  canEditSettings,
-  canAccessAdmin,
-  focusedClientId,
-  focusedContactId,
-  onFocusHandled,
-  onSaveInteraction,
-  onRequestConvert,
-  onOpenGlobalSearch
-}: AppMainTabContentProps) => {
+const AppMainTabContent = (props: AppMainTabContentProps) => {
+  const {
+    activeTab,
+    activeAgencyId,
+    config,
+    interactions,
+    userId,
+    userRole,
+    recentEntities,
+    entitySearchIndex,
+    entitySearchLoading,
+    canAccessSettings,
+    canEditSettings,
+    canAccessAdmin,
+    onSaveInteraction,
+    onRequestConvert,
+    onOpenGlobalSearch
+  } = props;
   const visitedTabsRef = useRef<Record<AppTab, boolean>>({
     cockpit: activeTab === 'cockpit',
     dashboard: activeTab === 'dashboard',
@@ -96,8 +94,9 @@ const AppMainTabContent = ({
         return (
           <section
             key={tab}
-            className={isActive ? 'flex h-full min-h-0 flex-col' : 'hidden'}
-            aria-hidden={!isActive}
+            hidden={!isActive}
+            className="flex h-full min-h-0 flex-col"
+            data-state={isActive ? 'active' : 'inactive'}
             data-testid={`app-main-tab-${tab}`}
           >
             {tab === 'cockpit' ? (
@@ -141,17 +140,7 @@ const AppMainTabContent = ({
 
             {tab === 'clients' ? (
               <div className="min-h-0 flex-1">
-                <Suspense fallback={ROUTE_LOADING_FALLBACK}>
-                  <ClientsPanel
-                    activeAgencyId={activeAgencyId}
-                    statuses={config.statuses}
-                    userRole={userRole}
-                    focusedClientId={focusedClientId}
-                    focusedContactId={focusedContactId}
-                    onFocusHandled={onFocusHandled}
-                    onRequestConvert={onRequestConvert}
-                  />
-                </Suspense>
+                <Outlet />
               </div>
             ) : null}
 

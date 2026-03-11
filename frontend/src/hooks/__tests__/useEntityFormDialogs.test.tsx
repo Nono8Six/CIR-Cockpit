@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { useClientFormDialog } from '@/hooks/useClientFormDialog';
 import { useProspectFormDialog } from '@/hooks/useProspectFormDialog';
-import type { ClientFormValues } from 'shared/schemas/client.schema';
+import type { ClientCompanyFormValues } from 'shared/schemas/client.schema';
 import type { ProspectFormValues } from 'shared/schemas/prospect.schema';
 
 const AGENCY_ID = '11111111-1111-1111-1111-111111111111';
@@ -32,8 +32,9 @@ describe('entity form dialogs', () => {
       })
     );
 
-    const values: ClientFormValues = {
+    const values: ClientCompanyFormValues = {
       client_number: '1234',
+      client_kind: 'company',
       account_type: 'term',
       name: 'ACME',
       address: 'Rue de Paris',

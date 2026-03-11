@@ -98,6 +98,8 @@ describe('useAppSessionState', () => {
       id: 'user-1',
       email: 'user@example.com',
       display_name: 'User',
+      first_name: 'User',
+      last_name: 'Test',
       role: 'agency_admin',
       must_change_password: false,
       password_changed_at: null
@@ -149,6 +151,8 @@ describe('useAppSessionState', () => {
       id: 'user-1',
       email: 'user@example.com',
       display_name: 'User',
+      first_name: 'User',
+      last_name: 'Test',
       role: 'tcs',
       must_change_password: true,
       password_changed_at: null

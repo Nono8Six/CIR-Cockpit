@@ -1,7 +1,7 @@
 import type { ChangeEvent } from 'react';
 import type { FieldErrors, UseFormRegisterReturn } from 'react-hook-form';
 
-import type { ClientFormValues } from 'shared/schemas/client.schema';
+import type { ClientCompanyFormValues } from 'shared/schemas/client.schema';
 import { Input } from '@/components/ui/input';
 
 type ClientFormCodesSectionProps = {
@@ -9,7 +9,7 @@ type ClientFormCodesSectionProps = {
   postalCode: string;
   onPostalCodeChange: (event: ChangeEvent<HTMLInputElement>) => void;
   siretField: UseFormRegisterReturn;
-  errors: FieldErrors<ClientFormValues>;
+  errors: FieldErrors<ClientCompanyFormValues>;
 };
 
 const ClientFormCodesSection = ({

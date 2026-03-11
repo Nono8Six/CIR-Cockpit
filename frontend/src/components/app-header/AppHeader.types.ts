@@ -1,41 +1,32 @@
-import type { ReactNode, RefObject } from 'react';
+import type { RefObject } from 'react';
 
-import type {
-  AgencyContext,
-  AgencyMembershipSummary,
-  AppTab,
-  UserRole
-} from '@/types';
-
-export type NavigationTab = {
-  value: AppTab;
-  icon: ReactNode;
-  label: ReactNode;
-  ariaLabel: string;
-  badge?: ReactNode | null;
-};
+import type { AppShellNavSection } from '@/app/appConstants';
+import type { AgencyContext, AgencyMembershipSummary, AppTab } from '@/types';
 
 export type AppHeaderProps = {
+  sections: AppShellNavSection[];
+  activeTab: AppTab;
+  activeSectionLabel: string;
+  activeItemLabel: string;
   agencyContext: AgencyContext | null;
   agencyMemberships: AgencyMembershipSummary[];
   hasMultipleAgencies: boolean;
-  userRole: UserRole;
   sessionEmail: string;
+  userFullName: string;
+  userInitials: string;
+  userRoleLabel: string;
   profileLoading: boolean;
   isContextRefreshing: boolean;
-  activeTab: AppTab;
-  navigationTabs: NavigationTab[];
   isSettingsDisabled: boolean;
   isProfileMenuOpen: boolean;
   profileMenuRef: RefObject<HTMLDivElement | null>;
-  hasProfileMenu: boolean;
-  roleLabels: Record<UserRole, string>;
-  roleBadgeStyles: Record<UserRole, string>;
-  onTabChange: (tab: AppTab) => void;
   onAgencyChange: (agencyId: string) => void;
   onOpenSearch: () => void;
   onSearchIntent?: () => void;
-  onToggleProfileMenu: () => void;
+  onProfileMenuOpenChange: (open: boolean) => void;
   onOpenSettings: () => void;
+  onOpenAccountPanel: () => void;
   onSignOut: () => void;
+  onBackToCockpit: () => void;
+  onOpenMobileMenu: () => void;
 };

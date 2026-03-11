@@ -1,6 +1,7 @@
 import { z } from 'zod/v4';
 
 import { uuidSchema } from './auth.schema.ts';
+import { officialCompanyFieldsSchema } from './directory.schema.ts';
 
 const optionalText = z.string().trim().optional().or(z.literal(''));
 
@@ -15,9 +16,8 @@ export const prospectFormSchema = z.object({
   postal_code: postalCode,
   department: optionalText,
   city: z.string().trim().min(1, 'Ville requise'),
-  siret: optionalText,
   notes: optionalText,
   agency_id: uuidSchema
-}).strict();
+}).extend(officialCompanyFieldsSchema.shape).strict();
 
-export type ProspectFormValues = z.infer<typeof prospectFormSchema>;
+export type ProspectFormValues = z.input<typeof prospectFormSchema>;

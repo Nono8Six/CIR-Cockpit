@@ -6,6 +6,11 @@ import {
   clientContactsKey,
   clientsKey,
   clientsRootKey,
+  directoryCitySuggestionsRootKey,
+  directoryRootKey,
+  directoryOptionsRootKey,
+  directoryRecordRootKey,
+  directorySavedViewsRootKey,
   entityInteractionsRootKey,
   entitySearchIndexKey,
   entitySearchIndexRootKey,
@@ -128,6 +133,18 @@ export const invalidateEntityInteractionsQueries = async (
   });
 };
 
+export const invalidateDirectoryQueries = async (
+  queryClient: QueryClient
+): Promise<void> => {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: directoryRootKey() }),
+    queryClient.invalidateQueries({ queryKey: directoryOptionsRootKey() }),
+    queryClient.invalidateQueries({ queryKey: directoryCitySuggestionsRootKey() }),
+    queryClient.invalidateQueries({ queryKey: directoryRecordRootKey() }),
+    queryClient.invalidateQueries({ queryKey: directorySavedViewsRootKey() })
+  ]);
+};
+
 export const invalidateEntityDirectoryQueries = async (
   queryClient: QueryClient,
   { agencyId, orphansOnly = false }: EntityDirectoryScope
@@ -135,6 +152,7 @@ export const invalidateEntityDirectoryQueries = async (
   await Promise.all([
     invalidateClientsQueries(queryClient, agencyId),
     invalidateProspectsQueries(queryClient, { agencyId, orphansOnly }),
-    invalidateEntitySearchIndexQueries(queryClient, agencyId)
+    invalidateEntitySearchIndexQueries(queryClient, agencyId),
+    invalidateDirectoryQueries(queryClient)
   ]);
 };

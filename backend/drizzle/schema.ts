@@ -1,6 +1,7 @@
 import { boolean, integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 import type { Database } from '../../shared/supabase.types.ts';
+import type { DirectorySavedViewState } from '../../shared/schemas/directory.schema.ts';
 
 type AccountType = Database['public']['Enums']['account_type'];
 type UserRole = Database['public']['Enums']['user_role'];
@@ -39,9 +40,20 @@ export const agency_members = pgTable('agency_members', {
   updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
 });
 
+export const directory_saved_views = pgTable('directory_saved_views', {
+  id: uuid('id').$type<string>().defaultRandom().primaryKey(),
+  user_id: uuid('user_id').$type<string>().notNull(),
+  name: text('name').notNull(),
+  state: jsonb('state').$type<DirectorySavedViewState>().notNull(),
+  is_default: boolean('is_default').$type<boolean>().notNull(),
+  created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull(),
+  updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
+});
+
 export const entities = pgTable('entities', {
   id: uuid('id').$type<string>().defaultRandom().primaryKey(),
   entity_type: text('entity_type').$type<string>().notNull(),
+  client_kind: text('client_kind').$type<'company' | 'individual' | null>(),
   name: text('name').notNull(),
   agency_id: uuid('agency_id').$type<string | null>(),
   address: text('address').$type<string | null>(),
@@ -50,9 +62,15 @@ export const entities = pgTable('entities', {
   city: text('city').$type<string | null>(),
   country: text('country').$type<string>().default('France').notNull(),
   siret: text('siret').$type<string | null>(),
+  siren: text('siren').$type<string | null>(),
+  naf_code: text('naf_code').$type<string | null>(),
+  official_name: text('official_name').$type<string | null>(),
+  official_data_source: text('official_data_source').$type<string | null>(),
+  official_data_synced_at: timestamp('official_data_synced_at', timestamptz).$type<string | null>(),
   notes: text('notes').$type<string | null>(),
   client_number: text('client_number').$type<string | null>(),
   account_type: text('account_type').$type<AccountType | null>(),
+  cir_commercial_id: uuid('cir_commercial_id').$type<string | null>(),
   archived_at: timestamp('archived_at', timestamptz).$type<string | null>(),
   created_by: uuid('created_by').$type<string | null>(),
   created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull(),
@@ -162,6 +180,7 @@ export const drizzleSchema = {
   agencies,
   profiles,
   agency_members,
+  directory_saved_views,
   entities,
   entity_contacts,
   interactions,

@@ -17,7 +17,13 @@ export type EntityPayload = {
   postal_code?: string | null;
   department?: string | null;
   siret?: string | null;
+  siren?: string | null;
+  naf_code?: string | null;
+  official_name?: string | null;
+  official_data_source?: 'api-recherche-entreprises' | null;
+  official_data_synced_at?: string | null;
   notes?: string | null;
+  cir_commercial_id?: string | null;
 };
 
 const parseEntityResponse = (payload: unknown): Entity => {
@@ -48,11 +54,17 @@ export const saveEntity = (payload: EntityPayload): ResultAsync<Entity, AppError
           postal_code: payload.postal_code,
           department: payload.department,
           siret: payload.siret,
+          siren: payload.siren,
+          naf_code: payload.naf_code,
+          official_name: payload.official_name,
+          official_data_source: payload.official_data_source,
+          official_data_synced_at: payload.official_data_synced_at,
           notes: payload.notes,
           agency_id: payload.agency_id,
           ...(payload.entity_type === 'Client' ? {
             client_number: payload.client_number,
-            account_type: payload.account_type
+            account_type: payload.account_type,
+            cir_commercial_id: payload.cir_commercial_id
           } : {})
         }
       }

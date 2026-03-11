@@ -1,8 +1,13 @@
-import { Suspense, lazy, useCallback, useMemo } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useRouterState } from '@tanstack/react-router';
 
-import { EMPTY_CONFIG, ROLE_BADGE_STYLES, ROLE_LABELS, buildNavigationTabs } from '@/app/appConstants';
+import {
+  APP_SHELL_SECTION_LABELS,
+  EMPTY_CONFIG,
+  ROLE_LABELS,
+  buildShellNavigation
+} from '@/app/appConstants';
 import { getAppGate } from '@/app/getAppGate';
 import { getPathForTab, isInteractionTab } from '@/app/appRoutes';
 import AppLayout from '@/components/AppLayout';
@@ -11,27 +16,59 @@ import { useAppQueries } from '@/hooks/useAppQueries';
 import { useAppSessionActions, useAppSessionStateContext } from '@/hooks/useAppSession';
 import { useAppViewState } from '@/hooks/useAppViewState';
 import { useSaveInteraction } from '@/hooks/useSaveInteraction';
-import { convertEntityToClient, type ConvertClientPayload } from '@/services/entities/convertEntityToClient';
-import { handleUiError } from '@/services/errors/handleUiError';
+import type { UserProfile } from '@/services/auth/getProfile';
 import { notifySuccess } from '@/services/errors/notify';
-import { invalidateClientsQueries, invalidateEntitySearchIndexQueries } from '@/services/query/queryInvalidation';
 import type { InteractionDraft } from '@/types';
 
 const loadAppSearchOverlay = () => import('@/components/AppSearchOverlay');
-const loadConvertClientDialog = () => import('@/components/ConvertClientDialog');
+const loadUiPocPage = () => import('@/components/poc/UiPocPage');
 
 const AppSearchOverlay = lazy(loadAppSearchOverlay);
-const ConvertClientDialog = lazy(loadConvertClientDialog);
+const UiPocPage = lazy(loadUiPocPage);
 
 let appSearchOverlayPreloadPromise: Promise<unknown> | null = null;
-let convertClientDialogPreloadPromise: Promise<unknown> | null = null;
+let uiPocPagePreloadPromise: Promise<unknown> | null = null;
 
 const preloadAppSearchOverlay = (): void => {
   appSearchOverlayPreloadPromise ??= loadAppSearchOverlay();
 };
 
-const preloadConvertClientDialog = (): void => {
-  convertClientDialogPreloadPromise ??= loadConvertClientDialog();
+const preloadUiPocPage = (): void => {
+  uiPocPagePreloadPromise ??= loadUiPocPage();
+};
+
+const getBestUserLabel = (profile: UserProfile | null, userEmail: string): string => {
+  const firstName = profile?.first_name?.trim() ?? '';
+  const lastName = profile?.last_name?.trim() ?? '';
+  const fullName = [firstName, lastName].filter(Boolean).join(' ');
+  if (fullName) return fullName;
+
+  const displayName = profile?.display_name?.trim() ?? '';
+  if (displayName) return displayName;
+
+  return userEmail;
+};
+
+const getUserInitials = (profile: UserProfile | null, fullName: string, userEmail: string): string => {
+  const firstName = profile?.first_name?.trim() ?? '';
+  const lastName = profile?.last_name?.trim() ?? '';
+  if (firstName || lastName) {
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || 'U';
+  }
+
+  const words = fullName
+    .replace(/@.*/, '')
+    .split(/\s+/)
+    .filter(Boolean);
+  if (words.length >= 2) {
+    return `${words[0]?.charAt(0)}${words[1]?.charAt(0)}`.toUpperCase();
+  }
+  if (words.length === 1) {
+    const firstWord = words[0] ?? '';
+    return firstWord.slice(0, 2).toUpperCase() || 'U';
+  }
+
+  return userEmail.slice(0, 2).toUpperCase() || 'U';
 };
 
 const App = () => {
@@ -45,6 +82,10 @@ const App = () => {
   const canAccessSettings = userRole !== 'tcs';
   const canEditSettings = userRole === 'super_admin';
   const canAccessAdmin = userRole !== 'tcs';
+  const normalizedPathname = pathname.endsWith('/') && pathname.length > 1
+    ? pathname.slice(0, -1)
+    : pathname;
+  const isUiPocRoute = normalizedPathname === '/ui-poc';
 
   const viewState = useAppViewState({
     pathname,
@@ -54,9 +95,7 @@ const App = () => {
     canAccessAdmin,
     canAccessSettings,
     onSearchOpen: preloadAppSearchOverlay,
-    onConvertOpen: preloadConvertClientDialog
   });
-
   const queries = useAppQueries({
     activeAgencyId: sessionState.activeAgencyId,
     canLoadData: sessionState.canLoadData,
@@ -64,6 +103,11 @@ const App = () => {
     isSearchOpen: viewState.isSearchOpen,
     searchQuery: viewState.searchQuery
   });
+
+  useEffect(() => {
+    if (!isUiPocRoute) return;
+    preloadUiPocPage();
+  }, [isUiPocRoute]);
 
   const saveInteractionMutation = useSaveInteraction(sessionState.activeAgencyId);
 
@@ -124,6 +168,100 @@ const App = () => {
     }
   }, [navigate, sessionActions]);
 
+  const handleAgencyChange = useCallback(
+    async (agencyId: string) => {
+      if (await sessionActions.changeActiveAgency(agencyId)) {
+        notifySuccess('Agence active mise à jour');
+      }
+    },
+    [sessionActions]
+  );
+
+  const shellSections = useMemo(
+    () => buildShellNavigation(canAccessAdmin, queries.searchData.pendingCount),
+    [canAccessAdmin, queries.searchData.pendingCount]
+  );
+  const activeShellItem = useMemo(() => {
+    const flattened = shellSections.flatMap((section) => section.items);
+    return flattened.find((item) => item.id === viewState.activeTab) ?? flattened[0];
+  }, [shellSections, viewState.activeTab]);
+  const activeSectionLabel = activeShellItem
+    ? APP_SHELL_SECTION_LABELS[activeShellItem.sectionId]
+    : APP_SHELL_SECTION_LABELS.clients;
+  const activeItemLabel = activeShellItem?.label ?? 'Clients';
+  const sessionEmail = sessionState.session?.user?.email ?? 'Utilisateur';
+  const userFullName = getBestUserLabel(sessionState.profile, sessionEmail);
+  const userInitials = getUserInitials(sessionState.profile, userFullName, sessionEmail);
+  const config = queries.config ?? EMPTY_CONFIG;
+
+  if (isUiPocRoute) {
+    const hasUiPocSearchResults =
+      queries.searchData.filteredInteractions.length > 0
+      || queries.searchData.filteredClients.length > 0
+      || queries.searchData.filteredContacts.length > 0;
+
+    return (
+      <Suspense fallback={null}>
+        <UiPocPage
+          userEmail={sessionState.session?.user?.email ?? 'Utilisateur'}
+          userProfile={sessionState.profile}
+          userRole={userRole}
+          activeAgencyId={sessionState.activeAgencyId}
+          agencyMemberships={sessionState.agencyMemberships}
+          authReady={sessionState.authReady}
+          isAuthenticated={Boolean(sessionState.session)}
+          onAgencyChange={handleAgencyChange}
+          onOpenSearch={viewState.handleOpenSearch}
+          onSearchIntent={preloadAppSearchOverlay}
+          onSignOut={() => void handleSignOut()}
+          onBackToCockpit={() => {
+            void navigate({ to: getPathForTab('cockpit') });
+          }}
+        />
+        {viewState.isSearchOpen ? (
+          <AppSearchOverlay
+            open={viewState.isSearchOpen}
+            onOpenChange={viewState.handleSearchOpenChange}
+            searchQuery={viewState.searchQuery}
+            onSearchQueryChange={viewState.setSearchQuery}
+            filteredInteractions={queries.searchData.filteredInteractions}
+            filteredClients={queries.searchData.filteredClients}
+            filteredProspects={[]}
+            filteredContacts={queries.searchData.filteredContacts}
+            hasSearchResults={hasUiPocSearchResults}
+            isEntitySearchLoading={queries.entitySearchQuery.isLoading}
+            entitySearchError={queries.entitySearchQuery.error}
+            onRetrySearch={async () => queries.entitySearchQuery.refetch()}
+            entityNameById={queries.searchData.entityNameById}
+            onOpenInteraction={() => {
+              void navigate({
+                to: '/ui-poc',
+                search: (previous) => ({
+                  ...previous,
+                  nav: 'dashboard'
+                })
+              });
+              viewState.handleSearchOpenChange(false);
+            }}
+            onFocusClient={() => {
+              void navigate({
+                to: '/ui-poc',
+                search: (previous) => ({
+                  ...previous,
+                  nav: 'clients'
+                })
+              });
+              viewState.handleSearchOpenChange(false);
+            }}
+            onRequestConvert={() => {
+              viewState.handleSearchOpenChange(false);
+            }}
+          />
+        ) : null}
+      </Suspense>
+    );
+  }
+
   const gate = getAppGate({
     authReady: sessionState.authReady,
     session: sessionState.session,
@@ -139,41 +277,39 @@ const App = () => {
     return gate;
   }
 
-  const navigationTabs = buildNavigationTabs(canAccessAdmin, queries.searchData.pendingCount);
-  const config = queries.config ?? EMPTY_CONFIG;
-
   return (
     <AppLayout
       headerProps={{
+        sections: shellSections,
+        activeTab: viewState.activeTab,
+        activeSectionLabel,
+        activeItemLabel,
         agencyContext: sessionState.agencyContext,
         agencyMemberships: sessionState.agencyMemberships,
         hasMultipleAgencies: sessionState.agencyMemberships.length > 1,
-        userRole,
-        sessionEmail: sessionState.session?.user?.email ?? 'Utilisateur',
+        sessionEmail,
+        userFullName,
+        userInitials,
+        userRoleLabel: ROLE_LABELS[userRole],
         profileLoading: sessionState.profileLoading,
         isContextRefreshing: sessionState.isContextLoading && Boolean(sessionState.agencyContext),
-        activeTab: viewState.activeTab,
-        navigationTabs,
         isSettingsDisabled: !canAccessSettings,
         isProfileMenuOpen: viewState.isProfileMenuOpen,
         profileMenuRef: viewState.profileMenuRef,
-        hasProfileMenu: true,
-        roleLabels: ROLE_LABELS,
-        roleBadgeStyles: ROLE_BADGE_STYLES,
-        onTabChange: viewState.handleTabChange,
-        onAgencyChange: async (agencyId) => {
-          if (await sessionActions.changeActiveAgency(agencyId)) {
-            notifySuccess('Agence active mise à jour');
-          }
-        },
+        onAgencyChange: handleAgencyChange,
         onOpenSearch: viewState.handleOpenSearch,
         onSearchIntent: preloadAppSearchOverlay,
-        onToggleProfileMenu: () => viewState.setIsProfileMenuOpen((prev) => !prev),
+        onProfileMenuOpenChange: viewState.setIsProfileMenuOpen,
         onOpenSettings: () => {
           viewState.handleTabChange('settings');
           viewState.setIsProfileMenuOpen(false);
         },
-        onSignOut: () => void handleSignOut()
+        onOpenAccountPanel: () => undefined,
+        onSignOut: () => void handleSignOut(),
+        onBackToCockpit: () => {
+          viewState.handleTabChange('cockpit');
+        },
+        onOpenMobileMenu: () => undefined
       }}
       mainContentProps={{
         activeTab: viewState.activeTab,
@@ -224,44 +360,19 @@ const App = () => {
               viewState.handleTabChange('dashboard');
               viewState.handleSearchOpenChange(false);
             }}
-            onFocusClient={(clientId, contactId) => {
-              viewState.setFocusedClientId(clientId);
-              viewState.setFocusedContactId(contactId ?? null);
-              viewState.handleTabChange('clients');
+            onFocusClient={(clientId) => {
+              const targetEntity = queries.entitySearchIndex.entities.find((entity) => entity.id === clientId);
+              if (targetEntity?.client_number) {
+                void navigate({
+                  to: '/clients/$clientNumber',
+                  params: { clientNumber: targetEntity.client_number }
+                });
+              } else {
+                viewState.handleTabChange('clients');
+              }
               viewState.handleSearchOpenChange(false);
             }}
             onRequestConvert={viewState.handleRequestConvert}
-          />
-        </Suspense>
-      ) : null}
-      {viewState.convertTarget ? (
-        <Suspense fallback={null}>
-          <ConvertClientDialog
-            open={Boolean(viewState.convertTarget)}
-            onOpenChange={(open) => {
-              if (!open) {
-                viewState.setConvertTarget(null);
-              }
-            }}
-            entity={viewState.convertTarget}
-            onConvert={async (payload: ConvertClientPayload) => {
-              const result = await convertEntityToClient(payload).match(
-                (updated) => updated,
-                (error) => {
-                  handleUiError(error, 'Impossible de convertir en client.', {
-                    source: 'App.convertEntityToClient'
-                  });
-                  return null;
-                }
-              );
-              if (!result) {
-                return;
-              }
-              void invalidateClientsQueries(queryClient, sessionState.activeAgencyId);
-              void invalidateEntitySearchIndexQueries(queryClient, sessionState.activeAgencyId);
-              viewState.setConvertTarget(null);
-              notifySuccess('Prospect converti en client');
-            }}
           />
         </Suspense>
       ) : null}

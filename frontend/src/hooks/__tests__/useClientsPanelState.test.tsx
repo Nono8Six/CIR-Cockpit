@@ -149,6 +149,7 @@ describe('useClientsPanelState', () => {
 
     await act(async () => {
       await result.current.handleSaveClient({
+        client_kind: 'company',
         account_type: 'term',
         name: 'Acme'
         ,

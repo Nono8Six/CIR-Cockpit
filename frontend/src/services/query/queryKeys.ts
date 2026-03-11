@@ -3,6 +3,13 @@ export const QUERY_ROOTS = {
   interactions: 'interactions',
   clients: 'clients',
   prospects: 'prospects',
+  directory: 'directory',
+  directoryCompanySearch: 'directory-company-search',
+  directoryDuplicates: 'directory-duplicates',
+  directoryOptions: 'directory-options',
+  directoryCitySuggestions: 'directory-city-suggestions',
+  directoryRecord: 'directory-record',
+  directorySavedViews: 'directory-saved-views',
   client: 'client',
   clientContacts: 'client-contacts',
   entityInteractions: 'entity-interactions',
@@ -34,6 +41,21 @@ export const prospectsKey = (agencyId: string | null, includeArchived: boolean, 
   orphansOnly ? 'orphans' : (agencyId ?? 'all'),
   archiveScope(includeArchived)
 ] as const;
+
+export const directoryRootKey = () => [QUERY_ROOTS.directory] as const;
+export const directoryPageKey = (input: Record<string, unknown>) => [QUERY_ROOTS.directory, input] as const;
+export const directoryCompanySearchRootKey = () => [QUERY_ROOTS.directoryCompanySearch] as const;
+export const directoryCompanySearchKey = (input: Record<string, unknown>) => [QUERY_ROOTS.directoryCompanySearch, input] as const;
+export const directoryDuplicatesRootKey = () => [QUERY_ROOTS.directoryDuplicates] as const;
+export const directoryDuplicatesKey = (input: Record<string, unknown>) => [QUERY_ROOTS.directoryDuplicates, input] as const;
+export const directoryOptionsRootKey = () => [QUERY_ROOTS.directoryOptions] as const;
+export const directoryOptionsKey = (input: Record<string, unknown>) => [QUERY_ROOTS.directoryOptions, input] as const;
+export const directoryCitySuggestionsRootKey = () => [QUERY_ROOTS.directoryCitySuggestions] as const;
+export const directoryCitySuggestionsKey = (input: Record<string, unknown>) => [QUERY_ROOTS.directoryCitySuggestions, input] as const;
+export const directoryRecordRootKey = () => [QUERY_ROOTS.directoryRecord] as const;
+export const directoryRecordKey = (route: Record<string, unknown>) => [QUERY_ROOTS.directoryRecord, route] as const;
+export const directorySavedViewsRootKey = () => [QUERY_ROOTS.directorySavedViews] as const;
+export const directorySavedViewsKey = () => [QUERY_ROOTS.directorySavedViews] as const;
 
 export const clientKey = (clientId: string) => [QUERY_ROOTS.client, clientId] as const;
 
