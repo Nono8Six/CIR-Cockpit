@@ -21,11 +21,11 @@ const ProspectFormAddressSection = ({
 }: ProspectFormAddressSectionProps) => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div>
-      <label className="text-xs font-medium text-muted-foreground" htmlFor="prospect-address">Adresse</label>
+      <label className="text-sm font-medium text-foreground" htmlFor="prospect-address">Adresse</label>
       <Input {...addressField} id="prospect-address" placeholder="Adresse" autoComplete="street-address" />
     </div>
     <div>
-      <label className="text-xs font-medium text-muted-foreground" htmlFor="prospect-postal-code">Code postal</label>
+      <label className="text-sm font-medium text-foreground" htmlFor="prospect-postal-code">Code postal</label>
       <Input
         {...postalCodeField}
         id="prospect-postal-code"

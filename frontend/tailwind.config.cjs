@@ -34,8 +34,10 @@ module.exports = {
         },
         surface: {
           1: "hsl(var(--surface-1))",
-          2: "hsl(var(--surface-2))"
+          2: "hsl(var(--surface-2))",
+          3: "hsl(var(--surface-3))"
         },
+        "border-subtle": "hsl(var(--border-subtle))",
         accent: {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))"

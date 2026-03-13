@@ -8,7 +8,6 @@ import type {
   DirectorySavedViewSaveInput
 } from 'shared/schemas/directory.schema';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -323,9 +322,9 @@ const ClientDirectoryPage = () => {
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2.5">
               <h1 className="text-base font-semibold text-foreground sm:text-lg">Clients et prospects</h1>
-              <Badge variant="secondary" density="dense" className="tabular-nums">
+              <span className="tabular-nums text-sm text-muted-foreground">
                 {`${totalResults} résultat${totalResults > 1 ? 's' : ''}`}
-              </Badge>
+              </span>
             </div>
 
             <div className="hidden items-center gap-2 sm:flex">
@@ -374,7 +373,7 @@ const ClientDirectoryPage = () => {
           </div>
 
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border/50 bg-card shadow-sm sm:rounded-xl">
-            <div className="border-b border-border/40 px-3 py-2">
+            <div className="border-b border-border-subtle px-3 py-1.5">
               <ClientDirectoryFilters
                 key={`directory-filters-${filtersSyncToken}`}
                 search={uiSearch}

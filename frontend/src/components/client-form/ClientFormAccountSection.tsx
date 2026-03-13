@@ -35,7 +35,7 @@ const ClientFormAccountSection = ({
 }: ClientFormAccountSectionProps) => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div>
-      <label className="text-xs font-medium text-muted-foreground" htmlFor="client-number">Numero de compte</label>
+      <label className="text-sm font-medium text-foreground" htmlFor="client-number">Numero de compte</label>
       <Input
         {...clientNumberField}
         id="client-number"
@@ -49,7 +49,7 @@ const ClientFormAccountSection = ({
       )}
     </div>
     <div>
-      <label className="text-xs font-medium text-muted-foreground" htmlFor="client-account-type">Type de compte</label>
+      <label className="text-sm font-medium text-foreground" htmlFor="client-account-type">Type de compte</label>
       <input
         type="hidden"
         name={accountTypeField.name}

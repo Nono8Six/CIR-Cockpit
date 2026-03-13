@@ -105,7 +105,7 @@ const ClientFormDialogLegacy = ({
         <DialogTitle className="sr-only">Modifier un client</DialogTitle>
         <DialogDescription className="sr-only">Formulaire de saisie client.</DialogDescription>
         <ClientFormHeader isEdit />
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 px-6 py-5">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 px-6 py-5">
           <ClientFormContent
             isEdit
             isSubmitting={isSubmitting}

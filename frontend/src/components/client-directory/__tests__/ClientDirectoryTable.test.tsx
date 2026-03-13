@@ -105,4 +105,36 @@ describe('ClientDirectoryTable', () => {
 
     expect(onOpenRecord).toHaveBeenCalledWith(baseRow);
   });
+
+  it('affiche le texte "archivé" quand archived_at est renseigné', () => {
+    const archivedRow: DirectoryListRow = {
+      ...baseRow,
+      archived_at: '2026-01-15T00:00:00.000Z'
+    };
+    render(
+      <ClientDirectoryTable
+        rows={[archivedRow]}
+        sorting={[{ id: 'updated_at', desc: false }]}
+        page={1}
+        pageSize={50}
+        total={1}
+        isFetching={false}
+        isInitialLoading={false}
+        columnVisibility={{}}
+        density="comfortable"
+        onSortChange={vi.fn()}
+        onPageChange={vi.fn()}
+        onPageSizeChange={vi.fn()}
+        onOpenRecord={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText(/archivé/)).toBeTruthy();
+  });
+
+  it('affiche un StatusDot pour chaque ligne', () => {
+    renderTable();
+
+    expect(screen.getByRole('img', { name: 'Client actif' })).toBeTruthy();
+  });
 });

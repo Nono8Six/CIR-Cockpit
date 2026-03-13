@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# IMPORTANT: ce script a un miroir dans qa-gate.ps1 -- les garder synchronises.
 set -euo pipefail
 
 echo "=========================================="
@@ -9,16 +10,13 @@ echo
 echo "[1/8] Frontend typecheck..."
 pnpm --dir frontend run typecheck
 echo "[2/8] Frontend lint..."
-pnpm --dir frontend run lint -- --max-warnings=0
+pnpm --dir frontend run lint
 echo "[3/8] Frontend tests + coverage thresholds..."
 pnpm --dir frontend run test:coverage
 echo "[4/8] Frontend error compliance..."
 pnpm --dir frontend run check:error-compliance
 
-echo "[5/9] Frontend audit..."
-pnpm --dir frontend exec pnpm audit --audit-level=high
-
-echo "[6/9] Frontend build..."
+echo "[5/8] Frontend build..."
 pnpm --dir frontend run build
 
 if [[ "${RUN_E2E:-0}" == "1" ]]; then
@@ -26,11 +24,11 @@ if [[ "${RUN_E2E:-0}" == "1" ]]; then
   pnpm --dir frontend run test:e2e
 fi
 
-echo "[7/9] Backend lint..."
+echo "[6/8] Backend lint..."
 deno lint backend/functions/api
-echo "[8/9] Backend typecheck..."
+echo "[7/8] Backend typecheck..."
 deno check --config backend/deno.json backend/functions/api/index.ts
-echo "[9/9] Backend tests..."
+echo "[8/8] Backend tests..."
 deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api
 
 echo

@@ -52,7 +52,6 @@ const ProspectFormDialogLegacy = ({
     postalCode,
     agencyValue,
     agencyLabel,
-    relationLabel,
     handlePostalCodeChange,
     onSubmit
   } = useProspectFormDialog({
@@ -86,8 +85,8 @@ const ProspectFormDialogLegacy = ({
       >
         <DialogTitle className="sr-only">Modifier un prospect</DialogTitle>
         <DialogDescription className="sr-only">Formulaire de saisie prospect.</DialogDescription>
-        <ProspectFormHeader isEdit relationLabel={relationLabel} />
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 px-6 py-5">
+        <ProspectFormHeader isEdit />
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 px-6 py-5">
           <ProspectFormContent
             isEdit
             isSubmitting={isSubmitting}

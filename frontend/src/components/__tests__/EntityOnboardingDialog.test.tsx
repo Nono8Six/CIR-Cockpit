@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -55,6 +55,44 @@ describe('EntityOnboardingDialog', () => {
     expect(screen.getByRole('textbox', { name: /filtre ville recherche officielle/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /departement/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^continuer$/i })).toBeDisabled();
+  });
+
+  it('announces the current step and only exposes completed steps as navigation actions', async () => {
+    const user = userEvent.setup();
+
+    renderWithProviders(
+      <EntityOnboardingDialog
+        open
+        onOpenChange={vi.fn()}
+        agencies={[{
+          id: 'agency-1',
+          name: 'CIR Bordeaux',
+          archived_at: null,
+          created_at: '2026-03-09T00:00:00.000Z',
+          updated_at: '2026-03-09T00:00:00.000Z'
+        }]}
+        userRole="super_admin"
+        activeAgencyId="agency-1"
+        commercials={[]}
+        onSaveClient={vi.fn(async () => undefined)}
+        onSaveProspect={vi.fn(async () => undefined)}
+      />
+    );
+
+    const navigation = screen.getByRole('navigation', { name: /progression du parcours/i });
+    expect(within(navigation).getByText('Type').closest('li')).toHaveAttribute('aria-current', 'step');
+    expect(within(navigation).queryAllByRole('button')).toHaveLength(0);
+
+    await user.click(screen.getByRole('button', { name: /^continuer$/i }));
+
+    expect(within(navigation).getByText('Recherche').closest('li')).toHaveAttribute('aria-current', 'step');
+    const previousStepButton = within(navigation).getByRole('button', { name: /revenir à l'étape type/i });
+    expect(previousStepButton).toBeEnabled();
+    expect(within(navigation).queryByRole('button', { name: /revenir à l'étape recherche/i })).not.toBeInTheDocument();
+
+    await user.click(previousStepButton);
+
+    expect(within(navigation).getByText('Type').closest('li')).toHaveAttribute('aria-current', 'step');
   });
 
   it('requires selecting an establishment when a company has multiple sites', async () => {
@@ -129,5 +167,70 @@ describe('EntityOnboardingDialog', () => {
 
     await user.click(screen.getByRole('button', { name: /33170 gradignan/i }));
     expect(continueButton).toBeEnabled();
+  });
+
+  it('confirms before closing when the form is dirty', async () => {
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
+
+    renderWithProviders(
+      <EntityOnboardingDialog
+        open
+        onOpenChange={onOpenChange}
+        agencies={[{
+          id: 'agency-1',
+          name: 'CIR Bordeaux',
+          archived_at: null,
+          created_at: '2026-03-09T00:00:00.000Z',
+          updated_at: '2026-03-09T00:00:00.000Z'
+        }]}
+        userRole="super_admin"
+        activeAgencyId="agency-1"
+        commercials={[]}
+        onSaveClient={vi.fn(async () => undefined)}
+        onSaveProspect={vi.fn(async () => undefined)}
+      />
+    );
+
+    await user.click(screen.getByRole('radio', { name: /selectionner prospect/i }));
+    await user.click(screen.getByRole('button', { name: /^annuler$/i }));
+
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^quitter$/i }));
+
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it('confirms before closing when local search draft is dirty', async () => {
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
+
+    renderWithProviders(
+      <EntityOnboardingDialog
+        open
+        onOpenChange={onOpenChange}
+        agencies={[{
+          id: 'agency-1',
+          name: 'CIR Bordeaux',
+          archived_at: null,
+          created_at: '2026-03-09T00:00:00.000Z',
+          updated_at: '2026-03-09T00:00:00.000Z'
+        }]}
+        userRole="super_admin"
+        activeAgencyId="agency-1"
+        commercials={[]}
+        allowedIntents={['client']}
+        onSaveClient={vi.fn(async () => undefined)}
+        onSaveProspect={vi.fn(async () => undefined)}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: /^continuer$/i }));
+    await user.type(screen.getByPlaceholderText(/nom de societe, siren ou siret/i), 'sea');
+    await user.click(screen.getByRole('button', { name: /^annuler$/i }));
+
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
   });
 });

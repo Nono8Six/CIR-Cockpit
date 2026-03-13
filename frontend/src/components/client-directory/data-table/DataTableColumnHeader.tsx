@@ -26,7 +26,7 @@ const DataTableColumnHeader = <TData, TValue>({
       size="sm"
       disabled={!canSort}
       aria-label={canSort ? `Trier la colonne ${title}` : `${title} non triable`}
-      className="h-10 w-full justify-between rounded-lg px-2.5 text-xs font-semibold text-foreground hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50"
+      className="h-9 w-full justify-between rounded-lg px-2 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50"
       onClick={(event) => {
         event.stopPropagation();
         toggleSorting?.(event);

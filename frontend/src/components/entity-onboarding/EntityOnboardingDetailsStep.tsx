@@ -35,8 +35,8 @@ interface FieldShellProps {
 
 const FieldShell = ({ label, helper, error, className, children }: FieldShellProps) => (
   <div className={className}>
-    <div className="grid gap-2">
-      <label className="text-sm font-medium text-foreground">{label}</label>
+    <div className="grid gap-1.5">
+      <label className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">{label}</label>
       {children}
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
       {!error && helper ? <p className="text-xs text-muted-foreground">{helper}</p> : null}
@@ -72,10 +72,10 @@ const EntityOnboardingDetailsStep = ({
   const { errors } = form.formState;
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_340px]">
-      <div className="space-y-4">
-        <Card variant="section" className="border-border/60 bg-card shadow-sm">
-          <div className="border-b border-border/60 px-5 py-5">
+    <div className="grid gap-3 xl:grid-cols-[minmax(0,1.35fr)_340px]">
+      <div className="space-y-3">
+        <Card variant="section" className="rounded-lg border-border-subtle bg-background shadow-none">
+          <div className="border-b border-border-subtle px-4 py-4">
             <div className="flex items-center gap-2">
               {isIndividualClient ? <UserRound className="size-4 text-muted-foreground" /> : <Building2 className="size-4 text-muted-foreground" />}
               <h2 className="text-lg font-semibold tracking-tight text-foreground">
@@ -89,38 +89,39 @@ const EntityOnboardingDetailsStep = ({
             </p>
           </div>
 
-          <div className="grid gap-4 p-5 md:grid-cols-2">
+          <div className="grid gap-3 px-4 py-4 md:grid-cols-2">
             {isIndividualClient ? (
               <>
                 <FieldShell label="Nom" error={errors.last_name?.message}>
-                  <Input aria-label="Nom" {...form.register('last_name')} className="h-10 rounded-lg" />
+                  <Input aria-label="Nom" density="dense" {...form.register('last_name')} className="rounded-md border-border-subtle bg-background" />
                 </FieldShell>
                 <FieldShell label="Prenom" error={errors.first_name?.message}>
-                  <Input aria-label="Prenom" {...form.register('first_name')} className="h-10 rounded-lg" />
+                  <Input aria-label="Prenom" density="dense" {...form.register('first_name')} className="rounded-md border-border-subtle bg-background" />
                 </FieldShell>
                 <FieldShell label="Telephone" error={errors.phone?.message}>
-                  <Input aria-label="Telephone" type="tel" autoComplete="tel" {...form.register('phone')} className="h-10 rounded-lg" />
+                  <Input aria-label="Telephone" type="tel" autoComplete="tel" density="dense" {...form.register('phone')} className="rounded-md border-border-subtle bg-background" />
                 </FieldShell>
                 <FieldShell label="Email" error={errors.email?.message}>
-                  <Input aria-label="Email" type="email" autoComplete="email" {...form.register('email')} className="h-10 rounded-lg" />
+                  <Input aria-label="Email" type="email" autoComplete="email" spellCheck={false} density="dense" {...form.register('email')} className="rounded-md border-border-subtle bg-background" />
                 </FieldShell>
                 <FieldShell label="Nom annuaire" helper="Construit automatiquement a partir du nom et du prenom." className="md:col-span-2">
                   <Input
                     aria-label="Nom annuaire"
                     value={[values.last_name, values.first_name].map((entry) => entry.trim()).filter(Boolean).join(' ')}
                     readOnly
-                    className="h-10 rounded-lg"
+                    density="dense"
+                    className="rounded-md border-border-subtle bg-surface-1/70"
                   />
                 </FieldShell>
               </>
             ) : (
               <FieldShell label="Nom de la societe" error={errors.name?.message} className="md:col-span-2">
-                <Input aria-label="Nom de la societe" {...form.register('name')} className="h-10 rounded-lg" />
+                <Input aria-label="Nom de la societe" density="dense" {...form.register('name')} className="rounded-md border-border-subtle bg-background" />
               </FieldShell>
             )}
 
             <FieldShell label="Adresse" helper={isIndividualClient ? 'Optionnelle pour un particulier.' : 'Adresse principale retenue pour la fiche.'} className="md:col-span-2">
-              <Input aria-label="Adresse" autoComplete="street-address" {...form.register('address')} className="h-10 rounded-lg" />
+              <Input aria-label="Adresse" autoComplete="street-address" density="dense" {...form.register('address')} className="rounded-md border-border-subtle bg-background" />
             </FieldShell>
 
             <FieldShell
@@ -131,6 +132,8 @@ const EntityOnboardingDetailsStep = ({
               <Input
                 aria-label="Code postal"
                 value={values.postal_code ?? ''}
+                spellCheck={false}
+                density="dense"
                 onChange={(event) => {
                   const digits = event.target.value.replace(/\D/g, '').slice(0, 5);
                   form.setValue('postal_code', digits, { shouldDirty: true, shouldValidate: true });
@@ -140,16 +143,16 @@ const EntityOnboardingDetailsStep = ({
                     { shouldDirty: true }
                   );
                 }}
-                className="h-10 rounded-lg"
+                className="rounded-md border-border-subtle bg-background font-mono tabular-nums"
               />
             </FieldShell>
 
             <FieldShell label="Ville" error={errors.city?.message}>
-              <Input aria-label="Ville" autoComplete="address-level2" {...form.register('city')} className="h-10 rounded-lg" />
+              <Input aria-label="Ville" autoComplete="address-level2" density="dense" {...form.register('city')} className="rounded-md border-border-subtle bg-background" />
             </FieldShell>
 
             <FieldShell label="Departement" helper="Calcule depuis le code postal quand il est connu.">
-              <Input aria-label="Departement" value={values.department ?? ''} readOnly className="h-10 rounded-lg" />
+              <Input aria-label="Departement" value={values.department ?? ''} readOnly density="dense" className="rounded-md border-border-subtle bg-surface-1/70 font-mono tabular-nums" />
             </FieldShell>
 
             <FieldShell
@@ -165,7 +168,7 @@ const EntityOnboardingDetailsStep = ({
                 })}
                 disabled={userRole === 'tcs'}
               >
-                <SelectTrigger aria-label="Agence" className="h-10 rounded-lg">
+                <SelectTrigger aria-label="Agence" density="dense" className="rounded-md border-border-subtle bg-background">
                   <SelectValue placeholder="Selectionner une agence" />
                 </SelectTrigger>
                 <SelectContent>
@@ -179,39 +182,40 @@ const EntityOnboardingDetailsStep = ({
             </FieldShell>
 
             <FieldShell label="Notes" helper="Visible uniquement dans les vues internes." className="md:col-span-2">
-              <Textarea aria-label="Notes" {...form.register('notes')} className="min-h-[140px] rounded-lg" />
+              <Textarea aria-label="Notes" {...form.register('notes')} className="min-h-[120px] rounded-md border-border-subtle bg-background px-3 py-2 text-sm" />
             </FieldShell>
           </div>
         </Card>
 
         {!isIndividualClient ? (
-          <Card variant="section" className="border-border/60 bg-card shadow-sm">
-            <div className="border-b border-border/60 px-5 py-5">
+          <Card variant="section" className="rounded-lg border-border-subtle bg-background shadow-none">
+            <div className="border-b border-border-subtle px-4 py-4">
               <h2 className="text-lg font-semibold tracking-tight text-foreground">Donnees officielles</h2>
               <p className="mt-1 text-sm leading-6 text-muted-foreground">
                 Informations importees ou completees manuellement avant validation.
               </p>
             </div>
-            <div className="grid gap-4 p-5 md:grid-cols-3">
+            <div className="grid gap-3 px-4 py-4 md:grid-cols-3">
               <FieldShell label="SIRET">
-                <Input aria-label="SIRET" {...form.register('siret')} className="h-10 rounded-lg" />
+                <Input aria-label="SIRET" spellCheck={false} density="dense" {...form.register('siret')} className="rounded-md border-border-subtle bg-background font-mono tabular-nums" />
               </FieldShell>
               <FieldShell label="SIREN">
-                <Input aria-label="SIREN" {...form.register('siren')} className="h-10 rounded-lg" />
+                <Input aria-label="SIREN" spellCheck={false} density="dense" {...form.register('siren')} className="rounded-md border-border-subtle bg-background font-mono tabular-nums" />
               </FieldShell>
               <FieldShell label="Code NAF">
-                <Input aria-label="Code NAF" {...form.register('naf_code')} className="h-10 rounded-lg" />
+                <Input aria-label="Code NAF" spellCheck={false} density="dense" {...form.register('naf_code')} className="rounded-md border-border-subtle bg-background font-mono tabular-nums" />
               </FieldShell>
 
               <FieldShell label="Nom officiel" className="md:col-span-2">
-                <Input aria-label="Nom officiel" {...form.register('official_name')} className="h-10 rounded-lg" />
+                <Input aria-label="Nom officiel" density="dense" {...form.register('official_name')} className="rounded-md border-border-subtle bg-background" />
               </FieldShell>
               <FieldShell label="Source">
                 <Input
                   aria-label="Source officielle"
                   value={values.official_data_source ? 'API Recherche d entreprises' : 'Saisie manuelle'}
                   readOnly
-                  className="h-10 rounded-lg"
+                  density="dense"
+                  className="rounded-md border-border-subtle bg-surface-1/70"
                 />
               </FieldShell>
             </div>
@@ -219,8 +223,8 @@ const EntityOnboardingDetailsStep = ({
         ) : null}
 
         {effectiveIntent === 'client' ? (
-          <Card variant="section" className="border-border/60 bg-card shadow-sm">
-            <div className="border-b border-border/60 px-5 py-5">
+          <Card variant="section" className="rounded-lg border-border-subtle bg-background shadow-none">
+            <div className="border-b border-border-subtle px-4 py-4">
               <h2 className="text-lg font-semibold tracking-tight text-foreground">Compte client</h2>
               <p className="mt-1 text-sm leading-6 text-muted-foreground">
                 {isIndividualClient
@@ -228,7 +232,7 @@ const EntityOnboardingDetailsStep = ({
                   : 'Donnees specifiques au compte et a l affectation commerciale.'}
               </p>
             </div>
-            <div className="grid gap-4 p-5 md:grid-cols-2">
+            <div className="grid gap-3 px-4 py-4 md:grid-cols-2">
               <FieldShell
                 label="Numero de compte"
                 helper="Obligatoire pour creer un client."
@@ -237,18 +241,20 @@ const EntityOnboardingDetailsStep = ({
                 <Input
                   aria-label="Numero de compte"
                   value={values.client_number ?? ''}
+                  spellCheck={false}
+                  density="dense"
                   onChange={(event) => form.setValue(
                     'client_number',
                     event.target.value.replace(/\D/g, '').slice(0, 10),
                     { shouldDirty: true, shouldValidate: true }
                   )}
-                  className="h-10 rounded-lg"
+                  className="rounded-md border-border-subtle bg-background font-mono tabular-nums"
                 />
               </FieldShell>
 
               {isIndividualClient ? (
                 <FieldShell label="Type de compte">
-                  <Input aria-label="Type de compte" value="Comptant" readOnly className="h-10 rounded-lg" />
+                  <Input aria-label="Type de compte" value="Comptant" readOnly density="dense" className="rounded-md border-border-subtle bg-surface-1/70" />
                 </FieldShell>
               ) : (
                 <FieldShell label="Type de compte">
@@ -259,7 +265,7 @@ const EntityOnboardingDetailsStep = ({
                       shouldValidate: true
                     })}
                   >
-                    <SelectTrigger aria-label="Type de compte" className="h-10 rounded-lg">
+                    <SelectTrigger aria-label="Type de compte" density="dense" className="rounded-md border-border-subtle bg-background">
                       <SelectValue placeholder="Type de compte" />
                     </SelectTrigger>
                     <SelectContent>
@@ -272,7 +278,7 @@ const EntityOnboardingDetailsStep = ({
 
               {isIndividualClient ? (
                 <FieldShell label="Commercial CIR" className="md:col-span-2">
-                  <Input aria-label="Commercial CIR" value="Aucun commercial affecte" readOnly className="h-10 rounded-lg" />
+                  <Input aria-label="Commercial CIR" value="Aucun commercial affecte" readOnly density="dense" className="rounded-md border-border-subtle bg-surface-1/70" />
                 </FieldShell>
               ) : (
                 <FieldShell label="Commercial CIR" className="md:col-span-2">
@@ -284,7 +290,7 @@ const EntityOnboardingDetailsStep = ({
                       { shouldDirty: true, shouldValidate: true }
                     )}
                   >
-                    <SelectTrigger aria-label="Commercial CIR" className="h-10 rounded-lg">
+                    <SelectTrigger aria-label="Commercial CIR" density="dense" className="rounded-md border-border-subtle bg-background">
                       <SelectValue placeholder="Aucun commercial affecte" />
                     </SelectTrigger>
                     <SelectContent>
@@ -303,9 +309,9 @@ const EntityOnboardingDetailsStep = ({
         ) : null}
       </div>
 
-      <aside className="space-y-4 xl:sticky xl:top-0">
-        <Card variant="section" className="border-border/60 bg-card shadow-sm">
-          <div className="border-b border-border/60 px-5 py-5">
+      <aside className="space-y-3 xl:sticky xl:top-0">
+        <Card variant="section" className="rounded-lg border-border-subtle bg-background shadow-none">
+          <div className="border-b border-border-subtle px-4 py-4">
             <div className="flex items-start gap-3">
               <div className="flex size-10 items-center justify-center rounded-lg border border-primary/20 bg-primary/8 text-primary">
                 {isIndividualClient ? <UserRound className="size-4" /> : <Building2 className="size-4" />}
@@ -319,7 +325,7 @@ const EntityOnboardingDetailsStep = ({
             </div>
           </div>
 
-          <div className="space-y-4 px-5 py-5 text-sm text-muted-foreground">
+          <div className="space-y-3 px-4 py-4 text-sm text-muted-foreground">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <MapPin className="size-4" />
@@ -330,8 +336,8 @@ const EntityOnboardingDetailsStep = ({
             </div>
 
             {isIndividualClient ? (
-              <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              <div className="rounded-lg border border-border-subtle bg-surface-1/70 p-4">
+                <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
                   <UserRound className="size-3.5" />
                   Contact principal
                 </div>
@@ -344,8 +350,8 @@ const EntityOnboardingDetailsStep = ({
                 </div>
               </div>
             ) : selectedCompany ? (
-              <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              <div className="rounded-lg border border-border-subtle bg-surface-1/70 p-4">
+                <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
                   <ShieldCheck className="size-3.5" />
                   Etablissement retenu
                 </div>
@@ -356,7 +362,7 @@ const EntityOnboardingDetailsStep = ({
               </div>
             ) : null}
 
-            <div className="rounded-lg border border-border/60 bg-background p-4">
+            <div className="rounded-lg border border-border-subtle bg-background p-4">
               <p className="text-sm font-medium text-foreground">Checklist avant validation</p>
               <div className="mt-3 space-y-2">
                 {remainingRequiredFields.length > 0 ? remainingRequiredFields.map((field) => (
@@ -373,7 +379,7 @@ const EntityOnboardingDetailsStep = ({
               </div>
             </div>
 
-            <div className="rounded-lg border border-border/60 bg-background p-4">
+            <div className="rounded-lg border border-border-subtle bg-background p-4">
               <p className="text-sm font-medium text-foreground">Controle doublons</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Badge variant={duplicateMatches.length > 0 ? 'warning' : 'success'}>

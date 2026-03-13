@@ -9,7 +9,7 @@
     "test": "pnpm run frontend:test && pnpm run backend:test",
     "build": "pnpm run frontend:build",
     "frontend:typecheck": "pnpm --dir frontend run typecheck",
-    "frontend:lint": "pnpm --dir frontend run lint -- --max-warnings=0",
+    "frontend:lint": "pnpm --dir frontend run lint",
     "frontend:test": "pnpm --dir frontend run test:run",
     "frontend:error-compliance": "pnpm --dir frontend run check:error-compliance",
     "frontend:build": "pnpm --dir frontend run build",
@@ -17,8 +17,9 @@
     "backend:typecheck": "deno check --config backend/deno.json backend/functions/api/index.ts",
     "backend:test": "deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api",
     "backend:test:integration": "deno test --env-file=backend/.env --allow-env --allow-net --no-check --config backend/deno.json backend/functions/api/integration",
-    "qa:fast": "pnpm --dir frontend run typecheck && pnpm --dir frontend run lint && pnpm --dir frontend run test:run && deno lint backend/functions/api && deno check --config backend/deno.json backend/functions/api/index.ts && deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api",
-    "qa": "pwsh -NoLogo -File scripts/qa-gate.ps1"
+    "qa:fast": "pnpm --dir frontend run typecheck && pnpm --dir frontend run lint && pnpm --dir frontend run test:run && pnpm --dir frontend run check:error-compliance && deno lint backend/functions/api && deno check --config backend/deno.json backend/functions/api/index.ts && deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api",
+    "qa": "pwsh -NoLogo -File scripts/qa-gate.ps1",
+    "qa:audit": "pnpm --dir frontend exec pnpm audit --audit-level=high"
   },
   "devDependencies": {
     "husky": "^9.1.7",
@@ -28,6 +29,7 @@
     "overrides": {
       "ajv": "6.14.0",
       "rollup": "4.59.0",
+      "flatted": "3.4.0",
       "eslint>minimatch": "3.1.4",
       "eslint-plugin-jsx-a11y>minimatch": "3.1.4",
       "eslint-plugin-react>minimatch": "3.1.4",

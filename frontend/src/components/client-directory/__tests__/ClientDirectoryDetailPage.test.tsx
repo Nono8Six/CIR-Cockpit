@@ -196,6 +196,19 @@ describe('ClientDirectoryDetailPage', () => {
     expect(screen.queryByRole('button', { name: /supprimer définitivement/i })).not.toBeInTheDocument();
   });
 
+  it('renders accessible loading skeleton with aria-busy', () => {
+    mockedDirectoryRecord.mockReturnValue({
+      isLoading: true,
+      data: undefined
+    } as never);
+
+    render(<ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} />);
+
+    const section = document.querySelector('section[aria-busy="true"]');
+    expect(section).toBeTruthy();
+    expect(screen.getByText('Chargement de la fiche…')).toBeTruthy();
+  });
+
   it('navigates to the integrated convert route from a prospect detail page', async () => {
     const user = userEvent.setup();
     mockedDirectoryRecord.mockReturnValue({

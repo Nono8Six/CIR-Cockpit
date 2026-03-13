@@ -17,7 +17,7 @@ interface DirectoryDesktopFiltersRowProps {
   onSearchPatch: (patch: Partial<DirectoryListInput>) => void;
 }
 
-const FIELD_LABEL_CLASS_NAME = 'text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground';
+const FIELD_LABEL_CLASS_NAME = 'text-xs font-medium text-muted-foreground';
 const FILTER_FIELD_CLASS_NAME = 'w-full';
 const DESKTOP_GRID_CLASS_NAME = 'hidden xl:grid xl:gap-2.5';
 

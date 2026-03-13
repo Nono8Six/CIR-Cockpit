@@ -1,72 +1,136 @@
-import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
 import { ShieldCheck, Sparkles } from 'lucide-react';
 
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+
+type EntityOnboardingStepRailStep = {
+  id: string;
+  title: string;
+  description: string;
+};
+
 interface EntityOnboardingStepRailProps {
+  className?: string;
   currentIndex: number;
   progress: number;
   sourceLabel: string;
+  steps: EntityOnboardingStepRailStep[];
+  onStepSelect?: (stepId: string) => void;
 }
 
-const STEPS = [
-  { label: 'Type', description: 'Cadre de la fiche' },
-  { label: 'Recherche', description: 'Entreprise et etablissement' },
-  { label: 'Informations', description: 'Champs metier' },
-  { label: 'Validation', description: 'Controle final' }
-] as const;
-
 const EntityOnboardingStepRail = ({
+  className,
   currentIndex,
   progress,
-  sourceLabel
+  sourceLabel,
+  steps,
+  onStepSelect
 }: EntityOnboardingStepRailProps) => {
   return (
-    <aside className="hidden min-h-0 border-r border-border/60 bg-[radial-gradient(circle_at_top_left,rgba(239,68,68,0.18),transparent_38%),linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.94))] p-7 xl:flex xl:flex-col">
-      <Badge variant="secondary" className="w-fit rounded-full px-3 py-1 text-[11px] uppercase tracking-[0.22em]">
-        <Sparkles className="size-3.5" />
-        {sourceLabel}
-      </Badge>
-      <h2 className="mt-5 text-[2rem] font-semibold tracking-tight text-foreground">
-        Nouvelle fiche entreprise
-      </h2>
-      <p className="mt-3 max-w-[22ch] text-sm leading-6 text-muted-foreground">
-        Un flux moderne pour qualifier la societe, choisir le bon etablissement et finaliser la fiche sans friction.
-      </p>
-
-      <div className="mt-6 overflow-hidden rounded-full bg-border/70">
-        <div className="h-2 rounded-full bg-primary transition-[width]" style={{ width: `${progress}%` }} />
-      </div>
-
-      <div className="mt-8 space-y-3">
-        {STEPS.map((step, index) => (
-          <div
-            key={step.label}
-            className={cn(
-              'rounded-[24px] border px-4 py-4 transition-colors',
-              currentIndex === index
-                ? 'border-primary/40 bg-primary/8 shadow-sm'
-                : index < currentIndex
-                  ? 'border-emerald-200/80 bg-emerald-50/60'
-                  : 'border-border/60 bg-background/70'
-            )}
-          >
-            <p className="text-sm font-medium text-foreground">{step.label}</p>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">{step.description}</p>
+    <aside
+      className={cn(
+        'hidden min-h-0 w-[280px] shrink-0 flex-col border-r border-border-subtle bg-surface-1/80 xl:flex',
+        className
+      )}
+    >
+      <div className="flex h-full min-h-0 flex-col px-5 py-5">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            <Badge variant="outline" density="dense" className="gap-1.5 border-border-subtle bg-background/90">
+              <Sparkles className="size-3.5" />
+              {sourceLabel}
+            </Badge>
+            <span className="text-xs font-medium text-muted-foreground">{progress}%</span>
           </div>
-        ))}
-      </div>
 
-      <Card variant="section" className="mt-auto rounded-[28px] border-border/70 bg-background/80 p-4">
-        <div className="flex items-start gap-3">
-          <div className="rounded-2xl bg-primary/10 p-2 text-primary">
-            <ShieldCheck className="size-4" />
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">Nouveau flux</p>
+            <h2 className="text-[1.55rem] font-semibold tracking-tight text-foreground">
+              Nouvelle fiche
+            </h2>
+            <p className="max-w-[23ch] text-sm leading-6 text-muted-foreground">
+              Qualification, verification et creation dans le meme parcours.
+            </p>
           </div>
-          <p className="text-xs leading-5 text-muted-foreground">
-            Donnees officielles issues de l&apos;API Recherche d&apos;entreprises, puis confirmees humainement avant creation.
-          </p>
+
+          <div className="overflow-hidden rounded-full bg-border-subtle">
+            <div
+              className="h-1.5 rounded-full bg-primary transition-[width]"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
         </div>
-      </Card>
+
+        <ol className="mt-6 space-y-1.5">
+          {steps.map((step, index) => {
+            const isCurrent = currentIndex === index;
+            const isCompleted = currentIndex > index;
+            const isClickable = index < currentIndex && onStepSelect;
+            const stepClasses = cn(
+              'w-full rounded-lg border px-3 py-3 text-left transition-[background-color,border-color,color]',
+              isCurrent
+                ? 'border-primary/35 bg-primary/5'
+                : isCompleted
+                  ? 'border-border-subtle bg-background hover:border-primary/20 hover:bg-background'
+                  : 'border-transparent bg-transparent text-muted-foreground'
+            );
+            const body = (
+              <>
+                <div className="flex items-center justify-between gap-3">
+                  <span className={cn('text-sm font-medium', isCurrent || isCompleted ? 'text-foreground' : 'text-muted-foreground')}>
+                    {step.title}
+                  </span>
+                  <span
+                    className={cn(
+                      'inline-flex min-w-6 items-center justify-center rounded-full border px-1.5 py-0.5 text-[11px] font-semibold tabular-nums',
+                      isCurrent
+                        ? 'border-primary/35 bg-primary/8 text-primary'
+                        : isCompleted
+                          ? 'border-success/30 bg-success/10 text-success'
+                          : 'border-border-subtle text-muted-foreground'
+                    )}
+                  >
+                    {index + 1}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">{step.description}</p>
+              </>
+            );
+
+            return (
+              <li key={step.id} aria-current={isCurrent ? 'step' : undefined}>
+                {isClickable ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onStepSelect(step.id);
+                    }}
+                    className={stepClasses}
+                  >
+                    {body}
+                  </button>
+                ) : (
+                  <div className={stepClasses}>{body}</div>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+
+        <div className="mt-auto rounded-lg border border-border-subtle bg-background px-4 py-4">
+          <div className="flex items-start gap-3">
+            <div className="rounded-md border border-primary/20 bg-primary/8 p-2 text-primary">
+              <ShieldCheck className="size-4" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">Controle officiel</p>
+              <p className="text-xs leading-5 text-muted-foreground">
+                Les donnees officielles et les doublons restent visibles en continu pendant le flux.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
     </aside>
   );
 };

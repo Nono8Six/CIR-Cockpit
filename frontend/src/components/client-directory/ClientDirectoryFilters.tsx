@@ -141,7 +141,7 @@ const ClientDirectoryFilters = ({
         <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center xl:items-end">
           <div className="min-w-0 flex-1 xl:min-w-[360px] xl:max-w-[440px]">
             <div className="space-y-1">
-              <p className="hidden text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground xl:block">
+              <p className="hidden text-xs font-medium text-muted-foreground xl:block">
                 Recherche
               </p>
               <DirectorySearchInput

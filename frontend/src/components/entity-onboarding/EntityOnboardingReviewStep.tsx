@@ -18,7 +18,7 @@ interface EntityOnboardingReviewStepProps {
 }
 
 const ReviewRow = ({ label, value }: { label: string; value: string }) => (
-  <div className="flex items-start justify-between gap-3 border-t border-border/50 py-3 first:border-t-0 first:pt-0 last:pb-0">
+  <div className="flex items-start justify-between gap-3 border-t border-border-subtle py-3 first:border-t-0 first:pt-0 last:pb-0">
     <span className="text-sm text-muted-foreground">{label}</span>
     <span className="text-right text-sm font-medium text-foreground">{value}</span>
   </div>
@@ -37,10 +37,10 @@ const EntityOnboardingReviewStep = ({
     : values.name;
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_340px]">
-      <div className="space-y-4">
-        <Card variant="section" className="border-border/60 bg-card shadow-sm">
-          <div className="border-b border-border/60 px-5 py-5">
+    <div className="grid gap-3 xl:grid-cols-[minmax(0,1.35fr)_340px]">
+      <div className="space-y-3">
+        <Card variant="section" className="rounded-lg border-border-subtle bg-background shadow-none">
+          <div className="border-b border-border-subtle px-4 py-4">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-xl font-semibold tracking-tight text-foreground">{displayName}</h2>
               <Badge variant="secondary">{effectiveIntent === 'client' ? 'Client' : 'Prospect'}</Badge>
@@ -52,8 +52,8 @@ const EntityOnboardingReviewStep = ({
             </p>
           </div>
 
-          <div className="grid gap-4 p-5 md:grid-cols-2">
-            <div className="rounded-lg border border-border/60 bg-background p-4">
+          <div className="grid gap-3 px-4 py-4 md:grid-cols-2">
+            <div className="rounded-lg border border-border-subtle bg-background p-4">
               <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                 <MapPin className="size-4 text-muted-foreground" />
                 Coordonnees
@@ -66,7 +66,7 @@ const EntityOnboardingReviewStep = ({
             </div>
 
             {isIndividualClient ? (
-              <div className="rounded-lg border border-border/60 bg-background p-4">
+              <div className="rounded-lg border border-border-subtle bg-background p-4">
                 <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                   <UserRound className="size-4 text-muted-foreground" />
                   Contact principal
@@ -78,22 +78,22 @@ const EntityOnboardingReviewStep = ({
                 </div>
               </div>
             ) : (
-              <div className="rounded-lg border border-border/60 bg-background p-4">
+              <div className="rounded-lg border border-border-subtle bg-background p-4">
                 <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                   <ShieldCheck className="size-4 text-muted-foreground" />
                   Donnees officielles
                 </div>
-                <div className="mt-4">
-                  <ReviewRow label="Nom officiel" value={values.official_name || 'Non renseigne'} />
-                  <ReviewRow label="SIRET" value={values.siret || 'Non renseigne'} />
-                  <ReviewRow label="SIREN" value={values.siren || 'Non renseigne'} />
-                  <ReviewRow label="Code NAF" value={values.naf_code || 'Non renseigne'} />
-                </div>
+              <div className="mt-4">
+                <ReviewRow label="Nom officiel" value={values.official_name || 'Non renseigne'} />
+                <ReviewRow label="SIRET" value={values.siret || 'Non renseigne'} />
+                <ReviewRow label="SIREN" value={values.siren || 'Non renseigne'} />
+                <ReviewRow label="Code NAF" value={values.naf_code || 'Non renseigne'} />
               </div>
-            )}
+            </div>
+          )}
 
             {effectiveIntent === 'client' ? (
-              <div className="rounded-lg border border-border/60 bg-background p-4 md:col-span-2">
+              <div className="rounded-lg border border-border-subtle bg-background p-4 md:col-span-2">
                 <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                   <Building2 className="size-4 text-muted-foreground" />
                   Compte client
@@ -109,9 +109,9 @@ const EntityOnboardingReviewStep = ({
         </Card>
       </div>
 
-      <aside className="space-y-4 xl:sticky xl:top-0">
-        <Card variant="section" className="border-border/60 bg-card shadow-sm">
-          <div className="border-b border-border/60 px-5 py-5">
+      <aside className="space-y-3 xl:sticky xl:top-0">
+        <Card variant="section" className="rounded-lg border-border-subtle bg-background shadow-none">
+          <div className="border-b border-border-subtle px-4 py-4">
             <div className="flex items-start gap-3">
               <div className="flex size-10 items-center justify-center rounded-lg border border-primary/20 bg-primary/8 text-primary">
                 <BadgeCheck className="size-4" />
@@ -125,8 +125,8 @@ const EntityOnboardingReviewStep = ({
             </div>
           </div>
 
-          <div className="space-y-4 px-5 py-5 text-sm leading-6 text-muted-foreground">
-            <div className="rounded-lg border border-emerald-200 bg-emerald-50/70 p-4">
+          <div className="space-y-3 px-4 py-4 text-sm leading-6 text-muted-foreground">
+            <div className="rounded-lg border border-success/25 bg-success/8 p-4">
               <p className="font-medium text-foreground">
                 {isIndividualClient
                   ? 'Le client particulier sera cree avec son contact principal et un compte comptant.'
@@ -137,7 +137,7 @@ const EntityOnboardingReviewStep = ({
             </div>
 
             {selectedCompany && !isIndividualClient ? (
-              <div className="rounded-lg border border-border/60 bg-background p-4">
+              <div className="rounded-lg border border-border-subtle bg-background p-4">
                 <p className="text-sm font-medium text-foreground">Etablissement importe</p>
                 <p className="mt-2">
                   {[selectedCompany.postal_code, selectedCompany.city].filter(Boolean).join(' ') || selectedCompany.name}
@@ -147,7 +147,7 @@ const EntityOnboardingReviewStep = ({
             ) : null}
 
             {isIndividualClient ? (
-              <div className="rounded-lg border border-border/60 bg-background p-4">
+              <div className="rounded-lg border border-border-subtle bg-background p-4">
                 <p className="text-sm font-medium text-foreground">Canaux retenus</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {values.phone ? <Badge variant="outline"><Phone size={12} /> {values.phone}</Badge> : null}
@@ -156,7 +156,7 @@ const EntityOnboardingReviewStep = ({
               </div>
             ) : null}
 
-            <div className="rounded-lg border border-border/60 bg-background p-4">
+            <div className="rounded-lg border border-border-subtle bg-background p-4">
               <p className="text-sm font-medium text-foreground">Statut controle</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Badge variant={duplicateMatches.length > 0 ? 'warning' : 'success'}>

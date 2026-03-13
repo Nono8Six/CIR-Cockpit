@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger
@@ -57,10 +58,13 @@ const DirectoryMobileFilterSheet = ({
         side="right"
         className="w-[min(88vw,340px)] space-y-4 p-0 [overscroll-behavior:contain]"
       >
-        <SheetHeader className="border-b border-border/60 px-5 py-4">
-          <SheetTitle>Filtres</SheetTitle>
+        <SheetHeader className="border-b border-border-subtle px-4 py-3">
+          <SheetTitle className="text-sm font-semibold">Filtres</SheetTitle>
+          <SheetDescription className="sr-only">
+            Affinez la liste clients et prospects avec les filtres disponibles.
+          </SheetDescription>
         </SheetHeader>
-        <div className="space-y-4 overflow-y-auto px-5 py-4">
+        <div className="space-y-3 overflow-y-auto px-4 py-3">
           <DirectoryFilterCombobox
             items={departmentItems}
             values={search.departments}

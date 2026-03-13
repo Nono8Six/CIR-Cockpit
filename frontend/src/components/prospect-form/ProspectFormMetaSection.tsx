@@ -40,11 +40,11 @@ const ProspectFormMetaSection = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <label className="text-xs font-medium text-muted-foreground" htmlFor="prospect-siret">SIRET (optionnel)</label>
+        <label className="text-sm font-medium text-foreground" htmlFor="prospect-siret">SIRET (optionnel)</label>
         <Input {...siretField} id="prospect-siret" placeholder="SIRET" inputMode="numeric" />
       </div>
       <div>
-        <label className="text-xs font-medium text-muted-foreground" htmlFor="prospect-agency">Agence</label>
+        <label className="text-sm font-medium text-foreground" htmlFor="prospect-agency">Agence</label>
         {userRole === 'tcs' ? (
           <Input value={agencyLabel} disabled />
         ) : (

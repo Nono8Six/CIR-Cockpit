@@ -1,14 +1,18 @@
 import { useMemo, useState } from 'react';
 
 import type { DirectoryRouteRef } from 'shared/schemas/directory.schema';
-import { ArrowLeftRight, Building2, Mail, MapPin, Phone, Trash2 } from 'lucide-react';
+import { ArrowLeftRight, Mail, MapPin, Phone, Trash2 } from 'lucide-react';
+import { motion, useReducedMotion } from 'motion/react';
 import { useCanGoBack, useNavigate } from '@tanstack/react-router';
 
 import ClientFormDialog from '@/components/ClientFormDialog';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import ProspectFormDialog from '@/components/ProspectFormDialog';
+import AvatarInitials from '@/components/ui/avatar-initials';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import StatusDot from '@/components/ui/status-dot';
 import { useAgencies } from '@/hooks/useAgencies';
 import { useAppSessionStateContext } from '@/hooks/useAppSession';
 import { useDeleteClient } from '@/hooks/useSetClientArchived';
@@ -20,7 +24,7 @@ import { useSaveClient } from '@/hooks/useSaveClient';
 import { useSaveProspect } from '@/hooks/useSaveProspect';
 import { notifySuccess } from '@/services/errors/notify';
 import { formatDate } from '@/utils/date/formatDate';
-import { formatTime } from '@/utils/date/formatTime';
+import { formatRelativeTime } from '@/utils/date/formatRelativeTime';
 import { formatClientNumber } from '@/utils/clients/formatClientNumber';
 import { getDirectoryTypeLabel, isProspectEntityType } from './clientDirectorySearch';
 
@@ -32,6 +36,7 @@ const ClientDirectoryDetailPage = ({ routeRef }: ClientDirectoryDetailPageProps)
   const sessionState = useAppSessionStateContext();
   const navigate = useNavigate();
   const canGoBack = useCanGoBack();
+  const reducedMotion = useReducedMotion();
   const userRole = sessionState.profile?.role ?? 'tcs';
   const activeAgencyId = sessionState.activeAgencyId;
   const recordQuery = useDirectoryRecord(routeRef, Boolean(sessionState.session));
@@ -60,8 +65,22 @@ const ClientDirectoryDetailPage = ({ routeRef }: ClientDirectoryDetailPageProps)
 
   if (recordQuery.isLoading || !record) {
     return (
-      <section className="flex h-full min-h-0 flex-1 items-center justify-center rounded-2xl border border-border/70 bg-card p-6 text-sm text-muted-foreground">
-        Chargement de la fiche…
+      <section aria-busy="true" className="flex h-full min-h-0 flex-1 flex-col gap-4 px-4 py-4 lg:px-6">
+        <p className="sr-only">Chargement de la fiche…</p>
+        <div className="rounded-xl border border-border/50 bg-card p-5">
+          <div className="flex items-start gap-4">
+            <div className="space-y-3 flex-1">
+              <Skeleton className="h-5 w-48" />
+              <Skeleton className="h-7 w-64" />
+              <Skeleton className="h-4 w-80" />
+            </div>
+            <Skeleton className="h-4 w-32" />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <Skeleton className="h-40 rounded-xl" />
+          <Skeleton className="h-40 rounded-xl" />
+        </div>
       </section>
     );
   }
@@ -88,9 +107,14 @@ const ClientDirectoryDetailPage = ({ routeRef }: ClientDirectoryDetailPageProps)
     }
   };
 
+  const MotionSection = reducedMotion ? 'section' : motion.section;
+  const motionProps = reducedMotion
+    ? {}
+    : { initial: { opacity: 0, y: 4 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.15 } };
+
   return (
     <>
-      <section className="flex h-full min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4 lg:px-6">
+      <MotionSection {...motionProps} className="flex h-full min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4 lg:px-6">
         <div className="flex flex-wrap items-center justify-end gap-2">
           <div className="flex flex-wrap items-center gap-2">
             {isProspect ? (
@@ -153,15 +177,16 @@ const ClientDirectoryDetailPage = ({ routeRef }: ClientDirectoryDetailPageProps)
           </div>
         </div>
 
-        <section className="rounded-2xl border border-border/70 bg-card/95 p-5 shadow-sm">
+        <section className="rounded-xl border border-border/50 bg-card/95 p-5 shadow-sm">
           <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="flex items-start gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border/80 bg-muted/40 text-muted-foreground">
-                <Building2 size={22} />
-              </div>
+            <div className="flex items-start gap-3">
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="secondary">{getDirectoryTypeLabel(record.entity_type)}</Badge>
+                  <StatusDot
+                    entityType={record.entity_type === 'Client' ? 'Client' : 'Prospect'}
+                    archivedAt={record.archived_at ?? null}
+                  />
+                  <Badge variant="outline">{getDirectoryTypeLabel(record.entity_type)}</Badge>
                   {record.client_kind === 'individual' ? <Badge variant="outline">Particulier</Badge> : null}
                   {record.archived_at ? <Badge variant="outline">Archivé</Badge> : null}
                   {!isProspect && record.account_type ? (
@@ -171,12 +196,12 @@ const ClientDirectoryDetailPage = ({ routeRef }: ClientDirectoryDetailPageProps)
                   ) : null}
                 </div>
                 <div>
-                  <h1 className="text-2xl font-semibold text-foreground">{record.name}</h1>
-                  <p className="text-sm text-muted-foreground">
+                  <h1 className="text-xl font-semibold tracking-tight text-foreground">{record.name}</h1>
+                  <p className="text-[13px] text-muted-foreground">
                     {isProspect || !record.client_number ? 'Prospect' : `N° ${formatClientNumber(record.client_number)}`}
                   </p>
                 </div>
-                <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-4 text-[13px] text-muted-foreground">
                   <span className="inline-flex items-center gap-2"><MapPin size={14} /> {addressLine || 'Adresse non renseignée'}</span>
                   <span>Agence: {record.agency_name ?? 'Non rattaché'}</span>
                   {record.client_kind === 'individual'
@@ -187,7 +212,7 @@ const ClientDirectoryDetailPage = ({ routeRef }: ClientDirectoryDetailPageProps)
             </div>
             <div className="grid gap-1 text-right text-xs text-muted-foreground">
               <span>Créé le {formatDate(record.created_at)}</span>
-              <span>Mis à jour le {formatDate(record.updated_at)}</span>
+              <span>Mis à jour {formatRelativeTime(record.updated_at)}</span>
             </div>
           </div>
         </section>
@@ -195,55 +220,69 @@ const ClientDirectoryDetailPage = ({ routeRef }: ClientDirectoryDetailPageProps)
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
           <section className="space-y-4">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div className="rounded-2xl border border-border/70 bg-card p-4">
-                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/80">Informations</p>
+              <div className="rounded-xl border border-border/50 bg-card p-4">
+                <p className="text-xs font-medium text-muted-foreground/80">Informations</p>
                 <div className="mt-3 space-y-2 text-sm">
                   <p><span className="font-medium text-foreground">SIRET:</span> {record.siret ?? 'Non renseigné'}</p>
                   <p><span className="font-medium text-foreground">Département:</span> {record.department ?? 'Non renseigné'}</p>
                   <p><span className="font-medium text-foreground">Pays:</span> {record.country}</p>
                 </div>
               </div>
-              <div className="rounded-2xl border border-border/70 bg-card p-4">
-                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/80">Notes</p>
-                <p className="mt-3 text-sm text-muted-foreground">{record.notes || 'Aucune note enregistrée.'}</p>
+              <div className="rounded-xl border border-border/50 bg-card p-4">
+                <p className="text-xs font-medium text-muted-foreground/80">Notes</p>
+                <p className={`mt-3 text-sm ${record.notes ? 'text-muted-foreground' : 'italic text-muted-foreground/60'}`}>
+                  {record.notes || 'Aucune note enregistrée.'}
+                </p>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-border/70 bg-card p-4">
-              <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/80">Contacts</p>
+            <div className="rounded-xl border border-border/50 bg-card p-4">
+              <p className="text-xs font-medium text-muted-foreground/80">Contacts</p>
               <div className="mt-3 space-y-3">
                 {(contactsQuery.data ?? []).length === 0 ? (
                   <p className="text-sm text-muted-foreground">Aucun contact rattaché.</p>
                 ) : (
-                  (contactsQuery.data ?? []).map((contact) => (
-                    <div key={contact.id} className="rounded-xl border border-border/70 px-3 py-3 text-sm">
-                      <p className="font-medium text-foreground">
-                        {[contact.first_name, contact.last_name].filter(Boolean).join(' ') || 'Contact'}
-                      </p>
-                      <div className="mt-1 flex flex-wrap gap-3 text-muted-foreground">
-                        {contact.position ? <span>{contact.position}</span> : null}
-                        {contact.email ? <span className="inline-flex items-center gap-1"><Mail size={12} /> {contact.email}</span> : null}
-                        {contact.phone ? <span className="inline-flex items-center gap-1"><Phone size={12} /> {contact.phone}</span> : null}
+                  (contactsQuery.data ?? []).map((contact) => {
+                    const contactName = [contact.first_name, contact.last_name].filter(Boolean).join(' ') || 'Contact';
+                    return (
+                      <div key={contact.id} className="flex items-start gap-3 rounded-xl border border-border/50 px-3 py-3 text-sm transition-colors hover:bg-surface-1">
+                        <AvatarInitials name={contactName} size="sm" />
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-foreground">{contactName}</p>
+                          <div className="mt-1 flex flex-wrap gap-3 text-muted-foreground">
+                            {contact.position ? <span>{contact.position}</span> : null}
+                            {contact.email ? (
+                              <a href={`mailto:${contact.email}`} className="inline-flex items-center gap-1 hover:text-foreground transition-colors">
+                                <Mail size={12} /> {contact.email}
+                              </a>
+                            ) : null}
+                            {contact.phone ? (
+                              <a href={`tel:${contact.phone}`} className="inline-flex items-center gap-1 hover:text-foreground transition-colors">
+                                <Phone size={12} /> {contact.phone}
+                              </a>
+                            ) : null}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>
           </section>
 
-          <section className="rounded-2xl border border-border/70 bg-card p-4">
-            <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground/80">Activité récente</p>
+          <section className="rounded-xl border border-border/50 bg-card p-4">
+            <p className="text-xs font-medium text-muted-foreground/80">Activité récente</p>
             <div className="mt-3 space-y-3">
               {(interactionsQuery.data?.interactions ?? []).length === 0 ? (
                 <p className="text-sm text-muted-foreground">Aucune interaction récente.</p>
               ) : (
                 (interactionsQuery.data?.interactions ?? []).map((interaction) => (
-                  <div key={interaction.id} className="rounded-xl border border-border/70 px-3 py-3 text-sm">
+                  <div key={interaction.id} className="rounded-xl border border-border/50 px-3 py-3 text-sm">
                     <p className="font-medium text-foreground">{interaction.subject}</p>
                     <p className="mt-1 text-muted-foreground">{interaction.status}</p>
                     <p className="mt-1 text-xs text-muted-foreground/80">
-                      {formatDate(interaction.last_action_at)} à {formatTime(interaction.last_action_at)}
+                      {formatRelativeTime(interaction.last_action_at)}
                     </p>
                   </div>
                 ))
@@ -251,7 +290,7 @@ const ClientDirectoryDetailPage = ({ routeRef }: ClientDirectoryDetailPageProps)
             </div>
           </section>
         </div>
-      </section>
+      </MotionSection>
 
       {!isProspect ? (
         <ClientFormDialog

@@ -10,6 +10,7 @@ import {
   useReactTable
 } from '@tanstack/react-table';
 import { SearchX } from 'lucide-react';
+import { motion, useReducedMotion } from 'motion/react';
 import type {
   DirectoryDensity,
   DirectoryListRow,
@@ -17,11 +18,11 @@ import type {
   DirectorySortingRule
 } from 'shared/schemas/directory.schema';
 
-import { Badge } from '@/components/ui/badge';
+import StatusDot from '@/components/ui/status-dot';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { formatClientNumber } from '@/utils/clients/formatClientNumber';
-import { formatDate } from '@/utils/date/formatDate';
+import { formatRelativeTime } from '@/utils/date/formatRelativeTime';
 import { getDirectoryTypeLabel } from './clientDirectorySearch';
 import DataTableColumnHeader from './data-table/DataTableColumnHeader';
 import DirectoryTablePagination from './data-table/DirectoryTablePagination';
@@ -85,9 +86,15 @@ const ClientDirectoryTable = ({
       id: 'entity_type',
       header: ({ column }) => renderHeader(column, DIRECTORY_COLUMN_LABELS.entity_type, sorting),
       cell: ({ row }) => (
-        <Badge variant="secondary" className="text-[11px]">
-          {getDirectoryTypeLabel(row.original.entity_type)}
-        </Badge>
+        <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+          <StatusDot
+            entityType={row.original.entity_type === 'Client' ? 'Client' : 'Prospect'}
+            archivedAt={row.original.archived_at ?? null}
+          />
+          {row.original.archived_at
+            ? `${getDirectoryTypeLabel(row.original.entity_type)} (archivé)`
+            : getDirectoryTypeLabel(row.original.entity_type)}
+        </span>
       )
     }),
     columnHelper.accessor((row) => row.client_number ?? '', {
@@ -103,7 +110,7 @@ const ClientDirectoryTable = ({
         <button
           type="button"
           aria-label={`Ouvrir la fiche ${row.original.name}`}
-          className="inline-flex min-w-0 max-w-full items-center rounded-md font-semibold text-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          className="inline-flex min-w-0 max-w-full items-center rounded-md font-semibold text-foreground transition-colors duration-150 hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           onClick={() => onOpenRecord(row.original)}
         >
           <span className="truncate">{row.original.name}</span>
@@ -133,7 +140,7 @@ const ClientDirectoryTable = ({
     columnHelper.accessor((row) => row.updated_at, {
       id: 'updated_at',
       header: ({ column }) => renderHeader(column, DIRECTORY_COLUMN_LABELS.updated_at, sorting),
-      cell: ({ row }) => formatDate(row.original.updated_at)
+      cell: ({ row }) => formatRelativeTime(row.original.updated_at)
     })
   ], [onOpenRecord, sorting]);
 
@@ -165,12 +172,18 @@ const ClientDirectoryTable = ({
     getCoreRowModel: getCoreRowModel()
   });
 
+  const reducedMotion = useReducedMotion();
   const rowPaddingClassName = density === 'compact' ? 'px-3 py-2 text-xs' : 'px-3 py-3 text-sm';
   const visibleColumnCount = table.getVisibleLeafColumns().length;
 
+  const TableWrapper = reducedMotion ? 'div' : motion.div;
+  const wrapperProps = reducedMotion
+    ? {}
+    : { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.15 } };
+
   return (
     <>
-      <div className="min-h-0 flex-1 overflow-auto rounded-b-xl">
+      <TableWrapper {...wrapperProps} className="min-h-0 flex-1 overflow-auto rounded-b-xl">
         <Table className="min-w-[420px] sm:min-w-[720px]">
           <TableHeader className="bg-card/98 backdrop-blur-sm">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -207,19 +220,16 @@ const ClientDirectoryTable = ({
                 <TableCell colSpan={Math.max(visibleColumnCount, 1)} className="py-12">
                   <div className="flex flex-col items-center gap-2 text-center text-muted-foreground">
                     <SearchX className="size-10 text-muted-foreground/35" />
-                    <p className="text-sm font-medium text-foreground">Aucun résultat</p>
-                    <p className="text-xs">Modifiez vos filtres ou créez un client ou un prospect.</p>
+                    <p className="text-sm font-medium text-foreground">Aucun résultat trouvé</p>
+                    <p className="text-xs">Essayez d&apos;élargir vos critères de recherche ou de modifier les filtres appliqués.</p>
                   </div>
                 </TableCell>
               </TableRow>
             ) : (
-              table.getRowModel().rows.map((row, index) => (
+              table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  className={cn(
-                    'group/row transition-colors hover:bg-accent/35 focus-within:bg-accent/40',
-                    index % 2 === 1 && 'bg-muted/20'
-                  )}
+                  className="group/row transition-colors duration-100 hover:bg-primary/[0.03] focus-within:bg-primary/[0.04]"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
@@ -240,7 +250,7 @@ const ClientDirectoryTable = ({
             )}
           </TableBody>
         </Table>
-      </div>
+      </TableWrapper>
 
       <div className="border-t border-border/40 px-3 py-2">
         <DirectoryTablePagination

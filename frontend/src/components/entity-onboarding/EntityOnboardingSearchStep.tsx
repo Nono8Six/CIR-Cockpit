@@ -62,6 +62,7 @@ const OfficialCityAutocomplete = ({
         <Input
           name="official-search-city"
           value={value}
+          autoComplete="off"
           onChange={(event) => {
             const nextValue = event.target.value;
             onValueChange(nextValue);
@@ -83,9 +84,10 @@ const OfficialCityAutocomplete = ({
             }, 0);
           }}
           onKeyDown={handleKeyDown}
-          placeholder="Ville"
+          placeholder="Ville…"
           aria-label="Filtre ville recherche officielle"
-          className="h-10 rounded-lg border-border/70 bg-background"
+          density="dense"
+          className="rounded-md border-border-subtle bg-background"
         />
       </PopoverAnchor>
       <PopoverContent
@@ -153,9 +155,9 @@ const DuplicatePanel = ({
 }: DuplicatePanelProps) => {
   if (!hasSelection) {
     return (
-      <div className="flex flex-1 items-center justify-center p-6">
+      <div className="flex flex-1 items-center justify-center p-5">
         <div className="max-w-sm text-center">
-          <div className="mx-auto flex size-12 items-center justify-center rounded-lg border border-primary/15 bg-primary/6 text-primary">
+          <div className="mx-auto flex size-11 items-center justify-center rounded-md border border-primary/15 bg-primary/6 text-primary">
             <ShieldCheck className="size-4" />
           </div>
           <p className="mt-4 text-sm font-medium text-foreground">{emptyTitle}</p>
@@ -167,7 +169,7 @@ const DuplicatePanel = ({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="border-b border-border/60 px-5 py-4">
+      <div aria-live="polite" className="border-b border-border-subtle px-4 py-3.5">
         {duplicatesLoading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <LoaderCircle className="size-4 animate-spin" />
@@ -182,9 +184,9 @@ const DuplicatePanel = ({
       </div>
 
       <ScrollArea className="min-h-0 flex-1">
-        <div className="space-y-3 px-5 py-4">
+        <div className="space-y-2.5 px-4 py-4">
           {duplicateMatches.length > 0 ? duplicateMatches.map(({ record, reason }) => (
-            <div key={record.id} className="rounded-xl border border-warning/35 bg-warning/7 p-4">
+            <div key={record.id} className="rounded-lg border border-warning/35 bg-warning/8 p-3.5">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
@@ -209,7 +211,7 @@ const DuplicatePanel = ({
               </div>
             </div>
           )) : (
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-4 text-sm leading-6 text-muted-foreground">
+            <div className="rounded-lg border border-success/25 bg-success/8 p-3.5 text-sm leading-6 text-muted-foreground">
               {successBody}
             </div>
           )}
@@ -274,9 +276,9 @@ const EntityOnboardingSearchStep = ({
 
   if (isIndividualClient) {
     return (
-      <div className="grid h-full min-h-0 gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
-        <Card variant="section" className="flex min-h-0 flex-col overflow-hidden border-border/60 bg-card shadow-sm">
-          <div className="border-b border-border/60 px-5 py-5">
+      <div className="grid h-full min-h-0 gap-3 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
+        <Card variant="section" className="flex min-h-0 flex-col overflow-hidden rounded-lg border-border-subtle bg-background shadow-none">
+          <div className="border-b border-border-subtle px-4 py-4">
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <UserRound className="size-4" />
@@ -294,38 +296,40 @@ const EntityOnboardingSearchStep = ({
           </div>
 
           <ScrollArea className="min-h-0 flex-1">
-            <div className="grid gap-4 p-5 md:grid-cols-2">
+            <div className="grid gap-3 px-4 py-4 md:grid-cols-2">
               <div className="space-y-2">
-                <label htmlFor="individual-last-name" className="text-sm font-medium text-foreground">Nom</label>
-                <Input id="individual-last-name" aria-label="Nom" {...form.register('last_name')} className="h-10 rounded-lg" />
+                <label htmlFor="individual-last-name" className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">Nom</label>
+                <Input id="individual-last-name" aria-label="Nom" density="dense" {...form.register('last_name')} className="rounded-md border-border-subtle bg-background" />
                 {errors.last_name?.message ? <p className="text-xs text-destructive">{errors.last_name.message}</p> : null}
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="individual-first-name" className="text-sm font-medium text-foreground">Prenom</label>
-                <Input id="individual-first-name" aria-label="Prenom" {...form.register('first_name')} className="h-10 rounded-lg" />
+                <label htmlFor="individual-first-name" className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">Prenom</label>
+                <Input id="individual-first-name" aria-label="Prenom" density="dense" {...form.register('first_name')} className="rounded-md border-border-subtle bg-background" />
                 {errors.first_name?.message ? <p className="text-xs text-destructive">{errors.first_name.message}</p> : null}
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="individual-phone" className="text-sm font-medium text-foreground">Telephone</label>
-                <Input id="individual-phone" type="tel" autoComplete="tel" aria-label="Telephone" {...form.register('phone')} className="h-10 rounded-lg" />
+                <label htmlFor="individual-phone" className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">Telephone</label>
+                <Input id="individual-phone" type="tel" autoComplete="tel" aria-label="Telephone" density="dense" {...form.register('phone')} className="rounded-md border-border-subtle bg-background" />
                 {errors.phone?.message ? <p className="text-xs text-destructive">{errors.phone.message}</p> : <p className="text-xs text-muted-foreground">Telephone ou email obligatoire.</p>}
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="individual-email" className="text-sm font-medium text-foreground">Email</label>
-                <Input id="individual-email" type="email" autoComplete="email" aria-label="Email" {...form.register('email')} className="h-10 rounded-lg" />
+                <label htmlFor="individual-email" className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">Email</label>
+                <Input id="individual-email" type="email" autoComplete="email" spellCheck={false} aria-label="Email" density="dense" {...form.register('email')} className="rounded-md border-border-subtle bg-background" />
                 {errors.email?.message ? <p className="text-xs text-destructive">{errors.email.message}</p> : <p className="text-xs text-muted-foreground">Utilise l email exact pour renforcer la detection.</p>}
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="individual-postal-code" className="text-sm font-medium text-foreground">Code postal</label>
+                <label htmlFor="individual-postal-code" className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">Code postal</label>
                 <Input
                   id="individual-postal-code"
                   inputMode="numeric"
                   autoComplete="postal-code"
+                  spellCheck={false}
                   aria-label="Code postal"
+                  density="dense"
                   value={values.postal_code}
                   onChange={(event) => {
                     const digits = event.target.value.replace(/\D/g, '').slice(0, 5);
@@ -336,27 +340,27 @@ const EntityOnboardingSearchStep = ({
                       { shouldDirty: true }
                     );
                   }}
-                  className="h-10 rounded-lg"
+                  className="rounded-md border-border-subtle bg-background font-mono tabular-nums"
                 />
                 {errors.postal_code?.message ? <p className="text-xs text-destructive">{errors.postal_code.message}</p> : null}
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="individual-city" className="text-sm font-medium text-foreground">Ville</label>
-                <Input id="individual-city" autoComplete="address-level2" aria-label="Ville" {...form.register('city')} className="h-10 rounded-lg" />
+                <label htmlFor="individual-city" className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">Ville</label>
+                <Input id="individual-city" autoComplete="address-level2" aria-label="Ville" density="dense" {...form.register('city')} className="rounded-md border-border-subtle bg-background" />
                 {errors.city?.message ? <p className="text-xs text-destructive">{errors.city.message}</p> : null}
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <label htmlFor="individual-address" className="text-sm font-medium text-foreground">Adresse</label>
-                <Input id="individual-address" autoComplete="street-address" aria-label="Adresse" {...form.register('address')} className="h-10 rounded-lg" />
+                <label htmlFor="individual-address" className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">Adresse</label>
+                <Input id="individual-address" autoComplete="street-address" aria-label="Adresse" density="dense" {...form.register('address')} className="rounded-md border-border-subtle bg-background" />
                 <p className="text-xs text-muted-foreground">Optionnelle. Tu pourras encore la completer a l etape suivante.</p>
               </div>
 
-              <div className="rounded-xl border border-border/60 bg-muted/20 p-4 md:col-span-2">
+              <div className="rounded-lg border border-border-subtle bg-surface-1/70 p-4 md:col-span-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="outline">Nom complet derive automatiquement</Badge>
-                  <Badge variant="outline">Aucun commercial CIR</Badge>
+                  <Badge variant="outline" className="border-border-subtle bg-background">Nom complet derive automatiquement</Badge>
+                  <Badge variant="outline" className="border-border-subtle bg-background">Aucun commercial CIR</Badge>
                 </div>
                 <p className="mt-3 text-sm leading-6 text-muted-foreground">
                   Le nom annuaire sera construit a partir de <span className="font-medium text-foreground">Nom + Prenom</span> au moment de la creation, tout en conservant le contact principal structure.
@@ -366,8 +370,8 @@ const EntityOnboardingSearchStep = ({
           </ScrollArea>
         </Card>
 
-        <Card variant="section" className="flex min-h-0 flex-col overflow-hidden border-border/60 bg-card shadow-sm">
-          <div className="border-b border-border/60 px-5 py-5">
+        <Card variant="section" className="flex min-h-0 flex-col overflow-hidden rounded-lg border-border-subtle bg-background shadow-none">
+          <div className="border-b border-border-subtle px-4 py-4">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <ShieldCheck className="size-4 text-primary" />
               Verification doublons
@@ -388,9 +392,9 @@ const EntityOnboardingSearchStep = ({
   }
 
   return (
-    <div className="grid h-full min-h-0 gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.9fr)]">
-      <Card variant="section" className="flex min-h-0 flex-col overflow-hidden border-border/60 bg-card shadow-sm">
-        <div className="border-b border-border/60 px-5 py-5">
+    <div className="grid h-full min-h-0 gap-3 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.9fr)]">
+      <Card variant="section" className="flex min-h-0 flex-col overflow-hidden rounded-lg border-border-subtle bg-background shadow-none">
+        <div className="border-b border-border-subtle px-4 py-4">
           <div className="flex flex-col gap-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="space-y-1">
@@ -404,7 +408,7 @@ const EntityOnboardingSearchStep = ({
                 </p>
               </div>
 
-              <Button type="button" variant="outline" size="sm" onClick={onToggleManualEntry}>
+              <Button type="button" variant="outline" size="dense" onClick={onToggleManualEntry}>
                 {manualEntry ? 'Retour recherche' : 'Saisie manuelle'}
               </Button>
             </div>
@@ -414,10 +418,13 @@ const EntityOnboardingSearchStep = ({
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   name="company-search"
+                  autoComplete="off"
+                  spellCheck={false}
                   value={searchDraft}
                   onChange={(event) => onSearchDraftChange(event.target.value)}
-                  placeholder="Nom de societe, SIREN ou SIRET"
-                  className="h-10 rounded-lg border-border/70 bg-background pl-9"
+                  placeholder="Nom de societe, SIREN ou SIRET…"
+                  density="dense"
+                  className="rounded-md border-border-subtle bg-background pl-9"
                 />
               </div>
               <DirectoryFilterCombobox
@@ -437,7 +444,7 @@ const EntityOnboardingSearchStep = ({
 
         {manualEntry ? (
           <div className="flex flex-1 items-center justify-center p-5">
-            <div className="max-w-lg rounded-xl border border-dashed border-border/70 bg-muted/20 p-6">
+            <div className="max-w-lg rounded-lg border border-dashed border-border-subtle bg-surface-1/70 p-6">
               <p className="text-sm font-medium text-foreground">Saisie manuelle active</p>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
                 Le flux continue sans donnees officielles. Les champs identite, adresse et rattachement agence restent disponibles a l etape suivante.
@@ -446,7 +453,7 @@ const EntityOnboardingSearchStep = ({
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-between gap-3 border-b border-border/60 px-5 py-3 text-sm text-muted-foreground">
+            <div className="flex items-center justify-between gap-3 border-b border-border-subtle px-4 py-3 text-sm text-muted-foreground">
               <span>
                 {groups.length > 0
                   ? `${groups.length} entreprise${groups.length > 1 ? 's' : ''} trouvee${groups.length > 1 ? 's' : ''}`
@@ -461,7 +468,7 @@ const EntityOnboardingSearchStep = ({
             </div>
 
             <ScrollArea className={cn('min-h-0 flex-1', isStale && 'opacity-70 transition-opacity')}>
-              <div className="divide-y divide-border/60">
+              <div className="divide-y divide-border-subtle">
                 {groups.length > 0 ? groups.map((group) => {
                   const isActive = selectedGroup?.id === group.id;
                   const cities = Array.from(
@@ -474,20 +481,20 @@ const EntityOnboardingSearchStep = ({
                       type="button"
                       onClick={() => onGroupSelect(group.id)}
                       className={cn(
-                        'flex w-full items-start justify-between gap-4 px-5 py-4 text-left transition-colors',
-                        isActive ? 'bg-muted/35' : 'hover:bg-muted/25'
+                        'flex w-full items-start justify-between gap-4 border-l-2 border-transparent px-4 py-3.5 text-left transition-[background-color,border-color]',
+                        isActive ? 'border-primary bg-primary/5' : 'hover:bg-surface-1'
                       )}
                     >
                       <div className="min-w-0 space-y-2">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="text-sm font-semibold text-foreground">{group.label}</span>
-                          {group.siren ? <Badge variant="outline">SIREN {group.siren}</Badge> : null}
+                          {group.siren ? <Badge variant="outline" className="border-border-subtle bg-background font-mono tabular-nums">SIREN {group.siren}</Badge> : null}
                           {getMatchBadgeLabel(group.match_quality) ? (
-                            <Badge variant="outline" className="border-border/70 bg-muted/30">
+                            <Badge variant="outline" className="border-border-subtle bg-surface-1">
                               {getMatchBadgeLabel(group.match_quality)}
                             </Badge>
                           ) : null}
-                          <Badge variant={isActive ? 'secondary' : 'outline'}>
+                          <Badge variant={isActive ? 'secondary' : 'outline'} className={cn(!isActive && 'border-border-subtle bg-background')}>
                             {group.establishments.length} site{group.establishments.length > 1 ? 's' : ''}
                           </Badge>
                         </div>
@@ -514,7 +521,7 @@ const EntityOnboardingSearchStep = ({
                     </button>
                   );
                 }) : (
-                  <div className="px-5 py-8 text-sm leading-6 text-muted-foreground">
+                  <div className="px-4 py-8 text-sm leading-6 text-muted-foreground">
                     Aucun resultat officiel. Essaie un nom plus court, un departement, une ville, ou passe en saisie manuelle.
                   </div>
                 )}
@@ -524,8 +531,8 @@ const EntityOnboardingSearchStep = ({
         )}
       </Card>
 
-      <Card variant="section" className="flex min-h-0 flex-col overflow-hidden border-border/60 bg-card shadow-sm">
-        <div className="border-b border-border/60 px-5 py-5">
+      <Card variant="section" className="flex min-h-0 flex-col overflow-hidden rounded-lg border-border-subtle bg-background shadow-none">
+        <div className="border-b border-border-subtle px-4 py-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <ShieldCheck className="size-4 text-primary" />
             Verification et selection
@@ -534,11 +541,11 @@ const EntityOnboardingSearchStep = ({
 
         {selectedGroup ? (
           <div className="flex min-h-0 flex-1 flex-col">
-            <div className="space-y-2 border-b border-border/60 px-5 py-4">
+            <div className="space-y-2 border-b border-border-subtle px-4 py-4">
               <div className="flex flex-wrap items-center gap-2">
                 <p className="text-base font-semibold text-foreground">{selectedGroup.label}</p>
                 {getMatchBadgeLabel(selectedGroup.match_quality) ? (
-                  <Badge variant="outline" className="border-border/70 bg-muted/30">
+                  <Badge variant="outline" className="border-border-subtle bg-surface-1">
                     {getMatchBadgeLabel(selectedGroup.match_quality)}
                   </Badge>
                 ) : null}
@@ -563,10 +570,10 @@ const EntityOnboardingSearchStep = ({
                       type="button"
                       onClick={() => onEstablishmentSelect(establishment)}
                       className={cn(
-                        'w-full rounded-xl border px-4 py-4 text-left transition-colors',
+                        'w-full rounded-lg border px-4 py-3.5 text-left transition-[background-color,border-color,box-shadow]',
                         isSelected
-                          ? 'border-primary/30 bg-primary/5 shadow-[0_0_0_1px_rgba(220,38,38,0.04)]'
-                          : 'border-border/60 bg-background hover:bg-muted/25'
+                          ? 'border-primary/35 bg-primary/5 shadow-[0_0_0_1px_rgba(220,38,38,0.04)]'
+                          : 'border-border-subtle bg-background hover:bg-surface-1'
                       )}
                     >
                       <div className="flex items-start justify-between gap-3">
@@ -583,8 +590,8 @@ const EntityOnboardingSearchStep = ({
                             {establishment.address ?? 'Adresse non diffusee'}
                           </p>
                           <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-                            {establishment.siret ? <span>SIRET {establishment.siret}</span> : null}
-                            {establishment.naf_code ? <span>NAF {establishment.naf_code}</span> : null}
+                            {establishment.siret ? <span className="font-mono tabular-nums">SIRET {establishment.siret}</span> : null}
+                            {establishment.naf_code ? <span className="font-mono tabular-nums">NAF {establishment.naf_code}</span> : null}
                           </div>
                         </div>
                         {isSelected ? <Check className="size-4 shrink-0 text-primary" /> : null}

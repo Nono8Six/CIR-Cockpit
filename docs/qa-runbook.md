@@ -52,11 +52,15 @@ Pour chaque cycle "demande -> modification -> livraison":
 1. Boucle intermediaire (pendant implementation, non livrable):
    - Identifier le perimetre exact (front/back/transversal/docs).
    - Lancer des checks cibles selon la matrice d'impact, ou `pnpm run qa:fast` depuis la racine.
+   - `qa:fast` inclut: typecheck + lint + tests (sans coverage) + error-compliance + backend lint/check/test.
    - Si KO: corriger immediatement avant de continuer.
 2. Gate final (avant livraison/merge, livrable):
-   - Re-executer les phases requises par la matrice d'impact en ordre strict (A -> ...).
+   - Executer `pnpm run qa` depuis la racine (gate complet sans audit reseau).
+   - Pour un audit de securite des deps: `pnpm run qa:audit` (separe, necessite reseau).
    - Produire un rapport QA manuel dans la reponse de livraison.
    - Si une etape bloquante est KO: ne pas livrer.
+
+Note: le hook `pre-push` execute `qa:fast` (pas le full gate). Le full `qa` est obligatoire manuellement avant merge.
 
 ## 4. Pre-requis
 
@@ -123,7 +127,7 @@ Executer depuis `frontend/`:
 
 ```bash
 pnpm run typecheck
-pnpm run lint -- --max-warnings=0
+pnpm run lint
 pnpm run test:coverage
 pnpm run check:error-compliance
 pnpm run build

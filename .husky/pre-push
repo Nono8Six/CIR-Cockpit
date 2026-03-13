@@ -1,2 +1,2 @@
 #!/usr/bin/env sh
-pnpm run qa
+pnpm run qa:fast

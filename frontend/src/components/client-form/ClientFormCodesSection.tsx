@@ -21,7 +21,7 @@ const ClientFormCodesSection = ({
 }: ClientFormCodesSectionProps) => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div>
-      <label className="text-xs font-medium text-muted-foreground" htmlFor="client-postal-code">Code postal</label>
+      <label className="text-sm font-medium text-foreground" htmlFor="client-postal-code">Code postal</label>
       <Input
         {...postalCodeField}
         id="client-postal-code"
@@ -36,7 +36,7 @@ const ClientFormCodesSection = ({
       )}
     </div>
     <div>
-      <label className="text-xs font-medium text-muted-foreground" htmlFor="client-siret">SIRET (optionnel)</label>
+      <label className="text-sm font-medium text-foreground" htmlFor="client-siret">SIRET (optionnel)</label>
       <Input {...siretField} id="client-siret" placeholder="SIRET" inputMode="numeric" />
     </div>
   </div>

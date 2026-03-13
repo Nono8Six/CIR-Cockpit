@@ -5,13 +5,13 @@ import { defineStepper } from '@stepperize/react';
 import {
   ArrowLeft,
   ArrowRight,
-  Building2,
   CircleCheckBig,
   LoaderCircle,
-  Search,
   ShieldCheck,
   Sparkles
 } from 'lucide-react';
+
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 
 import { clientFormSchema } from 'shared/schemas/client.schema';
 import { prospectFormSchema } from 'shared/schemas/prospect.schema';
@@ -28,8 +28,19 @@ import { useDirectoryCompanySearch } from '@/hooks/useDirectoryCompanySearch';
 import { useDirectoryDuplicates } from '@/hooks/useDirectoryDuplicates';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import EntityOnboardingDetailsStep from '@/components/entity-onboarding/EntityOnboardingDetailsStep';
+import EntityOnboardingIntentStep from '@/components/entity-onboarding/EntityOnboardingIntentStep';
 import {
   onboardingFormSchema,
   type OnboardingFormInput,
@@ -144,6 +155,8 @@ const EntityOnboardingDialog = ({
   const intents = allowedIntents ?? (mode === 'convert' ? ['client'] : ['client', 'prospect']);
   const shouldSkipIntent = mode !== 'convert' && intents.length === 1;
   const isIntentLocked = !shouldSkipIntent && intents.length === 1;
+  const initialManualEntry = initialEntity?.client_kind === 'individual'
+    || (mode === 'convert' && !initialEntity?.name);
   const stepper = useStepper({ initialStep: shouldSkipIntent ? 'company' : 'intent' });
   const form = useForm<OnboardingFormInput, unknown, OnboardingValues>({
     resolver: zodResolver(onboardingFormSchema),
@@ -153,12 +166,12 @@ const EntityOnboardingDialog = ({
   const [searchDraft, setSearchDraft] = useState(initialEntity?.name ?? '');
   const [departmentFilter, setDepartmentFilter] = useState(initialEntity?.department ?? '');
   const [cityFilter, setCityFilter] = useState(initialEntity?.city ?? '');
-  const [manualEntry, setManualEntry] = useState(
-    initialEntity?.client_kind === 'individual' || (mode === 'convert' && !initialEntity?.name)
-  );
+  const [manualEntry, setManualEntry] = useState(initialManualEntry);
   const [stepError, setStepError] = useState<string | null>(null);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isCloseConfirmOpen, setIsCloseConfirmOpen] = useState(false);
+  const reducedMotion = useReducedMotion();
   const hasInitializedOpenRef = useRef(false);
 
   const deferredSearchDraft = useDeferredValue(searchDraft.trim());
@@ -403,6 +416,7 @@ const EntityOnboardingDialog = ({
       setSelectedGroupId(null);
       setStepError(null);
       setIsSaving(false);
+      setIsCloseConfirmOpen(false);
     });
   }, [
     activeAgencyId,
@@ -416,8 +430,53 @@ const EntityOnboardingDialog = ({
     stepper.navigation
   ]);
 
-  const handleClose = () => {
+  const isDirty = form.formState.isDirty;
+  const hasLocalDraft = searchDraft.trim() !== (initialEntity?.name ?? '').trim()
+    || departmentFilter.trim() !== (initialEntity?.department ?? '').trim()
+    || cityFilter.trim() !== (initialEntity?.city ?? '').trim()
+    || manualEntry !== initialManualEntry
+    || selectedGroupId !== null;
+  const hasUnsavedProgress = isDirty || hasLocalDraft;
+
+  useEffect(() => {
+    if (!open || !hasUnsavedProgress) {
+      return;
+    }
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedProgress, open]);
+
+  const confirmClose = () => {
+    setIsCloseConfirmOpen(false);
     onOpenChange(false);
+  };
+
+  const requestClose = () => {
+    if (isSaving) {
+      return;
+    }
+
+    if (hasUnsavedProgress) {
+      setIsCloseConfirmOpen(true);
+      return;
+    }
+
+    onOpenChange(false);
+  };
+
+  const handleDialogOpenChange = (nextOpen: boolean) => {
+    if (nextOpen) {
+      onOpenChange(nextOpen);
+      return;
+    }
+
+    requestClose();
   };
 
   const handleIntentChange = (intent: OnboardingIntent) => {
@@ -685,8 +744,8 @@ const EntityOnboardingDialog = ({
     ? 'Convertir le prospect en client'
     : 'Nouvelle fiche entreprise';
   const subtitle = mode === 'convert'
-    ? 'Conserver la base prospect, qualifier le bon etablissement et finaliser le compte client.'
-    : 'Un seul flux pour rechercher, verifier et creer une fiche proprement dans l annuaire.';
+    ? 'Qualifier l etablissement et finaliser le compte client.'
+    : 'Rechercher, verifier et creer une fiche dans l annuaire.';
   const renderedSteps = STEP_DEFINITIONS.map((step) => {
     if (step.id === 'company' && isIndividualClient) {
       return {
@@ -717,23 +776,41 @@ const EntityOnboardingDialog = ({
     : 'Continuer';
   const footerMessage = stepError ?? (
     stepper.flow.is('company')
-      ? 'Les donnees officielles restent verifiables avant creation.'
+      ? 'Selection et doublons visibles avant creation.'
       : stepper.flow.is('details')
-        ? 'Les champs obligatoires sont controles en ligne.'
+        ? 'Champs obligatoires verifies en ligne.'
         : stepper.flow.is('review')
-          ? 'La validation finale reprend exactement les donnees qui seront sauvegardees.'
-          : 'Le type choisi ajuste les champs du parcours.'
+          ? 'Resume final exactement conforme aux donnees sauvegardees.'
+          : 'Le type choisi ajuste tout le reste du parcours.'
   );
+  const stepMotionProps = reducedMotion
+    ? {}
+    : {
+      initial: { opacity: 0, x: 8 },
+      animate: { opacity: 1, x: 0 },
+      exit: { opacity: 0, x: -8 },
+      transition: { duration: 0.15 }
+    };
+  const currentStep = renderedSteps[currentStepIndex] ?? renderedSteps[0];
+
+  const goToCompletedStep = (stepId: string) => {
+    const targetIndex = renderedSteps.findIndex((step) => step.id === stepId);
+    if (targetIndex === -1 || targetIndex >= currentStepIndex) {
+      return;
+    }
+
+    stepper.navigation.goTo(stepId as 'intent' | 'company' | 'details' | 'review');
+  };
 
   const content = (
     <section
       aria-label={title}
       className={cn(
         'flex h-full min-h-0 flex-col overflow-hidden bg-background',
-        surface === 'page' ? 'flex-1 rounded-xl border border-border/60 shadow-sm' : 'border-0'
+        surface === 'page' ? 'flex-1 rounded-xl border border-border-subtle shadow-sm' : 'border-0'
       )}
     >
-      <div className="sticky top-0 z-20 border-b border-border/60 bg-background/95 backdrop-blur">
+      <div className="sticky top-0 z-20 border-b border-border-subtle bg-background/92 backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4 px-4 py-4 sm:px-5 lg:px-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-3">
@@ -742,20 +819,23 @@ const EntityOnboardingDialog = ({
                   <Button
                     type="button"
                     variant="ghost"
-                    size="sm"
+                    size="dense"
                     className="px-2 text-muted-foreground"
-                    onClick={handleClose}
+                    onClick={requestClose}
                   >
                     <ArrowLeft className="size-4" />
                     {backLabel}
                   </Button>
                 ) : null}
-                <Badge variant="outline" density="dense" className="gap-1.5">
+                <Badge variant="outline" density="dense" className="gap-1.5 border-border-subtle bg-surface-1/80">
                   <Sparkles className="size-3.5" />
                   {sourceLabel}
                 </Badge>
                 <Badge variant={mode === 'convert' ? 'secondary' : 'ghost'} density="dense">
                   {mode === 'convert' ? 'Conversion' : 'Creation'}
+                </Badge>
+                <Badge variant="outline" density="dense" className="border-border-subtle bg-surface-1/80 tabular-nums">
+                  Etape {currentStepIndex + 1}/{renderedSteps.length}
                 </Badge>
                 {values.official_data_source ? (
                   <Badge variant="success" density="dense">
@@ -765,7 +845,7 @@ const EntityOnboardingDialog = ({
               </div>
 
               <div className="space-y-1.5">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                <p className="text-xs font-medium text-muted-foreground">
                   {mode === 'convert' ? 'Workflow client' : 'Creation annuaire'}
                 </p>
                 <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[1.8rem]">
@@ -775,307 +855,165 @@ const EntityOnboardingDialog = ({
               </div>
             </div>
 
-            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-              {renderedSteps.map((step, index) => {
-                const isCurrent = currentStepIndex === index;
-                const isCompleted = currentStepIndex > index;
-                const isClickable = index < currentStepIndex;
-
-                return (
-                  <button
-                    key={step.id}
-                    type="button"
-                    disabled={!isClickable}
-                    onClick={() => {
-                      if (isClickable) {
-                        stepper.navigation.goTo(step.id);
-                      }
-                    }}
-                    className={cn(
-                      'flex min-w-0 items-start gap-3 rounded-xl border px-3 py-3 text-left transition-colors',
-                      isCurrent
-                        ? 'border-primary/30 bg-primary/5'
-                        : isCompleted
-                          ? 'border-emerald-200 bg-emerald-50/70'
-                          : 'border-border/60 bg-card',
-                      isClickable ? 'cursor-pointer hover:bg-muted/40' : 'cursor-default'
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        'mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-semibold',
-                        isCurrent
-                          ? 'border-primary/50 bg-primary text-primary-foreground'
-                          : isCompleted
-                            ? 'border-emerald-300 bg-emerald-100 text-emerald-700'
-                            : 'border-border/70 bg-background text-muted-foreground'
-                      )}
-                    >
-                      {isCompleted ? <CircleCheckBig className="size-3.5" /> : index + 1}
-                    </span>
-                    <span className="space-y-1">
-                      <span className="block truncate text-sm font-medium text-foreground">{step.title}</span>
-                      <span className="block text-xs leading-5 text-muted-foreground">
-                        {step.description}
-                      </span>
-                    </span>
-                  </button>
-                );
-              })}
+            <div className="hidden min-w-[240px] rounded-lg border border-border-subtle bg-surface-1/80 px-4 py-3 lg:block">
+              <p className="text-xs font-medium text-muted-foreground">En cours</p>
+              <p className="mt-1 text-sm font-medium text-foreground">{currentStep.title}</p>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">{currentStep.description}</p>
             </div>
           </div>
+
+          <nav aria-label="Progression du parcours">
+            <div className={cn(surface === 'page' && 'xl:hidden')}>
+              <ol className="grid list-none gap-2 p-0 sm:grid-cols-2 xl:grid-cols-4">
+                {renderedSteps.map((step, index) => {
+                  const isCurrent = currentStepIndex === index;
+                  const isCompleted = currentStepIndex > index;
+                  const isClickable = index < currentStepIndex;
+                  const stepCardClassName = cn(
+                    'flex w-full min-w-0 items-start gap-3 rounded-lg border px-3 py-3 text-left transition-[background-color,border-color,box-shadow]',
+                    isCurrent
+                      ? 'border-primary/35 bg-primary/5'
+                      : isCompleted
+                        ? 'border-border-subtle bg-background'
+                        : 'border-border-subtle bg-surface-1/70'
+                  );
+                  const stepContent = (
+                    <>
+                      <span
+                        className={cn(
+                          'mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-semibold',
+                          isCurrent
+                            ? 'border-primary/35 bg-primary text-primary-foreground'
+                            : isCompleted
+                              ? 'border-success/35 bg-success/10 text-success'
+                              : 'border-border-subtle bg-background text-muted-foreground'
+                        )}
+                      >
+                        {isCompleted ? <CircleCheckBig className="size-3.5" /> : index + 1}
+                      </span>
+                      <span className="space-y-1">
+                        <span className="block truncate text-sm font-medium text-foreground">{step.title}</span>
+                        <span className="block text-xs leading-5 text-muted-foreground">
+                          {step.description}
+                        </span>
+                      </span>
+                    </>
+                  );
+
+                  return (
+                    <li key={step.id} aria-current={isCurrent ? 'step' : undefined}>
+                      {isClickable ? (
+                        <button
+                          type="button"
+                          aria-label={`Revenir à l'étape ${step.title}`}
+                          onClick={() => {
+                            goToCompletedStep(step.id);
+                          }}
+                          className={cn(stepCardClassName, 'cursor-pointer hover:border-primary/20 hover:bg-background')}
+                        >
+                          {stepContent}
+                        </button>
+                      ) : (
+                        <div className={cn(stepCardClassName, 'cursor-default')}>
+                          {stepContent}
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          </nav>
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-hidden">
-        <div className="mx-auto flex h-full min-h-0 w-full max-w-[1400px] flex-1 flex-col gap-4 px-4 py-4 sm:px-5 lg:px-6">
-          {stepper.flow.is('intent') ? (
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_360px]">
-              <div className="rounded-xl border border-border/60 bg-card shadow-sm">
-                <div className="border-b border-border/60 px-5 py-5">
-                  <div className="flex items-start gap-3">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/8 text-primary">
-                      <Building2 className="size-4" />
-                    </div>
-                    <div className="space-y-1">
-                      <h2 className="text-lg font-semibold tracking-tight text-foreground">
-                        Type de fiche
-                      </h2>
-                      <p className="text-sm leading-6 text-muted-foreground">
-                        Le type choisi regle la profondeur du parcours et les champs exposes.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+      <div className="min-h-0 flex-1 overflow-hidden bg-surface-1/50">
+        <div className="mx-auto flex h-full min-h-0 w-full max-w-[1400px] flex-1 flex-col px-3 py-3 sm:px-4 sm:py-4 lg:px-5">
+          <AnimatePresence mode="wait" initial={false}>
+            {stepper.flow.is('intent') ? (
+              <motion.div key="step-intent" className="min-h-0 flex-1" {...stepMotionProps}>
+                <EntityOnboardingIntentStep
+                  effectiveIntent={effectiveIntent}
+                  intents={intents}
+                  isIntentLocked={isIntentLocked}
+                  mode={mode}
+                  clientKind={values.client_kind}
+                  onIntentChange={handleIntentChange}
+                  onClientKindChange={handleClientKindChange}
+                />
+              </motion.div>
+            ) : null}
 
-                <div className="space-y-5 p-5">
-                  <div className="space-y-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                      Type de dossier
-                    </p>
-                    <div className="grid gap-3 md:grid-cols-2">
-                      {([
-                        {
-                          id: 'prospect',
-                          title: 'Prospect',
-                          body: 'Qualification legere pour lancer la relation.',
-                          chips: ['Recherche officielle', 'Fiche courte']
-                        },
-                        {
-                          id: 'client',
-                          title: 'Client',
-                          body: 'Creation d un compte complet dans l annuaire.',
-                          chips: ['Numero client', 'Compte client']
-                        }
-                      ] as const)
-                        .filter((option) => intents.includes(option.id))
-                        .map((option) => {
-                          const isActive = effectiveIntent === option.id;
+            {stepper.flow.is('company') ? (
+              <motion.div key="step-company" className="min-h-0 flex-1" {...stepMotionProps}>
+                <EntityOnboardingSearchStep
+                  form={form}
+                  values={values}
+                  isIndividualClient={isIndividualClient}
+                  searchDraft={searchDraft}
+                  onSearchDraftChange={setSearchDraft}
+                  department={departmentFilter}
+                  onDepartmentChange={setDepartmentFilter}
+                  city={cityFilter}
+                  onCityChange={setCityFilter}
+                  departmentOptions={OFFICIAL_DEPARTMENT_OPTIONS}
+                  citySuggestions={citySuggestions}
+                  manualEntry={manualEntry}
+                  onToggleManualEntry={() => {
+                    setManualEntry((previous) => !previous);
+                    setStepError(null);
+                  }}
+                  isFetching={companySearchQuery.isFetching}
+                  isStale={isSearchStale}
+                  groups={companyGroups}
+                  selectedGroup={selectedGroup}
+                  onGroupSelect={handleGroupSelect}
+                  selectedCompany={displaySelectedCompany}
+                  onEstablishmentSelect={applyCompany}
+                  duplicateMatches={duplicateMatches}
+                  duplicatesLoading={duplicatesQuery.isFetching}
+                  onOpenDuplicate={onOpenDuplicate}
+                />
+              </motion.div>
+            ) : null}
 
-                          return (
-                            <button
-                              key={option.id}
-                              type="button"
-                              disabled={isIntentLocked}
-                              onClick={() => handleIntentChange(option.id)}
-                              className={cn(
-                                'rounded-xl border px-4 py-4 text-left transition-colors',
-                                isActive
-                                  ? 'border-primary/30 bg-primary/5'
-                                  : 'border-border/60 bg-background hover:bg-muted/25',
-                                isIntentLocked && 'cursor-default'
-                              )}
-                            >
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="space-y-1.5">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-base font-semibold text-foreground">{option.title}</span>
-                                    {isActive ? <Badge variant="secondary" density="dense">Actif</Badge> : null}
-                                  </div>
-                                  <p className="text-sm leading-6 text-muted-foreground">{option.body}</p>
-                                </div>
-                                {isActive ? <CircleCheckBig className="mt-0.5 size-4 shrink-0 text-primary" /> : null}
-                              </div>
-                              <div className="mt-4 flex flex-wrap gap-2">
-                                {option.chips.map((chip) => (
-                                  <Badge key={chip} variant="outline" density="dense">
-                                    {chip}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </button>
-                          );
-                        })}
-                    </div>
-                  </div>
+            {stepper.flow.is('details') ? (
+              <motion.div key="step-details" className="min-h-0 flex-1 overflow-y-auto pr-1" {...stepMotionProps}>
+                <EntityOnboardingDetailsStep
+                  form={form}
+                  values={values}
+                  effectiveIntent={effectiveIntent}
+                  isIndividualClient={isIndividualClient}
+                  agencies={agencies}
+                  commercials={commercials}
+                  userRole={userRole}
+                  selectedCompany={displaySelectedCompany}
+                  duplicateMatches={duplicateMatches}
+                  remainingRequiredFields={missingChecklist}
+                />
+              </motion.div>
+            ) : null}
 
-                  {effectiveIntent === 'client' ? (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                          Cadre client
-                        </p>
-                        {mode === 'convert' ? <Badge variant="outline">Societe imposee</Badge> : null}
-                      </div>
-                      <div className="grid gap-3 md:grid-cols-2">
-                        {([
-                          {
-                            id: 'company',
-                            title: 'Societe',
-                            body: 'Recherche officielle, etablissements et controle des doublons.',
-                            chips: ['SIRET', 'SIREN', 'Commercial CIR']
-                          },
-                          {
-                            id: 'individual',
-                            title: 'Particulier',
-                            body: 'Client sans societe, avec contact principal et compte comptant.',
-                            chips: ['Nom + prenom', 'Telephone ou email', 'Sans commercial']
-                          }
-                        ] as const).map((option) => {
-                          const isActive = values.client_kind === option.id;
-                          const isDisabled = mode === 'convert' && option.id === 'individual';
-
-                          return (
-                            <button
-                              key={option.id}
-                              type="button"
-                              disabled={isDisabled}
-                              onClick={() => handleClientKindChange(option.id)}
-                              className={cn(
-                                'rounded-xl border px-4 py-4 text-left transition-colors',
-                                isActive
-                                  ? 'border-primary/30 bg-primary/5'
-                                  : 'border-border/60 bg-background hover:bg-muted/25',
-                                isDisabled && 'cursor-not-allowed opacity-60'
-                              )}
-                            >
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="space-y-1.5">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-base font-semibold text-foreground">{option.title}</span>
-                                    {isActive ? <Badge variant="secondary" density="dense">Actif</Badge> : null}
-                                  </div>
-                                  <p className="text-sm leading-6 text-muted-foreground">{option.body}</p>
-                                </div>
-                                {isActive ? <CircleCheckBig className="mt-0.5 size-4 shrink-0 text-primary" /> : null}
-                              </div>
-                              <div className="mt-4 flex flex-wrap gap-2">
-                                {option.chips.map((chip) => (
-                                  <Badge key={chip} variant="outline" density="dense">
-                                    {chip}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-
-              <aside className="rounded-xl border border-border/60 bg-card shadow-sm">
-                <div className="border-b border-border/60 px-5 py-5">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <ShieldCheck className="size-4 text-primary" />
-                    Cadre du parcours
-                  </div>
-                </div>
-                <div className="space-y-4 px-5 py-5 text-sm leading-6 text-muted-foreground">
-                  <p>
-                    {mode === 'convert'
-                      ? 'Le type client est impose par la conversion. Le prospect sert de base, puis les champs client sont ajoutes.'
-                      : effectiveIntent === 'client' && isIndividualClient
-                        ? 'Le parcours particulier remplace la recherche entreprise par une qualification identite + doublons, tout en restant dans le shell annuaire.'
-                        : 'Le flux reste le meme: recherche, verification, completion puis validation finale.'}
-                  </p>
-                  <div className="rounded-lg border border-border/60 bg-muted/25 p-4">
-                    <p className="font-medium text-foreground">Ce qui change ensuite</p>
-                    <ul className="mt-3 space-y-2">
-                      <li className="flex items-start gap-2">
-                        <Search className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                        {effectiveIntent === 'client' && isIndividualClient
-                          ? 'L etape recherche qualifie le particulier puis controle les doublons sur les donnees de contact.'
-                          : 'L etape recherche consolide l entreprise et detecte les doublons.'}
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Building2 className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                        Les champs metier s adaptent automatiquement au type retenu.
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </aside>
-            </div>
-          ) : null}
-
-          {stepper.flow.is('company') ? (
-            <EntityOnboardingSearchStep
-              form={form}
-              values={values}
-              isIndividualClient={isIndividualClient}
-              searchDraft={searchDraft}
-              onSearchDraftChange={setSearchDraft}
-              department={departmentFilter}
-              onDepartmentChange={setDepartmentFilter}
-              city={cityFilter}
-              onCityChange={setCityFilter}
-              departmentOptions={OFFICIAL_DEPARTMENT_OPTIONS}
-              citySuggestions={citySuggestions}
-              manualEntry={manualEntry}
-              onToggleManualEntry={() => {
-                setManualEntry((previous) => !previous);
-                setStepError(null);
-              }}
-              isFetching={companySearchQuery.isFetching}
-              isStale={isSearchStale}
-              groups={companyGroups}
-              selectedGroup={selectedGroup}
-              onGroupSelect={handleGroupSelect}
-              selectedCompany={displaySelectedCompany}
-              onEstablishmentSelect={applyCompany}
-              duplicateMatches={duplicateMatches}
-              duplicatesLoading={duplicatesQuery.isFetching}
-              onOpenDuplicate={onOpenDuplicate}
-            />
-          ) : null}
-
-          {stepper.flow.is('details') ? (
-            <div className="min-h-0 flex-1 overflow-y-auto pr-1">
-              <EntityOnboardingDetailsStep
-                form={form}
-                values={values}
-                effectiveIntent={effectiveIntent}
-                isIndividualClient={isIndividualClient}
-                agencies={agencies}
-                commercials={commercials}
-                userRole={userRole}
-                selectedCompany={displaySelectedCompany}
-                duplicateMatches={duplicateMatches}
-                remainingRequiredFields={missingChecklist}
-              />
-            </div>
-          ) : null}
-
-          {stepper.flow.is('review') ? (
-            <div className="min-h-0 flex-1 overflow-y-auto pr-1">
-              <EntityOnboardingReviewStep
-                values={values}
-                agencies={agencies}
-                effectiveIntent={effectiveIntent}
-                isIndividualClient={isIndividualClient}
-                selectedCompany={displaySelectedCompany}
-                duplicateMatches={duplicateMatches}
-              />
-            </div>
-          ) : null}
+            {stepper.flow.is('review') ? (
+              <motion.div key="step-review" className="min-h-0 flex-1 overflow-y-auto pr-1" {...stepMotionProps}>
+                <EntityOnboardingReviewStep
+                  values={values}
+                  agencies={agencies}
+                  effectiveIntent={effectiveIntent}
+                  isIndividualClient={isIndividualClient}
+                  selectedCompany={displaySelectedCompany}
+                  duplicateMatches={duplicateMatches}
+                />
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
         </div>
       </div>
 
-      <div className="border-t border-border/60 bg-background/95 backdrop-blur">
+      <div className="border-t border-border-subtle bg-background/92 backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5 lg:px-6">
           <div
+            aria-live="polite"
             className={cn(
               'flex items-start gap-2 text-sm leading-6',
               stepError ? 'text-destructive' : 'text-muted-foreground'
@@ -1085,18 +1023,19 @@ const EntityOnboardingDialog = ({
             <span>{footerMessage}</span>
           </div>
 
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             {showFooterBack ? (
-              <Button type="button" variant="outline" onClick={handleBack}>
+              <Button type="button" variant="outline" size="dense" onClick={handleBack}>
                 <ArrowLeft className="size-4" />
                 Retour
               </Button>
             ) : null}
-            <Button type="button" variant="outline" onClick={handleClose}>
+            <Button type="button" variant="outline" size="dense" onClick={requestClose}>
               Annuler
             </Button>
             <Button
               type="button"
+              size="comfortable"
               disabled={isSaving || (stepper.flow.is('company') && !canContinueCompany)}
               onClick={() => {
                 if (stepper.flow.is('intent')) {
@@ -1124,23 +1063,49 @@ const EntityOnboardingDialog = ({
     </section>
   );
 
+  const closeConfirmDialog = (
+    <AlertDialog open={isCloseConfirmOpen} onOpenChange={setIsCloseConfirmOpen}>
+      <AlertDialogContent className="border-border-subtle">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Quitter le parcours ?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Les modifications non enregistrees seront perdues si tu fermes maintenant ce flux.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Revenir au formulaire</AlertDialogCancel>
+          <AlertDialogAction onClick={confirmClose}>Quitter</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+
   if (surface === 'page') {
-    return content;
+    return (
+      <>
+        {closeConfirmDialog}
+        {content}
+      </>
+    );
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        overlayClassName="bg-foreground/28 backdrop-blur-[3px]"
-        className="h-[min(96vh,920px)] w-[min(96vw,1320px)] max-w-[1320px] overflow-hidden rounded-2xl border border-border/60 bg-background p-0 shadow-2xl sm:rounded-2xl"
-      >
-        <DialogTitle className="sr-only">{title}</DialogTitle>
-        <DialogDescription className="sr-only">
-          Flux de creation et de conversion d entreprise integre a l annuaire.
-        </DialogDescription>
-        {content}
-      </DialogContent>
-    </Dialog>
+    <>
+      {closeConfirmDialog}
+
+      <Dialog open={open} onOpenChange={handleDialogOpenChange}>
+        <DialogContent
+          overlayClassName="bg-foreground/20 backdrop-blur-[6px]"
+          className="h-[min(96vh,920px)] w-[min(96vw,1320px)] max-w-[1320px] overflow-hidden rounded-xl border border-border-subtle bg-background p-0 shadow-2xl sm:rounded-xl"
+        >
+          <DialogTitle className="sr-only">{title}</DialogTitle>
+          <DialogDescription className="sr-only">
+            Flux de creation et de conversion d entreprise integre a l annuaire.
+          </DialogDescription>
+          {content}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

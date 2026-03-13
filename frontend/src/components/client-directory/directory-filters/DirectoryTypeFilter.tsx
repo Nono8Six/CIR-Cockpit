@@ -53,7 +53,7 @@ const DirectoryTypeFilter = ({
       </div>
 
       <div className="hidden xl:flex xl:flex-col xl:gap-1">
-        <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground">
+        <p className="text-xs font-medium text-muted-foreground">
           Type de fiche
         </p>
         <ToggleGroup
@@ -77,7 +77,7 @@ const DirectoryTypeFilter = ({
               key={type.value}
               value={type.value}
               aria-label={type.label}
-              className="h-9 min-w-[78px] rounded-lg border-border/70 px-3 text-sm font-medium shadow-none data-[state=on]:border-primary/40 data-[state=on]:bg-primary/5 data-[state=on]:text-foreground data-[state=on]:hover:bg-primary/10"
+              className="h-9 min-w-[78px] rounded-lg border-border/70 px-3 text-sm font-medium shadow-none transition-colors duration-150 data-[state=on]:border-primary/40 data-[state=on]:bg-primary/5 data-[state=on]:text-foreground data-[state=on]:hover:bg-primary/10"
             >
               {type.label}
             </ToggleGroupItem>
