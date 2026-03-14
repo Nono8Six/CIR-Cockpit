@@ -32,3 +32,19 @@ Etapes:
 3. renommer les dossiers front hors convention (`ClientList`, `ProspectList`) vers du `kebab-case`
 4. decouper les hotspots `ClientDetailPanel` et `useClientsPanelState` en sous-modules internes
 5. verifier avec tests cibles puis gate `pnpm run qa`
+
+## 2026-03-14
+
+### Enrichissement du panneau droit onboarding entreprise
+
+Objectif:
+- conserver la recherche officielle legere a gauche
+- charger a la demande un profil societe enrichi pour la colonne "Intelligence Commerciale"
+- afficher un resume exploitable des signaux entreprise avant meme le choix final d un etablissement
+
+Etapes:
+1. etendre les schemas partages pour les details societe et les metadonnees etablissement utiles
+2. ajouter une procedure tRPC `directory.company-details` alimentee par l API officielle
+3. brancher un service/hook front avec cache dedie et erreurs mappees
+4. refondre la colonne de droite en sections pliables sans alourdir le flux de recherche
+5. verifier avec tests cibles puis gates `pnpm run qa:fast` et `pnpm run qa`

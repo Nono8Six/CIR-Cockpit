@@ -23,6 +23,7 @@ interface DirectoryFilterComboboxProps {
   emptyLabel: string;
   searchInputName?: string;
   selectionSummaryLabel?: string;
+  triggerAriaLabel?: string;
   multiple?: boolean;
   disabled?: boolean;
   className?: string;
@@ -40,6 +41,7 @@ const DirectoryFilterCombobox = ({
   emptyLabel,
   searchInputName,
   selectionSummaryLabel,
+  triggerAriaLabel,
   multiple = false,
   disabled = false,
   className
@@ -73,9 +75,10 @@ const DirectoryFilterCombobox = ({
     return `${selectedItems.length} ${selectionSummaryLabel ?? 'sélections'}`;
   }, [multiple, placeholder, selectedItems, selectionSummaryLabel]);
 
+  const baseAriaLabel = triggerAriaLabel?.trim() || placeholder;
   const ariaLabel = selectedItems.length > 0
-    ? `${placeholder} : ${selectedItems.map((item) => item.label).join(', ')}`
-    : placeholder;
+    ? `${baseAriaLabel} : ${selectedItems.map((item) => item.label).join(', ')}`
+    : baseAriaLabel;
 
   const toggleValue = (nextValue: string) => {
     if (!multiple) {

@@ -3,6 +3,7 @@ import { z } from 'zod/v4';
 import type { Database } from '../supabase.types.ts';
 import {
   directoryAgencyOptionSchema,
+  directoryCompanyDetailsSchema,
   directoryCompanySearchResultSchema,
   directoryCommercialOptionSchema,
   directoryDuplicateMatchSchema,
@@ -124,6 +125,10 @@ export const directoryCompanySearchResponseSchema = apiSuccessSchema.extend({
   companies: z.array(directoryCompanySearchResultSchema)
 }).strict();
 
+export const directoryCompanyDetailsResponseSchema = apiSuccessSchema.extend({
+  company: directoryCompanyDetailsSchema
+}).strict();
+
 export const directoryDuplicatesResponseSchema = apiSuccessSchema.extend({
   matches: z.array(directoryDuplicateMatchSchema)
 }).strict();
@@ -223,6 +228,7 @@ export type DirectoryOptionsResponse = z.infer<typeof directoryOptionsResponseSc
 export type DirectoryCitySuggestionsResponse = z.infer<typeof directoryCitySuggestionsResponseSchema>;
 export type DirectoryRecordResponse = z.infer<typeof directoryRecordResponseSchema>;
 export type DirectoryCompanySearchResponse = z.infer<typeof directoryCompanySearchResponseSchema>;
+export type DirectoryCompanyDetailsResponse = z.infer<typeof directoryCompanyDetailsResponseSchema>;
 export type DirectoryDuplicatesResponse = z.infer<typeof directoryDuplicatesResponseSchema>;
 export type DirectorySavedViewsListResponse = z.infer<typeof directorySavedViewsListResponseSchema>;
 export type DirectorySavedViewResponse = z.infer<typeof directorySavedViewResponseSchema>;

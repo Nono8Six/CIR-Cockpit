@@ -1,45 +1,63 @@
-import type { ReactNode } from 'react';
-import type { UseFormReturn } from 'react-hook-form';
-import {
-  AlertTriangle,
-  Building2,
-  CircleCheckBig,
-  Mail,
-  MapPin,
-  Phone,
-  ShieldCheck,
-  UserRound
-} from 'lucide-react';
+import type { ReactNode } from "react";
+import type { UseFormReturn } from "react-hook-form";
+import { Building2, UserRound } from "lucide-react";
 
 import type {
   DirectoryCommercialOption,
-  DirectoryCompanySearchResult
-} from 'shared/schemas/directory.schema';
-import type { Agency, UserRole } from '@/types';
-import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import type { OnboardingFormInput, OnboardingValues } from './entityOnboarding.schema';
-import type { DuplicateMatch } from './entityOnboarding.types';
-import { getAgencyLabel, getDepartmentFromPostalCode } from './entityOnboarding.utils';
+  DirectoryCompanySearchResult,
+} from "shared/schemas/directory.schema";
+import type { Agency, UserRole } from "@/types";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+import type {
+  OnboardingFormInput,
+  OnboardingValues,
+} from "./entityOnboarding.schema";
+import type { DuplicateMatch } from "./entityOnboarding.types";
+import { getDepartmentFromPostalCode } from "./entityOnboarding.utils";
 
 interface FieldShellProps {
   label: string;
+  htmlFor?: string;
   helper?: string;
   error?: string;
   className?: string;
   children: ReactNode;
 }
 
-const FieldShell = ({ label, helper, error, className, children }: FieldShellProps) => (
+const labelClasses =
+  "text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground";
+const inputGhostClasses =
+  "h-10 rounded-md border border-border bg-surface-1/60 px-3 text-base font-medium text-foreground shadow-sm hover:border-border-strong hover:bg-background focus-visible:border-primary focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-primary/20 transition-all sm:text-[14px]";
+const selectGhostClasses =
+  "h-10 rounded-md border border-border bg-surface-1/60 px-3 text-base font-medium text-foreground shadow-sm hover:border-border-strong hover:bg-background focus:ring-2 focus:ring-primary/20 transition-all sm:text-[14px]";
+
+const FieldShell = ({
+  label,
+  htmlFor,
+  helper,
+  error,
+  className,
+  children,
+}: FieldShellProps) => (
   <div className={className}>
-    <div className="grid gap-1.5">
-      <label className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">{label}</label>
+    <div className="grid gap-1">
+      <label htmlFor={htmlFor} className={labelClasses}>
+        {label}
+      </label>
       {children}
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
-      {!error && helper ? <p className="text-xs text-muted-foreground">{helper}</p> : null}
+      {!error && helper ? (
+        <p className="text-xs text-muted-foreground/60">{helper}</p>
+      ) : null}
     </div>
   </div>
 );
@@ -47,7 +65,7 @@ const FieldShell = ({ label, helper, error, className, children }: FieldShellPro
 interface EntityOnboardingDetailsStepProps {
   form: UseFormReturn<OnboardingFormInput, unknown, OnboardingValues>;
   values: OnboardingValues;
-  effectiveIntent: 'client' | 'prospect';
+  effectiveIntent: "client" | "prospect";
   isIndividualClient: boolean;
   agencies: Agency[];
   commercials: DirectoryCommercialOption[];
@@ -65,332 +83,344 @@ const EntityOnboardingDetailsStep = ({
   agencies,
   commercials,
   userRole,
-  selectedCompany,
-  duplicateMatches,
-  remainingRequiredFields
 }: EntityOnboardingDetailsStepProps) => {
   const { errors } = form.formState;
 
   return (
-    <div className="grid gap-3 xl:grid-cols-[minmax(0,1.35fr)_340px]">
-      <div className="space-y-3">
-        <Card variant="section" className="rounded-lg border-border-subtle bg-background shadow-none">
-          <div className="border-b border-border-subtle px-4 py-4">
-            <div className="flex items-center gap-2">
-              {isIndividualClient ? <UserRound className="size-4 text-muted-foreground" /> : <Building2 className="size-4 text-muted-foreground" />}
-              <h2 className="text-lg font-semibold tracking-tight text-foreground">
-                {isIndividualClient ? 'Identite et contact principal' : 'Identite'}
-              </h2>
-            </div>
-            <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              {isIndividualClient
-                ? 'Le client particulier est rattache a un contact principal structure.'
-                : 'Base de la fiche visible dans l annuaire et sur les fiches detail.'}
-            </p>
-          </div>
+    <div className="flex h-full flex-col space-y-12 pb-8">
+      {/* SECTION IDENTITE */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-2 border-b border-border-subtle pb-2 text-sm text-foreground font-medium">
+          {isIndividualClient ? (
+            <UserRound className="size-4" />
+          ) : (
+            <Building2 className="size-4" />
+          )}
+          <h3>
+            {isIndividualClient
+              ? "Identite et contact principal"
+              : "Identite & Adresse"}
+          </h3>
+        </div>
 
-          <div className="grid gap-3 px-4 py-4 md:grid-cols-2">
-            {isIndividualClient ? (
-              <>
-                <FieldShell label="Nom" error={errors.last_name?.message}>
-                  <Input aria-label="Nom" density="dense" {...form.register('last_name')} className="rounded-md border-border-subtle bg-background" />
-                </FieldShell>
-                <FieldShell label="Prenom" error={errors.first_name?.message}>
-                  <Input aria-label="Prenom" density="dense" {...form.register('first_name')} className="rounded-md border-border-subtle bg-background" />
-                </FieldShell>
-                <FieldShell label="Telephone" error={errors.phone?.message}>
-                  <Input aria-label="Telephone" type="tel" autoComplete="tel" density="dense" {...form.register('phone')} className="rounded-md border-border-subtle bg-background" />
-                </FieldShell>
-                <FieldShell label="Email" error={errors.email?.message}>
-                  <Input aria-label="Email" type="email" autoComplete="email" spellCheck={false} density="dense" {...form.register('email')} className="rounded-md border-border-subtle bg-background" />
-                </FieldShell>
-                <FieldShell label="Nom annuaire" helper="Construit automatiquement a partir du nom et du prenom." className="md:col-span-2">
-                  <Input
-                    aria-label="Nom annuaire"
-                    value={[values.last_name, values.first_name].map((entry) => entry.trim()).filter(Boolean).join(' ')}
-                    readOnly
-                    density="dense"
-                    className="rounded-md border-border-subtle bg-surface-1/70"
-                  />
-                </FieldShell>
-              </>
-            ) : (
-              <FieldShell label="Nom de la societe" error={errors.name?.message} className="md:col-span-2">
-                <Input aria-label="Nom de la societe" density="dense" {...form.register('name')} className="rounded-md border-border-subtle bg-background" />
+        <div className="grid gap-x-12 gap-y-8 md:grid-cols-2">
+          {isIndividualClient ? (
+            <>
+              <FieldShell
+                htmlFor="last_name"
+                label="Nom"
+                error={errors.last_name?.message}
+              >
+                <Input
+                  id="last_name"
+                  {...form.register("last_name")}
+                  className={inputGhostClasses}
+                />
               </FieldShell>
-            )}
-
-            <FieldShell label="Adresse" helper={isIndividualClient ? 'Optionnelle pour un particulier.' : 'Adresse principale retenue pour la fiche.'} className="md:col-span-2">
-              <Input aria-label="Adresse" autoComplete="street-address" density="dense" {...form.register('address')} className="rounded-md border-border-subtle bg-background" />
-            </FieldShell>
-
+              <FieldShell
+                htmlFor="first_name"
+                label="Prenom"
+                error={errors.first_name?.message}
+              >
+                <Input
+                  id="first_name"
+                  {...form.register("first_name")}
+                  className={inputGhostClasses}
+                />
+              </FieldShell>
+              <FieldShell
+                htmlFor="phone"
+                label="Telephone"
+                error={errors.phone?.message}
+              >
+                <Input
+                  id="phone"
+                  type="tel"
+                  autoComplete="tel"
+                  {...form.register("phone")}
+                  className={cn(inputGhostClasses, "font-mono tabular-nums")}
+                />
+              </FieldShell>
+              <FieldShell
+                htmlFor="email"
+                label="Email"
+                error={errors.email?.message}
+              >
+                <Input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  spellCheck={false}
+                  {...form.register("email")}
+                  className={inputGhostClasses}
+                />
+              </FieldShell>
+            </>
+          ) : (
             <FieldShell
-              label="Code postal"
-              helper="Le departement est mis a jour automatiquement."
-              error={errors.postal_code?.message}
+              htmlFor="name"
+              label="Nom de la societe"
+              error={errors.name?.message}
+              className="md:col-span-2"
             >
               <Input
-                aria-label="Code postal"
-                value={values.postal_code ?? ''}
+                id="name"
+                {...form.register("name")}
+                className={cn(inputGhostClasses, "text-base font-medium")}
+              />
+            </FieldShell>
+          )}
+
+          <FieldShell
+            htmlFor="address"
+            label="Adresse"
+            className="md:col-span-2"
+          >
+            <Input
+              id="address"
+              autoComplete="street-address"
+              {...form.register("address")}
+              className={inputGhostClasses}
+            />
+          </FieldShell>
+
+          <FieldShell
+            htmlFor="postal_code"
+            label="Code postal"
+            error={errors.postal_code?.message}
+          >
+            <Input
+              id="postal_code"
+              value={values.postal_code ?? ""}
+              spellCheck={false}
+              onChange={(event) => {
+                const digits = event.target.value
+                  .replace(/\D/g, "")
+                  .slice(0, 5);
+                form.setValue("postal_code", digits, {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                });
+                form.setValue(
+                  "department",
+                  digits.length >= 2 ? getDepartmentFromPostalCode(digits) : "",
+                  { shouldDirty: true },
+                );
+              }}
+              className={cn(inputGhostClasses, "font-mono tabular-nums")}
+            />
+          </FieldShell>
+
+          <FieldShell htmlFor="city" label="Ville" error={errors.city?.message}>
+            <Input
+              id="city"
+              autoComplete="address-level2"
+              {...form.register("city")}
+              className={inputGhostClasses}
+            />
+          </FieldShell>
+
+          <FieldShell htmlFor="department" label="Departement">
+            <Input
+              id="department"
+              value={values.department ?? ""}
+              readOnly
+              className={cn(inputGhostClasses, "text-muted-foreground")}
+            />
+          </FieldShell>
+
+          <FieldShell label="Agence" error={errors.agency_id?.message}>
+            <Select
+              value={values.agency_id ?? ""}
+              onValueChange={(nextValue) =>
+                form.setValue("agency_id", nextValue, {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                })
+              }
+              disabled={userRole === "tcs"}
+            >
+              <SelectTrigger aria-label="Agence" className={selectGhostClasses}>
+                <SelectValue placeholder="Selectionner une agence" />
+              </SelectTrigger>
+              <SelectContent>
+                {agencies.map((agency) => (
+                  <SelectItem key={agency.id} value={agency.id}>
+                    {agency.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FieldShell>
+
+          <FieldShell htmlFor="notes" label="Notes" className="md:col-span-2">
+            <Textarea
+              id="notes"
+              {...form.register("notes")}
+              className="min-h-[80px] rounded-md border border-border-subtle bg-surface-1/30 p-3 text-base shadow-sm hover:border-border hover:bg-background focus-visible:border-primary focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-primary/20 transition-[border-color,background-color,box-shadow] sm:text-[14px]"
+            />
+          </FieldShell>
+        </div>
+      </section>
+
+      {/* SECTION DONNEES OFFICIELLES (Société uniquement) */}
+      {!isIndividualClient && (
+        <section className="space-y-6">
+          <div className="flex items-center gap-2 border-b border-border-subtle pb-2 text-sm text-foreground font-medium">
+            <h3>Donnees officielles</h3>
+          </div>
+          <div className="grid gap-x-12 gap-y-8 md:grid-cols-3">
+            <FieldShell htmlFor="siret" label="SIRET">
+              <Input
+                id="siret"
                 spellCheck={false}
-                density="dense"
-                onChange={(event) => {
-                  const digits = event.target.value.replace(/\D/g, '').slice(0, 5);
-                  form.setValue('postal_code', digits, { shouldDirty: true, shouldValidate: true });
+                {...form.register("siret")}
+                className={cn(inputGhostClasses, "font-mono tabular-nums")}
+              />
+            </FieldShell>
+            <FieldShell htmlFor="siren" label="SIREN">
+              <Input
+                id="siren"
+                spellCheck={false}
+                {...form.register("siren")}
+                className={cn(inputGhostClasses, "font-mono tabular-nums")}
+              />
+            </FieldShell>
+            <FieldShell htmlFor="naf_code" label="Code NAF">
+              <Input
+                id="naf_code"
+                spellCheck={false}
+                {...form.register("naf_code")}
+                className={cn(inputGhostClasses, "font-mono tabular-nums")}
+              />
+            </FieldShell>
+            <FieldShell
+              htmlFor="official_name"
+              label="Nom officiel"
+              className="md:col-span-2"
+            >
+              <Input
+                id="official_name"
+                {...form.register("official_name")}
+                className={inputGhostClasses}
+              />
+            </FieldShell>
+            <FieldShell htmlFor="data_source" label="Source">
+              <Input
+                id="data_source"
+                value={
+                  values.official_data_source
+                    ? "Recherche API"
+                    : "Saisie manuelle"
+                }
+                readOnly
+                className={cn(inputGhostClasses, "text-muted-foreground")}
+              />
+            </FieldShell>
+          </div>
+        </section>
+      )}
+
+      {/* SECTION COMPTE CLIENT */}
+      {effectiveIntent === "client" && (
+        <section className="space-y-6">
+          <div className="flex items-center gap-2 border-b border-border-subtle pb-2 text-sm text-foreground font-medium">
+            <h3>Compte client</h3>
+          </div>
+          <div className="grid gap-x-12 gap-y-8 md:grid-cols-2">
+            <FieldShell
+              htmlFor="client_number"
+              label="Numero de compte"
+              error={errors.client_number?.message}
+            >
+              <Input
+                id="client_number"
+                value={values.client_number ?? ""}
+                spellCheck={false}
+                onChange={(event) =>
                   form.setValue(
-                    'department',
-                    digits.length >= 2 ? getDepartmentFromPostalCode(digits) : '',
-                    { shouldDirty: true }
-                  );
-                }}
-                className="rounded-md border-border-subtle bg-background font-mono tabular-nums"
+                    "client_number",
+                    event.target.value.replace(/\D/g, "").slice(0, 10),
+                    { shouldDirty: true, shouldValidate: true },
+                  )
+                }
+                className={cn(inputGhostClasses, "font-mono tabular-nums")}
               />
             </FieldShell>
 
-            <FieldShell label="Ville" error={errors.city?.message}>
-              <Input aria-label="Ville" autoComplete="address-level2" density="dense" {...form.register('city')} className="rounded-md border-border-subtle bg-background" />
-            </FieldShell>
-
-            <FieldShell label="Departement" helper="Calcule depuis le code postal quand il est connu.">
-              <Input aria-label="Departement" value={values.department ?? ''} readOnly density="dense" className="rounded-md border-border-subtle bg-surface-1/70 font-mono tabular-nums" />
-            </FieldShell>
-
-            <FieldShell
-              label="Agence"
-              helper={userRole === 'tcs' ? 'Fixee par ton contexte agence.' : 'Agence proprietaire de la fiche.'}
-              error={errors.agency_id?.message}
-            >
-              <Select
-                value={values.agency_id ?? ''}
-                onValueChange={(nextValue) => form.setValue('agency_id', nextValue, {
-                  shouldDirty: true,
-                  shouldValidate: true
-                })}
-                disabled={userRole === 'tcs'}
-              >
-                <SelectTrigger aria-label="Agence" density="dense" className="rounded-md border-border-subtle bg-background">
-                  <SelectValue placeholder="Selectionner une agence" />
-                </SelectTrigger>
-                <SelectContent>
-                  {agencies.map((agency) => (
-                    <SelectItem key={agency.id} value={agency.id}>
-                      {agency.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </FieldShell>
-
-            <FieldShell label="Notes" helper="Visible uniquement dans les vues internes." className="md:col-span-2">
-              <Textarea aria-label="Notes" {...form.register('notes')} className="min-h-[120px] rounded-md border-border-subtle bg-background px-3 py-2 text-sm" />
-            </FieldShell>
-          </div>
-        </Card>
-
-        {!isIndividualClient ? (
-          <Card variant="section" className="rounded-lg border-border-subtle bg-background shadow-none">
-            <div className="border-b border-border-subtle px-4 py-4">
-              <h2 className="text-lg font-semibold tracking-tight text-foreground">Donnees officielles</h2>
-              <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                Informations importees ou completees manuellement avant validation.
-              </p>
-            </div>
-            <div className="grid gap-3 px-4 py-4 md:grid-cols-3">
-              <FieldShell label="SIRET">
-                <Input aria-label="SIRET" spellCheck={false} density="dense" {...form.register('siret')} className="rounded-md border-border-subtle bg-background font-mono tabular-nums" />
-              </FieldShell>
-              <FieldShell label="SIREN">
-                <Input aria-label="SIREN" spellCheck={false} density="dense" {...form.register('siren')} className="rounded-md border-border-subtle bg-background font-mono tabular-nums" />
-              </FieldShell>
-              <FieldShell label="Code NAF">
-                <Input aria-label="Code NAF" spellCheck={false} density="dense" {...form.register('naf_code')} className="rounded-md border-border-subtle bg-background font-mono tabular-nums" />
-              </FieldShell>
-
-              <FieldShell label="Nom officiel" className="md:col-span-2">
-                <Input aria-label="Nom officiel" density="dense" {...form.register('official_name')} className="rounded-md border-border-subtle bg-background" />
-              </FieldShell>
-              <FieldShell label="Source">
+            <FieldShell label="Type de compte">
+              {isIndividualClient ? (
                 <Input
-                  aria-label="Source officielle"
-                  value={values.official_data_source ? 'API Recherche d entreprises' : 'Saisie manuelle'}
+                  aria-label="Type de compte"
+                  value="Comptant"
                   readOnly
-                  density="dense"
-                  className="rounded-md border-border-subtle bg-surface-1/70"
+                  className={cn(inputGhostClasses, "text-muted-foreground")}
                 />
-              </FieldShell>
-            </div>
-          </Card>
-        ) : null}
-
-        {effectiveIntent === 'client' ? (
-          <Card variant="section" className="rounded-lg border-border-subtle bg-background shadow-none">
-            <div className="border-b border-border-subtle px-4 py-4">
-              <h2 className="text-lg font-semibold tracking-tight text-foreground">Compte client</h2>
-              <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                {isIndividualClient
-                  ? 'Le compte particulier reste comptant et sans commercial CIR.'
-                  : 'Donnees specifiques au compte et a l affectation commerciale.'}
-              </p>
-            </div>
-            <div className="grid gap-3 px-4 py-4 md:grid-cols-2">
-              <FieldShell
-                label="Numero de compte"
-                helper="Obligatoire pour creer un client."
-                error={errors.client_number?.message}
-              >
-                <Input
-                  aria-label="Numero de compte"
-                  value={values.client_number ?? ''}
-                  spellCheck={false}
-                  density="dense"
-                  onChange={(event) => form.setValue(
-                    'client_number',
-                    event.target.value.replace(/\D/g, '').slice(0, 10),
-                    { shouldDirty: true, shouldValidate: true }
-                  )}
-                  className="rounded-md border-border-subtle bg-background font-mono tabular-nums"
-                />
-              </FieldShell>
-
-              {isIndividualClient ? (
-                <FieldShell label="Type de compte">
-                  <Input aria-label="Type de compte" value="Comptant" readOnly density="dense" className="rounded-md border-border-subtle bg-surface-1/70" />
-                </FieldShell>
               ) : (
-                <FieldShell label="Type de compte">
-                  <Select
-                    value={values.account_type ?? 'term'}
-                    onValueChange={(nextValue: 'term' | 'cash') => form.setValue('account_type', nextValue, {
+                <Select
+                  value={values.account_type ?? "term"}
+                  onValueChange={(nextValue: "term" | "cash") =>
+                    form.setValue("account_type", nextValue, {
                       shouldDirty: true,
-                      shouldValidate: true
-                    })}
+                      shouldValidate: true,
+                    })
+                  }
+                >
+                  <SelectTrigger
+                    aria-label="Type de compte"
+                    className={selectGhostClasses}
                   >
-                    <SelectTrigger aria-label="Type de compte" density="dense" className="rounded-md border-border-subtle bg-background">
-                      <SelectValue placeholder="Type de compte" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="term">Compte a terme</SelectItem>
-                      <SelectItem value="cash">Comptant</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FieldShell>
+                    <SelectValue placeholder="Type de compte" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="term">Compte a terme</SelectItem>
+                    <SelectItem value="cash">Comptant</SelectItem>
+                  </SelectContent>
+                </Select>
               )}
+            </FieldShell>
 
+            <FieldShell label="Commercial CIR" className="md:col-span-2">
               {isIndividualClient ? (
-                <FieldShell label="Commercial CIR" className="md:col-span-2">
-                  <Input aria-label="Commercial CIR" value="Aucun commercial affecte" readOnly density="dense" className="rounded-md border-border-subtle bg-surface-1/70" />
-                </FieldShell>
+                <Input
+                  aria-label="Commercial CIR"
+                  value="Aucun commercial affecte"
+                  readOnly
+                  className={cn(inputGhostClasses, "text-muted-foreground")}
+                />
               ) : (
-                <FieldShell label="Commercial CIR" className="md:col-span-2">
-                  <Select
-                    value={values.cir_commercial_id || '__none__'}
-                    onValueChange={(nextValue) => form.setValue(
-                      'cir_commercial_id',
-                      nextValue === '__none__' ? '' : nextValue,
-                      { shouldDirty: true, shouldValidate: true }
-                    )}
+                <Select
+                  value={values.cir_commercial_id || "__none__"}
+                  onValueChange={(nextValue) =>
+                    form.setValue(
+                      "cir_commercial_id",
+                      nextValue === "__none__" ? "" : nextValue,
+                      { shouldDirty: true, shouldValidate: true },
+                    )
+                  }
+                >
+                  <SelectTrigger
+                    aria-label="Commercial CIR"
+                    className={selectGhostClasses}
                   >
-                    <SelectTrigger aria-label="Commercial CIR" density="dense" className="rounded-md border-border-subtle bg-background">
-                      <SelectValue placeholder="Aucun commercial affecte" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none__">Aucun commercial affecte</SelectItem>
-                      {commercials.map((commercial) => (
-                        <SelectItem key={commercial.id} value={commercial.id}>
-                          {commercial.display_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FieldShell>
+                    <SelectValue placeholder="Aucun commercial affecte" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">
+                      Aucun commercial affecte
+                    </SelectItem>
+                    {commercials.map((commercial) => (
+                      <SelectItem key={commercial.id} value={commercial.id}>
+                        {commercial.display_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               )}
-            </div>
-          </Card>
-        ) : null}
-      </div>
-
-      <aside className="space-y-3 xl:sticky xl:top-0">
-        <Card variant="section" className="rounded-lg border-border-subtle bg-background shadow-none">
-          <div className="border-b border-border-subtle px-4 py-4">
-            <div className="flex items-start gap-3">
-              <div className="flex size-10 items-center justify-center rounded-lg border border-primary/20 bg-primary/8 text-primary">
-                {isIndividualClient ? <UserRound className="size-4" /> : <Building2 className="size-4" />}
-              </div>
-              <div>
-                <p className="text-base font-semibold text-foreground">Resume de la fiche</p>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                  Synthese visible avant la validation finale.
-                </p>
-              </div>
-            </div>
+            </FieldShell>
           </div>
-
-          <div className="space-y-3 px-4 py-4 text-sm text-muted-foreground">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <MapPin className="size-4" />
-                <span className="font-medium text-foreground">{values.city || 'Ville non renseignee'}</span>
-              </div>
-              <p>Agence: <span className="font-medium text-foreground">{getAgencyLabel(agencies, values.agency_id)}</span></p>
-              <p>Source: <span className="font-medium text-foreground">{values.official_data_source ? 'Officielle' : 'Manuelle'}</span></p>
-            </div>
-
-            {isIndividualClient ? (
-              <div className="rounded-lg border border-border-subtle bg-surface-1/70 p-4">
-                <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                  <UserRound className="size-3.5" />
-                  Contact principal
-                </div>
-                <p className="mt-3 font-medium text-foreground">
-                  {[values.first_name, values.last_name].filter((entry) => entry.trim().length > 0).join(' ') || 'Non renseigne'}
-                </p>
-                <div className="mt-2 space-y-1 text-sm text-muted-foreground">
-                  {values.phone ? <p className="inline-flex items-center gap-2"><Phone className="size-3.5" /> {values.phone}</p> : null}
-                  {values.email ? <p className="inline-flex items-center gap-2"><Mail className="size-3.5" /> {values.email}</p> : null}
-                </div>
-              </div>
-            ) : selectedCompany ? (
-              <div className="rounded-lg border border-border-subtle bg-surface-1/70 p-4">
-                <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                  <ShieldCheck className="size-3.5" />
-                  Etablissement retenu
-                </div>
-                <p className="mt-3 font-medium text-foreground">
-                  {[selectedCompany.postal_code, selectedCompany.city].filter(Boolean).join(' ') || selectedCompany.name}
-                </p>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">{selectedCompany.address ?? 'Adresse non diffusee'}</p>
-              </div>
-            ) : null}
-
-            <div className="rounded-lg border border-border-subtle bg-background p-4">
-              <p className="text-sm font-medium text-foreground">Checklist avant validation</p>
-              <div className="mt-3 space-y-2">
-                {remainingRequiredFields.length > 0 ? remainingRequiredFields.map((field) => (
-                  <div key={field} className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <AlertTriangle className="size-4 text-warning" />
-                    {field}
-                  </div>
-                )) : (
-                  <div className="flex items-center gap-2 text-sm text-emerald-700">
-                    <CircleCheckBig className="size-4" />
-                    Champs requis complets
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="rounded-lg border border-border-subtle bg-background p-4">
-              <p className="text-sm font-medium text-foreground">Controle doublons</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Badge variant={duplicateMatches.length > 0 ? 'warning' : 'success'}>
-                  {duplicateMatches.length > 0 ? 'A verifier' : 'Aucun doublon'}
-                </Badge>
-                {isIndividualClient ? <Badge variant="outline">Client particulier</Badge> : null}
-              </div>
-            </div>
-          </div>
-        </Card>
-      </aside>
+        </section>
+      )}
     </div>
   );
 };

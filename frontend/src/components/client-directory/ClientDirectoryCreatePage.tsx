@@ -61,7 +61,7 @@ const ClientDirectoryCreatePage = () => {
   }
 
   return (
-    <section className="flex h-full min-h-0 flex-1 flex-col overflow-hidden px-2 py-2 sm:px-4 sm:py-3 lg:px-6">
+    <section className="flex h-full min-h-0 flex-1 flex-col overflow-hidden p-0">
       <EntityOnboardingDialog
         open
         onOpenChange={(nextOpen) => {

@@ -166,6 +166,15 @@ const directoryNullableTextSchema = z.string().nullable();
 const optionalOfficialTextSchema = z
   .union([z.string(), z.null(), z.undefined()])
   .transform((value) => normalizeOptionalText(value) ?? null);
+const optionalOfficialYearSchema = z
+  .union([z.number().int().nonnegative(), z.null(), z.undefined()])
+  .transform((value) => typeof value === 'number' ? value : null);
+const optionalOfficialBooleanSchema = z
+  .union([z.boolean(), z.null(), z.undefined()])
+  .transform((value) => typeof value === 'boolean' ? value : null);
+const officialTextArraySchema = z
+  .array(z.string().trim().min(1, 'Valeur requise'))
+  .default([]);
 
 export const officialDataSourceSchema = z.literal('api-recherche-entreprises');
 export const directoryCompanySearchMatchQualitySchema = z.enum(['exact', 'close', 'expanded']);
@@ -294,6 +303,10 @@ export const directoryCompanySearchInputSchema = z.object({
   per_page: z.coerce.number().int().min(1, 'Taille invalide').max(20, 'Taille invalide').optional()
 }).strict();
 
+export const directoryCompanyDetailsInputSchema = z.object({
+  siren: z.string().trim().regex(/^\d{9}$/, 'SIREN invalide')
+}).strict();
+
 const directoryOptionalEmailSchema = z
   .union([z.string().trim().email('Email invalide'), z.literal(''), z.null(), z.undefined()])
   .transform((value) => normalizeOptionalText(value) ?? null);
@@ -337,16 +350,79 @@ export const directoryDuplicatesInputSchema = z.discriminatedUnion('kind', [
   directoryIndividualDuplicateInputSchema
 ]);
 
+export const directoryCompanySearchEstablishmentStatusSchema = z.enum(['open', 'closed', 'unknown']);
+
 export const directoryCompanySearchResultSchema = z.object({
   name: z.string().trim().min(1, 'Nom entreprise requis'),
   address: directoryNullableTextSchema,
   postal_code: directoryNullableTextSchema,
   city: directoryNullableTextSchema,
   department: directoryNullableTextSchema,
+  region: optionalOfficialTextSchema,
+  date_creation: optionalOfficialTextSchema,
+  date_debut_activite: optionalOfficialTextSchema,
+  employee_range: optionalOfficialTextSchema,
+  employee_range_year: optionalOfficialYearSchema,
+  is_employer: optionalOfficialBooleanSchema,
+  establishment_diffusion_status: optionalOfficialTextSchema,
+  brands: officialTextArraySchema,
   is_head_office: z.boolean(),
+  is_former_head_office: z.boolean(),
+  establishment_status: directoryCompanySearchEstablishmentStatusSchema,
+  establishment_closed_at: directoryNullableTextSchema,
+  commercial_name: directoryNullableTextSchema,
+  company_establishments_count: z.number().int().nonnegative().nullable(),
+  company_open_establishments_count: z.number().int().nonnegative().nullable(),
   match_quality: directoryCompanySearchMatchQualitySchema,
   match_explanation: directoryNullableTextSchema,
   ...officialCompanyFieldsSchema.shape
+}).strict();
+
+export const directoryCompanyDirectorSchema = z.object({
+  full_name: z.string().trim().min(1, 'Nom dirigeant requis'),
+  role: directoryNullableTextSchema,
+  nationality: directoryNullableTextSchema,
+  birth_year: z.number().int().nonnegative().nullable()
+}).strict();
+
+export const directoryCompanyFinancialsSchema = z.object({
+  latest_year: z.number().int().nonnegative(),
+  revenue: z.number().finite().nullable(),
+  net_income: z.number().finite().nullable()
+}).strict();
+
+export const directoryCompanySignalsSchema = z.object({
+  association: z.boolean(),
+  ess: z.boolean(),
+  qualiopi: z.boolean(),
+  rge: z.boolean(),
+  bio: z.boolean(),
+  organisme_formation: z.boolean(),
+  service_public: z.boolean(),
+  societe_mission: z.boolean()
+}).strict();
+
+export const directoryCompanyDetailsSchema = z.object({
+  siren: z.string().trim().regex(/^\d{9}$/, 'SIREN requis'),
+  official_name: z.string().trim().min(1, 'Raison sociale requise'),
+  name: z.string().trim().min(1, 'Nom complet requis'),
+  sigle: directoryNullableTextSchema,
+  nature_juridique: directoryNullableTextSchema,
+  categorie_entreprise: directoryNullableTextSchema,
+  date_creation: directoryNullableTextSchema,
+  etat_administratif: directoryNullableTextSchema,
+  activite_principale: directoryNullableTextSchema,
+  activite_principale_naf25: directoryNullableTextSchema,
+  section_activite_principale: directoryNullableTextSchema,
+  company_establishments_count: z.number().int().nonnegative().nullable(),
+  company_open_establishments_count: z.number().int().nonnegative().nullable(),
+  employee_range: directoryNullableTextSchema,
+  employee_range_year: z.number().int().nonnegative().nullable(),
+  is_employer: z.boolean().nullable(),
+  diffusion_status: directoryNullableTextSchema,
+  directors: z.array(directoryCompanyDirectorSchema),
+  financials: directoryCompanyFinancialsSchema.nullable(),
+  signals: directoryCompanySignalsSchema
 }).strict();
 
 export const directoryDuplicateMatchSchema = z.object({
@@ -377,7 +453,13 @@ export type DirectoryListRow = z.infer<typeof directoryListRowSchema>;
 export type DirectoryRecord = z.infer<typeof directoryRecordSchema>;
 export type OfficialCompanyFields = z.infer<typeof officialCompanyFieldsSchema>;
 export type DirectoryCompanySearchMatchQuality = z.infer<typeof directoryCompanySearchMatchQualitySchema>;
+export type DirectoryCompanySearchEstablishmentStatus = z.infer<typeof directoryCompanySearchEstablishmentStatusSchema>;
 export type DirectoryCompanySearchInput = z.infer<typeof directoryCompanySearchInputSchema>;
+export type DirectoryCompanyDetailsInput = z.infer<typeof directoryCompanyDetailsInputSchema>;
 export type DirectoryCompanySearchResult = z.infer<typeof directoryCompanySearchResultSchema>;
+export type DirectoryCompanyDirector = z.infer<typeof directoryCompanyDirectorSchema>;
+export type DirectoryCompanyFinancials = z.infer<typeof directoryCompanyFinancialsSchema>;
+export type DirectoryCompanySignals = z.infer<typeof directoryCompanySignalsSchema>;
+export type DirectoryCompanyDetails = z.infer<typeof directoryCompanyDetailsSchema>;
 export type DirectoryDuplicatesInput = z.infer<typeof directoryDuplicatesInputSchema>;
 export type DirectoryDuplicateMatch = z.infer<typeof directoryDuplicateMatchSchema>;

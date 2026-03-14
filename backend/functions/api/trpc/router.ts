@@ -7,6 +7,7 @@ import {
   dataInteractionsResponseSchema,
   dataProfileResponseSchema,
   directoryCitySuggestionsResponseSchema,
+  directoryCompanyDetailsResponseSchema,
   directoryCompanySearchResponseSchema,
   directoryDuplicatesResponseSchema,
   directoryListResponseSchema,
@@ -27,6 +28,7 @@ import {
 } from '../../../../shared/schemas/data.schema.ts';
 import {
   directoryCitySuggestionsInputSchema,
+  directoryCompanyDetailsInputSchema,
   directoryCompanySearchInputSchema,
   directoryDuplicatesInputSchema,
   directoryListInputSchema,
@@ -47,6 +49,7 @@ import { handleDataInteractionsAction } from '../services/dataInteractions.ts';
 import { handleDataProfileAction } from '../services/dataProfile.ts';
 import {
   getDirectoryCitySuggestions,
+  getDirectoryCompanyDetails,
   getDirectoryCompanySearch,
   getDirectoryDuplicates,
   getDirectoryOptions,
@@ -125,6 +128,10 @@ export const appRouter = router({
       .input(directoryCompanySearchInputSchema)
       .output(directoryCompanySearchResponseSchema)
       .query(withAuthedHandler(getDirectoryCompanySearch)),
+    'company-details': authedProcedure
+      .input(directoryCompanyDetailsInputSchema)
+      .output(directoryCompanyDetailsResponseSchema)
+      .query(withAuthedHandler(getDirectoryCompanyDetails)),
     duplicates: authedProcedure
       .input(directoryDuplicatesInputSchema)
       .output(directoryDuplicatesResponseSchema)

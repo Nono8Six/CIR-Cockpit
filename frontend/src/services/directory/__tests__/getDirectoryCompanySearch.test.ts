@@ -26,6 +26,12 @@ const makeCompany = (overrides: Record<string, unknown> = {}) => ({
   city: 'Merignac',
   department: '33',
   is_head_office: true,
+  is_former_head_office: false,
+  establishment_status: 'open' as const,
+  establishment_closed_at: null,
+  commercial_name: null,
+  company_establishments_count: 1,
+  company_open_establishments_count: 1,
   match_quality: 'exact' as const,
   match_explanation: 'Correspondance exacte',
   official_data_source: 'api-recherche-entreprises' as const,
@@ -110,6 +116,8 @@ describe('getDirectoryCompanySearch', () => {
           siren: '800929689',
           nom_complet: 'KB EQUIPEMENT',
           nom_raison_sociale: 'KB EQUIPEMENT',
+          nombre_etablissements: 1,
+          nombre_etablissements_ouverts: 1,
           siege: {
             siret: '80092968900018',
             adresse: '4 avenue de la Somme',
@@ -117,7 +125,11 @@ describe('getDirectoryCompanySearch', () => {
             libelle_commune: 'Merignac',
             departement: '33',
             est_siege: true,
-            activite_principale: '46.69B'
+            activite_principale: '46.69B',
+            etat_administratif: 'A',
+            date_fermeture: null,
+            ancien_siege: false,
+            nom_commercial: 'KB Equipement'
           },
           matching_etablissements: []
         }]
@@ -137,7 +149,86 @@ describe('getDirectoryCompanySearch', () => {
     expect(response.companies[0]).toMatchObject({
       name: 'KB EQUIPEMENT',
       department: '33',
-      siret: '80092968900018'
+      siret: '80092968900018',
+      establishment_status: 'open',
+      commercial_name: 'KB Equipement'
+    });
+  });
+
+  it('maps official establishment status, closure date, and former head office metadata', async () => {
+    const missingRouteError = createAppError({
+      code: 'NOT_FOUND',
+      message: 'No procedure found on path "directory.company-search"',
+      source: 'edge'
+    });
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        results: [{
+          siren: '503992141',
+          nom_complet: 'CONSEIL INVESTISSEMENTS ROST (EDITIONS RAYONNANTES) (CIR)',
+          nom_raison_sociale: 'CONSEIL INVESTISSEMENTS ROST',
+          nombre_etablissements: 3,
+          nombre_etablissements_ouverts: 1,
+          siege: {
+            siret: '50399214100039',
+            adresse: '21 RUE PASCAL TRIAT 33520 BRUGES',
+            code_postal: '33520',
+            libelle_commune: 'BRUGES',
+            departement: '33',
+            est_siege: true,
+            activite_principale: '70.10Z',
+            etat_administratif: 'A',
+            date_fermeture: null,
+            ancien_siege: false,
+            nom_commercial: 'EDITIONS RAYONNANTES'
+          },
+          matching_etablissements: [{
+            siret: '50399214100013',
+            adresse: '3 RUE GUSTAVE GOUNOUILHOU 33520 BRUGES',
+            code_postal: '33520',
+            libelle_commune: 'BRUGES',
+            departement: '33',
+            region: 'Nouvelle-Aquitaine',
+            est_siege: false,
+            activite_principale: '64.20Z',
+            etat_administratif: 'F',
+            date_creation: '2008-01-01',
+            date_debut_activite: '2008-01-01',
+            date_fermeture: '2010-06-05',
+            ancien_siege: true,
+            nom_commercial: null,
+            tranche_effectif_salarie: '1 ou 2 salariés',
+            annee_tranche_effectif_salarie: '2024',
+            caractere_employeur: true,
+            statut_diffusion_etablissement: 'O',
+            liste_enseignes: ['ROST CONSEIL']
+          }]
+        }]
+      })
+    });
+
+    mockInvokeTrpc.mockRejectedValue(missingRouteError);
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { getDirectoryCompanySearch } = await import('../getDirectoryCompanySearch');
+    const response = await getDirectoryCompanySearch({ query: 'rost' });
+
+    expect(response.companies[0]).toMatchObject({
+      establishment_status: 'closed',
+      establishment_closed_at: '2010-06-05',
+      is_former_head_office: true,
+      region: 'Nouvelle-Aquitaine',
+      date_creation: '2008-01-01',
+      date_debut_activite: '2008-01-01',
+      employee_range: '1 ou 2 salariés',
+      employee_range_year: 2024,
+      is_employer: true,
+      establishment_diffusion_status: 'O',
+      brands: ['ROST CONSEIL'],
+      company_establishments_count: 3,
+      company_open_establishments_count: 1
     });
   });
 

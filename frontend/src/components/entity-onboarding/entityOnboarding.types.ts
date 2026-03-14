@@ -1,6 +1,7 @@
 import type { z } from 'zod/v4';
 
 import {
+  type DirectoryCompanySearchEstablishmentStatus,
   type DirectoryCompanySearchMatchQuality,
   type DirectoryCompanySearchResult,
   type DirectoryListRow
@@ -43,8 +44,17 @@ export type CompanySearchGroup = {
   subtitle: string | null;
   match_quality: DirectoryCompanySearchMatchQuality;
   match_explanation: string | null;
+  primaryEstablishmentStatus: DirectoryCompanySearchEstablishmentStatus;
+  totalEstablishmentCount: number;
+  openEstablishmentCount: number;
+  closedEstablishmentCount: number;
+  unknownEstablishmentCount: number;
   establishments: DirectoryCompanySearchResult[];
 };
+
+export type CompanySearchStatusFilter =
+  | 'all'
+  | DirectoryCompanySearchEstablishmentStatus;
 
 export type DuplicateMatch = {
   record: DirectoryListRow;

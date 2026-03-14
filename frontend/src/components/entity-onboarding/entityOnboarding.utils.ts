@@ -1,8 +1,17 @@
 import type { Agency } from '@/types';
-import type { DirectoryCompanySearchResult, DirectoryListRow } from 'shared/schemas/directory.schema';
+import type {
+  DirectoryCompanySearchEstablishmentStatus,
+  DirectoryCompanySearchResult,
+  DirectoryListRow
+} from 'shared/schemas/directory.schema';
 
 import type { OnboardingValues } from './entityOnboarding.schema';
-import type { CompanySearchGroup, EntityOnboardingSeed, OnboardingIntent } from './entityOnboarding.types';
+import type {
+  CompanySearchGroup,
+  CompanySearchStatusFilter,
+  EntityOnboardingSeed,
+  OnboardingIntent
+} from './entityOnboarding.types';
 
 export const OFFICIAL_DEPARTMENT_OPTIONS = [
   '01', '02', '03', '04', '05', '06', '07', '08', '09', '10',
@@ -75,13 +84,77 @@ export const getDuplicateReason = (record: DirectoryListRow, values: OnboardingV
 };
 
 const sortEstablishments = (left: DirectoryCompanySearchResult, right: DirectoryCompanySearchResult): number => {
+  const leftBucket = getEstablishmentSortBucket(left);
+  const rightBucket = getEstablishmentSortBucket(right);
+  if (leftBucket !== rightBucket) {
+    return leftBucket - rightBucket;
+  }
+
   if (left.is_head_office !== right.is_head_office) {
     return left.is_head_office ? -1 : 1;
+  }
+
+  if (left.is_former_head_office !== right.is_former_head_office) {
+    return left.is_former_head_office ? -1 : 1;
   }
 
   return [left.city ?? '', left.address ?? '', left.siret ?? '']
     .join(' ')
     .localeCompare([right.city ?? '', right.address ?? '', right.siret ?? ''].join(' '), 'fr');
+};
+
+const getEstablishmentSortBucket = (company: DirectoryCompanySearchResult): number => {
+  if (company.establishment_status === 'open' && company.is_head_office) {
+    return 0;
+  }
+
+  if (company.establishment_status === 'open') {
+    return 1;
+  }
+
+  if (company.establishment_status === 'unknown') {
+    return 2;
+  }
+
+  return 3;
+};
+
+const resolveOfficialCount = (
+  companies: DirectoryCompanySearchResult[],
+  key: 'company_establishments_count' | 'company_open_establishments_count'
+): number | null => companies.find((company) => company[key] != null)?.[key] ?? null;
+
+const countEstablishmentsByStatus = (
+  companies: DirectoryCompanySearchResult[],
+  status: DirectoryCompanySearchEstablishmentStatus
+): number => companies.filter((company) => company.establishment_status === status).length;
+
+export const getCompanySearchStatusLabel = (
+  status: DirectoryCompanySearchEstablishmentStatus
+): string => {
+  if (status === 'open') {
+    return 'Actif';
+  }
+
+  if (status === 'closed') {
+    return 'Ferme';
+  }
+
+  return 'Statut inconnu';
+};
+
+export const formatOfficialDate = (value: string | null | undefined): string | null => {
+  const trimmed = value?.trim() ?? '';
+  if (!trimmed) {
+    return null;
+  }
+
+  const parsed = new Date(trimmed);
+  if (Number.isNaN(parsed.getTime())) {
+    return trimmed;
+  }
+
+  return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'short' }).format(parsed);
 };
 
 export const groupCompanySearchResults = (
@@ -105,26 +178,66 @@ export const groupCompanySearchResults = (
       subtitle: company.name !== company.official_name ? company.name : null,
       match_quality: company.match_quality,
       match_explanation: company.match_explanation,
+      primaryEstablishmentStatus: company.establishment_status,
+      totalEstablishmentCount: company.company_establishments_count ?? 1,
+      openEstablishmentCount: company.company_open_establishments_count ?? Number(company.establishment_status === 'open'),
+      closedEstablishmentCount: Number(company.establishment_status === 'closed'),
+      unknownEstablishmentCount: Number(company.establishment_status === 'unknown'),
       establishments: [company]
     });
   }
 
   return Array.from(groups.values())
-    .map((group) => ({
-      ...group,
-      establishments: [...group.establishments].sort(sortEstablishments)
-    }));
+    .map((group) => {
+      const establishments = [...group.establishments].sort(sortEstablishments);
+      const totalEstablishmentCount = resolveOfficialCount(establishments, 'company_establishments_count') ?? establishments.length;
+      const openEstablishmentCount = resolveOfficialCount(establishments, 'company_open_establishments_count')
+        ?? countEstablishmentsByStatus(establishments, 'open');
+      const unknownEstablishmentCount = countEstablishmentsByStatus(establishments, 'unknown');
+      const observedClosedEstablishmentCount = countEstablishmentsByStatus(establishments, 'closed');
+      const derivedClosedEstablishmentCount = unknownEstablishmentCount === 0
+        ? Math.max(totalEstablishmentCount - openEstablishmentCount, 0)
+        : observedClosedEstablishmentCount;
+      const closedEstablishmentCount = Math.max(
+        observedClosedEstablishmentCount,
+        derivedClosedEstablishmentCount
+      );
+
+      return {
+        ...group,
+        establishments,
+        primaryEstablishmentStatus: establishments[0]?.establishment_status ?? 'unknown',
+        totalEstablishmentCount,
+        openEstablishmentCount,
+        closedEstablishmentCount,
+        unknownEstablishmentCount
+      };
+    });
 };
 
-export const getOfficialCitySuggestions = (groups: CompanySearchGroup[]): string[] =>
-  Array.from(
-    new Set(
-      groups
-        .flatMap((group) => group.establishments)
-        .map((company) => company.city?.trim() ?? '')
-        .filter((city) => city.length > 0)
-    )
-  ).sort((left, right) => left.localeCompare(right, 'fr'));
+export const filterCompanySearchGroups = (
+  groups: CompanySearchGroup[],
+  statusFilter: CompanySearchStatusFilter
+): CompanySearchGroup[] => {
+  if (statusFilter === 'all') {
+    return groups;
+  }
+
+  return groups.flatMap((group) => {
+    const establishments = group.establishments.filter(
+      (company) => company.establishment_status === statusFilter
+    );
+
+    if (establishments.length === 0) {
+      return [];
+    }
+
+    return [{
+      ...group,
+      establishments
+    }];
+  });
+};
 
 export const getAgencyLabel = (agencies: Agency[], agencyId: string | null | undefined): string =>
   agencies.find((agency) => agency.id === agencyId)?.name ?? 'Aucune';

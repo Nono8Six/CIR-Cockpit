@@ -4,6 +4,7 @@ import {
   QUERY_ROOTS,
   auditLogsRootKey,
   clientsRootKey,
+  directoryCompanyDetailsRootKey,
   entitySearchIndexRootKey,
   interactionsKey,
   interactionsRootKey
@@ -13,6 +14,7 @@ describe('queryKeys', () => {
   it('exposes stable root keys', () => {
     expect(interactionsRootKey()).toEqual([QUERY_ROOTS.interactions]);
     expect(clientsRootKey()).toEqual([QUERY_ROOTS.clients]);
+    expect(directoryCompanyDetailsRootKey()).toEqual([QUERY_ROOTS.directoryCompanyDetails]);
     expect(entitySearchIndexRootKey()).toEqual([QUERY_ROOTS.entitySearchIndex]);
     expect(auditLogsRootKey()).toEqual([QUERY_ROOTS.auditLogs]);
   });

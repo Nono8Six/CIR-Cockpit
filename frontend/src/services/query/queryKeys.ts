@@ -4,6 +4,7 @@ export const QUERY_ROOTS = {
   clients: 'clients',
   prospects: 'prospects',
   directory: 'directory',
+  directoryCompanyDetails: 'directory-company-details',
   directoryCompanySearch: 'directory-company-search',
   directoryDuplicates: 'directory-duplicates',
   directoryOptions: 'directory-options',
@@ -43,6 +44,8 @@ export const prospectsKey = (agencyId: string | null, includeArchived: boolean, 
 ] as const;
 
 export const directoryRootKey = () => [QUERY_ROOTS.directory] as const;
+export const directoryCompanyDetailsRootKey = () => [QUERY_ROOTS.directoryCompanyDetails] as const;
+export const directoryCompanyDetailsKey = (input: Record<string, unknown>) => [QUERY_ROOTS.directoryCompanyDetails, input] as const;
 export const directoryPageKey = (input: Record<string, unknown>) => [QUERY_ROOTS.directory, input] as const;
 export const directoryCompanySearchRootKey = () => [QUERY_ROOTS.directoryCompanySearch] as const;
 export const directoryCompanySearchKey = (input: Record<string, unknown>) => [QUERY_ROOTS.directoryCompanySearch, input] as const;
