@@ -30,6 +30,7 @@ const AppMainContent = ({
       <div className="mx-auto flex h-full min-h-0 w-full max-w-[1600px] flex-col transition-opacity duration-200">
         <AppMainStateView
           mainViewState={mainViewState}
+          activeTab={activeTab}
           onReloadData={onReloadData}
         />
         {mainViewState.kind === 'ready' && (

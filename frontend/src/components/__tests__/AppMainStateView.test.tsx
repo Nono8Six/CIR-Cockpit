@@ -4,12 +4,14 @@ import userEvent from '@testing-library/user-event';
 
 import AppMainStateView from '@/components/app-main/AppMainStateView';
 import type { AppMainViewState } from '@/components/app-main/AppMainContent.types';
+import type { AppTab } from '@/types';
 
-const renderStateView = (mainViewState: AppMainViewState) => {
+const renderStateView = (mainViewState: AppMainViewState, activeTab: AppTab = 'cockpit') => {
   const onReloadData = vi.fn();
   const renderResult = render(
     <AppMainStateView
       mainViewState={mainViewState}
+      activeTab={activeTab}
       onReloadData={onReloadData}
     />
   );
@@ -18,14 +20,19 @@ const renderStateView = (mainViewState: AppMainViewState) => {
 };
 
 describe('AppMainStateView', () => {
-  it('renders context loading state', () => {
-    renderStateView({ kind: 'context-loading' });
-    expect(screen.getByText(/chargement du contexte agence/i)).toBeInTheDocument();
+  it('renders cockpit skeleton for context-loading state', () => {
+    const { container } = renderStateView({ kind: 'context-loading' }, 'cockpit');
+    expect(container.querySelector('.skeleton-shimmer')).toBeInTheDocument();
   });
 
-  it('renders data loading state', () => {
-    renderStateView({ kind: 'data-loading' });
-    expect(screen.getByText(/chargement des donnees/i)).toBeInTheDocument();
+  it('renders dashboard skeleton when data-loading on dashboard tab', () => {
+    const { container } = renderStateView({ kind: 'data-loading' }, 'dashboard');
+    expect(container.querySelector('.skeleton-shimmer')).toBeInTheDocument();
+  });
+
+  it('renders cockpit skeleton by default for non-dashboard tabs', () => {
+    const { container } = renderStateView({ kind: 'data-loading' }, 'settings');
+    expect(container.querySelector('.skeleton-shimmer')).toBeInTheDocument();
   });
 
   it('renders error state and calls reload action', async () => {

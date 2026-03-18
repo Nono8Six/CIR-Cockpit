@@ -44,7 +44,7 @@ const DesktopRailToggle = ({
   collapsed,
   onToggleCollapsed
 }: Pick<AppSidebarProps, 'collapsed' | 'onToggleCollapsed'>) => {
-  const actionLabel = collapsed ? 'Déplier la navigation' : 'Replier la navigation';
+  const actionLabel = collapsed ? 'D\u00E9plier la navigation' : 'Replier la navigation';
   const shortcutLabel = getSidebarToggleShortcutLabel();
 
   return (
@@ -62,7 +62,7 @@ const DesktopRailToggle = ({
         <span
           aria-hidden="true"
           className={cn(
-            'inline-flex h-12 w-5 items-center justify-center rounded-full border bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(248,250,252,0.94)_100%)] text-muted-foreground shadow-[0_14px_30px_-18px_rgba(15,23,42,0.55)] transition-[transform,border-color,background-color,color,box-shadow] duration-200 group-hover:-translate-x-px group-hover:border-primary/35 group-hover:bg-[linear-gradient(180deg,rgba(255,255,255,1)_0%,rgba(254,242,242,0.95)_100%)] group-hover:text-foreground group-hover:shadow-[0_18px_36px_-20px_rgba(185,28,28,0.42)] group-active:scale-[0.98]',
+            'inline-flex h-12 w-5 items-center justify-center rounded-full border bg-card text-muted-foreground transition-[transform,border-color,background-color,color] duration-200 group-hover:-translate-x-px group-hover:border-primary/35 group-hover:text-foreground group-active:scale-[0.98]',
             collapsed ? 'border-border/85' : 'border-border/75'
           )}
         >
@@ -95,9 +95,7 @@ const NavItemLink = ({
           : 'border-transparent text-muted-foreground hover:border-border/80 hover:bg-card/85 hover:text-foreground',
         collapsed ? 'justify-center px-0' : 'gap-2.5'
       )}
-      activeProps={{
-        'aria-current': 'page'
-      }}
+      activeProps={{ 'aria-current': 'page' }}
       aria-label={!collapsed ? undefined : `${item.sectionId} - ${item.label}`}
       data-testid={`app-shell-nav-${item.id}`}
     >
@@ -110,17 +108,14 @@ const NavItemLink = ({
       <item.icon size={15} className="shrink-0" />
       {!collapsed ? (
         <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
-          <span className="truncate font-medium">
-            {item.label}
-            <span className="ml-1 text-[10px] text-muted-foreground/80">{item.shortcut}</span>
-          </span>
-          <span className="inline-flex items-center gap-1">
-            {typeof item.badgeCount === 'number' ? (
-              <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
-                {item.badgeCount}
+          <span className="truncate font-medium">{item.label}</span>
+          <span className="inline-flex items-center gap-1.5">
+            {item.metaLabel ? (
+              <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-semibold text-primary-foreground">
+                {item.metaLabel}
               </span>
             ) : null}
-            <span className="truncate text-[11px] text-muted-foreground/80">{item.description}</span>
+            <span className="font-mono text-[10px] text-muted-foreground/80">{item.shortcut}</span>
           </span>
         </span>
       ) : null}

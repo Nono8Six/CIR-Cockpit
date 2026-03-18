@@ -81,6 +81,10 @@ const AppLayout = ({ headerProps, mainContentProps, children }: AppLayoutProps) 
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  const handleToggleSidebar = () => {
+    setCollapsed((previous) => !previous);
+  };
+
   const mobileAccountSlot = (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
@@ -239,7 +243,7 @@ const AppLayout = ({ headerProps, mainContentProps, children }: AppLayoutProps) 
           sections={headerProps.sections ?? []}
           activeTab={headerProps.activeTab}
           collapsed={collapsed}
-          onToggleCollapsed={() => setCollapsed((previous) => !previous)}
+          onToggleCollapsed={handleToggleSidebar}
           mobileOpen={mobileOpen}
           onMobileOpenChange={setMobileOpen}
           mobileAccountSlot={mobileAccountSlot}

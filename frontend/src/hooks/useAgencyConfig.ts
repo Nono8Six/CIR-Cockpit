@@ -20,7 +20,8 @@ export const useAgencyConfig = (agencyId: string | null, enabled: boolean) => {
       }
       return getAgencyConfig(agencyId);
     },
-    enabled: enabled && !!agencyId
+    enabled: enabled && !!agencyId,
+    staleTime: 120_000
   });
 
   const lastSignatureRef = useRef<string | null>(null);

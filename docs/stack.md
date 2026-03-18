@@ -1,378 +1,263 @@
 # Stack Technique - CIR Cockpit
 
-> Document de reference pour la stack technique du projet.
-> Derniere mise a jour: 28/02/2026 (versions du repo)
+> Reference documentaire de la stack du projet.
+> Derniere mise a jour: 2026-03-17
+> Etat verifie contre les manifests et configs du repo.
 
-## Vue d'ensemble
+## Resume executif
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                      FRONTEND                           │
-├─────────────────────────────────────────────────────────┤
-│  Framework:      React 19.2.4 + Vite 7.3.1               │
-│  Styling:        Tailwind CSS 4.1.18                      │
-│  UI Components:  shadcn/ui (Radix + Tailwind)          │
-│  Icones:         Lucide React                           │
-│  Data fetching:  TanStack Query v5.90.21                │
-│  Formulaires:    React Hook Form v7.71.1 + Zod v4.3.6   │
-│  Notifications:  Sonner v2.0.7                          │
-│  Dates:          date-fns v4.1.0 (locale FR)            │
-│  State global:   React Context + Zustand (erreurs)       │
-│  Realtime:       Supabase Realtime                      │
-├─────────────────────────────────────────────────────────┤
-│                      BACKEND                            │
-├─────────────────────────────────────────────────────────┤
-│  BaaS:           Supabase                               │
-│  Database:       PostgreSQL 15+ + RLS multi-tenant       │
-│  Auth:           Supabase Auth (JWT natif)              │
-│  API:            Supabase JS SDK v2.95.3 + Edge Functions (Hono RPC) │
-│  Realtime:       Supabase Realtime (WebSocket)          │
-└─────────────────────────────────────────────────────────┘
-```
+- Frontend: React 19, Vite 7, TypeScript 5.9, Tailwind CSS 4, shadcn/ui + Radix UI, TanStack Router, TanStack Query, React Hook Form + Zod, TanStack Table/Virtual, Motion, Sonner, Supabase JS.
+- Backend: Supabase (Postgres + Auth + Realtime), Edge Function Deno unique `api`, Hono + tRPC, Drizzle ORM + `postgres`, `jose` pour la verification JWT.
+- Qualite: `pnpm` workspace, ESLint 9, Vitest 4, Playwright, Husky, lint-staged, gate manuel `qa:fast` / `qa`.
+
+## Sources de verite
+
+Cette page doit suivre en priorite:
+
+1. `package.json`
+2. `frontend/package.json`
+3. `backend/deno.json`
+4. `deno.json`
+5. `supabase/config.toml`
+6. `frontend/vite.config.ts`
+7. `frontend/vitest.config.ts`
+8. `frontend/playwright.config.ts`
+
+## Workspace et outillage racine
+
+| Element | Version / etat | Source |
+|---------|-----------------|--------|
+| Package manager | `pnpm@10.30.2` | `package.json` |
+| Workspace | `frontend`, `shared` | `pnpm-workspace.yaml` |
+| Git hooks | Husky `9.1.7` | `package.json` |
+| Pre-commit cible | lint-staged `15.5.2` | `package.json` |
+| Gate rapide | `pnpm run qa:fast` | `package.json` |
+| Gate final | `pnpm run qa` | `package.json` |
+| Audit deps reseau | `pnpm run qa:audit` | `package.json` |
 
 ## Frontend
 
-### Core
+### Core runtime
 
 | Technologie | Version | Role |
 |-------------|---------|------|
-| **React** | 19.2.4 | Framework UI |
-| **Vite** | 7.3.1 | Build tool, dev server |
-| **TypeScript** | 5.9.3 | Typage statique |
-| **Tailwind CSS** | 4.1.18 | Utility-first CSS |
+| React | `19.2.4` | UI runtime |
+| React DOM | `19.2.4` | rendu DOM |
+| Vite | `7.3.1` | dev server + build |
+| TypeScript | `5.9.3` | typage strict |
+| Tailwind CSS | `4.1.18` | styling utilitaire |
+| `@tailwindcss/vite` | `4.1.18` | integration Vite |
+| PostCSS | `8.5.6` | pipeline CSS |
+| Autoprefixer | `10.4.23` | prefixing CSS |
 
-### Matrice de compatibilite (versions du repo)
+### Navigation, state et data fetching
 
-| Librairie cible | Version | Peer deps / contraintes |
-|-----------------|---------|--------------------------|
-| **React** | 19.2.4 | Aucun peer dep declare |
-| **React DOM** | 19.2.4 | `react ^19.2.4` |
-| **Vite** | 7.3.1 | Node `^20.19.0 || >=22.12.0`; peer deps optionnels: `@types/node`, `lightningcss`, `sass`, `sass-embedded`, `less`, `stylus`, `terser`, `yaml`, `sugarss`, `jiti`, `tsx` |
-| **Tailwind CSS** | 4.1.18 | Aucun peer dep declare |
-| **TanStack Query (React)** | 5.90.21 | `react ^18 || ^19` |
-| **React Hook Form** | 7.71.1 | `react ^16.8.0 || ^17 || ^18 || ^19` |
-| **Zod** | 4.3.6 | Aucun peer dep declare |
-| **date-fns** | 4.1.0 | Aucun peer dep declare |
-| **Sonner** | 2.0.7 | `react ^18 || ^19` + `react-dom ^18 || ^19` |
-| **Lucide React** | 0.564.0 | `react ^16.5.1 || ^17 || ^18 || ^19` |
-| **Supabase JS** | 2.95.3 | Aucun peer dep declare |
+| Technologie | Version | Role |
+|-------------|---------|------|
+| TanStack Router | `1.162.9` | routing SPA |
+| TanStack Query | `5.90.21` | cache, queries, mutations |
+| Zustand | `5.0.11` | store d'erreurs |
+| Supabase JS | `2.95.3` | auth, realtime, acces donnees et API |
 
-### UI & Composants
+### Formulaires et validation
 
-| Technologie | Role | Remplace |
-|-------------|------|----------|
-| **shadcn/ui (CLI v3.x)** | Composants accessibles (Select, Dialog, Command, Form...) | Composants custom, `<select>` natif |
-| **Lucide React (0.x)** | Icones SVG | - |
+| Technologie | Version | Role |
+|-------------|---------|------|
+| React Hook Form | `7.71.1` | formulaires |
+| `@hookform/resolvers` | `5.2.2` | bridge RHF + Zod |
+| Zod | `4.3.6` | validation partagee front/back |
 
-**Composants shadcn utilises:**
-- `AlertDialog` - confirmations critiques
-- `Badge` - badges statut
-- `Button` - boutons standardises
-- `Command` - recherche / palette
-- `Dialog` - modales
-- `Input` - champs de saisie
-- `Select` - dropdowns accessibles
-- `Sheet` - panneaux coulissants
-- `Table` - tableaux structures
-- `Tabs` - navigation onglets
-- `Tooltip` - infobulles
+### UI, composants et UX
 
-### Data & State
+| Technologie | Version | Role |
+|-------------|---------|------|
+| shadcn/ui | config repo | primitives UI |
+| Radix UI | packages `@radix-ui/react-*` | accessibilite / primitives headless |
+| TanStack Table | `8.21.3` | tables riches |
+| TanStack Virtual | `3.13.18` | virtualisation |
+| Motion | `12.35.2` | animations UI |
+| Sonner | `2.0.7` | notifications |
+| Lucide React | `0.564.0` | icones |
+| `react-error-boundary` | `6.1.0` | error boundary |
+| `react-day-picker` | `9.13.1` | calendrier |
+| `cmdk` | `1.1.1` | command palette / recherche |
+| `class-variance-authority` | `0.7.1` | variants Tailwind |
+| `clsx` | `2.1.1` | composition de classes |
+| `tailwind-merge` | `3.4.0` | merge de classes Tailwind |
+| `@stepperize/react` | `6.1.0` | stepper UI |
 
-| Technologie | Role | Remplace |
-|-------------|------|----------|
-| **TanStack Query v5** | Data fetching, cache, mutations | useState + useEffect manuels |
-| **React Context** | State global simple (agence active, user) | Props drilling |
-| **Zustand** | Error store (erreurs globales) | Context custom |
-| **Supabase Realtime** | Sync live entre utilisateurs | Polling / refresh manuel |
+### Utilitaires metier
 
-**Pourquoi TanStack Query:**
-- Cache automatique entre navigations
-- Loading/error states geres
-- Invalidation automatique apres mutation
-- Retry automatique
-- Devtools pour debug
+| Technologie | Version | Role |
+|-------------|---------|------|
+| date-fns | `4.1.0` | dates |
+| neverthrow | `8.2.0` | result/error ergonomics |
 
-**Pourquoi PAS Redux:**
-- Pas de state global complexe
-- TanStack Query gere le server state
-- React Context suffit pour le reste
-- Zustand est limite a l'error store
+### Architecture frontend actuelle
 
-**Strategie data fetching (etat actuel):**
-- Services `frontend/src/services/*` encapsulent les appels Supabase/Edge.
-- TanStack Query v5 pour cache, invalidations et retry centralise.
-- Pas de persistance locale pour les donnees metier (conformite AGENTS.md).
+- Application SPA Vite servie en local sur le port `3000`.
+- Alias actifs: `@/*` vers `frontend/src/*`, `shared/*` vers `../shared/*`.
+- Le dev server proxy `/functions/v1` vers `VITE_SUPABASE_URL`.
+- Le build Vite segmente explicitement les chunks `react-core`, `tanstack-core`, `tanstack-query`, `supabase`, `forms`, `data-grid`, `calendar`, `ui-primitives`.
 
-### Formulaires & Validation
+### Pattern d'acces donnees frontend
 
-| Technologie | Role |
-|-------------|------|
-| **React Hook Form v7.71.1** | Gestion formulaires performante |
-| **Zod v4.3.6** | Validation de schemas TypeScript-first (schemas partages dans `shared/`) |
-| **@hookform/resolvers v5.2.2** | Bridge RHF + Zod |
+Le frontend est aujourd'hui hybride:
 
-**Avantages:**
-- Validation declarative et typee
-- Pas de re-render a chaque keystroke
-- Schemas reutilisables frontend/backend
-- Erreurs par champ automatiques
+1. `@supabase/supabase-js` est utilise directement pour l'auth, le realtime et une partie importante des services de donnees.
+2. Un client tRPC existe pour les endpoints exposes par l'Edge Function `api` via `/functions/v1/api/trpc`.
+3. TanStack Query centralise cache, invalidation, retry et orchestration des appels.
 
-### UX & Utilities
+Autrement dit: le frontend ne repose pas sur une couche API unique. Le repo combine acces Supabase directs et appels tRPC selon les cas d'usage.
 
-| Technologie | Role | Remplace |
-|-------------|------|----------|
-| **Sonner v2.0.7** | Toast notifications | Erreurs inline, alerts |
-| **date-fns v4.1.0** | Manipulation dates | `new Date()` manuel |
+## Backend / API / data
 
-**Pourquoi date-fns:**
-- Modulaire (tree-shakable)
-- Locale FR native
-- Fonctions immutables
-- Bien type
+### BaaS et base de donnees
 
-## Backend (Supabase)
+| Element | Stack actuelle |
+|---------|----------------|
+| BaaS | Supabase |
+| SGBD | PostgreSQL |
+| Isolation multi-tenant | RLS par `agency_id` |
+| Auth | Supabase Auth |
+| Realtime | Supabase Realtime |
+| Migrations | SQL versionne dans `backend/migrations/` |
 
-### Base de donnees
+### Runtime Edge Function
 
-| Aspect | Implementation |
-|--------|----------------|
-| **SGBD** | PostgreSQL 15+ (gere par Supabase) |
-| **Multi-tenant** | RLS filtre par `agency_id` |
-| **Migrations** | SQL versionne dans `backend/migrations/` |
+| Element | Version / etat |
+|---------|-----------------|
+| Runtime | Deno |
+| Fonction principale | `backend/functions/api/` |
+| Wrapper CLI Supabase | `supabase/functions/api/index.ts` |
+| Entrypoint runtime | `backend/functions/api/index.ts` |
+| `verify_jwt` dashboard/CLI | `false` dans `supabase/config.toml` |
 
-### Authentification
+### HTTP / API layer
 
-| Aspect | Implementation |
-|--------|----------------|
-| **Provider** | Supabase Auth (GoTrue) |
-| **Methode** | Email + Password |
-| **Tokens** | JWT (access + refresh) |
-| **Signature JWT** | ES256 (ECC P-256) |
-| **Roles** | `super_admin`, `agency_admin`, `tcs` |
+| Technologie | Version | Role |
+|-------------|---------|------|
+| Hono | `4.12.4` en local | serveur HTTP de l'Edge Function |
+| `@hono/trpc-server` | `0.4.0` | bridge Hono <-> tRPC |
+| `@trpc/server` | `11.10.0` | procedures backend |
+| `@trpc/client` | `11.10.0` cote frontend | client HTTP batche |
 
-**Flux:**
-1. Login via `supabase.auth.signInWithPassword()`
-2. JWT stocke automatiquement
-3. RLS utilise `auth.uid()` pour filtrer
-4. Refresh token automatique
+### Data access backend
 
-**Note securite (decision produit):**
-1. `auth_leaked_password_protection` n'est pas active sur ce projet.
-2. Motif: plan Supabase non Pro + fonctionnalite non retenue pour cette application.
-3. Controles compensatoires conserves: creation de compte admin-only, mot de passe fort minimal, changement obligatoire au premier login, RLS multi-tenant strict.
+| Technologie | Version | Role |
+|-------------|---------|------|
+| Drizzle ORM | `0.45.1` | queries SQL typees |
+| `postgres` | `3.4.8` | driver SQL |
+| Supabase JS | `2.95.3` | auth/admin clients et contexte utilisateur |
+| Zod | `4.3.6` | validation input/output |
+| `jose` | `5.9.6` | verification JWT via JWKS |
 
-**Politique JWT backend (Edge Function `api`):**
-1. Verification JWT explicite via JWKS (`/auth/v1/.well-known/jwks.json`).
-2. Algorithme autorise par defaut: `ES256` (`SUPABASE_JWT_ALLOWED_ALGS=ES256`).
-3. Regle d'exploitation: la cle `Current key` Supabase doit rester en **ECC P-256** pour eviter les `401 AUTH_REQUIRED` dus a un mismatch algo.
+### Architecture backend actuelle
 
-### tRPC (Hono RPC)
+- Edge Function unique `api`.
+- `backend/functions/api/index.ts` normalise les prefixes `/functions/v1/api` et `/api`, puis delegue a Hono.
+- `backend/functions/api/app.ts` monte tRPC sur `/trpc/*`.
+- Les erreurs passent par le middleware partage `handleError()` / `httpError()`.
+- L'auth backend repose sur le header `Authorization: Bearer <token>`.
+- Le backend combine:
+  - client Supabase pour auth, contexte utilisateur et operations admin,
+  - Drizzle ORM pour les queries metier PostgreSQL.
 
-| Aspect | Implementation |
-|--------|----------------|
-| **Version** | `@trpc/server` `11.10.0` (Deno import map) + `@trpc/client` `^11.10.0` (frontend) |
-| **Transport** | tRPC over HTTP via `httpBatchLink` |
-| **Backend** | Router principal `backend/functions/api/trpc/router.ts` |
-| **Frontend** | Client `frontend/src/services/api/trpcClient.ts` vers `/functions/v1/api/trpc` |
+## Divergence technique a connaitre
 
-Pattern d'appel:
-1. Frontend: mutation/query tRPC via `callTrpcMutation(...)` sur le client configure avec `httpBatchLink`.
-2. Backend: validation Zod sur `.input()` et `.output()` dans les procedures.
-3. Contexte auth: fourni par middleware Hono (pas de fallback custom hors header `Authorization`).
+Le repo a actuellement une divergence de version Hono entre l'environnement local backend et l'import map de deploiement:
 
-### jose (verification JWT backend)
+| Fichier | Hono |
+|---------|------|
+| `backend/deno.json` | `4.12.4` |
+| `deno.json` | `4.11.9` |
 
-| Aspect | Implementation |
-|--------|----------------|
-| **Dependance** | `jose@5.9.6` |
-| **Import map Deno** | `deno.json` (`"jose": "npm:jose@5.9.6"`) |
-| **Usage** | `backend/functions/api/middleware/auth/verifyToken.ts` (orchestre depuis `backend/functions/api/middleware/auth.ts`) |
+Cette page documente volontairement cette divergence au lieu de la masquer. Si la stack doit etre strictement alignee, il faudra harmoniser ces deux fichiers.
 
-Utilisation actuelle:
-1. `createRemoteJWKSet(...)` pour resoudre la JWKS Supabase.
-2. `decodeProtectedHeader(...)` pour controler `alg` et `kid`.
-3. `jwtVerify(...)` pour verifier signature, issuer et audience.
+## Shared layer
 
-### Data Access Layer
+| Zone | Role |
+|------|------|
+| `shared/schemas/` | schemas Zod partages front/back |
+| `shared/errors/` | catalog, types, fingerprint AppError |
+| `shared/supabase.types.ts` | types Supabase generes |
 
-Le backend `api` utilise un mode hybride pour conserver la securite RLS et le typage des operations SQL:
+## Tests, lint et QA
 
-1. **`@supabase/supabase-js` (user-scoped auth context)**:
-   - verification JWT et chargement du profil/membership (`middleware/auth`),
-   - operations Auth Admin (`createUser`, `updateUserById`, `deleteUser`) via `getSupabaseAdmin()`.
-2. **Drizzle ORM (queries metier PostgreSQL)**:
-   - source des requetes metier dans `backend/functions/api/services/**`,
-   - type de reference `DbClient` dans `backend/functions/api/types.ts`.
+### Frontend
 
-Pattern de client:
-1. `db`: client de service (operations admin/globales).
-2. `userDb`: client scope utilisateur (RLS applique selon `authContext`).
+| Technologie | Version | Role |
+|-------------|---------|------|
+| Vitest | `4.0.18` | unit/integration tests |
+| `@vitest/coverage-v8` | `4.0.18` | couverture |
+| `@vitest/ui` | `4.0.18` | UI locale Vitest |
+| Testing Library React | `16.3.0` | tests composants |
+| Testing Library user-event | `14.6.1` | interactions utilisateur |
+| `@testing-library/jest-dom` | `6.6.3` | matchers DOM |
+| `vitest-axe` | `0.1.0` | assertions accessibilite |
+| jsdom | `25.0.1` | environnement DOM de test |
+| Playwright | `1.49.2` | E2E navigateur |
 
-Dans le code actuel, `db` et `userDb` pointent sur le meme client Drizzle (`getDbClient()`), mais la separation de contrat est volontaire pour maintenir la distinction d'intention (admin vs user-scoped) et preparer une evolution future sans casser les handlers.
+### Lint / typecheck
 
-### Error pipeline (shared/front/back)
+| Technologie | Version | Role |
+|-------------|---------|------|
+| ESLint | `9.39.2` | lint principal |
+| `@eslint/js` | `9.39.2` | base rules |
+| `typescript-eslint` | `8.53.1` | lint TypeScript |
+| `eslint-plugin-react` | `7.37.5` | lint React |
+| `eslint-plugin-react-hooks` | `7.0.1` | lint hooks |
+| `eslint-plugin-jsx-a11y` | `6.10.2` | a11y lint |
+| Deno lint | runtime Deno | lint backend |
+| Deno check | runtime Deno | typecheck backend |
 
-Source de verite partagee: `shared/errors/` (`types.ts`, `catalog.ts`, `fingerprint.ts`).
+### Execution des gates
 
-Pipeline:
-1. Frontend: `normalizeError()` -> `reportError()` -> `notifyError()` via `handleUiError()`.
-2. Backend: `httpError()` -> middleware `handleError()` avec mapping sur `shared/errors/catalog.ts`.
-3. Contrat: messages utilisateur en francais et codes d'erreur centralises.
+- Boucle intermediaire: `pnpm run qa:fast`
+- Gate final: `pnpm run qa`
+- Le projet n'utilise pas de workflow GitHub Actions comme gate principal.
 
-### Edge Functions
+## Ce que le repo n'utilise pas comme socle principal
 
-| Fonction | Role |
-|----------|------|
-| `api` | API Hono unique (admin users/agencies) |
+| Technologie | Statut |
+|-------------|--------|
+| Next.js | non utilise |
+| Redux | non utilise |
+| Prisma / TypeORM | non utilises |
+| Axios comme client principal | non utilise |
+| `framer-motion` | non utilise; le repo utilise `motion` |
+| CI GitHub Actions obligatoire | non utilise; gate manuel local |
 
-**Caracteristiques:**
-- Runtime Deno
-- Rate limiting integre
-- Idempotence (retry-safe)
-- Validation payload (Zod partage)
-- Erreurs standardisees avec `request_id`
+## Arborescence utile
 
-### Realtime
-
-| Aspect | Implementation |
-|--------|----------------|
-| **Protocole** | WebSocket (Phoenix) |
-| **Scope** | Table `interactions` |
-| **Securite** | RLS applique aux subscriptions |
-
-**Cas d'usage:**
-- Sync liste interactions entre TCS
-- Detection conflits d'edition
-- Timeline live
-
-### CI/CD et QA
-
-1. Le projet n'utilise pas de CI GitHub Actions en production.
-2. Le chemin de workflow standard `.github/workflows/ci.yml` est **N/A** (fichier non present par decision produit).
-3. Le gate qualite est local et obligatoire via:
-   - `scripts/qa-gate.ps1`
-   - `docs/qa-runbook.md`
-   - `pnpm run qa`
-
-## Ce qu'on n'utilise PAS
-
-| Technologie | Raison du refus |
-|-------------|-----------------|
-| **Redux** | Overkill, TanStack Query + Context suffisent |
-| **TypeORM / Prisma** | Supabase SDK avec types generes suffit |
-| **JWT custom** | Supabase Auth l'inclut nativement |
-| **Next.js** | Migration lourde, Vite suffit pour SPA |
-| **Chakra UI / MUI** | Deja Tailwind, shadcn mieux integre |
-| **Socket.io** | Supabase Realtime natif |
-| **Axios** | Supabase Client SDK suffit |
-| **Moment.js** | Lourd, date-fns est modulaire |
-| **Lenis / smooth scroll** | App metier, pas site vitrine |
-| **Framer Motion** | Animations pas prioritaires |
-
-## Architecture fichiers
-
-```
+```text
 frontend/
-├── src/
-│   ├── components/
-│   │   ├── ui/              # shadcn/ui components
-│   │   ├── CockpitForm.tsx
-│   │   ├── Dashboard.tsx
-│   │   └── ...
-│   ├── hooks/
-│   │   ├── useInteractions.ts   # TanStack Query
-│   │   ├── useAgencyConfig.ts
-│   │   └── ...
-│   ├── schemas/
-│   │   ├── ...                    # schemas strictement frontend si necessaire
-│   │   └── ...
-│   ├── services/
-│   │   ├── auth/
-│   │   ├── supabase/
-│   │   └── ...
-│   ├── types/
-│   │   ├── supabase.ts      # Types generes
-│   │   └── app-session.ts   # Types contexte session
-│   └── lib/
-│       ├── utils.ts         # cn() pour shadcn
-│       └── result.ts        # Result / safeAsync helpers
-├── components.json          # Config shadcn
-└── tailwind.config.cjs
+  src/
+    app/                 # router et bootstrap applicatif
+    components/          # composants React
+    hooks/               # hooks TanStack Query / UI
+    services/            # acces Supabase / API / erreurs
+    stores/              # Zustand
+    lib/                 # utils transverses
 
 shared/
-├── errors/                  # AppError + catalog + fingerprint
-├── schemas/                 # Zod partages (front/back) - ex: interaction.schema.ts
-└── supabase.types.ts         # Types Supabase
+  schemas/               # Zod partage
+  errors/                # AppError partage
+  supabase.types.ts      # types generes
 
 backend/
-├── migrations/              # SQL versionne
-├── functions/               # Edge Functions
-└── tests/                   # Tests RLS
+  functions/api/         # Edge Function Hono + tRPC
+  migrations/            # SQL versionne
+
+supabase/
+  functions/api/         # wrapper CLI de deploy
 ```
 
-## Dependances principales
+## Regle de maintenance de cette page
 
-```json
-{
-  "dependencies": {
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "@supabase/supabase-js": "2.95.3",
-    "@tanstack/react-query": "5.90.21",
-    "react-hook-form": "7.71.1",
-    "zod": "4.3.6",
-    "@hookform/resolvers": "5.2.2",
-    "sonner": "2.0.7",
-    "date-fns": "4.1.0",
-    "lucide-react": "0.564.0",
-    "clsx": "2.1.1",
-    "tailwind-merge": "3.4.0"
-  },
-  "devDependencies": {
-    "typescript": "5.9.3",
-    "vite": "7.3.1",
-    "@vitejs/plugin-react": "5.1.2",
-    "tailwindcss": "4.1.18",
-    "@tailwindcss/vite": "4.1.18",
-    "@tailwindcss/postcss": "4.1.18",
-    "postcss": "8.5.6",
-    "autoprefixer": "10.4.23",
-    "@types/node": "25.0.10",
-    "eslint": "9.39.2",
-    "@eslint/js": "9.39.2",
-    "eslint-plugin-react": "7.37.5",
-    "eslint-plugin-react-hooks": "7.0.1",
-    "globals": "17.0.0",
-    "typescript-eslint": "8.53.1"
-  }
-}
-```
+Mettre a jour cette page a chaque changement de:
 
-## Bundle size estimatif
-
-| Librairie | Taille (gzip) |
-|-----------|---------------|
-| React + React DOM | ~45kb |
-| Supabase Client | ~30kb |
-| TanStack Query | ~12kb |
-| React Hook Form | ~9kb |
-| Zod | ~13kb |
-| date-fns (tree-shaken) | ~5kb |
-| Sonner | ~5kb |
-| shadcn/ui (composants utilises) | ~15kb |
-| Lucide (icones utilisees) | ~5kb |
-| **Total estime** | **~140kb** |
-
-## Ressources
-
-- [Supabase Docs](https://supabase.com/docs)
-- [TanStack Query Docs](https://tanstack.com/query)
-- [React Hook Form Docs](https://react-hook-form.com)
-- [Zod Docs](https://zod.dev)
-- [shadcn/ui Docs](https://ui.shadcn.com)
-- [date-fns Docs](https://date-fns.org)
-- [Sonner Docs](https://sonner.emilkowal.ski)
-- [Tailwind CSS Docs](https://tailwindcss.com/docs)
-
-
+1. version de dependance structurelle,
+2. outil de build ou de test,
+3. mode d'appel front <-> back,
+4. runtime Edge Function ou import map de deploiement.

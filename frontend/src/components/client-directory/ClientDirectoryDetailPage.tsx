@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 
 import type { DirectoryRouteRef } from 'shared/schemas/directory.schema';
 import { ArrowLeftRight, Mail, MapPin, Phone, Trash2 } from 'lucide-react';
-import { motion, useReducedMotion } from 'motion/react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useCanGoBack, useNavigate } from '@tanstack/react-router';
 
 import ClientFormDialog from '@/components/ClientFormDialog';
@@ -63,33 +63,14 @@ const ClientDirectoryDetailPage = ({ routeRef }: ClientDirectoryDetailPageProps)
     [record?.address, record?.city, record?.postal_code]
   );
 
-  if (recordQuery.isLoading || !record) {
-    return (
-      <section aria-busy="true" className="flex h-full min-h-0 flex-1 flex-col gap-4 px-4 py-4 lg:px-6">
-        <p className="sr-only">Chargement de la fiche…</p>
-        <div className="rounded-xl border border-border/50 bg-card p-5">
-          <div className="flex items-start gap-4">
-            <div className="space-y-3 flex-1">
-              <Skeleton className="h-5 w-48" />
-              <Skeleton className="h-7 w-64" />
-              <Skeleton className="h-4 w-80" />
-            </div>
-            <Skeleton className="h-4 w-32" />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <Skeleton className="h-40 rounded-xl" />
-          <Skeleton className="h-40 rounded-xl" />
-        </div>
-      </section>
-    );
-  }
+  const showSkeleton = recordQuery.isLoading || !record;
 
-  const isProspect = isProspectEntityType(record.entity_type);
+  const isProspect = record ? isProspectEntityType(record.entity_type) : false;
   const canDeleteRecord = userRole === 'super_admin';
   const deleteLabel = 'Supprimer définitivement';
   const deleteMessage = isProspect ? 'Prospect supprime definitivement.' : 'Client supprime definitivement.';
   const handleDeleteRecord = async () => {
+    if (!record) return;
     try {
       await deleteEntityMutation.mutateAsync({
         clientId: record.id,
@@ -107,14 +88,43 @@ const ClientDirectoryDetailPage = ({ routeRef }: ClientDirectoryDetailPageProps)
     }
   };
 
-  const MotionSection = reducedMotion ? 'section' : motion.section;
-  const motionProps = reducedMotion
-    ? {}
-    : { initial: { opacity: 0, y: 4 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.15 } };
-
   return (
-    <>
-      <MotionSection {...motionProps} className="flex h-full min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4 lg:px-6">
+    <AnimatePresence mode="wait" initial={false}>
+      {showSkeleton ? (
+        <motion.section
+          key="skeleton"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: reducedMotion ? 0 : 0.15 }}
+          aria-busy="true"
+          className="flex h-full min-h-0 flex-1 flex-col gap-4 px-4 py-4 lg:px-6"
+        >
+          <p className="sr-only">Chargement de la fiche…</p>
+          <div className="rounded-xl border border-border/50 bg-card p-5">
+            <div className="flex items-start gap-4">
+              <div className="space-y-3 flex-1">
+                <Skeleton className="h-5 w-48" />
+                <Skeleton className="h-7 w-64" />
+                <Skeleton className="h-4 w-80" />
+              </div>
+              <Skeleton className="h-4 w-32" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Skeleton className="h-40 rounded-xl" />
+            <Skeleton className="h-40 rounded-xl" />
+          </div>
+        </motion.section>
+      ) : record ? (
+      <motion.section
+        key="content"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: reducedMotion ? 0 : 0.2 }}
+        className="flex h-full min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4 lg:px-6"
+      >
         <div className="flex flex-wrap items-center justify-end gap-2">
           <div className="flex flex-wrap items-center gap-2">
             {isProspect ? (
@@ -290,33 +300,30 @@ const ClientDirectoryDetailPage = ({ routeRef }: ClientDirectoryDetailPageProps)
             </div>
           </section>
         </div>
-      </MotionSection>
+        {!isProspect ? (
+          <ClientFormDialog
+            open={isClientDialogOpen}
+            onOpenChange={setIsClientDialogOpen}
+            client={{
+              ...record,
+              first_name: primaryContact?.first_name ?? null,
+              last_name: primaryContact?.last_name ?? null,
+              phone: primaryContact?.phone ?? null,
+              email: primaryContact?.email ?? null
+            }}
+            agencies={agenciesQuery.data ?? []}
+            userRole={userRole}
+            activeAgencyId={activeAgencyId}
+            commercials={optionsQuery.data?.commercials ?? []}
+            onSave={async (payload) => {
+              await saveClientMutation.mutateAsync(payload);
+              notifySuccess('Client mis à jour.');
+              setIsClientDialogOpen(false);
+            }}
+          />
+        ) : null}
 
-      {!isProspect ? (
-        <ClientFormDialog
-          open={isClientDialogOpen}
-          onOpenChange={setIsClientDialogOpen}
-          client={{
-            ...record,
-            first_name: primaryContact?.first_name ?? null,
-            last_name: primaryContact?.last_name ?? null,
-            phone: primaryContact?.phone ?? null,
-            email: primaryContact?.email ?? null
-          }}
-          agencies={agenciesQuery.data ?? []}
-          userRole={userRole}
-          activeAgencyId={activeAgencyId}
-          commercials={optionsQuery.data?.commercials ?? []}
-          onSave={async (payload) => {
-            await saveClientMutation.mutateAsync(payload);
-            notifySuccess('Client mis à jour.');
-            setIsClientDialogOpen(false);
-          }}
-        />
-      ) : null}
-
-      {isProspect ? (
-        <>
+        {isProspect ? (
           <ProspectFormDialog
             open={isProspectDialogOpen}
             onOpenChange={setIsProspectDialogOpen}
@@ -330,46 +337,47 @@ const ClientDirectoryDetailPage = ({ routeRef }: ClientDirectoryDetailPageProps)
               setIsProspectDialogOpen(false);
             }}
           />
-        </>
-      ) : null}
+        ) : null}
 
-      <ConfirmDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={(open) => {
-          setIsDeleteDialogOpen(open);
-          if (!open) {
-            setDeleteRelatedInteractions(true);
+        <ConfirmDialog
+          open={isDeleteDialogOpen}
+          onOpenChange={(open) => {
+            setIsDeleteDialogOpen(open);
+            if (!open) {
+              setDeleteRelatedInteractions(true);
+            }
+          }}
+          title={isProspect ? 'Supprimer ce prospect' : 'Supprimer ce client'}
+          description={
+            isProspect
+              ? `Le prospect ${record.name} sera definitivement supprime.`
+              : `Le client ${record.name} sera definitivement supprime.`
           }
-        }}
-        title={isProspect ? 'Supprimer ce prospect' : 'Supprimer ce client'}
-        description={
-          isProspect
-            ? `Le prospect ${record.name} sera definitivement supprime.`
-            : `Le client ${record.name} sera definitivement supprime.`
-        }
-        confirmLabel="Supprimer"
-        variant="destructive"
-        onConfirm={() => {
-          void handleDeleteRecord();
-        }}
-      >
-        <label className="flex items-start gap-3 rounded-md border border-border bg-surface-1/60 p-3 text-sm">
-          <input
-            type="checkbox"
-            className="mt-0.5 h-4 w-4 accent-destructive"
-            checked={deleteRelatedInteractions}
-            onChange={(event) => {
-              setDeleteRelatedInteractions(event.target.checked);
-            }}
-          />
-          <span>
-            {isProspect
-              ? 'Supprimer aussi toutes les interactions rattachees a ce prospect.'
-              : 'Supprimer aussi toutes les interactions rattachees a ce client.'}
-          </span>
-        </label>
-      </ConfirmDialog>
-    </>
+          confirmLabel="Supprimer"
+          variant="destructive"
+          onConfirm={() => {
+            void handleDeleteRecord();
+          }}
+        >
+          <label className="flex items-start gap-3 rounded-md border border-border bg-surface-1/60 p-3 text-sm">
+            <input
+              type="checkbox"
+              className="mt-0.5 h-4 w-4 accent-destructive"
+              checked={deleteRelatedInteractions}
+              onChange={(event) => {
+                setDeleteRelatedInteractions(event.target.checked);
+              }}
+            />
+            <span>
+              {isProspect
+                ? 'Supprimer aussi toutes les interactions rattachees a ce prospect.'
+                : 'Supprimer aussi toutes les interactions rattachees a ce client.'}
+            </span>
+          </label>
+        </ConfirmDialog>
+      </motion.section>
+      ) : null}
+    </AnimatePresence>
   );
 };
 

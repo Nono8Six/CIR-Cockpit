@@ -1,14 +1,14 @@
 import { Search } from 'lucide-react';
 
+import { getSearchShortcutLabel } from '@/app/appConstants';
+
 type AppHeaderSearchButtonProps = {
   onOpenSearch: () => void;
   onSearchIntent?: () => void;
 };
 
 const AppHeaderSearchButton = ({ onOpenSearch, onSearchIntent }: AppHeaderSearchButtonProps) => {
-  const isApplePlatform = typeof navigator !== 'undefined'
-    && /(Mac|iPhone|iPad|iPod)/i.test(navigator.platform);
-  const shortcutLabel = isApplePlatform ? '⌘\u00A0K' : 'Ctrl+\u00A0K';
+  const shortcutLabel = getSearchShortcutLabel();
 
   const handleSearchIntent = () => {
     onSearchIntent?.();

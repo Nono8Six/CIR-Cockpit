@@ -1,6 +1,30 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { isSidebarToggleShortcut } from '@/app/appConstants';
+import {
+  getSearchShortcutLabel,
+  getSidebarToggleShortcutLabel,
+  isSidebarToggleShortcut
+} from '@/app/appConstants';
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+describe('platform shortcut labels', () => {
+  it('renders Command labels on Apple platforms', () => {
+    vi.spyOn(window.navigator, 'platform', 'get').mockReturnValue('MacIntel');
+
+    expect(getSearchShortcutLabel()).toBe('\u2318 K');
+    expect(getSidebarToggleShortcutLabel()).toBe('\u2318 B');
+  });
+
+  it('renders Ctrl labels on non-Apple platforms', () => {
+    vi.spyOn(window.navigator, 'platform', 'get').mockReturnValue('Win32');
+
+    expect(getSearchShortcutLabel()).toBe('Ctrl K');
+    expect(getSidebarToggleShortcutLabel()).toBe('Ctrl B');
+  });
+});
 
 describe('isSidebarToggleShortcut', () => {
   it('matches the primary Ctrl or Command+B shortcut', () => {

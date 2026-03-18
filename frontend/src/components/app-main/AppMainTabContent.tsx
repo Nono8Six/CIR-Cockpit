@@ -1,4 +1,4 @@
-import { Suspense, lazy, useRef } from 'react';
+import { Suspense, lazy, useEffect, useRef } from 'react';
 import { Outlet } from '@tanstack/react-router';
 
 import type { AgencyConfig } from '@/services/config';
@@ -6,14 +6,26 @@ import type { AppTab, Entity, Interaction, InteractionDraft, UserRole } from '@/
 import type { ConvertClientEntity } from '@/components/ConvertClientDialog';
 import type { EntityContact } from '@/types';
 
-const CockpitForm = lazy(() => import('@/components/CockpitForm'));
-const Dashboard = lazy(() => import('@/components/Dashboard'));
-const Settings = lazy(() => import('@/components/Settings'));
-const AdminPanel = lazy(() => import('@/components/AdminPanel'));
+const loadCockpitForm = () => import('@/components/CockpitForm');
+const loadDashboard = () => import('@/components/Dashboard');
+const loadSettings = () => import('@/components/Settings');
+const loadAdminPanel = () => import('@/components/AdminPanel');
+
+const CockpitForm = lazy(loadCockpitForm);
+const Dashboard = lazy(loadDashboard);
+const Settings = lazy(loadSettings);
+const AdminPanel = lazy(loadAdminPanel);
 
 const ROUTE_LOADING_FALLBACK = (
-  <div className="h-full flex items-center justify-center text-muted-foreground/80 text-sm">
-    Chargement de la vue...
+  <div className="flex h-full min-h-0 flex-col gap-3 p-6">
+    <div className="flex items-center gap-3">
+      <div className="skeleton-shimmer h-7 w-36 rounded-lg" />
+      <div className="skeleton-shimmer h-7 w-24 rounded-lg" />
+    </div>
+    <div className="flex gap-3 flex-1 mt-2">
+      <div className="skeleton-shimmer flex-1 rounded-xl" />
+      <div className="skeleton-shimmer w-72 rounded-xl" />
+    </div>
   </div>
 );
 
@@ -61,6 +73,13 @@ const AppMainTabContent = (props: AppMainTabContentProps) => {
     onRequestConvert,
     onOpenGlobalSearch
   } = props;
+  useEffect(() => {
+    void loadCockpitForm();
+    void loadDashboard();
+    void loadSettings();
+    void loadAdminPanel();
+  }, []);
+
   const visitedTabsRef = useRef<Record<AppTab, boolean>>({
     cockpit: activeTab === 'cockpit',
     dashboard: activeTab === 'dashboard',

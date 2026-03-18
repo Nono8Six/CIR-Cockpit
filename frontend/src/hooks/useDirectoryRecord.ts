@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 
 import { type DirectoryRouteRef } from 'shared/schemas/directory.schema';
 import { getDirectoryRecord } from '@/services/directory/getDirectoryRecord';
@@ -9,7 +9,9 @@ export const useDirectoryRecord = (route: DirectoryRouteRef, enabled = true) => 
   const query = useQuery({
     queryKey: directoryRecordKey(route),
     queryFn: () => getDirectoryRecord(route),
-    enabled
+    enabled,
+    staleTime: 30_000,
+    placeholderData: keepPreviousData
   });
 
   useNotifyError(query.error, "Impossible de charger la fiche annuaire", 'useDirectoryRecord');

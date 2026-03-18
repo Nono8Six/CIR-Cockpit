@@ -138,7 +138,7 @@ const AppHeader = ({
                 aria-label="Ouvrir le menu profil"
               >
                 {hasInitials ? (
-                    <span aria-hidden="true" className="text-[11px] font-semibold text-foreground">
+                  <span aria-hidden="true" className="text-[11px] font-semibold text-foreground">
                     {safeInitials}
                   </span>
                 ) : (

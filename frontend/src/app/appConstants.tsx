@@ -33,14 +33,19 @@ export const APP_TAB_SHORTCUTS: Record<AppTab, string> = {
 };
 
 export const SIDEBAR_TOGGLE_SHORTCUT_ARIA = 'Control+B Meta+B Control+Backslash Meta+Backslash';
+const APPLE_PLATFORM_PATTERN = /(Mac|iPhone|iPad|iPod)/i;
 
 type SidebarToggleShortcutEvent = Pick<KeyboardEvent, 'altKey' | 'code' | 'ctrlKey' | 'key' | 'metaKey'>;
 
-export const getSidebarToggleShortcutLabel = (): string => {
-  const isApplePlatform = typeof navigator !== 'undefined'
-    && /(Mac|iPhone|iPad|iPod)/i.test(navigator.platform);
-  return isApplePlatform ? '⌘\u00A0B' : 'Ctrl+\u00A0B';
-};
+export const isApplePlatform = (): boolean =>
+  typeof navigator !== 'undefined' && APPLE_PLATFORM_PATTERN.test(navigator.platform);
+
+export const getPlatformShortcutLabel = (key: string): string =>
+  `${isApplePlatform() ? '\u2318' : 'Ctrl'} ${key.trim().toUpperCase()}`;
+
+export const getSearchShortcutLabel = (): string => getPlatformShortcutLabel('K');
+
+export const getSidebarToggleShortcutLabel = (): string => getPlatformShortcutLabel('B');
 
 export const isSidebarToggleShortcut = (event: SidebarToggleShortcutEvent): boolean => {
   if (!(event.ctrlKey || event.metaKey) || event.altKey) {
@@ -56,10 +61,9 @@ export type AppShellNavItem = {
   id: AppTab;
   sectionId: AppShellSectionId;
   label: string;
-  description: string;
   icon: LucideIcon;
   shortcut: string;
-  badgeCount?: number;
+  metaLabel?: string;
 };
 
 export type AppShellNavSection = {
@@ -72,6 +76,14 @@ export const APP_SHELL_SECTION_LABELS: Record<AppShellSectionId, string> = {
   clients: 'Clients',
   interactions: 'Interactions',
   admin: 'Admin'
+};
+
+const formatPendingNavLabel = (pendingCount: number): string | undefined => {
+  if (pendingCount <= 0) {
+    return undefined;
+  }
+
+  return `${pendingCount} \u00E0 traiter`;
 };
 
 export const buildShellNavigation = (
@@ -87,7 +99,6 @@ export const buildShellNavigation = (
           id: 'clients',
           sectionId: 'clients',
           label: 'Clients',
-          description: 'CRM',
           icon: Building2,
           shortcut: APP_TAB_SHORTCUTS.clients
         }
@@ -101,7 +112,6 @@ export const buildShellNavigation = (
           id: 'cockpit',
           sectionId: 'interactions',
           label: 'Saisie',
-          description: 'Nouveau',
           icon: PenTool,
           shortcut: APP_TAB_SHORTCUTS.cockpit
         },
@@ -109,10 +119,9 @@ export const buildShellNavigation = (
           id: 'dashboard',
           sectionId: 'interactions',
           label: 'Pilotage',
-          description: 'Suivi',
           icon: LayoutDashboard,
           shortcut: APP_TAB_SHORTCUTS.dashboard,
-          badgeCount: pendingCount > 0 ? pendingCount : undefined
+          metaLabel: formatPendingNavLabel(pendingCount)
         }
       ]
     }
@@ -127,15 +136,13 @@ export const buildShellNavigation = (
           id: 'admin',
           sectionId: 'admin',
           label: 'Admin',
-          description: 'Utilisateurs',
           icon: Shield,
           shortcut: APP_TAB_SHORTCUTS.admin
         },
         {
           id: 'settings',
           sectionId: 'admin',
-          label: 'Paramètres',
-          description: 'Agence',
+          label: 'Param\u00E8tres',
           icon: Settings,
           shortcut: APP_TAB_SHORTCUTS.settings
         }
