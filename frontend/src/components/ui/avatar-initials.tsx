@@ -2,19 +2,19 @@ import { cn } from '@/lib/utils';
 
 interface AvatarInitialsProps {
   name: string;
-  size?: 'sm' | 'md';
+  size?: 'sm' | 'md' | 'lg';
   className?: string;
 }
 
 const COLORS = [
-  'bg-blue-100 text-blue-700',
-  'bg-emerald-100 text-emerald-700',
-  'bg-amber-100 text-amber-700',
-  'bg-violet-100 text-violet-700',
-  'bg-rose-100 text-rose-700',
-  'bg-cyan-100 text-cyan-700',
-  'bg-orange-100 text-orange-700',
-  'bg-indigo-100 text-indigo-700'
+  'bg-slate-100 text-slate-700',
+  'bg-zinc-100 text-zinc-700',
+  'bg-slate-200 text-slate-800',
+  'bg-blue-50 text-blue-900',
+  'bg-primary/10 text-primary',
+  'bg-slate-50 text-slate-600',
+  'bg-zinc-200 text-zinc-900',
+  'bg-sky-50 text-sky-900'
 ];
 
 const getInitials = (name: string): string => {
@@ -37,13 +37,13 @@ const getColorClass = (name: string): string => {
 const AvatarInitials = ({ name, size = 'sm', className }: AvatarInitialsProps) => {
   const initials = getInitials(name);
   const colorClass = getColorClass(name);
-  const sizeClass = size === 'sm' ? 'size-7 text-[11px]' : 'size-9 text-xs';
+  const sizeClass = size === 'sm' ? 'size-7 text-[11px]' : size === 'md' ? 'size-9 text-xs' : 'size-10 text-sm';
 
   return (
     <span
       aria-hidden="true"
       className={cn(
-        'inline-flex shrink-0 items-center justify-center rounded-full font-medium',
+        'inline-flex shrink-0 items-center justify-center rounded-full font-semibold',
         sizeClass,
         colorClass,
         className

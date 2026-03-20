@@ -16,10 +16,66 @@ type UseAppSearchDataParams = {
   defaultStatusId: string;
 };
 
+export type AppSearchScope = 'all' | 'clients' | 'contacts' | 'interactions';
+
+const APP_SEARCH_SCOPE_PREFIXES: Record<Exclude<AppSearchScope, 'all'>, string> = {
+  clients: '!',
+  contacts: '@',
+  interactions: '#'
+};
+
+export const parseAppSearchQuery = (query: string): {
+  normalizedQuery: string;
+  scope: AppSearchScope;
+} => {
+  const trimmedQuery = query.trimStart();
+
+  if (trimmedQuery.startsWith(APP_SEARCH_SCOPE_PREFIXES.contacts)) {
+    return {
+      scope: 'contacts',
+      normalizedQuery: trimmedQuery.slice(1).trimStart()
+    };
+  }
+
+  if (trimmedQuery.startsWith(APP_SEARCH_SCOPE_PREFIXES.interactions)) {
+    return {
+      scope: 'interactions',
+      normalizedQuery: trimmedQuery.slice(1).trimStart()
+    };
+  }
+
+  if (trimmedQuery.startsWith(APP_SEARCH_SCOPE_PREFIXES.clients)) {
+    return {
+      scope: 'clients',
+      normalizedQuery: trimmedQuery.slice(1).trimStart()
+    };
+  }
+
+  return {
+    scope: 'all',
+    normalizedQuery: trimmedQuery
+  };
+};
+
+export const applyAppSearchScope = (scope: AppSearchScope, query: string): string => {
+  const { normalizedQuery } = parseAppSearchQuery(query);
+
+  if (scope === 'all') {
+    return normalizedQuery;
+  }
+
+  return `${APP_SEARCH_SCOPE_PREFIXES[scope]}${normalizedQuery}`;
+};
+
 export const useAppSearchData = ({ searchQuery, interactions, entitySearchIndex, defaultStatusId }: UseAppSearchDataParams) => {
   const deferredSearchQuery = useDeferredValue(searchQuery);
-  const lowerQuery = deferredSearchQuery.toLowerCase();
-  const rawQuery = deferredSearchQuery.replace(/\s/g, '');
+  const { normalizedQuery, scope } = useMemo(
+    () => parseAppSearchQuery(deferredSearchQuery),
+    [deferredSearchQuery]
+  );
+  const lowerQuery = normalizedQuery.toLowerCase();
+  const rawQuery = normalizedQuery.replace(/\s/g, '');
+  const hasSearchQuery = normalizedQuery.length > 0;
 
   const clientEntities = useMemo(() => entitySearchIndex.entities.filter(entity => entity.entity_type === 'Client'), [entitySearchIndex.entities]);
   const prospectEntities = useMemo(() => entitySearchIndex.entities.filter(entity => isProspectRelationValue(entity.entity_type)), [entitySearchIndex.entities]);
@@ -27,19 +83,19 @@ export const useAppSearchData = ({ searchQuery, interactions, entitySearchIndex,
   const entityNameById = useMemo(() => new Map(entitySearchIndex.entities.map(entity => [entity.id, entity.name])), [entitySearchIndex.entities]);
 
   const filteredInteractions = useMemo(() => {
-    if (!deferredSearchQuery) return [];
+    if (!hasSearchQuery || (scope !== 'all' && scope !== 'interactions')) return [];
     return interactions.filter(interaction => (
       interaction.company_name.toLowerCase().includes(lowerQuery)
       || interaction.contact_name.toLowerCase().includes(lowerQuery)
       || interaction.subject.toLowerCase().includes(lowerQuery)
-      || (interaction.order_ref && interaction.order_ref.includes(deferredSearchQuery))
-      || (interaction.contact_phone ?? '').includes(deferredSearchQuery)
+      || (interaction.order_ref && interaction.order_ref.includes(normalizedQuery))
+      || (interaction.contact_phone ?? '').includes(normalizedQuery)
       || (interaction.contact_email ?? '').toLowerCase().includes(lowerQuery)
     ));
-  }, [deferredSearchQuery, interactions, lowerQuery]);
+  }, [hasSearchQuery, interactions, lowerQuery, normalizedQuery, scope]);
 
   const filterEntities = (list: Entity[]) => {
-    if (!deferredSearchQuery) return [];
+    if (!hasSearchQuery) return [];
     return list.filter(entity => (
       entity.name.toLowerCase().includes(lowerQuery)
       || (entity.client_number ?? '').includes(rawQuery)
@@ -48,11 +104,18 @@ export const useAppSearchData = ({ searchQuery, interactions, entitySearchIndex,
     ));
   };
 
-  const filteredClients = useMemo(() => filterEntities(clientEntities), [clientEntities, deferredSearchQuery, lowerQuery, rawQuery]);
-  const filteredProspects = useMemo(() => filterEntities(prospectEntities), [deferredSearchQuery, lowerQuery, prospectEntities, rawQuery]);
+  const filteredClients = useMemo(() => {
+    if (scope !== 'all' && scope !== 'clients') return [];
+    return filterEntities(clientEntities);
+  }, [clientEntities, hasSearchQuery, lowerQuery, rawQuery, scope]);
+
+  const filteredProspects = useMemo(() => {
+    if (scope !== 'all') return [];
+    return filterEntities(prospectEntities);
+  }, [hasSearchQuery, lowerQuery, prospectEntities, rawQuery, scope]);
 
   const filteredContacts = useMemo(() => {
-    if (!deferredSearchQuery) return [];
+    if (!hasSearchQuery || (scope !== 'all' && scope !== 'contacts')) return [];
     return entitySearchIndex.contacts.filter(contact => {
       const entity = entitiesById.get(contact.entity_id);
       if (!entity || entity.entity_type !== 'Client') return false;
@@ -63,7 +126,7 @@ export const useAppSearchData = ({ searchQuery, interactions, entitySearchIndex,
         || (contact.position ?? '').toLowerCase().includes(lowerQuery)
       );
     });
-  }, [deferredSearchQuery, entitiesById, entitySearchIndex.contacts, lowerQuery]);
+  }, [entitiesById, entitySearchIndex.contacts, hasSearchQuery, lowerQuery, scope]);
 
   const recentEntities = useMemo(() => {
     if (interactions.length === 0 || entitySearchIndex.entities.length === 0) return [];

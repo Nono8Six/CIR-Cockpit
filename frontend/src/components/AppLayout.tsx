@@ -39,6 +39,7 @@ const AppLayout = ({ headerProps, mainContentProps, children }: AppLayoutProps) 
   const [collapsed, setCollapsed] = useState<boolean>(readCollapsedPreference);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isAccountPanelOpen, setIsAccountPanelOpen] = useState(false);
+
   const safeAgencyMemberships = Array.isArray(headerProps.agencyMemberships) ? headerProps.agencyMemberships : [];
   const safeUserInitials = typeof headerProps.userInitials === 'string' && headerProps.userInitials.trim().length > 0
     ? headerProps.userInitials

@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
 import {
-  ChevronDown,
   PanelLeft
 } from 'lucide-react';
 import {
@@ -76,6 +75,8 @@ const NavItemLink = ({
   onMobileOpenChange?: (open: boolean) => void;
 }) => {
   const sectionLabel = APP_SHELL_SECTION_LABELS[item.sectionId];
+  const metaLabel = item.metaLabel;
+  const shouldPulseMetaLabel = typeof metaLabel === 'string' && /\d/.test(metaLabel) && !reducedMotion;
   const activeIndicatorTransition: Transition = reducedMotion
     ? { duration: 0 }
     : { type: 'spring', stiffness: 300, damping: 30 };
@@ -123,9 +124,18 @@ const NavItemLink = ({
           >
             <span className="truncate">{item.label}</span>
             <span className="inline-flex shrink-0 items-center gap-1.5">
-              {item.metaLabel ? (
-                <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-primary/10 border border-primary/20 px-1.5 text-[10px] font-bold text-primary">
-                  {item.metaLabel}
+              {metaLabel ? (
+                <span className="relative inline-flex min-w-5 items-center justify-center">
+                  {shouldPulseMetaLabel ? (
+                    <motion.span
+                      className="absolute inset-0 rounded-full bg-primary/20"
+                      animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                    />
+                  ) : null}
+                  <span className="relative z-10 inline-flex min-w-5 items-center justify-center rounded-full bg-primary/10 border border-primary/20 px-1.5 text-[10px] font-bold text-primary">
+                    {metaLabel}
+                  </span>
                 </span>
               ) : null}
               {item.shortcut ? (
@@ -170,12 +180,14 @@ const SidebarContent = ({
   collapsed,
   onMobileOpenChange,
   onToggleCollapsed,
-  mobileAccountSlot
-}: SidebarContentProps) => {
+  mobileAccountSlot,
+  mobileOpen
+}: SidebarContentProps & { mobileOpen?: boolean }) => {
   const safeSections = Array.isArray(sections) ? sections : [];
   const toggleLabel = collapsed ? 'D\u00E9plier le menu' : 'R\u00E9duire le menu';
   const toggleShortcut = getSidebarToggleShortcutLabel();
   const reducedMotion = useReducedMotion() ?? false;
+  const shouldAnimateMobileOpen = !collapsed && Boolean(mobileOpen) && !reducedMotion;
   const fadeSlideTransition: Transition = reducedMotion
     ? { duration: 0 }
     : { duration: 0.16, ease: 'easeOut' };
@@ -197,11 +209,9 @@ const SidebarContent = ({
                   transition={fadeSlideTransition}
                   className="inline-flex min-w-0 flex-col overflow-hidden"
                 >
-                  <span className="inline-flex items-center gap-1 text-sm font-semibold text-foreground whitespace-nowrap">
+                  <span className="text-sm font-semibold text-foreground whitespace-nowrap">
                     CIR Cockpit
-                    <ChevronDown size={13} className="text-muted-foreground" />
                   </span>
-                  <span className="text-[11px] text-muted-foreground whitespace-nowrap">Navigation principale</span>
                 </motion.div>
               ) : null}
             </AnimatePresence>
@@ -215,7 +225,7 @@ const SidebarContent = ({
         ) : null}
 
         <nav className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
-          {safeSections.map((section) => (
+          {safeSections.map((section, sectionIndex) => (
             <div key={section.id} className="space-y-1">
               <AnimatePresence initial={false}>
                 {!collapsed ? (
@@ -223,22 +233,32 @@ const SidebarContent = ({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={fadeSlideTransition}
+                    transition={reducedMotion ? fadeSlideTransition : { ...fadeSlideTransition, delay: sectionIndex * 0.05 }}
                     className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/60"
                   >
                     {section.title}
                   </motion.p>
                 ) : null}
               </AnimatePresence>
-              {section.items.map((item) => (
-                <NavItemLink
+              {section.items.map((item, itemIndex) => (
+                <motion.div
                   key={item.id}
-                  item={item}
-                  collapsed={collapsed}
-                  isActive={item.id === activeTab}
-                  reducedMotion={reducedMotion}
-                  onMobileOpenChange={onMobileOpenChange}
-                />
+                  initial={shouldAnimateMobileOpen ? { opacity: 0, x: -10 } : false}
+                  animate={shouldAnimateMobileOpen ? { opacity: 1, x: 0 } : false}
+                  transition={
+                    reducedMotion
+                      ? { duration: 0 }
+                      : { duration: 0.2, delay: (sectionIndex * 0.1) + (itemIndex * 0.05), ease: 'easeOut' }
+                  }
+                >
+                  <NavItemLink
+                    item={item}
+                    collapsed={collapsed}
+                    isActive={item.id === activeTab}
+                    reducedMotion={reducedMotion}
+                    onMobileOpenChange={onMobileOpenChange}
+                  />
+                </motion.div>
               ))}
             </div>
           ))}

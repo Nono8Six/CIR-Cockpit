@@ -1,8 +1,12 @@
 import { memo, type ReactNode } from 'react';
-import { ArrowLeft, Menu, User } from 'lucide-react';
+import { Link } from '@tanstack/react-router';
+import { useReducedMotion } from 'motion/react';
+import { getPathForTab } from '@/app/appRoutes';
+import { ChevronDown, Menu, User } from 'lucide-react';
 
 import type { AppHeaderProps } from '@/components/app-header/AppHeader.types';
 import AppHeaderSearchButton from '@/components/app-header/AppHeaderSearchButton';
+import AvatarInitials from '@/components/ui/avatar-initials';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,10 +16,19 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import type { AppTab } from '@/types';
 
 const AppHeader = ({
+  sections,
   activeTab,
   activeSectionLabel,
   activeItemLabel,
@@ -30,7 +43,6 @@ const AppHeader = ({
   isContextRefreshing,
   isSettingsDisabled,
   isProfileMenuOpen,
-  profileMenuRef,
   onAgencyChange,
   onOpenSearch,
   onSearchIntent,
@@ -38,7 +50,6 @@ const AppHeader = ({
   onOpenSettings,
   onOpenAccountPanel,
   onSignOut,
-  onBackToCockpit,
   onOpenMobileMenu
 }: AppHeaderProps) => {
   const statusLabel = profileLoading ? 'Synchronisation profil…' : isContextRefreshing ? 'Synchronisation agence…' : null;
@@ -52,6 +63,7 @@ const AppHeader = ({
   const safeRoleLabel = typeof userRoleLabel === 'string' && userRoleLabel.trim().length > 0
     ? userRoleLabel
     : 'Rôle indisponible';
+  const safeSections = Array.isArray(sections) ? sections : [];
   const safeSectionLabel = typeof activeSectionLabel === 'string' && activeSectionLabel.trim().length > 0
     ? activeSectionLabel
     : 'Navigation';
@@ -62,6 +74,8 @@ const AppHeader = ({
   const hasInitials = safeInitials.length > 0;
   const activeAgency = agencyContext ?? safeAgencyMemberships[0] ?? null;
   const activeAgencyName = activeAgency?.agency_name ?? 'Agence indisponible';
+  const reducedMotion = useReducedMotion() ?? false;
+  const currentSectionItems = safeSections.find((section) => section.items.some((item) => item.id === activeTab))?.items ?? [];
 
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-card/95 backdrop-blur">
@@ -79,10 +93,40 @@ const AppHeader = ({
 
         <div className="flex min-w-0 flex-1 items-center gap-2 md:gap-3">
           <div className="flex min-w-0 items-center gap-2.5">
-            <p className="truncate text-sm font-medium text-muted-foreground/70">
-              {safeSectionLabel}
-            </p>
-            <span className="text-muted-foreground/30 font-light select-none">/</span>
+            {currentSectionItems && currentSectionItems.length > 0 ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="group inline-flex items-center gap-1 rounded-md px-1.5 py-1 -ml-1.5 text-sm font-medium text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <span className="truncate">{safeSectionLabel}</span>
+                    <ChevronDown size={14} className="opacity-50 transition-transform group-data-[state=open]:rotate-180" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-48">
+                  {currentSectionItems.map((item) => (
+                    <DropdownMenuItem key={item.id} asChild>
+                      <Link
+                        to={getPathForTab(item.id)}
+                        className={cn(
+                          'flex w-full items-center gap-2 cursor-pointer',
+                          activeTab === item.id && 'bg-muted font-medium text-foreground'
+                        )}
+                      >
+                        <item.icon size={14} className="text-muted-foreground" />
+                        <span className="truncate">{item.label}</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <p className="truncate text-sm font-medium text-muted-foreground">
+                {safeSectionLabel}
+              </p>
+            )}
+            <span className="text-muted-foreground/50 font-light select-none">/</span>
             <h1 className="truncate text-sm font-semibold text-foreground">
               {safeItemLabel}
             </h1>
@@ -90,11 +134,23 @@ const AppHeader = ({
         </div>
 
         <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
-          {statusLabel ? (
-            <span className="hidden text-[11px] uppercase tracking-widest text-muted-foreground xl:inline">
-              {statusLabel}
-            </span>
-          ) : null}
+          <div className="hidden items-center gap-2 xl:flex">
+             {statusLabel ? (
+              <>
+                <span className="relative flex h-2.5 w-2.5" aria-hidden="true">
+                  {!reducedMotion ? (
+                    <span className="absolute inline-flex h-full w-full rounded-full bg-primary opacity-75 animate-ping"></span>
+                  ) : null}
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
+                </span>
+                <span className="text-[11px] uppercase tracking-widest text-muted-foreground font-medium">
+                  {statusLabel}
+                </span>
+              </>
+            ) : null}
+          </div>
+
+          <div className="w-px h-4 bg-border/60 hidden xl:block mx-1" />
 
           <AppHeaderSearchButton onOpenSearch={onOpenSearch} onSearchIntent={onSearchIntent} />
 
@@ -125,96 +181,51 @@ const AppHeader = ({
               </div>
             )}
 
-            <div className="relative" ref={profileMenuRef}>
-              <button
-                type="button"
-                data-testid="app-header-profile-button"
-                className={cn(
-                  'inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-muted text-muted-foreground transition-colors',
-                  'hover:bg-surface-1 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background'
-                )}
-                onClick={() => onProfileMenuOpenChange(!isProfileMenuOpen)}
-                aria-haspopup="menu"
-                aria-expanded={isProfileMenuOpen}
-                aria-label="Ouvrir le menu profil"
-              >
-                {hasInitials ? (
-                  <span aria-hidden="true" className="text-[11px] font-semibold text-foreground">
-                    {safeInitials}
-                  </span>
-                ) : (
-                  <User size={14} aria-hidden="true" />
-                )}
-                <span className="sr-only">Menu profil</span>
-              </button>
-
-              {isProfileMenuOpen ? (
-                <div
-                  className="absolute right-0 z-30 mt-2 w-56 rounded-lg border border-border bg-card p-1 shadow-lg"
-                  role="menu"
+            <DropdownMenu open={isProfileMenuOpen} onOpenChange={onProfileMenuOpenChange}>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  data-testid="app-header-profile-button"
+                  className={cn(
+                    'relative inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border/80 bg-muted shadow-sm transition-[opacity,transform,border-color,box-shadow,background-color]',
+                    'hover:opacity-90 hover:scale-[0.98] active:scale-95 focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                    isProfileMenuOpen && 'ring-2 ring-primary/20 ring-offset-1 ring-offset-background border-primary/20'
+                  )}
+                  aria-label="Ouvrir le menu profil"
                 >
-                  <div className="m-1 rounded-md border border-border/80 bg-surface-1/80 px-2 py-2">
-                    <p className="truncate text-sm font-semibold text-foreground">{safeFullName}</p>
-                    <p className="truncate text-xs text-muted-foreground">{safeEmail}</p>
-                    <Badge variant="secondary" className="mt-1 text-[10px] font-medium">
-                      {safeRoleLabel}
-                    </Badge>
+                  {hasInitials ? (
+                    <AvatarInitials name={safeFullName} size="lg" className="h-full w-full rounded-none" />
+                  ) : (
+                    <User size={16} className="text-muted-foreground" aria-hidden="true" />
+                  )}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 mt-1">
+                <DropdownMenuLabel className="font-normal p-2">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-semibold text-foreground truncate">{safeFullName}</p>
+                    <p className="text-xs text-muted-foreground truncate">{safeEmail}</p>
+                    <div className="pt-1">
+                      <Badge variant="secondary" className="text-[10px] font-medium">
+                        {safeRoleLabel}
+                      </Badge>
+                    </div>
                   </div>
-
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="w-full justify-start text-sm"
-                    role="menuitem"
-                    onClick={() => {
-                      onProfileMenuOpenChange(false);
-                      onOpenAccountPanel();
-                    }}
-                  >
-                    Mon compte
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="w-full justify-start text-sm"
-                    role="menuitem"
-                    disabled={isSettingsDisabled}
-                    onClick={() => {
-                      onProfileMenuOpenChange(false);
-                      onOpenSettings();
-                    }}
-                  >
-                    Paramètres
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="w-full justify-start text-sm"
-                    role="menuitem"
-                    onClick={() => {
-                      onProfileMenuOpenChange(false);
-                      onSignOut();
-                    }}
-                  >
-                    Déconnexion
-                  </Button>
-                </div>
-              ) : null}
-            </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={onOpenAccountPanel} className="cursor-pointer">
+                  Mon compte
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onOpenSettings} disabled={isSettingsDisabled} className="cursor-pointer">
+                  Paramètres
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={onSignOut} className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10">
+                  Déconnexion
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-
-          {activeTab !== 'cockpit' ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="hidden gap-2 rounded-md border-border/80 lg:inline-flex"
-              onClick={onBackToCockpit}
-            >
-              <ArrowLeft size={14} />
-              Retour cockpit
-            </Button>
-          ) : null}
         </div>
       </div>
     </header>

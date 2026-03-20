@@ -57,6 +57,17 @@ describe('AppSearchOverlay', () => {
     expect(screen.getByTestId('app-search-status-live')).toHaveTextContent(/commencez a taper pour rechercher/i);
   });
 
+  it('treats a scope prefix without text as idle guidance', () => {
+    render(
+      <AppSearchOverlay
+        {...baseProps}
+        searchQuery="@"
+      />
+    );
+
+    expect(screen.getByTestId('app-search-status-live')).toHaveTextContent(/commencez a taper pour rechercher/i);
+  });
+
   it('selects a client with keyboard Enter', async () => {
     const user = userEvent.setup();
     const onFocusClient = vi.fn();
@@ -100,5 +111,35 @@ describe('AppSearchOverlay', () => {
     await waitFor(() => {
       expect(handleUiError).toHaveBeenCalled();
     });
+  });
+
+  it('toggles scoped filter chips through the query prefix', async () => {
+    const user = userEvent.setup();
+    const onSearchQueryChange = vi.fn();
+
+    const { rerender } = render(
+      <AppSearchOverlay
+        {...baseProps}
+        searchQuery="Alice"
+        onSearchQueryChange={onSearchQueryChange}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: /contact/i }));
+    expect(onSearchQueryChange).toHaveBeenCalledWith('@Alice');
+
+    rerender(
+      <AppSearchOverlay
+        {...baseProps}
+        searchQuery="@Alice"
+        onSearchQueryChange={onSearchQueryChange}
+      />
+    );
+
+    const contactChip = screen.getByRole('button', { name: /contact/i });
+    expect(contactChip).toHaveAttribute('aria-pressed', 'true');
+
+    await user.click(contactChip);
+    expect(onSearchQueryChange).toHaveBeenLastCalledWith('Alice');
   });
 });

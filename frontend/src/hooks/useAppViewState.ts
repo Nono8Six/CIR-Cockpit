@@ -1,10 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { QueryClient } from '@tanstack/react-query';
 import type { NavigateFn } from '@tanstack/react-router';
 
 import { getPathForTab, getTabFromPathname } from '@/app/appRoutes';
 import { useAppShortcuts } from '@/app/useAppShortcuts';
-import { useProfileMenuDismiss } from '@/app/useProfileMenuDismiss';
 import { prefetchAdminPanelQueries, prefetchClientsPanelQueries } from '@/services/query/queryPrefetch';
 import type { AppTab } from '@/types';
 import type { ConvertClientEntity } from '@/components/ConvertClientDialog';
@@ -34,7 +33,6 @@ export const useAppViewState = ({
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [focusedClientId, setFocusedClientId] = useState<string | null>(null);
   const [focusedContactId, setFocusedContactId] = useState<string | null>(null);
-  const profileMenuRef = useRef<HTMLDivElement | null>(null);
 
   const handleTabChange = useCallback(
     (tab: AppTab) => {
@@ -80,7 +78,6 @@ export const useAppViewState = ({
     setActiveTab: handleTabChange,
     setIsSearchOpen: handleSearchOpenChange
   });
-  useProfileMenuDismiss(profileMenuRef, isProfileMenuOpen, setIsProfileMenuOpen);
 
   useEffect(() => {
     if ((activeTab === 'settings' && !canAccessSettings) || (activeTab === 'admin' && !canAccessAdmin)) {
@@ -104,7 +101,6 @@ export const useAppViewState = ({
     isProfileMenuOpen,
     focusedClientId,
     focusedContactId,
-    profileMenuRef,
     setSearchQuery,
     setIsProfileMenuOpen,
     setFocusedClientId,

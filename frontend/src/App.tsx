@@ -295,7 +295,6 @@ const App = () => {
         isContextRefreshing: sessionState.isContextLoading && Boolean(sessionState.agencyContext),
         isSettingsDisabled: !canAccessSettings,
         isProfileMenuOpen: viewState.isProfileMenuOpen,
-        profileMenuRef: viewState.profileMenuRef,
         onAgencyChange: handleAgencyChange,
         onOpenSearch: viewState.handleOpenSearch,
         onSearchIntent: preloadAppSearchOverlay,
@@ -306,9 +305,6 @@ const App = () => {
         },
         onOpenAccountPanel: () => undefined,
         onSignOut: () => void handleSignOut(),
-        onBackToCockpit: () => {
-          viewState.handleTabChange('cockpit');
-        },
         onOpenMobileMenu: () => undefined
       }}
       mainContentProps={{

@@ -1,5 +1,3 @@
-import type { RefObject } from 'react';
-
 import type { AppShellNavSection } from '@/app/appConstants';
 import type { AgencyContext, AgencyMembershipSummary, AppTab } from '@/types';
 
@@ -19,7 +17,6 @@ export type AppHeaderProps = {
   isContextRefreshing: boolean;
   isSettingsDisabled: boolean;
   isProfileMenuOpen: boolean;
-  profileMenuRef: RefObject<HTMLDivElement | null>;
   onAgencyChange: (agencyId: string) => void;
   onOpenSearch: () => void;
   onSearchIntent?: () => void;
@@ -27,6 +24,5 @@ export type AppHeaderProps = {
   onOpenSettings: () => void;
   onOpenAccountPanel: () => void;
   onSignOut: () => void;
-  onBackToCockpit: () => void;
   onOpenMobileMenu: () => void;
 };

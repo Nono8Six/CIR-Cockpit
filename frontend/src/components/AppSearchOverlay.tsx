@@ -2,6 +2,7 @@ import { memo, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 
+import { applyAppSearchScope, parseAppSearchQuery, type AppSearchScope } from '@/app/useAppSearchData';
 import type { Entity, EntityContact, Interaction } from '@/types';
 import { handleUiError } from '@/services/errors/handleUiError';
 import { Button } from '@/components/ui/button';
@@ -13,11 +14,22 @@ import {
   CommandList,
   CommandLoading
 } from '@/components/ui/command';
+import { cn } from '@/lib/utils';
 import type { ConvertClientEntity } from './ConvertClientDialog';
 import AppSearchResults from './app-search/AppSearchResults';
 import AppSearchFooter from './app-search/AppSearchFooter';
 
 type AppSearchViewState = 'loading' | 'error' | 'idle' | 'empty' | 'results';
+
+const SEARCH_SCOPE_CHIPS: Array<{
+  accent: '@' | '#' | '!';
+  label: string;
+  scope: Exclude<AppSearchScope, 'all'>;
+}> = [
+  { accent: '@', label: 'Contact', scope: 'contacts' },
+  { accent: '#', label: 'Interaction', scope: 'interactions' },
+  { accent: '!', label: 'Client', scope: 'clients' }
+];
 
 type AppSearchOverlayProps = {
   open: boolean;
@@ -79,8 +91,9 @@ const AppSearchOverlay = ({
   footerRight
 }: AppSearchOverlayProps) => {
   const isErrorState = Boolean(entitySearchError);
+  const { normalizedQuery, scope } = parseAppSearchQuery(searchQuery);
   const viewState = getAppSearchViewState({
-    query: searchQuery,
+    query: normalizedQuery,
     isLoading: isEntitySearchLoading,
     hasError: isErrorState,
     hasResults: hasSearchResults
@@ -135,6 +148,14 @@ const AppSearchOverlay = ({
     }
   }, [onRequestConvert]);
 
+  const handleScopeChipClick = useCallback((nextScope: Exclude<AppSearchScope, 'all'>) => {
+    onSearchQueryChange(
+      scope === nextScope
+        ? applyAppSearchScope('all', searchQuery)
+        : applyAppSearchScope(nextScope, searchQuery)
+    );
+  }, [onSearchQueryChange, scope, searchQuery]);
+
   return (
     <CommandDialog
       open={open}
@@ -158,6 +179,33 @@ const AppSearchOverlay = ({
           data-testid="app-search-input"
           className="text-sm sm:text-base"
         />
+        <div className="flex items-center gap-2 px-4 py-2 border-b border-border/40 bg-muted/30 overflow-x-auto hide-scrollbar">
+          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest whitespace-nowrap mr-1">Filtres</span>
+          <div className="flex gap-2">
+            {SEARCH_SCOPE_CHIPS.map((chip) => {
+              const isActive = scope === chip.scope;
+
+              return (
+                <button
+                  key={chip.scope}
+                  type="button"
+                  aria-pressed={isActive}
+                  onClick={() => handleScopeChipClick(chip.scope)}
+                  className={cn(
+                    'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium transition-colors',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                    isActive
+                      ? 'border-primary/30 bg-primary/10 text-foreground'
+                      : 'border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground'
+                  )}
+                >
+                  <span className="text-primary font-bold">{chip.accent}</span>
+                  {chip.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
         <span aria-live="polite" className="sr-only" data-testid="app-search-status-live">
           {statusMessage}
         </span>
