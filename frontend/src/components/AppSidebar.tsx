@@ -2,11 +2,17 @@ import type { ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
 import {
   ChevronDown,
-  ChevronsLeft,
-  ChevronsRight
+  PanelLeft
 } from 'lucide-react';
+import {
+  AnimatePresence,
+  motion,
+  useReducedMotion,
+  type Transition
+} from 'motion/react';
 
 import {
+  APP_SHELL_SECTION_LABELS,
   getSidebarToggleShortcutLabel,
   SIDEBAR_TOGGLE_SHORTCUT_ARIA
 } from '@/app/appConstants';
@@ -19,6 +25,7 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from '@/components/ui/tooltip';
+import { Kbd } from '@/components/ui/kbd';
 import { cn } from '@/lib/utils';
 import type { AppTab } from '@/types';
 
@@ -27,6 +34,7 @@ type SidebarContentProps = {
   activeTab: AppTab;
   collapsed: boolean;
   onMobileOpenChange?: (open: boolean) => void;
+  onToggleCollapsed?: () => void;
   mobileAccountSlot?: ReactNode;
 };
 
@@ -40,85 +48,93 @@ type AppSidebarProps = {
   mobileAccountSlot?: ReactNode;
 };
 
-const DesktopRailToggle = ({
-  collapsed,
-  onToggleCollapsed
-}: Pick<AppSidebarProps, 'collapsed' | 'onToggleCollapsed'>) => {
-  const actionLabel = collapsed ? 'D\u00E9plier la navigation' : 'Replier la navigation';
-  const shortcutLabel = getSidebarToggleShortcutLabel();
+const buildCollapsedNavLabel = (item: AppShellNavItem): string => {
+  const parts = [APP_SHELL_SECTION_LABELS[item.sectionId], item.label];
 
-  return (
-    <div className="pointer-events-none absolute inset-y-0 -right-5 z-10 hidden w-10 items-center justify-center md:flex">
-      <button
-        type="button"
-        aria-label={actionLabel}
-        aria-expanded={!collapsed}
-        aria-keyshortcuts={SIDEBAR_TOGGLE_SHORTCUT_ARIA}
-        data-testid="app-sidebar-rail-toggle"
-        title={`${actionLabel} (${shortcutLabel})`}
-        onClick={onToggleCollapsed}
-        className="group pointer-events-auto inline-flex h-16 w-10 touch-manipulation items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-      >
-        <span
-          aria-hidden="true"
-          className={cn(
-            'inline-flex h-12 w-5 items-center justify-center rounded-full border bg-card text-muted-foreground transition-[transform,border-color,background-color,color] duration-200 group-hover:-translate-x-px group-hover:border-primary/35 group-hover:text-foreground group-active:scale-[0.98]',
-            collapsed ? 'border-border/85' : 'border-border/75'
-          )}
-        >
-          {collapsed ? <ChevronsRight size={14} /> : <ChevronsLeft size={14} />}
-        </span>
-      </button>
-    </div>
-  );
+  if (item.metaLabel) {
+    parts.push(item.metaLabel);
+  }
+
+  if (item.shortcut) {
+    parts.push(item.shortcut);
+  }
+
+  return parts.join(' - ');
 };
 
 const NavItemLink = ({
   item,
   collapsed,
   isActive,
+  reducedMotion,
   onMobileOpenChange
 }: {
   item: AppShellNavItem;
   collapsed: boolean;
   isActive: boolean;
+  reducedMotion: boolean;
   onMobileOpenChange?: (open: boolean) => void;
 }) => {
+  const sectionLabel = APP_SHELL_SECTION_LABELS[item.sectionId];
+  const activeIndicatorTransition: Transition = reducedMotion
+    ? { duration: 0 }
+    : { type: 'spring', stiffness: 300, damping: 30 };
+  const navContentTransition: Transition = reducedMotion
+    ? { duration: 0 }
+    : { duration: 0.16, ease: 'easeOut' };
+
   const link = (
     <Link
       to={getPathForTab(item.id)}
       onClick={() => onMobileOpenChange?.(false)}
       className={cn(
-        'group relative flex h-10 w-full items-center rounded-xl border px-3 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+        'group relative flex h-10 w-full items-center rounded-xl px-3 text-left text-sm transition-[background-color,color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98]',
         isActive
-          ? 'border-primary/35 bg-primary/12 text-foreground shadow-[0_6px_20px_-16px_rgba(200,30,30,0.95)]'
-          : 'border-transparent text-muted-foreground hover:border-border/80 hover:bg-card/85 hover:text-foreground',
+          ? 'bg-surface-1/80 font-semibold text-foreground shadow-sm ring-1 ring-border/50'
+          : 'text-muted-foreground hover:bg-card/85 hover:text-foreground',
         collapsed ? 'justify-center px-0' : 'gap-2.5'
       )}
       activeProps={{ 'aria-current': 'page' }}
-      aria-label={!collapsed ? undefined : `${item.sectionId} - ${item.label}`}
+      aria-label={!collapsed ? undefined : buildCollapsedNavLabel(item)}
       data-testid={`app-shell-nav-${item.id}`}
     >
-      {isActive && !collapsed ? (
-        <span
-          aria-hidden="true"
-          className="absolute left-0.5 h-4 w-1.5 rounded-full bg-primary/90"
+      {isActive ? (
+        <motion.span
+          layoutId="active-nav-indicator"
+          className={cn(
+            "absolute -left-[1px] top-[15%] h-[70%] rounded-r-full bg-primary",
+            collapsed ? "w-[2px]" : "w-[3px]"
+          )}
+          initial={false}
+          transition={activeIndicatorTransition}
         />
       ) : null}
-      <item.icon size={15} className="shrink-0" />
-      {!collapsed ? (
-        <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
-          <span className="truncate font-medium">{item.label}</span>
-          <span className="inline-flex items-center gap-1.5">
-            {item.metaLabel ? (
-              <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-semibold text-primary-foreground">
-                {item.metaLabel}
-              </span>
-            ) : null}
-            <span className="font-mono text-[10px] text-muted-foreground/80">{item.shortcut}</span>
-          </span>
-        </span>
-      ) : null}
+
+      <item.icon size={15} className="shrink-0 relative z-10" />
+
+      <AnimatePresence initial={false}>
+        {!collapsed ? (
+          <motion.span
+            initial={{ opacity: 0, width: 0 }}
+            animate={{ opacity: 1, width: 'auto' }}
+            exit={{ opacity: 0, width: 0 }}
+            transition={navContentTransition}
+            className="flex min-w-0 flex-1 items-center justify-between gap-2 overflow-hidden"
+          >
+            <span className="truncate">{item.label}</span>
+            <span className="inline-flex shrink-0 items-center gap-1.5">
+              {item.metaLabel ? (
+                <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-primary/10 border border-primary/20 px-1.5 text-[10px] font-bold text-primary">
+                  {item.metaLabel}
+                </span>
+              ) : null}
+              {item.shortcut ? (
+                 <span className="font-mono text-[10px] text-muted-foreground/60">{item.shortcut}</span>
+              ) : null}
+            </span>
+          </motion.span>
+        ) : null}
+      </AnimatePresence>
       {collapsed ? <span className="sr-only">{item.label}</span> : null}
     </Link>
   );
@@ -130,7 +146,20 @@ const NavItemLink = ({
   return (
     <Tooltip delayDuration={120}>
       <TooltipTrigger asChild>{link}</TooltipTrigger>
-      <TooltipContent side="right">{item.label}</TooltipContent>
+      <TooltipContent side="right">
+        <div className="space-y-1">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            {sectionLabel}
+          </p>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-foreground">{item.label}</span>
+            {item.metaLabel ? (
+              <span className="text-xs text-muted-foreground">{item.metaLabel}</span>
+            ) : null}
+            {item.shortcut ? <Kbd>{item.shortcut}</Kbd> : null}
+          </div>
+        </div>
+      </TooltipContent>
     </Tooltip>
   );
 };
@@ -140,56 +169,134 @@ const SidebarContent = ({
   activeTab,
   collapsed,
   onMobileOpenChange,
+  onToggleCollapsed,
   mobileAccountSlot
 }: SidebarContentProps) => {
   const safeSections = Array.isArray(sections) ? sections : [];
+  const toggleLabel = collapsed ? 'D\u00E9plier le menu' : 'R\u00E9duire le menu';
+  const toggleShortcut = getSidebarToggleShortcutLabel();
+  const reducedMotion = useReducedMotion() ?? false;
+  const fadeSlideTransition: Transition = reducedMotion
+    ? { duration: 0 }
+    : { duration: 0.16, ease: 'easeOut' };
 
   return (
     <TooltipProvider>
-      <div className="flex h-full flex-col bg-gradient-to-b from-[hsl(210,38%,98%)] via-[hsl(215,32%,96%)] to-[hsl(218,22%,94%)] p-3">
-        <div className={cn('mb-3 flex items-center', collapsed ? 'justify-center' : 'justify-between')}>
-          <div className={cn('flex items-center gap-2', collapsed && 'justify-center')}>
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-xs font-black text-white shadow-[0_8px_18px_-10px_rgba(200,30,30,0.9)]">
+      <div className="flex h-full flex-col bg-surface-2 p-3">
+        <div className={cn('mb-5 flex items-center', collapsed ? 'justify-center' : 'justify-between px-1')}>
+          <div className={cn('flex items-center gap-2.5', collapsed && 'justify-center')}>
+            <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-primary text-xs font-black text-white shadow-sm">
               C
             </span>
-            {!collapsed ? (
-              <div className="inline-flex min-w-0 flex-col">
-                <span className="inline-flex items-center gap-1 text-sm font-semibold text-foreground">
-                  CIR Cockpit
-                  <ChevronDown size={13} className="text-muted-foreground" />
-                </span>
-                <span className="text-[11px] text-muted-foreground">Navigation principale</span>
-              </div>
-            ) : null}
+            <AnimatePresence initial={false}>
+              {!collapsed ? (
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={fadeSlideTransition}
+                  className="inline-flex min-w-0 flex-col overflow-hidden"
+                >
+                  <span className="inline-flex items-center gap-1 text-sm font-semibold text-foreground whitespace-nowrap">
+                    CIR Cockpit
+                    <ChevronDown size={13} className="text-muted-foreground" />
+                  </span>
+                  <span className="text-[11px] text-muted-foreground whitespace-nowrap">Navigation principale</span>
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
           </div>
         </div>
 
         {!collapsed && mobileAccountSlot ? (
-          <div className="mb-3 rounded-xl border border-border/80 bg-card/90 p-3">
+          <div className="mb-4 rounded-xl border border-border/80 bg-card/90 p-3">
             {mobileAccountSlot}
           </div>
         ) : null}
 
-        <nav className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
+        <nav className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
           {safeSections.map((section) => (
             <div key={section.id} className="space-y-1">
-              {!collapsed ? (
-                <p className="px-2 pb-0.5 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
-                  {section.title}
-                </p>
-              ) : null}
+              <AnimatePresence initial={false}>
+                {!collapsed ? (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={fadeSlideTransition}
+                    className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/60"
+                  >
+                    {section.title}
+                  </motion.p>
+                ) : null}
+              </AnimatePresence>
               {section.items.map((item) => (
                 <NavItemLink
                   key={item.id}
                   item={item}
                   collapsed={collapsed}
                   isActive={item.id === activeTab}
+                  reducedMotion={reducedMotion}
                   onMobileOpenChange={onMobileOpenChange}
                 />
               ))}
             </div>
           ))}
         </nav>
+
+        {onToggleCollapsed && (
+          <div className="mt-auto pt-4 border-t border-border/40">
+            <Tooltip delayDuration={120}>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={toggleLabel}
+                  aria-expanded={!collapsed}
+                  aria-keyshortcuts={SIDEBAR_TOGGLE_SHORTCUT_ARIA}
+                  onClick={onToggleCollapsed}
+                  className={cn(
+                    'group flex h-10 w-full items-center rounded-xl text-sm transition-[background-color,color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98]',
+                    collapsed ? 'justify-center px-0 text-muted-foreground hover:bg-card/85 hover:text-foreground' : 'justify-between px-3 text-muted-foreground hover:bg-card/85 hover:text-foreground'
+                  )}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <PanelLeft size={15} className="shrink-0" />
+                    <AnimatePresence initial={false}>
+                      {!collapsed ? (
+                        <motion.span
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={fadeSlideTransition}
+                          className="font-medium truncate"
+                        >
+                          R&eacute;duire le menu
+                        </motion.span>
+                      ) : null}
+                    </AnimatePresence>
+                  </div>
+                  <AnimatePresence initial={false}>
+                    {!collapsed ? (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={fadeSlideTransition}
+                      >
+                        <Kbd className="group-hover:bg-background/80 transition-colors group-hover:text-foreground">{toggleShortcut}</Kbd>
+                      </motion.div>
+                    ) : null}
+                  </AnimatePresence>
+                </button>
+              </TooltipTrigger>
+              {collapsed && (
+                <TooltipContent side="right">
+                  {toggleLabel} <Kbd className="ml-1 bg-transparent border-border/40">{toggleShortcut}</Kbd>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </div>
+        )}
       </div>
     </TooltipProvider>
   );
@@ -203,37 +310,45 @@ const AppSidebar = ({
   mobileOpen,
   onMobileOpenChange,
   mobileAccountSlot
-}: AppSidebarProps) => (
-  <>
-    <aside
-      className={cn(
-        'relative hidden border-r border-border/80 bg-[hsl(214,24%,95%)] transition-[width] duration-200 md:flex md:flex-col',
-        collapsed ? 'w-[80px]' : 'w-[296px]'
-      )}
-    >
-      <SidebarContent
-        sections={sections}
-        activeTab={activeTab}
-        collapsed={collapsed}
-      />
-      <DesktopRailToggle collapsed={collapsed} onToggleCollapsed={onToggleCollapsed} />
-    </aside>
+}: AppSidebarProps) => {
+  const reducedMotion = useReducedMotion() ?? false;
+  const sidebarTransition: Transition = reducedMotion
+    ? { duration: 0 }
+    : { type: 'spring', stiffness: 350, damping: 35 };
 
-    <Sheet open={mobileOpen} onOpenChange={onMobileOpenChange}>
-      <SheetContent
-        side="left"
-        className="w-[min(88vw,360px)] border-r border-border/80 p-0 [overscroll-behavior:contain]"
+  return (
+    <>
+      <motion.aside
+        initial={false}
+        animate={{ width: collapsed ? 80 : 296 }}
+        transition={sidebarTransition}
+        className="relative hidden overflow-hidden border-r border-border/80 bg-[hsl(214,24%,95%)] md:flex md:flex-col"
       >
         <SidebarContent
           sections={sections}
           activeTab={activeTab}
-          collapsed={false}
-          onMobileOpenChange={onMobileOpenChange}
-          mobileAccountSlot={mobileAccountSlot}
+          collapsed={collapsed}
+          onToggleCollapsed={onToggleCollapsed}
         />
-      </SheetContent>
-    </Sheet>
-  </>
-);
+      </motion.aside>
+
+      <Sheet open={mobileOpen} onOpenChange={onMobileOpenChange}>
+        <SheetContent
+          side="left"
+          className="w-[min(88vw,360px)] border-r border-border/80 p-0 [overscroll-behavior:contain]"
+        >
+          <SidebarContent
+            sections={sections}
+            activeTab={activeTab}
+            collapsed={false}
+            onMobileOpenChange={onMobileOpenChange}
+            mobileAccountSlot={mobileAccountSlot}
+            mobileOpen={mobileOpen}
+          />
+        </SheetContent>
+      </Sheet>
+    </>
+  );
+};
 
 export default AppSidebar;

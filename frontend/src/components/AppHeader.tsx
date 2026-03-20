@@ -78,11 +78,12 @@ const AppHeader = ({
         </Button>
 
         <div className="flex min-w-0 flex-1 items-center gap-2 md:gap-3">
-          <div className="min-w-0">
-            <p className="truncate text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <p className="truncate text-sm font-medium text-muted-foreground/70">
               {safeSectionLabel}
             </p>
-            <h1 className="truncate text-sm font-semibold text-foreground sm:text-base">
+            <span className="text-muted-foreground/30 font-light select-none">/</span>
+            <h1 className="truncate text-sm font-semibold text-foreground">
               {safeItemLabel}
             </h1>
           </div>

@@ -32,6 +32,7 @@ export const APP_TAB_SHORTCUTS: Record<AppTab, string> = {
   clients: 'F5'
 };
 
+export const SEARCH_SHORTCUT_ARIA = 'Control+K Meta+K';
 export const SIDEBAR_TOGGLE_SHORTCUT_ARIA = 'Control+B Meta+B Control+Backslash Meta+Backslash';
 const APPLE_PLATFORM_PATTERN = /(Mac|iPhone|iPad|iPod)/i;
 
