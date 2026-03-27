@@ -42,6 +42,23 @@ const prospectRow = {
   account_type: null
 };
 
+const mockMatchMedia = (isDesktopDrawer = false) => {
+  Object.defineProperty(window, 'matchMedia', {
+    configurable: true,
+    writable: true,
+    value: vi.fn().mockImplementation((query: string) => ({
+      matches: query === '(min-width: 1280px)' ? isDesktopDrawer : false,
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn()
+    }))
+  });
+};
+
 vi.mock('@tanstack/react-router', () => ({
   useNavigate: () => mockNavigate,
   useSearch: () => searchState
@@ -131,6 +148,7 @@ vi.mock('@/components/ProspectFormDialog', () => ({
 describe('ClientDirectoryPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockMatchMedia(false);
   });
 
   it('opens a client detail route without propagating list search params', async () => {
@@ -157,6 +175,28 @@ describe('ClientDirectoryPage', () => {
       to: '/clients/prospects/$prospectId',
       params: { prospectId: 'prospect-1' }
     });
+  });
+
+  it('opens the drawer route on desktop large while masking the canonical detail URL', async () => {
+    const user = userEvent.setup();
+    mockMatchMedia(true);
+
+    render(<ClientDirectoryPage />);
+
+    await user.click(screen.getByRole('button', { name: /ouvrir client/i }));
+
+    expect(mockNavigate).toHaveBeenCalledWith({
+      to: '/clients/$clientNumber/drawer',
+      params: { clientNumber: '98568547' },
+      search: expect.any(Function),
+      mask: {
+        to: '/clients/$clientNumber',
+        params: { clientNumber: '98568547' }
+      }
+    });
+
+    const navigateCall = mockNavigate.mock.calls.at(-1)?.[0];
+    expect(navigateCall?.search()).toEqual(searchState);
   });
 
   it('opens the integrated create route while preserving directory search', async () => {

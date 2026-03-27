@@ -48,10 +48,12 @@ const DirectoryMobileFilterSheet = ({
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button type="button" variant="outline" size="dense" className="h-9 rounded-md px-3 text-sm shadow-none">
-          <SlidersHorizontal className="size-4" />
+        <Button type="button" variant="outline" size="dense" className="h-9 rounded-full px-4 text-sm shadow-none bg-white">
+          <SlidersHorizontal className="size-4 mr-2" />
           Filtres
-          {activeFilterCount > 0 ? <Badge variant="secondary">{activeFilterCount}</Badge> : null}
+          {activeFilterCount > 0 ? (
+            <Badge variant="secondary" className="ml-2 rounded-full px-1.5">{activeFilterCount}</Badge>
+          ) : null}
         </Button>
       </SheetTrigger>
       <SheetContent

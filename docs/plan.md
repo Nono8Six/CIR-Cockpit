@@ -30,7 +30,7 @@ Etapes:
 1. deplacer les audits historiques sous `docs/audit/` et le plan de refactor sous `docs/plan/`
 2. supprimer les fichiers sans consommateurs runtime/tests et durcir `.gitignore`
 3. renommer les dossiers front hors convention (`ClientList`, `ProspectList`) vers du `kebab-case`
-4. decouper les hotspots `ClientDetailPanel` et `useClientsPanelState` en sous-modules internes
+4. decouper les hotspots `ClientDetailPanel` et `ClientDirectoryFilters` en sous-modules internes
 5. verifier avec tests cibles puis gate `pnpm run qa`
 
 ## 2026-03-14

@@ -3,7 +3,8 @@ import {
   type DirectoryListInput,
   type DirectoryListRow,
   type DirectorySavedViewState,
-  type DirectorySortingRule
+  type DirectorySortingRule,
+  type DirectoryDensity
 } from 'shared/schemas/directory.schema';
 
 export const DEFAULT_DIRECTORY_SORTING: DirectorySortingRule[] = [{ id: 'name', desc: false }];
@@ -13,7 +14,7 @@ export const DEFAULT_DIRECTORY_SEARCH: DirectoryListInput = directoryListInputSc
   sorting: DEFAULT_DIRECTORY_SORTING
 });
 export const DEFAULT_DIRECTORY_COLUMN_VISIBILITY: DirectorySavedViewState['columnVisibility'] = {};
-export const DEFAULT_DIRECTORY_DENSITY: DirectorySavedViewState['density'] = 'comfortable';
+export const DEFAULT_DIRECTORY_DENSITY: DirectoryDensity = 'compact';
 
 const parseLegacySorting = (search: Record<string, unknown>): DirectorySortingRule[] => {
   const sortBy = typeof search.sortBy === 'string' ? search.sortBy.trim() : '';

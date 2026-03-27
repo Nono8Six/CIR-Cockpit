@@ -14,11 +14,6 @@ import {
   CommandLoading
 } from '@/components/ui/command';
 import { Input } from '@/components/ui/input';
-import {
-  Popover,
-  PopoverAnchor,
-  PopoverContent
-} from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 
 interface DirectoryCityAutocompleteProps {
@@ -29,6 +24,8 @@ interface DirectoryCityAutocompleteProps {
   includeArchived: boolean;
   onDraftChange: (value: string) => void;
   onCommit: (value: string | undefined) => void;
+  onCommitComplete?: () => void;
+  className?: string;
 }
 
 const DirectoryCityAutocomplete = ({
@@ -38,7 +35,9 @@ const DirectoryCityAutocomplete = ({
   agencyIds,
   includeArchived,
   onDraftChange,
-  onCommit
+  onCommit,
+  onCommitComplete,
+  className
 }: DirectoryCityAutocompleteProps) => {
   const [open, setOpen] = useState(false);
   const isSelectingSuggestionRef = useRef(false);
@@ -61,6 +60,7 @@ const DirectoryCityAutocomplete = ({
     onDraftChange(normalizedValue);
     onCommit(normalizedValue || undefined);
     setOpen(false);
+    onCommitComplete?.();
   };
 
   const restoreCommittedValue = () => {
@@ -92,6 +92,7 @@ const DirectoryCityAutocomplete = ({
       if (normalizedDraftValue.length === 0) {
         if (committedValue !== undefined) {
           onCommit(undefined);
+          onCommitComplete?.();
         }
         onDraftChange('');
         setOpen(false);
@@ -108,65 +109,62 @@ const DirectoryCityAutocomplete = ({
   };
 
   return (
-    <Popover open={shouldShowSuggestions} onOpenChange={setOpen}>
-      <PopoverAnchor asChild>
-        <Input
-          value={draftValue}
-          onChange={(event) => {
-            const nextValue = event.target.value;
-            onDraftChange(nextValue);
-            setOpen(nextValue.trim().length >= 2);
-          }}
-          onFocus={() => {
-            if (draftValue.trim().length >= 2) {
-              setOpen(true);
-            }
-          }}
-          onBlur={handleBlur}
-          onKeyDown={handleKeyDown}
-          placeholder="Saisir une ville…"
-          aria-label="Filtre ville"
-          name="directory-city"
-          autoComplete="off"
-          spellCheck={false}
-        />
-      </PopoverAnchor>
-      <PopoverContent
-        align="start"
-        className="w-[320px] p-0"
-        onOpenAutoFocus={(event) => event.preventDefault()}
-        onCloseAutoFocus={(event) => event.preventDefault()}
-      >
-        <Command shouldFilter={false}>
-          <CommandList>
-            {suggestionsQuery.isFetching ? (
-              <CommandLoading>Chargement des villes…</CommandLoading>
-            ) : null}
-            {!suggestionsQuery.isFetching && suggestions.length === 0 ? (
-              <CommandEmpty>Aucune ville trouvée.</CommandEmpty>
-            ) : null}
-            {suggestions.map((suggestion) => {
-              const isSelected = suggestion.value === (committedValue ?? '');
-              return (
-                <CommandItem
-                  key={suggestion.value}
-                  value={suggestion.value}
-                  onMouseDown={() => {
-                    isSelectingSuggestionRef.current = true;
-                  }}
-                  onSelect={() => {
-                    commitValue(suggestion.value);
-                  }}
-                >
-                  <span className="flex-1">{suggestion.label}</span>
-                  <Check className={cn('size-4 text-primary', isSelected ? 'opacity-100' : 'opacity-0')} />
-                </CommandItem>
-              );
-            })}
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+    <div className={cn('relative', className)}>
+      <Input
+        value={draftValue}
+        onChange={(event) => {
+          const nextValue = event.target.value;
+          onDraftChange(nextValue);
+          setOpen(nextValue.trim().length >= 2);
+        }}
+        onFocus={() => {
+          if (draftValue.trim().length >= 2) {
+            setOpen(true);
+          }
+        }}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        placeholder="Saisir une ville…"
+        aria-label="Filtre ville"
+        name="directory-city"
+        autoComplete="off"
+        spellCheck={false}
+        className="h-9 rounded-lg border-border/70 shadow-none"
+      />
+
+      {shouldShowSuggestions ? (
+        <div className="absolute left-0 top-[calc(100%+4px)] z-50 w-full overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md">
+          <Command shouldFilter={false}>
+            <CommandList>
+              {suggestionsQuery.isFetching ? (
+                <CommandLoading>Chargement des villes…</CommandLoading>
+              ) : null}
+              {!suggestionsQuery.isFetching && suggestions.length === 0 ? (
+                <CommandEmpty>Aucune ville trouvee.</CommandEmpty>
+              ) : null}
+              {suggestions.map((suggestion) => {
+                const isSelected = suggestion.value === (committedValue ?? '');
+                return (
+                  <CommandItem
+                    key={suggestion.value}
+                    value={suggestion.value}
+                    onMouseDown={() => {
+                      isSelectingSuggestionRef.current = true;
+                    }}
+                    onSelect={() => {
+                      commitValue(suggestion.value);
+                    }}
+                  >
+                    <span className="flex-1">{suggestion.label}</span>
+                    <Check className={cn('size-4 text-primary', isSelected ? 'opacity-100' : 'opacity-0')} />
+                  </CommandItem>
+                );
+              })}
+            </CommandList>
+          </Command>
+        </div>
+      ) : null}
+    </div>
   );
 };
 

@@ -52,9 +52,9 @@ const DirectoryTypeFilter = ({
         </Select>
       </div>
 
-      <div className="hidden xl:flex xl:flex-col xl:gap-1">
-        <p className="text-xs font-medium text-muted-foreground">
-          Type de fiche
+      <div className="hidden xl:flex xl:flex-col xl:gap-1.5">
+        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70">
+          AFFICHAGE
         </p>
         <ToggleGroup
           type="single"
@@ -63,7 +63,7 @@ const DirectoryTypeFilter = ({
           size="sm"
           spacing={1}
           aria-label="Type de fiche"
-          className="justify-start"
+          className="inline-flex h-8 items-center justify-start rounded-md bg-muted/50 p-1"
           onValueChange={(nextValue) => {
             if (!nextValue) {
               return;
@@ -77,7 +77,7 @@ const DirectoryTypeFilter = ({
               key={type.value}
               value={type.value}
               aria-label={type.label}
-              className="h-9 min-w-[78px] rounded-lg border-border/70 px-3 text-sm font-medium shadow-none transition-colors duration-150 data-[state=on]:border-primary/40 data-[state=on]:bg-primary/5 data-[state=on]:text-foreground data-[state=on]:hover:bg-primary/10"
+              className="h-6 rounded-sm border-0 px-3 text-xs font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm"
             >
               {type.label}
             </ToggleGroupItem>

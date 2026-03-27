@@ -90,7 +90,7 @@ export default defineConfig({
           functions: 0,
           lines: 0
         },
-        'src/hooks/{useInteractionDraft,useClientsPanelState,useCockpitFormController}.ts': {
+        'src/hooks/{useInteractionDraft,useCockpitFormController}.ts': {
           statements: 0,
           branches: 0,
           functions: 0,

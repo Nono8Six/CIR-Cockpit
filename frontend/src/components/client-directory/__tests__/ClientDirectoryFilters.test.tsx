@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import type { DirectoryListInput } from 'shared/schemas/directory.schema';
 
 import { createTestQueryClient } from '@/__tests__/test-utils';
-import ClientDirectoryFilters from '../ClientDirectoryFilters';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import ClientDirectoryFilters from '../ClientDirectoryFilters';
 
 vi.mock('@/hooks/useDirectoryCitySuggestions', () => ({
   useDirectoryCitySuggestions: () => ({
@@ -34,7 +34,7 @@ const baseSearch: DirectoryListInput = {
 
 const renderFilters = (
   searchOverrides: Partial<DirectoryListInput> = {},
-  options: { isFetching?: boolean } = {}
+  options: { isFetching?: boolean; density?: 'compact' | 'comfortable' } = {}
 ) => {
   const onSearchPatch = vi.fn();
   const onSearchDraftChange = vi.fn();
@@ -58,7 +58,7 @@ const renderFilters = (
         departments={['33']}
         canFilterAgency
         isFetching={options.isFetching ?? false}
-        density={searchOverrides.type === 'client' ? 'compact' : 'comfortable'}
+        density={options.density ?? 'compact'}
         viewOptionColumns={[
           { id: 'name', label: 'Nom', canHide: false, isVisible: true },
           { id: 'city', label: 'Ville', canHide: true, isVisible: true }
@@ -87,20 +87,22 @@ const renderFilters = (
 };
 
 describe('ClientDirectoryFilters', () => {
-  it('affiche un contrôle de type explicite et désactive le reset par défaut', () => {
+  it('affiche les controles principaux et desactive le reset par defaut', () => {
     renderFilters();
     const resetButtons = screen.getAllByRole('button', { name: 'Réinitialiser' });
 
-    expect(screen.getByText('Recherche')).toBeInTheDocument();
-    expect(screen.getByText('Type de fiche')).toBeInTheDocument();
+    expect(screen.getByText('RECHERCHE')).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Type de fiche' })).toBeInTheDocument();
+    expect(screen.getAllByText('Affichage').length).toBeGreaterThan(0);
     expect(screen.getByText('Type : Tous')).toBeInTheDocument();
-    expect(screen.getByText('Agence')).toBeInTheDocument();
-    expect(screen.getByText('Département')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Agence' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Departement' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Ville' })).toBeInTheDocument();
     expect(resetButtons).toHaveLength(2);
     resetButtons.forEach((button) => expect(button).toBeDisabled());
   });
 
-  it('met à jour le type via le contrôle segmenté desktop', async () => {
+  it('met a jour le type via le controle segmente desktop', async () => {
     const user = userEvent.setup();
     const { onSearchPatch } = renderFilters();
 
@@ -113,7 +115,7 @@ describe('ClientDirectoryFilters', () => {
     });
   });
 
-  it("ne déclenche pas la recherche sur simple frappe et commit sur Entrée", async () => {
+  it('ne declenche pas la recherche sur simple frappe et commit sur Entree', async () => {
     const user = userEvent.setup();
     const { onSearchPatch, onSearchDraftChange } = renderFilters();
 
@@ -150,7 +152,9 @@ describe('ClientDirectoryFilters', () => {
     const user = userEvent.setup();
     const { onSearchPatch } = renderFilters();
 
-    const cityInput = screen.getByRole('textbox', { name: 'Filtre ville' });
+    await user.click(screen.getByRole('button', { name: 'Ville' }));
+
+    const cityInput = await screen.findByRole('textbox', { name: 'Filtre ville' });
     await user.type(cityInput, 'gra');
 
     expect(cityInput).toHaveValue('gra');
@@ -160,7 +164,7 @@ describe('ClientDirectoryFilters', () => {
     });
   });
 
-  it('restaure le draft ville quand le filtre externe est vidé', async () => {
+  it('restaure le draft ville quand le filtre externe est vide', async () => {
     const user = userEvent.setup();
     const queryClient = createTestQueryClient();
 
@@ -185,7 +189,7 @@ describe('ClientDirectoryFilters', () => {
             departments={['33']}
             canFilterAgency
             isFetching={false}
-            density="comfortable"
+            density="compact"
             viewOptionColumns={[
               { id: 'name', label: 'Nom', canHide: false, isVisible: true },
               { id: 'city', label: 'Ville', canHide: true, isVisible: true }
@@ -216,15 +220,24 @@ describe('ClientDirectoryFilters', () => {
       </QueryClientProvider>
     );
 
-    const cityInput = screen.getByRole('textbox', { name: 'Filtre ville' });
+    await user.click(screen.getByRole('button', { name: 'Ville: Gradignan' }));
+
+    const cityInput = await screen.findByRole('textbox', { name: 'Filtre ville' });
     expect(cityInput).toHaveValue('Gradignan');
 
     await user.click(screen.getByRole('button', { name: 'Vider ville' }));
 
-    expect(cityInput).toHaveValue('');
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Ville' })).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Ville' }));
+
+    const clearedCityInput = await screen.findByRole('textbox', { name: 'Filtre ville' });
+    expect(clearedCityInput).toHaveValue('');
   });
 
-  it('active la réinitialisation dès qu’un état personnalisé est présent', () => {
+  it('active la reinitialisation des qu un etat personnalise est present', () => {
     renderFilters({ type: 'client' });
 
     screen.getAllByRole('button', { name: 'Réinitialiser' }).forEach((button) => {
@@ -232,11 +245,18 @@ describe('ClientDirectoryFilters', () => {
     });
   });
 
-  it('conserve le filtre agence visible après sélection', () => {
-    renderFilters({ agencyIds: ['agency-1'] });
+  it('affiche et efface un filtre agence actif depuis la pill desktop', async () => {
+    const user = userEvent.setup();
+    const { onSearchPatch } = renderFilters({ agencyIds: ['agency-1'] });
 
-    expect(screen.getByText('Agence')).toBeInTheDocument();
-    expect(screen.getAllByText('CIR Bordeaux').length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: 'Agence: CIR Bordeaux' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Effacer filtre Agence' }));
+
+    expect(onSearchPatch).toHaveBeenCalledWith({
+      agencyIds: [],
+      page: 1
+    });
   });
 
   it('expose un indicateur de synchronisation nomme pendant un rafraichissement', () => {

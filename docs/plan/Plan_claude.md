@@ -8,7 +8,7 @@ Le module clients (`/clients`) est fonctionnel mais visuellement en retard : tro
 - Route : `frontend/src/app/router.tsx:34` -> `ClientDirectoryPage`
 - L'onglet `clients` dans `AppMainTabContent.tsx:141` utilise `<Outlet />` (TanStack Router)
 
-**Ancien systeme** : `frontend/src/components/clients/` (17 fichiers) n'est plus dans l'arbre de rendu runtime, mais des hooks/types/prefetch y sont encore lies (`useClientsPanelState`, `queryPrefetch`). Ce n'est pas du dead code au sens strict repo - nettoyage hors scope.
+**Ancien systeme** : l'ancienne stack `ClientsPanel` a ete supprimee du repo. La source de verite est desormais uniquement `frontend/src/components/client-directory/`.
 
 **Flux actifs a couvrir** :
 1. **Liste annuaire** : `ClientDirectoryPage.tsx` -> `ClientDirectoryTable.tsx`

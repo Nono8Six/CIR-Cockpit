@@ -29,7 +29,130 @@ interface DirectoryFilterComboboxProps {
   className?: string;
 }
 
+interface DirectoryFilterComboboxContentProps {
+  items: DirectoryFilterOption[];
+  values: string[];
+  onValuesChange: (values: string[]) => void;
+  allLabel: string;
+  searchPlaceholder: string;
+  emptyLabel: string;
+  searchInputName?: string;
+  multiple?: boolean;
+  onRequestClose?: () => void;
+}
+
 const normalizeValue = (value: string): string => value.trim().toLowerCase();
+
+const getSelectedItems = (items: DirectoryFilterOption[], values: string[]) =>
+  items.filter((item) => values.includes(item.value));
+
+export const getDirectoryFilterTriggerLabel = ({
+  items,
+  values,
+  placeholder,
+  multiple = false,
+  selectionSummaryLabel
+}: Pick<
+  DirectoryFilterComboboxProps,
+  'items' | 'values' | 'placeholder' | 'multiple' | 'selectionSummaryLabel'
+>): string => {
+  const selectedItems = getSelectedItems(items, values);
+
+  if (selectedItems.length === 0) {
+    return placeholder;
+  }
+
+  if (!multiple || selectedItems.length === 1) {
+    return selectedItems[0]?.label ?? placeholder;
+  }
+
+  if (selectedItems.length === 2) {
+    return `${selectedItems[0]?.label ?? placeholder} +1`;
+  }
+
+  return `${selectedItems.length} ${selectionSummaryLabel ?? 'selections'}`;
+};
+
+export const DirectoryFilterComboboxContent = ({
+  items,
+  values,
+  onValuesChange,
+  allLabel,
+  searchPlaceholder,
+  emptyLabel,
+  searchInputName,
+  multiple = false,
+  onRequestClose
+}: DirectoryFilterComboboxContentProps) => {
+  const [query, setQuery] = useState('');
+
+  const filteredItems = useMemo(() => {
+    const normalizedQuery = normalizeValue(query);
+    if (!normalizedQuery) {
+      return items;
+    }
+
+    return items.filter((item) => normalizeValue(item.label).includes(normalizedQuery));
+  }, [items, query]);
+
+  const toggleValue = (nextValue: string) => {
+    if (!multiple) {
+      onValuesChange([nextValue]);
+      onRequestClose?.();
+      return;
+    }
+
+    const nextValues = values.includes(nextValue)
+      ? values.filter((value) => value !== nextValue)
+      : [...values, nextValue];
+
+    onValuesChange(nextValues);
+  };
+
+  return (
+    <Command shouldFilter={false}>
+      <CommandInput
+        name={searchInputName}
+        value={query}
+        onValueChange={setQuery}
+        placeholder={searchPlaceholder}
+        className="h-9"
+      />
+      <CommandList>
+        <CommandItem
+          value="__all__"
+          onSelect={() => {
+            onValuesChange([]);
+            if (!multiple) {
+              onRequestClose?.();
+            }
+          }}
+        >
+          <span className="flex-1">{allLabel}</span>
+          <Check className={cn('size-4 text-primary', values.length === 0 ? 'opacity-100' : 'opacity-0')} />
+        </CommandItem>
+        {filteredItems.length === 0 ? (
+          <CommandEmpty>{emptyLabel}</CommandEmpty>
+        ) : null}
+        {filteredItems.map((item) => {
+          const isSelected = values.includes(item.value);
+          return (
+            <CommandItem
+              key={item.value}
+              value={`${item.label} ${item.value}`}
+              onSelect={() => {
+                toggleValue(item.value);
+              }}
+            >
+              <span className="flex-1 truncate">{item.label}</span>
+              <Check className={cn('size-4 text-primary', isSelected ? 'opacity-100' : 'opacity-0')} />
+            </CommandItem>
+          );
+        })}
+      </CommandList>
+    </Command>
+  );
+};
 
 const DirectoryFilterCombobox = ({
   items,
@@ -47,63 +170,22 @@ const DirectoryFilterCombobox = ({
   className
 }: DirectoryFilterComboboxProps) => {
   const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState('');
-
-  const filteredItems = useMemo(() => {
-    const normalizedQuery = normalizeValue(query);
-    if (!normalizedQuery) {
-      return items;
-    }
-
-    return items.filter((item) => normalizeValue(item.label).includes(normalizedQuery));
-  }, [items, query]);
-
-  const selectedItems = items.filter((item) => values.includes(item.value));
-  const triggerLabel = useMemo(() => {
-    if (selectedItems.length === 0) {
-      return placeholder;
-    }
-
-    if (!multiple || selectedItems.length === 1) {
-      return selectedItems[0]?.label ?? placeholder;
-    }
-
-    if (selectedItems.length === 2) {
-      return `${selectedItems[0]?.label ?? placeholder} +1`;
-    }
-
-    return `${selectedItems.length} ${selectionSummaryLabel ?? 'sélections'}`;
-  }, [multiple, placeholder, selectedItems, selectionSummaryLabel]);
+  const selectedItems = getSelectedItems(items, values);
+  const triggerLabel = getDirectoryFilterTriggerLabel({
+    items,
+    values,
+    placeholder,
+    multiple,
+    selectionSummaryLabel
+  });
 
   const baseAriaLabel = triggerAriaLabel?.trim() || placeholder;
   const ariaLabel = selectedItems.length > 0
     ? `${baseAriaLabel} : ${selectedItems.map((item) => item.label).join(', ')}`
     : baseAriaLabel;
 
-  const toggleValue = (nextValue: string) => {
-    if (!multiple) {
-      onValuesChange([nextValue]);
-      setOpen(false);
-      return;
-    }
-
-    const nextValues = values.includes(nextValue)
-      ? values.filter((value) => value !== nextValue)
-      : [...values, nextValue];
-
-    onValuesChange(nextValues);
-  };
-
   return (
-    <Popover
-      open={open}
-      onOpenChange={(nextOpen) => {
-        setOpen(nextOpen);
-        if (!nextOpen) {
-          setQuery('');
-        }
-      }}
-    >
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           type="button"
@@ -112,57 +194,39 @@ const DirectoryFilterCombobox = ({
           disabled={disabled}
           aria-label={ariaLabel}
           className={cn(
-            'h-9 w-full justify-between gap-2 rounded-lg border-border/70 px-3 text-sm font-normal text-foreground shadow-none',
-            selectedItems.length === 0 && 'text-muted-foreground',
+            'h-8 justify-between gap-1.5 rounded-full px-3 text-xs font-medium shadow-none transition-colors',
+            selectedItems.length === 0
+              ? 'border-dashed border-border/70 bg-transparent text-muted-foreground hover:bg-surface-1'
+              : 'border-primary/30 bg-primary/5 text-foreground hover:bg-primary/10',
             className
           )}
         >
-          <span className="truncate text-left">{triggerLabel}</span>
-          <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground/70" />
+          {selectedItems.length === 0 ? <span className="mr-1 text-muted-foreground/60">+</span> : null}
+          <span className="truncate text-left">
+            {selectedItems.length > 0 ? (
+              <span className="mr-1 font-semibold text-primary/90">
+                {placeholder.replace('Toutes les ', '').replace('Tous les ', '').split(' ')[0]}:
+              </span>
+            ) : null}
+            {triggerLabel === placeholder
+              ? placeholder.replace('Toutes les ', '').replace('Tous les ', '')
+              : triggerLabel}
+          </span>
+          <ChevronsUpDown className="size-3 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-[--radix-popover-trigger-width] min-w-[260px] p-0">
-        <Command shouldFilter={false}>
-          <CommandInput
-            name={searchInputName}
-            value={query}
-            onValueChange={setQuery}
-            placeholder={searchPlaceholder}
-            className="h-9"
-          />
-          <CommandList>
-            <CommandItem
-              value="__all__"
-              onSelect={() => {
-                onValuesChange([]);
-                if (!multiple) {
-                  setOpen(false);
-                }
-              }}
-            >
-              <span className="flex-1">{allLabel}</span>
-              <Check className={cn('size-4 text-primary', values.length === 0 ? 'opacity-100' : 'opacity-0')} />
-            </CommandItem>
-            {filteredItems.length === 0 ? (
-              <CommandEmpty>{emptyLabel}</CommandEmpty>
-            ) : null}
-            {filteredItems.map((item) => {
-              const isSelected = values.includes(item.value);
-              return (
-                <CommandItem
-                  key={item.value}
-                  value={`${item.label} ${item.value}`}
-                  onSelect={() => {
-                    toggleValue(item.value);
-                  }}
-                >
-                  <span className="flex-1 truncate">{item.label}</span>
-                  <Check className={cn('size-4 text-primary', isSelected ? 'opacity-100' : 'opacity-0')} />
-                </CommandItem>
-              );
-            })}
-          </CommandList>
-        </Command>
+        <DirectoryFilterComboboxContent
+          items={items}
+          values={values}
+          onValuesChange={onValuesChange}
+          allLabel={allLabel}
+          searchPlaceholder={searchPlaceholder}
+          emptyLabel={emptyLabel}
+          searchInputName={searchInputName}
+          multiple={multiple}
+          onRequestClose={() => setOpen(false)}
+        />
       </PopoverContent>
     </Popover>
   );

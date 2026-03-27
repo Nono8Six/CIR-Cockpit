@@ -4,7 +4,7 @@ import { type DirectoryDensity } from 'shared/schemas/directory.schema';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { countActiveDirectoryFilters } from './clientDirectorySearch';
+import { DEFAULT_DIRECTORY_DENSITY, countActiveDirectoryFilters } from './clientDirectorySearch';
 import DirectoryMobileFilterSheet from './DirectoryMobileFilterSheet';
 import DirectoryTableViewOptions from './data-table/DirectoryTableViewOptions';
 import DirectoryDesktopFiltersRow from './directory-filters/DirectoryDesktopFiltersRow';
@@ -43,7 +43,7 @@ const ClientDirectoryFilters = ({
   const hasResettableState = Boolean(searchDraft.trim())
     || Boolean(cityDraft.trim())
     || activeFilterCount > 0
-    || density !== 'comfortable'
+    || density !== DEFAULT_DIRECTORY_DENSITY
     || hasHiddenOptionalColumns;
 
   const agencyItems = agencies.map((agency) => ({
@@ -113,7 +113,7 @@ const ClientDirectoryFilters = ({
       type="button"
       variant={hasResettableState ? 'outline' : 'ghost'}
       size="dense"
-      className="h-9 rounded-md px-3 text-sm shadow-none"
+      className="h-8 rounded-md px-3 text-xs shadow-none"
       disabled={!hasResettableState}
       onClick={handleReset}
     >
@@ -140,9 +140,9 @@ const ClientDirectoryFilters = ({
       <div className="flex min-w-0 flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
         <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center xl:items-end">
           <div className="min-w-0 flex-1 xl:min-w-[360px] xl:max-w-[440px]">
-            <div className="space-y-1">
-              <p className="hidden text-xs font-medium text-muted-foreground xl:block">
-                Recherche
+            <div className="space-y-1.5">
+              <p className="hidden text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70 xl:block">
+                RECHERCHE
               </p>
               <DirectorySearchInput
                 value={searchDraft}

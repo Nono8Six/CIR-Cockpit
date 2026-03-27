@@ -26,20 +26,22 @@ interface RenderTableOptions {
   sorting?: DirectorySortingRule[];
   onSortChange?: (sorting: DirectorySortingRule[]) => void;
   onOpenRecord?: (row: DirectoryListRow) => void;
+  rows?: DirectoryListRow[];
 }
 
 const renderTable = ({
   sorting = [{ id: 'updated_at', desc: false }],
   onSortChange = vi.fn(),
-  onOpenRecord = vi.fn()
+  onOpenRecord = vi.fn(),
+  rows = [baseRow]
 }: RenderTableOptions = {}) => {
   render(
     <ClientDirectoryTable
-      rows={[baseRow]}
+      rows={rows}
       sorting={sorting}
       page={1}
       pageSize={50}
-      total={1}
+      total={rows.length}
       isFetching={false}
       isInitialLoading={false}
       columnVisibility={{}}
@@ -106,35 +108,45 @@ describe('ClientDirectoryTable', () => {
     expect(onOpenRecord).toHaveBeenCalledWith(baseRow);
   });
 
-  it('affiche le texte "archivé" quand archived_at est renseigné', () => {
-    const archivedRow: DirectoryListRow = {
-      ...baseRow,
-      archived_at: '2026-01-15T00:00:00.000Z'
-    };
-    render(
-      <ClientDirectoryTable
-        rows={[archivedRow]}
-        sorting={[{ id: 'updated_at', desc: false }]}
-        page={1}
-        pageSize={50}
-        total={1}
-        isFetching={false}
-        isInitialLoading={false}
-        columnVisibility={{}}
-        density="comfortable"
-        onSortChange={vi.fn()}
-        onPageChange={vi.fn()}
-        onPageSizeChange={vi.fn()}
-        onOpenRecord={vi.fn()}
-      />
-    );
+  it('affiche un badge Archive quand archived_at est renseigne', () => {
+    renderTable({
+      rows: [{
+        ...baseRow,
+        archived_at: '2026-01-15T00:00:00.000Z'
+      }]
+    });
 
-    expect(screen.getByText(/archivé/)).toBeTruthy();
+    expect(screen.getByText('Archive')).toBeInTheDocument();
   });
 
-  it('affiche un StatusDot pour chaque ligne', () => {
+  it('affiche un badge Client pour chaque ligne active', () => {
     renderTable();
 
-    expect(screen.getByRole('img', { name: 'Client actif' })).toBeTruthy();
+    expect(screen.getByText('Client')).toBeInTheDocument();
+  });
+
+  it('affiche un badge Prospect pour les libelles derives du helper partage', () => {
+    renderTable({
+      rows: [{
+        ...baseRow,
+        entity_type: 'Particulier prospect',
+        client_number: null
+      }]
+    });
+
+    expect(screen.getByText('Prospect')).toBeInTheDocument();
+  });
+
+  it('laisse les cellules manquantes vides sans tiret', () => {
+    renderTable({
+      rows: [{
+        ...baseRow,
+        client_number: null,
+        city: null,
+        department: null
+      }]
+    });
+
+    expect(screen.queryByText('—')).not.toBeInTheDocument();
   });
 });

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { DirectorySavedViewState } from 'shared/schemas/directory.schema';
 import {
+  DEFAULT_DIRECTORY_DENSITY,
   DEFAULT_DIRECTORY_SEARCH,
   buildDirectoryRecordPath,
   countActiveDirectoryFilters,
@@ -13,6 +14,10 @@ import {
 } from '../clientDirectorySearch';
 
 describe('clientDirectorySearch helpers', () => {
+  it('expose une densite compacte par defaut', () => {
+    expect(DEFAULT_DIRECTORY_DENSITY).toBe('compact');
+  });
+
   it('parse un tri legacy sortBy/sortDir vers le nouveau state sorting', () => {
     const search = validateDirectorySearch({
       sortBy: 'updated_at',

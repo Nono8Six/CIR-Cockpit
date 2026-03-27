@@ -4,7 +4,7 @@ import type { NavigateFn } from '@tanstack/react-router';
 
 import { getPathForTab, getTabFromPathname } from '@/app/appRoutes';
 import { useAppShortcuts } from '@/app/useAppShortcuts';
-import { prefetchAdminPanelQueries, prefetchClientsPanelQueries } from '@/services/query/queryPrefetch';
+import { prefetchAdminPanelQueries } from '@/services/query/queryPrefetch';
 import type { AppTab } from '@/types';
 import type { ConvertClientEntity } from '@/components/ConvertClientDialog';
 
@@ -22,7 +22,6 @@ export const useAppViewState = ({
   pathname,
   navigate,
   queryClient,
-  activeAgencyId,
   canAccessAdmin,
   canAccessSettings,
   onSearchOpen
@@ -86,13 +85,10 @@ export const useAppViewState = ({
   }, [activeTab, canAccessAdmin, canAccessSettings, navigate]);
 
   useEffect(() => {
-    if (activeTab === 'clients' && activeAgencyId) {
-      void prefetchClientsPanelQueries(queryClient, activeAgencyId);
-    }
     if (activeTab === 'admin' && canAccessAdmin) {
       void prefetchAdminPanelQueries(queryClient);
     }
-  }, [activeAgencyId, activeTab, canAccessAdmin, queryClient]);
+  }, [activeTab, canAccessAdmin, queryClient]);
 
   return {
     activeTab,
