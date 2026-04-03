@@ -1,4 +1,4 @@
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 import type { DirectoryListRow } from 'shared/schemas/directory.schema';
 
 import EntityOnboardingDialog from '@/components/EntityOnboardingDialog';
@@ -19,6 +19,7 @@ type ClientDirectoryConvertPageProps = {
 const ClientDirectoryConvertPage = ({ prospectId }: ClientDirectoryConvertPageProps) => {
   const sessionState = useAppSessionStateContext();
   const navigate = useNavigate({ from: '/clients/prospects/$prospectId/convert' });
+  const search = useSearch({ from: '/clients/prospects/$prospectId/convert' });
   const userRole = sessionState.profile?.role ?? 'tcs';
   const activeAgencyId = sessionState.activeAgencyId;
   const canLoadDirectory = Boolean(sessionState.session) && (userRole === 'super_admin' || Boolean(activeAgencyId));
@@ -40,14 +41,16 @@ const ClientDirectoryConvertPage = ({ prospectId }: ClientDirectoryConvertPagePr
     if (!isProspectEntityType(duplicate.entity_type) && duplicate.client_number) {
       void navigate({
         to: '/clients/$clientNumber',
-        params: { clientNumber: duplicate.client_number }
+        params: { clientNumber: duplicate.client_number },
+        search: () => search
       });
       return;
     }
 
     void navigate({
       to: '/clients/prospects/$prospectId',
-      params: { prospectId: duplicate.id }
+      params: { prospectId: duplicate.id },
+      search: () => search
     });
   };
 
@@ -75,7 +78,8 @@ const ClientDirectoryConvertPage = ({ prospectId }: ClientDirectoryConvertPagePr
           if (!nextOpen) {
             void navigate({
               to: '/clients/prospects/$prospectId',
-              params: { prospectId }
+              params: { prospectId },
+              search: () => search
             });
           }
         }}
@@ -99,7 +103,8 @@ const ClientDirectoryConvertPage = ({ prospectId }: ClientDirectoryConvertPagePr
 
           void navigate({
             to: '/clients/$clientNumber',
-            params: { clientNumber: client_number }
+            params: { clientNumber: client_number },
+            search: () => search
           });
         }}
         onOpenDuplicate={handleOpenDuplicate}

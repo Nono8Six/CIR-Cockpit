@@ -31,35 +31,35 @@ test.skip(!isConfigured, SKIP_REASON);
 test('switch tabs between Cockpit and Dashboard', async ({ page }) => {
   await login(page);
 
-  const cockpitTab = page.getByRole('tab', { name: /saisie/i });
-  const dashboardTab = page.getByRole('tab', { name: /pilotage/i });
+  const cockpitLink = page.getByTestId('app-shell-nav-cockpit');
+  const dashboardLink = page.getByTestId('app-shell-nav-dashboard');
 
-  await expect(cockpitTab).toBeVisible();
-  await dashboardTab.click();
-  await expect(dashboardTab).toHaveAttribute('data-state', 'active');
+  await expect(cockpitLink).toBeVisible();
+  await dashboardLink.click();
+  await expect(dashboardLink).toHaveAttribute('aria-current', 'page');
   await expect(page).toHaveURL(/\/dashboard$/);
 });
 
 test('deep links, refresh and browser history remain consistent', async ({ page }) => {
   await login(page);
 
-  await page.getByRole('tab', { name: /clients/i }).click();
-  await expect(page).toHaveURL(/\/clients$/);
+  await page.goto('/clients');
+  await expect(page).toHaveURL(/\/clients(?:\?|$)/);
 
-  await page.getByRole('tab', { name: /pilotage/i }).click();
+  await page.goto('/dashboard');
   await expect(page).toHaveURL(/\/dashboard$/);
 
   await page.goBack();
-  await expect(page).toHaveURL(/\/clients$/);
+  await expect(page).toHaveURL(/\/clients(?:\?|$)/);
 
   await page.goForward();
   await expect(page).toHaveURL(/\/dashboard$/);
 
   await page.goto('/clients');
-  await expect(page).toHaveURL(/\/clients$/);
+  await expect(page).toHaveURL(/\/clients(?:\?|$)/);
 
   await page.reload();
-  await expect(page).toHaveURL(/\/clients$/);
+  await expect(page).toHaveURL(/\/clients(?:\?|$)/);
 });
 
 test('unauthorized admin deep link redirects to cockpit', async ({ page }) => {
@@ -75,54 +75,50 @@ test('header layout is collision-free on key breakpoints', async ({ page }) => {
 
   for (const viewport of KEY_VIEWPORTS) {
     await page.setViewportSize(viewport);
-    await expect(page.getByTestId('app-header-tabs-scroll')).toBeVisible();
     await expect(page.getByTestId('app-header-search-button')).toBeVisible();
-    await expect(page.getByTestId('app-header-profile-button')).toBeVisible();
+
+    if (viewport.width >= 768) {
+      await expect(page.getByTestId('app-header-profile-button')).toBeVisible();
+    } else {
+      await expect(page.getByRole('button', { name: /ouvrir le menu$/i })).toBeVisible();
+    }
 
     const headerMetrics = await page.evaluate(() => {
-      const tabsScroll = document.querySelector<HTMLElement>('[data-testid="app-header-tabs-scroll"]');
-      const searchButton = document.querySelector<HTMLElement>('[data-testid="app-header-search-button"]');
-      const profileButton = document.querySelector<HTMLElement>('[data-testid="app-header-profile-button"]');
+      const header = document.querySelector<HTMLElement>('header');
       const searchLabel = document.querySelector<HTMLElement>('[data-testid="app-header-search-label"]');
+      const profileButton = document.querySelector<HTMLElement>('[data-testid="app-header-profile-button"]');
+      const mobileMenuButton = Array.from(document.querySelectorAll<HTMLButtonElement>('button')).find((button) =>
+        button.getAttribute('aria-label') === 'Ouvrir le menu'
+      ) ?? null;
 
-      if (!tabsScroll || !searchButton || !profileButton) {
-        return {
-          overlapTabsSearch: true,
-          overlapTabsProfile: true,
-          hasHorizontalOverflow: true,
-          searchLabelVisible: false
-        };
-      }
-
-      const intersects = (first: DOMRect, second: DOMRect) =>
-        !(first.right <= second.left || second.right <= first.left || first.bottom <= second.top || second.bottom <= first.top);
-
-      const tabsRect = tabsScroll.getBoundingClientRect();
-      const searchRect = searchButton.getBoundingClientRect();
-      const profileRect = profileButton.getBoundingClientRect();
+      const isVisible = (element: HTMLElement | null): boolean => {
+        if (!element) return false;
+        const style = getComputedStyle(element);
+        if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return false;
+        const rect = element.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+      };
 
       return {
-        overlapTabsSearch: intersects(tabsRect, searchRect),
-        overlapTabsProfile: intersects(tabsRect, profileRect),
+        headerVisible: isVisible(header),
         hasHorizontalOverflow: document.documentElement.scrollWidth > window.innerWidth,
-        searchLabelVisible: Boolean(
-          searchLabel &&
-          getComputedStyle(searchLabel).display !== 'none' &&
-          searchLabel.getBoundingClientRect().width > 0
-        )
+        searchLabelVisible: isVisible(searchLabel),
+        profileButtonVisible: isVisible(profileButton),
+        mobileMenuVisible: isVisible(mobileMenuButton)
       };
     });
 
-    expect(headerMetrics.overlapTabsSearch).toBe(false);
-    expect(headerMetrics.overlapTabsProfile).toBe(false);
+    expect(headerMetrics.headerVisible).toBe(true);
     expect(headerMetrics.hasHorizontalOverflow).toBe(false);
     expect(headerMetrics.searchLabelVisible).toBe(viewport.width >= 1024);
+    expect(headerMetrics.profileButtonVisible).toBe(viewport.width >= 768);
+    expect(headerMetrics.mobileMenuVisible).toBe(viewport.width < 768);
   }
 });
 
 test('cockpit layout is fluid and status picker works on key breakpoints', async ({ page }) => {
   await login(page);
-  await page.getByRole('tab', { name: /saisie/i }).click();
+  await page.getByTestId('app-shell-nav-cockpit').click();
   await expect(page.getByText('Brouillon introuvable.')).toHaveCount(0);
   await expect(page.getByTestId('cockpit-submit-bar')).toBeVisible();
   await expect(page.getByTestId('cockpit-submit-button')).toBeVisible();

@@ -27,6 +27,12 @@ const AppSearchProspectsSection = ({
             client_number: entity.client_number ?? null,
             account_type: entity.account_type ?? null
           })}
+          onClick={() => onRequestConvert({
+            id: entity.id,
+            name: entity.name,
+            client_number: entity.client_number ?? null,
+            account_type: entity.account_type ?? null
+          })}
           className="gap-3 px-3 py-2"
           data-testid={`app-search-prospect-${entity.id}`}
         >

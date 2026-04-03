@@ -19,6 +19,7 @@ import { useSaveInteraction } from '@/hooks/useSaveInteraction';
 import type { UserProfile } from '@/services/auth/getProfile';
 import { notifySuccess } from '@/services/errors/notify';
 import type { InteractionDraft } from '@/types';
+import { DEFAULT_DIRECTORY_SEARCH } from '@/components/client-directory/clientDirectorySearch';
 
 const loadAppSearchOverlay = () => import('@/components/AppSearchOverlay');
 const loadUiPocPage = () => import('@/components/poc/UiPocPage');
@@ -361,11 +362,15 @@ const App = () => {
               if (targetEntity?.client_number) {
                 void navigate({
                   to: '/clients/$clientNumber',
-                  params: { clientNumber: targetEntity.client_number }
+                  params: { clientNumber: targetEntity.client_number },
+                  search: () => DEFAULT_DIRECTORY_SEARCH
+                }).finally(() => {
+                  viewState.handleSearchOpenChange(false);
                 });
-              } else {
-                viewState.handleTabChange('clients');
+                return;
               }
+
+              viewState.handleTabChange('clients');
               viewState.handleSearchOpenChange(false);
             }}
             onRequestConvert={viewState.handleRequestConvert}

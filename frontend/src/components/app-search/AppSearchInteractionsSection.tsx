@@ -18,6 +18,7 @@ const AppSearchInteractionsSection = ({ interactions, onOpenInteraction }: AppSe
           key={interaction.id}
           value={`${interaction.company_name} ${interaction.subject ?? ''} ${interaction.contact_name ?? ''} ${interaction.order_ref ?? ''}`}
           onSelect={() => onOpenInteraction(interaction)}
+          onClick={() => onOpenInteraction(interaction)}
           className="gap-3 px-3 py-2"
           data-testid={`app-search-interaction-${interaction.id}`}
         >

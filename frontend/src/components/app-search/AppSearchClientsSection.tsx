@@ -19,6 +19,7 @@ const AppSearchClientsSection = ({ clients, onFocusClient }: AppSearchClientsSec
           key={client.id}
           value={`${client.name} ${client.client_number ?? ''} ${client.city ?? ''}`}
           onSelect={() => onFocusClient(client.id)}
+          onClick={() => onFocusClient(client.id)}
           className="gap-3 px-3 py-2"
           data-testid={`app-search-client-${client.id}`}
         >

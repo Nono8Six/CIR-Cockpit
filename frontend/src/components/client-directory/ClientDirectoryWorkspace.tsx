@@ -61,15 +61,13 @@ export interface ClientDirectoryWorkspaceProps {
   onSearchChange: (updater: (previous: DirectoryListInput) => DirectoryListInput) => void;
   onOpenRecord: (row: DirectoryListRow, effectiveSearch: DirectoryListInput) => void;
   onCreateRecord: (effectiveSearch: DirectoryListInput) => void;
-  detailPane?: React.ReactNode;
 }
 
 const ClientDirectoryWorkspace = ({
   search,
   onSearchChange,
   onOpenRecord,
-  onCreateRecord,
-  detailPane
+  onCreateRecord
 }: ClientDirectoryWorkspaceProps) => {
   const sessionState = useAppSessionStateContext();
   const userRole = sessionState.profile?.role ?? 'tcs';
@@ -352,14 +350,8 @@ const ClientDirectoryWorkspace = ({
           </div>
         </div>
 
-        <div
-          className={
-            detailPane
-              ? 'flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(420px,46vw)]'
-              : 'flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm'
-          }
-        >
-          <div className={detailPane ? 'flex min-h-0 flex-1 flex-col overflow-hidden xl:min-w-0 xl:border-r xl:border-border/50' : 'flex min-h-0 flex-1 flex-col overflow-hidden'}>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
             <div className="border-b border-border/50 bg-muted/20 px-3 py-2.5 sm:px-4 sm:py-3">
               <ClientDirectoryFilters
                 key={`directory-filters-${filtersSyncToken}`}
@@ -416,16 +408,6 @@ const ClientDirectoryWorkspace = ({
               onOpenRecord={(row) => onOpenRecord(row, effectiveSearch)}
             />
           </div>
-
-          {detailPane ? (
-            <aside
-              className="hidden min-h-0 flex-col bg-card/95 xl:flex"
-              aria-label="Fiche annuaire"
-              data-testid="client-directory-detail-pane"
-            >
-              {detailPane}
-            </aside>
-          ) : null}
         </div>
       </section>
     </TooltipProvider>

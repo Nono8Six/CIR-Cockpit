@@ -42,12 +42,12 @@ const prospectRow = {
   account_type: null
 };
 
-const mockMatchMedia = (isDesktopDrawer = false) => {
+const mockMatchMedia = () => {
   Object.defineProperty(window, 'matchMedia', {
     configurable: true,
     writable: true,
     value: vi.fn().mockImplementation((query: string) => ({
-      matches: query === '(min-width: 1280px)' ? isDesktopDrawer : false,
+      matches: false,
       media: query,
       onchange: null,
       addEventListener: vi.fn(),
@@ -148,10 +148,10 @@ vi.mock('@/components/ProspectFormDialog', () => ({
 describe('ClientDirectoryPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockMatchMedia(false);
+    mockMatchMedia();
   });
 
-  it('opens a client detail route without propagating list search params', async () => {
+  it('opens a client detail route while preserving directory search params', async () => {
     const user = userEvent.setup();
 
     render(<ClientDirectoryPage />);
@@ -160,11 +160,15 @@ describe('ClientDirectoryPage', () => {
 
     expect(mockNavigate).toHaveBeenCalledWith({
       to: '/clients/$clientNumber',
-      params: { clientNumber: '98568547' }
+      params: { clientNumber: '98568547' },
+      search: expect.any(Function)
     });
+
+    const navigateCall = mockNavigate.mock.calls.at(-1)?.[0];
+    expect(navigateCall?.search()).toEqual(searchState);
   });
 
-  it('opens a prospect detail route without propagating list search params', async () => {
+  it('opens a prospect detail route while preserving directory search params', async () => {
     const user = userEvent.setup();
 
     render(<ClientDirectoryPage />);
@@ -173,26 +177,8 @@ describe('ClientDirectoryPage', () => {
 
     expect(mockNavigate).toHaveBeenCalledWith({
       to: '/clients/prospects/$prospectId',
-      params: { prospectId: 'prospect-1' }
-    });
-  });
-
-  it('opens the drawer route on desktop large while masking the canonical detail URL', async () => {
-    const user = userEvent.setup();
-    mockMatchMedia(true);
-
-    render(<ClientDirectoryPage />);
-
-    await user.click(screen.getByRole('button', { name: /ouvrir client/i }));
-
-    expect(mockNavigate).toHaveBeenCalledWith({
-      to: '/clients/$clientNumber/drawer',
-      params: { clientNumber: '98568547' },
-      search: expect.any(Function),
-      mask: {
-        to: '/clients/$clientNumber',
-        params: { clientNumber: '98568547' }
-      }
+      params: { prospectId: 'prospect-1' },
+      search: expect.any(Function)
     });
 
     const navigateCall = mockNavigate.mock.calls.at(-1)?.[0];

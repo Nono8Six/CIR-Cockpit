@@ -41,14 +41,16 @@ const ClientDirectoryCreatePage = () => {
     if (!isProspectEntityType(record.entity_type) && record.client_number) {
       void navigate({
         to: '/clients/$clientNumber',
-        params: { clientNumber: record.client_number }
+        params: { clientNumber: record.client_number },
+        search: () => search
       });
       return;
     }
 
     void navigate({
       to: '/clients/prospects/$prospectId',
-      params: { prospectId: record.id }
+      params: { prospectId: record.id },
+      search: () => search
     });
   };
 
@@ -89,7 +91,8 @@ const ClientDirectoryCreatePage = () => {
           if (intent === 'client' && client_number) {
             void navigate({
               to: '/clients/$clientNumber',
-              params: { clientNumber: client_number }
+              params: { clientNumber: client_number },
+              search: () => search
             });
             return;
           }
@@ -97,7 +100,8 @@ const ClientDirectoryCreatePage = () => {
           if (entity_id) {
             void navigate({
               to: '/clients/prospects/$prospectId',
-              params: { prospectId: entity_id }
+              params: { prospectId: entity_id },
+              search: () => search
             });
           }
         }}

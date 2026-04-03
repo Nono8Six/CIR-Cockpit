@@ -22,6 +22,7 @@ const AppSearchContactsSection = ({
           key={contact.id}
           value={`${contact.first_name ?? ''} ${contact.last_name ?? ''} ${contact.position ?? ''} ${contact.email ?? ''} ${contact.phone ?? ''} ${entityNameById.get(contact.entity_id) ?? ''}`}
           onSelect={() => onFocusClient(contact.entity_id, contact.id)}
+          onClick={() => onFocusClient(contact.entity_id, contact.id)}
           className="gap-3 px-3 py-2"
           data-testid={`app-search-contact-${contact.id}`}
         >

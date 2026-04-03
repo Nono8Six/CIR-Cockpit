@@ -5,53 +5,193 @@ const password = process.env.E2E_USER_PASSWORD;
 const isConfigured = Boolean(email && password);
 const SKIP_REASON = 'E2E env missing: E2E_USER_EMAIL / E2E_USER_PASSWORD';
 
-const CLIENTS_VIEWPORTS = [
-  { width: 320, height: 568 },
-  { width: 390, height: 844 },
-  { width: 768, height: 1024 },
-  { width: 1024, height: 768 },
-  { width: 1280, height: 800 }
-];
+const agencyId = '11111111-1111-1111-1111-111111111111';
+const prospectId = '22222222-2222-4222-8222-222222222222';
+const seaId = '33333333-3333-4333-8333-333333333333';
+const cashId = '44444444-4444-4444-8444-444444444444';
 
-const login = async (page: Page) => {
-  await page.goto('/');
-  await page.getByLabel('Email').fill(email!);
-  await page.getByLabel('Mot de passe').fill(password!);
-  await page.getByRole('button', { name: /se connecter/i }).click();
+const listRows = [
+  {
+    id: prospectId,
+    entity_type: 'Particulier prospect',
+    client_kind: 'individual',
+    client_number: null,
+    account_type: null,
+    name: 'PONTAC Thierry',
+    city: null,
+    postal_code: null,
+    department: null,
+    siret: null,
+    siren: null,
+    official_name: null,
+    agency_id: agencyId,
+    agency_name: 'CIR Bordeaux',
+    cir_commercial_id: null,
+    cir_commercial_name: null,
+    archived_at: null,
+    updated_at: '2026-02-03T10:00:00.000Z'
+  },
+  {
+    id: seaId,
+    entity_type: 'Client',
+    client_kind: 'company',
+    client_number: '116277',
+    account_type: 'term',
+    name: 'SEA',
+    city: 'GRADIGNAN',
+    postal_code: '33170',
+    department: '33',
+    siret: null,
+    siren: null,
+    official_name: null,
+    agency_id: agencyId,
+    agency_name: 'CIR Bordeaux',
+    cir_commercial_id: null,
+    cir_commercial_name: null,
+    archived_at: null,
+    updated_at: '2026-02-03T10:00:00.000Z'
+  },
+  {
+    id: cashId,
+    entity_type: 'Client',
+    client_kind: 'company',
+    client_number: '98568547',
+    account_type: 'cash',
+    name: 'Test comptant',
+    city: 'Merignac',
+    postal_code: '33700',
+    department: '33',
+    siret: null,
+    siren: null,
+    official_name: null,
+    agency_id: agencyId,
+    agency_name: 'CIR Bordeaux',
+    cir_commercial_id: null,
+    cir_commercial_name: null,
+    archived_at: null,
+    updated_at: '2026-02-02T10:00:00.000Z'
+  }
+] as const;
+
+const seaRecord = {
+  id: seaId,
+  entity_type: 'Client',
+  client_kind: 'company',
+  client_number: '116277',
+  account_type: 'term',
+  name: 'SEA',
+  address: '6 CHEMIN DU SOLARIUM',
+  postal_code: '33170',
+  department: '33',
+  city: 'GRADIGNAN',
+  country: 'France',
+  siret: null,
+  siren: null,
+  naf_code: null,
+  official_name: null,
+  official_data_source: null,
+  official_data_synced_at: null,
+  notes: null,
+  agency_id: agencyId,
+  agency_name: 'CIR Bordeaux',
+  cir_commercial_id: null,
+  cir_commercial_name: null,
+  archived_at: null,
+  created_at: '2026-02-03T10:00:00.000Z',
+  updated_at: '2026-02-03T10:00:00.000Z'
 };
 
-const openClientsTab = async (page: Page) => {
-  const clientsTab = page.getByRole('tab', { name: /clients \(f5\)/i });
-  await clientsTab.click();
-  await expect(clientsTab).toHaveAttribute('data-state', 'active');
+const cashRecord = {
+  id: cashId,
+  entity_type: 'Client',
+  client_kind: 'company',
+  client_number: '98568547',
+  account_type: 'cash',
+  name: 'Test comptant',
+  address: '1 RUE BOBARD',
+  postal_code: '33700',
+  department: '33',
+  city: 'Merignac',
+  country: 'France',
+  siret: null,
+  siren: null,
+  naf_code: null,
+  official_name: null,
+  official_data_source: null,
+  official_data_synced_at: null,
+  notes: null,
+  agency_id: agencyId,
+  agency_name: 'CIR Bordeaux',
+  cir_commercial_id: null,
+  cir_commercial_name: null,
+  archived_at: null,
+  created_at: '2026-02-02T10:00:00.000Z',
+  updated_at: '2026-02-02T10:00:00.000Z'
 };
 
-const setupDeepFocusFixture = async (page: Page) => {
-  await page.route('**/rest/v1/entities*', async (route) => {
+const buildTrpcEnvelope = (data: unknown) => ({ result: { data } });
+
+const installDirectoryMocks = async (page: Page): Promise<void> => {
+  await page.route('**/functions/v1/api/trpc/**', async (route) => {
+    const url = new URL(route.request().url());
+    const procedurePath = url.pathname.split('/functions/v1/api/trpc/')[1] ?? url.pathname.split('/trpc/')[1] ?? '';
+    const procedures = procedurePath.split(',').filter(Boolean);
+    const input = url.searchParams.get('input') ?? '';
+    const hasListContext = /SEA/i.test(input);
+
+    const responses = procedures.map((procedure) => {
+      switch (procedure) {
+        case 'directory.list':
+          return buildTrpcEnvelope({
+            request_id: 'req-directory-list',
+            ok: true,
+            rows: hasListContext ? listRows : [],
+            total: hasListContext ? listRows.length : 0,
+            page: 1,
+            page_size: 50
+          });
+        case 'directory.saved-views.list':
+          return buildTrpcEnvelope({
+            request_id: 'req-directory-saved-views',
+            ok: true,
+            views: []
+          });
+        case 'directory.options':
+          return buildTrpcEnvelope({
+            request_id: 'req-directory-options',
+            ok: true,
+            agencies: [{ id: agencyId, name: 'CIR Bordeaux' }],
+            commercials: [],
+            departments: ['33']
+          });
+        case 'directory.record':
+          return buildTrpcEnvelope({
+            request_id: 'req-directory-record',
+            ok: true,
+            record: input.includes('98568547') ? cashRecord : seaRecord
+          });
+        default:
+          return null;
+      }
+    });
+
+    if (responses.some((response) => response === null)) {
+      await route.continue();
+      return;
+    }
+
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify([
-        {
-          id: 'entity-p05-deep-focus',
-          account_type: 'term',
-          address: null,
-          agency_id: 'agency-1',
-          archived_at: null,
-          city: 'Paris',
-          client_number: 'P05001',
-          country: 'FR',
-          created_at: '2025-01-01T00:00:00Z',
-          created_by: null,
-          department: '75',
-          entity_type: 'Client',
-          name: 'P05_DEEP_FOCUS_CLIENT',
-          notes: null,
-          postal_code: '75001',
-          siret: null,
-          updated_at: '2025-01-01T00:00:00Z'
-        }
-      ])
+      body: JSON.stringify(responses)
+    });
+  });
+
+  await page.route('**/rest/v1/agencies*', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([{ id: agencyId, name: 'CIR Bordeaux', archived_at: null }])
     });
   });
 
@@ -64,122 +204,67 @@ const setupDeepFocusFixture = async (page: Page) => {
   });
 };
 
+const login = async (page: Page): Promise<void> => {
+  await page.goto('/');
+  await page.getByLabel('Email').fill(email ?? '');
+  await page.getByLabel('Mot de passe').fill(password ?? '');
+  await page.getByRole('button', { name: /se connecter/i }).click();
+  await expect(page.getByRole('button', { name: /ouvrir la recherche rapide/i })).toBeVisible();
+};
+
+const openDirectory = async (page: Page): Promise<void> => {
+  await page.goto('/clients');
+  await expect(page.getByRole('heading', { name: /clients et prospects/i })).toBeVisible();
+};
+
 test.skip(!isConfigured, SKIP_REASON);
 
-test('P05 - toolbar clients, selection list/detail, clavier et responsive anti-overflow', async ({
+test('P05 - la fiche full page conserve le contexte liste et le prev-next remplace l historique', async ({
   page
 }) => {
-  const criticalRadixWarnings: string[] = [];
-
-  page.on('console', (msg) => {
-    if (msg.type() !== 'warning') return;
-    const text = msg.text();
-    if (
-      text.includes('DialogContent requires a DialogTitle')
-      || text.includes('Missing `Description`')
-      || text.includes('aria-describedby')
-    ) {
-      criticalRadixWarnings.push(text);
-    }
-  });
-
+  await installDirectoryMocks(page);
   await login(page);
-  await openClientsTab(page);
+  await openDirectory(page);
 
-  await expect(page.getByTestId('clients-toolbar')).toBeVisible();
-  await expect(page.getByTestId('clients-toolbar-search')).toBeVisible();
+  const searchInput = page.getByRole('textbox', { name: /recherche annuaire/i });
+  await searchInput.fill('SEA');
+  await searchInput.press('Enter');
+  await page.waitForURL(/(?:\?|&)q=SEA/i);
 
-  const viewModeTabs = page.getByTestId('clients-toolbar-view-mode');
-  const clientsModeTab = viewModeTabs.getByRole('tab', { name: /clients/i });
-  const prospectsModeTab = viewModeTabs.getByRole('tab', { name: /prospects/i });
-  await clientsModeTab.focus();
-  await page.keyboard.press('ArrowRight');
-  await expect(prospectsModeTab).toHaveAttribute('data-state', 'active');
-  await page.keyboard.press('ArrowLeft');
-  await expect(clientsModeTab).toHaveAttribute('data-state', 'active');
+  const listUrl = page.url();
+  await expect(page.getByRole('button', { name: /ouvrir la fiche pontac thierry/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /ouvrir la fiche sea/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /ouvrir la fiche test comptant/i })).toBeVisible();
 
-  const firstClientRow = page.locator('[data-testid^="clients-list-row-"]').first();
-  if (await firstClientRow.count()) {
-    await firstClientRow.click();
-    await expect(firstClientRow).toHaveAttribute('data-state', 'selected');
-    await expect(page.getByTestId('clients-detail-pane')).toBeVisible();
-  }
+  await page.getByRole('button', { name: /ouvrir la fiche sea/i }).click();
 
-  for (const viewport of CLIENTS_VIEWPORTS) {
-    await page.setViewportSize(viewport);
-    await openClientsTab(page);
+  await expect(page).toHaveURL(/\/clients\/116277(?:\?|$)/);
+  await expect(page).toHaveURL(/(?:\?|&)q=SEA/i);
+  await expect(page.getByRole('heading', { name: /^SEA$/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /clients et prospects/i })).toHaveCount(0);
 
-    const metrics = await page.evaluate(() => {
-      const toolbar = document.querySelector<HTMLElement>('[data-testid="clients-toolbar"]');
-      const listPane = document.querySelector<HTMLElement>('[data-testid="clients-list-pane"]');
-      const detailPane = document.querySelector<HTMLElement>('[data-testid="clients-detail-pane"]');
-      const detailCard = detailPane?.firstElementChild instanceof HTMLElement
-        ? detailPane.firstElementChild
-        : null;
-      const clientsList = document.querySelector<HTMLElement>('[data-testid="clients-list"]');
-      const prospectsList = document.querySelector<HTMLElement>('[data-testid="prospects-list"]');
-      const activeList = clientsList ?? prospectsList;
+  const detailPathWithoutContext = new URL(page.url()).pathname;
+  const previousButton = page.getByRole('button', { name: /Fiche pr.c.dente/i });
+  const nextButton = page.getByRole('button', { name: 'Fiche suivante' });
 
-      return {
-        documentHasHorizontalOverflow: document.documentElement.scrollWidth > window.innerWidth,
-        toolbarHasHorizontalOverflow: toolbar ? toolbar.scrollWidth > toolbar.clientWidth : false,
-        listPaneHasHorizontalOverflow: listPane ? listPane.scrollWidth > listPane.clientWidth : false,
-        detailPaneHasHorizontalOverflow: detailPane ? detailPane.scrollWidth > detailPane.clientWidth : false,
-        detailPaneHasVerticalAutoScroll: detailPane
-          ? ['auto', 'scroll'].includes(getComputedStyle(detailPane).overflowY)
-          : false,
-        detailCardHasVerticalAutoScroll: detailCard
-          ? ['auto', 'scroll'].includes(getComputedStyle(detailCard).overflowY)
-          : false,
-        listHasHorizontalOverflow: activeList ? activeList.scrollWidth > activeList.clientWidth : false
-      };
-    });
+  await expect(previousButton).toBeVisible();
+  await expect(previousButton).toBeEnabled();
+  await expect(nextButton).toBeVisible();
+  await expect(nextButton).toBeEnabled();
 
-    expect(metrics.documentHasHorizontalOverflow).toBe(false);
-    expect(metrics.toolbarHasHorizontalOverflow).toBe(false);
-    expect(metrics.listPaneHasHorizontalOverflow).toBe(false);
-    expect(metrics.detailPaneHasHorizontalOverflow).toBe(false);
-    expect(metrics.detailPaneHasVerticalAutoScroll).toBe(false);
-    expect(metrics.detailCardHasVerticalAutoScroll).toBe(false);
-    expect(metrics.listHasHorizontalOverflow).toBe(false);
-  }
+  await nextButton.click();
+  await expect(page).toHaveURL(/\/clients\/98568547(?:\?|$)/);
+  await expect(page).toHaveURL(/(?:\?|&)q=SEA/i);
+  await expect(page.getByRole('heading', { name: /^Test comptant$/i })).toBeVisible();
 
-  expect(criticalRadixWarnings).toEqual([]);
+  await page.goBack();
+  await expect(page).toHaveURL(listUrl);
+  await expect(page.getByRole('heading', { name: /clients et prospects/i })).toBeVisible();
+
+  await page.goto(detailPathWithoutContext);
+  await expect(page.getByRole('heading', { name: /^SEA$/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Fiche pr.c.dente/i })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Fiche suivante' })).toHaveCount(0);
 });
 
-test('P05 - deep focus client depuis la recherche globale', async ({ page }) => {
-  await setupDeepFocusFixture(page);
-  await login(page);
-  await openClientsTab(page);
 
-  await page.keyboard.press('Control+k');
-  const searchInput = page.getByTestId('app-search-input');
-  await expect(searchInput).toBeVisible();
-  await searchInput.fill('P05_DEEP_FOCUS_CLIENT');
-
-  const clientId = 'entity-p05-deep-focus';
-  const searchResult = page.getByTestId(`app-search-client-${clientId}`);
-  await expect(searchResult).toBeVisible();
-  await searchResult.click();
-
-  await openClientsTab(page);
-  await expect(page.getByTestId(`clients-list-row-${clientId}`)).toHaveAttribute('data-state', 'selected');
-});
-
-test('P05 - etat erreur utilisateur sur la liste clients', async ({ page }) => {
-  await login(page);
-
-  await page.route('**/rest/v1/entities*', async (route) => {
-    await route.fulfill({
-      status: 500,
-      contentType: 'application/json',
-      body: JSON.stringify({ message: 'Erreur backend P05' })
-    });
-  });
-
-  await openClientsTab(page);
-  const errorMessage = page.getByText(/la liste clients est indisponible/i);
-  await expect(errorMessage).toBeVisible();
-  await page.getByRole('button', { name: /reessayer/i }).click();
-  await expect(errorMessage).toBeVisible();
-});

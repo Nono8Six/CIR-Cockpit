@@ -5,7 +5,6 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import ClientDirectoryWorkspace from './ClientDirectoryWorkspace';
 import { getDirectoryRouteRefFromRow } from './directoryRouting';
-import { getIsDesktopDirectoryDrawerViewport } from './directoryViewport';
 
 const ClientDirectoryPage = () => {
   const navigate = useNavigate({ from: '/clients/' });
@@ -24,43 +23,19 @@ const ClientDirectoryPage = () => {
     (row: DirectoryListRow, effectiveSearch: DirectoryListInput) => {
       const routeRef = getDirectoryRouteRefFromRow(row);
 
-      if (getIsDesktopDirectoryDrawerViewport()) {
-        if (routeRef.kind === 'client') {
-          void navigate({
-            to: '/clients/$clientNumber/drawer',
-            params: { clientNumber: routeRef.clientNumber },
-            search: () => effectiveSearch,
-            mask: {
-              to: '/clients/$clientNumber',
-              params: { clientNumber: routeRef.clientNumber }
-            }
-          });
-          return;
-        }
-
-        void navigate({
-          to: '/clients/prospects/$prospectId/drawer',
-          params: { prospectId: routeRef.id },
-          search: () => effectiveSearch,
-          mask: {
-            to: '/clients/prospects/$prospectId',
-            params: { prospectId: routeRef.id }
-          }
-        });
-        return;
-      }
-
       if (routeRef.kind === 'client') {
         void navigate({
           to: '/clients/$clientNumber',
-          params: { clientNumber: routeRef.clientNumber }
+          params: { clientNumber: routeRef.clientNumber },
+          search: () => effectiveSearch
         });
         return;
       }
 
       void navigate({
         to: '/clients/prospects/$prospectId',
-        params: { prospectId: routeRef.id }
+        params: { prospectId: routeRef.id },
+        search: () => effectiveSearch
       });
     },
     [navigate]

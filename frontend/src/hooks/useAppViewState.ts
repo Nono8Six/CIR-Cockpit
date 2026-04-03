@@ -4,6 +4,7 @@ import type { NavigateFn } from '@tanstack/react-router';
 
 import { getPathForTab, getTabFromPathname } from '@/app/appRoutes';
 import { useAppShortcuts } from '@/app/useAppShortcuts';
+import { DEFAULT_DIRECTORY_SEARCH } from '@/components/client-directory/clientDirectorySearch';
 import { prefetchAdminPanelQueries } from '@/services/query/queryPrefetch';
 import type { AppTab } from '@/types';
 import type { ConvertClientEntity } from '@/components/ConvertClientDialog';
@@ -65,7 +66,8 @@ export const useAppViewState = ({
 
       void navigate({
         to: '/clients/prospects/$prospectId/convert',
-        params: { prospectId: entity.id }
+        params: { prospectId: entity.id },
+        search: () => DEFAULT_DIRECTORY_SEARCH
       });
     },
     [navigate]

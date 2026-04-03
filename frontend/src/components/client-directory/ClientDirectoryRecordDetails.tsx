@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 
-import type { DirectoryRouteRef } from 'shared/schemas/directory.schema';
-import { ArrowLeftRight, Mail, MapPin, Phone, X, Trash2 } from 'lucide-react';
+import type { DirectoryListInput, DirectoryRouteRef } from 'shared/schemas/directory.schema';
+import { ArrowLeftRight, ChevronLeft, ChevronRight, Mail, MapPin, Phone, Trash2 } from 'lucide-react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useNavigate } from '@tanstack/react-router';
 
@@ -28,25 +28,25 @@ import { formatRelativeTime } from '@/utils/date/formatRelativeTime';
 import { formatClientNumber } from '@/utils/clients/formatClientNumber';
 import { getDirectoryTypeLabel, isProspectEntityType } from './clientDirectorySearch';
 
-type DetailSurface = 'page' | 'drawer';
-
 export interface ClientDirectoryRecordDetailsProps {
   routeRef: DirectoryRouteRef;
-  surface: DetailSurface;
-  onClose?: () => void;
+  search: DirectoryListInput;
   onDeleteSuccess?: () => void;
+  relativeNavigation?: {
+    previousDisabled: boolean;
+    nextDisabled: boolean;
+    onOpenPrevious?: () => void;
+    onOpenNext?: () => void;
+  } | null;
 }
 
-const getSurfaceSectionClassName = (surface: DetailSurface): string =>
-  surface === 'drawer'
-    ? 'flex h-full min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4'
-    : 'flex h-full min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4 lg:px-6';
+const RECORD_DETAILS_SECTION_CLASS_NAME = 'flex h-full min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4 lg:px-6';
 
 const ClientDirectoryRecordDetails = ({
   routeRef,
-  surface,
-  onClose,
-  onDeleteSuccess
+  search,
+  onDeleteSuccess,
+  relativeNavigation
 }: ClientDirectoryRecordDetailsProps) => {
   const sessionState = useAppSessionStateContext();
   const navigate = useNavigate();
@@ -106,7 +106,7 @@ const ClientDirectoryRecordDetails = ({
           exit={{ opacity: 0 }}
           transition={{ duration: reducedMotion ? 0 : 0.15 }}
           aria-busy="true"
-          className={getSurfaceSectionClassName(surface)}
+          className={RECORD_DETAILS_SECTION_CLASS_NAME}
         >
           <p className="sr-only">Chargement de la fiche…</p>
           <div className="rounded-xl border border-border/50 bg-card p-5">
@@ -131,18 +131,35 @@ const ClientDirectoryRecordDetails = ({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: reducedMotion ? 0 : 0.2 }}
-          className={getSurfaceSectionClassName(surface)}
+          className={RECORD_DETAILS_SECTION_CLASS_NAME}
         >
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              {surface === 'drawer' && onClose ? (
-                <Button type="button" variant="ghost" size="sm" className="gap-2 px-2" onClick={onClose}>
-                  <X size={14} />
-                  Fermer
+            {relativeNavigation ? (
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  aria-label="Fiche précédente"
+                  disabled={relativeNavigation.previousDisabled}
+                  onClick={relativeNavigation.onOpenPrevious}
+                >
+                  <ChevronLeft size={14} />
+                  Précédent
                 </Button>
-              ) : null}
-            </div>
-
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  aria-label="Fiche suivante"
+                  disabled={relativeNavigation.nextDisabled}
+                  onClick={relativeNavigation.onOpenNext}
+                >
+                  Suivant
+                  <ChevronRight size={14} />
+                </Button>
+              </div>
+            ) : null}
             <div className="flex flex-wrap items-center gap-2">
               {isProspect ? (
                 <>
@@ -171,7 +188,8 @@ const ClientDirectoryRecordDetails = ({
                     onClick={() => {
                       void navigate({
                         to: '/clients/prospects/$prospectId/convert',
-                        params: { prospectId: record.id }
+                        params: { prospectId: record.id },
+                        search: () => search
                       });
                     }}
                   >
