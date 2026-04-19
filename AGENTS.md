@@ -58,11 +58,12 @@ Invoquer le skill correspondant AVANT d'ecrire du code (voir liste dans CLAUDE.m
 - Utiliser `pnpm run qa:fast`/commandes ciblees pendant la boucle de dev, puis `pnpm run qa` en gate final depuis la racine
 - Zod: source unique dans `shared/schemas`, payloads API en `.strict()`, `safeParse` obligatoire sur les entrees/sorties externes, et details de validation en francais.
 
-## Quality Gate manuel (sans CI)
+## Quality Gate local + CI
 
 - Reference obligatoire: `docs/qa-runbook.md`
 - Lecture obligatoire de `docs/qa-runbook.md` avant chaque prompt de travail envoye au LLM.
 - Toute livraison doit suivre ce runbook de bout en bout (ordre strict, PASS/FAIL bloquant, rapport final).
+- La CI GitHub Actions execute la meme gate que le local; un check vert ne remplace pas le rapport QA manuel.
 - Sans execution complete du runbook, une tache n'est pas consideree terminee.
 
 ## Checklist pre-commit
@@ -71,6 +72,7 @@ Avant de considerer le travail termine :
 
 - [ ] Validation intermediaire executee (`pnpm run qa:fast` ou checks cibles equivalents)
 - [ ] `pnpm run qa` passe
+- [ ] Checks GitHub Actions requis au vert si une PR est ouverte
 - [ ] Zero `any`, `@ts-ignore`, `@ts-expect-error` non documentes
 - [ ] Zero `console.error` direct (utiliser `reportError`)
 - [ ] Zero `toast.error()` direct (utiliser `notifyError`)

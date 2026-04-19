@@ -7,7 +7,7 @@ export type UiMode = 'v1' | 'v2';
 type ResolveUiModeParams = {
   search: string;
   storedMode: string | null;
-  envFlag: string | boolean | null | undefined;
+  defaultEnabled: boolean;
 };
 
 type ResolveUiModeResult = {
@@ -20,17 +20,10 @@ export const parseUiMode = (value: string | null | undefined): UiMode | null => 
   return null;
 };
 
-export const isUiPocFlagEnabled = (value: string | boolean | null | undefined): boolean => {
-  if (typeof value === 'boolean') return value;
-
-  const normalized = (value ?? '').trim().toLowerCase();
-  return normalized === '1' || normalized === 'true' || normalized === 'yes' || normalized === 'on';
-};
-
 export const resolveUiMode = ({
   search,
   storedMode,
-  envFlag
+  defaultEnabled
 }: ResolveUiModeParams): ResolveUiModeResult => {
   const queryMode = parseUiMode(new URLSearchParams(search).get('ui'));
   if (queryMode) {
@@ -49,21 +42,21 @@ export const resolveUiMode = ({
   }
 
   return {
-    mode: isUiPocFlagEnabled(envFlag) ? 'v2' : 'v1',
+    mode: defaultEnabled ? 'v2' : 'v1',
     persistedMode: null
   };
 };
 
 type UseUiPocModeParams = {
   pathname: string;
-  envFlag?: string | boolean | null | undefined;
+  defaultEnabled?: boolean;
 };
 
 export const useUiPocMode = ({
   pathname,
-  envFlag = import.meta.env.VITE_UI_SHELL_V2_POC
+  defaultEnabled = false
 }: UseUiPocModeParams) => {
-  const [uiMode, setUiMode] = useState<UiMode>(() => (isUiPocFlagEnabled(envFlag) ? 'v2' : 'v1'));
+  const [uiMode, setUiMode] = useState<UiMode>(() => (defaultEnabled ? 'v2' : 'v1'));
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -72,7 +65,7 @@ export const useUiPocMode = ({
     const { mode, persistedMode } = resolveUiMode({
       search: window.location.search,
       storedMode,
-      envFlag
+      defaultEnabled
     });
 
     if (persistedMode) {
@@ -80,7 +73,7 @@ export const useUiPocMode = ({
     }
 
     setUiMode(mode);
-  }, [envFlag, pathname]);
+  }, [defaultEnabled, pathname]);
 
   return {
     uiMode,

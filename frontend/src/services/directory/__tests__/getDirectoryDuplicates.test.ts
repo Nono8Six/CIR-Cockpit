@@ -19,7 +19,6 @@ describe('getDirectoryDuplicates', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.resetModules();
-    window.sessionStorage.clear();
   });
 
   it('delegates the request to the tRPC directory.duplicates route', async () => {
@@ -48,12 +47,38 @@ describe('getDirectoryDuplicates', () => {
     expect(response.matches).toEqual([]);
   });
 
-  it('falls back to an empty response when the tRPC route is missing', async () => {
-    mockInvokeTrpc.mockRejectedValue(createAppError({
+  it('validates the server payload before returning it', async () => {
+    mockInvokeTrpc.mockImplementation(async (runner, parser) => parser(await runner()));
+    mockCallTrpcQuery.mockResolvedValue({
+      request_id: 'req-duplicates-invalid',
+      ok: true,
+      matches: [{ wrong: true }]
+    });
+
+    const { getDirectoryDuplicates } = await import('../getDirectoryDuplicates');
+    const input = {
+      kind: 'company' as const,
+      agencyIds: [],
+      includeArchived: true,
+      siret: '80092968900019',
+      siren: '800929689',
+      name: 'KB EQUIPEMENT',
+      city: 'CAVIGNAC'
+    };
+
+    await expect(getDirectoryDuplicates(input)).rejects.toMatchObject({
+      code: 'REQUEST_FAILED',
+      message: 'Reponse serveur invalide.'
+    });
+  });
+
+  it('surfaces missing route errors instead of falling back silently', async () => {
+    const missingRouteError = createAppError({
       code: 'NOT_FOUND',
       message: 'No procedure found on path "directory.duplicates"',
       source: 'edge'
-    }));
+    });
+    mockInvokeTrpc.mockRejectedValue(missingRouteError);
 
     const { getDirectoryDuplicates } = await import('../getDirectoryDuplicates');
     const input = {
@@ -68,11 +93,6 @@ describe('getDirectoryDuplicates', () => {
       phone: null
     };
 
-    const firstResponse = await getDirectoryDuplicates(input);
-    const secondResponse = await getDirectoryDuplicates(input);
-
-    expect(firstResponse.matches).toEqual([]);
-    expect(secondResponse.matches).toEqual([]);
-    expect(mockInvokeTrpc).toHaveBeenCalledTimes(1);
+    await expect(getDirectoryDuplicates(input)).rejects.toBe(missingRouteError);
   });
 });

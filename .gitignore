@@ -8,9 +8,16 @@ frontend/coverage/
 # Environment files
 .env
 .env.e2e
+.env.test
+.env.local
 frontend/.env
 frontend/.env.e2e
+frontend/.env.test
+frontend/.env.local
 backend/.env
+backend/.env.test
+backend/.env.local
+!**/.env.example
 
 # AI tool configs (local only)
 .claude/
@@ -20,6 +27,8 @@ backend/.env
 .tmp/
 .mcp.json
 .local-credentials.json
+supabase/.temp/
+migration/
 
 # OS / editor
 nul

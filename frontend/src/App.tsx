@@ -81,7 +81,8 @@ const App = () => {
 
   const userRole = sessionState.profile?.role ?? 'tcs';
   const canAccessSettings = userRole !== 'tcs';
-  const canEditSettings = userRole === 'super_admin';
+  const canEditAgencySettings = userRole !== 'tcs';
+  const canEditProductSettings = userRole === 'super_admin';
   const canAccessAdmin = userRole !== 'tcs';
   const normalizedPathname = pathname.endsWith('/') && pathname.length > 1
     ? pathname.slice(0, -1)
@@ -320,7 +321,8 @@ const App = () => {
         entitySearchIndex: queries.entitySearchIndex,
         entitySearchLoading: queries.entitySearchQuery.isLoading,
         canAccessSettings,
-        canEditSettings,
+        canEditAgencySettings,
+        canEditProductSettings,
         canAccessAdmin,
         focusedClientId: viewState.focusedClientId,
         focusedContactId: viewState.focusedContactId,

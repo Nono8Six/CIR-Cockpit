@@ -63,6 +63,7 @@ interface EntityOnboardingSearchStepProps {
   statusFilter: CompanySearchStatusFilter;
   onStatusFilterChange: (filter: CompanySearchStatusFilter) => void;
   departmentOptions: Array<{ value: string; label: string }>;
+  allowManualEntry: boolean;
   manualEntry: boolean;
   onToggleManualEntry: () => void;
   isFetching: boolean;
@@ -191,6 +192,7 @@ const EntityOnboardingSearchStep = ({
   statusFilter,
   onStatusFilterChange,
   departmentOptions,
+  allowManualEntry,
   manualEntry,
   onToggleManualEntry,
   isFetching,
@@ -378,15 +380,17 @@ const EntityOnboardingSearchStep = ({
             donnees.
           </p>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="dense"
-          onClick={onToggleManualEntry}
-          className="bg-surface-1/50 text-muted-foreground hover:text-foreground border-border"
-        >
-          {manualEntry ? "Retour recherche" : "Saisie manuelle"}
-        </Button>
+        {allowManualEntry ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="dense"
+            onClick={onToggleManualEntry}
+            className="bg-surface-1/50 text-muted-foreground hover:text-foreground border-border"
+          >
+            {manualEntry ? "Retour recherche" : "Saisie manuelle"}
+          </Button>
+        ) : null}
       </div>
 
       {manualEntry ? (
@@ -873,7 +877,9 @@ const EntityOnboardingSearchStep = ({
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground px-6 leading-relaxed">
                   Vérifiez l&apos;orthographe, essayez un département précis ou
-                  utilisez la <strong>saisie manuelle</strong>.
+                  {allowManualEntry
+                    ? <> utilisez la <strong>saisie manuelle</strong>.</>
+                    : ' ajustez le périmètre de recherche.'}
                 </p>
               </div>
             ) : (

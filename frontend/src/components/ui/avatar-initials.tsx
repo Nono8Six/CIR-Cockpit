@@ -15,15 +15,20 @@ const COLORS = [
   'bg-slate-50 text-slate-600',
   'bg-zinc-200 text-zinc-900',
   'bg-sky-50 text-sky-900'
-];
+] as const satisfies readonly [string, ...string[]];
+
+const getIndexedValue = <T,>(values: readonly [T, ...T[]], index: number): T =>
+  values[index % values.length];
+
+const firstChar = (value: string): string => value.charAt(0).toUpperCase();
 
 const getInitials = (name: string): string => {
   const parts = name.trim().split(/\s+/).filter(Boolean);
-  const firstPart = parts[0];
-  if (firstPart === undefined) return '?';
-  if (parts.length === 1) return firstPart[0]!.toUpperCase();
-  const lastPart = parts[parts.length - 1]!;
-  return `${firstPart[0]!.toUpperCase()}${lastPart[0]!.toUpperCase()}`;
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return firstChar(parts[0]);
+  const first = firstChar(parts[0]);
+  const last = firstChar(parts[parts.length - 1]);
+  return `${first}${last}`;
 };
 
 const getColorClass = (name: string): string => {
@@ -31,7 +36,7 @@ const getColorClass = (name: string): string => {
   for (let i = 0; i < name.length; i++) {
     hash = ((hash << 5) - hash + name.charCodeAt(i)) | 0;
   }
-  return COLORS[Math.abs(hash) % COLORS.length]!;
+  return getIndexedValue(COLORS, Math.abs(hash));
 };
 
 const AvatarInitials = ({ name, size = 'sm', className }: AvatarInitialsProps) => {

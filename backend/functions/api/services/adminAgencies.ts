@@ -1,11 +1,10 @@
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 import { agencies } from '../../../drizzle/schema.ts';
 import type { Database } from '../../../../shared/supabase.types.ts';
 import type { AdminAgenciesResponse } from '../../../../shared/schemas/api-responses.ts';
 import type { AdminAgenciesPayload } from '../../../../shared/schemas/agency.schema.ts';
 import type { DbClient } from '../types.ts';
-import { getSupabaseAdmin } from '../middleware/auth.ts';
 import { httpError } from '../middleware/errorHandler.ts';
 import { checkRateLimit } from './rateLimit.ts';
 
@@ -47,6 +46,19 @@ export const handleAgencyNameConflict = (error: { code?: string; message: string
   throw httpError(400, 'AGENCY_UPDATE_FAILED', error.message);
 };
 
+const readDatabaseError = (error: unknown): { code?: string; message?: string } => {
+  if (!error || typeof error !== 'object') {
+    return {};
+  }
+
+  const code = Reflect.get(error, 'code');
+  const message = Reflect.get(error, 'message');
+  return {
+    code: typeof code === 'string' ? code : undefined,
+    message: typeof message === 'string' ? message : undefined
+  };
+};
+
 const createAgency = async (db: DbClient, name: string): Promise<AgencySummary> => {
   try {
     const rows = await db
@@ -63,11 +75,9 @@ const createAgency = async (db: DbClient, name: string): Promise<AgencySummary> 
     }
     return data;
   } catch (error) {
-    if (typeof error === 'object' && error !== null) {
-      const dbError = error as { code?: string; message?: string };
-      if (typeof dbError.message === 'string') {
-        handleAgencyNameConflict({ code: dbError.code, message: dbError.message });
-      }
+    const dbError = readDatabaseError(error);
+    if (dbError.message) {
+      handleAgencyNameConflict({ code: dbError.code, message: dbError.message });
     }
     throw httpError(400, 'AGENCY_CREATE_FAILED', 'Impossible de creer l\'agence.');
   }
@@ -94,20 +104,20 @@ const updateAgency = async (
     }
     return data;
   } catch (error) {
-    if (typeof error === 'object' && error !== null) {
-      const dbError = error as { code?: string; message?: string };
-      if (typeof dbError.message === 'string') {
-        handleAgencyNameConflict({ code: dbError.code, message: dbError.message });
-      }
+    const dbError = readDatabaseError(error);
+    if (dbError.message) {
+      handleAgencyNameConflict({ code: dbError.code, message: dbError.message });
     }
     throw httpError(400, 'AGENCY_UPDATE_FAILED', 'Impossible de modifier l\'agence.');
   }
 };
 
 const hardDeleteAgency = async (db: DbClient, agencyId: string): Promise<void> => {
-  void db;
-  const { error } = await getSupabaseAdmin().rpc('hard_delete_agency', { p_agency_id: agencyId });
-  if (error) {
+  try {
+    await db.execute(sql`
+      select private.hard_delete_agency(${agencyId})
+    `);
+  } catch {
     throw httpError(500, 'AGENCY_DELETE_FAILED', 'Impossible de supprimer l\'agence.');
   }
 };

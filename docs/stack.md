@@ -8,7 +8,7 @@
 
 - Frontend: React 19, Vite 7, TypeScript 5.9, Tailwind CSS 4, shadcn/ui + Radix UI, TanStack Router, TanStack Query, React Hook Form + Zod, TanStack Table/Virtual, Motion, Sonner, Supabase JS.
 - Backend: Supabase (Postgres + Auth + Realtime), Edge Function Deno unique `api`, Hono + tRPC, Drizzle ORM + `postgres`, `jose` pour la verification JWT.
-- Qualite: `pnpm` workspace, ESLint 9, Vitest 4, Playwright, Husky, lint-staged, gate manuel `qa:fast` / `qa`.
+- Qualite: `pnpm` workspace, ESLint 9, Vitest 4, Playwright, Husky, lint-staged, gate locale `qa:fast` / `qa`, workflow GitHub Actions `qa.yml`.
 
 ## Sources de verite
 
@@ -163,16 +163,16 @@ Autrement dit: le frontend ne repose pas sur une couche API unique. Le repo comb
   - client Supabase pour auth, contexte utilisateur et operations admin,
   - Drizzle ORM pour les queries metier PostgreSQL.
 
-## Divergence technique a connaitre
+## Alignement runtime a maintenir
 
-Le repo a actuellement une divergence de version Hono entre l'environnement local backend et l'import map de deploiement:
+Le repo maintient la meme version Hono pour:
 
 | Fichier | Hono |
 |---------|------|
 | `backend/deno.json` | `4.12.4` |
-| `deno.json` | `4.11.9` |
+| `deno.json` | `4.12.4` |
 
-Cette page documente volontairement cette divergence au lieu de la masquer. Si la stack doit etre strictement alignee, il faudra harmoniser ces deux fichiers.
+Cet alignement est verifie par `pnpm run repo:check`.
 
 ## Shared layer
 
@@ -214,8 +214,8 @@ Cette page documente volontairement cette divergence au lieu de la masquer. Si l
 ### Execution des gates
 
 - Boucle intermediaire: `pnpm run qa:fast`
-- Gate final: `pnpm run qa`
-- Le projet n'utilise pas de workflow GitHub Actions comme gate principal.
+- Gate final local: `pnpm run qa`
+- Gate PR: workflow GitHub Actions `qa.yml`
 
 ## Ce que le repo n'utilise pas comme socle principal
 
@@ -226,7 +226,7 @@ Cette page documente volontairement cette divergence au lieu de la masquer. Si l
 | Prisma / TypeORM | non utilises |
 | Axios comme client principal | non utilise |
 | `framer-motion` | non utilise; le repo utilise `motion` |
-| CI GitHub Actions obligatoire | non utilise; gate manuel local |
+| CI GitHub Actions obligatoire | utilise sur PR en miroir de la gate locale |
 
 ## Arborescence utile
 

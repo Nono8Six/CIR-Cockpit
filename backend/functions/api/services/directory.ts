@@ -403,7 +403,7 @@ const normalizeNullableYear = (value: number | null | undefined): number | null 
 const normalizeNullableAmount = (value: number | null | undefined): number | null =>
   typeof value === 'number' && Number.isFinite(value) ? value : null;
 
-const normalizeBooleanFlag = (value: boolean | string | number | null | undefined): boolean | null => {
+export const normalizeBooleanFlag = (value: boolean | string | number | null | undefined): boolean | null => {
   if (typeof value === 'boolean') {
     return value;
   }
@@ -439,7 +439,7 @@ const normalizeBooleanFlag = (value: boolean | string | number | null | undefine
 const normalizeSignal = (value: boolean | string | number | null | undefined): boolean =>
   normalizeBooleanFlag(value) ?? false;
 
-const normalizeTextArray = (value: string[] | string | null | undefined): string[] => {
+export const normalizeTextArray = (value: string[] | string | null | undefined): string[] => {
   const entries = Array.isArray(value) ? value : value ? [value] : [];
   return Array.from(
     new Set(
@@ -790,7 +790,7 @@ export const getDirectoryRecord = async (
   }
 };
 
-const buildCompanySearchUrl = (input: CompanySearchPageRequest): string => {
+export const buildCompanySearchUrl = (input: CompanySearchPageRequest): string => {
   const url = new URL(COMPANY_SEARCH_URL);
   url.searchParams.set('q', input.query);
   url.searchParams.set('minimal', 'true');
@@ -1005,7 +1005,7 @@ const fetchEnterpriseApiSearchResponse = async (
   }
 };
 
-type DirectoryDuplicateLookupRow = DirectoryListRow & {
+export type DirectoryDuplicateLookupRow = DirectoryListRow & {
   contact_email: string | null;
   contact_phone: string | null;
   contact_first_name: string | null;
@@ -1042,7 +1042,7 @@ const toDirectoryDuplicateRecord = (
   updated_at: row.updated_at
 });
 
-const buildCompanyDuplicateReason = (
+export const buildCompanyDuplicateReason = (
   input: Extract<DirectoryDuplicatesInput, { kind: 'company' }>,
   row: DirectoryListRow
 ): string | null => {
@@ -1070,7 +1070,7 @@ const buildCompanyDuplicateReason = (
   return null;
 };
 
-const rankIndividualDuplicate = (
+export const rankIndividualDuplicate = (
   input: Extract<DirectoryDuplicatesInput, { kind: 'individual' }>,
   row: DirectoryDuplicateLookupRow
 ): { rank: number; reason: string } | null => {

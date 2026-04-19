@@ -1,4 +1,7 @@
 import {
+  configGetResponseSchema,
+  configSaveAgencyResponseSchema,
+  configSaveProductResponseSchema,
   adminAgenciesResponseSchema,
   adminUsersResponseSchema,
   dataConfigResponseSchema,
@@ -18,6 +21,11 @@ import {
   directorySavedViewsListResponseSchema
 } from '../../../../shared/schemas/api-responses.ts';
 import { adminAgenciesPayloadSchema } from '../../../../shared/schemas/agency.schema.ts';
+import {
+  configGetInputSchema,
+  configSaveAgencyInputSchema,
+  configSaveProductInputSchema
+} from '../../../../shared/schemas/config.schema.ts';
 import {
   dataConfigPayloadSchema,
   dataEntitiesPayloadSchema,
@@ -42,6 +50,8 @@ import {
 import { adminUsersPayloadSchema } from '../../../../shared/schemas/user.schema.ts';
 import { handleAdminAgenciesAction } from '../services/adminAgencies.ts';
 import { handleAdminUsersAction } from '../services/adminUsers.ts';
+import { saveAgencyConfigSettings, saveProductConfigSettings } from '../services/configSettings.ts';
+import { getConfigSnapshot } from '../services/configSnapshot.ts';
 import { handleDataConfigAction } from '../services/dataConfig.ts';
 import { handleDataEntitiesAction } from '../services/dataEntities.ts';
 import { handleDataEntityContactsAction } from '../services/dataEntityContacts.ts';
@@ -110,6 +120,20 @@ export const appRouter = router({
       .input(adminAgenciesPayloadSchema)
       .output(adminAgenciesResponseSchema)
       .mutation(withSuperAdminHandler(handleAdminAgenciesAction))
+  }),
+  config: router({
+    get: authedProcedure
+      .input(configGetInputSchema)
+      .output(configGetResponseSchema)
+      .query(withAuthedHandler(getConfigSnapshot)),
+    'save-agency': authedProcedure
+      .input(configSaveAgencyInputSchema)
+      .output(configSaveAgencyResponseSchema)
+      .mutation(withAuthedHandler(saveAgencyConfigSettings)),
+    'save-product': superAdminProcedure
+      .input(configSaveProductInputSchema)
+      .output(configSaveProductResponseSchema)
+      .mutation(withSuperAdminHandler(saveProductConfigSettings))
   }),
   directory: router({
     list: authedProcedure

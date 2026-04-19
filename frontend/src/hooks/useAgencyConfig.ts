@@ -1,14 +1,16 @@
 import { useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import type { ResolvedConfigSnapshot } from 'shared/schemas/config.schema';
 
 import { createAppError } from '@/services/errors/AppError';
-import { getAgencyConfig } from '@/services/config';
+import { getConfigSnapshot } from '@/services/config';
+import { mapSnapshotToAgencyConfig, type AgencyConfig } from '@/services/config/getAgencyConfig';
 import { agencyConfigKey } from '@/services/query/queryKeys';
 import { handleUiError } from '@/services/errors/handleUiError';
 import { mapSettingsDomainError } from '@/services/errors/mapSettingsDomainError';
 
 export const useAgencyConfig = (agencyId: string | null, enabled: boolean) => {
-  const query = useQuery({
+  const query = useQuery<ResolvedConfigSnapshot, Error, AgencyConfig>({
     queryKey: agencyId ? agencyConfigKey(agencyId) : ['agency-config', 'none'],
     queryFn: () => {
       if (!agencyId) {
@@ -18,8 +20,9 @@ export const useAgencyConfig = (agencyId: string | null, enabled: boolean) => {
           source: 'validation'
         }));
       }
-      return getAgencyConfig(agencyId);
+      return getConfigSnapshot(agencyId);
     },
+    select: mapSnapshotToAgencyConfig,
     enabled: enabled && !!agencyId,
     staleTime: 120_000
   });

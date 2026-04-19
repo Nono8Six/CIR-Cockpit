@@ -10,21 +10,35 @@ export const httpError = (
   message: string,
   details?: string
 ): HttpError => {
-  const err = new Error(message) as HttpError;
-  err.status = status;
-  err.code = code;
-  err.details = details;
-  return err;
+  return Object.assign(new Error(message), {
+    status,
+    code,
+    details
+  });
+};
+
+const readErrorNumber = (error: Error, key: string): number | undefined => {
+  const candidate = Reflect.get(error, key);
+  return typeof candidate === 'number' ? candidate : undefined;
+};
+
+const readErrorCode = (error: Error): string | undefined => {
+  const candidate = Reflect.get(error, 'code');
+  return typeof candidate === 'string' ? candidate : undefined;
+};
+
+const readErrorDetails = (error: Error): string | undefined => {
+  const candidate = Reflect.get(error, 'details');
+  return typeof candidate === 'string' ? candidate : undefined;
 };
 
 const normalizeError = (err: unknown) => {
   if (err instanceof Error) {
-    const maybe = err as HttpError;
     return {
-      status: typeof maybe.status === 'number' ? maybe.status : 500,
-      code: maybe.code ?? 'REQUEST_FAILED',
-      message: maybe.message || 'La requete a echoue.',
-      details: maybe.details
+      status: readErrorNumber(err, 'status') ?? 500,
+      code: readErrorCode(err) ?? 'REQUEST_FAILED',
+      message: err.message || 'La requete a echoue.',
+      details: readErrorDetails(err)
     };
   }
   return {

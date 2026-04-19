@@ -32,12 +32,13 @@ pnpm run qa                # Gate complet de livraison (coverage, audit, build, 
 
 ## Politique CI/CD
 
-- Pas de workflow GitHub Actions sur ce projet.
-- La qualite est validee en local via `pnpm run qa` et le runbook manuel `docs/qa-runbook.md`.
+- Un workflow GitHub Actions `qa.yml` valide les pull requests avec la meme gate que le local.
+- La qualite reste validee en local via `pnpm run qa` et le runbook `docs/qa-runbook.md`.
 - Les E2E restent hors CI et sont executes localement avec un environnement Supabase de test.
 - Methodologie locale:
   - pendant l'implementation: commandes ciblees ou `pnpm run qa:fast` selon l'impact.
   - avant livraison/merge: `pnpm run qa` obligatoire.
+  - avant merge: checks GitHub Actions verts requis si une PR est ouverte.
 
 ## Structure projet
 
@@ -80,7 +81,7 @@ backend/
     types.ts           # Types backend
   migrations/          # SQL versionne
 
-docs/                  # plan.md, stack.md, testing.md, CR/, prompt.md
+docs/                  # plan.md, stack.md, testing.md, qa-runbook.md
 ```
 
 ## Stack technique

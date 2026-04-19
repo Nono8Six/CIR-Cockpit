@@ -96,17 +96,41 @@ export default defineConfig({
           functions: 0,
           lines: 80
         },
-        'src/hooks/{useSettingsState,useInteractionSearch,useInteractionSubmit,useUsersManager,useAgenciesManager,useChangePasswordState}.ts': {
+        'src/hooks/{useInteractionSearch,useInteractionSubmit,useUsersManager,useAgenciesManager,useChangePasswordState}.ts': {
           statements: 0,
           branches: 0,
           functions: 0,
           lines: 70
         },
-        'src/hooks/{useClients,useProspects,useInteractions,useLoginScreenForm,useAuditLogs,useAppSessionState}.ts': {
+        'src/hooks/{useClients,useProspects,useInteractions,useLoginScreenForm,useAuditLogs,useAppSessionState,useSettingsState}.ts': {
           statements: 0,
           branches: 0,
           functions: 0,
           lines: 50
+        },
+        'src/hooks/{useClientContactDialog,useProspectFormDialog,useDirectoryCompanyDetails,useDirectoryDuplicates}.ts': {
+          statements: 80,
+          branches: 60,
+          functions: 80,
+          lines: 80
+        },
+        'src/hooks/interaction-draft/normalizeInteractionDraftValues.ts': {
+          statements: 80,
+          branches: 60,
+          functions: 100,
+          lines: 80
+        },
+        'src/hooks/settings-state/settingsFormSchema.ts': {
+          statements: 85,
+          branches: 40,
+          functions: 100,
+          lines: 85
+        },
+        'src/hooks/dashboard-state/useDashboardStatusHelpers.ts': {
+          statements: 60,
+          branches: 30,
+          functions: 80,
+          lines: 60
         },
         'src/components/ui/status-dot.tsx': {
           statements: 100,

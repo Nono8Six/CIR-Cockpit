@@ -2,6 +2,9 @@ import { z } from 'zod/v4';
 
 import type { Database } from '../supabase.types.ts';
 import {
+  resolvedConfigSnapshotSchema
+} from './config.schema.ts';
+import {
   directoryAgencyOptionSchema,
   directoryCompanyDetailsSchema,
   directoryCompanySearchResultSchema,
@@ -100,6 +103,11 @@ export const dataInteractionsResponseSchema = z.union([
 
 export const dataConfigResponseSchema = apiSuccessSchema;
 export const dataProfileResponseSchema = apiSuccessSchema;
+export const configGetResponseSchema = apiSuccessSchema.extend({
+  snapshot: resolvedConfigSnapshotSchema
+}).strict();
+export const configSaveAgencyResponseSchema = apiSuccessSchema;
+export const configSaveProductResponseSchema = apiSuccessSchema;
 export const directoryListResponseSchema = apiSuccessSchema.extend({
   rows: z.array(directoryListRowSchema),
   total: z.number().int().nonnegative(),
@@ -223,6 +231,9 @@ export type DataInteractionsDeleteResponse = z.infer<typeof dataInteractionsDele
 export type DataInteractionsResponse = z.infer<typeof dataInteractionsResponseSchema>;
 export type DataConfigResponse = z.infer<typeof dataConfigResponseSchema>;
 export type DataProfileResponse = z.infer<typeof dataProfileResponseSchema>;
+export type ConfigGetResponse = z.infer<typeof configGetResponseSchema>;
+export type ConfigSaveAgencyResponse = z.infer<typeof configSaveAgencyResponseSchema>;
+export type ConfigSaveProductResponse = z.infer<typeof configSaveProductResponseSchema>;
 export type DirectoryListResponse = z.infer<typeof directoryListResponseSchema>;
 export type DirectoryOptionsResponse = z.infer<typeof directoryOptionsResponseSchema>;
 export type DirectoryCitySuggestionsResponse = z.infer<typeof directoryCitySuggestionsResponseSchema>;

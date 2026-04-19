@@ -1,17 +1,17 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import type { ConfigSaveAgencyInput } from 'shared/schemas/config.schema';
 
 import { saveAgencyConfig } from '@/services/config';
 import { agencyConfigKey } from '@/services/query/queryKeys';
 import { handleUiError } from '@/services/errors/handleUiError';
 import { mapSettingsDomainError } from '@/services/errors/mapSettingsDomainError';
-import type { AgencyConfig } from '@/services/config/getAgencyConfig';
 import type { AppError } from '@/services/errors/AppError';
 
 export const useSaveAgencyConfig = (agencyId: string | null) => {
   const queryClient = useQueryClient();
 
-  return useMutation<void, AppError, AgencyConfig>({
-    mutationFn: (config: AgencyConfig) =>
+  return useMutation<void, AppError, ConfigSaveAgencyInput>({
+    mutationFn: (config: ConfigSaveAgencyInput) =>
       saveAgencyConfig(config).match(
         () => undefined,
         (error) => {

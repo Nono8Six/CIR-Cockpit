@@ -1,19 +1,20 @@
-# QA Runbook Ultra Complet (Sans CI)
+# QA Runbook Ultra Complet (Local + CI)
 
-Date de reference: 2026-02-28
+Date de reference: 2026-04-17
 Portee par defaut: tout le repo (`frontend/`, `backend/`, `shared/`, docs critiques)
-Mode: manuel strict, bloquant (gate final) + boucle rapide intermediaire
+Mode: gate locale stricte + CI miroir sur PR
 
 ## 1. Objectif
 
-Ce runbook remplace la CI par un gate qualite manuel.
+Ce runbook complete la CI par un gate qualite local et un rapport manuel.
 Une tache n'est pas terminee tant que toutes les etapes obligatoires ne sont pas vertes.
 
 Objectifs obligatoires:
 1. Verifier tests, lint, typecheck et build.
-2. Verifier la gestion d'erreurs front/back.
-3. Verifier la conformite aux regles `CLAUDE.md` et `AGENTS.md`.
-4. Verifier le runtime Supabase quand le backend API est impacte.
+2. Verifier la coherence repo/lock/install et les gardes-fous de source de verite.
+3. Verifier la gestion d'erreurs front/back.
+4. Verifier la conformite aux regles `CLAUDE.md` et `AGENTS.md`.
+5. Verifier le runtime Supabase quand le backend API est impacte.
 
 ## 2. Regles d'execution
 
@@ -23,6 +24,7 @@ Objectifs obligatoires:
 3. Si une commande KO: STOP, corriger, puis relancer la phase.
 4. Aucune livraison sans preuve ecrite en fin de runbook.
 5. Les exceptions doivent etre explicites et justifiees.
+6. Sur PR, la CI GitHub Actions doit etre verte en plus de la gate locale.
 
 ## 3. Perimetre et conditions de skip
 
@@ -52,15 +54,16 @@ Pour chaque cycle "demande -> modification -> livraison":
 1. Boucle intermediaire (pendant implementation, non livrable):
    - Identifier le perimetre exact (front/back/transversal/docs).
    - Lancer des checks cibles selon la matrice d'impact, ou `pnpm run qa:fast` depuis la racine.
-   - `qa:fast` inclut: typecheck + lint + tests (sans coverage) + error-compliance + backend lint/check/test.
+   - `qa:fast` inclut: controle repo + typecheck + lint + tests (sans coverage) + error-compliance + backend lint/check/test.
    - Si KO: corriger immediatement avant de continuer.
 2. Gate final (avant livraison/merge, livrable):
    - Executer `pnpm run qa` depuis la racine (gate complet sans audit reseau).
+   - Verifier que le workflow GitHub Actions `qa.yml` passe si une PR est ouverte.
    - Pour un audit de securite des deps: `pnpm run qa:audit` (separe, necessite reseau).
    - Produire un rapport QA manuel dans la reponse de livraison.
    - Si une etape bloquante est KO: ne pas livrer.
 
-Note: le hook `pre-push` execute `qa:fast` (pas le full gate). Le full `qa` est obligatoire manuellement avant merge.
+Note: le hook `pre-push` execute `qa:fast` (pas le full gate). Le full `qa` reste obligatoire localement avant merge.
 
 ## 4. Pre-requis
 
@@ -72,7 +75,7 @@ Note: le hook `pre-push` execute `qa:fast` (pas le full gate). Le full `qa` est 
 4. Dependances installees:
 
 ```bash
-pnpm --dir frontend install
+pnpm install --frozen-lockfile
 ```
 
 ## 4.2 Variables
@@ -84,7 +87,7 @@ Frontend:
 
 Backend:
 1. Variables minimales dans l'environnement shell (ou fichier charge) selon `backend/.env.example`.
-2. Pour integration API opt-in: `RUN_API_INTEGRATION=1` + variables `API_INT_*`.
+2. Pour integration API opt-in: copier `backend/.env.test.example` vers `backend/.env.test`, renseigner `RUN_API_INTEGRATION=1` + variables `API_INT_*`, ou fournir ces variables directement via l'environnement shell.
 3. Si backend impacte: verification fail-fast obligatoire des variables avant execution.
 
 ## 5. Phase A - Baseline repo
@@ -93,6 +96,7 @@ Executer depuis la racine:
 
 ```bash
 git status --short
+pnpm run repo:check
 ```
 
 Controle fail-fast (backend impacte):
@@ -110,6 +114,7 @@ if ([string]::IsNullOrWhiteSpace($env:SUPABASE_URL) -or [string]::IsNullOrWhiteS
 PASS:
 1. L'etat du worktree est compris.
 2. Les fichiers modifies par la tache sont identifies.
+3. `repo:check` confirme l'absence de shadow repo, de temp files suivis, de drift Deno/import-map connu et d'inventaire migrations repo/remote silencieusement incomplet.
 
 FAIL:
 1. Changements inattendus non analyses.
@@ -171,12 +176,14 @@ Executer depuis la racine:
 deno lint backend/functions/api
 deno check --config backend/deno.json backend/functions/api/index.ts
 deno test --allow-env --no-check --config backend/deno.json backend/functions/api
+pnpm run backend:test:integration
 ```
 
 PASS:
 1. Lint Deno vert.
 2. Typecheck backend vert.
 3. Tests backend verts (les tests `ignored` documentes sont acceptes si non applicables).
+4. `backend:test:integration` fonctionne avec `backend/.env.test` si present, sinon retombe explicitement sur l'environnement shell sans exposer de secret.
 
 FAIL:
 1. Echec lint/type/test = blocage.
@@ -320,10 +327,31 @@ Executer via MCP Supabase ou SQL equivalent:
 2. Si routines sensibles impactees:
    - `information_schema.routine_privileges` sur routines ciblees
    - `pg_proc.proconfig` pour confirmer `search_path` attendu
+   - `pg_proc` + `pg_namespace` pour confirmer qu'aucune routine custom sensible n'est encore dans `public`
+   - `pg_trigger` + `pg_get_triggerdef(...)` pour confirmer les bindings `private.*`
 3. Si suppression d'indexes:
    - classifier `supprimer` vs `garder` avec justification explicite
    - verifier qu'aucune contrainte PK/UNIQUE/FK n'est censee etre couverte par erreur
    - documenter un rollback SQL pret a l'emploi
+4. Si chantier Phase 3 Hardening Supabase:
+   - verifier `pg_extension` pour confirmer `pg_trgm -> extensions`
+   - verifier `pg_class.relforcerowsecurity` sur `app_settings`, `agency_settings`, `directory_saved_views`, `reference_departments`
+   - verifier `information_schema.routine_privileges`:
+     - zero `EXECUTE` sur fonctions custom `public.*` pour `PUBLIC`
+     - `authenticated` limite a `private.is_super_admin`, `private.is_member`, `private.has_agency_role`, `private.has_role`, `private.user_role`
+     - `service_role` limite aux routines backend/cron attendues (`check_rate_limit`, `hard_delete_agency`, `set_audit_actor`, retention audit)
+   - verifier les indexes FK attendus:
+     - `idx_audit_logs_archive_actor_id`
+     - `idx_audit_logs_archive_agency_id`
+     - `interaction_drafts_agency_id_idx`
+     - `idx_interactions_contact_id`
+     - `idx_interactions_created_by`
+     - `idx_interactions_status_id_only`
+     - `idx_interactions_updated_by`
+     - `idx_profiles_active_agency_id`
+   - noter explicitement les waivers conserves:
+     - indexes `unused` recents gardes par prudence
+     - `auth_leaked_password_protection` non traite si la politique projet le maintient `N/A`
 
 PASS:
 1. Preuves before/after ecrites dans le rapport final.
@@ -354,7 +382,7 @@ Regle de gouvernance:
 Copier-coller ce bloc dans PR, ticket, ou message de livraison:
 
 ```md
-## Rapport QA Manuel (Sans CI)
+## Rapport QA Manuel (Local + CI)
 
 - Date:
 - Branche/commit:
@@ -362,6 +390,7 @@ Copier-coller ce bloc dans PR, ticket, ou message de livraison:
 - Validation intermediaire: `qa:fast` ou checks cibles (details)
 - Backend impacte: oui/non
 - UI impactee: oui/non
+- CI GitHub Actions: verte / non lancee / justification
 
 ### Resultats commandes
 - [ ] frontend typecheck
@@ -401,5 +430,5 @@ Copier-coller ce bloc dans PR, ticket, ou message de livraison:
 1. `AGENTS.md`
 2. `CLAUDE.md`
 3. `docs/stack.md`
-4. `docs/audit-complet.md`
+4. `docs/plan.md`
 5. `frontend/scripts/check-error-compliance.mjs`

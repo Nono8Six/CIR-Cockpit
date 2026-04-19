@@ -7,6 +7,7 @@ import { useEntitySearchIndex } from '@/hooks/useEntitySearchIndex';
 import { useInteractions } from '@/hooks/useInteractions';
 import { useRealtimeInteractions } from '@/hooks/useRealtimeInteractions';
 import type { AppTab, Entity, EntityContact, Interaction } from '@/types';
+import type { AgencyConfig } from '@/services/config';
 
 type UseAppQueriesParams = {
   activeAgencyId: string | null;
@@ -40,7 +41,7 @@ export const useAppQueries = ({
   const shouldLoadEntityIndex = isSearchOpen || activeTab === 'clients' || activeTab === 'cockpit';
   const entitySearchQuery = useEntitySearchIndex(activeAgencyId, false, shouldLoadEntityIndex);
 
-  const config = useMemo(() => configQuery.data ?? EMPTY_CONFIG, [configQuery.data]);
+  const config = useMemo<AgencyConfig>(() => configQuery.data ?? EMPTY_CONFIG, [configQuery.data]);
   const interactions = useMemo<Interaction[]>(
     () => interactionsQuery.data ?? [],
     [interactionsQuery.data]

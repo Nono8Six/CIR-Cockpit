@@ -1,5 +1,10 @@
 import { boolean, integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
+import type {
+  AgencyOnboardingOverrides,
+  ProductFeatureFlags,
+  ProductOnboardingConfig
+} from '../../shared/schemas/config.schema.ts';
 import type { Database } from '../../shared/supabase.types.ts';
 import type { DirectorySavedViewState } from '../../shared/schemas/directory.schema.ts';
 
@@ -46,6 +51,30 @@ export const directory_saved_views = pgTable('directory_saved_views', {
   name: text('name').notNull(),
   state: jsonb('state').$type<DirectorySavedViewState>().notNull(),
   is_default: boolean('is_default').$type<boolean>().notNull(),
+  created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull(),
+  updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
+});
+
+export const app_settings = pgTable('app_settings', {
+  id: integer('id').$type<number>().primaryKey(),
+  feature_flags: jsonb('feature_flags').$type<ProductFeatureFlags>().notNull(),
+  onboarding: jsonb('onboarding').$type<ProductOnboardingConfig>().notNull(),
+  created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull(),
+  updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
+});
+
+export const agency_settings = pgTable('agency_settings', {
+  agency_id: uuid('agency_id').$type<string>().primaryKey(),
+  onboarding: jsonb('onboarding').$type<AgencyOnboardingOverrides>().notNull(),
+  created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull(),
+  updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
+});
+
+export const reference_departments = pgTable('reference_departments', {
+  code: text('code').$type<string>().primaryKey(),
+  label: text('label').$type<string>().notNull(),
+  sort_order: integer('sort_order').$type<number>().notNull(),
+  is_active: boolean('is_active').$type<boolean>().notNull(),
   created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull(),
   updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
 });
@@ -181,6 +210,9 @@ export const drizzleSchema = {
   profiles,
   agency_members,
   directory_saved_views,
+  app_settings,
+  agency_settings,
+  reference_departments,
   entities,
   entity_contacts,
   interactions,

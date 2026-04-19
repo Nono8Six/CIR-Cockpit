@@ -1,17 +1,10 @@
 import { assert } from 'std/assert';
 
-export const RUN_FLAG = Deno.env.get('RUN_API_INTEGRATION') === '1';
+import { integrationEnv, missingIntegrationEnv } from './env.ts';
+
+export const RUN_FLAG = integrationEnv.runFlag;
 const NET_PERMISSION = await Deno.permissions.query({ name: 'net' });
 const HAS_NET_PERMISSION = NET_PERMISSION.state === 'granted';
-
-const REQUIRED_ENV = [
-  'SUPABASE_URL',
-  'SUPABASE_ANON_KEY',
-  'API_INT_ADMIN_EMAIL',
-  'API_INT_ADMIN_PASSWORD',
-  'API_INT_USER_EMAIL',
-  'API_INT_USER_PASSWORD'
-] as const;
 
 export type ProcedurePath =
   | 'admin.users'
@@ -48,17 +41,17 @@ export type IntegrationContext = {
   configInteractionTypes: string[];
 };
 
-export const missingEnv = REQUIRED_ENV.filter((key) => !Deno.env.get(key)?.trim());
+export const missingEnv = missingIntegrationEnv;
 const ENV_CONFIGURED = missingEnv.length === 0;
 export const CAN_RUN_NETWORK_INTEGRATION = RUN_FLAG && ENV_CONFIGURED && HAS_NET_PERMISSION;
 
-const baseUrl = (Deno.env.get('SUPABASE_URL') ?? '').trim().replace(/\/+$/, '');
-const anonKey = (Deno.env.get('SUPABASE_ANON_KEY') ?? '').trim();
-const adminEmail = (Deno.env.get('API_INT_ADMIN_EMAIL') ?? '').trim();
-const adminPassword = (Deno.env.get('API_INT_ADMIN_PASSWORD') ?? '').trim();
-const userEmail = (Deno.env.get('API_INT_USER_EMAIL') ?? '').trim();
-const userPassword = (Deno.env.get('API_INT_USER_PASSWORD') ?? '').trim();
-export const corsOrigin = (Deno.env.get('API_INT_ORIGIN') ?? 'http://localhost:3000').trim();
+const baseUrl = integrationEnv.supabaseUrl;
+const anonKey = integrationEnv.anonKey;
+const adminEmail = integrationEnv.adminEmail;
+const adminPassword = integrationEnv.adminPassword;
+const userEmail = integrationEnv.userEmail;
+const userPassword = integrationEnv.userPassword;
+export const corsOrigin = integrationEnv.corsOrigin;
 
 const apiBaseUrl = `${baseUrl}/functions/v1/api`;
 const restBaseUrl = `${baseUrl}/rest/v1`;
@@ -75,30 +68,29 @@ export const DATA_ROUTES: ProcedurePath[] = [
 export const ADMIN_ROUTES: ProcedurePath[] = ['admin.users', 'admin.agencies'];
 export const ALL_ROUTES: ProcedurePath[] = [...ADMIN_ROUTES, ...DATA_ROUTES];
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const readRecordField = (value: unknown, key: string): unknown =>
+  isRecord(value) ? value[key] ?? null : null;
+
 export const readString = (value: unknown, key: string): string => {
-  if (!value || typeof value !== 'object') return '';
-  const candidate = (value as Record<string, unknown>)[key];
+  const candidate = readRecordField(value, key);
   return typeof candidate === 'string' ? candidate : '';
 };
 
 export const readBoolean = (value: unknown, key: string): boolean | null => {
-  if (!value || typeof value !== 'object') return null;
-  const candidate = (value as Record<string, unknown>)[key];
+  const candidate = readRecordField(value, key);
   return typeof candidate === 'boolean' ? candidate : null;
 };
 
 const readObject = (value: unknown, key: string): Record<string, unknown> | null => {
-  if (!value || typeof value !== 'object') return null;
-  const candidate = (value as Record<string, unknown>)[key];
-  return candidate && typeof candidate === 'object' && !Array.isArray(candidate)
-    ? candidate as Record<string, unknown>
-    : null;
+  const candidate = readRecordField(value, key);
+  return isRecord(candidate) ? candidate : null;
 };
 
-export const readValue = (value: unknown, key: string): unknown => {
-  if (!value || typeof value !== 'object') return null;
-  return (value as Record<string, unknown>)[key] ?? null;
-};
+export const readValue = (value: unknown, key: string): unknown =>
+  readRecordField(value, key);
 
 const parseJsonOrNull = async (response: Response): Promise<unknown | null> => {
   try {
@@ -109,7 +101,10 @@ const parseJsonOrNull = async (response: Response): Promise<unknown | null> => {
 };
 
 const parseTrpcPayload = (payload: unknown): unknown | null => {
-  if (!payload || typeof payload !== 'object') return payload;
+  if (!isRecord(payload)) {
+    return payload;
+  }
+
   const result = readObject(payload, 'result');
   const resultData = result ? readObject(result, 'data') : null;
   const jsonData = resultData ? readValue(resultData, 'json') : null;
@@ -164,7 +159,7 @@ export const postApi = async (
   };
 };
 
-const fetchRows = async <TRow>(pathAndQuery: string, token: string): Promise<TRow[]> => {
+const fetchRows = async (pathAndQuery: string, token: string): Promise<unknown[]> => {
   const response = await fetch(`${restBaseUrl}${pathAndQuery}`, {
     method: 'GET',
     headers: {
@@ -177,8 +172,23 @@ const fetchRows = async <TRow>(pathAndQuery: string, token: string): Promise<TRo
   assert(response.ok, `REST request failed on ${pathAndQuery} (status ${response.status}).`);
   assert(Array.isArray(payload), `REST payload invalide sur ${pathAndQuery}.`);
 
-  return payload as TRow[];
+  return payload;
 };
+
+const requireString = (value: unknown, key: string, resource: string): string => {
+  const candidate = readString(value, key).trim();
+  assert(candidate.length > 0, `${resource}: ${key} manquant.`);
+  return candidate;
+};
+
+const toStatusRow = (value: unknown, index: number): StatusRow => ({
+  id: requireString(value, 'id', `agency_statuses[${index}]`),
+  label: requireString(value, 'label', `agency_statuses[${index}]`),
+  category: requireString(value, 'category', `agency_statuses[${index}]`)
+});
+
+const toLabel = (value: unknown, resource: string, index: number): string =>
+  requireString(value, 'label', `${resource}[${index}]`);
 
 const signIn = async (email: string, password: string): Promise<AuthSession> => {
   const response = await fetch(`${authBaseUrl}/token?grant_type=password`, {
@@ -194,9 +204,7 @@ const signIn = async (email: string, password: string): Promise<AuthSession> => 
   assert(response.ok, `Unable to sign in ${email} (status ${response.status}).`);
 
   const accessToken = readString(payload, 'access_token');
-  const user = payload && typeof payload === 'object'
-    ? (payload as Record<string, unknown>).user
-    : null;
+  const user = readObject(payload, 'user');
   const userId = readString(user, 'id');
 
   assert(accessToken.length > 0, `Access token missing for ${email}.`);
@@ -209,35 +217,39 @@ const buildContext = async (): Promise<IntegrationContext> => {
   const adminSession = await signIn(adminEmail, adminPassword);
   const userSession = await signIn(userEmail, userPassword);
 
-  const memberships = await fetchRows<{ agency_id: string }>(
+  const memberships = await fetchRows(
     `/agency_members?select=agency_id&user_id=eq.${userSession.userId}&limit=1`,
     userSession.accessToken
   );
-  const agencyId = memberships[0]?.agency_id ?? '';
+  const agencyId = memberships
+    .map((value) => readString(value, 'agency_id').trim())
+    .find((value) => value.length > 0) ?? '';
   assert(agencyId.length > 0, 'No agency membership found for API_INT_USER_EMAIL.');
 
-  const statuses = await fetchRows<StatusRow>(
+  const statuses = (await fetchRows(
     `/agency_statuses?select=id,label,category&agency_id=eq.${agencyId}&order=sort_order.asc`,
     userSession.accessToken
-  );
+  )).map(toStatusRow);
   assert(statuses.length > 0, `No status found for agency ${agencyId}.`);
 
-  const interactionTypeRows = await fetchRows<{ label: string }>(
+  const interactionTypeRows = await fetchRows(
     `/agency_interaction_types?select=label&agency_id=eq.${agencyId}&order=sort_order.asc`,
     userSession.accessToken
   );
-  const interactionType = interactionTypeRows[0]?.label?.trim() ?? '';
+  const interactionType = interactionTypeRows
+    .map((row, index) => toLabel(row, 'agency_interaction_types', index))
+    .find((value) => value.length > 0) ?? '';
   assert(interactionType.length > 0, `No interaction type found for agency ${agencyId}.`);
 
-  const serviceRows = await fetchRows<{ label: string }>(
+  const serviceRows = await fetchRows(
     `/agency_services?select=label&agency_id=eq.${agencyId}&order=sort_order.asc`,
     userSession.accessToken
   );
-  const entityRows = await fetchRows<{ label: string }>(
+  const entityRows = await fetchRows(
     `/agency_entities?select=label&agency_id=eq.${agencyId}&order=sort_order.asc`,
     userSession.accessToken
   );
-  const familyRows = await fetchRows<{ label: string }>(
+  const familyRows = await fetchRows(
     `/agency_families?select=label&agency_id=eq.${agencyId}&order=sort_order.asc`,
     userSession.accessToken
   );
@@ -246,17 +258,19 @@ const buildContext = async (): Promise<IntegrationContext> => {
     adminToken: adminSession.accessToken,
     userToken: userSession.accessToken,
     agencyId,
-    statusId: statuses[0].id,
+    statusId: statuses[0]?.id ?? '',
     interactionType,
     configStatuses: statuses.map((status) => ({
       id: status.id,
       label: status.label,
       category: status.category
     })),
-    configServices: serviceRows.map((row) => row.label),
-    configEntities: entityRows.map((row) => row.label),
-    configFamilies: familyRows.map((row) => row.label),
-    configInteractionTypes: interactionTypeRows.map((row) => row.label)
+    configServices: serviceRows.map((row, index) => toLabel(row, 'agency_services', index)),
+    configEntities: entityRows.map((row, index) => toLabel(row, 'agency_entities', index)),
+    configFamilies: familyRows.map((row, index) => toLabel(row, 'agency_families', index)),
+    configInteractionTypes: interactionTypeRows.map((row, index) =>
+      toLabel(row, 'agency_interaction_types', index)
+    )
   };
 };
 
@@ -271,14 +285,10 @@ export const getContext = (): Promise<IntegrationContext> => {
 
 export const readEntityFromPayload = (payload: unknown): ApiPayload | null => {
   const candidate = readValue(payload, 'entity');
-  return candidate && typeof candidate === 'object' && !Array.isArray(candidate)
-    ? candidate as ApiPayload
-    : null;
+  return isRecord(candidate) ? candidate : null;
 };
 
 export const readContactFromPayload = (payload: unknown): ApiPayload | null => {
   const candidate = readValue(payload, 'contact');
-  return candidate && typeof candidate === 'object' && !Array.isArray(candidate)
-    ? candidate as ApiPayload
-    : null;
+  return isRecord(candidate) ? candidate : null;
 };

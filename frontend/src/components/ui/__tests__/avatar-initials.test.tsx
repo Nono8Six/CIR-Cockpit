@@ -36,4 +36,14 @@ describe('AvatarInitials', () => {
     const { container } = render(<AvatarInitials name="AB" size="md" />);
     expect(container.firstElementChild?.className).toContain('size-9');
   });
+
+  it('applies lg size when specified', () => {
+    const { container } = render(<AvatarInitials name="AB" size="lg" />);
+    expect(container.firstElementChild?.className).toContain('size-10');
+  });
+
+  it('merges a custom class name with the computed styles', () => {
+    const { container } = render(<AvatarInitials name="AB" className="ring-1" />);
+    expect(container.firstElementChild?.className).toContain('ring-1');
+  });
 });

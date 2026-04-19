@@ -185,44 +185,6 @@ export type Database = {
           },
         ]
       }
-      directory_saved_views: {
-        Row: {
-          created_at: string
-          id: string
-          is_default: boolean
-          name: string
-          state: Json
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_default?: boolean
-          name: string
-          state: Json
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_default?: boolean
-          name?: string
-          state?: Json
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "directory_saved_views_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       agency_services: {
         Row: {
           agency_id: string
@@ -253,6 +215,35 @@ export type Database = {
             foreignKeyName: "agency_services_agency_id_fkey"
             columns: ["agency_id"]
             isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agency_settings: {
+        Row: {
+          agency_id: string
+          created_at: string
+          onboarding: Json
+          updated_at: string
+        }
+        Insert: {
+          agency_id: string
+          created_at?: string
+          onboarding?: Json
+          updated_at?: string
+        }
+        Update: {
+          agency_id?: string
+          created_at?: string
+          onboarding?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agency_settings_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: true
             referencedRelation: "agencies"
             referencedColumns: ["id"]
           },
@@ -337,6 +328,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      app_settings: {
+        Row: {
+          created_at: string
+          feature_flags: Json
+          id: number
+          onboarding: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          feature_flags: Json
+          id: number
+          onboarding: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          feature_flags?: Json
+          id?: number
+          onboarding?: Json
+          updated_at?: string
+        }
+        Relationships: []
       }
       audit_logs: {
         Row: {
@@ -440,15 +455,53 @@ export type Database = {
           },
         ]
       }
+      directory_saved_views: {
+        Row: {
+          created_at: string
+          id: string
+          is_default: boolean
+          name: string
+          state: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name: string
+          state: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+          state?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "directory_saved_views_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       entities: {
         Row: {
           account_type: Database["public"]["Enums"]["account_type"] | null
           address: string | null
           agency_id: string | null
           archived_at: string | null
+          cir_commercial_id: string | null
           city: string | null
           client_kind: string | null
-          cir_commercial_id: string | null
           client_number: string | null
           country: string
           created_at: string
@@ -472,9 +525,9 @@ export type Database = {
           address?: string | null
           agency_id?: string | null
           archived_at?: string | null
+          cir_commercial_id?: string | null
           city?: string | null
           client_kind?: string | null
-          cir_commercial_id?: string | null
           client_number?: string | null
           country?: string
           created_at?: string
@@ -498,9 +551,9 @@ export type Database = {
           address?: string | null
           agency_id?: string | null
           archived_at?: string | null
+          cir_commercial_id?: string | null
           city?: string | null
           client_kind?: string | null
-          cir_commercial_id?: string | null
           client_number?: string | null
           country?: string
           created_at?: string
@@ -528,15 +581,15 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "entities_created_by_fkey"
-            columns: ["created_by"]
+            foreignKeyName: "entities_cir_commercial_id_fkey"
+            columns: ["cir_commercial_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "entities_cir_commercial_id_fkey"
-            columns: ["cir_commercial_id"]
+            foreignKeyName: "entities_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -835,50 +888,39 @@ export type Database = {
         }
         Relationships: []
       }
+      reference_departments: {
+        Row: {
+          code: string
+          created_at: string
+          is_active: boolean
+          label: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          is_active?: boolean
+          label: string
+          sort_order: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          is_active?: boolean
+          label?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      app_actor_id: { Args: never; Returns: string }
-      archive_audit_logs_older_than: {
-        Args: { p_batch_size?: number; p_before?: string }
-        Returns: number
-      }
-      audit_actor_id: { Args: never; Returns: string }
-      check_rate_limit: {
-        Args: { p_key: string; p_limit: number; p_window_seconds: number }
-        Returns: boolean
-      }
-      hard_delete_agency: { Args: { p_agency_id: string }; Returns: undefined }
-      has_agency_role: {
-        Args: {
-          roles: Database["public"]["Enums"]["user_role"][]
-          target_agency_id: string
-        }
-        Returns: boolean
-      }
-      has_role: {
-        Args: { roles: Database["public"]["Enums"]["user_role"][] }
-        Returns: boolean
-      }
-      is_member: { Args: { target_agency_id: string }; Returns: boolean }
-      is_super_admin: { Args: never; Returns: boolean }
-      jwt_sub: { Args: never; Returns: string }
-      run_audit_logs_retention: {
-        Args: {
-          p_batch_size?: number
-          p_before?: string
-          p_max_batches?: number
-        }
-        Returns: number
-      }
-      safe_uuid: { Args: { p_value: string }; Returns: string }
-      set_audit_actor: { Args: { p_actor_id: string }; Returns: undefined }
-      user_role: {
-        Args: never
-        Returns: Database["public"]["Enums"]["user_role"]
-      }
+      [_ in never]: never
     }
     Enums: {
       account_type: "term" | "cash"

@@ -4,6 +4,7 @@
   "packageManager": "pnpm@10.30.2+sha512.36cdc707e7b7940a988c9c1ecf88d084f8514b5c3f085f53a2e244c2921d3b2545bc20dd4ebe1fc245feec463bb298aecea7a63ed1f7680b877dc6379d8d0cb4",
   "scripts": {
     "prepare": "husky",
+    "repo:check": "node ./scripts/check-repo-state.mjs",
     "typecheck": "pnpm run frontend:typecheck && pnpm run backend:typecheck",
     "lint": "pnpm run frontend:lint && pnpm run backend:lint",
     "test": "pnpm run frontend:test && pnpm run backend:test",
@@ -16,8 +17,8 @@
     "backend:lint": "deno lint backend/functions/api",
     "backend:typecheck": "deno check --config backend/deno.json backend/functions/api/index.ts",
     "backend:test": "deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api",
-    "backend:test:integration": "deno test --env-file=backend/.env --allow-env --allow-net --no-check --config backend/deno.json backend/functions/api/integration",
-    "qa:fast": "pnpm --dir frontend run typecheck && pnpm --dir frontend run lint && pnpm --dir frontend run test:run && pnpm --dir frontend run check:error-compliance && deno lint backend/functions/api && deno check --config backend/deno.json backend/functions/api/index.ts && deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api",
+    "backend:test:integration": "node ./scripts/run-backend-integration-tests.mjs",
+    "qa:fast": "pnpm run repo:check && pnpm --dir frontend run typecheck && pnpm --dir frontend run lint && pnpm --dir frontend run test:run && pnpm --dir frontend run check:error-compliance && deno lint backend/functions/api && deno check --config backend/deno.json backend/functions/api/index.ts && deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api",
     "qa": "pwsh -NoLogo -File scripts/qa-gate.ps1",
     "qa:audit": "pnpm --dir frontend exec pnpm audit --audit-level=high"
   },

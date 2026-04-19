@@ -43,7 +43,8 @@ type AppMainTabContentProps = {
   };
   entitySearchLoading: boolean;
   canAccessSettings: boolean;
-  canEditSettings: boolean;
+  canEditAgencySettings: boolean;
+  canEditProductSettings: boolean;
   canAccessAdmin: boolean;
   focusedClientId: string | null;
   focusedContactId: string | null;
@@ -67,7 +68,8 @@ const AppMainTabContent = (props: AppMainTabContentProps) => {
     entitySearchIndex,
     entitySearchLoading,
     canAccessSettings,
-    canEditSettings,
+    canEditAgencySettings,
+    canEditProductSettings,
     canAccessAdmin,
     onSaveInteraction,
     onRequestConvert,
@@ -152,7 +154,12 @@ const AppMainTabContent = (props: AppMainTabContentProps) => {
             {tab === 'settings' ? (
               <div className="min-h-0 flex-1">
                 <Suspense fallback={ROUTE_LOADING_FALLBACK}>
-                  <Settings config={config} canEdit={canEditSettings} agencyId={activeAgencyId} />
+                  <Settings
+                    config={config}
+                    canEditAgencySettings={canEditAgencySettings}
+                    canEditProductSettings={canEditProductSettings}
+                    agencyId={activeAgencyId}
+                  />
                 </Suspense>
               </div>
             ) : null}

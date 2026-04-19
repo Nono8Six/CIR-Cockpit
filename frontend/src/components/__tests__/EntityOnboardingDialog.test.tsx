@@ -1,13 +1,46 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ResolvedConfigSnapshot } from 'shared/schemas/config.schema';
 
 import { renderWithProviders } from '@/__tests__/test-utils';
 import EntityOnboardingDialog from '@/components/EntityOnboardingDialog';
 
 const useDirectoryCompanySearchMock = vi.fn();
 const useDirectoryCompanyDetailsMock = vi.fn();
-const useDirectoryPageMock = vi.fn();
+const useDirectoryDuplicatesMock = vi.fn();
+const useConfigSnapshotMock = vi.fn();
+
+const BASE_CONFIG_SNAPSHOT: ResolvedConfigSnapshot = {
+  product: {
+    feature_flags: {
+      ui_shell_v2: false
+    },
+    onboarding: {
+      allow_manual_entry: true,
+      default_account_type_company: 'term',
+      default_account_type_individual: 'cash'
+    }
+  },
+  agency: {
+    onboarding: {}
+  },
+  references: {
+    statuses: [],
+    services: [],
+    entities: [],
+    families: [],
+    interaction_types: [],
+    departments: [
+      {
+        code: '33',
+        label: 'Gironde',
+        sort_order: 33,
+        is_active: true
+      }
+    ]
+  }
+};
 
 vi.mock('@/hooks/useDirectoryCompanySearch', () => ({
   useDirectoryCompanySearch: (...args: unknown[]) => useDirectoryCompanySearchMock(...args)
@@ -17,8 +50,12 @@ vi.mock('@/hooks/useDirectoryCompanyDetails', () => ({
   useDirectoryCompanyDetails: (...args: unknown[]) => useDirectoryCompanyDetailsMock(...args)
 }));
 
-vi.mock('@/hooks/useDirectoryPage', () => ({
-  useDirectoryPage: (...args: unknown[]) => useDirectoryPageMock(...args)
+vi.mock('@/hooks/useDirectoryDuplicates', () => ({
+  useDirectoryDuplicates: (...args: unknown[]) => useDirectoryDuplicatesMock(...args)
+}));
+
+vi.mock('@/hooks/useConfigSnapshot', () => ({
+  useConfigSnapshot: (...args: unknown[]) => useConfigSnapshotMock(...args)
 }));
 
 const makeCompanyDetails = (overrides: Record<string, unknown> = {}) => ({
@@ -67,7 +104,8 @@ describe('EntityOnboardingDialog', () => {
   beforeEach(() => {
     useDirectoryCompanySearchMock.mockReset();
     useDirectoryCompanyDetailsMock.mockReset();
-    useDirectoryPageMock.mockReset();
+    useDirectoryDuplicatesMock.mockReset();
+    useConfigSnapshotMock.mockReset();
     useDirectoryCompanySearchMock.mockReturnValue({
       isFetching: false,
       data: { companies: [] }
@@ -76,9 +114,14 @@ describe('EntityOnboardingDialog', () => {
       isLoading: false,
       data: undefined
     });
-    useDirectoryPageMock.mockReturnValue({
+    useDirectoryDuplicatesMock.mockReturnValue({
       isFetching: false,
-      data: { rows: [] }
+      data: { matches: [] }
+    });
+    useConfigSnapshotMock.mockReturnValue({
+      data: BASE_CONFIG_SNAPSHOT,
+      isLoading: false,
+      error: null
     });
   });
 
@@ -628,7 +671,7 @@ describe('EntityOnboardingDialog', () => {
     await user.click(screen.getByRole('radio', { name: /selectionner prospect/i }));
     await user.click(screen.getByRole('button', { name: /^annuler$/i }));
 
-    expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+    expect(await screen.findByRole('alertdialog')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /^quitter$/i }));
 
@@ -663,7 +706,7 @@ describe('EntityOnboardingDialog', () => {
     await user.type(screen.getByPlaceholderText(/nom de societe, siren ou siret/i), 'sea');
     await user.click(screen.getByRole('button', { name: /^annuler$/i }));
 
-    expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+    expect(await screen.findByRole('alertdialog')).toBeInTheDocument();
     expect(onOpenChange).not.toHaveBeenCalledWith(false);
   });
 });

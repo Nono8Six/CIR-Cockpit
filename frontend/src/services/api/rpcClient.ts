@@ -15,6 +15,10 @@ export type RpcClient = {
     'entity-contacts': RpcLeaf;
     interactions: RpcLeaf;
   };
+  config: {
+    'save-agency': RpcLeaf;
+    'save-product': RpcLeaf;
+  };
   admin: {
     users: RpcLeaf;
     agencies: RpcLeaf;
@@ -34,6 +38,10 @@ export const rpcClient: RpcClient = {
     entities: { $post: createRpcPost('data.entities') },
     'entity-contacts': { $post: createRpcPost('data.entity-contacts') },
     interactions: { $post: createRpcPost('data.interactions') }
+  },
+  config: {
+    'save-agency': { $post: createRpcPost('config.save-agency') },
+    'save-product': { $post: createRpcPost('config.save-product') }
   },
   admin: {
     users: { $post: createRpcPost('admin.users') },

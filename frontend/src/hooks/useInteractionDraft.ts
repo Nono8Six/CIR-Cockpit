@@ -6,13 +6,17 @@ import { isAppError } from '@/services/errors/AppError';
 import { handleUiError } from '@/services/errors/handleUiError';
 import { normalizeError } from '@/services/errors/normalizeError';
 import { reportError } from '@/services/errors/reportError';
-import { INTERNAL_COMPANY_NAME, isInternalRelationValue } from '@/constants/relations';
 import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
 import { deleteInteractionDraft } from '@/services/interactions/deleteInteractionDraft';
 import { getInteractionDraft } from '@/services/interactions/getInteractionDraft';
 import type { InteractionDraftPayload } from '@/services/interactions/interactionDraftPayload';
 import { saveInteractionDraft } from '@/services/interactions/saveInteractionDraft';
 import type { Entity, EntityContact } from '@/types';
+
+import {
+  buildInteractionDraftResetValues,
+  normalizeInteractionDraftValues,
+} from './interaction-draft/normalizeInteractionDraftValues';
 
 type DraftContext = {
   activeAgencyId: string | null;
@@ -55,7 +59,7 @@ export const useInteractionDraft = ({
   selectedEntity,
   selectedContact,
   draftPayload,
-  hasDraftContent
+  hasDraftContent,
 }: DraftContext) => {
   const [draftId, setDraftId] = useState<string | null>(null);
   const [pendingDraftEntityId, setPendingDraftEntityId] = useState<string | null>(null);
@@ -76,83 +80,22 @@ export const useInteractionDraft = ({
 
       reportError(normalizeError(error, fallbackMessage), context);
     },
-    []
+    [],
   );
 
   const buildResetValues = useCallback(
-    () => ({
-      ...defaultValues,
-      entity_type: relationOptions[0] ?? '',
-      contact_service: config.services[0] ?? '',
-      interaction_type: config.interactionTypes[0] ?? '',
-      status_id: defaultStatusId
-    }),
-    [config.interactionTypes, config.services, defaultStatusId, defaultValues, relationOptions]
-  );
-
-  const normalizeDraftValues = useCallback(
-    (values: Partial<InteractionFormValues>): InteractionFormValues => {
-      const defaults = buildResetValues();
-      const normalized: InteractionFormValues = {
-        ...defaults,
-        ...values,
-        company_name: values.company_name ?? '',
-        company_city: values.company_city ?? '',
-        contact_first_name: values.contact_first_name ?? '',
-        contact_last_name: values.contact_last_name ?? '',
-        contact_position: values.contact_position ?? '',
-        contact_name: values.contact_name ?? '',
-        contact_phone: values.contact_phone ?? '',
-        contact_email: values.contact_email ?? '',
-        interaction_type: values.interaction_type ?? defaults.interaction_type ?? '',
-        subject: values.subject ?? '',
-        order_ref: values.order_ref ?? '',
-        reminder_at: values.reminder_at ?? '',
-        notes: values.notes ?? '',
-        mega_families: values.mega_families ?? defaults.mega_families ?? [],
-        entity_id: values.entity_id ?? '',
-        contact_id: values.contact_id ?? ''
-      };
-
-      if (!normalized.entity_id) {
-        normalized.contact_id = '';
-      }
-
-      if (isInternalRelationValue(normalized.entity_type)) {
-        normalized.company_name = INTERNAL_COMPANY_NAME;
-        normalized.company_city = '';
-        normalized.entity_id = '';
-        normalized.contact_id = '';
-      }
-
-      if (!config.statuses.find((item) => item.id === normalized.status_id || item.label === normalized.status_id)) {
-        normalized.status_id = defaults.status_id;
-      }
-
-      if (relationOptions.length > 0 && !relationOptions.includes(normalized.entity_type)) {
-        normalized.entity_type = defaults.entity_type;
-      }
-
-      if (config.services.length > 0 && !config.services.includes(normalized.contact_service)) {
-        normalized.contact_service = defaults.contact_service;
-      }
-
-      if (config.families.length > 0) {
-        normalized.mega_families = (normalized.mega_families ?? []).filter((family) => config.families.includes(family));
-      }
-
-      if (config.interactionTypes.length > 0 && !config.interactionTypes.includes(normalized.interaction_type)) {
-        normalized.interaction_type = defaults.interaction_type;
-      }
-
-      return normalized;
-    },
-    [buildResetValues, config.families, config.interactionTypes, config.services, config.statuses, relationOptions]
+    () => buildInteractionDraftResetValues({ defaultValues, relationOptions, config, defaultStatusId }),
+    [config, defaultStatusId, defaultValues, relationOptions],
   );
 
   const applyDraft = useCallback(
     (payload: InteractionDraftPayload): InteractionDraftPayload => {
-      const values = normalizeDraftValues(payload?.values ?? {});
+      const values = normalizeInteractionDraftValues(payload?.values ?? {}, {
+        defaultValues,
+        relationOptions,
+        config,
+        defaultStatusId,
+      });
       draftApplyRef.current = true;
       setSelectedEntity(null);
       setSelectedContact(null);
@@ -164,7 +107,15 @@ export const useInteractionDraft = ({
       });
       return { values };
     },
-    [normalizeDraftValues, reset, setSelectedContact, setSelectedEntity]
+    [
+      config,
+      defaultStatusId,
+      defaultValues,
+      relationOptions,
+      reset,
+      setSelectedContact,
+      setSelectedEntity,
+    ],
   );
 
   const clearDraft = useCallback(
@@ -180,10 +131,13 @@ export const useInteractionDraft = ({
         setDraftId(null);
         lastDraftRef.current = null;
       } catch (error) {
-        handleDraftError(error, 'Impossible de supprimer le brouillon.', { source: 'CockpitForm.clearDraft', action: source });
+        handleDraftError(error, 'Impossible de supprimer le brouillon.', {
+          source: 'CockpitForm.clearDraft',
+          action: source,
+        });
       }
     },
-    [activeAgencyId, draftId, handleDraftError, userId]
+    [activeAgencyId, draftId, handleDraftError, userId],
   );
 
   const handleReset = useCallback(() => {
@@ -225,14 +179,16 @@ export const useInteractionDraft = ({
             await deleteInteractionDraft({ userId, agencyId: activeAgencyId });
           } catch (deleteError) {
             reportError(normalizeError(deleteError, 'Impossible de nettoyer le brouillon.'), {
-              source: 'CockpitForm.deleteInvalidDraft'
+              source: 'CockpitForm.deleteInvalidDraft',
             });
           }
 
           return;
         }
 
-        handleDraftError(error, 'Impossible de restaurer le brouillon.', { source: 'CockpitForm.getDraft' });
+        handleDraftError(error, 'Impossible de restaurer le brouillon.', {
+          source: 'CockpitForm.getDraft',
+        });
       } finally {
         if (mounted) draftReadyRef.current = true;
       }
@@ -317,10 +273,16 @@ export const useInteractionDraft = ({
     draftSaveTimeoutRef.current = setTimeout(() => {
       void Promise.resolve().then(async () => {
         try {
-          const saved = await saveInteractionDraft({ userId, agencyId: activeAgencyId, payload: draftPayload });
+          const saved = await saveInteractionDraft({
+            userId,
+            agencyId: activeAgencyId,
+            payload: draftPayload,
+          });
           startTransition(() => setDraftId((previous) => (previous === saved.id ? previous : saved.id)));
         } catch (error) {
-          handleDraftError(error, 'Sauvegarde automatique indisponible.', { source: 'CockpitForm.saveDraft' });
+          handleDraftError(error, 'Sauvegarde automatique indisponible.', {
+            source: 'CockpitForm.saveDraft',
+          });
         }
       });
     }, 800);
@@ -332,7 +294,7 @@ export const useInteractionDraft = ({
         clearTimeout(draftSaveTimeoutRef.current);
       }
     },
-    []
+    [],
   );
 
   return { handleReset };

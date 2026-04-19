@@ -2,6 +2,13 @@ import type { AgencyStatus, StatusCategory } from '@/types';
 
 export type SettingsSectionsProps = {
   readOnly: boolean;
+  canEditAgencySettings: boolean;
+  canEditProductSettings: boolean;
+  allowManualEntryOverride: 'inherit' | 'enabled' | 'disabled';
+  defaultCompanyAccountTypeOverride: 'inherit' | 'term' | 'cash';
+  productAllowManualEntry: boolean;
+  productDefaultCompanyAccountType: 'term' | 'cash';
+  productUiShellV2: boolean;
   families: string[];
   services: string[];
   entities: string[];
@@ -19,6 +26,11 @@ export type SettingsSectionsProps = {
   setNewInteractionType: (value: string) => void;
   setNewStatus: (value: string) => void;
   setNewStatusCategory: (value: StatusCategory) => void;
+  setAllowManualEntryOverride: (value: 'inherit' | 'enabled' | 'disabled') => void;
+  setDefaultCompanyAccountTypeOverride: (value: 'inherit' | 'term' | 'cash') => void;
+  setProductAllowManualEntry: (value: boolean) => void;
+  setProductDefaultCompanyAccountType: (value: 'term' | 'cash') => void;
+  setProductUiShellV2: (value: boolean) => void;
   addItem: (
     item: string,
     list: string[],

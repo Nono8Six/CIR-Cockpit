@@ -12,6 +12,8 @@ const legacyBackendRpcDir = path.join(generatedDir, 'backend-rpc');
 const trpcProcedurePaths = [
   'admin.users',
   'admin.agencies',
+  'config.save-agency',
+  'config.save-product',
   'data.entities',
   'data.entity-contacts',
   'data.interactions',

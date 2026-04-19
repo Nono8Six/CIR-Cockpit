@@ -16,7 +16,7 @@ import type { AuthContext, DbClient } from '../types.ts';
 import { httpError } from '../middleware/errorHandler.ts';
 import { ensureDataRateLimit } from './dataAccess.ts';
 
-const DIRECTORY_SAVED_VIEWS_LIMIT = 20;
+export const DIRECTORY_SAVED_VIEWS_LIMIT = 20;
 
 const baseViewSelect = {
   id: directory_saved_views.id,
@@ -26,6 +26,26 @@ const baseViewSelect = {
   created_at: directory_saved_views.created_at,
   updated_at: directory_saved_views.updated_at
 } as const;
+
+export const enforceDirectorySavedViewsLimit = (
+  existingCount: number,
+  isCreate: boolean
+): void => {
+  if (isCreate && existingCount >= DIRECTORY_SAVED_VIEWS_LIMIT) {
+    throw httpError(400, 'INVALID_PAYLOAD', 'Limite de vues sauvegardees atteinte.');
+  }
+};
+
+export const requireDirectorySavedView = <T>(
+  rows: T[],
+  message: string
+): T => {
+  const view = rows[0];
+  if (!view) {
+    throw httpError(404, 'NOT_FOUND', message);
+  }
+  return view;
+};
 
 const clearDefaultView = async (
   db: DbClient,
@@ -87,9 +107,7 @@ export const saveDirectorySavedView = async (
       .where(eq(directory_saved_views.user_id, authContext.userId));
 
     const isCreate = !input.id;
-    if (isCreate && existingViews.length >= DIRECTORY_SAVED_VIEWS_LIMIT) {
-      throw httpError(400, 'INVALID_PAYLOAD', 'Limite de vues sauvegardees atteinte.');
-    }
+    enforceDirectorySavedViewsLimit(existingViews.length, isCreate);
 
     if (input.is_default) {
       await clearDefaultView(db, authContext.userId, input.id);
@@ -118,10 +136,7 @@ export const saveDirectorySavedView = async (
           })
           .returning(baseViewSelect);
 
-    const view = rows[0];
-    if (!view) {
-      throw httpError(404, 'NOT_FOUND', 'Vue sauvegardee introuvable.');
-    }
+    const view = requireDirectorySavedView(rows, 'Vue sauvegardee introuvable.');
 
     return {
       request_id: requestId,
@@ -163,14 +178,12 @@ export const deleteDirectorySavedView = async (
       ))
       .returning({ id: directory_saved_views.id });
 
-    if (!rows[0]) {
-      throw httpError(404, 'NOT_FOUND', 'Vue sauvegardee introuvable.');
-    }
+    const deletedView = requireDirectorySavedView(rows, 'Vue sauvegardee introuvable.');
 
     return {
       request_id: requestId,
       ok: true,
-      view_id: rows[0].id
+      view_id: deletedView.id
     };
   } catch (error) {
     if (
@@ -210,10 +223,7 @@ export const setDefaultDirectorySavedView = async (
       ))
       .returning(baseViewSelect);
 
-    const view = rows[0];
-    if (!view) {
-      throw httpError(404, 'NOT_FOUND', 'Vue sauvegardee introuvable.');
-    }
+    const view = requireDirectorySavedView(rows, 'Vue sauvegardee introuvable.');
 
     return {
       request_id: requestId,

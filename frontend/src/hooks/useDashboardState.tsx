@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Car, Mail, Phone, Store } from 'lucide-react';
 
 import type { ConvertClientEntity } from '@/components/ConvertClientDialog';
 import type { KanbanColumns } from '@/components/dashboard/DashboardKanban';
@@ -10,17 +9,13 @@ import { createAppError, isAppError } from '@/services/errors/AppError';
 import { handleUiError } from '@/services/errors/handleUiError';
 import { notifySuccess } from '@/services/errors/notify';
 import { invalidateInteractionsQuery } from '@/services/query/queryInvalidation';
-import type {
-  AgencyStatus,
-  Interaction,
-  InteractionUpdate,
-  TimelineEvent
-} from '@/types';
-import { inferStatusCategoryFromLabel, buildKanbanColumns } from '@/utils/dashboard/dashboardAggregates';
-import { isBeforeNow } from '@/utils/date/isBeforeNow';
+import type { AgencyStatus, Interaction, InteractionUpdate, TimelineEvent } from '@/types';
+import { buildKanbanColumns } from '@/utils/dashboard/dashboardAggregates';
 
 import { useAddTimelineEvent } from './useAddTimelineEvent';
 import { useDeleteInteraction } from './useDeleteInteraction';
+import { getDashboardChannelIcon } from './dashboard-state/getDashboardChannelIcon';
+import { useDashboardStatusHelpers } from './dashboard-state/useDashboardStatusHelpers';
 
 type ViewMode = 'kanban' | 'list';
 
@@ -34,7 +29,7 @@ type UseDashboardStateParams = {
 const buildTimelineSuccessMessage = (
   updates: InteractionUpdate | undefined,
   event: TimelineEvent,
-  statusById: Map<string, AgencyStatus>
+  statusById: Map<string, AgencyStatus>,
 ): string => {
   if (updates?.status_id) {
     return `Statut change : ${statusById.get(updates.status_id)?.label ?? updates.status ?? 'Statut mis a jour'}`;
@@ -59,7 +54,7 @@ export const useDashboardState = ({
   interactions,
   statuses,
   agencyId,
-  onRequestConvert
+  onRequestConvert,
 }: UseDashboardStateParams) => {
   const [viewMode, setViewMode] = useState<ViewMode>('kanban');
   const [selectedInteraction, setSelectedInteraction] = useState<Interaction | null>(null);
@@ -70,62 +65,8 @@ export const useDashboardState = ({
   const deleteInteractionMutation = useDeleteInteraction({ agencyId });
   const lastPeriodErrorMessageRef = useRef<string | null>(null);
 
-  const statusById = useMemo(() => {
-    const map = new Map<string, AgencyStatus>();
-    statuses.forEach((status) => {
-      if (status.id) {
-        map.set(status.id, status);
-      }
-    });
-    return map;
-  }, [statuses]);
-
-  const statusByLabel = useMemo(
-    () => new Map(statuses.map((status) => [status.label.toLowerCase(), status])),
-    [statuses]
-  );
-
-  const getStatusMeta = useCallback(
-    (interaction: Interaction) => {
-      if (interaction.status_id) {
-        return (
-          statusById.get(interaction.status_id)
-          ?? statusByLabel.get(interaction.status.toLowerCase())
-        );
-      }
-
-      return statusByLabel.get(interaction.status.toLowerCase());
-    },
-    [statusById, statusByLabel]
-  );
-
-  const isStatusDone = useCallback(
-    (interaction: Interaction) => {
-      if (typeof interaction.status_is_terminal === 'boolean') {
-        return interaction.status_is_terminal;
-      }
-
-      const statusMeta = getStatusMeta(interaction);
-      if (statusMeta) {
-        return Boolean(statusMeta.is_terminal || statusMeta.category === 'done');
-      }
-
-      return inferStatusCategoryFromLabel(interaction.status) === 'done';
-    },
-    [getStatusMeta]
-  );
-
-  const isStatusTodo = useCallback(
-    (interaction: Interaction) => {
-      const statusMeta = getStatusMeta(interaction);
-      if (statusMeta) {
-        return Boolean(statusMeta.category === 'todo' || statusMeta.is_default);
-      }
-
-      return inferStatusCategoryFromLabel(interaction.status) === 'todo';
-    },
-    [getStatusMeta]
-  );
+  const { statusById, getStatusMeta, isStatusDone, isStatusTodo, getStatusBadgeClass, isReminderOverdue } =
+    useDashboardStatusHelpers(statuses);
 
   const {
     searchTerm,
@@ -138,11 +79,11 @@ export const useDashboardState = ({
     filteredData,
     handleDateRangeChange,
     handleStartDateChange,
-    handleEndDateChange
+    handleEndDateChange,
   } = useDashboardFilters({
     interactions,
     viewMode,
-    isStatusDone
+    isStatusDone,
   });
 
   useEffect(() => {
@@ -160,40 +101,12 @@ export const useDashboardState = ({
       createAppError({
         code: 'VALIDATION_ERROR',
         message: periodErrorMessage,
-        source: 'validation'
+        source: 'validation',
       }),
       periodErrorMessage,
-      { source: 'dashboard.filters' }
+      { source: 'dashboard.filters' },
     );
   }, [periodErrorMessage]);
-
-  const getStatusBadgeClass = useCallback(
-    (interaction: Interaction) => {
-      const meta = getStatusMeta(interaction);
-      const isTerminal =
-        typeof interaction.status_is_terminal === 'boolean'
-          ? interaction.status_is_terminal
-          : meta?.is_terminal;
-      const inferredCategory = inferStatusCategoryFromLabel(interaction.status);
-
-      if (meta?.category === 'todo' || meta?.is_default || inferredCategory === 'todo') {
-        return 'border-destructive/50 bg-destructive/15 text-destructive';
-      }
-
-      if (meta?.category === 'done' || isTerminal || inferredCategory === 'done') {
-        return 'border-success/45 bg-success/18 text-success';
-      }
-
-      return 'border-warning/45 bg-warning/20 text-warning-foreground';
-    },
-    [getStatusMeta]
-  );
-
-  const isReminderOverdue = useCallback(
-    (interaction: Interaction) =>
-      Boolean(interaction.reminder_at && isBeforeNow(interaction.reminder_at) && !isStatusDone(interaction)),
-    [isStatusDone]
-  );
 
   const kanbanColumns = useMemo<KanbanColumns | null>(() => {
     if (viewMode === 'list') {
@@ -204,24 +117,9 @@ export const useDashboardState = ({
       interactions: filteredData,
       isStatusTodo,
       isStatusDone,
-      isReminderOverdue
+      isReminderOverdue,
     });
   }, [filteredData, isReminderOverdue, isStatusDone, isStatusTodo, viewMode]);
-
-  const getChannelIcon = useCallback((channel: string) => {
-    switch (channel) {
-      case 'Téléphone':
-        return <Phone size={14} className="text-muted-foreground" />;
-      case 'Email':
-        return <Mail size={14} className="text-muted-foreground" />;
-      case 'Comptoir':
-        return <Store size={14} className="text-muted-foreground" />;
-      case 'Visite':
-        return <Car size={14} className="text-muted-foreground" />;
-      default:
-        return <Phone size={14} className="text-muted-foreground" />;
-    }
-  }, []);
 
   const handleConvertRequest = useCallback(
     (interaction: Interaction) => {
@@ -233,10 +131,10 @@ export const useDashboardState = ({
         id: interaction.entity_id,
         name: interaction.company_name,
         client_number: null,
-        account_type: null
+        account_type: null,
       });
     },
-    [onRequestConvert]
+    [onRequestConvert],
   );
 
   const handleInteractionUpdate = useCallback(
@@ -256,17 +154,17 @@ export const useDashboardState = ({
           handleUiError(
             error,
             'Ce dossier a ete modifie par un autre utilisateur. Rechargez les donnees.',
-            { source: 'dashboard.details.conflict' }
+            { source: 'dashboard.details.conflict' },
           );
           return;
         }
 
         handleUiError(error, 'Impossible de mettre a jour le dossier.', {
-          source: 'dashboard.details.update'
+          source: 'dashboard.details.update',
         });
       }
     },
-    [addTimelineMutation, agencyId, queryClient, selectedInteraction, statusById]
+    [addTimelineMutation, agencyId, queryClient, selectedInteraction, statusById],
   );
 
   const handleRequestDeleteInteraction = useCallback((interaction: Interaction) => {
@@ -302,7 +200,7 @@ export const useDashboardState = ({
     kanbanColumns,
     getStatusMeta,
     getStatusBadgeClass,
-    getChannelIcon,
+    getChannelIcon: getDashboardChannelIcon,
     setViewMode,
     setSearchTerm,
     setPeriod,
@@ -316,6 +214,6 @@ export const useDashboardState = ({
     interactionToDelete,
     isDeleteInteractionPending: deleteInteractionMutation.isPending,
     handleRequestDeleteInteraction,
-    handleConfirmDeleteInteraction
+    handleConfirmDeleteInteraction,
   };
 };

@@ -1,5 +1,5 @@
 export const QUERY_ROOTS = {
-  agencyConfig: 'agency-config',
+  configSnapshot: 'config-snapshot',
   interactions: 'interactions',
   clients: 'clients',
   prospects: 'prospects',
@@ -23,7 +23,8 @@ export const QUERY_ROOTS = {
 const archiveScope = (includeArchived: boolean): 'with-archived' | 'active' =>
   includeArchived ? 'with-archived' : 'active';
 
-export const agencyConfigKey = (agencyId: string) => [QUERY_ROOTS.agencyConfig, agencyId] as const;
+export const configSnapshotKey = (agencyId: string) => [QUERY_ROOTS.configSnapshot, agencyId] as const;
+export const agencyConfigKey = (agencyId: string) => configSnapshotKey(agencyId);
 
 export const interactionsRootKey = () => [QUERY_ROOTS.interactions] as const;
 export const interactionsKey = (agencyId: string | null) =>

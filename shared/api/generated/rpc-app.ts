@@ -23,6 +23,10 @@ export const RPC_POST_PATHS = {
     "users": "/trpc/admin.users",
     "agencies": "/trpc/admin.agencies"
   },
+  "config": {
+    "save-agency": "/trpc/config.save-agency",
+    "save-product": "/trpc/config.save-product"
+  },
   "data": {
     "entities": "/trpc/data.entities",
     "entity-contacts": "/trpc/data.entity-contacts",
