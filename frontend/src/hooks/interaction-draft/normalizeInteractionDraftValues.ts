@@ -12,12 +12,11 @@ export interface InteractionDraftNormalizationContext {
 
 export const buildInteractionDraftResetValues = ({
   defaultValues,
-  relationOptions,
   config,
   defaultStatusId,
 }: InteractionDraftNormalizationContext): InteractionFormValues => ({
   ...defaultValues,
-  entity_type: relationOptions[0] ?? '',
+  entity_type: '',
   contact_service: config.services[0] ?? '',
   interaction_type: config.interactionTypes[0] ?? '',
   status_id: defaultStatusId,
@@ -70,7 +69,11 @@ export const normalizeInteractionDraftValues = (
     normalized.status_id = defaults.status_id;
   }
 
-  if (relationOptions.length > 0 && !relationOptions.includes(normalized.entity_type)) {
+  if (
+    normalized.entity_type.trim() &&
+    relationOptions.length > 0 &&
+    !relationOptions.includes(normalized.entity_type)
+  ) {
     normalized.entity_type = defaults.entity_type;
   }
 

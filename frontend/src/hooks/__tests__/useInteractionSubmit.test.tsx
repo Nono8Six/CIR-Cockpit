@@ -123,6 +123,7 @@ describe('useInteractionSubmit', () => {
         handleSelectContact,
         queryClient: new QueryClient(),
         handleReset,
+        onSaveSuccess: vi.fn(),
         setKnownCompanies
       })
     );
@@ -158,6 +159,7 @@ describe('useInteractionSubmit', () => {
         handleSelectContact: vi.fn(),
         queryClient: new QueryClient(),
         handleReset: vi.fn(),
+        onSaveSuccess: vi.fn(),
         setKnownCompanies: vi.fn()
       })
     );
@@ -183,6 +185,7 @@ describe('useInteractionSubmit', () => {
         handleSelectContact: vi.fn(),
         queryClient: new QueryClient(),
         handleReset: vi.fn(),
+        onSaveSuccess: vi.fn(),
         setKnownCompanies: vi.fn()
       })
     );

@@ -5,14 +5,15 @@ import { formatFrenchPhone } from '@/utils/formatFrenchPhone';
 import { handleUiError } from '@/services/errors/handleUiError';
 import { invalidateClientsQueries, invalidateEntitySearchIndexQueries } from '@/services/query/queryInvalidation';
 import type { ClientPayload } from '@/services/clients/saveClient';
+import type { EntityPayload } from '@/services/entities/saveEntity';
 import type { EntityContactPayload } from '@/services/entities/saveEntityContact';
-import type { Entity, EntityContact } from '@/types';
+import type { Entity, EntityContact, Interaction } from '@/types';
 import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
 import type { InteractionHandlersInput } from './useInteractionHandlers.types';
 
 type StringField = Exclude<keyof InteractionFormValues, 'mega_families'>;
 
-export const useInteractionHandlers = ({ setValue, clearErrors, normalizedRelation, contacts, megaFamilies, contactFirstName, contactLastName, activeAgencyId, queryClient, setSelectedEntity, setSelectedContact, saveClientMutation, saveContactMutation, onConvertComplete }: InteractionHandlersInput) => {
+export const useInteractionHandlers = ({ setValue, clearErrors, normalizedRelation, contacts, megaFamilies, contactFirstName, contactLastName, activeAgencyId, queryClient, setSelectedEntity, setSelectedContact, saveClientMutation, saveProspectMutation, saveContactMutation, onConvertComplete }: InteractionHandlersInput) => {
   const setStringField = useCallback((field: StringField, value: string) => setValue(field, value, { shouldValidate: true, shouldDirty: true }), [setValue]);
   const setFamiliesField = useCallback((value: string[]) => setValue('mega_families', value, { shouldValidate: true, shouldDirty: true }), [setValue]);
   const setContactIdentity = useCallback((firstName: string, lastName: string) => {
@@ -50,6 +51,7 @@ export const useInteractionHandlers = ({ setValue, clearErrors, normalizedRelati
   const handleSelectEntityFromSearch = useCallback((entity: Entity) => handleSelectEntity(entity), [handleSelectEntity]);
   const handleSelectContactFromSearch = useCallback((contact: EntityContact, entity: Entity | null) => { if (entity) handleSelectEntity(entity); handleSelectContact(contact); }, [handleSelectContact, handleSelectEntity]);
   const handleSaveClient = useCallback(async (payload: ClientPayload) => handleSelectEntity(await saveClientMutation.mutateAsync(payload)), [handleSelectEntity, saveClientMutation]);
+  const handleSaveProspect = useCallback(async (payload: EntityPayload) => handleSelectEntity(await saveProspectMutation.mutateAsync(payload)), [handleSelectEntity, saveProspectMutation]);
   const handleSaveContact = useCallback(async (payload: EntityContactPayload) => handleSelectContact(await saveContactMutation.mutateAsync(payload)), [handleSelectContact, saveContactMutation]);
 
   const handleConvertClient = useCallback(async (payload: ClientPayload) => {
@@ -68,5 +70,10 @@ export const useInteractionHandlers = ({ setValue, clearErrors, normalizedRelati
   const toggleFamily = useCallback((family: string) => setFamiliesField((megaFamilies ?? []).includes(family) ? megaFamilies.filter(item => item !== family) : [...megaFamilies, family]), [megaFamilies, setFamiliesField]);
   const setReminder = useCallback((type: '1h' | 'tomorrow' | '3days' | 'nextWeek') => setStringField('reminder_at', buildReminderDateTime(type)), [setStringField]);
 
-  return { handlePhoneChange, handleContactFirstNameChange, handleContactLastNameChange, handleSelectEntity, handleSelectContact, handleContactSelect, handleSelectEntityFromSearch, handleSelectContactFromSearch, handleSaveClient, handleSaveContact, handleConvertClient, toggleFamily, setReminder };
+  const handleSelectRecent = useCallback((interaction: Interaction, entity: Entity | null) => {
+    setValue('channel', interaction.channel, { shouldDirty: true, shouldValidate: true });
+    handleSelectEntity(entity);
+  }, [handleSelectEntity, setValue]);
+
+  return { handlePhoneChange, handleContactFirstNameChange, handleContactLastNameChange, handleSelectEntity, handleSelectContact, handleContactSelect, handleSelectEntityFromSearch, handleSelectContactFromSearch, handleSaveClient, handleSaveProspect, handleSaveContact, handleConvertClient, handleSelectRecent, toggleFamily, setReminder };
 };

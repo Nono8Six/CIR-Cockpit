@@ -26,6 +26,12 @@ export type EntityPayload = {
   cir_commercial_id?: string | null;
 };
 
+const resolvePayloadEntityType = (entityType: string): 'Client' | 'Prospect' | 'Fournisseur' => {
+  if (entityType === 'Client') return 'Client';
+  if (entityType === 'Fournisseur') return 'Fournisseur';
+  return 'Prospect';
+};
+
 const parseEntityResponse = (payload: unknown): Entity => {
   const parsed = dataEntitiesResponseSchema.safeParse(payload);
   if (!parsed.success) {
@@ -45,7 +51,7 @@ export const saveEntity = (payload: EntityPayload): ResultAsync<Entity, AppError
       json: {
         action: 'save',
         agency_id: payload.agency_id,
-        entity_type: payload.entity_type === 'Client' ? 'Client' : 'Prospect',
+        entity_type: resolvePayloadEntityType(payload.entity_type),
         id: payload.id,
         entity: {
           name: payload.name,

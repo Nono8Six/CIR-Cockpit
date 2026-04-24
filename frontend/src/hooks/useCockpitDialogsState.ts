@@ -8,6 +8,7 @@ export const useCockpitDialogsState = () => {
   const [selectedEntity, setSelectedEntity] = useState<Entity | null>(null);
   const [selectedContact, setSelectedContact] = useState<EntityContact | null>(null);
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
+  const [isProspectDialogOpen, setIsProspectDialogOpen] = useState(false);
   const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
   const [isConvertDialogOpen, setIsConvertDialogOpen] = useState(false);
   const [convertTarget, setConvertTarget] = useState<Entity | null>(null);
@@ -36,6 +37,7 @@ export const useCockpitDialogsState = () => {
     selectedEntity,
     selectedContact,
     isClientDialogOpen,
+    isProspectDialogOpen,
     isContactDialogOpen,
     isConvertDialogOpen,
     convertTarget,
@@ -44,6 +46,7 @@ export const useCockpitDialogsState = () => {
     setSelectedEntity,
     setSelectedContact,
     setIsClientDialogOpen,
+    setIsProspectDialogOpen,
     setIsContactDialogOpen,
     handleOpenConvertDialog,
     closeConvertDialog,

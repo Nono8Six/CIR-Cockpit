@@ -5,6 +5,7 @@ import type { UseFormClearErrors, UseFormSetValue } from 'react-hook-form';
 import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
 import type { Entity, EntityContact } from '@/types';
 import type { ClientPayload } from '@/services/clients/saveClient';
+import type { EntityPayload } from '@/services/entities/saveEntity';
 import type { EntityContactPayload } from '@/services/entities/saveEntityContact';
 
 type MutationLike<TPayload, TResult> = { mutateAsync: (payload: TPayload) => Promise<TResult> };
@@ -22,6 +23,7 @@ export type InteractionHandlersInput = {
   setSelectedEntity: (entity: Entity | null) => void;
   setSelectedContact: (contact: EntityContact | null) => void;
   saveClientMutation: MutationLike<ClientPayload, Entity>;
+  saveProspectMutation: MutationLike<EntityPayload, Entity>;
   saveContactMutation: MutationLike<EntityContactPayload, EntityContact>;
   onConvertComplete: () => void;
 };

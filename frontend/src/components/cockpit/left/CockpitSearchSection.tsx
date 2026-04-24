@@ -17,6 +17,7 @@ type CockpitSearchSectionProps = {
   onSelectEntityFromSearch: (entity: Entity) => void;
   onSelectContactFromSearch: (contact: EntityContact, entity: Entity | null) => void;
   onOpenClientDialog: () => void;
+  onOpenProspectDialog: () => void;
   onOpenGlobalSearch?: () => void;
   searchInputRef: RefObject<HTMLInputElement | null>;
 };
@@ -31,12 +32,20 @@ const CockpitSearchSection = ({
   onSelectEntityFromSearch,
   onSelectContactFromSearch,
   onOpenClientDialog,
+  onOpenProspectDialog,
   onOpenGlobalSearch,
   searchInputRef
 }: CockpitSearchSectionProps) => {
   if (relationMode === 'internal' || relationMode === 'solicitation') {
     return null;
   }
+
+  const showTypeBadge = entityType.trim() === '';
+  const handleCreateEntity = relationMode === 'client'
+    ? onOpenClientDialog
+    : relationMode === 'prospect'
+      ? onOpenProspectDialog
+      : undefined;
 
   return (
     <InteractionSearchBar
@@ -47,10 +56,11 @@ const CockpitSearchSection = ({
       isLoading={entitySearchLoading}
       onSelectEntity={onSelectEntityFromSearch}
       onSelectContact={onSelectContactFromSearch}
-      onCreateEntity={relationMode === 'client' ? onOpenClientDialog : undefined}
+      onCreateEntity={handleCreateEntity}
       onOpenGlobalSearch={onOpenGlobalSearch}
       recentEntities={recentEntities}
       inputRef={searchInputRef}
+      showTypeBadge={showTypeBadge}
     />
   );
 };

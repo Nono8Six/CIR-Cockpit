@@ -15,9 +15,9 @@ import {
 } from '@/services/query/queryInvalidation';
 import { INTERNAL_COMPANY_NAME, isInternalRelationValue, isProspectRelationValue, isSolicitationRelationValue } from '@/constants/relations';
 
-type UseInteractionSubmitParams = { activeAgencyId: string | null; selectedEntity: Entity | null; selectedContact: EntityContact | null; onSave: (interaction: InteractionDraft) => Promise<boolean>; handleSelectEntity: (entity: Entity | null) => void; handleSelectContact: (contact: EntityContact | null) => void; queryClient: QueryClient; handleReset: () => void; setKnownCompanies: React.Dispatch<React.SetStateAction<string[]>> };
+type UseInteractionSubmitParams = { activeAgencyId: string | null; selectedEntity: Entity | null; selectedContact: EntityContact | null; onSave: (interaction: InteractionDraft) => Promise<boolean>; handleSelectEntity: (entity: Entity | null) => void; handleSelectContact: (contact: EntityContact | null) => void; queryClient: QueryClient; handleReset: () => void; onSaveSuccess: (interaction: InteractionDraft) => void; setKnownCompanies: React.Dispatch<React.SetStateAction<string[]>> };
 
-export const useInteractionSubmit = ({ activeAgencyId, selectedEntity, selectedContact, onSave, handleSelectEntity, handleSelectContact, queryClient, handleReset, setKnownCompanies }: UseInteractionSubmitParams) => {
+export const useInteractionSubmit = ({ activeAgencyId, selectedEntity, selectedContact, onSave, handleSelectEntity, handleSelectContact, queryClient, handleReset, onSaveSuccess, setKnownCompanies }: UseInteractionSubmitParams) => {
   const onSubmit = useCallback(async (values: InteractionFormValues) => {
     const relation = values.entity_type.trim().toLowerCase();
     const isProspect = isProspectRelationValue(values.entity_type);
@@ -50,8 +50,9 @@ export const useInteractionSubmit = ({ activeAgencyId, selectedEntity, selectedC
     const newInteraction: InteractionDraft = { id: generateId(), channel: values.channel, entity_type: values.entity_type, contact_service: values.contact_service, interaction_type: values.interaction_type, company_name: resolvedCompanyName, contact_first_name: (resolvedContact?.first_name ?? values.contact_first_name ?? '').trim(), contact_last_name: (resolvedContact?.last_name ?? values.contact_last_name ?? '').trim(), contact_position: (resolvedContact?.position ?? values.contact_position ?? '').trim(), contact_name: resolvedContactName, contact_phone: (resolvedContact?.phone ?? values.contact_phone ?? '').trim() || undefined, contact_email: (resolvedContact?.email ?? values.contact_email ?? '').trim() || undefined, mega_families: values.mega_families ?? [], subject: values.subject, order_ref: values.order_ref ?? '', status_id: values.status_id, reminder_at: values.reminder_at || undefined, notes: values.notes ?? '', timeline, entity_id: resolvedEntity?.id, contact_id: resolvedContact?.id, agency_id: resolvedEntity?.agency_id ?? activeAgencyId ?? undefined };
     if (!await onSave(newInteraction)) return;
     if (resolvedCompanyName && !isInternal && !isSolicitation) setKnownCompanies(previous => previous.includes(resolvedCompanyName) ? previous : [...previous, resolvedCompanyName].sort());
+    onSaveSuccess(newInteraction);
     handleReset();
-  }, [activeAgencyId, handleReset, handleSelectContact, handleSelectEntity, onSave, queryClient, selectedContact, selectedEntity, setKnownCompanies]);
+  }, [activeAgencyId, handleReset, handleSelectContact, handleSelectEntity, onSave, onSaveSuccess, queryClient, selectedContact, selectedEntity, setKnownCompanies]);
 
   return { onSubmit };
 };

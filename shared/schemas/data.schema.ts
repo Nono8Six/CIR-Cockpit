@@ -7,6 +7,7 @@ import { clientContactFormSchema } from './client-contact.schema.ts';
 import { convertClientSchema } from './convert-client.schema.ts';
 import { addSharedInteractionRules, interactionBaseSchema } from './interaction.schema.ts';
 import { prospectFormSchema } from './prospect.schema.ts';
+import { supplierFormSchema } from './supplier.schema.ts';
 
 const MAX_TIMELINE_CONTENT_LENGTH = 5000;
 const MAX_TIMELINE_AUTHOR_LENGTH = 120;
@@ -41,6 +42,14 @@ const saveProspectEntitySchema = z.object({
   entity: prospectFormSchema
 }).strict();
 
+const saveSupplierEntitySchema = z.object({
+  action: z.literal('save'),
+  agency_id: uuidSchema,
+  entity_type: z.literal('Fournisseur'),
+  id: uuidSchema.optional(),
+  entity: supplierFormSchema
+}).strict();
+
 const archiveEntitySchema = z.object({
   action: z.literal('archive'),
   entity_id: uuidSchema,
@@ -65,11 +74,12 @@ const reassignEntitySchema = z.object({
   target_agency_id: uuidSchema
 }).strict();
 
-// Keep z.union here because two branches intentionally share action="save"
-// (Client vs Prospect), which is incompatible with discriminatedUnion.
+// Keep z.union here because save branches intentionally share action="save",
+// which is incompatible with discriminatedUnion.
 export const dataEntitiesPayloadSchema = z.union([
   saveClientEntitySchema,
   saveProspectEntitySchema,
+  saveSupplierEntitySchema,
   archiveEntitySchema,
   deleteEntitySchema,
   convertEntitySchema,

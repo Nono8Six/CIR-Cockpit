@@ -22,6 +22,25 @@ Deno.test('dataEntitiesPayloadSchema supports delete action for super-admin work
   assertEquals(dataEntitiesPayloadSchema.safeParse(deleteWithInteractionsPayload).success, true);
 });
 
+Deno.test('dataEntitiesPayloadSchema supports supplier save action', () => {
+  const supplierPayload = {
+    action: 'save',
+    agency_id: '11111111-1111-4111-8111-111111111111',
+    entity_type: 'Fournisseur',
+    entity: {
+      name: 'SEA Aquitaine',
+      address: '',
+      postal_code: '',
+      department: '',
+      city: '',
+      notes: '',
+      agency_id: '11111111-1111-4111-8111-111111111111'
+    }
+  };
+
+  assertEquals(dataEntitiesPayloadSchema.safeParse(supplierPayload).success, true);
+});
+
 Deno.test('dataEntityContactsPayloadSchema supports only save and delete actions', () => {
   const savePayload = {
     action: 'save',

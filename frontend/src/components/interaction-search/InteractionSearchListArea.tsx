@@ -19,6 +19,7 @@ type InteractionSearchListAreaProps = {
   entityHeading: string;
   onSelectEntity: (entity: Entity) => void;
   onSelectContact: (contact: EntityContact) => void;
+  showTypeBadge?: boolean;
 };
 
 const InteractionSearchListArea = ({
@@ -30,13 +31,15 @@ const InteractionSearchListArea = ({
   includeArchived,
   entityHeading,
   onSelectEntity,
-  onSelectContact
+  onSelectContact,
+  showTypeBadge = false
 }: InteractionSearchListAreaProps) => (
   <>
     {panelState.showRecents && (
       <InteractionSearchRecents
         recents={filteredRecents}
         onSelectEntity={onSelectEntity}
+        showTypeBadge={showTypeBadge}
       />
     )}
     {panelState.showList && (
@@ -49,6 +52,7 @@ const InteractionSearchListArea = ({
         entityHeading={entityHeading}
         onSelectEntity={onSelectEntity}
         onSelectContact={onSelectContact}
+        showTypeBadge={showTypeBadge}
       />
     )}
   </>

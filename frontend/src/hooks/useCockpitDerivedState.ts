@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
 import { InteractionDraftPayload } from '@/services/interactions/interactionDraftPayload';
+import { Channel } from '@/types';
 import { QUICK_SERVICE_COUNT, type UseCockpitDerivedStateParams } from './useCockpitDerivedState.types';
 
 export const useCockpitDerivedState = ({
@@ -55,9 +56,9 @@ export const useCockpitDerivedState = ({
   }), [channel, companyCity, companyName, contactEmail, contactFirstName, contactId, contactLastName, contactName, contactPhone, contactPosition, contactService, entityId, entityType, interactionType, megaFamilies, notes, orderRef, reminderAt, statusId, subject]);
 
   const hasDraftContent = useMemo(() => {
-    if (isClientRelation && entityId) return true;
-    return Boolean(companyName.trim() || companyCity.trim() || contactFirstName.trim() || contactLastName.trim() || contactPosition.trim() || contactName.trim() || contactPhone.trim() || contactEmail.trim() || subject.trim() || notes.trim() || orderRef.trim() || interactionType.trim() || reminderAt.trim() || megaFamilies.length > 0);
-  }, [companyCity, companyName, contactEmail, contactFirstName, contactLastName, contactName, contactPhone, contactPosition, entityId, interactionType, isClientRelation, megaFamilies.length, notes, orderRef, reminderAt, subject]);
+    if (selectedEntity || entityId || contactId) return true;
+    return Boolean(channel !== Channel.PHONE || entityType.trim() || companyName.trim() || companyCity.trim() || contactFirstName.trim() || contactLastName.trim() || contactPosition.trim() || contactName.trim() || contactPhone.trim() || contactEmail.trim() || subject.trim() || notes.trim() || orderRef.trim() || reminderAt.trim() || megaFamilies.length > 0);
+  }, [channel, companyCity, companyName, contactEmail, contactFirstName, contactId, contactLastName, contactName, contactPhone, contactPosition, entityId, entityType, megaFamilies.length, notes, orderRef, reminderAt, selectedEntity, subject]);
 
   const companySuggestions = useMemo(() => {
     if (isClientRelation || selectedEntity || !companyName || companyName.length < 2) return [];

@@ -19,7 +19,6 @@ type EntityUpdate = Omit<EntityInsert, 'created_by'>;
 type AgencyLookupRow = Pick<Database['public']['Tables']['agencies']['Row'], 'id' | 'archived_at'>;
 type SaveEntityPayload = Extract<DataEntitiesPayload, { action: 'save' }>;
 type SaveClientPayload = Extract<SaveEntityPayload, { entity_type: 'Client' }>;
-type SaveProspectPayload = Extract<SaveEntityPayload, { entity_type: 'Prospect' }>;
 type SaveIndividualClientPayload = SaveClientPayload & {
   entity: Extract<SaveClientPayload['entity'], { client_kind: 'individual' }>;
 };
@@ -102,7 +101,7 @@ const buildBaseEntityUpdate = (
     address: entity.address?.trim() ?? '',
     postal_code: entity.postal_code?.trim() ?? '',
     department: entity.department?.trim() ?? '',
-    city: entity.city.trim(),
+    city: entity.city?.trim() ?? '',
     siret: entity.siret?.trim() || null,
     siren: entity.siren?.trim() || null,
     naf_code: entity.naf_code?.trim() || null,

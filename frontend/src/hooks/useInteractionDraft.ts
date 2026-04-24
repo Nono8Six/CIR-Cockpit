@@ -18,6 +18,8 @@ import {
   normalizeInteractionDraftValues,
 } from './interaction-draft/normalizeInteractionDraftValues';
 
+export type DraftStatus = 'idle' | 'saving' | 'saved' | 'error';
+
 type DraftContext = {
   activeAgencyId: string | null;
   userId: string | null;
@@ -64,6 +66,8 @@ export const useInteractionDraft = ({
   const [draftId, setDraftId] = useState<string | null>(null);
   const [pendingDraftEntityId, setPendingDraftEntityId] = useState<string | null>(null);
   const [pendingDraftContactId, setPendingDraftContactId] = useState<string | null>(null);
+  const [draftStatus, setDraftStatus] = useState<DraftStatus>('idle');
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const draftReadyRef = useRef(false);
   const draftApplyRef = useRef(false);
   const draftSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -130,6 +134,8 @@ export const useInteractionDraft = ({
         await deleteInteractionDraft({ userId, agencyId: activeAgencyId });
         setDraftId(null);
         lastDraftRef.current = null;
+        setDraftStatus('idle');
+        setLastSavedAt(null);
       } catch (error) {
         handleDraftError(error, 'Impossible de supprimer le brouillon.', {
           source: 'CockpitForm.clearDraft',
@@ -259,12 +265,15 @@ export const useInteractionDraft = ({
     if (!hasDraftContent) {
       if (draftId) void clearDraft('empty');
       lastDraftRef.current = null;
+      setDraftStatus('idle');
+      setLastSavedAt(null);
       return;
     }
 
     const serialized = JSON.stringify(draftPayload);
     if (serialized === lastDraftRef.current) return;
     lastDraftRef.current = serialized;
+    setDraftStatus('saving');
 
     if (draftSaveTimeoutRef.current) {
       clearTimeout(draftSaveTimeoutRef.current);
@@ -278,8 +287,13 @@ export const useInteractionDraft = ({
             agencyId: activeAgencyId,
             payload: draftPayload,
           });
-          startTransition(() => setDraftId((previous) => (previous === saved.id ? previous : saved.id)));
+          startTransition(() => {
+            setDraftId((previous) => (previous === saved.id ? previous : saved.id));
+            setDraftStatus('saved');
+            setLastSavedAt(new Date());
+          });
         } catch (error) {
+          setDraftStatus('error');
           handleDraftError(error, 'Sauvegarde automatique indisponible.', {
             source: 'CockpitForm.saveDraft',
           });
@@ -297,5 +311,5 @@ export const useInteractionDraft = ({
     [],
   );
 
-  return { handleReset };
+  return { handleReset, draftStatus, lastSavedAt };
 };

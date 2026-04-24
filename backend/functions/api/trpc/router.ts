@@ -22,6 +22,12 @@ import {
 } from '../../../../shared/schemas/api-responses.ts';
 import { adminAgenciesPayloadSchema } from '../../../../shared/schemas/agency.schema.ts';
 import {
+  cockpitAgencyMembersInputSchema,
+  cockpitAgencyMembersResponseSchema,
+  cockpitPhoneLookupInputSchema,
+  cockpitPhoneLookupResponseSchema
+} from '../../../../shared/schemas/cockpit.schema.ts';
+import {
   configGetInputSchema,
   configSaveAgencyInputSchema,
   configSaveProductInputSchema
@@ -57,6 +63,7 @@ import { handleDataEntitiesAction } from '../services/dataEntities.ts';
 import { handleDataEntityContactsAction } from '../services/dataEntityContacts.ts';
 import { handleDataInteractionsAction } from '../services/dataInteractions.ts';
 import { handleDataProfileAction } from '../services/dataProfile.ts';
+import { listCockpitAgencyMembers, lookupCockpitPhone } from '../services/cockpit.ts';
 import {
   getDirectoryCitySuggestions,
   getDirectoryCompanyDetails,
@@ -110,6 +117,16 @@ export const appRouter = router({
       .input(dataProfilePayloadSchema)
       .output(dataProfileResponseSchema)
       .mutation(withAuthedHandler(handleDataProfileAction))
+  }),
+  cockpit: router({
+    'agency-members': authedProcedure
+      .input(cockpitAgencyMembersInputSchema)
+      .output(cockpitAgencyMembersResponseSchema)
+      .query(withAuthedHandler(listCockpitAgencyMembers)),
+    'phone-lookup': authedProcedure
+      .input(cockpitPhoneLookupInputSchema)
+      .output(cockpitPhoneLookupResponseSchema)
+      .query(withAuthedHandler(lookupCockpitPhone))
   }),
   admin: router({
     users: superAdminProcedure

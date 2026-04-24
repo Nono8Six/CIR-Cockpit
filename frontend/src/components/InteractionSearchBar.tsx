@@ -18,7 +18,8 @@ const InteractionSearchBar = ({
   onCreateEntity,
   onOpenGlobalSearch,
   recentEntities,
-  inputRef
+  inputRef,
+  showTypeBadge = false
 }: InteractionSearchBarProps) => {
   const {
     query,
@@ -69,6 +70,7 @@ const InteractionSearchBar = ({
           entityHeading={entityHeading}
           onSelectEntity={handleSelectEntity}
           onSelectContact={handleSelectContact}
+          showTypeBadge={showTypeBadge}
         />
       </Command>
       <InteractionSearchFooter

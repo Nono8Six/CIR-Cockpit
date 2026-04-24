@@ -1,5 +1,9 @@
 import { assertStrictEquals } from 'std/assert';
 
+import {
+  cockpitAgencyMembersInputSchema,
+  cockpitPhoneLookupInputSchema
+} from '../../../../shared/schemas/cockpit.schema.ts';
 import { dataEntitiesPayloadSchema } from '../../../../shared/schemas/data.schema.ts';
 import type { DbClient } from '../types.ts';
 import { selectDataEntitiesDb } from './router.ts';
@@ -41,4 +45,20 @@ Deno.test('dataEntitiesPayloadSchema rejects unknown keys', () => {
 
   const parsed = dataEntitiesPayloadSchema.safeParse(payload);
   assertStrictEquals(parsed.success, false);
+});
+
+Deno.test('cockpit schemas validate agency members and phone lookup inputs', () => {
+  const agencyId = '11111111-1111-4111-8111-111111111111';
+
+  assertStrictEquals(cockpitAgencyMembersInputSchema.safeParse({ agency_id: agencyId }).success, true);
+  assertStrictEquals(cockpitPhoneLookupInputSchema.safeParse({
+    agency_id: agencyId,
+    phone: '05 56 00 00 00',
+    limit: 5
+  }).success, true);
+  assertStrictEquals(cockpitPhoneLookupInputSchema.safeParse({
+    agency_id: agencyId,
+    phone: '',
+    limit: 5
+  }).success, false);
 });

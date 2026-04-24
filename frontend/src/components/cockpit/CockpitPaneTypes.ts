@@ -15,6 +15,7 @@ export type CockpitFormLeftPaneProps = {
   channelButtonRef: RefObject<HTMLButtonElement | null>;
   relationOptions: string[];
   entityType: string;
+  onRelationChange: (entityType: string) => void;
   relationButtonRef: RefObject<HTMLButtonElement | null>;
   relationMode: RelationMode;
   activeAgencyId: string | null;
@@ -26,6 +27,7 @@ export type CockpitFormLeftPaneProps = {
   onSelectEntityFromSearch: (entity: Entity) => void;
   onSelectContactFromSearch: (contact: EntityContact, entity: Entity | null) => void;
   onOpenClientDialog: () => void;
+  onOpenProspectDialog: () => void;
   onOpenGlobalSearch?: () => void;
   recentEntities: Entity[];
   searchInputRef: RefObject<HTMLInputElement | null>;
@@ -59,6 +61,8 @@ export type CockpitFormLeftPaneProps = {
   contactFirstNameInputRef: RefObject<HTMLInputElement | null>;
   contactFirstName: string;
   contactLastName: string;
+  contactPosition: string;
+  contactName: string;
   contactPhone: string;
   contactEmail: string;
   onContactFirstNameChange: (event: ChangeEvent<HTMLInputElement>) => void;
@@ -80,6 +84,7 @@ export type CockpitFormLeftPaneProps = {
 export type CockpitFormRightPaneProps = {
   labelStyle: string;
   footerLabelStyle: string;
+  subject: string;
   subjectField: UseFormRegisterReturn;
   notesField: UseFormRegisterReturn;
   orderRefField: UseFormRegisterReturn;

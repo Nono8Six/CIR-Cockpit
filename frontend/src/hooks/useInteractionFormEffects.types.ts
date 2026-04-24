@@ -9,9 +9,7 @@ export type InteractionFormEffectsParams = {
   setValue: UseFormSetValue<InteractionFormValues>;
   clearErrors: UseFormClearErrors<InteractionFormValues>;
   config: AgencyConfig;
-  relationOptions: string[];
   defaultStatusId: string;
-  entityType: string;
   statusId: string;
   contactService: string;
   interactionType: string;

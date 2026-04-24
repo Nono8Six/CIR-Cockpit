@@ -48,7 +48,7 @@ export const departmentReferenceSchema = z.object({
   code: z
     .string()
     .trim()
-    .regex(/^\d{2,3}[A-Z]?$/, 'Code departement invalide'),
+    .regex(/^(?:\d{2,3}|2[AB])$/, 'Code departement invalide'),
   label: referenceLabelSchema,
   sort_order: z.number().int().min(1, 'Ordre invalide'),
   is_active: z.boolean()

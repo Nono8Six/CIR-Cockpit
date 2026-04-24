@@ -2,6 +2,7 @@ import type { AgencyConfig } from '@/services/config';
 import type {
   Entity,
   EntityContact,
+  Interaction,
   InteractionDraft,
   UserRole
 } from '@/types';
@@ -13,6 +14,7 @@ export type CockpitFormProps = {
   userId: string | null;
   userRole: UserRole;
   recentEntities?: Entity[];
+  interactions?: Interaction[];
   entitySearchIndex: {
     entities: Entity[];
     contacts: EntityContact[];

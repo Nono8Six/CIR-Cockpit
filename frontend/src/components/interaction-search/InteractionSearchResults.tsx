@@ -13,6 +13,7 @@ type InteractionSearchResultsProps = {
   entityHeading: string;
   onSelectEntity: (entity: Entity) => void;
   onSelectContact: (contact: EntityContact) => void;
+  showTypeBadge?: boolean;
 };
 
 const InteractionSearchResults = ({
@@ -23,7 +24,8 @@ const InteractionSearchResults = ({
   includeArchived,
   entityHeading,
   onSelectEntity,
-  onSelectContact
+  onSelectContact,
+  showTypeBadge = false
 }: InteractionSearchResultsProps) => (
   <div className="px-3 pb-3">
     <CommandList className="max-h-[220px] rounded-lg border border-border bg-card shadow-[0_12px_30px_rgba(15,23,42,0.12)] overflow-hidden">
@@ -37,6 +39,7 @@ const InteractionSearchResults = ({
               query={query}
               includeArchived={includeArchived}
               onSelectEntity={onSelectEntity}
+              showTypeBadge={showTypeBadge}
             />
           ))}
         </CommandGroup>

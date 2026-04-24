@@ -1,6 +1,7 @@
 import { assertEquals, assertThrows } from 'std/assert';
 import { z } from 'zod/v4';
 
+import { departmentReferenceSchema } from '../../../../shared/schemas/config.schema.ts';
 import type { AuthContext } from '../types.ts';
 import {
   mapAgencyReferenceStatuses,
@@ -121,4 +122,18 @@ Deno.test('mapAgencyReferenceStatuses throws when the stored category is invalid
 
   assertEquals(readStatus(error), 500);
   assertEquals(readCode(error), 'DB_READ_FAILED');
+});
+
+Deno.test('departmentReferenceSchema accepts Corsica department codes', () => {
+  const corsicaDepartments = [
+    { code: '2A', label: 'Corse-du-Sud', sort_order: 29, is_active: true },
+    { code: '2B', label: 'Haute-Corse', sort_order: 30, is_active: true }
+  ];
+
+  assertEquals(
+    corsicaDepartments.every((department) =>
+      departmentReferenceSchema.safeParse(department).success
+    ),
+    true
+  );
 });

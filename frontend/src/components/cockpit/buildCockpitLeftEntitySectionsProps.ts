@@ -14,6 +14,7 @@ export const buildCockpitLeftEntitySectionsProps = (
     onSelectEntityFromSearch,
     onSelectContactFromSearch,
     onOpenClientDialog,
+    onOpenProspectDialog,
     onOpenGlobalSearch,
     searchInputRef,
     labelStyle,
@@ -67,6 +68,7 @@ export const buildCockpitLeftEntitySectionsProps = (
       onSelectEntityFromSearch,
       onSelectContactFromSearch,
       onOpenClientDialog,
+      onOpenProspectDialog,
       onOpenGlobalSearch,
       searchInputRef
     },

@@ -38,7 +38,7 @@ const CockpitIdentityEditor = ({
     <CockpitIdentityHints
       relationMode={relationMode}
     />
-    {relationMode !== 'internal' && relationMode !== 'solicitation' && relationMode !== 'client' && (
+    {relationMode !== 'internal' && relationMode !== 'client' && (
       <>
         <CockpitCompanyInput
           errors={errors}

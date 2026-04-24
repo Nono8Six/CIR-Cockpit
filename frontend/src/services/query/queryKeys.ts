@@ -15,6 +15,8 @@ export const QUERY_ROOTS = {
   clientContacts: 'client-contacts',
   entityInteractions: 'entity-interactions',
   entitySearchIndex: 'entity-search-index',
+  cockpitAgencyMembers: 'cockpit-agency-members',
+  cockpitPhoneLookup: 'cockpit-phone-lookup',
   agencies: 'agencies',
   adminUsers: 'admin-users',
   auditLogs: 'audit-logs'
@@ -82,6 +84,17 @@ export const entitySearchIndexKey = (agencyId: string | null, includeArchived: b
   QUERY_ROOTS.entitySearchIndex,
   agencyId ?? 'all',
   archiveScope(includeArchived)
+] as const;
+
+export const cockpitAgencyMembersKey = (agencyId: string | null) => [
+  QUERY_ROOTS.cockpitAgencyMembers,
+  agencyId ?? 'none'
+] as const;
+
+export const cockpitPhoneLookupKey = (agencyId: string | null, normalizedPhone: string) => [
+  QUERY_ROOTS.cockpitPhoneLookup,
+  agencyId ?? 'none',
+  normalizedPhone
 ] as const;
 
 export const agenciesRootKey = () => [QUERY_ROOTS.agencies] as const;

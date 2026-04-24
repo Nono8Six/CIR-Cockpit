@@ -14,6 +14,8 @@ const trpcProcedurePaths = [
   'admin.agencies',
   'config.save-agency',
   'config.save-product',
+  'cockpit.agency-members',
+  'cockpit.phone-lookup',
   'data.entities',
   'data.entity-contacts',
   'data.interactions',

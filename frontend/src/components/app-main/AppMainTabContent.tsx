@@ -130,6 +130,7 @@ const AppMainTabContent = (props: AppMainTabContentProps) => {
                     userId={userId}
                     userRole={userRole}
                     recentEntities={recentEntities}
+                    interactions={interactions}
                     entitySearchIndex={entitySearchIndex}
                     entitySearchLoading={entitySearchLoading}
                     onOpenGlobalSearch={onOpenGlobalSearch}

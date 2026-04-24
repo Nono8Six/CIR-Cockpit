@@ -14,4 +14,5 @@ export type InteractionSearchBarProps = {
   onOpenGlobalSearch?: () => void;
   recentEntities?: Entity[];
   inputRef?: Ref<HTMLInputElement>;
+  showTypeBadge?: boolean;
 };

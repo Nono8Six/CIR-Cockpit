@@ -20,6 +20,15 @@ vi.mock('@/components/cockpit/CockpitFormRightPane', () => ({
 vi.mock('@/components/cockpit/CockpitFormDialogs', () => ({
   default: () => null
 }));
+vi.mock('@/components/cockpit/CockpitShortcutLegend', () => ({
+  default: () => <div data-testid="cockpit-shortcut-legend" />
+}));
+vi.mock('@/components/cockpit/left/CockpitChannelSection', () => ({
+  default: () => <div data-testid="cockpit-channel-section" />
+}));
+vi.mock('@/components/cockpit/guided/CockpitGuidedEntry', () => ({
+  default: () => <section data-testid="cockpit-guided-entry" />
+}));
 vi.mock('@/hooks/useCockpitFormController', () => ({
   useCockpitFormController: () => ({
     canSave: true,

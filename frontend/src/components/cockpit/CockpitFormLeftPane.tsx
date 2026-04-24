@@ -1,6 +1,5 @@
 import type { CockpitFormLeftPaneProps } from './CockpitPaneTypes';
 import { buildCockpitLeftEntitySectionsProps } from './buildCockpitLeftEntitySectionsProps';
-import CockpitChannelSection from './left/CockpitChannelSection';
 import CockpitRelationSection from './left/CockpitRelationSection';
 import CockpitInteractionTypeSection from './left/CockpitInteractionTypeSection';
 import CockpitServiceSection from './left/CockpitServiceSection';
@@ -13,20 +12,12 @@ const CockpitFormLeftPane = (props: CockpitFormLeftPaneProps) => {
 
   return (
     <div data-testid="cockpit-left-pane" className="col-span-12 md:col-span-5 min-w-0 bg-card p-4 sm:p-5 flex flex-col gap-4 border-b border-border md:border-b-0 md:border-r">
-      {/* Groupe Contexte */}
-      <CockpitChannelSection
-        labelStyle={props.labelStyle}
-        errors={props.errors}
-        setValue={props.setValue}
-        channel={props.channel}
-        channelButtonRef={props.channelButtonRef}
-      />
       <CockpitRelationSection
         labelStyle={props.labelStyle}
         errors={props.errors}
-        setValue={props.setValue}
         relationOptions={props.relationOptions}
         entityType={props.entityType}
+        onRelationChange={props.onRelationChange}
         relationButtonRef={props.relationButtonRef}
       />
       <CockpitSearchSection {...entityProps.search} />

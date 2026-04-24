@@ -12,18 +12,22 @@ type CockpitFormDialogsProps = {
   activeAgencyId: string | null;
   selectedEntity: Entity | null;
   isClientDialogOpen: boolean;
+  isProspectDialogOpen: boolean;
   isContactDialogOpen: boolean;
   isConvertDialogOpen: boolean;
   convertTarget: Entity | null;
   onClientDialogChange: (open: boolean) => void;
+  onProspectDialogChange: (open: boolean) => void;
   onContactDialogChange: (open: boolean) => void;
   onConvertDialogChange: (open: boolean) => void;
   onSaveClient: (payload: ClientPayload) => Promise<void>;
+  onSaveProspect: (payload: EntityPayload) => Promise<void>;
   onSaveContact: (payload: EntityContactPayload) => Promise<void>;
   onConvertClient: (payload: ClientPayload) => Promise<void>;
 };
 
-const saveProspectFallback = async (): Promise<void> => undefined;
+const saveClientFallback: (payload: ClientPayload) => Promise<void> = async () => undefined;
+const saveProspectFallback: (payload: EntityPayload) => Promise<void> = async () => undefined;
 
 const CockpitFormDialogs = ({
   agencies,
@@ -31,13 +35,16 @@ const CockpitFormDialogs = ({
   activeAgencyId,
   selectedEntity,
   isClientDialogOpen,
+  isProspectDialogOpen,
   isContactDialogOpen,
   isConvertDialogOpen,
   convertTarget,
   onClientDialogChange,
+  onProspectDialogChange,
   onContactDialogChange,
   onConvertDialogChange,
   onSaveClient,
+  onSaveProspect,
   onSaveContact,
   onConvertClient
 }: CockpitFormDialogsProps) => {
@@ -50,7 +57,19 @@ const CockpitFormDialogs = ({
         agencies={agencies}
         userRole={userRole}
         activeAgencyId={activeAgencyId}
-        onSave={onSaveClient}
+          onSave={onSaveClient}
+        />
+      <EntityOnboardingDialog
+        open={isProspectDialogOpen}
+        onOpenChange={onProspectDialogChange}
+        agencies={agencies}
+        userRole={userRole}
+        activeAgencyId={activeAgencyId}
+        allowedIntents={['prospect']}
+        defaultIntent="prospect"
+        sourceLabel="Cockpit"
+        onSaveClient={saveClientFallback}
+        onSaveProspect={onSaveProspect}
       />
       {selectedEntity && (
         <ClientContactDialog
@@ -73,7 +92,7 @@ const CockpitFormDialogs = ({
           initialEntity={convertTarget}
           sourceLabel="Cockpit"
           onSaveClient={onConvertClient}
-          onSaveProspect={saveProspectFallback as (payload: EntityPayload) => Promise<void>}
+          onSaveProspect={saveProspectFallback}
         />
       ) : null}
     </>
