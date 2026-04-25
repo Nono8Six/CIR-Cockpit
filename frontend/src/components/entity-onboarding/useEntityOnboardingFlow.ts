@@ -53,6 +53,7 @@ import {
   type DepartmentOption,
 } from './useOnboardingConfig';
 import { useOnboardingCloseGuard } from './useOnboardingCloseGuard';
+import { useOnboardingCompanySelection } from './useOnboardingCompanySelection';
 import { useOnboardingIntentControls } from './useOnboardingIntentControls';
 
 export const STEP_DEFINITIONS = [
@@ -316,60 +317,15 @@ export const useEntityOnboardingFlow = ({
   const selectedCompany = stepper.metadata.get('company')?.selectedCompany as
     | DirectoryCompanySearchResult
     | undefined;
+  const setSelectedCompany = useCallback(
+    (company: DirectoryCompanySearchResult | null) => {
+      stepper.metadata.set('company', { selectedCompany: company });
+    },
+    [stepper.metadata],
+  );
   const isIndividualClient =
     effectiveIntent === 'client' && values.client_kind === 'individual';
   const currentStepIndex = stepper.state.current.index;
-
-  const clearOfficialSelection = useCallback(() => {
-    form.setValue('siret', '', { shouldDirty: true });
-    form.setValue('siren', '', { shouldDirty: true });
-    form.setValue('naf_code', '', { shouldDirty: true });
-    form.setValue('official_name', '', { shouldDirty: true });
-    form.setValue('official_data_source', null, { shouldDirty: true });
-    form.setValue('official_data_synced_at', '', { shouldDirty: true });
-    stepper.metadata.set('company', { selectedCompany: null });
-  }, [form, stepper.metadata]);
-
-  const applyCompany = useCallback(
-    (company: DirectoryCompanySearchResult) => {
-      form.setValue('name', company.official_name ?? company.name, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-      form.setValue('address', company.address ?? '', { shouldDirty: true });
-      form.setValue('postal_code', company.postal_code ?? '', {
-        shouldDirty: true,
-      });
-      form.setValue('department', company.department ?? '', {
-        shouldDirty: true,
-      });
-      form.setValue('city', company.city ?? '', {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-      form.setValue('siret', company.siret ?? '', { shouldDirty: true });
-      form.setValue('siren', company.siren ?? '', { shouldDirty: true });
-      form.setValue('naf_code', company.naf_code ?? '', { shouldDirty: true });
-      form.setValue('official_name', company.official_name ?? company.name, {
-        shouldDirty: true,
-      });
-      form.setValue(
-        'official_data_source',
-        company.official_data_source === 'api-recherche-entreprises'
-          ? 'api-recherche-entreprises'
-          : null,
-        { shouldDirty: true },
-      );
-      form.setValue(
-        'official_data_synced_at',
-        company.official_data_synced_at ?? '',
-        { shouldDirty: true },
-      );
-      stepper.metadata.set('company', { selectedCompany: company });
-      setStepError(null);
-    },
-    [form, stepper.metadata],
-  );
 
   const companySearchQuery = useDirectoryCompanySearch(
     {
@@ -391,40 +347,27 @@ export const useEntityOnboardingFlow = ({
     statusFilter !== 'all' &&
     rawCompanyGroups.length > 0 &&
     companyGroups.length === 0;
-  const selectedGroup = useMemo<CompanySearchGroup | null>(() => {
-    if (selectedCompany?.siret) {
-      const groupFromCompany = companyGroups.find((group) =>
-        group.establishments.some(
-          (establishment) => establishment.siret === selectedCompany.siret,
-        ),
-      );
-      if (groupFromCompany) {
-        return groupFromCompany;
-      }
-    }
-
-    if (selectedGroupId) {
-      const explicitGroup = companyGroups.find(
-        (group) => group.id === selectedGroupId,
-      );
-      if (explicitGroup) {
-        return explicitGroup;
-      }
-    }
-
-    return companyGroups.length === 1 ? (companyGroups[0] ?? null) : null;
-  }, [companyGroups, selectedCompany?.siret, selectedGroupId]);
   const isSearchStale =
     searchDraft.trim() !== deferredSearchDraft ||
     departmentFilter.trim() !== deferredDepartmentFilter ||
     companySearchQuery.isFetching;
-  const displaySelectedCompany =
-    selectedCompany ??
-    (!manualEntry &&
-    statusFilter === 'all' &&
-    selectedGroup?.establishments.length === 1
-      ? selectedGroup.establishments[0]
-      : undefined);
+  const {
+    applyCompany,
+    clearOfficialSelection,
+    displaySelectedCompany,
+    handleGroupSelect,
+    selectedGroup,
+  } = useOnboardingCompanySelection({
+    companyGroups,
+    form,
+    manualEntry,
+    selectedCompany,
+    selectedGroupId,
+    setSelectedCompany,
+    setSelectedGroupId,
+    setStepError,
+    statusFilter,
+  });
 
   const duplicateInput = useMemo(() => {
     if (isIndividualClient) {
@@ -626,32 +569,6 @@ export const useEntityOnboardingFlow = ({
       setManualEntry,
       setStepError,
     });
-
-  const handleGroupSelect = useCallback(
-    (groupId: string) => {
-      setSelectedGroupId(groupId);
-      const group = companyGroups.find((entry) => entry.id === groupId);
-      if (!group) {
-        return;
-      }
-
-      if (group.establishments.length === 1) {
-        const establishment = group.establishments[0];
-        if (establishment) {
-          applyCompany(establishment);
-        }
-        return;
-      }
-
-      const currentCompanyBelongsToGroup = group.establishments.some(
-        (establishment) => establishment.siret === selectedCompany?.siret,
-      );
-      if (!currentCompanyBelongsToGroup) {
-        clearOfficialSelection();
-      }
-    },
-    [applyCompany, clearOfficialSelection, companyGroups, selectedCompany?.siret],
-  );
 
   const handleCompanyNext = useCallback(async () => {
     if (isIndividualClient) {
