@@ -139,6 +139,7 @@ pnpm run build
 ```
 
 Portee actuelle de la gate couverture (Vitest):
+0. Seuil global minimal: `55/50/50/58`.
 1. `src/services/admin/**`
 2. `src/services/agency/**`
 3. `src/services/api/**`
@@ -402,6 +403,7 @@ Copier-coller ce bloc dans PR, ticket, ou message de livraison:
 - [ ] deno lint backend/functions/api
 - [ ] deno check backend/functions/api/index.ts
 - [ ] deno test backend/functions/api
+- [ ] backend:test:integration
 
 ### Relecture regles
 - [ ] zero throw new Error hors tests

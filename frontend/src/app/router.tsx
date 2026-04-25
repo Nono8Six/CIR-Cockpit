@@ -101,12 +101,6 @@ const settingsRoute = createRoute({
   component: () => null
 });
 
-const uiPocRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: 'ui-poc',
-  component: () => null
-});
-
 const routeTree = rootRoute.addChildren([
   indexRoute,
   cockpitRoute,
@@ -119,8 +113,7 @@ const routeTree = rootRoute.addChildren([
     prospectRecordRoute
   ]),
   adminRoute,
-  settingsRoute,
-  uiPocRoute
+  settingsRoute
 ]);
 
 export const appRouter = createRouter({

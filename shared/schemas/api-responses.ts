@@ -63,6 +63,21 @@ export const dataEntitiesResponseSchema = apiSuccessSchema.extend({
   deleted_interactions_count: z.number().int().nonnegative().optional()
 }).strict();
 
+export const dataEntitiesListResponseSchema = apiSuccessSchema.extend({
+  entities: z.array(entityRowSchema)
+}).strict();
+
+export const dataEntitiesSearchIndexResponseSchema = apiSuccessSchema.extend({
+  entities: z.array(entityRowSchema),
+  contacts: z.array(entityContactRowSchema)
+}).strict();
+
+export const dataEntitiesRouteResponseSchema = z.union([
+  dataEntitiesResponseSchema,
+  dataEntitiesListResponseSchema,
+  dataEntitiesSearchIndexResponseSchema
+]);
+
 export const dataEntitiesReassignResponseSchema = dataEntitiesResponseSchema.extend({
   propagated_interactions_count: z.number().int().nonnegative()
 }).strict();
@@ -75,7 +90,12 @@ const dataEntityContactsDeleteResponseSchema = apiSuccessSchema.extend({
   contact_id: z.string().trim().min(1, 'Identifiant contact requis')
 }).strict();
 
+export const dataEntityContactsListResponseSchema = apiSuccessSchema.extend({
+  contacts: z.array(entityContactRowSchema)
+}).strict();
+
 export const dataEntityContactsResponseSchema = z.union([
+  dataEntityContactsListResponseSchema,
   dataEntityContactsSaveResponseSchema,
   dataEntityContactsDeleteResponseSchema
 ]);
@@ -223,7 +243,11 @@ export const adminUsersResponseSchema = z.union([
 
 export type ApiSuccess = z.infer<typeof apiSuccessSchema>;
 export type DataEntitiesResponse = z.infer<typeof dataEntitiesResponseSchema>;
+export type DataEntitiesListResponse = z.infer<typeof dataEntitiesListResponseSchema>;
+export type DataEntitiesSearchIndexResponse = z.infer<typeof dataEntitiesSearchIndexResponseSchema>;
+export type DataEntitiesRouteResponse = z.infer<typeof dataEntitiesRouteResponseSchema>;
 export type DataEntitiesReassignResponse = z.infer<typeof dataEntitiesReassignResponseSchema>;
+export type DataEntityContactsListResponse = z.infer<typeof dataEntityContactsListResponseSchema>;
 export type DataEntityContactsResponse = z.infer<typeof dataEntityContactsResponseSchema>;
 export type DataInteractionsMutationResponse = z.infer<typeof dataInteractionsMutationResponseSchema>;
 export type DataInteractionsListResponse = z.infer<typeof dataInteractionsListResponseSchema>;

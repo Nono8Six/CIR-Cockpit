@@ -27,7 +27,7 @@ Cette page doit suivre en priorite:
 
 | Element | Version / etat | Source |
 |---------|-----------------|--------|
-| Package manager | `pnpm@10.30.2` | `package.json` |
+| Package manager | `pnpm@10.33.0` | `package.json` |
 | Workspace | `frontend`, `shared` | `pnpm-workspace.yaml` |
 | Git hooks | Husky `9.1.7` | `package.json` |
 | Pre-commit cible | lint-staged `15.5.2` | `package.json` |

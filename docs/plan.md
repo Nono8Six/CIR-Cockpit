@@ -140,3 +140,35 @@ Elle ne conserve que l'etat reellement verifie par commandes et tests.
 
 - Le renommage des anciennes migrations au format `YYYYMMDDHHMMSS_` reste **non execute**. La compatibilite remote/local est desormais verifiee par manifest/ordre, sans reecriture destructive de l'historique.
 - L'erreur Postgres `invalid regular expression` reste **hors scope** tant qu'elle provient des requetes d'introspection Supabase Dashboard et non du code applicatif.
+
+## 2026-04-24 - Socle audit phase 1
+
+### Corrige
+
+- [x] retirer la surface prototype `/ui-poc` du runtime applicatif et du router.
+- [x] aligner la version pnpm CI/documentation sur le manifest racine.
+- [x] ajouter `backend:test:integration` au gate final `pnpm run qa`.
+- [x] migrer la lecture clients `getClients` vers la frontiere tRPC `data.entities` avec schema shared strict et filtres d'agence cote backend.
+
+### Reste a traiter
+
+- [ ] migrer les derniers services metier front qui lisent directement Supabase vers la frontiere tRPC (`getProspects`, `getEntitySearchIndex`, `getEntityContacts`).
+- [ ] decouper les hotspots majeurs restants (`directory.ts`, onboarding entite, services data).
+- [ ] requalifier les grants et indexes Supabase apres observation prod.
+
+## 2026-04-25 - Frontiere API entites
+
+### Corrige
+
+- [x] migrer `getProspects` vers la frontiere tRPC `data.entities` avec conservation des filtres `agencyId`, `includeArchived`, `orphansOnly`.
+- [x] exposer l'action backend `data.entities/list` pour les prospects avec filtre compatible `prospect` ou `particulier`.
+- [x] migrer `getEntityContacts` vers `data.entity-contacts` via l'action `list_by_entity`.
+- [x] migrer `getEntitySearchIndex` vers `data.entities/search_index`.
+- [x] filtrer les contacts de l'index de recherche par les entites accessibles de l'agence au lieu d'une lecture globale.
+- [x] remplacer les tests Supabase directs obsoletes des services entites par des tests RPC et backend cibles.
+
+### Reste a traiter
+
+- [ ] decouper les hotspots majeurs restants (`directory.ts`, `dataEntities.ts`, onboarding entite).
+- [ ] requalifier Supabase securite/performance via MCP avant toute phase DB.
+- [ ] renforcer les controles mecaniques de gouvernance non encore couverts par `repo:check`.

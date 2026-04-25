@@ -1,9 +1,11 @@
-import { assertEquals, assertThrows } from 'std/assert';
+import { assertEquals, assertRejects, assertThrows } from 'std/assert';
 
 import type { AuthContext, DbClient } from '../types.ts';
 import {
   ensureDeleteSuperAdmin,
   ensureReassignSuperAdmin,
+  getEntitySearchIndex,
+  listEntities,
   reassignEntity
 } from './dataEntities.ts';
 
@@ -107,6 +109,74 @@ const createDbMock = (
   return { db, calls };
 };
 
+const createListDbMock = (
+  rows: unknown[] = []
+): { db: DbClient; calls: { orderByCount: number; whereCount: number } } => {
+  const calls = {
+    orderByCount: 0,
+    whereCount: 0
+  };
+
+  const db = {
+    select: () => ({
+      from: (_table: unknown) => ({
+        where: (_condition: unknown) => {
+          calls.whereCount += 1;
+          return {
+            orderBy: (_order: unknown) => {
+              calls.orderByCount += 1;
+              return Promise.resolve(rows);
+            }
+          };
+        }
+      })
+    })
+  } as unknown as DbClient;
+
+  return { db, calls };
+};
+
+const createSearchIndexDbMock = (
+  entityRows: unknown[] = [],
+  contactRows: unknown[] = []
+): { db: DbClient; calls: { entityOrderByCount: number; contactOrderByCount: number } } => {
+  const calls = {
+    entityOrderByCount: 0,
+    contactOrderByCount: 0
+  };
+  let selectCall = 0;
+
+  const db = {
+    select: () => {
+      selectCall += 1;
+      return {
+        from: (_table: unknown) => ({
+          where: (_condition: unknown) => ({
+            orderBy: (_order: unknown) => {
+              if (selectCall === 1) {
+                calls.entityOrderByCount += 1;
+                return Promise.resolve(entityRows);
+              }
+              calls.contactOrderByCount += 1;
+              return Promise.resolve(contactRows);
+            }
+          })
+        })
+      };
+    }
+  } as unknown as DbClient;
+
+  return { db, calls };
+};
+
+const createAuthContext = (overrides: Partial<AuthContext> = {}): AuthContext => ({
+  userId: 'user-1',
+  role: 'agency_admin',
+  agencyIds: ['agency-1'],
+  isSuperAdmin: false,
+  ...overrides
+});
+
 Deno.test('reassignEntity reassigns orphan entity and propagates interaction agency_id', async () => {
   const reassignedEntity = {
     id: 'entity-1',
@@ -127,6 +197,97 @@ Deno.test('reassignEntity reassigns orphan entity and propagates interaction age
   assertEquals(result.propagatedInteractionsCount, 2);
   assertEquals(calls.entityUpdatePayload, { agency_id: 'agency-target' });
   assertEquals(calls.interactionUpdatePayload, { agency_id: 'agency-target' });
+});
+
+Deno.test('listEntities returns clients through the backend API service', async () => {
+  const rows = [
+    {
+      id: 'client-1',
+      entity_type: 'Client',
+      agency_id: 'agency-1',
+      name: 'ACME'
+    }
+  ];
+  const { db, calls } = createListDbMock(rows);
+
+  const result = await listEntities(db, createAuthContext(), {
+    action: 'list',
+    entity_type: 'Client',
+    agency_id: 'agency-1'
+  });
+
+  assertEquals(result, rows);
+  assertEquals(calls.whereCount, 1);
+  assertEquals(calls.orderByCount, 1);
+});
+
+Deno.test('listEntities returns prospect-compatible rows through the backend API service', async () => {
+  const rows = [
+    {
+      id: 'prospect-1',
+      entity_type: 'Prospect',
+      agency_id: 'agency-1',
+      name: 'Prospect'
+    }
+  ];
+  const { db, calls } = createListDbMock(rows);
+
+  const result = await listEntities(db, createAuthContext(), {
+    action: 'list',
+    entity_type: 'Prospect',
+    agency_id: 'agency-1'
+  });
+
+  assertEquals(result, rows);
+  assertEquals(calls.whereCount, 1);
+  assertEquals(calls.orderByCount, 1);
+});
+
+Deno.test('listEntities rejects orphan listing for non-super-admin callers', async () => {
+  const { db } = createListDbMock();
+
+  const error = await assertRejects(() =>
+    listEntities(db, createAuthContext(), {
+      action: 'list',
+      entity_type: 'Client',
+      orphans_only: true
+    })
+  );
+
+  assertEquals(readStatus(error), 403);
+  assertEquals(readCode(error), 'AUTH_FORBIDDEN');
+});
+
+Deno.test('getEntitySearchIndex loads contacts only for selected entity ids', async () => {
+  const entityRows = [
+    { id: 'entity-1', agency_id: 'agency-1' },
+    { id: 'entity-2', agency_id: 'agency-1' }
+  ];
+  const contactRows = [{ id: 'contact-1', entity_id: 'entity-1' }];
+  const { db, calls } = createSearchIndexDbMock(entityRows, contactRows);
+
+  const result = await getEntitySearchIndex(db, createAuthContext(), {
+    action: 'search_index',
+    agency_id: 'agency-1',
+    include_archived: false
+  });
+
+  assertEquals(result, { entities: entityRows, contacts: contactRows });
+  assertEquals(calls.entityOrderByCount, 1);
+  assertEquals(calls.contactOrderByCount, 1);
+});
+
+Deno.test('getEntitySearchIndex returns empty index when agency is missing', async () => {
+  const { db, calls } = createSearchIndexDbMock();
+
+  const result = await getEntitySearchIndex(db, createAuthContext(), {
+    action: 'search_index',
+    agency_id: null
+  });
+
+  assertEquals(result, { entities: [], contacts: [] });
+  assertEquals(calls.entityOrderByCount, 0);
+  assertEquals(calls.contactOrderByCount, 0);
 });
 
 Deno.test('reassignEntity rejects non-orphan entities', async () => {

@@ -5,7 +5,7 @@ import {
   adminAgenciesResponseSchema,
   adminUsersResponseSchema,
   dataConfigResponseSchema,
-  dataEntitiesResponseSchema,
+  dataEntitiesRouteResponseSchema,
   dataEntityContactsResponseSchema,
   dataInteractionsResponseSchema,
   dataProfileResponseSchema,
@@ -97,7 +97,7 @@ export const appRouter = router({
   data: router({
     entities: authedProcedure
       .input(dataEntitiesPayloadSchema)
-      .output(dataEntitiesResponseSchema)
+      .output(dataEntitiesRouteResponseSchema)
       .mutation(withAuthedDualDbHandler(handleDataEntitiesAction, selectDataEntitiesDb)),
     'entity-contacts': authedProcedure
       .input(dataEntityContactsPayloadSchema)

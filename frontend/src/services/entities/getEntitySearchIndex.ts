@@ -1,10 +1,29 @@
+import { dataEntitiesSearchIndexResponseSchema } from 'shared/schemas/api-responses';
+
 import { Entity, EntityContact } from '@/types';
-import { mapPostgrestError } from '@/services/errors/mapPostgrestError';
-import { requireSupabaseClient } from '@/services/supabase/requireSupabaseClient';
+import { safeRpc } from '@/services/api/safeRpc';
+import { createAppError } from '@/services/errors/AppError';
 
 export type EntitySearchIndex = {
   entities: Entity[];
   contacts: EntityContact[];
+};
+
+const parseSearchIndexResponse = (payload: unknown): EntitySearchIndex => {
+  const parsed = dataEntitiesSearchIndexResponseSchema.safeParse(payload);
+  if (!parsed.success) {
+    throw createAppError({
+      code: 'REQUEST_FAILED',
+      message: 'Reponse serveur invalide.',
+      source: 'edge',
+      details: parsed.error.message
+    });
+  }
+
+  return {
+    entities: parsed.data.entities,
+    contacts: parsed.data.contacts
+  };
 };
 
 export const getEntitySearchIndex = async (
@@ -15,51 +34,20 @@ export const getEntitySearchIndex = async (
     return { entities: [], contacts: [] };
   }
 
-  const supabase = requireSupabaseClient();
-
-  const entitiesQuery = supabase
-    .from('entities')
-    .select('*')
-    .order('name', { ascending: true });
-
-  const filteredEntitiesQuery = entitiesQuery.eq('agency_id', agencyId);
-
-  const finalEntitiesQuery = includeArchived
-    ? filteredEntitiesQuery
-    : filteredEntitiesQuery.is('archived_at', null);
-
-  const contactsQuery = supabase
-    .from('entity_contacts')
-    .select('*')
-    .order('last_name', { ascending: true });
-
-  const finalContactsQuery = includeArchived
-    ? contactsQuery
-    : contactsQuery.is('archived_at', null);
-
-  const [
-    { data: entities, error: entitiesError, status: entitiesStatus },
-    { data: contacts, error: contactsError, status: contactsStatus }
-  ] = await Promise.all([
-    finalEntitiesQuery,
-    finalContactsQuery
-  ]);
-
-  if (entitiesError) {
-    throw mapPostgrestError(entitiesError, {
-      operation: 'read',
-      resource: 'les entites',
-      status: entitiesStatus
-    });
-  }
-
-  if (contactsError) {
-    throw mapPostgrestError(contactsError, {
-      operation: 'read',
-      resource: 'les contacts',
-      status: contactsStatus
-    });
-  }
-
-  return { entities: entities ?? [], contacts: contacts ?? [] };
+  return safeRpc(
+    (api, init) => api.data.entities.$post({
+      json: {
+        action: 'search_index',
+        agency_id: agencyId,
+        include_archived: includeArchived
+      }
+    }, init),
+    parseSearchIndexResponse,
+    "Impossible de charger l'index de recherche."
+  ).match(
+    (index) => index,
+    (error) => {
+      throw error;
+    }
+  );
 };

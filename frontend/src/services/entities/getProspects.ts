@@ -1,6 +1,8 @@
+import { dataEntitiesListResponseSchema } from 'shared/schemas/api-responses';
+
 import { Entity } from '@/types';
-import { mapPostgrestError } from '@/services/errors/mapPostgrestError';
-import { requireSupabaseClient } from '@/services/supabase/requireSupabaseClient';
+import { safeRpc } from '@/services/api/safeRpc';
+import { createAppError } from '@/services/errors/AppError';
 
 export type GetProspectsOptions = {
   agencyId?: string | null;
@@ -8,35 +10,39 @@ export type GetProspectsOptions = {
   orphansOnly?: boolean;
 };
 
-export const getProspects = async (options: GetProspectsOptions = {}): Promise<Entity[]> => {
-  const supabase = requireSupabaseClient();
-  const { agencyId, includeArchived = false, orphansOnly = false } = options;
-
-  let query = supabase
-    .from('entities')
-    .select('*')
-    .or('entity_type.ilike.%prospect%,entity_type.ilike.%particulier%')
-    .order('name', { ascending: true });
-
-  if (!includeArchived) {
-    query = query.is('archived_at', null);
-  }
-
-  if (orphansOnly) {
-    query = query.is('agency_id', null);
-  } else if (agencyId) {
-    query = query.eq('agency_id', agencyId);
-  }
-
-  const { data, error, status } = await query;
-
-  if (error) {
-    throw mapPostgrestError(error, {
-      operation: 'read',
-      resource: 'les prospects',
-      status
+const parseProspectsResponse = (payload: unknown): Entity[] => {
+  const parsed = dataEntitiesListResponseSchema.safeParse(payload);
+  if (!parsed.success) {
+    throw createAppError({
+      code: 'REQUEST_FAILED',
+      message: 'Reponse serveur invalide.',
+      source: 'edge',
+      details: parsed.error.message
     });
   }
 
-  return data ?? [];
+  return parsed.data.entities;
+};
+
+export const getProspects = async (options: GetProspectsOptions = {}): Promise<Entity[]> => {
+  const { agencyId, includeArchived = false, orphansOnly = false } = options;
+
+  return safeRpc(
+    (api, init) => api.data.entities.$post({
+      json: {
+        action: 'list',
+        entity_type: 'Prospect',
+        agency_id: agencyId ?? null,
+        include_archived: includeArchived,
+        orphans_only: orphansOnly
+      }
+    }, init),
+    parseProspectsResponse,
+    'Impossible de charger les prospects.'
+  ).match(
+    (prospects) => prospects,
+    (error) => {
+      throw error;
+    }
+  );
 };

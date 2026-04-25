@@ -39,6 +39,7 @@ if ($env:RUN_E2E -eq "1") {
 Invoke-Step "[6/9] Backend lint..." { deno lint backend/functions/api }
 Invoke-Step "[7/9] Backend typecheck..." { deno check --config backend/deno.json backend/functions/api/index.ts }
 Invoke-Step "[8/9] Backend tests..." { deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api }
+Invoke-Step "[9/9] Backend integration tests..." { pnpm run backend:test:integration }
 
 Write-Output ""
 Write-Output "=========================================="

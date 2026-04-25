@@ -1,4 +1,4 @@
-import { Suspense, lazy, useCallback, useEffect, useMemo } from 'react';
+import { Suspense, lazy, useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useRouterState } from '@tanstack/react-router';
 
@@ -22,20 +22,13 @@ import type { InteractionDraft } from '@/types';
 import { DEFAULT_DIRECTORY_SEARCH } from '@/components/client-directory/clientDirectorySearch';
 
 const loadAppSearchOverlay = () => import('@/components/AppSearchOverlay');
-const loadUiPocPage = () => import('@/components/poc/UiPocPage');
 
 const AppSearchOverlay = lazy(loadAppSearchOverlay);
-const UiPocPage = lazy(loadUiPocPage);
 
 let appSearchOverlayPreloadPromise: Promise<unknown> | null = null;
-let uiPocPagePreloadPromise: Promise<unknown> | null = null;
 
 const preloadAppSearchOverlay = (): void => {
   appSearchOverlayPreloadPromise ??= loadAppSearchOverlay();
-};
-
-const preloadUiPocPage = (): void => {
-  uiPocPagePreloadPromise ??= loadUiPocPage();
 };
 
 const getBestUserLabel = (profile: UserProfile | null, userEmail: string): string => {
@@ -84,11 +77,6 @@ const App = () => {
   const canEditAgencySettings = userRole !== 'tcs';
   const canEditProductSettings = userRole === 'super_admin';
   const canAccessAdmin = userRole !== 'tcs';
-  const normalizedPathname = pathname.endsWith('/') && pathname.length > 1
-    ? pathname.slice(0, -1)
-    : pathname;
-  const isUiPocRoute = normalizedPathname === '/ui-poc';
-
   const viewState = useAppViewState({
     pathname,
     navigate,
@@ -105,11 +93,6 @@ const App = () => {
     isSearchOpen: viewState.isSearchOpen,
     searchQuery: viewState.searchQuery
   });
-
-  useEffect(() => {
-    if (!isUiPocRoute) return;
-    preloadUiPocPage();
-  }, [isUiPocRoute]);
 
   const saveInteractionMutation = useSaveInteraction(sessionState.activeAgencyId);
 
@@ -195,74 +178,6 @@ const App = () => {
   const userFullName = getBestUserLabel(sessionState.profile, sessionEmail);
   const userInitials = getUserInitials(sessionState.profile, userFullName, sessionEmail);
   const config = queries.config ?? EMPTY_CONFIG;
-
-  if (isUiPocRoute) {
-    const hasUiPocSearchResults =
-      queries.searchData.filteredInteractions.length > 0
-      || queries.searchData.filteredClients.length > 0
-      || queries.searchData.filteredContacts.length > 0;
-
-    return (
-      <Suspense fallback={null}>
-        <UiPocPage
-          userEmail={sessionState.session?.user?.email ?? 'Utilisateur'}
-          userProfile={sessionState.profile}
-          userRole={userRole}
-          activeAgencyId={sessionState.activeAgencyId}
-          agencyMemberships={sessionState.agencyMemberships}
-          authReady={sessionState.authReady}
-          isAuthenticated={Boolean(sessionState.session)}
-          onAgencyChange={handleAgencyChange}
-          onOpenSearch={viewState.handleOpenSearch}
-          onSearchIntent={preloadAppSearchOverlay}
-          onSignOut={() => void handleSignOut()}
-          onBackToCockpit={() => {
-            void navigate({ to: getPathForTab('cockpit') });
-          }}
-        />
-        {viewState.isSearchOpen ? (
-          <AppSearchOverlay
-            open={viewState.isSearchOpen}
-            onOpenChange={viewState.handleSearchOpenChange}
-            searchQuery={viewState.searchQuery}
-            onSearchQueryChange={viewState.setSearchQuery}
-            filteredInteractions={queries.searchData.filteredInteractions}
-            filteredClients={queries.searchData.filteredClients}
-            filteredProspects={[]}
-            filteredContacts={queries.searchData.filteredContacts}
-            hasSearchResults={hasUiPocSearchResults}
-            isEntitySearchLoading={queries.entitySearchQuery.isLoading}
-            entitySearchError={queries.entitySearchQuery.error}
-            onRetrySearch={async () => queries.entitySearchQuery.refetch()}
-            entityNameById={queries.searchData.entityNameById}
-            onOpenInteraction={() => {
-              void navigate({
-                to: '/ui-poc',
-                search: (previous) => ({
-                  ...previous,
-                  nav: 'dashboard'
-                })
-              });
-              viewState.handleSearchOpenChange(false);
-            }}
-            onFocusClient={() => {
-              void navigate({
-                to: '/ui-poc',
-                search: (previous) => ({
-                  ...previous,
-                  nav: 'clients'
-                })
-              });
-              viewState.handleSearchOpenChange(false);
-            }}
-            onRequestConvert={() => {
-              viewState.handleSearchOpenChange(false);
-            }}
-          />
-        ) : null}
-      </Suspense>
-    );
-  }
 
   const gate = getAppGate({
     authReady: sessionState.authReady,

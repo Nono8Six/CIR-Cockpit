@@ -125,6 +125,17 @@ function command(commandName, args) {
   }).trim();
 }
 
+function commandAllowFailure(commandName, args) {
+  try {
+    return command(commandName, args);
+  } catch (error) {
+    if (typeof error === "object" && error !== null && "status" in error && error.status === 1) {
+      return "";
+    }
+    throw error;
+  }
+}
+
 function getMigrationVersion(filename) {
   const match = filename.match(/^(\d+)_.*\.sql$/);
   return match ? BigInt(match[1]) : null;
@@ -151,6 +162,10 @@ if (existsSync(path.join(repoRoot, "migration"))) {
   fail("Shadow repository directory 'migration/' must not exist at the repository root.");
 }
 
+if (existsSync(path.join(repoRoot, "frontend", "src", "components", "poc"))) {
+  fail("Prototype UI directory frontend/src/components/poc must not exist in the production app.");
+}
+
 const trackedSupabaseTempFiles = git(["ls-files", "--", "supabase/.temp"])
   .split(/\r?\n/)
   .map((value) => value.trim())
@@ -163,6 +178,40 @@ if (trackedSupabaseTempFiles.length > 0) {
 const qaRunbook = readText("docs/qa-runbook.md");
 if (qaRunbook.includes("docs/audit-complet.md")) {
   fail("docs/qa-runbook.md still references missing file docs/audit-complet.md.");
+}
+
+const rootPackage = readJson("package.json");
+const packageManager = rootPackage.packageManager;
+const pnpmVersionMatch = typeof packageManager === "string"
+  ? packageManager.match(/^pnpm@([^+]+)(?:\+.+)?$/)
+  : null;
+if (!pnpmVersionMatch) {
+  fail("package.json must declare packageManager as pnpm@<version>.");
+}
+const pnpmVersion = pnpmVersionMatch?.[1] ?? "";
+const stackDoc = readText("docs/stack.md");
+if (pnpmVersion && !stackDoc.includes(`pnpm@${pnpmVersion}`)) {
+  fail(`docs/stack.md must document package manager pnpm@${pnpmVersion}.`);
+}
+const githubQaWorkflow = readText(".github/workflows/qa.yml");
+if (pnpmVersion && !githubQaWorkflow.includes(`version: ${pnpmVersion}`)) {
+  fail(`.github/workflows/qa.yml must install pnpm ${pnpmVersion}.`);
+}
+
+const frontendSourceFiles = commandAllowFailure("rg", ["-n", "ui-poc|UiPoc|useUiPoc|getUiPoc", "frontend/src"]);
+if (frontendSourceFiles) {
+  fail(`Runtime prototype UI references remain in frontend/src:\n${frontendSourceFiles}`);
+}
+
+const qaGatePs1 = readText("scripts/qa-gate.ps1");
+const qaGateSh = readText("scripts/qa-gate.sh");
+for (const [filename, source] of [
+  ["scripts/qa-gate.ps1", qaGatePs1],
+  ["scripts/qa-gate.sh", qaGateSh],
+]) {
+  if (!source.includes("backend:test:integration")) {
+    fail(`${filename} must run backend:test:integration to match docs/qa-runbook.md.`);
+  }
 }
 
 const configSchemaSource = readText("shared/schemas/config.schema.ts");

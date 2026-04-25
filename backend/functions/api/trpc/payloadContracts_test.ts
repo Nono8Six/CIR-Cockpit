@@ -22,6 +22,30 @@ Deno.test('dataEntitiesPayloadSchema supports delete action for super-admin work
   assertEquals(dataEntitiesPayloadSchema.safeParse(deleteWithInteractionsPayload).success, true);
 });
 
+Deno.test('dataEntitiesPayloadSchema supports entity list and search index actions', () => {
+  const listPayload = {
+    action: 'list',
+    entity_type: 'Client',
+    agency_id: '11111111-1111-4111-8111-111111111111',
+    include_archived: false,
+    orphans_only: false
+  };
+
+  const prospectListPayload = {
+    action: 'list',
+    entity_type: 'Prospect'
+  };
+  const searchIndexPayload = {
+    action: 'search_index',
+    agency_id: '11111111-1111-4111-8111-111111111111',
+    include_archived: false
+  };
+
+  assertEquals(dataEntitiesPayloadSchema.safeParse(listPayload).success, true);
+  assertEquals(dataEntitiesPayloadSchema.safeParse(prospectListPayload).success, true);
+  assertEquals(dataEntitiesPayloadSchema.safeParse(searchIndexPayload).success, true);
+});
+
 Deno.test('dataEntitiesPayloadSchema supports supplier save action', () => {
   const supplierPayload = {
     action: 'save',
@@ -41,7 +65,7 @@ Deno.test('dataEntitiesPayloadSchema supports supplier save action', () => {
   assertEquals(dataEntitiesPayloadSchema.safeParse(supplierPayload).success, true);
 });
 
-Deno.test('dataEntityContactsPayloadSchema supports only save and delete actions', () => {
+Deno.test('dataEntityContactsPayloadSchema supports list_by_entity, save and delete actions', () => {
   const savePayload = {
     action: 'save',
     entity_id: '11111111-1111-4111-8111-111111111111',
@@ -61,13 +85,14 @@ Deno.test('dataEntityContactsPayloadSchema supports only save and delete actions
   };
 
   const listPayload = {
-    action: 'list',
-    entity_id: '11111111-1111-4111-8111-111111111111'
+    action: 'list_by_entity',
+    entity_id: '11111111-1111-4111-8111-111111111111',
+    include_archived: false
   };
 
+  assertEquals(dataEntityContactsPayloadSchema.safeParse(listPayload).success, true);
   assertEquals(dataEntityContactsPayloadSchema.safeParse(savePayload).success, true);
   assertEquals(dataEntityContactsPayloadSchema.safeParse(deletePayload).success, true);
-  assertEquals(dataEntityContactsPayloadSchema.safeParse(listPayload).success, false);
 });
 
 Deno.test('dataProfilePayloadSchema supports only password_changed action', () => {

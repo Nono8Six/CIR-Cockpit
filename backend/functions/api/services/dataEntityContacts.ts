@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, asc, eq, isNull, sql } from 'drizzle-orm';
 
 import { entity_contacts } from '../../../drizzle/schema.ts';
 import type { Database } from '../../../../shared/supabase.types.ts';
@@ -16,6 +16,7 @@ import {
 type ContactRow = Database['public']['Tables']['entity_contacts']['Row'];
 
 type SaveContactData = Extract<DataEntityContactsPayload, { action: 'save' }>;
+type ListContactsData = Extract<DataEntityContactsPayload, { action: 'list_by_entity' }>;
 
 type DataEntityContactsDependencies = {
   ensureRateLimit: (scope: string, callerId: string) => Promise<void>;
@@ -102,6 +103,26 @@ const deleteContact = async (db: DbClient, contactId: string): Promise<void> => 
   }
 };
 
+const listContactsByEntity = async (
+  db: DbClient,
+  data: ListContactsData
+): Promise<ContactRow[]> => {
+  const conditions = [eq(entity_contacts.entity_id, data.entity_id)];
+  if (data.include_archived !== true) {
+    conditions.push(isNull(entity_contacts.archived_at));
+  }
+
+  try {
+    return await db
+      .select()
+      .from(entity_contacts)
+      .where(and(...conditions) ?? sql<boolean>`true`)
+      .orderBy(asc(entity_contacts.last_name));
+  } catch {
+    throw httpError(500, 'DB_READ_FAILED', 'Impossible de charger les contacts.');
+  }
+};
+
 export const handleDataEntityContactsAction = async (
   db: DbClient,
   authContext: AuthContext,
@@ -112,6 +133,12 @@ export const handleDataEntityContactsAction = async (
   await dependencies.ensureRateLimit(`data_entity_contacts:${data.action}`, authContext.userId);
 
   switch (data.action) {
+    case 'list_by_entity': {
+      const agencyId = await dependencies.getEntityAgencyId(db, data.entity_id);
+      dependencies.ensureAgencyAccess(authContext, agencyId);
+      const contacts = await listContactsByEntity(db, data);
+      return { request_id: requestId, ok: true, contacts };
+    }
     case 'save': {
       const agencyId = await dependencies.getEntityAgencyId(db, data.entity_id);
       dependencies.ensureAgencyAccess(authContext, agencyId);

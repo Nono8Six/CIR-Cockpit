@@ -22,11 +22,27 @@ const readCode = (value: unknown): string | undefined => {
   return typeof candidate === 'string' ? candidate : undefined;
 };
 
-const createDbMock = (contactRow: ContactRow): { db: DbClient; getInsertedEntityId: () => string | null; getDeletedCount: () => number } => {
+const createDbMock = (contactRow: ContactRow): {
+  db: DbClient;
+  getInsertedEntityId: () => string | null;
+  getDeletedCount: () => number;
+  getListOrderCount: () => number;
+} => {
   let insertedEntityId: string | null = null;
   let deletedCount = 0;
+  let listOrderCount = 0;
 
   const db = {
+    select: () => ({
+      from: () => ({
+        where: () => ({
+          orderBy: () => {
+            listOrderCount += 1;
+            return Promise.resolve([contactRow]);
+          }
+        })
+      })
+    }),
     insert: () => ({
       values: (values: Record<string, unknown>) => {
         insertedEntityId = typeof values.entity_id === 'string' ? values.entity_id : null;
@@ -53,9 +69,36 @@ const createDbMock = (contactRow: ContactRow): { db: DbClient; getInsertedEntity
   return {
     db,
     getInsertedEntityId: () => insertedEntityId,
-    getDeletedCount: () => deletedCount
+    getDeletedCount: () => deletedCount,
+    getListOrderCount: () => listOrderCount
   };
 };
+
+Deno.test('handleDataEntityContactsAction lists contacts by entity', async () => {
+  const contactRow = { id: 'contact-1' } as ContactRow;
+  const mock = createDbMock(contactRow);
+
+  const response = await handleDataEntityContactsAction(
+    mock.db,
+    authContext,
+    'req-list',
+    {
+      action: 'list_by_entity',
+      entity_id: 'entity-1',
+      include_archived: false
+    },
+    {
+      ensureRateLimit: () => Promise.resolve(),
+      getEntityAgencyId: () => Promise.resolve('agency-1'),
+      getContactEntityId: () => Promise.resolve('entity-1'),
+      ensureAgencyAccess: () => 'agency-1'
+    }
+  );
+
+  assertEquals(response.ok, true);
+  assertEquals('contacts' in response, true);
+  assertEquals(mock.getListOrderCount(), 1);
+});
 
 Deno.test('handleDataEntityContactsAction saves contact', async () => {
   const contactRow = { id: 'contact-1' } as ContactRow;

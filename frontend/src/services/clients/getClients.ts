@@ -1,6 +1,7 @@
+import { dataEntitiesListResponseSchema } from 'shared/schemas/api-responses';
 import { Client } from '@/types';
-import { mapPostgrestError } from '@/services/errors/mapPostgrestError';
-import { requireSupabaseClient } from '@/services/supabase/requireSupabaseClient';
+import { createAppError } from '@/services/errors/AppError';
+import { safeRpc } from '@/services/api/safeRpc';
 
 export type GetClientsOptions = {
   agencyId?: string | null;
@@ -8,35 +9,38 @@ export type GetClientsOptions = {
   orphansOnly?: boolean;
 };
 
-export const getClients = async (options: GetClientsOptions = {}): Promise<Client[]> => {
-  const supabase = requireSupabaseClient();
-  const { agencyId, includeArchived = false, orphansOnly = false } = options;
-
-  let query = supabase
-    .from('entities')
-    .select('*')
-    .eq('entity_type', 'Client')
-    .order('name', { ascending: true });
-
-  if (!includeArchived) {
-    query = query.is('archived_at', null);
-  }
-
-  if (orphansOnly) {
-    query = query.is('agency_id', null);
-  } else if (agencyId) {
-    query = query.eq('agency_id', agencyId);
-  }
-
-  const { data, error, status } = await query;
-
-  if (error) {
-    throw mapPostgrestError(error, {
-      operation: 'read',
-      resource: 'les clients',
-      status
+const parseClientsResponse = (payload: unknown): Client[] => {
+  const parsed = dataEntitiesListResponseSchema.safeParse(payload);
+  if (!parsed.success) {
+    throw createAppError({
+      code: 'REQUEST_FAILED',
+      message: 'Reponse serveur invalide.',
+      source: 'edge',
+      details: parsed.error.message
     });
   }
+  return parsed.data.entities;
+};
 
-  return data ?? [];
+export const getClients = async (options: GetClientsOptions = {}): Promise<Client[]> => {
+  const { agencyId, includeArchived = false, orphansOnly = false } = options;
+
+  return safeRpc(
+    (api, init) => api.data.entities.$post({
+      json: {
+        action: 'list',
+        entity_type: 'Client',
+        agency_id: agencyId ?? null,
+        include_archived: includeArchived,
+        orphans_only: orphansOnly
+      }
+    }, init),
+    parseClientsResponse,
+    'Impossible de charger les clients.'
+  ).match(
+    (clients) => clients,
+    (error) => {
+      throw error;
+    }
+  );
 };

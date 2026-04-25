@@ -44,10 +44,10 @@ export default defineConfig({
         'src/hooks/**/__tests__/**'
       ],
       thresholds: {
-        statements: 0,
-        branches: 0,
-        functions: 0,
-        lines: 0,
+        statements: 55,
+        branches: 50,
+        functions: 50,
+        lines: 58,
         'src/services/admin/**/*.ts': {
           statements: 80,
           branches: 70,

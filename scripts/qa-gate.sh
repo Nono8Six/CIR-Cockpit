@@ -32,6 +32,8 @@ echo "[7/9] Backend typecheck..."
 deno check --config backend/deno.json backend/functions/api/index.ts
 echo "[8/9] Backend tests..."
 deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api
+echo "[9/9] Backend integration tests..."
+pnpm run backend:test:integration
 
 echo
 echo "=========================================="

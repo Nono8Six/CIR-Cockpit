@@ -56,6 +56,20 @@ const archiveEntitySchema = z.object({
   archived: z.boolean()
 }).strict();
 
+const listEntitiesSchema = z.object({
+  action: z.literal('list'),
+  entity_type: z.enum(['Client', 'Prospect']),
+  agency_id: z.union([uuidSchema, z.null()]).optional(),
+  include_archived: z.boolean().optional(),
+  orphans_only: z.boolean().optional()
+}).strict();
+
+const searchIndexEntitiesSchema = z.object({
+  action: z.literal('search_index'),
+  agency_id: z.union([uuidSchema, z.null()]),
+  include_archived: z.boolean().optional()
+}).strict();
+
 const deleteEntitySchema = z.object({
   action: z.literal('delete'),
   entity_id: uuidSchema,
@@ -80,6 +94,8 @@ export const dataEntitiesPayloadSchema = z.union([
   saveClientEntitySchema,
   saveProspectEntitySchema,
   saveSupplierEntitySchema,
+  listEntitiesSchema,
+  searchIndexEntitiesSchema,
   archiveEntitySchema,
   deleteEntitySchema,
   convertEntitySchema,
@@ -102,7 +118,14 @@ const deleteContactSchema = z.object({
   contact_id: uuidSchema
 }).strict();
 
+const listEntityContactsSchema = z.object({
+  action: z.literal('list_by_entity'),
+  entity_id: uuidSchema,
+  include_archived: z.boolean().optional()
+}).strict();
+
 export const dataEntityContactsPayloadSchema = z.discriminatedUnion('action', [
+  listEntityContactsSchema,
   saveContactSchema,
   deleteContactSchema
 ]);
