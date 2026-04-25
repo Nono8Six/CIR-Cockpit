@@ -25,7 +25,6 @@ import type {
 import type { ClientPayload } from '@/services/clients/saveClient';
 import type { EntityPayload } from '@/services/entities/saveEntity';
 import { useDirectoryCompanyDetails } from '@/hooks/useDirectoryCompanyDetails';
-import { useDirectoryCompanySearch } from '@/hooks/useDirectoryCompanySearch';
 import { useDirectoryDuplicates } from '@/hooks/useDirectoryDuplicates';
 import type { UserRole } from '@/types';
 
@@ -43,9 +42,7 @@ import type {
 } from './entityOnboarding.types';
 import {
   buildValues,
-  filterCompanySearchGroups,
   getDepartmentFromPostalCode,
-  groupCompanySearchResults,
   toNullable,
 } from './entityOnboarding.utils';
 import {
@@ -54,6 +51,7 @@ import {
 } from './useOnboardingConfig';
 import { useOnboardingCloseGuard } from './useOnboardingCloseGuard';
 import { useOnboardingCompanySelection } from './useOnboardingCompanySelection';
+import { useOnboardingCompanySearch } from './useOnboardingCompanySearch';
 import { useOnboardingIntentControls } from './useOnboardingIntentControls';
 
 export const STEP_DEFINITIONS = [
@@ -327,30 +325,20 @@ export const useEntityOnboardingFlow = ({
     effectiveIntent === 'client' && values.client_kind === 'individual';
   const currentStepIndex = stepper.state.current.index;
 
-  const companySearchQuery = useDirectoryCompanySearch(
-    {
-      query: searchDraft,
-      department: departmentFilter || undefined,
-    },
-    open && stepper.flow.is('company') && !manualEntry && !isIndividualClient,
-  );
-
-  const rawCompanyGroups = useMemo(
-    () => groupCompanySearchResults(companySearchQuery.data?.companies ?? []),
-    [companySearchQuery.data?.companies],
-  );
-  const companyGroups = useMemo(
-    () => filterCompanySearchGroups(rawCompanyGroups, statusFilter),
-    [rawCompanyGroups, statusFilter],
-  );
-  const hasStatusFilteredOutResults =
-    statusFilter !== 'all' &&
-    rawCompanyGroups.length > 0 &&
-    companyGroups.length === 0;
-  const isSearchStale =
-    searchDraft.trim() !== deferredSearchDraft ||
-    departmentFilter.trim() !== deferredDepartmentFilter ||
-    companySearchQuery.isFetching;
+  const {
+    companyGroups,
+    hasStatusFilteredOutResults,
+    isSearchFetching,
+    isSearchStale,
+  } = useOnboardingCompanySearch({
+    deferredDepartmentFilter,
+    deferredSearchDraft,
+    departmentFilter,
+    enabled:
+      open && stepper.flow.is('company') && !manualEntry && !isIndividualClient,
+    searchDraft,
+    statusFilter,
+  });
   const {
     applyCompany,
     clearOfficialSelection,
@@ -892,7 +880,7 @@ export const useEntityOnboardingFlow = ({
     hasStatusFilteredOutResults,
     selectedGroup,
     displaySelectedCompany,
-    isSearchFetching: companySearchQuery.isFetching,
+    isSearchFetching,
     isSearchStale,
 
     duplicateMatches,
