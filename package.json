@@ -42,7 +42,7 @@
       "pnpm --dir frontend exec eslint --max-warnings=0"
     ],
     "shared/**/*.ts": [
-      "pnpm --dir frontend exec eslint --max-warnings=0"
+      "pnpm --dir frontend exec eslint --max-warnings=0 --no-warn-ignored"
     ],
     "backend/functions/api/**/*.ts": [
       "deno lint"

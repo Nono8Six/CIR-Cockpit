@@ -203,6 +203,17 @@ if (frontendSourceFiles) {
   fail(`Runtime prototype UI references remain in frontend/src:\n${frontendSourceFiles}`);
 }
 
+const forbiddenFrontendEntityTableAccess = commandAllowFailure("rg", [
+  "-n",
+  String.raw`\.from\(['"](entities|entity_contacts)['"]\)`,
+  "frontend/src",
+]);
+if (forbiddenFrontendEntityTableAccess) {
+  fail(
+    `Frontend must access entities/entity_contacts through the backend API boundary, not direct Supabase table calls:\n${forbiddenFrontendEntityTableAccess}`,
+  );
+}
+
 const qaGatePs1 = readText("scripts/qa-gate.ps1");
 const qaGateSh = readText("scripts/qa-gate.sh");
 for (const [filename, source] of [
@@ -212,6 +223,9 @@ for (const [filename, source] of [
   if (!source.includes("backend:test:integration")) {
     fail(`${filename} must run backend:test:integration to match docs/qa-runbook.md.`);
   }
+}
+if (!rootPackage.scripts?.["backend:test:integration"]) {
+  fail("package.json must expose backend:test:integration for local and CI QA gates.");
 }
 
 const configSchemaSource = readText("shared/schemas/config.schema.ts");

@@ -14,12 +14,7 @@ import { defineStepper } from '@stepperize/react';
 import { useReducedMotion } from 'motion/react';
 
 import { clientFormSchema } from 'shared/schemas/client.schema';
-import {
-  DEFAULT_AGENCY_SETTINGS,
-  DEFAULT_APP_SETTINGS,
-  resolveOnboardingConfig,
-  type ProductOnboardingConfig,
-} from 'shared/schemas/config.schema';
+import type { ProductOnboardingConfig } from 'shared/schemas/config.schema';
 import { prospectFormSchema } from 'shared/schemas/prospect.schema';
 import type {
   DirectoryCompanySearchResult,
@@ -29,7 +24,6 @@ import type {
 
 import type { ClientPayload } from '@/services/clients/saveClient';
 import type { EntityPayload } from '@/services/entities/saveEntity';
-import { useConfigSnapshot } from '@/hooks/useConfigSnapshot';
 import { useDirectoryCompanyDetails } from '@/hooks/useDirectoryCompanyDetails';
 import { useDirectoryCompanySearch } from '@/hooks/useDirectoryCompanySearch';
 import { useDirectoryDuplicates } from '@/hooks/useDirectoryDuplicates';
@@ -54,6 +48,11 @@ import {
   groupCompanySearchResults,
   toNullable,
 } from './entityOnboarding.utils';
+import {
+  useOnboardingConfig,
+  type DepartmentOption,
+} from './useOnboardingConfig';
+import { useOnboardingCloseGuard } from './useOnboardingCloseGuard';
 
 export const STEP_DEFINITIONS = [
   { id: 'intent', title: 'Type', description: 'Choisir le cadre de creation' },
@@ -84,11 +83,6 @@ export type EntityOnboardingStepper = ReturnType<typeof useStepper>;
 type SavedEntityResult = {
   id?: string;
   client_number?: string | null;
-};
-
-export type DepartmentOption = {
-  value: string;
-  label: string;
 };
 
 export interface UseEntityOnboardingFlowInput {
@@ -225,42 +219,8 @@ export const useEntityOnboardingFlow = ({
   const shouldSkipIntent = mode !== 'convert' && intents.length === 1;
   const isIntentLocked = !shouldSkipIntent && intents.length === 1;
 
-  const configSnapshotQuery = useConfigSnapshot(
-    activeAgencyId,
-    open && Boolean(activeAgencyId),
-  );
-  const configSnapshot = configSnapshotQuery.data ?? {
-    product: DEFAULT_APP_SETTINGS,
-    agency: DEFAULT_AGENCY_SETTINGS,
-    references: {
-      statuses: [],
-      services: [],
-      entities: [],
-      families: [],
-      interaction_types: [],
-      departments: [],
-    },
-  };
-  const onboardingConfig = useMemo(
-    () =>
-      resolveOnboardingConfig(
-        configSnapshot.product.onboarding,
-        configSnapshot.agency.onboarding,
-      ),
-    [configSnapshot.agency.onboarding, configSnapshot.product.onboarding],
-  );
-  const departmentOptions = useMemo<DepartmentOption[]>(
-    () =>
-      configSnapshot.references.departments.map((department) => ({
-        value: department.code,
-        label:
-          department.label === department.code
-            ? department.code
-            : `${department.code} - ${department.label}`,
-      })),
-    [configSnapshot.references.departments],
-  );
-  const isConfigReady = !open || !activeAgencyId || !configSnapshotQuery.isLoading;
+  const { onboardingConfig, departmentOptions, isConfigReady } =
+    useOnboardingConfig(activeAgencyId, open);
   const initialManualEntry =
     initialEntity?.client_kind === 'individual' ||
     (mode === 'convert' && !initialEntity?.name);
@@ -645,49 +605,14 @@ export const useEntityOnboardingFlow = ({
     selectedGroupId !== null;
   const hasUnsavedProgress = isDirty || hasLocalDraft;
 
-  useEffect(() => {
-    if (!open || !hasUnsavedProgress) {
-      return;
-    }
-
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-      event.returnValue = '';
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [hasUnsavedProgress, open]);
-
-  const confirmClose = useCallback(() => {
-    setIsCloseConfirmOpen(false);
-    onOpenChange(false);
-  }, [onOpenChange]);
-
-  const requestClose = useCallback(() => {
-    if (isSaving) {
-      return;
-    }
-
-    if (hasUnsavedProgress) {
-      setIsCloseConfirmOpen(true);
-      return;
-    }
-
-    onOpenChange(false);
-  }, [hasUnsavedProgress, isSaving, onOpenChange]);
-
-  const handleDialogOpenChange = useCallback(
-    (nextOpen: boolean) => {
-      if (nextOpen) {
-        onOpenChange(nextOpen);
-        return;
-      }
-
-      requestClose();
-    },
-    [onOpenChange, requestClose],
-  );
+  const { confirmClose, requestClose, handleDialogOpenChange } =
+    useOnboardingCloseGuard({
+      open,
+      isSaving,
+      hasUnsavedProgress,
+      onOpenChange,
+      setIsCloseConfirmOpen,
+    });
 
   const handleIntentChange = useCallback(
     (intent: OnboardingIntent) => {
