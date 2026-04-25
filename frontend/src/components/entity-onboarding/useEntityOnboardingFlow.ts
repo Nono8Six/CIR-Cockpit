@@ -53,6 +53,7 @@ import {
   type DepartmentOption,
 } from './useOnboardingConfig';
 import { useOnboardingCloseGuard } from './useOnboardingCloseGuard';
+import { useOnboardingIntentControls } from './useOnboardingIntentControls';
 
 export const STEP_DEFINITIONS = [
   { id: 'intent', title: 'Type', description: 'Choisir le cadre de creation' },
@@ -614,71 +615,17 @@ export const useEntityOnboardingFlow = ({
       setIsCloseConfirmOpen,
     });
 
-  const handleIntentChange = useCallback(
-    (intent: OnboardingIntent) => {
-      if (!intents.includes(intent)) {
-        return;
-      }
-
-      form.setValue('intent', intent, { shouldDirty: true });
-      if (intent !== 'client') {
-        form.setValue('client_kind', 'company', { shouldDirty: true });
-        form.setValue('account_type', onboardingConfig.default_account_type_company, {
-          shouldDirty: true,
-          shouldValidate: true,
-        });
-        form.setValue('cir_commercial_id', '', {
-          shouldDirty: true,
-          shouldValidate: true,
-        });
-      }
-      setStepError(null);
-    },
-    [form, intents, onboardingConfig.default_account_type_company],
-  );
-
-  const handleClientKindChange = useCallback(
-    (clientKind: 'company' | 'individual') => {
-      form.setValue('client_kind', clientKind, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-
-      if (clientKind === 'individual') {
-        form.setValue('account_type', onboardingConfig.default_account_type_individual, {
-          shouldDirty: true,
-          shouldValidate: true,
-        });
-        form.setValue('cir_commercial_id', '', {
-          shouldDirty: true,
-          shouldValidate: true,
-        });
-        clearOfficialSelection();
-        setManualEntry(true);
-        setStepError(null);
-        return;
-      }
-
-      form.setValue(
-        'account_type',
-        initialEntity?.account_type ?? onboardingConfig.default_account_type_company,
-        {
-          shouldDirty: true,
-          shouldValidate: true,
-        },
-      );
-      setManualEntry(initialManualEntry);
-      setStepError(null);
-    },
-    [
+  const { handleClientKindChange, handleIntentChange } =
+    useOnboardingIntentControls({
       clearOfficialSelection,
       form,
-      initialEntity?.account_type,
+      initialAccountType: initialEntity?.account_type,
       initialManualEntry,
-      onboardingConfig.default_account_type_company,
-      onboardingConfig.default_account_type_individual,
-    ],
-  );
+      intents,
+      onboardingConfig,
+      setManualEntry,
+      setStepError,
+    });
 
   const handleGroupSelect = useCallback(
     (groupId: string) => {
