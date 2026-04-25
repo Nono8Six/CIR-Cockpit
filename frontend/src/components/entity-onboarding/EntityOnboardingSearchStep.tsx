@@ -6,7 +6,6 @@ import {
   LoaderCircle,
   MapPin,
   Search,
-  UserRound,
   AlertTriangle,
 } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
@@ -19,7 +18,6 @@ import type {
 } from "shared/schemas/directory.schema";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
@@ -33,10 +31,8 @@ import type {
   DuplicateMatch,
   CompanySearchStatusFilter,
 } from "./entityOnboarding.types";
-import {
-  formatOfficialDate,
-  getDepartmentFromPostalCode,
-} from "./entityOnboarding.utils";
+import { formatOfficialDate } from "./entityOnboarding.utils";
+import EntityOnboardingIndividualSearchStep from "./EntityOnboardingIndividualSearchStep";
 
 const getMatchBadgeLabel = (
   quality: DirectoryCompanySearchMatchQuality,
@@ -79,8 +75,6 @@ interface EntityOnboardingSearchStepProps {
   onOpenDuplicate?: (record: DirectoryListRow) => void;
 }
 
-const inputGhostClasses =
-  "h-10 rounded-md border border-border bg-surface-1/60 px-3 text-base font-medium text-foreground shadow-sm transition-[border-color,background-color,box-shadow] hover:border-border-strong hover:bg-background focus-visible:border-primary focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-primary/20 sm:text-[14px]";
 const labelClasses =
   "text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground";
 
@@ -204,164 +198,10 @@ const EntityOnboardingSearchStep = ({
   selectedCompany,
   onEstablishmentSelect,
 }: EntityOnboardingSearchStepProps) => {
-  const { errors } = form.formState;
   const reducedMotion = useReducedMotion();
 
   if (isIndividualClient) {
-    return (
-      <div className="flex h-full flex-col space-y-10">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <UserRound className="size-4" />
-            <span>Client particulier</span>
-          </div>
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Identite du particulier
-          </h2>
-          <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
-            Saisis les coordonnees. La verification des doublons se met a jour
-            en temps reel dans le panneau de droite.
-          </p>
-        </div>
-
-        <div className="grid gap-x-12 gap-y-8 md:grid-cols-2">
-          <div className="space-y-2">
-            <label htmlFor="individual-last-name" className={labelClasses}>
-              Nom
-            </label>
-            <Input
-              id="individual-last-name"
-              density="dense"
-              {...form.register("last_name")}
-              className={inputGhostClasses}
-            />
-            {errors.last_name?.message ? (
-              <p className="text-xs text-destructive">
-                {errors.last_name.message}
-              </p>
-            ) : null}
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="individual-first-name" className={labelClasses}>
-              Prenom
-            </label>
-            <Input
-              id="individual-first-name"
-              density="dense"
-              {...form.register("first_name")}
-              className={inputGhostClasses}
-            />
-            {errors.first_name?.message ? (
-              <p className="text-xs text-destructive">
-                {errors.first_name.message}
-              </p>
-            ) : null}
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="individual-phone" className={labelClasses}>
-              Telephone
-            </label>
-            <Input
-              id="individual-phone"
-              type="tel"
-              autoComplete="tel"
-              density="dense"
-              {...form.register("phone")}
-              className={cn(inputGhostClasses, "font-mono tabular-nums")}
-            />
-            {errors.phone?.message ? (
-              <p className="text-xs text-destructive">{errors.phone.message}</p>
-            ) : null}
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="individual-email" className={labelClasses}>
-              Email
-            </label>
-            <Input
-              id="individual-email"
-              type="email"
-              autoComplete="email"
-              spellCheck={false}
-              density="dense"
-              {...form.register("email")}
-              className={inputGhostClasses}
-            />
-            {errors.email?.message ? (
-              <p className="text-xs text-destructive">{errors.email.message}</p>
-            ) : null}
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="individual-postal-code" className={labelClasses}>
-              Code postal
-            </label>
-            <Input
-              id="individual-postal-code"
-              inputMode="numeric"
-              autoComplete="postal-code"
-              spellCheck={false}
-              density="dense"
-              value={values.postal_code}
-              onChange={(event) => {
-                const digits = event.target.value
-                  .replace(/\D/g, "")
-                  .slice(0, 5);
-                form.setValue("postal_code", digits, {
-                  shouldDirty: true,
-                  shouldValidate: true,
-                });
-                form.setValue(
-                  "department",
-                  digits.length >= 2 ? getDepartmentFromPostalCode(digits) : "",
-                  { shouldDirty: true },
-                );
-              }}
-              className={cn(inputGhostClasses, "font-mono tabular-nums")}
-            />
-            {errors.postal_code?.message ? (
-              <p className="text-xs text-destructive">
-                {errors.postal_code.message}
-              </p>
-            ) : null}
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="individual-city" className={labelClasses}>
-              Ville
-            </label>
-            <Input
-              id="individual-city"
-              autoComplete="address-level2"
-              density="dense"
-              {...form.register("city")}
-              className={inputGhostClasses}
-            />
-            {errors.city?.message ? (
-              <p className="text-xs text-destructive">{errors.city.message}</p>
-            ) : null}
-          </div>
-
-          <div className="space-y-2 md:col-span-2">
-            <label htmlFor="individual-address" className={labelClasses}>
-              Adresse
-            </label>
-            <Input
-              id="individual-address"
-              autoComplete="street-address"
-              density="dense"
-              {...form.register("address")}
-              className={inputGhostClasses}
-            />
-            <p className="text-xs text-muted-foreground/60">
-              Optionnelle. Peut etre completee a l&apos;etape suivante.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
+    return <EntityOnboardingIndividualSearchStep form={form} values={values} />;
   }
 
   return (
