@@ -146,6 +146,7 @@ Portee actuelle de la gate couverture (Vitest):
 4. `src/services/auth/**`
 5. `src/services/entities/**`
 6. `src/services/errors/**`
+7. Seuils additionnels specifiques sur certains hooks, composants UI et utilitaires selon `frontend/vitest.config.ts`.
 
 Si UI/parcours impacte:
 
@@ -157,7 +158,7 @@ PASS:
 1. Toutes les commandes retournent exit code 0.
 2. `check:error-compliance` retourne `Error compliance check passed.`
 3. Build Vite termine sans erreur.
-4. Couverture Vitest respecte les seuils bloquants `80/70/80/80`.
+4. Couverture Vitest respecte les seuils configures dans `frontend/vitest.config.ts`: global `55/50/50/58`, domaines critiques `80/70/80/80`, et seuils cibles explicites.
 
 FAIL:
 1. Un seul echec bloque la livraison.
@@ -434,3 +435,6 @@ Copier-coller ce bloc dans PR, ticket, ou message de livraison:
 3. `docs/stack.md`
 4. `docs/plan.md`
 5. `frontend/scripts/check-error-compliance.mjs`
+6. `.github/workflows/qa.yml`
+7. `scripts/qa-gate.ps1`
+8. `scripts/qa-gate.sh`

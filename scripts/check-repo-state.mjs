@@ -276,6 +276,14 @@ for (const requiredTable of [
   }
 }
 
+const drizzleSchemaSource = readText("backend/drizzle/schema.ts");
+const interactionsSchemaMatch = drizzleSchemaSource.match(
+  /export const interactions = pgTable\('interactions', \{(?<body>[\s\S]*?)\n\}\);/,
+);
+if (!interactionsSchemaMatch?.groups?.body.includes("id: text('id').$type<string>().primaryKey()")) {
+  fail("backend/drizzle/schema.ts must model interactions.id as text to match the live Supabase column.");
+}
+
 const rootDeno = readJson("deno.json");
 const backendDeno = readJson("backend/deno.json");
 const rootImports = rootDeno.imports ?? {};

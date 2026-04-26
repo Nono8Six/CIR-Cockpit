@@ -1,5 +1,6 @@
 import { assert, assertEquals, assertThrows } from 'std/assert';
 
+import { listAdminAuditLogs, listAdminUsers } from './adminQueries.ts';
 import { handleAdminUsersAction } from './adminUsers.ts';
 import {
   buildDisplayName,
@@ -12,6 +13,11 @@ import {
 
 Deno.test('handleAdminUsersAction is exported', () => {
   assert(typeof handleAdminUsersAction === 'function');
+});
+
+Deno.test('admin query handlers are exported', () => {
+  assert(typeof listAdminUsers === 'function');
+  assert(typeof listAdminAuditLogs === 'function');
 });
 
 Deno.test('validatePasswordPolicy accepts valid password', () => {

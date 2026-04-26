@@ -45,6 +45,18 @@ export const agency_members = pgTable('agency_members', {
   updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
 });
 
+export const audit_logs = pgTable('audit_logs', {
+  id: uuid('id').$type<string>().defaultRandom().primaryKey(),
+  action: text('action').notNull(),
+  actor_id: uuid('actor_id').$type<string | null>(),
+  actor_is_super_admin: boolean('actor_is_super_admin').$type<boolean>().default(false).notNull(),
+  agency_id: uuid('agency_id').$type<string | null>(),
+  entity_table: text('entity_table').notNull(),
+  entity_id: text('entity_id').notNull(),
+  metadata: jsonb('metadata').$type<Database['public']['Tables']['audit_logs']['Row']['metadata']>().notNull(),
+  created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull()
+});
+
 export const directory_saved_views = pgTable('directory_saved_views', {
   id: uuid('id').$type<string>().defaultRandom().primaryKey(),
   user_id: uuid('user_id').$type<string>().notNull(),
@@ -121,7 +133,7 @@ export const entity_contacts = pgTable('entity_contacts', {
 });
 
 export const interactions = pgTable('interactions', {
-  id: uuid('id').$type<string>().primaryKey(),
+  id: text('id').$type<string>().primaryKey(),
   agency_id: uuid('agency_id').$type<string | null>(),
   channel: text('channel').notNull(),
   entity_type: text('entity_type').notNull(),
@@ -209,6 +221,7 @@ export const drizzleSchema = {
   agencies,
   profiles,
   agency_members,
+  audit_logs,
   directory_saved_views,
   app_settings,
   agency_settings,

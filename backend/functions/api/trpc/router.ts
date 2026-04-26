@@ -3,6 +3,8 @@ import {
   configSaveAgencyResponseSchema,
   configSaveProductResponseSchema,
   adminAgenciesResponseSchema,
+  adminAuditLogsResponseSchema,
+  adminUsersListResponseSchema,
   adminUsersResponseSchema,
   dataConfigResponseSchema,
   dataEntitiesRouteResponseSchema,
@@ -53,8 +55,13 @@ import {
   directorySavedViewSetDefaultInputSchema,
   directorySavedViewsListInputSchema
 } from '../../../../shared/schemas/directory.schema.ts';
-import { adminUsersPayloadSchema } from '../../../../shared/schemas/user.schema.ts';
+import {
+  adminAuditLogsInputSchema,
+  adminUsersListInputSchema,
+  adminUsersPayloadSchema
+} from '../../../../shared/schemas/user.schema.ts';
 import { handleAdminAgenciesAction } from '../services/adminAgencies.ts';
+import { listAdminAuditLogs, listAdminUsers } from '../services/adminQueries.ts';
 import { handleAdminUsersAction } from '../services/adminUsers.ts';
 import { saveAgencyConfigSettings, saveProductConfigSettings } from '../services/configSettings.ts';
 import { getConfigSnapshot } from '../services/configSnapshot.ts';
@@ -129,6 +136,14 @@ export const appRouter = router({
       .query(withAuthedHandler(lookupCockpitPhone))
   }),
   admin: router({
+    'users-list': superAdminProcedure
+      .input(adminUsersListInputSchema)
+      .output(adminUsersListResponseSchema)
+      .query(withSuperAdminHandler(listAdminUsers)),
+    'audit-logs': authedProcedure
+      .input(adminAuditLogsInputSchema)
+      .output(adminAuditLogsResponseSchema)
+      .query(withAuthedDualDbHandler(listAdminAuditLogs, (_input, db) => db)),
     users: superAdminProcedure
       .input(adminUsersPayloadSchema)
       .output(adminUsersResponseSchema)

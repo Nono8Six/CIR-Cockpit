@@ -88,9 +88,10 @@ Comportement config:
 Source de verite: `frontend/vitest.config.ts`.
 
 Seuils globaux et scopes principaux:
-1. Thresholds explicites par domaine `src/services/**` (80/70/80/80 sur statements/branches/functions/lines pour les domaines critiques).
-2. Thresholds definis pour des groupes de hooks cibles.
-3. Inclusion coverage definie via `coverage.include` et exclusions via `coverage.exclude`.
+1. Seuil global minimal: `55/50/50/58` sur statements/branches/functions/lines.
+2. Domaines critiques `src/services/admin/**`, `src/services/agency/**`, `src/services/api/**`, `src/services/auth/**`, `src/services/entities/**`, `src/services/errors/**`: `80/70/80/80`.
+3. Thresholds specifiques definis pour des groupes de hooks, composants UI et utilitaires cibles.
+4. Inclusion coverage definie via `coverage.include` et exclusions via `coverage.exclude`.
 
 Verification:
 1. Executer `pnpm --dir frontend run test:coverage`.
@@ -99,5 +100,6 @@ Verification:
 
 ## CI/CD et execution locale
 
-Le projet n'a pas de workflow GitHub CI actif.
-La validation est manuelle et bloquante en local via `pnpm run qa` et `docs/qa-runbook.md`.
+Le workflow GitHub Actions `.github/workflows/qa.yml` est actif sur pull request et `workflow_dispatch`.
+Il installe pnpm, Node, Deno, prepare `backend/.env` depuis l'exemple si necessaire, puis lance `pnpm run qa`.
+La validation locale reste bloquante via `pnpm run qa` et `docs/qa-runbook.md`; un check CI vert ne remplace pas le rapport QA manuel demande par le runbook.

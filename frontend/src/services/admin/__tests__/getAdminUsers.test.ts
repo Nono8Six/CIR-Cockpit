@@ -1,71 +1,52 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import type { TrpcClient } from '@/services/api/trpcClient';
+import { invokeTrpc } from '@/services/api/safeTrpc';
 import { getAdminUsers } from '@/services/admin/getAdminUsers';
-import { requireSupabaseClient } from '@/services/supabase/requireSupabaseClient';
 
-vi.mock('../../supabase/requireSupabaseClient');
+vi.mock('../../api/safeTrpc');
 
-const mockRequireSupabase = vi.mocked(requireSupabaseClient);
-
-const makePostgrestError = (overrides: Partial<{ code: string; message: string; details: string | null }> = {}) => ({
-  code: overrides.code ?? 'PGRST000',
-  message: overrides.message ?? 'db error',
-  details: overrides.details ?? null,
-  hint: null
-});
+const mockInvokeTrpc = vi.mocked(invokeTrpc);
 
 describe('getAdminUsers', () => {
-  it('falls back to legacy select when first_name/last_name are unavailable', async () => {
-    const profilesOrder = vi
-      .fn()
-      .mockResolvedValueOnce({
-        data: null,
-        error: makePostgrestError({
-          code: 'PGRST204',
-          message: "Could not find the 'first_name' column of 'profiles' in the schema cache"
-        }),
-        status: 400
-      })
-      .mockResolvedValueOnce({
-        data: [
+  it('calls the admin users-list tRPC query and returns validated users', async () => {
+    mockInvokeTrpc.mockImplementationOnce(async (call, parser) => {
+      const query = vi.fn();
+      const client = {
+        admin: {
+          'users-list': { query }
+        }
+      } as unknown as TrpcClient;
+
+      await call(client, { context: { headers: { 'x-request-id': 'users-test' } } });
+      expect(query).toHaveBeenCalledWith({}, { context: { headers: { 'x-request-id': 'users-test' } } });
+
+      return parser({
+        ok: true,
+        users: [
           {
-            id: 'u1',
+            id: '11111111-1111-4111-8111-111111111111',
             email: 'a.ferron@cir.fr',
             display_name: 'FERRON Arnaud',
+            first_name: 'Arnaud',
+            last_name: 'FERRON',
             role: 'super_admin',
             archived_at: null,
-            created_at: '2026-02-10T10:00:00.000Z'
+            created_at: '2026-02-10T10:00:00.000Z',
+            memberships: [
+              {
+                agency_id: '22222222-2222-4222-8222-222222222222',
+                agency_name: 'CIR Paris'
+              }
+            ]
           }
-        ],
-        error: null,
-        status: 200
+        ]
       });
-
-    const profilesSelect = vi.fn().mockReturnValue({ order: profilesOrder });
-    const membershipsSelect = vi.fn().mockResolvedValue({
-      data: [{ user_id: 'u1', agency_id: 'agency-1', agencies: { id: 'agency-1', name: 'CIR Paris' } }],
-      error: null,
-      status: 200
     });
 
-    const from = vi.fn((table: string) => {
-      if (table === 'profiles') return { select: profilesSelect };
-      if (table === 'agency_members') return { select: membershipsSelect };
-      return { select: vi.fn() };
-    });
-
-    mockRequireSupabase.mockReturnValue({ from } as never);
-
-    const result = await getAdminUsers();
-
-    expect(profilesSelect).toHaveBeenNthCalledWith(
-      1,
-      'id, email, display_name, first_name, last_name, role, archived_at, created_at, is_system'
-    );
-    expect(profilesSelect).toHaveBeenNthCalledWith(2, 'id, email, display_name, role, archived_at, created_at');
-    expect(result).toEqual([
+    await expect(getAdminUsers()).resolves.toEqual([
       {
-        id: 'u1',
+        id: '11111111-1111-4111-8111-111111111111',
         email: 'a.ferron@cir.fr',
         display_name: 'FERRON Arnaud',
         first_name: 'Arnaud',
@@ -73,92 +54,22 @@ describe('getAdminUsers', () => {
         role: 'super_admin',
         archived_at: null,
         created_at: '2026-02-10T10:00:00.000Z',
-        memberships: [{ agency_id: 'agency-1', agency_name: 'CIR Paris' }]
+        memberships: [
+          {
+            agency_id: '22222222-2222-4222-8222-222222222222',
+            agency_name: 'CIR Paris'
+          }
+        ]
       }
     ]);
-    expect(from).toHaveBeenCalledWith('profiles');
-    expect(from).toHaveBeenCalledWith('agency_members');
   });
 
-  it('filters out system users when is_system is available', async () => {
-    const profilesOrder = vi.fn().mockResolvedValue({
-      data: [
-        {
-          id: 'u1',
-          email: 'a.ferron@cir.fr',
-          display_name: 'FERRON Arnaud',
-          first_name: 'Arnaud',
-          last_name: 'FERRON',
-          role: 'super_admin',
-          archived_at: null,
-          created_at: '2026-02-10T10:00:00.000Z',
-          is_system: false
-        },
-        {
-          id: 'u-system',
-          email: 'system+agency-test@cir.invalid',
-          display_name: 'SYSTEME Agence',
-          first_name: 'Agence',
-          last_name: 'SYSTEME',
-          role: 'tcs',
-          archived_at: null,
-          created_at: '2026-02-10T10:00:00.000Z',
-          is_system: true
-        }
-      ],
-      error: null,
-      status: 200
-    });
-
-    const profilesSelect = vi.fn().mockReturnValue({ order: profilesOrder });
-    const membershipsSelect = vi.fn().mockResolvedValue({
-      data: [],
-      error: null,
-      status: 200
-    });
-
-    const from = vi.fn((table: string) => {
-      if (table === 'profiles') return { select: profilesSelect };
-      if (table === 'agency_members') return { select: membershipsSelect };
-      return { select: vi.fn() };
-    });
-
-    mockRequireSupabase.mockReturnValue({ from } as never);
-
-    const result = await getAdminUsers();
-
-    expect(result).toHaveLength(1);
-    expect(result[0].id).toBe('u1');
-  });
-
-  it('throws a mapped error when profile loading fails without fallback condition', async () => {
-    const profilesOrder = vi.fn().mockResolvedValue({
-      data: null,
-      error: makePostgrestError({
-        code: '42501',
-        message: 'permission denied for table profiles'
-      }),
-      status: 403
-    });
-
-    const profilesSelect = vi.fn().mockReturnValue({ order: profilesOrder });
-    const membershipsSelect = vi.fn().mockResolvedValue({
-      data: [],
-      error: null,
-      status: 200
-    });
-
-    const from = vi.fn((table: string) => {
-      if (table === 'profiles') return { select: profilesSelect };
-      if (table === 'agency_members') return { select: membershipsSelect };
-      return { select: vi.fn() };
-    });
-
-    mockRequireSupabase.mockReturnValue({ from } as never);
+  it('rejects invalid response payloads', async () => {
+    mockInvokeTrpc.mockImplementationOnce(async (_call, parser) => parser({ ok: true, users: [{ id: '' }] }));
 
     await expect(getAdminUsers()).rejects.toMatchObject({
-      code: 'AUTH_FORBIDDEN',
-      message: 'Accès non autorisé.'
+      code: 'EDGE_INVALID_RESPONSE',
+      message: 'Reponse serveur invalide.'
     });
   });
 });

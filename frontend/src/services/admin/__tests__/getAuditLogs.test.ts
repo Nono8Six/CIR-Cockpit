@@ -1,139 +1,127 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import { createAppError } from '@/services/errors/AppError';
-import { mapPostgrestError } from '@/services/errors/mapPostgrestError';
+import type { TrpcClient } from '@/services/api/trpcClient';
+import { invokeTrpc } from '@/services/api/safeTrpc';
 import { getAuditLogs } from '@/services/admin/getAuditLogs';
-import { requireSupabaseClient } from '@/services/supabase/requireSupabaseClient';
 
-vi.mock('../../supabase/requireSupabaseClient');
-vi.mock('../../errors/mapPostgrestError');
+vi.mock('../../api/safeTrpc');
 
-type QueryResponse = {
-  data: unknown;
-  error: unknown;
-  status: number;
-};
-
-type AuditQuery = Promise<QueryResponse> & {
-  select: ReturnType<typeof vi.fn>;
-  order: ReturnType<typeof vi.fn>;
-  limit: ReturnType<typeof vi.fn>;
-  eq: ReturnType<typeof vi.fn>;
-  gte: ReturnType<typeof vi.fn>;
-  lte: ReturnType<typeof vi.fn>;
-};
-
-const mockRequireSupabase = vi.mocked(requireSupabaseClient);
-const mockMapPostgrestError = vi.mocked(mapPostgrestError);
-
-const asSupabaseClient = (client: object): ReturnType<typeof requireSupabaseClient> =>
-  client as unknown as ReturnType<typeof requireSupabaseClient>;
-
-const createAuditQuery = (response: QueryResponse): AuditQuery => {
-  const query = Promise.resolve(response) as AuditQuery;
-  query.select = vi.fn(() => query);
-  query.order = vi.fn(() => query);
-  query.limit = vi.fn(() => query);
-  query.eq = vi.fn(() => query);
-  query.gte = vi.fn(() => query);
-  query.lte = vi.fn(() => query);
-  return query;
-};
+const mockInvokeTrpc = vi.mocked(invokeTrpc);
 
 describe('getAuditLogs', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('applies filters and normalizes actor/agency payloads', async () => {
-    const query = createAuditQuery({
-      data: [
-        {
-          id: 'audit-1',
-          action: 'profile.update',
-          entity_table: 'profiles',
-          entity_id: 'user-1',
-          metadata: { key: 'value' },
-          created_at: '2026-02-20T10:00:00.000Z',
-          actor_id: 'user-1',
-          actor_is_super_admin: false,
-          agency_id: 'agency-1',
-          actor: { id: 'user-1', display_name: 'Jean Dupont', email: 'jean@cir.fr' },
-          agency: { id: 'agency-1', name: 'CIR Paris' }
-        },
-        {
-          id: '',
-          action: 'invalid'
+  it('maps filters to the admin audit-logs tRPC query and returns validated logs', async () => {
+    mockInvokeTrpc.mockImplementationOnce(async (call, parser) => {
+      const query = vi.fn();
+      const client = {
+        admin: {
+          'audit-logs': { query }
         }
-      ],
-      error: null,
-      status: 200
-    });
-    const from = vi.fn(() => ({ select: vi.fn(() => query) }));
-    mockRequireSupabase.mockReturnValue(asSupabaseClient({ from }));
+      } as unknown as TrpcClient;
 
-    const result = await getAuditLogs({
-      agencyId: 'agency-1',
-      actorId: 'user-1',
+      await call(client, { context: { headers: { 'x-request-id': 'audit-test' } } });
+      expect(query).toHaveBeenCalledWith(
+        {
+          agency_id: '22222222-2222-4222-8222-222222222222',
+          actor_id: '11111111-1111-4111-8111-111111111111',
+          entity_table: 'profiles',
+          from: '2026-02-01T00:00:00.000Z',
+          to: '2026-02-28T23:59:59.999Z',
+          limit: 50
+        },
+        { context: { headers: { 'x-request-id': 'audit-test' } } }
+      );
+
+      return parser({
+        ok: true,
+        logs: [
+          {
+            id: '33333333-3333-4333-8333-333333333333',
+            action: 'profile.update',
+            entity_table: 'profiles',
+            entity_id: '11111111-1111-4111-8111-111111111111',
+            metadata: { key: 'value' },
+            created_at: '2026-02-20T10:00:00.000Z',
+            actor_id: '11111111-1111-4111-8111-111111111111',
+            actor_is_super_admin: false,
+            agency_id: '22222222-2222-4222-8222-222222222222',
+            actor: {
+              id: '11111111-1111-4111-8111-111111111111',
+              display_name: 'Jean Dupont',
+              email: 'jean@cir.fr'
+            },
+            agency: {
+              id: '22222222-2222-4222-8222-222222222222',
+              name: 'CIR Paris'
+            }
+          }
+        ]
+      });
+    });
+
+    await expect(getAuditLogs({
+      agencyId: '22222222-2222-4222-8222-222222222222',
+      actorId: '11111111-1111-4111-8111-111111111111',
       entityTable: 'profiles',
       from: '2026-02-01T00:00:00.000Z',
       to: '2026-02-28T23:59:59.999Z',
       limit: 50
-    });
-
-    expect(from).toHaveBeenCalledWith('audit_logs');
-    expect(query.eq).toHaveBeenCalledWith('agency_id', 'agency-1');
-    expect(query.eq).toHaveBeenCalledWith('actor_id', 'user-1');
-    expect(query.eq).toHaveBeenCalledWith('entity_table', 'profiles');
-    expect(query.gte).toHaveBeenCalledWith('created_at', '2026-02-01T00:00:00.000Z');
-    expect(query.lte).toHaveBeenCalledWith('created_at', '2026-02-28T23:59:59.999Z');
-    expect(result).toEqual([
+    })).resolves.toEqual([
       {
-        id: 'audit-1',
+        id: '33333333-3333-4333-8333-333333333333',
         action: 'profile.update',
         entity_table: 'profiles',
-        entity_id: 'user-1',
+        entity_id: '11111111-1111-4111-8111-111111111111',
         metadata: { key: 'value' },
         created_at: '2026-02-20T10:00:00.000Z',
-        actor_id: 'user-1',
+        actor_id: '11111111-1111-4111-8111-111111111111',
         actor_is_super_admin: false,
-        agency_id: 'agency-1',
+        agency_id: '22222222-2222-4222-8222-222222222222',
         actor: {
-          id: 'user-1',
+          id: '11111111-1111-4111-8111-111111111111',
           display_name: 'Jean Dupont',
           email: 'jean@cir.fr'
         },
         agency: {
-          id: 'agency-1',
+          id: '22222222-2222-4222-8222-222222222222',
           name: 'CIR Paris'
         }
       }
     ]);
   });
 
-  it('maps postgrest errors', async () => {
-    const mappedError = createAppError({
-      code: 'DB_READ_FAILED',
-      message: 'Erreur audits.',
-      source: 'db'
-    });
-    mockMapPostgrestError.mockReturnValue(mappedError);
+  it('sends null filters by default', async () => {
+    mockInvokeTrpc.mockImplementationOnce(async (call, parser) => {
+      const query = vi.fn();
+      const client = {
+        admin: {
+          'audit-logs': { query }
+        }
+      } as unknown as TrpcClient;
 
-    const query = createAuditQuery({
-      data: null,
-      error: { message: 'permission denied' },
-      status: 403
+      await call(client, {});
+      expect(query).toHaveBeenCalledWith(
+        {
+          agency_id: null,
+          actor_id: null,
+          entity_table: null,
+          from: null,
+          to: null,
+          limit: undefined
+        },
+        {}
+      );
+      return parser({ ok: true, logs: [] });
     });
-    mockRequireSupabase.mockReturnValue(
-      asSupabaseClient({
-        from: vi.fn(() => ({ select: vi.fn(() => query) }))
-      })
-    );
 
-    await expect(getAuditLogs()).rejects.toBe(mappedError);
-    expect(mockMapPostgrestError).toHaveBeenCalledWith(
-      { message: 'permission denied' },
-      { operation: 'read', resource: 'les audits', status: 403 }
-    );
+    await expect(getAuditLogs()).resolves.toEqual([]);
+  });
+
+  it('rejects invalid response payloads', async () => {
+    mockInvokeTrpc.mockImplementationOnce(async (_call, parser) => parser({ ok: true, logs: [{ id: '' }] }));
+
+    await expect(getAuditLogs()).rejects.toMatchObject({
+      code: 'EDGE_INVALID_RESPONSE',
+      message: 'Reponse serveur invalide.'
+    });
   });
 });

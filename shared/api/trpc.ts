@@ -6,6 +6,8 @@ import {
   configSaveAgencyResponseSchema,
   configSaveProductResponseSchema,
   adminAgenciesResponseSchema,
+  adminAuditLogsResponseSchema,
+  adminUsersListResponseSchema,
   adminUsersResponseSchema,
   dataConfigResponseSchema,
   dataEntitiesRouteResponseSchema,
@@ -54,7 +56,11 @@ import {
   directorySavedViewSetDefaultInputSchema,
   directorySavedViewsListInputSchema
 } from '../schemas/directory.schema.ts';
-import { adminUsersPayloadSchema } from '../schemas/user.schema.ts';
+import {
+  adminAuditLogsInputSchema,
+  adminUsersListInputSchema,
+  adminUsersPayloadSchema
+} from '../schemas/user.schema.ts';
 
 const t = initTRPC.create();
 
@@ -92,6 +98,14 @@ const appRouterType = t.router({
       .query(() => undefined as never)
   }),
   admin: t.router({
+    'users-list': t.procedure
+      .input(adminUsersListInputSchema)
+      .output(adminUsersListResponseSchema)
+      .query(() => undefined as never),
+    'audit-logs': t.procedure
+      .input(adminAuditLogsInputSchema)
+      .output(adminAuditLogsResponseSchema)
+      .query(() => undefined as never),
     users: t.procedure
       .input(adminUsersPayloadSchema)
       .output(adminUsersResponseSchema)

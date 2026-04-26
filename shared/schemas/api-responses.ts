@@ -57,6 +57,48 @@ const adminAgencySummarySchema = z.object({
   archived_at: z.string().nullable()
 }).strict();
 
+const adminUserMembershipSchema = z.object({
+  agency_id: agencyIdSchema,
+  agency_name: z.string().trim().min(1, "Nom d'agence requis")
+}).strict();
+
+const adminUserSummarySchema = z.object({
+  id: profileIdSchema,
+  email: z.string().trim().min(1, 'Email requis'),
+  display_name: z.string().nullable(),
+  first_name: z.string().nullable(),
+  last_name: z.string().nullable(),
+  role: userRoleSchema,
+  archived_at: z.string().nullable(),
+  created_at: z.string().trim().min(1, 'Date de creation requise'),
+  memberships: z.array(adminUserMembershipSchema)
+}).strict();
+
+const auditLogActorSchema = z.object({
+  id: profileIdSchema,
+  display_name: z.string().nullable(),
+  email: z.string().trim().min(1, 'Email requis')
+}).strict();
+
+const auditLogAgencySchema = z.object({
+  id: agencyIdSchema,
+  name: z.string().trim().min(1, "Nom d'agence requis")
+}).strict();
+
+const adminAuditLogEntrySchema = z.object({
+  id: z.string().trim().min(1, 'Identifiant audit requis'),
+  action: z.string().trim().min(1, 'Action requise'),
+  entity_table: z.string().trim().min(1, 'Table requise'),
+  entity_id: z.string().trim().min(1, 'Identifiant entite requis'),
+  metadata: z.unknown(),
+  created_at: z.string().trim().min(1, 'Date de creation requise'),
+  actor_id: profileIdSchema.nullable(),
+  actor_is_super_admin: z.boolean(),
+  agency_id: agencyIdSchema.nullable(),
+  actor: auditLogActorSchema.nullable(),
+  agency: auditLogAgencySchema.nullable()
+}).strict();
+
 export const dataEntitiesResponseSchema = apiSuccessSchema.extend({
   entity: entityRowSchema,
   propagated_interactions_count: z.number().int().nonnegative().optional(),
@@ -241,6 +283,14 @@ export const adminUsersResponseSchema = z.union([
   adminUsersDeleteResponseSchema
 ]);
 
+export const adminUsersListResponseSchema = apiSuccessSchema.extend({
+  users: z.array(adminUserSummarySchema)
+}).strict();
+
+export const adminAuditLogsResponseSchema = apiSuccessSchema.extend({
+  logs: z.array(adminAuditLogEntrySchema)
+}).strict();
+
 export type ApiSuccess = z.infer<typeof apiSuccessSchema>;
 export type DataEntitiesResponse = z.infer<typeof dataEntitiesResponseSchema>;
 export type DataEntitiesListResponse = z.infer<typeof dataEntitiesListResponseSchema>;
@@ -269,9 +319,14 @@ export type DirectorySavedViewsListResponse = z.infer<typeof directorySavedViews
 export type DirectorySavedViewResponse = z.infer<typeof directorySavedViewResponseSchema>;
 export type DirectorySavedViewDeleteResponse = z.infer<typeof directorySavedViewDeleteResponseSchema>;
 export type AdminAgencySummary = z.infer<typeof adminAgencySummarySchema>;
+export type AdminUserMembership = z.infer<typeof adminUserMembershipSchema>;
+export type AdminUserSummary = z.infer<typeof adminUserSummarySchema>;
+export type AdminAuditLogEntry = z.infer<typeof adminAuditLogEntrySchema>;
 export type AdminAgenciesAgencyResponse = z.infer<typeof adminAgenciesAgencyResponseSchema>;
 export type AdminAgenciesDeleteResponse = z.infer<typeof adminAgenciesDeleteResponseSchema>;
 export type AdminAgenciesResponse = z.infer<typeof adminAgenciesResponseSchema>;
+export type AdminUsersListResponse = z.infer<typeof adminUsersListResponseSchema>;
+export type AdminAuditLogsResponse = z.infer<typeof adminAuditLogsResponseSchema>;
 export type AdminUsersCreateResponse = z.infer<typeof adminUsersCreateResponseSchema>;
 export type AdminUsersSetRoleResponse = z.infer<typeof adminUsersSetRoleResponseSchema>;
 export type AdminUsersUpdateIdentityResponse = z.infer<typeof adminUsersUpdateIdentityResponseSchema>;

@@ -120,9 +120,22 @@ export const adminUsersPayloadSchema = z.discriminatedUnion('action', [
   deleteUserSchema
 ]);
 
+export const adminUsersListInputSchema = z.object({}).strict();
+
+export const adminAuditLogsInputSchema = z.object({
+  agency_id: uuidSchema.nullish(),
+  actor_id: uuidSchema.nullish(),
+  entity_table: z.string().trim().min(1, 'Table requise').max(80, 'Table trop longue').nullish(),
+  from: z.string().trim().datetime({ offset: true }).nullish(),
+  to: z.string().trim().datetime({ offset: true }).nullish(),
+  limit: z.number().int().min(1, 'Limite invalide').max(500, 'Limite trop elevee').optional()
+}).strict();
+
 export type UserCreateFormValues = z.infer<typeof userCreateFormSchema>;
 export type UserIdentityFormValues = z.infer<typeof userIdentityFormSchema>;
 export type UserMembershipsFormValues = z.infer<typeof userMembershipsFormSchema>;
 export type AdminUsersPayload = z.infer<typeof adminUsersPayloadSchema>;
+export type AdminUsersListInput = z.infer<typeof adminUsersListInputSchema>;
+export type AdminAuditLogsInput = z.infer<typeof adminAuditLogsInputSchema>;
 export type UserRole = z.infer<typeof userRoleSchema>;
 export type MembershipMode = z.infer<typeof membershipModeSchema>;

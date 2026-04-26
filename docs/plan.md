@@ -218,4 +218,100 @@ Elle ne conserve que l'etat reellement verifie par commandes et tests.
 - `pnpm --dir frontend run lint` -> PASS.
 - `pnpm --dir frontend exec vitest run src/components/__tests__/EntityOnboardingDialog.test.tsx src/components/cockpit/__tests__/CockpitFormDialogs.test.tsx` -> PASS (`10` tests).
 - `pnpm run qa:fast` -> PASS (`425` tests frontend, `138` tests backend).
+
+## 2026-04-26 - Frontiere API admin/audit
+
+### Corrige
+
+- [x] migrer `getAdminUsers` hors lecture Supabase directe vers la procedure tRPC `admin.users-list`.
+- [x] migrer `getAuditLogs` hors lecture Supabase directe vers la procedure tRPC `admin.audit-logs`.
+- [x] ajouter les schemas partages d'entree/sortie admin/audit dans `shared/schemas`.
+- [x] ajouter `audit_logs` au schema Drizzle parce que la procedure backend lit cette table.
+- [x] conserver les droits live: liste utilisateurs reservee `super_admin`; audit logs accessibles aux `super_admin` et aux `agency_admin` uniquement sur leurs agences.
+- [x] remplacer les tests frontend PostgREST/Supabase directs par des tests de contrat tRPC.
+
+### Validation reexecutee
+
+- MCP Supabase `list_tables(public, verbose=true)` + SQL `pg_policies`/`pg_indexes` sur `profiles`, `agency_members`, `audit_logs`, `agencies` -> droits et indexes requalifies.
+- Context7 tRPC v11 -> contrat `input`/`output` Zod et route type-only miroir confirmes.
+- `pnpm --dir frontend run test:run -- src/services/admin/__tests__/getAdminUsers.test.ts src/services/admin/__tests__/getAuditLogs.test.ts src/services/admin/__tests__/admin.rpc-services.test.ts` -> PASS (`18` tests).
+- `deno check --config backend/deno.json backend/functions/api/index.ts` -> PASS.
+- `deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api/services/adminUsers_test.ts backend/functions/api/trpc/router_test.ts` -> PASS (`23` tests).
+- `pnpm --dir frontend run typecheck` -> PASS.
+- `deno lint backend/functions/api` -> PASS.
+- MCP Supabase `list_edge_functions` -> `api` ACTIVE version 37, `verify_jwt=false`, entrypoint/import map attendus.
+- MCP Supabase advisors -> securite: `auth_leaked_password_protection` WARN connu; performance: `unused_index` INFO observation-only, aucune action de suppression.
+- `pnpm run qa:fast` -> PASS (`425` tests frontend, `140` tests backend, `8` ignores).
+- `pnpm run qa` -> PASS avec coverage, build frontend, lint/typecheck/tests backend et runner integration (`9` ignores hors environnement dedie).
+- Deploy prod `supabase functions deploy api --project-ref rbjtrcorlezvocayluok --use-api --import-map deno.json --no-verify-jwt` -> PASS.
+- MCP Supabase `list_edge_functions` apres deploy -> `api` ACTIVE version 38, `verify_jwt=false`, hash `04800a6bad825c417245e82f94331428589fae3964aac9cd51adf8efff2b06a0`.
+- Probe CORS prod `OPTIONS /functions/v1/api/trpc/admin.audit-logs` avec `Origin: http://localhost:3000` -> PASS `200`. Avec `Origin: https://cir-cockpit.com` -> `403`, origine non autorisee par la configuration actuelle.
 - `pnpm run qa` -> PASS (`117` fichiers de tests frontend, `425` tests frontend, `138` tests backend, `9` integrations backend ignorees hors environnement dedie).
+
+## 2026-04-26 - Audit architecture et QA docs
+
+### Corrige
+
+- [x] restaurer `docs/plan.md` comme roadmap globale vivante apres suppression locale non desiree.
+- [x] mettre a jour `docs/audit-base-projet-architecture-qa.md` pour refleter l'etat reel: P0 tRPC clos, P0 QA/docs clos, avancements Phase 4 annuaire/onboarding integres, dettes restantes qualifiees.
+- [x] corriger `docs/testing.md` pour documenter le workflow GitHub Actions actif (`.github/workflows/qa.yml`) et l'execution de `pnpm run qa`.
+- [x] clarifier les seuils Vitest dans `docs/testing.md` et `docs/qa-runbook.md`: global `55/50/50/58`, domaines critiques `80/70/80/80`, seuils cibles explicites dans `frontend/vitest.config.ts`.
+- [x] verifier que `package.json` garde `scripts/qa-gate.ps1` comme gate executable de `pnpm run qa`, avec `scripts/qa-gate.sh` comme miroir synchronise.
+
+### Validation reexecutee
+
+- `pnpm run repo:check` -> PASS.
+- `git diff --check -- docs/testing.md docs/qa-runbook.md docs/audit-base-projet-architecture-qa.md` -> PASS avec avertissements LF/CRLF uniquement.
+- Relecture croisee de `docs/testing.md`, `docs/qa-runbook.md`, `package.json`, `scripts/qa-gate.ps1`, `scripts/qa-gate.sh`, `.github/workflows/qa.yml` et `frontend/vitest.config.ts` -> PASS.
+
+### Reste a traiter
+
+- [x] formaliser la frontiere API Supabase direct vs backend/tRPC dans `docs/audit-base-projet-architecture-qa.md` (traite dans la section suivante).
+- [ ] garder la gouvernance GitHub required checks comme sujet plateforme Phase 6, distinct de la correction documentaire QA/docs.
+
+## 2026-04-26 - Frontiere API Supabase direct vs backend
+
+### Corrige
+
+- [x] inventorier les usages Supabase directs frontend avec `rg` sur `requireSupabaseClient`, `supabase.from(...)`, `supabase.auth`, `channel(...)`, `safeTrpc` et `invokeTrpc`.
+- [x] formaliser dans `docs/audit-base-projet-architecture-qa.md` la regle canonique:
+  - Supabase direct autorise pour auth/session/realtime et bootstrap minimal borne par RLS;
+  - backend/tRPC obligatoire pour mutations metier, admin, audit, workflows multi-table, validation serveur, service role, rate limiting et logique cross-agency.
+- [x] classer les usages existants en `autorise`, `tolere temporairement` et `a migrer`.
+
+### Reste a traiter
+
+- [x] migrer `frontend/src/services/admin/getAdminUsers.ts` et `frontend/src/services/admin/getAuditLogs.ts` vers des procedures backend/tRPC.
+- [ ] migrer `frontend/src/services/interactions/getInteractions.ts` et `frontend/src/services/interactions/getKnownCompanies.ts` vers `data.interactions` ou une procedure dediee.
+- [ ] migrer `frontend/src/services/interactions/getInteractionDraft.ts`, `saveInteractionDraft.ts` et `deleteInteractionDraft.ts` si le workflow brouillon continue d'evoluer.
+- [ ] migrer `frontend/src/services/agency/setProfileActiveAgencyId.ts` si la preference agence doit etre auditee ou valider une logique multi-agence stricte.
+
+## 2026-04-26 - Audit alignement DB/types/schemas
+
+### Corrige
+
+- [x] requalifier via MCP Supabase les tables ciblees `profiles`, `agency_members`, `agencies`, `audit_logs`, `interactions`, `interaction_drafts`, `entities` et `entity_contacts`.
+- [x] verifier les colonnes, nullabilites, contraintes, policies RLS, indexes et volumes live des tables ciblees.
+- [x] verifier que `shared/supabase.types.ts` reflete les tables auditees du schema live genere par MCP (`PostgrestVersion: "14.1"`).
+- [x] clarifier que `backend/drizzle/schema.ts` est une couche partielle de requetes, pas la source exhaustive du schema Supabase.
+- [x] clarifier que les schemas Zod partages sont des contrats API/formulaires, pas un miroir DB colonne par colonne.
+- [x] documenter les divergences a traiter avant refactor lourd: `interactions.id` live `text` vs Drizzle `uuid`, `entities.department` live strictement 2 chiffres vs schema client 2-3 chiffres, validation transitoire des brouillons vs `interaction_drafts.agency_id` non nullable.
+- [x] aligner `backend/drizzle/schema.ts` sur le schema live pour `interactions.id`: colonne Drizzle passee de `uuid('id')` a `text('id').$type<string>().primaryKey()`, sans migration DB.
+- [x] ajouter un garde-fou `pnpm run repo:check` qui bloque le retour de `interactions.id` en `uuid` dans Drizzle.
+
+### Reste a traiter
+
+- [ ] trancher la strategie departements pour `entities.department` avant d'accepter des codes hors `^[0-9]{2}$` dans les fiches clients.
+- [ ] migrer les lectures directes restantes interactions/brouillons en s'appuyant sur les contraintes live et schemas partages verifies.
+- [ ] ajouter un controle de drift explicite repo/runtime/schema/types si la phase DB reprend.
+
+### Validation reexecutee
+
+- MCP Supabase `list_tables(public)` -> PASS: 20 tables publiques, RLS activee partout.
+- MCP Supabase `generate_typescript_types` -> PASS: types generes disponibles, `PostgrestVersion: "14.1"`.
+- MCP SQL `information_schema.columns`, `pg_policies`, `pg_indexes`, `pg_constraint` sur tables ciblees -> PASS: constats integres dans `docs/audit-base-projet-architecture-qa.md`.
+- Relecture locale ciblee `backend/migrations`, `shared/supabase.types.ts`, `backend/drizzle/schema.ts`, `shared/schemas/*`, services frontend/backend touches par les tables ciblees -> PASS documentaire.
+- `deno check --config backend/deno.json backend/functions/api/index.ts` -> PASS apres correction Drizzle.
+- `pnpm run repo:check` -> PASS avec garde-fou `interactions.id` actif.
+- `pnpm run qa:fast` -> PASS (`425` tests frontend, `138` tests backend).
+- `pnpm run qa` -> PASS (`425` tests frontend avec coverage/build, `138` tests backend, `9` integrations backend ignorees hors environnement dedie).
