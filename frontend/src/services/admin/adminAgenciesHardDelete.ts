@@ -2,7 +2,7 @@ import {
   adminAgenciesDeleteResponseSchema,
   type AdminAgenciesDeleteResponse
 } from 'shared/schemas/api-responses';
-import { safeRpc } from '@/services/api/safeRpc';
+import { safeTrpc } from '@/services/api/safeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 
 export type AdminAgencyDeleteResponse = AdminAgenciesDeleteResponse;
@@ -21,13 +21,11 @@ const parseAdminAgencyDeleteResponse = (payload: unknown): AdminAgencyDeleteResp
 };
 
 export const adminAgenciesHardDelete = (agencyId: string) =>
-  safeRpc(
-    (api, init) => api.admin.agencies.$post({
-      json: {
+  safeTrpc(
+    (api, options) => api.admin.agencies.mutate({
       action: 'hard_delete',
       agency_id: agencyId
-      }
-    }, init),
+      }, options),
     parseAdminAgencyDeleteResponse,
     "Impossible de supprimer l'agence."
   );

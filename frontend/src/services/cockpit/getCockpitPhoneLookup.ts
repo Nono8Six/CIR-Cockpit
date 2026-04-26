@@ -3,10 +3,9 @@ import {
   type CockpitPhoneLookupInput,
   type CockpitPhoneLookupResponse
 } from 'shared/schemas/cockpit.schema';
-
-import { callTrpcQuery } from '@/services/api/trpcClient';
+
 import { createAppError } from '@/services/errors/AppError';
-import { invokeTrpc } from '@/services/api/invokeTrpc';
+import { invokeTrpc } from '@/services/api/safeTrpc';
 
 const parseCockpitPhoneLookupResponse = (payload: unknown): CockpitPhoneLookupResponse => {
   const parsed = cockpitPhoneLookupResponseSchema.safeParse(payload);
@@ -26,7 +25,7 @@ export const getCockpitPhoneLookup = (
   input: CockpitPhoneLookupInput
 ): Promise<CockpitPhoneLookupResponse> =>
   invokeTrpc(
-    () => callTrpcQuery('cockpit.phone-lookup', input),
+    (api, options) => api.cockpit['phone-lookup'].query(input, options),
     parseCockpitPhoneLookupResponse,
     "Impossible de rechercher l'historique du numero."
   );

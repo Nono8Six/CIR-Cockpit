@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { RpcClient } from '@/services/api/rpcClient';
-import { safeRpc } from '@/services/api/safeRpc';
+import type { TrpcClient } from '@/services/api/trpcClient';
+import { safeTrpc } from '@/services/api/safeTrpc';
 import { getClients } from '@/services/clients/getClients';
 import { convertEntityToClient } from '@/services/entities/convertEntityToClient';
 import { deleteEntityContact } from '@/services/entities/deleteEntityContact';
@@ -12,30 +12,30 @@ import { reassignEntity } from '@/services/entities/reassignEntity';
 import { saveEntity } from '@/services/entities/saveEntity';
 import { saveEntityContact } from '@/services/entities/saveEntityContact';
 
-vi.mock('../../api/safeRpc');
+vi.mock('../../api/safeTrpc');
 
-type SafeRpcCall = Parameters<typeof safeRpc>[0];
-type SafeRpcParser = Parameters<typeof safeRpc>[1];
+type SafeRpcCall = Parameters<typeof safeTrpc>[0];
+type SafeRpcParser = Parameters<typeof safeTrpc>[1];
 
-const mockSafeRpc = vi.mocked(safeRpc);
+const mockSafeRpc = vi.mocked(safeTrpc);
 
-const createRpcClient = () => {
+const createTrpcClientFixture = () => {
   const entitiesPost = vi.fn().mockResolvedValue(new Response('{}', { status: 200 }));
   const entityContactsPost = vi.fn().mockResolvedValue(new Response('{}', { status: 200 }));
 
   const client = {
     data: {
-      profile: { $post: vi.fn() },
-      config: { $post: vi.fn() },
-      entities: { $post: entitiesPost },
-      'entity-contacts': { $post: entityContactsPost },
-      interactions: { $post: vi.fn() }
+      profile: { mutate: vi.fn() },
+      config: { mutate: vi.fn() },
+      entities: { mutate: entitiesPost },
+      'entity-contacts': { mutate: entityContactsPost },
+      interactions: { mutate: vi.fn() }
     },
     admin: {
-      users: { $post: vi.fn() },
-      agencies: { $post: vi.fn() }
+      users: { mutate: vi.fn() },
+      agencies: { mutate: vi.fn() }
     }
-  } as unknown as RpcClient;
+  } as unknown as TrpcClient;
 
   return { client, entitiesPost, entityContactsPost };
 };
@@ -68,20 +68,17 @@ describe('entities RPC services', () => {
     );
 
     const [call, parser] = mockSafeRpc.mock.calls[0] as [SafeRpcCall, SafeRpcParser, string];
-    const { client, entitiesPost } = createRpcClient();
-    await call(client, { headers: { 'x-request-id': 'req-clients' } });
+    const { client, entitiesPost } = createTrpcClientFixture();
+    await call(client, { context: { headers: { 'x-request-id': 'req-clients' } } });
 
-    expect(entitiesPost).toHaveBeenCalledWith(
-      {
-        json: {
+    expect(entitiesPost).toHaveBeenCalledWith({
           action: 'list',
           entity_type: 'Client',
           agency_id: 'agency-1',
           include_archived: true,
           orphans_only: false
-        }
-      },
-      { headers: { 'x-request-id': 'req-clients' } }
+        },
+      { context: { headers: { 'x-request-id': 'req-clients' } } }
     );
 
     const clients = [{ id: 'client-1' }, { id: 'client-2' }];
@@ -96,19 +93,16 @@ describe('entities RPC services', () => {
     await getClients({ orphansOnly: true });
 
     const [call] = mockSafeRpc.mock.calls[0] as [SafeRpcCall, SafeRpcParser, string];
-    const { client, entitiesPost } = createRpcClient();
+    const { client, entitiesPost } = createTrpcClientFixture();
     await call(client, {});
 
-    expect(entitiesPost).toHaveBeenCalledWith(
-      {
-        json: {
+    expect(entitiesPost).toHaveBeenCalledWith({
           action: 'list',
           entity_type: 'Client',
           agency_id: null,
           include_archived: false,
           orphans_only: true
-        }
-      },
+        },
       {}
     );
   });
@@ -130,19 +124,16 @@ describe('entities RPC services', () => {
     );
 
     const [call, parser] = mockSafeRpc.mock.calls[0] as [SafeRpcCall, SafeRpcParser, string];
-    const { client, entitiesPost } = createRpcClient();
+    const { client, entitiesPost } = createTrpcClientFixture();
     await call(client, {});
 
-    expect(entitiesPost).toHaveBeenCalledWith(
-      {
-        json: {
+    expect(entitiesPost).toHaveBeenCalledWith({
           action: 'list',
           entity_type: 'Prospect',
           agency_id: 'agency-1',
           include_archived: true,
           orphans_only: false
-        }
-      },
+        },
       {}
     );
 
@@ -164,17 +155,14 @@ describe('entities RPC services', () => {
     );
 
     const [call, parser] = mockSafeRpc.mock.calls[0] as [SafeRpcCall, SafeRpcParser, string];
-    const { client, entityContactsPost } = createRpcClient();
+    const { client, entityContactsPost } = createTrpcClientFixture();
     await call(client, {});
 
-    expect(entityContactsPost).toHaveBeenCalledWith(
-      {
-        json: {
+    expect(entityContactsPost).toHaveBeenCalledWith({
           action: 'list_by_entity',
           entity_id: 'entity-1',
           include_archived: true
-        }
-      },
+        },
       {}
     );
 
@@ -203,17 +191,14 @@ describe('entities RPC services', () => {
     );
 
     const [call, parser] = mockSafeRpc.mock.calls[0] as [SafeRpcCall, SafeRpcParser, string];
-    const { client, entitiesPost } = createRpcClient();
+    const { client, entitiesPost } = createTrpcClientFixture();
     await call(client, {});
 
-    expect(entitiesPost).toHaveBeenCalledWith(
-      {
-        json: {
+    expect(entitiesPost).toHaveBeenCalledWith({
           action: 'search_index',
           agency_id: 'agency-1',
           include_archived: false
-        }
-      },
+        },
       {}
     );
 
@@ -239,21 +224,18 @@ describe('entities RPC services', () => {
     );
 
     const [call, parser] = mockSafeRpc.mock.calls[0] as [SafeRpcCall, SafeRpcParser, string];
-    const { client, entitiesPost } = createRpcClient();
-    await call(client, { headers: { 'x-request-id': 'req-1' } });
+    const { client, entitiesPost } = createTrpcClientFixture();
+    await call(client, { context: { headers: { 'x-request-id': 'req-1' } } });
 
-    expect(entitiesPost).toHaveBeenCalledWith(
-      {
-        json: {
+    expect(entitiesPost).toHaveBeenCalledWith({
           action: 'convert_to_client',
           entity_id: 'entity-1',
           convert: {
             client_number: '12345',
             account_type: 'term'
           }
-        }
-      },
-      { headers: { 'x-request-id': 'req-1' } }
+        },
+      { context: { headers: { 'x-request-id': 'req-1' } } }
     );
 
     const entity = { id: 'entity-1' };
@@ -267,17 +249,14 @@ describe('entities RPC services', () => {
     deleteEntityContact('contact-1');
 
     const [call, parser] = mockSafeRpc.mock.calls[0] as [SafeRpcCall, SafeRpcParser, string];
-    const { client, entityContactsPost } = createRpcClient();
-    await call(client, { headers: { 'x-request-id': 'req-2' } });
+    const { client, entityContactsPost } = createTrpcClientFixture();
+    await call(client, { context: { headers: { 'x-request-id': 'req-2' } } });
 
-    expect(entityContactsPost).toHaveBeenCalledWith(
-      {
-        json: {
+    expect(entityContactsPost).toHaveBeenCalledWith({
           action: 'delete',
           contact_id: 'contact-1'
-        }
-      },
-      { headers: { 'x-request-id': 'req-2' } }
+        },
+      { context: { headers: { 'x-request-id': 'req-2' } } }
     );
 
     expect(parser({ any: 'value' })).toBeUndefined();
@@ -298,17 +277,14 @@ describe('entities RPC services', () => {
     );
 
     const [call, parser] = mockSafeRpc.mock.calls[0] as [SafeRpcCall, SafeRpcParser, string];
-    const { client, entitiesPost } = createRpcClient();
+    const { client, entitiesPost } = createTrpcClientFixture();
     await call(client, {});
 
-    expect(entitiesPost).toHaveBeenCalledWith(
-      {
-        json: {
+    expect(entitiesPost).toHaveBeenCalledWith({
           action: 'reassign',
           entity_id: 'entity-2',
           target_agency_id: 'agency-2'
-        }
-      },
+        },
       {}
     );
 
@@ -344,12 +320,10 @@ describe('entities RPC services', () => {
     });
 
     let [call, parser] = mockSafeRpc.mock.calls[0] as [SafeRpcCall, SafeRpcParser, string];
-    let { client, entitiesPost } = createRpcClient();
+    let { client, entitiesPost } = createTrpcClientFixture();
     await call(client, {});
 
-    expect(entitiesPost).toHaveBeenCalledWith(
-      {
-        json: {
+    expect(entitiesPost).toHaveBeenCalledWith({
           action: 'save',
           agency_id: 'agency-1',
           entity_type: 'Prospect',
@@ -364,8 +338,7 @@ describe('entities RPC services', () => {
             notes: undefined,
             agency_id: 'agency-1'
           }
-        }
-      },
+        },
       {}
     );
 
@@ -375,17 +348,18 @@ describe('entities RPC services', () => {
       name: 'Client 1',
       agency_id: 'agency-1',
       city: 'Paris',
-      client_number: 'C-001',
+      client_number: '1001',
+      address: '1 rue de Paris',
+      postal_code: '75001',
+      department: '75',
       account_type: 'term'
     });
 
     [call, parser] = mockSafeRpc.mock.calls[1] as [SafeRpcCall, SafeRpcParser, string];
-    ({ client, entitiesPost } = createRpcClient());
+    ({ client, entitiesPost } = createTrpcClientFixture());
     await call(client, {});
 
-    expect(entitiesPost).toHaveBeenCalledWith(
-      {
-        json: {
+    expect(entitiesPost).toHaveBeenCalledWith({
           action: 'save',
           agency_id: 'agency-1',
           entity_type: 'Client',
@@ -393,17 +367,17 @@ describe('entities RPC services', () => {
           entity: {
             name: 'Client 1',
             city: 'Paris',
-            address: undefined,
-            postal_code: undefined,
-            department: undefined,
+            address: '1 rue de Paris',
+            postal_code: '75001',
+            department: '75',
             siret: undefined,
             notes: undefined,
             agency_id: 'agency-1',
-            client_number: 'C-001',
+            client_number: '1001',
+            client_kind: 'company',
             account_type: 'term'
           }
-        }
-      },
+        },
       {}
     );
 
@@ -427,12 +401,10 @@ describe('entities RPC services', () => {
     });
 
     const [call, parser] = mockSafeRpc.mock.calls[0] as [SafeRpcCall, SafeRpcParser, string];
-    const { client, entityContactsPost } = createRpcClient();
+    const { client, entityContactsPost } = createTrpcClientFixture();
     await call(client, {});
 
-    expect(entityContactsPost).toHaveBeenCalledWith(
-      {
-        json: {
+    expect(entityContactsPost).toHaveBeenCalledWith({
           action: 'save',
           entity_id: 'entity-2',
           id: 'contact-2',
@@ -444,8 +416,7 @@ describe('entities RPC services', () => {
             position: 'Directeur',
             notes: 'VIP'
           }
-        }
-      },
+        },
       {}
     );
 

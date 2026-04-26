@@ -252,13 +252,16 @@ for (const requiredRouterFragment of [
   }
 }
 
-const generatedRpcSource = readText("shared/api/generated/rpc-app.ts");
-for (const requiredRpcPath of [
-  "/trpc/config.save-agency",
-  "/trpc/config.save-product",
+const sharedTrpcSource = readText("shared/api/trpc.ts");
+for (const requiredTrpcFragment of [
+  "export type AppRouter",
+  "inferRouterInputs<AppRouter>",
+  "inferRouterOutputs<AppRouter>",
+  "'save-agency': t.procedure",
+  "'save-product': t.procedure",
 ]) {
-  if (!generatedRpcSource.includes(requiredRpcPath)) {
-    fail(`shared/api/generated/rpc-app.ts is missing ${requiredRpcPath}. Run frontend generate:rpc-types.`);
+  if (!sharedTrpcSource.includes(requiredTrpcFragment)) {
+    fail(`shared/api/trpc.ts is missing typed tRPC fragment ${JSON.stringify(requiredTrpcFragment)}.`);
   }
 }
 

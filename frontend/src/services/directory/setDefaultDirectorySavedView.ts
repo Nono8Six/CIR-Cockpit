@@ -4,8 +4,7 @@ import {
 } from 'shared/schemas/api-responses';
 import { type DirectorySavedViewSetDefaultInput } from 'shared/schemas/directory.schema';
 
-import { invokeTrpc } from '@/services/api/invokeTrpc';
-import { callTrpcMutation } from '@/services/api/trpcClient';
+import { invokeTrpc } from '@/services/api/safeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 
 const parseSetDefaultDirectorySavedViewResponse = (payload: unknown): DirectorySavedViewResponse => {
@@ -26,7 +25,7 @@ export const setDefaultDirectorySavedView = (
   input: DirectorySavedViewSetDefaultInput
 ): Promise<DirectorySavedViewResponse> =>
   invokeTrpc(
-    () => callTrpcMutation('directory.saved-views.set-default', input),
+    (api, options) => api.directory['saved-views']['set-default'].mutate(input, options),
     parseSetDefaultDirectorySavedViewResponse,
     'Impossible de definir la vue par defaut.'
   );

@@ -2,7 +2,7 @@ import {
   adminUsersUpdateIdentityResponseSchema,
   type AdminUsersUpdateIdentityResponse
 } from 'shared/schemas/api-responses';
-import { safeRpc } from '@/services/api/safeRpc';
+import { safeTrpc } from '@/services/api/safeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 
 export type UpdateUserIdentityPayload = {
@@ -28,13 +28,11 @@ const parseUpdateUserIdentityResponse = (payload: unknown): UpdateUserIdentityRe
 };
 
 export const adminUsersUpdateIdentity = (payload: UpdateUserIdentityPayload) =>
-  safeRpc(
-    (api, init) => api.admin.users.$post({
-      json: {
+  safeTrpc(
+    (api, options) => api.admin.users.mutate({
       action: 'update_identity',
       ...payload
-      }
-    }, init),
+      }, options),
     parseUpdateUserIdentityResponse,
     "Impossible de mettre a jour l'identite de l'utilisateur."
   );

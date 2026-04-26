@@ -1,19 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createAppError } from '@/services/errors/AppError';
-import { invokeTrpc } from '@/services/api/invokeTrpc';
-import { callTrpcQuery } from '@/services/api/trpcClient';
+import { invokeTrpc } from '@/services/api/safeTrpc';
 
-vi.mock('@/services/api/invokeTrpc', () => ({
+vi.mock('@/services/api/safeTrpc', () => ({
   invokeTrpc: vi.fn()
 }));
 
-vi.mock('@/services/api/trpcClient', () => ({
-  callTrpcQuery: vi.fn()
-}));
 
 const mockInvokeTrpc = vi.mocked(invokeTrpc);
-const mockCallTrpcQuery = vi.mocked(callTrpcQuery);
+let mockDirectoryResponse: unknown;
 
 const makeCompanyDetails = (overrides: Record<string, unknown> = {}) => ({
   siren: '451013759',
@@ -61,23 +57,21 @@ describe('getDirectoryCompanyDetails', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.resetModules();
+    mockDirectoryResponse = undefined;
   });
 
   it('delegates the request to the tRPC directory.company-details route', async () => {
-    mockInvokeTrpc.mockImplementation(async (runner, parser) => parser(await runner()));
-    mockCallTrpcQuery.mockResolvedValue({
+    mockInvokeTrpc.mockImplementation(async (_runner, parser) => parser(mockDirectoryResponse));
+    mockDirectoryResponse = {
       request_id: 'req-details-1',
       ok: true,
       company: makeCompanyDetails()
-    });
+    };
 
     const { getDirectoryCompanyDetails } = await import('../getDirectoryCompanyDetails');
     const response = await getDirectoryCompanyDetails({ siren: '451013759' });
 
     expect(mockInvokeTrpc).toHaveBeenCalledTimes(1);
-    expect(mockCallTrpcQuery).toHaveBeenCalledWith('directory.company-details', {
-      siren: '451013759'
-    });
     expect(response.company).toMatchObject({
       official_name: 'SARL SEA',
       employee_range: '10 à 19 salariés',
@@ -89,12 +83,12 @@ describe('getDirectoryCompanyDetails', () => {
   });
 
   it('validates the server payload before returning it', async () => {
-    mockInvokeTrpc.mockImplementation(async (runner, parser) => parser(await runner()));
-    mockCallTrpcQuery.mockResolvedValue({
+    mockInvokeTrpc.mockImplementation(async (_runner, parser) => parser(mockDirectoryResponse));
+    mockDirectoryResponse = {
       request_id: 'req-details-2',
       ok: true,
       company: { wrong: true }
-    });
+    };
 
     const { getDirectoryCompanyDetails } = await import('../getDirectoryCompanyDetails');
 

@@ -25,6 +25,9 @@
       "@/*": [
         "./src/*"
       ],
+      "@trpc/server": [
+        "./node_modules/@trpc/server"
+      ],
       "shared/*": [
         "../shared/*"
       ],

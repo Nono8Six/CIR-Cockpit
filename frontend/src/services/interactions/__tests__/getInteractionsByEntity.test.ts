@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { type Interaction, Channel } from '@/types';
-import { invokeRpc } from '@/services/api/safeRpc';
+import { invokeTrpc } from '@/services/api/safeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 import { getInteractions } from '@/services/interactions/getInteractions';
 import { getInteractionsByEntity } from '@/services/interactions/getInteractionsByEntity';
 
-vi.mock('@/services/api/safeRpc', () => ({
-  invokeRpc: vi.fn()
+vi.mock('@/services/api/safeTrpc', () => ({
+  invokeTrpc: vi.fn()
 }));
 
 vi.mock('@/services/interactions/getInteractions', () => ({
@@ -47,7 +47,7 @@ const buildInteraction = (
   updated_by: null
 });
 
-const mockInvokeRpc = vi.mocked(invokeRpc);
+const mockInvokeRpc = vi.mocked(invokeTrpc);
 const mockGetInteractions = vi.mocked(getInteractions);
 
 describe('getInteractionsByEntity', () => {

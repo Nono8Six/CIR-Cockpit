@@ -4,8 +4,7 @@ import {
 } from 'shared/schemas/api-responses';
 import { type DirectoryCompanyDetailsInput } from 'shared/schemas/directory.schema';
 
-import { invokeTrpc } from '@/services/api/invokeTrpc';
-import { callTrpcQuery } from '@/services/api/trpcClient';
+import { invokeTrpc } from '@/services/api/safeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 
 const parseDirectoryCompanyDetailsResponse = (
@@ -28,7 +27,7 @@ export const getDirectoryCompanyDetails = async (
   input: DirectoryCompanyDetailsInput
 ): Promise<DirectoryCompanyDetailsResponse> =>
   invokeTrpc(
-    () => callTrpcQuery('directory.company-details', input),
+    (api, options) => api.directory['company-details'].query(input, options),
     parseDirectoryCompanyDetailsResponse,
     "Impossible de charger les informations société."
   );

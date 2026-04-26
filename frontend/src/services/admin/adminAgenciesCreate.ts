@@ -2,7 +2,7 @@ import {
   adminAgenciesAgencyResponseSchema,
   type AdminAgenciesAgencyResponse
 } from 'shared/schemas/api-responses';
-import { safeRpc } from '@/services/api/safeRpc';
+import { safeTrpc } from '@/services/api/safeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 
 export type AdminAgencyResponse = AdminAgenciesAgencyResponse;
@@ -21,13 +21,11 @@ const parseAdminAgencyResponse = (payload: unknown): AdminAgencyResponse => {
 };
 
 export const adminAgenciesCreate = (name: string) =>
-  safeRpc(
-    (api, init) => api.admin.agencies.$post({
-      json: {
+  safeTrpc(
+    (api, options) => api.admin.agencies.mutate({
       action: 'create',
       name
-      }
-    }, init),
+      }, options),
     parseAdminAgencyResponse,
     "Impossible de creer l'agence."
   );

@@ -55,17 +55,16 @@ describe('trpcClient', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     const module = await import('../trpcClient');
-    const result = await module.callTrpcMutation(
-      'data.entities',
-      { action: 'save' },
-      { headers: { 'x-request-id': 'req-1' } }
+    const result = await module.getTrpcClient().data.profile.mutate(
+      { action: 'password_changed' },
+      module.createTrpcCallOptions({ headers: { 'x-request-id': 'req-1' } })
     );
 
     expect(result).toMatchObject({ ok: true });
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(url).toContain('https://demo.supabase.co/functions/v1/api/trpc/data.entities');
+    expect(url).toContain('https://demo.supabase.co/functions/v1/api/trpc/data.profile');
     expect(url).toContain('batch=1');
 
     const headers = new Headers(init.headers);
@@ -99,7 +98,7 @@ describe('trpcClient', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     const module = await import('../trpcClient');
-    await module.callTrpcMutation('data.profile', { action: 'password_changed' });
+    await module.getTrpcClient().data.profile.mutate({ action: 'password_changed' });
 
     expect(refreshSession).toHaveBeenCalledTimes(1);
     const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
@@ -120,7 +119,7 @@ describe('trpcClient', () => {
     const module = await import('../trpcClient');
     let error: unknown;
     try {
-      await module.callTrpcMutation('data.config', { agency_id: 'agency-1' });
+      await module.getTrpcClient().data.profile.mutate({ action: 'password_changed' });
     } catch (caught) {
       error = caught;
     }
@@ -147,10 +146,11 @@ describe('trpcClient', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     const module = await import('../trpcClient');
-    await module.callTrpcMutation('data.entities', { action: 'list' });
-    await module.callTrpcMutation('data.entities', { action: 'list' }, {
-      headers: new Headers([['x-request-id', 'req-cache']])
-    });
+    await module.getTrpcClient().data.profile.mutate({ action: 'password_changed' });
+    await module.getTrpcClient().data.profile.mutate(
+      { action: 'password_changed' },
+      module.createTrpcCallOptions({ headers: new Headers([['x-request-id', 'req-cache']]) })
+    );
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
@@ -191,9 +191,10 @@ describe('trpcClient', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     const module = await import('../trpcClient');
-    await module.callTrpcMutation('data.entities', { action: 'list' }, {
-      headers: [['x-request-id', 'req-array']]
-    });
+    await module.getTrpcClient().data.profile.mutate(
+      { action: 'password_changed' },
+      module.createTrpcCallOptions({ headers: [['x-request-id', 'req-array']] })
+    );
 
     const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     const headers = new Headers(init.headers);

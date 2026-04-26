@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { RpcClient } from '@/services/api/rpcClient';
-import { safeRpc } from '@/services/api/safeRpc';
+import type { TrpcClient } from '@/services/api/trpcClient';
+import { safeTrpc } from '@/services/api/safeTrpc';
 import { adminAgenciesArchive } from '@/services/admin/adminAgenciesArchive';
 import { adminAgenciesCreate } from '@/services/admin/adminAgenciesCreate';
 import { adminAgenciesHardDelete } from '@/services/admin/adminAgenciesHardDelete';
@@ -16,10 +16,10 @@ import { adminUsersSetRole } from '@/services/admin/adminUsersSetRole';
 import { adminUsersUnarchive } from '@/services/admin/adminUsersUnarchive';
 import { adminUsersUpdateIdentity } from '@/services/admin/adminUsersUpdateIdentity';
 
-vi.mock('../../api/safeRpc');
+vi.mock('../../api/safeTrpc');
 
-type SafeRpcCall = Parameters<typeof safeRpc>[0];
-type SafeRpcParser = Parameters<typeof safeRpc>[1];
+type SafeRpcCall = Parameters<typeof safeTrpc>[0];
+type SafeRpcParser = Parameters<typeof safeTrpc>[1];
 
 type RpcCase = {
   label: string;
@@ -30,25 +30,25 @@ type RpcCase = {
   fallbackMessage: string;
 };
 
-const mockSafeRpc = vi.mocked(safeRpc);
+const mockSafeRpc = vi.mocked(safeTrpc);
 
-const createAdminRpcClient = () => {
+const createAdminTrpcClientFixture = () => {
   const usersPost = vi.fn().mockResolvedValue(new Response('{}', { status: 200 }));
   const agenciesPost = vi.fn().mockResolvedValue(new Response('{}', { status: 200 }));
 
   const client = {
     data: {
-      profile: { $post: vi.fn() },
-      config: { $post: vi.fn() },
-      entities: { $post: vi.fn() },
-      'entity-contacts': { $post: vi.fn() },
-      interactions: { $post: vi.fn() }
+      profile: { mutate: vi.fn() },
+      config: { mutate: vi.fn() },
+      entities: { mutate: vi.fn() },
+      'entity-contacts': { mutate: vi.fn() },
+      interactions: { mutate: vi.fn() }
     },
     admin: {
-      users: { $post: usersPost },
-      agencies: { $post: agenciesPost }
+      users: { mutate: usersPost },
+      agencies: { mutate: agenciesPost }
     }
-  } as unknown as RpcClient;
+  } as unknown as TrpcClient;
 
   return { client, usersPost, agenciesPost };
 };
@@ -219,15 +219,12 @@ describe('admin RPC wrappers', () => {
       SafeRpcParser,
       string
     ];
-    const { client, usersPost, agenciesPost } = createAdminRpcClient();
-    await call(client, { headers: { 'x-request-id': 'admin-test' } });
+    const { client, usersPost, agenciesPost } = createAdminTrpcClientFixture();
+    await call(client, { context: { headers: { 'x-request-id': 'admin-test' } } });
 
     const targetPost = scenario.endpoint === 'users' ? usersPost : agenciesPost;
-    expect(targetPost).toHaveBeenCalledWith(
-      {
-        json: scenario.expectedJson
-      },
-      { headers: { 'x-request-id': 'admin-test' } }
+    expect(targetPost).toHaveBeenCalledWith(scenario.expectedJson,
+      { context: { headers: { 'x-request-id': 'admin-test' } } }
     );
     expect(fallback).toBe(scenario.fallbackMessage);
 

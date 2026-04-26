@@ -1,19 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DirectoryListInput } from 'shared/schemas/directory.schema';
 
-import { invokeTrpc } from '@/services/api/invokeTrpc';
-import { callTrpcQuery } from '@/services/api/trpcClient';
+import { invokeTrpc } from '@/services/api/safeTrpc';
 
-vi.mock('@/services/api/invokeTrpc', () => ({
+vi.mock('@/services/api/safeTrpc', () => ({
   invokeTrpc: vi.fn()
 }));
 
-vi.mock('@/services/api/trpcClient', () => ({
-  callTrpcQuery: vi.fn()
-}));
 
 const mockInvokeTrpc = vi.mocked(invokeTrpc);
-const mockCallTrpcQuery = vi.mocked(callTrpcQuery);
+let mockDirectoryResponse: unknown;
 
 const baseInput: DirectoryListInput = {
   q: undefined,
@@ -50,15 +46,15 @@ describe('getDirectoryPage', () => {
   });
 
   it('coerces a missing client_kind from the edge payload to null', async () => {
-    mockInvokeTrpc.mockImplementation(async (runner, parser) => parser(await runner()));
-    mockCallTrpcQuery.mockResolvedValue({
+    mockInvokeTrpc.mockImplementation(async (_runner, parser) => parser(mockDirectoryResponse));
+    mockDirectoryResponse = {
       request_id: 'req-1',
       ok: true,
       rows: [baseRow],
       total: 1,
       page: 1,
       page_size: 50
-    });
+    };
 
     const { getDirectoryPage } = await import('../getDirectoryPage');
     const response = await getDirectoryPage(baseInput);
@@ -68,15 +64,15 @@ describe('getDirectoryPage', () => {
   });
 
   it('coerces an unknown client_kind from the edge payload to null', async () => {
-    mockInvokeTrpc.mockImplementation(async (runner, parser) => parser(await runner()));
-    mockCallTrpcQuery.mockResolvedValue({
+    mockInvokeTrpc.mockImplementation(async (_runner, parser) => parser(mockDirectoryResponse));
+    mockDirectoryResponse = {
       request_id: 'req-2',
       ok: true,
       rows: [{ ...baseRow, client_kind: 'legacy' }],
       total: 1,
       page: 1,
       page_size: 50
-    });
+    };
 
     const { getDirectoryPage } = await import('../getDirectoryPage');
     const response = await getDirectoryPage(baseInput);

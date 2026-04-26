@@ -4,8 +4,7 @@ import {
 } from 'shared/schemas/api-responses';
 import { type DirectoryDuplicatesInput } from 'shared/schemas/directory.schema';
 
-import { invokeTrpc } from '@/services/api/invokeTrpc';
-import { callTrpcQuery } from '@/services/api/trpcClient';
+import { invokeTrpc } from '@/services/api/safeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 
 const parseDirectoryDuplicatesResponse = (payload: unknown): DirectoryDuplicatesResponse => {
@@ -26,7 +25,7 @@ export const getDirectoryDuplicates = async (
   input: DirectoryDuplicatesInput
 ): Promise<DirectoryDuplicatesResponse> =>
   invokeTrpc(
-    () => callTrpcQuery('directory.duplicates', input),
+    (api, options) => api.directory.duplicates.query(input, options),
     parseDirectoryDuplicatesResponse,
     'Impossible de verifier les doublons.'
   );

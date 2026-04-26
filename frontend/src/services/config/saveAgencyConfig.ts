@@ -2,14 +2,14 @@ import { ResultAsync } from 'neverthrow';
 import type { ConfigSaveAgencyInput } from 'shared/schemas/config.schema';
 
 import { type AppError } from '@/services/errors/AppError';
-import { safeRpc } from '@/services/api/safeRpc';
+import { safeTrpc } from '@/services/api/safeTrpc';
 
 const parseVoidResponse = (): void => undefined;
 
 export const saveAgencyConfig = (config: ConfigSaveAgencyInput): ResultAsync<void, AppError> =>
-  safeRpc(
-    async (api, init) => {
-      return api.config['save-agency'].$post({ json: config }, init);
+  safeTrpc(
+    async (api, options) => {
+      return api.config['save-agency'].mutate(config, options);
     },
     parseVoidResponse,
     'Impossible de mettre a jour la configuration.'

@@ -3,7 +3,7 @@ import { ResultAsync } from 'neverthrow';
 import { dataEntitiesResponseSchema } from 'shared/schemas/api-responses';
 import { AccountType, Entity } from '@/types';
 import { createAppError, type AppError } from '@/services/errors/AppError';
-import { safeRpc } from '@/services/api/safeRpc';
+import { safeTrpc } from '@/services/api/safeTrpc';
 
 export type ConvertClientPayload = {
   id: string;
@@ -25,17 +25,15 @@ const parseEntityResponse = (payload: unknown): Entity => {
 };
 
 export const convertEntityToClient = (payload: ConvertClientPayload): ResultAsync<Entity, AppError> =>
-  safeRpc(
-    (api, init) => api.data.entities.$post({
-      json: {
+  safeTrpc(
+    (api, options) => api.data.entities.mutate({
         action: 'convert_to_client',
         entity_id: payload.id,
         convert: {
           client_number: payload.client_number,
           account_type: payload.account_type
         }
-      }
-    }, init),
+      }, options),
     parseEntityResponse,
     'Impossible de convertir en client.'
   );

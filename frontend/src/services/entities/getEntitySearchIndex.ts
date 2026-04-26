@@ -1,7 +1,7 @@
 import { dataEntitiesSearchIndexResponseSchema } from 'shared/schemas/api-responses';
 
 import { Entity, EntityContact } from '@/types';
-import { safeRpc } from '@/services/api/safeRpc';
+import { safeTrpc } from '@/services/api/safeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 
 export type EntitySearchIndex = {
@@ -34,14 +34,12 @@ export const getEntitySearchIndex = async (
     return { entities: [], contacts: [] };
   }
 
-  return safeRpc(
-    (api, init) => api.data.entities.$post({
-      json: {
+  return safeTrpc(
+    (api, options) => api.data.entities.mutate({
         action: 'search_index',
         agency_id: agencyId,
         include_archived: includeArchived
-      }
-    }, init),
+      }, options),
     parseSearchIndexResponse,
     "Impossible de charger l'index de recherche."
   ).match(

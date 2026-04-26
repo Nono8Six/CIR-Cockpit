@@ -1,18 +1,16 @@
 import { ResultAsync } from 'neverthrow';
 
 import { type AppError } from '@/services/errors/AppError';
-import { safeRpc } from '@/services/api/safeRpc';
+import { safeTrpc } from '@/services/api/safeTrpc';
 
 const parseVoidResponse = (): void => undefined;
 
 export const deleteEntityContact = (contactId: string): ResultAsync<void, AppError> =>
-  safeRpc(
-    (api, init) => api.data['entity-contacts'].$post({
-      json: {
+  safeTrpc(
+    (api, options) => api.data['entity-contacts'].mutate({
         action: 'delete',
         contact_id: contactId
-      }
-    }, init),
+      }, options),
     parseVoidResponse,
     'Impossible de supprimer le contact.'
   );

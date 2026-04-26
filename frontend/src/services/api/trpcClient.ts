@@ -1,5 +1,6 @@
-import { createTRPCUntypedClient, httpBatchLink } from '@trpc/client';
-import type { AnyRouter } from '@trpc/server';
+import { createTRPCClient, httpBatchLink } from '@trpc/client';
+
+import type { AppRouter } from 'shared/api/trpc';
 
 import { createAppError } from '@/services/errors/AppError';
 import { requireSupabaseClient } from '@/services/supabase/requireSupabaseClient';
@@ -103,14 +104,16 @@ const createDefaultHeaders = (): Headers => {
   return headers;
 };
 
-let trpcClient: ReturnType<typeof createTRPCUntypedClient<AnyRouter>> | null = null;
+export type TrpcClient = ReturnType<typeof createTRPCClient<AppRouter>>;
 
-const getTrpcClient = () => {
+let trpcClient: TrpcClient | null = null;
+
+export const getTrpcClient = (): TrpcClient => {
   if (trpcClient) {
     return trpcClient;
   }
 
-  trpcClient = createTRPCUntypedClient<AnyRouter>({
+  trpcClient = createTRPCClient<AppRouter>({
     links: [
       httpBatchLink({
         url: getTrpcBaseUrl(),
@@ -141,23 +144,10 @@ const getTrpcClient = () => {
   return trpcClient;
 };
 
-export const callTrpcMutation = (
-  path: string,
-  input: unknown,
+export const createTrpcCallOptions = (
   init?: RequestInit
-): Promise<unknown> =>
-  getTrpcClient().mutation(path, input, {
-    context: init?.headers ? { headers: init.headers } : undefined
-  });
-
-export const callTrpcQuery = (
-  path: string,
-  input: unknown,
-  init?: RequestInit
-): Promise<unknown> =>
-  getTrpcClient().query(path, input, {
-    context: init?.headers ? { headers: init.headers } : undefined
-  });
+): { context?: { headers: HeadersInit } } =>
+  init?.headers ? { context: { headers: init.headers } } : {};
 
 export const buildRpcRequestInit = async (
   init?: RequestInit

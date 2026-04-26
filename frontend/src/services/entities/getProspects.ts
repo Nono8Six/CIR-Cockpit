@@ -1,7 +1,7 @@
 import { dataEntitiesListResponseSchema } from 'shared/schemas/api-responses';
 
 import { Entity } from '@/types';
-import { safeRpc } from '@/services/api/safeRpc';
+import { safeTrpc } from '@/services/api/safeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 
 export type GetProspectsOptions = {
@@ -27,16 +27,14 @@ const parseProspectsResponse = (payload: unknown): Entity[] => {
 export const getProspects = async (options: GetProspectsOptions = {}): Promise<Entity[]> => {
   const { agencyId, includeArchived = false, orphansOnly = false } = options;
 
-  return safeRpc(
-    (api, init) => api.data.entities.$post({
-      json: {
+  return safeTrpc(
+    (api, options) => api.data.entities.mutate({
         action: 'list',
         entity_type: 'Prospect',
         agency_id: agencyId ?? null,
         include_archived: includeArchived,
         orphans_only: orphansOnly
-      }
-    }, init),
+      }, options),
     parseProspectsResponse,
     'Impossible de charger les prospects.'
   ).match(

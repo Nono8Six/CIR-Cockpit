@@ -3,9 +3,8 @@ import {
   type DirectoryListResponse
 } from 'shared/schemas/api-responses';
 import { type DirectoryListInput } from 'shared/schemas/directory.schema';
-import { createAppError } from '@/services/errors/AppError';
-import { callTrpcQuery } from '@/services/api/trpcClient';
-import { invokeTrpc } from '@/services/api/invokeTrpc';
+import { createAppError } from '@/services/errors/AppError';
+import { invokeTrpc } from '@/services/api/safeTrpc';
 
 const parseDirectoryListResponse = (payload: unknown): DirectoryListResponse => {
   const parsed = directoryListResponseSchema.safeParse(payload);
@@ -23,7 +22,7 @@ const parseDirectoryListResponse = (payload: unknown): DirectoryListResponse => 
 
 export const getDirectoryPage = (input: DirectoryListInput): Promise<DirectoryListResponse> =>
   invokeTrpc(
-    () => callTrpcQuery('directory.list', input),
+    (api, options) => api.directory.list.query(input, options),
     parseDirectoryListResponse,
     "Impossible de charger l'annuaire."
   );

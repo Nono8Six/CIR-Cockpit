@@ -4,8 +4,7 @@ import {
 } from 'shared/schemas/api-responses';
 import { type DirectorySavedViewSaveInput } from 'shared/schemas/directory.schema';
 
-import { invokeTrpc } from '@/services/api/invokeTrpc';
-import { callTrpcMutation } from '@/services/api/trpcClient';
+import { invokeTrpc } from '@/services/api/safeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 
 const parseDirectorySavedViewResponse = (payload: unknown): DirectorySavedViewResponse => {
@@ -26,7 +25,7 @@ export const saveDirectorySavedView = (
   input: DirectorySavedViewSaveInput
 ): Promise<DirectorySavedViewResponse> =>
   invokeTrpc(
-    () => callTrpcMutation('directory.saved-views.save', input),
+    (api, options) => api.directory['saved-views'].save.mutate(input, options),
     parseDirectorySavedViewResponse,
     'Impossible de sauvegarder la vue.'
   );

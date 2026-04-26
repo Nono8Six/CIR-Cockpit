@@ -4,8 +4,7 @@ import {
 } from 'shared/schemas/api-responses';
 import { type DirectoryCompanySearchInput } from 'shared/schemas/directory.schema';
 
-import { invokeTrpc } from '@/services/api/invokeTrpc';
-import { callTrpcQuery } from '@/services/api/trpcClient';
+import { invokeTrpc } from '@/services/api/safeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 
 const parseDirectoryCompanySearchResponse = (payload: unknown): DirectoryCompanySearchResponse => {
@@ -26,7 +25,7 @@ export const getDirectoryCompanySearch = async (
   input: DirectoryCompanySearchInput
 ): Promise<DirectoryCompanySearchResponse> =>
   invokeTrpc(
-    () => callTrpcQuery('directory.company-search', input),
+    (api, options) => api.directory['company-search'].query(input, options),
     parseDirectoryCompanySearchResponse,
     "Impossible de rechercher l'entreprise."
   );

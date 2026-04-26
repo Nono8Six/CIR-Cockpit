@@ -3,10 +3,9 @@ import {
   type CockpitAgencyMembersInput,
   type CockpitAgencyMembersResponse
 } from 'shared/schemas/cockpit.schema';
-
-import { callTrpcQuery } from '@/services/api/trpcClient';
+
 import { createAppError } from '@/services/errors/AppError';
-import { invokeTrpc } from '@/services/api/invokeTrpc';
+import { invokeTrpc } from '@/services/api/safeTrpc';
 
 const parseCockpitAgencyMembersResponse = (payload: unknown): CockpitAgencyMembersResponse => {
   const parsed = cockpitAgencyMembersResponseSchema.safeParse(payload);
@@ -26,7 +25,7 @@ export const getCockpitAgencyMembers = (
   input: CockpitAgencyMembersInput
 ): Promise<CockpitAgencyMembersResponse> =>
   invokeTrpc(
-    () => callTrpcQuery('cockpit.agency-members', input),
+    (api, options) => api.cockpit['agency-members'].query(input, options),
     parseCockpitAgencyMembersResponse,
     "Impossible de charger les membres de l'agence."
   );

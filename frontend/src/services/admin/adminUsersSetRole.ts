@@ -2,7 +2,7 @@ import {
   adminUsersSetRoleResponseSchema,
   type AdminUsersSetRoleResponse
 } from 'shared/schemas/api-responses';
-import { safeRpc } from '@/services/api/safeRpc';
+import { safeTrpc } from '@/services/api/safeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 import { UserRole } from '@/types';
 
@@ -22,14 +22,12 @@ const parseSetUserRoleResponse = (payload: unknown): SetUserRoleResponse => {
 };
 
 export const adminUsersSetRole = (userId: string, role: UserRole) =>
-  safeRpc(
-    (api, init) => api.admin.users.$post({
-      json: {
+  safeTrpc(
+    (api, options) => api.admin.users.mutate({
       action: 'set_role',
       user_id: userId,
       role
-      }
-    }, init),
+      }, options),
     parseSetUserRoleResponse,
     'Impossible de mettre a jour le role.'
   );

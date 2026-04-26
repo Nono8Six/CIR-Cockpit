@@ -2,7 +2,7 @@ import {
   adminUsersDeleteResponseSchema,
   type AdminUsersDeleteResponse
 } from 'shared/schemas/api-responses';
-import { safeRpc } from '@/services/api/safeRpc';
+import { safeTrpc } from '@/services/api/safeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 
 export type DeleteUserResponse = AdminUsersDeleteResponse;
@@ -21,13 +21,11 @@ const parseDeleteUserResponse = (payload: unknown): DeleteUserResponse => {
 };
 
 export const adminUsersDelete = (userId: string) =>
-  safeRpc(
-    (api, init) => api.admin.users.$post({
-      json: {
+  safeTrpc(
+    (api, options) => api.admin.users.mutate({
       action: 'delete',
       user_id: userId
-      }
-    }, init),
+      }, options),
     parseDeleteUserResponse,
     "Impossible de supprimer l'utilisateur."
   );

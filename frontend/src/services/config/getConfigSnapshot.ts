@@ -5,8 +5,7 @@ import {
 import type { ConfigGetInput, ResolvedConfigSnapshot } from 'shared/schemas/config.schema';
 
 import { createAppError } from '@/services/errors/AppError';
-import { invokeTrpc } from '@/services/api/invokeTrpc';
-import { callTrpcQuery } from '@/services/api/trpcClient';
+import { invokeTrpc } from '@/services/api/safeTrpc';
 import { getActiveAgencyId } from '@/services/agency/getActiveAgencyId';
 
 const parseConfigGetResponse = (payload: unknown): ConfigGetResponse => {
@@ -34,7 +33,7 @@ export const getConfigSnapshot = async (
 ): Promise<ResolvedConfigSnapshot> => {
   const input = await resolveConfigGetInput(agencyIdOverride);
   const response = await invokeTrpc(
-    () => callTrpcQuery('config.get', input),
+    (api, options) => api.config.get.query(input, options),
     parseConfigGetResponse,
     'Impossible de charger la configuration.'
   );

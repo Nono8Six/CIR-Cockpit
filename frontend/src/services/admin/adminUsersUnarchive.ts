@@ -2,7 +2,7 @@ import {
   adminUsersArchiveResponseSchema,
   type AdminUsersArchiveResponse
 } from 'shared/schemas/api-responses';
-import { safeRpc } from '@/services/api/safeRpc';
+import { safeTrpc } from '@/services/api/safeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 
 export type UnarchiveUserResponse = AdminUsersArchiveResponse;
@@ -21,13 +21,11 @@ const parseUnarchiveUserResponse = (payload: unknown): UnarchiveUserResponse => 
 };
 
 export const adminUsersUnarchive = (userId: string) =>
-  safeRpc(
-    (api, init) => api.admin.users.$post({
-      json: {
+  safeTrpc(
+    (api, options) => api.admin.users.mutate({
       action: 'unarchive',
       user_id: userId
-      }
-    }, init),
+      }, options),
     parseUnarchiveUserResponse,
     "Impossible de reactiver l'utilisateur."
   );

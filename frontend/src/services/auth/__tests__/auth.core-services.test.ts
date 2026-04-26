@@ -5,7 +5,7 @@ import { mapPostgrestError } from '@/services/errors/mapPostgrestError';
 import { mapSupabaseAuthError } from '@/services/errors/mapSupabaseAuthError';
 import { reportError } from '@/services/errors/reportError';
 import { requireSupabaseClient } from '@/services/supabase/requireSupabaseClient';
-import { invokeRpc } from '@/services/api/safeRpc';
+import { invokeTrpc } from '@/services/api/safeTrpc';
 import { getCurrentUserId } from '@/services/auth/getCurrentUserId';
 import { getCurrentUserLabel } from '@/services/auth/getCurrentUserLabel';
 import { getProfile } from '@/services/auth/getProfile';
@@ -18,13 +18,13 @@ vi.mock('../../supabase/requireSupabaseClient');
 vi.mock('../../errors/mapSupabaseAuthError');
 vi.mock('../../errors/mapPostgrestError');
 vi.mock('../../errors/reportError');
-vi.mock('../../api/safeRpc');
+vi.mock('../../api/safeTrpc');
 
 const mockRequireSupabase = vi.mocked(requireSupabaseClient);
 const mockMapSupabaseAuthError = vi.mocked(mapSupabaseAuthError);
 const mockMapPostgrestError = vi.mocked(mapPostgrestError);
 const mockReportError = vi.mocked(reportError);
-const mockInvokeRpc = vi.mocked(invokeRpc);
+const mockInvokeRpc = vi.mocked(invokeTrpc);
 
 const asSupabaseClient = (client: object): ReturnType<typeof requireSupabaseClient> =>
   client as unknown as ReturnType<typeof requireSupabaseClient>;

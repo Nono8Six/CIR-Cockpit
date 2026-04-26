@@ -4,8 +4,7 @@ import {
 } from 'shared/schemas/api-responses';
 import { type DirectoryCitySuggestionsInput } from 'shared/schemas/directory.schema';
 
-import { invokeTrpc } from '@/services/api/invokeTrpc';
-import { callTrpcQuery } from '@/services/api/trpcClient';
+import { invokeTrpc } from '@/services/api/safeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 
 const parseDirectoryCitySuggestionsResponse = (payload: unknown): DirectoryCitySuggestionsResponse => {
@@ -26,7 +25,7 @@ export const getDirectoryCitySuggestions = (
   input: DirectoryCitySuggestionsInput
 ): Promise<DirectoryCitySuggestionsResponse> =>
   invokeTrpc(
-    () => callTrpcQuery('directory.city-suggestions', input),
+    (api, options) => api.directory['city-suggestions'].query(input, options),
     parseDirectoryCitySuggestionsResponse,
     'Impossible de charger les suggestions de villes.'
   );

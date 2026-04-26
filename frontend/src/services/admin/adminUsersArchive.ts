@@ -2,7 +2,7 @@ import {
   adminUsersArchiveResponseSchema,
   type AdminUsersArchiveResponse
 } from 'shared/schemas/api-responses';
-import { safeRpc } from '@/services/api/safeRpc';
+import { safeTrpc } from '@/services/api/safeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 
 export type ArchiveUserResponse = AdminUsersArchiveResponse;
@@ -21,13 +21,11 @@ const parseArchiveUserResponse = (payload: unknown): ArchiveUserResponse => {
 };
 
 export const adminUsersArchive = (userId: string) =>
-  safeRpc(
-    (api, init) => api.admin.users.$post({
-      json: {
+  safeTrpc(
+    (api, options) => api.admin.users.mutate({
       action: 'archive',
       user_id: userId
-      }
-    }, init),
+      }, options),
     parseArchiveUserResponse,
     "Impossible d'archiver l'utilisateur."
   );

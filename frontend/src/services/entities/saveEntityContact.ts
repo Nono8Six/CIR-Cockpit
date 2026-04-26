@@ -3,7 +3,7 @@ import { ResultAsync } from 'neverthrow';
 import { dataEntityContactsResponseSchema } from 'shared/schemas/api-responses';
 import { EntityContact } from '@/types';
 import { createAppError, type AppError } from '@/services/errors/AppError';
-import { safeRpc } from '@/services/api/safeRpc';
+import { safeTrpc } from '@/services/api/safeTrpc';
 
 export type EntityContactPayload = {
   id?: string;
@@ -33,9 +33,8 @@ const parseContactResponse = (payload: unknown): EntityContact => {
 };
 
 export const saveEntityContact = (payload: EntityContactPayload): ResultAsync<EntityContact, AppError> =>
-  safeRpc(
-    (api, init) => api.data['entity-contacts'].$post({
-      json: {
+  safeTrpc(
+    (api, options) => api.data['entity-contacts'].mutate({
         action: 'save',
         entity_id: payload.entity_id,
         id: payload.id,
@@ -47,8 +46,7 @@ export const saveEntityContact = (payload: EntityContactPayload): ResultAsync<En
           position: normalizeOptionalField(payload.position),
           notes: normalizeOptionalField(payload.notes)
         }
-      }
-    }, init),
+      }, options),
     parseContactResponse,
     "Impossible d'enregistrer le contact."
   );

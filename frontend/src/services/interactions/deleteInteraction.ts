@@ -2,7 +2,7 @@ import { ResultAsync } from 'neverthrow';
 
 import { dataInteractionsDeleteResponseSchema } from 'shared/schemas/api-responses';
 import { type AppError, createAppError } from '@/services/errors/AppError';
-import { safeRpc } from '@/services/api/safeRpc';
+import { safeTrpc } from '@/services/api/safeTrpc';
 
 const parseDeleteResponse = (payload: unknown): string => {
   const parsed = dataInteractionsDeleteResponseSchema.safeParse(payload);
@@ -18,13 +18,11 @@ const parseDeleteResponse = (payload: unknown): string => {
 };
 
 export const deleteInteraction = (interactionId: string): ResultAsync<string, AppError> =>
-  safeRpc(
-    (api, init) => api.data.interactions.$post({
-      json: {
+  safeTrpc(
+    (api, options) => api.data.interactions.mutate({
         action: 'delete',
         interaction_id: interactionId
-      }
-    }, init),
+      }, options),
     parseDeleteResponse,
     "Impossible de supprimer l'interaction."
   );

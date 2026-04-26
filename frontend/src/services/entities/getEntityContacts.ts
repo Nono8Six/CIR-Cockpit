@@ -1,7 +1,7 @@
 import { dataEntityContactsListResponseSchema } from 'shared/schemas/api-responses';
 
 import { EntityContact } from '@/types';
-import { safeRpc } from '@/services/api/safeRpc';
+import { safeTrpc } from '@/services/api/safeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 
 const parseContactsResponse = (payload: unknown): EntityContact[] => {
@@ -22,14 +22,12 @@ export const getEntityContacts = async (
   entityId: string,
   includeArchived = false
 ): Promise<EntityContact[]> => {
-  return safeRpc(
-    (api, init) => api.data['entity-contacts'].$post({
-      json: {
+  return safeTrpc(
+    (api, options) => api.data['entity-contacts'].mutate({
         action: 'list_by_entity',
         entity_id: entityId,
         include_archived: includeArchived
-      }
-    }, init),
+      }, options),
     parseContactsResponse,
     'Impossible de charger les contacts.'
   ).match(

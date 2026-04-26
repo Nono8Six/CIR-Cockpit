@@ -2,7 +2,7 @@ import {
   adminUsersCreateResponseSchema,
   type AdminUsersCreateResponse
 } from 'shared/schemas/api-responses';
-import { safeRpc } from '@/services/api/safeRpc';
+import { safeTrpc } from '@/services/api/safeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 import { UserRole } from '@/types';
 
@@ -31,13 +31,11 @@ const parseCreateAdminUserResponse = (payload: unknown): CreateAdminUserResponse
 };
 
 export const adminUsersCreate = (payload: CreateAdminUserPayload) =>
-  safeRpc(
-    (api, init) => api.admin.users.$post({
-      json: {
+  safeTrpc(
+    (api, options) => api.admin.users.mutate({
       action: 'create',
       ...payload
-      }
-    }, init),
+      }, options),
     parseCreateAdminUserResponse,
     "Impossible de creer l'utilisateur."
   );

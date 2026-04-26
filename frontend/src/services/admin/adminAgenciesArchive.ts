@@ -2,7 +2,7 @@ import {
   adminAgenciesAgencyResponseSchema,
   type AdminAgenciesAgencyResponse
 } from 'shared/schemas/api-responses';
-import { safeRpc } from '@/services/api/safeRpc';
+import { safeTrpc } from '@/services/api/safeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 
 export type AdminAgencyResponse = AdminAgenciesAgencyResponse;
@@ -21,13 +21,11 @@ const parseAdminAgencyResponse = (payload: unknown): AdminAgencyResponse => {
 };
 
 export const adminAgenciesArchive = (agencyId: string) =>
-  safeRpc(
-    (api, init) => api.admin.agencies.$post({
-      json: {
+  safeTrpc(
+    (api, options) => api.admin.agencies.mutate({
       action: 'archive',
       agency_id: agencyId
-      }
-    }, init),
+      }, options),
     parseAdminAgencyResponse,
     "Impossible d'archiver l'agence."
   );

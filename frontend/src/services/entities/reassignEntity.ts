@@ -6,7 +6,7 @@ import {
 } from 'shared/schemas/api-responses';
 import { Entity } from '@/types';
 import { createAppError, type AppError } from '@/services/errors/AppError';
-import { safeRpc } from '@/services/api/safeRpc';
+import { safeTrpc } from '@/services/api/safeTrpc';
 
 export type ReassignEntityPayload = {
   entity_id: string;
@@ -35,14 +35,12 @@ const parseReassignEntityResponse = (payload: unknown): ReassignEntityResponse =
 export const reassignEntity = (
   payload: ReassignEntityPayload
 ): ResultAsync<ReassignEntityResponse, AppError> =>
-  safeRpc(
-    (api, init) => api.data.entities.$post({
-      json: {
+  safeTrpc(
+    (api, options) => api.data.entities.mutate({
         action: 'reassign',
         entity_id: payload.entity_id,
         target_agency_id: payload.target_agency_id
-      },
-    }, init),
+      }, options),
     parseReassignEntityResponse,
     "Impossible de reassigner l'entite."
   );

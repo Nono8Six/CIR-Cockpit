@@ -3,8 +3,7 @@ import {
   type DirectorySavedViewsListResponse
 } from 'shared/schemas/api-responses';
 
-import { invokeTrpc } from '@/services/api/invokeTrpc';
-import { callTrpcQuery } from '@/services/api/trpcClient';
+import { invokeTrpc } from '@/services/api/safeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 
 const parseDirectorySavedViewsListResponse = (payload: unknown): DirectorySavedViewsListResponse => {
@@ -23,7 +22,7 @@ const parseDirectorySavedViewsListResponse = (payload: unknown): DirectorySavedV
 
 export const getDirectorySavedViews = (): Promise<DirectorySavedViewsListResponse> =>
   invokeTrpc(
-    () => callTrpcQuery('directory.saved-views.list', {}),
+    (api, options) => api.directory['saved-views'].list.query({}, options),
     parseDirectorySavedViewsListResponse,
     'Impossible de charger les vues sauvegardees.'
   );

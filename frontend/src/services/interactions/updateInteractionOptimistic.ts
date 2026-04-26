@@ -1,6 +1,6 @@
 import { dataInteractionsMutationResponseSchema } from 'shared/schemas/api-responses';
 import { Interaction, InteractionUpdate, TimelineEvent } from '@/types';
-import { invokeRpc } from '@/services/api/safeRpc';
+import { invokeTrpc } from '@/services/api/safeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 import { hydrateTimeline } from './hydrateTimeline';
 
@@ -23,21 +23,21 @@ export const updateInteractionOptimistic = async (
   event: TimelineEvent,
   updates?: InteractionUpdate
 ): Promise<Interaction> => {
-  return invokeRpc(
-    (api, init) => api.data.interactions.$post({
-      json: {
+  return invokeTrpc(
+    (api, options) => api.data.interactions.mutate({
         action: 'add_timeline_event',
         interaction_id: interactionId,
         expected_updated_at: expectedUpdatedAt,
         event: {
+          id: event.id,
           type: event.type,
           content: event.content,
           author: event.author,
           date: event.date
         },
         updates
-      }
-    }, init),
-    parseInteractionResponse
+      }, options),
+    parseInteractionResponse,
+    "Impossible de mettre a jour l'interaction."
   );
 };

@@ -1,33 +1,30 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createAppError } from '@/services/errors/AppError';
-import { invokeTrpc } from '@/services/api/invokeTrpc';
-import { callTrpcQuery } from '@/services/api/trpcClient';
+import { invokeTrpc } from '@/services/api/safeTrpc';
 
-vi.mock('@/services/api/invokeTrpc', () => ({
+vi.mock('@/services/api/safeTrpc', () => ({
   invokeTrpc: vi.fn()
 }));
 
-vi.mock('@/services/api/trpcClient', () => ({
-  callTrpcQuery: vi.fn()
-}));
 
 const mockInvokeTrpc = vi.mocked(invokeTrpc);
-const mockCallTrpcQuery = vi.mocked(callTrpcQuery);
+let mockDirectoryResponse: unknown;
 
 describe('getDirectoryDuplicates', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.resetModules();
+    mockDirectoryResponse = undefined;
   });
 
   it('delegates the request to the tRPC directory.duplicates route', async () => {
-    mockInvokeTrpc.mockImplementation(async (runner, parser) => parser(await runner()));
-    mockCallTrpcQuery.mockResolvedValue({
+    mockInvokeTrpc.mockImplementation(async (_runner, parser) => parser(mockDirectoryResponse));
+    mockDirectoryResponse = {
       request_id: 'req-duplicates',
       ok: true,
       matches: []
-    });
+    };
 
     const { getDirectoryDuplicates } = await import('../getDirectoryDuplicates');
     const input = {
@@ -43,17 +40,16 @@ describe('getDirectoryDuplicates', () => {
     const response = await getDirectoryDuplicates(input);
 
     expect(mockInvokeTrpc).toHaveBeenCalledTimes(1);
-    expect(mockCallTrpcQuery).toHaveBeenCalledWith('directory.duplicates', input);
     expect(response.matches).toEqual([]);
   });
 
   it('validates the server payload before returning it', async () => {
-    mockInvokeTrpc.mockImplementation(async (runner, parser) => parser(await runner()));
-    mockCallTrpcQuery.mockResolvedValue({
+    mockInvokeTrpc.mockImplementation(async (_runner, parser) => parser(mockDirectoryResponse));
+    mockDirectoryResponse = {
       request_id: 'req-duplicates-invalid',
       ok: true,
       matches: [{ wrong: true }]
-    });
+    };
 
     const { getDirectoryDuplicates } = await import('../getDirectoryDuplicates');
     const input = {

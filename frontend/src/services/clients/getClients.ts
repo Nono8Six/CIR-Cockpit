@@ -1,7 +1,7 @@
 import { dataEntitiesListResponseSchema } from 'shared/schemas/api-responses';
 import { Client } from '@/types';
 import { createAppError } from '@/services/errors/AppError';
-import { safeRpc } from '@/services/api/safeRpc';
+import { safeTrpc } from '@/services/api/safeTrpc';
 
 export type GetClientsOptions = {
   agencyId?: string | null;
@@ -25,16 +25,14 @@ const parseClientsResponse = (payload: unknown): Client[] => {
 export const getClients = async (options: GetClientsOptions = {}): Promise<Client[]> => {
   const { agencyId, includeArchived = false, orphansOnly = false } = options;
 
-  return safeRpc(
-    (api, init) => api.data.entities.$post({
-      json: {
+  return safeTrpc(
+    (api, options) => api.data.entities.mutate({
         action: 'list',
         entity_type: 'Client',
         agency_id: agencyId ?? null,
         include_archived: includeArchived,
         orphans_only: orphansOnly
-      }
-    }, init),
+      }, options),
     parseClientsResponse,
     'Impossible de charger les clients.'
   ).match(

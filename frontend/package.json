@@ -8,8 +8,6 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext .ts,.tsx --max-warnings 0",
-    "generate:rpc-types": "node ./scripts/generate-rpc-types.mjs",
-    "pretypecheck": "pnpm run generate:rpc-types",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "check:error-compliance": "node ./scripts/check-error-compliance.mjs",
     "test": "vitest",

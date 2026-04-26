@@ -2,7 +2,7 @@ import { dataInteractionsListResponseSchema } from 'shared/schemas/api-responses
 
 import type { Interaction } from '@/types';
 import { createAppError, isAppError } from '@/services/errors/AppError';
-import { invokeRpc } from '@/services/api/safeRpc';
+import { invokeTrpc } from '@/services/api/safeTrpc';
 import { toTimestamp } from '@/utils/date/toTimestamp';
 import { getInteractions } from './getInteractions';
 import { hydrateTimeline } from './hydrateTimeline';
@@ -96,16 +96,15 @@ export const getInteractionsByEntity = async (
   pageSize = 20
 ): Promise<EntityInteractionsPage> => {
   try {
-    return await invokeRpc(
-      (api, init) => api.data.interactions.$post({
-        json: {
+    return await invokeTrpc(
+      (api, options) => api.data.interactions.mutate({
           action: 'list_by_entity',
           entity_id: entityId,
           page,
           page_size: pageSize
-        }
-      }, init),
-      parseListResponse
+        }, options),
+      parseListResponse,
+      'Impossible de charger les interactions.'
     );
   } catch (error) {
     if (!isUnsupportedListByEntityActionError(error)) {

@@ -4,7 +4,7 @@ import { dataEntitiesResponseSchema } from 'shared/schemas/api-responses';
 import type { ClientPrimaryContactFormValues } from 'shared/schemas/client.schema';
 import { AccountType, Client } from '@/types';
 import { createAppError, type AppError } from '@/services/errors/AppError';
-import { safeRpc } from '@/services/api/safeRpc';
+import { safeTrpc } from '@/services/api/safeTrpc';
 
 export type ClientPayload = {
   id?: string;
@@ -41,36 +41,95 @@ const parseEntityResponse = (payload: unknown): Client => {
   return parsed.data.entity;
 };
 
-export const saveClient = (payload: ClientPayload): ResultAsync<Client, AppError> =>
-  safeRpc(
-    (api, init) => api.data.entities.$post({
-      json: {
+const requireClientText = (value: string | null | undefined, message: string): string => {
+  const trimmed = value?.trim() ?? '';
+  if (!trimmed) {
+    throw createAppError({
+      code: 'VALIDATION_ERROR',
+      message,
+      source: 'validation'
+    });
+  }
+  return trimmed;
+};
+
+export const saveClient = (payload: ClientPayload): ResultAsync<Client, AppError> => {
+  const agencyId = requireClientText(payload.agency_id, 'Agence requise.');
+  const clientNumber = requireClientText(payload.client_number, 'Numero client requis.');
+
+  if (payload.client_kind === 'company') {
+    const entity = {
+      client_number: clientNumber,
+      client_kind: 'company' as const,
+      account_type: payload.account_type,
+      name: payload.name,
+      address: payload.address,
+      postal_code: payload.postal_code,
+      department: payload.department,
+      city: payload.city,
+      siret: payload.siret,
+      siren: payload.siren,
+      naf_code: payload.naf_code,
+      official_name: payload.official_name,
+      official_data_source: payload.official_data_source,
+      official_data_synced_at: payload.official_data_synced_at,
+      notes: payload.notes,
+      cir_commercial_id: payload.cir_commercial_id,
+      agency_id: agencyId
+    };
+
+    return safeTrpc(
+      (api, options) => api.data.entities.mutate({
+          action: 'save',
+          agency_id: agencyId,
+          entity_type: 'Client',
+          id: payload.id,
+          entity
+        }, options),
+      parseEntityResponse,
+      "Impossible de sauvegarder le client."
+    );
+  }
+
+  const primaryContact = payload.primary_contact;
+  if (!primaryContact) {
+    throw createAppError({
+      code: 'VALIDATION_ERROR',
+      message: 'Contact principal requis.',
+      source: 'validation'
+    });
+  }
+
+  const entity = {
+    client_number: clientNumber,
+    client_kind: 'individual' as const,
+    account_type: 'cash' as const,
+    name: payload.name,
+    address: payload.address,
+    postal_code: payload.postal_code,
+    department: payload.department,
+    city: payload.city,
+    siret: payload.siret,
+    siren: payload.siren,
+    naf_code: payload.naf_code,
+    official_name: payload.official_name,
+    official_data_source: payload.official_data_source,
+    official_data_synced_at: payload.official_data_synced_at,
+    notes: payload.notes,
+    cir_commercial_id: null,
+    primary_contact: primaryContact,
+    agency_id: agencyId
+  };
+
+  return safeTrpc(
+    (api, options) => api.data.entities.mutate({
         action: 'save',
-        agency_id: payload.agency_id,
+        agency_id: agencyId,
         entity_type: 'Client',
         id: payload.id,
-        entity: {
-          client_number: payload.client_number,
-          client_kind: payload.client_kind,
-          account_type: payload.account_type,
-          name: payload.name,
-          address: payload.address,
-          postal_code: payload.postal_code,
-          department: payload.department,
-          city: payload.city,
-          siret: payload.siret,
-          siren: payload.siren,
-          naf_code: payload.naf_code,
-          official_name: payload.official_name,
-          official_data_source: payload.official_data_source,
-          official_data_synced_at: payload.official_data_synced_at,
-          notes: payload.notes,
-          cir_commercial_id: payload.cir_commercial_id,
-          primary_contact: payload.primary_contact ?? undefined,
-          agency_id: payload.agency_id
-        }
-      }
-    }, init),
+        entity
+      }, options),
     parseEntityResponse,
     "Impossible de sauvegarder le client."
   );
+};

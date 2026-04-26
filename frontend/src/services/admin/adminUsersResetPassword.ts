@@ -2,7 +2,7 @@ import {
   adminUsersResetPasswordResponseSchema,
   type AdminUsersResetPasswordResponse
 } from 'shared/schemas/api-responses';
-import { safeRpc } from '@/services/api/safeRpc';
+import { safeTrpc } from '@/services/api/safeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 
 export type ResetPasswordResponse = AdminUsersResetPasswordResponse;
@@ -21,14 +21,12 @@ const parseResetPasswordResponse = (payload: unknown): ResetPasswordResponse => 
 };
 
 export const adminUsersResetPassword = (userId: string, password?: string) =>
-  safeRpc(
-    (api, init) => api.admin.users.$post({
-      json: {
+  safeTrpc(
+    (api, options) => api.admin.users.mutate({
       action: 'reset_password',
       user_id: userId,
       password
-      }
-    }, init),
+      }, options),
     parseResetPasswordResponse,
     'Impossible de reinitialiser le mot de passe.'
   );

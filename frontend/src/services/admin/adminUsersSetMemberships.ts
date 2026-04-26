@@ -2,7 +2,7 @@ import {
   adminUsersSetMembershipsResponseSchema,
   type AdminUsersSetMembershipsResponse
 } from 'shared/schemas/api-responses';
-import { safeRpc } from '@/services/api/safeRpc';
+import { safeTrpc } from '@/services/api/safeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 
 export type MembershipMode = 'replace' | 'add' | 'remove';
@@ -27,15 +27,13 @@ export const adminUsersSetMemberships = (
   agencyIds: string[],
   mode: MembershipMode = 'replace'
 ) =>
-  safeRpc(
-    (api, init) => api.admin.users.$post({
-      json: {
+  safeTrpc(
+    (api, options) => api.admin.users.mutate({
       action: 'set_memberships',
       user_id: userId,
       agency_ids: agencyIds,
       mode
-      }
-    }, init),
+      }, options),
     parseSetUserMembershipsResponse,
     "Impossible de mettre a jour les agences."
   );
