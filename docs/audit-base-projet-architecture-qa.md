@@ -2,13 +2,13 @@
 
 Date: 2026-04-25  
 Derniere mise a jour: 2026-04-26
-Perimetre: audit du repo `CIR-Cockpit`, avec mise a jour de l'etat reel du 2026-04-26 et migration applicative admin/audit vers backend/tRPC. Aucune migration DB live n'est appliquee dans cette tranche.
+Perimetre: audit du repo `CIR-Cockpit`, avec mise a jour de l'etat reel du 2026-04-26 et migrations applicatives admin/audit, interactions et brouillons vers backend/tRPC. L'application reste locale; seul le projet Supabase `rbjtrcorlezvocayluok` est un runtime distant lie. Aucune migration DB live n'est appliquee dans cette tranche.
 
 ## Verdict executif
 
 La base projet est fonctionnelle, testee et exploitable. Les checks locaux et les validations documentees confirment un socle solide: hygiene repo, typecheck/lint/tests front, compliance erreurs, Deno lint/check/tests backend, `qa:fast` et `qa` passes lors de la derniere livraison applicative. Le runtime Supabase expose aussi un socle coherent: 20 tables `public` visibles, RLS activee partout, et l'Edge Function `api` active en `verify_jwt=false`.
 
-Le P0 tRPC client et le P0 QA/docs ont ete traites. Le frontend consomme maintenant un contrat `AppRouter` partage via `shared/api/trpc.ts`, les anciens artefacts RPC generes ont ete supprimes, et la frontiere Supabase direct vs backend/tRPC est formalisee. Les dettes restantes se concentrent sur trois axes structurants: migrations revelees par cette frontiere API, decoupage par domaines, et alignement explicite DB/types/schemas. La dette n'est pas un blocage court terme, mais elle augmente le cout de chaque evolution transverse.
+Le P0 tRPC client et le P0 QA/docs ont ete traites. Le frontend consomme maintenant un contrat `AppRouter` partage via `shared/api/trpc.ts`, les anciens artefacts RPC generes ont ete supprimes, et la frontiere Supabase direct vs backend/tRPC est formalisee. Les lectures `interactions` simples (`getInteractions`, `getKnownCompanies`), le CRUD brouillons `interaction_drafts`, l'ecriture de preference agence active et l'alignement `entities.department` passent maintenant par des contrats explicites. Les dettes restantes se concentrent sur deux axes structurants: decoupage par domaines et validation row-level plus fine des sorties API. La dette n'est pas un blocage court terme, mais elle augmente le cout de chaque evolution transverse.
 
 Priorites:
 
@@ -55,13 +55,14 @@ Regle de suivi: chaque action terminee doit etre cochee ici avec une preuve cour
   - [x] Classer les usages autorises, toleres temporairement et a migrer.
     - Preuve: contrat ecrit dans la section "Frontiere API formalisee" avec matrice par famille de services.
   - [x] Ne pas cocher les migrations applicatives non faites.
-    - Preuve: drafts, interactions directes, entreprises connues et preference d'agence active restent listes comme dettes de migration; admin/audit est coche seulement apres migration effective.
+    - Preuve: les dettes sont cochees seulement apres migration effective; interactions directes, entreprises connues, brouillons et preference d'agence active ont ete coches apres leurs validations respectives.
   - [x] Migrer les lectures admin/audit sensibles vers backend/tRPC.
     - Preuve: `getAdminUsers` appelle `admin.users-list`; `getAuditLogs` appelle `admin.audit-logs`; `backend/functions/api/services/adminQueries.ts` centralise les agregations et les droits; tests cibles frontend/backend PASS.
 - [x] 4. P1 - Auditer l'alignement DB/types/schemas avant refactor.
   - Preuve: MCP Supabase `list_tables`, `generate_typescript_types`, requetes `information_schema`/`pg_constraint`/policies/indexes, puis relecture ciblee de `backend/migrations`, `shared/supabase.types.ts`, `backend/drizzle/schema.ts` et `shared/schemas/*`.
 - [ ] 5. P1 - Decouper progressivement le frontend par domaines.
   - [x] Avancement cible 2026-04-26: `frontend/src/components/entity-onboarding/useEntityOnboardingFlow.ts` n'est plus le mega-hook de 833 lignes; il est redescendu a 270 lignes et delegue types, etapes, checklist, valeurs derivees, etat local, donnees entreprise, effets et actions a des modules dedies.
+  - [x] Avancement cible 2026-04-26: `frontend/src/components/entity-onboarding/EntityOnboardingSidebar.tsx` a ete reduit en extrayant la carte resume entreprise et les primitives de section/sidebar sans changer les props publiques.
   - [ ] Reste ouvert: `EntityOnboardingDialog.tsx`, plusieurs sous-composants `entity-onboarding`, `useSettingsState.ts`, `useInteractionDraft.ts`, `AppLayout.tsx` et des zones `client-directory` restent au-dessus de la cible de lisibilite.
 - [ ] 6. P1 - Decouper progressivement le backend par domaines tRPC/services.
   - [x] Avancement cible 2026-04-26: annuaire entreprise et data save decoupes (`directoryCompany*`, `directoryListing*`, `directoryDuplicates*`, `dataEntitiesSave*`), avec validations Deno ciblees documentees dans `docs/plan.md`.
@@ -96,7 +97,7 @@ Base Supabase:
 
 - MCP Supabase, lecture initiale du 2026-04-25 revalidee le 2026-04-26: 20 tables `public`, toutes avec `rls_enabled=true`.
 - Tables visibles: `agencies`, `profiles`, `agency_members`, `interactions`, `agency_statuses`, `agency_services`, `agency_entities`, `agency_families`, `audit_logs`, `rate_limits`, `interaction_drafts`, `agency_interaction_types`, `entities`, `entity_contacts`, `agency_system_users`, `audit_logs_archive`, `directory_saved_views`, `app_settings`, `agency_settings`, `reference_departments`.
-- Edge Function MCP: `api` active, version `37`, `verify_jwt=false`, entrypoint `source/supabase/functions/api/index.ts`, import map `source/deno.json`.
+- Edge Function MCP: `api` active, version `42`, `verify_jwt=false`, entrypoint `source/supabase/functions/api/index.ts`, import map `source/deno.json`.
 - Repo: `supabase/config.toml` confirme aussi `verify_jwt=false`.
 
 ## Constats prioritaires
@@ -134,6 +135,7 @@ Signaux actuels:
 
 - Plusieurs orchestrateurs ou composants restent au-dessus de la cible de lisibilite: `EntityOnboardingDialog.tsx` 524 lignes, `EntityOnboardingSearchStep.tsx` 708 lignes, `EntityOnboardingSidebar.tsx` 454 lignes, `EntityOnboardingDetailsStep.tsx` 409 lignes, `useSettingsState.ts` 307 lignes, `useInteractionDraft.ts` 280 lignes, `ClientDirectoryTable.tsx` 264 lignes, `AppLayout.tsx` 245 lignes.
 - Le precedent hotspot `frontend/src/components/entity-onboarding/useEntityOnboardingFlow.ts` est passe de 833 lignes a 270 lignes apres extraction des types, etapes, checklist, valeurs derivees, etat local, donnees entreprise, effets et actions. Il n'est plus le signal principal, mais il reste dans un domaine encore trop fragmente horizontalement.
+- `frontend/src/components/entity-onboarding/EntityOnboardingSidebar.tsx` est passe de 454 lignes a 278 lignes apres extraction de `EntityOnboardingCompanySummary.tsx` et `EntityOnboardingSidebarSection.tsx`; les tests de dialogue onboarding restent verts.
 - Les hooks metier cockpit/directory/admin/settings sont au meme niveau dans `frontend/src/hooks`.
 - Les services API/Supabase/metier cohabitent dans `frontend/src/services` avec beaucoup de conventions implicites.
 
@@ -168,18 +170,12 @@ Matrice actuelle des usages frontend:
 | --- | --- | --- | --- |
 | Auth/session Supabase | `services/auth/signInWithPassword.ts`, `signOut.ts`, `getSession.ts`, `onAuthStateChange.ts`, `getCurrentUserId.ts`, `updateUserPassword.ts`, `services/api/trpcClient.ts` | Autorise | API Supabase Auth native, session locale, refresh token et credential flow utilisateur courant. |
 | Profil courant et bootstrap agence | `services/auth/getProfile.ts`, `getCurrentUserLabel.ts`, `services/agency/getAgencyMemberships.ts`, `getProfileActiveAgencyId.ts`, `getAgencies.ts` | Tolere temporairement | Lectures bootstrap bornees par RLS; a garder petites et sans logique metier lourde. |
-| Preference agence active | `services/agency/setProfileActiveAgencyId.ts` | A migrer | Ecriture sur `profiles`; doit passer par une procedure backend si la preference devient une regle produit ou doit etre auditee. |
+| Preference agence active | `services/agency/setProfileActiveAgencyId.ts` | Conforme backend/tRPC | `set_active_agency` passe par `data.profile`; le backend accepte `null` et controle l'acces agence avant d'ecrire `profiles.active_agency_id`. |
 | Realtime interactions | `hooks/useRealtimeInteractions.ts` | Autorise | Subscription realtime Supabase; aucune mutation. Les payloads alimentent le cache TanStack Query. |
-| Brouillons interaction | `services/interactions/getInteractionDraft.ts`, `saveInteractionDraft.ts`, `deleteInteractionDraft.ts` | A migrer | CRUD applicatif sur `interaction_drafts`; meme si RLS borne l'acces, c'est un workflow metier utilisateur/agence. |
-| Interactions directes | `services/interactions/getInteractions.ts`, `getKnownCompanies.ts` | A migrer | Lectures metier sur `interactions`; `data.interactions` existe deja comme frontiere backend pour d'autres usages. |
+| Brouillons interaction | `services/interactions/getInteractionDraft.ts`, `saveInteractionDraft.ts`, `deleteInteractionDraft.ts` | Conforme backend/tRPC | `draft_get`, `draft_save` et `draft_delete` passent par `data.interactions`; controle serveur `user_id` courant + acces agence, transport JSON strict et parsing UI conserve cote frontend. |
+| Interactions lectures simples | `services/interactions/getInteractions.ts`, `getKnownCompanies.ts`, `getInteractionsByEntity.ts` | Conforme backend/tRPC | `list_by_agency`, `known_companies` et `list_by_entity` passent par `data.interactions`; le fallback global vers une lecture Supabase directe a ete supprime. |
 | Admin utilisateurs et audits | `services/admin/getAdminUsers.ts`, `getAuditLogs.ts` | Conforme backend/tRPC | Migres vers `admin.users-list` et `admin.audit-logs`; agregations profils/agences cote backend, schemas de sortie partages, droits `super_admin` pour utilisateurs et `super_admin`/`agency_admin` borne agence pour audits. |
-| Annuaire, entites, clients, config, mutations admin | `services/directory/*`, `services/entities/*`, `services/clients/*`, `services/config/*`, `services/admin/admin*.ts`, `services/interactions/saveInteraction.ts`, `deleteInteraction.ts`, `getInteractionsByEntity.ts` | Conforme backend/tRPC | Appels via `safeTrpc` / `invokeTrpc`, schemas partages et router `shared/api/trpc.ts`. |
-
-Priorite de migration conseillee:
-
-1. `getInteractions` et `getKnownCompanies`: lectures metier sur `interactions`, a rapprocher de `data.interactions`.
-2. `getInteractionDraft`, `saveInteractionDraft`, `deleteInteractionDraft`: CRUD de brouillons a deplacer vers une procedure dediee si le workflow continue d'evoluer.
-3. `setProfileActiveAgencyId`: preference profil a traiter via backend si on veut audit, validation ou logique multi-agence plus stricte.
+| Annuaire, entites, clients, config, mutations admin | `services/directory/*`, `services/entities/*`, `services/clients/*`, `services/config/*`, `services/admin/admin*.ts`, `services/interactions/saveInteraction.ts`, `deleteInteraction.ts` | Conforme backend/tRPC | Appels via `safeTrpc` / `invokeTrpc`, schemas partages et router `shared/api/trpc.ts`. |
 
 Ce qui ne doit plus arriver: ajouter une nouvelle lecture ou mutation metier Supabase directe dans `frontend/src/services` sans ligne de justification dans cette matrice ou sans procedure backend/tRPC.
 
@@ -207,13 +203,13 @@ Sources de verite constatees:
 Ecarts ou vigilances factuels:
 
 - `interactions.id`: live Supabase expose `id text` et `shared/supabase.types.ts` le type en `string`. La divergence Drizzle initiale `uuid('id')` a ete corrigee le 2026-04-26: `backend/drizzle/schema.ts` declare maintenant `text('id').$type<string>().primaryKey()`, avec garde-fou dans `pnpm run repo:check`.
-- `entities.department`: contrainte live `^[0-9]{2}$`, alors que `client.schema.ts` accepte `^\d{2,3}$`. Les departements de l'annuaire de reference acceptent bien des codes non strictement numeriques comme `2A/2B` via `reference_departments`, mais la table `entities.department` ne les acceptera pas. Ce point doit etre tranche avant d'enrichir l'annuaire client.
-- `interaction_drafts`: la table live a `agency_id` non nullable et une unique key `(user_id, agency_id, form_type)`. Le schema formulaire `interactionDraftSchema` accepte un `agency_id` optionnel car il valide un etat UI transitoire, pas la ligne DB finale. La future migration backend/tRPC des brouillons devra donc separer clairement validation brouillon UI et payload persiste.
+- `entities.department`: contrainte live `department IS NULL OR department ~ '^[0-9]{2}$'`. Decision appliquee le 2026-04-26: les fiches entites restent alignees sur deux chiffres uniquement; les schemas client/prospect/fournisseur/onboarding rejettent les codes hors contrainte, et le backend persiste `NULL` quand le departement est absent. Les codes `2A/2B` restent valides uniquement pour `reference_departments`; les accepter sur les fiches entites necessiterait une migration DB explicite.
+- `interaction_drafts`: la table live a `agency_id` non nullable et une unique key `(user_id, agency_id, form_type)`. Le schema formulaire `interactionDraftSchema` accepte un `agency_id` optionnel car il valide un etat UI transitoire, pas la ligne DB finale. La migration backend/tRPC appliquee le 2026-04-26 separe donc le transport JSON persiste (`draft_*`) du parsing UI brouillon conserve cote frontend.
 - `profiles.first_name`: live nullable, `profiles.last_name` non nullable. Le fallback legacy frontend de `getAdminUsers` a ete supprime avec la migration backend/tRPC; la liste admin consomme maintenant le schema live via Drizzle et le contrat `adminUsersListResponseSchema`.
 - `api-responses.ts`: les rows `entities`, `entity_contacts` et `interactions` sont validees par `z.custom` avec gardes minimaux, pas par une validation colonne par colonne. C'est acceptable comme contrat de transport tant que les rows viennent du backend, mais insuffisant si une sortie exposee devient publique ou recombine plusieurs sources.
-- Les direct reads encore listes dans la frontiere API (`getInteractions`, `getKnownCompanies`, brouillons) sont les meilleurs candidats suivants pour consommer cet audit: ils touchent justement les tables avec RLS, nullabilite et contrats Zod a clarifier.
+- Les direct reads/writes metier `interactions`, `interaction_drafts` et preference agence active ont ete migres vers tRPC. Les usages Supabase directs restants concernent auth/session, bootstrap agence tolere et realtime.
 
-Decision: l'alignement n'est pas bloquant pour continuer le refactor par domaines, mais il interdit les suppressions opportunistes de colonnes/index/policies. Le modele Drizzle `interactions.id` est maintenant aligne avec le schema live; les vigilances restantes portent surtout sur `entities.department`, les brouillons et la validation row-level des sorties API.
+Decision: l'alignement n'est pas bloquant pour continuer le refactor par domaines, mais il interdit les suppressions opportunistes de colonnes/index/policies. Le modele Drizzle `interactions.id` et le contrat applicatif `entities.department` sont maintenant alignes avec le schema live; la vigilance restante porte surtout sur la validation row-level des sorties API.
 
 ### P2 - Dette UI/perf/a11y a consigner
 
@@ -318,7 +314,7 @@ Validation historique effectuee pour l'audit Markdown initial du 2026-04-25:
 | Deno check backend | `deno check --config backend/deno.json backend/functions/api/index.ts` | PASS. |
 | Deno tests backend | `deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api` | PASS: 138 passed, 0 failed, 8 ignored. |
 | Supabase MCP tables | `list_tables(public)` | PASS: 20 tables publiques, RLS activee partout. |
-| Supabase MCP Edge Functions | `list_edge_functions` | PASS: `api` active, version 37, `verify_jwt=false`. |
+| Supabase MCP Edge Functions | `list_edge_functions` | PASS historique: `api` active, version 37 a cette date; etat courant revalide ensuite en version 38. |
 
 Validation applicative recente documentee dans `docs/plan.md` pour les refactors du 2026-04-26:
 
@@ -335,30 +331,50 @@ Revalidation effectuee le 2026-04-26 pour cette mise a jour:
 | Recherche artefacts RPC obsoletes | `Test-Path` + `rg` sur `rpcClient`, `generated/rpc-app`, `generate-rpc`, `createTRPCUntypedClient`, `pretypecheck` | Les artefacts obsoletes n'existent plus; seules les mentions documentaires etaient obsoletes. |
 | Tailles hotspots | mesure lignes sur fichiers front/back cibles | Hotspots actualises: `useEntityOnboardingFlow.ts` 270 lignes, `EntityOnboardingDialog.tsx` 524 lignes, `ClientDirectoryTable.tsx` 264 lignes, `AppLayout.tsx` 245 lignes, `router.ts` 201 lignes. |
 | Supabase MCP tables | `list_tables(public)` | PASS: 20 tables publiques, RLS activee partout. |
-| Supabase MCP Edge Functions | `list_edge_functions` | PASS: `api` active, version 37, `verify_jwt=false`, entrypoint `source/supabase/functions/api/index.ts`, import map `source/deno.json`. |
+| Supabase MCP Edge Functions | `list_edge_functions` | PASS: `api` active, version 38, `verify_jwt=false`, entrypoint `source/supabase/functions/api/index.ts`, import map `source/deno.json`. |
 | Alignement QA/docs | relecture `docs/testing.md`, `docs/qa-runbook.md`, `package.json`, `scripts/qa-gate.ps1`, `scripts/qa-gate.sh`, `.github/workflows/qa.yml` | PASS: CI documentee, seuils clarifies, gate executable identifiee. |
-| Frontiere API | `rg` sur `requireSupabaseClient`, `supabase.from`, `supabase.auth`, `channel`, `safeTrpc`, `invokeTrpc` dans `frontend/src` | PASS: usages directs classes; admin/audit est maintenant conforme backend/tRPC, les lectures restantes a migrer sont interactions, brouillons et preference agence active. |
-| Alignement DB/types/schemas | MCP `list_tables`, `generate_typescript_types`, SQL `information_schema.columns`, `pg_policies`, `pg_indexes`, `pg_constraint`; relecture `backend/migrations`, `shared/supabase.types.ts`, `backend/drizzle/schema.ts`, `shared/schemas/*` | PASS documentaire: tables ciblees auditees; divergence `interactions.id` corrigee; vigilances `entities.department`, brouillons et validation row-level consignees. |
+| Frontiere API | `rg` sur `requireSupabaseClient`, `supabase.from`, `supabase.auth`, `channel`, `safeTrpc`, `invokeTrpc` dans `frontend/src` | PASS: usages directs classes; admin/audit, lectures simples interactions, brouillons et preference agence active sont maintenant conformes backend/tRPC. |
+| Alignement DB/types/schemas | MCP `list_tables`, `generate_typescript_types`, SQL `information_schema.columns`, `pg_policies`, `pg_indexes`, `pg_constraint`; relecture `backend/migrations`, `shared/supabase.types.ts`, `backend/drizzle/schema.ts`, `shared/schemas/*` | PASS documentaire: tables ciblees auditees; divergence `interactions.id` corrigee; vigilance `entities.department` tranchee le 2026-04-26; validation row-level des sorties API encore a renforcer. |
 | Correction Drizzle `interactions.id` | `deno check --config backend/deno.json backend/functions/api/index.ts`, `pnpm run qa:fast`, `pnpm run qa` | PASS: schema Drizzle aligne sur `id text`, garde-fou `repo:check` actif, gate complete verte. |
 | Migration backend admin/audit | MCP `list_tables(public, verbose=true)`, SQL MCP `pg_policies`/`pg_indexes`, Context7 tRPC v11, relecture `AdminPanel`, `useAuditLogsPanel`, services admin, router tRPC et schemas shared | PASS: droits live confirmes (`profiles`, `agency_members`, `audit_logs`, `agencies` avec RLS); `audit_logs` lisible par `super_admin` ou `agency_admin` membre; contrat implemente sans lecture Supabase front. |
 | Tests cibles admin/audit | `pnpm --dir frontend run test:run -- src/services/admin/__tests__/getAdminUsers.test.ts src/services/admin/__tests__/getAuditLogs.test.ts src/services/admin/__tests__/admin.rpc-services.test.ts` | PASS: 3 fichiers, 18 tests. |
 | Tests cibles backend/router | `deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api/services/adminUsers_test.ts backend/functions/api/trpc/router_test.ts` | PASS: 23 tests. |
 | Typecheck/lint cibles | `deno check --config backend/deno.json backend/functions/api/index.ts`, `deno lint backend/functions/api`, `pnpm --dir frontend run typecheck` | PASS. |
-| Supabase MCP fin de tranche | `list_edge_functions`, `get_advisors(security)`, `get_advisors(performance)` | PASS qualif: `api` active version 37, `verify_jwt=false`; security WARN connu `auth_leaked_password_protection`; performance INFO `unused_index` a conserver en observation. |
+| Supabase MCP fin de tranche | `list_edge_functions`, `get_advisors(security)`, `get_advisors(performance)` | PASS qualif historique: `api` active version 37 avant deploy distant admin/audit, puis version 38 apres deploy; security WARN connu `auth_leaked_password_protection`; performance INFO `unused_index` a conserver en observation. |
 | Gate intermediaire | `pnpm run qa:fast` | PASS: repo check, typecheck/lint/tests front, compliance erreurs, Deno lint/check/tests backend; `425` tests frontend, `140` tests backend, `8` ignores. |
 | Gate finale | `pnpm run qa` | PASS: gate complete avec coverage, build frontend, backend tests et runner integration; `QA Gate PASS`. |
-| Deploy prod Edge Function | `supabase functions deploy api --project-ref rbjtrcorlezvocayluok --use-api --import-map deno.json --no-verify-jwt` | PASS: `api` deployee sur le projet prod. |
+| Deploy Edge Function Supabase distant | `supabase functions deploy api --project-ref rbjtrcorlezvocayluok --use-api --import-map deno.json --no-verify-jwt` | PASS historique: `api` deployee sur le projet Supabase distant. |
 | Supabase MCP apres deploy | `list_edge_functions` | PASS: `api` active version 38, `verify_jwt=false`, entrypoint `source/supabase/functions/api/index.ts`, import map `source/deno.json`, hash `04800a6bad825c417245e82f94331428589fae3964aac9cd51adf8efff2b06a0`. |
-| Probe CORS prod | `OPTIONS https://rbjtrcorlezvocayluok.supabase.co/functions/v1/api/trpc/admin.audit-logs` avec `Origin: http://localhost:3000` | PASS: `200`, `Access-Control-Allow-Origin: http://localhost:3000`, methods `POST, OPTIONS`, headers attendus. |
+| Probe CORS Supabase distant | `OPTIONS https://rbjtrcorlezvocayluok.supabase.co/functions/v1/api/trpc/admin.audit-logs` avec `Origin: http://localhost:3000` | PASS: `200`, `Access-Control-Allow-Origin: http://localhost:3000`, methods `POST, OPTIONS`, headers attendus. |
 | Probe CORS domaine non autorise | meme endpoint avec `Origin: https://cir-cockpit.com` | 403 attendu avec la configuration actuelle: cette origine n'est pas dans `CORS_ALLOWED_ORIGIN`. |
 | Recherche mentions obsoletes | `rg` sur les anciennes formulations DB non auditee | PASS: aucune mention obsolete restante; seule la checklist cochee garde le libelle historique de l'action. |
 | Hygiene repo apres edition docs | `pnpm run repo:check` | PASS: `Repo state check passed.` |
 | Diff whitespace docs | `git diff --check -- docs/audit-base-projet-architecture-qa.md docs/plan.md docs/qa-runbook.md docs/testing.md` | PASS avec avertissements LF/CRLF uniquement. |
+| Migration lectures interactions | `getInteractions`, `getKnownCompanies`, `getInteractionsByEntity`, `data.interactions` | PASS: lectures simples migrees vers backend/tRPC; fallback global supprime; deploy Supabase distant effectue en version 39. |
+| Tests cibles interactions | `deno test ... dataInteractions_test.ts payloadContracts_test.ts`, `pnpm --dir frontend run test:run -- ...interactions...` | PASS: `11` tests backend cibles, `6` tests frontend cibles. |
+| Gate locale suite interactions | `pnpm run qa:fast`, `pnpm run qa` | PASS: `qa:fast` puis gate complete `QA Gate PASS`; `428` tests frontend, `141` tests backend, `9` integrations backend ignorees hors environnement dedie. |
+| Deploy suite interactions | `supabase functions deploy api --project-ref rbjtrcorlezvocayluok --use-api --import-map deno.json --no-verify-jwt`, `list_edge_functions`, probes `data.interactions` | PASS: `api` ACTIVE version 39, hash `a264e0dc7109d76c3f1068a6ede3c027269f5d8cde099832e1884a0ce16c4373`; `OPTIONS` 200, POST anonyme 401 `AUTH_REQUIRED`, POST avec seul `x-client-authorization` 401 `AUTH_REQUIRED`, aucun 404. |
+| Migration brouillons interactions | `getInteractionDraft`, `saveInteractionDraft`, `deleteInteractionDraft`, `data.interactions` | PASS: CRUD `interaction_drafts` migre vers `draft_get`, `draft_save`, `draft_delete`; acces agence et `user_id` courant controles cote backend; payload UI parse cote frontend. |
+| Tests cibles brouillons | `deno test ... dataInteractions_test.ts payloadContracts_test.ts`, `pnpm --dir frontend run test:run -- ...interactions.rpc-services... useInteractionDraft...` | PASS: `12` tests backend cibles, `13` tests frontend cibles. |
+| Gate locale suite brouillons | `pnpm run qa:fast`, `pnpm run qa` | PASS: `qa:fast` puis gate complete `QA Gate PASS`; `432` tests frontend, `142` tests backend, `9` integrations backend ignorees hors environnement dedie. |
+| Deploy suite brouillons | `supabase functions deploy api --project-ref rbjtrcorlezvocayluok --use-api --import-map deno.json --no-verify-jwt`, `list_edge_functions`, probes `data.interactions` | PASS: `api` ACTIVE version 40, hash `41bfc3eed7eb8fded1841f7abb74ddb304af63dee09494118a67ff8a45d17331`; `OPTIONS` 200, POST anonyme 401 `AUTH_REQUIRED`, POST avec seul `x-client-authorization` 401 `AUTH_REQUIRED`, aucun 404. |
+| Migration preference agence active | `setProfileActiveAgencyId`, `data.profile` | PASS: ecriture `profiles.active_agency_id` migree vers `set_active_agency`; `agency_id` nullable conserve; acces agence controle cote backend. |
+| Tests cibles preference agence | `deno test ... dataProfile_test.ts payloadContracts_test.ts`, `pnpm --dir frontend run test:run -- ...agency.supabase-services... useAppSessionState...` | PASS: `12` tests backend cibles, `6` tests frontend cibles. |
+| Gate locale preference agence | `pnpm run qa:fast`, `pnpm run qa` | PASS: `qa:fast` puis gate complete `QA Gate PASS`; `432` tests frontend, `145` tests backend, `9` integrations backend ignorees hors environnement dedie. |
+| Deploy preference agence | `supabase functions deploy api --project-ref rbjtrcorlezvocayluok --use-api --import-map deno.json --no-verify-jwt`, `list_edge_functions`, probes `data.profile` | PASS: `api` ACTIVE version 41, hash `e65d0339e479e324481fca8e99066168dc0e167493937adce4fcb5d706a7f1b4`; `OPTIONS` 200, POST anonyme 401 `AUTH_REQUIRED`, POST avec seul `x-client-authorization` 401 `AUTH_REQUIRED`, aucun 404. |
+| Alignement `entities.department` | schemas partages, onboarding, backend save row | PASS: contrat entite limite a `NULL` ou deux chiffres; `2A/2B` reserves a `reference_departments` tant qu'aucune migration DB n'est appliquee. |
+| Tests cibles departements | `pnpm --dir frontend run test:run -- ...entityOnboarding.utils... EntityOnboardingDialog... entities.rpc-services...`, `deno test ... payloadContracts_test.ts dataEntities_test.ts` | PASS: `21` tests frontend cibles, `18` tests backend cibles. |
+| Gate locale departements | `pnpm run qa:fast`, `pnpm run qa` | PASS: `qa:fast` puis gate complete `QA Gate PASS`; `433` tests frontend, `147` tests backend, `9` integrations backend ignorees hors environnement dedie. |
+| Deploy departements | `supabase functions deploy api --project-ref rbjtrcorlezvocayluok --use-api --import-map deno.json --no-verify-jwt`, `list_edge_functions`, probes `data.entities` | PASS: `api` ACTIVE version 42, hash `07b24ed5d2c389812a3075fd46f39811b4d535383df7ad8927a89a06d3afad91`; `OPTIONS` 200, POST anonyme 401 `AUTH_REQUIRED`, POST avec seul `x-client-authorization` 401 `AUTH_REQUIRED`, aucun 404. |
+| P1 frontend sidebar onboarding | extraction `EntityOnboardingCompanySummary.tsx` et `EntityOnboardingSidebarSection.tsx` | PASS cible: `EntityOnboardingSidebar.tsx` reduit de 454 a 278 lignes; props publiques conservees. |
+| Tests cibles sidebar onboarding | `pnpm --dir frontend run test:run -- src/components/__tests__/EntityOnboardingDialog.test.tsx` | PASS: `9` tests. |
+| Typecheck/lint frontend sidebar | `pnpm --dir frontend run typecheck`, `pnpm --dir frontend run lint` | PASS. |
+| Gate locale P1 frontend sidebar | `pnpm run qa:fast`, `pnpm run qa` | PASS: `qa:fast` puis gate complete `QA Gate PASS`; `433` tests frontend, `147` tests backend, `9` integrations backend ignorees hors environnement dedie. |
 
 Validation non executee automatiquement:
 
 - E2E Playwright: non lance automatiquement; parcours UI non demande explicitement et pas de modification de composant visuel.
-- Probes tRPC POST authentifies: non executes faute de session utilisateur fournie dans ce contexte; le preflight CORS prod et le statut Edge Function ont ete verifies.
+- Probes tRPC POST authentifies: non executes faute de session utilisateur fournie dans ce contexte; le preflight CORS Supabase distant et le statut Edge Function ont ete verifies.
 
 Validation a appliquer pour les phases de refactor ulterieures:
 

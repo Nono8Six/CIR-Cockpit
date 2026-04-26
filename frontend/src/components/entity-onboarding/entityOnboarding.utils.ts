@@ -54,7 +54,7 @@ export const buildValues = (
 export const toNullable = (value: string): string | null => value.trim() ? value.trim() : null;
 
 export const getDepartmentFromPostalCode = (postalCode: string): string =>
-  postalCode.startsWith('97') ? postalCode.slice(0, 3) : postalCode.slice(0, 2);
+  postalCode.slice(0, 2);
 
 export const getDuplicateReason = (record: DirectoryListRow, values: OnboardingValues): string | null => {
   if (values.siret && values.siret === record.siret) {

@@ -53,7 +53,7 @@ const buildBaseEntityUpdate = (
     agency_id: agencyId,
     address: entity.address?.trim() ?? "",
     postal_code: entity.postal_code?.trim() ?? "",
-    department: entity.department?.trim() ?? "",
+    department: entity.department?.trim() || null,
     city: entity.city?.trim() ?? "",
     siret: entity.siret?.trim() || null,
     siren: entity.siren?.trim() || null,

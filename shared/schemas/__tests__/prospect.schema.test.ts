@@ -30,4 +30,17 @@ describe('prospectFormSchema', () => {
 
     expect(result.success).toBe(false);
   });
+
+  it('rejects non-numeric entity departments', () => {
+    const result = prospectFormSchema.safeParse({
+      name: 'Prospect',
+      address: '',
+      postal_code: '75001',
+      department: '2A',
+      city: 'Paris',
+      agency_id: '11111111-1111-1111-1111-111111111111'
+    });
+
+    expect(result.success).toBe(false);
+  });
 });

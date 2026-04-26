@@ -1,26 +1,33 @@
-import { ResultAsync } from 'neverthrow';
+import type { ResultAsync } from 'neverthrow';
+
+import { dataProfileResponseSchema } from 'shared/schemas/api-responses';
 
 import { safeAsync } from '@/lib/result';
-import { getCurrentUserId } from '@/services/auth/getCurrentUserId';
-import { mapPostgrestError } from '@/services/errors/mapPostgrestError';
+import { invokeTrpc } from '@/services/api/safeTrpc';
+import { createAppError, type AppError } from '@/services/errors/AppError';
 import { normalizeError } from '@/services/errors/normalizeError';
-import { requireSupabaseClient } from '@/services/supabase/requireSupabaseClient';
-import type { AppError } from '@/services/errors/AppError';
+
+const parseProfileResponse = (payload: unknown): void => {
+  const parsed = dataProfileResponseSchema.safeParse(payload);
+  if (!parsed.success) {
+    throw createAppError({
+      code: 'REQUEST_FAILED',
+      message: 'Reponse serveur invalide.',
+      source: 'edge',
+      details: parsed.error.message
+    });
+  }
+};
 
 export const setProfileActiveAgencyId = (agencyId: string | null): ResultAsync<void, AppError> =>
   safeAsync(
-    (async () => {
-      const supabase = requireSupabaseClient();
-      const userId = await getCurrentUserId();
-
-      const { error, status } = await supabase
-        .from('profiles')
-        .update({ active_agency_id: agencyId })
-        .eq('id', userId);
-
-      if (error) {
-        throw mapPostgrestError(error, { operation: 'write', resource: "l'agence active", status });
-      }
-    })(),
+    invokeTrpc(
+      (api, options) => api.data.profile.mutate({
+        action: 'set_active_agency',
+        agency_id: agencyId
+      }, options),
+      parseProfileResponse,
+      "Impossible de changer d'agence."
+    ),
     (error) => normalizeError(error, "Impossible de changer d'agence.")
   );

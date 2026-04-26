@@ -161,6 +161,16 @@ export const interactions = pgTable('interactions', {
   updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
 });
 
+export const interaction_drafts = pgTable('interaction_drafts', {
+  id: uuid('id').$type<string>().defaultRandom().primaryKey(),
+  user_id: uuid('user_id').$type<string>().notNull(),
+  agency_id: uuid('agency_id').$type<string>().notNull(),
+  form_type: text('form_type').$type<string>().default('interaction').notNull(),
+  payload: jsonb('payload').$type<Database['public']['Tables']['interaction_drafts']['Row']['payload']>().notNull(),
+  created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull(),
+  updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
+});
+
 export const agency_statuses = pgTable('agency_statuses', {
   id: uuid('id').$type<string>().defaultRandom().primaryKey(),
   agency_id: uuid('agency_id').$type<string>().notNull(),
@@ -229,6 +239,7 @@ export const drizzleSchema = {
   entities,
   entity_contacts,
   interactions,
+  interaction_drafts,
   agency_statuses,
   agency_services,
   agency_entities,

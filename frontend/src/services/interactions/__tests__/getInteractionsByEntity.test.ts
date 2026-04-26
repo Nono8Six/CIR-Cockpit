@@ -3,15 +3,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { type Interaction, Channel } from '@/types';
 import { invokeTrpc } from '@/services/api/safeTrpc';
 import { createAppError } from '@/services/errors/AppError';
-import { getInteractions } from '@/services/interactions/getInteractions';
 import { getInteractionsByEntity } from '@/services/interactions/getInteractionsByEntity';
 
 vi.mock('@/services/api/safeTrpc', () => ({
   invokeTrpc: vi.fn()
-}));
-
-vi.mock('@/services/interactions/getInteractions', () => ({
-  getInteractions: vi.fn()
 }));
 
 const buildInteraction = (
@@ -48,7 +43,6 @@ const buildInteraction = (
 });
 
 const mockInvokeRpc = vi.mocked(invokeTrpc);
-const mockGetInteractions = vi.mocked(getInteractions);
 
 describe('getInteractionsByEntity', () => {
   beforeEach(() => {
@@ -75,32 +69,9 @@ describe('getInteractionsByEntity', () => {
       totalPages: 1
     });
     expect(result.interactions).toHaveLength(1);
-    expect(mockGetInteractions).not.toHaveBeenCalled();
   });
 
-  it('falls back to Supabase filtering when backend does not support list_by_entity yet', async () => {
-    mockInvokeRpc.mockRejectedValue(
-      createAppError({
-        code: 'INVALID_PAYLOAD',
-        message:
-          '[{"code":"invalid_union","errors":[],"note":"No matching discriminator","discriminator":"action","path":["action"],"message":"Invalid input"}]',
-        source: 'edge'
-      })
-    );
-    mockGetInteractions.mockResolvedValue([
-      buildInteraction('out-of-entity', 'entity-2', '2026-02-12T10:00:00.000Z'),
-      buildInteraction('older', 'entity-1', '2026-02-01T09:00:00.000Z'),
-      buildInteraction('newer', 'entity-1', '2026-02-10T09:00:00.000Z')
-    ]);
-
-    const result = await getInteractionsByEntity('entity-1', 1, 20);
-
-    expect(mockGetInteractions).toHaveBeenCalledTimes(1);
-    expect(result.total).toBe(2);
-    expect(result.interactions.map((interaction) => interaction.id)).toEqual(['newer', 'older']);
-  });
-
-  it('keeps throwing unrelated RPC errors without fallback', async () => {
+  it('throws RPC errors without fallback to a global interactions read', async () => {
     const error = createAppError({
       code: 'INVALID_PAYLOAD',
       message: 'Payload invalide.',
@@ -109,6 +80,5 @@ describe('getInteractionsByEntity', () => {
     mockInvokeRpc.mockRejectedValue(error);
 
     await expect(getInteractionsByEntity('entity-1', 1, 20)).rejects.toBe(error);
-    expect(mockGetInteractions).not.toHaveBeenCalled();
   });
 });

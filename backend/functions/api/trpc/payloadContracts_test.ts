@@ -46,6 +46,35 @@ Deno.test('dataEntitiesPayloadSchema supports entity list and search index actio
   assertEquals(dataEntitiesPayloadSchema.safeParse(searchIndexPayload).success, true);
 });
 
+Deno.test('dataEntitiesPayloadSchema rejects entity departments outside the live table constraint', () => {
+  const clientPayload = {
+    action: 'save',
+    agency_id: '11111111-1111-4111-8111-111111111111',
+    entity_type: 'Client',
+    entity: {
+      client_number: '1001',
+      client_kind: 'company',
+      account_type: 'term',
+      name: 'ACME',
+      address: '1 rue de Paris',
+      postal_code: '75001',
+      department: '075',
+      city: 'Paris',
+      notes: '',
+      agency_id: '11111111-1111-4111-8111-111111111111'
+    }
+  };
+
+  assertEquals(dataEntitiesPayloadSchema.safeParse(clientPayload).success, false);
+  assertEquals(dataEntitiesPayloadSchema.safeParse({
+    ...clientPayload,
+    entity: {
+      ...clientPayload.entity,
+      department: '75'
+    }
+  }).success, true);
+});
+
 Deno.test('dataEntitiesPayloadSchema supports supplier save action', () => {
   const supplierPayload = {
     action: 'save',
@@ -63,6 +92,13 @@ Deno.test('dataEntitiesPayloadSchema supports supplier save action', () => {
   };
 
   assertEquals(dataEntitiesPayloadSchema.safeParse(supplierPayload).success, true);
+  assertEquals(dataEntitiesPayloadSchema.safeParse({
+    ...supplierPayload,
+    entity: {
+      ...supplierPayload.entity,
+      department: '2A'
+    }
+  }).success, false);
 });
 
 Deno.test('dataEntityContactsPayloadSchema supports list_by_entity, save and delete actions', () => {
@@ -95,15 +131,26 @@ Deno.test('dataEntityContactsPayloadSchema supports list_by_entity, save and del
   assertEquals(dataEntityContactsPayloadSchema.safeParse(deletePayload).success, true);
 });
 
-Deno.test('dataProfilePayloadSchema supports only password_changed action', () => {
+Deno.test('dataProfilePayloadSchema supports profile write actions', () => {
   const supportedPayload = { action: 'password_changed' };
+  const activeAgencyPayload = {
+    action: 'set_active_agency',
+    agency_id: '11111111-1111-4111-8111-111111111111'
+  };
+  const clearAgencyPayload = {
+    action: 'set_active_agency',
+    agency_id: null
+  };
   const unsupportedPayload = { action: 'get' };
 
   assertEquals(dataProfilePayloadSchema.safeParse(supportedPayload).success, true);
+  assertEquals(dataProfilePayloadSchema.safeParse(activeAgencyPayload).success, true);
+  assertEquals(dataProfilePayloadSchema.safeParse(clearAgencyPayload).success, true);
+  assertEquals(dataProfilePayloadSchema.safeParse({ ...activeAgencyPayload, extra: true }).success, false);
   assertEquals(dataProfilePayloadSchema.safeParse(unsupportedPayload).success, false);
 });
 
-Deno.test('dataInteractionsPayloadSchema supports save, add_timeline_event, list_by_entity and delete', () => {
+Deno.test('dataInteractionsPayloadSchema supports save, add_timeline_event, agency lists, drafts and delete', () => {
   const savePayload = {
     action: 'save',
     agency_id: '11111111-1111-4111-8111-111111111111',
@@ -146,6 +193,39 @@ Deno.test('dataInteractionsPayloadSchema supports save, add_timeline_event, list
     page: 1,
     page_size: 20
   };
+  const listByAgencyPayload = {
+    action: 'list_by_agency',
+    agency_id: '11111111-1111-4111-8111-111111111111',
+    limit: 200
+  };
+  const knownCompaniesPayload = {
+    action: 'known_companies',
+    agency_id: '11111111-1111-4111-8111-111111111111',
+    limit: 2000
+  };
+  const draftGetPayload = {
+    action: 'draft_get',
+    user_id: '66666666-6666-4666-8666-666666666666',
+    agency_id: '11111111-1111-4111-8111-111111111111',
+    form_type: 'interaction'
+  };
+  const draftSavePayload = {
+    action: 'draft_save',
+    user_id: '66666666-6666-4666-8666-666666666666',
+    agency_id: '11111111-1111-4111-8111-111111111111',
+    form_type: 'interaction',
+    payload: {
+      values: {
+        subject: 'Sujet brouillon'
+      }
+    }
+  };
+  const draftDeletePayload = {
+    action: 'draft_delete',
+    user_id: '66666666-6666-4666-8666-666666666666',
+    agency_id: '11111111-1111-4111-8111-111111111111',
+    form_type: 'interaction'
+  };
 
   const deletePayload = {
     action: 'delete',
@@ -154,6 +234,14 @@ Deno.test('dataInteractionsPayloadSchema supports save, add_timeline_event, list
 
   assertEquals(dataInteractionsPayloadSchema.safeParse(savePayload).success, true);
   assertEquals(dataInteractionsPayloadSchema.safeParse(addTimelinePayload).success, true);
+  assertEquals(dataInteractionsPayloadSchema.safeParse(listByAgencyPayload).success, true);
+  assertEquals(dataInteractionsPayloadSchema.safeParse(knownCompaniesPayload).success, true);
+  assertEquals(dataInteractionsPayloadSchema.safeParse(draftGetPayload).success, true);
+  assertEquals(dataInteractionsPayloadSchema.safeParse(draftSavePayload).success, true);
+  assertEquals(dataInteractionsPayloadSchema.safeParse(draftDeletePayload).success, true);
   assertEquals(dataInteractionsPayloadSchema.safeParse(listPayload).success, true);
   assertEquals(dataInteractionsPayloadSchema.safeParse(deletePayload).success, true);
+  assertEquals(dataInteractionsPayloadSchema.safeParse({ ...listByAgencyPayload, limit: 501 }).success, false);
+  assertEquals(dataInteractionsPayloadSchema.safeParse({ ...draftGetPayload, form_type: '' }).success, false);
+  assertEquals(dataInteractionsPayloadSchema.safeParse({ ...draftSavePayload, payload: undefined }).success, false);
 });

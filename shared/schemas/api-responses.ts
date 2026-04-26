@@ -23,6 +23,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 type EntityRow = Database['public']['Tables']['entities']['Row'];
 type EntityContactRow = Database['public']['Tables']['entity_contacts']['Row'];
 type InteractionRow = Database['public']['Tables']['interactions']['Row'];
+type InteractionDraftRow = Pick<Database['public']['Tables']['interaction_drafts']['Row'], 'id' | 'payload' | 'updated_at'>;
 type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 type AgencyMemberRow = Database['public']['Tables']['agency_members']['Row'];
 
@@ -39,9 +40,18 @@ const isInteractionRow = (value: unknown): value is InteractionRow =>
   && typeof value.channel === 'string'
   && Array.isArray(value.timeline);
 
+const isInteractionDraftRow = (value: unknown): value is InteractionDraftRow =>
+  isRecord(value)
+  && typeof value.id === 'string'
+  && value.id.trim().length > 0
+  && typeof value.updated_at === 'string'
+  && value.updated_at.trim().length > 0
+  && 'payload' in value;
+
 const entityRowSchema = z.custom<EntityRow>((value) => isEntityRow(value), 'Entite invalide.');
 const entityContactRowSchema = z.custom<EntityContactRow>((value) => isEntityContactRow(value), 'Contact invalide.');
 const interactionRowSchema = z.custom<InteractionRow>((value) => isInteractionRow(value), 'Interaction invalide.');
+const interactionDraftRowSchema = z.custom<InteractionDraftRow>((value) => isInteractionDraftRow(value), 'Brouillon invalide.');
 
 const apiSuccessSchema = z.object({
   request_id: z.string().trim().min(1).optional(),
@@ -157,9 +167,19 @@ export const dataInteractionsDeleteResponseSchema = apiSuccessSchema.extend({
   interaction_id: z.string().trim().min(1, 'Identifiant interaction requis')
 }).strict();
 
+export const dataInteractionsKnownCompaniesResponseSchema = apiSuccessSchema.extend({
+  companies: z.array(z.string().trim().min(1, 'Entreprise requise'))
+}).strict();
+
+export const dataInteractionDraftResponseSchema = apiSuccessSchema.extend({
+  draft: interactionDraftRowSchema.nullable()
+}).strict();
+
 export const dataInteractionsResponseSchema = z.union([
   dataInteractionsMutationResponseSchema,
   dataInteractionsListResponseSchema,
+  dataInteractionsKnownCompaniesResponseSchema,
+  dataInteractionDraftResponseSchema,
   dataInteractionsDeleteResponseSchema
 ]);
 
@@ -302,6 +322,8 @@ export type DataEntityContactsResponse = z.infer<typeof dataEntityContactsRespon
 export type DataInteractionsMutationResponse = z.infer<typeof dataInteractionsMutationResponseSchema>;
 export type DataInteractionsListResponse = z.infer<typeof dataInteractionsListResponseSchema>;
 export type DataInteractionsDeleteResponse = z.infer<typeof dataInteractionsDeleteResponseSchema>;
+export type DataInteractionsKnownCompaniesResponse = z.infer<typeof dataInteractionsKnownCompaniesResponseSchema>;
+export type DataInteractionDraftResponse = z.infer<typeof dataInteractionDraftResponseSchema>;
 export type DataInteractionsResponse = z.infer<typeof dataInteractionsResponseSchema>;
 export type DataConfigResponse = z.infer<typeof dataConfigResponseSchema>;
 export type DataProfileResponse = z.infer<typeof dataProfileResponseSchema>;

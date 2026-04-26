@@ -5,10 +5,12 @@
 ### Programme de remise a niveau professionnelle
 
 Objectif global:
-- remettre le projet dans un etat reproductible, auditable et deployable sans drift repo/prod
+- remettre le projet dans un etat reproductible et auditable sans drift repo/Supabase distant lie
 - restaurer une source de verite unique pour le code Edge Function, les migrations, les types generes et la gate QA
-- supprimer les fallbacks qui masquent les divergences backend/prod
+- supprimer les fallbacks qui masquent les divergences backend/Supabase distant lie
 - reintroduire une CI qui execute la meme verite que la gate locale
+
+Contexte d'environnement: l'application CIR Cockpit reste executee localement. Le seul runtime distant lie est le projet Supabase `rbjtrcorlezvocayluok` utilise pour la base, Auth et l'Edge Function `api`; toute mention historique de deploy concerne ce runtime Supabase distant, pas une application web de production.
 
 ### Etat d'avancement
 
@@ -51,7 +53,7 @@ Critere de sortie:
 - [ ] exposer le parametrage metier administrable sans rehardcoder les comportements dans le front
 
 Critere de sortie:
-- plus aucun appel frontend direct aux APIs entreprise en production
+- plus aucun appel frontend direct aux APIs entreprise dans le runtime applicatif local
 - plus aucun fallback silencieux qui masque une procedure absente
 - chaque comportement variable passe par une couche de configuration explicite
 
@@ -63,7 +65,7 @@ Critere de sortie:
 - [x] forcer RLS sur `app_settings`, `agency_settings`, `directory_saved_views` et `reference_departments`
 - [x] supprimer les appels backend `rpc()` vers `check_rate_limit` et `hard_delete_agency` au profit de SQL direct via le client DB de confiance
 - [x] formaliser les controles de hardening dans `docs/qa-runbook.md` et dans `pnpm run repo:check`
-- [ ] requalifier les indexes "unused" apres une vraie fenetre d'observation prod
+- [ ] requalifier les indexes "unused" apres une vraie fenetre d'observation sur le Supabase distant lie
 - [ ] garder `auth_leaked_password_protection` explicitement waivé tant que la politique projet reste `N/A`
 
 Critere de sortie:
@@ -154,7 +156,7 @@ Elle ne conserve que l'etat reellement verifie par commandes et tests.
 
 - [ ] migrer les derniers services metier front qui lisent directement Supabase vers la frontiere tRPC (`getProspects`, `getEntitySearchIndex`, `getEntityContacts`).
 - [ ] decouper les hotspots majeurs restants (`directory.ts`, onboarding entite, services data).
-- [ ] requalifier les grants et indexes Supabase apres observation prod.
+- [ ] requalifier les grants et indexes Supabase apres observation sur le Supabase distant lie.
 
 ## 2026-04-25 - Frontiere API entites
 
@@ -239,13 +241,13 @@ Elle ne conserve que l'etat reellement verifie par commandes et tests.
 - `deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api/services/adminUsers_test.ts backend/functions/api/trpc/router_test.ts` -> PASS (`23` tests).
 - `pnpm --dir frontend run typecheck` -> PASS.
 - `deno lint backend/functions/api` -> PASS.
-- MCP Supabase `list_edge_functions` -> `api` ACTIVE version 37, `verify_jwt=false`, entrypoint/import map attendus.
+- MCP Supabase `list_edge_functions` -> `api` ACTIVE version 37 avant deploy distant admin/audit, `verify_jwt=false`, entrypoint/import map attendus.
 - MCP Supabase advisors -> securite: `auth_leaked_password_protection` WARN connu; performance: `unused_index` INFO observation-only, aucune action de suppression.
 - `pnpm run qa:fast` -> PASS (`425` tests frontend, `140` tests backend, `8` ignores).
 - `pnpm run qa` -> PASS avec coverage, build frontend, lint/typecheck/tests backend et runner integration (`9` ignores hors environnement dedie).
-- Deploy prod `supabase functions deploy api --project-ref rbjtrcorlezvocayluok --use-api --import-map deno.json --no-verify-jwt` -> PASS.
+- Deploy Edge Function Supabase distant `supabase functions deploy api --project-ref rbjtrcorlezvocayluok --use-api --import-map deno.json --no-verify-jwt` -> PASS.
 - MCP Supabase `list_edge_functions` apres deploy -> `api` ACTIVE version 38, `verify_jwt=false`, hash `04800a6bad825c417245e82f94331428589fae3964aac9cd51adf8efff2b06a0`.
-- Probe CORS prod `OPTIONS /functions/v1/api/trpc/admin.audit-logs` avec `Origin: http://localhost:3000` -> PASS `200`. Avec `Origin: https://cir-cockpit.com` -> `403`, origine non autorisee par la configuration actuelle.
+- Probe CORS Supabase distant `OPTIONS /functions/v1/api/trpc/admin.audit-logs` avec `Origin: http://localhost:3000` -> PASS `200`. Avec `Origin: https://cir-cockpit.com` -> `403`, origine non autorisee par la configuration actuelle.
 - `pnpm run qa` -> PASS (`117` fichiers de tests frontend, `425` tests frontend, `138` tests backend, `9` integrations backend ignorees hors environnement dedie).
 
 ## 2026-04-26 - Audit architecture et QA docs
@@ -282,9 +284,9 @@ Elle ne conserve que l'etat reellement verifie par commandes et tests.
 ### Reste a traiter
 
 - [x] migrer `frontend/src/services/admin/getAdminUsers.ts` et `frontend/src/services/admin/getAuditLogs.ts` vers des procedures backend/tRPC.
-- [ ] migrer `frontend/src/services/interactions/getInteractions.ts` et `frontend/src/services/interactions/getKnownCompanies.ts` vers `data.interactions` ou une procedure dediee.
-- [ ] migrer `frontend/src/services/interactions/getInteractionDraft.ts`, `saveInteractionDraft.ts` et `deleteInteractionDraft.ts` si le workflow brouillon continue d'evoluer.
-- [ ] migrer `frontend/src/services/agency/setProfileActiveAgencyId.ts` si la preference agence doit etre auditee ou valider une logique multi-agence stricte.
+- [x] migrer `frontend/src/services/interactions/getInteractions.ts` et `frontend/src/services/interactions/getKnownCompanies.ts` vers `data.interactions`.
+- [x] migrer `frontend/src/services/interactions/getInteractionDraft.ts`, `saveInteractionDraft.ts` et `deleteInteractionDraft.ts` vers `data.interactions`.
+- [x] migrer `frontend/src/services/agency/setProfileActiveAgencyId.ts` vers `data.profile`.
 
 ## 2026-04-26 - Audit alignement DB/types/schemas
 
@@ -295,14 +297,14 @@ Elle ne conserve que l'etat reellement verifie par commandes et tests.
 - [x] verifier que `shared/supabase.types.ts` reflete les tables auditees du schema live genere par MCP (`PostgrestVersion: "14.1"`).
 - [x] clarifier que `backend/drizzle/schema.ts` est une couche partielle de requetes, pas la source exhaustive du schema Supabase.
 - [x] clarifier que les schemas Zod partages sont des contrats API/formulaires, pas un miroir DB colonne par colonne.
-- [x] documenter les divergences a traiter avant refactor lourd: `interactions.id` live `text` vs Drizzle `uuid`, `entities.department` live strictement 2 chiffres vs schema client 2-3 chiffres, validation transitoire des brouillons vs `interaction_drafts.agency_id` non nullable.
+- [x] documenter les divergences a traiter avant refactor lourd: `interactions.id` live `text` vs Drizzle `uuid`, `entities.department` live strictement 2 chiffres vs schema client historique 2-3 chiffres, validation transitoire des brouillons vs `interaction_drafts.agency_id` non nullable.
 - [x] aligner `backend/drizzle/schema.ts` sur le schema live pour `interactions.id`: colonne Drizzle passee de `uuid('id')` a `text('id').$type<string>().primaryKey()`, sans migration DB.
 - [x] ajouter un garde-fou `pnpm run repo:check` qui bloque le retour de `interactions.id` en `uuid` dans Drizzle.
 
 ### Reste a traiter
 
-- [ ] trancher la strategie departements pour `entities.department` avant d'accepter des codes hors `^[0-9]{2}$` dans les fiches clients.
-- [ ] migrer les lectures directes restantes interactions/brouillons en s'appuyant sur les contraintes live et schemas partages verifies.
+- [x] trancher la strategie departements pour `entities.department`: rester aligne avec la contrainte live `NULL` ou deux chiffres, sans accepter `2A/2B` dans les fiches entites tant qu'aucune migration DB explicite n'est appliquee.
+- [x] migrer les lectures/ecritures directes restantes des brouillons en s'appuyant sur les contraintes live et schemas partages verifies.
 - [ ] ajouter un controle de drift explicite repo/runtime/schema/types si la phase DB reprend.
 
 ### Validation reexecutee
@@ -315,3 +317,120 @@ Elle ne conserve que l'etat reellement verifie par commandes et tests.
 - `pnpm run repo:check` -> PASS avec garde-fou `interactions.id` actif.
 - `pnpm run qa:fast` -> PASS (`425` tests frontend, `138` tests backend).
 - `pnpm run qa` -> PASS (`425` tests frontend avec coverage/build, `138` tests backend, `9` integrations backend ignorees hors environnement dedie).
+
+## 2026-04-26 - Suite frontiere API interactions
+
+### Corrige
+
+- [x] clarifier dans les docs que l'application reste locale et que le projet Supabase `rbjtrcorlezvocayluok` est le seul runtime distant lie.
+- [x] ajouter les actions `data.interactions/list_by_agency` et `data.interactions/known_companies` dans le contrat Zod partage.
+- [x] migrer `getInteractions` hors lecture Supabase directe vers `data.interactions/list_by_agency`, avec hydratation locale de la timeline conservee.
+- [x] migrer `getKnownCompanies` hors lecture Supabase directe vers `data.interactions/known_companies`, avec normalisation trim/dedup/tri cote backend.
+- [x] supprimer le fallback global de `getInteractionsByEntity` vers `getInteractions`.
+
+### Validation reexecutee
+
+- MCP Supabase `list_edge_functions` -> `api` ACTIVE version 38, `verify_jwt=false`, entrypoint/import map attendus.
+- MCP Supabase `list_tables(public)` -> PASS: 20 tables publiques, RLS activee partout.
+- Context7 tRPC -> KO technique: 3 tentatives `resolve-library-id` ont expire. Decision appliquee depuis le contrat local deja type (`shared/api/trpc.ts`) et les patterns tRPC v11 existants du repo.
+- `deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api/services/dataInteractions_test.ts backend/functions/api/trpc/payloadContracts_test.ts` -> PASS (`11` tests).
+- `pnpm --dir frontend run test:run -- src/services/interactions/__tests__/interactions.rpc-services.test.ts src/services/interactions/__tests__/getInteractionsByEntity.test.ts` -> PASS (`6` tests).
+- `deno lint backend/functions/api/services/dataInteractions.ts backend/functions/api/services/dataInteractions_test.ts backend/functions/api/trpc/payloadContracts_test.ts` -> PASS.
+- `deno check --config backend/deno.json backend/functions/api/index.ts` -> PASS.
+- `pnpm --dir frontend run typecheck` -> PASS.
+- `pnpm run qa:fast` -> PASS (`118` fichiers de tests frontend, `428` tests frontend, `141` tests backend, `8` ignores).
+- `pnpm run qa` -> PASS avec coverage, build frontend, lint/typecheck/tests backend et runner integration (`9` integrations backend ignorees hors environnement dedie).
+- Deploy Edge Function Supabase distant `supabase functions deploy api --project-ref rbjtrcorlezvocayluok --use-api --import-map deno.json --no-verify-jwt` -> PASS.
+- MCP Supabase `list_edge_functions` apres deploy -> `api` ACTIVE version 39, `verify_jwt=false`, entrypoint `source/supabase/functions/api/index.ts`, import map `source/deno.json`, hash `a264e0dc7109d76c3f1068a6ede3c027269f5d8cde099832e1884a0ce16c4373`.
+- Probe CORS Supabase distant `OPTIONS /functions/v1/api/trpc/data.interactions` avec `Origin: http://localhost:3000` -> PASS `200`.
+- Probe anonyme Supabase distant `POST /functions/v1/api/trpc/data.interactions` -> PASS attendu `401 AUTH_REQUIRED`, sans `404`.
+- Probe header legacy Supabase distant `POST /functions/v1/api/trpc/data.interactions` avec seul `x-client-authorization` -> PASS attendu `401 AUTH_REQUIRED`, contrat `Authorization` uniquement respecte.
+
+## 2026-04-26 - Suite frontiere API brouillons interactions
+
+### Corrige
+
+- [x] ajouter les actions `data.interactions/draft_get`, `draft_save` et `draft_delete` dans le contrat Zod partage, avec payloads `.strict()`.
+- [x] ajouter `interaction_drafts` au schema Drizzle local utilise par l'Edge Function, sans migration DB.
+- [x] migrer `getInteractionDraft`, `saveInteractionDraft` et `deleteInteractionDraft` hors lecture/ecriture Supabase directe vers `data.interactions`.
+- [x] conserver la validation frontend du payload UI brouillon via `parseInteractionDraftPayload`, separee du transport JSON backend.
+- [x] ajouter le controle serveur `user_id === authContext.userId` en plus de `ensureAgencyAccess`.
+
+### Reste a traiter
+
+- [x] trancher la strategie departements pour `entities.department`: contrat applicatif limite a deux chiffres et absence persistee en `NULL`.
+
+### Validation reexecutee
+
+- MCP Supabase `list_tables(public, verbose=true)` -> PASS: `interaction_drafts` RLS active, `agency_id` non nullable, unique key `(user_id, agency_id, form_type)` presente.
+- Supabase docs MCP deploy Edge Functions -> PASS: commande `supabase functions deploy` et option `--no-verify-jwt` confirmees dans la documentation officielle.
+- Context7 tRPC -> KO technique: `resolve-library-id` a expire. Decision appliquee depuis le contrat local deja type (`shared/api/trpc.ts`) et les patterns tRPC v11 existants du repo.
+- `deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api/services/dataInteractions_test.ts backend/functions/api/trpc/payloadContracts_test.ts` -> PASS (`12` tests).
+- `pnpm --dir frontend run test:run -- src/services/interactions/__tests__/interactions.rpc-services.test.ts src/hooks/__tests__/useInteractionDraft.test.tsx` -> PASS (`13` tests).
+- `deno check --config backend/deno.json backend/functions/api/index.ts` -> PASS.
+- `pnpm --dir frontend run typecheck` -> PASS.
+- `pnpm run qa:fast` -> PASS (`118` fichiers de tests frontend, `432` tests frontend, `142` tests backend, `8` ignores).
+- `pnpm run qa` -> PASS avec coverage, build frontend, lint/typecheck/tests backend et runner integration (`9` integrations backend ignorees hors environnement dedie).
+- Deploy Edge Function Supabase distant `supabase functions deploy api --project-ref rbjtrcorlezvocayluok --use-api --import-map deno.json --no-verify-jwt` -> PASS.
+- MCP Supabase `list_edge_functions` apres deploy -> `api` ACTIVE version 40, `verify_jwt=false`, entrypoint `source/supabase/functions/api/index.ts`, import map `source/deno.json`, hash `41bfc3eed7eb8fded1841f7abb74ddb304af63dee09494118a67ff8a45d17331`.
+- Probe CORS Supabase distant `OPTIONS /functions/v1/api/trpc/data.interactions` avec `Origin: http://localhost:3000` -> PASS `200`.
+- Probe anonyme Supabase distant `POST /functions/v1/api/trpc/data.interactions` action `draft_get` -> PASS attendu `401 AUTH_REQUIRED`, sans `404`.
+- Probe header legacy Supabase distant `POST /functions/v1/api/trpc/data.interactions` action `draft_get` avec seul `x-client-authorization` -> PASS attendu `401 AUTH_REQUIRED`, contrat `Authorization` uniquement respecte.
+
+## 2026-04-26 - Suite frontiere API preference agence active
+
+### Corrige
+
+- [x] ajouter l'action `data.profile/set_active_agency` dans le contrat Zod partage, avec `agency_id` `uuid | null`.
+- [x] migrer `setProfileActiveAgencyId` hors ecriture Supabase directe vers `data.profile`.
+- [x] controler cote backend que l'agence demandee est accessible via `ensureAgencyAccess`; `null` reste autorise pour vider la preference.
+- [x] conserver le contrat frontend `ResultAsync<void, AppError>` consomme par `useAppSessionState`.
+
+### Reste a traiter
+
+- [x] trancher la strategie departements pour `entities.department`: contrat applicatif limite a deux chiffres et absence persistee en `NULL`.
+
+## 2026-04-26 - Suite alignement `entities.department`
+
+### Corrige
+
+- [x] ajouter un schema partage `entityDepartmentCodeSchema` aligne sur la contrainte live `department IS NULL OR department ~ '^[0-9]{2}$'`.
+- [x] brancher les schemas client, prospect, fournisseur et onboarding sur ce contrat deux chiffres.
+- [x] normaliser la deduction onboarding depuis le code postal sur deux chiffres pour eviter les valeurs `971/972/...` refusees par `entities.department`.
+- [x] persister les departements absents en `NULL` cote backend au lieu de `''`, qui viole aussi la contrainte live.
+- [x] documenter l'ecart assume: `2A/2B` restent autorises dans `reference_departments`, mais pas dans les fiches entites sans migration DB.
+
+### Validation reexecutee
+
+- Context7 Zod v4 -> PASS: `z.strictObject`/schemas stricts et validation regex/safeParse confirmes; implementation conserve les patterns `.strict()` existants du repo.
+- `pnpm --dir frontend run test:run -- src/components/entity-onboarding/__tests__/entityOnboarding.utils.test.ts src/components/__tests__/EntityOnboardingDialog.test.tsx src/services/entities/__tests__/entities.rpc-services.test.ts` -> PASS (`21` tests).
+- `deno test --allow-env --no-check --config backend/deno.json backend/functions/api/trpc/payloadContracts_test.ts backend/functions/api/services/dataEntities_test.ts` -> PASS (`18` tests).
+- `pnpm --dir frontend run typecheck` -> PASS.
+- `deno check --config backend/deno.json backend/functions/api/index.ts` -> PASS.
+- `deno lint backend/functions/api` -> PASS.
+- `git diff --check` -> PASS avec avertissements CRLF historiques uniquement.
+- `pnpm run qa:fast` -> PASS (`119` fichiers de tests frontend, `433` tests frontend, `147` tests backend, `8` ignores).
+- `pnpm run qa` -> PASS avec coverage, build frontend, lint/typecheck/tests backend et runner integration (`9` integrations backend ignorees hors environnement dedie).
+- MCP Supabase avant deploy -> `api` ACTIVE version 41, `verify_jwt=false`; security advisor: WARN connu `auth_leaked_password_protection`; performance advisor: INFO `unused_index` observation-only.
+- Deploy Edge Function Supabase distant `supabase functions deploy api --project-ref rbjtrcorlezvocayluok --use-api --import-map deno.json --no-verify-jwt` -> PASS.
+- MCP Supabase `list_edge_functions` apres deploy -> `api` ACTIVE version 42, `verify_jwt=false`, entrypoint `source/supabase/functions/api/index.ts`, import map `source/deno.json`, hash `07b24ed5d2c389812a3075fd46f39811b4d535383df7ad8927a89a06d3afad91`.
+- Probe CORS Supabase distant `OPTIONS /functions/v1/api/trpc/data.entities` avec `Origin: http://localhost:3000` -> PASS `200`.
+- Probe anonyme Supabase distant `POST /functions/v1/api/trpc/data.entities` action `list` -> PASS attendu `401 AUTH_REQUIRED`, sans `404`.
+- Probe header legacy Supabase distant `POST /functions/v1/api/trpc/data.entities` action `list` avec seul `x-client-authorization` -> PASS attendu `401 AUTH_REQUIRED`, contrat `Authorization` uniquement respecte.
+
+### Validation reexecutee
+
+- MCP Supabase `list_tables(public, verbose=true)` -> PASS: `profiles.active_agency_id` nullable, FK vers `agencies`, RLS active.
+- Context7 tRPC -> KO technique: `resolve-library-id` a expire. Decision appliquee depuis le contrat local deja type (`shared/api/trpc.ts`) et les patterns tRPC v11 existants du repo.
+- `deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api/services/dataProfile_test.ts backend/functions/api/trpc/payloadContracts_test.ts` -> PASS (`12` tests).
+- `pnpm --dir frontend run test:run -- src/services/agency/__tests__/agency.supabase-services.test.ts src/hooks/__tests__/useAppSessionState.test.tsx` -> PASS (`6` tests).
+- `deno lint backend/functions/api/services/dataProfile.ts backend/functions/api/services/dataProfile_test.ts backend/functions/api/trpc/payloadContracts_test.ts` -> PASS.
+- `deno check --config backend/deno.json backend/functions/api/index.ts` -> PASS.
+- `pnpm --dir frontend run typecheck` -> PASS.
+- `pnpm run qa:fast` -> PASS (`118` fichiers de tests frontend, `432` tests frontend, `145` tests backend, `8` ignores).
+- `pnpm run qa` -> PASS avec coverage, build frontend, lint/typecheck/tests backend et runner integration (`9` integrations backend ignorees hors environnement dedie).
+- Deploy Edge Function Supabase distant `supabase functions deploy api --project-ref rbjtrcorlezvocayluok --use-api --import-map deno.json --no-verify-jwt` -> PASS.
+- MCP Supabase `list_edge_functions` apres deploy -> `api` ACTIVE version 41, `verify_jwt=false`, entrypoint `source/supabase/functions/api/index.ts`, import map `source/deno.json`, hash `e65d0339e479e324481fca8e99066168dc0e167493937adce4fcb5d706a7f1b4`.
+- Probe CORS Supabase distant `OPTIONS /functions/v1/api/trpc/data.profile` avec `Origin: http://localhost:3000` -> PASS `200`.
+- Probe anonyme Supabase distant `POST /functions/v1/api/trpc/data.profile` action `set_active_agency` -> PASS attendu `401 AUTH_REQUIRED`, sans `404`.
+- Probe header legacy Supabase distant `POST /functions/v1/api/trpc/data.profile` action `set_active_agency` avec seul `x-client-authorization` -> PASS attendu `401 AUTH_REQUIRED`, contrat `Authorization` uniquement respecte.

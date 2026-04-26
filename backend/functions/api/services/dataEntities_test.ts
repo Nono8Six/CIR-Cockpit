@@ -8,6 +8,7 @@ import {
   listEntities,
   reassignEntity
 } from './dataEntities.ts';
+import { buildSaveEntityRows } from './dataEntitiesSaveRows.ts';
 
 type ReassignMocks = {
   agencyRow?: { id: string; archived_at: string | null } | null;
@@ -288,6 +289,26 @@ Deno.test('getEntitySearchIndex returns empty index when agency is missing', asy
   assertEquals(result, { entities: [], contacts: [] });
   assertEquals(calls.entityOrderByCount, 0);
   assertEquals(calls.contactOrderByCount, 0);
+});
+
+Deno.test('buildSaveEntityRows stores missing departments as null for the entities check constraint', () => {
+  const { updateRow, insertRow } = buildSaveEntityRows({
+    action: 'save',
+    agency_id: 'agency-1',
+    entity_type: 'Fournisseur',
+    entity: {
+      name: 'Fournisseur',
+      address: '',
+      postal_code: '',
+      department: '',
+      city: '',
+      notes: '',
+      agency_id: 'agency-1'
+    }
+  }, 'agency-1', 'user-1');
+
+  assertEquals(updateRow.department, null);
+  assertEquals(insertRow.department, null);
 });
 
 Deno.test('reassignEntity rejects non-orphan entities', async () => {

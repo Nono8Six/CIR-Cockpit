@@ -1,6 +1,7 @@
 import { z } from 'zod/v4';
 
 import { accountTypeSchema, clientKindSchema, clientNumberSchema } from 'shared/schemas/client.schema';
+import { optionalEntityDepartmentCodeSchema } from 'shared/schemas/department.schema';
 import { officialDataSourceSchema } from 'shared/schemas/directory.schema';
 
 const optionalTextSchema = z.union([z.string(), z.null(), z.undefined()]).transform((value) => value?.trim() ?? '');
@@ -22,7 +23,7 @@ export const onboardingFormSchema = z.object({
   email: optionalEmailSchema,
   address: optionalTextSchema,
   postal_code: optionalPostalCodeSchema,
-  department: optionalTextSchema,
+  department: optionalEntityDepartmentCodeSchema,
   city: z.string().trim().min(1, 'Ville requise'),
   siret: optionalTextSchema,
   siren: optionalTextSchema,

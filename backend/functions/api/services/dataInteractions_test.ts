@@ -1,6 +1,11 @@
 import { assertEquals } from 'std/assert';
 
-import { normalizeInteractionUpdates, resolvePagination } from './dataInteractions.ts';
+import {
+  normalizeInteractionUpdates,
+  normalizeKnownCompanies,
+  resolveDraftFormType,
+  resolvePagination
+} from './dataInteractions.ts';
 
 Deno.test('normalizeInteractionUpdates keeps only whitelisted keys', () => {
   const normalized = normalizeInteractionUpdates({
@@ -71,4 +76,23 @@ Deno.test('resolvePagination computes offset from page and page_size', () => {
     pageSize: 10,
     offset: 20
   });
+});
+
+Deno.test('normalizeKnownCompanies trims, removes empty names, deduplicates case-insensitively and sorts in French', () => {
+  const companies = normalizeKnownCompanies([
+    { company_name: '  Zebra Industrie  ' },
+    { company_name: '' },
+    { company_name: 'alpha' },
+    { company_name: 'Alpha' },
+    { company_name: null },
+    { company_name: 'Éclair' }
+  ]);
+
+  assertEquals(companies, ['alpha', 'Éclair', 'Zebra Industrie']);
+});
+
+Deno.test('resolveDraftFormType applies the default interaction form and trims custom form types', () => {
+  assertEquals(resolveDraftFormType(undefined), 'interaction');
+  assertEquals(resolveDraftFormType('   '), 'interaction');
+  assertEquals(resolveDraftFormType('  interaction-mobile  '), 'interaction-mobile');
 });

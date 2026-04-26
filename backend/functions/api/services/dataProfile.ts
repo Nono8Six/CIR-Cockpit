@@ -5,7 +5,7 @@ import type { DataProfileResponse } from '../../../../shared/schemas/api-respons
 import type { DataProfilePayload } from '../../../../shared/schemas/data.schema.ts';
 import type { AuthContext, DbClient } from '../types.ts';
 import { httpError } from '../middleware/errorHandler.ts';
-import { ensureDataRateLimit } from './dataAccess.ts';
+import { ensureAgencyAccess, ensureDataRateLimit } from './dataAccess.ts';
 
 type DataProfileDependencies = {
   ensureRateLimit: (scope: string, callerId: string) => Promise<void>;
@@ -13,6 +13,23 @@ type DataProfileDependencies = {
 
 const defaultDependencies: DataProfileDependencies = {
   ensureRateLimit: ensureDataRateLimit
+};
+
+const setActiveAgencyId = async (
+  db: DbClient,
+  authContext: AuthContext,
+  agencyId: string | null
+): Promise<void> => {
+  const activeAgencyId = agencyId === null ? null : ensureAgencyAccess(authContext, agencyId);
+
+  try {
+    await db
+      .update(profiles)
+      .set({ active_agency_id: activeAgencyId })
+      .where(eq(profiles.id, authContext.userId));
+  } catch {
+    throw httpError(500, 'PROFILE_UPDATE_FAILED', "Impossible de changer d'agence.");
+  }
 };
 
 export const handleDataProfileAction = async (
@@ -35,6 +52,10 @@ export const handleDataProfileAction = async (
         throw httpError(500, 'PROFILE_UPDATE_FAILED', 'Impossible de mettre a jour le profil.');
       }
 
+      return { request_id: requestId, ok: true };
+    }
+    case 'set_active_agency': {
+      await setActiveAgencyId(db, authContext, data.agency_id);
       return { request_id: requestId, ok: true };
     }
     default:

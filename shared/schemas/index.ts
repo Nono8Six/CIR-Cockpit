@@ -23,6 +23,10 @@ export {
 export { clientFormSchema, clientNumberSchema, accountTypeSchema } from './client.schema.ts';
 export { clientContactFormSchema } from './client-contact.schema.ts';
 export { convertClientSchema } from './convert-client.schema.ts';
+export {
+  entityDepartmentCodeSchema,
+  optionalEntityDepartmentCodeSchema
+} from './department.schema.ts';
 export { prospectFormSchema } from './prospect.schema.ts';
 export { supplierFormSchema } from './supplier.schema.ts';
 export {

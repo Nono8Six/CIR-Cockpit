@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getCurrentUserId } from '@/services/auth/getCurrentUserId';
+import { invokeTrpc } from '@/services/api/safeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 import { mapPostgrestError } from '@/services/errors/mapPostgrestError';
 import { getAgencies } from '@/services/agency/getAgencies';
@@ -9,6 +10,7 @@ import { setProfileActiveAgencyId } from '@/services/agency/setProfileActiveAgen
 import { requireSupabaseClient } from '@/services/supabase/requireSupabaseClient';
 
 vi.mock('../../auth/getCurrentUserId');
+vi.mock('../../api/safeTrpc');
 vi.mock('../../errors/mapPostgrestError');
 vi.mock('../../supabase/requireSupabaseClient');
 
@@ -25,6 +27,7 @@ type ListQuery = Promise<QueryResponse> & {
 };
 
 const mockGetCurrentUserId = vi.mocked(getCurrentUserId);
+const mockInvokeTrpc = vi.mocked(invokeTrpc);
 const mockMapPostgrestError = vi.mocked(mapPostgrestError);
 const mockRequireSupabase = vi.mocked(requireSupabaseClient);
 const asSupabaseClient = (client: object): ReturnType<typeof requireSupabaseClient> =>
@@ -102,39 +105,32 @@ describe('agency supabase services', () => {
     );
   });
 
-  it('updates active agency id and returns ResultAsync success/error', async () => {
-    mockGetCurrentUserId.mockResolvedValue('user-profile-2');
+  it('updates active agency id through data.profile and returns ResultAsync success/error', async () => {
+    mockInvokeTrpc.mockImplementationOnce(async (call, parseResponse) => {
+      const mutate = vi.fn().mockResolvedValue({ ok: true });
 
-    const eqSuccess = vi.fn().mockResolvedValue({
-      error: null,
-      status: 200
+      const payload = await call(
+        { data: { profile: { mutate } } } as unknown as Parameters<typeof call>[0],
+        {}
+      );
+      expect(mutate).toHaveBeenCalledWith({
+        action: 'set_active_agency',
+        agency_id: 'agency-1'
+      }, {});
+
+      return parseResponse(payload);
     });
-    const updateSuccess = vi.fn(() => ({ eq: eqSuccess }));
-    mockRequireSupabase.mockReturnValue(asSupabaseClient({
-      from: vi.fn(() => ({ update: updateSuccess }))
-    }));
 
     const successOutcome = await setProfileActiveAgencyId('agency-1').match(
       () => 'ok',
       () => 'err'
     );
     expect(successOutcome).toBe('ok');
-    expect(updateSuccess).toHaveBeenCalledWith({ active_agency_id: 'agency-1' });
-    expect(eqSuccess).toHaveBeenCalledWith('id', 'user-profile-2');
 
-    const mappedError = createAppError({
+    mockInvokeTrpc.mockRejectedValueOnce(createAppError({
       code: 'AUTH_FORBIDDEN',
       message: 'Acces interdit.',
-      source: 'db'
-    });
-    mockMapPostgrestError.mockReturnValue(mappedError);
-    const eqError = vi.fn().mockResolvedValue({
-      error: { message: 'forbidden' },
-      status: 403
-    });
-    const updateError = vi.fn(() => ({ eq: eqError }));
-    mockRequireSupabase.mockReturnValue(asSupabaseClient({
-      from: vi.fn(() => ({ update: updateError }))
+      source: 'edge'
     }));
 
     const errorCode = await setProfileActiveAgencyId('agency-2').match(

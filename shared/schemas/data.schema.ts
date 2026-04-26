@@ -12,6 +12,7 @@ import { supplierFormSchema } from './supplier.schema.ts';
 const MAX_TIMELINE_CONTENT_LENGTH = 5000;
 const MAX_TIMELINE_AUTHOR_LENGTH = 120;
 const MAX_CONFIG_LABEL_LENGTH = 120;
+const MAX_DRAFT_FORM_TYPE_LENGTH = 64;
 
 const jsonValueSchema: z.ZodType<Json> = z.lazy(() =>
   z.union([
@@ -182,6 +183,45 @@ const listByEntitySchema = z.object({
   page_size: z.number().int().min(1, 'Taille de page invalide').max(50, 'Taille de page trop grande').optional()
 }).strict();
 
+const listByAgencySchema = z.object({
+  action: z.literal('list_by_agency'),
+  agency_id: uuidSchema,
+  limit: z.number().int().min(1, 'Limite invalide').max(500, 'Limite trop grande').optional()
+}).strict();
+
+const knownCompaniesSchema = z.object({
+  action: z.literal('known_companies'),
+  agency_id: uuidSchema,
+  limit: z.number().int().min(1, 'Limite invalide').max(5000, 'Limite trop grande').optional()
+}).strict();
+
+const draftFormTypeSchema = z.string()
+  .trim()
+  .min(1, 'Type de formulaire requis')
+  .max(MAX_DRAFT_FORM_TYPE_LENGTH, 'Type de formulaire trop long');
+
+const draftGetSchema = z.object({
+  action: z.literal('draft_get'),
+  user_id: uuidSchema,
+  agency_id: uuidSchema,
+  form_type: draftFormTypeSchema.optional()
+}).strict();
+
+const draftSaveSchema = z.object({
+  action: z.literal('draft_save'),
+  user_id: uuidSchema,
+  agency_id: uuidSchema,
+  form_type: draftFormTypeSchema.optional(),
+  payload: jsonValueSchema
+}).strict();
+
+const draftDeleteSchema = z.object({
+  action: z.literal('draft_delete'),
+  user_id: uuidSchema,
+  agency_id: uuidSchema,
+  form_type: draftFormTypeSchema.optional()
+}).strict();
+
 const deleteInteractionSchema = z.object({
   action: z.literal('delete'),
   interaction_id: uuidSchema
@@ -191,6 +231,11 @@ export const dataInteractionsPayloadSchema = z.discriminatedUnion('action', [
   saveInteractionSchema,
   addTimelineEventSchema,
   listByEntitySchema,
+  listByAgencySchema,
+  knownCompaniesSchema,
+  draftGetSchema,
+  draftSaveSchema,
+  draftDeleteSchema,
   deleteInteractionSchema
 ]);
 
@@ -221,8 +266,14 @@ const passwordChangedSchema = z.object({
   action: z.literal('password_changed')
 }).strict();
 
+const setActiveAgencySchema = z.object({
+  action: z.literal('set_active_agency'),
+  agency_id: z.union([uuidSchema, z.null()])
+}).strict();
+
 export const dataProfilePayloadSchema = z.discriminatedUnion('action', [
-  passwordChangedSchema
+  passwordChangedSchema,
+  setActiveAgencySchema
 ]);
 
 export type DataProfilePayload = z.infer<typeof dataProfilePayloadSchema>;

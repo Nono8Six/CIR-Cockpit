@@ -1,28 +1,37 @@
-import { Interaction } from '@/types';
+import { dataInteractionsListResponseSchema } from 'shared/schemas/api-responses';
+
+import type { Interaction } from '@/types';
 import { getActiveAgencyId } from '@/services/agency/getActiveAgencyId';
-import { mapPostgrestError } from '@/services/errors/mapPostgrestError';
-import { requireSupabaseClient } from '@/services/supabase/requireSupabaseClient';
+import { invokeTrpc } from '@/services/api/safeTrpc';
+import { createAppError } from '@/services/errors/AppError';
 import { hydrateTimeline } from './hydrateTimeline';
 
+const parseInteractionsResponse = (payload: unknown): Interaction[] => {
+  const parsed = dataInteractionsListResponseSchema.safeParse(payload);
+  if (!parsed.success) {
+    throw createAppError({
+      code: 'REQUEST_FAILED',
+      message: 'Reponse serveur invalide.',
+      source: 'edge',
+      details: parsed.error.message
+    });
+  }
+
+  return parsed.data.interactions.map(hydrateTimeline);
+};
+
 export const getInteractions = async (agencyIdOverride?: string): Promise<Interaction[]> => {
-  const supabase = requireSupabaseClient();
   const agencyId = agencyIdOverride ?? (await getActiveAgencyId());
   if (!agencyId) {
     return [];
   }
-  const { data, error, status } = await supabase
-    .from('interactions')
-    .select('*')
-    .eq('agency_id', agencyId)
-    .order('created_at', { ascending: false });
 
-  if (error) {
-    throw mapPostgrestError(error, {
-      operation: 'read',
-      resource: 'les interactions',
-      status
-    });
-  }
-
-  return (data ?? []).map(hydrateTimeline);
+  return invokeTrpc(
+    (api, options) => api.data.interactions.mutate({
+      action: 'list_by_agency',
+      agency_id: agencyId
+    }, options),
+    parseInteractionsResponse,
+    'Impossible de charger les interactions.'
+  );
 };

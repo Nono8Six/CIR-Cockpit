@@ -47,6 +47,88 @@ Deno.test('handleDataProfileAction updates must_change_password on password_chan
   assertEquals(whereCalled, 1);
 });
 
+Deno.test('handleDataProfileAction updates active agency when agency is accessible', async () => {
+  let setPayload: unknown;
+
+  const db = {
+    update: () => ({
+      set: (payload: unknown) => {
+        setPayload = payload;
+        return {
+          where: () => Promise.resolve()
+        };
+      }
+    })
+  } as unknown as DbClient;
+
+  const response = await handleDataProfileAction(
+    db,
+    authContext,
+    'req-agency',
+    { action: 'set_active_agency', agency_id: 'agency-1' },
+    {
+      ensureRateLimit: () => Promise.resolve()
+    }
+  );
+
+  assertEquals(response.ok, true);
+  assertEquals(setPayload, { active_agency_id: 'agency-1' });
+});
+
+Deno.test('handleDataProfileAction clears active agency when agency is null', async () => {
+  let setPayload: unknown;
+
+  const db = {
+    update: () => ({
+      set: (payload: unknown) => {
+        setPayload = payload;
+        return {
+          where: () => Promise.resolve()
+        };
+      }
+    })
+  } as unknown as DbClient;
+
+  const response = await handleDataProfileAction(
+    db,
+    authContext,
+    'req-agency-null',
+    { action: 'set_active_agency', agency_id: null },
+    {
+      ensureRateLimit: () => Promise.resolve()
+    }
+  );
+
+  assertEquals(response.ok, true);
+  assertEquals(setPayload, { active_agency_id: null });
+});
+
+Deno.test('handleDataProfileAction rejects cross-agency active agency updates', async () => {
+  const db = {
+    update: () => ({
+      set: () => ({
+        where: () => Promise.resolve()
+      })
+    })
+  } as unknown as DbClient;
+
+  await assertRejects(
+    async () => {
+      await handleDataProfileAction(
+        db,
+        authContext,
+        'req-agency-forbidden',
+        { action: 'set_active_agency', agency_id: 'agency-2' },
+        {
+          ensureRateLimit: () => Promise.resolve()
+        }
+      );
+    },
+    Error,
+    'Acces interdit.'
+  );
+});
+
 Deno.test('handleDataProfileAction throws PROFILE_UPDATE_FAILED on db errors', async () => {
   const db = {
     update: () => ({
@@ -87,7 +169,16 @@ Deno.test('handleDataProfileAction throws PROFILE_UPDATE_FAILED on db errors', a
   }
 });
 
-Deno.test('dataProfilePayloadSchema rejects unsupported get action', () => {
+Deno.test('dataProfilePayloadSchema supports profile write actions and rejects unsupported get action', () => {
+  assertEquals(dataProfilePayloadSchema.safeParse({ action: 'password_changed' }).success, true);
+  assertEquals(dataProfilePayloadSchema.safeParse({
+    action: 'set_active_agency',
+    agency_id: '11111111-1111-4111-8111-111111111111'
+  }).success, true);
+  assertEquals(dataProfilePayloadSchema.safeParse({
+    action: 'set_active_agency',
+    agency_id: null
+  }).success, true);
   const parsed = dataProfilePayloadSchema.safeParse({ action: 'get' });
   assertEquals(parsed.success, false);
 });

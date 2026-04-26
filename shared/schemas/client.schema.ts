@@ -2,6 +2,7 @@ import { z } from 'zod/v4';
 
 import { uuidSchema } from './auth.schema.ts';
 import { clientContactFormSchema } from './client-contact.schema.ts';
+import { entityDepartmentCodeSchema } from './department.schema.ts';
 import { officialCompanyFieldsSchema } from './directory.schema.ts';
 
 export const clientNumberSchema = z
@@ -35,7 +36,7 @@ const clientBaseSchema = z.object({
   client_kind: clientKindSchema,
   name: z.string().trim().min(1, 'Nom requis'),
   postal_code: z.string().regex(/^\d{5}$/, 'Code postal invalide'),
-  department: z.string().regex(/^\d{2,3}$/, 'Departement invalide'),
+  department: entityDepartmentCodeSchema,
   city: z.string().trim().min(1, 'Ville requise'),
   notes: z.string().trim().optional().nullable(),
   agency_id: uuidSchema

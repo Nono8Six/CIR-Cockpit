@@ -1,6 +1,6 @@
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, isNotNull, ne, sql } from 'drizzle-orm';
 
-import { interactions } from '../../../drizzle/schema.ts';
+import { interaction_drafts, interactions } from '../../../drizzle/schema.ts';
 import type { Database } from '../../../../shared/supabase.types.ts';
 import type { DataInteractionsResponse } from '../../../../shared/schemas/api-responses.ts';
 import type { DataInteractionsPayload } from '../../../../shared/schemas/data.schema.ts';
@@ -14,15 +14,24 @@ import {
 } from './dataAccess.ts';
 
 type InteractionRow = Database['public']['Tables']['interactions']['Row'];
+type InteractionDraftRow = Pick<Database['public']['Tables']['interaction_drafts']['Row'], 'id' | 'payload' | 'updated_at'>;
 type InteractionUpdate = Database['public']['Tables']['interactions']['Update'];
 type InteractionInsert = typeof interactions.$inferInsert;
+type InteractionDraftInsert = typeof interaction_drafts.$inferInsert;
 type SaveInteractionPayload = Extract<DataInteractionsPayload, { action: 'save' }>;
 type AddTimelineEventPayload = Extract<DataInteractionsPayload, { action: 'add_timeline_event' }>;
 type ListByEntityPayload = Extract<DataInteractionsPayload, { action: 'list_by_entity' }>;
+type ListByAgencyPayload = Extract<DataInteractionsPayload, { action: 'list_by_agency' }>;
+type KnownCompaniesPayload = Extract<DataInteractionsPayload, { action: 'known_companies' }>;
+type DraftGetPayload = Extract<DataInteractionsPayload, { action: 'draft_get' }>;
+type DraftSavePayload = Extract<DataInteractionsPayload, { action: 'draft_save' }>;
+type DraftDeletePayload = Extract<DataInteractionsPayload, { action: 'draft_delete' }>;
 type DeleteInteractionPayload = Extract<DataInteractionsPayload, { action: 'delete' }>;
 
 const DEFAULT_INTERACTIONS_PAGE = 1;
 const DEFAULT_INTERACTIONS_PAGE_SIZE = 20;
+const DEFAULT_AGENCY_INTERACTIONS_LIMIT = 200;
+const DEFAULT_KNOWN_COMPANIES_LIMIT = 2000;
 
 const toNullableString = (value: unknown): string | null | undefined => {
   if (value === null) return null;
@@ -228,6 +237,80 @@ export const resolvePagination = (payload: Pick<ListByEntityPayload, 'page' | 'p
   };
 };
 
+const resolveLimit = (limit: number | undefined, defaultLimit: number): number =>
+  limit ?? defaultLimit;
+
+export const resolveDraftFormType = (formType: string | undefined): string =>
+  formType?.trim() || 'interaction';
+
+const ensureDraftUserAccess = (authContext: AuthContext, userId: string): void => {
+  if (authContext.userId !== userId) {
+    throw httpError(403, 'AUTH_FORBIDDEN', 'Acces interdit.');
+  }
+};
+
+const toDraftResponseRow = (
+  row: Pick<Database['public']['Tables']['interaction_drafts']['Row'], 'id' | 'payload' | 'updated_at'>
+): InteractionDraftRow => ({
+  id: row.id,
+  payload: row.payload,
+  updated_at: row.updated_at
+});
+
+export const normalizeKnownCompanies = (rows: Array<{ company_name: string | null }>): string[] => {
+  const companies = new Map<string, string>();
+
+  for (const row of rows) {
+    const name = row.company_name?.trim();
+    if (!name) continue;
+
+    const key = name.toLocaleLowerCase('fr');
+    if (!companies.has(key)) {
+      companies.set(key, name);
+    }
+  }
+
+  return [...companies.values()].sort((left, right) => left.localeCompare(right, 'fr'));
+};
+
+const listInteractionsByAgency = async (
+  db: DbClient,
+  authContext: AuthContext,
+  payload: ListByAgencyPayload
+): Promise<{
+  interactions: InteractionRow[];
+  page: number;
+  page_size: number;
+  total: number;
+}> => {
+  const agencyId = ensureAgencyAccess(authContext, payload.agency_id);
+  const limit = resolveLimit(payload.limit, DEFAULT_AGENCY_INTERACTIONS_LIMIT);
+
+  try {
+    const [rows, countRows] = await Promise.all([
+      db
+        .select()
+        .from(interactions)
+        .where(eq(interactions.agency_id, agencyId))
+        .orderBy(desc(interactions.created_at))
+        .limit(limit),
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(interactions)
+        .where(eq(interactions.agency_id, agencyId))
+    ]);
+
+    return {
+      interactions: rows,
+      page: 1,
+      page_size: limit,
+      total: Number(countRows[0]?.count ?? 0)
+    };
+  } catch {
+    throw httpError(500, 'DB_READ_FAILED', 'Impossible de charger les interactions.');
+  }
+};
+
 const listInteractionsByEntity = async (
   db: DbClient,
   authContext: AuthContext,
@@ -270,6 +353,137 @@ const listInteractionsByEntity = async (
     };
   } catch {
     throw httpError(500, 'DB_READ_FAILED', "Impossible de charger les interactions du client.");
+  }
+};
+
+const listKnownCompanies = async (
+  db: DbClient,
+  authContext: AuthContext,
+  payload: KnownCompaniesPayload
+): Promise<string[]> => {
+  const agencyId = ensureAgencyAccess(authContext, payload.agency_id);
+  const limit = resolveLimit(payload.limit, DEFAULT_KNOWN_COMPANIES_LIMIT);
+
+  try {
+    const rows = await db
+      .select({ company_name: interactions.company_name })
+      .from(interactions)
+      .where(and(
+        eq(interactions.agency_id, agencyId),
+        isNotNull(interactions.company_name),
+        ne(interactions.company_name, '')
+      ))
+      .orderBy(interactions.company_name)
+      .limit(limit);
+
+    return normalizeKnownCompanies(rows);
+  } catch {
+    throw httpError(500, 'DB_READ_FAILED', 'Impossible de charger les entreprises connues.');
+  }
+};
+
+const getInteractionDraft = async (
+  db: DbClient,
+  authContext: AuthContext,
+  payload: DraftGetPayload
+): Promise<InteractionDraftRow | null> => {
+  ensureDraftUserAccess(authContext, payload.user_id);
+  const agencyId = ensureAgencyAccess(authContext, payload.agency_id);
+  const formType = resolveDraftFormType(payload.form_type);
+
+  try {
+    const rows = await db
+      .select({
+        id: interaction_drafts.id,
+        payload: interaction_drafts.payload,
+        updated_at: interaction_drafts.updated_at
+      })
+      .from(interaction_drafts)
+      .where(and(
+        eq(interaction_drafts.user_id, payload.user_id),
+        eq(interaction_drafts.agency_id, agencyId),
+        eq(interaction_drafts.form_type, formType)
+      ))
+      .limit(1);
+
+    const draft = rows[0];
+    return draft ? toDraftResponseRow(draft) : null;
+  } catch {
+    throw httpError(500, 'DB_READ_FAILED', 'Impossible de charger le brouillon.');
+  }
+};
+
+const saveInteractionDraft = async (
+  db: DbClient,
+  authContext: AuthContext,
+  payload: DraftSavePayload
+): Promise<InteractionDraftRow> => {
+  ensureDraftUserAccess(authContext, payload.user_id);
+  const agencyId = ensureAgencyAccess(authContext, payload.agency_id);
+  const formType = resolveDraftFormType(payload.form_type);
+  const row: InteractionDraftInsert = {
+    user_id: payload.user_id,
+    agency_id: agencyId,
+    form_type: formType,
+    payload: payload.payload
+  };
+
+  try {
+    const rows = await db
+      .insert(interaction_drafts)
+      .values(row)
+      .onConflictDoUpdate({
+        target: [
+          interaction_drafts.user_id,
+          interaction_drafts.agency_id,
+          interaction_drafts.form_type
+        ],
+        set: {
+          payload: payload.payload
+        }
+      })
+      .returning({
+        id: interaction_drafts.id,
+        payload: interaction_drafts.payload,
+        updated_at: interaction_drafts.updated_at
+      });
+
+    const draft = rows[0];
+    if (!draft) {
+      throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de sauvegarder le brouillon.');
+    }
+    return toDraftResponseRow(draft);
+  } catch (error) {
+    if (
+      typeof error === 'object'
+      && error !== null
+      && Reflect.get(error, 'code') === 'DB_WRITE_FAILED'
+    ) {
+      throw error;
+    }
+    throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de sauvegarder le brouillon.');
+  }
+};
+
+const deleteInteractionDraft = async (
+  db: DbClient,
+  authContext: AuthContext,
+  payload: DraftDeletePayload
+): Promise<void> => {
+  ensureDraftUserAccess(authContext, payload.user_id);
+  const agencyId = ensureAgencyAccess(authContext, payload.agency_id);
+  const formType = resolveDraftFormType(payload.form_type);
+
+  try {
+    await db
+      .delete(interaction_drafts)
+      .where(and(
+        eq(interaction_drafts.user_id, payload.user_id),
+        eq(interaction_drafts.agency_id, agencyId),
+        eq(interaction_drafts.form_type, formType)
+      ));
+  } catch {
+    throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de supprimer le brouillon.');
   }
 };
 
@@ -350,9 +564,29 @@ export const handleDataInteractionsAction = async (
       const interaction = await addTimelineEvent(db, authContext, data);
       return { request_id: requestId, ok: true, interaction };
     }
+    case 'list_by_agency': {
+      const result = await listInteractionsByAgency(db, authContext, data);
+      return { request_id: requestId, ok: true, ...result };
+    }
     case 'list_by_entity': {
       const result = await listInteractionsByEntity(db, authContext, data);
       return { request_id: requestId, ok: true, ...result };
+    }
+    case 'known_companies': {
+      const companies = await listKnownCompanies(db, authContext, data);
+      return { request_id: requestId, ok: true, companies };
+    }
+    case 'draft_get': {
+      const draft = await getInteractionDraft(db, authContext, data);
+      return { request_id: requestId, ok: true, draft };
+    }
+    case 'draft_save': {
+      const draft = await saveInteractionDraft(db, authContext, data);
+      return { request_id: requestId, ok: true, draft };
+    }
+    case 'draft_delete': {
+      await deleteInteractionDraft(db, authContext, data);
+      return { request_id: requestId, ok: true, draft: null };
     }
     case 'delete': {
       const interactionId = await deleteInteraction(db, authContext, data);

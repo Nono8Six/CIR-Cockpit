@@ -6,6 +6,7 @@ describe('clientFormSchema', () => {
   it('parses and normalizes client_number', () => {
     const result = clientFormSchema.safeParse({
       client_number: '12 34',
+      client_kind: 'company',
       account_type: 'term',
       name: 'Acme',
       address: 'Rue de Paris',
@@ -26,11 +27,28 @@ describe('clientFormSchema', () => {
   it('rejects invalid postal code', () => {
     const result = clientFormSchema.safeParse({
       client_number: '1234',
+      client_kind: 'company',
       account_type: 'cash',
       name: 'Acme',
       address: 'Rue de Paris',
       postal_code: '7500',
       department: '75',
+      city: 'Paris',
+      agency_id: '11111111-1111-1111-1111-111111111111'
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects departments that do not match the entities table constraint', () => {
+    const result = clientFormSchema.safeParse({
+      client_number: '1234',
+      client_kind: 'company',
+      account_type: 'cash',
+      name: 'Acme',
+      address: 'Rue de Paris',
+      postal_code: '75001',
+      department: '2A',
       city: 'Paris',
       agency_id: '11111111-1111-1111-1111-111111111111'
     });
