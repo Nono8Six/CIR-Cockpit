@@ -198,6 +198,24 @@ Elle ne conserve que l'etat reellement verifie par commandes et tests.
 - `deno lint backend/functions/api/services/dataEntitiesSave*.ts backend/functions/api/services/dataEntities_test.ts` -> PASS.
 - `deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api/services/dataEntities_test.ts backend/functions/api/trpc/payloadContracts_test.ts` -> PASS (`16` tests).
 
-### Reste a traiter
+## 2026-04-26 - Phase 4 onboarding entite
 
-- [ ] traiter le mega-hook frontend `useEntityOnboardingFlow.ts`.
+### Corrige
+
+- [x] transformer `useEntityOnboardingFlow.ts` en orchestrateur de flux au lieu d'un mega-hook monolithique.
+- [x] extraire les types publics du flux dans `useEntityOnboardingFlow.types.ts`.
+- [x] extraire les etapes stepper dans `entityOnboardingSteps.ts`.
+- [x] extraire la checklist manquante dans `entityOnboardingChecklist.ts`.
+- [x] extraire les valeurs derivees du formulaire dans `useOnboardingValues.ts`.
+- [x] extraire l'etat local du flux dans `useOnboardingLocalState.ts`.
+- [x] extraire les donnees entreprise, doublons et details officiels dans `useOnboardingCompanyData.ts`.
+- [x] extraire les effets de reset/synchronisation dans `useOnboardingFlowEffects.ts`.
+- [x] extraire les actions de navigation/fermeture/soumission dans `useOnboardingFlowActions.ts`, `useOnboardingNavigation.ts` et `useOnboardingSubmit.ts`.
+
+### Validation reexecutee
+
+- `pnpm --dir frontend run typecheck` -> PASS.
+- `pnpm --dir frontend run lint` -> PASS.
+- `pnpm --dir frontend exec vitest run src/components/__tests__/EntityOnboardingDialog.test.tsx src/components/cockpit/__tests__/CockpitFormDialogs.test.tsx` -> PASS (`10` tests).
+- `pnpm run qa:fast` -> PASS (`425` tests frontend, `138` tests backend).
+- `pnpm run qa` -> PASS (`117` fichiers de tests frontend, `425` tests frontend, `138` tests backend, `9` integrations backend ignorees hors environnement dedie).
