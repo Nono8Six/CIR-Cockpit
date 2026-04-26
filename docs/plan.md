@@ -169,6 +169,35 @@ Elle ne conserve que l'etat reellement verifie par commandes et tests.
 
 ### Reste a traiter
 
-- [ ] decouper les hotspots majeurs restants (`directory.ts`, `dataEntities.ts`, onboarding entite).
+- [ ] poursuivre le decoupage des hotspots majeurs restants (onboarding entite).
 - [ ] requalifier Supabase securite/performance via MCP avant toute phase DB.
 - [ ] renforcer les controles mecaniques de gouvernance non encore couverts par `repo:check`.
+
+## 2026-04-26 - Phase 4 annuaire entreprise
+
+### Corrige
+
+- [x] constater que `directory.ts` est deja une facade courte, puis traiter le vrai hotspot interne `directoryCompany.ts`.
+- [x] extraire les schemas Zod de l'API Entreprises dans `directoryCompanySchemas.ts` avec `z.looseObject` conforme Zod v4.
+- [x] extraire le client HTTP / parsing API Entreprises dans `directoryCompanyApi.ts`.
+- [x] extraire les mappers recherche et detail entreprise dans `directoryCompanySearchMapper.ts` et `directoryCompanyDetailsMapper.ts`.
+- [x] conserver les exports publics existants (`buildCompanySearchUrl`, `getDirectoryCompanySearch`, `getDirectoryCompanyDetails`).
+- [x] transformer `directoryListing.ts` en facade et extraire liste, options, suggestions ville et fiche annuaire dans des modules dedies.
+- [x] transformer `directoryDuplicates.ts` en facade et extraire doublons societe, doublons particulier et mapping de ligne commun.
+- [x] decouper `dataEntitiesSave.ts` en orchestration, construction des lignes a persister et persistance DB/contact principal.
+
+### Validation reexecutee
+
+- `deno lint backend/functions/api/services/directoryCompany*.ts backend/functions/api/services/directory_test.ts` -> PASS.
+- `deno check --config backend/deno.json backend/functions/api/index.ts` -> PASS.
+- `deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api/services/directory_test.ts` -> PASS (`8` tests).
+- `deno lint backend/functions/api/services/directoryListing*.ts backend/functions/api/services/directory_test.ts` -> PASS.
+- `deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api/services/directory_test.ts backend/functions/api/trpc/router_test.ts` -> PASS (`13` tests).
+- `deno lint backend/functions/api/services/directoryDuplicates*.ts backend/functions/api/services/directoryDuplicateRows.ts backend/functions/api/services/directory_test.ts` -> PASS.
+- `deno check --config backend/deno.json backend/functions/api/index.ts` -> PASS apres correction du typage des conditions Drizzle dynamiques.
+- `deno lint backend/functions/api/services/dataEntitiesSave*.ts backend/functions/api/services/dataEntities_test.ts` -> PASS.
+- `deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api/services/dataEntities_test.ts backend/functions/api/trpc/payloadContracts_test.ts` -> PASS (`16` tests).
+
+### Reste a traiter
+
+- [ ] traiter le mega-hook frontend `useEntityOnboardingFlow.ts`.
