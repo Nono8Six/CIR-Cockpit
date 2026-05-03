@@ -38,6 +38,7 @@ const renderFilters = (
 ) => {
   const onSearchPatch = vi.fn();
   const onSearchDraftChange = vi.fn();
+  const onRequestOptions = vi.fn();
   const onReset = vi.fn();
   const queryClient = createTestQueryClient();
   const search = { ...baseSearch, ...searchOverrides };
@@ -70,6 +71,7 @@ const renderFilters = (
           onSearchDraftChange(value);
         }}
         onSearchPatch={onSearchPatch}
+        onRequestOptions={onRequestOptions}
         onReset={onReset}
       />
     );
@@ -83,7 +85,7 @@ const renderFilters = (
     </QueryClientProvider>
   );
 
-  return { onSearchPatch, onSearchDraftChange, onReset };
+  return { onSearchPatch, onSearchDraftChange, onRequestOptions, onReset };
 };
 
 describe('ClientDirectoryFilters', () => {
@@ -200,6 +202,7 @@ describe('ClientDirectoryFilters', () => {
             onSearchPatch={(patch) => {
               setSearch((previous) => ({ ...previous, ...patch }));
             }}
+            onRequestOptions={vi.fn()}
             onReset={() => {
               setSearch(baseSearch);
               setSearchDraft('');

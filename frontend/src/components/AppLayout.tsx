@@ -170,7 +170,7 @@ const AppLayout = ({ headerProps, mainContentProps, children }: AppLayoutProps) 
   );
 
   return (
-    <div className="h-[100dvh] w-screen overflow-hidden bg-surface-1/70 font-sans text-foreground">
+    <div className="h-[100dvh] w-screen overflow-hidden bg-background font-sans text-foreground">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:rounded-md focus:bg-card focus:px-3 focus:py-2 focus:text-xs focus:font-semibold focus:text-foreground focus:shadow-md"
@@ -243,6 +243,11 @@ const AppLayout = ({ headerProps, mainContentProps, children }: AppLayoutProps) 
         <AppSidebar
           sections={headerProps.sections ?? []}
           activeTab={headerProps.activeTab}
+          agencyName={activeAgency?.agency_name}
+          agencySubtitle={activeAgency?.agency_id ? 'Agence active' : undefined}
+          userName={safeUserFullName}
+          userRoleLabel={safeRoleLabel}
+          userInitials={safeUserInitials}
           collapsed={collapsed}
           onToggleCollapsed={handleToggleSidebar}
           mobileOpen={mobileOpen}
@@ -250,7 +255,7 @@ const AppLayout = ({ headerProps, mainContentProps, children }: AppLayoutProps) 
           mobileAccountSlot={mobileAccountSlot}
         />
 
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex min-w-0 flex-1 flex-col bg-background">
           <AppHeader
             {...headerProps}
             onOpenMobileMenu={() => setMobileOpen(true)}

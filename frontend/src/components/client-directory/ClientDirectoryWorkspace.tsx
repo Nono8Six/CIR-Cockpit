@@ -55,6 +55,7 @@ const ClientDirectoryWorkspace = ({
     handleSetDefaultView,
     handleToggleColumn,
     handleResetFilters,
+    requestDirectoryOptions,
   } = useClientDirectoryWorkspace({ search, onSearchChange });
 
   const renderSavedViewsControl = () => (
@@ -141,6 +142,7 @@ const ClientDirectoryWorkspace = ({
                 onDensityChange={setDensity}
                 onSearchDraftChange={setSearchDraft}
                 onSearchPatch={handleSearchPatch}
+                onRequestOptions={requestDirectoryOptions}
                 onReset={handleResetFilters}
               />
             </div>

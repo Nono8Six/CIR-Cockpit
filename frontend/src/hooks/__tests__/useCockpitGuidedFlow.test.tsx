@@ -34,29 +34,31 @@ describe('useCockpitGuidedFlow', () => {
     act(() => result.current.completeStep('channel'));
     expect(result.current.activeStep).toBe('relation');
 
-    rerender(buildParams({ entityType: 'Prospect / Particulier' }));
+    rerender(buildParams({ entityType: 'Prospect' }));
     expect(result.current.activeStep).toBe('search');
 
     rerender(buildParams({
-      entityType: 'Prospect / Particulier',
+      entityType: 'Prospect',
       companyName: 'SEA Aquitaine',
       companyCity: 'Gradignan'
     }));
     expect(result.current.activeStep).toBe('contact');
 
     rerender(buildParams({
-      entityType: 'Prospect / Particulier',
+      entityType: 'Prospect',
       companyName: 'SEA Aquitaine',
       companyCity: 'Gradignan',
+      contactFirstName: 'Marc',
       contactLastName: 'Dupont',
       contactPhone: '0102030405'
     }));
-    expect(result.current.activeStep).toBe('qualification');
+    expect(result.current.activeStep).toBe('subject');
 
     rerender(buildParams({
-      entityType: 'Prospect / Particulier',
+      entityType: 'Prospect',
       companyName: 'SEA Aquitaine',
       companyCity: 'Gradignan',
+      contactFirstName: 'Marc',
       contactLastName: 'Dupont',
       contactPhone: '0102030405',
       interactionType: 'Demande',
@@ -82,19 +84,18 @@ describe('useCockpitGuidedFlow', () => {
 
     expect(result.current.identityComplete).toBe(true);
     expect(result.current.contactComplete).toBe(true);
-    expect(result.current.activeStep).toBe('qualification');
+    expect(result.current.activeStep).toBe('subject');
   });
 
-  it('permet de confirmer Tout avant la recherche sans forcer un type de tiers', () => {
+  it('garde la relation incomplete tant qu aucun type de tiers n est choisi', () => {
     const { result } = renderHook((params) => useCockpitGuidedFlow(params), {
       initialProps: buildParams()
     });
 
     act(() => result.current.completeStep('channel'));
-    act(() => result.current.completeStep('relation'));
 
-    expect(result.current.isRelationConfirmed).toBe(true);
-    expect(result.current.activeStep).toBe('search');
+    expect(result.current.isRelationConfirmed).toBe(false);
+    expect(result.current.activeStep).toBe('relation');
     expect(result.current.identityComplete).toBe(false);
   });
 

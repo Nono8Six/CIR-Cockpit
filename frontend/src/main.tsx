@@ -9,6 +9,15 @@ import AppProviders from '@/components/AppProviders';
 import { createAppError } from '@/services/errors/AppError';
 import { reportError } from '@/services/errors/reportError';
 import { initErrorReporter } from '@/services/errors/sentryStub';
+import '@fontsource/inter/400.css';
+import '@fontsource/inter/500.css';
+import '@fontsource/inter/600.css';
+import '@fontsource/inter/700.css';
+import '@fontsource/inter-tight/500.css';
+import '@fontsource/inter-tight/600.css';
+import '@fontsource/inter-tight/700.css';
+import '@fontsource/jetbrains-mono/400.css';
+import '@fontsource/jetbrains-mono/600.css';
 import './index.css';
 
 const rootElement = document.getElementById('root');

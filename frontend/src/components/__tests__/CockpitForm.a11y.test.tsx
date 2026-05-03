@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { screen } from '@testing-library/react';
 import { renderWithProviders } from '@/__tests__/test-utils';
 import { axe } from 'vitest-axe';
 
@@ -75,23 +76,32 @@ const config: AgencyConfig = {
   interactionTypes: ['Demande']
 };
 
+const renderCockpitForm = () => renderWithProviders(
+  <CockpitForm
+    onSave={async () => true}
+    config={config}
+    activeAgencyId="agency-1"
+    userId="user-1"
+    userRole="tcs"
+    recentEntities={[]}
+    entitySearchIndex={{ entities: [], contacts: [] }}
+    entitySearchLoading={false}
+    onOpenGlobalSearch={() => undefined}
+  />
+);
+
 describe('CockpitForm accessibility', () => {
   it('has no accessibility violations', async () => {
-    const { container } = renderWithProviders(
-      <CockpitForm
-        onSave={async () => true}
-        config={config}
-        activeAgencyId="agency-1"
-        userId="user-1"
-        userRole="tcs"
-        recentEntities={[]}
-        entitySearchIndex={{ entities: [], contacts: [] }}
-        entitySearchLoading={false}
-        onOpenGlobalSearch={() => undefined}
-      />
-    );
+    const { container } = renderCockpitForm();
 
     const results = await axe(container);
     expect(results.violations).toHaveLength(0);
+  });
+
+  it('keeps the guided form inside a scrollable flex chain', () => {
+    renderCockpitForm();
+
+    expect(screen.getByTestId('cockpit-form-shell')).toHaveClass('h-full', 'min-h-0');
+    expect(document.querySelector('form#interaction-form')).toHaveClass('min-h-0', 'flex-1');
   });
 });

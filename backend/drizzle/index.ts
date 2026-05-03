@@ -13,7 +13,13 @@ let drizzleDb: PostgresJsDatabase<DrizzleSchema> | null = null;
 let drizzleDbKey = '';
 
 const buildSqlClient = (connectionString: string): DrizzleSqlClient => {
-  return postgres(connectionString, { prepare: false });
+  return postgres(connectionString, {
+    prepare: false,
+    max: 1,
+    idle_timeout: 20,
+    connect_timeout: 10,
+    max_lifetime: 60 * 30
+  });
 };
 
 export type DbClient = PostgresJsDatabase<DrizzleSchema>;

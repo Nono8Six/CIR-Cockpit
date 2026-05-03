@@ -1,11 +1,15 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { DirectoryListInput } from 'shared/schemas/directory.schema';
+
+import { useDirectoryOptions } from '@/hooks/useDirectoryOptions';
+import { useDirectoryPage } from '@/hooks/useDirectoryPage';
 
 import ClientDirectoryPage from '../ClientDirectoryPage';
 
 const mockNavigate = vi.fn();
-const searchState = {
+const defaultSearchState: DirectoryListInput = {
   q: 'sea',
   type: 'all' as const,
   agencyIds: [],
@@ -17,6 +21,8 @@ const searchState = {
   pageSize: 50,
   sorting: [{ id: 'name' as const, desc: false }]
 };
+let searchState = { ...defaultSearchState };
+const defaultEffectiveSearchState = { ...defaultSearchState, agencyIds: ['agency-1'] };
 
 const clientRow = {
   id: 'entity-1',
@@ -148,7 +154,36 @@ vi.mock('@/components/ProspectFormDialog', () => ({
 describe('ClientDirectoryPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    searchState = { ...defaultSearchState };
     mockMatchMedia();
+  });
+
+  it('scopes empty agency filters to the active agency before loading directory queries', () => {
+    render(<ClientDirectoryPage />);
+
+    expect(useDirectoryPage).toHaveBeenCalledWith(
+      expect.objectContaining({ agencyIds: ['agency-1'] }),
+      true
+    );
+    expect(useDirectoryOptions).toHaveBeenCalledWith(
+      expect.objectContaining({ agencyIds: ['agency-1'] }),
+      expect.any(Boolean)
+    );
+  });
+
+  it('preserves explicit agency filters before loading directory queries', () => {
+    searchState = { ...defaultSearchState, agencyIds: ['agency-2'] };
+
+    render(<ClientDirectoryPage />);
+
+    expect(useDirectoryPage).toHaveBeenCalledWith(
+      expect.objectContaining({ agencyIds: ['agency-2'] }),
+      true
+    );
+    expect(useDirectoryOptions).toHaveBeenCalledWith(
+      expect.objectContaining({ agencyIds: ['agency-2'] }),
+      expect.any(Boolean)
+    );
   });
 
   it('opens a client detail route while preserving directory search params', async () => {
@@ -165,7 +200,7 @@ describe('ClientDirectoryPage', () => {
     });
 
     const navigateCall = mockNavigate.mock.calls.at(-1)?.[0];
-    expect(navigateCall?.search()).toEqual(searchState);
+    expect(navigateCall?.search()).toEqual(defaultEffectiveSearchState);
   });
 
   it('opens a prospect detail route while preserving directory search params', async () => {
@@ -182,7 +217,7 @@ describe('ClientDirectoryPage', () => {
     });
 
     const navigateCall = mockNavigate.mock.calls.at(-1)?.[0];
-    expect(navigateCall?.search()).toEqual(searchState);
+    expect(navigateCall?.search()).toEqual(defaultEffectiveSearchState);
   });
 
   it('opens the integrated create route while preserving directory search', async () => {
@@ -198,6 +233,6 @@ describe('ClientDirectoryPage', () => {
     });
 
     const navigateCall = mockNavigate.mock.calls.at(-1)?.[0];
-    expect(navigateCall?.search()).toEqual(searchState);
+    expect(navigateCall?.search()).toEqual(defaultEffectiveSearchState);
   });
 });

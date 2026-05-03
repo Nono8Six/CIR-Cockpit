@@ -10,6 +10,11 @@ import AppSidebarContent from './app-sidebar/AppSidebarContent';
 export interface AppSidebarProps {
   sections: AppShellNavSection[];
   activeTab: AppTab;
+  agencyName?: string;
+  agencySubtitle?: string;
+  userName?: string;
+  userRoleLabel?: string;
+  userInitials?: string;
   collapsed: boolean;
   onToggleCollapsed: () => void;
   mobileOpen: boolean;
@@ -20,6 +25,11 @@ export interface AppSidebarProps {
 const AppSidebar = ({
   sections,
   activeTab,
+  agencyName,
+  agencySubtitle,
+  userName,
+  userRoleLabel,
+  userInitials,
   collapsed,
   onToggleCollapsed,
   mobileOpen,
@@ -35,13 +45,18 @@ const AppSidebar = ({
     <>
       <motion.aside
         initial={false}
-        animate={{ width: collapsed ? 80 : 296 }}
+        animate={{ width: collapsed ? 48 : 232 }}
         transition={sidebarTransition}
-        className="relative hidden overflow-hidden border-r border-border/80 bg-[hsl(214,24%,95%)] md:flex md:flex-col"
+        className="relative hidden overflow-hidden border-r border-border bg-surface-2 md:flex md:flex-col"
       >
         <AppSidebarContent
           sections={sections}
           activeTab={activeTab}
+          agencyName={agencyName}
+          agencySubtitle={agencySubtitle}
+          userName={userName}
+          userRoleLabel={userRoleLabel}
+          userInitials={userInitials}
           collapsed={collapsed}
           onToggleCollapsed={onToggleCollapsed}
         />
@@ -55,6 +70,11 @@ const AppSidebar = ({
           <AppSidebarContent
             sections={sections}
             activeTab={activeTab}
+            agencyName={agencyName}
+            agencySubtitle={agencySubtitle}
+            userName={userName}
+            userRoleLabel={userRoleLabel}
+            userInitials={userInitials}
             collapsed={false}
             onMobileOpenChange={onMobileOpenChange}
             mobileAccountSlot={mobileAccountSlot}

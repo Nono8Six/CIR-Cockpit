@@ -3,6 +3,7 @@ import type { FieldErrors, UseFormSetValue } from 'react-hook-form';
 import { Car, Mail, Phone, Store, type LucideIcon } from 'lucide-react';
 
 import { Channel } from '@/types';
+import { Kbd } from '@/components/ui/kbd';
 import { cn } from '@/lib/utils';
 import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
 
@@ -18,13 +19,14 @@ type ChannelOption = {
   value: Channel;
   icon: LucideIcon;
   shortcut: string;
+  description: string;
 };
 
 const CHANNEL_OPTIONS: ChannelOption[] = [
-  { value: Channel.PHONE, icon: Phone, shortcut: 'T' },
-  { value: Channel.EMAIL, icon: Mail, shortcut: 'E' },
-  { value: Channel.COUNTER, icon: Store, shortcut: 'C' },
-  { value: Channel.VISIT, icon: Car, shortcut: 'V' }
+  { value: Channel.PHONE, icon: Phone, shortcut: 'T', description: 'Appel entrant ou sortant' },
+  { value: Channel.EMAIL, icon: Mail, shortcut: 'E', description: 'Message reçu ou envoyé' },
+  { value: Channel.COUNTER, icon: Store, shortcut: 'C', description: 'Échange au comptoir' },
+  { value: Channel.VISIT, icon: Car, shortcut: 'V', description: 'Rendez-vous ou passage terrain' }
 ];
 
 const CockpitGuidedChannelQuestion = ({
@@ -34,7 +36,7 @@ const CockpitGuidedChannelQuestion = ({
   channelButtonRef,
   onComplete
 }: CockpitGuidedChannelQuestionProps) => (
-  <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4" data-testid="cockpit-guided-channel">
+  <div className="grid auto-rows-fr gap-3 sm:grid-cols-2 xl:grid-cols-4" data-testid="cockpit-guided-channel">
     {CHANNEL_OPTIONS.map((option, index) => {
       const Icon = option.icon;
       const isSelected = option.value === channel;
@@ -48,23 +50,32 @@ const CockpitGuidedChannelQuestion = ({
             onComplete();
           }}
           className={cn(
-            'flex min-h-[76px] items-center justify-between gap-3 rounded-lg border px-4 py-3 text-left transition-colors',
+            'group grid h-full min-h-[88px] grid-cols-[36px_minmax(0,1fr)_auto] items-start gap-3 rounded-md border bg-card px-3.5 py-3 text-left transition-[border-color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.99]',
             isSelected
-              ? 'border-ring/50 bg-primary text-primary-foreground shadow-sm'
-              : 'border-border bg-card hover:border-ring/35 hover:bg-surface-1'
+              ? 'border-primary/55 shadow-[inset_3px_0_0_0_hsl(var(--primary))]'
+              : 'border-border hover:border-foreground/20 hover:shadow-soft'
           )}
           aria-pressed={isSelected}
         >
-          <span className="flex min-w-0 items-center gap-3">
-            <Icon size={18} className="shrink-0" aria-hidden="true" />
-            <span className="text-sm font-semibold">{option.value}</span>
+          <span
+            className={cn(
+              'mt-0.5 grid size-9 place-items-center rounded-md border border-border bg-surface-2 transition-colors',
+              isSelected ? 'text-foreground' : 'text-muted-foreground group-hover:text-foreground'
+            )}
+          >
+            <Icon size={16} aria-hidden="true" />
           </span>
-          <kbd className={cn(
-            'rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide',
-            isSelected ? 'border-white/30 bg-white/15 text-white' : 'border-border bg-surface-1 text-muted-foreground'
-          )}>
+          <span className="min-w-0">
+            <span className="block text-sm font-semibold leading-tight text-foreground">
+              {option.value}
+            </span>
+            <span className="mt-1 block text-[12px] leading-[1.45] text-muted-foreground">
+              {option.description}
+            </span>
+          </span>
+          <Kbd className="mt-0.5 h-6 min-w-6 px-2 text-[11px]">
             {option.shortcut}
-          </kbd>
+          </Kbd>
         </button>
       );
     })}

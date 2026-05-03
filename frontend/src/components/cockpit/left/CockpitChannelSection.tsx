@@ -13,6 +13,7 @@ import {
   ComboboxList
 } from '@/components/ui/combobox';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { cn } from '@/lib/utils';
 
 type CockpitChannelSectionProps = {
   labelStyle: string;
@@ -43,7 +44,7 @@ const CockpitChannelSection = ({
   channelButtonRef
 }: CockpitChannelSectionProps) => (
   <div className="space-y-1.5">
-    <p id="cockpit-channel-label" className={`${labelStyle} mb-0`}>Canal</p>
+    <p id="cockpit-channel-label" className={cn(labelStyle, 'mb-0')}>Canal</p>
     <div className="min-[769px]:hidden">
       <Combobox
         items={CHANNEL_OPTIONS.map((option) => option.val)}
@@ -56,11 +57,11 @@ const CockpitChannelSection = ({
         <ComboboxInput
           aria-labelledby="cockpit-channel-label"
           data-testid="cockpit-channel-picker-trigger"
-          placeholder="Selectionner un canal"
-          searchPlaceholder="Rechercher un canal..."
+          placeholder="Sélectionner un canal"
+          searchPlaceholder="Rechercher un canal…"
         />
         <ComboboxContent>
-          <ComboboxEmpty>Aucun canal trouve.</ComboboxEmpty>
+          <ComboboxEmpty>Aucun canal trouvé.</ComboboxEmpty>
           <ComboboxList>
             {(item) => (
               <ComboboxItem key={item} value={item}>

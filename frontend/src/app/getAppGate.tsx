@@ -23,10 +23,10 @@ const LoadingScreen = ({ message }: { message: string }) => (
   <main
     role="main"
     aria-busy="true"
-    className="min-h-[100dvh] w-full flex items-center justify-center bg-surface-1/80 text-muted-foreground font-sans"
+    className="min-h-[100dvh] w-full flex items-center justify-center bg-surface-1/80 font-sans"
   >
     <h1 className="sr-only">Chargement de l&apos;application</h1>
-    <p>{message}</p>
+    <p className="text-sm font-medium text-foreground">{message}</p>
   </main>
 );
 

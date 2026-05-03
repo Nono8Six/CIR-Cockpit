@@ -38,6 +38,13 @@ describe('interactionFormSchema', () => {
     expect(result.success).toBe(false);
   });
 
+  it('accepts an empty or 6-digit dossier reference only', () => {
+    expect(interactionFormSchema.safeParse({ ...base, order_ref: '' }).success).toBe(true);
+    expect(interactionFormSchema.safeParse({ ...base, order_ref: '123456' }).success).toBe(true);
+    expect(interactionFormSchema.safeParse({ ...base, order_ref: '12345' }).success).toBe(false);
+    expect(interactionFormSchema.safeParse({ ...base, order_ref: 'ABC123' }).success).toBe(false);
+  });
+
   it('accepts sollicitation with phone only and no name', () => {
     const solicitation = {
       ...base,

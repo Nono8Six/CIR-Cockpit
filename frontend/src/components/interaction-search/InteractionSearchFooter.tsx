@@ -19,9 +19,9 @@ const InteractionSearchFooter = ({
         <button
           type="button"
           onClick={onCreateEntity}
-          className="text-primary font-semibold hover:text-primary"
+          className="font-semibold text-primary hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
         >
-          {`+ Creer ${entityHeading.toLowerCase()}`}
+          {`+ Créer ${entityHeading.toLowerCase()}`}
         </button>
       ) : (
         <span />
@@ -30,7 +30,7 @@ const InteractionSearchFooter = ({
         <button
           type="button"
           onClick={onOpenGlobalSearch}
-          className="text-muted-foreground hover:text-foreground"
+          className="text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
         >
           <span className="sm:hidden">Voir tout</span>
           <span className="hidden sm:inline">Voir tout (Ctrl+K)</span>

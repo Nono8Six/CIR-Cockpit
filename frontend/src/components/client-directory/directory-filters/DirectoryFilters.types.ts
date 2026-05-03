@@ -30,5 +30,6 @@ export interface ClientDirectoryFiltersProps {
   onDensityChange: (density: DirectoryDensity) => void;
   onSearchDraftChange: (value: string) => void;
   onSearchPatch: (patch: Partial<DirectoryListInput>) => void;
+  onRequestOptions: () => void;
   onReset: () => void;
 }

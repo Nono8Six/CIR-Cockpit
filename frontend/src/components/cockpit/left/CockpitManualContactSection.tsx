@@ -3,10 +3,8 @@ import type { CockpitManualContactProps } from './CockpitContactSection.types';
 import CockpitSelectedContactCard from './CockpitSelectedContactCard';
 
 const CockpitManualContactSection = ({
-  labelStyle,
   errors,
   selectedContact,
-  selectedContactMeta,
   onClearSelectedContact,
   relationMode,
   contactFirstNameField,
@@ -23,12 +21,10 @@ const CockpitManualContactSection = ({
   onContactLastNameChange,
   onContactPhoneChange
 }: CockpitManualContactProps) => (
-  <div className="space-y-2">
-    <p className={labelStyle}>Contact</p>
+  <div className="space-y-3">
     {selectedContact ? (
       <CockpitSelectedContactCard
         contact={selectedContact}
-        contactMeta={selectedContactMeta}
         onClear={onClearSelectedContact}
       />
     ) : (

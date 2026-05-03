@@ -8,7 +8,6 @@ export type CockpitGuidedStep =
   | 'relation'
   | 'search'
   | 'contact'
-  | 'qualification'
   | 'subject'
   | 'details';
 
@@ -36,7 +35,6 @@ export const GUIDED_STEP_ORDER: CockpitGuidedStep[] = [
   'relation',
   'search',
   'contact',
-  'qualification',
   'subject',
   'details'
 ];
@@ -81,15 +79,17 @@ export const useCockpitGuidedFlow = ({
   }, [entityType]);
   const identityComplete = useMemo(() => {
     if (relationMode === 'client') return Boolean(selectedEntity);
+    if (relationMode === 'individual') return Boolean(selectedEntity) || (hasText(contactFirstName) && hasText(contactLastName));
     if (relationMode === 'internal') return hasText(contactName) || hasText(contactLastName);
     if (relationMode === 'solicitation') return hasText(companyName) && hasText(contactPhone);
     if (relationMode === 'prospect') return Boolean(selectedEntity) || (hasText(companyName) && hasText(companyCity));
     if (relationMode === 'supplier') return Boolean(selectedEntity) || hasText(companyName);
     return hasText(entityType) && (Boolean(selectedEntity) || hasText(companyName));
-  }, [companyCity, companyName, contactLastName, contactName, contactPhone, entityType, relationMode, selectedEntity]);
+  }, [companyCity, companyName, contactFirstName, contactLastName, contactName, contactPhone, relationMode, selectedEntity]);
 
   const contactComplete = useMemo(() => {
     if (relationMode === 'client') return Boolean(selectedContact);
+    if (relationMode === 'individual') return (Boolean(selectedContact) || (hasText(contactFirstName) && hasText(contactLastName))) && hasContactMethod;
     if (relationMode === 'internal' || relationMode === 'solicitation') return identityComplete;
     const hasContactName = hasText(contactFirstName) || hasText(contactLastName);
     if (relationMode === 'supplier') return hasContactName && hasText(contactPosition) && hasContactMethod;
@@ -97,14 +97,13 @@ export const useCockpitGuidedFlow = ({
   }, [contactFirstName, contactLastName, contactPosition, hasContactMethod, identityComplete, relationMode, selectedContact]);
 
   const qualificationComplete = hasText(interactionType) && hasText(contactService) && hasText(statusValue);
-  const subjectComplete = hasText(subject);
+  const subjectComplete = hasText(subject) && qualificationComplete;
 
   const firstIncompleteStep = useMemo<CockpitGuidedStep>(() => {
     if (!isChannelConfirmed) return 'channel';
     if (!isRelationConfirmed) return 'relation';
     if (!identityComplete) return 'search';
     if (!contactComplete) return 'contact';
-    if (!qualificationComplete) return 'qualification';
     if (!subjectComplete) return 'subject';
     return 'details';
   }, [contactComplete, identityComplete, isChannelConfirmed, isRelationConfirmed, qualificationComplete, subjectComplete]);

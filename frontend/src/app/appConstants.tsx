@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { Building2, LayoutDashboard, PenTool, Settings, Shield } from 'lucide-react';
+import { Building2, Gauge, PenLine, Settings, Shield } from 'lucide-react';
 
 import type { AgencyConfig } from '@/services/config';
 import type { AppTab, UserRole } from '@/types';
@@ -25,11 +25,11 @@ export const ROLE_BADGE_STYLES: Record<UserRole, string> = {
 };
 
 export const APP_TAB_SHORTCUTS: Record<AppTab, string> = {
-  cockpit: 'F1',
-  dashboard: 'F2',
-  settings: 'F3',
-  admin: 'F4',
-  clients: 'F5'
+  clients: 'F1',
+  cockpit: 'F3',
+  dashboard: 'F4',
+  admin: 'F7',
+  settings: 'F8'
 };
 
 export const SEARCH_SHORTCUT_ARIA = 'Control+K Meta+K';
@@ -84,7 +84,7 @@ const formatPendingNavLabel = (pendingCount: number): string | undefined => {
     return undefined;
   }
 
-  return `${pendingCount} \u00E0 traiter`;
+  return String(pendingCount);
 };
 
 export const buildShellNavigation = (
@@ -113,14 +113,14 @@ export const buildShellNavigation = (
           id: 'cockpit',
           sectionId: 'interactions',
           label: 'Saisie',
-          icon: PenTool,
+          icon: PenLine,
           shortcut: APP_TAB_SHORTCUTS.cockpit
         },
         {
           id: 'dashboard',
           sectionId: 'interactions',
           label: 'Pilotage',
-          icon: LayoutDashboard,
+          icon: Gauge,
           shortcut: APP_TAB_SHORTCUTS.dashboard,
           metaLabel: formatPendingNavLabel(pendingCount)
         }

@@ -140,14 +140,14 @@ describe('useCockpitRelationChange', () => {
     expect(result.current.form.getValues('subject')).toBe('');
   });
 
-  it('preserve le mode Tout avec un entity_type vide', () => {
+  it('reset vers une relation explicite sans conserver les champs tiers', () => {
     const { result } = setup();
 
     act(() => {
-      result.current.onRelationChange('');
+      result.current.onRelationChange('Client comptant');
     });
 
-    expect(result.current.form.getValues('entity_type')).toBe('');
+    expect(result.current.form.getValues('entity_type')).toBe('Client comptant');
     expect(result.current.form.getValues('contact_service')).toBe('Atelier');
     expect(result.current.form.getValues('interaction_type')).toBe('Demande');
     expect(result.current.form.getValues('status_id')).toBe('status-default');

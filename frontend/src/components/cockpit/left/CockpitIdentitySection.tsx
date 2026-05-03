@@ -48,7 +48,7 @@ const CockpitIdentitySection = ({
   setValue
 }: CockpitIdentitySectionProps) => (
   <div className="space-y-2">
-    <p className={labelStyle}>Identite</p>
+    <p className={labelStyle}>Identité</p>
     {selectedEntity ? (
       <CockpitSelectedEntityCard
         selectedEntity={selectedEntity}

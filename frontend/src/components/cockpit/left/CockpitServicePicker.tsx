@@ -55,11 +55,11 @@ const CockpitServicePicker = ({
         id="cockpit-service-picker-input"
         aria-labelledby={triggerLabelledBy}
         data-testid="cockpit-service-picker-trigger"
-        placeholder="Selectionner un service"
-        searchPlaceholder="Rechercher un service..."
+        placeholder="Sélectionner un service"
+        searchPlaceholder="Rechercher un service…"
       />
       <ComboboxContent className={fullWidth ? 'w-[min(320px,calc(100vw-1.5rem))]' : ''}>
-        <ComboboxEmpty>Aucun service trouve.</ComboboxEmpty>
+        <ComboboxEmpty>Aucun service trouvé.</ComboboxEmpty>
         <ComboboxList>
           {(service) => (
             <ComboboxItem key={service} value={service}>

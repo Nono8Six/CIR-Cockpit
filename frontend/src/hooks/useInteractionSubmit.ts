@@ -13,21 +13,32 @@ import {
   invalidateClientContactsQuery,
   invalidateEntitySearchIndexQueries
 } from '@/services/query/queryInvalidation';
-import { INTERNAL_COMPANY_NAME, isInternalRelationValue, isProspectRelationValue, isSolicitationRelationValue } from '@/constants/relations';
+import {
+  INTERNAL_COMPANY_NAME,
+  isClientRelationValue,
+  isIndividualRelationValue,
+  isInternalRelationValue,
+  isProspectRelationValue,
+  isSolicitationRelationValue
+} from '@/constants/relations';
 
 type UseInteractionSubmitParams = { activeAgencyId: string | null; selectedEntity: Entity | null; selectedContact: EntityContact | null; onSave: (interaction: InteractionDraft) => Promise<boolean>; handleSelectEntity: (entity: Entity | null) => void; handleSelectContact: (contact: EntityContact | null) => void; queryClient: QueryClient; handleReset: () => void; onSaveSuccess: (interaction: InteractionDraft) => void; setKnownCompanies: React.Dispatch<React.SetStateAction<string[]>> };
 
 export const useInteractionSubmit = ({ activeAgencyId, selectedEntity, selectedContact, onSave, handleSelectEntity, handleSelectContact, queryClient, handleReset, onSaveSuccess, setKnownCompanies }: UseInteractionSubmitParams) => {
   const onSubmit = useCallback(async (values: InteractionFormValues) => {
-    const relation = values.entity_type.trim().toLowerCase();
     const isProspect = isProspectRelationValue(values.entity_type);
+    const isClient = isClientRelationValue(values.entity_type);
+    const isIndividual = isIndividualRelationValue(values.entity_type);
     const isInternal = isInternalRelationValue(values.entity_type);
     const isSolicitation = isSolicitationRelationValue(values.entity_type);
 
     let resolvedEntity = selectedEntity; let resolvedContact = selectedContact;
-    if (relation !== 'client' && !isInternal && !isSolicitation) {
+    if (!isClient && !isInternal && !isSolicitation) {
       if (!resolvedEntity) {
-        resolvedEntity = await saveEntity({ entity_type: values.entity_type, name: values.company_name ?? '', agency_id: activeAgencyId, city: isProspect ? values.company_city?.trim() || null : null }).match(entity => entity, error => { handleUiError(error, "Impossible de creer l'entite.", { source: 'CockpitForm.saveEntity' }); return null; });
+        const entityName = isIndividual
+          ? `${values.contact_first_name ?? ''} ${values.contact_last_name ?? ''}`.trim()
+          : values.company_name ?? '';
+        resolvedEntity = await saveEntity({ entity_type: values.entity_type, name: entityName, agency_id: activeAgencyId, city: isProspect ? values.company_city?.trim() || null : null }).match(entity => entity, error => { handleUiError(error, "Impossible de creer l'entite.", { source: 'CockpitForm.saveEntity' }); return null; });
         if (!resolvedEntity) return;
         void invalidateEntitySearchIndexQueries(queryClient, activeAgencyId); handleSelectEntity(resolvedEntity);
       }

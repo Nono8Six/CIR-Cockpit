@@ -40,7 +40,7 @@ const CockpitInteractionTypeSection = ({
         aria-describedby={hasInteractionTypes ? undefined : interactionTypeHelpId}
         className="h-8 w-fit min-w-[180px] max-w-[260px] rounded-md border-border bg-card text-xs font-semibold text-foreground shadow-sm transition-colors hover:border-ring/40 hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background data-[state=open]:border-ring/50"
       >
-        <SelectValue placeholder="Choisir..." />
+        <SelectValue placeholder="Choisir…" />
       </SelectTrigger>
       <SelectContent className="max-h-64">
         {interactionTypes.map((type) => (
@@ -52,7 +52,7 @@ const CockpitInteractionTypeSection = ({
     </Select>
     {!hasInteractionTypes && (
       <p id={interactionTypeHelpId} className="text-xs text-warning mt-1">
-        Ajoutez des types d&apos;interaction dans Parametres.
+        Ajoutez des types d&apos;interaction dans Paramètres.
       </p>
     )}
     {errors.interaction_type && (

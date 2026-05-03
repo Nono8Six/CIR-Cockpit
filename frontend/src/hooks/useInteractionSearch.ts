@@ -1,6 +1,7 @@
 import { useCallback, useDeferredValue, useMemo, useState } from 'react';
 
 import type { Entity, EntityContact } from '@/types';
+import { relationValuesMatch } from '@/constants/relations';
 import { useEntitySearchIndex } from './useEntitySearchIndex';
 
 type InteractionSearchInput = {
@@ -18,7 +19,7 @@ type InteractionSearchInput = {
 type InteractionSearchStatus = 'loading' | 'error' | 'idle' | 'empty' | 'results';
 
 const normalizeQuery = (value: string) => value.trim().toLowerCase();
-const normalizePhone = (value?: string | null) => (value ?? '').replace(/\s/g, '');
+const normalizeDigits = (value?: string | null): string => (value ?? '').replace(/\D/g, '');
 
 export const useInteractionSearch = ({
   agencyId,
@@ -58,9 +59,7 @@ export const useInteractionSearch = ({
   const filteredRecents = useMemo(() => {
     if (!recentEntities?.length) return [];
     if (!normalizedRelation) return recentEntities;
-    return recentEntities.filter((entity) => (
-      entity.entity_type.trim().toLowerCase() === normalizedRelation
-    ));
+    return recentEntities.filter((entity) => relationValuesMatch(entity.entity_type, normalizedRelation));
   }, [normalizedRelation, recentEntities]);
 
   const { matchedEntities, matchedContacts, entitiesById } = useMemo(() => {
@@ -75,7 +74,7 @@ export const useInteractionSearch = ({
 
     const matchesRelation = (entity: Entity) => {
       if (!normalizedRelation) return true;
-      return entity.entity_type.trim().toLowerCase() === normalizedRelation;
+      return relationValuesMatch(entity.entity_type, normalizedRelation);
     };
 
     const byId = new Map<string, Entity>();
@@ -87,9 +86,9 @@ export const useInteractionSearch = ({
       if (!matchesRelation(entity)) return false;
       const name = entity.name.toLowerCase();
       const city = (entity.city ?? '').toLowerCase();
-      const number = normalizePhone(entity.client_number);
-      const rawQuery = normalized.replace(/\s/g, '');
-      return name.includes(normalized) || city.includes(normalized) || number.includes(rawQuery);
+      const number = normalizeDigits(entity.client_number);
+      const rawQuery = normalizeDigits(normalized);
+      return name.includes(normalized) || city.includes(normalized) || (rawQuery.length > 0 && number.includes(rawQuery));
     });
 
     const matchedContacts = resolvedContacts.filter((contact) => {
@@ -97,9 +96,9 @@ export const useInteractionSearch = ({
       if (!entity || !matchesRelation(entity)) return false;
       const fullName = `${contact.first_name ?? ''} ${contact.last_name}`.trim().toLowerCase();
       const email = (contact.email ?? '').toLowerCase();
-      const phone = normalizePhone(contact.phone);
-      const rawQuery = normalized.replace(/\s/g, '');
-      return fullName.includes(normalized) || email.includes(normalized) || phone.includes(rawQuery);
+      const phone = normalizeDigits(contact.phone);
+      const rawQuery = normalizeDigits(normalized);
+      return fullName.includes(normalized) || email.includes(normalized) || (rawQuery.length > 0 && phone.includes(rawQuery));
     });
 
     return { matchedEntities, matchedContacts, entitiesById: byId };

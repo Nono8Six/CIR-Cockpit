@@ -41,8 +41,8 @@ describe('AppSidebar', () => {
 
     const dashboardLink = screen.getByTestId('app-shell-nav-dashboard');
     expect(dashboardLink).toHaveTextContent('Pilotage');
-    expect(dashboardLink).toHaveTextContent('1 à traiter');
-    expect(dashboardLink).toHaveTextContent('F2');
+    expect(dashboardLink).toHaveTextContent('1');
+    expect(dashboardLink).toHaveTextContent('F4');
 
     expect(screen.getByRole('button', { name: /réduire le menu/i })).toHaveAttribute(
       'aria-keyshortcuts',
@@ -63,19 +63,19 @@ describe('AppSidebar', () => {
     );
 
     const dashboardLink = screen.getByRole('link', {
-      name: /interactions - pilotage - 1 à traiter - f2/i
+      name: /interactions - pilotage - 1 - f4/i
     });
 
     expect(dashboardLink).toBeInTheDocument();
 
-    const dashboardTooltip = screen.getByText('1 à traiter').closest('[role="tooltip"]');
+    const dashboardTooltip = screen.getByText('1').closest('[role="tooltip"]');
     expect(dashboardTooltip).not.toBeNull();
 
     const tooltip = dashboardTooltip as HTMLElement;
 
     expect(within(tooltip).getByText('Interactions')).toBeInTheDocument();
     expect(within(tooltip).getByText('Pilotage')).toBeInTheDocument();
-    expect(within(tooltip).getByText('F2')).toBeInTheDocument();
+    expect(within(tooltip).getByText('F4')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /déplier le menu/i })).toHaveAttribute(
       'aria-keyshortcuts',
       SIDEBAR_TOGGLE_SHORTCUT_ARIA

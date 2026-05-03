@@ -261,6 +261,8 @@ const DashboardDateFilters = ({
         </div>
 
         <input
+          id="dashboard-start-date"
+          name="dashboard-start-date"
           data-testid="dashboard-start-date"
           type="text"
           value={effectiveStartDate}
@@ -270,6 +272,8 @@ const DashboardDateFilters = ({
           aria-hidden="true"
         />
         <input
+          id="dashboard-end-date"
+          name="dashboard-end-date"
           data-testid="dashboard-end-date"
           type="text"
           value={effectiveEndDate}

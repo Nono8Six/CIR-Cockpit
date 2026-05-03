@@ -63,4 +63,17 @@ describe('getInteractionGateState', () => {
     expect(result.canSave).toBe(true);
     expect(result.gateMessage).toBe('');
   });
+
+  it('allows particulier without company name when contact method is provided', () => {
+    const result = getInteractionGateState({
+      ...base,
+      entityType: 'Particulier',
+      companyName: '',
+      companyCity: '',
+      contactEmail: '',
+      contactPhone: '0612345678'
+    });
+    expect(result.canSave).toBe(true);
+    expect(result.gateMessage).toBe('');
+  });
 });

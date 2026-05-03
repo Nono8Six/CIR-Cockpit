@@ -45,6 +45,27 @@ const hasExplicitDirectoryState = (search: DirectoryListInput): boolean =>
   search.pageSize !== DEFAULT_DIRECTORY_SEARCH.pageSize ||
   JSON.stringify(search.sorting) !== JSON.stringify(DEFAULT_DIRECTORY_SEARCH.sorting);
 
+const resolveDirectoryAgencyIds = (
+  searchAgencyIds: string[],
+  activeAgencyId: string | null,
+): string[] => {
+  if (searchAgencyIds.length > 0) {
+    return searchAgencyIds;
+  }
+
+  return activeAgencyId ? [activeAgencyId] : [];
+};
+
+const getDirectoryOptionsScopeKey = ({
+  agencyIds,
+  includeArchived,
+  type,
+}: {
+  agencyIds: string[];
+  includeArchived: boolean;
+  type: DirectoryListInput['type'];
+}): string => `${type}|${includeArchived ? 'archived' : 'active'}|${agencyIds.join(',')}`;
+
 const getResponsiveDirectoryColumnVisibility = (isMobile: boolean): VisibilityState =>
   isMobile ? MOBILE_DIRECTORY_COLUMN_VISIBILITY : {};
 
@@ -58,15 +79,19 @@ export const useClientDirectoryWorkspace = ({
   onSearchChange,
 }: UseClientDirectoryWorkspaceInput) => {
   const sessionState = useAppSessionStateContext();
-  const userRole = sessionState.profile?.role ?? 'tcs';
+  const resolvedUserRole = sessionState.profile?.role ?? null;
+  const userRole = resolvedUserRole ?? 'tcs';
   const activeAgencyId = sessionState.activeAgencyId;
+  const scopedAgencyIds = useMemo(
+    () => resolveDirectoryAgencyIds(search.agencyIds, activeAgencyId),
+    [activeAgencyId, search.agencyIds],
+  );
   const effectiveSearch = useMemo<DirectoryListInput>(
     () => ({
       ...search,
-      agencyIds:
-        userRole === 'super_admin' ? search.agencyIds : activeAgencyId ? [activeAgencyId] : [],
+      agencyIds: scopedAgencyIds,
     }),
-    [activeAgencyId, search, userRole],
+    [scopedAgencyIds, search],
   );
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(() =>
     getResponsiveDirectoryColumnVisibility(getIsMobileDirectoryViewport()),
@@ -92,13 +117,16 @@ export const useClientDirectoryWorkspace = ({
     [directoryOptionsAgencyIds, directoryOptionsIncludeArchived, directoryOptionsType],
   );
   const [directoryOptionsInput, setDirectoryOptionsInput] = useState(directoryOptionsScope);
+  const directoryOptionsInputKey = getDirectoryOptionsScopeKey(directoryOptionsInput);
+  const directoryOptionsScopeKey = getDirectoryOptionsScopeKey(directoryOptionsScope);
   const [isDirectoryOptionsEnabled, setIsDirectoryOptionsEnabled] = useState(false);
+  const [hasRequestedDirectoryOptions, setHasRequestedDirectoryOptions] = useState(false);
   const hasAppliedDefaultViewRef = useRef(false);
   const deferredSearchDraft = useDeferredValue(searchDraft);
   const normalizedSearchDraft = searchDraft.trim();
   const normalizedDeferredSearchDraft = deferredSearchDraft.trim();
   const canLoadDirectory =
-    Boolean(sessionState.session) && (userRole === 'super_admin' || Boolean(activeAgencyId));
+    Boolean(sessionState.session) && Boolean(resolvedUserRole) && Boolean(activeAgencyId);
 
   const querySearch = useMemo<DirectoryListInput>(
     () => ({
@@ -117,7 +145,10 @@ export const useClientDirectoryWorkspace = ({
   const directoryPageQuery = useDirectoryPage(querySearch, canLoadDirectory);
   const directoryOptionsQuery = useDirectoryOptions(
     directoryOptionsInput,
-    canLoadDirectory && isDirectoryOptionsEnabled,
+    canLoadDirectory &&
+      hasRequestedDirectoryOptions &&
+      isDirectoryOptionsEnabled &&
+      directoryOptionsInputKey === directoryOptionsScopeKey,
   );
   const agenciesQuery = useAgencies(false, canLoadDirectory);
   const savedViewsQuery = useDirectorySavedViews(canLoadDirectory);
@@ -125,6 +156,35 @@ export const useClientDirectoryWorkspace = ({
   const deleteSavedViewMutation = useDeleteDirectorySavedView();
   const setDefaultSavedViewMutation = useSetDefaultDirectorySavedView();
   const totalResults = directoryPageQuery.data?.total ?? 0;
+  const directoryRows = directoryPageQuery.data?.rows ?? [];
+  const rowDepartments = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          directoryRows
+            .map((row) => row.department?.trim() ?? '')
+            .filter((department) => department.length > 0),
+        ),
+      ).sort((left, right) => left.localeCompare(right, 'fr')),
+    [directoryRows],
+  );
+  const rowCommercials = useMemo(
+    () =>
+      Array.from(
+        new Map(
+          directoryRows
+            .filter((row) => row.cir_commercial_id && row.cir_commercial_name)
+            .map((row) => [
+              row.cir_commercial_id as string,
+              {
+                id: row.cir_commercial_id as string,
+                display_name: row.cir_commercial_name as string,
+              },
+            ]),
+        ).values(),
+      ).sort((left, right) => left.display_name.localeCompare(right.display_name, 'fr')),
+    [directoryRows],
+  );
   const viewOptionColumns = useMemo(
     () => buildDirectoryViewOptionColumns(columnVisibility),
     [columnVisibility],
@@ -135,6 +195,12 @@ export const useClientDirectoryWorkspace = ({
   }, [routeSearchValue]);
 
   useEffect(() => {
+    if (!hasRequestedDirectoryOptions) {
+      setIsDirectoryOptionsEnabled(false);
+      setDirectoryOptionsInput(directoryOptionsScope);
+      return;
+    }
+
     setIsDirectoryOptionsEnabled(false);
     const timeoutId = window.setTimeout(() => {
       setDirectoryOptionsInput(directoryOptionsScope);
@@ -142,7 +208,7 @@ export const useClientDirectoryWorkspace = ({
     }, DIRECTORY_OPTIONS_FETCH_DELAY_MS);
 
     return () => window.clearTimeout(timeoutId);
-  }, [directoryOptionsScope]);
+  }, [directoryOptionsScope, hasRequestedDirectoryOptions]);
 
   useEffect(() => {
     if (
@@ -200,11 +266,10 @@ export const useClientDirectoryWorkspace = ({
     startTransition(() => {
       onSearchChange(() => ({
         ...nextSearch,
-        agencyIds:
-          userRole === 'super_admin' ? nextSearch.agencyIds : activeAgencyId ? [activeAgencyId] : [],
+        agencyIds: resolveDirectoryAgencyIds(nextSearch.agencyIds, activeAgencyId),
       }));
     });
-  }, [activeAgencyId, onSearchChange, savedViewsQuery.data, search, userRole]);
+  }, [activeAgencyId, onSearchChange, savedViewsQuery.data, search]);
 
   const handleSearchPatch = (patch: Partial<DirectoryListInput>) => {
     const nextSearchDraft = Object.prototype.hasOwnProperty.call(patch, 'q')
@@ -231,8 +296,7 @@ export const useClientDirectoryWorkspace = ({
     startTransition(() => {
       onSearchChange(() => ({
         ...nextSearch,
-        agencyIds:
-          userRole === 'super_admin' ? nextSearch.agencyIds : activeAgencyId ? [activeAgencyId] : [],
+        agencyIds: resolveDirectoryAgencyIds(nextSearch.agencyIds, activeAgencyId),
       }));
     });
   };
@@ -277,7 +341,7 @@ export const useClientDirectoryWorkspace = ({
     handleSearchPatch({
       q: undefined,
       type: 'all',
-      agencyIds: userRole === 'super_admin' ? [] : activeAgencyId ? [activeAgencyId] : [],
+      agencyIds: resolveDirectoryAgencyIds([], activeAgencyId),
       departments: [],
       city: undefined,
       cirCommercialIds: [],
@@ -313,18 +377,19 @@ export const useClientDirectoryWorkspace = ({
     totalResults,
     viewOptionColumns,
     agencies: agenciesQuery.data ?? [],
-    directoryRows: directoryPageQuery.data?.rows ?? [],
+    directoryRows,
     directoryPage: directoryPageQuery.data?.page ?? effectiveSearch.page,
     directoryPageSize: directoryPageQuery.data?.page_size ?? effectiveSearch.pageSize,
     directoryIsFetching: directoryPageQuery.isFetching,
     directoryIsPending: directoryPageQuery.isPending,
-    commercials: directoryOptionsQuery.data?.commercials ?? [],
-    departments: directoryOptionsQuery.data?.departments ?? [],
+    commercials: directoryOptionsQuery.data?.commercials ?? rowCommercials,
+    departments: directoryOptionsQuery.data?.departments ?? rowDepartments,
     savedViews: savedViewsQuery.data?.views ?? [],
     savedViewsIsLoading: savedViewsQuery.isLoading,
     savedViewsState,
     isSavedViewsMutating,
     handleSearchPatch,
+    requestDirectoryOptions: () => setHasRequestedDirectoryOptions(true),
     handleApplySavedView,
     handleSaveView,
     handleDeleteView,

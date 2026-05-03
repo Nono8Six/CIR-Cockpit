@@ -14,6 +14,7 @@ type UseAppViewStateParams = {
   navigate: NavigateFn;
   queryClient: QueryClient;
   activeAgencyId: string | null;
+  isAccessControlReady: boolean;
   canAccessAdmin: boolean;
   canAccessSettings: boolean;
   onSearchOpen?: () => void;
@@ -23,6 +24,7 @@ export const useAppViewState = ({
   pathname,
   navigate,
   queryClient,
+  isAccessControlReady,
   canAccessAdmin,
   canAccessSettings,
   onSearchOpen
@@ -81,10 +83,14 @@ export const useAppViewState = ({
   });
 
   useEffect(() => {
+    if (!isAccessControlReady) {
+      return;
+    }
+
     if ((activeTab === 'settings' && !canAccessSettings) || (activeTab === 'admin' && !canAccessAdmin)) {
       void navigate({ to: getPathForTab('cockpit'), replace: true });
     }
-  }, [activeTab, canAccessAdmin, canAccessSettings, navigate]);
+  }, [activeTab, canAccessAdmin, canAccessSettings, isAccessControlReady, navigate]);
 
   useEffect(() => {
     if (activeTab === 'admin' && canAccessAdmin) {

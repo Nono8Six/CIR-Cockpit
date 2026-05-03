@@ -2,20 +2,13 @@ import { memo, type ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useReducedMotion } from 'motion/react';
 import { getPathForTab } from '@/app/appRoutes';
-import { ChevronDown, Menu, User } from 'lucide-react';
+import { Bell, ChevronDown, Menu, User } from 'lucide-react';
 
 import type { AppHeaderProps } from '@/components/app-header/AppHeader.types';
 import AppHeaderSearchButton from '@/components/app-header/AppHeaderSearchButton';
 import AvatarInitials from '@/components/ui/avatar-initials';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,9 +25,6 @@ const AppHeader = ({
   activeTab,
   activeSectionLabel,
   activeItemLabel,
-  agencyContext,
-  agencyMemberships,
-  hasMultipleAgencies,
   sessionEmail,
   userFullName,
   userInitials,
@@ -43,7 +33,6 @@ const AppHeader = ({
   isContextRefreshing,
   isSettingsDisabled,
   isProfileMenuOpen,
-  onAgencyChange,
   onOpenSearch,
   onSearchIntent,
   onProfileMenuOpenChange,
@@ -70,21 +59,18 @@ const AppHeader = ({
   const safeItemLabel = typeof activeItemLabel === 'string' && activeItemLabel.trim().length > 0
     ? activeItemLabel
     : 'Vue';
-  const safeAgencyMemberships = Array.isArray(agencyMemberships) ? agencyMemberships : [];
   const hasInitials = safeInitials.length > 0;
-  const activeAgency = agencyContext ?? safeAgencyMemberships[0] ?? null;
-  const activeAgencyName = activeAgency?.agency_name ?? 'Agence indisponible';
   const reducedMotion = useReducedMotion() ?? false;
   const currentSectionItems = safeSections.find((section) => section.items.some((item) => item.id === activeTab))?.items ?? [];
 
   return (
-    <header className="sticky top-0 z-20 border-b border-border bg-card/95 backdrop-blur">
-      <div className="flex h-14 items-center gap-2 px-3 sm:px-4 lg:px-6">
+    <header className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur">
+      <div className="flex h-11 items-center gap-2 px-3 sm:px-4">
         <Button
           type="button"
           size="icon"
           variant="outline"
-          className="h-9 w-9 rounded-md border-border/80 md:hidden"
+          className="h-8 w-8 rounded-md border-border md:hidden"
           onClick={onOpenMobileMenu}
           aria-label="Ouvrir le menu"
         >
@@ -98,7 +84,7 @@ const AppHeader = ({
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    className="group inline-flex items-center gap-1 rounded-md px-1.5 py-1 -ml-1.5 text-sm font-medium text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="-ml-1.5 inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[12.5px] font-medium text-muted-foreground outline-none transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <span className="truncate">{safeSectionLabel}</span>
                     <ChevronDown size={14} className="opacity-50 transition-transform group-data-[state=open]:rotate-180" />
@@ -126,8 +112,8 @@ const AppHeader = ({
                 {safeSectionLabel}
               </p>
             )}
-            <span className="text-muted-foreground/50 font-light select-none">/</span>
-            <h1 className="truncate text-sm font-semibold text-foreground">
+            <span className="select-none text-muted-foreground/50">/</span>
+            <h1 className="truncate text-[12.5px] font-semibold text-foreground">
               {safeItemLabel}
             </h1>
           </div>
@@ -154,40 +140,22 @@ const AppHeader = ({
 
           <AppHeaderSearchButton onOpenSearch={onOpenSearch} onSearchIntent={onSearchIntent} />
 
-          <div className="hidden items-center gap-2 md:flex">
-            {hasMultipleAgencies ? (
-              <Select
-                value={activeAgency?.agency_id ?? ''}
-                onValueChange={onAgencyChange}
-              >
-                <SelectTrigger
-                  className="h-9 min-w-[170px] rounded-md border-border bg-card text-xs font-semibold"
-                  density="comfortable"
-                  aria-label="Agence active"
-                >
-                  <SelectValue placeholder="Agence active" />
-                </SelectTrigger>
-                <SelectContent>
-                  {safeAgencyMemberships.map((membership) => (
-                    <SelectItem key={membership.agency_id} value={membership.agency_id}>
-                      {membership.agency_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : (
-              <div className="inline-flex h-9 min-w-[170px] items-center rounded-md border border-border bg-card px-3 text-xs font-semibold text-foreground">
-                <span className="truncate">{activeAgencyName}</span>
-              </div>
-            )}
+          <button
+            type="button"
+            aria-label="Notifications"
+            className="hidden h-8 w-8 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-[background-color,border-color,color,box-shadow] hover:bg-muted/80 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background md:inline-flex"
+          >
+            <Bell size={14} aria-hidden="true" />
+          </button>
 
+          <div className="hidden items-center gap-2 md:flex">
             <DropdownMenu open={isProfileMenuOpen} onOpenChange={onProfileMenuOpenChange}>
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
                   data-testid="app-header-profile-button"
                   className={cn(
-                    'relative inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border/80 bg-muted shadow-sm transition-[opacity,transform,border-color,box-shadow,background-color]',
+                    'relative inline-flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-muted shadow-sm transition-[opacity,transform,border-color,box-shadow,background-color]',
                     'hover:opacity-90 hover:scale-[0.98] active:scale-95 focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                     isProfileMenuOpen && 'ring-2 ring-primary/20 ring-offset-1 ring-offset-background border-primary/20'
                   )}

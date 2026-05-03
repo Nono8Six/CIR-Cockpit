@@ -59,8 +59,8 @@ const CockpitGuidedSearchQuestion = ({
 
   return (
     <CockpitGuidedQuestionFrame
-      eyebrow="Etape 3"
-      title="Rechercher le tiers ou saisir les premiers elements"
+      eyebrow="Étape 3"
+      title="Rechercher le tiers ou saisir les premiers éléments"
       actions={<Button type="button" size="sm" onClick={onComplete} disabled={!identityComplete}>Continuer</Button>}
     >
       {renderLookup()}

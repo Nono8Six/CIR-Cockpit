@@ -72,16 +72,27 @@ const App = () => {
   const sessionActions = useAppSessionActions();
   const queryClient = useQueryClient();
 
-  const userRole = sessionState.profile?.role ?? 'tcs';
-  const canAccessSettings = userRole !== 'tcs';
-  const canEditAgencySettings = userRole !== 'tcs';
-  const canEditProductSettings = userRole === 'super_admin';
-  const canAccessAdmin = userRole !== 'tcs';
+  const resolvedUserRole = sessionState.profile?.role ?? null;
+  const userRole = resolvedUserRole ?? 'tcs';
+  const isAccessControlReady = Boolean(
+    sessionState.canLoadData
+      || (
+        sessionState.authReady
+        && !sessionState.profileLoading
+        && resolvedUserRole
+        && !sessionState.profileError
+      )
+  );
+  const canAccessSettings = resolvedUserRole !== null && resolvedUserRole !== 'tcs';
+  const canEditAgencySettings = canAccessSettings;
+  const canEditProductSettings = resolvedUserRole === 'super_admin';
+  const canAccessAdmin = canAccessSettings;
   const viewState = useAppViewState({
     pathname,
     navigate,
     queryClient,
     activeAgencyId: sessionState.activeAgencyId,
+    isAccessControlReady,
     canAccessAdmin,
     canAccessSettings,
     onSearchOpen: preloadAppSearchOverlay,

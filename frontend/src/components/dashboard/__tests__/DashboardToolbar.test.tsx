@@ -57,11 +57,15 @@ describe('DashboardToolbar', () => {
       target: { value: '2026-02-02' }
     });
     expect(onStartDateChange).toHaveBeenCalledWith('2026-02-02');
+    expect(screen.getByTestId('dashboard-start-date')).toHaveAttribute('id', 'dashboard-start-date');
+    expect(screen.getByTestId('dashboard-start-date')).toHaveAttribute('name', 'dashboard-start-date');
 
     fireEvent.change(screen.getByTestId('dashboard-end-date'), {
       target: { value: '2026-02-10' }
     });
     expect(onEndDateChange).toHaveBeenCalledWith('2026-02-10');
+    expect(screen.getByTestId('dashboard-end-date')).toHaveAttribute('id', 'dashboard-end-date');
+    expect(screen.getByTestId('dashboard-end-date')).toHaveAttribute('name', 'dashboard-end-date');
     expect(onDateRangeChange).not.toHaveBeenCalled();
 
     fireEvent.change(screen.getByTestId('dashboard-search-input'), {

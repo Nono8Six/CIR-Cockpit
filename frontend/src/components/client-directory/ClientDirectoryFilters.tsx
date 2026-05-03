@@ -29,6 +29,7 @@ const ClientDirectoryFilters = ({
   onDensityChange,
   onSearchDraftChange,
   onSearchPatch,
+  onRequestOptions,
   onReset
 }: ClientDirectoryFiltersProps) => {
   const routeCityValue = cityDraftSeed ?? search.city ?? '';
@@ -169,6 +170,7 @@ const ClientDirectoryFilters = ({
             cityDraft={cityDraft}
             onCityDraftChange={setCityDraft}
             onSearchPatch={(patch) => applyPatch(patch)}
+            onRequestOptions={onRequestOptions}
             onResetFilters={handleReset}
           />
           <div className="h-5 w-px bg-border/50" aria-hidden="true" />
@@ -192,6 +194,7 @@ const ClientDirectoryFilters = ({
           onCityDraftChange={setCityDraft}
           renderSavedViews={renderSavedViews}
           onSearchPatch={(patch) => applyPatch(patch)}
+          onRequestOptions={onRequestOptions}
           onReset={handleReset}
         />
         <span className="ml-auto">{renderSyncIndicator('compact')}</span>
@@ -206,6 +209,7 @@ const ClientDirectoryFilters = ({
         cityDraft={cityDraft}
         onCityDraftChange={setCityDraft}
         onSearchPatch={(patch) => applyPatch(patch)}
+        onRequestOptions={onRequestOptions}
       />
     </div>
   );

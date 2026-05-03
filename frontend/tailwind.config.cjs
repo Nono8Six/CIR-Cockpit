@@ -2,6 +2,10 @@ module.exports = {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['"Inter Tight"', '"Inter"', 'system-ui', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', '"SF Mono"', 'Menlo', 'Consolas', 'monospace']
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -51,15 +55,15 @@ module.exports = {
           foreground: "hsl(var(--card-foreground))"
         },
         cir: {
-          red: "#c81e1e",
-          dark: "#1f2937",
-          gray: "#f3f4f6"
+          red: "#c92b1f",
+          dark: "#342b27",
+          gray: "#f5f2ee"
         }
       },
       borderRadius: {
-        lg: "0.5rem",
-        md: "calc(0.5rem - 2px)",
-        sm: "calc(0.5rem - 4px)"
+        lg: "0.625rem",
+        md: "0.375rem",
+        sm: "0.25rem"
       },
       boxShadow: {
         soft: "0 1px 2px 0 rgba(0, 0, 0, 0.05)"

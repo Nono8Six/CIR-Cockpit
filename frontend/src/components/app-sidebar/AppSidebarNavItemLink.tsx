@@ -39,7 +39,6 @@ const AppSidebarNavItemLink = ({
 }: AppSidebarNavItemLinkProps) => {
   const sectionLabel = APP_SHELL_SECTION_LABELS[item.sectionId];
   const metaLabel = item.metaLabel;
-  const shouldPulseMetaLabel = typeof metaLabel === 'string' && /\d/.test(metaLabel) && !reducedMotion;
   const activeIndicatorTransition: Transition = reducedMotion
     ? { duration: 0 }
     : { type: 'spring', stiffness: 300, damping: 30 };
@@ -52,10 +51,10 @@ const AppSidebarNavItemLink = ({
       to={getPathForTab(item.id)}
       onClick={() => onMobileOpenChange?.(false)}
       className={cn(
-        'group relative flex h-10 w-full items-center rounded-xl px-3 text-left text-sm transition-[background-color,color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98]',
+        'group relative flex h-7 w-full items-center rounded-md px-2 text-left text-[12.5px] transition-[background-color,color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98]',
         isActive
-          ? 'bg-surface-1/80 font-semibold text-foreground shadow-sm ring-1 ring-border/50'
-          : 'text-muted-foreground hover:bg-card/85 hover:text-foreground',
+          ? 'border border-border bg-card font-semibold text-foreground shadow-sm'
+          : 'border border-transparent text-muted-foreground hover:bg-card/70 hover:text-foreground',
         collapsed ? 'justify-center px-0' : 'gap-2.5',
       )}
       activeProps={{ 'aria-current': 'page' }}
@@ -66,7 +65,7 @@ const AppSidebarNavItemLink = ({
         <motion.span
           layoutId="active-nav-indicator"
           className={cn(
-            'absolute -left-[1px] top-[15%] h-[70%] rounded-r-full bg-primary',
+            'absolute -left-[7px] top-[21%] h-[58%] rounded-r-full bg-primary',
             collapsed ? 'w-[2px]' : 'w-[3px]',
           )}
           initial={false}
@@ -74,7 +73,7 @@ const AppSidebarNavItemLink = ({
         />
       ) : null}
 
-      <item.icon size={15} className="shrink-0 relative z-10" />
+      <item.icon size={14} className={cn('relative z-10 shrink-0', isActive ? 'text-primary' : 'text-muted-foreground')} />
 
       <AnimatePresence initial={false}>
         {!collapsed ? (
@@ -88,17 +87,8 @@ const AppSidebarNavItemLink = ({
             <span className="truncate">{item.label}</span>
             <span className="inline-flex shrink-0 items-center gap-1.5">
               {metaLabel ? (
-                <span className="relative inline-flex min-w-5 items-center justify-center">
-                  {shouldPulseMetaLabel ? (
-                    <motion.span
-                      className="absolute inset-0 rounded-full bg-primary/20"
-                      animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
-                      transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                    />
-                  ) : null}
-                  <span className="relative z-10 inline-flex min-w-5 items-center justify-center rounded-full bg-primary/10 border border-primary/20 px-1.5 text-[10px] font-bold text-primary">
-                    {metaLabel}
-                  </span>
+                <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full border border-warning/25 bg-warning/15 px-1.5 font-mono text-[10px] font-semibold leading-none text-warning-foreground">
+                  {metaLabel}
                 </span>
               ) : null}
               {item.shortcut ? (

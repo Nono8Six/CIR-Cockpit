@@ -23,10 +23,10 @@ const CockpitClientContactSelector = ({
       <Select value={contactSelectValue} onValueChange={onContactSelect}>
         <SelectTrigger
           className="h-8 text-xs"
-          aria-label="Selectionner un contact"
+          aria-label="Sélectionner un contact"
           ref={contactSelectRef}
         >
-          <SelectValue placeholder="Selectionner un contact" />
+          <SelectValue placeholder="Sélectionner un contact" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="none">Aucun contact</SelectItem>
@@ -38,10 +38,10 @@ const CockpitClientContactSelector = ({
         </SelectContent>
       </Select>
       {contactsLoading && (
-        <p className="text-xs text-muted-foreground/80">Chargement des contacts...</p>
+        <p className="text-xs text-muted-foreground/80">Chargement des contacts…</p>
       )}
       {!contactsLoading && contacts.length === 0 && (
-        <p className="text-xs text-muted-foreground/80">Aucun contact associe.</p>
+        <p className="text-xs text-muted-foreground/80">Aucun contact associé.</p>
       )}
     </div>
   );

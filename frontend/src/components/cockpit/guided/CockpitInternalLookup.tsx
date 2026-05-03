@@ -62,7 +62,7 @@ const CockpitInternalLookup = ({
         <Input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Membre CIR, email..."
+          placeholder="Membre CIR, email…"
           className="h-10 pl-9"
           autoComplete="off"
         />
@@ -91,10 +91,10 @@ const CockpitInternalLookup = ({
         ))}
       </div>
       {membersQuery.isLoading ? (
-        <p className="text-xs text-muted-foreground" role="status">Chargement...</p>
+        <p className="text-xs text-muted-foreground" role="status">Chargement…</p>
       ) : null}
       {!membersQuery.isLoading && filteredMembers.length === 0 ? (
-        <p className="text-xs text-muted-foreground" role="status">Aucun membre trouve.</p>
+        <p className="text-xs text-muted-foreground" role="status">Aucun membre trouvé.</p>
       ) : null}
     </div>
   );

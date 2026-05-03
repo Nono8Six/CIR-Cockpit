@@ -19,7 +19,7 @@ const CockpitGuidedQualificationQuestion = ({
   onComplete
 }: CockpitGuidedQualificationQuestionProps) => (
   <CockpitGuidedQuestionFrame
-    eyebrow="Etape 5"
+    eyebrow="Étape 5"
     title="Qualifier la demande"
     actions={<Button type="button" size="sm" onClick={onComplete} disabled={!qualificationComplete}>Continuer</Button>}
   >

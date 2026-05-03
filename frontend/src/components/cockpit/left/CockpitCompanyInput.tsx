@@ -41,10 +41,10 @@ const CockpitCompanyInput = ({
           onShowSuggestionsChange(true);
         }}
         onBlur={() => onShowSuggestionsChange(false)}
-        placeholder="Nom de la societe…"
+        placeholder="Nom de la société…"
         className="font-semibold"
         aria-invalid={!!errors.company_name}
-        aria-label="Nom de la societe"
+        aria-label="Nom de la société"
         autoComplete="organization"
       />
       {errors.company_name && (
@@ -55,7 +55,7 @@ const CockpitCompanyInput = ({
       {showSuggestions && companyName.length > 1 && (
         <div className="absolute z-50 w-full bg-card border border-border shadow-lg rounded-md mt-1 max-h-40 overflow-auto py-1">
           {companySuggestions.length === 0 ? (
-            <div className="px-3 py-2 text-xs text-muted-foreground/80 italic">Nouvelle entree</div>
+            <div className="px-3 py-2 text-xs text-muted-foreground/80 italic">Nouvelle entrée</div>
           ) : (
             companySuggestions.map((company) => (
               <button
@@ -70,7 +70,7 @@ const CockpitCompanyInput = ({
                   setValue('company_name', company, { shouldDirty: true, shouldValidate: true });
                   onShowSuggestionsChange(false);
                 }}
-                aria-label={`Selectionner ${company}`}
+                aria-label={`Sélectionner ${company}`}
               >
                 {company}
               </button>

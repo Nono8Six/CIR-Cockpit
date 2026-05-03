@@ -1,4 +1,4 @@
-import { isProspectRelationValue } from '@/constants/relations';
+import { isIndividualRelationValue, isProspectRelationValue, isSupplierRelationValue } from '@/constants/relations';
 
 type GateInput = {
   channel?: string | null;
@@ -33,6 +33,7 @@ const hasValue = (value?: string | null) => Boolean(value && value.trim().length
 export const getInteractionGateState = (input: GateInput): GateState => {
   const relation = input.entityType?.trim().toLowerCase() ?? '';
   const isSolicitation = relation === 'sollicitation';
+  const isIndividual = isIndividualRelationValue(input.entityType);
   const hasContactMethod = isSolicitation
     ? hasValue(input.contactPhone)
     : hasValue(input.contactPhone) || hasValue(input.contactEmail);
@@ -49,11 +50,11 @@ export const getInteractionGateState = (input: GateInput): GateState => {
     input.isClientRelation && input.hasSelectedEntity && input.hasSelectedContact
   );
   const needsCity = isProspectRelationValue(input.entityType);
-  const needsPosition = relation === 'fournisseur';
+  const needsPosition = isSupplierRelationValue(input.entityType);
 
   const hasNonClientIdentity = Boolean(
     !input.isClientRelation &&
-      (input.isInternalRelation || hasValue(input.companyName)) &&
+      (input.isInternalRelation || isIndividual || hasValue(input.companyName)) &&
       (!needsCity || hasValue(input.companyCity)) &&
       (isSolicitation || hasValue(input.contactFirstName)) &&
       (isSolicitation || hasValue(input.contactLastName)) &&
@@ -74,7 +75,7 @@ export const getInteractionGateState = (input: GateInput): GateState => {
         gateMessage = 'Completer les informations du client.';
       }
     } else {
-      if (!input.isInternalRelation && !hasValue(input.companyName)) {
+      if (!input.isInternalRelation && !isIndividual && !hasValue(input.companyName)) {
         gateMessage = 'Renseignez la societe.';
       } else if (!input.isInternalRelation && needsCity && !hasValue(input.companyCity)) {
         gateMessage = 'Renseignez la ville.';

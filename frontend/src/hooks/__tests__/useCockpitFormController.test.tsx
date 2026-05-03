@@ -3,7 +3,7 @@ import { renderHook } from '@testing-library/react';
 import type { PropsWithChildren } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { Channel, type Interaction } from '@/types';
+import { Channel, type Entity, type Interaction } from '@/types';
 import { useCockpitFormController } from '@/hooks/useCockpitFormController';
 
 const controllerMocks = vi.hoisted(() => ({
@@ -25,7 +25,8 @@ const controllerMocks = vi.hoisted(() => ({
   useCockpitPaneProps: vi.fn(),
   useSaveClient: vi.fn(),
   useSaveProspect: vi.fn(),
-  useSaveEntityContact: vi.fn()
+  useSaveEntityContact: vi.fn(),
+  useEntityInteractions: vi.fn()
 }));
 
 vi.mock('@/hooks/useCockpitDialogsState', () => ({
@@ -84,6 +85,9 @@ vi.mock('@/hooks/useSaveProspect', () => ({
 }));
 vi.mock('@/hooks/useSaveEntityContact', () => ({
   useSaveEntityContact: controllerMocks.useSaveEntityContact
+}));
+vi.mock('@/hooks/useEntityInteractions', () => ({
+  useEntityInteractions: controllerMocks.useEntityInteractions
 }));
 
 const buildWrapper = () => {
@@ -144,6 +148,33 @@ const buildInteraction = (overrides: Partial<Interaction> & { id: string }): Int
   timeline: overrides.timeline ?? [],
   updated_at: overrides.updated_at ?? '2026-04-20T10:00:00.000Z',
   updated_by: overrides.updated_by ?? null
+});
+
+const buildEntity = (overrides: Partial<Entity> & { id: string }): Entity => ({
+  id: overrides.id,
+  agency_id: overrides.agency_id ?? 'agency-1',
+  account_type: overrides.account_type ?? null,
+  address: overrides.address ?? null,
+  archived_at: overrides.archived_at ?? null,
+  cir_commercial_id: overrides.cir_commercial_id ?? null,
+  city: overrides.city ?? 'Gradignan',
+  client_kind: overrides.client_kind ?? null,
+  client_number: overrides.client_number ?? '116277',
+  country: overrides.country ?? 'France',
+  created_at: overrides.created_at ?? '2026-04-20T10:00:00.000Z',
+  created_by: overrides.created_by ?? null,
+  department: overrides.department ?? '33',
+  entity_type: overrides.entity_type ?? 'Client',
+  naf_code: overrides.naf_code ?? null,
+  name: overrides.name ?? 'SEA',
+  notes: overrides.notes ?? null,
+  official_data_source: overrides.official_data_source ?? null,
+  official_data_synced_at: overrides.official_data_synced_at ?? null,
+  official_name: overrides.official_name ?? null,
+  postal_code: overrides.postal_code ?? '33170',
+  siren: overrides.siren ?? null,
+  siret: overrides.siret ?? null,
+  updated_at: overrides.updated_at ?? '2026-04-20T10:00:00.000Z'
 });
 
 describe('useCockpitFormController', () => {
@@ -237,6 +268,11 @@ describe('useCockpitFormController', () => {
     controllerMocks.useSaveClient.mockReturnValue({ mutateAsync: vi.fn() });
     controllerMocks.useSaveProspect.mockReturnValue({ mutateAsync: vi.fn() });
     controllerMocks.useSaveEntityContact.mockReturnValue({ mutateAsync: vi.fn() });
+    controllerMocks.useEntityInteractions.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false
+    });
     controllerMocks.useInteractionHandlers.mockReturnValue({
       handleSelectEntity: vi.fn(),
       handleSelectContact: vi.fn(),
@@ -390,6 +426,26 @@ describe('useCockpitFormController', () => {
     expect(lastCallArgs?.recentEntities).toEqual([]);
   });
 
+  it('appelle toujours le hook interactions client sans selection active', () => {
+    renderHook(
+      () =>
+        useCockpitFormController({
+          onSave: vi.fn().mockResolvedValue(true),
+          config: BASE_CONFIG,
+          activeAgencyId: 'agency-1',
+          userId: 'user-1',
+          userRole: 'agency_admin',
+          entitySearchIndex: { entities: [], contacts: [] },
+          entitySearchLoading: false,
+          recentEntities: [],
+          interactions: []
+        }),
+      { wrapper: buildWrapper() }
+    );
+
+    expect(controllerMocks.useEntityInteractions).toHaveBeenCalledWith(null, 1, 6, false);
+  });
+
   it('wires prospect creation into pane props and dialogs', () => {
     const setIsProspectDialogOpen = vi.fn();
     const handleSaveProspect = vi.fn();
@@ -469,6 +525,60 @@ describe('useCockpitFormController', () => {
     );
 
     expect(result.current.showEntryRecents).toBe(false);
+  });
+
+  it('charge le contexte interactions avec l identifiant du client selectionne', () => {
+    const selectedEntity = buildEntity({ id: 'entity-client-1' });
+    const ownInteraction = buildInteraction({
+      id: 'own-user-other-client',
+      created_by: 'user-1',
+      entity_id: 'entity-other'
+    });
+    const clientInteraction = buildInteraction({
+      id: 'client-context',
+      created_by: 'user-2',
+      entity_id: 'entity-client-1'
+    });
+
+    controllerMocks.useCockpitDialogsState.mockReturnValue({
+      ...controllerMocks.useCockpitDialogsState(),
+      selectedEntity
+    });
+    controllerMocks.useEntityInteractions.mockReturnValue({
+      data: {
+        interactions: [clientInteraction],
+        page: 1,
+        pageSize: 6,
+        total: 1,
+        totalPages: 1
+      },
+      isLoading: false,
+      isError: false
+    });
+
+    const { result } = renderHook(
+      () =>
+        useCockpitFormController({
+          onSave: vi.fn().mockResolvedValue(true),
+          config: BASE_CONFIG,
+          activeAgencyId: 'agency-1',
+          userId: 'user-1',
+          userRole: 'agency_admin',
+          entitySearchIndex: { entities: [], contacts: [] },
+          entitySearchLoading: false,
+          recentEntities: [],
+          interactions: [ownInteraction]
+        }),
+      { wrapper: buildWrapper() }
+    );
+
+    expect(controllerMocks.useEntityInteractions).toHaveBeenCalledWith('entity-client-1', 1, 6, true);
+    expect(result.current.recentOwnInteractions.map((interaction) => interaction.id)).toEqual([
+      'own-user-other-client'
+    ]);
+    expect(result.current.clientContextInteractions.map((interaction) => interaction.id)).toEqual([
+      'client-context'
+    ]);
   });
 });
 

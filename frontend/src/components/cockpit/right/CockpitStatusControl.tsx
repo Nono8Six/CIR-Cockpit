@@ -6,6 +6,7 @@ import type { AgencyConfig } from '@/services/config';
 import type { AgencyStatus, StatusCategory } from '@/types';
 import { STATUS_CATEGORY_LABELS, STATUS_CATEGORY_ORDER } from '@/constants/statusCategories';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import {
   Command,
   CommandEmpty,
@@ -27,6 +28,7 @@ type CockpitStatusControlProps = {
   statusGroups: Record<StatusCategory, AgencyConfig['statuses']>;
   hasStatuses: boolean;
   statusHelpId: string;
+  layout?: 'stacked' | 'inline';
 };
 
 const CockpitStatusControl = ({
@@ -39,7 +41,8 @@ const CockpitStatusControl = ({
   onStatusChange,
   statusGroups,
   hasStatuses,
-  statusHelpId
+  statusHelpId,
+  layout = 'stacked'
 }: CockpitStatusControlProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -71,7 +74,7 @@ const CockpitStatusControl = ({
       .filter((section) => section.statuses.length > 0);
   }, [categorySections, query]);
 
-  const statusLabel = statusMeta?.label ?? 'Selectionner un statut';
+  const statusLabel = statusMeta?.label ?? 'Sélectionner un statut';
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
@@ -86,12 +89,14 @@ const CockpitStatusControl = ({
     setQuery('');
   };
 
+  const isInline = layout === 'inline';
+
   return (
-    <div className="grid w-full gap-2 sm:flex sm:min-w-0 sm:flex-wrap sm:items-center sm:gap-2">
-      <div className="flex min-w-0 flex-wrap items-center gap-2">
-        <label className={footerLabelStyle} htmlFor="interaction-status-trigger">Statut</label>
+    <div className={cn('min-w-0', isInline ? 'grid gap-2 sm:grid-cols-[170px_minmax(0,1fr)] sm:items-center' : 'space-y-1.5')}>
+      <div className="flex min-h-5 min-w-0 items-center gap-2">
+        <label className={cn(footerLabelStyle, 'inline-flex h-5 items-center leading-none', isInline && 'mb-0')} htmlFor="interaction-status-trigger">Statut</label>
         {statusMeta && statusCategoryLabel ? (
-          <span className={`inline-flex shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-xs font-semibold uppercase tracking-wide ${statusCategoryBadges[statusMeta.category]}`}>
+          <span className={`inline-flex h-5 shrink-0 items-center whitespace-nowrap rounded-full border px-2 text-[11px] font-semibold uppercase leading-none tracking-wide ${statusCategoryBadges[statusMeta.category]}`}>
             {statusCategoryLabel}
           </span>
         ) : null}
@@ -107,7 +112,7 @@ const CockpitStatusControl = ({
             size="sm"
             disabled={!hasStatuses}
             aria-describedby={hasStatuses ? undefined : statusHelpId}
-            className="h-9 w-full justify-between gap-2 px-2.5 text-xs font-semibold text-foreground sm:w-[260px]"
+            className="h-10 w-full min-w-0 justify-between gap-2 px-2.5 text-sm font-medium text-foreground"
           >
             <span className="truncate text-left">{statusLabel}</span>
             <ChevronDown size={14} className="shrink-0 text-muted-foreground/80" />
@@ -118,10 +123,10 @@ const CockpitStatusControl = ({
             <CommandInput
               value={query}
               onValueChange={setQuery}
-              placeholder="Rechercher un statut..."
+              placeholder="Rechercher un statut…"
             />
             <CommandList data-testid="cockpit-status-list" className="max-h-[320px]">
-              <CommandEmpty>Aucun statut trouve.</CommandEmpty>
+              <CommandEmpty>Aucun statut trouvé.</CommandEmpty>
               {filteredSections.map((section) => (
                 <CommandGroup
                   key={section.category}

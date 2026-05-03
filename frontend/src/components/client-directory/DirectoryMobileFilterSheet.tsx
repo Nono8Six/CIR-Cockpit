@@ -27,6 +27,7 @@ interface DirectoryMobileFilterSheetProps {
   onCityDraftChange: (value: string) => void;
   renderSavedViews?: () => ReactNode;
   onSearchPatch: (patch: Partial<DirectoryListInput>) => void;
+  onRequestOptions: () => void;
   onReset: () => void;
 }
 
@@ -41,12 +42,21 @@ const DirectoryMobileFilterSheet = ({
   onCityDraftChange,
   renderSavedViews,
   onSearchPatch,
+  onRequestOptions,
   onReset
 }: DirectoryMobileFilterSheetProps) => {
   const [open, setOpen] = useState(false);
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (nextOpen) {
+          onRequestOptions();
+        }
+        setOpen(nextOpen);
+      }}
+    >
       <SheetTrigger asChild>
         <Button type="button" variant="outline" size="dense" className="h-9 rounded-full px-4 text-sm shadow-none bg-white">
           <SlidersHorizontal className="size-4 mr-2" />

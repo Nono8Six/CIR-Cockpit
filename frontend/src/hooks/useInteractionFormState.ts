@@ -36,6 +36,7 @@ export const useInteractionFormState = ({ control, config, activeAgencyId, entit
   const normalizedRelation = entityType.trim().toLowerCase();
   const relationMode = getRelationMode(entityType);
   const isClientRelation = relationMode === 'client';
+  const isIndividualRelation = relationMode === 'individual';
   const isProspectRelation = relationMode === 'prospect';
   const isSupplierRelation = relationMode === 'supplier';
   const isInternalRelation = relationMode === 'internal';
@@ -92,6 +93,7 @@ export const useInteractionFormState = ({ control, config, activeAgencyId, entit
     normalizedRelation,
     relationMode,
     isClientRelation,
+    isIndividualRelation,
     isProspectRelation,
     isSupplierRelation,
     isInternalRelation,

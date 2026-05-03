@@ -13,6 +13,12 @@ const optionalText = z
   .max(MAX_SHORT_TEXT_LENGTH, 'Texte trop long')
   .optional()
   .or(z.literal(''));
+const optionalOrderReference = z
+  .string()
+  .trim()
+  .regex(/^\d{6}$/, 'Numéro de dossier invalide')
+  .optional()
+  .or(z.literal(''));
 const optionalUuid = z
   .string()
   .transform((value) => {
@@ -30,9 +36,20 @@ const isInternalRelationValue = (value?: string | null): boolean => {
 const isSolicitationRelationValue = (value?: string | null): boolean =>
   (value ?? '').trim().toLowerCase() === 'sollicitation';
 
+const isClientRelationValue = (value?: string | null): boolean => {
+  const normalized = (value ?? '').trim().toLowerCase();
+  return normalized === 'client'
+    || normalized === 'client à terme'
+    || normalized === 'client a terme'
+    || normalized === 'client comptant';
+};
+
+const isIndividualRelationValue = (value?: string | null): boolean =>
+  (value ?? '').trim().toLowerCase() === 'particulier';
+
 const isProspectRelationValue = (value?: string | null): boolean => {
   const normalized = (value ?? '').trim().toLowerCase();
-  return normalized.includes('prospect') || normalized.includes('particulier');
+  return normalized === 'prospect';
 };
 
 const interactionCoreSchema = z.object({
@@ -51,7 +68,7 @@ const interactionCoreSchema = z.object({
   mega_families: z.array(z.string().trim().max(80, 'Famille trop longue')).optional(),
   status_id: z.string().trim().min(1, 'Statut requis'),
   interaction_type: z.string().trim().min(1, "Type d'interaction requis").max(120, "Type d'interaction trop long"),
-  order_ref: optionalText,
+  order_ref: optionalOrderReference,
   reminder_at: z.string().optional(),
   notes: z.string().max(MAX_NOTES_LENGTH, 'Notes trop longues').optional(),
   entity_id: optionalUuid,
@@ -80,7 +97,7 @@ export const addSharedInteractionRules = (
     });
   }
 
-  if (values.entity_type.trim().toLowerCase() === 'client') {
+  if (isClientRelationValue(values.entity_type)) {
     if (!values.entity_id) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -99,7 +116,9 @@ export const addSharedInteractionRules = (
   }
   const isProspect = isProspectRelationValue(values.entity_type);
 
-  if (!isInternal && !values.company_name?.trim()) {
+  const isIndividual = isIndividualRelationValue(values.entity_type);
+
+  if (!isInternal && !isIndividual && !values.company_name?.trim()) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: 'Societe requise',
@@ -161,7 +180,7 @@ const addSharedInteractionDraftRules = (
     });
   }
 
-  if (values.entity_type.trim().toLowerCase() === 'client') {
+  if (isClientRelationValue(values.entity_type)) {
     if (!values.entity_id) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

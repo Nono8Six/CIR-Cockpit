@@ -20,6 +20,7 @@ interface DirectoryDesktopFiltersRowProps {
   cityDraft: string;
   onCityDraftChange: (value: string) => void;
   onSearchPatch: (patch: Partial<DirectoryListInput>) => void;
+  onRequestOptions: () => void;
 }
 
 type DesktopFilterKey = 'agency' | 'department' | 'commercial' | 'city';
@@ -124,7 +125,8 @@ const DirectoryDesktopFiltersRow = ({
   canFilterAgency,
   cityDraft,
   onCityDraftChange,
-  onSearchPatch
+  onSearchPatch,
+  onRequestOptions
 }: DirectoryDesktopFiltersRowProps) => {
   const [openFilter, setOpenFilter] = useState<DesktopFilterKey | null>(null);
 
@@ -149,7 +151,12 @@ const DirectoryDesktopFiltersRow = ({
           label="Agence"
           summary={agencySummary}
           open={openFilter === 'agency'}
-          onOpenChange={(nextOpen) => setOpenFilter(nextOpen ? 'agency' : null)}
+          onOpenChange={(nextOpen) => {
+            if (nextOpen) {
+              onRequestOptions();
+            }
+            setOpenFilter(nextOpen ? 'agency' : null);
+          }}
           onClear={() => onSearchPatch({ agencyIds: [], page: 1 })}
         >
           <DirectoryFilterComboboxContent
@@ -168,7 +175,12 @@ const DirectoryDesktopFiltersRow = ({
         label="Departement"
         summary={departmentSummary}
         open={openFilter === 'department'}
-        onOpenChange={(nextOpen) => setOpenFilter(nextOpen ? 'department' : null)}
+        onOpenChange={(nextOpen) => {
+          if (nextOpen) {
+            onRequestOptions();
+          }
+          setOpenFilter(nextOpen ? 'department' : null);
+        }}
         onClear={() => onSearchPatch({ departments: [], page: 1 })}
       >
         <DirectoryFilterComboboxContent
@@ -211,7 +223,12 @@ const DirectoryDesktopFiltersRow = ({
         summary={commercialSummary}
         open={search.type === 'prospect' ? false : openFilter === 'commercial'}
         disabled={search.type === 'prospect'}
-        onOpenChange={(nextOpen) => setOpenFilter(nextOpen ? 'commercial' : null)}
+        onOpenChange={(nextOpen) => {
+          if (nextOpen) {
+            onRequestOptions();
+          }
+          setOpenFilter(nextOpen ? 'commercial' : null);
+        }}
         onClear={() => onSearchPatch({ cirCommercialIds: [], page: 1 })}
       >
         <DirectoryFilterComboboxContent

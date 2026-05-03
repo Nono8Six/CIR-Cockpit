@@ -24,6 +24,7 @@ type InteractionStepperInput = {
   isClientRelation: boolean;
   isProspectRelation: boolean;
   isSupplierRelation: boolean;
+  isIndividualRelation?: boolean;
   isInternalRelation: boolean;
   isSolicitationRelation: boolean;
   selectedEntity: Entity | null;
@@ -45,6 +46,7 @@ export const useInteractionStepper = ({
   isClientRelation,
   isProspectRelation,
   isSupplierRelation,
+  isIndividualRelation = false,
   isInternalRelation,
   isSolicitationRelation,
   selectedEntity,
@@ -55,7 +57,9 @@ export const useInteractionStepper = ({
       ? Boolean(selectedEntity)
       : isInternalRelation
         ? true
-        : Boolean(companyName.trim() && (!isProspectRelation || companyCity.trim()));
+        : isIndividualRelation
+          ? Boolean(selectedEntity || (contactFirstName.trim() && contactLastName.trim()))
+          : Boolean(companyName.trim() && (!isProspectRelation || companyCity.trim()));
     const contactComplete = isClientRelation
       ? Boolean(selectedContact)
       : isSolicitationRelation
@@ -105,6 +109,7 @@ export const useInteractionStepper = ({
     isProspectRelation,
     isSupplierRelation,
     isInternalRelation,
+    isIndividualRelation,
     isSolicitationRelation,
     selectedEntity,
     selectedContact

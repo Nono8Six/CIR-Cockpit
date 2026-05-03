@@ -34,18 +34,18 @@ describe('useAppShortcuts', () => {
     );
 
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F1' }));
-    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F2' }));
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F3' }));
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F4' }));
-    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F5' }));
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F7' }));
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F8' }));
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }));
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
 
+    expect(setActiveTab).toHaveBeenCalledWith('clients');
     expect(setActiveTab).toHaveBeenCalledWith('cockpit');
     expect(setActiveTab).toHaveBeenCalledWith('dashboard');
-    expect(setActiveTab).toHaveBeenCalledWith('settings');
     expect(setActiveTab).toHaveBeenCalledWith('admin');
-    expect(setActiveTab).toHaveBeenCalledWith('clients');
+    expect(setActiveTab).toHaveBeenCalledWith('settings');
     expect(setIsSearchOpen).toHaveBeenCalledWith(true);
     expect(setIsSearchOpen).toHaveBeenCalledWith(false);
   });
@@ -62,8 +62,8 @@ describe('useAppShortcuts', () => {
       />
     );
 
-    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F3' }));
-    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F4' }));
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F7' }));
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F8' }));
 
     expect(setActiveTab).not.toHaveBeenCalledWith('settings');
     expect(setActiveTab).not.toHaveBeenCalledWith('admin');

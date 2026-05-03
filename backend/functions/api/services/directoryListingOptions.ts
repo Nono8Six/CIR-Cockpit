@@ -55,7 +55,7 @@ export const getDirectoryOptions = async (
       isNull(profiles.archived_at),
     )
     : authContext.isSuperAdmin
-    ? and(isNotNull(agency_members.agency_id), isNull(profiles.archived_at))
+    ? sql<boolean>`false`
     : authContext.agencyIds.length > 0
     ? and(
       inArray(agency_members.agency_id, authContext.agencyIds),

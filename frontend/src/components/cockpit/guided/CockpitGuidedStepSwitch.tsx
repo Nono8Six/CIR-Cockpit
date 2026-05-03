@@ -1,14 +1,14 @@
+import { ArrowRight } from 'lucide-react';
+
 import type { CockpitFormLeftPaneProps, CockpitFormRightPaneProps } from '../CockpitPaneTypes';
 import type { CockpitLeftEntitySectionsProps } from '../CockpitLeftEntitySectionsProps';
 import type { useCockpitGuidedFlow } from '@/hooks/useCockpitGuidedFlow';
 import { Button } from '@/components/ui/button';
 import CockpitContactSection from '../left/CockpitContactSection';
-import CockpitSubjectSection from '../right/CockpitSubjectSection';
 import CockpitGuidedChannelQuestion from './CockpitGuidedChannelQuestion';
 import CockpitGuidedRelationQuestion from './CockpitGuidedRelationQuestion';
 import CockpitGuidedQuestionFrame from './CockpitGuidedQuestionFrame';
 import CockpitGuidedSearchQuestion from './CockpitGuidedSearchQuestion';
-import CockpitGuidedQualificationQuestion from './CockpitGuidedQualificationQuestion';
 import CockpitGuidedDetailsQuestion from './CockpitGuidedDetailsQuestion';
 
 type CockpitGuidedFlowState = ReturnType<typeof useCockpitGuidedFlow>;
@@ -30,14 +30,14 @@ const CockpitGuidedStepSwitch = ({
 }: CockpitGuidedStepSwitchProps) => {
   if (flow.activeStep === 'channel') {
     return (
-      <CockpitGuidedQuestionFrame eyebrow="Etape 1" title="Par quel canal arrive la demande ?">
+      <CockpitGuidedQuestionFrame eyebrow="Canal">
         <CockpitGuidedChannelQuestion {...leftPaneProps} onComplete={() => flow.completeStep('channel')} />
       </CockpitGuidedQuestionFrame>
     );
   }
   if (flow.activeStep === 'relation') {
     return (
-      <CockpitGuidedQuestionFrame eyebrow="Etape 2" title="Quel type de tiers est concerne ?">
+      <CockpitGuidedQuestionFrame eyebrow="Relation">
         <CockpitGuidedRelationQuestion {...leftPaneProps} onComplete={() => flow.completeStep('relation')} />
       </CockpitGuidedQuestionFrame>
     );
@@ -55,36 +55,46 @@ const CockpitGuidedStepSwitch = ({
   if (flow.activeStep === 'contact') {
     return (
       <CockpitGuidedQuestionFrame
-        eyebrow="Etape 4"
-        title="Quel contact dois-je rattacher ?"
-        actions={<Button type="button" size="sm" onClick={() => flow.completeStep('contact')} disabled={!flow.contactComplete}>Continuer</Button>}
+        eyebrow="Contact"
+        title="Avec qui as-tu échangé ?"
+        description="Choisis un contact existant du tiers, ou ajoute-en un nouveau."
+        actions={
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => flow.completeStep('contact')}
+            disabled={!flow.contactComplete}
+            className="gap-1.5"
+          >
+            Continuer
+            <ArrowRight size={14} aria-hidden="true" />
+          </Button>
+        }
       >
         <CockpitContactSection {...entityProps.contact} />
       </CockpitGuidedQuestionFrame>
     );
   }
-  if (flow.activeStep === 'qualification') {
+  if (flow.activeStep === 'subject') {
     return (
-      <CockpitGuidedQualificationQuestion
+      <CockpitGuidedDetailsQuestion
         leftPaneProps={leftPaneProps}
         rightPaneProps={rightPaneProps}
-        qualificationComplete={flow.qualificationComplete}
-        onComplete={() => flow.completeStep('qualification')}
+        onReset={onReset}
+        onComplete={() => flow.completeStep('subject')}
+        canComplete={flow.subjectComplete}
+        onEditContact={() => flow.editStep('contact')}
       />
     );
   }
-  if (flow.activeStep === 'subject') {
-    return (
-      <CockpitGuidedQuestionFrame
-        eyebrow="Etape 6"
-        title="Resumer le sujet et le descriptif"
-        actions={<Button type="button" size="sm" onClick={() => flow.completeStep('subject')} disabled={!flow.subjectComplete}>Continuer</Button>}
-      >
-        <CockpitSubjectSection {...rightPaneProps} />
-      </CockpitGuidedQuestionFrame>
-    );
-  }
-  return <CockpitGuidedDetailsQuestion rightPaneProps={rightPaneProps} onReset={onReset} />;
+  return (
+    <CockpitGuidedDetailsQuestion
+      leftPaneProps={leftPaneProps}
+      rightPaneProps={rightPaneProps}
+      onReset={onReset}
+      onEditContact={() => flow.editStep('contact')}
+    />
+  );
 };
 
 export default CockpitGuidedStepSwitch;

@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
 
 type CockpitGuidedQuestionFrameProps = {
-  title: string;
+  title?: string;
   eyebrow: string;
+  description?: string;
   children: ReactNode;
   actions?: ReactNode;
 };
@@ -10,22 +11,30 @@ type CockpitGuidedQuestionFrameProps = {
 const CockpitGuidedQuestionFrame = ({
   title,
   eyebrow,
+  description,
   children,
   actions
 }: CockpitGuidedQuestionFrameProps) => (
-  <section className="rounded-lg border border-border bg-card shadow-sm">
-    <div className="border-b border-border px-4 py-3 sm:px-5">
-      <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+  <section className="space-y-5">
+    <div className="space-y-1.5">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
         {eyebrow}
       </p>
-      <h2 className="mt-1 text-lg font-semibold text-foreground">
-        {title}
-      </h2>
+      {title ? (
+        <h2 className="text-[20px] font-semibold leading-snug tracking-tight text-foreground">
+          {title}
+        </h2>
+      ) : null}
+      {description ? (
+        <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
+          {description}
+        </p>
+      ) : null}
     </div>
-    <div className="space-y-4 px-4 py-4 sm:px-5">
+    <div className="space-y-4">
       {children}
       {actions ? (
-        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border pt-4">
+        <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
           {actions}
         </div>
       ) : null}

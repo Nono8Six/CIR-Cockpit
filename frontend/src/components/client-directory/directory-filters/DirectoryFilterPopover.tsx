@@ -18,6 +18,7 @@ interface DirectoryFilterPopoverProps {
   cityDraft: string;
   onCityDraftChange: (value: string) => void;
   onSearchPatch: (patch: Partial<DirectoryListInput>) => void;
+  onRequestOptions: () => void;
   onResetFilters: () => void;
 }
 
@@ -31,10 +32,15 @@ const DirectoryFilterPopover = ({
   cityDraft,
   onCityDraftChange,
   onSearchPatch,
+  onRequestOptions,
   onResetFilters
 }: DirectoryFilterPopoverProps) => {
   return (
-    <Popover>
+    <Popover onOpenChange={(open) => {
+      if (open) {
+        onRequestOptions();
+      }
+    }}>
       <PopoverTrigger asChild>
         <Button type="button" variant="outline" size="dense" className="h-9 rounded-md px-3 text-sm shadow-none">
           <SlidersHorizontal className="size-4" />

@@ -1,6 +1,5 @@
 import CockpitFormHeader from './cockpit/CockpitFormHeader';
 import CockpitFormDialogs from './cockpit/CockpitFormDialogs';
-import CockpitShortcutLegend from './cockpit/CockpitShortcutLegend';
 import CockpitReadonlyView from './cockpit/CockpitReadonlyView';
 import CockpitGuidedEntry from './cockpit/guided/CockpitGuidedEntry';
 import type { CockpitFormProps } from './cockpit/CockpitForm.types';
@@ -33,10 +32,10 @@ const CockpitForm = ({
     lastSavedAt,
     lastSavedInteraction,
     onStartNewEntry,
-    recentOwnInteractions,
-    onSelectRecent,
-    showEntryRecents,
-    searchIndexEntities,
+    clientContextInteractions,
+    clientContextInteractionsTotal,
+    isClientContextInteractionsLoading,
+    hasClientContextInteractionsError,
     dialogs
   } = useCockpitFormController({
     onSave,
@@ -54,25 +53,27 @@ const CockpitForm = ({
   const formId = 'interaction-form';
 
   return (
-    <div data-testid="cockpit-form-shell" className="min-h-full rounded-lg border border-border bg-card shadow-sm overflow-x-clip flex flex-col">
-      <CockpitFormHeader
-        canSave={canSave}
-        draftStatus={draftStatus}
-        lastSavedAt={lastSavedAt}
-        savedInteractionId={lastSavedInteraction?.id ?? null}
-      />
+    <div data-testid="cockpit-form-shell" className="flex h-full min-h-0 flex-col overflow-x-clip bg-background">
       {lastSavedInteraction ? (
-        <CockpitReadonlyView
-          interaction={lastSavedInteraction}
-          config={config}
-          onStartNew={onStartNewEntry}
-        />
+        <>
+          <CockpitFormHeader
+            canSave={canSave}
+            draftStatus={draftStatus}
+            lastSavedAt={lastSavedAt}
+            savedInteractionId={lastSavedInteraction.id}
+          />
+          <CockpitReadonlyView
+            interaction={lastSavedInteraction}
+            config={config}
+            onStartNew={onStartNewEntry}
+          />
+        </>
       ) : (
         <form
           id={formId}
           ref={formRef}
           onSubmit={handleFormSubmit}
-          className="flex flex-1 flex-col"
+          className="flex min-h-0 flex-1 flex-col"
         >
           <CockpitGuidedEntry
             formId={formId}
@@ -81,14 +82,13 @@ const CockpitForm = ({
             focusCurrentStep={focusCurrentStep}
             leftPaneProps={leftPaneProps}
             rightPaneProps={rightPaneProps}
-            recentOwnInteractions={recentOwnInteractions}
-            searchIndexEntities={searchIndexEntities}
-            onSelectRecent={onSelectRecent}
-            showEntryRecents={showEntryRecents}
+            clientContextInteractions={clientContextInteractions}
+            clientContextInteractionsTotal={clientContextInteractionsTotal}
+            isClientContextInteractionsLoading={isClientContextInteractionsLoading}
+            hasClientContextInteractionsError={hasClientContextInteractionsError}
           />
         </form>
       )}
-      <CockpitShortcutLegend canStartNewEntry={Boolean(lastSavedInteraction)} />
       <CockpitFormDialogs
         agencies={dialogs.agencies}
         userRole={dialogs.userRole}

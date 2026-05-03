@@ -1,5 +1,3 @@
-import { Building2 } from 'lucide-react';
-
 import type { Entity } from '@/types';
 import { formatClientNumber } from '@/utils/clients/formatClientNumber';
 import { CommandItem } from '@/components/ui/command';
@@ -24,11 +22,18 @@ const InteractionSearchEntityItem = ({
   <CommandItem
     value={`entity-${entity.id}`}
     onSelect={() => onSelectEntity(entity)}
-    className="rounded-md px-2.5 py-1.5 text-[12px] text-foreground hover:bg-surface-1 data-[selected=true]:bg-muted data-[selected=true]:text-foreground"
+    className="min-h-11 rounded-md px-2.5 py-2 text-[12px] text-foreground hover:bg-surface-1 data-[selected=true]:bg-muted data-[selected=true]:text-foreground"
   >
-    <Building2 className="text-muted-foreground/80" />
-    <span className="flex-1 truncate">
-      <HighlightedText value={entity.name} query={query} />
+    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary" aria-hidden="true">
+      {entity.name.trim().slice(0, 2).toUpperCase() || 'TI'}
+    </span>
+    <span className="min-w-0 flex-1">
+      <span className="block truncate text-[13px] font-semibold">
+        <HighlightedText value={entity.name} query={query} />
+      </span>
+      <span className="block truncate font-mono text-[10.5px] text-muted-foreground">
+        {entity.city || 'Ville non renseignée'}
+      </span>
     </span>
     {showTypeBadge && entity.entity_type ? (
       <span
@@ -43,7 +48,7 @@ const InteractionSearchEntityItem = ({
         Archive
       </span>
     )}
-    <span className="text-xs text-muted-foreground">
+    <span className="font-mono text-[11px] text-muted-foreground">
       <HighlightedDigits
         formatted={formatClientNumber(entity.client_number)}
         query={query}

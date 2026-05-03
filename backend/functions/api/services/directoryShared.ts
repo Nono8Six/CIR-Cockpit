@@ -100,6 +100,10 @@ export const toAccessibleAgencyCondition = (
   authContext: AuthContext,
   agencyIds: string[]
 ): SqlCondition | undefined => {
+  if (authContext.isSuperAdmin && agencyIds.length === 0) {
+    return sql<boolean>`false`;
+  }
+
   const resolvedAgencyIds = resolveAccessibleAgencyIds(authContext, agencyIds);
 
   if (resolvedAgencyIds.length > 0) {

@@ -100,7 +100,7 @@ describe('InteractionSearchBar', () => {
       />
     );
 
-    const input = screen.getByPlaceholderText(/rechercher entite/i);
+    const input = screen.getByPlaceholderText(/rechercher entité/i);
     await user.type(input, 'a');
 
     expect(findOptionByText('Alpha')).toBeTruthy();
@@ -144,7 +144,7 @@ describe('InteractionSearchBar', () => {
     );
 
     await user.click(screen.getByLabelText('Afficher les entites archivees'));
-    await user.type(screen.getByPlaceholderText(/rechercher entite/i), 'archive');
+    await user.type(screen.getByPlaceholderText(/rechercher entité/i), 'archive');
 
     const archivedOption = findOptionByText('Archive Client');
     expect(archivedOption).toBeTruthy();

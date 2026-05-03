@@ -64,11 +64,11 @@ const CockpitRelationSection = ({
           id="cockpit-relation-picker-input"
           aria-labelledby={relationLabelId}
           data-testid="cockpit-relation-picker-trigger"
-          placeholder="Selectionner un type de tiers"
-          searchPlaceholder="Rechercher un type de tiers..."
+          placeholder="Sélectionner un type de tiers"
+          searchPlaceholder="Rechercher un type de tiers…"
         />
         <ComboboxContent>
-          <ComboboxEmpty>Aucun type de tiers trouve.</ComboboxEmpty>
+          <ComboboxEmpty>Aucun type de tiers trouvé.</ComboboxEmpty>
           <ComboboxList>
             {(item) => (
               <ComboboxItem key={item} value={item}>

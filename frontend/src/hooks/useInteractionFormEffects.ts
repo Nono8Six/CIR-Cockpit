@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-import { INTERNAL_COMPANY_NAME } from '@/constants/relations';
+import { INTERNAL_COMPANY_NAME, relationValuesMatch } from '@/constants/relations';
 import type { InteractionFormEffectsParams } from './useInteractionFormEffects.types';
 
 export const useInteractionFormEffects = ({ register, setValue, clearErrors, config, defaultStatusId, statusId, contactService, interactionType, normalizedRelation, selectedEntity, setSelectedEntity, setSelectedContact, entityId, isInternalRelation, isSolicitationRelation, onCloseContactDialog }: InteractionFormEffectsParams) => {
@@ -15,7 +15,7 @@ export const useInteractionFormEffects = ({ register, setValue, clearErrors, con
   useEffect(() => {
     if (!selectedEntity) { if (!entityId) return; setValue('entity_id', '', { shouldValidate: true, shouldDirty: true }); setValue('contact_id', '', { shouldValidate: true, shouldDirty: true }); setSelectedContact(null); return; }
     if (!normalizedRelation) return;
-    if (selectedEntity.entity_type.trim().toLowerCase() !== normalizedRelation) {
+    if (!relationValuesMatch(selectedEntity.entity_type, normalizedRelation)) {
       setSelectedEntity(null);
       setSelectedContact(null);
       setValue('entity_id', '', { shouldValidate: true, shouldDirty: true });

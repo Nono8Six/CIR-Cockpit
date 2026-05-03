@@ -21,13 +21,13 @@ describe('CockpitGuidedRelationQuestion', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: 'Fournisseur' }));
+    await user.click(screen.getByRole('button', { name: /Fournisseur/ }));
 
     expect(onRelationChange).toHaveBeenCalledWith('Fournisseur');
     expect(onComplete).toHaveBeenCalledTimes(1);
   });
 
-  it('delegue Tout comme valeur vide pour la recherche tous types', async () => {
+  it('propose les relations explicites sans option Tout', async () => {
     const user = userEvent.setup();
     const onRelationChange = vi.fn();
     const onComplete = vi.fn();
@@ -42,9 +42,11 @@ describe('CockpitGuidedRelationQuestion', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: 'Tout' }));
+    expect(screen.queryByRole('button', { name: /Tout/ })).not.toBeInTheDocument();
 
-    expect(onRelationChange).toHaveBeenCalledWith('');
+    await user.click(screen.getByRole('button', { name: /Client comptant/ }));
+
+    expect(onRelationChange).toHaveBeenCalledWith('Client comptant');
     expect(onComplete).toHaveBeenCalledTimes(1);
   });
 });
