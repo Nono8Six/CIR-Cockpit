@@ -16,7 +16,10 @@ import {
   directoryCompanySearchResponseSchema,
   directoryDuplicatesResponseSchema,
   directoryListResponseSchema,
-  directoryOptionsResponseSchema,
+  directoryOptionsAgenciesResponseSchema,
+  directoryOptionsCitiesResponseSchema,
+  directoryOptionsCommercialsResponseSchema,
+  directoryOptionsDepartmentsResponseSchema,
   directoryRecordResponseSchema,
   directorySavedViewDeleteResponseSchema,
   directorySavedViewResponseSchema,
@@ -48,7 +51,9 @@ import {
   directoryCompanySearchInputSchema,
   directoryDuplicatesInputSchema,
   directoryListInputSchema,
-  directoryOptionsInputSchema,
+  directoryOptionsAgenciesInputSchema,
+  directoryOptionsCitiesInputSchema,
+  directoryOptionsFacetInputSchema,
   directoryRouteRefSchema,
   directorySavedViewDeleteInputSchema,
   directorySavedViewSaveInputSchema,
@@ -76,7 +81,10 @@ import {
   getDirectoryCompanyDetails,
   getDirectoryCompanySearch,
   getDirectoryDuplicates,
-  getDirectoryOptions,
+  getDirectoryOptionAgencies,
+  getDirectoryOptionCities,
+  getDirectoryOptionCommercials,
+  getDirectoryOptionDepartments,
   getDirectoryRecord,
   listDirectory
 } from '../services/directory.ts';
@@ -172,10 +180,24 @@ export const appRouter = router({
       .input(directoryListInputSchema)
       .output(directoryListResponseSchema)
       .query(withAuthedHandler(listDirectory)),
-    options: authedProcedure
-      .input(directoryOptionsInputSchema)
-      .output(directoryOptionsResponseSchema)
-      .query(withAuthedHandler(getDirectoryOptions)),
+    options: router({
+      agencies: authedProcedure
+        .input(directoryOptionsAgenciesInputSchema)
+        .output(directoryOptionsAgenciesResponseSchema)
+        .query(withAuthedHandler(getDirectoryOptionAgencies)),
+      commercials: authedProcedure
+        .input(directoryOptionsFacetInputSchema)
+        .output(directoryOptionsCommercialsResponseSchema)
+        .query(withAuthedHandler(getDirectoryOptionCommercials)),
+      departments: authedProcedure
+        .input(directoryOptionsFacetInputSchema)
+        .output(directoryOptionsDepartmentsResponseSchema)
+        .query(withAuthedHandler(getDirectoryOptionDepartments)),
+      cities: authedProcedure
+        .input(directoryOptionsCitiesInputSchema)
+        .output(directoryOptionsCitiesResponseSchema)
+        .query(withAuthedHandler(getDirectoryOptionCities))
+    }),
     'city-suggestions': authedProcedure
       .input(directoryCitySuggestionsInputSchema)
       .output(directoryCitySuggestionsResponseSchema)

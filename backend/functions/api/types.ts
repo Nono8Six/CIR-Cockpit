@@ -11,6 +11,7 @@ export type AuthContext = {
   userId: string;
   role: UserRole;
   agencyIds: string[];
+  activeAgencyId: string | null;
   isSuperAdmin: boolean;
 };
 

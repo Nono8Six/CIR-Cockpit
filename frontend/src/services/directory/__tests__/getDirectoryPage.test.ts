@@ -12,15 +12,18 @@ const mockInvokeTrpc = vi.mocked(invokeTrpc);
 let mockDirectoryResponse: unknown;
 
 const baseInput: DirectoryListInput = {
-  q: undefined,
+  scope: { mode: 'active_agency' },
   type: 'all',
-  agencyIds: [],
-  departments: [],
-  city: undefined,
-  cirCommercialIds: [],
-  includeArchived: false,
-  page: 1,
-  pageSize: 50,
+  filters: {
+    departments: [],
+    cirCommercialIds: [],
+    includeArchived: false
+  },
+  pagination: {
+    page: 1,
+    pageSize: 50,
+    includeTotal: false
+  },
   sorting: [{ id: 'name', desc: false }]
 };
 

@@ -23,7 +23,7 @@ export const getDirectoryDuplicates = async (
 
   const baseWhereClause = buildBaseWhereClause(authContext, {
     type: "all",
-    agencyIds: input.agencyIds,
+    scope: input.scope,
     includeArchived: input.includeArchived,
   });
 

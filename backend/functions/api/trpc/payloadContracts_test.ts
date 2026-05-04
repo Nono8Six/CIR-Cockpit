@@ -6,6 +6,12 @@ import {
   dataInteractionsPayloadSchema,
   dataProfilePayloadSchema
 } from '../../../../shared/schemas/data.schema.ts';
+import {
+  directoryDuplicatesInputSchema,
+  directoryListInputSchema,
+  directoryOptionsFacetInputSchema,
+  directorySavedViewStateSchema
+} from '../../../../shared/schemas/directory.schema.ts';
 
 Deno.test('dataEntitiesPayloadSchema supports delete action for super-admin workflows', () => {
   const deletePayload = {
@@ -244,4 +250,87 @@ Deno.test('dataInteractionsPayloadSchema supports save, add_timeline_event, agen
   assertEquals(dataInteractionsPayloadSchema.safeParse({ ...listByAgencyPayload, limit: 501 }).success, false);
   assertEquals(dataInteractionsPayloadSchema.safeParse({ ...draftGetPayload, form_type: '' }).success, false);
   assertEquals(dataInteractionsPayloadSchema.safeParse({ ...draftSavePayload, payload: undefined }).success, false);
+});
+
+Deno.test('directory.list refuses unknown and legacy fields', () => {
+  const validPayload = {
+    scope: { mode: 'active_agency' },
+    type: 'all',
+    filters: {
+      departments: [],
+      cirCommercialIds: [],
+      includeArchived: false
+    },
+    pagination: {
+      page: 1,
+      pageSize: 50,
+      includeTotal: false
+    },
+    sorting: [{ id: 'name', desc: false }]
+  };
+
+  assertEquals(directoryListInputSchema.safeParse(validPayload).success, true);
+  assertEquals(directoryListInputSchema.safeParse({ ...validPayload, unexpected: true }).success, false);
+  assertEquals(directoryListInputSchema.safeParse({ ...validPayload, agencyIds: [] }).success, false);
+  assertEquals(directoryListInputSchema.safeParse({ ...validPayload, agencyId: '11111111-1111-4111-8111-111111111111' }).success, false);
+});
+
+Deno.test('directory contracts accept scoped payloads and reject legacy shortcut filters', () => {
+  const scopedFacetPayload = {
+    scope: { mode: 'active_agency' },
+    type: 'all',
+    includeArchived: false
+  };
+  const duplicatePayload = {
+    kind: 'company',
+    scope: { mode: 'active_agency' },
+    includeArchived: true,
+    name: 'ACME'
+  };
+
+  assertEquals(directoryOptionsFacetInputSchema.safeParse(scopedFacetPayload).success, true);
+  assertEquals(directoryOptionsFacetInputSchema.safeParse({ ...scopedFacetPayload, agencyIds: [] }).success, false);
+  assertEquals(directoryOptionsFacetInputSchema.safeParse({ ...scopedFacetPayload, department: '33' }).success, false);
+  assertEquals(directoryDuplicatesInputSchema.safeParse(duplicatePayload).success, true);
+  assertEquals(directoryDuplicatesInputSchema.safeParse({ ...duplicatePayload, cirCommercialId: '11111111-1111-4111-8111-111111111111' }).success, false);
+});
+
+Deno.test('directory contracts parse all_accessible_agencies only as explicit scope value', () => {
+  const broadScope = { mode: 'all_accessible_agencies' };
+
+  assertEquals(directoryListInputSchema.safeParse({ scope: broadScope }).success, true);
+  assertEquals(directoryOptionsFacetInputSchema.safeParse({ scope: broadScope }).success, true);
+  assertEquals(directoryDuplicatesInputSchema.safeParse({
+    kind: 'company',
+    scope: broadScope,
+    name: 'ACME'
+  }).success, true);
+});
+
+Deno.test('directory saved view state accepts migrated scope and rejects legacy agency fields', () => {
+  const migratedState = {
+    q: 'acme',
+    type: 'all',
+    scope: {
+      mode: 'selected_agencies',
+      agencyIds: ['11111111-1111-4111-8111-111111111111']
+    },
+    departments: ['33'],
+    cirCommercialIds: ['22222222-2222-4222-8222-222222222222'],
+    includeArchived: false,
+    pageSize: 50,
+    sorting: [{ id: 'name', desc: false }],
+    columnVisibility: {},
+    density: 'compact'
+  };
+
+  assertEquals(directorySavedViewStateSchema.safeParse(migratedState).success, true);
+  assertEquals(directorySavedViewStateSchema.safeParse({
+    ...migratedState,
+    agencyIds: ['11111111-1111-4111-8111-111111111111']
+  }).success, false);
+  assertEquals(directorySavedViewStateSchema.safeParse({
+    ...migratedState,
+    agencyId: '11111111-1111-4111-8111-111111111111'
+  }).success, false);
 });

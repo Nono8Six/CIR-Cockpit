@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { ChevronDown, Plus, X } from 'lucide-react';
-import type { DirectoryListInput } from 'shared/schemas/directory.schema';
+import type { DirectorySearchState } from 'shared/schemas/directory.schema';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
@@ -9,18 +9,19 @@ import {
   DirectoryFilterComboboxContent,
   getDirectoryFilterTriggerLabel
 } from './DirectoryFilterCombobox';
-import type { DirectoryFilterOption } from './DirectoryFilters.types';
+import type { DirectoryFilterOption, DirectoryOptionRequest } from './DirectoryFilters.types';
+import { getDirectorySelectedAgencyIds, toSelectedAgenciesScope } from '../clientDirectorySearch';
 
 interface DirectoryDesktopFiltersRowProps {
-  search: DirectoryListInput;
+  search: DirectorySearchState;
   departmentItems: DirectoryFilterOption[];
   commercialItems: DirectoryFilterOption[];
   agencyItems: DirectoryFilterOption[];
   canFilterAgency: boolean;
   cityDraft: string;
   onCityDraftChange: (value: string) => void;
-  onSearchPatch: (patch: Partial<DirectoryListInput>) => void;
-  onRequestOptions: () => void;
+  onSearchPatch: (patch: Partial<DirectorySearchState>) => void;
+  onRequestOptions: (options: DirectoryOptionRequest[]) => void;
 }
 
 type DesktopFilterKey = 'agency' | 'department' | 'commercial' | 'city';
@@ -129,10 +130,11 @@ const DirectoryDesktopFiltersRow = ({
   onRequestOptions
 }: DirectoryDesktopFiltersRowProps) => {
   const [openFilter, setOpenFilter] = useState<DesktopFilterKey | null>(null);
+  const selectedAgencyIds = getDirectorySelectedAgencyIds(search.scope);
 
   const agencySummary = useMemo(
-    () => getSummaryLabel(agencyItems, search.agencyIds, 'agences'),
-    [agencyItems, search.agencyIds]
+    () => getSummaryLabel(agencyItems, selectedAgencyIds, 'agences'),
+    [agencyItems, selectedAgencyIds]
   );
   const departmentSummary = useMemo(
     () => getSummaryLabel(departmentItems, search.departments, 'departements'),
@@ -153,16 +155,16 @@ const DirectoryDesktopFiltersRow = ({
           open={openFilter === 'agency'}
           onOpenChange={(nextOpen) => {
             if (nextOpen) {
-              onRequestOptions();
+              onRequestOptions(['agencies']);
             }
             setOpenFilter(nextOpen ? 'agency' : null);
           }}
-          onClear={() => onSearchPatch({ agencyIds: [], page: 1 })}
+          onClear={() => onSearchPatch({ scope: toSelectedAgenciesScope([]), page: 1 })}
         >
           <DirectoryFilterComboboxContent
             items={agencyItems}
-            values={search.agencyIds}
-            onValuesChange={(values) => onSearchPatch({ agencyIds: values, page: 1 })}
+            values={selectedAgencyIds}
+            onValuesChange={(values) => onSearchPatch({ scope: toSelectedAgenciesScope(values), page: 1 })}
             allLabel="Toutes les agences"
             searchPlaceholder="Rechercher une agence…"
             emptyLabel="Aucune agence trouvee."
@@ -177,7 +179,7 @@ const DirectoryDesktopFiltersRow = ({
         open={openFilter === 'department'}
         onOpenChange={(nextOpen) => {
           if (nextOpen) {
-            onRequestOptions();
+            onRequestOptions(['departments']);
           }
           setOpenFilter(nextOpen ? 'department' : null);
         }}
@@ -209,7 +211,7 @@ const DirectoryDesktopFiltersRow = ({
             draftValue={cityDraft}
             committedValue={search.city}
             type={search.type}
-            agencyIds={search.agencyIds}
+            scope={search.scope}
             includeArchived={search.includeArchived}
             onDraftChange={onCityDraftChange}
             onCommit={(value) => onSearchPatch({ city: value, page: 1 })}
@@ -225,7 +227,7 @@ const DirectoryDesktopFiltersRow = ({
         disabled={search.type === 'prospect'}
         onOpenChange={(nextOpen) => {
           if (nextOpen) {
-            onRequestOptions();
+            onRequestOptions(['commercials']);
           }
           setOpenFilter(nextOpen ? 'commercial' : null);
         }}

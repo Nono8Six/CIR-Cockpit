@@ -1,7 +1,10 @@
 import {
   directoryListInputSchema,
+  directorySearchStateSchema,
   type DirectoryListInput,
   type DirectoryListRow,
+  type DirectoryScopeInput,
+  type DirectorySearchState,
   type DirectorySavedViewState,
   type DirectorySortingRule,
   type DirectoryDensity
@@ -9,7 +12,9 @@ import {
 
 export const DEFAULT_DIRECTORY_SORTING: DirectorySortingRule[] = [{ id: 'name', desc: false }];
 export const DIRECTORY_PAGE_SIZE = 50;
-export const DEFAULT_DIRECTORY_SEARCH: DirectoryListInput = directoryListInputSchema.parse({
+export const DEFAULT_DIRECTORY_SCOPE: DirectoryScopeInput = { mode: 'active_agency' };
+export const DEFAULT_DIRECTORY_SEARCH: DirectorySearchState = directorySearchStateSchema.parse({
+  scope: DEFAULT_DIRECTORY_SCOPE,
   pageSize: DIRECTORY_PAGE_SIZE,
   sorting: DEFAULT_DIRECTORY_SORTING
 });
@@ -24,7 +29,7 @@ const parseLegacySorting = (search: Record<string, unknown>): DirectorySortingRu
     return DEFAULT_DIRECTORY_SORTING;
   }
 
-  const parsed = directoryListInputSchema.safeParse({
+  const parsed = directorySearchStateSchema.safeParse({
     pageSize: DIRECTORY_PAGE_SIZE,
     sorting: [{ id: sortBy, desc: sortDir === 'desc' }]
   });
@@ -49,7 +54,7 @@ const parseSortString = (value: unknown): DirectorySortingRule[] => {
       };
     });
 
-  const parsed = directoryListInputSchema.safeParse({
+  const parsed = directorySearchStateSchema.safeParse({
     pageSize: DIRECTORY_PAGE_SIZE,
     sorting: entries
   });
@@ -64,7 +69,7 @@ export const serializeDirectorySorting = (sorting: DirectorySortingRule[]): stri
 
 const resolveSearchSorting = (search: Record<string, unknown>): DirectorySortingRule[] => {
   if (Array.isArray(search.sorting) && search.sorting.length > 0) {
-    const parsed = directoryListInputSchema.safeParse({
+    const parsed = directorySearchStateSchema.safeParse({
       pageSize: DIRECTORY_PAGE_SIZE,
       sorting: search.sorting
     });
@@ -80,11 +85,11 @@ const resolveSearchSorting = (search: Record<string, unknown>): DirectorySorting
   return parseLegacySorting(search);
 };
 
-export const validateDirectorySearch = (search: Record<string, unknown>): DirectoryListInput => {
+export const validateDirectorySearch = (search: Record<string, unknown>): DirectorySearchState => {
   const restSearch = Object.fromEntries(
     Object.entries(search).filter(([key]) => key !== 'sort' && key !== 'sortBy' && key !== 'sortDir' && key !== 'sorting')
   );
-  const parsed = directoryListInputSchema.safeParse({
+  const parsed = directorySearchStateSchema.safeParse({
     ...restSearch,
     pageSize: typeof restSearch.pageSize === 'number' || typeof restSearch.pageSize === 'string'
       ? restSearch.pageSize
@@ -104,13 +109,13 @@ export const validateDirectorySearch = (search: Record<string, unknown>): Direct
 };
 
 export const toDirectorySavedViewState = (
-  search: DirectoryListInput,
+  search: DirectorySearchState,
   columnVisibility: DirectorySavedViewState['columnVisibility'],
   density: DirectorySavedViewState['density']
 ): DirectorySavedViewState => ({
   q: search.q,
   type: search.type,
-  agencyIds: search.agencyIds,
+  scope: search.scope,
   departments: search.departments,
   city: search.city,
   cirCommercialIds: search.cirCommercialIds,
@@ -121,12 +126,12 @@ export const toDirectorySavedViewState = (
   density
 });
 
-export const toDirectorySearchFromViewState = (state: DirectorySavedViewState): DirectoryListInput =>
-  directoryListInputSchema.parse({
+export const toDirectorySearchFromViewState = (state: DirectorySavedViewState): DirectorySearchState =>
+  directorySearchStateSchema.parse({
     ...DEFAULT_DIRECTORY_SEARCH,
     q: state.q,
     type: state.type,
-    agencyIds: state.agencyIds,
+    scope: state.scope,
     departments: state.departments,
     city: state.city,
     cirCommercialIds: state.cirCommercialIds,
@@ -135,6 +140,31 @@ export const toDirectorySearchFromViewState = (state: DirectorySavedViewState): 
     sorting: state.sorting,
     page: 1
   });
+
+export const toDirectoryListInput = (search: DirectorySearchState): DirectoryListInput =>
+  directoryListInputSchema.parse({
+    scope: search.scope,
+    type: search.type,
+    filters: {
+      q: search.q,
+      departments: search.departments,
+      city: search.city,
+      cirCommercialIds: search.cirCommercialIds,
+      includeArchived: search.includeArchived
+    },
+    pagination: {
+      page: search.page,
+      pageSize: search.pageSize,
+      includeTotal: false
+    },
+    sorting: search.sorting
+  });
+
+export const toSelectedAgenciesScope = (agencyIds: string[]): DirectoryScopeInput =>
+  agencyIds.length > 0 ? { mode: 'selected_agencies', agencyIds } : DEFAULT_DIRECTORY_SCOPE;
+
+export const getDirectorySelectedAgencyIds = (scope: DirectoryScopeInput): string[] =>
+  scope.mode === 'selected_agencies' ? scope.agencyIds : [];
 
 export const isProspectEntityType = (entityType: string): boolean => {
   const normalized = entityType.trim().toLowerCase();
@@ -152,15 +182,22 @@ export const buildDirectoryRecordPath = (row: DirectoryListRow): string => {
 export const getDirectoryTypeLabel = (entityType: string): string =>
   isProspectEntityType(entityType) ? 'Prospect' : 'Client';
 
-export const countActiveDirectoryFilters = (search: DirectoryListInput): number =>
+export const countActiveDirectoryFilters = (search: DirectorySearchState): number =>
   [
     search.type !== 'all',
     search.departments.length > 0,
     Boolean(search.city),
-    search.agencyIds.length > 0,
+    search.scope.mode === 'selected_agencies',
     search.cirCommercialIds.length > 0,
     search.includeArchived
   ].filter(Boolean).length;
 
-export const hasActiveDirectoryFilters = (search: DirectoryListInput): boolean =>
-  countActiveDirectoryFilters(search) > 0 || Boolean(search.q);
+export const hasActiveDirectoryFilters = (search: DirectorySearchState): boolean =>
+  [
+    search.type !== 'all',
+    search.departments.length > 0,
+    Boolean(search.city),
+    search.scope.mode === 'selected_agencies',
+    search.cirCommercialIds.length > 0,
+    search.includeArchived
+  ].filter(Boolean).length > 0 || Boolean(search.q);

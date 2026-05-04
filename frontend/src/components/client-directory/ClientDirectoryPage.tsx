@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 
-import type { DirectoryListInput, DirectoryListRow } from 'shared/schemas/directory.schema';
+import type { DirectoryListRow, DirectorySearchState } from 'shared/schemas/directory.schema';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import ClientDirectoryWorkspace from './ClientDirectoryWorkspace';
@@ -11,7 +11,7 @@ const ClientDirectoryPage = () => {
   const search = useSearch({ from: '/clients/' });
 
   const handleSearchChange = useCallback(
-    (updater: (previous: DirectoryListInput) => DirectoryListInput) => {
+    (updater: (previous: DirectorySearchState) => DirectorySearchState) => {
       void navigate({
         search: (previous) => updater({ ...search, ...previous })
       });
@@ -20,7 +20,7 @@ const ClientDirectoryPage = () => {
   );
 
   const handleOpenRecord = useCallback(
-    (row: DirectoryListRow, effectiveSearch: DirectoryListInput) => {
+    (row: DirectoryListRow, effectiveSearch: DirectorySearchState) => {
       const routeRef = getDirectoryRouteRefFromRow(row);
 
       if (routeRef.kind === 'client') {
@@ -42,7 +42,7 @@ const ClientDirectoryPage = () => {
   );
 
   const handleCreateRecord = useCallback(
-    (effectiveSearch: DirectoryListInput) => {
+    (effectiveSearch: DirectorySearchState) => {
       void navigate({
         to: '/clients/new',
         search: () => effectiveSearch

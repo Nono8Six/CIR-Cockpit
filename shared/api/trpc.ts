@@ -19,7 +19,10 @@ import {
   directoryCompanySearchResponseSchema,
   directoryDuplicatesResponseSchema,
   directoryListResponseSchema,
-  directoryOptionsResponseSchema,
+  directoryOptionsAgenciesResponseSchema,
+  directoryOptionsCitiesResponseSchema,
+  directoryOptionsCommercialsResponseSchema,
+  directoryOptionsDepartmentsResponseSchema,
   directoryRecordResponseSchema,
   directorySavedViewDeleteResponseSchema,
   directorySavedViewResponseSchema,
@@ -49,7 +52,9 @@ import {
   directoryCompanySearchInputSchema,
   directoryDuplicatesInputSchema,
   directoryListInputSchema,
-  directoryOptionsInputSchema,
+  directoryOptionsAgenciesInputSchema,
+  directoryOptionsCitiesInputSchema,
+  directoryOptionsFacetInputSchema,
   directoryRouteRefSchema,
   directorySavedViewDeleteInputSchema,
   directorySavedViewSaveInputSchema,
@@ -134,10 +139,24 @@ const appRouterType = t.router({
       .input(directoryListInputSchema)
       .output(directoryListResponseSchema)
       .query(() => undefined as never),
-    options: t.procedure
-      .input(directoryOptionsInputSchema)
-      .output(directoryOptionsResponseSchema)
-      .query(() => undefined as never),
+    options: t.router({
+      agencies: t.procedure
+        .input(directoryOptionsAgenciesInputSchema)
+        .output(directoryOptionsAgenciesResponseSchema)
+        .query(() => undefined as never),
+      commercials: t.procedure
+        .input(directoryOptionsFacetInputSchema)
+        .output(directoryOptionsCommercialsResponseSchema)
+        .query(() => undefined as never),
+      departments: t.procedure
+        .input(directoryOptionsFacetInputSchema)
+        .output(directoryOptionsDepartmentsResponseSchema)
+        .query(() => undefined as never),
+      cities: t.procedure
+        .input(directoryOptionsCitiesInputSchema)
+        .output(directoryOptionsCitiesResponseSchema)
+        .query(() => undefined as never)
+    }),
     'city-suggestions': t.procedure
       .input(directoryCitySuggestionsInputSchema)
       .output(directoryCitySuggestionsResponseSchema)

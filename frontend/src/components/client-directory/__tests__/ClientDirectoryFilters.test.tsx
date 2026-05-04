@@ -3,7 +3,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import type { DirectoryListInput } from 'shared/schemas/directory.schema';
+import type { DirectorySearchState } from 'shared/schemas/directory.schema';
 
 import { createTestQueryClient } from '@/__tests__/test-utils';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -19,10 +19,10 @@ vi.mock('@/hooks/useDirectoryCitySuggestions', () => ({
   })
 }));
 
-const baseSearch: DirectoryListInput = {
+const baseSearch: DirectorySearchState = {
   q: undefined,
   type: 'all',
-  agencyIds: [],
+  scope: { mode: 'active_agency' },
   departments: [],
   city: undefined,
   cirCommercialIds: [],
@@ -33,7 +33,7 @@ const baseSearch: DirectoryListInput = {
 };
 
 const renderFilters = (
-  searchOverrides: Partial<DirectoryListInput> = {},
+  searchOverrides: Partial<DirectorySearchState> = {},
   options: { isFetching?: boolean; density?: 'compact' | 'comfortable' } = {}
 ) => {
   const onSearchPatch = vi.fn();
@@ -171,7 +171,7 @@ describe('ClientDirectoryFilters', () => {
     const queryClient = createTestQueryClient();
 
     const TestHarness = () => {
-      const [search, setSearch] = useState<DirectoryListInput>({
+      const [search, setSearch] = useState<DirectorySearchState>({
         ...baseSearch,
         city: 'Gradignan'
       });
@@ -250,14 +250,14 @@ describe('ClientDirectoryFilters', () => {
 
   it('affiche et efface un filtre agence actif depuis la pill desktop', async () => {
     const user = userEvent.setup();
-    const { onSearchPatch } = renderFilters({ agencyIds: ['agency-1'] });
+    const { onSearchPatch } = renderFilters({ scope: { mode: 'selected_agencies', agencyIds: ['agency-1'] } });
 
     expect(screen.getByRole('button', { name: 'Agence: CIR Bordeaux' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Effacer filtre Agence' }));
 
     expect(onSearchPatch).toHaveBeenCalledWith({
-      agencyIds: [],
+      scope: { mode: 'active_agency' },
       page: 1
     });
   });

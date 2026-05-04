@@ -32,7 +32,7 @@ type ClientDirectoryTableProps = {
   sorting: DirectorySortingRule[];
   page: number;
   pageSize: number;
-  total: number;
+  total?: number;
   isFetching: boolean;
   isInitialLoading: boolean;
   columnVisibility: VisibilityState;

@@ -4,11 +4,11 @@ import type { DirectoryListRow } from 'shared/schemas/directory.schema';
 import EntityOnboardingDialog from '@/components/EntityOnboardingDialog';
 import { useAgencies } from '@/hooks/useAgencies';
 import { useAppSessionStateContext } from '@/hooks/useAppSession';
-import { useDirectoryOptions } from '@/hooks/useDirectoryOptions';
+import { useDirectoryOptionCommercials } from '@/hooks/useDirectoryOptionCommercials';
 import { useDirectoryRecord } from '@/hooks/useDirectoryRecord';
 import { useSaveClient } from '@/hooks/useSaveClient';
 import { notifySuccess } from '@/services/errors/notify';
-import { isProspectEntityType } from './clientDirectorySearch';
+import { isProspectEntityType, toSelectedAgenciesScope } from './clientDirectorySearch';
 
 const saveProspectFallback = async (): Promise<void> => undefined;
 
@@ -27,11 +27,11 @@ const ClientDirectoryConvertPage = ({ prospectId }: ClientDirectoryConvertPagePr
   const record = recordQuery.data?.record ?? null;
   const scopedAgencyIds = record?.agency_id ? [record.agency_id] : activeAgencyId ? [activeAgencyId] : [];
   const agenciesQuery = useAgencies(false, canLoadDirectory);
-  const optionsQuery = useDirectoryOptions(
+  const commercialsQuery = useDirectoryOptionCommercials(
     {
       type: 'client',
-      agencyIds: scopedAgencyIds,
-      includeArchived: true
+      scope: toSelectedAgenciesScope(scopedAgencyIds),
+      includeArchived: true,
     },
     canLoadDirectory && Boolean(record)
   );
@@ -86,7 +86,7 @@ const ClientDirectoryConvertPage = ({ prospectId }: ClientDirectoryConvertPagePr
         agencies={agenciesQuery.data ?? []}
         userRole={userRole}
         activeAgencyId={activeAgencyId}
-        commercials={optionsQuery.data?.commercials ?? []}
+        commercials={commercialsQuery.data?.commercials ?? []}
         mode="convert"
         allowedIntents={['client']}
         initialEntity={record}

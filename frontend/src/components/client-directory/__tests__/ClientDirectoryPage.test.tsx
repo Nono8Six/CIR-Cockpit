@@ -1,18 +1,19 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { DirectoryListInput } from 'shared/schemas/directory.schema';
+import type { DirectorySearchState } from 'shared/schemas/directory.schema';
 
-import { useDirectoryOptions } from '@/hooks/useDirectoryOptions';
+import { useDirectoryOptionCommercials } from '@/hooks/useDirectoryOptionCommercials';
+import { useDirectoryOptionDepartments } from '@/hooks/useDirectoryOptionDepartments';
 import { useDirectoryPage } from '@/hooks/useDirectoryPage';
 
 import ClientDirectoryPage from '../ClientDirectoryPage';
 
 const mockNavigate = vi.fn();
-const defaultSearchState: DirectoryListInput = {
+const defaultSearchState: DirectorySearchState = {
   q: 'sea',
   type: 'all' as const,
-  agencyIds: [],
+  scope: { mode: 'active_agency' },
   departments: [],
   city: undefined,
   cirCommercialIds: [],
@@ -22,7 +23,10 @@ const defaultSearchState: DirectoryListInput = {
   sorting: [{ id: 'name' as const, desc: false }]
 };
 let searchState = { ...defaultSearchState };
-const defaultEffectiveSearchState = { ...defaultSearchState, agencyIds: ['agency-1'] };
+const explicitAgencySearchState: DirectorySearchState = {
+  ...defaultSearchState,
+  scope: { mode: 'selected_agencies', agencyIds: ['22222222-2222-4222-8222-222222222222'] }
+};
 
 const clientRow = {
   id: 'entity-1',
@@ -91,9 +95,23 @@ vi.mock('@/hooks/useDirectoryPage', () => ({
   }))
 }));
 
-vi.mock('@/hooks/useDirectoryOptions', () => ({
-  useDirectoryOptions: vi.fn(() => ({
-    data: { commercials: [], departments: [] },
+vi.mock('@/hooks/useDirectoryOptionAgencies', () => ({
+  useDirectoryOptionAgencies: vi.fn(() => ({
+    data: { agencies: [] },
+    isFetching: false
+  }))
+}));
+
+vi.mock('@/hooks/useDirectoryOptionCommercials', () => ({
+  useDirectoryOptionCommercials: vi.fn(() => ({
+    data: { commercials: [] },
+    isFetching: false
+  }))
+}));
+
+vi.mock('@/hooks/useDirectoryOptionDepartments', () => ({
+  useDirectoryOptionDepartments: vi.fn(() => ({
+    data: { departments: [] },
     isFetching: false
   }))
 }));
@@ -158,31 +176,39 @@ describe('ClientDirectoryPage', () => {
     mockMatchMedia();
   });
 
-  it('scopes empty agency filters to the active agency before loading directory queries', () => {
+  it('sends an explicit active-agency directory scope before loading directory queries', () => {
     render(<ClientDirectoryPage />);
 
     expect(useDirectoryPage).toHaveBeenCalledWith(
-      expect.objectContaining({ agencyIds: ['agency-1'] }),
+      expect.objectContaining({ scope: { mode: 'active_agency' } }),
       true
     );
-    expect(useDirectoryOptions).toHaveBeenCalledWith(
-      expect.objectContaining({ agencyIds: ['agency-1'] }),
-      expect.any(Boolean)
+    expect(useDirectoryOptionCommercials).toHaveBeenCalledWith(
+      expect.objectContaining({ scope: { mode: 'active_agency' } }),
+      false
+    );
+    expect(useDirectoryOptionDepartments).toHaveBeenCalledWith(
+      expect.objectContaining({ scope: { mode: 'active_agency' } }),
+      false
     );
   });
 
   it('preserves explicit agency filters before loading directory queries', () => {
-    searchState = { ...defaultSearchState, agencyIds: ['agency-2'] };
+    searchState = explicitAgencySearchState;
 
     render(<ClientDirectoryPage />);
 
     expect(useDirectoryPage).toHaveBeenCalledWith(
-      expect.objectContaining({ agencyIds: ['agency-2'] }),
+      expect.objectContaining({ scope: { mode: 'selected_agencies', agencyIds: ['22222222-2222-4222-8222-222222222222'] } }),
       true
     );
-    expect(useDirectoryOptions).toHaveBeenCalledWith(
-      expect.objectContaining({ agencyIds: ['agency-2'] }),
-      expect.any(Boolean)
+    expect(useDirectoryOptionCommercials).toHaveBeenCalledWith(
+      expect.objectContaining({ scope: { mode: 'selected_agencies', agencyIds: ['22222222-2222-4222-8222-222222222222'] } }),
+      false
+    );
+    expect(useDirectoryOptionDepartments).toHaveBeenCalledWith(
+      expect.objectContaining({ scope: { mode: 'selected_agencies', agencyIds: ['22222222-2222-4222-8222-222222222222'] } }),
+      false
     );
   });
 
@@ -200,7 +226,7 @@ describe('ClientDirectoryPage', () => {
     });
 
     const navigateCall = mockNavigate.mock.calls.at(-1)?.[0];
-    expect(navigateCall?.search()).toEqual(defaultEffectiveSearchState);
+    expect(navigateCall?.search()).toEqual(defaultSearchState);
   });
 
   it('opens a prospect detail route while preserving directory search params', async () => {
@@ -217,7 +243,7 @@ describe('ClientDirectoryPage', () => {
     });
 
     const navigateCall = mockNavigate.mock.calls.at(-1)?.[0];
-    expect(navigateCall?.search()).toEqual(defaultEffectiveSearchState);
+    expect(navigateCall?.search()).toEqual(defaultSearchState);
   });
 
   it('opens the integrated create route while preserving directory search', async () => {
@@ -233,6 +259,6 @@ describe('ClientDirectoryPage', () => {
     });
 
     const navigateCall = mockNavigate.mock.calls.at(-1)?.[0];
-    expect(navigateCall?.search()).toEqual(defaultEffectiveSearchState);
+    expect(navigateCall?.search()).toEqual(defaultSearchState);
   });
 });

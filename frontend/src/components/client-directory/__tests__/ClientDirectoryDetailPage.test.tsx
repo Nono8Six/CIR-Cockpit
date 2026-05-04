@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { DirectoryListInput, DirectoryListRow } from 'shared/schemas/directory.schema';
+import type { DirectoryListRow, DirectorySearchState } from 'shared/schemas/directory.schema';
 
 import ClientDirectoryDetailPage from '../ClientDirectoryDetailPage';
 
@@ -9,10 +9,10 @@ const mockNavigate = vi.fn();
 const mockDeleteMutateAsync = vi.fn();
 const mockHistoryBack = vi.fn();
 const mockUseCanGoBack = vi.fn(() => true);
-const detailSearch: DirectoryListInput = {
+const detailSearch: DirectorySearchState = {
   q: 'sea',
   type: 'all',
-  agencyIds: [],
+  scope: { mode: 'active_agency' },
   departments: ['33'],
   city: undefined,
   cirCommercialIds: [],
@@ -39,8 +39,8 @@ vi.mock('@/hooks/useDirectoryPage', () => ({
   useDirectoryPage: vi.fn()
 }));
 
-vi.mock('@/hooks/useDirectoryOptions', () => ({
-  useDirectoryOptions: vi.fn(() => ({ data: { commercials: [] } }))
+vi.mock('@/hooks/useDirectoryOptionCommercials', () => ({
+  useDirectoryOptionCommercials: vi.fn(() => ({ data: { commercials: [] } }))
 }));
 
 vi.mock('@/hooks/useAgencies', () => ({

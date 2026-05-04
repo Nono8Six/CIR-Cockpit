@@ -28,7 +28,7 @@ const buildWrapper = () => {
 
 const buildInput = (): DirectoryDuplicatesInput => ({
   kind: 'company',
-  agencyIds: [],
+  scope: { mode: 'active_agency' },
   includeArchived: true,
   name: 'Acme',
   city: 'Paris',

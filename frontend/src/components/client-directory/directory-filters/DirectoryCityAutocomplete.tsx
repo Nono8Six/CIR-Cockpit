@@ -2,7 +2,8 @@ import { useDeferredValue, useMemo, useRef, useState, type KeyboardEvent } from 
 import { Check } from 'lucide-react';
 import type {
   DirectoryCitySuggestionsInput,
-  DirectoryEntityType
+  DirectoryEntityType,
+  DirectoryScopeInput
 } from 'shared/schemas/directory.schema';
 
 import { useDirectoryCitySuggestions } from '@/hooks/useDirectoryCitySuggestions';
@@ -20,7 +21,7 @@ interface DirectoryCityAutocompleteProps {
   draftValue: string;
   committedValue: string | undefined;
   type: DirectoryEntityType;
-  agencyIds: string[];
+  scope: DirectoryScopeInput;
   includeArchived: boolean;
   onDraftChange: (value: string) => void;
   onCommit: (value: string | undefined) => void;
@@ -32,7 +33,7 @@ const DirectoryCityAutocomplete = ({
   draftValue,
   committedValue,
   type,
-  agencyIds,
+  scope,
   includeArchived,
   onDraftChange,
   onCommit,
@@ -47,9 +48,9 @@ const DirectoryCityAutocomplete = ({
   const suggestionInput = useMemo<DirectoryCitySuggestionsInput>(() => ({
     q: deferredDraftValue,
     type,
-    agencyIds,
+    scope,
     includeArchived
-  }), [agencyIds, deferredDraftValue, includeArchived, type]);
+  }), [deferredDraftValue, includeArchived, scope, type]);
 
   const suggestionsQuery = useDirectoryCitySuggestions(suggestionInput, open);
   const suggestions = suggestionsQuery.data?.cities ?? [];

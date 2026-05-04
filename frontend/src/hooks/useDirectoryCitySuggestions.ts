@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { type DirectoryCitySuggestionsInput } from 'shared/schemas/directory.schema';
-import { getDirectoryCitySuggestions } from '@/services/directory/getDirectoryCitySuggestions';
-import { directoryCitySuggestionsKey } from '@/services/query/queryKeys';
+import { getDirectoryOptionCities } from '@/services/directory/getDirectoryOptionCities';
+import { directoryOptionCitiesKey } from '@/services/query/queryKeys';
 import { useNotifyError } from './useNotifyError';
 
 export const useDirectoryCitySuggestions = (
@@ -12,8 +12,8 @@ export const useDirectoryCitySuggestions = (
   const normalizedQuery = input.q.trim();
   const shouldEnable = enabled && normalizedQuery.length >= 2;
   const query = useQuery({
-    queryKey: directoryCitySuggestionsKey({ ...input, q: normalizedQuery }),
-    queryFn: () => getDirectoryCitySuggestions({ ...input, q: normalizedQuery }),
+    queryKey: directoryOptionCitiesKey({ ...input, q: normalizedQuery }),
+    queryFn: () => getDirectoryOptionCities({ ...input, q: normalizedQuery }),
     enabled: shouldEnable,
     staleTime: 30_000
   });

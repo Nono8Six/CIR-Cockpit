@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { SlidersHorizontal } from 'lucide-react';
-import type { DirectoryListInput } from 'shared/schemas/directory.schema';
+import type { DirectorySearchState } from 'shared/schemas/directory.schema';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,10 +14,11 @@ import {
 } from '@/components/ui/sheet';
 import DirectoryCityAutocomplete from './directory-filters/DirectoryCityAutocomplete';
 import DirectoryFilterCombobox from './directory-filters/DirectoryFilterCombobox';
-import type { DirectoryFilterOption } from './directory-filters/DirectoryFilters.types';
+import type { DirectoryFilterOption, DirectoryOptionRequest } from './directory-filters/DirectoryFilters.types';
+import { getDirectorySelectedAgencyIds, toSelectedAgenciesScope } from './clientDirectorySearch';
 
 interface DirectoryMobileFilterSheetProps {
-  search: DirectoryListInput;
+  search: DirectorySearchState;
   activeFilterCount: number;
   departmentItems: DirectoryFilterOption[];
   commercialItems: DirectoryFilterOption[];
@@ -26,8 +27,8 @@ interface DirectoryMobileFilterSheetProps {
   cityDraft: string;
   onCityDraftChange: (value: string) => void;
   renderSavedViews?: () => ReactNode;
-  onSearchPatch: (patch: Partial<DirectoryListInput>) => void;
-  onRequestOptions: () => void;
+  onSearchPatch: (patch: Partial<DirectorySearchState>) => void;
+  onRequestOptions: (options: DirectoryOptionRequest[]) => void;
   onReset: () => void;
 }
 
@@ -46,13 +47,14 @@ const DirectoryMobileFilterSheet = ({
   onReset
 }: DirectoryMobileFilterSheetProps) => {
   const [open, setOpen] = useState(false);
+  const selectedAgencyIds = getDirectorySelectedAgencyIds(search.scope);
 
   return (
     <Sheet
       open={open}
       onOpenChange={(nextOpen) => {
         if (nextOpen) {
-          onRequestOptions();
+          onRequestOptions(canFilterAgency ? ['agencies', 'commercials', 'departments'] : ['commercials', 'departments']);
         }
         setOpen(nextOpen);
       }}
@@ -93,7 +95,7 @@ const DirectoryMobileFilterSheet = ({
             draftValue={cityDraft}
             committedValue={search.city}
             type={search.type}
-            agencyIds={search.agencyIds}
+            scope={search.scope}
             includeArchived={search.includeArchived}
             onDraftChange={onCityDraftChange}
             onCommit={(value) => onSearchPatch({ city: value, page: 1 })}
@@ -115,8 +117,8 @@ const DirectoryMobileFilterSheet = ({
           {canFilterAgency ? (
             <DirectoryFilterCombobox
               items={agencyItems}
-              values={search.agencyIds}
-              onValuesChange={(values) => onSearchPatch({ agencyIds: values, page: 1 })}
+              values={selectedAgencyIds}
+              onValuesChange={(values) => onSearchPatch({ scope: toSelectedAgenciesScope(values), page: 1 })}
               placeholder="Agence"
               allLabel="Toutes les agences"
               searchPlaceholder="Rechercher une agence…"

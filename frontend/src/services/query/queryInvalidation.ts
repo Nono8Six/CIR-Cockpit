@@ -7,8 +7,11 @@ import {
   clientsKey,
   clientsRootKey,
   directoryCitySuggestionsRootKey,
+  directoryOptionAgenciesRootKey,
+  directoryOptionCitiesRootKey,
+  directoryOptionCommercialsRootKey,
+  directoryOptionDepartmentsRootKey,
   directoryRootKey,
-  directoryOptionsRootKey,
   directoryRecordRootKey,
   directorySavedViewsRootKey,
   entityInteractionsRootKey,
@@ -138,7 +141,10 @@ export const invalidateDirectoryQueries = async (
 ): Promise<void> => {
   await Promise.all([
     queryClient.invalidateQueries({ queryKey: directoryRootKey() }),
-    queryClient.invalidateQueries({ queryKey: directoryOptionsRootKey() }),
+    queryClient.invalidateQueries({ queryKey: directoryOptionAgenciesRootKey() }),
+    queryClient.invalidateQueries({ queryKey: directoryOptionCommercialsRootKey() }),
+    queryClient.invalidateQueries({ queryKey: directoryOptionDepartmentsRootKey() }),
+    queryClient.invalidateQueries({ queryKey: directoryOptionCitiesRootKey() }),
     queryClient.invalidateQueries({ queryKey: directoryCitySuggestionsRootKey() }),
     queryClient.invalidateQueries({ queryKey: directoryRecordRootKey() }),
     queryClient.invalidateQueries({ queryKey: directorySavedViewsRootKey() })

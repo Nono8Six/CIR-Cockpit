@@ -1,3 +1,16 @@
+import type {
+  DirectoryCitySuggestionsInput,
+  DirectoryCompanyDetailsInput,
+  DirectoryCompanySearchInput,
+  DirectoryDuplicatesInput,
+  DirectoryListInput,
+  DirectoryOptionsAgenciesInput,
+  DirectoryOptionsCitiesInput,
+  DirectoryOptionsFacetInput,
+  DirectoryScopeInput,
+  DirectoryRouteRef
+} from 'shared/schemas/directory.schema';
+
 export const QUERY_ROOTS = {
   configSnapshot: 'config-snapshot',
   interactions: 'interactions',
@@ -7,7 +20,10 @@ export const QUERY_ROOTS = {
   directoryCompanyDetails: 'directory-company-details',
   directoryCompanySearch: 'directory-company-search',
   directoryDuplicates: 'directory-duplicates',
-  directoryOptions: 'directory-options',
+  directoryOptionAgencies: 'directory-option-agencies',
+  directoryOptionCommercials: 'directory-option-commercials',
+  directoryOptionDepartments: 'directory-option-departments',
+  directoryOptionCities: 'directory-option-cities',
   directoryCitySuggestions: 'directory-city-suggestions',
   directoryRecord: 'directory-record',
   directorySavedViews: 'directory-saved-views',
@@ -48,18 +64,67 @@ export const prospectsKey = (agencyId: string | null, includeArchived: boolean, 
 
 export const directoryRootKey = () => [QUERY_ROOTS.directory] as const;
 export const directoryCompanyDetailsRootKey = () => [QUERY_ROOTS.directoryCompanyDetails] as const;
-export const directoryCompanyDetailsKey = (input: Record<string, unknown>) => [QUERY_ROOTS.directoryCompanyDetails, input] as const;
-export const directoryPageKey = (input: Record<string, unknown>) => [QUERY_ROOTS.directory, input] as const;
+export const directoryCompanyDetailsKey = (input: DirectoryCompanyDetailsInput) =>
+  [QUERY_ROOTS.directoryCompanyDetails, input] as const;
+export const directoryPageKey = (input: DirectoryListInput) => [
+  QUERY_ROOTS.directory,
+  directoryScopeKey(input.scope),
+  input.type,
+  directoryFiltersKey(input.filters),
+  directoryPaginationKey(input.pagination),
+  input.sorting
+] as const;
 export const directoryCompanySearchRootKey = () => [QUERY_ROOTS.directoryCompanySearch] as const;
-export const directoryCompanySearchKey = (input: Record<string, unknown>) => [QUERY_ROOTS.directoryCompanySearch, input] as const;
+export const directoryCompanySearchKey = (input: DirectoryCompanySearchInput) =>
+  [QUERY_ROOTS.directoryCompanySearch, input] as const;
 export const directoryDuplicatesRootKey = () => [QUERY_ROOTS.directoryDuplicates] as const;
-export const directoryDuplicatesKey = (input: Record<string, unknown>) => [QUERY_ROOTS.directoryDuplicates, input] as const;
-export const directoryOptionsRootKey = () => [QUERY_ROOTS.directoryOptions] as const;
-export const directoryOptionsKey = (input: Record<string, unknown>) => [QUERY_ROOTS.directoryOptions, input] as const;
+export const directoryDuplicatesKey = (input: DirectoryDuplicatesInput) =>
+  [QUERY_ROOTS.directoryDuplicates, input] as const;
+export const directoryScopeKey = (scope: DirectoryScopeInput) => scope.mode === 'selected_agencies'
+  ? ['selected_agencies', [...scope.agencyIds].sort()] as const
+  : [scope.mode] as const;
+export const directoryFiltersKey = (input: DirectoryListInput['filters']) => ({
+  q: input.q ?? null,
+  departments: [...input.departments].sort(),
+  city: input.city ?? null,
+  cirCommercialIds: [...input.cirCommercialIds].sort(),
+  includeArchived: input.includeArchived
+});
+export const directoryPaginationKey = (input: DirectoryListInput['pagination']) => ({
+  page: input.page,
+  pageSize: input.pageSize,
+  includeTotal: input.includeTotal
+});
+export const directoryOptionAgenciesRootKey = () => [QUERY_ROOTS.directoryOptionAgencies] as const;
+export const directoryOptionAgenciesKey = (input: DirectoryOptionsAgenciesInput) =>
+  [QUERY_ROOTS.directoryOptionAgencies, input] as const;
+export const directoryOptionCommercialsRootKey = () => [QUERY_ROOTS.directoryOptionCommercials] as const;
+export const directoryOptionCommercialsKey = (input: DirectoryOptionsFacetInput) => [
+  QUERY_ROOTS.directoryOptionCommercials,
+  directoryScopeKey(input.scope),
+  input.type,
+  archiveScope(input.includeArchived)
+] as const;
+export const directoryOptionDepartmentsRootKey = () => [QUERY_ROOTS.directoryOptionDepartments] as const;
+export const directoryOptionDepartmentsKey = (input: DirectoryOptionsFacetInput) => [
+  QUERY_ROOTS.directoryOptionDepartments,
+  directoryScopeKey(input.scope),
+  input.type,
+  archiveScope(input.includeArchived)
+] as const;
+export const directoryOptionCitiesRootKey = () => [QUERY_ROOTS.directoryOptionCities] as const;
+export const directoryOptionCitiesKey = (input: DirectoryOptionsCitiesInput) => [
+  QUERY_ROOTS.directoryOptionCities,
+  directoryScopeKey(input.scope),
+  input.type,
+  archiveScope(input.includeArchived),
+  input.q ?? null
+] as const;
 export const directoryCitySuggestionsRootKey = () => [QUERY_ROOTS.directoryCitySuggestions] as const;
-export const directoryCitySuggestionsKey = (input: Record<string, unknown>) => [QUERY_ROOTS.directoryCitySuggestions, input] as const;
+export const directoryCitySuggestionsKey = (input: DirectoryCitySuggestionsInput) =>
+  [QUERY_ROOTS.directoryCitySuggestions, input] as const;
 export const directoryRecordRootKey = () => [QUERY_ROOTS.directoryRecord] as const;
-export const directoryRecordKey = (route: Record<string, unknown>) => [QUERY_ROOTS.directoryRecord, route] as const;
+export const directoryRecordKey = (route: DirectoryRouteRef) => [QUERY_ROOTS.directoryRecord, route] as const;
 export const directorySavedViewsRootKey = () => [QUERY_ROOTS.directorySavedViews] as const;
 export const directorySavedViewsKey = () => [QUERY_ROOTS.directorySavedViews] as const;
 

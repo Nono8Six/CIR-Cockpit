@@ -192,15 +192,49 @@ export const configSaveAgencyResponseSchema = apiSuccessSchema;
 export const configSaveProductResponseSchema = apiSuccessSchema;
 export const directoryListResponseSchema = apiSuccessSchema.extend({
   rows: z.array(directoryListRowSchema),
-  total: z.number().int().nonnegative(),
+  total: z.number().int().nonnegative().optional(),
   page: z.number().int().positive(),
-  page_size: z.number().int().positive()
+  page_size: z.number().int().positive(),
+  meta: z.object({
+    scope: z.object({
+      mode: z.enum(['single_agency', 'multi_agency', 'global_read']),
+      agencyIds: z.array(z.string().trim().min(1, 'Identifiant agence requis'))
+    }).strict()
+  }).strict().optional()
 }).strict();
 
-export const directoryOptionsResponseSchema = apiSuccessSchema.extend({
+export const directoryOptionsAgenciesResponseSchema = apiSuccessSchema.extend({
   agencies: z.array(directoryAgencyOptionSchema),
+}).strict();
+
+export const directoryOptionsCommercialsResponseSchema = apiSuccessSchema.extend({
   commercials: z.array(directoryCommercialOptionSchema),
-  departments: z.array(z.string().trim().min(1, 'Departement requis'))
+  meta: z.object({
+    scope: z.object({
+      mode: z.enum(['single_agency', 'multi_agency', 'global_read']),
+      agencyIds: z.array(z.string().trim().min(1, 'Identifiant agence requis'))
+    }).strict()
+  }).strict().optional()
+}).strict();
+
+export const directoryOptionsDepartmentsResponseSchema = apiSuccessSchema.extend({
+  departments: z.array(z.string().trim().min(1, 'Departement requis')),
+  meta: z.object({
+    scope: z.object({
+      mode: z.enum(['single_agency', 'multi_agency', 'global_read']),
+      agencyIds: z.array(z.string().trim().min(1, 'Identifiant agence requis'))
+    }).strict()
+  }).strict().optional()
+}).strict();
+
+export const directoryOptionsCitiesResponseSchema = apiSuccessSchema.extend({
+  cities: z.array(directorySuggestionOptionSchema),
+  meta: z.object({
+    scope: z.object({
+      mode: z.enum(['single_agency', 'multi_agency', 'global_read']),
+      agencyIds: z.array(z.string().trim().min(1, 'Identifiant agence requis'))
+    }).strict()
+  }).strict().optional()
 }).strict();
 
 export const directoryCitySuggestionsResponseSchema = apiSuccessSchema.extend({
@@ -331,7 +365,10 @@ export type ConfigGetResponse = z.infer<typeof configGetResponseSchema>;
 export type ConfigSaveAgencyResponse = z.infer<typeof configSaveAgencyResponseSchema>;
 export type ConfigSaveProductResponse = z.infer<typeof configSaveProductResponseSchema>;
 export type DirectoryListResponse = z.infer<typeof directoryListResponseSchema>;
-export type DirectoryOptionsResponse = z.infer<typeof directoryOptionsResponseSchema>;
+export type DirectoryOptionsAgenciesResponse = z.infer<typeof directoryOptionsAgenciesResponseSchema>;
+export type DirectoryOptionsCommercialsResponse = z.infer<typeof directoryOptionsCommercialsResponseSchema>;
+export type DirectoryOptionsDepartmentsResponse = z.infer<typeof directoryOptionsDepartmentsResponseSchema>;
+export type DirectoryOptionsCitiesResponse = z.infer<typeof directoryOptionsCitiesResponseSchema>;
 export type DirectoryCitySuggestionsResponse = z.infer<typeof directoryCitySuggestionsResponseSchema>;
 export type DirectoryRecordResponse = z.infer<typeof directoryRecordResponseSchema>;
 export type DirectoryCompanySearchResponse = z.infer<typeof directoryCompanySearchResponseSchema>;

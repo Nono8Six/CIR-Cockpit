@@ -13,7 +13,9 @@ import {
   buildListWhereClause,
   commercialDisplayNameSql,
   normalizeClientKind,
+  resolveDirectoryScope,
   toSortingOrder,
+  toDirectoryResponseMeta,
 } from "./directoryShared.ts";
 
 export const listDirectory = async (
@@ -25,42 +27,47 @@ export const listDirectory = async (
   await ensureDataRateLimit("directory:list", authContext.userId);
 
   const whereClause = buildListWhereClause(authContext, input);
-  const offset = (input.page - 1) * input.pageSize;
+  const resolvedScope = resolveDirectoryScope(authContext, input.scope);
+  const offset = (input.pagination.page - 1) * input.pagination.pageSize;
 
   try {
-    const [rows, countRows] = await Promise.all([
-      db
-        .select({
-          id: entities.id,
-          entity_type: entities.entity_type,
-          client_kind: entities.client_kind,
-          client_number: entities.client_number,
-          account_type: entities.account_type,
-          name: entities.name,
-          city: entities.city,
-          postal_code: entities.postal_code,
-          department: entities.department,
-          siret: entities.siret,
-          siren: entities.siren,
-          official_name: entities.official_name,
-          agency_id: entities.agency_id,
-          agency_name: agencies.name,
-          cir_commercial_id: entities.cir_commercial_id,
-          cir_commercial_name: commercialDisplayNameSql,
-          archived_at: entities.archived_at,
-          updated_at: entities.updated_at,
-        })
-        .from(entities)
-        .leftJoin(agencies, eq(entities.agency_id, agencies.id))
-        .leftJoin(profiles, eq(entities.cir_commercial_id, profiles.id))
-        .where(whereClause)
-        .orderBy(...toSortingOrder(input.sorting))
-        .limit(input.pageSize)
-        .offset(offset),
-      db
+    const rowsPromise = db
+      .select({
+        id: entities.id,
+        entity_type: entities.entity_type,
+        client_kind: entities.client_kind,
+        client_number: entities.client_number,
+        account_type: entities.account_type,
+        name: entities.name,
+        city: entities.city,
+        postal_code: entities.postal_code,
+        department: entities.department,
+        siret: entities.siret,
+        siren: entities.siren,
+        official_name: entities.official_name,
+        agency_id: entities.agency_id,
+        agency_name: agencies.name,
+        cir_commercial_id: entities.cir_commercial_id,
+        cir_commercial_name: commercialDisplayNameSql,
+        archived_at: entities.archived_at,
+        updated_at: entities.updated_at,
+      })
+      .from(entities)
+      .leftJoin(agencies, eq(entities.agency_id, agencies.id))
+      .leftJoin(profiles, eq(entities.cir_commercial_id, profiles.id))
+      .where(whereClause)
+      .orderBy(...toSortingOrder(input.sorting))
+      .limit(input.pagination.pageSize)
+      .offset(offset);
+    const countPromise = input.pagination.includeTotal
+      ? db
         .select({ count: sql<number>`count(*)::int` })
         .from(entities)
-        .where(whereClause),
+        .where(whereClause)
+      : Promise.resolve([]);
+    const [rows, countRows] = await Promise.all([
+      rowsPromise,
+      countPromise,
     ]);
 
     const normalizedRows = rows.map((row): DirectoryListRow => ({
@@ -68,13 +75,18 @@ export const listDirectory = async (
       client_kind: normalizeClientKind(row.client_kind),
     }));
 
+    const total = input.pagination.includeTotal ? Number(countRows[0]?.count ?? 0) : undefined;
+
     return {
       request_id: requestId,
       ok: true,
       rows: normalizedRows,
-      total: Number(countRows[0]?.count ?? 0),
-      page: input.page,
-      page_size: input.pageSize,
+      ...(typeof total === "number" ? { total } : {}),
+      page: input.pagination.page,
+      page_size: input.pagination.pageSize,
+      ...(toDirectoryResponseMeta(resolvedScope, input.debug?.includeResolvedScope)
+        ? { meta: toDirectoryResponseMeta(resolvedScope, input.debug?.includeResolvedScope) }
+        : {}),
     };
   } catch (error) {
     throw httpError(

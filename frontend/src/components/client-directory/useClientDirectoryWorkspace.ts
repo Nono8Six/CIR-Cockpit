@@ -1,15 +1,17 @@
 import { startTransition, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import type { VisibilityState } from '@tanstack/react-table';
 import type {
-  DirectoryListInput,
+  DirectoryOptionsFacetInput,
+  DirectorySearchState,
   DirectorySavedView,
   DirectorySavedViewSaveInput,
 } from 'shared/schemas/directory.schema';
 
-import { useAgencies } from '@/hooks/useAgencies';
 import { useAppSessionStateContext } from '@/hooks/useAppSession';
 import { useDeleteDirectorySavedView } from '@/hooks/useDeleteDirectorySavedView';
-import { useDirectoryOptions } from '@/hooks/useDirectoryOptions';
+import { useDirectoryOptionAgencies } from '@/hooks/useDirectoryOptionAgencies';
+import { useDirectoryOptionCommercials } from '@/hooks/useDirectoryOptionCommercials';
+import { useDirectoryOptionDepartments } from '@/hooks/useDirectoryOptionDepartments';
 import { useDirectoryPage } from '@/hooks/useDirectoryPage';
 import { useDirectorySavedViews } from '@/hooks/useDirectorySavedViews';
 import { useSaveDirectorySavedView } from '@/hooks/useSaveDirectorySavedView';
@@ -20,6 +22,7 @@ import { notifySuccess } from '@/services/errors/notify';
 import {
   DEFAULT_DIRECTORY_DENSITY,
   DEFAULT_DIRECTORY_SEARCH,
+  toDirectoryListInput,
   toDirectorySavedViewState,
   toDirectorySearchFromViewState,
 } from './clientDirectorySearch';
@@ -32,11 +35,12 @@ import { getIsMobileDirectoryViewport, MOBILE_DIRECTORY_QUERY } from './director
 const DIRECTORY_OPTIONS_FETCH_DELAY_MS = 150;
 
 type ColumnVisibilityMode = 'responsive' | 'custom' | 'saved';
+type DirectoryOptionRequest = 'agencies' | 'commercials' | 'departments';
 
-const hasExplicitDirectoryState = (search: DirectoryListInput): boolean =>
+const hasExplicitDirectoryState = (search: DirectorySearchState): boolean =>
   Boolean(search.q) ||
   search.type !== DEFAULT_DIRECTORY_SEARCH.type ||
-  search.agencyIds.length > 0 ||
+  search.scope.mode !== DEFAULT_DIRECTORY_SEARCH.scope.mode ||
   search.departments.length > 0 ||
   Boolean(search.city) ||
   search.cirCommercialIds.length > 0 ||
@@ -45,33 +49,14 @@ const hasExplicitDirectoryState = (search: DirectoryListInput): boolean =>
   search.pageSize !== DEFAULT_DIRECTORY_SEARCH.pageSize ||
   JSON.stringify(search.sorting) !== JSON.stringify(DEFAULT_DIRECTORY_SEARCH.sorting);
 
-const resolveDirectoryAgencyIds = (
-  searchAgencyIds: string[],
-  activeAgencyId: string | null,
-): string[] => {
-  if (searchAgencyIds.length > 0) {
-    return searchAgencyIds;
-  }
-
-  return activeAgencyId ? [activeAgencyId] : [];
-};
-
-const getDirectoryOptionsScopeKey = ({
-  agencyIds,
-  includeArchived,
-  type,
-}: {
-  agencyIds: string[];
-  includeArchived: boolean;
-  type: DirectoryListInput['type'];
-}): string => `${type}|${includeArchived ? 'archived' : 'active'}|${agencyIds.join(',')}`;
+const getDirectoryOptionsScopeKey = (input: DirectoryOptionsFacetInput): string => JSON.stringify(input);
 
 const getResponsiveDirectoryColumnVisibility = (isMobile: boolean): VisibilityState =>
   isMobile ? MOBILE_DIRECTORY_COLUMN_VISIBILITY : {};
 
 export interface UseClientDirectoryWorkspaceInput {
-  search: DirectoryListInput;
-  onSearchChange: (updater: (previous: DirectoryListInput) => DirectoryListInput) => void;
+  search: DirectorySearchState;
+  onSearchChange: (updater: (previous: DirectorySearchState) => DirectorySearchState) => void;
 }
 
 export const useClientDirectoryWorkspace = ({
@@ -82,17 +67,7 @@ export const useClientDirectoryWorkspace = ({
   const resolvedUserRole = sessionState.profile?.role ?? null;
   const userRole = resolvedUserRole ?? 'tcs';
   const activeAgencyId = sessionState.activeAgencyId;
-  const scopedAgencyIds = useMemo(
-    () => resolveDirectoryAgencyIds(search.agencyIds, activeAgencyId),
-    [activeAgencyId, search.agencyIds],
-  );
-  const effectiveSearch = useMemo<DirectoryListInput>(
-    () => ({
-      ...search,
-      agencyIds: scopedAgencyIds,
-    }),
-    [scopedAgencyIds, search],
-  );
+  const effectiveSearch = search;
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(() =>
     getResponsiveDirectoryColumnVisibility(getIsMobileDirectoryViewport()),
   );
@@ -101,26 +76,27 @@ export const useClientDirectoryWorkspace = ({
   const [filtersSyncToken, setFiltersSyncToken] = useState(0);
   const routeSearchValue = effectiveSearch.q ?? '';
   const [searchDraft, setSearchDraft] = useState(routeSearchValue);
-  const directoryOptionsType = effectiveSearch.type;
-  const directoryOptionsIncludeArchived = effectiveSearch.includeArchived;
-  const directoryOptionsAgencyIdsKey = effectiveSearch.agencyIds.join(',');
-  const directoryOptionsAgencyIds = useMemo(
-    () => (directoryOptionsAgencyIdsKey ? directoryOptionsAgencyIdsKey.split(',') : []),
-    [directoryOptionsAgencyIdsKey],
-  );
-  const directoryOptionsScope = useMemo(
+  const directoryOptionsScope = useMemo<DirectoryOptionsFacetInput>(
     () => ({
-      type: directoryOptionsType,
-      agencyIds: directoryOptionsAgencyIds,
-      includeArchived: directoryOptionsIncludeArchived,
+      type: effectiveSearch.type,
+      scope: effectiveSearch.scope,
+      includeArchived: effectiveSearch.includeArchived,
     }),
-    [directoryOptionsAgencyIds, directoryOptionsIncludeArchived, directoryOptionsType],
+    [effectiveSearch.includeArchived, effectiveSearch.scope, effectiveSearch.type],
   );
   const [directoryOptionsInput, setDirectoryOptionsInput] = useState(directoryOptionsScope);
+  const [requestedOptions, setRequestedOptions] = useState<Record<DirectoryOptionRequest, boolean>>({
+    agencies: false,
+    commercials: false,
+    departments: false,
+  });
+  const [enabledOptions, setEnabledOptions] = useState<Record<DirectoryOptionRequest, boolean>>({
+    agencies: false,
+    commercials: false,
+    departments: false,
+  });
   const directoryOptionsInputKey = getDirectoryOptionsScopeKey(directoryOptionsInput);
   const directoryOptionsScopeKey = getDirectoryOptionsScopeKey(directoryOptionsScope);
-  const [isDirectoryOptionsEnabled, setIsDirectoryOptionsEnabled] = useState(false);
-  const [hasRequestedDirectoryOptions, setHasRequestedDirectoryOptions] = useState(false);
   const hasAppliedDefaultViewRef = useRef(false);
   const deferredSearchDraft = useDeferredValue(searchDraft);
   const normalizedSearchDraft = searchDraft.trim();
@@ -128,34 +104,40 @@ export const useClientDirectoryWorkspace = ({
   const canLoadDirectory =
     Boolean(sessionState.session) && Boolean(resolvedUserRole) && Boolean(activeAgencyId);
 
-  const querySearch = useMemo<DirectoryListInput>(
+  const querySearch = useMemo<DirectorySearchState>(
     () => ({
       ...effectiveSearch,
       q: normalizedDeferredSearchDraft || undefined,
     }),
     [effectiveSearch, normalizedDeferredSearchDraft],
   );
-  const uiSearch = useMemo<DirectoryListInput>(
+  const uiSearch = useMemo<DirectorySearchState>(
     () => ({
       ...effectiveSearch,
       q: normalizedSearchDraft || undefined,
     }),
     [effectiveSearch, normalizedSearchDraft],
   );
-  const directoryPageQuery = useDirectoryPage(querySearch, canLoadDirectory);
-  const directoryOptionsQuery = useDirectoryOptions(
-    directoryOptionsInput,
-    canLoadDirectory &&
-      hasRequestedDirectoryOptions &&
-      isDirectoryOptionsEnabled &&
-      directoryOptionsInputKey === directoryOptionsScopeKey,
+  const directoryListInput = useMemo(() => toDirectoryListInput(querySearch), [querySearch]);
+  const directoryPageQuery = useDirectoryPage(directoryListInput, canLoadDirectory);
+  const canLoadCurrentOptions = canLoadDirectory && directoryOptionsInputKey === directoryOptionsScopeKey;
+  const agenciesQuery = useDirectoryOptionAgencies(
+    { includeArchived: false },
+    canLoadDirectory && userRole === 'super_admin' && enabledOptions.agencies,
   );
-  const agenciesQuery = useAgencies(false, canLoadDirectory);
+  const commercialsQuery = useDirectoryOptionCommercials(
+    directoryOptionsInput,
+    canLoadCurrentOptions && enabledOptions.commercials,
+  );
+  const departmentsQuery = useDirectoryOptionDepartments(
+    directoryOptionsInput,
+    canLoadCurrentOptions && enabledOptions.departments,
+  );
   const savedViewsQuery = useDirectorySavedViews(canLoadDirectory);
   const saveSavedViewMutation = useSaveDirectorySavedView();
   const deleteSavedViewMutation = useDeleteDirectorySavedView();
   const setDefaultSavedViewMutation = useSetDefaultDirectorySavedView();
-  const totalResults = directoryPageQuery.data?.total ?? 0;
+  const totalResults = directoryPageQuery.data?.total;
   const directoryRows = directoryPageQuery.data?.rows ?? [];
   const rowDepartments = useMemo(
     () =>
@@ -195,20 +177,28 @@ export const useClientDirectoryWorkspace = ({
   }, [routeSearchValue]);
 
   useEffect(() => {
-    if (!hasRequestedDirectoryOptions) {
-      setIsDirectoryOptionsEnabled(false);
+    if (!Object.values(requestedOptions).some(Boolean)) {
+      setEnabledOptions({
+        agencies: false,
+        commercials: false,
+        departments: false,
+      });
       setDirectoryOptionsInput(directoryOptionsScope);
       return;
     }
 
-    setIsDirectoryOptionsEnabled(false);
+    setEnabledOptions({
+      agencies: false,
+      commercials: false,
+      departments: false,
+    });
     const timeoutId = window.setTimeout(() => {
       setDirectoryOptionsInput(directoryOptionsScope);
-      setIsDirectoryOptionsEnabled(true);
+      setEnabledOptions(requestedOptions);
     }, DIRECTORY_OPTIONS_FETCH_DELAY_MS);
 
     return () => window.clearTimeout(timeoutId);
-  }, [directoryOptionsScope, hasRequestedDirectoryOptions]);
+  }, [directoryOptionsScope, requestedOptions]);
 
   useEffect(() => {
     if (
@@ -264,14 +254,11 @@ export const useClientDirectoryWorkspace = ({
     const nextSearch = toDirectorySearchFromViewState(defaultView.state);
 
     startTransition(() => {
-      onSearchChange(() => ({
-        ...nextSearch,
-        agencyIds: resolveDirectoryAgencyIds(nextSearch.agencyIds, activeAgencyId),
-      }));
+      onSearchChange(() => nextSearch);
     });
-  }, [activeAgencyId, onSearchChange, savedViewsQuery.data, search]);
+  }, [onSearchChange, savedViewsQuery.data, search]);
 
-  const handleSearchPatch = (patch: Partial<DirectoryListInput>) => {
+  const handleSearchPatch = (patch: Partial<DirectorySearchState>) => {
     const nextSearchDraft = Object.prototype.hasOwnProperty.call(patch, 'q')
       ? patch.q ?? ''
       : normalizedSearchDraft;
@@ -294,10 +281,7 @@ export const useClientDirectoryWorkspace = ({
     applySavedViewUiState(view);
 
     startTransition(() => {
-      onSearchChange(() => ({
-        ...nextSearch,
-        agencyIds: resolveDirectoryAgencyIds(nextSearch.agencyIds, activeAgencyId),
-      }));
+      onSearchChange(() => nextSearch);
     });
   };
 
@@ -341,7 +325,7 @@ export const useClientDirectoryWorkspace = ({
     handleSearchPatch({
       q: undefined,
       type: 'all',
-      agencyIds: resolveDirectoryAgencyIds([], activeAgencyId),
+      scope: DEFAULT_DIRECTORY_SEARCH.scope,
       departments: [],
       city: undefined,
       cirCommercialIds: [],
@@ -376,20 +360,26 @@ export const useClientDirectoryWorkspace = ({
     filtersSyncToken,
     totalResults,
     viewOptionColumns,
-    agencies: agenciesQuery.data ?? [],
+    agencies: agenciesQuery.data?.agencies ?? [],
     directoryRows,
     directoryPage: directoryPageQuery.data?.page ?? effectiveSearch.page,
     directoryPageSize: directoryPageQuery.data?.page_size ?? effectiveSearch.pageSize,
     directoryIsFetching: directoryPageQuery.isFetching,
     directoryIsPending: directoryPageQuery.isPending,
-    commercials: directoryOptionsQuery.data?.commercials ?? rowCommercials,
-    departments: directoryOptionsQuery.data?.departments ?? rowDepartments,
+    commercials: commercialsQuery.data?.commercials ?? rowCommercials,
+    departments: departmentsQuery.data?.departments ?? rowDepartments,
     savedViews: savedViewsQuery.data?.views ?? [],
     savedViewsIsLoading: savedViewsQuery.isLoading,
     savedViewsState,
     isSavedViewsMutating,
     handleSearchPatch,
-    requestDirectoryOptions: () => setHasRequestedDirectoryOptions(true),
+    requestDirectoryOptions: (options: DirectoryOptionRequest[]) => {
+      setRequestedOptions((previous) => ({
+        agencies: previous.agencies || options.includes('agencies'),
+        commercials: previous.commercials || options.includes('commercials'),
+        departments: previous.departments || options.includes('departments'),
+      }));
+    },
     handleApplySavedView,
     handleSaveView,
     handleDeleteView,

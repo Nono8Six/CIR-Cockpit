@@ -3,6 +3,7 @@ import { httpError } from '../errorHandler.ts';
 
 type ProfileAuthState = {
   role: AuthContext['role'] | null;
+  active_agency_id: string | null;
   archived_at: string | null;
   is_system: boolean;
 };
@@ -35,7 +36,7 @@ export const resolveAuthContext = async (
 ): Promise<AuthContext> => {
   const { data: profile, error: profileError } = await db
     .from('profiles')
-    .select('role, archived_at, is_system, agency_members(agency_id)')
+    .select('role, active_agency_id, archived_at, is_system, agency_members(agency_id)')
     .eq('id', userId)
     .single<ProfileLookupRow>();
 
@@ -54,6 +55,7 @@ export const resolveAuthContext = async (
       userId,
       role: profile.role,
       agencyIds: [],
+      activeAgencyId: profile.active_agency_id,
       isSuperAdmin: true
     };
   }
@@ -67,6 +69,7 @@ export const resolveAuthContext = async (
     userId,
     role: profile.role,
     agencyIds: toUniqueAgencyIds(memberships),
+    activeAgencyId: profile.active_agency_id,
     isSuperAdmin: false
   };
 };

@@ -4,12 +4,13 @@ import type { DirectoryListRow } from 'shared/schemas/directory.schema';
 import EntityOnboardingDialog from '@/components/EntityOnboardingDialog';
 import { useAgencies } from '@/hooks/useAgencies';
 import { useAppSessionStateContext } from '@/hooks/useAppSession';
-import { useDirectoryOptions } from '@/hooks/useDirectoryOptions';
+import { useDirectoryOptionCommercials } from '@/hooks/useDirectoryOptionCommercials';
 import { useSaveClient } from '@/hooks/useSaveClient';
 import { useSaveProspect } from '@/hooks/useSaveProspect';
 import { notifySuccess } from '@/services/errors/notify';
 import {
-  isProspectEntityType
+  isProspectEntityType,
+  toSelectedAgenciesScope
 } from './clientDirectorySearch';
 
 const ClientDirectoryCreatePage = () => {
@@ -19,17 +20,17 @@ const ClientDirectoryCreatePage = () => {
   const userRole = sessionState.profile?.role ?? 'tcs';
   const activeAgencyId = sessionState.activeAgencyId;
   const canLoadDirectory = Boolean(sessionState.session) && (userRole === 'super_admin' || Boolean(activeAgencyId));
-  const scopedAgencyIds = userRole === 'super_admin'
-    ? search.agencyIds
+  const scopedAgencyIds = search.scope.mode === 'selected_agencies'
+    ? search.scope.agencyIds
     : activeAgencyId
       ? [activeAgencyId]
       : [];
   const agenciesQuery = useAgencies(false, canLoadDirectory);
-  const optionsQuery = useDirectoryOptions(
+  const commercialsQuery = useDirectoryOptionCommercials(
     {
       type: 'all',
-      agencyIds: scopedAgencyIds,
-      includeArchived: search.includeArchived
+      scope: toSelectedAgenciesScope(scopedAgencyIds),
+      includeArchived: search.includeArchived,
     },
     canLoadDirectory
   );
@@ -79,7 +80,7 @@ const ClientDirectoryCreatePage = () => {
         agencies={agenciesQuery.data ?? []}
         userRole={userRole}
         activeAgencyId={activeAgencyId}
-        commercials={optionsQuery.data?.commercials ?? []}
+        commercials={commercialsQuery.data?.commercials ?? []}
         sourceLabel="Annuaire"
         surface="page"
         backLabel="Retour aux resultats"

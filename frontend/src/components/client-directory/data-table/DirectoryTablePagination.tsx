@@ -13,7 +13,7 @@ import {
 interface DirectoryTablePaginationProps {
   page: number;
   pageSize: number;
-  total: number;
+  total?: number;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
 }
@@ -41,15 +41,16 @@ const DirectoryTablePagination = ({
   onPageChange,
   onPageSizeChange
 }: DirectoryTablePaginationProps) => {
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const pageStart = total === 0 ? 0 : ((page - 1) * pageSize) + 1;
-  const pageEnd = total === 0 ? 0 : Math.min(total, page * pageSize);
+  const hasTotal = typeof total === 'number';
+  const totalPages = hasTotal ? Math.max(1, Math.ceil(total / pageSize)) : page + 1;
+  const pageStart = hasTotal && total === 0 ? 0 : ((page - 1) * pageSize) + 1;
+  const pageEnd = hasTotal ? Math.min(total, page * pageSize) : page * pageSize;
   const pageItems = buildPageItems(page, totalPages);
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-        <span className="tabular-nums">{`${pageStart}-${pageEnd} / ${total}`}</span>
+        <span className="tabular-nums">{hasTotal ? `${pageStart}-${pageEnd} / ${total}` : `${pageStart}-${pageEnd}`}</span>
         <div className="flex items-center gap-2">
           <span>Lignes</span>
           <Select value={String(pageSize)} onValueChange={(value) => onPageSizeChange(Number(value))}>
@@ -120,16 +121,18 @@ const DirectoryTablePagination = ({
           <span className="hidden sm:inline">Suivant</span>
           <span className="sm:hidden">›</span>
         </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          aria-label="Dernière page"
-          onClick={() => onPageChange(totalPages)}
-          disabled={page >= totalPages}
-        >
-          <ChevronsRight className="size-4" />
-        </Button>
+        {hasTotal ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            aria-label="Dernière page"
+            onClick={() => onPageChange(totalPages)}
+            disabled={page >= totalPages}
+          >
+            <ChevronsRight className="size-4" />
+          </Button>
+        ) : null}
       </div>
     </div>
   );

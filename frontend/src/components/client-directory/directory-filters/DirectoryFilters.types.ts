@@ -1,7 +1,7 @@
 import type {
   DirectoryDensity,
   DirectoryCommercialOption,
-  DirectoryListInput
+  DirectorySearchState
 } from 'shared/schemas/directory.schema';
 
 export interface DirectoryFilterOption {
@@ -9,8 +9,10 @@ export interface DirectoryFilterOption {
   label: string;
 }
 
+export type DirectoryOptionRequest = 'agencies' | 'commercials' | 'departments';
+
 export interface ClientDirectoryFiltersProps {
-  search: DirectoryListInput;
+  search: DirectorySearchState;
   cityDraftSeed?: string;
   searchDraft: string;
   agencies: Array<{ id: string; name: string }>;
@@ -29,7 +31,7 @@ export interface ClientDirectoryFiltersProps {
   onToggleColumn: (columnId: string) => void;
   onDensityChange: (density: DirectoryDensity) => void;
   onSearchDraftChange: (value: string) => void;
-  onSearchPatch: (patch: Partial<DirectoryListInput>) => void;
-  onRequestOptions: () => void;
+  onSearchPatch: (patch: Partial<DirectorySearchState>) => void;
+  onRequestOptions: (options: DirectoryOptionRequest[]) => void;
   onReset: () => void;
 }

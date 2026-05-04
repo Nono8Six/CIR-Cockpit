@@ -1,6 +1,9 @@
 export {
   getDirectoryCitySuggestions,
-  getDirectoryOptions,
+  getDirectoryOptionAgencies,
+  getDirectoryOptionCities,
+  getDirectoryOptionCommercials,
+  getDirectoryOptionDepartments,
   getDirectoryRecord,
   listDirectory
 } from './directoryListing.ts';

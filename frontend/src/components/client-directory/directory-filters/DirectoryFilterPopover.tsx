@@ -1,15 +1,16 @@
 import { SlidersHorizontal } from 'lucide-react';
-import type { DirectoryListInput } from 'shared/schemas/directory.schema';
+import type { DirectorySearchState } from 'shared/schemas/directory.schema';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import DirectoryCityAutocomplete from './DirectoryCityAutocomplete';
 import DirectoryFilterCombobox from './DirectoryFilterCombobox';
-import type { DirectoryFilterOption } from './DirectoryFilters.types';
+import type { DirectoryFilterOption, DirectoryOptionRequest } from './DirectoryFilters.types';
+import { getDirectorySelectedAgencyIds, toSelectedAgenciesScope } from '../clientDirectorySearch';
 
 interface DirectoryFilterPopoverProps {
-  search: DirectoryListInput;
+  search: DirectorySearchState;
   activeFilterCount: number;
   departmentItems: DirectoryFilterOption[];
   commercialItems: DirectoryFilterOption[];
@@ -17,8 +18,8 @@ interface DirectoryFilterPopoverProps {
   canFilterAgency: boolean;
   cityDraft: string;
   onCityDraftChange: (value: string) => void;
-  onSearchPatch: (patch: Partial<DirectoryListInput>) => void;
-  onRequestOptions: () => void;
+  onSearchPatch: (patch: Partial<DirectorySearchState>) => void;
+  onRequestOptions: (options: DirectoryOptionRequest[]) => void;
   onResetFilters: () => void;
 }
 
@@ -35,10 +36,12 @@ const DirectoryFilterPopover = ({
   onRequestOptions,
   onResetFilters
 }: DirectoryFilterPopoverProps) => {
+  const selectedAgencyIds = getDirectorySelectedAgencyIds(search.scope);
+
   return (
     <Popover onOpenChange={(open) => {
       if (open) {
-        onRequestOptions();
+        onRequestOptions(canFilterAgency ? ['agencies', 'commercials', 'departments'] : ['commercials', 'departments']);
       }
     }}>
       <PopoverTrigger asChild>
@@ -72,7 +75,7 @@ const DirectoryFilterPopover = ({
               draftValue={cityDraft}
               committedValue={search.city}
               type={search.type}
-              agencyIds={search.agencyIds}
+              scope={search.scope}
               includeArchived={search.includeArchived}
               onDraftChange={onCityDraftChange}
               onCommit={(value) => onSearchPatch({ city: value, page: 1 })}
@@ -96,8 +99,8 @@ const DirectoryFilterPopover = ({
           {canFilterAgency ? (
             <DirectoryFilterCombobox
               items={agencyItems}
-              values={search.agencyIds}
-              onValuesChange={(values) => onSearchPatch({ agencyIds: values, page: 1 })}
+              values={selectedAgencyIds}
+              onValuesChange={(values) => onSearchPatch({ scope: toSelectedAgenciesScope(values), page: 1 })}
               placeholder="Agence"
               allLabel="Toutes les agences"
               searchPlaceholder="Rechercher une agence…"

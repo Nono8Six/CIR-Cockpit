@@ -29,7 +29,7 @@ describe('getDirectoryDuplicates', () => {
     const { getDirectoryDuplicates } = await import('../getDirectoryDuplicates');
     const input = {
       kind: 'company' as const,
-      agencyIds: [],
+      scope: { mode: 'active_agency' as const },
       includeArchived: true,
       siret: '80092968900019',
       siren: '800929689',
@@ -54,7 +54,7 @@ describe('getDirectoryDuplicates', () => {
     const { getDirectoryDuplicates } = await import('../getDirectoryDuplicates');
     const input = {
       kind: 'company' as const,
-      agencyIds: [],
+      scope: { mode: 'active_agency' as const },
       includeArchived: true,
       siret: '80092968900019',
       siren: '800929689',
@@ -79,7 +79,7 @@ describe('getDirectoryDuplicates', () => {
     const { getDirectoryDuplicates } = await import('../getDirectoryDuplicates');
     const input = {
       kind: 'individual' as const,
-      agencyIds: [],
+      scope: { mode: 'active_agency' as const },
       includeArchived: true,
       first_name: 'Arnaud',
       last_name: 'Ferron',

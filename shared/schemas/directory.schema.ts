@@ -61,6 +61,25 @@ export const directorySortBySchema = z.enum([
 export const directorySortDirectionSchema = z.enum(['asc', 'desc']);
 export const directoryDensitySchema = z.enum(['comfortable', 'compact']);
 
+export const directoryActiveAgencyScopeSchema = z.object({
+  mode: z.literal('active_agency')
+}).strict();
+
+export const directorySelectedAgenciesScopeSchema = z.object({
+  mode: z.literal('selected_agencies'),
+  agencyIds: optionalUuidArrayFilterSchema.pipe(z.array(uuidSchema).min(1, 'Au moins une agence requise'))
+}).strict();
+
+export const directoryAllAccessibleAgenciesScopeSchema = z.object({
+  mode: z.literal('all_accessible_agencies')
+}).strict();
+
+export const directoryScopeInputSchema = z.discriminatedUnion('mode', [
+  directoryActiveAgencyScopeSchema,
+  directorySelectedAgenciesScopeSchema,
+  directoryAllAccessibleAgenciesScopeSchema
+]);
+
 export const DIRECTORY_PAGE_SIZES = [25, 50, 100] as const;
 
 const directoryPageSizeSchema = z
@@ -85,67 +104,62 @@ export const directorySortingStateSchema = z
     'Colonnes de tri dupliquees'
   );
 
-const normalizeLegacyDirectoryFilters = (value: unknown): unknown => {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-    return value;
-  }
+export const directoryListFiltersSchema = z.object({
+  q: optionalTextFilterSchema.optional(),
+  departments: optionalTextArrayFilterSchema.default([]),
+  city: optionalTextFilterSchema.optional(),
+  cirCommercialIds: optionalUuidArrayFilterSchema.default([]),
+  includeArchived: booleanLikeSchema.default(false)
+}).strict();
 
-  const record = { ...value } as Record<string, unknown>;
-  const normalized = { ...record };
+export const directoryPaginationSchema = z.object({
+  page: z.coerce.number().int().min(1, 'Page invalide').default(1),
+  pageSize: directoryPageSizeSchema.default(50),
+  includeTotal: z.boolean().default(false)
+}).strict();
 
-  if (!('agencyIds' in normalized) && 'agencyId' in record) {
-    normalized.agencyIds = record.agencyId;
-  }
+export const directoryDebugInputSchema = z.object({
+  includeResolvedScope: z.boolean().default(false)
+}).strict();
 
-  if (!('departments' in normalized) && 'department' in record) {
-    normalized.departments = record.department;
-  }
+export const directoryListInputSchema = z.object({
+  scope: directoryScopeInputSchema.default({ mode: 'active_agency' }),
+  type: directoryEntityTypeSchema.default('all'),
+  filters: directoryListFiltersSchema.default({
+    departments: [],
+    cirCommercialIds: [],
+    includeArchived: false
+  }),
+  pagination: directoryPaginationSchema.default({
+    page: 1,
+    pageSize: 50,
+    includeTotal: false
+  }),
+  sorting: directorySortingStateSchema.default([{ id: 'name', desc: false }]),
+  debug: directoryDebugInputSchema.optional()
+}).strict();
 
-  if (!('cirCommercialIds' in normalized) && 'cirCommercialId' in record) {
-    normalized.cirCommercialIds = record.cirCommercialId;
-  }
+export const directoryOptionsAgenciesInputSchema = z.object({
+  includeArchived: booleanLikeSchema.default(false)
+}).strict();
 
-  delete normalized.agencyId;
-  delete normalized.department;
-  delete normalized.cirCommercialId;
+export const directoryOptionsFacetInputSchema = z.object({
+  scope: directoryScopeInputSchema.default({ mode: 'active_agency' }),
+  type: directoryEntityTypeSchema.default('all'),
+  includeArchived: booleanLikeSchema.default(false),
+  debug: directoryDebugInputSchema.optional()
+}).strict();
 
-  return normalized;
-};
+export const directoryOptionsCitiesInputSchema = directoryOptionsFacetInputSchema.extend({
+  q: optionalTextFilterSchema.optional()
+}).strict();
 
-export const directoryListInputSchema = z.preprocess(
-  normalizeLegacyDirectoryFilters,
-  z.object({
-    q: optionalTextFilterSchema.optional(),
-    type: directoryEntityTypeSchema.default('all'),
-    agencyIds: optionalUuidArrayFilterSchema.default([]),
-    departments: optionalTextArrayFilterSchema.default([]),
-    city: optionalTextFilterSchema.optional(),
-    cirCommercialIds: optionalUuidArrayFilterSchema.default([]),
-    includeArchived: booleanLikeSchema.default(false),
-    page: z.coerce.number().int().min(1, 'Page invalide').default(1),
-    pageSize: directoryPageSizeSchema.default(50),
-    sorting: directorySortingStateSchema.default([{ id: 'name', desc: false }])
-  }).strict()
-);
-
-export const directoryOptionsInputSchema = z.preprocess(
-  normalizeLegacyDirectoryFilters,
-  z.object({
-    type: directoryEntityTypeSchema.default('all'),
-    agencyIds: optionalUuidArrayFilterSchema.default([]),
-    includeArchived: booleanLikeSchema.default(false)
-  }).strict()
-);
-
-export const directoryCitySuggestionsInputSchema = z.preprocess(
-  normalizeLegacyDirectoryFilters,
-  z.object({
-    q: z.string().trim().min(1, 'Recherche ville requise'),
-    type: directoryEntityTypeSchema.default('all'),
-    agencyIds: optionalUuidArrayFilterSchema.default([]),
-    includeArchived: booleanLikeSchema.default(false)
-  }).strict()
-);
+export const directoryCitySuggestionsInputSchema = z.object({
+  q: z.string().trim().min(1, 'Recherche ville requise'),
+  scope: directoryScopeInputSchema.default({ mode: 'active_agency' }),
+  type: directoryEntityTypeSchema.default('all'),
+  includeArchived: booleanLikeSchema.default(false)
+}).strict();
 
 export const directoryClientRouteRefSchema = z.object({
   kind: z.literal('client'),
@@ -208,22 +222,32 @@ export const directorySuggestionOptionSchema = z.object({
 
 export const directoryColumnVisibilitySchema = z.record(z.string(), z.boolean()).default({});
 
-export const directorySavedViewStateSchema = z.preprocess(
-  normalizeLegacyDirectoryFilters,
-  z.object({
-    q: optionalTextFilterSchema.optional(),
-    type: directoryEntityTypeSchema.default('all'),
-    agencyIds: optionalUuidArrayFilterSchema.default([]),
-    departments: optionalTextArrayFilterSchema.default([]),
-    city: optionalTextFilterSchema.optional(),
-    cirCommercialIds: optionalUuidArrayFilterSchema.default([]),
-    includeArchived: booleanLikeSchema.default(false),
-    pageSize: directoryPageSizeSchema.default(50),
-    sorting: directorySortingStateSchema.default([{ id: 'name', desc: false }]),
-    columnVisibility: directoryColumnVisibilitySchema,
-    density: directoryDensitySchema.default('comfortable')
-  }).strict()
-);
+export const directorySavedViewStateSchema = z.object({
+  q: optionalTextFilterSchema.optional(),
+  type: directoryEntityTypeSchema.default('all'),
+  scope: directoryScopeInputSchema.default({ mode: 'active_agency' }),
+  departments: optionalTextArrayFilterSchema.default([]),
+  city: optionalTextFilterSchema.optional(),
+  cirCommercialIds: optionalUuidArrayFilterSchema.default([]),
+  includeArchived: booleanLikeSchema.default(false),
+  pageSize: directoryPageSizeSchema.default(50),
+  sorting: directorySortingStateSchema.default([{ id: 'name', desc: false }]),
+  columnVisibility: directoryColumnVisibilitySchema,
+  density: directoryDensitySchema.default('comfortable')
+}).strict();
+
+export const directorySearchStateSchema = z.object({
+  q: optionalTextFilterSchema.optional(),
+  type: directoryEntityTypeSchema.default('all'),
+  scope: directoryScopeInputSchema.default({ mode: 'active_agency' }),
+  departments: optionalTextArrayFilterSchema.default([]),
+  city: optionalTextFilterSchema.optional(),
+  cirCommercialIds: optionalUuidArrayFilterSchema.default([]),
+  includeArchived: booleanLikeSchema.default(false),
+  page: z.coerce.number().int().min(1, 'Page invalide').default(1),
+  pageSize: directoryPageSizeSchema.default(50),
+  sorting: directorySortingStateSchema.default([{ id: 'name', desc: false }])
+}).strict();
 
 export const directorySavedViewSchema = z.object({
   id: uuidSchema,
@@ -317,7 +341,7 @@ const directoryOptionalPhoneSchema = z
 
 export const directoryCompanyDuplicateInputSchema = z.object({
   kind: z.literal('company'),
-  agencyIds: optionalUuidArrayFilterSchema.default([]),
+  scope: directoryScopeInputSchema.default({ mode: 'active_agency' }),
   includeArchived: booleanLikeSchema.default(true),
   siret: optionalOfficialTextSchema.optional(),
   siren: optionalOfficialTextSchema.optional(),
@@ -327,7 +351,7 @@ export const directoryCompanyDuplicateInputSchema = z.object({
 
 export const directoryIndividualDuplicateInputSchema = z.object({
   kind: z.literal('individual'),
-  agencyIds: optionalUuidArrayFilterSchema.default([]),
+  scope: directoryScopeInputSchema.default({ mode: 'active_agency' }),
   includeArchived: booleanLikeSchema.default(true),
   first_name: z.string().trim().min(1, 'Prenom requis'),
   last_name: z.string().trim().min(1, 'Nom requis'),
@@ -435,14 +459,21 @@ export type DirectoryClientKind = z.infer<typeof directoryClientKindSchema>;
 export type DirectorySortBy = z.infer<typeof directorySortBySchema>;
 export type DirectorySortDirection = z.infer<typeof directorySortDirectionSchema>;
 export type DirectoryDensity = z.infer<typeof directoryDensitySchema>;
+export type DirectoryScopeInput = z.infer<typeof directoryScopeInputSchema>;
 export type DirectorySortingRule = z.infer<typeof directorySortingRuleSchema>;
+export type DirectoryListFilters = z.infer<typeof directoryListFiltersSchema>;
+export type DirectoryPagination = z.infer<typeof directoryPaginationSchema>;
+export type DirectoryDebugInput = z.infer<typeof directoryDebugInputSchema>;
 export type DirectoryListInput = z.infer<typeof directoryListInputSchema>;
-export type DirectoryOptionsInput = z.infer<typeof directoryOptionsInputSchema>;
+export type DirectoryOptionsAgenciesInput = z.infer<typeof directoryOptionsAgenciesInputSchema>;
+export type DirectoryOptionsFacetInput = z.infer<typeof directoryOptionsFacetInputSchema>;
+export type DirectoryOptionsCitiesInput = z.infer<typeof directoryOptionsCitiesInputSchema>;
 export type DirectoryCitySuggestionsInput = z.infer<typeof directoryCitySuggestionsInputSchema>;
 export type DirectoryRouteRef = z.infer<typeof directoryRouteRefSchema>;
 export type DirectoryCommercialOption = z.infer<typeof directoryCommercialOptionSchema>;
 export type DirectoryAgencyOption = z.infer<typeof directoryAgencyOptionSchema>;
 export type DirectorySuggestionOption = z.infer<typeof directorySuggestionOptionSchema>;
+export type DirectorySearchState = z.infer<typeof directorySearchStateSchema>;
 export type DirectorySavedViewState = z.infer<typeof directorySavedViewStateSchema>;
 export type DirectorySavedView = z.infer<typeof directorySavedViewSchema>;
 export type DirectorySavedViewsListInput = z.infer<typeof directorySavedViewsListInputSchema>;

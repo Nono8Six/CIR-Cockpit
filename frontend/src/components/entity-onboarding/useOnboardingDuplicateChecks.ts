@@ -4,6 +4,7 @@ import type { DirectoryCompanySearchResult } from 'shared/schemas/directory.sche
 
 import { useDirectoryDuplicates } from '@/hooks/useDirectoryDuplicates';
 import type { UserRole } from '@/types';
+import { toSelectedAgenciesScope } from '@/components/client-directory/clientDirectorySearch';
 
 import type { OnboardingValues } from './entityOnboarding.schema';
 import type { CompanySearchGroup } from './entityOnboarding.types';
@@ -45,7 +46,7 @@ export const useOnboardingDuplicateChecks = ({
     if (isIndividualClient) {
       return {
         kind: 'individual' as const,
-        agencyIds: duplicateAgencyIds,
+        scope: toSelectedAgenciesScope(duplicateAgencyIds),
         includeArchived: true,
         first_name: values.first_name,
         last_name: values.last_name,
@@ -58,7 +59,7 @@ export const useOnboardingDuplicateChecks = ({
 
     return {
       kind: 'company' as const,
-      agencyIds: duplicateAgencyIds,
+      scope: toSelectedAgenciesScope(duplicateAgencyIds),
       includeArchived: true,
       siret: displaySelectedCompany?.siret ?? values.siret ?? undefined,
       siren: displaySelectedCompany?.siren ?? values.siren ?? undefined,

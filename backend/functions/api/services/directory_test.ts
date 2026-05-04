@@ -85,7 +85,7 @@ Deno.test('buildCompanySearchUrl includes optional filters and pagination', () =
 Deno.test('buildCompanyDuplicateReason prioritizes SIRET duplicates', () => {
   const input: Extract<DirectoryDuplicatesInput, { kind: 'company' }> = {
     kind: 'company',
-    agencyIds: [],
+    scope: { mode: 'active_agency' },
     includeArchived: true,
     siret: '12345678900011',
     siren: '123456789',
@@ -100,7 +100,7 @@ Deno.test('buildCompanyDuplicateReason prioritizes SIRET duplicates', () => {
 Deno.test('buildCompanyDuplicateReason falls back to SIREN when SIRET is absent', () => {
   const input: Extract<DirectoryDuplicatesInput, { kind: 'company' }> = {
     kind: 'company',
-    agencyIds: [],
+    scope: { mode: 'active_agency' },
     includeArchived: true,
     siret: null,
     siren: '123456789',
@@ -118,7 +118,7 @@ Deno.test('buildCompanyDuplicateReason falls back to SIREN when SIRET is absent'
 Deno.test('rankIndividualDuplicate gives the strongest rank to an email match', () => {
   const input: Extract<DirectoryDuplicatesInput, { kind: 'individual' }> = {
     kind: 'individual',
-    agencyIds: [],
+    scope: { mode: 'active_agency' },
     includeArchived: true,
     first_name: 'Jane',
     last_name: 'Doe',
@@ -135,7 +135,7 @@ Deno.test('rankIndividualDuplicate gives the strongest rank to an email match', 
 Deno.test('rankIndividualDuplicate falls back to phone matching when email differs', () => {
   const input: Extract<DirectoryDuplicatesInput, { kind: 'individual' }> = {
     kind: 'individual',
-    agencyIds: [],
+    scope: { mode: 'active_agency' },
     includeArchived: true,
     first_name: 'Jane',
     last_name: 'Doe',
@@ -155,7 +155,7 @@ Deno.test('rankIndividualDuplicate falls back to phone matching when email diffe
 Deno.test('rankIndividualDuplicate returns null when identity fields do not match', () => {
   const input: Extract<DirectoryDuplicatesInput, { kind: 'individual' }> = {
     kind: 'individual',
-    agencyIds: [],
+    scope: { mode: 'active_agency' },
     includeArchived: true,
     first_name: 'Jane',
     last_name: 'Doe',

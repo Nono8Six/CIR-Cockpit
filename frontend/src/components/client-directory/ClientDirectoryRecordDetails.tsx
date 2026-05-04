@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 
-import type { DirectoryListInput, DirectoryRouteRef } from 'shared/schemas/directory.schema';
+import type { DirectoryRouteRef, DirectorySearchState } from 'shared/schemas/directory.schema';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useNavigate } from '@tanstack/react-router';
 
@@ -11,7 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useAgencies } from '@/hooks/useAgencies';
 import { useAppSessionStateContext } from '@/hooks/useAppSession';
 import { useDeleteClient } from '@/hooks/useSetClientArchived';
-import { useDirectoryOptions } from '@/hooks/useDirectoryOptions';
+import { useDirectoryOptionCommercials } from '@/hooks/useDirectoryOptionCommercials';
 import { useDirectoryRecord } from '@/hooks/useDirectoryRecord';
 import { useEntityContacts } from '@/hooks/useEntityContacts';
 import { useEntityInteractions } from '@/hooks/useEntityInteractions';
@@ -22,11 +22,11 @@ import { notifySuccess } from '@/services/errors/notify';
 import ClientDirectoryRecordActionsBar from './ClientDirectoryRecordActionsBar';
 import ClientDirectoryRecordIdentityCard from './ClientDirectoryRecordIdentityCard';
 import ClientDirectoryRecordInfoGrid from './ClientDirectoryRecordInfoGrid';
-import { isProspectEntityType } from './clientDirectorySearch';
+import { isProspectEntityType, toSelectedAgenciesScope } from './clientDirectorySearch';
 
 export interface ClientDirectoryRecordDetailsProps {
   routeRef: DirectoryRouteRef;
-  search: DirectoryListInput;
+  search: DirectorySearchState;
   onDeleteSuccess?: () => void;
   relativeNavigation?: {
     previousDisabled: boolean;
@@ -52,10 +52,10 @@ const ClientDirectoryRecordDetails = ({
   const activeAgencyId = sessionState.activeAgencyId;
   const recordQuery = useDirectoryRecord(routeRef, Boolean(sessionState.session));
   const record = recordQuery.data?.record ?? null;
-  const optionsQuery = useDirectoryOptions(
+  const commercialsQuery = useDirectoryOptionCommercials(
     {
       type: isProspectEntityType(record?.entity_type ?? '') ? 'prospect' : 'client',
-      agencyIds: record?.agency_id ? [record.agency_id] : activeAgencyId ? [activeAgencyId] : [],
+      scope: toSelectedAgenciesScope(record?.agency_id ? [record.agency_id] : activeAgencyId ? [activeAgencyId] : []),
       includeArchived: true,
     },
     Boolean(record),
@@ -185,7 +185,7 @@ const ClientDirectoryRecordDetails = ({
               agencies={agenciesQuery.data ?? []}
               userRole={userRole}
               activeAgencyId={activeAgencyId}
-              commercials={optionsQuery.data?.commercials ?? []}
+              commercials={commercialsQuery.data?.commercials ?? []}
               onSave={async (payload) => {
                 await saveClientMutation.mutateAsync(payload);
                 notifySuccess('Client mis à jour.');

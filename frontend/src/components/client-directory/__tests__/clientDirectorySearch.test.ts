@@ -44,7 +44,7 @@ describe('clientDirectorySearch helpers', () => {
     const viewState: DirectorySavedViewState = {
       q: 'sea',
       type: 'client',
-      agencyIds: ['3b298857-b531-4f4d-8dcf-3b9ca62d9d01'],
+      scope: { mode: 'selected_agencies', agencyIds: ['3b298857-b531-4f4d-8dcf-3b9ca62d9d01'] },
       departments: ['33'],
       city: 'Bordeaux',
       cirCommercialIds: ['456cc30e-2c03-44a6-a33d-f4b2f1584405'],
@@ -120,19 +120,43 @@ describe('clientDirectorySearch helpers', () => {
     })).toBe(3);
   });
 
-  it('normalise les paramètres legacy mono-valeur vers les tableaux', () => {
+  it('ignore les paramètres legacy mono-valeur', () => {
     const search = validateDirectorySearch({
       agencyId: '3b298857-b531-4f4d-8dcf-3b9ca62d9d01',
       department: '33',
       cirCommercialId: '456cc30e-2c03-44a6-a33d-f4b2f1584405'
     });
 
-    expect(search.agencyIds).toEqual(['3b298857-b531-4f4d-8dcf-3b9ca62d9d01']);
-    expect(search.departments).toEqual(['33']);
-    expect(search.cirCommercialIds).toEqual(['456cc30e-2c03-44a6-a33d-f4b2f1584405']);
+    expect(search.scope).toEqual({ mode: 'active_agency' });
+    expect(search.departments).toEqual([]);
+    expect(search.cirCommercialIds).toEqual([]);
   });
 
   it('déduplique les filtres multi-sélection', () => {
+    const search = validateDirectorySearch({
+      scope: {
+        mode: 'selected_agencies',
+        agencyIds: [
+          '3b298857-b531-4f4d-8dcf-3b9ca62d9d01',
+          '3b298857-b531-4f4d-8dcf-3b9ca62d9d01'
+        ]
+      },
+      departments: ['33', '33', '64'],
+      cirCommercialIds: [
+        '456cc30e-2c03-44a6-a33d-f4b2f1584405',
+        '456cc30e-2c03-44a6-a33d-f4b2f1584405'
+      ]
+    });
+
+    expect(search.scope).toEqual({
+      mode: 'selected_agencies',
+      agencyIds: ['3b298857-b531-4f4d-8dcf-3b9ca62d9d01']
+    });
+    expect(search.departments).toEqual(['33', '64']);
+    expect(search.cirCommercialIds).toEqual(['456cc30e-2c03-44a6-a33d-f4b2f1584405']);
+  });
+
+  it('ignore les paramètres legacy multi-sélection', () => {
     const search = validateDirectorySearch({
       agencyIds: [
         '3b298857-b531-4f4d-8dcf-3b9ca62d9d01',
@@ -141,8 +165,8 @@ describe('clientDirectorySearch helpers', () => {
       departments: ['33', '33', '64']
     });
 
-    expect(search.agencyIds).toEqual(['3b298857-b531-4f4d-8dcf-3b9ca62d9d01']);
-    expect(search.departments).toEqual(['33', '64']);
+    expect(search.scope).toEqual({ mode: 'active_agency' });
+    expect(search.departments).toEqual([]);
   });
 
   it('considère la recherche libre comme un état actif', () => {

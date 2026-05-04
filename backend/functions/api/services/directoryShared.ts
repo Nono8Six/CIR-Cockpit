@@ -3,17 +3,37 @@ import { and, asc, desc, inArray, isNull, sql } from 'drizzle-orm';
 import { agencies, entities, profiles } from '../../../drizzle/schema.ts';
 import type {
   DirectoryCitySuggestionsInput,
+  DirectoryOptionsCitiesInput,
+  DirectoryOptionsFacetInput,
   DirectoryCommercialOption,
   DirectoryCompanySearchResult,
   DirectoryListInput,
   DirectoryListRow,
-  DirectoryOptionsInput,
+  DirectoryScopeInput,
   DirectorySortingRule
 } from '../../../../shared/schemas/directory.schema.ts';
 import type { AuthContext } from '../types.ts';
+import { httpError } from '../middleware/errorHandler.ts';
 import { ensureAgencyAccess } from './dataAccess.ts';
 
 export type SqlCondition = ReturnType<typeof sql>;
+export type ResolvedDirectoryScope = {
+  mode: 'single_agency' | 'multi_agency' | 'global_read';
+  agencyIds: string[];
+  isGlobal: boolean;
+};
+export type DirectoryResponseMeta = {
+  scope: {
+    mode: ResolvedDirectoryScope['mode'];
+    agencyIds: string[];
+  };
+};
+type DirectoryScopedBaseInput = {
+  scope: DirectoryScopeInput;
+  type: DirectoryListInput['type'] | DirectoryOptionsFacetInput['type'] | DirectoryOptionsCitiesInput['type'] | DirectoryCitySuggestionsInput['type'];
+  includeArchived?: boolean;
+  filters?: Pick<DirectoryListInput['filters'], 'includeArchived'>;
+};
 
 export const PROSPECT_ENTITY_TYPE_WHERE = sql<boolean>`
   (
@@ -57,7 +77,7 @@ export const numericDepartmentSql = sql<number | null>`
 `;
 
 const toEntityTypeCondition = (
-  type: DirectoryListInput['type'] | DirectoryOptionsInput['type'] | DirectoryCitySuggestionsInput['type']
+  type: DirectoryListInput['type'] | DirectoryOptionsFacetInput['type'] | DirectoryOptionsCitiesInput['type'] | DirectoryCitySuggestionsInput['type']
 ): SqlCondition | undefined => {
   if (type === 'client') {
     return sql<boolean>`${entities.entity_type} = 'Client'`;
@@ -70,6 +90,10 @@ const toEntityTypeCondition = (
   return undefined;
 };
 
+const getIncludeArchived = (
+  input: DirectoryScopedBaseInput
+): boolean => input.filters?.includeArchived ?? Boolean(input.includeArchived);
+
 export const resolveAccessibleAgencyIds = (
   authContext: AuthContext,
   agencyIds: string[]
@@ -80,6 +104,92 @@ export const resolveAccessibleAgencyIds = (
 
   return Array.from(new Set(agencyIds.map((agencyId) => ensureAgencyAccess(authContext, agencyId))));
 };
+
+const resolveActiveAgencyId = (authContext: AuthContext): string => {
+  const activeAgencyId = authContext.activeAgencyId ?? (
+    authContext.agencyIds.length === 1 ? authContext.agencyIds[0] : null
+  );
+
+  if (!activeAgencyId) {
+    throw httpError(400, 'AGENCY_ID_INVALID', 'Agence active requise.');
+  }
+
+  return ensureAgencyAccess(authContext, activeAgencyId);
+};
+
+const toResolvedDirectoryScope = (agencyIds: string[]): ResolvedDirectoryScope => ({
+  mode: agencyIds.length === 1 ? 'single_agency' : 'multi_agency',
+  agencyIds,
+  isGlobal: false
+});
+
+export const resolveDirectoryScope = (
+  authContext: AuthContext,
+  scope: DirectoryScopeInput,
+  options: { allowAllAccessible?: boolean } = {}
+): ResolvedDirectoryScope => {
+  if (scope.mode === 'active_agency') {
+    return toResolvedDirectoryScope([resolveActiveAgencyId(authContext)]);
+  }
+
+  if (scope.mode === 'selected_agencies') {
+    return toResolvedDirectoryScope(
+      Array.from(new Set(scope.agencyIds.map((agencyId) => ensureAgencyAccess(authContext, agencyId))))
+    );
+  }
+
+  if (!options.allowAllAccessible) {
+    throw httpError(
+      400,
+      'INVALID_PAYLOAD',
+      'Scope annuaire trop large pour cette operation.'
+    );
+  }
+
+  if (authContext.isSuperAdmin) {
+    return {
+      mode: 'global_read',
+      agencyIds: [],
+      isGlobal: true
+    };
+  }
+
+  if (authContext.agencyIds.length === 0) {
+    throw httpError(403, 'AUTH_FORBIDDEN', 'Acces interdit.');
+  }
+
+  return toResolvedDirectoryScope(authContext.agencyIds);
+};
+
+export const toDirectoryScopeCondition = (
+  resolvedScope: ResolvedDirectoryScope
+): SqlCondition | undefined => {
+  if (resolvedScope.isGlobal) {
+    return undefined;
+  }
+
+  if (resolvedScope.agencyIds.length === 0) {
+    return sql<boolean>`false`;
+  }
+
+  if (resolvedScope.agencyIds.length === 1) {
+    return sql<boolean>`${entities.agency_id} = ${resolvedScope.agencyIds[0]}`;
+  }
+
+  return inArray(entities.agency_id, resolvedScope.agencyIds);
+};
+
+export const toDirectoryResponseMeta = (
+  resolvedScope: ResolvedDirectoryScope,
+  includeResolvedScope?: boolean
+): DirectoryResponseMeta | undefined => includeResolvedScope
+  ? {
+    scope: {
+      mode: resolvedScope.mode,
+      agencyIds: resolvedScope.agencyIds
+    }
+  }
+  : undefined;
 
 const buildTextInCondition = (
   column: SqlCondition,
@@ -129,6 +239,30 @@ export const toAccessibleAgencyCondition = (
   return inArray(entities.agency_id, authContext.agencyIds);
 };
 
+// Role-scoped variant (no listing-style "explicit choice required" semantic).
+// Use for record-by-id reads where the natural key already isolates a single row
+// and we only need to enforce row-level access by role:
+//   - super admin: no agency filter
+//   - member of >=1 agencies: restrict to those agencies
+//   - member of 0 agencies: deny (false)
+export const toRoleScopedAgencyCondition = (
+  authContext: AuthContext
+): SqlCondition | undefined => {
+  if (authContext.isSuperAdmin) {
+    return undefined;
+  }
+
+  if (authContext.agencyIds.length === 0) {
+    return sql<boolean>`false`;
+  }
+
+  if (authContext.agencyIds.length === 1) {
+    return sql<boolean>`${entities.agency_id} = ${authContext.agencyIds[0]}`;
+  }
+
+  return inArray(entities.agency_id, authContext.agencyIds);
+};
+
 export const escapeLikePattern = (value: string): string =>
   value.toLowerCase().replaceAll('%', '').replaceAll('_', '');
 
@@ -151,17 +285,17 @@ const buildSearchCondition = (query: string | undefined): SqlCondition | undefin
 
 export const buildBaseWhereClause = (
   authContext: AuthContext,
-  input: DirectoryOptionsInput | DirectoryListInput | DirectoryCitySuggestionsInput
+  input: DirectoryScopedBaseInput
 ): SqlCondition => {
   const conditions: SqlCondition[] = [];
-  const accessibleAgencyCondition = toAccessibleAgencyCondition(authContext, input.agencyIds);
+  const accessibleAgencyCondition = toDirectoryScopeCondition(resolveDirectoryScope(authContext, input.scope));
   const entityTypeCondition = toEntityTypeCondition(input.type);
 
   if (accessibleAgencyCondition) {
     conditions.push(accessibleAgencyCondition);
   }
 
-  if (!input.includeArchived) {
+  if (!getIncludeArchived(input)) {
     conditions.push(isNull(entities.archived_at));
   }
 
@@ -185,28 +319,28 @@ export const buildListWhereClause = (
   input: DirectoryListInput
 ): SqlCondition => {
   const conditions: SqlCondition[] = [buildBaseWhereClause(authContext, input)];
-  const searchCondition = buildSearchCondition(input.q);
+  const searchCondition = buildSearchCondition(input.filters.q);
 
   if (searchCondition) {
     conditions.push(searchCondition);
   }
 
-  const normalizedDepartments = input.departments.map((department) => department.toLowerCase());
+  const normalizedDepartments = input.filters.departments.map((department) => department.toLowerCase());
   const departmentCondition = buildTextInCondition(normalizedDepartmentSql, normalizedDepartments);
   if (departmentCondition) {
     conditions.push(departmentCondition);
   }
 
-  if (input.city) {
-    conditions.push(sql<boolean>`${normalizedCitySql} = ${input.city.toLowerCase()}`);
+  if (input.filters.city) {
+    conditions.push(sql<boolean>`${normalizedCitySql} = ${input.filters.city.toLowerCase()}`);
   }
 
-  if (input.cirCommercialIds.length === 1) {
-    conditions.push(sql<boolean>`${entities.cir_commercial_id} = ${input.cirCommercialIds[0]}`);
+  if (input.filters.cirCommercialIds.length === 1) {
+    conditions.push(sql<boolean>`${entities.cir_commercial_id} = ${input.filters.cirCommercialIds[0]}`);
   }
 
-  if (input.cirCommercialIds.length > 1) {
-    conditions.push(inArray(entities.cir_commercial_id, input.cirCommercialIds));
+  if (input.filters.cirCommercialIds.length > 1) {
+    conditions.push(inArray(entities.cir_commercial_id, input.filters.cirCommercialIds));
   }
 
   return and(...conditions) ?? sql<boolean>`true`;

@@ -14,7 +14,7 @@ import {
   normalizeClientKind,
   normalizedOfficialDataSourceSql,
   PROSPECT_ENTITY_TYPE_WHERE,
-  toAccessibleAgencyCondition,
+  toRoleScopedAgencyCondition,
 } from "./directoryShared.ts";
 
 export const getDirectoryRecord = async (
@@ -32,10 +32,7 @@ export const getDirectoryRecord = async (
     )
     : and(PROSPECT_ENTITY_TYPE_WHERE, eq(entities.id, route.id));
 
-  const accessibleAgencyCondition = toAccessibleAgencyCondition(
-    authContext,
-    [],
-  );
+  const accessibleAgencyCondition = toRoleScopedAgencyCondition(authContext);
   const whereClause = accessibleAgencyCondition
     ? and(routeCondition, accessibleAgencyCondition)
     : routeCondition;

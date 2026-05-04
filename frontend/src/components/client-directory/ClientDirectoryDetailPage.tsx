@@ -1,23 +1,25 @@
 import { useCallback, useMemo } from 'react';
 
-import type { DirectoryListInput, DirectoryRouteRef } from 'shared/schemas/directory.schema';
+import type { DirectoryRouteRef, DirectorySearchState } from 'shared/schemas/directory.schema';
 import { useCanGoBack, useNavigate } from '@tanstack/react-router';
 
 import ClientDirectoryRecordDetails from './ClientDirectoryRecordDetails';
+import { toDirectoryListInput } from './clientDirectorySearch';
 import { getDirectoryRouteRefFromRow } from './directoryRouting';
 import { useAppSessionStateContext } from '@/hooks/useAppSession';
 import { useDirectoryPage } from '@/hooks/useDirectoryPage';
 
 type ClientDirectoryDetailPageProps = {
   routeRef: DirectoryRouteRef;
-  search: DirectoryListInput;
+  search: DirectorySearchState;
 };
 
 const ClientDirectoryDetailPage = ({ routeRef, search }: ClientDirectoryDetailPageProps) => {
   const canGoBack = useCanGoBack();
   const navigate = useNavigate();
   const sessionState = useAppSessionStateContext();
-  const directoryPageQuery = useDirectoryPage(search, sessionState.canLoadData);
+  const directoryListInput = useMemo(() => toDirectoryListInput(search), [search]);
+  const directoryPageQuery = useDirectoryPage(directoryListInput, sessionState.canLoadData);
 
   const navigateToRouteRef = useCallback((targetRouteRef: DirectoryRouteRef) => {
     if (targetRouteRef.kind === 'client') {
