@@ -1,5 +1,4 @@
 import type { Agency, UserRole } from '@/types';
-import type { ClientPayload } from '@/services/clients/saveClient';
 import type { EntityPayload } from '@/services/entities/saveEntity';
 import { useProspectFormDialog } from '@/hooks/useProspectFormDialog';
 import { useProspectFormDialogFields } from '@/hooks/useProspectFormDialogFields';
@@ -35,8 +34,6 @@ type ProspectFormDialogProps = {
   activeAgencyId: string | null;
   onSave: (payload: EntityPayload) => Promise<void>;
 };
-
-const createClientFallback = async (): Promise<void> => undefined;
 
 const ProspectFormDialogLegacy = ({
   open,
@@ -125,7 +122,6 @@ const ProspectFormDialog = (props: ProspectFormDialogProps) => {
         allowedIntents={['prospect']}
         defaultIntent="prospect"
         sourceLabel="Creation"
-        onSaveClient={createClientFallback as (payload: ClientPayload) => Promise<void>}
         onSaveProspect={props.onSave}
       />
     );

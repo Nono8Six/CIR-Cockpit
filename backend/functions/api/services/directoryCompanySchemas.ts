@@ -71,7 +71,7 @@ export const enterpriseApiEstablishmentSchema = z.looseObject({
 const enterpriseApiDirectorSchema = z.looseObject({
   nom: z.string().trim().nullable().optional(),
   prenoms: z.string().trim().nullable().optional(),
-  annee_de_naissance: z.number().int().nonnegative().nullable().optional(),
+  annee_de_naissance: enterpriseApiNullableYearSchema,
   qualite: z.string().trim().nullable().optional(),
   nationalite: z.string().trim().nullable().optional(),
 });

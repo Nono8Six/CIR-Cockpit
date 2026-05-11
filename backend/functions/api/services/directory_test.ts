@@ -12,6 +12,8 @@ import {
   rankIndividualDuplicate,
   type DirectoryDuplicateLookupRow
 } from './directory.ts';
+import { mapEnterpriseApiCompanyDetails } from './directoryCompanyDetailsMapper.ts';
+import { enterpriseApiSearchResponseSchema } from './directoryCompanySchemas.ts';
 
 const createDirectoryListRow = (overrides: Partial<DirectoryListRow> = {}): DirectoryListRow => ({
   id: '11111111-1111-1111-1111-111111111111',
@@ -80,6 +82,32 @@ Deno.test('buildCompanySearchUrl includes optional filters and pagination', () =
   assertEquals(url.searchParams.get('per_page'), '25');
   assertEquals(url.searchParams.get('ville'), 'Paris');
   assertEquals(url.searchParams.get('departement'), '75');
+});
+
+Deno.test('enterprise API details accepts string director birth years', () => {
+  const parsed = enterpriseApiSearchResponseSchema.parse({
+    results: [{
+      siren: '399685650',
+      nom_complet: 'LE PETIT BASQUE',
+      nom_raison_sociale: 'LE PETIT BASQUE',
+      caractere_employeur: 'O',
+      annee_tranche_effectif_salarie: '2023',
+      nombre_etablissements: 3,
+      nombre_etablissements_ouverts: 2,
+      dirigeants: [{
+        nom: 'LEON (LEON)',
+        prenoms: 'PIERRE',
+        annee_de_naissance: '1959',
+        qualite: 'Président',
+        nationalite: 'Française'
+      }],
+      matching_etablissements: []
+    }]
+  });
+
+  const details = mapEnterpriseApiCompanyDetails(parsed.results[0]);
+
+  assertEquals(details.directors[0]?.birth_year, 1959);
 });
 
 Deno.test('buildCompanyDuplicateReason prioritizes SIRET duplicates', () => {

@@ -49,8 +49,8 @@ interface UseOnboardingFlowActionsInput {
       }) => void)
     | undefined;
   onOpenChange: (open: boolean) => void;
-  onSaveClient: (payload: ClientPayload) => Promise<SavedEntityResult | void>;
-  onSaveProspect: (payload: EntityPayload) => Promise<SavedEntityResult | void>;
+  onSaveClient?: (payload: ClientPayload) => Promise<SavedEntityResult | void>;
+  onSaveProspect?: (payload: EntityPayload) => Promise<SavedEntityResult | void>;
   onboardingConfig: Parameters<typeof useOnboardingIntentControls>[0]['onboardingConfig'];
   open: boolean;
   selectedCompany: DirectoryCompanySearchResult | undefined;

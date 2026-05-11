@@ -1,7 +1,7 @@
 # Stack Technique - CIR Cockpit
 
 > Reference documentaire de la stack du projet.
-> Derniere mise a jour: 2026-03-17
+> Derniere mise a jour: 2026-05-04
 > Etat verifie contre les manifests et configs du repo.
 
 ## Resume executif
@@ -34,6 +34,8 @@ Cette page doit suivre en priorite:
 | Gate rapide | `pnpm run qa:fast` | `package.json` |
 | Gate final | `pnpm run qa` | `package.json` |
 | Audit deps reseau | `pnpm run qa:audit` | `package.json` |
+| CLI Supabase locale | `2.98.1` | `supabase --version` |
+| Overrides securite pnpm | `flatted@3.4.2`, `picomatch@2.3.2/4.0.4`, `lodash-es@4.18.1` | `package.json` |
 
 ## Frontend
 
@@ -43,7 +45,7 @@ Cette page doit suivre en priorite:
 |-------------|---------|------|
 | React | `19.2.4` | UI runtime |
 | React DOM | `19.2.4` | rendu DOM |
-| Vite | `7.3.1` | dev server + build |
+| Vite | `7.3.2` | dev server + build |
 | TypeScript | `5.9.3` | typage strict |
 | Tailwind CSS | `4.1.18` | styling utilitaire |
 | `@tailwindcss/vite` | `4.1.18` | integration Vite |
@@ -57,7 +59,7 @@ Cette page doit suivre en priorite:
 | TanStack Router | `1.162.9` | routing SPA |
 | TanStack Query | `5.90.21` | cache, queries, mutations |
 | Zustand | `5.0.11` | store d'erreurs |
-| Supabase JS | `2.95.3` | auth, realtime, acces donnees et API |
+| Supabase JS | `2.97.0` | auth, realtime, acces donnees et API |
 
 ### Formulaires et validation
 
@@ -79,7 +81,7 @@ Cette page doit suivre en priorite:
 | Sonner | `2.0.7` | notifications |
 | Lucide React | `0.564.0` | icones |
 | `react-error-boundary` | `6.1.0` | error boundary |
-| `react-day-picker` | `9.13.1` | calendrier |
+| `react-day-picker` | `9.13.2` | calendrier |
 | `cmdk` | `1.1.1` | command palette / recherche |
 | `class-variance-authority` | `0.7.1` | variants Tailwind |
 | `clsx` | `2.1.1` | composition de classes |
@@ -148,7 +150,7 @@ Autrement dit: le frontend ne repose pas sur une couche API unique. Le repo comb
 |-------------|---------|------|
 | Drizzle ORM | `0.45.1` | queries SQL typees |
 | `postgres` | `3.4.8` | driver SQL |
-| Supabase JS | `2.95.3` | auth/admin clients et contexte utilisateur |
+| Supabase JS | `2.97.0` | auth/admin clients et contexte utilisateur |
 | Zod | `4.3.6` | validation input/output |
 | `jose` | `5.9.6` | verification JWT via JWKS |
 
@@ -196,7 +198,7 @@ Cet alignement est verifie par `pnpm run repo:check`.
 | `@testing-library/jest-dom` | `6.6.3` | matchers DOM |
 | `vitest-axe` | `0.1.0` | assertions accessibilite |
 | jsdom | `25.0.1` | environnement DOM de test |
-| Playwright | `1.49.2` | E2E navigateur |
+| Playwright | `1.58.2` | E2E navigateur |
 
 ### Lint / typecheck
 

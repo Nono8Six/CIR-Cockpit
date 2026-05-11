@@ -40,6 +40,7 @@ Deno.test('tRPC unknown procedure returns NOT_FOUND with aligned appCode/httpSta
   assertEquals(readString(data, 'code'), 'NOT_FOUND');
   assertEquals(readString(data, 'appCode'), 'NOT_FOUND');
   assertEquals(readNumber(data, 'httpStatus'), 404);
+  assertEquals(data.stack, undefined);
   assertMatch(readString(data, 'requestId') ?? '', /^[0-9a-fA-F-]{36}$/);
 });
 
@@ -56,6 +57,7 @@ Deno.test('tRPC routes reject missing Authorization header', async () => {
   assertEquals(readString(data, 'code'), 'UNAUTHORIZED');
   assertEquals(readString(data, 'appCode'), 'AUTH_REQUIRED');
   assertEquals(readNumber(data, 'httpStatus'), 401);
+  assertEquals(data.stack, undefined);
 });
 
 Deno.test('tRPC routes ignore x-client-authorization fallback header', async () => {

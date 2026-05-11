@@ -2,6 +2,7 @@ import { ShieldCheck, Sparkles } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import type { OnboardingSourceLabel } from './entityOnboarding.types';
 
 type EntityOnboardingStepRailStep = {
   id: string;
@@ -13,7 +14,7 @@ interface EntityOnboardingStepRailProps {
   className?: string;
   currentIndex: number;
   progress: number;
-  sourceLabel: string;
+  sourceLabel: OnboardingSourceLabel;
   steps: EntityOnboardingStepRailStep[];
   onStepSelect?: (stepId: string) => void;
 }

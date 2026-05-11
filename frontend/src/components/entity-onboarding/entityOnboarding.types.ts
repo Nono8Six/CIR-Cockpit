@@ -10,6 +10,13 @@ import { accountTypeSchema } from 'shared/schemas/client.schema';
 
 export type OnboardingIntent = 'client' | 'prospect';
 export type OnboardingMode = 'create' | 'convert';
+export type OnboardingSourceLabel =
+  | 'Annuaire'
+  | 'Cockpit'
+  | 'Edition client'
+  | 'Fiche prospect'
+  | 'Creation'
+  | 'Conversion';
 export type AccountType = z.infer<typeof accountTypeSchema>;
 export type EntityOnboardingSeed = {
   id?: string;

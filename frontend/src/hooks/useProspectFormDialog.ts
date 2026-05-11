@@ -32,6 +32,11 @@ type UseProspectFormDialogInput = {
   onOpenChange: (open: boolean) => void;
 };
 
+const resolveProspectDialogEntityType = (
+  entityType: string | null | undefined
+): EntityPayload['entity_type'] =>
+  entityType === 'Fournisseur' ? 'Fournisseur' : 'Prospect';
+
 export const useProspectFormDialog = ({
   open,
   prospect,
@@ -99,7 +104,7 @@ export const useProspectFormDialog = ({
 
     const payload: EntityPayload = {
       id: prospect?.id,
-      entity_type: prospect?.entity_type ?? 'Prospect',
+      entity_type: resolveProspectDialogEntityType(prospect?.entity_type),
       name: values.name,
       agency_id: resolvedAgencyId,
       city: values.city,

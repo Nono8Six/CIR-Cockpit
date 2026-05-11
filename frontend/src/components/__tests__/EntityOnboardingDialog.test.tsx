@@ -100,6 +100,74 @@ const makeCompanyDetails = (overrides: Record<string, unknown> = {}) => ({
   ...overrides
 });
 
+const TEST_AGENCY_ID = '00000000-0000-4000-8000-000000000001';
+
+const TEST_AGENCIES = [{
+  id: TEST_AGENCY_ID,
+  name: 'CIR Bordeaux',
+  archived_at: null,
+  created_at: '2026-03-09T00:00:00.000Z',
+  updated_at: '2026-03-09T00:00:00.000Z'
+}];
+
+const renderOnboardingDialog = (
+  overrides: Partial<Parameters<typeof EntityOnboardingDialog>[0]> = {}
+) =>
+  renderWithProviders(
+    <EntityOnboardingDialog
+      open
+      onOpenChange={vi.fn()}
+      agencies={TEST_AGENCIES}
+      userRole="super_admin"
+      activeAgencyId={TEST_AGENCY_ID}
+      commercials={[]}
+      {...overrides}
+    />
+  );
+
+const reachManualReviewStep = async (
+  user: ReturnType<typeof userEvent.setup>,
+  values: {
+    name: string;
+    city: string;
+    address?: string;
+    postalCode?: string;
+    clientNumber?: string;
+  }
+) => {
+  await user.click(await screen.findByRole('button', { name: /saisie manuelle/i }));
+  await user.click(screen.getByRole('button', { name: /^continuer$/i }));
+
+  const companyNameInput = await screen.findByLabelText(/nom de la societe/i);
+  const cityInput = await screen.findByLabelText(/^ville$/i);
+
+  await user.clear(companyNameInput);
+  await user.type(companyNameInput, values.name);
+  await user.clear(cityInput);
+  await user.type(cityInput, values.city);
+
+  if (values.address) {
+    const addressInput = await screen.findByLabelText(/^adresse$/i);
+    await user.clear(addressInput);
+    await user.type(addressInput, values.address);
+  }
+
+  if (values.postalCode) {
+    const postalCodeInput = await screen.findByLabelText(/^code postal$/i);
+    await user.clear(postalCodeInput);
+    await user.type(postalCodeInput, values.postalCode);
+  }
+
+  if (values.clientNumber) {
+    const clientNumberInput = await screen.findByLabelText(/^numero de compte$/i);
+    await user.clear(clientNumberInput);
+    await user.type(clientNumberInput, values.clientNumber);
+  }
+
+  await user.click(screen.getByRole('button', { name: /^continuer$/i }));
+  expect(await screen.findByText(/confirmation finale/i)).toBeInTheDocument();
+};
+
 describe('EntityOnboardingDialog', () => {
   beforeEach(() => {
     useDirectoryCompanySearchMock.mockReset();
@@ -605,6 +673,156 @@ describe('EntityOnboardingDialog', () => {
 
     await user.click(screen.getByRole('button', { name: /finances/i }));
     expect(screen.getByText(/1.?250.?000/)).toBeInTheDocument();
+  });
+
+  it('keeps company selection usable when enriched details fail', async () => {
+    const user = userEvent.setup();
+    useDirectoryCompanySearchMock.mockReturnValue({
+      isFetching: false,
+      data: {
+        companies: [{
+          name: 'LE PETIT BASQUE',
+          official_name: 'LE PETIT BASQUE',
+          city: "SAINT-MEDARD-D'EYRANS",
+          postal_code: '33650',
+          department: '33',
+          address: "PARC D'ACTIVITE LA PRADE",
+          siret: '39968565000018',
+          siren: '399685650',
+          naf_code: '10.51A',
+          match_quality: 'close',
+          match_explanation: 'Correspondance approchante',
+          official_data_source: 'api-recherche-entreprises',
+          official_data_synced_at: '2026-05-05T17:47:18.606Z',
+          is_head_office: true,
+          is_former_head_office: false,
+          establishment_status: 'open',
+          establishment_closed_at: null,
+          commercial_name: null,
+          company_establishments_count: 3,
+          company_open_establishments_count: 2
+        }]
+      }
+    });
+    useDirectoryCompanyDetailsMock.mockReturnValue({
+      isLoading: false,
+      isError: true,
+      data: undefined
+    });
+
+    renderWithProviders(
+      <EntityOnboardingDialog
+        open
+        onOpenChange={vi.fn()}
+        agencies={[{
+          id: 'agency-1',
+          name: 'CIR Bordeaux',
+          archived_at: null,
+          created_at: '2026-03-09T00:00:00.000Z',
+          updated_at: '2026-03-09T00:00:00.000Z'
+        }]}
+        userRole="super_admin"
+        activeAgencyId="agency-1"
+        commercials={[]}
+        allowedIntents={['client']}
+        onSaveClient={vi.fn(async () => undefined)}
+        onSaveProspect={vi.fn(async () => undefined)}
+      />
+    );
+
+    const continueButton = await screen.findByRole('button', { name: /^continuer$/i });
+
+    await user.click(screen.getByRole('button', { name: /le petit basque/i }));
+
+    expect(screen.getByText(/données enrichies indisponibles/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /33650 saint-medard/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /33650 saint-medard/i }));
+    expect(continueButton).toBeEnabled();
+  });
+
+  it('surfaces a controlled error when client save callback is missing', async () => {
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
+
+    renderOnboardingDialog({
+      onOpenChange,
+      allowedIntents: ['client'],
+      onSaveProspect: vi.fn(async () => undefined)
+    });
+
+    await reachManualReviewStep(user, {
+      name: 'Client Sans Callback',
+      city: 'Bordeaux',
+      address: '1 rue des Tests',
+      postalCode: '33000',
+      clientNumber: '1001'
+    });
+    await user.click(screen.getByRole('button', { name: /creer le client/i }));
+
+    expect(
+      (await screen.findAllByText(/action d'enregistrement client indisponible/i)).length
+    ).toBeGreaterThan(0);
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+  });
+
+  it('surfaces a controlled error when prospect save callback is missing', async () => {
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
+
+    renderOnboardingDialog({
+      onOpenChange,
+      allowedIntents: ['prospect'],
+      defaultIntent: 'prospect',
+      onSaveClient: vi.fn(async () => undefined)
+    });
+
+    await reachManualReviewStep(user, {
+      name: 'Prospect Sans Callback',
+      city: 'Bordeaux'
+    });
+    await user.click(screen.getByRole('button', { name: /creer le prospect/i }));
+
+    expect(
+      (await screen.findAllByText(/action d'enregistrement prospect indisponible/i)).length
+    ).toBeGreaterThan(0);
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+  });
+
+  it('blocks prospect conversion when the client save callback is missing', async () => {
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
+
+    renderOnboardingDialog({
+      onOpenChange,
+      mode: 'convert',
+      allowedIntents: ['client'],
+      initialEntity: {
+        id: 'prospect-1',
+        entity_type: 'Prospect',
+        name: 'Prospect A Convertir',
+        address: '2 rue des Tests',
+        postal_code: '33000',
+        department: '33',
+        city: 'Bordeaux',
+        agency_id: TEST_AGENCY_ID
+      }
+    });
+
+    await user.click(screen.getByRole('button', { name: /^continuer$/i }));
+    await reachManualReviewStep(user, {
+      name: 'Prospect A Convertir',
+      city: 'Bordeaux',
+      address: '2 rue des Tests',
+      postalCode: '33000',
+      clientNumber: '1002'
+    });
+    await user.click(screen.getByRole('button', { name: /convertir en client/i }));
+
+    expect(
+      (await screen.findAllByText(/action d'enregistrement client indisponible/i)).length
+    ).toBeGreaterThan(0);
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
   });
 
   it('supports arrow-key navigation for both onboarding radio groups', async () => {

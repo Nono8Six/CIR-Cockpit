@@ -310,7 +310,7 @@ describe('entities RPC services', () => {
     ).toThrow();
   });
 
-  it('builds saveEntity payload for prospect and client entities', async () => {
+  it('builds saveEntity payload for prospect and supplier entities', async () => {
     mockSafeRpc.mockReturnValue({} as never);
 
     saveEntity({
@@ -344,15 +344,13 @@ describe('entities RPC services', () => {
 
     saveEntity({
       id: 'entity-3',
-      entity_type: 'Client',
-      name: 'Client 1',
+      entity_type: 'Fournisseur',
+      name: 'Supplier 1',
       agency_id: 'agency-1',
       city: 'Paris',
-      client_number: '1001',
       address: '1 rue de Paris',
       postal_code: '75001',
-      department: '75',
-      account_type: 'term'
+      department: '75'
     });
 
     [call, parser] = mockSafeRpc.mock.calls[1] as [SafeRpcCall, SafeRpcParser, string];
@@ -362,20 +360,17 @@ describe('entities RPC services', () => {
     expect(entitiesPost).toHaveBeenCalledWith({
           action: 'save',
           agency_id: 'agency-1',
-          entity_type: 'Client',
+          entity_type: 'Fournisseur',
           id: 'entity-3',
           entity: {
-            name: 'Client 1',
+            name: 'Supplier 1',
             city: 'Paris',
             address: '1 rue de Paris',
             postal_code: '75001',
             department: '75',
             siret: undefined,
             notes: undefined,
-            agency_id: 'agency-1',
-            client_number: '1001',
-            client_kind: 'company',
-            account_type: 'term'
+            agency_id: 'agency-1'
           }
         },
       {}

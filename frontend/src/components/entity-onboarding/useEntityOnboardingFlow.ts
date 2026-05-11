@@ -114,6 +114,7 @@ export const useEntityOnboardingFlow = ({
     clearOfficialSelection,
     companyGroups,
     companyDetails,
+    companyDetailsUnavailable,
     companyDetailsLoading,
     displaySelectedCompany,
     duplicateMatches,
@@ -262,6 +263,7 @@ export const useEntityOnboardingFlow = ({
     duplicatesFetching,
 
     companyDetails,
+    companyDetailsUnavailable,
     companyDetailsLoading,
 
     missingChecklist,

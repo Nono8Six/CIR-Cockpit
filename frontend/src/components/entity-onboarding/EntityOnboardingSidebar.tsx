@@ -25,6 +25,7 @@ interface EntityOnboardingSidebarProps {
   company: DirectoryCompanySearchResult | undefined;
   selectedGroup: CompanySearchGroup | null;
   companyDetails: DirectoryCompanyDetails | undefined;
+  companyDetailsUnavailable: boolean;
   companyDetailsLoading: boolean;
   duplicateMatches: DuplicateMatch[];
   stepError: string | null;
@@ -59,6 +60,7 @@ const EntityOnboardingSidebar = ({
   company,
   selectedGroup,
   companyDetails,
+  companyDetailsUnavailable,
   companyDetailsLoading,
   duplicateMatches,
   stepError,
@@ -93,6 +95,7 @@ const EntityOnboardingSidebar = ({
             company={company}
             selectedGroup={selectedGroup}
             companyDetails={companyDetails}
+            companyDetailsUnavailable={companyDetailsUnavailable}
             companyDetailsLoading={companyDetailsLoading}
           />
 

@@ -16,12 +16,16 @@ vi.mock('@/components/EntityOnboardingDialog', () => ({
     open,
     allowedIntents,
     defaultIntent,
-    sourceLabel
+    sourceLabel,
+    onSaveClient,
+    onSaveProspect
   }: {
     open: boolean;
     allowedIntents?: string[];
     defaultIntent?: string;
     sourceLabel?: string;
+    onSaveClient?: unknown;
+    onSaveProspect?: unknown;
   }) => (
     <div
       data-testid="entity-onboarding-dialog"
@@ -29,6 +33,8 @@ vi.mock('@/components/EntityOnboardingDialog', () => ({
       data-allowed-intents={allowedIntents?.join(',') ?? ''}
       data-default-intent={defaultIntent ?? ''}
       data-source-label={sourceLabel ?? ''}
+      data-has-save-client={String(Boolean(onSaveClient))}
+      data-has-save-prospect={String(Boolean(onSaveProspect))}
     />
   )
 }));
@@ -67,5 +73,7 @@ describe('CockpitFormDialogs', () => {
     expect(dialog).toHaveAttribute('data-allowed-intents', 'prospect');
     expect(dialog).toHaveAttribute('data-default-intent', 'prospect');
     expect(dialog).toHaveAttribute('data-source-label', 'Cockpit');
+    expect(dialog).toHaveAttribute('data-has-save-client', 'false');
+    expect(dialog).toHaveAttribute('data-has-save-prospect', 'true');
   });
 });

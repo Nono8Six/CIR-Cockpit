@@ -13,6 +13,20 @@ type FormattedErrorData = {
   requestId?: string;
 };
 
+type PublicTrpcShapeData = Record<string, unknown>;
+
+const toPublicShapeData = (data: PublicTrpcShapeData): PublicTrpcShapeData => {
+  const publicData: PublicTrpcShapeData = {};
+
+  for (const [key, value] of Object.entries(data)) {
+    if (key !== 'stack') {
+      publicData[key] = value;
+    }
+  }
+
+  return publicData;
+};
+
 const formatIssuePath = (path: PropertyKey[]): string =>
   path.length === 0 ? 'payload' : path.map(String).join('.');
 
@@ -107,7 +121,7 @@ const t = initTRPC.context<TrpcContext>().create({
     return {
       ...shape,
       data: {
-        ...shape.data,
+        ...toPublicShapeData(shape.data),
         ...toFormattedErrorData(error, ctx?.requestId)
       }
     };

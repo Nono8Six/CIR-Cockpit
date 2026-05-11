@@ -26,9 +26,6 @@ type CockpitFormDialogsProps = {
   onConvertClient: (payload: ClientPayload) => Promise<void>;
 };
 
-const saveClientFallback: (payload: ClientPayload) => Promise<void> = async () => undefined;
-const saveProspectFallback: (payload: EntityPayload) => Promise<void> = async () => undefined;
-
 const CockpitFormDialogs = ({
   agencies,
   userRole,
@@ -68,7 +65,6 @@ const CockpitFormDialogs = ({
         allowedIntents={['prospect']}
         defaultIntent="prospect"
         sourceLabel="Cockpit"
-        onSaveClient={saveClientFallback}
         onSaveProspect={onSaveProspect}
       />
       {selectedEntity && (
@@ -92,7 +88,6 @@ const CockpitFormDialogs = ({
           initialEntity={convertTarget}
           sourceLabel="Cockpit"
           onSaveClient={onConvertClient}
-          onSaveProspect={saveProspectFallback}
         />
       ) : null}
     </>

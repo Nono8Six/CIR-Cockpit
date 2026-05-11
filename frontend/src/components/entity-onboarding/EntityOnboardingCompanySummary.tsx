@@ -13,6 +13,7 @@ interface EntityOnboardingCompanySummaryProps {
   company: DirectoryCompanySearchResult | undefined;
   selectedGroup: CompanySearchGroup | null;
   companyDetails: DirectoryCompanyDetails | undefined;
+  companyDetailsUnavailable: boolean;
   companyDetailsLoading: boolean;
 }
 
@@ -42,6 +43,7 @@ export const EntityOnboardingCompanySummary = ({
   company,
   selectedGroup,
   companyDetails,
+  companyDetailsUnavailable,
   companyDetailsLoading
 }: EntityOnboardingCompanySummaryProps) => {
   const companyName =
@@ -87,6 +89,11 @@ export const EntityOnboardingCompanySummary = ({
               <LoaderCircle className="size-3 animate-spin" />
               Chargement des donnees officielles enrichies
             </div>
+          ) : null}
+          {companyDetailsUnavailable ? (
+            <p className="pt-1 text-[11px] leading-relaxed text-warning">
+              Données enrichies indisponibles. La sélection reste utilisable.
+            </p>
           ) : null}
         </div>
         {companyDetails ? (

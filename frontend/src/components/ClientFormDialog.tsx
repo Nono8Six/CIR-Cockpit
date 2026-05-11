@@ -2,7 +2,6 @@ import type { DirectoryCommercialOption } from 'shared/schemas/directory.schema'
 
 import type { AccountType, Agency, UserRole } from '@/types';
 import type { ClientPayload } from '@/services/clients/saveClient';
-import type { EntityPayload } from '@/services/entities/saveEntity';
 import { useClientFormDialog } from '@/hooks/useClientFormDialog';
 import { useClientFormDialogFields } from '@/hooks/useClientFormDialogFields';
 import EntityOnboardingDialog from './EntityOnboardingDialog';
@@ -45,8 +44,6 @@ type ClientFormDialogProps = {
   commercials?: DirectoryCommercialOption[];
   onSave: (payload: ClientPayload) => Promise<void>;
 };
-
-const createProspectFallback = async (): Promise<void> => undefined;
 
 const ClientFormDialogLegacy = ({
   open,
@@ -155,7 +152,6 @@ const ClientFormDialog = (props: ClientFormDialogProps) => {
         initialEntity={props.client}
         sourceLabel={props.client ? 'Edition client' : 'Creation'}
         onSaveClient={props.onSave}
-        onSaveProspect={createProspectFallback as (payload: EntityPayload) => Promise<void>}
       />
     );
   }

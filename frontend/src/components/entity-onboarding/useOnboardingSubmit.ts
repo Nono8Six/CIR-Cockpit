@@ -4,6 +4,8 @@ import { clientFormSchema } from 'shared/schemas/client.schema';
 import { prospectFormSchema } from 'shared/schemas/prospect.schema';
 
 import type { ClientPayload } from '@/services/clients/saveClient';
+import { createAppError } from '@/services/errors/AppError';
+import { handleUiError } from '@/services/errors/handleUiError';
 import type { EntityPayload } from '@/services/entities/saveEntity';
 import type { UserRole } from '@/types';
 
@@ -33,14 +35,33 @@ interface UseOnboardingSubmitInput {
       }) => void)
     | undefined;
   onOpenChange: (open: boolean) => void;
-  onSaveClient: (payload: ClientPayload) => Promise<SavedEntityResult | void>;
-  onSaveProspect: (payload: EntityPayload) => Promise<SavedEntityResult | void>;
+  onSaveClient?: (payload: ClientPayload) => Promise<SavedEntityResult | void>;
+  onSaveProspect?: (payload: EntityPayload) => Promise<SavedEntityResult | void>;
   setIsSaving: Dispatch<SetStateAction<boolean>>;
   setStepError: Dispatch<SetStateAction<string | null>>;
   stepper: EntityOnboardingStepper;
   userRole: UserRole;
   values: OnboardingValues;
 }
+
+const createMissingSaveCallbackError = (intent: OnboardingIntent) =>
+  createAppError({
+    code: 'ACTION_REQUIRED',
+    message:
+      intent === 'client'
+        ? "Action d'enregistrement client indisponible."
+        : "Action d'enregistrement prospect indisponible.",
+    source: 'validation',
+    details:
+      intent === 'client'
+        ? 'onSaveClient est absent du parcours onboarding.'
+        : 'onSaveProspect est absent du parcours onboarding.',
+  });
+
+const resolveProspectPayloadType = (
+  initialEntity: EntityOnboardingSeed | null,
+): EntityPayload['entity_type'] =>
+  initialEntity?.entity_type === 'Fournisseur' ? 'Fournisseur' : 'Prospect';
 
 export const useOnboardingSubmit = ({
   activeAgencyId,
@@ -64,6 +85,10 @@ export const useOnboardingSubmit = ({
     setIsSaving(true);
     try {
       if (effectiveIntent === 'client') {
+        if (!onSaveClient) {
+          throw createMissingSaveCallbackError('client');
+        }
+
         const parsed = clientFormSchema.safeParse({
           client_number: values.client_number,
           client_kind: values.client_kind,
@@ -145,6 +170,10 @@ export const useOnboardingSubmit = ({
         return;
       }
 
+      if (!onSaveProspect) {
+        throw createMissingSaveCallbackError('prospect');
+      }
+
       const parsed = prospectFormSchema.safeParse({
         name: values.name,
         address: values.address,
@@ -175,7 +204,7 @@ export const useOnboardingSubmit = ({
 
       const savedProspect = await onSaveProspect({
         id: initialEntity?.id,
-        entity_type: initialEntity?.entity_type ?? 'Prospect',
+        entity_type: resolveProspectPayloadType(initialEntity),
         name: parsed.data.name,
         address: toNullable(parsed.data.address ?? ''),
         postal_code: toNullable(parsed.data.postal_code ?? ''),
@@ -199,8 +228,18 @@ export const useOnboardingSubmit = ({
         entity_id: savedProspect?.id ?? initialEntity?.id ?? null,
       });
       onOpenChange(false);
-    } catch {
-      return;
+    } catch (error) {
+      const appError = handleUiError(
+        error,
+        effectiveIntent === 'client'
+          ? "Impossible d'enregistrer le client."
+          : "Impossible d'enregistrer le prospect.",
+        {
+          intent: effectiveIntent,
+          source: 'EntityOnboardingDialog.handleSubmit',
+        },
+      );
+      setStepError(appError.message);
     } finally {
       setIsSaving(false);
     }

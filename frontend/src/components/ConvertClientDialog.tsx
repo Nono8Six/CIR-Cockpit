@@ -45,7 +45,6 @@ const ConvertClientDialog = ({ open, onOpenChange, entity, onConvert }: ConvertC
       initialEntity={entity}
       sourceLabel="Conversion"
       onSaveClient={onConvert}
-      onSaveProspect={async () => undefined}
       onComplete={({ client_number }) => {
         if (!client_number) {
           return;

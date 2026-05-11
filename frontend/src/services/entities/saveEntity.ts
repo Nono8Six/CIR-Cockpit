@@ -1,18 +1,18 @@
 import { ResultAsync } from 'neverthrow';
 
 import { dataEntitiesResponseSchema } from 'shared/schemas/api-responses';
-import { AccountType, Entity } from '@/types';
+import { Entity } from '@/types';
 import { createAppError, type AppError } from '@/services/errors/AppError';
 import { safeTrpc } from '@/services/api/safeTrpc';
 
+export type EntityPayloadType = 'Prospect' | 'Fournisseur';
+
 export type EntityPayload = {
   id?: string;
-  entity_type: string;
+  entity_type: EntityPayloadType;
   name: string;
   agency_id: string | null;
   city?: string | null;
-  client_number?: string | null;
-  account_type?: AccountType | null;
   address?: string | null;
   postal_code?: string | null;
   department?: string | null;
@@ -23,13 +23,6 @@ export type EntityPayload = {
   official_data_source?: 'api-recherche-entreprises' | null;
   official_data_synced_at?: string | null;
   notes?: string | null;
-  cir_commercial_id?: string | null;
-};
-
-const resolvePayloadEntityType = (entityType: string): 'Client' | 'Prospect' | 'Fournisseur' => {
-  if (entityType === 'Client') return 'Client';
-  if (entityType === 'Fournisseur') return 'Fournisseur';
-  return 'Prospect';
 };
 
 const parseEntityResponse = (payload: unknown): Entity => {
@@ -62,7 +55,6 @@ const optionalEntityText = (value: string | null | undefined): string | undefine
 
 export const saveEntity = (payload: EntityPayload): ResultAsync<Entity, AppError> => {
   const agencyId = requireEntityText(payload.agency_id, 'Agence requise.');
-  const entityType = resolvePayloadEntityType(payload.entity_type);
   const commonEntity = {
     name: payload.name,
     city: payload.city ?? '',
@@ -79,32 +71,7 @@ export const saveEntity = (payload: EntityPayload): ResultAsync<Entity, AppError
     agency_id: agencyId
   };
 
-  if (entityType === 'Client') {
-    const entity = {
-      ...commonEntity,
-      client_number: requireEntityText(payload.client_number, 'Numero client requis.'),
-      client_kind: 'company' as const,
-      account_type: payload.account_type ?? 'term',
-      address: requireEntityText(payload.address, 'Adresse requise.'),
-      postal_code: requireEntityText(payload.postal_code, 'Code postal requis.'),
-      department: requireEntityText(payload.department, 'Departement requis.'),
-      cir_commercial_id: payload.cir_commercial_id
-    };
-
-    return safeTrpc(
-      (api, options) => api.data.entities.mutate({
-          action: 'save',
-          agency_id: agencyId,
-          entity_type: 'Client',
-          id: payload.id,
-          entity
-        }, options),
-      parseEntityResponse,
-      "Impossible d'enregistrer l'entite."
-    );
-  }
-
-  if (entityType === 'Prospect') {
+  if (payload.entity_type === 'Prospect') {
     return safeTrpc(
       (api, options) => api.data.entities.mutate({
           action: 'save',

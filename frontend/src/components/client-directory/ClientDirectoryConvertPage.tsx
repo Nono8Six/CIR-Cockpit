@@ -10,8 +10,6 @@ import { useSaveClient } from '@/hooks/useSaveClient';
 import { notifySuccess } from '@/services/errors/notify';
 import { isProspectEntityType, toSelectedAgenciesScope } from './clientDirectorySearch';
 
-const saveProspectFallback = async (): Promise<void> => undefined;
-
 type ClientDirectoryConvertPageProps = {
   prospectId: string;
 };
@@ -94,7 +92,6 @@ const ClientDirectoryConvertPage = ({ prospectId }: ClientDirectoryConvertPagePr
         surface="page"
         backLabel="Retour au prospect"
         onSaveClient={(payload) => saveClientMutation.mutateAsync(payload)}
-        onSaveProspect={saveProspectFallback}
         onComplete={({ client_number }) => {
           notifySuccess('Prospect converti en client.');
           if (!client_number) {

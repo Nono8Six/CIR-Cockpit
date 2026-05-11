@@ -36,6 +36,7 @@ import type {
   EntityOnboardingSeed,
   OnboardingIntent,
   OnboardingMode,
+  OnboardingSourceLabel,
 } from "@/components/entity-onboarding/entityOnboarding.types";
 import {
   STEP_DEFINITIONS,
@@ -58,11 +59,11 @@ type EntityOnboardingDialogProps = {
   defaultIntent?: OnboardingIntent;
   allowedIntents?: OnboardingIntent[];
   initialEntity?: EntityOnboardingSeed | null;
-  sourceLabel?: string;
+  sourceLabel?: OnboardingSourceLabel;
   surface?: "dialog" | "page";
   backLabel?: string;
-  onSaveClient: (payload: ClientPayload) => Promise<SavedEntityResult | void>;
-  onSaveProspect: (payload: EntityPayload) => Promise<SavedEntityResult | void>;
+  onSaveClient?: (payload: ClientPayload) => Promise<SavedEntityResult | void>;
+  onSaveProspect?: (payload: EntityPayload) => Promise<SavedEntityResult | void>;
   onComplete?: (result: {
     intent: OnboardingIntent;
     client_number?: string | null;
@@ -138,6 +139,7 @@ const EntityOnboardingDialog = ({
     duplicatesFetching,
 
     companyDetails,
+    companyDetailsUnavailable,
     companyDetailsLoading,
 
     missingChecklist,
@@ -491,6 +493,7 @@ const EntityOnboardingDialog = ({
           company={displaySelectedCompany}
           selectedGroup={selectedGroup}
           companyDetails={companyDetails?.company}
+          companyDetailsUnavailable={companyDetailsUnavailable}
           companyDetailsLoading={companyDetailsLoading}
           duplicateMatches={duplicateMatches}
           stepError={stepError}

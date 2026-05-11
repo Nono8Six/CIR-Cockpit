@@ -19,7 +19,8 @@ import {
   isIndividualRelationValue,
   isInternalRelationValue,
   isProspectRelationValue,
-  isSolicitationRelationValue
+  isSolicitationRelationValue,
+  isSupplierRelationValue
 } from '@/constants/relations';
 
 type UseInteractionSubmitParams = { activeAgencyId: string | null; selectedEntity: Entity | null; selectedContact: EntityContact | null; onSave: (interaction: InteractionDraft) => Promise<boolean>; handleSelectEntity: (entity: Entity | null) => void; handleSelectContact: (contact: EntityContact | null) => void; queryClient: QueryClient; handleReset: () => void; onSaveSuccess: (interaction: InteractionDraft) => void; setKnownCompanies: React.Dispatch<React.SetStateAction<string[]>> };
@@ -31,6 +32,7 @@ export const useInteractionSubmit = ({ activeAgencyId, selectedEntity, selectedC
     const isIndividual = isIndividualRelationValue(values.entity_type);
     const isInternal = isInternalRelationValue(values.entity_type);
     const isSolicitation = isSolicitationRelationValue(values.entity_type);
+    const entityPayloadType = isSupplierRelationValue(values.entity_type) ? 'Fournisseur' : 'Prospect';
 
     let resolvedEntity = selectedEntity; let resolvedContact = selectedContact;
     if (!isClient && !isInternal && !isSolicitation) {
@@ -38,7 +40,7 @@ export const useInteractionSubmit = ({ activeAgencyId, selectedEntity, selectedC
         const entityName = isIndividual
           ? `${values.contact_first_name ?? ''} ${values.contact_last_name ?? ''}`.trim()
           : values.company_name ?? '';
-        resolvedEntity = await saveEntity({ entity_type: values.entity_type, name: entityName, agency_id: activeAgencyId, city: isProspect ? values.company_city?.trim() || null : null }).match(entity => entity, error => { handleUiError(error, "Impossible de creer l'entite.", { source: 'CockpitForm.saveEntity' }); return null; });
+        resolvedEntity = await saveEntity({ entity_type: entityPayloadType, name: entityName, agency_id: activeAgencyId, city: isProspect ? values.company_city?.trim() || null : null }).match(entity => entity, error => { handleUiError(error, "Impossible de creer l'entite.", { source: 'CockpitForm.saveEntity' }); return null; });
         if (!resolvedEntity) return;
         void invalidateEntitySearchIndexQueries(queryClient, activeAgencyId); handleSelectEntity(resolvedEntity);
       }

@@ -41,8 +41,8 @@ export interface UseEntityOnboardingFlowInput {
   defaultIntent: OnboardingIntent;
   allowedIntents: OnboardingIntent[] | undefined;
   initialEntity: EntityOnboardingSeed | null;
-  onSaveClient: (payload: ClientPayload) => Promise<SavedEntityResult | void>;
-  onSaveProspect: (payload: EntityPayload) => Promise<SavedEntityResult | void>;
+  onSaveClient?: (payload: ClientPayload) => Promise<SavedEntityResult | void>;
+  onSaveProspect?: (payload: EntityPayload) => Promise<SavedEntityResult | void>;
   onComplete: ((result: {
     intent: OnboardingIntent;
     client_number?: string | null;
@@ -86,6 +86,7 @@ export interface EntityOnboardingFlowState {
   duplicatesFetching: boolean;
 
   companyDetails: ReturnType<typeof useDirectoryCompanyDetails>['data'];
+  companyDetailsUnavailable: boolean;
   companyDetailsLoading: boolean;
 
   missingChecklist: string[];

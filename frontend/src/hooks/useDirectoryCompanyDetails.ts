@@ -16,6 +16,7 @@ export const useDirectoryCompanyDetails = (
     queryKey: directoryCompanyDetailsKey({ siren: normalizedSiren }),
     queryFn: () => getDirectoryCompanyDetails({ siren: normalizedSiren }),
     enabled: enabled && normalizedSiren.length === 9,
+    retry: false,
     staleTime: 10 * 60_000
   });
 

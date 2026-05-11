@@ -126,6 +126,7 @@ export const useOnboardingCompanyData = ({
       manualEntry ||
       Boolean(selection.displaySelectedCompany),
     companyDetails: companyDetailsQuery.data,
+    companyDetailsUnavailable: companyDetailsQuery.isError,
     companyDetailsLoading: companyDetailsQuery.isLoading,
     missingChecklist,
     selectedCompany,
