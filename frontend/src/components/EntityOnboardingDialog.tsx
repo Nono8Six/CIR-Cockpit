@@ -224,21 +224,22 @@ const EntityOnboardingDialog = ({
         surface === "page" ? "flex-1" : "border-0",
       )}
     >
-      <header className="flex h-14 shrink-0 items-center justify-between border-b border-border-subtle bg-background px-4 sm:px-6">
-        <div className="flex items-center gap-3">
+      <header className="flex min-h-14 shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-border-subtle bg-background px-4 py-2 sm:px-6 lg:flex-nowrap lg:py-0">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1.5">
           {showHeaderBack ? (
             <Button
               type="button"
               variant="ghost"
               size="dense"
-              className="-ml-2 px-2 text-muted-foreground hover:bg-surface-1"
+              className="-ml-2 shrink-0 px-2 text-muted-foreground hover:bg-surface-1 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
               onClick={requestClose}
+              aria-label={`${backLabel} (quitter le parcours)`}
             >
               <ArrowLeft className="size-4" />
-              {backLabel}
+              <span className="truncate">{backLabel}</span>
             </Button>
           ) : null}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
             <Badge
               variant="outline"
               density="dense"
@@ -259,15 +260,21 @@ const EntityOnboardingDialog = ({
                 density="dense"
                 className="border-success/20 bg-success/5 text-success"
               >
-                <Sparkles className="mr-1 size-3" />
+                <Sparkles className="mr-1 size-3" aria-hidden="true" />
                 Officiel
               </Badge>
             ) : null}
           </div>
-          <div className="mx-2 h-4 w-[1px] bg-border-subtle" />
+          <div
+            aria-hidden="true"
+            className="hidden h-4 w-px bg-border-subtle md:block"
+          />
 
-          <nav aria-label="Progression du parcours">
-            <ol className="flex items-center space-x-2 text-[13px] font-medium">
+          <nav
+            aria-label="Progression du parcours"
+            className="hidden min-w-0 md:block"
+          >
+            <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] font-medium">
               {renderedSteps.map((step, index) => {
                 const isCurrent = currentStepIndex === index;
                 const isClickable = index < currentStepIndex;
@@ -283,16 +290,17 @@ const EntityOnboardingDialog = ({
                         type="button"
                         aria-label={`Revenir à l'étape ${step.title}`}
                         onClick={() => goToCompletedStep(step.id)}
-                        className="text-muted-foreground transition-colors hover:text-foreground"
+                        className="rounded-sm px-1 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
                       >
                         {step.title}
                       </button>
                     ) : (
                       <span
                         className={cn(
+                          "px-1",
                           isCurrent
                             ? "text-foreground"
-                            : "text-muted-foreground/40",
+                            : "text-muted-foreground/60",
                         )}
                       >
                         {step.title}
@@ -301,7 +309,7 @@ const EntityOnboardingDialog = ({
                     {index < renderedSteps.length - 1 && (
                       <span
                         aria-hidden="true"
-                        className="ml-2 text-muted-foreground/30"
+                        className="ml-1 text-muted-foreground/40"
                       >
                         ›
                       </span>
@@ -313,23 +321,28 @@ const EntityOnboardingDialog = ({
           </nav>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div
+          className="flex shrink-0 flex-wrap items-center justify-end gap-2"
+          role="group"
+          aria-label="Actions du parcours"
+        >
           {showFooterBack ? (
             <Button
               type="button"
               variant="ghost"
               size="dense"
-              className="text-muted-foreground"
+              className="text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
               onClick={handleBack}
+              aria-label="Revenir à l'étape précédente"
             >
-              Retour
+              Étape précédente
             </Button>
           ) : null}
           <Button
             type="button"
             variant="ghost"
             size="dense"
-            className="text-muted-foreground"
+            className="text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
             onClick={requestClose}
           >
             Annuler
@@ -340,7 +353,7 @@ const EntityOnboardingDialog = ({
             disabled={
               isSaving || (stepper.flow.is("company") && !canContinueCompany)
             }
-            className="h-8 shadow-sm transition-transform active:scale-95"
+            className="h-8 shadow-sm transition-transform motion-safe:active:scale-95 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
             onClick={() => {
               if (stepper.flow.is("intent")) {
                 stepper.navigation.goTo("company");
@@ -358,16 +371,19 @@ const EntityOnboardingDialog = ({
             }}
           >
             {isSaving ? (
-              <LoaderCircle className="mr-2 size-3.5 animate-spin" />
+              <LoaderCircle
+                className="mr-2 size-3.5 animate-spin"
+                aria-hidden="true"
+              />
             ) : null}
             {primaryButtonLabel}
           </Button>
         </div>
       </header>
 
-      <div className="flex min-h-0 flex-1 flex-col xl:flex-row">
+      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         <div className="flex min-h-0 flex-1 flex-col bg-background">
-          <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 sm:p-8 lg:px-12">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 sm:p-8 lg:px-10 xl:px-12">
             <AnimatePresence mode="wait" initial={false}>
               {stepper.flow.is("intent") ? (
                 <motion.div
@@ -540,8 +556,9 @@ const EntityOnboardingDialog = ({
 
       <Dialog open={open} onOpenChange={handleDialogOpenChange}>
         <DialogContent
-          overlayClassName="bg-foreground/20 backdrop-blur-[6px]"
-          className="h-[min(96vh,920px)] w-[min(96vw,1320px)] max-w-[1320px] overflow-hidden rounded-xl border border-border-subtle bg-background p-0 shadow-2xl sm:rounded-xl"
+          showCloseButton={false}
+          overlayClassName="bg-foreground/25 backdrop-blur-[6px]"
+          className="h-[min(92vh,880px)] w-[min(94vw,1240px)] max-w-[1240px] overflow-hidden rounded-xl border border-border-subtle bg-background p-0 shadow-2xl sm:rounded-xl"
         >
           <DialogTitle className="sr-only">{title}</DialogTitle>
           <DialogDescription className="sr-only">

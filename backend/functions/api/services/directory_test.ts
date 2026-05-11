@@ -80,8 +80,9 @@ Deno.test('buildCompanySearchUrl includes optional filters and pagination', () =
   assertEquals(url.searchParams.get('q'), 'Acme');
   assertEquals(url.searchParams.get('page'), '2');
   assertEquals(url.searchParams.get('per_page'), '25');
-  assertEquals(url.searchParams.get('ville'), 'Paris');
+  assertEquals(url.searchParams.get('ville'), null);
   assertEquals(url.searchParams.get('departement'), '75');
+  assertEquals(url.searchParams.get('limite_matching_etablissements'), '100');
 });
 
 Deno.test('enterprise API details accepts string director birth years', () => {

@@ -81,11 +81,14 @@ const EntityOnboardingSidebar = ({
   const establishmentStatus = company ? getCompanySearchStatusLabel(company.establishment_status) : null;
 
   return (
-    <aside className="flex w-full shrink-0 flex-col border-t border-border-subtle bg-surface-1/40 max-h-[35vh] xl:max-h-none xl:w-[380px] xl:border-l xl:border-t-0">
+    <aside
+      aria-label="Intelligence commerciale et doublons"
+      className="flex max-h-[38vh] w-full shrink-0 flex-col border-t border-border-subtle bg-surface-1/40 lg:max-h-none lg:w-[300px] lg:border-l lg:border-t-0 xl:w-[360px]"
+    >
       <div className="flex h-full flex-col">
         <div className="border-b border-border-subtle bg-surface-1/20 p-5">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            <ShieldCheck className="size-3.5" />
+            <ShieldCheck className="size-3.5" aria-hidden="true" />
             Intelligence Commerciale
           </div>
         </div>
@@ -229,7 +232,11 @@ const EntityOnboardingSidebar = ({
           ) : null}
 
           {stepError ? (
-            <div className="rounded-md border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
+            <div
+              role="alert"
+              aria-live="polite"
+              className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm font-medium text-destructive"
+            >
               {stepError}
             </div>
           ) : null}
@@ -237,22 +244,24 @@ const EntityOnboardingSidebar = ({
           {!isReviewStep && duplicateMatches.length > 0 ? (
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-warning">
-                <AlertCircle className="size-3.5" />
+                <AlertCircle className="size-3.5" aria-hidden="true" />
                 Doublons détectés ({duplicateMatches.length})
               </div>
-              <div className="space-y-2">
+              <ul className="space-y-2">
                 {duplicateMatches.map(({ record, reason }) => (
-                  <button
-                    key={record.id}
-                    type="button"
-                    className="w-full rounded-md border border-warning/30 bg-warning/[0.03] p-3 text-left shadow-sm transition-colors hover:bg-warning/[0.06]"
-                    onClick={() => onOpenDuplicate?.(record)}
-                  >
-                    <p className="text-[13px] font-bold text-foreground">{record.name}</p>
-                    <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">{reason}</p>
-                  </button>
+                  <li key={record.id}>
+                    <button
+                      type="button"
+                      aria-label={`Ouvrir la fiche ${record.name}`}
+                      className="w-full rounded-md border border-warning/30 bg-warning/[0.03] p-3 text-left shadow-sm transition-colors hover:bg-warning/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning focus-visible:ring-offset-1"
+                      onClick={() => onOpenDuplicate?.(record)}
+                    >
+                      <p className="break-words text-[13px] font-bold text-foreground">{record.name}</p>
+                      <p className="mt-1 break-words text-[12px] leading-relaxed text-muted-foreground">{reason}</p>
+                    </button>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
           ) : null}
 

@@ -7,6 +7,7 @@ import {
 
 const COMPANY_SEARCH_URL = "https://recherche-entreprises.api.gouv.fr/search";
 const COMPANY_SEARCH_TIMEOUT_MS = 6_000;
+const COMPANY_MATCHING_ESTABLISHMENTS_LIMIT = 100;
 
 export const buildCompanySearchUrl = (
   input: CompanySearchPageRequest,
@@ -18,9 +19,10 @@ export const buildCompanySearchUrl = (
   if (input.department) {
     url.searchParams.set("departement", input.department);
   }
-  if (input.city) {
-    url.searchParams.set("ville", input.city);
-  }
+  url.searchParams.set(
+    "limite_matching_etablissements",
+    String(COMPANY_MATCHING_ESTABLISHMENTS_LIMIT),
+  );
   url.searchParams.set("page", String(input.page));
   url.searchParams.set("per_page", String(input.per_page));
   return url.toString();

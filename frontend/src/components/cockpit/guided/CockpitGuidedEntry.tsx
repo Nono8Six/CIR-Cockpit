@@ -1,5 +1,8 @@
+import { RotateCcw } from 'lucide-react';
+
 import type { CockpitFormLeftPaneProps, CockpitFormRightPaneProps } from '../CockpitPaneTypes';
 import type { Interaction } from '@/types';
+import { Button } from '@/components/ui/button';
 import { buildCockpitLeftEntitySectionsProps } from '../buildCockpitLeftEntitySectionsProps';
 import { GUIDED_STEP_ORDER, type CockpitGuidedStep, useCockpitGuidedFlow } from '@/hooks/useCockpitGuidedFlow';
 import { cn } from '@/lib/utils';
@@ -22,8 +25,6 @@ type CockpitGuidedEntryProps = {
 };
 
 const getStepIndex = (step: CockpitGuidedStep): number => GUIDED_STEP_ORDER.indexOf(step) + 1;
-const isStepBefore = (step: CockpitGuidedStep, activeStep: CockpitGuidedStep): boolean =>
-  GUIDED_STEP_ORDER.indexOf(step) < GUIDED_STEP_ORDER.indexOf(activeStep);
 
 const STEP_PROGRESS_LABELS: Record<CockpitGuidedStep, string> = {
   channel: 'Canal',
@@ -151,22 +152,33 @@ const CockpitGuidedEntry = ({
             <div className="flex items-center gap-3">
               <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Nouvelle interaction</span>
               <span className="h-px flex-1 bg-[hsl(var(--border-subtle))]" />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleReset}
+                className="h-7 gap-1.5 px-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+                aria-label="Réinitialiser la saisie en cours"
+              >
+                <RotateCcw size={12} aria-hidden="true" />
+                Recommencer
+              </Button>
             </div>
             <CockpitGuidedProgress activeStep={flow.activeStep} />
             <div className="flex flex-col divide-y divide-[hsl(var(--border-subtle))]">
-              {flow.isChannelConfirmed && isStepBefore('channel', flow.activeStep) ? (
+              {flow.isChannelConfirmed && flow.activeStep !== 'channel' ? (
                 <CockpitGuidedAnswerRow index={getStepIndex('channel')} label="Canal" value={leftPaneProps.channel} active={false} complete onEdit={() => flow.editStep('channel')} />
               ) : null}
-              {flow.isRelationConfirmed && isStepBefore('relation', flow.activeStep) ? (
+              {flow.isRelationConfirmed && flow.activeStep !== 'relation' ? (
                 <CockpitGuidedAnswerRow index={getStepIndex('relation')} label="Relation" value={buildRelationLabel(leftPaneProps.entityType, flow.isRelationConfirmed)} active={false} complete onEdit={() => flow.editStep('relation')} />
               ) : null}
-              {flow.identityComplete && isStepBefore('search', flow.activeStep) ? (
+              {flow.identityComplete && flow.activeStep !== 'search' ? (
                 <CockpitGuidedAnswerRow index={getStepIndex('search')} label="Tiers" value={buildIdentityLabel(leftPaneProps)} active={false} complete onEdit={() => flow.editStep('search')} />
               ) : null}
-              {flow.contactComplete && isStepBefore('contact', flow.activeStep) ? (
+              {flow.contactComplete && flow.activeStep !== 'contact' ? (
                 <CockpitGuidedAnswerRow index={getStepIndex('contact')} label="Contact" value={buildContactLabel(leftPaneProps)} active={false} complete onEdit={() => flow.editStep('contact')} />
               ) : null}
-              {flow.subjectComplete && isStepBefore('subject', flow.activeStep) ? (
+              {flow.subjectComplete && flow.activeStep !== 'subject' ? (
                 <CockpitGuidedAnswerRow index={getStepIndex('subject')} label="Sujet" value={rightPaneProps.subject || 'A renseigner'} active={false} complete onEdit={() => flow.editStep('subject')} />
               ) : null}
             </div>

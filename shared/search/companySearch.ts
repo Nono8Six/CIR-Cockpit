@@ -169,14 +169,58 @@ const extractCompactAcronymTokens = (value: string | null | undefined): string[]
   return compactTokens;
 };
 
-const buildCompanySearchWords = (company: DirectoryCompanySearchResult): string[] =>
+const buildCompanyBusinessWords = (company: DirectoryCompanySearchResult): string[] =>
   Array.from(
     new Set(
-      [buildLabel(company), company.name]
+      [buildLabel(company), company.name, company.commercial_name, ...company.brands]
         .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
         .flatMap((value) => [...toTokens(value), ...extractCompactAcronymTokens(value)])
     )
   );
+
+const buildCompanyLocationWords = (company: DirectoryCompanySearchResult): string[] =>
+  Array.from(
+    new Set(
+      [company.city, company.postal_code, company.department, company.address]
+        .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+        .flatMap((value) => toTokens(value))
+    )
+  );
+
+type CompanySearchTokenMatch = {
+  exact: boolean;
+  index: number;
+  location: boolean;
+};
+
+const findCompanySearchTokenMatch = (
+  token: string,
+  businessWords: string[],
+  locationWords: string[]
+): CompanySearchTokenMatch | null => {
+  const businessExactIndex = businessWords.findIndex((word) => word === token);
+  if (businessExactIndex >= 0) {
+    return { exact: true, index: businessExactIndex, location: false };
+  }
+
+  const businessPrefixIndex = businessWords.findIndex((word) => word.startsWith(token));
+  if (businessPrefixIndex >= 0) {
+    return { exact: false, index: businessPrefixIndex, location: false };
+  }
+
+  const locationOffset = businessWords.length;
+  const locationExactIndex = locationWords.findIndex((word) => word === token);
+  if (locationExactIndex >= 0) {
+    return { exact: true, index: locationOffset + locationExactIndex, location: true };
+  }
+
+  const locationPrefixIndex = locationWords.findIndex((word) => word.startsWith(token));
+  if (locationPrefixIndex >= 0) {
+    return { exact: false, index: locationOffset + locationPrefixIndex, location: true };
+  }
+
+  return null;
+};
 
 const matchesInputCity = (
   company: DirectoryCompanySearchResult,
@@ -350,7 +394,7 @@ const buildContextualSearchPlans = (
   for (const company of groupedCompanies.values()) {
     const labelTokens = toMeaningfulTokens(buildLabel(company));
     const uniqueCompanyTokens = new Set(
-      buildCompanySearchWords(company).filter((token) =>
+      buildCompanyBusinessWords(company).filter((token) =>
         token.length >= 4
         && !/^\d+$/.test(token)
         && !ignoredTokens.has(token)
@@ -516,7 +560,8 @@ const scoreCompany = (
     : fallbackTokens.length > 1
       ? fallbackTokens
       : fallbackTokens.filter((token) => token.length >= 2);
-  const words = buildCompanySearchWords(company);
+  const businessWords = buildCompanyBusinessWords(company);
+  const locationWords = buildCompanyLocationWords(company);
   const normalizedLabel = normalizeSearchText(buildLabel(company));
   const normalizedCollapsedLabel = collapseTokens(toTokens(buildLabel(company)));
   const normalizedCity = normalizeSearchText(company.city);
@@ -539,16 +584,17 @@ const scoreCompany = (
   let lastMatchedIndex = -1;
   let exactMatches = 0;
   let prefixMatches = 0;
+  let businessMatches = 0;
+  let locationMatches = 0;
   let missingSignificantTokens = 0;
   let orderedMatch = true;
   const matchedIndexes: number[] = [];
 
   for (const token of scoredTokens) {
-    const exactIndex = words.findIndex((word) => word === token);
-    const prefixIndex = words.findIndex((word) => word.startsWith(token));
-    const matchedIndex = exactIndex >= 0 ? exactIndex : prefixIndex;
+    const match = findCompanySearchTokenMatch(token, businessWords, locationWords);
+    const matchedIndex = match?.index ?? -1;
 
-    if (matchedIndex < 0) {
+    if (!match) {
       if (token.length >= 4) {
         missingSignificantTokens += 1;
       }
@@ -557,10 +603,16 @@ const scoreCompany = (
       continue;
     }
 
-    if (exactIndex >= 0) {
+    if (match.exact) {
       exactMatches += 1;
     } else {
       prefixMatches += 1;
+    }
+
+    if (match.location) {
+      locationMatches += 1;
+    } else {
+      businessMatches += 1;
     }
 
     if (matchedIndex < lastMatchedIndex) {
@@ -576,7 +628,7 @@ const scoreCompany = (
   const collapsedStartsWithSequence = normalizedCollapsedQuery.length >= 6
     && !startsWithSequence
     && normalizedCollapsedLabel.startsWith(normalizedCollapsedQuery);
-  const matchedFirstToken = words[0]?.startsWith(scoredTokens[0] ?? '') ?? false;
+  const matchedFirstToken = businessWords[0]?.startsWith(scoredTokens[0] ?? '') ?? false;
   const matchedLastToken = matchedIndexes.at(-1) != null && (matchedIndexes.at(-1) ?? -1) >= 0;
   let trailingSequenceLength = 0;
   let previousMatchedIndex = Number.POSITIVE_INFINITY;
@@ -619,6 +671,11 @@ const scoreCompany = (
 
   score += exactMatches * 10;
   score += prefixMatches * 6;
+  score += locationMatches * 12;
+
+  if (businessMatches > 0 && locationMatches > 0) {
+    score += 18;
+  }
 
   if (startsWithSequence) {
     score += 8;

@@ -27,40 +27,38 @@ const InteractionSearchResults = ({
   onSelectContact,
   showTypeBadge = false
 }: InteractionSearchResultsProps) => (
-  <div className="px-3 pb-3">
-    <CommandList className="max-h-[220px] rounded-lg border border-border bg-card shadow-[0_12px_30px_rgba(15,23,42,0.12)] overflow-hidden">
-      <InteractionSearchStatusMessage status={status} />
-      {status === 'results' && limitedEntities.length > 0 && (
-        <CommandGroup heading={entityHeading} className="p-2">
-          {limitedEntities.map((entity) => (
-            <InteractionSearchEntityItem
-              key={entity.id}
-              entity={entity}
+  <CommandList className="max-h-[220px] overflow-y-auto overflow-x-hidden">
+    <InteractionSearchStatusMessage status={status} />
+    {status === 'results' && limitedEntities.length > 0 && (
+      <CommandGroup heading={entityHeading} className="p-2">
+        {limitedEntities.map((entity) => (
+          <InteractionSearchEntityItem
+            key={entity.id}
+            entity={entity}
+            query={query}
+            includeArchived={includeArchived}
+            onSelectEntity={onSelectEntity}
+            showTypeBadge={showTypeBadge}
+          />
+        ))}
+      </CommandGroup>
+    )}
+    {status === 'results' && limitedContacts.length > 0 && (
+      <>
+        <CommandSeparator className="mx-2" />
+        <CommandGroup heading="Contacts" className="p-2">
+          {limitedContacts.map((contact) => (
+            <InteractionSearchContactItem
+              key={contact.id}
+              contact={contact}
               query={query}
-              includeArchived={includeArchived}
-              onSelectEntity={onSelectEntity}
-              showTypeBadge={showTypeBadge}
+              onSelectContact={onSelectContact}
             />
           ))}
         </CommandGroup>
-      )}
-      {status === 'results' && limitedContacts.length > 0 && (
-        <>
-          <CommandSeparator className="mx-2" />
-          <CommandGroup heading="Contacts" className="p-2">
-            {limitedContacts.map((contact) => (
-              <InteractionSearchContactItem
-                key={contact.id}
-                contact={contact}
-                query={query}
-                onSelectContact={onSelectContact}
-              />
-            ))}
-          </CommandGroup>
-        </>
-      )}
-    </CommandList>
-  </div>
+      </>
+    )}
+  </CommandList>
 );
 
 export default InteractionSearchResults;

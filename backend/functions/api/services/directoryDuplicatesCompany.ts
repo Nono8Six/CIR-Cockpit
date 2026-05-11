@@ -51,26 +51,28 @@ export const getCompanyDuplicateMatches = async (
   baseWhereClause: SqlCondition,
   input: Extract<DirectoryDuplicatesInput, { kind: "company" }>,
 ): Promise<DirectoryDuplicateMatch[]> => {
-  const companyConditions = [
+  const identifierConditions = [
     input.siret ? eq(entities.siret, input.siret) : undefined,
     input.siren ? eq(entities.siren, input.siren) : undefined,
-    sql<boolean>`lower(${entities.name}) = ${input.name.trim().toLowerCase()}`,
   ].filter((condition): condition is SqlCondition => Boolean(condition));
-
   const cityCondition = input.city
     ? sql<
       boolean
     >`lower(coalesce(${entities.city}, '')) = ${input.city.trim().toLowerCase()}`
     : undefined;
+  const nameCondition = sql<
+    boolean
+  >`lower(${entities.name}) = ${input.name.trim().toLowerCase()}`;
+  const scopedNameCondition = cityCondition
+    ? and(nameCondition, cityCondition)
+    : nameCondition;
+  const companyConditions = [
+    ...identifierConditions,
+    scopedNameCondition,
+  ].filter((condition): condition is SqlCondition => Boolean(condition));
   const whereClause = and(
     baseWhereClause,
-    cityCondition
-      ? or(
-        ...companyConditions.map((condition) =>
-          and(condition, cityCondition) ?? condition
-        ),
-      )
-      : or(...companyConditions),
+    or(...companyConditions),
   ) ?? baseWhereClause;
 
   const rows = await db
