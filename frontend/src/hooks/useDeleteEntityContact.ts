@@ -1,10 +1,17 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { deleteEntityContact } from '@/services/entities/deleteEntityContact';
-import { invalidateClientContactsQuery } from '@/services/query/queryInvalidation';
+import {
+  invalidateClientContactsQuery,
+  invalidateEntitySearchIndexQueries
+} from '@/services/query/queryInvalidation';
 import { handleUiError } from '@/services/errors/handleUiError';
 
-export const useDeleteEntityContact = (entityId: string | null, includeArchived = false) => {
+export const useDeleteEntityContact = (
+  entityId: string | null,
+  includeArchived = false,
+  agencyId: string | null = null
+) => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -17,6 +24,7 @@ export const useDeleteEntityContact = (entityId: string | null, includeArchived 
       ),
     onSuccess: () => {
       void invalidateClientContactsQuery(queryClient, entityId, includeArchived);
+      void invalidateEntitySearchIndexQueries(queryClient, agencyId, includeArchived);
     },
     onError: (error) => {
       handleUiError(error, 'Impossible de supprimer le contact.', {

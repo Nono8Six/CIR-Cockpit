@@ -4,20 +4,27 @@ import type { DirectoryRouteRef, DirectorySearchState } from 'shared/schemas/dir
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useNavigate } from '@tanstack/react-router';
 
+import ClientContactDialog from '@/components/ClientContactDialog';
 import ClientFormDialog from '@/components/ClientFormDialog';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import EntityContactsPanelSection from '@/components/entity-contact/EntityContactsPanelSection';
+import { getEntityContactName } from '@/components/entity-contact/entityContactRow.utils';
 import ProspectFormDialog from '@/components/ProspectFormDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAgencies } from '@/hooks/useAgencies';
 import { useAppSessionStateContext } from '@/hooks/useAppSession';
 import { useDeleteClient } from '@/hooks/useSetClientArchived';
+import { useDeleteEntityContact } from '@/hooks/useDeleteEntityContact';
 import { useDirectoryOptionCommercials } from '@/hooks/useDirectoryOptionCommercials';
 import { useDirectoryRecord } from '@/hooks/useDirectoryRecord';
 import { useEntityContacts } from '@/hooks/useEntityContacts';
 import { useEntityInteractions } from '@/hooks/useEntityInteractions';
+import { useSaveEntityContact } from '@/hooks/useSaveEntityContact';
 import { useSaveClient } from '@/hooks/useSaveClient';
 import { useSaveProspect } from '@/hooks/useSaveProspect';
+import type { EntityContactPayload } from '@/services/entities/saveEntityContact';
 import { notifySuccess } from '@/services/errors/notify';
+import type { EntityContact } from '@/types';
 
 import ClientDirectoryRecordActionsBar from './ClientDirectoryRecordActionsBar';
 import ClientDirectoryRecordIdentityCard from './ClientDirectoryRecordIdentityCard';
@@ -65,10 +72,15 @@ const ClientDirectoryRecordDetails = ({
   const interactionsQuery = useEntityInteractions(record?.id ?? null, 1, 5, Boolean(record?.id));
   const saveClientMutation = useSaveClient(record?.agency_id ?? activeAgencyId ?? null, true);
   const saveProspectMutation = useSaveProspect(record?.agency_id ?? activeAgencyId ?? null, true, false);
+  const saveContactMutation = useSaveEntityContact(record?.id ?? null, false, record?.agency_id ?? activeAgencyId ?? null);
+  const deleteContactMutation = useDeleteEntityContact(record?.id ?? null, false, record?.agency_id ?? activeAgencyId ?? null);
   const deleteEntityMutation = useDeleteClient(record?.agency_id ?? activeAgencyId ?? null, false);
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
   const [isProspectDialogOpen, setIsProspectDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
+  const [contactDialogContact, setContactDialogContact] = useState<EntityContact | null>(null);
+  const [contactToDelete, setContactToDelete] = useState<EntityContact | null>(null);
   const [deleteRelatedInteractions, setDeleteRelatedInteractions] = useState(true);
   const primaryContact = contactsQuery.data?.[0] ?? null;
   const addressLine = useMemo(
@@ -99,6 +111,41 @@ const ClientDirectoryRecordDetails = ({
   const handleRequestDelete = () => {
     setDeleteRelatedInteractions(true);
     setIsDeleteDialogOpen(true);
+  };
+
+  const handleAddContact = () => {
+    setContactDialogContact(null);
+    setIsContactDialogOpen(true);
+  };
+
+  const handleEditContact = (contact: EntityContact) => {
+    setContactDialogContact(contact);
+    setIsContactDialogOpen(true);
+  };
+
+  const handleContactDialogOpenChange = (open: boolean) => {
+    setIsContactDialogOpen(open);
+    if (!open) {
+      setContactDialogContact(null);
+    }
+  };
+
+  const handleSaveContact = async (payload: EntityContactPayload) => {
+    await saveContactMutation.mutateAsync(payload);
+    notifySuccess(payload.id ? 'Contact mis à jour.' : 'Contact ajouté.');
+  };
+
+  const handleDeleteContact = async () => {
+    if (!contactToDelete) return;
+
+    try {
+      await deleteContactMutation.mutateAsync(contactToDelete.id);
+      notifySuccess('Contact supprimé.');
+    } catch {
+      return;
+    } finally {
+      setContactToDelete(null);
+    }
   };
 
   const handleConvertProspect = () => {
@@ -167,7 +214,17 @@ const ClientDirectoryRecordDetails = ({
 
           <ClientDirectoryRecordInfoGrid
             record={record}
-            contacts={contactsQuery.data ?? []}
+            contactsSection={
+              <EntityContactsPanelSection
+                contacts={contactsQuery.data ?? []}
+                focusedContactId={null}
+                isContactsLoading={contactsQuery.isLoading}
+                emptyLabel={isProspect ? 'Aucun contact pour ce prospect.' : 'Aucun contact pour ce client.'}
+                onAddContact={handleAddContact}
+                onEditContact={handleEditContact}
+                onDeleteContact={setContactToDelete}
+              />
+            }
             interactions={interactionsQuery.data?.interactions ?? []}
           />
 
@@ -209,6 +266,34 @@ const ClientDirectoryRecordDetails = ({
               }}
             />
           ) : null}
+
+          <ClientContactDialog
+            open={isContactDialogOpen}
+            onOpenChange={handleContactDialogOpenChange}
+            contact={contactDialogContact}
+            entityId={record.id}
+            onSave={handleSaveContact}
+          />
+
+          <ConfirmDialog
+            open={Boolean(contactToDelete)}
+            onOpenChange={(open) => {
+              if (!open) {
+                setContactToDelete(null);
+              }
+            }}
+            title="Supprimer ce contact"
+            description={
+              contactToDelete
+                ? `Le contact ${getEntityContactName(contactToDelete)} sera supprimé de cette fiche.`
+                : 'Ce contact sera supprimé de cette fiche.'
+            }
+            confirmLabel="Supprimer"
+            variant="destructive"
+            onConfirm={() => {
+              void handleDeleteContact();
+            }}
+          />
 
           <ConfirmDialog
             open={isDeleteDialogOpen}

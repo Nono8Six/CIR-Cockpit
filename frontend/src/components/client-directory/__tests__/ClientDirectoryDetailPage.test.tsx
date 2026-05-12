@@ -7,6 +7,8 @@ import ClientDirectoryDetailPage from '../ClientDirectoryDetailPage';
 
 const mockNavigate = vi.fn();
 const mockDeleteMutateAsync = vi.fn();
+const mockSaveContactMutateAsync = vi.fn();
+const mockDeleteContactMutateAsync = vi.fn();
 const mockHistoryBack = vi.fn();
 const mockUseCanGoBack = vi.fn(() => true);
 const detailSearch: DirectorySearchState = {
@@ -63,6 +65,14 @@ vi.mock('@/hooks/useSaveProspect', () => ({
   useSaveProspect: vi.fn(() => ({ mutateAsync: vi.fn() }))
 }));
 
+vi.mock('@/hooks/useSaveEntityContact', () => ({
+  useSaveEntityContact: vi.fn(() => ({ mutateAsync: mockSaveContactMutateAsync }))
+}));
+
+vi.mock('@/hooks/useDeleteEntityContact', () => ({
+  useDeleteEntityContact: vi.fn(() => ({ mutateAsync: mockDeleteContactMutateAsync }))
+}));
+
 vi.mock('@/hooks/useSetClientArchived', () => ({
   useDeleteClient: vi.fn(() => ({ mutateAsync: mockDeleteMutateAsync }))
 }));
@@ -90,10 +100,14 @@ vi.mock('@/services/errors/notify', () => ({
 const { useAppSessionStateContext } = await import('@/hooks/useAppSession');
 const { useDirectoryRecord } = await import('@/hooks/useDirectoryRecord');
 const { useDirectoryPage } = await import('@/hooks/useDirectoryPage');
+const { useEntityContacts } = await import('@/hooks/useEntityContacts');
+const { notifySuccess } = await import('@/services/errors/notify');
 
 const mockedSessionState = vi.mocked(useAppSessionStateContext);
 const mockedDirectoryRecord = vi.mocked(useDirectoryRecord);
 const mockedDirectoryPage = vi.mocked(useDirectoryPage);
+const mockedEntityContacts = vi.mocked(useEntityContacts);
+const mockedNotifySuccess = vi.mocked(notifySuccess);
 
 const baseRecord = {
   id: 'entity-1',
@@ -188,12 +202,28 @@ const nextRow: DirectoryListRow = {
   updated_at: '2026-02-03T00:00:00.000Z'
 };
 
+const contact = {
+  id: 'contact-1',
+  entity_id: 'entity-1',
+  first_name: 'Kévin',
+  last_name: 'Chauchet',
+  email: 'kevin.chauchet@sea-sarl.fr',
+  phone: '05 56 00 00 00',
+  position: 'Responsable technique',
+  notes: null,
+  created_at: '2026-02-01T00:00:00.000Z',
+  updated_at: '2026-02-01T00:00:00.000Z'
+};
+
 describe('ClientDirectoryDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseCanGoBack.mockReturnValue(true);
     vi.spyOn(window.history, 'back').mockImplementation(mockHistoryBack);
     mockDeleteMutateAsync.mockResolvedValue(baseRecord);
+    mockSaveContactMutateAsync.mockResolvedValue(contact);
+    mockDeleteContactMutateAsync.mockResolvedValue(undefined);
+    mockedEntityContacts.mockReturnValue({ data: [] } as never);
     mockedSessionState.mockReturnValue({
       session: { user: { id: 'user-1', email: 'admin@example.com' } },
       authReady: true,
@@ -299,6 +329,91 @@ describe('ClientDirectoryDetailPage', () => {
     const section = document.querySelector('section[aria-busy="true"]');
     expect(section).toBeTruthy();
     expect(screen.getByText('Chargement de la fiche…')).toBeTruthy();
+  });
+
+  it('opens the compact contact dialog and creates a contact from the client record', async () => {
+    const user = userEvent.setup();
+
+    render(<ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} search={detailSearch} />);
+
+    await user.click(screen.getByRole('button', { name: /^ajouter$/i }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/prenom/i), 'Lina');
+    await user.type(screen.getByLabelText(/^nom$/i), 'Martin');
+    await user.type(screen.getByLabelText(/email/i), 'lina.martin@example.test');
+    await user.click(screen.getByRole('button', { name: /^ajouter$/i }));
+
+    await waitFor(() => {
+      expect(mockSaveContactMutateAsync).toHaveBeenCalledWith({
+        id: undefined,
+        entity_id: 'entity-1',
+        first_name: 'Lina',
+        last_name: 'Martin',
+        email: 'lina.martin@example.test',
+        phone: null,
+        position: null,
+        notes: null
+      });
+    });
+    expect(mockedNotifySuccess).toHaveBeenCalledWith('Contact ajouté.');
+  });
+
+  it('prefills the contact dialog and saves an edited contact payload', async () => {
+    const user = userEvent.setup();
+    mockedEntityContacts.mockReturnValue({ data: [contact], isLoading: false } as never);
+
+    render(<ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} search={detailSearch} />);
+
+    await user.click(screen.getByRole('button', { name: /modifier kévin chauchet/i }));
+    expect(screen.getByDisplayValue('Kévin')).toBeInTheDocument();
+
+    const positionInput = screen.getByLabelText(/poste/i);
+    await user.clear(positionInput);
+    await user.type(positionInput, 'Directeur technique');
+    await user.click(screen.getByRole('button', { name: /^enregistrer$/i }));
+
+    await waitFor(() => {
+      expect(mockSaveContactMutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'contact-1',
+          entity_id: 'entity-1',
+          position: 'Directeur technique'
+        })
+      );
+    });
+    expect(mockedNotifySuccess).toHaveBeenCalledWith('Contact mis à jour.');
+  });
+
+  it('confirms contact deletion before calling the delete mutation', async () => {
+    const user = userEvent.setup();
+    mockedEntityContacts.mockReturnValue({ data: [contact], isLoading: false } as never);
+
+    render(<ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} search={detailSearch} />);
+
+    await user.click(screen.getByRole('button', { name: /supprimer kévin chauchet/i }));
+    expect(screen.getByText(/le contact kévin chauchet sera supprimé/i)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /^supprimer$/i }));
+
+    await waitFor(() => {
+      expect(mockDeleteContactMutateAsync).toHaveBeenCalledWith('contact-1');
+    });
+    expect(mockedNotifySuccess).toHaveBeenCalledWith('Contact supprimé.');
+  });
+
+  it('keeps compact empty and loading contact states on the record detail', () => {
+    mockedEntityContacts.mockReturnValueOnce({ data: [], isLoading: false } as never);
+
+    const { rerender } = render(
+      <ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} search={detailSearch} />
+    );
+
+    expect(screen.getByText('Aucun contact pour ce client.')).toBeInTheDocument();
+
+    mockedEntityContacts.mockReturnValueOnce({ data: [], isLoading: true } as never);
+    rerender(<ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} search={detailSearch} />);
+
+    expect(screen.getByText('Chargement des contacts…')).toBeInTheDocument();
   });
 
   it('navigates to the integrated convert route from a prospect detail page', async () => {

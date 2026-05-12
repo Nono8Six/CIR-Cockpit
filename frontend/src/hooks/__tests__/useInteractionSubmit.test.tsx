@@ -137,6 +137,15 @@ describe('useInteractionSubmit', () => {
     expect(onSave).toHaveBeenCalledTimes(1);
     expect(handleSelectEntity).toHaveBeenCalledWith(createdEntity);
     expect(handleSelectContact).toHaveBeenCalledWith(createdContact);
+    expect(invalidateClientContactsQuery).toHaveBeenCalledWith(
+      expect.any(QueryClient),
+      createdEntity.id,
+      false
+    );
+    expect(invalidateEntitySearchIndexQueries).toHaveBeenCalledWith(
+      expect.any(QueryClient),
+      'agency-1'
+    );
     expect(handleReset).toHaveBeenCalledTimes(1);
   });
 
