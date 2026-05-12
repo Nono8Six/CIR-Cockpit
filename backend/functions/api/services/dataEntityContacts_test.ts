@@ -22,23 +22,26 @@ const readCode = (value: unknown): string | undefined => {
   return typeof candidate === 'string' ? candidate : undefined;
 };
 
-const createDbMock = (contactRow: ContactRow): {
+const createDbMock = (
+  contactRows: ContactRow[],
+  options: { updateRows?: ContactRow[]; deleteRows?: Array<{ id: string }> } = {}
+): {
   db: DbClient;
   getInsertedEntityId: () => string | null;
   getDeletedCount: () => number;
-  getListOrderCount: () => number;
+  getListOrderArgsCount: () => number;
 } => {
   let insertedEntityId: string | null = null;
   let deletedCount = 0;
-  let listOrderCount = 0;
+  let listOrderArgsCount = 0;
 
   const db = {
     select: () => ({
       from: () => ({
         where: () => ({
-          orderBy: () => {
-            listOrderCount += 1;
-            return Promise.resolve([contactRow]);
+          orderBy: (...args: unknown[]) => {
+            listOrderArgsCount = args.length;
+            return Promise.resolve(contactRows);
           }
         })
       })
@@ -47,22 +50,25 @@ const createDbMock = (contactRow: ContactRow): {
       values: (values: Record<string, unknown>) => {
         insertedEntityId = typeof values.entity_id === 'string' ? values.entity_id : null;
         return {
-          returning: () => Promise.resolve([contactRow])
+          returning: () => Promise.resolve(contactRows)
         };
       }
     }),
     update: () => ({
       set: () => ({
         where: () => ({
-          returning: () => Promise.resolve([contactRow])
+          returning: () => Promise.resolve(options.updateRows ?? contactRows)
         })
       })
     }),
     delete: () => ({
-      where: () => {
-        deletedCount += 1;
-        return Promise.resolve();
-      }
+      where: () => ({
+        returning: () => {
+          const rows = options.deleteRows ?? contactRows.map((row) => ({ id: row.id }));
+          deletedCount += 1;
+          return Promise.resolve(rows);
+        }
+      })
     })
   } as unknown as DbClient;
 
@@ -70,13 +76,17 @@ const createDbMock = (contactRow: ContactRow): {
     db,
     getInsertedEntityId: () => insertedEntityId,
     getDeletedCount: () => deletedCount,
-    getListOrderCount: () => listOrderCount
+    getListOrderArgsCount: () => listOrderArgsCount
   };
 };
 
 Deno.test('handleDataEntityContactsAction lists contacts by entity', async () => {
-  const contactRow = { id: 'contact-1' } as ContactRow;
-  const mock = createDbMock(contactRow);
+  const contactRows = [
+    { id: 'contact-2', first_name: 'Zoé', last_name: 'Martin', created_at: '2026-02-02T00:00:00Z' },
+    { id: 'contact-1', first_name: 'Alice', last_name: 'Martin', created_at: '2026-02-01T00:00:00Z' },
+    { id: 'contact-3', first_name: 'Bruno', last_name: 'Durand', created_at: '2026-02-03T00:00:00Z' }
+  ] as ContactRow[];
+  const mock = createDbMock(contactRows);
 
   const response = await handleDataEntityContactsAction(
     mock.db,
@@ -97,12 +107,15 @@ Deno.test('handleDataEntityContactsAction lists contacts by entity', async () =>
 
   assertEquals(response.ok, true);
   assertEquals('contacts' in response, true);
-  assertEquals(mock.getListOrderCount(), 1);
+  assertEquals(mock.getListOrderArgsCount(), 3);
+  if ('contacts' in response) {
+    assertEquals(response.contacts.map((contact) => contact.id), ['contact-3', 'contact-1', 'contact-2']);
+  }
 });
 
 Deno.test('handleDataEntityContactsAction saves contact', async () => {
   const contactRow = { id: 'contact-1' } as ContactRow;
-  const mock = createDbMock(contactRow);
+  const mock = createDbMock([contactRow]);
 
   const response = await handleDataEntityContactsAction(
     mock.db,
@@ -135,7 +148,7 @@ Deno.test('handleDataEntityContactsAction saves contact', async () => {
 
 Deno.test('handleDataEntityContactsAction deletes contact', async () => {
   const contactRow = { id: 'contact-1' } as ContactRow;
-  const mock = createDbMock(contactRow);
+  const mock = createDbMock([contactRow]);
 
   const response = await handleDataEntityContactsAction(
     mock.db,
@@ -156,6 +169,69 @@ Deno.test('handleDataEntityContactsAction deletes contact', async () => {
   assertEquals(response.ok, true);
   assertEquals('contact_id' in response, true);
   assertEquals(mock.getDeletedCount(), 1);
+});
+
+Deno.test('handleDataEntityContactsAction rejects update outside requested entity scope', async () => {
+  const contactRow = { id: 'contact-1' } as ContactRow;
+  const mock = createDbMock([contactRow], { updateRows: [] });
+
+  await assertRejects(
+    async () => {
+      await handleDataEntityContactsAction(
+        mock.db,
+        authContext,
+        'req-cross-entity',
+        {
+          action: 'save',
+          entity_id: 'entity-2',
+          id: 'contact-1',
+          contact: {
+            first_name: 'Alice',
+            last_name: 'Martin',
+            email: '',
+            phone: '',
+            position: '',
+            notes: ''
+          }
+        },
+        {
+          ensureRateLimit: () => Promise.resolve(),
+          getEntityAgencyId: () => Promise.resolve('agency-1'),
+          getContactEntityId: () => Promise.resolve('entity-1'),
+          ensureAgencyAccess: () => 'agency-1'
+        }
+      );
+    },
+    Error,
+    'Contact introuvable pour ce tiers.'
+  );
+});
+
+Deno.test('handleDataEntityContactsAction rejects delete when contact is absent', async () => {
+  const contactRow = { id: 'contact-1' } as ContactRow;
+  const mock = createDbMock([contactRow], { deleteRows: [] });
+
+  await assertRejects(
+    async () => {
+      await handleDataEntityContactsAction(
+        mock.db,
+        authContext,
+        'req-delete-missing',
+        {
+          action: 'delete',
+          contact_id: 'contact-unknown'
+        },
+        {
+          ensureRateLimit: () => Promise.resolve(),
+          getEntityAgencyId: () => Promise.resolve('agency-1'),
+          getContactEntityId: () => Promise.resolve('entity-1'),
+          ensureAgencyAccess: () => 'agency-1'
+        }
+      );
+    },
+    Error,
+    'Contact introuvable.'
+  );
 });
 
 Deno.test('dataEntityContactsPayloadSchema rejects unsupported list action', () => {

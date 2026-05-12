@@ -1,14 +1,16 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
+import { okAsync } from 'neverthrow';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DirectoryListRow, DirectorySearchState } from 'shared/schemas/directory.schema';
 
+import { renderWithProviders } from '@/__tests__/test-utils';
+import { deleteEntityContact } from '@/services/entities/deleteEntityContact';
+import { saveEntityContact } from '@/services/entities/saveEntityContact';
 import ClientDirectoryDetailPage from '../ClientDirectoryDetailPage';
 
 const mockNavigate = vi.fn();
 const mockDeleteMutateAsync = vi.fn();
-const mockSaveContactMutateAsync = vi.fn();
-const mockDeleteContactMutateAsync = vi.fn();
 const mockHistoryBack = vi.fn();
 const mockUseCanGoBack = vi.fn(() => true);
 const detailSearch: DirectorySearchState = {
@@ -65,16 +67,16 @@ vi.mock('@/hooks/useSaveProspect', () => ({
   useSaveProspect: vi.fn(() => ({ mutateAsync: vi.fn() }))
 }));
 
-vi.mock('@/hooks/useSaveEntityContact', () => ({
-  useSaveEntityContact: vi.fn(() => ({ mutateAsync: mockSaveContactMutateAsync }))
-}));
-
-vi.mock('@/hooks/useDeleteEntityContact', () => ({
-  useDeleteEntityContact: vi.fn(() => ({ mutateAsync: mockDeleteContactMutateAsync }))
-}));
-
 vi.mock('@/hooks/useSetClientArchived', () => ({
   useDeleteClient: vi.fn(() => ({ mutateAsync: mockDeleteMutateAsync }))
+}));
+
+vi.mock('@/services/entities/saveEntityContact', () => ({
+  saveEntityContact: vi.fn()
+}));
+
+vi.mock('@/services/entities/deleteEntityContact', () => ({
+  deleteEntityContact: vi.fn()
 }));
 
 vi.mock('@/components/ClientFormDialog', () => ({
@@ -108,6 +110,8 @@ const mockedDirectoryRecord = vi.mocked(useDirectoryRecord);
 const mockedDirectoryPage = vi.mocked(useDirectoryPage);
 const mockedEntityContacts = vi.mocked(useEntityContacts);
 const mockedNotifySuccess = vi.mocked(notifySuccess);
+const mockedSaveEntityContact = vi.mocked(saveEntityContact);
+const mockedDeleteEntityContact = vi.mocked(deleteEntityContact);
 
 const baseRecord = {
   id: 'entity-1',
@@ -211,6 +215,7 @@ const contact = {
   phone: '05 56 00 00 00',
   position: 'Responsable technique',
   notes: null,
+  archived_at: null,
   created_at: '2026-02-01T00:00:00.000Z',
   updated_at: '2026-02-01T00:00:00.000Z'
 };
@@ -221,8 +226,8 @@ describe('ClientDirectoryDetailPage', () => {
     mockUseCanGoBack.mockReturnValue(true);
     vi.spyOn(window.history, 'back').mockImplementation(mockHistoryBack);
     mockDeleteMutateAsync.mockResolvedValue(baseRecord);
-    mockSaveContactMutateAsync.mockResolvedValue(contact);
-    mockDeleteContactMutateAsync.mockResolvedValue(undefined);
+    mockedSaveEntityContact.mockReturnValue(okAsync(contact));
+    mockedDeleteEntityContact.mockReturnValue(okAsync(undefined));
     mockedEntityContacts.mockReturnValue({ data: [] } as never);
     mockedSessionState.mockReturnValue({
       session: { user: { id: 'user-1', email: 'admin@example.com' } },
@@ -265,7 +270,7 @@ describe('ClientDirectoryDetailPage', () => {
   it('renders a canonical detail view without a back button and exposes delete for super_admin', async () => {
     const user = userEvent.setup();
 
-    render(<ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} search={detailSearch} />);
+    renderWithProviders(<ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} search={detailSearch} />);
 
     expect(screen.queryByRole('button', { name: /retour aux résultats/i })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /supprimer définitivement/i })).toBeInTheDocument();
@@ -313,7 +318,7 @@ describe('ClientDirectoryDetailPage', () => {
       isAuthenticated: true
     } as never);
 
-    render(<ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} search={detailSearch} />);
+    renderWithProviders(<ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} search={detailSearch} />);
 
     expect(screen.queryByRole('button', { name: /supprimer définitivement/i })).not.toBeInTheDocument();
   });
@@ -324,7 +329,7 @@ describe('ClientDirectoryDetailPage', () => {
       data: undefined
     } as never);
 
-    render(<ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} search={detailSearch} />);
+    renderWithProviders(<ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} search={detailSearch} />);
 
     const section = document.querySelector('section[aria-busy="true"]');
     expect(section).toBeTruthy();
@@ -334,7 +339,7 @@ describe('ClientDirectoryDetailPage', () => {
   it('opens the compact contact dialog and creates a contact from the client record', async () => {
     const user = userEvent.setup();
 
-    render(<ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} search={detailSearch} />);
+    renderWithProviders(<ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} search={detailSearch} />);
 
     await user.click(screen.getByRole('button', { name: /^ajouter$/i }));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
@@ -345,7 +350,7 @@ describe('ClientDirectoryDetailPage', () => {
     await user.click(screen.getByRole('button', { name: /^ajouter$/i }));
 
     await waitFor(() => {
-      expect(mockSaveContactMutateAsync).toHaveBeenCalledWith({
+      expect(mockedSaveEntityContact).toHaveBeenCalledWith({
         id: undefined,
         entity_id: 'entity-1',
         first_name: 'Lina',
@@ -363,7 +368,7 @@ describe('ClientDirectoryDetailPage', () => {
     const user = userEvent.setup();
     mockedEntityContacts.mockReturnValue({ data: [contact], isLoading: false } as never);
 
-    render(<ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} search={detailSearch} />);
+    renderWithProviders(<ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} search={detailSearch} />);
 
     await user.click(screen.getByRole('button', { name: /modifier kévin chauchet/i }));
     expect(screen.getByDisplayValue('Kévin')).toBeInTheDocument();
@@ -374,7 +379,7 @@ describe('ClientDirectoryDetailPage', () => {
     await user.click(screen.getByRole('button', { name: /^enregistrer$/i }));
 
     await waitFor(() => {
-      expect(mockSaveContactMutateAsync).toHaveBeenCalledWith(
+      expect(mockedSaveEntityContact).toHaveBeenCalledWith(
         expect.objectContaining({
           id: 'contact-1',
           entity_id: 'entity-1',
@@ -389,14 +394,14 @@ describe('ClientDirectoryDetailPage', () => {
     const user = userEvent.setup();
     mockedEntityContacts.mockReturnValue({ data: [contact], isLoading: false } as never);
 
-    render(<ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} search={detailSearch} />);
+    renderWithProviders(<ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} search={detailSearch} />);
 
     await user.click(screen.getByRole('button', { name: /supprimer kévin chauchet/i }));
     expect(screen.getByText(/le contact kévin chauchet sera supprimé/i)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /^supprimer$/i }));
 
     await waitFor(() => {
-      expect(mockDeleteContactMutateAsync).toHaveBeenCalledWith('contact-1');
+      expect(mockedDeleteEntityContact).toHaveBeenCalledWith('contact-1');
     });
     expect(mockedNotifySuccess).toHaveBeenCalledWith('Contact supprimé.');
   });
@@ -404,7 +409,7 @@ describe('ClientDirectoryDetailPage', () => {
   it('keeps compact empty and loading contact states on the record detail', () => {
     mockedEntityContacts.mockReturnValueOnce({ data: [], isLoading: false } as never);
 
-    const { rerender } = render(
+    const { rerender } = renderWithProviders(
       <ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} search={detailSearch} />
     );
 
@@ -423,7 +428,7 @@ describe('ClientDirectoryDetailPage', () => {
       data: { record: prospectRecord }
     } as never);
 
-    render(<ClientDirectoryDetailPage routeRef={{ kind: 'prospect', id: 'prospect-1' }} search={detailSearch} />);
+    renderWithProviders(<ClientDirectoryDetailPage routeRef={{ kind: 'prospect', id: 'prospect-1' }} search={detailSearch} />);
 
     await user.click(screen.getByRole('button', { name: /convertir en client/i }));
 
@@ -441,7 +446,7 @@ describe('ClientDirectoryDetailPage', () => {
     const user = userEvent.setup();
     mockUseCanGoBack.mockReturnValue(false);
 
-    render(<ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} search={detailSearch} />);
+    renderWithProviders(<ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} search={detailSearch} />);
 
     await user.click(screen.getByRole('button', { name: /supprimer d.finitivement/i }));
     await user.click(screen.getByRole('button', { name: /^supprimer$/i }));
@@ -460,7 +465,7 @@ describe('ClientDirectoryDetailPage', () => {
   });
 
   it('shows previous and next controls when the current record belongs to the filtered page', () => {
-    render(<ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} search={detailSearch} />);
+    renderWithProviders(<ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} search={detailSearch} />);
 
     expect(screen.getByRole('button', { name: 'Fiche précédente' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Fiche suivante' })).toBeEnabled();
@@ -469,7 +474,7 @@ describe('ClientDirectoryDetailPage', () => {
   it('navigates to the previous canonical record with preserved search state and replace history', async () => {
     const user = userEvent.setup();
 
-    render(<ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} search={detailSearch} />);
+    renderWithProviders(<ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} search={detailSearch} />);
 
     await user.click(screen.getByRole('button', { name: 'Fiche précédente' }));
 
@@ -487,7 +492,7 @@ describe('ClientDirectoryDetailPage', () => {
   it('navigates to the next canonical record with preserved search state and replace history', async () => {
     const user = userEvent.setup();
 
-    render(<ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} search={detailSearch} />);
+    renderWithProviders(<ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} search={detailSearch} />);
 
     await user.click(screen.getByRole('button', { name: 'Fiche suivante' }));
 
@@ -503,7 +508,7 @@ describe('ClientDirectoryDetailPage', () => {
   });
 
   it('disables previous on the first row and next on the last row', () => {
-    const { rerender } = render(
+    const { rerender } = renderWithProviders(
       <ClientDirectoryDetailPage routeRef={{ kind: 'prospect', id: previousRow.id }} search={detailSearch} />
     );
 
@@ -526,7 +531,7 @@ describe('ClientDirectoryDetailPage', () => {
       }
     } as never);
 
-    render(<ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} search={detailSearch} />);
+    renderWithProviders(<ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} search={detailSearch} />);
 
     expect(screen.queryByRole('button', { name: 'Fiche précédente' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Fiche suivante' })).not.toBeInTheDocument();

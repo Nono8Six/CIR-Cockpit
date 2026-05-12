@@ -52,18 +52,18 @@ const saveContact = async (
       const rows = await db
         .update(entity_contacts)
         .set(normalized)
-        .where(eq(entity_contacts.id, contactId))
+        .where(and(eq(entity_contacts.id, contactId), eq(entity_contacts.entity_id, entityId)))
         .returning();
       const data = rows[0];
       if (!data) {
-        throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de mettre a jour le contact.');
+        throw httpError(404, 'NOT_FOUND', 'Contact introuvable pour ce tiers.');
       }
       return data;
     } catch (error) {
       if (
         typeof error === 'object'
         && error !== null
-        && Reflect.get(error, 'code') === 'DB_WRITE_FAILED'
+        && ['DB_WRITE_FAILED', 'NOT_FOUND'].includes(String(Reflect.get(error, 'code')))
       ) {
         throw error;
       }
@@ -95,13 +95,38 @@ const saveContact = async (
 
 const deleteContact = async (db: DbClient, contactId: string): Promise<void> => {
   try {
-    await db
+    const rows = await db
       .delete(entity_contacts)
-      .where(eq(entity_contacts.id, contactId));
-  } catch {
+      .where(eq(entity_contacts.id, contactId))
+      .returning({ id: entity_contacts.id });
+    if (rows.length === 0) {
+      throw httpError(404, 'NOT_FOUND', 'Contact introuvable.');
+    }
+  } catch (error) {
+    if (
+      typeof error === 'object'
+      && error !== null
+      && Reflect.get(error, 'code') === 'NOT_FOUND'
+    ) {
+      throw error;
+    }
     throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de supprimer le contact.');
   }
 };
+
+const compareText = (left: string | null, right: string | null): number => {
+  if (left === right) return 0;
+  if (left === null) return 1;
+  if (right === null) return -1;
+  return left.localeCompare(right, 'fr');
+};
+
+const sortContacts = (contacts: ContactRow[]): ContactRow[] =>
+  contacts.toSorted((left, right) =>
+    compareText(left.last_name, right.last_name)
+    || compareText(left.first_name, right.first_name)
+    || left.created_at.localeCompare(right.created_at)
+  );
 
 const listContactsByEntity = async (
   db: DbClient,
@@ -113,11 +138,12 @@ const listContactsByEntity = async (
   }
 
   try {
-    return await db
+    const contacts = await db
       .select()
       .from(entity_contacts)
       .where(and(...conditions) ?? sql<boolean>`true`)
-      .orderBy(asc(entity_contacts.last_name));
+      .orderBy(asc(entity_contacts.last_name), asc(entity_contacts.first_name), asc(entity_contacts.created_at));
+    return sortContacts(contacts);
   } catch {
     throw httpError(500, 'DB_READ_FAILED', 'Impossible de charger les contacts.');
   }
