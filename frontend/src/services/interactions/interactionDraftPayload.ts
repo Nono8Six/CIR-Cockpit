@@ -14,7 +14,7 @@ export type InteractionDraftRecord = {
   updated_at: string;
 };
 
-const interactionDraftValuesSnapshotSchema = z.object({
+const interactionDraftValuesSnapshotSchema = z.strictObject({
   channel: z.enum([Channel.PHONE, Channel.EMAIL, Channel.COUNTER, Channel.VISIT]).optional(),
   entity_type: z.string().optional(),
   contact_service: z.string().optional(),
@@ -35,7 +35,7 @@ const interactionDraftValuesSnapshotSchema = z.object({
   notes: z.string().optional(),
   entity_id: z.string().optional(),
   contact_id: z.string().optional()
-}).strict();
+});
 
 export const parseInteractionDraftPayload = (value: unknown): InteractionDraftPayload | null => {
   const payload = readObject({ payload: value }, 'payload');

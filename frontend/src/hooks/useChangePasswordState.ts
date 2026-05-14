@@ -21,7 +21,7 @@ const PASSWORD_RULES: PasswordRule[] = [
   { id: 'symbol', label: 'Au moins 1 symbole (!@#$…)', test: (pw) => /[^a-zA-Z0-9]/.test(pw) }
 ];
 
-const changePasswordFormSchema = z.object({
+const changePasswordFormSchema = z.strictObject({
   password: passwordSchema,
   confirmPassword: z.string().min(1, 'Confirmation requise')
 }).superRefine((values, ctx) => {

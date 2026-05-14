@@ -16,6 +16,7 @@ import {
   directorySuggestionOptionSchema
 } from './directory.schema.ts';
 import { membershipModeSchema, userRoleSchema } from './user.schema.ts';
+import { tierV1DirectoryRowSchema } from './tier-v1.schema.ts';
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -53,26 +54,26 @@ const entityContactRowSchema = z.custom<EntityContactRow>((value) => isEntityCon
 const interactionRowSchema = z.custom<InteractionRow>((value) => isInteractionRow(value), 'Interaction invalide.');
 const interactionDraftRowSchema = z.custom<InteractionDraftRow>((value) => isInteractionDraftRow(value), 'Brouillon invalide.');
 
-const apiSuccessSchema = z.object({
+const apiSuccessSchema = z.strictObject({
   request_id: z.string().trim().min(1).optional(),
   ok: z.literal(true)
-}).strict();
+});
 
 const agencyIdSchema = z.string().trim().min(1, 'Identifiant agence requis');
 const profileIdSchema = z.string().trim().min(1, 'Identifiant utilisateur requis');
 
-const adminAgencySummarySchema = z.object({
+const adminAgencySummarySchema = z.strictObject({
   id: agencyIdSchema,
   name: z.string().trim().min(1, "Nom d'agence requis"),
   archived_at: z.string().nullable()
-}).strict();
+});
 
-const adminUserMembershipSchema = z.object({
+const adminUserMembershipSchema = z.strictObject({
   agency_id: agencyIdSchema,
   agency_name: z.string().trim().min(1, "Nom d'agence requis")
-}).strict();
+});
 
-const adminUserSummarySchema = z.object({
+const adminUserSummarySchema = z.strictObject({
   id: profileIdSchema,
   email: z.string().trim().min(1, 'Email requis'),
   display_name: z.string().nullable(),
@@ -82,20 +83,20 @@ const adminUserSummarySchema = z.object({
   archived_at: z.string().nullable(),
   created_at: z.string().trim().min(1, 'Date de creation requise'),
   memberships: z.array(adminUserMembershipSchema)
-}).strict();
+});
 
-const auditLogActorSchema = z.object({
+const auditLogActorSchema = z.strictObject({
   id: profileIdSchema,
   display_name: z.string().nullable(),
   email: z.string().trim().min(1, 'Email requis')
-}).strict();
+});
 
-const auditLogAgencySchema = z.object({
+const auditLogAgencySchema = z.strictObject({
   id: agencyIdSchema,
   name: z.string().trim().min(1, "Nom d'agence requis")
-}).strict();
+});
 
-const adminAuditLogEntrySchema = z.object({
+const adminAuditLogEntrySchema = z.strictObject({
   id: z.string().trim().min(1, 'Identifiant audit requis'),
   action: z.string().trim().min(1, 'Action requise'),
   entity_table: z.string().trim().min(1, 'Table requise'),
@@ -107,22 +108,22 @@ const adminAuditLogEntrySchema = z.object({
   agency_id: agencyIdSchema.nullable(),
   actor: auditLogActorSchema.nullable(),
   agency: auditLogAgencySchema.nullable()
-}).strict();
+});
 
 export const dataEntitiesResponseSchema = apiSuccessSchema.extend({
   entity: entityRowSchema,
   propagated_interactions_count: z.number().int().nonnegative().optional(),
   deleted_interactions_count: z.number().int().nonnegative().optional()
-}).strict();
+});
 
 export const dataEntitiesListResponseSchema = apiSuccessSchema.extend({
   entities: z.array(entityRowSchema)
-}).strict();
+});
 
 export const dataEntitiesSearchIndexResponseSchema = apiSuccessSchema.extend({
   entities: z.array(entityRowSchema),
   contacts: z.array(entityContactRowSchema)
-}).strict();
+});
 
 export const dataEntitiesRouteResponseSchema = z.union([
   dataEntitiesResponseSchema,
@@ -132,19 +133,19 @@ export const dataEntitiesRouteResponseSchema = z.union([
 
 export const dataEntitiesReassignResponseSchema = dataEntitiesResponseSchema.extend({
   propagated_interactions_count: z.number().int().nonnegative()
-}).strict();
+});
 
 const dataEntityContactsSaveResponseSchema = apiSuccessSchema.extend({
   contact: entityContactRowSchema
-}).strict();
+});
 
 const dataEntityContactsDeleteResponseSchema = apiSuccessSchema.extend({
   contact_id: z.string().trim().min(1, 'Identifiant contact requis')
-}).strict();
+});
 
 export const dataEntityContactsListResponseSchema = apiSuccessSchema.extend({
   contacts: z.array(entityContactRowSchema)
-}).strict();
+});
 
 export const dataEntityContactsResponseSchema = z.union([
   dataEntityContactsListResponseSchema,
@@ -154,26 +155,26 @@ export const dataEntityContactsResponseSchema = z.union([
 
 export const dataInteractionsMutationResponseSchema = apiSuccessSchema.extend({
   interaction: interactionRowSchema
-}).strict();
+});
 
 export const dataInteractionsListResponseSchema = apiSuccessSchema.extend({
   interactions: z.array(interactionRowSchema),
   page: z.number().int().positive(),
   page_size: z.number().int().positive(),
   total: z.number().int().nonnegative()
-}).strict();
+});
 
 export const dataInteractionsDeleteResponseSchema = apiSuccessSchema.extend({
   interaction_id: z.string().trim().min(1, 'Identifiant interaction requis')
-}).strict();
+});
 
 export const dataInteractionsKnownCompaniesResponseSchema = apiSuccessSchema.extend({
   companies: z.array(z.string().trim().min(1, 'Entreprise requise'))
-}).strict();
+});
 
 export const dataInteractionDraftResponseSchema = apiSuccessSchema.extend({
   draft: interactionDraftRowSchema.nullable()
-}).strict();
+});
 
 export const dataInteractionsResponseSchema = z.union([
   dataInteractionsMutationResponseSchema,
@@ -187,7 +188,7 @@ export const dataConfigResponseSchema = apiSuccessSchema;
 export const dataProfileResponseSchema = apiSuccessSchema;
 export const configGetResponseSchema = apiSuccessSchema.extend({
   snapshot: resolvedConfigSnapshotSchema
-}).strict();
+});
 export const configSaveAgencyResponseSchema = apiSuccessSchema;
 export const configSaveProductResponseSchema = apiSuccessSchema;
 export const directoryListResponseSchema = apiSuccessSchema.extend({
@@ -195,87 +196,98 @@ export const directoryListResponseSchema = apiSuccessSchema.extend({
   total: z.number().int().nonnegative().optional(),
   page: z.number().int().positive(),
   page_size: z.number().int().positive(),
-  meta: z.object({
-    scope: z.object({
+  meta: z.strictObject({
+    scope: z.strictObject({
       mode: z.enum(['single_agency', 'multi_agency', 'global_read']),
       agencyIds: z.array(z.string().trim().min(1, 'Identifiant agence requis'))
-    }).strict()
-  }).strict().optional()
-}).strict();
+    })
+  }).optional()
+});
 
 export const directoryOptionsAgenciesResponseSchema = apiSuccessSchema.extend({
   agencies: z.array(directoryAgencyOptionSchema),
-}).strict();
+});
 
 export const directoryOptionsCommercialsResponseSchema = apiSuccessSchema.extend({
   commercials: z.array(directoryCommercialOptionSchema),
-  meta: z.object({
-    scope: z.object({
+  meta: z.strictObject({
+    scope: z.strictObject({
       mode: z.enum(['single_agency', 'multi_agency', 'global_read']),
       agencyIds: z.array(z.string().trim().min(1, 'Identifiant agence requis'))
-    }).strict()
-  }).strict().optional()
-}).strict();
+    })
+  }).optional()
+});
 
 export const directoryOptionsDepartmentsResponseSchema = apiSuccessSchema.extend({
   departments: z.array(z.string().trim().min(1, 'Departement requis')),
-  meta: z.object({
-    scope: z.object({
+  meta: z.strictObject({
+    scope: z.strictObject({
       mode: z.enum(['single_agency', 'multi_agency', 'global_read']),
       agencyIds: z.array(z.string().trim().min(1, 'Identifiant agence requis'))
-    }).strict()
-  }).strict().optional()
-}).strict();
+    })
+  }).optional()
+});
 
 export const directoryOptionsCitiesResponseSchema = apiSuccessSchema.extend({
   cities: z.array(directorySuggestionOptionSchema),
-  meta: z.object({
-    scope: z.object({
+  meta: z.strictObject({
+    scope: z.strictObject({
       mode: z.enum(['single_agency', 'multi_agency', 'global_read']),
       agencyIds: z.array(z.string().trim().min(1, 'Identifiant agence requis'))
-    }).strict()
-  }).strict().optional()
-}).strict();
+    })
+  }).optional()
+});
 
 export const directoryCitySuggestionsResponseSchema = apiSuccessSchema.extend({
   cities: z.array(directorySuggestionOptionSchema)
-}).strict();
+});
 
 export const directoryRecordResponseSchema = apiSuccessSchema.extend({
   record: directoryRecordSchema
-}).strict();
+});
 
 export const directoryCompanySearchResponseSchema = apiSuccessSchema.extend({
   companies: z.array(directoryCompanySearchResultSchema)
-}).strict();
+});
 
 export const directoryCompanyDetailsResponseSchema = apiSuccessSchema.extend({
   company: directoryCompanyDetailsSchema
-}).strict();
+});
 
 export const directoryDuplicatesResponseSchema = apiSuccessSchema.extend({
   matches: z.array(directoryDuplicateMatchSchema)
-}).strict();
+});
+
+export const tierV1SearchResponseSchema = apiSuccessSchema.extend({
+  results: z.array(tierV1DirectoryRowSchema)
+});
+
+export const tierV1DirectoryListResponseSchema = apiSuccessSchema.extend({
+  rows: z.array(tierV1DirectoryRowSchema),
+  page: z.number().int().positive(),
+  page_size: z.number().int().positive(),
+  total: z.number().int().nonnegative().optional()
+});
 
 export const directorySavedViewsListResponseSchema = apiSuccessSchema.extend({
   views: z.array(directorySavedViewSchema)
-}).strict();
+});
 
 export const directorySavedViewResponseSchema = apiSuccessSchema.extend({
   view: directorySavedViewSchema
-}).strict();
+});
 
 export const directorySavedViewDeleteResponseSchema = apiSuccessSchema.extend({
   view_id: z.string().trim().min(1, 'Identifiant vue requis')
-}).strict();
+});
 
 export const adminAgenciesAgencyResponseSchema = apiSuccessSchema.extend({
   agency: adminAgencySummarySchema
-}).strict();
+});
 
 export const adminAgenciesDeleteResponseSchema = apiSuccessSchema.extend({
   agency_id: agencyIdSchema
-}).strict();
+});
 
 export const adminAgenciesResponseSchema = z.union([
   adminAgenciesAgencyResponseSchema,
@@ -288,12 +300,12 @@ export const adminUsersCreateResponseSchema = apiSuccessSchema.extend({
   role: userRoleSchema,
   agency_ids: z.array(agencyIdSchema),
   temporary_password: z.string().min(1).optional()
-}).strict();
+});
 
 export const adminUsersSetRoleResponseSchema = apiSuccessSchema.extend({
   user_id: profileIdSchema,
   role: userRoleSchema
-}).strict();
+});
 
 export const adminUsersUpdateIdentityResponseSchema = apiSuccessSchema.extend({
   user_id: profileIdSchema,
@@ -301,23 +313,23 @@ export const adminUsersUpdateIdentityResponseSchema = apiSuccessSchema.extend({
   first_name: z.string().trim().min(1, 'Prenom requis'),
   last_name: z.string().trim().min(1, 'Nom requis'),
   display_name: z.string().trim().min(1, 'Nom affiche requis').optional()
-}).strict();
+});
 
 export const adminUsersSetMembershipsResponseSchema = apiSuccessSchema.extend({
   user_id: profileIdSchema,
   agency_ids: z.array(agencyIdSchema),
   membership_mode: membershipModeSchema
-}).strict();
+});
 
 export const adminUsersResetPasswordResponseSchema = apiSuccessSchema.extend({
   user_id: profileIdSchema,
   temporary_password: z.string().min(1)
-}).strict();
+});
 
 export const adminUsersArchiveResponseSchema = apiSuccessSchema.extend({
   user_id: profileIdSchema,
   archived: z.boolean()
-}).strict();
+});
 
 export const adminUsersDeleteResponseSchema = apiSuccessSchema.extend({
   user_id: profileIdSchema,
@@ -325,7 +337,7 @@ export const adminUsersDeleteResponseSchema = apiSuccessSchema.extend({
   anonymized_interactions: z.number().int().nonnegative().optional(),
   anonymized_agency_ids: z.array(agencyIdSchema).optional(),
   anonymized_orphan_interactions: z.number().int().nonnegative().optional()
-}).strict();
+});
 
 export const adminUsersResponseSchema = z.union([
   adminUsersCreateResponseSchema,
@@ -339,11 +351,11 @@ export const adminUsersResponseSchema = z.union([
 
 export const adminUsersListResponseSchema = apiSuccessSchema.extend({
   users: z.array(adminUserSummarySchema)
-}).strict();
+});
 
 export const adminAuditLogsResponseSchema = apiSuccessSchema.extend({
   logs: z.array(adminAuditLogEntrySchema)
-}).strict();
+});
 
 export type ApiSuccess = z.infer<typeof apiSuccessSchema>;
 export type DataEntitiesResponse = z.infer<typeof dataEntitiesResponseSchema>;
@@ -374,6 +386,8 @@ export type DirectoryRecordResponse = z.infer<typeof directoryRecordResponseSche
 export type DirectoryCompanySearchResponse = z.infer<typeof directoryCompanySearchResponseSchema>;
 export type DirectoryCompanyDetailsResponse = z.infer<typeof directoryCompanyDetailsResponseSchema>;
 export type DirectoryDuplicatesResponse = z.infer<typeof directoryDuplicatesResponseSchema>;
+export type TierV1SearchResponse = z.infer<typeof tierV1SearchResponseSchema>;
+export type TierV1DirectoryListResponse = z.infer<typeof tierV1DirectoryListResponseSchema>;
 export type DirectorySavedViewsListResponse = z.infer<typeof directorySavedViewsListResponseSchema>;
 export type DirectorySavedViewResponse = z.infer<typeof directorySavedViewResponseSchema>;
 export type DirectorySavedViewDeleteResponse = z.infer<typeof directorySavedViewDeleteResponseSchema>;

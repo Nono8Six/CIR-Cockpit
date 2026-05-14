@@ -7,11 +7,14 @@ import {
   DATA_ROUTES,
   RUN_FLAG,
   corsOrigin,
+  getApi,
   getContext,
   missingEnv,
   postApi,
   readString
 } from './helpers.ts';
+
+const POST_ROUTES = [...ADMIN_ROUTES, ...DATA_ROUTES];
 
 Deno.test({
   name: 'integration env is configured when RUN_API_INTEGRATION=1',
@@ -55,11 +58,15 @@ Deno.test({
   name: 'POST without token returns 401 AUTH_REQUIRED on all API routes',
   ignore: !CAN_RUN_NETWORK_INTEGRATION,
   fn: async () => {
-    for (const path of ALL_ROUTES) {
+    for (const path of POST_ROUTES) {
       const { status, payload } = await postApi(path, '', {});
       assertEquals(status, 401, `Unexpected unauth status for ${path}`);
       assertEquals(readString(payload, 'code'), 'AUTH_REQUIRED');
     }
+
+    const { status, payload } = await getApi('data.searchEntitiesUnified', '', {});
+    assertEquals(status, 401, 'Unexpected unauth status for data.searchEntitiesUnified GET');
+    assertEquals(readString(payload, 'code'), 'AUTH_REQUIRED');
   }
 });
 
@@ -70,13 +77,23 @@ Deno.test({
     const context = await getContext();
     const clientAuthHeader = `Bearer ${context.userToken}`;
 
-    for (const path of ALL_ROUTES) {
+    for (const path of POST_ROUTES) {
       const { status, payload } = await postApi(path, '', {}, {
         'x-client-authorization': clientAuthHeader
       });
       assertEquals(status, 401, `Unexpected x-client-authorization status for ${path}`);
       assertEquals(readString(payload, 'code'), 'AUTH_REQUIRED');
     }
+
+    const { status, payload } = await getApi('data.searchEntitiesUnified', '', {}, {
+      'x-client-authorization': clientAuthHeader
+    });
+    assertEquals(
+      status,
+      401,
+      'Unexpected x-client-authorization status for data.searchEntitiesUnified GET'
+    );
+    assertEquals(readString(payload, 'code'), 'AUTH_REQUIRED');
   }
 });
 
@@ -110,5 +127,9 @@ Deno.test({
       assertEquals(status, 400, `Unexpected data invalid payload status for ${path}`);
       assertEquals(readString(payload, 'code'), 'INVALID_PAYLOAD');
     }
+
+    const { status, payload } = await getApi('data.searchEntitiesUnified', context.userToken, {});
+    assertEquals(status, 400, 'Unexpected invalid payload status for data.searchEntitiesUnified GET');
+    assertEquals(readString(payload, 'code'), 'INVALID_PAYLOAD');
   }
 });

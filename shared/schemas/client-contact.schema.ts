@@ -7,14 +7,14 @@ const optionalEmail = z
   .optional()
   .or(z.literal(''));
 
-export const clientContactFormSchema = z.object({
+export const clientContactFormSchema = z.strictObject({
   first_name: z.string().trim().min(1, 'Prenom requis'),
   last_name: z.string().trim().min(1, 'Nom requis'),
   email: optionalEmail,
   phone: z.string().trim().optional().or(z.literal('')),
   position: z.string().trim().optional().or(z.literal('')),
   notes: z.string().trim().optional().or(z.literal(''))
-}).strict().superRefine((values, ctx) => {
+}).superRefine((values, ctx) => {
   const hasPhone = Boolean(values.phone?.trim());
   const hasEmail = Boolean(values.email?.trim());
   if (!hasPhone && !hasEmail) {

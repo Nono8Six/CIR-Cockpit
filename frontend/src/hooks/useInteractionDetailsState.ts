@@ -17,12 +17,12 @@ type InteractionDetailsStateInput = {
   ) => Promise<void> | void;
 };
 
-const interactionDetailsFormSchema = z.object({
+const interactionDetailsFormSchema = z.strictObject({
   note: z.string().max(5000, 'Note trop longue'),
   statusId: z.string().trim().min(1, 'Statut requis'),
   reminder: z.string(),
   orderRef: z.string().trim().max(255, 'Reference trop longue')
-}).strict();
+});
 
 type InteractionDetailsFormValues = z.infer<typeof interactionDetailsFormSchema>;
 

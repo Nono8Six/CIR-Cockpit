@@ -13,7 +13,7 @@ const optionalEmailSchema = z
   .union([z.string().trim().email('Email invalide'), z.literal(''), z.null(), z.undefined()])
   .transform((value) => typeof value === 'string' ? value.trim() : '');
 
-export const onboardingFormSchema = z.object({
+export const onboardingFormSchema = z.strictObject({
   intent: z.enum(['client', 'prospect']),
   client_kind: clientKindSchema.default('company'),
   name: z.string().trim().min(1, 'Nom requis'),
@@ -36,7 +36,7 @@ export const onboardingFormSchema = z.object({
   client_number: z.union([clientNumberSchema, z.literal('')]).default(''),
   account_type: accountTypeSchema.default('term'),
   cir_commercial_id: optionalUuidSchema
-}).strict().superRefine((values, ctx) => {
+}).superRefine((values, ctx) => {
   const isIndividualClient = values.intent === 'client' && values.client_kind === 'individual';
 
   if (!isIndividualClient) {

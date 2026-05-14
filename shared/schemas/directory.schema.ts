@@ -61,18 +61,18 @@ export const directorySortBySchema = z.enum([
 export const directorySortDirectionSchema = z.enum(['asc', 'desc']);
 export const directoryDensitySchema = z.enum(['comfortable', 'compact']);
 
-export const directoryActiveAgencyScopeSchema = z.object({
+export const directoryActiveAgencyScopeSchema = z.strictObject({
   mode: z.literal('active_agency')
-}).strict();
+});
 
-export const directorySelectedAgenciesScopeSchema = z.object({
+export const directorySelectedAgenciesScopeSchema = z.strictObject({
   mode: z.literal('selected_agencies'),
   agencyIds: optionalUuidArrayFilterSchema.pipe(z.array(uuidSchema).min(1, 'Au moins une agence requise'))
-}).strict();
+});
 
-export const directoryAllAccessibleAgenciesScopeSchema = z.object({
+export const directoryAllAccessibleAgenciesScopeSchema = z.strictObject({
   mode: z.literal('all_accessible_agencies')
-}).strict();
+});
 
 export const directoryScopeInputSchema = z.discriminatedUnion('mode', [
   directoryActiveAgencyScopeSchema,
@@ -90,10 +90,10 @@ const directoryPageSizeSchema = z
     message: 'Taille de page invalide'
   });
 
-export const directorySortingRuleSchema = z.object({
+export const directorySortingRuleSchema = z.strictObject({
   id: directorySortBySchema,
   desc: booleanLikeSchema.default(false)
-}).strict();
+});
 
 export const directorySortingStateSchema = z
   .array(directorySortingRuleSchema)
@@ -104,25 +104,25 @@ export const directorySortingStateSchema = z
     'Colonnes de tri dupliquees'
   );
 
-export const directoryListFiltersSchema = z.object({
+export const directoryListFiltersSchema = z.strictObject({
   q: optionalTextFilterSchema.optional(),
   departments: optionalTextArrayFilterSchema.default([]),
   city: optionalTextFilterSchema.optional(),
   cirCommercialIds: optionalUuidArrayFilterSchema.default([]),
   includeArchived: booleanLikeSchema.default(false)
-}).strict();
+});
 
-export const directoryPaginationSchema = z.object({
+export const directoryPaginationSchema = z.strictObject({
   page: z.coerce.number().int().min(1, 'Page invalide').default(1),
   pageSize: directoryPageSizeSchema.default(50),
   includeTotal: z.boolean().default(false)
-}).strict();
+});
 
-export const directoryDebugInputSchema = z.object({
+export const directoryDebugInputSchema = z.strictObject({
   includeResolvedScope: z.boolean().default(false)
-}).strict();
+});
 
-export const directoryListInputSchema = z.object({
+export const directoryListInputSchema = z.strictObject({
   scope: directoryScopeInputSchema.default({ mode: 'active_agency' }),
   type: directoryEntityTypeSchema.default('all'),
   filters: directoryListFiltersSchema.default({
@@ -137,39 +137,39 @@ export const directoryListInputSchema = z.object({
   }),
   sorting: directorySortingStateSchema.default([{ id: 'name', desc: false }]),
   debug: directoryDebugInputSchema.optional()
-}).strict();
+});
 
-export const directoryOptionsAgenciesInputSchema = z.object({
+export const directoryOptionsAgenciesInputSchema = z.strictObject({
   includeArchived: booleanLikeSchema.default(false)
-}).strict();
+});
 
-export const directoryOptionsFacetInputSchema = z.object({
+export const directoryOptionsFacetInputSchema = z.strictObject({
   scope: directoryScopeInputSchema.default({ mode: 'active_agency' }),
   type: directoryEntityTypeSchema.default('all'),
   includeArchived: booleanLikeSchema.default(false),
   debug: directoryDebugInputSchema.optional()
-}).strict();
+});
 
 export const directoryOptionsCitiesInputSchema = directoryOptionsFacetInputSchema.extend({
   q: optionalTextFilterSchema.optional()
-}).strict();
+});
 
-export const directoryCitySuggestionsInputSchema = z.object({
+export const directoryCitySuggestionsInputSchema = z.strictObject({
   q: z.string().trim().min(1, 'Recherche ville requise'),
   scope: directoryScopeInputSchema.default({ mode: 'active_agency' }),
   type: directoryEntityTypeSchema.default('all'),
   includeArchived: booleanLikeSchema.default(false)
-}).strict();
+});
 
-export const directoryClientRouteRefSchema = z.object({
+export const directoryClientRouteRefSchema = z.strictObject({
   kind: z.literal('client'),
   clientNumber: z.string().trim().min(1, 'Numero client requis')
-}).strict();
+});
 
-export const directoryProspectRouteRefSchema = z.object({
+export const directoryProspectRouteRefSchema = z.strictObject({
   kind: z.literal('prospect'),
   id: uuidSchema
-}).strict();
+});
 
 export const directoryRouteRefSchema = z.discriminatedUnion('kind', [
   directoryClientRouteRefSchema,
@@ -193,7 +193,7 @@ const officialTextArraySchema = z
 export const officialDataSourceSchema = z.literal('api-recherche-entreprises');
 export const directoryCompanySearchMatchQualitySchema = z.enum(['exact', 'close', 'expanded']);
 
-export const officialCompanyFieldsSchema = z.object({
+export const officialCompanyFieldsSchema = z.strictObject({
   siret: optionalOfficialTextSchema.optional(),
   siren: optionalOfficialTextSchema.optional(),
   naf_code: optionalOfficialTextSchema.optional(),
@@ -203,26 +203,26 @@ export const officialCompanyFieldsSchema = z.object({
     .transform((value) => value ?? null)
     .optional(),
   official_data_synced_at: optionalOfficialTextSchema.optional()
-}).strict();
+});
 
-export const directoryCommercialOptionSchema = z.object({
+export const directoryCommercialOptionSchema = z.strictObject({
   id: uuidSchema,
   display_name: z.string().trim().min(1, 'Nom commercial requis')
-}).strict();
+});
 
-export const directoryAgencyOptionSchema = z.object({
+export const directoryAgencyOptionSchema = z.strictObject({
   id: uuidSchema,
   name: z.string().trim().min(1, "Nom d'agence requis")
-}).strict();
+});
 
-export const directorySuggestionOptionSchema = z.object({
+export const directorySuggestionOptionSchema = z.strictObject({
   value: z.string().trim().min(1, 'Valeur requise'),
   label: z.string().trim().min(1, 'Libelle requis')
-}).strict();
+});
 
 export const directoryColumnVisibilitySchema = z.record(z.string(), z.boolean()).default({});
 
-export const directorySavedViewStateSchema = z.object({
+export const directorySavedViewStateSchema = z.strictObject({
   q: optionalTextFilterSchema.optional(),
   type: directoryEntityTypeSchema.default('all'),
   scope: directoryScopeInputSchema.default({ mode: 'active_agency' }),
@@ -234,9 +234,9 @@ export const directorySavedViewStateSchema = z.object({
   sorting: directorySortingStateSchema.default([{ id: 'name', desc: false }]),
   columnVisibility: directoryColumnVisibilitySchema,
   density: directoryDensitySchema.default('comfortable')
-}).strict();
+});
 
-export const directorySearchStateSchema = z.object({
+export const directorySearchStateSchema = z.strictObject({
   q: optionalTextFilterSchema.optional(),
   type: directoryEntityTypeSchema.default('all'),
   scope: directoryScopeInputSchema.default({ mode: 'active_agency' }),
@@ -247,35 +247,35 @@ export const directorySearchStateSchema = z.object({
   page: z.coerce.number().int().min(1, 'Page invalide').default(1),
   pageSize: directoryPageSizeSchema.default(50),
   sorting: directorySortingStateSchema.default([{ id: 'name', desc: false }])
-}).strict();
+});
 
-export const directorySavedViewSchema = z.object({
+export const directorySavedViewSchema = z.strictObject({
   id: uuidSchema,
   name: z.string().trim().min(1, 'Nom de vue requis'),
   is_default: z.boolean(),
   state: directorySavedViewStateSchema,
   created_at: z.string().trim().min(1, 'Date de creation requise'),
   updated_at: z.string().trim().min(1, 'Date de mise a jour requise')
-}).strict();
+});
 
-export const directorySavedViewsListInputSchema = z.object({}).strict();
+export const directorySavedViewsListInputSchema = z.strictObject({});
 
-export const directorySavedViewSaveInputSchema = z.object({
+export const directorySavedViewSaveInputSchema = z.strictObject({
   id: uuidSchema.optional(),
   name: z.string().trim().min(1, 'Nom de vue requis').max(60, 'Nom de vue trop long'),
   state: directorySavedViewStateSchema,
   is_default: z.boolean().default(false)
-}).strict();
+});
 
-export const directorySavedViewDeleteInputSchema = z.object({
+export const directorySavedViewDeleteInputSchema = z.strictObject({
   id: uuidSchema
-}).strict();
+});
 
-export const directorySavedViewSetDefaultInputSchema = z.object({
+export const directorySavedViewSetDefaultInputSchema = z.strictObject({
   id: uuidSchema
-}).strict();
+});
 
-export const directoryListRowSchema = z.object({
+export const directoryListRowSchema = z.strictObject({
   id: uuidSchema,
   entity_type: z.string().trim().min(1, 'Type requis'),
   client_kind: directoryNullableClientKindSchema,
@@ -294,9 +294,9 @@ export const directoryListRowSchema = z.object({
   cir_commercial_name: directoryNullableTextSchema,
   archived_at: z.string().nullable(),
   updated_at: z.string().trim().min(1, 'Date de mise a jour requise')
-}).strict();
+});
 
-export const directoryRecordSchema = z.object({
+export const directoryRecordSchema = z.strictObject({
   id: uuidSchema,
   entity_type: z.string().trim().min(1, 'Type requis'),
   client_kind: directoryNullableClientKindSchema,
@@ -317,19 +317,19 @@ export const directoryRecordSchema = z.object({
   archived_at: z.string().nullable(),
   created_at: z.string().trim().min(1, 'Date de creation requise'),
   updated_at: z.string().trim().min(1, 'Date de mise a jour requise')
-}).strict();
+});
 
-export const directoryCompanySearchInputSchema = z.object({
+export const directoryCompanySearchInputSchema = z.strictObject({
   query: z.string().trim().min(1, 'Recherche entreprise requise').max(120, 'Recherche trop longue'),
   department: optionalTextFilterSchema.optional(),
   city: optionalTextFilterSchema.optional(),
   page: z.coerce.number().int().min(1, 'Page invalide').max(10, 'Page invalide').optional(),
   per_page: z.coerce.number().int().min(1, 'Taille invalide').max(20, 'Taille invalide').optional()
-}).strict();
+});
 
-export const directoryCompanyDetailsInputSchema = z.object({
+export const directoryCompanyDetailsInputSchema = z.strictObject({
   siren: z.string().trim().regex(/^\d{9}$/, 'SIREN invalide')
-}).strict();
+});
 
 const directoryOptionalEmailSchema = z
   .union([z.string().trim().email('Email invalide'), z.literal(''), z.null(), z.undefined()])
@@ -339,7 +339,7 @@ const directoryOptionalPhoneSchema = z
   .union([z.string(), z.null(), z.undefined()])
   .transform((value) => normalizeOptionalText(value) ?? null);
 
-export const directoryCompanyDuplicateInputSchema = z.object({
+export const directoryCompanyDuplicateInputSchema = z.strictObject({
   kind: z.literal('company'),
   scope: directoryScopeInputSchema.default({ mode: 'active_agency' }),
   includeArchived: booleanLikeSchema.default(true),
@@ -347,9 +347,9 @@ export const directoryCompanyDuplicateInputSchema = z.object({
   siren: optionalOfficialTextSchema.optional(),
   name: z.string().trim().min(1, 'Nom requis'),
   city: optionalTextFilterSchema.optional()
-}).strict();
+});
 
-export const directoryIndividualDuplicateInputSchema = z.object({
+export const directoryIndividualDuplicateInputSchema = z.strictObject({
   kind: z.literal('individual'),
   scope: directoryScopeInputSchema.default({ mode: 'active_agency' }),
   includeArchived: booleanLikeSchema.default(true),
@@ -359,7 +359,7 @@ export const directoryIndividualDuplicateInputSchema = z.object({
   city: z.string().trim().min(1, 'Ville requise'),
   email: directoryOptionalEmailSchema,
   phone: directoryOptionalPhoneSchema
-}).strict().superRefine((values, ctx) => {
+}).superRefine((values, ctx) => {
   if (!values.email && !values.phone) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -376,7 +376,7 @@ export const directoryDuplicatesInputSchema = z.discriminatedUnion('kind', [
 
 export const directoryCompanySearchEstablishmentStatusSchema = z.enum(['open', 'closed', 'unknown']);
 
-export const directoryCompanySearchResultSchema = z.object({
+export const directoryCompanySearchResultSchema = z.strictObject({
   name: z.string().trim().min(1, 'Nom entreprise requis'),
   address: directoryNullableTextSchema,
   postal_code: directoryNullableTextSchema,
@@ -400,22 +400,22 @@ export const directoryCompanySearchResultSchema = z.object({
   match_quality: directoryCompanySearchMatchQualitySchema,
   match_explanation: directoryNullableTextSchema,
   ...officialCompanyFieldsSchema.shape
-}).strict();
+});
 
-export const directoryCompanyDirectorSchema = z.object({
+export const directoryCompanyDirectorSchema = z.strictObject({
   full_name: z.string().trim().min(1, 'Nom dirigeant requis'),
   role: directoryNullableTextSchema,
   nationality: directoryNullableTextSchema,
   birth_year: z.number().int().nonnegative().nullable()
-}).strict();
+});
 
-export const directoryCompanyFinancialsSchema = z.object({
+export const directoryCompanyFinancialsSchema = z.strictObject({
   latest_year: z.number().int().nonnegative(),
   revenue: z.number().finite().nullable(),
   net_income: z.number().finite().nullable()
-}).strict();
+});
 
-export const directoryCompanySignalsSchema = z.object({
+export const directoryCompanySignalsSchema = z.strictObject({
   association: z.boolean(),
   ess: z.boolean(),
   qualiopi: z.boolean(),
@@ -424,9 +424,9 @@ export const directoryCompanySignalsSchema = z.object({
   organisme_formation: z.boolean(),
   service_public: z.boolean(),
   societe_mission: z.boolean()
-}).strict();
+});
 
-export const directoryCompanyDetailsSchema = z.object({
+export const directoryCompanyDetailsSchema = z.strictObject({
   siren: z.string().trim().regex(/^\d{9}$/, 'SIREN requis'),
   official_name: z.string().trim().min(1, 'Raison sociale requise'),
   name: z.string().trim().min(1, 'Nom complet requis'),
@@ -447,12 +447,12 @@ export const directoryCompanyDetailsSchema = z.object({
   directors: z.array(directoryCompanyDirectorSchema),
   financials: directoryCompanyFinancialsSchema.nullable(),
   signals: directoryCompanySignalsSchema
-}).strict();
+});
 
-export const directoryDuplicateMatchSchema = z.object({
+export const directoryDuplicateMatchSchema = z.strictObject({
   record: directoryListRowSchema,
   reason: z.string().trim().min(1, 'Raison requise')
-}).strict();
+});
 
 export type DirectoryEntityType = z.infer<typeof directoryEntityTypeSchema>;
 export type DirectoryClientKind = z.infer<typeof directoryClientKindSchema>;

@@ -23,7 +23,9 @@ import {
   directoryRecordResponseSchema,
   directorySavedViewDeleteResponseSchema,
   directorySavedViewResponseSchema,
-  directorySavedViewsListResponseSchema
+  directorySavedViewsListResponseSchema,
+  tierV1DirectoryListResponseSchema,
+  tierV1SearchResponseSchema
 } from '../../../../shared/schemas/api-responses.ts';
 import { adminAgenciesPayloadSchema } from '../../../../shared/schemas/agency.schema.ts';
 import {
@@ -61,6 +63,10 @@ import {
   directorySavedViewsListInputSchema
 } from '../../../../shared/schemas/directory.schema.ts';
 import {
+  tierV1DirectoryListInputSchema,
+  tierV1SearchInputSchema
+} from '../../../../shared/schemas/tier-v1.schema.ts';
+import {
   adminAuditLogsInputSchema,
   adminUsersListInputSchema,
   adminUsersPayloadSchema
@@ -75,6 +81,7 @@ import { handleDataEntitiesAction } from '../services/dataEntities.ts';
 import { handleDataEntityContactsAction } from '../services/dataEntityContacts.ts';
 import { handleDataInteractionsAction } from '../services/dataInteractions.ts';
 import { handleDataProfileAction } from '../services/dataProfile.ts';
+import { searchEntitiesUnified } from '../services/dataSearchEntitiesUnified.ts';
 import { listCockpitAgencyMembers, lookupCockpitPhone } from '../services/cockpit.ts';
 import {
   getDirectoryCitySuggestions,
@@ -95,6 +102,7 @@ import {
   setDefaultDirectorySavedView
 } from '../services/directorySavedViews.ts';
 import type { DbClient } from '../types.ts';
+import { httpError } from '../middleware/errorHandler.ts';
 import { authedProcedure, router, superAdminProcedure } from './procedures.ts';
 import { withAuthedDualDbHandler, withAuthedHandler, withSuperAdminHandler } from './procedureHelpers.ts';
 
@@ -107,6 +115,14 @@ export const selectDataEntitiesDb = (
   db: DbClient,
   userDb: DbClient
 ): DbClient => (isServiceRoleDataEntitiesAction(payload) ? db : userDb);
+
+const rejectDeferredTierV1Contract = (): Promise<never> => {
+  return Promise.reject(httpError(
+    501,
+    'REQUEST_FAILED',
+    'Contrat V1 disponible. Implementation prevue dans la tranche suivante.'
+  ));
+};
 
 export const appRouter = router({
   data: router({
@@ -131,7 +147,11 @@ export const appRouter = router({
     profile: authedProcedure
       .input(dataProfilePayloadSchema)
       .output(dataProfileResponseSchema)
-      .mutation(withAuthedHandler(handleDataProfileAction))
+      .mutation(withAuthedHandler(handleDataProfileAction)),
+    searchEntitiesUnified: authedProcedure
+      .input(tierV1SearchInputSchema)
+      .output(tierV1SearchResponseSchema)
+      .query(withAuthedDualDbHandler(searchEntitiesUnified, (_input, db) => db))
   }),
   cockpit: router({
     'agency-members': authedProcedure
@@ -218,6 +238,10 @@ export const appRouter = router({
       .input(directoryRouteRefSchema)
       .output(directoryRecordResponseSchema)
       .query(withAuthedHandler(getDirectoryRecord)),
+    'tiers-list': authedProcedure
+      .input(tierV1DirectoryListInputSchema)
+      .output(tierV1DirectoryListResponseSchema)
+      .query(withAuthedHandler(rejectDeferredTierV1Contract)),
     'saved-views': router({
       list: authedProcedure
         .input(directorySavedViewsListInputSchema)

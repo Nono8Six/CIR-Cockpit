@@ -31,7 +31,7 @@ export const optionalCommercialIdSchema = z
     return trimmed.length > 0 ? trimmed : null;
   });
 
-const clientBaseSchema = z.object({
+const clientBaseSchema = z.strictObject({
   client_number: clientNumberSchema,
   client_kind: clientKindSchema,
   name: z.string().trim().min(1, 'Nom requis'),
@@ -40,14 +40,14 @@ const clientBaseSchema = z.object({
   city: z.string().trim().min(1, 'Ville requise'),
   notes: z.string().trim().optional().nullable(),
   agency_id: uuidSchema
-}).extend(officialCompanyFieldsSchema.shape).strict();
+}).extend(officialCompanyFieldsSchema.shape);
 
 export const clientCompanyFormSchema = clientBaseSchema.extend({
   client_kind: z.literal('company'),
   account_type: accountTypeSchema,
   address: z.string().trim().min(1, 'Adresse requise'),
   cir_commercial_id: optionalCommercialIdSchema.optional()
-}).strict();
+});
 
 export const clientIndividualFormSchema = clientBaseSchema.extend({
   client_kind: z.literal('individual'),
@@ -55,7 +55,7 @@ export const clientIndividualFormSchema = clientBaseSchema.extend({
   address: optionalTextSchema,
   cir_commercial_id: optionalCommercialIdSchema.optional(),
   primary_contact: clientContactFormSchema
-}).strict().superRefine((values, ctx) => {
+}).superRefine((values, ctx) => {
   if (values.cir_commercial_id) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,

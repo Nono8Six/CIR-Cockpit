@@ -11,7 +11,7 @@ const postalCode = optionalText.refine(
   { message: 'Code postal invalide' }
 );
 
-export const prospectFormSchema = z.object({
+export const prospectFormSchema = z.strictObject({
   name: z.string().trim().min(1, 'Nom requis'),
   address: optionalText,
   postal_code: postalCode,
@@ -19,6 +19,6 @@ export const prospectFormSchema = z.object({
   city: z.string().trim().min(1, 'Ville requise'),
   notes: optionalText,
   agency_id: uuidSchema
-}).extend(officialCompanyFieldsSchema.shape).strict();
+}).extend(officialCompanyFieldsSchema.shape);
 
 export type ProspectFormValues = z.input<typeof prospectFormSchema>;

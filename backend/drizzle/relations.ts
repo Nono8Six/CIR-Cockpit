@@ -4,6 +4,7 @@ import {
   agencies,
   agency_members,
   agency_system_users,
+  cir_agencies,
   entities,
   entity_contacts,
   interactions,
@@ -18,6 +19,10 @@ export const agencyRelations = relations(agencies, ({ many, one }) => ({
     fields: [agencies.id],
     references: [agency_system_users.agency_id]
   })
+}));
+
+export const cirAgencyRelations = relations(cir_agencies, ({ many }) => ({
+  entities: many(entities)
 }));
 
 export const profileRelations = relations(profiles, ({ many }) => ({
@@ -39,6 +44,10 @@ export const entityRelations = relations(entities, ({ many, one }) => ({
   agency: one(agencies, {
     fields: [entities.agency_id],
     references: [agencies.id]
+  }),
+  cirAgency: one(cir_agencies, {
+    fields: [entities.cir_agency_id],
+    references: [cir_agencies.id]
   }),
   contacts: many(entity_contacts),
   interactions: many(interactions)
@@ -65,4 +74,3 @@ export const interactionRelations = relations(interactions, ({ one }) => ({
     references: [entity_contacts.id]
   })
 }));
-

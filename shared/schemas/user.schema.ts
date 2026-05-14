@@ -32,7 +32,7 @@ export const userCreateFormSchema = z
     agency_ids: z.array(uuidSchema),
     password: optionalPasswordSchema
   })
-  .strict()
+  
   .superRefine((values, ctx) => {
     if (values.role === 'tcs' && values.agency_ids.length === 0) {
       ctx.addIssue({
@@ -49,15 +49,15 @@ export const userIdentityFormSchema = z
     first_name: firstNameSchema,
     last_name: lastNameSchema
   })
-  .strict();
+  ;
 
 export const userMembershipsFormSchema = z
   .object({
     agency_ids: z.array(uuidSchema).min(1, 'Au moins une agence requise')
   })
-  .strict();
+  ;
 
-const createUserSchema = z.object({
+const createUserSchema = z.strictObject({
   action: z.literal('create'),
   email: emailSchema,
   first_name: firstNameSchema,
@@ -65,49 +65,49 @@ const createUserSchema = z.object({
   role: userRoleSchema.optional(),
   agency_ids: z.array(uuidSchema).optional(),
   password: passwordSchema.optional()
-}).strict();
+});
 
-const setRoleSchema = z.object({
+const setRoleSchema = z.strictObject({
   action: z.literal('set_role'),
   user_id: uuidSchema,
   role: userRoleSchema
-}).strict();
+});
 
-const updateIdentitySchema = z.object({
+const updateIdentitySchema = z.strictObject({
   action: z.literal('update_identity'),
   user_id: uuidSchema,
   email: emailSchema,
   first_name: firstNameSchema,
   last_name: lastNameSchema
-}).strict();
+});
 
-const setMembershipsSchema = z.object({
+const setMembershipsSchema = z.strictObject({
   action: z.literal('set_memberships'),
   user_id: uuidSchema,
   agency_ids: z.array(uuidSchema).min(1, 'Au moins une agence requise'),
   mode: membershipModeSchema.optional()
-}).strict();
+});
 
-const resetPasswordSchema = z.object({
+const resetPasswordSchema = z.strictObject({
   action: z.literal('reset_password'),
   user_id: uuidSchema,
   password: passwordSchema.optional()
-}).strict();
+});
 
-const archiveSchema = z.object({
+const archiveSchema = z.strictObject({
   action: z.literal('archive'),
   user_id: uuidSchema
-}).strict();
+});
 
-const unarchiveSchema = z.object({
+const unarchiveSchema = z.strictObject({
   action: z.literal('unarchive'),
   user_id: uuidSchema
-}).strict();
+});
 
-const deleteUserSchema = z.object({
+const deleteUserSchema = z.strictObject({
   action: z.literal('delete'),
   user_id: uuidSchema
-}).strict();
+});
 
 export const adminUsersPayloadSchema = z.discriminatedUnion('action', [
   createUserSchema,
@@ -120,16 +120,16 @@ export const adminUsersPayloadSchema = z.discriminatedUnion('action', [
   deleteUserSchema
 ]);
 
-export const adminUsersListInputSchema = z.object({}).strict();
+export const adminUsersListInputSchema = z.strictObject({});
 
-export const adminAuditLogsInputSchema = z.object({
+export const adminAuditLogsInputSchema = z.strictObject({
   agency_id: uuidSchema.nullish(),
   actor_id: uuidSchema.nullish(),
   entity_table: z.string().trim().min(1, 'Table requise').max(80, 'Table trop longue').nullish(),
   from: z.string().trim().datetime({ offset: true }).nullish(),
   to: z.string().trim().datetime({ offset: true }).nullish(),
   limit: z.number().int().min(1, 'Limite invalide').max(500, 'Limite trop elevee').optional()
-}).strict();
+});
 
 export type UserCreateFormValues = z.infer<typeof userCreateFormSchema>;
 export type UserIdentityFormValues = z.infer<typeof userIdentityFormSchema>;

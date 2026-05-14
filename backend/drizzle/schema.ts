@@ -21,6 +21,16 @@ export const agencies = pgTable('agencies', {
   updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
 });
 
+export const cir_agencies = pgTable('cir_agencies', {
+  id: uuid('id').$type<string>().defaultRandom().primaryKey(),
+  name: text('name').notNull(),
+  region: text('region').$type<string | null>(),
+  city: text('city').$type<string | null>(),
+  archived_at: timestamp('archived_at', timestamptz).$type<string | null>(),
+  created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull(),
+  updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
+});
+
 export const profiles = pgTable('profiles', {
   id: uuid('id').$type<string>().primaryKey(),
   email: text('email').$type<string>().notNull(),
@@ -28,6 +38,7 @@ export const profiles = pgTable('profiles', {
   first_name: text('first_name').$type<string | null>(),
   last_name: text('last_name').$type<string>().notNull(),
   display_name: text('display_name').$type<string | null>(),
+  phone: text('phone').$type<string | null>(),
   active_agency_id: uuid('active_agency_id').$type<string | null>(),
   archived_at: timestamp('archived_at', timestamptz).$type<string | null>(),
   must_change_password: boolean('must_change_password').$type<boolean>().notNull(),
@@ -95,6 +106,8 @@ export const entities = pgTable('entities', {
   id: uuid('id').$type<string>().defaultRandom().primaryKey(),
   entity_type: text('entity_type').$type<string>().notNull(),
   client_kind: text('client_kind').$type<'company' | 'individual' | null>(),
+  first_name: text('first_name').$type<string | null>(),
+  last_name: text('last_name').$type<string | null>(),
   name: text('name').notNull(),
   agency_id: uuid('agency_id').$type<string | null>(),
   address: text('address').$type<string | null>(),
@@ -109,9 +122,14 @@ export const entities = pgTable('entities', {
   official_data_source: text('official_data_source').$type<string | null>(),
   official_data_synced_at: timestamp('official_data_synced_at', timestamptz).$type<string | null>(),
   notes: text('notes').$type<string | null>(),
+  primary_phone: text('primary_phone').$type<string | null>(),
+  primary_email: text('primary_email').$type<string | null>(),
+  supplier_code: text('supplier_code').$type<string | null>(),
+  supplier_number: text('supplier_number').$type<string | null>(),
   client_number: text('client_number').$type<string | null>(),
   account_type: text('account_type').$type<AccountType | null>(),
   cir_commercial_id: uuid('cir_commercial_id').$type<string | null>(),
+  cir_agency_id: uuid('cir_agency_id').$type<string | null>(),
   archived_at: timestamp('archived_at', timestamptz).$type<string | null>(),
   created_by: uuid('created_by').$type<string | null>(),
   created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull(),
@@ -229,6 +247,7 @@ export const agency_system_users = pgTable('agency_system_users', {
 
 export const drizzleSchema = {
   agencies,
+  cir_agencies,
   profiles,
   agency_members,
   audit_logs,

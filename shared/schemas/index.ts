@@ -30,6 +30,20 @@ export {
 export { prospectFormSchema } from './prospect.schema.ts';
 export { supplierFormSchema } from './supplier.schema.ts';
 export {
+  tierV1ClientCashPayloadSchema,
+  tierV1ClientTermPayloadSchema,
+  tierV1DirectoryListInputSchema,
+  tierV1DirectoryRowSchema,
+  tierV1IndividualPayloadSchema,
+  tierV1InternalCirQuickPayloadSchema,
+  tierV1PayloadSchema,
+  tierV1ProspectCompanyPayloadSchema,
+  tierV1ProspectIndividualPayloadSchema,
+  tierV1SearchInputSchema,
+  tierV1SolicitationInteractionOnlyPayloadSchema,
+  tierV1SupplierPayloadSchema
+} from './tier-v1.schema.ts';
+export {
   cockpitAgencyMembersInputSchema,
   cockpitAgencyMembersResponseSchema,
   cockpitPhoneLookupInputSchema,
@@ -67,5 +81,7 @@ export {
   dataInteractionsListResponseSchema,
   dataInteractionsMutationResponseSchema,
   dataInteractionsResponseSchema,
-  dataProfileResponseSchema
+  dataProfileResponseSchema,
+  tierV1DirectoryListResponseSchema,
+  tierV1SearchResponseSchema
 } from './api-responses.ts';

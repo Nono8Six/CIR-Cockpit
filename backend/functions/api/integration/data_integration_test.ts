@@ -2,6 +2,7 @@ import { assertEquals } from 'std/assert';
 
 import {
   CAN_RUN_NETWORK_INTEGRATION,
+  getApi,
   getContext,
   postApi,
   readBoolean,
@@ -109,6 +110,17 @@ Deno.test({
     assertEquals(convertedEntity.status, 200);
     assertEquals(readBoolean(convertedEntity.payload, 'ok'), true);
 
+    const unifiedSearch = await getApi('data.searchEntitiesUnified', context.userToken, {
+      query: entityName,
+      agency_id: context.agencyId,
+      family: 'all',
+      include_archived: false,
+      limit: 10
+    });
+    assertEquals(unifiedSearch.status, 200);
+    assertEquals(readBoolean(unifiedSearch.payload, 'ok'), true);
+    assertEquals(Array.isArray(readValue(unifiedSearch.payload, 'results')), true);
+
     const createdContact = await postApi('data.entity-contacts', context.userToken, {
       action: 'save',
       entity_id: entityId,
@@ -126,13 +138,6 @@ Deno.test({
     const contactId = readString(contact, 'id');
     assertEquals(Boolean(contactId), true);
 
-    const deletedContact = await postApi('data.entity-contacts', context.userToken, {
-      action: 'delete',
-      contact_id: contactId
-    });
-    assertEquals(deletedContact.status, 200);
-    assertEquals(readBoolean(deletedContact.payload, 'ok'), true);
-
     const savedInteraction = await postApi('data.interactions', context.userToken, {
       action: 'save',
       agency_id: context.agencyId,
@@ -140,19 +145,20 @@ Deno.test({
         id: crypto.randomUUID(),
         channel: 'Téléphone',
         entity_type: 'Client',
-        contact_service: 'Accueil',
+        contact_service: context.configServices[0] ?? '',
         company_name: '',
         contact_name: '',
         contact_phone: '0102030405',
         contact_email: '',
         subject: 'Integration P2',
-        mega_families: [],
+        mega_families: context.configFamilies.slice(0, 1),
         status_id: context.statusId,
         interaction_type: context.interactionType,
         order_ref: '',
         reminder_at: new Date().toISOString(),
         notes: '',
-        entity_id: entityId
+        entity_id: entityId,
+        contact_id: contactId
       }
     });
     assertEquals(savedInteraction.status, 200);
@@ -200,7 +206,14 @@ Deno.test({
     assertEquals(readBoolean(deletedInteraction.payload, 'ok'), true);
     assertEquals(readString(deletedInteraction.payload, 'interaction_id'), interactionId);
 
-    const savedConfig = await postApi('data.config', context.userToken, {
+    const deletedContact = await postApi('data.entity-contacts', context.userToken, {
+      action: 'delete',
+      contact_id: contactId
+    });
+    assertEquals(deletedContact.status, 200);
+    assertEquals(readBoolean(deletedContact.payload, 'ok'), true);
+
+    const savedConfig = await postApi('data.config', context.adminToken, {
       agency_id: context.agencyId,
       statuses: context.configStatuses,
       services: context.configServices,
@@ -211,7 +224,7 @@ Deno.test({
     assertEquals(savedConfig.status, 200);
     assertEquals(readBoolean(savedConfig.payload, 'ok'), true);
 
-    const invalidConfig = await postApi('data.config', context.userToken, {
+    const invalidConfig = await postApi('data.config', context.adminToken, {
       agency_id: context.agencyId,
       statuses: [{ id: context.statusId, label: 'invalid status', category: 'invalid' }],
       services: context.configServices,

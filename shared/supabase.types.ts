@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -455,6 +455,36 @@ export type Database = {
           },
         ]
       }
+      cir_agencies: {
+        Row: {
+          archived_at: string | null
+          city: string | null
+          created_at: string
+          id: string
+          name: string
+          region: string | null
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          region?: string | null
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          region?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       directory_saved_views: {
         Row: {
           created_at: string
@@ -499,6 +529,7 @@ export type Database = {
           address: string | null
           agency_id: string | null
           archived_at: string | null
+          cir_agency_id: string | null
           cir_commercial_id: string | null
           city: string | null
           client_kind: string | null
@@ -508,7 +539,9 @@ export type Database = {
           created_by: string | null
           department: string | null
           entity_type: string
+          first_name: string | null
           id: string
+          last_name: string | null
           naf_code: string | null
           name: string
           notes: string | null
@@ -516,8 +549,12 @@ export type Database = {
           official_data_synced_at: string | null
           official_name: string | null
           postal_code: string | null
+          primary_email: string | null
+          primary_phone: string | null
           siren: string | null
           siret: string | null
+          supplier_code: string | null
+          supplier_number: string | null
           updated_at: string
         }
         Insert: {
@@ -525,6 +562,7 @@ export type Database = {
           address?: string | null
           agency_id?: string | null
           archived_at?: string | null
+          cir_agency_id?: string | null
           cir_commercial_id?: string | null
           city?: string | null
           client_kind?: string | null
@@ -534,7 +572,9 @@ export type Database = {
           created_by?: string | null
           department?: string | null
           entity_type: string
+          first_name?: string | null
           id?: string
+          last_name?: string | null
           naf_code?: string | null
           name: string
           notes?: string | null
@@ -542,8 +582,12 @@ export type Database = {
           official_data_synced_at?: string | null
           official_name?: string | null
           postal_code?: string | null
+          primary_email?: string | null
+          primary_phone?: string | null
           siren?: string | null
           siret?: string | null
+          supplier_code?: string | null
+          supplier_number?: string | null
           updated_at?: string
         }
         Update: {
@@ -551,6 +595,7 @@ export type Database = {
           address?: string | null
           agency_id?: string | null
           archived_at?: string | null
+          cir_agency_id?: string | null
           cir_commercial_id?: string | null
           city?: string | null
           client_kind?: string | null
@@ -560,7 +605,9 @@ export type Database = {
           created_by?: string | null
           department?: string | null
           entity_type?: string
+          first_name?: string | null
           id?: string
+          last_name?: string | null
           naf_code?: string | null
           name?: string
           notes?: string | null
@@ -568,8 +615,12 @@ export type Database = {
           official_data_synced_at?: string | null
           official_name?: string | null
           postal_code?: string | null
+          primary_email?: string | null
+          primary_phone?: string | null
           siren?: string | null
           siret?: string | null
+          supplier_code?: string | null
+          supplier_number?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -578,6 +629,13 @@ export type Database = {
             columns: ["agency_id"]
             isOneToOne: false
             referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entities_cir_agency_id_fkey"
+            columns: ["cir_agency_id"]
+            isOneToOne: false
+            referencedRelation: "cir_agencies"
             referencedColumns: ["id"]
           },
           {
@@ -827,6 +885,7 @@ export type Database = {
           last_name: string
           must_change_password: boolean
           password_changed_at: string | null
+          phone: string | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string
         }
@@ -842,6 +901,7 @@ export type Database = {
           last_name: string
           must_change_password?: boolean
           password_changed_at?: string | null
+          phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
@@ -857,6 +917,7 @@ export type Database = {
           last_name?: string
           must_change_password?: boolean
           password_changed_at?: string | null
+          phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }

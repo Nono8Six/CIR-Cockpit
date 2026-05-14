@@ -87,6 +87,7 @@ const REMOTE_TO_LOCAL_MODERN_MIGRATION_COMPATIBILITY = {
   20260418153000n: "20260418153000_phase3_private_schema_hardening.sql",
   20260418154000n: "20260418154000_phase3_pg_trgm_and_fk_indexes.sql",
   20260504094202n: "20260504092200_migrate_directory_saved_view_scopes.sql",
+  20260513151526n: "20260513144739_add_tier_v1_foundation.sql",
 };
 
 function readJson(relativePath) {

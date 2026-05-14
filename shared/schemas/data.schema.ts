@@ -27,67 +27,68 @@ const jsonValueSchema: z.ZodType<Json> = z.lazy(() =>
 
 // --- Entities ---
 
-const saveClientEntitySchema = z.object({
+const saveClientEntitySchema = z.strictObject({
   action: z.literal('save'),
   agency_id: uuidSchema,
   entity_type: z.literal('Client'),
   id: uuidSchema.optional(),
   entity: clientFormSchema
-}).strict();
+});
 
-const saveProspectEntitySchema = z.object({
+const saveProspectEntitySchema = z.strictObject({
   action: z.literal('save'),
   agency_id: uuidSchema,
   entity_type: z.literal('Prospect'),
   id: uuidSchema.optional(),
   entity: prospectFormSchema
-}).strict();
+});
 
-const saveSupplierEntitySchema = z.object({
+const saveSupplierEntitySchema = z.strictObject({
   action: z.literal('save'),
   agency_id: uuidSchema,
   entity_type: z.literal('Fournisseur'),
   id: uuidSchema.optional(),
   entity: supplierFormSchema
-}).strict();
+});
 
-const archiveEntitySchema = z.object({
+const archiveEntitySchema = z.strictObject({
   action: z.literal('archive'),
   entity_id: uuidSchema,
   archived: z.boolean()
-}).strict();
+});
 
-const listEntitiesSchema = z.object({
+const listEntitiesSchema = z.strictObject({
   action: z.literal('list'),
   entity_type: z.enum(['Client', 'Prospect']),
   agency_id: z.union([uuidSchema, z.null()]).optional(),
   include_archived: z.boolean().optional(),
   orphans_only: z.boolean().optional()
-}).strict();
+});
 
-const searchIndexEntitiesSchema = z.object({
+const searchIndexEntitiesSchema = z.strictObject({
+  /** @deprecated Legacy Saisie index. New V1 flows must use data.searchEntitiesUnified. */
   action: z.literal('search_index'),
   agency_id: z.union([uuidSchema, z.null()]),
   include_archived: z.boolean().optional()
-}).strict();
+});
 
-const deleteEntitySchema = z.object({
+const deleteEntitySchema = z.strictObject({
   action: z.literal('delete'),
   entity_id: uuidSchema,
   delete_related_interactions: z.boolean().optional()
-}).strict();
+});
 
-const convertEntitySchema = z.object({
+const convertEntitySchema = z.strictObject({
   action: z.literal('convert_to_client'),
   entity_id: uuidSchema,
   convert: convertClientSchema
-}).strict();
+});
 
-const reassignEntitySchema = z.object({
+const reassignEntitySchema = z.strictObject({
   action: z.literal('reassign'),
   entity_id: uuidSchema,
   target_agency_id: uuidSchema
-}).strict();
+});
 
 // Keep z.union here because save branches intentionally share action="save",
 // which is incompatible with discriminatedUnion.
@@ -107,23 +108,23 @@ export type DataEntitiesPayload = z.infer<typeof dataEntitiesPayloadSchema>;
 
 // --- Entity Contacts ---
 
-const saveContactSchema = z.object({
+const saveContactSchema = z.strictObject({
   action: z.literal('save'),
   entity_id: uuidSchema,
   id: uuidSchema.optional(),
   contact: clientContactFormSchema
-}).strict();
+});
 
-const deleteContactSchema = z.object({
+const deleteContactSchema = z.strictObject({
   action: z.literal('delete'),
   contact_id: uuidSchema
-}).strict();
+});
 
-const listEntityContactsSchema = z.object({
+const listEntityContactsSchema = z.strictObject({
   action: z.literal('list_by_entity'),
   entity_id: uuidSchema,
   include_archived: z.boolean().optional()
-}).strict();
+});
 
 export const dataEntityContactsPayloadSchema = z.discriminatedUnion('action', [
   listEntityContactsSchema,
@@ -135,27 +136,27 @@ export type DataEntityContactsPayload = z.infer<typeof dataEntityContactsPayload
 
 // --- Interactions ---
 
-const timelineEventSchema = z.object({
+const timelineEventSchema = z.strictObject({
   id: z.string().trim().min(1, 'Identifiant evenement requis'),
   date: z.string().trim().min(1, 'Date evenement requise'),
   type: z.enum(['note', 'status_change', 'reminder_change', 'creation', 'file', 'order_ref_change']),
   content: z.string().trim().min(1, 'Contenu evenement requis').max(MAX_TIMELINE_CONTENT_LENGTH, 'Contenu trop long'),
   author: z.string().trim().max(MAX_TIMELINE_AUTHOR_LENGTH, 'Auteur trop long').optional(),
   meta: z.record(z.string(), jsonValueSchema).optional()
-}).strict();
+});
 
-const saveInteractionSchema = z.object({
+const saveInteractionSchema = z.strictObject({
   action: z.literal('save'),
   agency_id: uuidSchema,
   interaction: interactionBaseSchema.extend({
     id: uuidSchema,
     timeline: z.array(timelineEventSchema).optional()
-  }).strict().superRefine((values, ctx) => {
+  }).superRefine((values, ctx) => {
     addSharedInteractionRules(values, ctx);
   })
-}).strict();
+});
 
-const timelineUpdatesSchema = z.object({
+const timelineUpdatesSchema = z.strictObject({
   status: z.string().trim().optional(),
   status_id: z.union([uuidSchema, z.null()]).optional(),
   order_ref: z.union([z.string().trim(), z.null()]).optional(),
@@ -166,66 +167,66 @@ const timelineUpdatesSchema = z.object({
   last_action_at: z.string().trim().optional(),
   status_is_terminal: z.boolean().optional(),
   mega_families: z.array(z.string()).optional()
-}).strict();
+});
 
-const addTimelineEventSchema = z.object({
+const addTimelineEventSchema = z.strictObject({
   action: z.literal('add_timeline_event'),
   interaction_id: uuidSchema,
   expected_updated_at: z.string().min(1, 'Version requise'),
   event: timelineEventSchema,
   updates: timelineUpdatesSchema.optional()
-}).strict();
+});
 
-const listByEntitySchema = z.object({
+const listByEntitySchema = z.strictObject({
   action: z.literal('list_by_entity'),
   entity_id: uuidSchema,
   page: z.number().int().min(1, 'Page invalide').optional(),
   page_size: z.number().int().min(1, 'Taille de page invalide').max(50, 'Taille de page trop grande').optional()
-}).strict();
+});
 
-const listByAgencySchema = z.object({
+const listByAgencySchema = z.strictObject({
   action: z.literal('list_by_agency'),
   agency_id: uuidSchema,
   limit: z.number().int().min(1, 'Limite invalide').max(500, 'Limite trop grande').optional()
-}).strict();
+});
 
-const knownCompaniesSchema = z.object({
+const knownCompaniesSchema = z.strictObject({
   action: z.literal('known_companies'),
   agency_id: uuidSchema,
   limit: z.number().int().min(1, 'Limite invalide').max(5000, 'Limite trop grande').optional()
-}).strict();
+});
 
 const draftFormTypeSchema = z.string()
   .trim()
   .min(1, 'Type de formulaire requis')
   .max(MAX_DRAFT_FORM_TYPE_LENGTH, 'Type de formulaire trop long');
 
-const draftGetSchema = z.object({
+const draftGetSchema = z.strictObject({
   action: z.literal('draft_get'),
   user_id: uuidSchema,
   agency_id: uuidSchema,
   form_type: draftFormTypeSchema.optional()
-}).strict();
+});
 
-const draftSaveSchema = z.object({
+const draftSaveSchema = z.strictObject({
   action: z.literal('draft_save'),
   user_id: uuidSchema,
   agency_id: uuidSchema,
   form_type: draftFormTypeSchema.optional(),
   payload: jsonValueSchema
-}).strict();
+});
 
-const draftDeleteSchema = z.object({
+const draftDeleteSchema = z.strictObject({
   action: z.literal('draft_delete'),
   user_id: uuidSchema,
   agency_id: uuidSchema,
   form_type: draftFormTypeSchema.optional()
-}).strict();
+});
 
-const deleteInteractionSchema = z.object({
+const deleteInteractionSchema = z.strictObject({
   action: z.literal('delete'),
   interaction_id: uuidSchema
-}).strict();
+});
 
 export const dataInteractionsPayloadSchema = z.discriminatedUnion('action', [
   saveInteractionSchema,
@@ -243,33 +244,33 @@ export type DataInteractionsPayload = z.infer<typeof dataInteractionsPayloadSche
 
 // --- Config ---
 
-const statusItemSchema = z.object({
+const statusItemSchema = z.strictObject({
   id: z.string().optional(),
   label: z.string().trim().min(1, 'Label requis').max(MAX_CONFIG_LABEL_LENGTH, 'Label trop long'),
   category: z.string().trim().min(1, 'Categorie requise').max(32, 'Categorie trop longue')
-}).strict();
+});
 
-export const dataConfigPayloadSchema = z.object({
+export const dataConfigPayloadSchema = z.strictObject({
   agency_id: uuidSchema,
   statuses: z.array(statusItemSchema).min(1, 'Au moins un statut requis'),
   services: z.array(z.string().trim().max(MAX_CONFIG_LABEL_LENGTH, 'Label service trop long')),
   entities: z.array(z.string().trim().max(MAX_CONFIG_LABEL_LENGTH, 'Label entite trop long')),
   families: z.array(z.string().trim().max(MAX_CONFIG_LABEL_LENGTH, 'Label famille trop long')),
   interactionTypes: z.array(z.string().trim().max(MAX_CONFIG_LABEL_LENGTH, "Label type d'interaction trop long"))
-}).strict();
+});
 
 export type DataConfigPayload = z.infer<typeof dataConfigPayloadSchema>;
 
 // --- Profile ---
 
-const passwordChangedSchema = z.object({
+const passwordChangedSchema = z.strictObject({
   action: z.literal('password_changed')
-}).strict();
+});
 
-const setActiveAgencySchema = z.object({
+const setActiveAgencySchema = z.strictObject({
   action: z.literal('set_active_agency'),
   agency_id: z.union([uuidSchema, z.null()])
-}).strict();
+});
 
 export const dataProfilePayloadSchema = z.discriminatedUnion('action', [
   passwordChangedSchema,

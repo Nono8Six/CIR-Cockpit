@@ -12,7 +12,7 @@ describe('prospectFormSchema', () => {
       city: 'Paris',
       siret: '',
       notes: '',
-      agency_id: '11111111-1111-1111-1111-111111111111'
+      agency_id: '11111111-1111-4111-8111-111111111111'
     });
 
     expect(result.success).toBe(true);
@@ -25,7 +25,7 @@ describe('prospectFormSchema', () => {
       postal_code: '7500',
       department: '',
       city: 'Paris',
-      agency_id: '11111111-1111-1111-1111-111111111111'
+      agency_id: '11111111-1111-4111-8111-111111111111'
     });
 
     expect(result.success).toBe(false);
@@ -38,7 +38,7 @@ describe('prospectFormSchema', () => {
       postal_code: '75001',
       department: '2A',
       city: 'Paris',
-      agency_id: '11111111-1111-1111-1111-111111111111'
+      agency_id: '11111111-1111-4111-8111-111111111111'
     });
 
     expect(result.success).toBe(false);

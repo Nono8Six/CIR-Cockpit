@@ -52,7 +52,7 @@ const isProspectRelationValue = (value?: string | null): boolean => {
   return normalized === 'prospect';
 };
 
-const interactionCoreSchema = z.object({
+const interactionCoreSchema = z.strictObject({
   channel: z.enum(CHANNEL_VALUES, { message: 'Canal requis' }),
   entity_type: z.string().trim().min(1, 'Type de tiers requis').max(80, 'Type de tiers trop long'),
   contact_service: z.string().trim().min(1, 'Service requis').max(120, 'Service trop long'),
@@ -73,7 +73,7 @@ const interactionCoreSchema = z.object({
   notes: z.string().max(MAX_NOTES_LENGTH, 'Notes trop longues').optional(),
   entity_id: optionalUuid,
   contact_id: optionalUuid
-}).strict();
+});
 
 export const addSharedInteractionRules = (
   values: z.infer<typeof interactionCoreSchema>,
@@ -207,7 +207,7 @@ const interactionDraftBaseSchema = interactionCoreSchema.extend({
   created_by: z.string().trim().min(1, 'Auteur requis').optional(),
   timeline: z.array(z.unknown()).optional(),
   company_name: z.string().trim().min(1, 'Nom de la societe requis')
-}).strict();
+});
 
 export const interactionDraftSchema = interactionDraftBaseSchema.superRefine((values, ctx) => {
   addSharedInteractionDraftRules(values, ctx);

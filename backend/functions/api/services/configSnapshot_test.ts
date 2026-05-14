@@ -42,7 +42,7 @@ const readCode = (value: unknown): string | undefined => {
 Deno.test('parseStoredJson returns parsed data for valid payloads', () => {
   const value = parseStoredJson(
     { feature_enabled: true },
-    z.object({ feature_enabled: z.boolean() }).strict(),
+    z.strictObject({ feature_enabled: z.boolean() }),
     'le snapshot'
   );
 
@@ -53,7 +53,7 @@ Deno.test('parseStoredJson throws a DB_READ_FAILED app error on invalid payloads
   const error = assertThrows(() =>
     parseStoredJson(
       { feature_enabled: 'yes' },
-      z.object({ feature_enabled: z.boolean() }).strict(),
+      z.strictObject({ feature_enabled: z.boolean() }),
       'le snapshot'
     )
   );

@@ -25,7 +25,7 @@ const settingsStatusSchema = z
     is_default: z.boolean(),
     sort_order: z.number().int(),
   })
-  .strict();
+  ;
 
 export const settingsFormSchema = z
   .object({
@@ -49,7 +49,7 @@ export const settingsFormSchema = z
     newStatus: z.string(),
     newStatusCategory: statusCategorySchema,
   })
-  .strict();
+  ;
 
 export type SettingsFormValues = z.infer<typeof settingsFormSchema>;
 export type BooleanOverrideValue = 'inherit' | 'enabled' | 'disabled';

@@ -13,38 +13,38 @@ const referenceLabelSchema = z
 
 export const configStatusCategorySchema = z.enum(['todo', 'in_progress', 'done']);
 
-export const agencyStatusInputSchema = z.object({
+export const agencyStatusInputSchema = z.strictObject({
   id: uuidSchema.optional(),
   label: referenceLabelSchema,
   category: configStatusCategorySchema
-}).strict();
+});
 
 export const agencyStatusSchema = agencyStatusInputSchema.extend({
   agency_id: uuidSchema.optional(),
   is_default: z.boolean(),
   is_terminal: z.boolean(),
   sort_order: z.number().int().min(1, 'Ordre invalide')
-}).strict();
+});
 
 const referenceLabelsInputSchema = z.array(referenceLabelSchema);
 
-export const agencyReferenceConfigInputSchema = z.object({
+export const agencyReferenceConfigInputSchema = z.strictObject({
   statuses: z.array(agencyStatusInputSchema).min(1, 'Au moins un statut requis'),
   services: referenceLabelsInputSchema,
   entities: referenceLabelsInputSchema,
   families: referenceLabelsInputSchema,
   interaction_types: referenceLabelsInputSchema
-}).strict();
+});
 
-export const agencyReferenceConfigSchema = z.object({
+export const agencyReferenceConfigSchema = z.strictObject({
   statuses: z.array(agencyStatusSchema),
   services: referenceLabelsInputSchema,
   entities: referenceLabelsInputSchema,
   families: referenceLabelsInputSchema,
   interaction_types: referenceLabelsInputSchema
-}).strict();
+});
 
-export const departmentReferenceSchema = z.object({
+export const departmentReferenceSchema = z.strictObject({
   code: z
     .string()
     .trim()
@@ -52,52 +52,52 @@ export const departmentReferenceSchema = z.object({
   label: referenceLabelSchema,
   sort_order: z.number().int().min(1, 'Ordre invalide'),
   is_active: z.boolean()
-}).strict();
+});
 
-export const productFeatureFlagsSchema = z.object({
+export const productFeatureFlagsSchema = z.strictObject({
   ui_shell_v2: z.boolean()
-}).strict();
+});
 
-export const productOnboardingConfigSchema = z.object({
+export const productOnboardingConfigSchema = z.strictObject({
   allow_manual_entry: z.boolean(),
   default_account_type_company: accountTypeSchema,
   default_account_type_individual: z.literal('cash')
-}).strict();
+});
 
-export const agencyOnboardingOverridesSchema = z.object({
+export const agencyOnboardingOverridesSchema = z.strictObject({
   allow_manual_entry: z.boolean().optional(),
   default_account_type_company: accountTypeSchema.optional(),
   default_account_type_individual: z.literal('cash').optional()
-}).strict();
+});
 
-export const appSettingsSchema = z.object({
+export const appSettingsSchema = z.strictObject({
   feature_flags: productFeatureFlagsSchema,
   onboarding: productOnboardingConfigSchema
-}).strict();
+});
 
-export const agencySettingsSchema = z.object({
+export const agencySettingsSchema = z.strictObject({
   onboarding: agencyOnboardingOverridesSchema
-}).strict();
+});
 
-export const configGetInputSchema = z.object({
+export const configGetInputSchema = z.strictObject({
   agency_id: uuidSchema.optional()
-}).strict();
+});
 
-export const configSaveAgencyInputSchema = z.object({
+export const configSaveAgencyInputSchema = z.strictObject({
   agency_id: uuidSchema,
   onboarding: agencyOnboardingOverridesSchema,
   references: agencyReferenceConfigInputSchema
-}).strict();
+});
 
 export const configSaveProductInputSchema = appSettingsSchema;
 
-export const resolvedConfigSnapshotSchema = z.object({
+export const resolvedConfigSnapshotSchema = z.strictObject({
   product: appSettingsSchema,
   agency: agencySettingsSchema,
   references: agencyReferenceConfigSchema.extend({
     departments: z.array(departmentReferenceSchema)
-  }).strict()
-}).strict();
+  })
+});
 
 export const DEFAULT_PRODUCT_FEATURE_FLAGS: ProductFeatureFlags = {
   ui_shell_v2: false

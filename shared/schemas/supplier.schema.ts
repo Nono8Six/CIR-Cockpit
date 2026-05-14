@@ -11,7 +11,7 @@ const postalCode = optionalText.refine(
   { message: 'Code postal invalide' }
 );
 
-export const supplierFormSchema = z.object({
+export const supplierFormSchema = z.strictObject({
   name: z.string().trim().min(1, 'Nom requis'),
   address: optionalText,
   postal_code: postalCode,
@@ -19,6 +19,6 @@ export const supplierFormSchema = z.object({
   city: optionalText,
   notes: optionalText,
   agency_id: uuidSchema
-}).extend(officialCompanyFieldsSchema.shape).strict();
+}).extend(officialCompanyFieldsSchema.shape);
 
 export type SupplierFormValues = z.input<typeof supplierFormSchema>;

@@ -41,20 +41,34 @@ export type AgencyMember = Tables<'agency_members'>;
 export type Entity = Omit<
   Tables<'entities'>,
   | 'client_kind'
+  | 'cir_agency_id'
   | 'cir_commercial_id'
+  | 'first_name'
+  | 'last_name'
+  | 'primary_email'
+  | 'primary_phone'
   | 'siren'
   | 'naf_code'
   | 'official_name'
   | 'official_data_source'
   | 'official_data_synced_at'
+  | 'supplier_code'
+  | 'supplier_number'
 > & {
   client_kind?: Tables<'entities'>['client_kind'];
+  cir_agency_id?: Tables<'entities'>['cir_agency_id'];
   cir_commercial_id?: Tables<'entities'>['cir_commercial_id'];
+  first_name?: Tables<'entities'>['first_name'];
+  last_name?: Tables<'entities'>['last_name'];
+  primary_email?: Tables<'entities'>['primary_email'];
+  primary_phone?: Tables<'entities'>['primary_phone'];
   siren?: Tables<'entities'>['siren'];
   naf_code?: Tables<'entities'>['naf_code'];
   official_name?: Tables<'entities'>['official_name'];
   official_data_source?: Tables<'entities'>['official_data_source'];
   official_data_synced_at?: Tables<'entities'>['official_data_synced_at'];
+  supplier_code?: Tables<'entities'>['supplier_code'];
+  supplier_number?: Tables<'entities'>['supplier_number'];
 };
 export type EntityContact = Tables<'entity_contacts'>;
 

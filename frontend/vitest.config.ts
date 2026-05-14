@@ -15,7 +15,8 @@ export default defineConfig({
     testTimeout: 10000,
     setupFiles: ['./src/__tests__/setup.ts'],
     globals: true,
-    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+    include: ['src/**/*.test.ts', 'src/**/*.test.tsx', '../shared/**/*.test.ts'],
+    exclude: ['**/node_modules/**', '**/.git/**', '../shared/node_modules/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
@@ -38,6 +39,7 @@ export default defineConfig({
         'src/utils/date/formatRelativeTime.ts'
       ],
       exclude: [
+        '../shared/node_modules/**',
         'src/services/**/__tests__/**',
         'src/services/**/index.ts',
         'src/services/errors/journal.ts',

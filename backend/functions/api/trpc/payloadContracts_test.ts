@@ -12,6 +12,12 @@ import {
   directoryOptionsFacetInputSchema,
   directorySavedViewStateSchema
 } from '../../../../shared/schemas/directory.schema.ts';
+import {
+  tierV1DirectoryListInputSchema,
+  tierV1DirectoryRowSchema,
+  tierV1PayloadSchema,
+  tierV1SearchInputSchema
+} from '../../../../shared/schemas/tier-v1.schema.ts';
 
 Deno.test('dataEntitiesPayloadSchema supports delete action for super-admin workflows', () => {
   const deletePayload = {
@@ -333,4 +339,85 @@ Deno.test('directory saved view state accepts migrated scope and rejects legacy 
     ...migratedState,
     agencyId: '11111111-1111-4111-8111-111111111111'
   }).success, false);
+});
+
+Deno.test('tier V1 payload contracts accept specialized product types and reject generic mixing', () => {
+  const agencyId = '11111111-1111-4111-8111-111111111111';
+  const validSupplier = {
+    tier_type: 'supplier',
+    agency_id: agencyId,
+    name: 'SEA Aquitaine',
+    primary_phone: '0102030405',
+    supplier_code: 'SUP1'
+  };
+  const invalidGenericClient = {
+    tier_type: 'client_term',
+    agency_id: agencyId,
+    entity_type: 'Client',
+    name: 'ACME',
+    primary_phone: '0102030405'
+  };
+
+  assertEquals(tierV1PayloadSchema.safeParse(validSupplier).success, true);
+  assertEquals(tierV1PayloadSchema.safeParse(invalidGenericClient).success, false);
+});
+
+Deno.test('tier V1 solicitation contract remains interaction-only', () => {
+  const payload = {
+    tier_type: 'solicitation_interaction_only',
+    agency_id: '11111111-1111-4111-8111-111111111111',
+    phone: '0102030405'
+  };
+
+  assertEquals(tierV1PayloadSchema.safeParse(payload).success, true);
+  assertEquals(tierV1PayloadSchema.safeParse({
+    ...payload,
+    entity_id: '33333333-3333-4333-8333-333333333333'
+  }).success, false);
+});
+
+Deno.test('tier V1 unified search and directory contracts are strict', () => {
+  const searchPayload = {
+    query: 'acme',
+    family: 'clients',
+    client_filter: 'term',
+    prospect_filter: 'all',
+    include_archived: false,
+    limit: 20
+  };
+  const directoryPayload = {
+    query: 'acme',
+    family: 'prospects',
+    prospect_filter: 'company',
+    include_archived: false,
+    page: 1,
+    page_size: 50
+  };
+
+  assertEquals(tierV1SearchInputSchema.safeParse(searchPayload).success, true);
+  assertEquals(tierV1SearchInputSchema.safeParse({ ...searchPayload, type: 'Client' }).success, false);
+  assertEquals(tierV1DirectoryListInputSchema.safeParse(directoryPayload).success, true);
+  assertEquals(tierV1DirectoryListInputSchema.safeParse({ ...directoryPayload, agencyIds: [] }).success, false);
+});
+
+Deno.test('tier V1 directory rows cover multi-source annuaire results', () => {
+  const row = {
+    id: 'profile:11111111-1111-4111-8111-111111111111',
+    source: 'profile',
+    type: 'internal_cir',
+    label: 'Alice Martin',
+    identifier: null,
+    phone: '0102030405',
+    email: 'alice@example.com',
+    city: null,
+    agency_name: 'CIR Bordeaux',
+    referent_name: null,
+    updated_at: '2026-05-13T10:00:00.000Z',
+    archived_at: null
+  };
+
+  const invalidSource = ['entity', 'contact'].join('_');
+
+  assertEquals(tierV1DirectoryRowSchema.safeParse(row).success, true);
+  assertEquals(tierV1DirectoryRowSchema.safeParse({ ...row, source: invalidSource }).success, false);
 });

@@ -10,6 +10,7 @@ export type ProcedurePath =
   | 'admin.users'
   | 'admin.agencies'
   | 'data.entities'
+  | 'data.searchEntitiesUnified'
   | 'data.entity-contacts'
   | 'data.interactions'
   | 'data.config'
@@ -65,8 +66,9 @@ export const DATA_ROUTES: ProcedurePath[] = [
   'data.profile'
 ];
 
+export const QUERY_ROUTES: ProcedurePath[] = ['data.searchEntitiesUnified'];
 export const ADMIN_ROUTES: ProcedurePath[] = ['admin.users', 'admin.agencies'];
-export const ALL_ROUTES: ProcedurePath[] = [...ADMIN_ROUTES, ...DATA_ROUTES];
+export const ALL_ROUTES: ProcedurePath[] = [...ADMIN_ROUTES, ...DATA_ROUTES, ...QUERY_ROUTES];
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -111,6 +113,9 @@ const parseTrpcPayload = (payload: unknown): unknown | null => {
   if (jsonData !== null && jsonData !== undefined) {
     return jsonData;
   }
+  if (resultData) {
+    return resultData;
+  }
 
   const error = readObject(payload, 'error');
   if (!error) {
@@ -150,6 +155,36 @@ export const postApi = async (
     method: 'POST',
     headers,
     body: JSON.stringify(body)
+  });
+
+  const payload = parseTrpcPayload(await parseJsonOrNull(response));
+  return {
+    status: response.status,
+    payload
+  };
+};
+
+export const getApi = async (
+  path: ProcedurePath,
+  token: string,
+  input: unknown,
+  extraHeaders?: Record<string, string>
+): Promise<{ status: number; payload: unknown | null }> => {
+  const headers: HeadersInit = { apikey: anonKey };
+
+  if (token.trim()) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  if (extraHeaders) {
+    for (const [key, value] of Object.entries(extraHeaders)) {
+      headers[key] = value;
+    }
+  }
+
+  const encodedInput = encodeURIComponent(JSON.stringify(input));
+  const response = await fetch(`${apiBaseUrl}/trpc/${path}?input=${encodedInput}`, {
+    method: 'GET',
+    headers
   });
 
   const payload = parseTrpcPayload(await parseJsonOrNull(response));

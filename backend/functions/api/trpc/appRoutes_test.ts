@@ -60,6 +60,20 @@ Deno.test('tRPC routes reject missing Authorization header', async () => {
   assertEquals(data.stack, undefined);
 });
 
+Deno.test('tRPC query routes accept POST method override before auth', async () => {
+  const appModule = await import('../app.ts');
+  const response = await appModule.default.request('/trpc/data.searchEntitiesUnified', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: '{}'
+  });
+
+  const data = await readErrorData(response);
+  assertEquals(response.status, 401);
+  assertEquals(readString(data, 'appCode'), 'AUTH_REQUIRED');
+  assertEquals(readNumber(data, 'httpStatus'), 401);
+});
+
 Deno.test('tRPC routes ignore x-client-authorization fallback header', async () => {
   const appModule = await import('../app.ts');
   const response = await appModule.default.request('/trpc/data.profile', {

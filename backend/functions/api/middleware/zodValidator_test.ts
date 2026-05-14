@@ -6,9 +6,9 @@ import { handleError } from './errorHandler.ts';
 import { zValidator } from './zodValidator.ts';
 
 const app = new Hono();
-const schema = z.object({
+const schema = z.strictObject({
   name: z.string().min(1)
-}).strict();
+});
 
 app.post('/validate', zValidator('json', schema), (c) => {
   const payload = c.req.valid('json');

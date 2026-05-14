@@ -17,10 +17,10 @@ type UseLoginScreenFormArgs = {
 
 export type LoginSubmitState = 'idle' | 'submitting' | 'success' | 'error';
 
-const loginFormSchema = z.object({
+const loginFormSchema = z.strictObject({
   email: emailSchema,
   password: z.string().min(1, 'Mot de passe requis')
-}).strict();
+});
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
 
