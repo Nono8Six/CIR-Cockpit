@@ -1,4 +1,5 @@
-import type { Entity, EntityContact } from '@/types';
+import type { TierV1DirectoryRow } from 'shared/schemas/tier-v1.schema';
+import type { Entity } from '@/types';
 import InteractionSearchRecents from './InteractionSearchRecents';
 import InteractionSearchResults from './InteractionSearchResults';
 import type { InteractionSearchStatus } from './InteractionSearchStatusMessage';
@@ -12,26 +13,24 @@ type InteractionSearchPanelState = {
 type InteractionSearchListAreaProps = {
   panelState: InteractionSearchPanelState;
   filteredRecents: Entity[];
-  limitedEntities: Entity[];
-  limitedContacts: EntityContact[];
+  limitedResults: TierV1DirectoryRow[];
   query: string;
   includeArchived: boolean;
   entityHeading: string;
   onSelectEntity: (entity: Entity) => void;
-  onSelectContact: (contact: EntityContact) => void;
+  onSelectSearchResult: (result: TierV1DirectoryRow) => void;
   showTypeBadge?: boolean;
 };
 
 const InteractionSearchListArea = ({
   panelState,
   filteredRecents,
-  limitedEntities,
-  limitedContacts,
+  limitedResults,
   query,
   includeArchived,
   entityHeading,
   onSelectEntity,
-  onSelectContact,
+  onSelectSearchResult,
   showTypeBadge = false
 }: InteractionSearchListAreaProps) => (
   <>
@@ -45,13 +44,11 @@ const InteractionSearchListArea = ({
     {panelState.showList && (
       <InteractionSearchResults
         status={panelState.status}
-        limitedEntities={limitedEntities}
-        limitedContacts={limitedContacts}
+        limitedResults={limitedResults}
         query={query}
         includeArchived={includeArchived}
         entityHeading={entityHeading}
-        onSelectEntity={onSelectEntity}
-        onSelectContact={onSelectContact}
+        onSelectSearchResult={onSelectSearchResult}
         showTypeBadge={showTypeBadge}
       />
     )}

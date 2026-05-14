@@ -1,5 +1,6 @@
 import type { RefObject } from 'react';
 
+import type { TierV1DirectoryRow } from 'shared/schemas/tier-v1.schema';
 import type { RelationMode } from '@/constants/relations';
 import type { Entity, EntityContact } from '@/types';
 import InteractionSearchBar from '@/components/InteractionSearchBar';
@@ -16,6 +17,7 @@ type CockpitSearchSectionProps = {
   relationMode: RelationMode;
   onSelectEntityFromSearch: (entity: Entity) => void;
   onSelectContactFromSearch: (contact: EntityContact, entity: Entity | null) => void;
+  onSelectUnifiedSearchResult: (result: TierV1DirectoryRow) => void;
   onOpenClientDialog: () => void;
   onOpenProspectDialog: () => void;
   onOpenGlobalSearch?: () => void;
@@ -31,6 +33,7 @@ const CockpitSearchSection = ({
   relationMode,
   onSelectEntityFromSearch,
   onSelectContactFromSearch,
+  onSelectUnifiedSearchResult,
   onOpenClientDialog,
   onOpenProspectDialog,
   onOpenGlobalSearch,
@@ -40,7 +43,6 @@ const CockpitSearchSection = ({
     return null;
   }
 
-  const showTypeBadge = entityType.trim() === '';
   const handleCreateEntity = relationMode === 'client'
     ? onOpenClientDialog
     : relationMode === 'prospect'
@@ -56,11 +58,12 @@ const CockpitSearchSection = ({
       isLoading={entitySearchLoading}
       onSelectEntity={onSelectEntityFromSearch}
       onSelectContact={onSelectContactFromSearch}
+      onSelectSearchResult={onSelectUnifiedSearchResult}
       onCreateEntity={handleCreateEntity}
       onOpenGlobalSearch={onOpenGlobalSearch}
       recentEntities={recentEntities}
       inputRef={searchInputRef}
-      showTypeBadge={showTypeBadge}
+      showTypeBadge={true}
     />
   );
 };

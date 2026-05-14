@@ -1,6 +1,7 @@
 import type { ChangeEvent, RefObject } from 'react';
 import type { FieldErrors, UseFormSetValue } from 'react-hook-form';
 
+import type { TierV1DirectoryRow } from 'shared/schemas/tier-v1.schema';
 import type { RelationMode } from '@/constants/relations';
 import type { AgencyConfig } from '@/services/config';
 import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
@@ -24,6 +25,7 @@ export type UseCockpitPanePropsParams = {
   entitySearchLoading: boolean;
   onSelectEntityFromSearch: (entity: Entity) => void;
   onSelectContactFromSearch: (contact: EntityContact, entity: Entity | null) => void;
+  onSelectUnifiedSearchResult: (result: TierV1DirectoryRow) => void;
   onOpenClientDialog: () => void;
   onOpenProspectDialog: () => void;
   onOpenGlobalSearch?: () => void;

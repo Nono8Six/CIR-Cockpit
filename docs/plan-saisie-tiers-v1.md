@@ -46,12 +46,13 @@ Etat au 2026-05-13 :
   - [x] Recherche multi-champs et cross-type
   - [x] Tests backend + probes + RLS
   - Note 2026-05-14 : service backend implemente pour `data.searchEntitiesUnified` avec sources `entity` et `profile`, filtres V1, normalisation telephone, tests backend, verification MCP RLS/policies/advisors et `pnpm run qa:fast` PASS. Edge Function `api` redeployee en v55 avec `allowMethodOverride` ; probes runtime tRPC PASS : POST token valide `200 ok:true results`, GET query token valide `200 ok:true results`, anonyme `401 AUTH_REQUIRED`, payload invalide `400 INVALID_PAYLOAD`, suite `pnpm run backend:test:integration` avec `RUN_API_INTEGRATION=1` PASS.
-- [ ] Tranche 4 - Saisie : relation et recherche
-  - [ ] `Tout` retire comme choix utilisateur
-  - [ ] Categories produit fixes
-  - [ ] Recherche backend debounced
-  - [ ] Confirmation cross-type
-  - [ ] Toggle archives
+- [x] Tranche 4 - Saisie : relation et recherche
+  - [x] `Tout` retire comme choix utilisateur
+  - [x] Categories produit fixes
+  - [x] Recherche backend debounced
+  - [x] Confirmation cross-type
+  - [x] Toggle archives
+  - Note 2026-05-14 : Saisie alignee sur les categories produit fixes, recherche branchee sur `data.searchEntitiesUnified` via tRPC/TanStack Query avec debounce et `include_archived`, confirmation de bascule cross-type, support `source: "entity"` et `source: "profile"`, tests Saisie/hooks/services PASS et `pnpm run qa:fast` PASS.
 - [ ] Tranche 5 - Creation typee
   - [ ] Parcours commun + formulaires specialises
   - [ ] Societes avec recherche officielle + saisie manuelle

@@ -1,62 +1,42 @@
-import type { Entity, EntityContact } from '@/types';
-import { CommandGroup, CommandList, CommandSeparator } from '@/components/ui/command';
-import InteractionSearchContactItem from './InteractionSearchContactItem';
+import type { TierV1DirectoryRow } from 'shared/schemas/tier-v1.schema';
+import { CommandGroup, CommandList } from '@/components/ui/command';
 import InteractionSearchEntityItem from './InteractionSearchEntityItem';
 import InteractionSearchStatusMessage, { type InteractionSearchStatus } from './InteractionSearchStatusMessage';
 
 type InteractionSearchResultsProps = {
   status: InteractionSearchStatus;
-  limitedEntities: Entity[];
-  limitedContacts: EntityContact[];
+  limitedResults: TierV1DirectoryRow[];
   query: string;
   includeArchived: boolean;
   entityHeading: string;
-  onSelectEntity: (entity: Entity) => void;
-  onSelectContact: (contact: EntityContact) => void;
+  onSelectSearchResult: (result: TierV1DirectoryRow) => void;
   showTypeBadge?: boolean;
 };
 
 const InteractionSearchResults = ({
   status,
-  limitedEntities,
-  limitedContacts,
+  limitedResults,
   query,
   includeArchived,
   entityHeading,
-  onSelectEntity,
-  onSelectContact,
+  onSelectSearchResult,
   showTypeBadge = false
 }: InteractionSearchResultsProps) => (
   <CommandList className="max-h-[220px] overflow-y-auto overflow-x-hidden">
     <InteractionSearchStatusMessage status={status} />
-    {status === 'results' && limitedEntities.length > 0 && (
+    {status === 'results' && limitedResults.length > 0 && (
       <CommandGroup heading={entityHeading} className="p-2">
-        {limitedEntities.map((entity) => (
+        {limitedResults.map((result) => (
           <InteractionSearchEntityItem
-            key={entity.id}
-            entity={entity}
+            key={`${result.source}-${result.id}`}
+            result={result}
             query={query}
             includeArchived={includeArchived}
-            onSelectEntity={onSelectEntity}
+            onSelectSearchResult={onSelectSearchResult}
             showTypeBadge={showTypeBadge}
           />
         ))}
       </CommandGroup>
-    )}
-    {status === 'results' && limitedContacts.length > 0 && (
-      <>
-        <CommandSeparator className="mx-2" />
-        <CommandGroup heading="Contacts" className="p-2">
-          {limitedContacts.map((contact) => (
-            <InteractionSearchContactItem
-              key={contact.id}
-              contact={contact}
-              query={query}
-              onSelectContact={onSelectContact}
-            />
-          ))}
-        </CommandGroup>
-      </>
     )}
   </CommandList>
 );

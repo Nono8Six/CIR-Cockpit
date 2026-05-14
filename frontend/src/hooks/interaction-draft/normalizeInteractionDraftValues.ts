@@ -1,7 +1,11 @@
 import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
 
 import type { AgencyConfig } from '@/services/config';
-import { INTERNAL_COMPANY_NAME, isInternalRelationValue } from '@/constants/relations';
+import {
+  INTERNAL_COMPANY_NAME,
+  isInternalRelationValue,
+  normalizeVisibleRelationValue
+} from '@/constants/relations';
 
 export interface InteractionDraftNormalizationContext {
   defaultValues: InteractionFormValues;
@@ -60,6 +64,8 @@ export const normalizeInteractionDraftValues = (
     normalized.entity_id = '';
     normalized.contact_id = '';
   }
+
+  normalized.entity_type = normalizeVisibleRelationValue(normalized.entity_type);
 
   if (
     !config.statuses.find(

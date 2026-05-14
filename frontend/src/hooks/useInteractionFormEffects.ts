@@ -34,8 +34,8 @@ export const useInteractionFormEffects = ({ register, setValue, clearErrors, con
   useEffect(() => { if (!selectedEntity) onCloseContactDialog(); }, [onCloseContactDialog, selectedEntity]);
   useEffect(() => {
     if (!isInternalRelation) return;
-    setSelectedEntity(null); setSelectedContact(null); setValue('entity_id', '', { shouldValidate: true, shouldDirty: true }); setValue('contact_id', '', { shouldValidate: true, shouldDirty: true }); setValue('company_name', INTERNAL_COMPANY_NAME, { shouldValidate: true, shouldDirty: true }); setValue('company_city', '', { shouldValidate: true, shouldDirty: true }); setValue('contact_first_name', '', { shouldValidate: true, shouldDirty: true }); setValue('contact_last_name', '', { shouldValidate: true, shouldDirty: true }); setValue('contact_position', '', { shouldValidate: true, shouldDirty: true }); setValue('contact_phone', '', { shouldValidate: true, shouldDirty: true }); setValue('contact_email', '', { shouldValidate: true, shouldDirty: true });
-    clearErrors(['entity_id', 'contact_id', 'company_name', 'company_city', 'contact_first_name', 'contact_last_name', 'contact_position', 'contact_phone', 'contact_email']);
+    setSelectedEntity(null); setSelectedContact(null); setValue('entity_id', '', { shouldValidate: true, shouldDirty: true }); setValue('contact_id', '', { shouldValidate: true, shouldDirty: true }); setValue('company_name', INTERNAL_COMPANY_NAME, { shouldValidate: true, shouldDirty: true });
+    clearErrors(['entity_id', 'contact_id', 'company_name']);
   }, [clearErrors, isInternalRelation, setSelectedContact, setSelectedEntity, setValue]);
   useEffect(() => {
     if (!isSolicitationRelation) return;

@@ -1,8 +1,12 @@
 import { useCallback, useDeferredValue, useMemo, useState } from 'react';
 
+import type { TierV1DirectoryRow } from 'shared/schemas/tier-v1.schema';
 import type { Entity, EntityContact } from '@/types';
-import { relationValuesMatch } from '@/constants/relations';
-import { useEntitySearchIndex } from './useEntitySearchIndex';
+import {
+  getRelationLabelForTierType,
+  relationValuesMatch
+} from '@/constants/relations';
+import { useUnifiedEntitySearch } from './useUnifiedEntitySearch';
 
 type InteractionSearchInput = {
   agencyId?: string | null;
@@ -13,47 +17,41 @@ type InteractionSearchInput = {
   recentEntities?: Entity[];
   onSelectEntity: (entity: Entity) => void;
   onSelectContact: (contact: EntityContact, entity: Entity | null) => void;
+  onSelectSearchResult: (result: TierV1DirectoryRow) => void;
   onOpenGlobalSearch?: () => void;
 };
 
 type InteractionSearchStatus = 'loading' | 'error' | 'idle' | 'empty' | 'results';
 
 const normalizeQuery = (value: string) => value.trim().toLowerCase();
-const normalizeDigits = (value?: string | null): string => (value ?? '').replace(/\D/g, '');
 
 export const useInteractionSearch = ({
   agencyId,
   entityType = '',
-  entities,
-  contacts,
   isLoading = false,
   recentEntities,
   onSelectEntity,
   onSelectContact,
+  onSelectSearchResult,
   onOpenGlobalSearch
 }: InteractionSearchInput) => {
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [includeArchived, setIncludeArchived] = useState(false);
+  const [pendingResult, setPendingResult] = useState<TierV1DirectoryRow | null>(null);
   const deferredQuery = useDeferredValue(query);
-  const hasExternalData = entities.length > 0 || contacts.length > 0;
-  const shouldFetchBase = !hasExternalData && Boolean(agencyId);
-  const baseSearch = useEntitySearchIndex(agencyId ?? null, false, shouldFetchBase);
-  const shouldFetchArchived = includeArchived && Boolean(agencyId);
-  const archivedSearch = useEntitySearchIndex(agencyId ?? null, true, shouldFetchArchived);
-  const baseEntities = hasExternalData ? entities : (baseSearch.data?.entities ?? []);
-  const baseContacts = hasExternalData ? contacts : (baseSearch.data?.contacts ?? []);
-  const resolvedEntities = includeArchived
-    ? (archivedSearch.data?.entities ?? baseEntities)
-    : baseEntities;
-  const resolvedContacts = includeArchived
-    ? (archivedSearch.data?.contacts ?? baseContacts)
-    : baseContacts;
-  const resolvedLoading = isLoading
-    || (includeArchived ? archivedSearch.isLoading : baseSearch.isLoading);
-  const showSearchError = includeArchived
-    ? archivedSearch.isError && !archivedSearch.isLoading
-    : baseSearch.isError && !baseSearch.isLoading;
+  const normalizedSearchQuery = normalizeQuery(deferredQuery);
+  const unifiedSearch = useUnifiedEntitySearch({
+    query: normalizedSearchQuery,
+    agency_id: agencyId ?? null,
+    family: 'all',
+    client_filter: 'all',
+    prospect_filter: 'all',
+    include_archived: includeArchived,
+    limit: 5
+  }, Boolean(agencyId) && normalizedSearchQuery.length > 0);
+  const resolvedLoading = isLoading || unifiedSearch.isFetching;
+  const showSearchError = unifiedSearch.isError && !unifiedSearch.isFetching;
 
   const normalizedRelation = entityType.trim().toLowerCase();
   const filteredRecents = useMemo(() => {
@@ -62,55 +60,17 @@ export const useInteractionSearch = ({
     return recentEntities.filter((entity) => relationValuesMatch(entity.entity_type, normalizedRelation));
   }, [normalizedRelation, recentEntities]);
 
-  const { matchedEntities, matchedContacts, entitiesById } = useMemo(() => {
-    const normalized = normalizeQuery(deferredQuery);
-    if (!normalized) {
-      return {
-        matchedEntities: [],
-        matchedContacts: [],
-        entitiesById: new Map<string, Entity>()
-      };
-    }
-
-    const matchesRelation = (entity: Entity) => {
-      if (!normalizedRelation) return true;
-      return relationValuesMatch(entity.entity_type, normalizedRelation);
-    };
-
+  const entitiesById = useMemo(() => {
     const byId = new Map<string, Entity>();
-    for (const entity of resolvedEntities) {
-      byId.set(entity.id, entity);
-    }
-
-    const matchedEntities = resolvedEntities.filter((entity) => {
-      if (!matchesRelation(entity)) return false;
-      const name = entity.name.toLowerCase();
-      const city = (entity.city ?? '').toLowerCase();
-      const number = normalizeDigits(entity.client_number);
-      const rawQuery = normalizeDigits(normalized);
-      return name.includes(normalized) || city.includes(normalized) || (rawQuery.length > 0 && number.includes(rawQuery));
-    });
-
-    const matchedContacts = resolvedContacts.filter((contact) => {
-      const entity = byId.get(contact.entity_id);
-      if (!entity || !matchesRelation(entity)) return false;
-      const fullName = `${contact.first_name ?? ''} ${contact.last_name}`.trim().toLowerCase();
-      const email = (contact.email ?? '').toLowerCase();
-      const phone = normalizeDigits(contact.phone);
-      const rawQuery = normalizeDigits(normalized);
-      return fullName.includes(normalized) || email.includes(normalized) || (rawQuery.length > 0 && phone.includes(rawQuery));
-    });
-
-    return { matchedEntities, matchedContacts, entitiesById: byId };
-  }, [deferredQuery, normalizedRelation, resolvedContacts, resolvedEntities]);
+    recentEntities?.forEach((entity) => byId.set(entity.id, entity));
+    return byId;
+  }, [recentEntities]);
 
   const showResults = query.trim().length > 0;
   const showRecents = !showResults && filteredRecents.length > 0;
   const showList = showResults || isOpen;
-  const limitedEntities = matchedEntities.slice(0, 3);
-  const remainingSlots = 5 - limitedEntities.length;
-  const limitedContacts = matchedContacts.slice(0, Math.min(2, remainingSlots));
-  const hasResults = limitedEntities.length > 0 || limitedContacts.length > 0;
+  const limitedResults = unifiedSearch.data?.results ?? [];
+  const hasResults = limitedResults.length > 0;
   let status: InteractionSearchStatus = 'results';
   if (resolvedLoading) {
     status = 'loading';
@@ -121,26 +81,53 @@ export const useInteractionSearch = ({
   } else if (showResults && !hasResults) {
     status = 'empty';
   }
-  const entityHeading = entityType.trim() ? entityType.trim() : 'Entites';
+  const entityHeading = 'Résultats tiers';
+
+  const clearSearch = useCallback(() => {
+    setQuery('');
+    setIsOpen(false);
+  }, []);
 
   const handleSelectEntity = useCallback((entity: Entity) => {
     onSelectEntity(entity);
-    setQuery('');
-    setIsOpen(false);
-  }, [onSelectEntity]);
+    clearSearch();
+  }, [clearSearch, onSelectEntity]);
 
   const handleSelectContact = useCallback((contact: EntityContact) => {
     onSelectContact(contact, entitiesById.get(contact.entity_id) ?? null);
-    setQuery('');
-    setIsOpen(false);
-  }, [entitiesById, onSelectContact]);
+    clearSearch();
+  }, [clearSearch, entitiesById, onSelectContact]);
+
+  const commitSearchResult = useCallback((result: TierV1DirectoryRow) => {
+    onSelectSearchResult(result);
+    setPendingResult(null);
+    clearSearch();
+  }, [clearSearch, onSelectSearchResult]);
+
+  const handleSelectSearchResult = useCallback((result: TierV1DirectoryRow) => {
+    const selectedRelation = entityType.trim();
+    const resultRelation = getRelationLabelForTierType(result.type);
+    if (selectedRelation && selectedRelation !== resultRelation) {
+      setPendingResult(result);
+      return;
+    }
+    commitSearchResult(result);
+  }, [commitSearchResult, entityType]);
+
+  const handleConfirmPendingResult = useCallback(() => {
+    if (!pendingResult) return;
+    commitSearchResult(pendingResult);
+  }, [commitSearchResult, pendingResult]);
+
+  const handleCancelPendingResult = useCallback(() => {
+    setPendingResult(null);
+  }, []);
 
   const handleOpenGlobalSearch = useCallback(() => {
     if (!onOpenGlobalSearch) return;
     onOpenGlobalSearch();
-    setQuery('');
-    setIsOpen(false);
-  }, [onOpenGlobalSearch]);
+    clearSearch();
+  }, [clearSearch, onOpenGlobalSearch]);
 
   return {
     query,
@@ -155,11 +142,14 @@ export const useInteractionSearch = ({
       showList,
       status
     },
-    limitedEntities,
-    limitedContacts,
+    limitedResults,
     entityHeading,
+    pendingResult,
     handleSelectEntity,
     handleSelectContact,
+    handleSelectSearchResult,
+    handleConfirmPendingResult,
+    handleCancelPendingResult,
     handleOpenGlobalSearch
   };
 };

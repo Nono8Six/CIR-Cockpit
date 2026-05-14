@@ -1,15 +1,19 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { TierV1DirectoryRow, TierV1SearchInput } from 'shared/schemas/tier-v1.schema';
 import { useInteractionSearch } from '@/hooks/useInteractionSearch';
+import { useUnifiedEntitySearch } from '@/hooks/useUnifiedEntitySearch';
 import type { Entity, EntityContact } from '@/types';
 
-const searchMocks = vi.hoisted(() => ({
-  useEntitySearchIndex: vi.fn()
-}));
+type SearchHookReturn = {
+  data?: { ok: true; results: TierV1DirectoryRow[] };
+  isFetching: boolean;
+  isError: boolean;
+};
 
-vi.mock('@/hooks/useEntitySearchIndex', () => ({
-  useEntitySearchIndex: searchMocks.useEntitySearchIndex
+vi.mock('@/hooks/useUnifiedEntitySearch', () => ({
+  useUnifiedEntitySearch: vi.fn()
 }));
 
 const createEntity = (overrides?: Partial<Entity>): Entity => ({
@@ -25,7 +29,7 @@ const createEntity = (overrides?: Partial<Entity>): Entity => ({
   created_by: overrides?.created_by ?? null,
   department: overrides?.department ?? null,
   entity_type: overrides?.entity_type ?? 'Client',
-  name: overrides?.name ?? 'Acme',
+  name: overrides?.name ?? 'Client recent',
   notes: overrides?.notes ?? null,
   postal_code: overrides?.postal_code ?? null,
   siret: overrides?.siret ?? null,
@@ -46,72 +50,129 @@ const createContact = (overrides?: Partial<EntityContact>): EntityContact => ({
   updated_at: overrides?.updated_at ?? '2026-01-01T10:00:00.000Z'
 });
 
+const createResult = (overrides?: Partial<TierV1DirectoryRow>): TierV1DirectoryRow => ({
+  id: overrides?.id ?? 'entity-1',
+  source: overrides?.source ?? 'entity',
+  type: overrides?.type ?? 'client_term',
+  label: overrides?.label ?? 'Client Alpha',
+  identifier: overrides?.identifier ?? 'C-001',
+  phone: overrides?.phone ?? null,
+  email: overrides?.email ?? null,
+  city: overrides?.city ?? 'Paris',
+  agency_name: overrides?.agency_name ?? null,
+  referent_name: overrides?.referent_name ?? null,
+  updated_at: overrides?.updated_at ?? '2026-01-01T10:00:00.000Z',
+  archived_at: overrides?.archived_at ?? null
+});
+
+const mockUnifiedSearch = (implementation: (input: TierV1SearchInput) => SearchHookReturn) => {
+  vi.mocked(useUnifiedEntitySearch).mockImplementation((input) =>
+    implementation(input) as ReturnType<typeof useUnifiedEntitySearch>
+  );
+};
+
 describe('useInteractionSearch', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    searchMocks.useEntitySearchIndex.mockReturnValue({
-      data: { entities: [], contacts: [] },
-      isLoading: false,
+    mockUnifiedSearch(() => ({
+      data: { ok: true, results: [] },
+      isFetching: false,
       isError: false
-    });
+    }));
   });
 
-  it('returns search results and clears state after selection', async () => {
-    const onSelectEntity = vi.fn();
-    const onSelectContact = vi.fn();
-    const entity = createEntity();
-    const contact = createContact();
-
-    const { result } = renderHook(() =>
-      useInteractionSearch({
-        agencyId: 'agency-1',
-        entityType: 'Client',
-        entities: [entity],
-        contacts: [contact],
-        onSelectEntity,
-        onSelectContact
-      })
-    );
-
-    act(() => {
-      result.current.setIsOpen(true);
-      result.current.setQuery('acme');
-    });
-
-    await waitFor(() => {
-      expect(result.current.panelState.status).toBe('results');
-    });
-    expect(result.current.limitedEntities).toHaveLength(1);
-
-    act(() => {
-      result.current.handleSelectEntity(entity);
-    });
-
-    expect(onSelectEntity).toHaveBeenCalledWith(entity);
-    expect(result.current.query).toBe('');
-    expect(result.current.isOpen).toBe(false);
-  });
-
-  it('exposes error panel state when search index query fails', async () => {
-    searchMocks.useEntitySearchIndex.mockImplementation((agencyId, includeArchived) => ({
-      data: { entities: [], contacts: [] },
-      isLoading: false,
-      isError: !includeArchived && Boolean(agencyId)
+  it('returns unified backend results and clears state after selection', async () => {
+    const onSelectSearchResult = vi.fn();
+    const resultRow = createResult();
+    mockUnifiedSearch(() => ({
+      data: { ok: true, results: [resultRow] },
+      isFetching: false,
+      isError: false
     }));
 
     const { result } = renderHook(() =>
       useInteractionSearch({
         agencyId: 'agency-1',
-        entityType: 'Client',
+        entityType: 'Client à terme',
         entities: [],
         contacts: [],
         onSelectEntity: vi.fn(),
-        onSelectContact: vi.fn()
+        onSelectContact: vi.fn(),
+        onSelectSearchResult
       })
     );
 
     act(() => {
-      result.current.setQuery('acme');
+      result.current.setIsOpen(true);
+      result.current.setQuery('alpha');
+    });
+
+    await waitFor(() => {
+      expect(result.current.panelState.status).toBe('results');
+    });
+    expect(result.current.limitedResults).toHaveLength(1);
+
+    act(() => {
+      result.current.handleSelectSearchResult(resultRow);
+    });
+
+    expect(onSelectSearchResult).toHaveBeenCalledWith(resultRow);
+    expect(result.current.query).toBe('');
+    expect(result.current.isOpen).toBe(false);
+  });
+
+  it('opens cross-type confirmation before committing a different relation', () => {
+    const onSelectSearchResult = vi.fn();
+    const resultRow = createResult({ type: 'client_cash' });
+
+    const { result } = renderHook(() =>
+      useInteractionSearch({
+        agencyId: 'agency-1',
+        entityType: 'Prospect',
+        entities: [],
+        contacts: [],
+        onSelectEntity: vi.fn(),
+        onSelectContact: vi.fn(),
+        onSelectSearchResult
+      })
+    );
+
+    act(() => {
+      result.current.handleSelectSearchResult(resultRow);
+    });
+
+    expect(result.current.pendingResult).toEqual(resultRow);
+    expect(onSelectSearchResult).not.toHaveBeenCalled();
+
+    act(() => {
+      result.current.handleConfirmPendingResult();
+    });
+
+    expect(onSelectSearchResult).toHaveBeenCalledWith(resultRow);
+    expect(result.current.pendingResult).toBeNull();
+  });
+
+  it('exposes error panel state when unified search query fails', async () => {
+    mockUnifiedSearch(() => ({
+      data: { ok: true, results: [] },
+      isFetching: false,
+      isError: true
+    }));
+
+    const { result } = renderHook(() =>
+      useInteractionSearch({
+        agencyId: 'agency-1',
+        entityType: 'Client à terme',
+        entities: [],
+        contacts: [],
+        onSelectEntity: vi.fn(),
+        onSelectContact: vi.fn(),
+        onSelectSearchResult: vi.fn()
+      })
+    );
+
+    act(() => {
+      result.current.setQuery('alpha');
     });
 
     await waitFor(() => {
@@ -119,36 +180,32 @@ describe('useInteractionSearch', () => {
     });
   });
 
-  it('filters recent entities by relation and can include archived index', async () => {
-    const liveEntity = createEntity({ id: 'entity-live', name: 'Live Client', entity_type: 'Client' });
-    const archivedEntity = createEntity({
+  it('filters recent entities by relation and sends archived toggle to backend search', async () => {
+    const archivedResult = createResult({
       id: 'entity-archived',
-      name: 'Archived Client',
-      entity_type: 'Client',
+      label: 'Archived Client',
       archived_at: '2026-01-10T10:00:00.000Z'
     });
 
-    searchMocks.useEntitySearchIndex.mockImplementation((agencyId, includeArchived) => ({
-      data: {
-        entities: includeArchived && Boolean(agencyId) ? [archivedEntity] : [liveEntity],
-        contacts: []
-      },
-      isLoading: false,
+    mockUnifiedSearch((input) => ({
+      data: { ok: true, results: input.include_archived ? [archivedResult] : [] },
+      isFetching: false,
       isError: false
     }));
 
     const { result } = renderHook(() =>
       useInteractionSearch({
         agencyId: 'agency-1',
-        entityType: 'Client',
+        entityType: 'Client à terme',
         entities: [],
-        contacts: [],
+        contacts: [createContact()],
         recentEntities: [
           createEntity({ id: 'recent-client', name: 'Recent Client', entity_type: 'Client' }),
           createEntity({ id: 'recent-prospect', name: 'Recent Prospect', entity_type: 'Prospect' })
         ],
         onSelectEntity: vi.fn(),
-        onSelectContact: vi.fn()
+        onSelectContact: vi.fn(),
+        onSelectSearchResult: vi.fn()
       })
     );
 
@@ -161,7 +218,7 @@ describe('useInteractionSearch', () => {
     });
 
     await waitFor(() => {
-      expect(result.current.limitedEntities[0]?.id).toBe('entity-archived');
+      expect(result.current.limitedResults[0]?.id).toBe('entity-archived');
     });
   });
 });

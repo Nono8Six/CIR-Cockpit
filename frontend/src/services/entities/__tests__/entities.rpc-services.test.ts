@@ -11,6 +11,7 @@ import { getProspects } from '@/services/entities/getProspects';
 import { reassignEntity } from '@/services/entities/reassignEntity';
 import { saveEntity } from '@/services/entities/saveEntity';
 import { saveEntityContact } from '@/services/entities/saveEntityContact';
+import { searchEntitiesUnified } from '@/services/entities/searchEntitiesUnified';
 
 vi.mock('../../api/safeTrpc');
 
@@ -22,12 +23,14 @@ const mockSafeRpc = vi.mocked(safeTrpc);
 const createTrpcClientFixture = () => {
   const entitiesPost = vi.fn().mockResolvedValue(new Response('{}', { status: 200 }));
   const entityContactsPost = vi.fn().mockResolvedValue(new Response('{}', { status: 200 }));
+  const unifiedSearchQuery = vi.fn().mockResolvedValue(new Response('{}', { status: 200 }));
 
   const client = {
     data: {
       profile: { mutate: vi.fn() },
       config: { mutate: vi.fn() },
       entities: { mutate: entitiesPost },
+      searchEntitiesUnified: { query: unifiedSearchQuery },
       'entity-contacts': { mutate: entityContactsPost },
       interactions: { mutate: vi.fn() }
     },
@@ -37,7 +40,7 @@ const createTrpcClientFixture = () => {
     }
   } as unknown as TrpcClient;
 
-  return { client, entitiesPost, entityContactsPost };
+  return { client, entitiesPost, entityContactsPost, unifiedSearchQuery };
 };
 
 const expectRequestFailedError = (parser: SafeRpcParser) => {
@@ -205,6 +208,59 @@ describe('entities RPC services', () => {
     const entities = [{ id: 'entity-1' }];
     const contacts = [{ id: 'contact-1', entity_id: 'entity-1' }];
     expect(parser({ ok: true, entities, contacts })).toEqual({ entities, contacts });
+    expectRequestFailedError(parser);
+  });
+
+  it('builds searchEntitiesUnified query payload and parses V1 rows', async () => {
+    const match = vi.fn();
+    mockSafeRpc.mockReturnValue({ match } as never);
+
+    await searchEntitiesUnified({
+      query: 'alpha',
+      agency_id: 'agency-1',
+      family: 'all',
+      client_filter: 'all',
+      prospect_filter: 'all',
+      include_archived: false,
+      limit: 5
+    });
+
+    expect(mockSafeRpc).toHaveBeenCalledWith(
+      expect.any(Function),
+      expect.any(Function),
+      'Impossible de rechercher les tiers.'
+    );
+
+    const [call, parser] = mockSafeRpc.mock.calls[0] as [SafeRpcCall, SafeRpcParser, string];
+    const { client, unifiedSearchQuery } = createTrpcClientFixture();
+    const input = {
+      query: 'alpha',
+      agency_id: 'agency-1',
+      family: 'all',
+      client_filter: 'all',
+      prospect_filter: 'all',
+      include_archived: false,
+      limit: 5
+    };
+    await call(client, {});
+
+    expect(unifiedSearchQuery).toHaveBeenCalledWith(input, {});
+
+    const row = {
+      id: 'entity-1',
+      source: 'entity',
+      type: 'client_term',
+      label: 'Client Alpha',
+      identifier: '000123',
+      phone: null,
+      email: null,
+      city: 'Paris',
+      agency_name: null,
+      referent_name: null,
+      updated_at: '2026-01-01T10:00:00.000Z',
+      archived_at: null
+    };
+    expect(parser({ ok: true, results: [row] })).toEqual({ ok: true, results: [row] });
     expectRequestFailedError(parser);
   });
 

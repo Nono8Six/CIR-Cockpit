@@ -10,6 +10,7 @@ import type {
   DirectoryScopeInput,
   DirectoryRouteRef
 } from 'shared/schemas/directory.schema';
+import type { TierV1SearchInput } from 'shared/schemas/tier-v1.schema';
 
 export const QUERY_ROOTS = {
   configSnapshot: 'config-snapshot',
@@ -31,6 +32,7 @@ export const QUERY_ROOTS = {
   clientContacts: 'client-contacts',
   entityInteractions: 'entity-interactions',
   entitySearchIndex: 'entity-search-index',
+  entityUnifiedSearch: 'entity-unified-search',
   cockpitAgencyMembers: 'cockpit-agency-members',
   cockpitPhoneLookup: 'cockpit-phone-lookup',
   agencies: 'agencies',
@@ -149,6 +151,17 @@ export const entitySearchIndexKey = (agencyId: string | null, includeArchived: b
   QUERY_ROOTS.entitySearchIndex,
   agencyId ?? 'all',
   archiveScope(includeArchived)
+] as const;
+
+export const entityUnifiedSearchKey = (input: TierV1SearchInput) => [
+  QUERY_ROOTS.entityUnifiedSearch,
+  input.agency_id ?? 'all',
+  input.query,
+  input.family,
+  input.client_filter,
+  input.prospect_filter,
+  archiveScope(input.include_archived),
+  input.limit
 ] as const;
 
 export const cockpitAgencyMembersKey = (agencyId: string | null) => [

@@ -15,7 +15,7 @@ const InteractionSearchStatusMessage = ({
   status
 }: InteractionSearchStatusMessageProps) => {
   if (status === 'loading') {
-    return <CommandEmpty className="text-xs text-muted-foreground/80 py-5">Chargement...</CommandEmpty>;
+    return <CommandEmpty className="text-xs text-muted-foreground/80 py-5">Chargement…</CommandEmpty>;
   }
 
   if (status === 'error') {
@@ -35,7 +35,7 @@ const InteractionSearchStatusMessage = ({
   }
 
   if (status === 'empty') {
-    return <CommandEmpty className="text-xs text-muted-foreground/80 py-5">Aucun resultat.</CommandEmpty>;
+    return <CommandEmpty className="text-xs text-muted-foreground/80 py-5">Aucun résultat.</CommandEmpty>;
   }
 
   return null;

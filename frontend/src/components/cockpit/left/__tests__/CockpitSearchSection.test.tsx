@@ -31,6 +31,7 @@ const buildProps = (
   relationMode: 'prospect',
   onSelectEntityFromSearch: vi.fn(),
   onSelectContactFromSearch: vi.fn(),
+  onSelectUnifiedSearchResult: vi.fn(),
   onOpenClientDialog: vi.fn(),
   onOpenProspectDialog: vi.fn(),
   onOpenGlobalSearch: undefined,
@@ -66,7 +67,7 @@ describe('CockpitSearchSection', () => {
     expect(screen.queryByRole('button', { name: 'Créer' })).not.toBeInTheDocument();
   });
 
-  it('active les badges type uniquement quand la recherche est en mode Tout', () => {
+  it('active toujours les badges type pour les resultats cross-type', () => {
     const { rerender } = render(
       <CockpitSearchSection {...buildProps({ entityType: '', relationMode: 'other' })} />
     );
@@ -82,7 +83,7 @@ describe('CockpitSearchSection', () => {
 
     expect(screen.getByTestId('interaction-search-bar')).toHaveAttribute(
       'data-show-type-badge',
-      'false'
+      'true'
     );
   });
 });

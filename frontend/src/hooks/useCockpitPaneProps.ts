@@ -18,6 +18,7 @@ export const useCockpitPaneProps = (params: UseCockpitPanePropsParams) => {
     entitySearchLoading: params.entitySearchLoading,
     onSelectEntityFromSearch: params.onSelectEntityFromSearch,
     onSelectContactFromSearch: params.onSelectContactFromSearch,
+    onSelectUnifiedSearchResult: params.onSelectUnifiedSearchResult,
     onOpenClientDialog: params.onOpenClientDialog,
     onOpenProspectDialog: params.onOpenProspectDialog,
     onOpenGlobalSearch: params.onOpenGlobalSearch,

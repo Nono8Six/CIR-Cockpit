@@ -1,5 +1,19 @@
 import { Command } from './ui/command';
 import { useInteractionSearch } from '@/hooks/useInteractionSearch';
+import {
+  getRelationLabelForTierType,
+  getTierTypeDisplayLabel
+} from '@/constants/relations';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog';
 import type { InteractionSearchBarProps } from './interaction-search/InteractionSearchBar.types';
 import InteractionSearchContainer from './interaction-search/InteractionSearchContainer';
 import InteractionSearchFooter from './interaction-search/InteractionSearchFooter';
@@ -15,6 +29,7 @@ const InteractionSearchBar = ({
   isLoading = false,
   onSelectEntity,
   onSelectContact,
+  onSelectSearchResult,
   onCreateEntity,
   onOpenGlobalSearch,
   recentEntities,
@@ -29,11 +44,13 @@ const InteractionSearchBar = ({
     setIncludeArchived,
     filteredRecents,
     panelState,
-    limitedEntities,
-    limitedContacts,
+    limitedResults,
     entityHeading,
+    pendingResult,
     handleSelectEntity,
-    handleSelectContact,
+    handleSelectSearchResult,
+    handleConfirmPendingResult,
+    handleCancelPendingResult,
     handleOpenGlobalSearch
   } = useInteractionSearch({
     agencyId,
@@ -44,41 +61,63 @@ const InteractionSearchBar = ({
     recentEntities,
     onSelectEntity,
     onSelectContact,
+    onSelectSearchResult,
     onOpenGlobalSearch
   });
 
   const canOpenGlobalSearch = Boolean(onOpenGlobalSearch);
+  const pendingResultType = pendingResult ? getTierTypeDisplayLabel(pendingResult.type) : '';
+  const pendingRelation = pendingResult ? getRelationLabelForTierType(pendingResult.type) : '';
 
   return (
-    <InteractionSearchContainer
-      onOpen={() => setIsOpen(true)}
-      onClose={() => setIsOpen(false)}
-    >
-      <InteractionSearchHeader
-        includeArchived={includeArchived}
-        onIncludeArchivedChange={setIncludeArchived}
-      />
-      <Command className="rounded-none overflow-visible h-auto bg-transparent" shouldFilter={false}>
-        <InteractionSearchInput query={query} onQueryChange={setQuery} inputRef={inputRef} />
-        <InteractionSearchListArea
-          panelState={panelState}
-          filteredRecents={filteredRecents}
-          limitedEntities={limitedEntities}
-          limitedContacts={limitedContacts}
-          query={query}
+    <>
+      <InteractionSearchContainer
+        onOpen={() => setIsOpen(true)}
+        onClose={() => setIsOpen(false)}
+      >
+        <InteractionSearchHeader
           includeArchived={includeArchived}
-          entityHeading={entityHeading}
-          onSelectEntity={handleSelectEntity}
-          onSelectContact={handleSelectContact}
-          showTypeBadge={showTypeBadge}
+          onIncludeArchivedChange={setIncludeArchived}
         />
-      </Command>
-      <InteractionSearchFooter
-        entityHeading={entityHeading}
-        onCreateEntity={onCreateEntity}
-        onOpenGlobalSearch={canOpenGlobalSearch ? handleOpenGlobalSearch : undefined}
-      />
-    </InteractionSearchContainer>
+        <Command className="rounded-none overflow-visible h-auto bg-transparent" shouldFilter={false}>
+          <InteractionSearchInput query={query} onQueryChange={setQuery} inputRef={inputRef} />
+          <InteractionSearchListArea
+            panelState={panelState}
+            filteredRecents={filteredRecents}
+            limitedResults={limitedResults}
+            query={query}
+            includeArchived={includeArchived}
+            entityHeading={entityHeading}
+            onSelectEntity={handleSelectEntity}
+            onSelectSearchResult={handleSelectSearchResult}
+            showTypeBadge={showTypeBadge}
+          />
+        </Command>
+        <InteractionSearchFooter
+          entityHeading={entityHeading}
+          onCreateEntity={onCreateEntity}
+          onOpenGlobalSearch={canOpenGlobalSearch ? handleOpenGlobalSearch : undefined}
+        />
+      </InteractionSearchContainer>
+      <AlertDialog open={Boolean(pendingResult)} onOpenChange={(open) => {
+        if (!open) handleCancelPendingResult();
+      }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Basculer vers le type réel ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Le tiers sélectionné est classé {pendingResultType}. La Saisie va passer sur {pendingRelation} pour éviter une interaction incohérente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmPendingResult}>
+              Basculer vers ce type
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 

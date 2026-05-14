@@ -1,8 +1,18 @@
 import type { RefObject } from 'react';
-import { Building2, Circle, Factory, Globe, Megaphone, UserRound, Users } from 'lucide-react';
+import { Building2, Factory, Megaphone, Sprout, Store, UserRound, Users } from 'lucide-react';
 import type { FieldErrors } from 'react-hook-form';
 
 import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
+import {
+  CASH_CLIENT_RELATION_LABEL,
+  INDIVIDUAL_RELATION_LABEL,
+  INTERNAL_RELATION_LABEL,
+  PRODUCT_RELATION_OPTIONS,
+  PROSPECT_RELATION_LABEL,
+  SOLICITATION_RELATION_LABEL,
+  SUPPLIER_RELATION_LABEL,
+  TERM_CLIENT_RELATION_LABEL
+} from '@/constants/relations';
 import {
   Combobox,
   ComboboxContent,
@@ -22,36 +32,33 @@ type CockpitRelationSectionProps = {
   relationButtonRef: RefObject<HTMLButtonElement | null>;
 };
 
-const ALL_OPTION_VALUE = 'Tout';
-
 const RELATION_ICONS = {
-  [ALL_OPTION_VALUE]: Globe,
-  'Client': Building2,
-  'Prospect / Particulier': UserRound,
-  'Fournisseur': Factory,
-  'Sollicitation': Megaphone,
-  'Interne (CIR)': Users
+  [TERM_CLIENT_RELATION_LABEL]: Building2,
+  [CASH_CLIENT_RELATION_LABEL]: Store,
+  [INDIVIDUAL_RELATION_LABEL]: UserRound,
+  [PROSPECT_RELATION_LABEL]: Sprout,
+  [SUPPLIER_RELATION_LABEL]: Factory,
+  [SOLICITATION_RELATION_LABEL]: Megaphone,
+  [INTERNAL_RELATION_LABEL]: Users
 } as const;
 
 const CockpitRelationSection = ({
   labelStyle,
   errors,
-  relationOptions,
   entityType,
   onRelationChange,
   relationButtonRef
 }: CockpitRelationSectionProps) => {
   const relationLabelId = 'cockpit-relation-label';
-  const displayOptions = [ALL_OPTION_VALUE, ...relationOptions];
-  const toggleValue = entityType.trim() === '' ? ALL_OPTION_VALUE : entityType;
+  const displayOptions = [...PRODUCT_RELATION_OPTIONS];
+  const toggleValue = entityType.trim();
 
   const handleValueChange = (value: string) => {
     if (!value) return;
-    const normalized = value === ALL_OPTION_VALUE ? '' : value;
-    onRelationChange(normalized);
+    onRelationChange(value);
   };
 
-    return (
+  return (
     <div className="space-y-2">
       <p id={relationLabelId} className={labelStyle}>Type de tiers</p>
       <div className="min-[769px]:hidden">
@@ -91,7 +98,7 @@ const CockpitRelationSection = ({
       className="hidden flex-wrap items-center justify-start gap-2 min-[769px]:flex"
     >
       {displayOptions.map((option, index) => {
-        const RelationIcon = RELATION_ICONS[option as keyof typeof RELATION_ICONS] ?? Circle;
+        const RelationIcon = RELATION_ICONS[option];
 
         return (
           <ToggleGroupItem
@@ -106,11 +113,6 @@ const CockpitRelationSection = ({
         );
       })}
     </ToggleGroup>
-    {toggleValue === ALL_OPTION_VALUE ? (
-      <p className="text-[11px] text-muted-foreground">
-        Tous les types sont visibles dans la recherche. Choisissez un tiers pour préciser.
-      </p>
-    ) : null}
     {errors.entity_type ? (
       <p className="text-xs text-destructive" role="status" aria-live="polite">
         {errors.entity_type.message}

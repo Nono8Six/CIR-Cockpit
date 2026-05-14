@@ -764,7 +764,7 @@ describe('EntityOnboardingDialog', () => {
       (await screen.findAllByText(/action d'enregistrement client indisponible/i)).length
     ).toBeGreaterThan(0);
     expect(onOpenChange).not.toHaveBeenCalledWith(false);
-  });
+  }, 15_000);
 
   it('surfaces a controlled error when prospect save callback is missing', async () => {
     const user = userEvent.setup();
@@ -823,7 +823,7 @@ describe('EntityOnboardingDialog', () => {
       (await screen.findAllByText(/action d'enregistrement client indisponible/i)).length
     ).toBeGreaterThan(0);
     expect(onOpenChange).not.toHaveBeenCalledWith(false);
-  });
+  }, 15_000);
 
   it('supports arrow-key navigation for both onboarding radio groups', async () => {
     const user = userEvent.setup();

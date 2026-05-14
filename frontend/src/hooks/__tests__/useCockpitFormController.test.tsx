@@ -1,8 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import type { PropsWithChildren } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { TierV1DirectoryRow } from 'shared/schemas/tier-v1.schema';
 import { Channel, type Entity, type Interaction } from '@/types';
 import { useCockpitFormController } from '@/hooks/useCockpitFormController';
 
@@ -579,6 +580,60 @@ describe('useCockpitFormController', () => {
     expect(result.current.clientContextInteractions.map((interaction) => interaction.id)).toEqual([
       'client-context'
     ]);
+  });
+
+  it('branche les resultats profile sans selectionner une fiche entity', async () => {
+    const setSelectedEntity = vi.fn();
+    const setSelectedContact = vi.fn();
+    const handleSelectEntityFromSearch = vi.fn();
+    controllerMocks.useCockpitDialogsState.mockReturnValue({
+      ...controllerMocks.useCockpitDialogsState(),
+      setSelectedEntity,
+      setSelectedContact
+    });
+    controllerMocks.useInteractionHandlers.mockReturnValue({
+      ...controllerMocks.useInteractionHandlers(),
+      handleSelectEntityFromSearch
+    });
+
+    renderHook(
+      () =>
+        useCockpitFormController({
+          onSave: vi.fn().mockResolvedValue(true),
+          config: BASE_CONFIG,
+          activeAgencyId: 'agency-1',
+          userId: 'user-1',
+          userRole: 'agency_admin',
+          entitySearchIndex: { entities: [], contacts: [] },
+          entitySearchLoading: false,
+          recentEntities: []
+        }),
+      { wrapper: buildWrapper() }
+    );
+
+    const profileResult: TierV1DirectoryRow = {
+      id: 'profile-1',
+      source: 'profile',
+      type: 'internal_cir',
+      label: 'Alice CIR',
+      identifier: 'alice@example.com',
+      phone: '0102030405',
+      email: 'alice@example.com',
+      city: null,
+      agency_name: 'Agence Bordeaux',
+      referent_name: null,
+      updated_at: '2026-05-14T00:00:00.000Z',
+      archived_at: null
+    };
+    const lastCallArgs = controllerMocks.useCockpitPaneProps.mock.calls.at(-1)?.[0];
+
+    await act(async () => {
+      lastCallArgs?.onSelectUnifiedSearchResult(profileResult);
+    });
+
+    expect(setSelectedEntity).toHaveBeenCalledWith(null);
+    expect(setSelectedContact).toHaveBeenCalledWith(null);
+    expect(handleSelectEntityFromSearch).not.toHaveBeenCalled();
   });
 });
 

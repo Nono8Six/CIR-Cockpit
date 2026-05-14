@@ -26,7 +26,8 @@ import {
   directoryRecordResponseSchema,
   directorySavedViewDeleteResponseSchema,
   directorySavedViewResponseSchema,
-  directorySavedViewsListResponseSchema
+  directorySavedViewsListResponseSchema,
+  tierV1SearchResponseSchema
 } from '../schemas/api-responses.ts';
 import {
   cockpitAgencyMembersInputSchema,
@@ -46,6 +47,7 @@ import {
   dataInteractionsPayloadSchema,
   dataProfilePayloadSchema
 } from '../schemas/data.schema.ts';
+import { tierV1SearchInputSchema } from '../schemas/tier-v1.schema.ts';
 import {
   directoryCitySuggestionsInputSchema,
   directoryCompanyDetailsInputSchema,
@@ -90,7 +92,11 @@ const appRouterType = t.router({
     profile: t.procedure
       .input(dataProfilePayloadSchema)
       .output(dataProfileResponseSchema)
-      .mutation(() => undefined as never)
+      .mutation(() => undefined as never),
+    searchEntitiesUnified: t.procedure
+      .input(tierV1SearchInputSchema)
+      .output(tierV1SearchResponseSchema)
+      .query(() => undefined as never)
   }),
   cockpit: t.router({
     'agency-members': t.procedure

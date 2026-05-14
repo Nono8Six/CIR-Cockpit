@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useWatch } from 'react-hook-form';
 
 import { STATUS_CATEGORY_LABELS } from '@/constants/statusCategories';
-import { ensureInternalRelation, getRelationMode, isProspectRelationValue } from '@/constants/relations';
+import { getRelationMode, isProspectRelationValue, PRODUCT_RELATION_OPTIONS } from '@/constants/relations';
 import { Channel, type StatusCategory } from '@/types';
 import { formatClientNumber } from '@/utils/clients/formatClientNumber';
 import { useAgencies } from '@/hooks/useAgencies';
@@ -31,7 +31,7 @@ export const useInteractionFormState = ({ control, config, activeAgencyId, entit
   const entityId = useWatch({ control, name: 'entity_id' }) ?? '';
   const contactId = useWatch({ control, name: 'contact_id' }) ?? '';
 
-  const relationOptions = useMemo(() => ensureInternalRelation(config.entities), [config.entities]);
+  const relationOptions = useMemo(() => [...PRODUCT_RELATION_OPTIONS], []);
   const defaultStatusId = useMemo(() => getDefaultStatusId(config.statuses), [config.statuses]);
   const normalizedRelation = entityType.trim().toLowerCase();
   const relationMode = getRelationMode(entityType);

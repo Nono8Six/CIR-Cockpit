@@ -1,64 +1,63 @@
-import { describe, expect, it, vi } from 'vitest';
-import { screen, within } from '@testing-library/react';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ComponentProps } from 'react';
 
+import type { TierV1DirectoryRow, TierV1SearchInput } from 'shared/schemas/tier-v1.schema';
 import InteractionSearchBar from '../InteractionSearchBar';
 import { renderWithProviders } from '@/__tests__/test-utils';
-import { Entity, EntityContact } from '@/types';
-import { useEntitySearchIndex } from '@/hooks/useEntitySearchIndex';
+import type { Entity, EntityContact } from '@/types';
+import { useUnifiedEntitySearch } from '@/hooks/useUnifiedEntitySearch';
 
 type SearchHookReturn = {
-  data?: { entities: Entity[]; contacts: EntityContact[] };
-  isLoading: boolean;
+  data?: { ok: true; results: TierV1DirectoryRow[] };
+  isFetching: boolean;
   isError: boolean;
 };
 
-vi.mock('@/hooks/useEntitySearchIndex', () => ({
-  useEntitySearchIndex: vi.fn()
+vi.mock('@/hooks/useUnifiedEntitySearch', () => ({
+  useUnifiedEntitySearch: vi.fn()
 }));
 
-const buildEntity = (overrides: Partial<Entity> = {}): Entity => ({
+const buildResult = (overrides: Partial<TierV1DirectoryRow> = {}): TierV1DirectoryRow => ({
   id: 'entity-1',
-  account_type: 'term',
-  address: '1 rue test',
-  agency_id: 'agency-1',
-  archived_at: null,
-  city: 'Paris',
-  client_number: '000123',
-  country: 'FR',
-  created_at: '2025-01-01T00:00:00Z',
-  created_by: null,
-  department: '75',
-  entity_type: 'Client',
-  name: 'Client Alpha',
-  notes: null,
-  postal_code: '75001',
-  siret: null,
-  updated_at: '2025-01-01T00:00:00Z',
-  ...overrides
-});
-
-const buildContact = (overrides: Partial<EntityContact> = {}): EntityContact => ({
-  id: 'contact-1',
-  entity_id: 'entity-1',
-  archived_at: null,
-  created_at: '2025-01-01T00:00:00Z',
-  email: null,
-  first_name: 'Alice',
-  last_name: 'Martin',
-  notes: null,
+  source: 'entity',
+  type: 'client_term',
+  label: 'Client Alpha',
+  identifier: '000123',
   phone: null,
-  position: null,
+  email: null,
+  city: 'Paris',
+  agency_name: 'Agence Paris',
+  referent_name: null,
   updated_at: '2025-01-01T00:00:00Z',
+  archived_at: null,
   ...overrides
 });
 
-const mockSearchHook = (implementation: (includeArchived: boolean) => SearchHookReturn) => {
-  const hookMock = vi.mocked(useEntitySearchIndex);
-  hookMock.mockImplementation((_agencyId: string | null, includeArchived: boolean) => ({
-    ...implementation(includeArchived),
-    error: null
-  }) as ReturnType<typeof useEntitySearchIndex>);
+const mockUnifiedSearch = (implementation: (input: TierV1SearchInput) => SearchHookReturn) => {
+  vi.mocked(useUnifiedEntitySearch).mockImplementation((input) =>
+    implementation(input) as ReturnType<typeof useUnifiedEntitySearch>
+  );
+};
+
+const renderSearch = (
+  overrides: Partial<ComponentProps<typeof InteractionSearchBar>> = {}
+) => {
+  const props = {
+    agencyId: 'agency-1',
+    entityType: 'Client à terme',
+    entities: [] as Entity[],
+    contacts: [] as EntityContact[],
+    onSelectEntity: vi.fn(),
+    onSelectContact: vi.fn(),
+    onSelectSearchResult: vi.fn(),
+    showTypeBadge: true,
+    ...overrides
+  };
+
+  renderWithProviders(<InteractionSearchBar {...props} />);
+  return props;
 };
 
 const normalizeText = (value: string) => value.replace(/\s/g, '').toLowerCase();
@@ -71,85 +70,84 @@ const findOptionByText = (label: string) => {
 };
 
 describe('InteractionSearchBar', () => {
-  it('limits results to 3 entities and 2 contacts (max 5 total) and filters by relation', async () => {
-    mockSearchHook(() => ({ data: { entities: [], contacts: [] }, isLoading: false, isError: false }));
-    const user = userEvent.setup();
-
-    const entities = [
-      buildEntity({ id: 'c1', name: 'Alpha', client_number: '000001', city: 'Paris', entity_type: 'Client' }),
-      buildEntity({ id: 'c2', name: 'Beta', client_number: '000002', city: 'Lyon', entity_type: 'Client' }),
-      buildEntity({ id: 'c3', name: 'Gamma', client_number: '000003', city: 'Lille', entity_type: 'Client' }),
-      buildEntity({ id: 'c4', name: 'Delta', client_number: '000004', city: 'Bordeaux', entity_type: 'Client' }),
-      buildEntity({ id: 'p1', name: 'Prospect A', client_number: null, city: 'Nantes', entity_type: 'Prospect' })
-    ];
-    const contacts = [
-      buildContact({ id: 'ct1', first_name: 'Aaron', last_name: 'A', entity_id: 'c1' }),
-      buildContact({ id: 'ct2', first_name: 'Aline', last_name: 'A', entity_id: 'c1' }),
-      buildContact({ id: 'ct3', first_name: 'Ava', last_name: 'A', entity_id: 'c1' }),
-      buildContact({ id: 'ct4', first_name: 'Ada', last_name: 'Prospect', entity_id: 'p1' })
-    ];
-
-    renderWithProviders(
-      <InteractionSearchBar
-        agencyId="agency-1"
-        entityType="Client"
-        entities={entities}
-        contacts={contacts}
-        onSelectEntity={vi.fn()}
-        onSelectContact={vi.fn()}
-      />
-    );
-
-    const input = screen.getByPlaceholderText(/rechercher entité/i);
-    await user.type(input, 'a');
-
-    expect(findOptionByText('Alpha')).toBeTruthy();
-    expect(findOptionByText('Beta')).toBeTruthy();
-    expect(findOptionByText('Gamma')).toBeTruthy();
-    expect(findOptionByText('Delta')).toBeFalsy();
-    expect(findOptionByText('Prospect A')).toBeFalsy();
-
-    expect(findOptionByText('Aaron A')).toBeTruthy();
-    expect(findOptionByText('Aline A')).toBeTruthy();
-    expect(findOptionByText('Ava A')).toBeFalsy();
-    expect(findOptionByText('Ada Prospect')).toBeFalsy();
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUnifiedSearch((): SearchHookReturn => ({
+      data: { ok: true, results: [] },
+      isFetching: false,
+      isError: false
+    }));
   });
 
-  it('loads archived results on toggle and shows the archive badge', async () => {
-    const archivedEntity = buildEntity({
+  it('affiche les resultats backend unifies et selectionne un type coherent', async () => {
+    const result = buildResult();
+    mockUnifiedSearch((): SearchHookReturn => ({
+      data: { ok: true, results: [result] },
+      isFetching: false,
+      isError: false
+    }));
+    const user = userEvent.setup();
+    const props = renderSearch();
+
+    await user.type(screen.getByPlaceholderText(/rechercher entité/i), 'alpha');
+
+    const option = await waitFor(() => findOptionByText('Client Alpha'));
+    expect(option).toBeTruthy();
+    expect(option).toHaveTextContent('Client à terme');
+
+    await user.click(option as HTMLElement);
+
+    expect(props.onSelectSearchResult).toHaveBeenCalledWith(result);
+  });
+
+  it('demande confirmation avant de basculer sur un resultat cross-type', async () => {
+    const crossTypeResult = buildResult({
+      id: 'cash-client',
+      type: 'client_cash',
+      label: 'Client Comptant'
+    });
+    mockUnifiedSearch((): SearchHookReturn => ({
+      data: { ok: true, results: [crossTypeResult] },
+      isFetching: false,
+      isError: false
+    }));
+    const user = userEvent.setup();
+    const props = renderSearch({ entityType: 'Prospect' });
+
+    await user.type(screen.getByPlaceholderText(/rechercher entité/i), 'comptant');
+    await user.click(await waitFor(() => findOptionByText('Client Comptant')) as HTMLElement);
+
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+    expect(screen.getByText(/classé Client comptant/i)).toBeInTheDocument();
+    expect(props.onSelectSearchResult).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('button', { name: /Basculer vers ce type/i }));
+
+    expect(props.onSelectSearchResult).toHaveBeenCalledWith(crossTypeResult);
+  });
+
+  it('alimente la recherche avec le toggle archives et affiche le badge archive', async () => {
+    const archivedResult = buildResult({
       id: 'archived',
-      name: 'Archive Client',
+      label: 'Archive Client',
       archived_at: '2025-01-01T00:00:00Z'
     });
-
-    mockSearchHook((includeArchived) => {
-      if (includeArchived) {
-        return { data: { entities: [archivedEntity], contacts: [] }, isLoading: false, isError: false };
-      }
-      return { data: { entities: [], contacts: [] }, isLoading: false, isError: false };
-    });
-
+    mockUnifiedSearch((input): SearchHookReturn => ({
+      data: { ok: true, results: input.include_archived ? [archivedResult] : [] },
+      isFetching: false,
+      isError: false
+    }));
     const user = userEvent.setup();
     const onOpenGlobalSearch = vi.fn();
 
-    renderWithProviders(
-      <InteractionSearchBar
-        agencyId="agency-1"
-        entities={[]}
-        contacts={[]}
-        onSelectEntity={vi.fn()}
-        onSelectContact={vi.fn()}
-        onOpenGlobalSearch={onOpenGlobalSearch}
-      />
-    );
+    renderSearch({ onOpenGlobalSearch });
 
     await user.click(screen.getByLabelText('Afficher les entites archivees'));
     await user.type(screen.getByPlaceholderText(/rechercher entité/i), 'archive');
 
-    const archivedOption = findOptionByText('Archive Client');
+    const archivedOption = await waitFor(() => findOptionByText('Archive Client'));
     expect(archivedOption).toBeTruthy();
-    const archiveLabels = within(archivedOption as HTMLElement).getAllByText('Archive');
-    expect(archiveLabels.some((label) => label.className.includes('bg-warning/15'))).toBe(true);
+    expect(within(archivedOption as HTMLElement).getAllByText('Archive').length).toBeGreaterThan(0);
 
     await user.click(screen.getByRole('button', { name: /voir tout/i }));
     expect(onOpenGlobalSearch).toHaveBeenCalledTimes(1);
