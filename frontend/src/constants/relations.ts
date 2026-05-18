@@ -69,6 +69,13 @@ export const relationValuesMatch = (selectedEntityType: string, targetRelation: 
   return selectedEntityType.trim().toLowerCase() === targetRelation.trim().toLowerCase();
 };
 
+export const getDefaultInteractionTypeForRelation = (entityType: string, interactionTypes: string[]): string => {
+  if (isInternalRelationValue(entityType)) {
+    return interactionTypes.find((type) => isInternalRelationValue(type)) ?? interactionTypes[0] ?? '';
+  }
+  return interactionTypes[0] ?? '';
+};
+
 export const normalizeVisibleRelationValue = (value?: string | null): string => {
   const normalized = (value ?? '').trim().toLowerCase();
   if (!normalized) return '';

@@ -7,7 +7,7 @@ import {
   getSidebarToggleShortcutLabel,
   SIDEBAR_TOGGLE_SHORTCUT_ARIA,
 } from '@/app/appConstants';
-import { getPathForTab } from '@/app/appRoutes';
+import { getPathForTab, isShellNavItemActive } from '@/app/appRoutes';
 import type { AppShellNavSection } from '@/app/appConstants';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Kbd } from '@/components/ui/kbd';
@@ -19,6 +19,7 @@ import AppSidebarNavItemLink from './AppSidebarNavItemLink';
 export interface AppSidebarContentProps {
   sections: AppShellNavSection[];
   activeTab: AppTab;
+  activePath: string;
   agencyName?: string;
   agencySubtitle?: string;
   userName?: string;
@@ -34,6 +35,7 @@ export interface AppSidebarContentProps {
 const AppSidebarContent = ({
   sections,
   activeTab,
+  activePath,
   agencyName,
   agencySubtitle = 'Agence active',
   userName,
@@ -162,7 +164,7 @@ const AppSidebarContent = ({
                   <AppSidebarNavItemLink
                     item={item}
                     collapsed={collapsed}
-                    isActive={item.id === activeTab}
+                    isActive={isShellNavItemActive(item, activeTab, activePath)}
                     reducedMotion={reducedMotion}
                     onMobileOpenChange={onMobileOpenChange}
                   />

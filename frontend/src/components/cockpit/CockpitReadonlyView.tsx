@@ -3,6 +3,7 @@ import { Bell, Car, CheckCircle2, Clock, FileText, Mail, Phone, Store, Tag, User
 
 import { getPlatformShortcutLabel } from '@/app/appConstants';
 import { Button } from '@/components/ui/button';
+import { isInternalRelationValue, isSolicitationRelationValue, isSupplierRelationValue } from '@/constants/relations';
 import type { AgencyConfig } from '@/services/config';
 import { Channel, type InteractionDraft } from '@/types';
 
@@ -71,6 +72,72 @@ const CockpitReadonlyView = ({ interaction, config, onStartNew }: CockpitReadonl
   const statusLabel = resolveStatusLabel(interaction.status_id, config);
   const contactLabel = joinContactName(interaction);
   const tags = interaction.mega_families ?? [];
+  const isSolicitation = isSolicitationRelationValue(interaction.entity_type);
+  const isInternal = isInternalRelationValue(interaction.entity_type);
+  const isSupplier = isSupplierRelationValue(interaction.entity_type);
+
+  if (isSolicitation || isInternal || isSupplier) {
+    const description = interaction.notes?.trim() || interaction.subject?.trim();
+    const title = isInternal
+      ? 'Interaction interne enregistrée'
+      : isSupplier
+        ? 'Interaction fournisseur enregistrée'
+        : 'Sollicitation enregistrée';
+    const identityLabel = isInternal ? 'Contact interne' : isSupplier ? 'Fournisseur' : 'Nom';
+    const phoneLabel = isSupplier ? interaction.contact_phone?.trim() || interaction.contact_email?.trim() : interaction.contact_phone?.trim();
+
+    return (
+      <div
+        data-testid="cockpit-readonly-view"
+        aria-live="polite"
+        className="flex min-w-0 flex-1 flex-col gap-4 bg-surface-1/30 p-4 sm:p-6"
+      >
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-success/30 bg-success/5 px-3 py-2 text-sm font-semibold text-success">
+          <CheckCircle2 size={16} aria-hidden />
+          <span>{title}</span>
+          <span className="text-xs font-normal text-muted-foreground">
+            Les informations utiles sont verrouillées.
+          </span>
+        </div>
+
+        <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2">
+          <AtomField label={identityLabel} value={(isSupplier ? interaction.company_name?.trim() : contactLabel) || '—'} icon={User} />
+          <AtomField label={isSupplier && interaction.contact_email?.trim() && !interaction.contact_phone?.trim() ? 'Email' : 'Téléphone'} value={phoneLabel || '—'} icon={Phone} />
+          {isSupplier && contactLabel ? (
+            <AtomField label="Contact" value={contactLabel} icon={User} />
+          ) : null}
+        </div>
+
+        <div
+          data-testid="cockpit-readonly-notes"
+          className="flex min-w-0 flex-col gap-1 rounded-md border border-border bg-card px-4 py-3"
+        >
+          <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+            <FileText size={11} aria-hidden />
+            Description
+          </span>
+          <p className="whitespace-pre-wrap text-sm text-foreground">
+            {description || <span className="italic text-muted-foreground">Aucune description saisie</span>}
+          </p>
+        </div>
+
+        <div className="mt-auto flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+          <Button
+            ref={newEntryButtonRef}
+            type="button"
+            onClick={onStartNew}
+            data-testid="cockpit-start-new-entry"
+            className="h-10 w-full gap-2 px-4 text-sm font-semibold sm:w-auto"
+          >
+            + Nouvelle saisie
+            <kbd className="rounded border border-white/40 bg-white/15 px-1.5 text-[10px] font-bold uppercase tracking-wide">
+              {newEntryShortcut}
+            </kbd>
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

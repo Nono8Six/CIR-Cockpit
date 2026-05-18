@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import CockpitSearchSection from '../left/CockpitSearchSection';
 import CockpitIdentitySection from '../left/CockpitIdentitySection';
 import CockpitGuidedQuestionFrame from './CockpitGuidedQuestionFrame';
-import CockpitInternalLookup from './CockpitInternalLookup';
 import CockpitSolicitationLookup from './CockpitSolicitationLookup';
+import CockpitSupplierLookup from './CockpitSupplierLookup';
 
 type CockpitGuidedSearchQuestionProps = {
   leftPaneProps: CockpitFormLeftPaneProps;
@@ -23,11 +23,9 @@ const CockpitGuidedSearchQuestion = ({
   const renderLookup = () => {
     if (leftPaneProps.relationMode === 'internal') {
       return (
-        <CockpitInternalLookup
-          activeAgencyId={leftPaneProps.activeAgencyId}
-          setValue={leftPaneProps.setValue}
-          onComplete={onComplete}
-        />
+        <p className="text-sm text-muted-foreground">
+          Tiers interne CIR sélectionné. La personne se choisit à l&apos;étape Contact.
+        </p>
       );
     }
     if (leftPaneProps.relationMode === 'solicitation') {
@@ -45,6 +43,20 @@ const CockpitGuidedSearchQuestion = ({
           contactPhone={leftPaneProps.contactPhone}
           onContactPhoneChange={leftPaneProps.onContactPhoneChange}
           setValue={leftPaneProps.setValue}
+          interactions={leftPaneProps.interactions}
+          onComplete={onComplete}
+        />
+      );
+    }
+    if (leftPaneProps.relationMode === 'supplier') {
+      return (
+        <CockpitSupplierLookup
+          activeAgencyId={leftPaneProps.activeAgencyId}
+          selectedEntity={leftPaneProps.selectedEntity}
+          companyName={leftPaneProps.companyName}
+          onSelectUnifiedSearchResult={leftPaneProps.onSelectUnifiedSearchResult}
+          onClearSelectedEntity={leftPaneProps.onClearSelectedEntity}
+          setValue={leftPaneProps.setValue}
           onComplete={onComplete}
         />
       );
@@ -60,8 +72,10 @@ const CockpitGuidedSearchQuestion = ({
   return (
     <CockpitGuidedQuestionFrame
       eyebrow="Étape 3"
-      title="Rechercher le tiers ou saisir les premiers éléments"
-      actions={<Button type="button" size="sm" onClick={onComplete} disabled={!identityComplete}>Continuer</Button>}
+      title="Rechercher ou créer le tiers"
+      actions={leftPaneProps.relationMode === 'solicitation' || leftPaneProps.relationMode === 'supplier'
+        ? null
+        : <Button type="button" size="sm" onClick={onComplete} disabled={!identityComplete}>Continuer</Button>}
     >
       {renderLookup()}
     </CockpitGuidedQuestionFrame>

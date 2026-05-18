@@ -78,11 +78,33 @@ describe('useCockpitGuidedFlow', () => {
     rerender(buildParams({
       relationMode: 'solicitation',
       entityType: 'Sollicitation',
-      companyName: 'SEA Aquitaine',
+      companyName: 'Sollicitation',
       contactPhone: '0102030405'
     }));
 
     expect(result.current.identityComplete).toBe(true);
+    expect(result.current.contactComplete).toBe(true);
+    expect(result.current.activeStep).toBe('subject');
+  });
+
+  it('traite le tiers interne comme CIR fixe et garde le choix du contact sur l etape contact', () => {
+    const { result, rerender } = renderHook((params) => useCockpitGuidedFlow(params), {
+      initialProps: buildParams({ relationMode: 'internal', entityType: 'Interne (CIR)' })
+    });
+
+    act(() => result.current.completeStep('channel'));
+
+    expect(result.current.identityComplete).toBe(true);
+    expect(result.current.contactComplete).toBe(false);
+    expect(result.current.activeStep).toBe('contact');
+
+    rerender(buildParams({
+      relationMode: 'internal',
+      entityType: 'Interne (CIR)',
+      contactFirstName: 'Arnaud',
+      contactLastName: 'FERRON'
+    }));
+
     expect(result.current.contactComplete).toBe(true);
     expect(result.current.activeStep).toBe('subject');
   });

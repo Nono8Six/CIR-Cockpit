@@ -7,6 +7,7 @@ import type {
   DirectoryOptionsAgenciesInput,
   DirectoryOptionsCitiesInput,
   DirectoryOptionsFacetInput,
+  DirectorySavedViewType,
   DirectoryScopeInput,
   DirectoryRouteRef
 } from 'shared/schemas/directory.schema';
@@ -128,7 +129,8 @@ export const directoryCitySuggestionsKey = (input: DirectoryCitySuggestionsInput
 export const directoryRecordRootKey = () => [QUERY_ROOTS.directoryRecord] as const;
 export const directoryRecordKey = (route: DirectoryRouteRef) => [QUERY_ROOTS.directoryRecord, route] as const;
 export const directorySavedViewsRootKey = () => [QUERY_ROOTS.directorySavedViews] as const;
-export const directorySavedViewsKey = () => [QUERY_ROOTS.directorySavedViews] as const;
+export const directorySavedViewsKey = (viewType: DirectorySavedViewType = 'clients') =>
+  [QUERY_ROOTS.directorySavedViews, viewType] as const;
 
 export const clientKey = (clientId: string) => [QUERY_ROOTS.client, clientId] as const;
 

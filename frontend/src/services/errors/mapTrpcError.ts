@@ -69,10 +69,13 @@ export const mapTrpcError = (error: unknown, fallbackMessage: string): AppError 
   const resolvedCode = appCodeRaw && isErrorCode(appCodeRaw)
     ? appCodeRaw
     : (resolvedStatus ? STATUS_TO_CODE[resolvedStatus] : undefined) ?? 'EDGE_FUNCTION_ERROR';
+  const resolvedMessage = resolvedCode === 'REQUEST_FAILED' && resolvedStatus && resolvedStatus >= 500
+    ? fallbackMessage
+    : error.message || fallbackMessage;
 
   return createAppError({
     code: resolvedCode,
-    message: error.message || fallbackMessage,
+    message: resolvedMessage,
     source: 'edge',
     status: resolvedStatus,
     requestId: requestId ?? undefined,

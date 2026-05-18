@@ -3,8 +3,8 @@ import { Archive, ArchiveRestore, KeyRound, Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button';
 import type { AdminUserSummary } from '@/services/admin/getAdminUsers';
 import type { UserRole } from '@/types';
-import UserRoleSelect from './UserRoleSelect';
-import UserMembershipPills from './UserMembershipPills';
+import UserRoleSelect from './controls/UserRoleSelect';
+import UserMembershipPills from './controls/UserMembershipPills';
 
 type UserCardProps = {
   user: AdminUserSummary;
@@ -36,7 +36,7 @@ const UserCard = ({
         <p className="text-sm font-semibold text-foreground">{identityLabel}</p>
         <p className="text-xs text-muted-foreground">{user.email}</p>
         {user.archived_at && (
-          <p className="text-xs text-warning">Archive</p>
+          <p className="text-xs text-warning">Archivé</p>
         )}
       </div>
       <div className="flex flex-wrap items-center justify-end gap-2">
@@ -52,17 +52,17 @@ const UserCard = ({
         </Button>
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           className="h-9 px-3 text-xs sm:text-sm"
           onClick={() => onResetPassword(user)}
-          aria-label="Reinitialiser le mot de passe"
+          aria-label="Réinitialiser le mot de passe"
           data-testid={`admin-user-reset-password-${user.id}`}
         >
-          <KeyRound size={14} className="mr-1" /> Reinitialiser
+          <KeyRound size={14} className="mr-1" /> Réinitialiser
         </Button>
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           className="h-9 px-3 text-xs sm:text-sm"
           onClick={() => onArchiveToggle(user)}
           aria-label={user.archived_at ? "Restaurer l'utilisateur" : "Archiver l'utilisateur"}
@@ -74,7 +74,7 @@ const UserCard = ({
         <Button
           type="button"
           variant="outline"
-          className="h-9 border-destructive/30 px-3 text-xs text-destructive hover:bg-destructive/10 sm:text-sm"
+          className="h-9 border-destructive/30 text-destructive bg-destructive/5 hover:bg-destructive/15 transition-colors px-3 text-xs sm:text-sm"
           onClick={() => onDeleteUser(user)}
           aria-label="Supprimer l'utilisateur"
           data-testid={`admin-user-delete-${user.id}`}
@@ -86,7 +86,7 @@ const UserCard = ({
 
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
       <div>
-        <p className="text-xs font-semibold text-muted-foreground/80 uppercase">Role</p>
+        <p className="text-xs font-semibold text-muted-foreground/80 uppercase">Rôle</p>
         <UserRoleSelect role={user.role} onRoleChange={(role) => onRoleChange(user.id, role)} />
       </div>
       <div className="md:col-span-2">

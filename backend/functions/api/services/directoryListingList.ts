@@ -18,6 +18,11 @@ import {
   toDirectoryResponseMeta,
 } from "./directoryShared.ts";
 
+const normalizeOfficialDataSource = (
+  value: string | null,
+): DirectoryListRow["official_data_source"] =>
+  value === "api-recherche-entreprises" ? value : null;
+
 export const listDirectory = async (
   db: DbClient,
   authContext: AuthContext,
@@ -27,7 +32,9 @@ export const listDirectory = async (
   await ensureDataRateLimit("directory:list", authContext.userId);
 
   const whereClause = buildListWhereClause(authContext, input);
-  const resolvedScope = resolveDirectoryScope(authContext, input.scope);
+  const resolvedScope = input.type === "supplier"
+    ? { mode: "global_read" as const, agencyIds: [], isGlobal: true }
+    : resolveDirectoryScope(authContext, input.scope);
   const offset = (input.pagination.page - 1) * input.pagination.pageSize;
 
   try {
@@ -37,14 +44,23 @@ export const listDirectory = async (
         entity_type: entities.entity_type,
         client_kind: entities.client_kind,
         client_number: entities.client_number,
+        supplier_code: entities.supplier_code,
+        supplier_number: entities.supplier_number,
         account_type: entities.account_type,
         name: entities.name,
+        address: entities.address,
         city: entities.city,
         postal_code: entities.postal_code,
         department: entities.department,
         siret: entities.siret,
         siren: entities.siren,
+        naf_code: entities.naf_code,
         official_name: entities.official_name,
+        official_data_source: entities.official_data_source,
+        official_data_synced_at: entities.official_data_synced_at,
+        primary_phone: entities.primary_phone,
+        primary_email: entities.primary_email,
+        notes: entities.notes,
         agency_id: entities.agency_id,
         agency_name: agencies.name,
         cir_commercial_id: entities.cir_commercial_id,
@@ -73,6 +89,7 @@ export const listDirectory = async (
     const normalizedRows = rows.map((row): DirectoryListRow => ({
       ...row,
       client_kind: normalizeClientKind(row.client_kind),
+      official_data_source: normalizeOfficialDataSource(row.official_data_source),
     }));
 
     const total = input.pagination.includeTotal ? Number(countRows[0]?.count ?? 0) : undefined;

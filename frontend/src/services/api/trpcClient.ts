@@ -1,4 +1,4 @@
-import { createTRPCClient, httpBatchLink } from '@trpc/client';
+import { createTRPCClient, httpLink } from '@trpc/client';
 
 import type { AppRouter } from 'shared/api/trpc';
 
@@ -115,21 +115,19 @@ export const getTrpcClient = (): TrpcClient => {
 
   trpcClient = createTRPCClient<AppRouter>({
     links: [
-      httpBatchLink({
+      httpLink({
         url: getTrpcBaseUrl(),
-        headers: async ({ opList }) => {
+        headers: async ({ op }) => {
           const headers = createDefaultHeaders();
           const token = await getUserAccessToken();
           if (token) {
             headers.set('Authorization', token);
           }
 
-          for (const operation of opList) {
-            const operationHeaders = readContextHeaders(operation.context);
-            operationHeaders.forEach((value, key) => {
-              headers.set(key, value);
-            });
-          }
+          const operationHeaders = readContextHeaders(op.context);
+          operationHeaders.forEach((value, key) => {
+            headers.set(key, value);
+          });
 
           if (!headers.has('Content-Type')) {
             headers.set('Content-Type', 'application/json');

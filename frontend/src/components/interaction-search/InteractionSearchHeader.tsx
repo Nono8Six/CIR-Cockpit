@@ -18,13 +18,13 @@ const InteractionSearchHeader = ({
     </div>
     <div className="flex items-center gap-2">
       <label htmlFor="search-archived-toggle" className="text-xs font-medium text-muted-foreground">
-        Archivés
+        Inclure archivés
       </label>
       <Switch
         id="search-archived-toggle"
         checked={includeArchived}
         onCheckedChange={onIncludeArchivedChange}
-        aria-label="Afficher les entites archivees"
+        aria-label="Inclure les tiers archivés"
       />
     </div>
   </div>

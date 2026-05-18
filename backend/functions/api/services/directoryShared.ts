@@ -53,8 +53,16 @@ export const commercialDisplayNameSql = sql<string>`
 export const normalizedNameSql = sql<string>`lower(${entities.name})`;
 export const normalizedEntityTypeSql = sql<string>`lower(${entities.entity_type})`;
 export const normalizedClientNumberSql = sql<string>`lower(coalesce(${entities.client_number}, ''))`;
+export const normalizedSupplierCodeSql = sql<string>`lower(coalesce(${entities.supplier_code}, ''))`;
+export const normalizedSupplierNumberSql = sql<string>`lower(coalesce(${entities.supplier_number}, ''))`;
 export const normalizedCitySql = sql<string>`lower(coalesce(${entities.city}, ''))`;
 export const normalizedDepartmentSql = sql<string>`lower(coalesce(${entities.department}, ''))`;
+export const normalizedSiretSql = sql<string>`lower(coalesce(${entities.siret}, ''))`;
+export const normalizedSirenSql = sql<string>`lower(coalesce(${entities.siren}, ''))`;
+export const normalizedNafCodeSql = sql<string>`lower(coalesce(${entities.naf_code}, ''))`;
+export const normalizedPrimaryContactSql = sql<string>`
+  lower(coalesce(${entities.primary_phone}, '') || ' ' || coalesce(${entities.primary_email}, ''))
+`;
 export const normalizedAgencyNameSql = sql<string>`lower(coalesce(${agencies.name}, ''))`;
 export const normalizedCommercialNameSql = sql<string>`lower(coalesce(${commercialDisplayNameSql}, ''))`;
 export const normalizedOfficialDataSourceSql = sql<'api-recherche-entreprises' | null>`
@@ -87,12 +95,23 @@ const toEntityTypeCondition = (
     return PROSPECT_ENTITY_TYPE_WHERE;
   }
 
-  return undefined;
+  if (type === 'supplier') {
+    return sql<boolean>`${entities.entity_type} = 'Fournisseur'`;
+  }
+
+  return sql<boolean>`
+    (
+      ${entities.entity_type} = 'Client'
+      or ${PROSPECT_ENTITY_TYPE_WHERE}
+    )
+  `;
 };
 
 const getIncludeArchived = (
   input: DirectoryScopedBaseInput
 ): boolean => input.filters?.includeArchived ?? Boolean(input.includeArchived);
+
+const isSupplierDirectoryInput = (input: DirectoryScopedBaseInput): boolean => input.type === 'supplier';
 
 export const resolveAccessibleAgencyIds = (
   authContext: AuthContext,
@@ -277,8 +296,14 @@ const buildSearchCondition = (query: string | undefined): SqlCondition | undefin
     (
       ${normalizedNameSql} like ${pattern}
       or ${normalizedClientNumberSql} like ${pattern}
+      or ${normalizedSupplierCodeSql} like ${pattern}
+      or ${normalizedSupplierNumberSql} like ${pattern}
       or ${normalizedCitySql} like ${pattern}
       or lower(coalesce(${entities.postal_code}, '')) like ${pattern}
+      or ${normalizedSiretSql} like ${pattern}
+      or ${normalizedSirenSql} like ${pattern}
+      or ${normalizedNafCodeSql} like ${pattern}
+      or ${normalizedPrimaryContactSql} like ${pattern}
     )
   `;
 };
@@ -288,7 +313,9 @@ export const buildBaseWhereClause = (
   input: DirectoryScopedBaseInput
 ): SqlCondition => {
   const conditions: SqlCondition[] = [];
-  const accessibleAgencyCondition = toDirectoryScopeCondition(resolveDirectoryScope(authContext, input.scope));
+  const accessibleAgencyCondition = isSupplierDirectoryInput(input)
+    ? undefined
+    : toDirectoryScopeCondition(resolveDirectoryScope(authContext, input.scope));
   const entityTypeCondition = toEntityTypeCondition(input.type);
 
   if (accessibleAgencyCondition) {
@@ -365,6 +392,12 @@ export const toSortingOrder = (sorting: DirectorySortingRule[]): SqlCondition[] 
         orders.push(direction(numericClientNumberSql));
         orders.push(direction(normalizedClientNumberSql));
         break;
+      case 'supplier_code':
+        orders.push(direction(normalizedSupplierCodeSql));
+        break;
+      case 'supplier_number':
+        orders.push(direction(normalizedSupplierNumberSql));
+        break;
       case 'city':
         orders.push(direction(normalizedCitySql));
         break;
@@ -372,11 +405,23 @@ export const toSortingOrder = (sorting: DirectorySortingRule[]): SqlCondition[] 
         orders.push(direction(numericDepartmentSql));
         orders.push(direction(normalizedDepartmentSql));
         break;
+      case 'siret':
+        orders.push(direction(normalizedSiretSql));
+        break;
+      case 'siren':
+        orders.push(direction(normalizedSirenSql));
+        break;
+      case 'naf_code':
+        orders.push(direction(normalizedNafCodeSql));
+        break;
       case 'agency_name':
         orders.push(direction(normalizedAgencyNameSql));
         break;
       case 'cir_commercial_name':
         orders.push(direction(normalizedCommercialNameSql));
+        break;
+      case 'primary_contact':
+        orders.push(direction(normalizedPrimaryContactSql));
         break;
       case 'updated_at':
         orders.push(direction(entities.updated_at));

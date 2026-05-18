@@ -52,6 +52,9 @@ export interface CompanySearchPageRequest {
   query: string;
   department?: string;
   city?: string;
+  postal_code?: string;
+  naf_code?: string;
+  activity_section?: string;
   page: number;
   per_page: number;
 }
@@ -242,6 +245,17 @@ const matchesInputDepartment = (
   input.department
     ? company.department === input.department || company.postal_code?.startsWith(input.department) === true
     : false;
+
+const matchesInputHeadOffice = (
+  company: DirectoryCompanySearchResult,
+  input: DirectoryCompanySearchInput
+): boolean => {
+  if (!input.head_office || input.head_office === 'all') {
+    return true;
+  }
+
+  return input.head_office === 'head_office' ? company.is_head_office : !company.is_head_office;
+};
 
 const buildSearchPlans = (input: DirectoryCompanySearchInput): CompanySearchPlan[] => {
   const normalizedQuery = normalizeSearchText(input.query);
@@ -836,6 +850,12 @@ const filterCompaniesByCity = (
   return companies.filter((company) => matchesInputCity(company, input));
 };
 
+const filterCompaniesByHeadOffice = (
+  companies: DirectoryCompanySearchResult[],
+  input: DirectoryCompanySearchInput
+): DirectoryCompanySearchResult[] =>
+  companies.filter((company) => matchesInputHeadOffice(company, input));
+
 export const executeCompanySearch = async (
   input: DirectoryCompanySearchInput,
   fetchPage: CompanySearchPageFetcher,
@@ -866,6 +886,9 @@ export const executeCompanySearch = async (
         query: plan.query,
         department: input.department ?? undefined,
         city: input.city ?? undefined,
+        postal_code: input.postal_code ?? undefined,
+        naf_code: input.naf_code ?? undefined,
+        activity_section: input.activity_section ?? undefined,
         page,
         per_page: plan.perPage
       } satisfies CompanySearchPageRequest;
@@ -907,6 +930,10 @@ export const executeCompanySearch = async (
 
       const rankedCompanies = rankCompanies(collectedCompanies, input);
       const cityFilteredCompanies = filterCompaniesByCity(rankedCompanies, input);
+      const headOfficeFilteredCompanies = filterCompaniesByHeadOffice(
+        input.city?.trim() ? cityFilteredCompanies : rankedCompanies,
+        input
+      );
       const topScore = Math.max(
         ...Array.from(collectedCompanies.values(), (entry) => entry.score),
         Number.NEGATIVE_INFINITY
@@ -930,15 +957,15 @@ export const executeCompanySearch = async (
       }
 
       if (input.city?.trim()) {
-        if (cityFilteredCompanies.length > 0 && topCityScore >= HIGH_CONFIDENCE_SCORE) {
+        if (headOfficeFilteredCompanies.length > 0 && topCityScore >= HIGH_CONFIDENCE_SCORE) {
           return {
-            companies: sliceCompanies(cityFilteredCompanies, input),
+            companies: sliceCompanies(headOfficeFilteredCompanies, input),
             attempts
           };
         }
-      } else if (topScore >= HIGH_CONFIDENCE_SCORE) {
+      } else if (headOfficeFilteredCompanies.length > 0 && topScore >= HIGH_CONFIDENCE_SCORE) {
         return {
-          companies: sliceCompanies(rankedCompanies, input),
+          companies: sliceCompanies(headOfficeFilteredCompanies, input),
           attempts
         };
       }
@@ -1000,7 +1027,10 @@ export const executeCompanySearch = async (
 
   const rankedCompanies = rankCompanies(collectedCompanies, input);
   const cityFilteredCompanies = filterCompaniesByCity(rankedCompanies, input);
-  const finalCompanies = input.city?.trim() ? cityFilteredCompanies : rankedCompanies;
+  const finalCompanies = filterCompaniesByHeadOffice(
+    input.city?.trim() ? cityFilteredCompanies : rankedCompanies,
+    input
+  );
   if (finalCompanies.length > 0) {
     return {
       companies: sliceCompanies(finalCompanies, input),

@@ -1,6 +1,11 @@
 import { useEffect } from 'react';
 
-import { INTERNAL_COMPANY_NAME, relationValuesMatch } from '@/constants/relations';
+import {
+  getDefaultInteractionTypeForRelation,
+  INTERNAL_COMPANY_NAME,
+  isInternalRelationValue,
+  relationValuesMatch
+} from '@/constants/relations';
 import type { InteractionFormEffectsParams } from './useInteractionFormEffects.types';
 
 export const useInteractionFormEffects = ({ register, setValue, clearErrors, config, defaultStatusId, statusId, contactService, interactionType, normalizedRelation, selectedEntity, setSelectedEntity, setSelectedContact, entityId, isInternalRelation, isSolicitationRelation, onCloseContactDialog }: InteractionFormEffectsParams) => {
@@ -10,8 +15,14 @@ export const useInteractionFormEffects = ({ register, setValue, clearErrors, con
   useEffect(() => {
     if (config.statuses.length > 0 && !statusId) setValue('status_id', defaultStatusId, { shouldValidate: true });
     if (config.services.length > 0 && !contactService) setValue('contact_service', config.services[0], { shouldValidate: true });
-    if (config.interactionTypes.length > 0 && !interactionType) setValue('interaction_type', config.interactionTypes[0], { shouldValidate: true });
-  }, [config.interactionTypes, config.services, config.statuses, contactService, defaultStatusId, interactionType, setValue, statusId]);
+    const defaultInteractionType = getDefaultInteractionTypeForRelation(normalizedRelation, config.interactionTypes);
+    if (
+      defaultInteractionType &&
+      (!interactionType || (isInternalRelation && !isInternalRelationValue(interactionType)))
+    ) {
+      setValue('interaction_type', defaultInteractionType, { shouldValidate: true });
+    }
+  }, [config.interactionTypes, config.services, config.statuses, contactService, defaultStatusId, interactionType, isInternalRelation, normalizedRelation, setValue, statusId]);
   useEffect(() => {
     if (!selectedEntity) { if (!entityId) return; setValue('entity_id', '', { shouldValidate: true, shouldDirty: true }); setValue('contact_id', '', { shouldValidate: true, shouldDirty: true }); setSelectedContact(null); return; }
     if (!normalizedRelation) return;

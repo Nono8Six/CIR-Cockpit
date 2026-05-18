@@ -16,7 +16,10 @@ const mapEnterpriseApiEstablishment = (
   company: EnterpriseApiCompany,
   establishment: EnterpriseApiEstablishment,
 ): DirectoryCompanySearchResult => ({
-  name: company.nom_complet,
+  name: normalizeNullableText(company.nom_complet) ??
+    normalizeNullableText(company.nom_raison_sociale) ??
+    normalizeNullableText(company.sigle) ??
+    company.siren,
   address: normalizeNullableText(establishment.adresse),
   postal_code: normalizeNullableText(establishment.code_postal),
   city: normalizeNullableText(establishment.libelle_commune),
@@ -33,8 +36,9 @@ const mapEnterpriseApiEstablishment = (
     establishment.statut_diffusion_etablissement,
   ),
   brands: normalizeTextArray(establishment.liste_enseignes),
-  is_head_office: Boolean(establishment.est_siege ?? false),
-  is_former_head_office: Boolean(establishment.ancien_siege ?? false),
+  is_head_office: normalizeBooleanFlag(establishment.est_siege) ?? false,
+  is_former_head_office: normalizeBooleanFlag(establishment.ancien_siege) ??
+    false,
   establishment_status: normalizeEstablishmentStatus(
     establishment.etat_administratif,
   ),
@@ -54,7 +58,8 @@ const mapEnterpriseApiEstablishment = (
     establishment.activite_principale ?? company.activite_principale,
   ),
   official_name: normalizeNullableText(company.nom_raison_sociale) ??
-    company.nom_complet,
+    normalizeNullableText(company.nom_complet) ??
+    company.siren,
   official_data_source: "api-recherche-entreprises",
   official_data_synced_at: new Date().toISOString(),
 });

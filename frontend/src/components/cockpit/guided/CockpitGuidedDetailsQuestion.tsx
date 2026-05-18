@@ -5,6 +5,7 @@ import type { CockpitFormLeftPaneProps, CockpitFormRightPaneProps } from '../Coc
 import AvatarInitials from '@/components/ui/avatar-initials';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Kbd } from '@/components/ui/kbd';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import CockpitReminderControl from '../right/CockpitReminderControl';
@@ -18,6 +19,7 @@ type CockpitGuidedDetailsQuestionProps = {
   onComplete?: () => void;
   canComplete?: boolean;
   onEditContact?: () => void;
+  continueShortcutLabel?: string;
 };
 
 const buildContactName = (props: CockpitFormLeftPaneProps): string => {
@@ -40,13 +42,24 @@ const SectionDivider = () => (
 
 const fieldRowStyle = 'grid min-w-0 gap-2 sm:grid-cols-[170px_minmax(0,1fr)] sm:items-start';
 
+export const buildDescriptionOnlySubject = (
+  description: string,
+  interactionType: string,
+  fallbackSubject: string
+): string => {
+  const normalizedDescription = description.replace(/\s+/g, ' ').trim();
+  if (normalizedDescription) return normalizedDescription.slice(0, 120);
+  return interactionType.trim() || fallbackSubject;
+};
+
 const CockpitGuidedDetailsQuestion = ({
   leftPaneProps,
   rightPaneProps,
   onReset,
   onComplete,
   canComplete = true,
-  onEditContact
+  onEditContact,
+  continueShortcutLabel
 }: CockpitGuidedDetailsQuestionProps) => {
   const handleOrderRefChange = (event: ChangeEvent<HTMLInputElement>) => {
     event.currentTarget.value = event.currentTarget.value.replace(/\D/g, '').slice(0, 6);
@@ -57,6 +70,75 @@ const CockpitGuidedDetailsQuestion = ({
   const fullName = buildContactName(leftPaneProps);
   const position = buildContactPosition(leftPaneProps);
   const hasContact = fullName.length > 0;
+  const isDescriptionOnlyRelation = leftPaneProps.relationMode === 'solicitation'
+    || leftPaneProps.relationMode === 'internal'
+    || leftPaneProps.relationMode === 'supplier';
+
+  if (isDescriptionOnlyRelation) {
+    const isInternal = leftPaneProps.relationMode === 'internal';
+    const isSupplier = leftPaneProps.relationMode === 'supplier';
+
+    return (
+      <CockpitGuidedQuestionFrame
+        eyebrow="Description"
+        title={isInternal ? 'Relation interne CIR' : isSupplier ? 'Interaction fournisseur' : 'Démarchage téléphonique'}
+        description={isInternal
+          ? 'Conserve uniquement le contexte utile de l’échange.'
+          : isSupplier
+            ? 'Note la demande, le fournisseur et la suite utile.'
+            : 'Conserve uniquement le contexte utile de l’appel.'}
+      >
+        <div className="rounded-lg border border-border bg-card p-4 sm:p-5">
+          <label className={labelStyle} htmlFor="interaction-notes">Description</label>
+          <textarea
+            id="interaction-notes"
+            {...rightPaneProps.notesField}
+            rows={7}
+            className="min-h-[210px] w-full resize-none rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground transition-colors placeholder:text-muted-foreground/80 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            placeholder={isInternal
+              ? 'Résumé de l’échange interne, décision, suite à donner…'
+              : isSupplier
+                ? 'Demande fournisseur, référence, délai, suite à donner…'
+                : 'Résumé de l’appel, besoin exprimé, suite à donner…'}
+            autoComplete="off"
+          />
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onReset}
+            className="gap-1.5 text-muted-foreground hover:text-foreground"
+          >
+            <RotateCcw size={13} aria-hidden="true" />
+            Effacer le formulaire
+          </Button>
+          {onComplete ? (
+            <Button
+              type="button"
+              size="sm"
+              onClick={onComplete}
+              disabled={!canComplete}
+              className="gap-1.5 shadow-sm"
+            >
+              Continuer
+              {continueShortcutLabel ? (
+                <Kbd className={cn(
+                  'ml-1 border-primary-foreground/30 bg-primary-foreground/15 text-primary-foreground',
+                  !canComplete && 'border-muted-foreground/20 bg-muted text-muted-foreground'
+                )}>
+                  {continueShortcutLabel}
+                </Kbd>
+              ) : null}
+              <ArrowRight size={14} aria-hidden="true" />
+            </Button>
+          ) : null}
+        </div>
+      </CockpitGuidedQuestionFrame>
+    );
+  }
 
   return (
     <CockpitGuidedQuestionFrame
@@ -236,9 +318,17 @@ const CockpitGuidedDetailsQuestion = ({
             size="sm"
             onClick={onComplete}
             disabled={!canComplete}
-            className="gap-1.5"
+            className="gap-1.5 shadow-sm"
           >
             Continuer
+            {continueShortcutLabel ? (
+              <Kbd className={cn(
+                'ml-1 border-primary-foreground/30 bg-primary-foreground/15 text-primary-foreground',
+                !canComplete && 'border-muted-foreground/20 bg-muted text-muted-foreground'
+              )}>
+                {continueShortcutLabel}
+              </Kbd>
+            ) : null}
             <ArrowRight size={14} aria-hidden="true" />
           </Button>
         ) : null}

@@ -42,6 +42,7 @@ describe('clientDirectorySearch helpers', () => {
 
   it('construit et relit un état de vue sauvegardée', () => {
     const viewState: DirectorySavedViewState = {
+      viewType: 'clients',
       q: 'sea',
       type: 'client',
       scope: { mode: 'selected_agencies', agencyIds: ['3b298857-b531-4f4d-8dcf-3b9ca62d9d01'] },

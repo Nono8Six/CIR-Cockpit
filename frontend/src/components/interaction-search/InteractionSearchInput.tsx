@@ -14,7 +14,7 @@ const InteractionSearchInput = ({
   inputRef
 }: InteractionSearchInputProps) => (
   <CommandInput
-    placeholder="Rechercher entité, contact, n° client, téléphone…"
+    placeholder="Nom, téléphone, email, n° client, SIRET…"
     value={query}
     onValueChange={onQueryChange}
     autoComplete="off"

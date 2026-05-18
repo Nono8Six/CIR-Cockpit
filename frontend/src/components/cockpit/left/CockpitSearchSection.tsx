@@ -1,4 +1,5 @@
-import type { RefObject } from 'react';
+import { type RefObject } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 
 import type { TierV1DirectoryRow } from 'shared/schemas/tier-v1.schema';
 import type { RelationMode } from '@/constants/relations';
@@ -24,6 +25,18 @@ type CockpitSearchSectionProps = {
   searchInputRef: RefObject<HTMLInputElement | null>;
 };
 
+const getCreateLabel = (relationMode: RelationMode, entityType: string): string | undefined => {
+  if (relationMode === 'client') {
+    return entityType.trim().toLowerCase() === 'client comptant'
+      ? 'Créer un client comptant'
+      : 'Créer un client à terme';
+  }
+  if (relationMode === 'individual') return 'Créer un particulier';
+  if (relationMode === 'prospect') return 'Créer un prospect';
+  if (relationMode === 'supplier') return 'Créer un fournisseur';
+  return undefined;
+};
+
 const CockpitSearchSection = ({
   activeAgencyId,
   entityType,
@@ -39,15 +52,24 @@ const CockpitSearchSection = ({
   onOpenGlobalSearch,
   searchInputRef
 }: CockpitSearchSectionProps) => {
+  const navigate = useNavigate();
+
   if (relationMode === 'internal' || relationMode === 'solicitation') {
     return null;
   }
 
+  const handleCreateSupplier = () => {
+    void navigate({ to: '/admin/suppliers/new' });
+  };
   const handleCreateEntity = relationMode === 'client'
     ? onOpenClientDialog
     : relationMode === 'prospect'
       ? onOpenProspectDialog
-      : undefined;
+      : relationMode === 'supplier'
+        ? handleCreateSupplier
+        : undefined;
+  const createLabel = getCreateLabel(relationMode, entityType);
+  const isSupplier = relationMode === 'supplier';
 
   return (
     <InteractionSearchBar
@@ -60,6 +82,9 @@ const CockpitSearchSection = ({
       onSelectContact={onSelectContactFromSearch}
       onSelectSearchResult={onSelectUnifiedSearchResult}
       onCreateEntity={handleCreateEntity}
+      createLabel={createLabel}
+      createMode={handleCreateEntity ? 'dialog' : 'none'}
+      createDisabled={Boolean(createLabel && !handleCreateEntity && !isSupplier)}
       onOpenGlobalSearch={onOpenGlobalSearch}
       recentEntities={recentEntities}
       inputRef={searchInputRef}

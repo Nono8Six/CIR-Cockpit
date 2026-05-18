@@ -1,9 +1,7 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import CockpitShortcutLegend from '@/components/cockpit/CockpitShortcutLegend';
-
-const getActions = () => within(screen.getByTestId('cockpit-shortcut-legend-actions'));
 
 describe('CockpitShortcutLegend', () => {
   it('ne rend pas de barre basse avant l etape validation', () => {
@@ -39,8 +37,8 @@ describe('CockpitShortcutLegend', () => {
     );
 
     expect(screen.getByTestId('cockpit-submit-button')).toBeEnabled();
-    expect(getActions().getByText(/(Ctrl|⌘) ↵/)).toBeInTheDocument();
-    expect(getActions().getByText('Enregistrer')).toBeInTheDocument();
+    expect(screen.getByTestId('cockpit-submit-button')).toHaveTextContent(/Enregistrer/);
+    expect(screen.getByTestId('cockpit-submit-button')).toHaveTextContent(/(Ctrl|⌘) ↵/);
   });
 
   it('rend le message bloquant actionnable quand l enregistrement est impossible', () => {

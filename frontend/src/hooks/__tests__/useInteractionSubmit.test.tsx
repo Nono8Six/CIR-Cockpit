@@ -211,8 +211,218 @@ describe('useInteractionSubmit', () => {
     expect(saveEntityContact).not.toHaveBeenCalled();
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
-        company_name: INTERNAL_COMPANY_NAME
+        company_name: INTERNAL_COMPANY_NAME,
+        contact_service: 'Interne CIR',
+        contact_name: '',
+        mega_families: [],
+        order_ref: '',
+        status_id: null,
+        reminder_at: undefined
       })
     );
+  });
+
+  it('submits solicitations as interaction-only without stale entity/contact ids', async () => {
+    const selectedEntity = {
+      id: 'stale-entity',
+      account_type: null,
+      address: null,
+      agency_id: 'agency-1',
+      archived_at: null,
+      city: 'Paris',
+      client_number: null,
+      country: 'France',
+      created_at: '2026-01-01T10:00:00.000Z',
+      created_by: null,
+      department: null,
+      entity_type: 'Prospect',
+      name: 'Ancien tiers',
+      notes: null,
+      postal_code: null,
+      siret: null,
+      updated_at: '2026-01-01T10:00:00.000Z'
+    } satisfies Entity;
+    const selectedContact = {
+      id: 'stale-contact',
+      archived_at: null,
+      created_at: '2026-01-01T10:00:00.000Z',
+      email: null,
+      entity_id: 'stale-entity',
+      first_name: 'Ancien',
+      last_name: 'Contact',
+      notes: null,
+      phone: '0102030405',
+      position: null,
+      updated_at: '2026-01-01T10:00:00.000Z'
+    } satisfies EntityContact;
+    const onSave = vi.fn<(_: InteractionDraft) => Promise<boolean>>().mockResolvedValue(true);
+
+    const { result } = renderHook(() =>
+      useInteractionSubmit({
+        activeAgencyId: 'agency-1',
+        selectedEntity,
+        selectedContact,
+        onSave,
+        handleSelectEntity: vi.fn(),
+        handleSelectContact: vi.fn(),
+        queryClient: new QueryClient(),
+        handleReset: vi.fn(),
+        onSaveSuccess: vi.fn(),
+        setKnownCompanies: vi.fn()
+      })
+    );
+
+    await act(async () => {
+      await result.current.onSubmit({
+        ...BASE_VALUES,
+        entity_type: 'Sollicitation',
+        company_name: 'Sollicitation',
+        contact_first_name: '',
+        contact_last_name: '',
+        contact_name: 'Jean Dupont',
+        contact_email: '',
+        contact_phone: '05 58 96 52 12'
+      });
+    });
+
+    expect(saveEntity).not.toHaveBeenCalled();
+    expect(saveEntityContact).not.toHaveBeenCalled();
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        company_name: 'Sollicitation',
+        contact_service: 'Sollicitation',
+        interaction_type: 'Démarchage téléphonique',
+        contact_name: 'Jean Dupont',
+        contact_phone: '05 58 96 52 12',
+        mega_families: [],
+        order_ref: '',
+        status_id: null,
+        reminder_at: undefined,
+        entity_id: undefined,
+        contact_id: undefined
+      })
+    );
+  });
+
+  it('submits an existing supplier without requiring a nominative contact', async () => {
+    const selectedEntity = {
+      id: 'supplier-1',
+      account_type: null,
+      address: null,
+      agency_id: 'agency-1',
+      archived_at: null,
+      city: 'Bordeaux',
+      client_number: null,
+      country: 'France',
+      created_at: '2026-01-01T10:00:00.000Z',
+      created_by: null,
+      department: null,
+      entity_type: 'Fournisseur',
+      name: 'SEA Aquitaine',
+      notes: null,
+      postal_code: null,
+      primary_phone: '05 58 36 96 19',
+      primary_email: null,
+      siret: null,
+      updated_at: '2026-01-01T10:00:00.000Z'
+    } satisfies Entity;
+    const onSave = vi.fn<(_: InteractionDraft) => Promise<boolean>>().mockResolvedValue(true);
+
+    const { result } = renderHook(() =>
+      useInteractionSubmit({
+        activeAgencyId: 'agency-1',
+        selectedEntity,
+        selectedContact: null,
+        onSave,
+        handleSelectEntity: vi.fn(),
+        handleSelectContact: vi.fn(),
+        queryClient: new QueryClient(),
+        handleReset: vi.fn(),
+        onSaveSuccess: vi.fn(),
+        setKnownCompanies: vi.fn()
+      })
+    );
+
+    await act(async () => {
+      await result.current.onSubmit({
+        ...BASE_VALUES,
+        entity_type: 'Fournisseur',
+        company_name: 'SEA Aquitaine',
+        contact_first_name: '',
+        contact_last_name: '',
+        contact_position: '',
+        contact_name: '',
+        contact_phone: '05 58 36 96 19',
+        contact_email: '',
+        subject: 'Demande délai fournisseur',
+        notes: 'Relance délai livraison.'
+      });
+    });
+
+    expect(saveEntity).not.toHaveBeenCalled();
+    expect(saveEntityContact).not.toHaveBeenCalled();
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        company_name: 'SEA Aquitaine',
+        contact_service: 'Fournisseur',
+        interaction_type: 'Interaction fournisseur',
+        contact_name: '',
+        contact_phone: '05 58 36 96 19',
+        mega_families: [],
+        order_ref: '',
+        status_id: null,
+        reminder_at: undefined,
+        entity_id: 'supplier-1',
+        contact_id: undefined
+      })
+    );
+  });
+
+  it('submits a temporary supplier without creating a reusable supplier record', async () => {
+    const onSave = vi.fn<(_: InteractionDraft) => Promise<boolean>>().mockResolvedValue(true);
+    const handleSelectEntity = vi.fn();
+
+    const { result } = renderHook(() =>
+      useInteractionSubmit({
+        activeAgencyId: 'agency-1',
+        selectedEntity: null,
+        selectedContact: null,
+        onSave,
+        handleSelectEntity,
+        handleSelectContact: vi.fn(),
+        queryClient: new QueryClient(),
+        handleReset: vi.fn(),
+        onSaveSuccess: vi.fn(),
+        setKnownCompanies: vi.fn()
+      })
+    );
+
+    await act(async () => {
+      await result.current.onSubmit({
+        ...BASE_VALUES,
+        entity_type: 'Fournisseur',
+        company_name: 'SEA Aquitaine',
+        company_city: 'Bordeaux',
+        contact_first_name: '',
+        contact_last_name: '',
+        contact_position: '',
+        contact_name: '',
+        contact_phone: '05 58 36 96 19',
+        contact_email: '',
+        subject: 'Demande délai fournisseur'
+      });
+    });
+
+    expect(saveEntity).not.toHaveBeenCalled();
+    expect(saveEntityContact).not.toHaveBeenCalled();
+    expect(handleSelectEntity).not.toHaveBeenCalled();
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({
+      company_name: 'SEA Aquitaine',
+      contact_service: 'Fournisseur',
+      interaction_type: 'Interaction fournisseur',
+      contact_phone: '05 58 36 96 19',
+      entity_id: undefined,
+      contact_id: undefined
+    }));
   });
 });

@@ -2,6 +2,7 @@ import {
   directorySavedViewsListResponseSchema,
   type DirectorySavedViewsListResponse
 } from 'shared/schemas/api-responses';
+import type { DirectorySavedViewsListInput } from 'shared/schemas/directory.schema';
 
 import { invokeTrpc } from '@/services/api/safeTrpc';
 import { createAppError } from '@/services/errors/AppError';
@@ -20,9 +21,11 @@ const parseDirectorySavedViewsListResponse = (payload: unknown): DirectorySavedV
   return parsed.data;
 };
 
-export const getDirectorySavedViews = (): Promise<DirectorySavedViewsListResponse> =>
+export const getDirectorySavedViews = (
+  input: DirectorySavedViewsListInput = { viewType: 'clients' }
+): Promise<DirectorySavedViewsListResponse> =>
   invokeTrpc(
-    (api, options) => api.directory['saved-views'].list.query({}, options),
+    (api, options) => api.directory['saved-views'].list.query(input, options),
     parseDirectorySavedViewsListResponse,
     'Impossible de charger les vues sauvegardees.'
   );

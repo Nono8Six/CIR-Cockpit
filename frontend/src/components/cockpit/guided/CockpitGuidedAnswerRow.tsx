@@ -10,6 +10,7 @@ type CockpitGuidedAnswerRowProps = {
   active: boolean;
   complete: boolean;
   onEdit: () => void;
+  editable?: boolean;
 };
 
 const CockpitGuidedAnswerRow = ({
@@ -19,9 +20,10 @@ const CockpitGuidedAnswerRow = ({
   meta,
   active,
   complete,
-  onEdit
+  onEdit,
+  editable = true
 }: CockpitGuidedAnswerRowProps) => {
-  const interactive = complete || active;
+  const interactive = editable && (complete || active);
 
   return (
     <button
@@ -29,18 +31,18 @@ const CockpitGuidedAnswerRow = ({
       onClick={onEdit}
       disabled={!interactive}
       className={cn(
-        'group flex w-full items-center gap-4 px-2 py-2.5 text-left transition-colors focus-visible:outline-none focus-visible:bg-surface-1',
+        'group flex w-full items-center gap-3 px-2 py-1.5 text-left transition-colors focus-visible:outline-none focus-visible:bg-surface-1',
         interactive ? 'cursor-pointer hover:bg-surface-1/70' : 'cursor-default opacity-55'
       )}
       aria-current={active ? 'step' : undefined}
     >
-      <span className="w-[72px] shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+      <span className="w-16 shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
         {label}
       </span>
       <span className="min-w-0 flex-1">
         <span
           className={cn(
-            'block truncate text-sm',
+            'block truncate text-[13px]',
             interactive ? 'font-medium text-foreground' : 'text-muted-foreground'
           )}
         >
@@ -52,17 +54,17 @@ const CockpitGuidedAnswerRow = ({
           </span>
         ) : null}
       </span>
-      {complete ? (
+      {complete && editable ? (
         <span
           aria-hidden="true"
-          className="flex size-7 shrink-0 items-center justify-center rounded-md text-transparent transition-colors group-hover:text-muted-foreground group-focus-visible:text-muted-foreground"
+          className="flex size-6 shrink-0 items-center justify-center rounded-md text-transparent transition-colors group-hover:text-muted-foreground group-focus-visible:text-muted-foreground"
         >
           <Pencil size={13} />
         </span>
       ) : (
-        <span aria-hidden="true" className="size-7" />
+        <span aria-hidden="true" className="size-6" />
       )}
-      {complete ? <span className="sr-only">Modifier {label}</span> : null}
+      {complete && editable ? <span className="sr-only">Modifier {label}</span> : null}
     </button>
   );
 };

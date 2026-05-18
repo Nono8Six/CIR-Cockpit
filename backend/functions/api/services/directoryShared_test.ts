@@ -169,6 +169,28 @@ Deno.test('directory list and option where clauses reject all_accessible_agencie
   );
 });
 
+Deno.test('supplier directory where clause is global CIR and does not require agency scope', () => {
+  const rendered = renderCondition(buildListWhereClause(memberZeroAgenciesContext, {
+    scope: { mode: 'all_accessible_agencies' },
+    type: 'supplier',
+    filters: {
+      departments: [],
+      cirCommercialIds: [],
+      includeArchived: false
+    },
+    pagination: {
+      page: 1,
+      pageSize: 50,
+      includeTotal: false
+    },
+    sorting: [{ id: 'name', desc: false }]
+  }));
+
+  assert(rendered, 'expected a SQL condition for supplier directory');
+  assertStringIncludes(rendered.sql, '"entity_type" = \'Fournisseur\'');
+  assertEquals(rendered.sql.includes('"agency_id"'), false);
+});
+
 Deno.test('resolveDirectoryScope rejects selected agencies outside membership with AUTH_FORBIDDEN', () => {
   const error = assertThrows(() =>
     resolveDirectoryScope(memberOneAgencyContext, {

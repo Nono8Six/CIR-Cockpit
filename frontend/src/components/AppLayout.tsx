@@ -243,6 +243,7 @@ const AppLayout = ({ headerProps, mainContentProps, children }: AppLayoutProps) 
         <AppSidebar
           sections={headerProps.sections ?? []}
           activeTab={headerProps.activeTab}
+          activePath={headerProps.activePath}
           agencyName={activeAgency?.agency_name}
           agencySubtitle={activeAgency?.agency_id ? 'Agence active' : undefined}
           userName={safeUserFullName}

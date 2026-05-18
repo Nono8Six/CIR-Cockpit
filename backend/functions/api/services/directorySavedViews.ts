@@ -1,11 +1,12 @@
-import { and, asc, desc, eq, ne } from 'drizzle-orm';
+import { and, asc, desc, eq, ne, sql } from 'drizzle-orm';
 
 import { directory_saved_views } from '../../../drizzle/schema.ts';
 import type {
   DirectorySavedViewDeleteInput,
   DirectorySavedViewSaveInput,
   DirectorySavedViewSetDefaultInput,
-  DirectorySavedViewsListInput
+  DirectorySavedViewsListInput,
+  DirectorySavedViewType
 } from '../../../../shared/schemas/directory.schema.ts';
 import type {
   DirectorySavedViewDeleteResponse,
@@ -26,6 +27,9 @@ const baseViewSelect = {
   created_at: directory_saved_views.created_at,
   updated_at: directory_saved_views.updated_at
 } as const;
+
+const savedViewTypeCondition = (viewType: DirectorySavedViewType) =>
+  sql<boolean>`coalesce(${directory_saved_views.state} ->> 'viewType', 'clients') = ${viewType}`;
 
 export const enforceDirectorySavedViewsLimit = (
   existingCount: number,
@@ -50,6 +54,7 @@ export const requireDirectorySavedView = <T>(
 const clearDefaultView = async (
   db: DbClient,
   userId: string,
+  viewType: DirectorySavedViewType,
   excludedViewId?: string
 ): Promise<void> => {
   await db
@@ -57,8 +62,12 @@ const clearDefaultView = async (
     .set({ is_default: false })
     .where(
       excludedViewId
-        ? and(eq(directory_saved_views.user_id, userId), ne(directory_saved_views.id, excludedViewId))
-        : eq(directory_saved_views.user_id, userId)
+        ? and(
+          eq(directory_saved_views.user_id, userId),
+          savedViewTypeCondition(viewType),
+          ne(directory_saved_views.id, excludedViewId)
+        )
+        : and(eq(directory_saved_views.user_id, userId), savedViewTypeCondition(viewType))
     );
 };
 
@@ -66,7 +75,7 @@ export const listDirectorySavedViews = async (
   db: DbClient,
   authContext: AuthContext,
   requestId: string,
-  _input: DirectorySavedViewsListInput
+  input: DirectorySavedViewsListInput
 ): Promise<DirectorySavedViewsListResponse> => {
   await ensureDataRateLimit('directory:saved-views:list', authContext.userId);
 
@@ -74,7 +83,10 @@ export const listDirectorySavedViews = async (
     const views = await db
       .select(baseViewSelect)
       .from(directory_saved_views)
-      .where(eq(directory_saved_views.user_id, authContext.userId))
+      .where(and(
+        eq(directory_saved_views.user_id, authContext.userId),
+        savedViewTypeCondition(input.viewType)
+      ))
       .orderBy(desc(directory_saved_views.is_default), asc(directory_saved_views.name));
 
     return {
@@ -104,13 +116,16 @@ export const saveDirectorySavedView = async (
     const existingViews = await db
       .select({ id: directory_saved_views.id })
       .from(directory_saved_views)
-      .where(eq(directory_saved_views.user_id, authContext.userId));
+      .where(and(
+        eq(directory_saved_views.user_id, authContext.userId),
+        savedViewTypeCondition(input.state.viewType)
+      ));
 
     const isCreate = !input.id;
     enforceDirectorySavedViewsLimit(existingViews.length, isCreate);
 
     if (input.is_default) {
-      await clearDefaultView(db, authContext.userId, input.id);
+      await clearDefaultView(db, authContext.userId, input.state.viewType, input.id);
     }
 
     const rows = input.id
@@ -123,7 +138,8 @@ export const saveDirectorySavedView = async (
           })
           .where(and(
             eq(directory_saved_views.id, input.id),
-            eq(directory_saved_views.user_id, authContext.userId)
+            eq(directory_saved_views.user_id, authContext.userId),
+            savedViewTypeCondition(input.state.viewType)
           ))
           .returning(baseViewSelect)
       : await db
@@ -212,14 +228,15 @@ export const setDefaultDirectorySavedView = async (
   await ensureDataRateLimit('directory:saved-views:set-default', authContext.userId);
 
   try {
-    await clearDefaultView(db, authContext.userId, input.id);
+    await clearDefaultView(db, authContext.userId, input.viewType, input.id);
 
     const rows = await db
       .update(directory_saved_views)
       .set({ is_default: true })
       .where(and(
         eq(directory_saved_views.id, input.id),
-        eq(directory_saved_views.user_id, authContext.userId)
+        eq(directory_saved_views.user_id, authContext.userId),
+        savedViewTypeCondition(input.viewType)
       ))
       .returning(baseViewSelect);
 

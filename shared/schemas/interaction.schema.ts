@@ -52,6 +52,9 @@ const isProspectRelationValue = (value?: string | null): boolean => {
   return normalized === 'prospect';
 };
 
+const isSupplierRelationValue = (value?: string | null): boolean =>
+  (value ?? '').trim().toLowerCase() === 'fournisseur';
+
 const interactionCoreSchema = z.strictObject({
   channel: z.enum(CHANNEL_VALUES, { message: 'Canal requis' }),
   entity_type: z.string().trim().min(1, 'Type de tiers requis').max(80, 'Type de tiers trop long'),
@@ -66,7 +69,7 @@ const interactionCoreSchema = z.strictObject({
   contact_email: z.string().trim().email('Email invalide').max(254, 'Email trop long').optional().or(z.literal('')),
   subject: z.string().trim().min(1, 'Sujet requis').max(MAX_SUBJECT_LENGTH, 'Sujet trop long'),
   mega_families: z.array(z.string().trim().max(80, 'Famille trop longue')).optional(),
-  status_id: z.string().trim().min(1, 'Statut requis'),
+  status_id: z.string().trim().min(1, 'Statut requis').nullish(),
   interaction_type: z.string().trim().min(1, "Type d'interaction requis").max(120, "Type d'interaction trop long"),
   order_ref: optionalOrderReference,
   reminder_at: z.string().optional(),
@@ -83,13 +86,22 @@ export const addSharedInteractionRules = (
   const hasEmail = Boolean(values.contact_email?.trim());
   const isInternal = isInternalRelationValue(values.entity_type);
   const isSolicitation = isSolicitationRelationValue(values.entity_type);
+  const isSupplier = isSupplierRelationValue(values.entity_type);
+  if (!isInternal && !isSolicitation && !isSupplier && !values.status_id?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Statut requis',
+      path: ['status_id']
+    });
+  }
+
   if (isSolicitation && !hasPhone) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: 'Numero requis',
       path: ['contact_phone']
     });
-  } else if (!isInternal && !isSolicitation && !hasPhone && !hasEmail) {
+  } else if (!isInternal && !isSolicitation && !isSupplier && !hasPhone && !hasEmail) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: 'Telephone ou email requis',
@@ -128,6 +140,9 @@ export const addSharedInteractionRules = (
   if (isSolicitation) {
     return;
   }
+  if (isSupplier) {
+    return;
+  }
   if (!values.contact_first_name?.trim()) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -140,13 +155,6 @@ export const addSharedInteractionRules = (
       code: z.ZodIssueCode.custom,
       message: 'Nom requis',
       path: ['contact_last_name']
-    });
-  }
-  if (values.entity_type.trim().toLowerCase() === 'fournisseur' && !values.contact_position?.trim()) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: 'Fonction requise',
-      path: ['contact_position']
     });
   }
   if (isProspect && !values.company_city?.trim()) {
@@ -166,13 +174,22 @@ const addSharedInteractionDraftRules = (
   const hasEmail = Boolean(values.contact_email?.trim());
   const isInternal = isInternalRelationValue(values.entity_type);
   const isSolicitation = isSolicitationRelationValue(values.entity_type);
+  const isSupplier = isSupplierRelationValue(values.entity_type);
+  if (!isInternal && !isSolicitation && !isSupplier && !values.status_id?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Statut requis',
+      path: ['status_id']
+    });
+  }
+
   if (isSolicitation && !hasPhone) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: 'Numero requis',
       path: ['contact_phone']
     });
-  } else if (!isInternal && !isSolicitation && !hasPhone && !hasEmail) {
+  } else if (!isInternal && !isSolicitation && !isSupplier && !hasPhone && !hasEmail) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: 'Telephone ou email requis',
@@ -212,7 +229,11 @@ const interactionDraftBaseSchema = interactionCoreSchema.extend({
 export const interactionDraftSchema = interactionDraftBaseSchema.superRefine((values, ctx) => {
   addSharedInteractionDraftRules(values, ctx);
 
-  if (!isSolicitationRelationValue(values.entity_type) && !values.contact_name?.trim()) {
+  if (
+    !isSolicitationRelationValue(values.entity_type)
+    && !isSupplierRelationValue(values.entity_type)
+    && !values.contact_name?.trim()
+  ) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: 'Nom de contact requis',

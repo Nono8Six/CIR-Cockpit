@@ -133,7 +133,7 @@ export const useClientDirectoryWorkspace = ({
     directoryOptionsInput,
     canLoadCurrentOptions && enabledOptions.departments,
   );
-  const savedViewsQuery = useDirectorySavedViews(canLoadDirectory);
+  const savedViewsQuery = useDirectorySavedViews('clients', canLoadDirectory);
   const saveSavedViewMutation = useSaveDirectorySavedView();
   const deleteSavedViewMutation = useDeleteDirectorySavedView();
   const setDefaultSavedViewMutation = useSetDefaultDirectorySavedView();
@@ -305,7 +305,7 @@ export const useClientDirectoryWorkspace = ({
 
   const handleSetDefaultView = async (viewId: string): Promise<void> => {
     try {
-      await setDefaultSavedViewMutation.mutateAsync({ id: viewId });
+      await setDefaultSavedViewMutation.mutateAsync({ id: viewId, viewType: 'clients' });
       notifySuccess('Vue par défaut enregistrée.');
     } catch (error) {
       handleUiError(error, 'Impossible de definir la vue par defaut.');

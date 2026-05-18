@@ -1,7 +1,7 @@
 import { memo, type ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useReducedMotion } from 'motion/react';
-import { getPathForTab } from '@/app/appRoutes';
+import { getPathForShellNavItem, isShellNavItemActive } from '@/app/appRoutes';
 import { Bell, ChevronDown, Menu, User } from 'lucide-react';
 
 import type { AppHeaderProps } from '@/components/app-header/AppHeader.types';
@@ -23,6 +23,7 @@ import type { AppTab } from '@/types';
 const AppHeader = ({
   sections,
   activeTab,
+  activePath,
   activeSectionLabel,
   activeItemLabel,
   sessionEmail,
@@ -94,10 +95,10 @@ const AppHeader = ({
                   {currentSectionItems.map((item) => (
                     <DropdownMenuItem key={item.id} asChild>
                       <Link
-                        to={getPathForTab(item.id)}
+                        to={getPathForShellNavItem(item)}
                         className={cn(
                           'flex w-full items-center gap-2 cursor-pointer',
-                          activeTab === item.id && 'bg-muted font-medium text-foreground'
+                          isShellNavItemActive(item, activeTab, activePath) && 'bg-muted font-medium text-foreground'
                         )}
                       >
                         <item.icon size={14} className="text-muted-foreground" />

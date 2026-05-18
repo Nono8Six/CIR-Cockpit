@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 import { Command } from './ui/command';
 import { useInteractionSearch } from '@/hooks/useInteractionSearch';
 import {
@@ -17,9 +19,9 @@ import {
 import type { InteractionSearchBarProps } from './interaction-search/InteractionSearchBar.types';
 import InteractionSearchContainer from './interaction-search/InteractionSearchContainer';
 import InteractionSearchFooter from './interaction-search/InteractionSearchFooter';
-import InteractionSearchHeader from './interaction-search/InteractionSearchHeader';
 import InteractionSearchInput from './interaction-search/InteractionSearchInput';
 import InteractionSearchListArea from './interaction-search/InteractionSearchListArea';
+import GuidedTierSearchShell from './cockpit/guided/GuidedTierSearchShell';
 
 const InteractionSearchBar = ({
   agencyId,
@@ -31,11 +33,16 @@ const InteractionSearchBar = ({
   onSelectContact,
   onSelectSearchResult,
   onCreateEntity,
+  createLabel,
+  createMode = 'dialog',
+  createDisabled = false,
+  inlineCreateSlot,
   onOpenGlobalSearch,
   recentEntities,
   inputRef,
   showTypeBadge = false
 }: InteractionSearchBarProps) => {
+  const [showInlineCreate, setShowInlineCreate] = useState(false);
   const {
     query,
     setQuery,
@@ -68,6 +75,23 @@ const InteractionSearchBar = ({
   const canOpenGlobalSearch = Boolean(onOpenGlobalSearch);
   const pendingResultType = pendingResult ? getTierTypeDisplayLabel(pendingResult.type) : '';
   const pendingRelation = pendingResult ? getRelationLabelForTierType(pendingResult.type) : '';
+  const resolvedCreateMode = createLabel ? createMode : 'none';
+  const handleCreate = resolvedCreateMode === 'inline'
+    ? () => {
+        setShowInlineCreate((current) => !current);
+        setIsOpen(true);
+      }
+    : onCreateEntity;
+  const footer = createLabel || canOpenGlobalSearch
+    ? (
+      <InteractionSearchFooter
+        createLabel={createLabel}
+        createDisabled={createDisabled || resolvedCreateMode === 'none'}
+        onCreateEntity={handleCreate}
+        onOpenGlobalSearch={canOpenGlobalSearch ? handleOpenGlobalSearch : undefined}
+      />
+    )
+    : undefined;
 
   return (
     <>
@@ -75,38 +99,44 @@ const InteractionSearchBar = ({
         onOpen={() => setIsOpen(true)}
         onClose={() => setIsOpen(false)}
       >
-        <InteractionSearchHeader
+        <GuidedTierSearchShell
           includeArchived={includeArchived}
           onIncludeArchivedChange={setIncludeArchived}
-        />
-        <Command className="rounded-none overflow-visible h-auto bg-transparent" shouldFilter={false}>
-          <InteractionSearchInput query={query} onQueryChange={setQuery} inputRef={inputRef} />
-          <InteractionSearchListArea
-            panelState={panelState}
-            filteredRecents={filteredRecents}
-            limitedResults={limitedResults}
-            query={query}
-            includeArchived={includeArchived}
-            entityHeading={entityHeading}
-            onSelectEntity={handleSelectEntity}
-            onSelectSearchResult={handleSelectSearchResult}
-            showTypeBadge={showTypeBadge}
-          />
-        </Command>
-        <InteractionSearchFooter
-          entityHeading={entityHeading}
-          onCreateEntity={onCreateEntity}
-          onOpenGlobalSearch={canOpenGlobalSearch ? handleOpenGlobalSearch : undefined}
-        />
+          footer={footer}
+        >
+          <Command className="h-auto overflow-visible rounded-none bg-transparent" shouldFilter={false}>
+            <InteractionSearchInput query={query} onQueryChange={setQuery} inputRef={inputRef} />
+            <InteractionSearchListArea
+              panelState={panelState}
+              filteredRecents={filteredRecents}
+              limitedResults={limitedResults}
+              query={query}
+              includeArchived={includeArchived}
+              entityHeading={entityHeading}
+              onSelectEntity={handleSelectEntity}
+              onSelectSearchResult={handleSelectSearchResult}
+              showTypeBadge={showTypeBadge}
+            />
+          </Command>
+          {showInlineCreate && inlineCreateSlot ? (
+            <div className="border-t border-border bg-surface-1/70 px-3 py-3">
+              {typeof inlineCreateSlot === 'function'
+                ? inlineCreateSlot({ onCancel: () => setShowInlineCreate(false) })
+                : inlineCreateSlot}
+            </div>
+          ) : null}
+        </GuidedTierSearchShell>
       </InteractionSearchContainer>
       <AlertDialog open={Boolean(pendingResult)} onOpenChange={(open) => {
         if (!open) handleCancelPendingResult();
       }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Basculer vers le type réel ?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {`Ce tiers existe déjà comme ${pendingResultType}. Basculer vers ce type ?`}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Le tiers sélectionné est classé {pendingResultType}. La Saisie va passer sur {pendingRelation} pour éviter une interaction incohérente.
+              La Saisie guidée va passer sur {pendingRelation} avant de sélectionner ce résultat pour éviter une interaction incohérente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

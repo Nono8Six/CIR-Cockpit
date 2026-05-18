@@ -3,7 +3,7 @@ import type { FieldErrors, UseFormRegisterReturn, UseFormSetValue } from 'react-
 
 import type { TierV1DirectoryRow } from 'shared/schemas/tier-v1.schema';
 import type { RelationMode } from '@/constants/relations';
-import type { Entity, EntityContact } from '@/types';
+import type { Agency, Entity, EntityContact, Interaction } from '@/types';
 import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
 import type { AgencyConfig } from '@/services/config';
 import type { AgencyStatus, StatusCategory } from '@/types';
@@ -20,6 +20,7 @@ export type CockpitFormLeftPaneProps = {
   relationButtonRef: RefObject<HTMLButtonElement | null>;
   relationMode: RelationMode;
   activeAgencyId: string | null;
+  agencies: Agency[];
   entitySearchIndex: {
     entities: Entity[];
     contacts: EntityContact[];
@@ -32,6 +33,7 @@ export type CockpitFormLeftPaneProps = {
   onOpenProspectDialog: () => void;
   onOpenGlobalSearch?: () => void;
   recentEntities: Entity[];
+  interactions: Interaction[];
   searchInputRef: RefObject<HTMLInputElement | null>;
   selectedEntity: Entity | null;
   selectedContact: EntityContact | null;
@@ -87,6 +89,7 @@ export type CockpitFormRightPaneProps = {
   labelStyle: string;
   footerLabelStyle: string;
   subject: string;
+  notes: string;
   subjectField: UseFormRegisterReturn;
   notesField: UseFormRegisterReturn;
   orderRefField: UseFormRegisterReturn;

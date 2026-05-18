@@ -32,6 +32,23 @@ const enterpriseApiNumericValueSchema = z
     return null;
   });
 
+const enterpriseApiNullableCountSchema = z
+  .union([z.number(), z.string(), z.null(), z.undefined()])
+  .transform((value) => {
+    if (typeof value === "number" && Number.isInteger(value) && value >= 0) {
+      return value;
+    }
+
+    if (typeof value === "string") {
+      const normalized = Number(value.trim());
+      return Number.isInteger(normalized) && normalized >= 0
+        ? normalized
+        : null;
+    }
+
+    return null;
+  });
+
 const enterpriseApiBooleanLikeSchema = z.union([
   z.boolean(),
   z.string(),
@@ -47,25 +64,29 @@ export const enterpriseApiEstablishmentSchema = z.looseObject({
   libelle_commune: z.string().trim().nullable().optional(),
   departement: z.string().trim().nullable().optional(),
   region: z.string().trim().nullable().optional(),
-  est_siege: z.boolean().optional(),
+  est_siege: enterpriseApiBooleanLikeSchema,
   activite_principale: z.string().trim().nullable().optional(),
   activite_principale_naf25: z.string().trim().nullable().optional(),
   etat_administratif: z.string().trim().nullable().optional(),
   date_creation: z.string().trim().nullable().optional(),
   date_debut_activite: z.string().trim().nullable().optional(),
   date_fermeture: z.string().trim().nullable().optional(),
-  ancien_siege: z.boolean().optional(),
+  ancien_siege: enterpriseApiBooleanLikeSchema,
   nom_commercial: z.string().trim().nullable().optional(),
   tranche_effectif_salarie: z.string().trim().nullable().optional(),
   annee_tranche_effectif_salarie: enterpriseApiNullableYearSchema,
   caractere_employeur: enterpriseApiBooleanLikeSchema,
   statut_diffusion_etablissement: z.string().trim().nullable().optional(),
   liste_enseignes: z.union([
-    z.array(z.string()),
+    z.array(z.string().nullable()),
     z.string(),
     z.null(),
     z.undefined(),
-  ]),
+  ]).transform((value) =>
+    Array.isArray(value)
+      ? value.filter((entry): entry is string => typeof entry === "string")
+      : value
+  ),
 });
 
 const enterpriseApiDirectorSchema = z.looseObject({
@@ -94,7 +115,7 @@ const enterpriseApiComplementsSchema = z.looseObject({
 
 export const enterpriseApiCompanySchema = z.looseObject({
   siren: z.string().trim().min(1, "SIREN requis"),
-  nom_complet: z.string().trim().min(1, "Nom complet requis"),
+  nom_complet: z.string().trim().nullable().optional(),
   nom_raison_sociale: z.string().trim().nullable().optional(),
   sigle: z.string().trim().nullable().optional(),
   activite_principale: z.string().trim().nullable().optional(),
@@ -108,14 +129,19 @@ export const enterpriseApiCompanySchema = z.looseObject({
   tranche_effectif_salarie: z.string().trim().nullable().optional(),
   annee_tranche_effectif_salarie: enterpriseApiNullableYearSchema,
   statut_diffusion: z.string().trim().nullable().optional(),
-  nombre_etablissements: z.number().int().nonnegative().nullable().optional(),
-  nombre_etablissements_ouverts: z.number().int().nonnegative().nullable()
-    .optional(),
+  nombre_etablissements: enterpriseApiNullableCountSchema,
+  nombre_etablissements_ouverts: enterpriseApiNullableCountSchema,
   siege: enterpriseApiEstablishmentSchema.nullable().optional(),
-  matching_etablissements: z.array(enterpriseApiEstablishmentSchema).default(
-    [],
-  ),
-  dirigeants: z.array(enterpriseApiDirectorSchema).default([]),
+  matching_etablissements: z.union([
+    z.array(enterpriseApiEstablishmentSchema),
+    z.null(),
+    z.undefined(),
+  ]).transform((value) => value ?? []),
+  dirigeants: z.union([
+    z.array(enterpriseApiDirectorSchema),
+    z.null(),
+    z.undefined(),
+  ]).transform((value) => value ?? []),
   finances: z.record(z.string(), enterpriseApiFinancialYearSchema).nullable()
     .optional(),
   complements: enterpriseApiComplementsSchema.nullable().optional(),

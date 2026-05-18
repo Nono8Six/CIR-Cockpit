@@ -1,27 +1,30 @@
 type InteractionSearchFooterProps = {
-  entityHeading: string;
+  createLabel?: string;
+  createDisabled?: boolean;
   onCreateEntity?: () => void;
   onOpenGlobalSearch?: () => void;
 };
 
 const InteractionSearchFooter = ({
-  entityHeading,
+  createLabel,
+  createDisabled = false,
   onCreateEntity,
   onOpenGlobalSearch
 }: InteractionSearchFooterProps) => {
-  if (!onCreateEntity && !onOpenGlobalSearch) {
+  if (!createLabel && !onOpenGlobalSearch) {
     return null;
   }
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border bg-surface-1/80 px-3 py-2 text-xs text-muted-foreground">
-      {onCreateEntity ? (
+    <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+      {createLabel ? (
         <button
           type="button"
           onClick={onCreateEntity}
-          className="font-semibold text-primary hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
+          disabled={createDisabled || !onCreateEntity}
+          className="font-semibold text-primary transition-colors hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:text-muted-foreground/60"
         >
-          {`+ Créer ${entityHeading.toLowerCase()}`}
+          {createLabel}
         </button>
       ) : (
         <span />

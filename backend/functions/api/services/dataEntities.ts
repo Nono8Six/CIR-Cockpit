@@ -5,6 +5,7 @@ import { httpError } from '../middleware/errorHandler.ts';
 import {
   ensureAgencyAccess,
   ensureDataRateLimit,
+  getEntityAccessInfo,
   ensureOptionalAgencyAccess,
   getEntityAgencyId
 } from './dataAccess.ts';
@@ -35,6 +36,14 @@ export {
 } from './dataEntitiesMutations.ts';
 export { saveEntity } from './dataEntitiesSave.ts';
 
+export const ensureSupplierWriteAccess = (authContext: AuthContext): void => {
+  if (authContext.role === 'super_admin' || authContext.role === 'agency_admin') {
+    return;
+  }
+
+  throw httpError(403, 'AUTH_FORBIDDEN', 'Creation fournisseur reservee aux administrateurs.');
+};
+
 export const handleDataEntitiesAction = async (
   db: DbClient,
   authContext: AuthContext,
@@ -53,13 +62,22 @@ export const handleDataEntitiesAction = async (
       return { request_id: requestId, ok: true, ...index };
     }
     case 'save': {
+      if (data.entity_type === 'Fournisseur') {
+        ensureSupplierWriteAccess(authContext);
+        const entity = await saveEntity(db, data, null, authContext.userId);
+        return { request_id: requestId, ok: true, entity };
+      }
       const agencyId = ensureAgencyAccess(authContext, data.agency_id);
       const entity = await saveEntity(db, data, agencyId, authContext.userId);
       return { request_id: requestId, ok: true, entity };
     }
     case 'archive': {
-      const agencyId = await getEntityAgencyId(db, data.entity_id);
-      ensureOptionalAgencyAccess(authContext, agencyId);
+      const accessInfo = await getEntityAccessInfo(db, data.entity_id);
+      if (accessInfo.entityType === 'Fournisseur') {
+        ensureSupplierWriteAccess(authContext);
+      } else {
+        ensureOptionalAgencyAccess(authContext, accessInfo.agencyId);
+      }
       const entity = await archiveEntity(db, data.entity_id, data.archived);
       return { request_id: requestId, ok: true, entity };
     }

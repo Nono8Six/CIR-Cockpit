@@ -57,4 +57,94 @@ describe('CockpitReadonlyView', () => {
     expect(screen.getByTestId('cockpit-readonly-view')).toBeInTheDocument();
     expect(screen.queryByTestId('cockpit-readonly-tags')).not.toBeInTheDocument();
   });
+
+  it('resume une sollicitation avec uniquement nom telephone et description', () => {
+    render(
+      <CockpitReadonlyView
+        interaction={{
+          ...interaction,
+          entity_type: 'Sollicitation',
+          contact_service: 'Comptabilité',
+          interaction_type: 'Démarchage téléphonique',
+          contact_name: 'Test pub',
+          contact_phone: '05 58 96 52 12',
+          subject: 'Appel publicitaire',
+          notes: 'Appel publicitaire pour proposer une offre fournisseur.',
+          reminder_at: '2026-05-15T08:00:00Z'
+        }}
+        config={config}
+        onStartNew={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText('Sollicitation enregistrée')).toBeInTheDocument();
+    expect(screen.getByText('Test pub')).toBeInTheDocument();
+    expect(screen.getByText('05 58 96 52 12')).toBeInTheDocument();
+    expect(screen.getByText('Appel publicitaire pour proposer une offre fournisseur.')).toBeInTheDocument();
+    expect(screen.queryByText('Comptabilité')).not.toBeInTheDocument();
+    expect(screen.queryByText('Démarchage téléphonique')).not.toBeInTheDocument();
+    expect(screen.queryByText('Nouveau')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('cockpit-readonly-subject')).not.toBeInTheDocument();
+  });
+
+  it('resume une interaction interne avec uniquement contact telephone et description', () => {
+    render(
+      <CockpitReadonlyView
+        interaction={{
+          ...interaction,
+          entity_type: 'Interne (CIR)',
+          contact_service: 'Comptabilité',
+          interaction_type: 'Interne (CIR)',
+          company_name: 'CIR',
+          contact_name: 'Arnaud FERRON',
+          contact_phone: '05 58 36 96 19',
+          subject: 'Synchronisation atelier',
+          notes: 'Point rapide avec l’agence sur le dossier.',
+          reminder_at: '2026-05-15T08:00:00Z'
+        }}
+        config={config}
+        onStartNew={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText('Interaction interne enregistrée')).toBeInTheDocument();
+    expect(screen.getByText('Arnaud FERRON')).toBeInTheDocument();
+    expect(screen.getByText('05 58 36 96 19')).toBeInTheDocument();
+    expect(screen.getByText('Point rapide avec l’agence sur le dossier.')).toBeInTheDocument();
+    expect(screen.queryByText('Comptabilité')).not.toBeInTheDocument();
+    expect(screen.queryByText('Interne (CIR)')).not.toBeInTheDocument();
+    expect(screen.queryByText('Nouveau')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('cockpit-readonly-subject')).not.toBeInTheDocument();
+  });
+
+  it('resume une interaction fournisseur sans statut ni qualification visibles', () => {
+    render(
+      <CockpitReadonlyView
+        interaction={{
+          ...interaction,
+          entity_type: 'Fournisseur',
+          company_name: 'SEA Aquitaine',
+          contact_service: 'Achats',
+          interaction_type: 'Relance',
+          contact_first_name: '',
+          contact_last_name: '',
+          contact_name: '',
+          contact_phone: '05 58 36 96 19',
+          subject: 'Relance délai fournisseur',
+          notes: 'Relance sur délai de livraison vérins.'
+        }}
+        config={config}
+        onStartNew={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText('Interaction fournisseur enregistrée')).toBeInTheDocument();
+    expect(screen.getByText('SEA Aquitaine')).toBeInTheDocument();
+    expect(screen.getByText('05 58 36 96 19')).toBeInTheDocument();
+    expect(screen.getByText('Relance sur délai de livraison vérins.')).toBeInTheDocument();
+    expect(screen.queryByText('Achats')).not.toBeInTheDocument();
+    expect(screen.queryByText('Relance')).not.toBeInTheDocument();
+    expect(screen.queryByText('Nouveau')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('cockpit-readonly-subject')).not.toBeInTheDocument();
+  });
 });

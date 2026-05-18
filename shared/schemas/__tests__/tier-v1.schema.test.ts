@@ -13,6 +13,7 @@ import {
   tierV1SolicitationInteractionOnlyPayloadSchema,
   tierV1SupplierPayloadSchema
 } from '../tier-v1.schema';
+import { supplierFormSchema } from '../supplier.schema';
 
 const agencyId = '11111111-1111-4111-8111-111111111111';
 const cirAgencyId = '22222222-2222-4222-8222-222222222222';
@@ -202,6 +203,27 @@ describe('tier V1 search and directory contracts', () => {
       name: 'Prospect SAS',
       client_number: '1004',
       primary_email: 'contact@prospect.example.com'
+    }).success).toBe(false);
+  });
+});
+
+describe('supplier form schema', () => {
+  it('accepts a lightweight supplier with phone or email', () => {
+    expect(supplierFormSchema.safeParse({
+      name: 'SEA Aquitaine',
+      primary_phone: '05 58 36 96 19',
+      city: ''
+    }).success).toBe(true);
+
+    expect(supplierFormSchema.safeParse({
+      name: 'Fournisseur Europe',
+      primary_email: 'contact@supplier.example'
+    }).success).toBe(true);
+  });
+
+  it('rejects lightweight supplier creation without contact method', () => {
+    expect(supplierFormSchema.safeParse({
+      name: 'SEA Aquitaine'
     }).success).toBe(false);
   });
 });

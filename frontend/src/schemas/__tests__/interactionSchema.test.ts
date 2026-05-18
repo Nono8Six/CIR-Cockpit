@@ -53,9 +53,27 @@ describe('interactionFormSchema', () => {
       contact_last_name: '',
       contact_name: '',
       contact_email: '',
-      contact_phone: '0612345678'
+      contact_phone: '0612345678',
+      status_id: null
     };
     expect(() => interactionFormSchema.parse(solicitation)).not.toThrow();
+  });
+
+  it('accepts internal CIR without status', () => {
+    const internal = {
+      ...base,
+      entity_type: 'Interne (CIR)',
+      company_name: 'CIR',
+      contact_email: '',
+      contact_phone: '',
+      status_id: null
+    };
+    expect(() => interactionFormSchema.parse(internal)).not.toThrow();
+  });
+
+  it('keeps status required for standard relations', () => {
+    const result = interactionFormSchema.safeParse({ ...base, status_id: null });
+    expect(result.success).toBe(false);
   });
 
   it('keeps backend data payload rules aligned with form schema', () => {

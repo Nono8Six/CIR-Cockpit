@@ -19,6 +19,12 @@ export interface ClientDirectoryFiltersProps {
   commercials: DirectoryCommercialOption[];
   departments: string[];
   canFilterAgency: boolean;
+  showTypeFilter?: boolean;
+  showCommercialFilter?: boolean;
+  searchLabel?: string;
+  searchPlaceholder?: string;
+  syncReadyLabel?: string;
+  syncPendingLabel?: string;
   isFetching: boolean;
   density: DirectoryDensity;
   viewOptionColumns: Array<{

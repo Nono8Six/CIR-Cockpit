@@ -6,11 +6,14 @@ import {
   getUnifiedEntityType,
   matchesUnifiedEntitySearch,
   matchesUnifiedProfileSearch,
+  matchesUnifiedSupplierContactSearch,
   sortUnifiedResults,
   toUnifiedEntityResult,
   toUnifiedProfileResult,
+  toUnifiedSupplierContactResult,
   type UnifiedEntitySearchRow,
-  type UnifiedProfileSearchRow
+  type UnifiedProfileSearchRow,
+  type UnifiedSupplierContactSearchRow
 } from './dataSearchEntitiesUnifiedMapping.ts';
 
 const createAuthContext = (overrides: Partial<AuthContext> = {}): AuthContext => ({
@@ -71,6 +74,26 @@ const profileRow = (overrides: Partial<UnifiedProfileSearchRow> = {}): UnifiedPr
   ...overrides
 });
 
+const supplierContactRow = (
+  overrides: Partial<UnifiedSupplierContactSearchRow> = {}
+): UnifiedSupplierContactSearchRow => ({
+  ...entityRow({
+    id: 'supplier-1',
+    entity_type: 'Fournisseur',
+    name: 'SEA Aquitaine',
+    supplier_code: 'SEA1',
+    primary_phone: '05 58 36 96 19',
+    primary_email: 'contact@sea.example'
+  }),
+  contact_id: 'contact-1',
+  contact_first_name: 'Jeanne',
+  contact_last_name: 'Martin',
+  contact_position: 'ADV',
+  contact_phone: '06 01 02 03 04',
+  contact_email: 'jeanne.martin@sea.example',
+  ...overrides
+});
+
 Deno.test('matchesUnifiedEntitySearch covers V1 entity fields and normalized phone', () => {
   const row = entityRow({
     supplier_code: 'SUP1',
@@ -98,6 +121,27 @@ Deno.test('matchesUnifiedProfileSearch covers internal profile identity, email, 
   assertEquals(matchesUnifiedProfileSearch(row, '06 01 02'), true);
   assertEquals(matchesUnifiedProfileSearch(row, 'CIR Bordeaux'), true);
   assertEquals(matchesUnifiedProfileSearch(row, 'absent'), false);
+});
+
+Deno.test('matchesUnifiedSupplierContactSearch covers supplier contacts and labels match source', () => {
+  const row = supplierContactRow();
+
+  assertEquals(matchesUnifiedSupplierContactSearch(row, 'Jeanne'), true);
+  assertEquals(matchesUnifiedSupplierContactSearch(row, '06 01 02'), true);
+  assertEquals(matchesUnifiedSupplierContactSearch(row, 'jeanne.martin'), true);
+  assertEquals(matchesUnifiedSupplierContactSearch(row, 'absent'), false);
+
+  const phoneResult = toUnifiedSupplierContactResult(row, '06 01');
+  assertEquals(phoneResult.id, 'contact:contact-1');
+  assertEquals(phoneResult.entity_id, 'supplier-1');
+  assertEquals(phoneResult.contact_id, 'contact-1');
+  assertEquals(phoneResult.type, 'supplier');
+  assertEquals(phoneResult.match_kind, 'phone');
+  assertEquals(phoneResult.match_label, '06 01 02 03 04');
+
+  const contactResult = toUnifiedSupplierContactResult(row, 'ADV');
+  assertEquals(contactResult.match_kind, 'contact');
+  assertEquals(contactResult.match_label, 'Jeanne Martin');
 });
 
 Deno.test('unified result mapping preserves source and V1 result type', () => {

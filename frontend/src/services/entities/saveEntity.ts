@@ -5,13 +5,9 @@ import { Entity } from '@/types';
 import { createAppError, type AppError } from '@/services/errors/AppError';
 import { safeTrpc } from '@/services/api/safeTrpc';
 
-export type EntityPayloadType = 'Prospect' | 'Fournisseur';
-
-export type EntityPayload = {
+type EntityPayloadBase = {
   id?: string;
-  entity_type: EntityPayloadType;
   name: string;
-  agency_id: string | null;
   city?: string | null;
   address?: string | null;
   postal_code?: string | null;
@@ -24,6 +20,21 @@ export type EntityPayload = {
   official_data_synced_at?: string | null;
   notes?: string | null;
 };
+
+export type ProspectEntityPayload = EntityPayloadBase & {
+  entity_type: 'Prospect';
+  agency_id: string | null;
+};
+
+export type SupplierEntityPayload = EntityPayloadBase & {
+  entity_type: 'Fournisseur';
+  supplier_code?: string | null;
+  supplier_number?: string | null;
+  primary_phone?: string | null;
+  primary_email?: string | null;
+};
+
+export type EntityPayload = ProspectEntityPayload | SupplierEntityPayload;
 
 const parseEntityResponse = (payload: unknown): Entity => {
   const parsed = dataEntitiesResponseSchema.safeParse(payload);
@@ -54,7 +65,6 @@ const optionalEntityText = (value: string | null | undefined): string | undefine
   value ?? undefined;
 
 export const saveEntity = (payload: EntityPayload): ResultAsync<Entity, AppError> => {
-  const agencyId = requireEntityText(payload.agency_id, 'Agence requise.');
   const commonEntity = {
     name: payload.name,
     city: payload.city ?? '',
@@ -67,18 +77,22 @@ export const saveEntity = (payload: EntityPayload): ResultAsync<Entity, AppError
     official_name: payload.official_name,
     official_data_source: payload.official_data_source,
     official_data_synced_at: payload.official_data_synced_at,
-    notes: optionalEntityText(payload.notes),
-    agency_id: agencyId
+    notes: optionalEntityText(payload.notes)
   };
 
   if (payload.entity_type === 'Prospect') {
+    const agencyId = requireEntityText(payload.agency_id, 'Agence requise.');
+
     return safeTrpc(
       (api, options) => api.data.entities.mutate({
           action: 'save',
           agency_id: agencyId,
           entity_type: 'Prospect',
           id: payload.id,
-          entity: commonEntity
+          entity: {
+            ...commonEntity,
+            agency_id: agencyId
+          }
         }, options),
       parseEntityResponse,
       "Impossible d'enregistrer l'entite."
@@ -88,12 +102,39 @@ export const saveEntity = (payload: EntityPayload): ResultAsync<Entity, AppError
   return safeTrpc(
     (api, options) => api.data.entities.mutate({
         action: 'save',
-        agency_id: agencyId,
         entity_type: 'Fournisseur',
         id: payload.id,
-        entity: commonEntity
+        entity: {
+          ...commonEntity,
+          supplier_code: optionalEntityText(payload.supplier_code),
+          supplier_number: optionalEntityText(payload.supplier_number),
+          primary_phone: optionalEntityText(payload.primary_phone),
+          primary_email: optionalEntityText(payload.primary_email)
+        }
       }, options),
     parseEntityResponse,
     "Impossible d'enregistrer l'entite."
   );
 };
+
+export const setSupplierArchived = (supplierId: string, archived: boolean): ResultAsync<Entity, AppError> =>
+  safeTrpc(
+    (api, options) => api.data.entities.mutate({
+        action: 'archive',
+        entity_id: supplierId,
+        archived
+      }, options),
+    parseEntityResponse,
+    'Impossible de mettre a jour le fournisseur.'
+  );
+
+export const deleteSupplier = (supplierId: string): ResultAsync<Entity, AppError> =>
+  safeTrpc(
+    (api, options) => api.data.entities.mutate({
+        action: 'delete',
+        entity_id: supplierId,
+        delete_related_interactions: false
+      }, options),
+    parseEntityResponse,
+    'Impossible de supprimer le fournisseur.'
+  );

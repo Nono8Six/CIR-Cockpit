@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import type { UseFormClearErrors, UseFormReset } from 'react-hook-form';
 
 import {
+  getDefaultInteractionTypeForRelation,
   INTERNAL_COMPANY_NAME,
   isInternalRelationValue
 } from '@/constants/relations';
@@ -45,7 +46,7 @@ export const buildRelationChangeValues = ({
   subject: '',
   mega_families: [],
   status_id: defaultStatusId,
-  interaction_type: config.interactionTypes[0] ?? '',
+  interaction_type: getDefaultInteractionTypeForRelation(entityType, config.interactionTypes),
   order_ref: '',
   reminder_at: '',
   notes: '',

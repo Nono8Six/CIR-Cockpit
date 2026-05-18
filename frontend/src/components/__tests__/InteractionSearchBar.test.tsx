@@ -89,7 +89,7 @@ describe('InteractionSearchBar', () => {
     const user = userEvent.setup();
     const props = renderSearch();
 
-    await user.type(screen.getByPlaceholderText(/rechercher entité/i), 'alpha');
+    await user.type(screen.getByPlaceholderText(/nom, téléphone, email/i), 'alpha');
 
     const option = await waitFor(() => findOptionByText('Client Alpha'));
     expect(option).toBeTruthy();
@@ -114,11 +114,11 @@ describe('InteractionSearchBar', () => {
     const user = userEvent.setup();
     const props = renderSearch({ entityType: 'Prospect' });
 
-    await user.type(screen.getByPlaceholderText(/rechercher entité/i), 'comptant');
+    await user.type(screen.getByPlaceholderText(/nom, téléphone, email/i), 'comptant');
     await user.click(await waitFor(() => findOptionByText('Client Comptant')) as HTMLElement);
 
     expect(screen.getByRole('alertdialog')).toBeInTheDocument();
-    expect(screen.getByText(/classé Client comptant/i)).toBeInTheDocument();
+    expect(screen.getByText(/existe déjà comme Client comptant/i)).toBeInTheDocument();
     expect(props.onSelectSearchResult).not.toHaveBeenCalled();
 
     await user.click(screen.getByRole('button', { name: /Basculer vers ce type/i }));
@@ -142,8 +142,8 @@ describe('InteractionSearchBar', () => {
 
     renderSearch({ onOpenGlobalSearch });
 
-    await user.click(screen.getByLabelText('Afficher les entites archivees'));
-    await user.type(screen.getByPlaceholderText(/rechercher entité/i), 'archive');
+    await user.click(screen.getByLabelText('Inclure les tiers archivés'));
+    await user.type(screen.getByPlaceholderText(/nom, téléphone, email/i), 'archive');
 
     const archivedOption = await waitFor(() => findOptionByText('Archive Client'));
     expect(archivedOption).toBeTruthy();

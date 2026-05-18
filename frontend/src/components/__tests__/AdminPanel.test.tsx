@@ -41,6 +41,15 @@ describe('AdminPanel', () => {
     expect(screen.getByTestId('admin-panel')).toHaveClass('h-full', 'min-h-0', 'overflow-y-auto');
   });
 
+  it('keeps agency admins focused on audit logs without super-admin management tabs', () => {
+    render(<AdminPanel userRole="agency_admin" />);
+
+    expect(screen.queryByRole('link', { name: /fournisseurs/i })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('admin-tab-users')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('admin-tab-agencies')).not.toBeInTheDocument();
+    expect(screen.getByTestId('mock-audit-logs-panel')).toBeInTheDocument();
+  });
+
   it('exposes named and labelled admin search inputs', async () => {
     const user = userEvent.setup();
     render(<AdminPanel userRole="super_admin" />);

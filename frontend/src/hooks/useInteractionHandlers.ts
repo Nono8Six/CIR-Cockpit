@@ -2,7 +2,7 @@ import { useCallback, type ChangeEvent } from 'react';
 
 import { buildReminderDateTime } from '@/utils/date/buildReminderDateTime';
 import { formatFrenchPhone } from '@/utils/formatFrenchPhone';
-import { relationValuesMatch } from '@/constants/relations';
+import { isSupplierRelationValue, relationValuesMatch } from '@/constants/relations';
 import { handleUiError } from '@/services/errors/handleUiError';
 import { invalidateClientsQueries, invalidateEntitySearchIndexQueries } from '@/services/query/queryInvalidation';
 import type { ClientPayload } from '@/services/clients/saveClient';
@@ -36,7 +36,12 @@ export const useInteractionHandlers = ({ setValue, clearErrors, normalizedRelati
   }, [contactFirstName, setContactIdentity]);
 
   const handleSelectEntity = useCallback((entity: Entity | null) => {
+    const isSupplier = isSupplierRelationValue(entity?.entity_type);
     setSelectedEntity(entity); setSelectedContact(null); setStringField('entity_id', entity?.id ?? ''); setStringField('contact_id', ''); setStringField('company_name', entity?.name ?? ''); setStringField('company_city', entity?.city ?? ''); resetContactFields();
+    if (entity && isSupplier) {
+      setStringField('contact_phone', entity.primary_phone ?? '');
+      setStringField('contact_email', entity.primary_email ?? '');
+    }
     if (entity && !relationValuesMatch(entity.entity_type, normalizedRelation)) setStringField('entity_type', entity.entity_type);
     if (entity) clearErrors('entity_id');
   }, [clearErrors, normalizedRelation, resetContactFields, setSelectedContact, setSelectedEntity, setStringField]);

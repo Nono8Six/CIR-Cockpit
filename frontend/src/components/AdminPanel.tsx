@@ -12,7 +12,7 @@ interface AdminPanelProps {
 const AdminPanel = ({ userRole }: AdminPanelProps) => {
   if (userRole !== 'super_admin') {
     return (
-      <div className="h-full min-h-0 overflow-y-auto pr-1" data-testid="admin-panel">
+      <div className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto pr-1" data-testid="admin-panel">
         <AuditLogsPanel userRole={userRole} />
       </div>
     );

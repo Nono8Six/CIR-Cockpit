@@ -4,6 +4,7 @@ import type { AgencyContext, AgencyMembershipSummary, AppTab } from '@/types';
 export type AppHeaderProps = {
   sections: AppShellNavSection[];
   activeTab: AppTab;
+  activePath: string;
   activeSectionLabel: string;
   activeItemLabel: string;
   agencyContext: AgencyContext | null;

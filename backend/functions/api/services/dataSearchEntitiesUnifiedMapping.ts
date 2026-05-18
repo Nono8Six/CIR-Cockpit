@@ -36,6 +36,15 @@ export type UnifiedProfileSearchRow = {
   archived_at: string | null;
 };
 
+export type UnifiedSupplierContactSearchRow = UnifiedEntitySearchRow & {
+  contact_id: string;
+  contact_first_name: string | null;
+  contact_last_name: string;
+  contact_position: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
+};
+
 const normalizeText = (value: string | null | undefined): string =>
   (value ?? '').trim().toLowerCase();
 
@@ -96,6 +105,18 @@ export const matchesUnifiedEntitySearch = (row: UnifiedEntitySearchRow, query: s
     row.city
   ].some((value) => includesQuery(value, query)) || includesPhoneQuery(row.primary_phone, query);
 
+export const matchesUnifiedSupplierContactSearch = (
+  row: UnifiedSupplierContactSearchRow,
+  query: string
+): boolean =>
+  [
+    row.name,
+    row.contact_first_name,
+    row.contact_last_name,
+    row.contact_position,
+    row.contact_email
+  ].some((value) => includesQuery(value, query)) || includesPhoneQuery(row.contact_phone, query);
+
 export const matchesUnifiedProfileSearch = (row: UnifiedProfileSearchRow, query: string): boolean =>
   [
     row.display_name,
@@ -122,6 +143,42 @@ export const toUnifiedEntityResult = (row: UnifiedEntitySearchRow): TierV1Direct
     city: normalizeNullableText(row.city),
     agency_name: normalizeNullableText(row.agency_name),
     referent_name: normalizeNullableText(row.referent_name),
+    match_kind: 'entity',
+    match_label: null,
+    updated_at: row.updated_at,
+    archived_at: row.archived_at
+  };
+};
+
+export const toUnifiedSupplierContactResult = (
+  row: UnifiedSupplierContactSearchRow,
+  query: string
+): TierV1DirectoryRow => {
+  const contactLabel = toPersonLabel(row.contact_first_name, row.contact_last_name) ?? row.contact_last_name;
+  const queryDigits = normalizePhoneDigits(query);
+  const matchesPhone = queryDigits.length > 0 && includesPhoneQuery(row.contact_phone, query);
+  const matchesEmail = includesQuery(row.contact_email, query);
+  const matchKind = matchesPhone ? 'phone' : matchesEmail ? 'email' : 'contact';
+
+  return {
+    id: `contact:${row.contact_id}`,
+    entity_id: row.id,
+    contact_id: row.contact_id,
+    source: 'entity',
+    type: 'supplier',
+    label: row.name,
+    identifier: row.supplier_code ?? row.supplier_number ?? row.siret ?? row.siren,
+    phone: normalizeNullableText(row.primary_phone),
+    email: normalizeNullableText(row.primary_email),
+    city: normalizeNullableText(row.city),
+    agency_name: normalizeNullableText(row.agency_name),
+    referent_name: normalizeNullableText(row.referent_name),
+    match_kind: matchKind,
+    match_label: matchKind === 'phone'
+      ? normalizeNullableText(row.contact_phone)
+      : matchKind === 'email'
+        ? normalizeNullableText(row.contact_email)
+        : contactLabel,
     updated_at: row.updated_at,
     archived_at: row.archived_at
   };

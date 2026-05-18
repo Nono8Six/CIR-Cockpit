@@ -3,16 +3,17 @@ import { eq } from 'drizzle-orm';
 import { entities, entity_contacts } from '../../../drizzle/schema.ts';
 import type { AuthContext, DbClient } from '../types.ts';
 import { httpError } from '../middleware/errorHandler.ts';
-import { checkRateLimit } from './rateLimit.ts';
+import { checkRateLimit, type RateLimitOptions } from './rateLimit.ts';
 
 const FORBIDDEN_MESSAGE = 'Acces interdit.';
 const RATE_LIMIT_MESSAGE = 'Trop de requetes. Reessayez plus tard.';
 
 export const ensureDataRateLimit = async (
   scope: string,
-  callerId: string
+  callerId: string,
+  options?: RateLimitOptions
 ): Promise<void> => {
-  const allowed = await checkRateLimit(scope, callerId);
+  const allowed = await checkRateLimit(scope, callerId, options);
   if (!allowed) {
     throw httpError(429, 'RATE_LIMITED', RATE_LIMIT_MESSAGE);
   }
@@ -64,6 +65,41 @@ export const getEntityAgencyId = async (
       throw httpError(404, 'NOT_FOUND', 'Entite introuvable.');
     }
     return data.agency_id;
+  } catch (error) {
+    if (
+      typeof error === 'object'
+      && error !== null
+      && Reflect.get(error, 'code') === 'NOT_FOUND'
+    ) {
+      throw error;
+    }
+    throw httpError(500, 'DB_READ_FAILED', "Impossible de charger l'entite.");
+  }
+};
+
+export type EntityAccessInfo = {
+  agencyId: string | null;
+  entityType: string;
+};
+
+export const getEntityAccessInfo = async (
+  db: DbClient,
+  entityId: string
+): Promise<EntityAccessInfo> => {
+  try {
+    const rows = await db
+      .select({ agency_id: entities.agency_id, entity_type: entities.entity_type })
+      .from(entities)
+      .where(eq(entities.id, entityId))
+      .limit(1);
+    const data = rows[0];
+    if (!data) {
+      throw httpError(404, 'NOT_FOUND', 'Entite introuvable.');
+    }
+    return {
+      agencyId: data.agency_id,
+      entityType: data.entity_type
+    };
   } catch (error) {
     if (
       typeof error === 'object'

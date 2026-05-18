@@ -65,7 +65,7 @@ describe('trpcClient', () => {
 
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(url).toContain('https://demo.supabase.co/functions/v1/api/trpc/data.profile');
-    expect(url).toContain('batch=1');
+    expect(url).not.toContain('batch=1');
 
     const headers = new Headers(init.headers);
     expect(headers.get('apikey')).toBe('anon-key');

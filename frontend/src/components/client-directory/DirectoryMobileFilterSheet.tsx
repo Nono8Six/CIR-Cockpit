@@ -24,6 +24,7 @@ interface DirectoryMobileFilterSheetProps {
   commercialItems: DirectoryFilterOption[];
   agencyItems: DirectoryFilterOption[];
   canFilterAgency: boolean;
+  showCommercialFilter?: boolean;
   cityDraft: string;
   onCityDraftChange: (value: string) => void;
   renderSavedViews?: () => ReactNode;
@@ -39,6 +40,7 @@ const DirectoryMobileFilterSheet = ({
   commercialItems,
   agencyItems,
   canFilterAgency,
+  showCommercialFilter = true,
   cityDraft,
   onCityDraftChange,
   renderSavedViews,
@@ -54,7 +56,10 @@ const DirectoryMobileFilterSheet = ({
       open={open}
       onOpenChange={(nextOpen) => {
         if (nextOpen) {
-          onRequestOptions(canFilterAgency ? ['agencies', 'commercials', 'departments'] : ['commercials', 'departments']);
+          const optionRequests: DirectoryOptionRequest[] = ['departments'];
+          if (canFilterAgency) optionRequests.push('agencies');
+          if (showCommercialFilter) optionRequests.push('commercials');
+          onRequestOptions(optionRequests);
         }
         setOpen(nextOpen);
       }}
@@ -74,9 +79,7 @@ const DirectoryMobileFilterSheet = ({
       >
         <SheetHeader className="border-b border-border-subtle px-4 py-3">
           <SheetTitle className="text-sm font-semibold">Filtres</SheetTitle>
-          <SheetDescription className="sr-only">
-            Affinez la liste clients et prospects avec les filtres disponibles.
-          </SheetDescription>
+          <SheetDescription className="sr-only">Affinez la liste avec les filtres disponibles.</SheetDescription>
         </SheetHeader>
         <div className="space-y-3 overflow-y-auto px-4 py-3">
           <DirectoryFilterCombobox
@@ -101,18 +104,20 @@ const DirectoryMobileFilterSheet = ({
             onCommit={(value) => onSearchPatch({ city: value, page: 1 })}
           />
 
-          <DirectoryFilterCombobox
-            items={commercialItems}
-            values={search.cirCommercialIds}
-            onValuesChange={(values) => onSearchPatch({ cirCommercialIds: values, page: 1 })}
-            placeholder="Commercial CIR"
-            allLabel="Tous les commerciaux"
-            searchPlaceholder="Rechercher un commercial…"
-            emptyLabel="Aucun commercial trouvé."
-            selectionSummaryLabel="commerciaux"
-            multiple
-            disabled={search.type === 'prospect'}
-          />
+          {showCommercialFilter ? (
+            <DirectoryFilterCombobox
+              items={commercialItems}
+              values={search.cirCommercialIds}
+              onValuesChange={(values) => onSearchPatch({ cirCommercialIds: values, page: 1 })}
+              placeholder="Commercial CIR"
+              allLabel="Tous les commerciaux"
+              searchPlaceholder="Rechercher un commercial…"
+              emptyLabel="Aucun commercial trouvé."
+              selectionSummaryLabel="commerciaux"
+              multiple
+              disabled={search.type === 'prospect'}
+            />
+          ) : null}
 
           {canFilterAgency ? (
             <DirectoryFilterCombobox

@@ -32,6 +32,7 @@ describe('AppSidebar', () => {
       <AppSidebar
         sections={buildShellNavigation(true, 1)}
         activeTab="dashboard"
+        activePath="/dashboard"
         collapsed={false}
         onToggleCollapsed={vi.fn()}
         mobileOpen={false}
@@ -50,11 +51,33 @@ describe('AppSidebar', () => {
     );
   });
 
+  it('renders the supplier admin entry in expanded mode', () => {
+    render(
+      <AppSidebar
+        sections={buildShellNavigation(true, 1)}
+        activeTab="admin"
+        activePath="/admin/suppliers"
+        collapsed={false}
+        onToggleCollapsed={vi.fn()}
+        mobileOpen={false}
+        onMobileOpenChange={vi.fn()}
+      />
+    );
+
+    expect(screen.getByTestId('app-shell-nav-admin-suppliers')).toHaveAttribute(
+      'href',
+      '/admin/suppliers'
+    );
+    expect(screen.getByTestId('app-shell-nav-admin-suppliers')).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByTestId('app-shell-nav-admin')).not.toHaveAttribute('aria-current');
+  });
+
   it('keeps collapsed navigation labels and tooltips descriptive', () => {
     render(
       <AppSidebar
         sections={buildShellNavigation(true, 1)}
         activeTab="dashboard"
+        activePath="/dashboard"
         collapsed
         onToggleCollapsed={vi.fn()}
         mobileOpen={false}

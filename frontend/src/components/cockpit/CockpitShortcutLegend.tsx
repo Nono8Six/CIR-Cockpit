@@ -39,12 +39,6 @@ const CockpitShortcutLegend = ({
           <span className="rounded border border-border bg-surface-1 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground">
             Validation
           </span>
-          <span className="inline-flex min-h-7 items-center gap-1.5 rounded-md border border-primary/25 bg-primary/5 px-2 text-[11px] font-medium text-foreground">
-            <Kbd className="border-primary/25 bg-primary/10 text-primary">
-              {submitShortcut}
-            </Kbd>
-            Enregistrer
-          </span>
           <span className="inline-flex min-h-7 items-center gap-1.5 rounded-md border border-border bg-card px-2 text-[11px] font-medium text-muted-foreground">
             <Kbd>?</Kbd>
             Aide
@@ -65,11 +59,16 @@ const CockpitShortcutLegend = ({
             type="submit"
             form={formId}
             disabled={!canSave}
-            className="min-h-9 w-full gap-1.5 px-3 text-xs sm:w-auto"
+            className="min-h-9 w-full gap-1.5 px-3 text-xs shadow-sm sm:w-auto"
             title={canSave ? 'Prêt à enregistrer' : gateMessage ?? undefined}
           >
             <Save size={12} />
             Enregistrer
+            {canSave ? (
+              <Kbd className="ml-1 hidden border-primary-foreground/30 bg-primary-foreground/15 text-primary-foreground sm:inline-flex">
+                {submitShortcut}
+              </Kbd>
+            ) : null}
           </Button>
         </div>
       </div>

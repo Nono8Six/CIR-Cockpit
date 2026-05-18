@@ -77,7 +77,7 @@ const UsersManagerDialogs = ({ state }: UsersManagerDialogsProps) => {
         }}
         password={tempPassword}
         title="Mot de passe temporaire"
-        description="Copiez ce mot de passe et communiquez-le a l'utilisateur."
+        description="Copiez ce mot de passe et communiquez-le à l'utilisateur."
       />
 
       <ConfirmDialog
@@ -85,9 +85,9 @@ const UsersManagerDialogs = ({ state }: UsersManagerDialogsProps) => {
         onOpenChange={(open) => {
           if (!open) closeResetConfirm();
         }}
-        title="Reinitialiser le mot de passe"
-        description={`Un nouveau mot de passe temporaire sera genere pour ${confirmResetUser?.email ?? ''}.`}
-        confirmLabel="Reinitialiser"
+        title="Réinitialiser le mot de passe"
+        description={`Un nouveau mot de passe temporaire sera généré pour ${confirmResetUser?.email ?? ''}.`}
+        confirmLabel="Réinitialiser"
         variant="destructive"
         onConfirm={executeResetPassword}
       />
@@ -100,8 +100,8 @@ const UsersManagerDialogs = ({ state }: UsersManagerDialogsProps) => {
         title={confirmArchive?.nextArchived ? "Archiver l'utilisateur" : "Restaurer l'utilisateur"}
         description={
           confirmArchive?.nextArchived
-            ? `L'utilisateur ${confirmArchive?.user.email ?? ''} sera archive.`
-            : `L'utilisateur ${confirmArchive?.user.email ?? ''} sera restaure.`
+            ? `L'utilisateur ${confirmArchive?.user.email ?? ''} sera archivé.`
+            : `L'utilisateur ${confirmArchive?.user.email ?? ''} sera restauré.`
         }
         confirmLabel={confirmArchive?.nextArchived ? 'Archiver' : 'Restaurer'}
         variant={confirmArchive?.nextArchived ? 'destructive' : 'default'}
@@ -114,7 +114,7 @@ const UsersManagerDialogs = ({ state }: UsersManagerDialogsProps) => {
           if (!open) closeDeleteConfirm();
         }}
         title="Supprimer l'utilisateur"
-        description={`L'utilisateur ${confirmDeleteUser?.email ?? ''} sera definitivement supprime. Ses interactions resteront historisees et reattribuees a un compte systeme.`}
+        description={`L'utilisateur ${confirmDeleteUser?.email ?? ''} sera définitivement supprimé. Ses interactions resteront historisées et réattribuées à un compte système.`}
         confirmLabel="Supprimer"
         variant="destructive"
         onConfirm={executeDeleteUser}

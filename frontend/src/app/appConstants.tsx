@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { Building2, Gauge, PenLine, Settings, Shield } from 'lucide-react';
+import { Building2, Factory, Gauge, PenLine, Settings, Shield } from 'lucide-react';
 
 import type { AgencyConfig } from '@/services/config';
 import type { AppTab, UserRole } from '@/types';
@@ -58,19 +58,37 @@ export const isSidebarToggleShortcut = (event: SidebarToggleShortcutEvent): bool
 
 export type AppShellSectionId = 'clients' | 'interactions' | 'admin';
 
-export type AppShellNavItem = {
-  id: AppTab;
+type AppShellNavItemBase = {
   sectionId: AppShellSectionId;
   label: string;
   icon: LucideIcon;
-  shortcut: string;
+  shortcut?: string;
   metaLabel?: string;
 };
+
+type AppShellTabNavItem = AppShellNavItemBase & {
+  id: AppTab;
+};
+
+type AppShellRouteNavItem = AppShellNavItemBase & {
+  id: 'admin-suppliers';
+  routePath: string;
+};
+
+export type AppShellNavItem = AppShellTabNavItem | AppShellRouteNavItem;
 
 export type AppShellNavSection = {
   id: AppShellSectionId;
   title: string;
   items: AppShellNavItem[];
+};
+
+export const ADMIN_SUPPLIERS_NAV_ITEM: AppShellNavItem = {
+  id: 'admin-suppliers',
+  sectionId: 'admin',
+  label: 'Fournisseur',
+  icon: Factory,
+  routePath: '/admin/suppliers'
 };
 
 export const APP_SHELL_SECTION_LABELS: Record<AppShellSectionId, string> = {
@@ -140,6 +158,7 @@ export const buildShellNavigation = (
           icon: Shield,
           shortcut: APP_TAB_SHORTCUTS.admin
         },
+        ADMIN_SUPPLIERS_NAV_ITEM,
         {
           id: 'settings',
           sectionId: 'admin',

@@ -78,10 +78,25 @@ const buildContactLabel = (props: CockpitFormLeftPaneProps): string => {
   if (props.selectedContact) {
     return [props.selectedContact.first_name ?? '', props.selectedContact.last_name].filter(Boolean).join(' ');
   }
-  return [props.contactFirstName, props.contactLastName].filter(Boolean).join(' ') || props.contactName || props.contactPhone || 'Contact';
+  return [props.contactFirstName, props.contactLastName].filter(Boolean).join(' ') || props.contactName || props.contactPhone;
+};
+
+const hasContactSummary = (props: CockpitFormLeftPaneProps): boolean => {
+  if (props.relationMode === 'solicitation') return false;
+  if (props.selectedContact) return true;
+  const contactName = [props.contactFirstName, props.contactLastName].filter(Boolean).join(' ') || props.contactName;
+  if (props.relationMode === 'supplier') return Boolean(contactName.trim());
+  return Boolean(contactName.trim() || props.contactPhone.trim() || props.contactEmail.trim() || props.selectedContactMeta.trim());
 };
 
 const buildIdentityLabel = (props: CockpitFormLeftPaneProps): string => {
+  if (props.relationMode === 'internal') return 'CIR';
+  if (props.relationMode === 'solicitation') {
+    const contactName = props.contactName.trim();
+    const contactPhone = props.contactPhone.trim();
+    if (contactName && contactPhone) return `${contactName} · ${contactPhone}`;
+    return contactName || contactPhone || 'Numéro appelant';
+  }
   const manualLabel = props.companyName.trim() || props.contactName.trim() || 'Tiers';
   return props.selectedEntity?.name ?? manualLabel;
 };
@@ -89,6 +104,35 @@ const buildIdentityLabel = (props: CockpitFormLeftPaneProps): string => {
 const buildRelationLabel = (entityType: string, isRelationConfirmed: boolean): string => {
   if (entityType.trim()) return entityType;
   return isRelationConfirmed ? 'Relation choisie' : 'A choisir';
+};
+
+type GuidedAnswerStep = 'channel' | 'relation' | 'search' | 'contact' | 'subject';
+
+type GuidedAnswerVisibilityFlow = Pick<
+  ReturnType<typeof useCockpitGuidedFlow>,
+  | 'activeStep'
+  | 'isChannelConfirmed'
+  | 'isRelationConfirmed'
+  | 'identityComplete'
+  | 'contactComplete'
+  | 'subjectComplete'
+>;
+
+export const getVisibleGuidedAnswerSteps = (
+  flow: GuidedAnswerVisibilityFlow,
+  leftPaneProps: CockpitFormLeftPaneProps
+): GuidedAnswerStep[] => {
+  const activeIndex = GUIDED_STEP_ORDER.indexOf(flow.activeStep);
+  const isPrevious = (step: GuidedAnswerStep) => GUIDED_STEP_ORDER.indexOf(step) < activeIndex;
+  const visible: GuidedAnswerStep[] = [];
+
+  if (isPrevious('channel') && flow.isChannelConfirmed) visible.push('channel');
+  if (isPrevious('relation') && flow.isRelationConfirmed) visible.push('relation');
+  if (isPrevious('search') && flow.identityComplete) visible.push('search');
+  if (isPrevious('contact') && flow.contactComplete && hasContactSummary(leftPaneProps)) visible.push('contact');
+  if (isPrevious('subject') && flow.subjectComplete) visible.push('subject');
+
+  return visible;
 };
 
 const CockpitGuidedEntry = ({
@@ -114,7 +158,7 @@ const CockpitGuidedEntry = ({
     contactFirstName: leftPaneProps.contactFirstName,
     contactLastName: leftPaneProps.contactLastName,
     contactPosition: leftPaneProps.contactPosition,
-    contactName: buildContactLabel(leftPaneProps),
+    contactName: leftPaneProps.contactName,
     contactPhone: leftPaneProps.contactPhone,
     contactEmail: leftPaneProps.contactEmail,
     interactionType: leftPaneProps.interactionType,
@@ -133,6 +177,7 @@ const CockpitGuidedEntry = ({
       || leftPaneProps.selectedEntityMeta
       || leftPaneProps.selectedContactMeta
   );
+  const visibleAnswerSteps = getVisibleGuidedAnswerSteps(flow, leftPaneProps);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-background">
@@ -148,7 +193,7 @@ const CockpitGuidedEntry = ({
             flow.activeStep === 'details' ? 'pb-28' : 'pb-10'
           )}
         >
-          <div className="mx-auto flex w-full max-w-[900px] flex-col gap-4">
+          <div className="mx-auto flex w-full max-w-[900px] flex-col gap-3">
             <div className="flex items-center gap-3">
               <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Nouvelle interaction</span>
               <span className="h-px flex-1 bg-[hsl(var(--border-subtle))]" />
@@ -166,19 +211,27 @@ const CockpitGuidedEntry = ({
             </div>
             <CockpitGuidedProgress activeStep={flow.activeStep} />
             <div className="flex flex-col divide-y divide-[hsl(var(--border-subtle))]">
-              {flow.isChannelConfirmed && flow.activeStep !== 'channel' ? (
+              {visibleAnswerSteps.includes('channel') ? (
                 <CockpitGuidedAnswerRow index={getStepIndex('channel')} label="Canal" value={leftPaneProps.channel} active={false} complete onEdit={() => flow.editStep('channel')} />
               ) : null}
-              {flow.isRelationConfirmed && flow.activeStep !== 'relation' ? (
+              {visibleAnswerSteps.includes('relation') ? (
                 <CockpitGuidedAnswerRow index={getStepIndex('relation')} label="Relation" value={buildRelationLabel(leftPaneProps.entityType, flow.isRelationConfirmed)} active={false} complete onEdit={() => flow.editStep('relation')} />
               ) : null}
-              {flow.identityComplete && flow.activeStep !== 'search' ? (
-                <CockpitGuidedAnswerRow index={getStepIndex('search')} label="Tiers" value={buildIdentityLabel(leftPaneProps)} active={false} complete onEdit={() => flow.editStep('search')} />
+              {visibleAnswerSteps.includes('search') ? (
+                <CockpitGuidedAnswerRow
+                  index={getStepIndex('search')}
+                  label={leftPaneProps.relationMode === 'solicitation' ? 'Appelant' : 'Tiers'}
+                  value={buildIdentityLabel(leftPaneProps)}
+                  active={false}
+                  complete
+                  editable={leftPaneProps.relationMode !== 'internal'}
+                  onEdit={() => flow.editStep('search')}
+                />
               ) : null}
-              {flow.contactComplete && flow.activeStep !== 'contact' ? (
+              {visibleAnswerSteps.includes('contact') ? (
                 <CockpitGuidedAnswerRow index={getStepIndex('contact')} label="Contact" value={buildContactLabel(leftPaneProps)} active={false} complete onEdit={() => flow.editStep('contact')} />
               ) : null}
-              {flow.subjectComplete && flow.activeStep !== 'subject' ? (
+              {visibleAnswerSteps.includes('subject') ? (
                 <CockpitGuidedAnswerRow index={getStepIndex('subject')} label="Sujet" value={rightPaneProps.subject || 'A renseigner'} active={false} complete onEdit={() => flow.editStep('subject')} />
               ) : null}
             </div>

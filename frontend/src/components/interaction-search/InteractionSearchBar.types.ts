@@ -1,4 +1,4 @@
-import type { Ref } from 'react';
+import type { ReactNode, Ref } from 'react';
 
 import type { TierV1DirectoryRow } from 'shared/schemas/tier-v1.schema';
 import type { Entity, EntityContact } from '@/types';
@@ -13,6 +13,10 @@ export type InteractionSearchBarProps = {
   onSelectContact: (contact: EntityContact, entity: Entity | null) => void;
   onSelectSearchResult: (result: TierV1DirectoryRow) => void;
   onCreateEntity?: () => void;
+  createLabel?: string;
+  createMode?: 'dialog' | 'inline' | 'none';
+  createDisabled?: boolean;
+  inlineCreateSlot?: ReactNode | ((controls: { onCancel: () => void }) => ReactNode);
   onOpenGlobalSearch?: () => void;
   recentEntities?: Entity[];
   inputRef?: Ref<HTMLInputElement>;

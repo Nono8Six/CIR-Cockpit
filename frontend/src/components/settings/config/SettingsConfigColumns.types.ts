@@ -1,4 +1,4 @@
-import type { SettingsSectionsProps } from './SettingsSections.types';
+import type { SettingsSectionsProps } from '../SettingsSections.types';
 
 export type SettingsConfigColumnsProps = Pick<
   SettingsSectionsProps,

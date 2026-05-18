@@ -33,11 +33,11 @@ const StatusSection = ({
   <div className="bg-card p-6 rounded-lg border border-border shadow-sm flex flex-col h-full">
     <h3 className="font-semibold text-foreground mb-2 flex items-center gap-2">
       <ListTodo size={15} className="text-muted-foreground" aria-hidden="true" />
-      Statuts Dossier
+      Statuts du dossier
       <span className="text-xs font-normal text-muted-foreground/80 bg-muted px-2 py-0.5 rounded-full">({statuses.length})</span>
     </h3>
     <p className="text-xs text-muted-foreground mb-4">
-      La categorie classe le Kanban (A traiter / En cours / Termine).
+      La catégorie classe le Kanban (À traiter / En cours / Terminé).
     </p>
 
     <div className="space-y-3 mb-4">

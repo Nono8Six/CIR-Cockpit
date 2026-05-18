@@ -19,6 +19,15 @@ export const buildCompanySearchUrl = (
   if (input.department) {
     url.searchParams.set("departement", input.department);
   }
+  if (input.postal_code) {
+    url.searchParams.set("code_postal", input.postal_code);
+  }
+  if (input.naf_code) {
+    url.searchParams.set("activite_principale", input.naf_code);
+  }
+  if (input.activity_section) {
+    url.searchParams.set("section_activite_principale", input.activity_section);
+  }
   url.searchParams.set(
     "limite_matching_etablissements",
     String(COMPANY_MATCHING_ESTABLISHMENTS_LIMIT),
@@ -49,7 +58,6 @@ export const fetchEnterpriseApiSearchResponse = async (
     const response = await fetch(requestUrl, {
       headers: {
         Accept: "application/json",
-        "User-Agent": "CIR-Cockpit/1.0",
       },
       signal: controller.signal,
     });
@@ -85,7 +93,9 @@ export const fetchEnterpriseApiSearchResponse = async (
     return parsed.data;
   } catch (error) {
     if (
-      typeof error === "object" && error !== null && Reflect.get(error, "code")
+      typeof error === "object" && error !== null &&
+      typeof Reflect.get(error, "status") === "number" &&
+      typeof Reflect.get(error, "code") === "string"
     ) {
       throw error;
     }

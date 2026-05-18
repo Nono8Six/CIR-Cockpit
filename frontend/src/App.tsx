@@ -9,7 +9,7 @@ import {
   buildShellNavigation
 } from '@/app/appConstants';
 import { getAppGate } from '@/app/getAppGate';
-import { getPathForTab, isInteractionTab } from '@/app/appRoutes';
+import { getPathForTab, isInteractionTab, isShellNavItemActive } from '@/app/appRoutes';
 import AppLayout from '@/components/AppLayout';
 import type { AppMainViewState } from '@/components/app-main/AppMainContent.types';
 import { useAppQueries } from '@/hooks/useAppQueries';
@@ -179,8 +179,8 @@ const App = () => {
   );
   const activeShellItem = useMemo(() => {
     const flattened = shellSections.flatMap((section) => section.items);
-    return flattened.find((item) => item.id === viewState.activeTab) ?? flattened[0];
-  }, [shellSections, viewState.activeTab]);
+    return flattened.find((item) => isShellNavItemActive(item, viewState.activeTab, pathname)) ?? flattened[0];
+  }, [pathname, shellSections, viewState.activeTab]);
   const activeSectionLabel = activeShellItem
     ? APP_SHELL_SECTION_LABELS[activeShellItem.sectionId]
     : APP_SHELL_SECTION_LABELS.clients;
@@ -210,6 +210,7 @@ const App = () => {
       headerProps={{
         sections: shellSections,
         activeTab: viewState.activeTab,
+        activePath: pathname,
         activeSectionLabel,
         activeItemLabel,
         agencyContext: sessionState.agencyContext,

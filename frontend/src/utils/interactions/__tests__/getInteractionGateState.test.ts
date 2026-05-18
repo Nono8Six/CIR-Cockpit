@@ -64,6 +64,24 @@ describe('getInteractionGateState', () => {
     expect(result.gateMessage).toBe('');
   });
 
+  it('allows fournisseur without status or contact nominatif', () => {
+    const result = getInteractionGateState({
+      ...base,
+      entityType: 'Fournisseur',
+      contactService: 'Fournisseur',
+      interactionType: 'Interaction fournisseur',
+      statusId: '',
+      companyName: 'Fournisseur Test',
+      companyCity: '',
+      contactFirstName: '',
+      contactLastName: '',
+      contactEmail: '',
+      contactPhone: '0612345678'
+    });
+    expect(result.canSave).toBe(true);
+    expect(result.gateMessage).toBe('');
+  });
+
   it('allows particulier without company name when contact method is provided', () => {
     const result = getInteractionGateState({
       ...base,

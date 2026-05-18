@@ -21,6 +21,12 @@ const ClientDirectoryFilters = ({
   commercials,
   departments,
   canFilterAgency,
+  showTypeFilter = true,
+  showCommercialFilter = true,
+  searchLabel = 'RECHERCHE',
+  searchPlaceholder = 'Nom, n° client, ville…',
+  syncReadyLabel = 'Données synchronisées',
+  syncPendingLabel = 'Synchronisation en cours',
   isFetching,
   density,
   viewOptionColumns,
@@ -39,7 +45,15 @@ const ClientDirectoryFilters = ({
     setCityDraft(routeCityValue);
   }, [routeCityValue]);
 
-  const activeFilterCount = countActiveDirectoryFilters(search);
+  const activeFilterCount = showTypeFilter
+    ? countActiveDirectoryFilters(search)
+    : [
+      search.departments.length > 0,
+      Boolean(search.city),
+      search.scope.mode === 'selected_agencies',
+      showCommercialFilter && search.cirCommercialIds.length > 0,
+      search.includeArchived
+    ].filter(Boolean).length;
   const hasHiddenOptionalColumns = viewOptionColumns.some((column) => column.canHide && !column.isVisible);
   const hasResettableState = Boolean(searchDraft.trim())
     || Boolean(cityDraft.trim())
@@ -85,9 +99,9 @@ const ClientDirectoryFilters = ({
   const renderSyncIndicator = (size: DirectoryDensity = 'comfortable') => (
     <Tooltip>
       <TooltipTrigger asChild>
-        <button
+          <button
           type="button"
-          aria-label={isFetching ? 'Synchronisation en cours' : 'Données synchronisées'}
+          aria-label={isFetching ? syncPendingLabel : syncReadyLabel}
           className={cn(
             'inline-flex items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
             size === 'compact' ? 'size-5' : 'size-6'
@@ -104,7 +118,7 @@ const ClientDirectoryFilters = ({
         </button>
       </TooltipTrigger>
       <TooltipContent side="bottom">
-        {isFetching ? 'Synchronisation en cours…' : 'Données synchronisées'}
+        {isFetching ? `${syncPendingLabel}…` : syncReadyLabel}
       </TooltipContent>
     </Tooltip>
   );
@@ -143,11 +157,11 @@ const ClientDirectoryFilters = ({
           <div className="min-w-0 flex-1 xl:min-w-[360px] xl:max-w-[440px]">
             <div className="space-y-1.5">
               <p className="hidden text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70 xl:block">
-                RECHERCHE
+                {searchLabel}
               </p>
               <DirectorySearchInput
                 value={searchDraft}
-                placeholder="Nom, n° client, ville…"
+                placeholder={searchPlaceholder}
                 ariaLabel="Recherche annuaire"
                 className="min-w-0"
                 onValueChange={onSearchDraftChange}
@@ -156,7 +170,7 @@ const ClientDirectoryFilters = ({
             </div>
           </div>
 
-          <DirectoryTypeFilter value={search.type} onValueChange={handleTypeChange} />
+          {showTypeFilter ? <DirectoryTypeFilter value={search.type} onValueChange={handleTypeChange} /> : null}
         </div>
 
         <div className="hidden items-center gap-1 md:flex xl:hidden">
@@ -167,6 +181,7 @@ const ClientDirectoryFilters = ({
             commercialItems={commercialItems}
             agencyItems={agencyItems}
             canFilterAgency={canFilterAgency}
+            showCommercialFilter={showCommercialFilter}
             cityDraft={cityDraft}
             onCityDraftChange={setCityDraft}
             onSearchPatch={(patch) => applyPatch(patch)}
@@ -190,6 +205,7 @@ const ClientDirectoryFilters = ({
           commercialItems={commercialItems}
           agencyItems={agencyItems}
           canFilterAgency={canFilterAgency}
+          showCommercialFilter={showCommercialFilter}
           cityDraft={cityDraft}
           onCityDraftChange={setCityDraft}
           renderSavedViews={renderSavedViews}
@@ -206,6 +222,7 @@ const ClientDirectoryFilters = ({
         commercialItems={commercialItems}
         agencyItems={agencyItems}
         canFilterAgency={canFilterAgency}
+        showCommercialFilter={showCommercialFilter}
         cityDraft={cityDraft}
         onCityDraftChange={setCityDraft}
         onSearchPatch={(patch) => applyPatch(patch)}

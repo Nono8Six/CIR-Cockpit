@@ -1,6 +1,7 @@
 import { ResultAsync } from 'neverthrow';
 
 import { dataInteractionsMutationResponseSchema } from 'shared/schemas/api-responses';
+import { isInternalRelationValue, isSolicitationRelationValue, isSupplierRelationValue } from '@/constants/relations';
 import type { Interaction, InteractionDraft } from '@/types';
 import { safeTrpc } from '@/services/api/safeTrpc';
 import { getCurrentUserLabel } from '@/services/auth/getCurrentUserLabel';
@@ -29,6 +30,9 @@ export const saveInteraction = (interaction: InteractionDraft): ResultAsync<Inte
       const interactionId = interaction.id?.trim();
       const statusId = interaction.status_id?.trim();
       const interactionType = interaction.interaction_type?.trim();
+      const allowsEmptyStatus = isInternalRelationValue(interaction.entity_type)
+        || isSolicitationRelationValue(interaction.entity_type)
+        || isSupplierRelationValue(interaction.entity_type);
       if (!agencyId) {
         throw createAppError({
           code: 'AGENCY_ID_INVALID',
@@ -43,7 +47,7 @@ export const saveInteraction = (interaction: InteractionDraft): ResultAsync<Inte
           source: 'validation'
         });
       }
-      if (!statusId) {
+      if (!statusId && !allowsEmptyStatus) {
         throw createAppError({
           code: 'VALIDATION_ERROR',
           message: 'Statut interaction requis.',
@@ -67,7 +71,7 @@ export const saveInteraction = (interaction: InteractionDraft): ResultAsync<Inte
       const normalizedInteraction = {
         ...interactionPayload,
         id: interactionId,
-        status_id: statusId,
+        status_id: statusId || null,
         interaction_type: interactionType,
         contact_phone: interaction.contact_phone ?? undefined,
         contact_email: interaction.contact_email ?? undefined,

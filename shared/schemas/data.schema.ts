@@ -45,7 +45,6 @@ const saveProspectEntitySchema = z.strictObject({
 
 const saveSupplierEntitySchema = z.strictObject({
   action: z.literal('save'),
-  agency_id: uuidSchema,
   entity_type: z.literal('Fournisseur'),
   id: uuidSchema.optional(),
   entity: supplierFormSchema
@@ -59,7 +58,7 @@ const archiveEntitySchema = z.strictObject({
 
 const listEntitiesSchema = z.strictObject({
   action: z.literal('list'),
-  entity_type: z.enum(['Client', 'Prospect']),
+  entity_type: z.enum(['Client', 'Prospect', 'Fournisseur']),
   agency_id: z.union([uuidSchema, z.null()]).optional(),
   include_archived: z.boolean().optional(),
   orphans_only: z.boolean().optional()

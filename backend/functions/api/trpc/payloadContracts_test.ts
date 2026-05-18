@@ -47,6 +47,11 @@ Deno.test('dataEntitiesPayloadSchema supports entity list and search index actio
     action: 'list',
     entity_type: 'Prospect'
   };
+  const supplierListPayload = {
+    action: 'list',
+    entity_type: 'Fournisseur',
+    agency_id: '11111111-1111-4111-8111-111111111111'
+  };
   const searchIndexPayload = {
     action: 'search_index',
     agency_id: '11111111-1111-4111-8111-111111111111',
@@ -55,6 +60,7 @@ Deno.test('dataEntitiesPayloadSchema supports entity list and search index actio
 
   assertEquals(dataEntitiesPayloadSchema.safeParse(listPayload).success, true);
   assertEquals(dataEntitiesPayloadSchema.safeParse(prospectListPayload).success, true);
+  assertEquals(dataEntitiesPayloadSchema.safeParse(supplierListPayload).success, true);
   assertEquals(dataEntitiesPayloadSchema.safeParse(searchIndexPayload).success, true);
 });
 
@@ -90,20 +96,28 @@ Deno.test('dataEntitiesPayloadSchema rejects entity departments outside the live
 Deno.test('dataEntitiesPayloadSchema supports supplier save action', () => {
   const supplierPayload = {
     action: 'save',
-    agency_id: '11111111-1111-4111-8111-111111111111',
     entity_type: 'Fournisseur',
     entity: {
       name: 'SEA Aquitaine',
+      supplier_code: 'SEA1',
+      supplier_number: '445566',
       address: '',
       postal_code: '',
       department: '',
       city: '',
-      notes: '',
-      agency_id: '11111111-1111-4111-8111-111111111111'
+      primary_phone: '05 58 36 96 19',
+      notes: ''
     }
   };
 
   assertEquals(dataEntitiesPayloadSchema.safeParse(supplierPayload).success, true);
+  assertEquals(dataEntitiesPayloadSchema.safeParse({
+    ...supplierPayload,
+    entity: {
+      ...supplierPayload.entity,
+      supplier_code: 'SEA-1'
+    }
+  }).success, false);
   assertEquals(dataEntitiesPayloadSchema.safeParse({
     ...supplierPayload,
     entity: {
@@ -276,6 +290,11 @@ Deno.test('directory.list refuses unknown and legacy fields', () => {
   };
 
   assertEquals(directoryListInputSchema.safeParse(validPayload).success, true);
+  assertEquals(directoryListInputSchema.safeParse({
+    ...validPayload,
+    type: 'supplier',
+    sorting: [{ id: 'supplier_code', desc: false }]
+  }).success, true);
   assertEquals(directoryListInputSchema.safeParse({ ...validPayload, unexpected: true }).success, false);
   assertEquals(directoryListInputSchema.safeParse({ ...validPayload, agencyIds: [] }).success, false);
   assertEquals(directoryListInputSchema.safeParse({ ...validPayload, agencyId: '11111111-1111-4111-8111-111111111111' }).success, false);

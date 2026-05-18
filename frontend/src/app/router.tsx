@@ -13,6 +13,10 @@ import ClientDirectoryCreatePage from '@/components/client-directory/ClientDirec
 import ClientDirectoryDetailPage from '@/components/client-directory/ClientDirectoryDetailPage';
 import ClientDirectoryPage from '@/components/client-directory/ClientDirectoryPage';
 import { validateDirectorySearch } from '@/components/client-directory/clientDirectorySearch';
+import AdminIndexPage from '@/components/admin-suppliers/AdminIndexPage';
+import AdminSupplierCreatePage from '@/components/admin-suppliers/AdminSupplierCreatePage';
+import AdminSuppliersPage from '@/components/admin-suppliers/AdminSuppliersPage';
+import { validateSupplierDirectorySearch } from '@/components/admin-suppliers/supplierDirectorySearch';
 
 const rootRoute = createRootRoute({
   component: App,
@@ -92,7 +96,26 @@ export const prospectRecordRoute = createRoute({
 const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'admin',
-  component: () => null
+  component: () => <Outlet />
+});
+
+const adminIndexRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/',
+  component: AdminIndexPage
+});
+
+const adminSupplierCreateRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: 'suppliers/new',
+  component: AdminSupplierCreatePage
+});
+
+const adminSuppliersRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: 'suppliers',
+  validateSearch: validateSupplierDirectorySearch,
+  component: AdminSuppliersPage
 });
 
 const settingsRoute = createRoute({
@@ -112,7 +135,11 @@ const routeTree = rootRoute.addChildren([
     clientRecordRoute,
     prospectRecordRoute
   ]),
-  adminRoute,
+  adminRoute.addChildren([
+    adminIndexRoute,
+    adminSuppliersRoute,
+    adminSupplierCreateRoute
+  ]),
   settingsRoute
 ]);
 

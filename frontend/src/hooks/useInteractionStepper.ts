@@ -59,11 +59,13 @@ export const useInteractionStepper = ({
         ? true
         : isIndividualRelation
           ? Boolean(selectedEntity || (contactFirstName.trim() && contactLastName.trim()))
-          : Boolean(companyName.trim() && (!isProspectRelation || companyCity.trim()));
+          : isSolicitationRelation
+            ? Boolean(companyName.trim()) && contactPhone.replace(/\D/g, '').length >= 10
+            : Boolean(companyName.trim() && (!isProspectRelation || companyCity.trim()));
     const contactComplete = isClientRelation
       ? Boolean(selectedContact)
       : isSolicitationRelation
-        ? Boolean(contactPhone.trim())
+        ? true
         : Boolean(
             contactFirstName.trim()
               && contactLastName.trim()

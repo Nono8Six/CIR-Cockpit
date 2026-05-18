@@ -94,7 +94,9 @@ export const getDirectoryOptionCommercials = async (
 ): Promise<DirectoryOptionsCommercialsResponse> => {
   await ensureDataRateLimit("directory:options:commercials", authContext.userId);
 
-  const resolvedScope = resolveDirectoryScope(authContext, input.scope);
+  const resolvedScope = input.type === "supplier"
+    ? { mode: "global_read" as const, agencyIds: [], isGlobal: true }
+    : resolveDirectoryScope(authContext, input.scope);
   const selectedAgencyIds = resolvedScope.agencyIds;
   const whereClause = selectedAgencyIds.length > 0
     ? and(
@@ -148,7 +150,9 @@ export const getDirectoryOptionDepartments = async (
 ): Promise<DirectoryOptionsDepartmentsResponse> => {
   await ensureDataRateLimit("directory:options:departments", authContext.userId);
 
-  const resolvedScope = resolveDirectoryScope(authContext, input.scope);
+  const resolvedScope = input.type === "supplier"
+    ? { mode: "global_read" as const, agencyIds: [], isGlobal: true }
+    : resolveDirectoryScope(authContext, input.scope);
   const baseWhereClause = buildBaseWhereClause(authContext, input);
 
   try {
@@ -193,7 +197,9 @@ export const getDirectoryOptionCities = async (
 ): Promise<DirectoryOptionsCitiesResponse> => {
   await ensureDataRateLimit("directory:options:cities", authContext.userId);
 
-  const resolvedScope = resolveDirectoryScope(authContext, input.scope);
+  const resolvedScope = input.type === "supplier"
+    ? { mode: "global_read" as const, agencyIds: [], isGlobal: true }
+    : resolveDirectoryScope(authContext, input.scope);
   const baseWhereClause = buildBaseWhereClause(authContext, input);
   const cityPattern = input.q ? `%${input.q.toLowerCase()}%` : null;
   const whereClause = cityPattern

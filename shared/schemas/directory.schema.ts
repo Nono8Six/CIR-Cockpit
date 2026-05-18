@@ -43,7 +43,7 @@ const booleanLikeSchema = z
     return normalized === 'true' || normalized === '1';
   });
 
-export const directoryEntityTypeSchema = z.enum(['all', 'client', 'prospect']);
+export const directoryEntityTypeSchema = z.enum(['all', 'client', 'prospect', 'supplier']);
 export const directoryClientKindSchema = z.enum(['company', 'individual']);
 const directoryNullableClientKindSchema = z
   .union([directoryClientKindSchema, z.string(), z.null(), z.undefined()])
@@ -51,15 +51,22 @@ const directoryNullableClientKindSchema = z
 export const directorySortBySchema = z.enum([
   'entity_type',
   'client_number',
+  'supplier_code',
+  'supplier_number',
   'name',
   'city',
   'department',
+  'siret',
+  'siren',
+  'naf_code',
   'agency_name',
   'cir_commercial_name',
+  'primary_contact',
   'updated_at'
 ]);
 export const directorySortDirectionSchema = z.enum(['asc', 'desc']);
 export const directoryDensitySchema = z.enum(['comfortable', 'compact']);
+export const directorySavedViewTypeSchema = z.enum(['clients', 'suppliers']);
 
 export const directoryActiveAgencyScopeSchema = z.strictObject({
   mode: z.literal('active_agency')
@@ -223,6 +230,7 @@ export const directorySuggestionOptionSchema = z.strictObject({
 export const directoryColumnVisibilitySchema = z.record(z.string(), z.boolean()).default({});
 
 export const directorySavedViewStateSchema = z.strictObject({
+  viewType: directorySavedViewTypeSchema.default('clients'),
   q: optionalTextFilterSchema.optional(),
   type: directoryEntityTypeSchema.default('all'),
   scope: directoryScopeInputSchema.default({ mode: 'active_agency' }),
@@ -258,7 +266,9 @@ export const directorySavedViewSchema = z.strictObject({
   updated_at: z.string().trim().min(1, 'Date de mise a jour requise')
 });
 
-export const directorySavedViewsListInputSchema = z.strictObject({});
+export const directorySavedViewsListInputSchema = z.strictObject({
+  viewType: directorySavedViewTypeSchema.default('clients')
+});
 
 export const directorySavedViewSaveInputSchema = z.strictObject({
   id: uuidSchema.optional(),
@@ -272,7 +282,8 @@ export const directorySavedViewDeleteInputSchema = z.strictObject({
 });
 
 export const directorySavedViewSetDefaultInputSchema = z.strictObject({
-  id: uuidSchema
+  id: uuidSchema,
+  viewType: directorySavedViewTypeSchema.default('clients')
 });
 
 export const directoryListRowSchema = z.strictObject({
@@ -280,14 +291,23 @@ export const directoryListRowSchema = z.strictObject({
   entity_type: z.string().trim().min(1, 'Type requis'),
   client_kind: directoryNullableClientKindSchema,
   client_number: directoryNullableTextSchema,
+  supplier_code: directoryNullableTextSchema.optional(),
+  supplier_number: directoryNullableTextSchema.optional(),
   account_type: z.enum(['term', 'cash']).nullable(),
   name: z.string().trim().min(1, 'Nom requis'),
+  address: directoryNullableTextSchema.optional(),
   city: directoryNullableTextSchema,
   postal_code: directoryNullableTextSchema.optional(),
   department: directoryNullableTextSchema,
   siret: directoryNullableTextSchema.optional(),
   siren: directoryNullableTextSchema.optional(),
+  naf_code: directoryNullableTextSchema.optional(),
   official_name: directoryNullableTextSchema.optional(),
+  official_data_source: z.union([officialDataSourceSchema, z.null()]).optional(),
+  official_data_synced_at: directoryNullableTextSchema.optional(),
+  primary_phone: directoryNullableTextSchema.optional(),
+  primary_email: directoryNullableTextSchema.optional(),
+  notes: directoryNullableTextSchema.optional(),
   agency_id: z.string().nullable(),
   agency_name: directoryNullableTextSchema,
   cir_commercial_id: z.string().nullable(),
@@ -323,6 +343,10 @@ export const directoryCompanySearchInputSchema = z.strictObject({
   query: z.string().trim().min(1, 'Recherche entreprise requise').max(120, 'Recherche trop longue'),
   department: optionalTextFilterSchema.optional(),
   city: optionalTextFilterSchema.optional(),
+  postal_code: optionalTextFilterSchema.optional(),
+  naf_code: optionalTextFilterSchema.optional(),
+  activity_section: optionalTextFilterSchema.optional(),
+  head_office: z.enum(['all', 'head_office', 'secondary']).default('all').optional(),
   page: z.coerce.number().int().min(1, 'Page invalide').max(10, 'Page invalide').optional(),
   per_page: z.coerce.number().int().min(1, 'Taille invalide').max(20, 'Taille invalide').optional()
 });
@@ -459,6 +483,7 @@ export type DirectoryClientKind = z.infer<typeof directoryClientKindSchema>;
 export type DirectorySortBy = z.infer<typeof directorySortBySchema>;
 export type DirectorySortDirection = z.infer<typeof directorySortDirectionSchema>;
 export type DirectoryDensity = z.infer<typeof directoryDensitySchema>;
+export type DirectorySavedViewType = z.infer<typeof directorySavedViewTypeSchema>;
 export type DirectoryScopeInput = z.infer<typeof directoryScopeInputSchema>;
 export type DirectorySortingRule = z.infer<typeof directorySortingRuleSchema>;
 export type DirectoryListFilters = z.infer<typeof directoryListFiltersSchema>;

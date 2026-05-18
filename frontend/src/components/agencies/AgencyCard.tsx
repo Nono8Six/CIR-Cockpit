@@ -16,7 +16,7 @@ const AgencyCard = ({ agency, onRename, onToggleArchive, onDelete }: AgencyCardP
       <div>
         <p className="text-sm font-semibold text-foreground">{agency.name}</p>
         {agency.archived_at && (
-          <p className="text-xs text-warning">Archivee</p>
+          <p className="text-xs text-warning">Archivée</p>
         )}
       </div>
       <div className="flex flex-wrap items-center gap-2">
@@ -32,7 +32,7 @@ const AgencyCard = ({ agency, onRename, onToggleArchive, onDelete }: AgencyCardP
         </Button>
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           className="h-9 px-3 text-xs sm:text-sm"
           onClick={() => onToggleArchive(agency)}
           aria-label={agency.archived_at ? "Restaurer l'agence" : "Archiver l'agence"}
@@ -44,7 +44,7 @@ const AgencyCard = ({ agency, onRename, onToggleArchive, onDelete }: AgencyCardP
         <Button
           type="button"
           variant="outline"
-          className="h-9 border-destructive/30 px-3 text-xs text-destructive hover:bg-destructive/10 sm:text-sm"
+          className="h-9 border-destructive/30 text-destructive bg-destructive/5 hover:bg-destructive/15 transition-colors px-3 text-xs sm:text-sm"
           onClick={() => onDelete(agency)}
           aria-label="Supprimer l'agence"
           data-testid={`admin-agency-delete-${agency.id}`}

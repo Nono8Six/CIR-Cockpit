@@ -1,4 +1,5 @@
 import type { AppTab } from '@/types';
+import type { AppShellNavItem } from '@/app/appConstants';
 
 export const APP_TAB_PATHS: Record<AppTab, string> = {
   cockpit: '/cockpit',
@@ -17,7 +18,38 @@ const normalizePathname = (pathname: string): string => {
   return pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
 };
 
+const isPathWithin = (pathname: string, routePath: string): boolean => {
+  const normalizedPath = normalizePathname(pathname);
+  const normalizedRoute = normalizePathname(routePath);
+
+  return normalizedPath === normalizedRoute || normalizedPath.startsWith(`${normalizedRoute}/`);
+};
+
 export const getPathForTab = (tab: AppTab): string => APP_TAB_PATHS[tab];
+
+export const getPathForShellNavItem = (item: AppShellNavItem): string => {
+  if ('routePath' in item) {
+    return item.routePath;
+  }
+
+  return getPathForTab(item.id);
+};
+
+export const isShellNavItemActive = (
+  item: AppShellNavItem,
+  activeTab: AppTab,
+  pathname: string
+): boolean => {
+  if ('routePath' in item) {
+    return isPathWithin(pathname, item.routePath);
+  }
+
+  if (item.id === 'admin') {
+    return normalizePathname(pathname) === APP_TAB_PATHS.admin;
+  }
+
+  return activeTab === item.id && isPathWithin(pathname, getPathForTab(item.id));
+};
 
 export const getTabFromPathname = (pathname: string): AppTab => {
   const normalizedPath = normalizePathname(pathname);

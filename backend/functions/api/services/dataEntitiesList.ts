@@ -83,7 +83,9 @@ export const listEntities = async (
       'DB_READ_FAILED',
       payload.entity_type === 'Client'
         ? 'Impossible de charger les clients.'
-        : 'Impossible de charger les prospects.',
+        : payload.entity_type === 'Fournisseur'
+          ? 'Impossible de charger les fournisseurs.'
+          : 'Impossible de charger les prospects.',
       extractDbErrorDetails(error)
     );
   }

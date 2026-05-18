@@ -113,6 +113,7 @@ export const toDirectorySavedViewState = (
   columnVisibility: DirectorySavedViewState['columnVisibility'],
   density: DirectorySavedViewState['density']
 ): DirectorySavedViewState => ({
+  viewType: 'clients',
   q: search.q,
   type: search.type,
   scope: search.scope,

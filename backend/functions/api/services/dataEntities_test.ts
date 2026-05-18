@@ -3,6 +3,7 @@ import { assertEquals, assertRejects, assertThrows } from 'std/assert';
 import type { AuthContext, DbClient } from '../types.ts';
 import {
   ensureDeleteSuperAdmin,
+  ensureSupplierWriteAccess,
   ensureReassignSuperAdmin,
   getEntitySearchIndex,
   listEntities,
@@ -291,24 +292,36 @@ Deno.test('getEntitySearchIndex returns empty index when agency is missing', asy
   assertEquals(calls.contactOrderByCount, 0);
 });
 
-Deno.test('buildSaveEntityRows stores missing departments as null for the entities check constraint', () => {
+Deno.test('buildSaveEntityRows stores missing optional location fields as null for entity check constraints', () => {
   const { updateRow, insertRow } = buildSaveEntityRows({
     action: 'save',
-    agency_id: 'agency-1',
     entity_type: 'Fournisseur',
     entity: {
       name: 'Fournisseur',
+      supplier_code: 'SUP1',
+      supplier_number: '445566',
       address: '',
       postal_code: '',
       department: '',
       city: '',
-      notes: '',
-      agency_id: 'agency-1'
+      notes: ''
     }
-  }, 'agency-1', 'user-1');
+  }, null, 'user-1');
 
   assertEquals(updateRow.department, null);
+  assertEquals(updateRow.address, null);
+  assertEquals(updateRow.postal_code, null);
+  assertEquals(updateRow.city, null);
   assertEquals(insertRow.department, null);
+  assertEquals(insertRow.address, null);
+  assertEquals(insertRow.postal_code, null);
+  assertEquals(insertRow.city, null);
+  assertEquals(updateRow.agency_id, null);
+  assertEquals(insertRow.agency_id, null);
+  assertEquals(updateRow.supplier_code, 'SUP1');
+  assertEquals(updateRow.supplier_number, '445566');
+  assertEquals(insertRow.supplier_code, 'SUP1');
+  assertEquals(insertRow.supplier_number, '445566');
 });
 
 Deno.test('reassignEntity rejects non-orphan entities', async () => {
@@ -378,6 +391,20 @@ Deno.test('ensureDeleteSuperAdmin rejects non-super-admin callers', () => {
   };
 
   const error = assertThrows(() => ensureDeleteSuperAdmin(memberContext));
+  assertEquals(readStatus(error), 403);
+  assertEquals(readCode(error), 'AUTH_FORBIDDEN');
+});
+
+Deno.test('ensureSupplierWriteAccess accepts super-admin and agency-admin callers', () => {
+  ensureSupplierWriteAccess(createAuthContext({ role: 'super_admin', isSuperAdmin: true }));
+  ensureSupplierWriteAccess(createAuthContext({ role: 'agency_admin', isSuperAdmin: false }));
+});
+
+Deno.test('ensureSupplierWriteAccess rejects tcs callers', () => {
+  const error = assertThrows(() =>
+    ensureSupplierWriteAccess(createAuthContext({ role: 'tcs', isSuperAdmin: false }))
+  );
+
   assertEquals(readStatus(error), 403);
   assertEquals(readCode(error), 'AUTH_FORBIDDEN');
 });

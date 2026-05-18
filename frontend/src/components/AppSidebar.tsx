@@ -10,6 +10,7 @@ import AppSidebarContent from './app-sidebar/AppSidebarContent';
 export interface AppSidebarProps {
   sections: AppShellNavSection[];
   activeTab: AppTab;
+  activePath: string;
   agencyName?: string;
   agencySubtitle?: string;
   userName?: string;
@@ -25,6 +26,7 @@ export interface AppSidebarProps {
 const AppSidebar = ({
   sections,
   activeTab,
+  activePath,
   agencyName,
   agencySubtitle,
   userName,
@@ -52,6 +54,7 @@ const AppSidebar = ({
         <AppSidebarContent
           sections={sections}
           activeTab={activeTab}
+          activePath={activePath}
           agencyName={agencyName}
           agencySubtitle={agencySubtitle}
           userName={userName}
@@ -70,6 +73,7 @@ const AppSidebar = ({
           <AppSidebarContent
             sections={sections}
             activeTab={activeTab}
+            activePath={activePath}
             agencyName={agencyName}
             agencySubtitle={agencySubtitle}
             userName={userName}

@@ -71,36 +71,43 @@ const normalizeEnterpriseApiSignals = (
 
 export const mapEnterpriseApiCompanyDetails = (
   company: EnterpriseApiCompany,
-): DirectoryCompanyDetails => ({
-  siren: company.siren,
-  official_name: normalizeNullableText(company.nom_raison_sociale) ??
-    company.nom_complet,
-  name: company.nom_complet,
-  sigle: normalizeNullableText(company.sigle),
-  nature_juridique: normalizeNullableText(company.nature_juridique),
-  categorie_entreprise: normalizeNullableText(company.categorie_entreprise),
-  date_creation: normalizeNullableText(company.date_creation),
-  etat_administratif: normalizeNullableText(company.etat_administratif),
-  activite_principale: normalizeNullableText(company.activite_principale),
-  activite_principale_naf25: normalizeNullableText(
-    company.activite_principale_naf25,
-  ),
-  section_activite_principale: normalizeNullableText(
-    company.section_activite_principale,
-  ),
-  company_establishments_count: normalizeNullableCount(
-    company.nombre_etablissements,
-  ),
-  company_open_establishments_count: normalizeNullableCount(
-    company.nombre_etablissements_ouverts,
-  ),
-  employee_range: normalizeNullableText(company.tranche_effectif_salarie),
-  employee_range_year: normalizeNullableYear(
-    company.annee_tranche_effectif_salarie,
-  ),
-  is_employer: normalizeBooleanFlag(company.caractere_employeur),
-  diffusion_status: normalizeNullableText(company.statut_diffusion),
-  directors: normalizeEnterpriseApiDirectors(company.dirigeants),
-  financials: normalizeEnterpriseApiFinancials(company.finances),
-  signals: normalizeEnterpriseApiSignals(company.complements),
-});
+): DirectoryCompanyDetails => {
+  const companyName = normalizeNullableText(company.nom_complet) ??
+    normalizeNullableText(company.nom_raison_sociale) ??
+    normalizeNullableText(company.sigle) ??
+    company.siren;
+
+  return {
+    siren: company.siren,
+    official_name: normalizeNullableText(company.nom_raison_sociale) ??
+      companyName,
+    name: companyName,
+    sigle: normalizeNullableText(company.sigle),
+    nature_juridique: normalizeNullableText(company.nature_juridique),
+    categorie_entreprise: normalizeNullableText(company.categorie_entreprise),
+    date_creation: normalizeNullableText(company.date_creation),
+    etat_administratif: normalizeNullableText(company.etat_administratif),
+    activite_principale: normalizeNullableText(company.activite_principale),
+    activite_principale_naf25: normalizeNullableText(
+      company.activite_principale_naf25,
+    ),
+    section_activite_principale: normalizeNullableText(
+      company.section_activite_principale,
+    ),
+    company_establishments_count: normalizeNullableCount(
+      company.nombre_etablissements,
+    ),
+    company_open_establishments_count: normalizeNullableCount(
+      company.nombre_etablissements_ouverts,
+    ),
+    employee_range: normalizeNullableText(company.tranche_effectif_salarie),
+    employee_range_year: normalizeNullableYear(
+      company.annee_tranche_effectif_salarie,
+    ),
+    is_employer: normalizeBooleanFlag(company.caractere_employeur),
+    diffusion_status: normalizeNullableText(company.statut_diffusion),
+    directors: normalizeEnterpriseApiDirectors(company.dirigeants),
+    financials: normalizeEnterpriseApiFinancials(company.finances),
+    signals: normalizeEnterpriseApiSignals(company.complements),
+  };
+};

@@ -40,6 +40,7 @@ export const GUIDED_STEP_ORDER: CockpitGuidedStep[] = [
 ];
 
 const hasText = (value: string): boolean => value.trim().length > 0;
+const hasPhoneNumber = (value: string): boolean => value.replace(/\D/g, '').length >= 10;
 
 export const useCockpitGuidedFlow = ({
   relationMode,
@@ -63,9 +64,20 @@ export const useCockpitGuidedFlow = ({
     || [entityType, companyName, companyCity, contactFirstName, contactLastName, contactName, contactPhone, contactEmail, interactionType, contactService, statusValue, subject].some(hasText);
   const [isChannelConfirmed, setIsChannelConfirmed] = useState(hasExistingProgress);
   const [isRelationConfirmed, setIsRelationConfirmed] = useState(hasText(entityType));
+  const [isSupplierContactConfirmed, setIsSupplierContactConfirmed] = useState(false);
   const [editingStep, setEditingStep] = useState<CockpitGuidedStep | null>(null);
 
   const hasContactMethod = hasText(contactPhone) || hasText(contactEmail);
+
+  const identityComplete = useMemo(() => {
+    if (relationMode === 'client') return Boolean(selectedEntity);
+    if (relationMode === 'individual') return Boolean(selectedEntity) || (hasText(contactFirstName) && hasText(contactLastName));
+    if (relationMode === 'internal') return true;
+    if (relationMode === 'solicitation') return hasText(companyName) && hasPhoneNumber(contactPhone);
+    if (relationMode === 'prospect') return Boolean(selectedEntity) || (hasText(companyName) && hasText(companyCity));
+    if (relationMode === 'supplier') return Boolean(selectedEntity) || hasText(companyName);
+    return hasText(entityType) && (Boolean(selectedEntity) || hasText(companyName));
+  }, [companyCity, companyName, contactFirstName, contactLastName, contactPhone, hasContactMethod, relationMode, selectedEntity]);
 
   useEffect(() => {
     if (hasExistingProgress) {
@@ -77,22 +89,28 @@ export const useCockpitGuidedFlow = ({
       setIsRelationConfirmed(true);
     }
   }, [entityType]);
-  const identityComplete = useMemo(() => {
-    if (relationMode === 'client') return Boolean(selectedEntity);
-    if (relationMode === 'individual') return Boolean(selectedEntity) || (hasText(contactFirstName) && hasText(contactLastName));
-    if (relationMode === 'internal') return hasText(contactName) || hasText(contactLastName);
-    if (relationMode === 'solicitation') return hasText(companyName) && hasText(contactPhone);
-    if (relationMode === 'prospect') return Boolean(selectedEntity) || (hasText(companyName) && hasText(companyCity));
-    if (relationMode === 'supplier') return Boolean(selectedEntity) || hasText(companyName);
-    return hasText(entityType) && (Boolean(selectedEntity) || hasText(companyName));
-  }, [companyCity, companyName, contactFirstName, contactLastName, contactName, contactPhone, relationMode, selectedEntity]);
+  useEffect(() => {
+    if (relationMode !== 'supplier') {
+      setIsSupplierContactConfirmed(false);
+      return;
+    }
+    if (!identityComplete) {
+      setIsSupplierContactConfirmed(false);
+    }
+  }, [identityComplete, relationMode]);
+  useEffect(() => {
+    if (relationMode === 'supplier' && selectedContact) {
+      setIsSupplierContactConfirmed(true);
+    }
+  }, [relationMode, selectedContact]);
 
   const contactComplete = useMemo(() => {
     if (relationMode === 'client') return Boolean(selectedContact);
     if (relationMode === 'individual') return (Boolean(selectedContact) || (hasText(contactFirstName) && hasText(contactLastName))) && hasContactMethod;
-    if (relationMode === 'internal' || relationMode === 'solicitation') return identityComplete;
+    if (relationMode === 'internal') return hasText(contactName) || (hasText(contactFirstName) && hasText(contactLastName));
+    if (relationMode === 'solicitation') return true;
     const hasContactName = hasText(contactFirstName) || hasText(contactLastName);
-    if (relationMode === 'supplier') return hasContactName && hasText(contactPosition) && hasContactMethod;
+    if (relationMode === 'supplier') return true;
     return hasContactName && hasContactMethod;
   }, [contactFirstName, contactLastName, contactPosition, hasContactMethod, identityComplete, relationMode, selectedContact]);
 
@@ -103,10 +121,11 @@ export const useCockpitGuidedFlow = ({
     if (!isChannelConfirmed) return 'channel';
     if (!isRelationConfirmed) return 'relation';
     if (!identityComplete) return 'search';
+    if (relationMode === 'supplier' && !isSupplierContactConfirmed) return 'contact';
     if (!contactComplete) return 'contact';
     if (!subjectComplete) return 'subject';
     return 'details';
-  }, [contactComplete, identityComplete, isChannelConfirmed, isRelationConfirmed, qualificationComplete, subjectComplete]);
+  }, [contactComplete, identityComplete, isChannelConfirmed, isRelationConfirmed, isSupplierContactConfirmed, qualificationComplete, relationMode, subjectComplete]);
 
   const activeStep = editingStep ?? firstIncompleteStep;
 
@@ -117,8 +136,11 @@ export const useCockpitGuidedFlow = ({
     if (step === 'relation') {
       setIsRelationConfirmed(true);
     }
+    if (step === 'contact' && relationMode === 'supplier') {
+      setIsSupplierContactConfirmed(true);
+    }
     setEditingStep(null);
-  }, []);
+  }, [relationMode]);
 
   const editStep = useCallback((step: CockpitGuidedStep) => {
     setEditingStep(step);
@@ -127,6 +149,7 @@ export const useCockpitGuidedFlow = ({
   const resetFlow = useCallback(() => {
     setIsChannelConfirmed(false);
     setIsRelationConfirmed(false);
+    setIsSupplierContactConfirmed(false);
     setEditingStep(null);
   }, []);
 

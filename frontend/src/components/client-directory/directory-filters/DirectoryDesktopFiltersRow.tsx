@@ -18,6 +18,7 @@ interface DirectoryDesktopFiltersRowProps {
   commercialItems: DirectoryFilterOption[];
   agencyItems: DirectoryFilterOption[];
   canFilterAgency: boolean;
+  showCommercialFilter?: boolean;
   cityDraft: string;
   onCityDraftChange: (value: string) => void;
   onSearchPatch: (patch: Partial<DirectorySearchState>) => void;
@@ -124,6 +125,7 @@ const DirectoryDesktopFiltersRow = ({
   commercialItems,
   agencyItems,
   canFilterAgency,
+  showCommercialFilter = true,
   cityDraft,
   onCityDraftChange,
   onSearchPatch,
@@ -220,29 +222,31 @@ const DirectoryDesktopFiltersRow = ({
         </div>
       </DirectoryDesktopSmartPill>
 
-      <DirectoryDesktopSmartPill
-        label="Commercial"
-        summary={commercialSummary}
-        open={search.type === 'prospect' ? false : openFilter === 'commercial'}
-        disabled={search.type === 'prospect'}
-        onOpenChange={(nextOpen) => {
-          if (nextOpen) {
-            onRequestOptions(['commercials']);
-          }
-          setOpenFilter(nextOpen ? 'commercial' : null);
-        }}
-        onClear={() => onSearchPatch({ cirCommercialIds: [], page: 1 })}
-      >
-        <DirectoryFilterComboboxContent
-          items={commercialItems}
-          values={search.cirCommercialIds}
-          onValuesChange={(values) => onSearchPatch({ cirCommercialIds: values, page: 1 })}
-          allLabel="Tous les commerciaux"
-          searchPlaceholder="Rechercher un commercial…"
-          emptyLabel="Aucun commercial trouve."
-          multiple
-        />
-      </DirectoryDesktopSmartPill>
+      {showCommercialFilter ? (
+        <DirectoryDesktopSmartPill
+          label="Commercial"
+          summary={commercialSummary}
+          open={search.type === 'prospect' ? false : openFilter === 'commercial'}
+          disabled={search.type === 'prospect'}
+          onOpenChange={(nextOpen) => {
+            if (nextOpen) {
+              onRequestOptions(['commercials']);
+            }
+            setOpenFilter(nextOpen ? 'commercial' : null);
+          }}
+          onClear={() => onSearchPatch({ cirCommercialIds: [], page: 1 })}
+        >
+          <DirectoryFilterComboboxContent
+            items={commercialItems}
+            values={search.cirCommercialIds}
+            onValuesChange={(values) => onSearchPatch({ cirCommercialIds: values, page: 1 })}
+            allLabel="Tous les commerciaux"
+            searchPlaceholder="Rechercher un commercial…"
+            emptyLabel="Aucun commercial trouve."
+            multiple
+          />
+        </DirectoryDesktopSmartPill>
+      ) : null}
 
       <button
         type="button"

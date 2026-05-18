@@ -12,6 +12,7 @@ import {
   ensureOptionalAgencyAccess,
   getEntityAgencyId
 } from './dataAccess.ts';
+import { DRAFT_RATE_LIMIT_MAX, DRAFT_RATE_LIMIT_WINDOW_SECONDS } from './rateLimit.ts';
 
 type InteractionRow = Database['public']['Tables']['interactions']['Row'];
 type InteractionDraftRow = Pick<Database['public']['Tables']['interaction_drafts']['Row'], 'id' | 'payload' | 'updated_at'>;
@@ -117,7 +118,7 @@ const saveInteraction = async (
     subject: interaction.subject,
     mega_families: interaction.mega_families ?? [],
     status: '',
-    status_id: interaction.status_id.trim(),
+    status_id: interaction.status_id?.trim() || null,
     interaction_type: interaction.interaction_type,
     order_ref: interaction.order_ref?.trim() || null,
     reminder_at: interaction.reminder_at?.trim() || null,
@@ -553,7 +554,13 @@ export const handleDataInteractionsAction = async (
   requestId: string | undefined,
   data: DataInteractionsPayload
 ): Promise<DataInteractionsResponse> => {
-  await ensureDataRateLimit(`data_interactions:${data.action}`, authContext.userId);
+  await ensureDataRateLimit(
+    `data_interactions:${data.action}`,
+    authContext.userId,
+    data.action === 'draft_save'
+      ? { max: DRAFT_RATE_LIMIT_MAX, windowSeconds: DRAFT_RATE_LIMIT_WINDOW_SECONDS }
+      : undefined
+  );
 
   switch (data.action) {
     case 'save': {

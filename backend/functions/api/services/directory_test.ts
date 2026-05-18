@@ -74,7 +74,10 @@ Deno.test('buildCompanySearchUrl includes optional filters and pagination', () =
     page: 2,
     per_page: 25,
     city: 'Paris',
-    department: '75'
+    department: '75',
+    postal_code: '75001',
+    naf_code: '33.12Z',
+    activity_section: 'C'
   }));
 
   assertEquals(url.searchParams.get('q'), 'Acme');
@@ -82,6 +85,9 @@ Deno.test('buildCompanySearchUrl includes optional filters and pagination', () =
   assertEquals(url.searchParams.get('per_page'), '25');
   assertEquals(url.searchParams.get('ville'), null);
   assertEquals(url.searchParams.get('departement'), '75');
+  assertEquals(url.searchParams.get('code_postal'), '75001');
+  assertEquals(url.searchParams.get('activite_principale'), '33.12Z');
+  assertEquals(url.searchParams.get('section_activite_principale'), 'C');
   assertEquals(url.searchParams.get('limite_matching_etablissements'), '100');
 });
 

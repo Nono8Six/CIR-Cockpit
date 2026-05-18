@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { AnimatePresence, motion, type Transition } from 'motion/react';
 
 import { APP_SHELL_SECTION_LABELS } from '@/app/appConstants';
-import { getPathForTab } from '@/app/appRoutes';
+import { getPathForShellNavItem } from '@/app/appRoutes';
 import type { AppShellNavItem } from '@/app/appConstants';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Kbd } from '@/components/ui/kbd';
@@ -48,7 +48,7 @@ const AppSidebarNavItemLink = ({
 
   const link = (
     <Link
-      to={getPathForTab(item.id)}
+      to={getPathForShellNavItem(item)}
       onClick={() => onMobileOpenChange?.(false)}
       className={cn(
         'group relative flex h-7 w-full items-center rounded-md px-2 text-left text-[12.5px] transition-[background-color,color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98]',
@@ -57,7 +57,7 @@ const AppSidebarNavItemLink = ({
           : 'border border-transparent text-muted-foreground hover:bg-card/70 hover:text-foreground',
         collapsed ? 'justify-center px-0' : 'gap-2.5',
       )}
-      activeProps={{ 'aria-current': 'page' }}
+      aria-current={isActive ? 'page' : undefined}
       aria-label={!collapsed ? undefined : buildCollapsedNavLabel(item)}
       data-testid={`app-shell-nav-${item.id}`}
     >

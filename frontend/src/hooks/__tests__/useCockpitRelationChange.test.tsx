@@ -48,7 +48,7 @@ const config: AgencyConfig = {
   services: ['Atelier'],
   entities: ['Client', 'Fournisseur', INTERNAL_RELATION_LABEL],
   families: ['Freinage'],
-  interactionTypes: ['Demande']
+  interactionTypes: ['Demande', INTERNAL_RELATION_LABEL]
 };
 
 const clearedStringFields: Array<keyof InteractionFormValues> = [
@@ -136,6 +136,7 @@ describe('useCockpitRelationChange', () => {
 
     expect(result.current.form.getValues('entity_type')).toBe(INTERNAL_RELATION_LABEL);
     expect(result.current.form.getValues('company_name')).toBe(INTERNAL_COMPANY_NAME);
+    expect(result.current.form.getValues('interaction_type')).toBe(INTERNAL_RELATION_LABEL);
     expect(result.current.form.getValues('contact_id')).toBe('');
     expect(result.current.form.getValues('subject')).toBe('');
   });

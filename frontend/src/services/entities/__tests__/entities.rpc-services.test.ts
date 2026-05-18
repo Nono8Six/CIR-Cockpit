@@ -174,6 +174,15 @@ describe('entities RPC services', () => {
     expectRequestFailedError(parser);
   });
 
+  it('propagates entity contact RPC errors', async () => {
+    const error = new Error('rpc failed');
+    mockSafeRpc.mockReturnValue({
+      match: vi.fn((_onSuccess, onError) => onError(error))
+    } as never);
+
+    await expect(getEntityContacts('entity-1')).rejects.toBe(error);
+  });
+
   it('returns an empty search index without agency id', async () => {
     const result = await getEntitySearchIndex(null);
 
@@ -257,11 +266,29 @@ describe('entities RPC services', () => {
       city: 'Paris',
       agency_name: null,
       referent_name: null,
+      match_label: null,
       updated_at: '2026-01-01T10:00:00.000Z',
       archived_at: null
     };
     expect(parser({ ok: true, results: [row] })).toEqual({ ok: true, results: [row] });
     expectRequestFailedError(parser);
+  });
+
+  it('propagates unified search RPC errors', async () => {
+    const error = new Error('search failed');
+    mockSafeRpc.mockReturnValue({
+      match: vi.fn((_onSuccess, onError) => onError(error))
+    } as never);
+
+    await expect(searchEntitiesUnified({
+      query: 'alpha',
+      agency_id: 'agency-1',
+      family: 'all',
+      client_filter: 'all',
+      prospect_filter: 'all',
+      include_archived: false,
+      limit: 5
+    })).rejects.toBe(error);
   });
 
   it('builds convertEntityToClient RPC payload and parses response', async () => {
@@ -402,7 +429,8 @@ describe('entities RPC services', () => {
       id: 'entity-3',
       entity_type: 'Fournisseur',
       name: 'Supplier 1',
-      agency_id: 'agency-1',
+      supplier_code: 'SUP1',
+      supplier_number: '445566',
       city: 'Paris',
       address: '1 rue de Paris',
       postal_code: '75001',
@@ -415,18 +443,18 @@ describe('entities RPC services', () => {
 
     expect(entitiesPost).toHaveBeenCalledWith({
           action: 'save',
-          agency_id: 'agency-1',
           entity_type: 'Fournisseur',
           id: 'entity-3',
           entity: {
             name: 'Supplier 1',
+            supplier_code: 'SUP1',
+            supplier_number: '445566',
             city: 'Paris',
             address: '1 rue de Paris',
             postal_code: '75001',
             department: '75',
             siret: undefined,
-            notes: undefined,
-            agency_id: 'agency-1'
+            notes: undefined
           }
         },
       {}

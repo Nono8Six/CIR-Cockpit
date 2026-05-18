@@ -6,7 +6,7 @@ import type { RelationMode } from '@/constants/relations';
 import type { AgencyConfig } from '@/services/config';
 import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
 import type { CockpitFormLeftPaneProps, CockpitFormRightPaneProps } from '@/components/cockpit/CockpitPaneTypes';
-import type { Entity, EntityContact, StatusCategory } from '@/types';
+import type { Agency, Entity, EntityContact, Interaction, StatusCategory } from '@/types';
 
 export type UseCockpitPanePropsParams = {
   labelStyle: string;
@@ -21,6 +21,7 @@ export type UseCockpitPanePropsParams = {
   relationButtonRef: RefObject<HTMLButtonElement | null>;
   relationMode: RelationMode;
   activeAgencyId: string | null;
+  agencies: Agency[];
   entitySearchIndex: { entities: Entity[]; contacts: EntityContact[] };
   entitySearchLoading: boolean;
   onSelectEntityFromSearch: (entity: Entity) => void;
@@ -30,6 +31,7 @@ export type UseCockpitPanePropsParams = {
   onOpenProspectDialog: () => void;
   onOpenGlobalSearch?: () => void;
   recentEntities: Entity[];
+  interactions: Interaction[];
   searchInputRef: RefObject<HTMLInputElement | null>;
   selectedEntity: Entity | null;
   selectedContact: EntityContact | null;
@@ -79,6 +81,7 @@ export type UseCockpitPanePropsParams = {
   onServicePickerOpenChange: (open: boolean) => void;
   config: AgencyConfig;
   subject: string;
+  notes: string;
   subjectField: CockpitFormRightPaneProps['subjectField'];
   notesField: CockpitFormRightPaneProps['notesField'];
   orderRefField: CockpitFormRightPaneProps['orderRefField'];

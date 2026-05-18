@@ -201,6 +201,7 @@ const renderHeader = ({
       <AppHeader
         sections={buildShellNavigation(true, 1)}
         activeTab="dashboard"
+        activePath="/dashboard"
         activeSectionLabel="Interactions"
         activeItemLabel="Pilotage"
         agencyContext={{ agency_id: 'agency-1', agency_name: 'Agence Alpha' }}
@@ -244,6 +245,45 @@ describe('AppHeader', () => {
 
     expect(await screen.findByText('Saisie')).toBeInTheDocument();
     expect(screen.getAllByText('Pilotage').length).toBeGreaterThan(0);
+  });
+
+  it('exposes the supplier admin route in the admin section menu', async () => {
+    const onOpenSearch = vi.fn();
+
+    render(
+      <AppHeader
+        sections={buildShellNavigation(true, 0)}
+        activeTab="admin"
+        activePath="/admin/suppliers"
+        activeSectionLabel="Admin"
+        activeItemLabel="Admin"
+        agencyContext={{ agency_id: 'agency-1', agency_name: 'Agence Alpha' }}
+        agencyMemberships={[{ agency_id: 'agency-1', agency_name: 'Agence Alpha' }]}
+        hasMultipleAgencies={false}
+        sessionEmail="a.ferron@cir.fr"
+        userFullName="Arnaud Ferron"
+        userInitials="AF"
+        userRoleLabel="Admin agence"
+        profileLoading={false}
+        isContextRefreshing={false}
+        isSettingsDisabled={false}
+        isProfileMenuOpen={false}
+        onAgencyChange={vi.fn()}
+        onOpenSearch={onOpenSearch}
+        onProfileMenuOpenChange={vi.fn()}
+        onOpenSettings={vi.fn()}
+        onOpenAccountPanel={vi.fn()}
+        onSignOut={vi.fn()}
+        onOpenMobileMenu={vi.fn()}
+      />
+    );
+
+    openDropdown(screen.getByRole('button', { name: /admin/i }));
+
+    expect(await screen.findByRole('menuitem', { name: /fournisseur/i })).toHaveAttribute(
+      'href',
+      '/admin/suppliers'
+    );
   });
 
   it('opens the profile menu and wires account, settings and sign-out actions', async () => {

@@ -24,6 +24,14 @@ interface DirectorySavedViewsBarProps {
   currentState: DirectorySavedViewState;
   isLoading: boolean;
   isMutating: boolean;
+  triggerLabel?: string;
+  title?: string;
+  description?: string;
+  saveButtonLabel?: string;
+  emptyLabel?: string;
+  createDialogTitle?: string;
+  updateDialogTitle?: string;
+  dialogDescription?: string;
   onApplyView: (view: DirectorySavedView) => void;
   onSaveView: (input: DirectorySavedViewSaveInput) => Promise<void>;
   onDeleteView: (viewId: string) => Promise<void>;
@@ -46,6 +54,14 @@ const DirectorySavedViewsBar = ({
   currentState,
   isLoading,
   isMutating,
+  triggerLabel = 'Vues',
+  title = 'Mes vues',
+  description = 'Appliquez, mettez à jour ou définissez une vue par défaut.',
+  saveButtonLabel = "Sauvegarder l'état actuel",
+  emptyLabel = 'Aucune vue sauvegardée pour le moment.',
+  createDialogTitle = 'Sauvegarder une vue',
+  updateDialogTitle = 'Mettre à jour la vue',
+  dialogDescription = 'Le nom, le tri, les filtres, la densité et les colonnes visibles seront conservés.',
   onApplyView,
   onSaveView,
   onDeleteView,
@@ -92,26 +108,26 @@ const DirectorySavedViewsBar = ({
       <Popover>
         <PopoverTrigger asChild>
           <Button type="button" variant="outline" size="dense" className="h-9 rounded-md px-3 text-sm shadow-none">
-            Vues
+            {triggerLabel}
           </Button>
         </PopoverTrigger>
         <PopoverContent align="end" className="w-[360px] space-y-3">
           <div className="space-y-1">
-            <p className="text-sm font-semibold text-foreground">Mes vues</p>
+            <p className="text-sm font-semibold text-foreground">{title}</p>
             <p className="text-xs text-muted-foreground">
-              Appliquez, mettez à jour ou définissez une vue par défaut.
+              {description}
             </p>
           </div>
           <Button type="button" variant="default" size="sm" className="w-full" onClick={openCreateDialog}>
             <Save className="size-4" />
-            Sauvegarder l&apos;état actuel
+            {saveButtonLabel}
           </Button>
           <div className="space-y-2">
             {isLoading ? (
               <p className="text-sm text-muted-foreground">Chargement des vues…</p>
             ) : null}
             {!isLoading && views.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Aucune vue sauvegardée pour le moment.</p>
+              <p className="text-sm text-muted-foreground">{emptyLabel}</p>
             ) : null}
             {views.map((view) => (
               <div
@@ -169,10 +185,10 @@ const DirectorySavedViewsBar = ({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {dialogState.id ? 'Mettre à jour la vue' : 'Sauvegarder une vue'}
+              {dialogState.id ? updateDialogTitle : createDialogTitle}
             </DialogTitle>
             <DialogDescription>
-              Le nom, le tri, les filtres, la densité et les colonnes visibles seront conservés.
+              {dialogDescription}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">

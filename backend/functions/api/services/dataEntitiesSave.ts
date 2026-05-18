@@ -14,7 +14,7 @@ import { buildSaveEntityRows } from "./dataEntitiesSaveRows.ts";
 export const saveEntity = async (
   db: DbClient,
   payload: SaveEntityPayload,
-  agencyId: string,
+  agencyId: string | null,
   createdBy: string,
 ): Promise<EntityRow> => {
   const { updateRow, insertRow, primaryContact, isIndividualClient } =

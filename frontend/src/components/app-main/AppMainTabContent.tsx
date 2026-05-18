@@ -9,12 +9,10 @@ import type { EntityContact } from '@/types';
 const loadCockpitForm = () => import('@/components/CockpitForm');
 const loadDashboard = () => import('@/components/Dashboard');
 const loadSettings = () => import('@/components/Settings');
-const loadAdminPanel = () => import('@/components/AdminPanel');
 
 const CockpitForm = lazy(loadCockpitForm);
 const Dashboard = lazy(loadDashboard);
 const Settings = lazy(loadSettings);
-const AdminPanel = lazy(loadAdminPanel);
 
 const ROUTE_LOADING_FALLBACK = (
   <div className="flex h-full min-h-0 flex-col gap-3 p-6">
@@ -79,7 +77,6 @@ const AppMainTabContent = (props: AppMainTabContentProps) => {
     void loadCockpitForm();
     void loadDashboard();
     void loadSettings();
-    void loadAdminPanel();
   }, []);
 
   const visitedTabsRef = useRef<Record<AppTab, boolean>>({
@@ -167,15 +164,13 @@ const AppMainTabContent = (props: AppMainTabContentProps) => {
 
             {tab === 'clients' ? (
               <div className="min-h-0 flex-1">
-                <Outlet />
+                {isActive ? <Outlet /> : null}
               </div>
             ) : null}
 
             {tab === 'admin' ? (
               <div className="min-h-0 flex-1">
-                <Suspense fallback={ROUTE_LOADING_FALLBACK}>
-                  <AdminPanel userRole={userRole} />
-                </Suspense>
+                {isActive ? <Outlet /> : null}
               </div>
             ) : null}
           </section>

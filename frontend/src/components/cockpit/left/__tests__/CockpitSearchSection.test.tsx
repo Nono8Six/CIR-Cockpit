@@ -1,24 +1,52 @@
-import { createRef, type ComponentProps } from 'react';
+import { createRef, type ComponentProps, type ReactNode } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import CockpitSearchSection from '@/components/cockpit/left/CockpitSearchSection';
 
+const navigateMock = vi.hoisted(() => vi.fn());
+
+vi.mock('@tanstack/react-router', () => ({
+  useNavigate: () => navigateMock
+}));
+
 vi.mock('@/components/InteractionSearchBar', () => ({
-  default: ({ onCreateEntity, showTypeBadge }: {
+  default: ({ onCreateEntity, createLabel, createDisabled, createMode, inlineCreateSlot, showTypeBadge }: {
     onCreateEntity?: () => void;
+    createLabel?: string;
+    createDisabled?: boolean;
+    createMode?: 'dialog' | 'inline' | 'none';
+    inlineCreateSlot?: ReactNode | ((controls: { onCancel: () => void }) => ReactNode);
     showTypeBadge?: boolean;
   }) => (
-    <div data-testid="interaction-search-bar" data-show-type-badge={String(showTypeBadge)}>
-      {onCreateEntity ? (
-        <button type="button" onClick={onCreateEntity}>
-          Créer
+    <div
+      data-testid="interaction-search-bar"
+      data-show-type-badge={String(showTypeBadge)}
+      data-create-mode={createMode}
+    >
+      {createLabel ? (
+        <button type="button" onClick={onCreateEntity} disabled={createDisabled || (createMode !== 'inline' && !onCreateEntity)}>
+          {createLabel}
         </button>
       ) : null}
+      {typeof inlineCreateSlot === 'function' ? inlineCreateSlot({ onCancel: vi.fn() }) : inlineCreateSlot}
     </div>
   )
 }));
+
+const renderSection = (props: ComponentProps<typeof CockpitSearchSection>) => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } }
+  });
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <CockpitSearchSection {...props} />
+    </QueryClientProvider>
+  );
+};
 
 const buildProps = (
   overrides: Partial<ComponentProps<typeof CockpitSearchSection>> = {}
@@ -40,36 +68,41 @@ const buildProps = (
 });
 
 describe('CockpitSearchSection', () => {
+  beforeEach(() => {
+    navigateMock.mockClear();
+  });
+
   it('ouvre la creation prospect quand le mode prospect demande une creation', async () => {
     const user = userEvent.setup();
     const onOpenClientDialog = vi.fn();
     const onOpenProspectDialog = vi.fn();
 
-    render(
-      <CockpitSearchSection
-        {...buildProps({ onOpenClientDialog, onOpenProspectDialog })}
-      />
-    );
+    renderSection(buildProps({ onOpenClientDialog, onOpenProspectDialog }));
 
-    await user.click(screen.getByRole('button', { name: 'Créer' }));
+    await user.click(screen.getByRole('button', { name: 'Créer un prospect' }));
 
     expect(onOpenProspectDialog).toHaveBeenCalledTimes(1);
     expect(onOpenClientDialog).not.toHaveBeenCalled();
   });
 
-  it('ne propose pas de creation fournisseur tant que le contrat API est absent', () => {
-    render(
-      <CockpitSearchSection
-        {...buildProps({ relationMode: 'supplier', entityType: 'Fournisseur' })}
-      />
-    );
+  it('ouvre la création fournisseur complète depuis le cockpit', async () => {
+    const user = userEvent.setup();
+    renderSection(buildProps({ relationMode: 'supplier', entityType: 'Fournisseur' }));
 
-    expect(screen.queryByRole('button', { name: 'Créer' })).not.toBeInTheDocument();
+    expect(screen.getByTestId('interaction-search-bar')).toHaveAttribute('data-create-mode', 'dialog');
+    expect(screen.getByRole('button', { name: 'Créer un fournisseur' })).toBeEnabled();
+    await user.click(screen.getByRole('button', { name: 'Créer un fournisseur' }));
+    expect(navigateMock).toHaveBeenCalledWith({ to: '/admin/suppliers/new' });
   });
 
   it('active toujours les badges type pour les resultats cross-type', () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } }
+    });
     const { rerender } = render(
-      <CockpitSearchSection {...buildProps({ entityType: '', relationMode: 'other' })} />
+      <QueryClientProvider client={queryClient}>
+        <CockpitSearchSection {...buildProps({ entityType: '', relationMode: 'other' })} />
+      </QueryClientProvider>
     );
 
     expect(screen.getByTestId('interaction-search-bar')).toHaveAttribute(
@@ -78,7 +111,9 @@ describe('CockpitSearchSection', () => {
     );
 
     rerender(
-      <CockpitSearchSection {...buildProps({ entityType: 'Prospect', relationMode: 'prospect' })} />
+      <QueryClientProvider client={queryClient}>
+        <CockpitSearchSection {...buildProps({ entityType: 'Prospect', relationMode: 'prospect' })} />
+      </QueryClientProvider>
     );
 
     expect(screen.getByTestId('interaction-search-bar')).toHaveAttribute(

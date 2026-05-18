@@ -16,6 +16,7 @@ interface DirectoryFilterPopoverProps {
   commercialItems: DirectoryFilterOption[];
   agencyItems: DirectoryFilterOption[];
   canFilterAgency: boolean;
+  showCommercialFilter?: boolean;
   cityDraft: string;
   onCityDraftChange: (value: string) => void;
   onSearchPatch: (patch: Partial<DirectorySearchState>) => void;
@@ -30,6 +31,7 @@ const DirectoryFilterPopover = ({
   commercialItems,
   agencyItems,
   canFilterAgency,
+  showCommercialFilter = true,
   cityDraft,
   onCityDraftChange,
   onSearchPatch,
@@ -41,7 +43,10 @@ const DirectoryFilterPopover = ({
   return (
     <Popover onOpenChange={(open) => {
       if (open) {
-        onRequestOptions(canFilterAgency ? ['agencies', 'commercials', 'departments'] : ['commercials', 'departments']);
+        const optionRequests: DirectoryOptionRequest[] = ['departments'];
+        if (canFilterAgency) optionRequests.push('agencies');
+        if (showCommercialFilter) optionRequests.push('commercials');
+        onRequestOptions(optionRequests);
       }
     }}>
       <PopoverTrigger asChild>
@@ -82,19 +87,21 @@ const DirectoryFilterPopover = ({
             />
           </div>
 
-          <DirectoryFilterCombobox
-            items={commercialItems}
-            values={search.cirCommercialIds}
-            onValuesChange={(values) => onSearchPatch({ cirCommercialIds: values, page: 1 })}
-            placeholder="Commercial CIR"
-            allLabel="Tous les commerciaux"
-            searchPlaceholder="Rechercher un commercial…"
-            emptyLabel="Aucun commercial trouvé."
-            selectionSummaryLabel="commerciaux"
-            multiple
-            disabled={search.type === 'prospect'}
-            className="w-full"
-          />
+          {showCommercialFilter ? (
+            <DirectoryFilterCombobox
+              items={commercialItems}
+              values={search.cirCommercialIds}
+              onValuesChange={(values) => onSearchPatch({ cirCommercialIds: values, page: 1 })}
+              placeholder="Commercial CIR"
+              allLabel="Tous les commerciaux"
+              searchPlaceholder="Rechercher un commercial…"
+              emptyLabel="Aucun commercial trouvé."
+              selectionSummaryLabel="commerciaux"
+              multiple
+              disabled={search.type === 'prospect'}
+              className="w-full"
+            />
+          ) : null}
 
           {canFilterAgency ? (
             <DirectoryFilterCombobox

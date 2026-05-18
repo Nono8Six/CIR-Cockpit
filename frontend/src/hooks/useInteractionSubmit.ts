@@ -23,6 +23,12 @@ import {
   isSupplierRelationValue
 } from '@/constants/relations';
 
+const SOLICITATION_SERVICE_LABEL = 'Sollicitation';
+const SOLICITATION_INTERACTION_TYPE_LABEL = 'Démarchage téléphonique';
+const INTERNAL_SERVICE_LABEL = 'Interne CIR';
+const SUPPLIER_SERVICE_LABEL = 'Fournisseur';
+const SUPPLIER_INTERACTION_TYPE_LABEL = 'Interaction fournisseur';
+
 type UseInteractionSubmitParams = { activeAgencyId: string | null; selectedEntity: Entity | null; selectedContact: EntityContact | null; onSave: (interaction: InteractionDraft) => Promise<boolean>; handleSelectEntity: (entity: Entity | null) => void; handleSelectContact: (contact: EntityContact | null) => void; queryClient: QueryClient; handleReset: () => void; onSaveSuccess: (interaction: InteractionDraft) => void; setKnownCompanies: React.Dispatch<React.SetStateAction<string[]>> };
 
 export const useInteractionSubmit = ({ activeAgencyId, selectedEntity, selectedContact, onSave, handleSelectEntity, handleSelectContact, queryClient, handleReset, onSaveSuccess, setKnownCompanies }: UseInteractionSubmitParams) => {
@@ -32,19 +38,33 @@ export const useInteractionSubmit = ({ activeAgencyId, selectedEntity, selectedC
     const isIndividual = isIndividualRelationValue(values.entity_type);
     const isInternal = isInternalRelationValue(values.entity_type);
     const isSolicitation = isSolicitationRelationValue(values.entity_type);
+    const isSupplier = isSupplierRelationValue(values.entity_type);
     const entityPayloadType = isSupplierRelationValue(values.entity_type) ? 'Fournisseur' : 'Prospect';
 
-    let resolvedEntity = selectedEntity; let resolvedContact = selectedContact;
+    let resolvedEntity = isInternal || isSolicitation ? null : selectedEntity;
+    let resolvedContact = isInternal || isSolicitation ? null : selectedContact;
+    const hasManualContact = Boolean(
+      values.contact_first_name?.trim()
+      && values.contact_last_name?.trim()
+      && (values.contact_phone?.trim() || values.contact_email?.trim())
+    );
     if (!isClient && !isInternal && !isSolicitation) {
       if (!resolvedEntity) {
-        const entityName = isIndividual
-          ? `${values.contact_first_name ?? ''} ${values.contact_last_name ?? ''}`.trim()
-          : values.company_name ?? '';
-        resolvedEntity = await saveEntity({ entity_type: entityPayloadType, name: entityName, agency_id: activeAgencyId, city: isProspect ? values.company_city?.trim() || null : null }).match(entity => entity, error => { handleUiError(error, "Impossible de creer l'entite.", { source: 'CockpitForm.saveEntity' }); return null; });
-        if (!resolvedEntity) return;
-        void invalidateEntitySearchIndexQueries(queryClient, activeAgencyId); handleSelectEntity(resolvedEntity);
+        if (!isSupplier) {
+          const entityName = isIndividual
+            ? `${values.contact_first_name ?? ''} ${values.contact_last_name ?? ''}`.trim()
+            : values.company_name ?? '';
+          resolvedEntity = await saveEntity({
+            entity_type: entityPayloadType,
+            name: entityName,
+            agency_id: activeAgencyId,
+            city: isProspect ? values.company_city?.trim() || null : null
+          }).match(entity => entity, error => { handleUiError(error, "Impossible de creer l'entite.", { source: 'CockpitForm.saveEntity' }); return null; });
+          if (!resolvedEntity) return;
+          void invalidateEntitySearchIndexQueries(queryClient, activeAgencyId); handleSelectEntity(resolvedEntity);
+        }
       }
-      if (!resolvedContact) {
+      if (!resolvedContact && resolvedEntity && (!isSupplier || hasManualContact)) {
         if (!resolvedEntity?.id) {
           handleUiError(createAppError({ code: 'NOT_FOUND', message: "Entite introuvable pour creer le contact.", source: 'validation' }), "Impossible de creer le contact.", { source: 'CockpitForm.saveEntityContact' });
           return;
@@ -57,10 +77,14 @@ export const useInteractionSubmit = ({ activeAgencyId, selectedEntity, selectedC
 
     const creationDate = getNowIsoString(); const timeline: TimelineEvent[] = [{ id: generateId(), date: creationDate, type: 'creation', content: 'Dossier cree' }]; if (values.notes?.trim()) timeline.push({ id: generateId(), date: creationDate, type: 'note', content: values.notes.trim() });
     const selectedContactLabel = resolvedContact ? `${resolvedContact.first_name ?? ''} ${resolvedContact.last_name}`.trim() : '';
-    const resolvedContactName = resolvedContact ? selectedContactLabel : isSolicitation ? (values.company_name ?? '').trim() : `${values.contact_first_name ?? ''} ${values.contact_last_name ?? ''}`.trim();
+    const resolvedContactName = resolvedContact
+      ? selectedContactLabel
+      : isSolicitation || isInternal
+        ? (values.contact_name ?? '').trim()
+        : `${values.contact_first_name ?? ''} ${values.contact_last_name ?? ''}`.trim();
     const resolvedCompanyName = isInternal ? INTERNAL_COMPANY_NAME : resolvedEntity?.name ?? values.company_name ?? '';
 
-    const newInteraction: InteractionDraft = { id: generateId(), channel: values.channel, entity_type: values.entity_type, contact_service: values.contact_service, interaction_type: values.interaction_type, company_name: resolvedCompanyName, contact_first_name: (resolvedContact?.first_name ?? values.contact_first_name ?? '').trim(), contact_last_name: (resolvedContact?.last_name ?? values.contact_last_name ?? '').trim(), contact_position: (resolvedContact?.position ?? values.contact_position ?? '').trim(), contact_name: resolvedContactName, contact_phone: (resolvedContact?.phone ?? values.contact_phone ?? '').trim() || undefined, contact_email: (resolvedContact?.email ?? values.contact_email ?? '').trim() || undefined, mega_families: values.mega_families ?? [], subject: values.subject, order_ref: values.order_ref ?? '', status_id: values.status_id, reminder_at: values.reminder_at || undefined, notes: values.notes ?? '', timeline, entity_id: resolvedEntity?.id, contact_id: resolvedContact?.id, agency_id: resolvedEntity?.agency_id ?? activeAgencyId ?? undefined };
+    const newInteraction: InteractionDraft = { id: generateId(), channel: values.channel, entity_type: values.entity_type, contact_service: isSolicitation ? SOLICITATION_SERVICE_LABEL : isInternal ? INTERNAL_SERVICE_LABEL : isSupplier ? SUPPLIER_SERVICE_LABEL : values.contact_service, interaction_type: isSolicitation ? SOLICITATION_INTERACTION_TYPE_LABEL : isSupplier ? SUPPLIER_INTERACTION_TYPE_LABEL : values.interaction_type, company_name: resolvedCompanyName, contact_first_name: (resolvedContact?.first_name ?? values.contact_first_name ?? '').trim(), contact_last_name: (resolvedContact?.last_name ?? values.contact_last_name ?? '').trim(), contact_position: (resolvedContact?.position ?? values.contact_position ?? '').trim(), contact_name: resolvedContactName, contact_phone: (resolvedContact?.phone ?? values.contact_phone ?? '').trim() || undefined, contact_email: (resolvedContact?.email ?? values.contact_email ?? '').trim() || undefined, mega_families: isSolicitation || isInternal || isSupplier ? [] : values.mega_families ?? [], subject: values.subject, order_ref: isSolicitation || isInternal || isSupplier ? '' : values.order_ref ?? '', status_id: isSolicitation || isInternal || isSupplier ? null : values.status_id, reminder_at: isSolicitation || isInternal || isSupplier ? undefined : values.reminder_at || undefined, notes: values.notes ?? '', timeline, entity_id: resolvedEntity?.id, contact_id: resolvedContact?.id, agency_id: resolvedEntity?.agency_id ?? activeAgencyId ?? undefined };
     if (!await onSave(newInteraction)) return;
     if (resolvedCompanyName && !isInternal && !isSolicitation) setKnownCompanies(previous => previous.includes(resolvedCompanyName) ? previous : [...previous, resolvedCompanyName].sort());
     onSaveSuccess(newInteraction);

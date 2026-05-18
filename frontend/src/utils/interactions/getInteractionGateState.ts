@@ -34,6 +34,7 @@ export const getInteractionGateState = (input: GateInput): GateState => {
   const relation = input.entityType?.trim().toLowerCase() ?? '';
   const isSolicitation = relation === 'sollicitation';
   const isIndividual = isIndividualRelationValue(input.entityType);
+  const isSupplier = isSupplierRelationValue(input.entityType);
   const hasContactMethod = isSolicitation
     ? hasValue(input.contactPhone)
     : hasValue(input.contactPhone) || hasValue(input.contactEmail);
@@ -43,23 +44,21 @@ export const getInteractionGateState = (input: GateInput): GateState => {
       input.contactService &&
       input.interactionType &&
       input.subject &&
-      input.statusId
+      (isSupplier || input.statusId)
   );
 
   const hasClientIdentity = Boolean(
     input.isClientRelation && input.hasSelectedEntity && input.hasSelectedContact
   );
   const needsCity = isProspectRelationValue(input.entityType);
-  const needsPosition = isSupplierRelationValue(input.entityType);
 
   const hasNonClientIdentity = Boolean(
     !input.isClientRelation &&
-      (input.isInternalRelation || isIndividual || hasValue(input.companyName)) &&
+      (input.isInternalRelation || isIndividual || isSolicitation || hasValue(input.companyName)) &&
       (!needsCity || hasValue(input.companyCity)) &&
-      (isSolicitation || hasValue(input.contactFirstName)) &&
-      (isSolicitation || hasValue(input.contactLastName)) &&
-      (!needsPosition || hasValue(input.contactPosition)) &&
-      (input.isInternalRelation || hasContactMethod)
+      (isSolicitation || isSupplier || hasValue(input.contactFirstName)) &&
+      (isSolicitation || isSupplier || hasValue(input.contactLastName)) &&
+      (input.isInternalRelation || isSupplier || hasContactMethod)
   );
 
   const canSave = hasBaseRequired && (input.isClientRelation ? hasClientIdentity : hasNonClientIdentity);
@@ -75,15 +74,13 @@ export const getInteractionGateState = (input: GateInput): GateState => {
         gateMessage = 'Completer les informations du client.';
       }
     } else {
-      if (!input.isInternalRelation && !isIndividual && !hasValue(input.companyName)) {
+      if (!input.isInternalRelation && !isIndividual && !isSolicitation && !hasValue(input.companyName)) {
         gateMessage = 'Renseignez la societe.';
       } else if (!input.isInternalRelation && needsCity && !hasValue(input.companyCity)) {
         gateMessage = 'Renseignez la ville.';
-      } else if (!isSolicitation && (!hasValue(input.contactFirstName) || !hasValue(input.contactLastName))) {
+      } else if (!isSolicitation && !isSupplier && (!hasValue(input.contactFirstName) || !hasValue(input.contactLastName))) {
         gateMessage = 'Renseignez le contact.';
-      } else if (needsPosition && !hasValue(input.contactPosition)) {
-        gateMessage = 'Renseignez la fonction.';
-      } else if (!input.isInternalRelation && !hasContactMethod) {
+      } else if (!input.isInternalRelation && !isSupplier && !hasContactMethod) {
         gateMessage = isSolicitation ? 'Renseignez le numero.' : 'Telephone ou email requis.';
       } else if (!hasValue(input.interactionType)) {
         gateMessage = "Type d'interaction requis.";

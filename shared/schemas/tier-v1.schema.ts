@@ -214,6 +214,8 @@ export const tierV1DirectoryListInputSchema = z.strictObject({
 
 export const tierV1DirectoryRowSchema = z.strictObject({
   id: z.string().trim().min(1, 'Identifiant requis'),
+  entity_id: z.string().trim().min(1, 'Identifiant tiers requis').optional(),
+  contact_id: z.string().trim().min(1, 'Identifiant contact requis').optional(),
   source: tierV1ResultSourceSchema,
   type: tierV1ResultTypeSchema,
   label: requiredTextSchema,
@@ -223,6 +225,8 @@ export const tierV1DirectoryRowSchema = z.strictObject({
   city: optionalTextSchema,
   agency_name: optionalTextSchema,
   referent_name: optionalTextSchema,
+  match_kind: z.enum(['entity', 'contact', 'phone', 'email']).optional(),
+  match_label: optionalTextSchema.optional(),
   updated_at: z.string().trim().min(1, 'Date de mise a jour requise'),
   archived_at: optionalTextSchema
 });
