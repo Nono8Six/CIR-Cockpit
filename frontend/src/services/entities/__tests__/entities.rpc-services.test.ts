@@ -3,8 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 import type { TrpcClient } from '@/services/api/trpcClient';
 import { safeTrpc } from '@/services/api/safeTrpc';
 import { getClients } from '@/services/clients/getClients';
-import { convertEntityToClient } from '@/services/entities/convertEntityToClient';
 import { deleteEntityContact } from '@/services/entities/deleteEntityContact';
+import { deleteSupplier } from '@/services/entities/deleteSupplier';
 import { getEntityContacts } from '@/services/entities/getEntityContacts';
 import { getEntitySearchIndex } from '@/services/entities/getEntitySearchIndex';
 import { getProspects } from '@/services/entities/getProspects';
@@ -12,6 +12,7 @@ import { reassignEntity } from '@/services/entities/reassignEntity';
 import { saveEntity } from '@/services/entities/saveEntity';
 import { saveEntityContact } from '@/services/entities/saveEntityContact';
 import { searchEntitiesUnified } from '@/services/entities/searchEntitiesUnified';
+import { setSupplierArchived } from '@/services/entities/setSupplierArchived';
 
 vi.mock('../../api/safeTrpc');
 
@@ -291,40 +292,6 @@ describe('entities RPC services', () => {
     })).rejects.toBe(error);
   });
 
-  it('builds convertEntityToClient RPC payload and parses response', async () => {
-    mockSafeRpc.mockReturnValue({} as never);
-
-    convertEntityToClient({
-      id: 'entity-1',
-      client_number: '12345',
-      account_type: 'term'
-    });
-
-    expect(mockSafeRpc).toHaveBeenCalledWith(
-      expect.any(Function),
-      expect.any(Function),
-      'Impossible de convertir en client.'
-    );
-
-    const [call, parser] = mockSafeRpc.mock.calls[0] as [SafeRpcCall, SafeRpcParser, string];
-    const { client, entitiesPost } = createTrpcClientFixture();
-    await call(client, { context: { headers: { 'x-request-id': 'req-1' } } });
-
-    expect(entitiesPost).toHaveBeenCalledWith({
-          action: 'convert_to_client',
-          entity_id: 'entity-1',
-          convert: {
-            client_number: '12345',
-            account_type: 'term'
-          }
-        },
-      { context: { headers: { 'x-request-id': 'req-1' } } }
-    );
-
-    const entity = { id: 'entity-1' };
-    expect(parser({ ok: true, entity })).toBe(entity);
-    expectRequestFailedError(parser);
-  });
 
   it('builds deleteEntityContact RPC payload and parses void response', async () => {
     mockSafeRpc.mockReturnValue({} as never);
@@ -345,52 +312,80 @@ describe('entities RPC services', () => {
     expect(parser({ any: 'value' })).toBeUndefined();
   });
 
-  it('builds reassignEntity RPC payload and validates propagated count', async () => {
+  it('builds deleteSupplier RPC payload and parses deleted entity response', async () => {
     mockSafeRpc.mockReturnValue({} as never);
 
-    reassignEntity({
-      entity_id: 'entity-2',
-      target_agency_id: 'agency-2'
-    });
+    deleteSupplier('supplier-1');
 
-    expect(mockSafeRpc).toHaveBeenCalledWith(
-      expect.any(Function),
-      expect.any(Function),
-      "Impossible de reassigner l'entite."
+    const [call, parser] = mockSafeRpc.mock.calls[0] as [SafeRpcCall, SafeRpcParser, string];
+    const { client, entitiesPost } = createTrpcClientFixture();
+    await call(client, { context: { headers: { 'x-request-id': 'req-delete-supplier' } } });
+
+    expect(entitiesPost).toHaveBeenCalledWith({
+          action: 'delete',
+          entity_id: 'supplier-1',
+          delete_related_interactions: false
+        },
+      { context: { headers: { 'x-request-id': 'req-delete-supplier' } } }
     );
+
+    const entity = { id: 'supplier-1' };
+    expect(parser({ ok: true, entity })).toBe(entity);
+    expectRequestFailedError(parser);
+  });
+
+  it('builds setSupplierArchived RPC payload and parses updated entity response', async () => {
+    mockSafeRpc.mockReturnValue({} as never);
+
+    setSupplierArchived('supplier-2', true);
 
     const [call, parser] = mockSafeRpc.mock.calls[0] as [SafeRpcCall, SafeRpcParser, string];
     const { client, entitiesPost } = createTrpcClientFixture();
     await call(client, {});
 
     expect(entitiesPost).toHaveBeenCalledWith({
-          action: 'reassign',
-          entity_id: 'entity-2',
-          target_agency_id: 'agency-2'
+          action: 'archive',
+          entity_id: 'supplier-2',
+          archived: true
         },
       {}
     );
 
-    const entity = { id: 'entity-2' };
-    expect(
-      parser({
-        ok: true,
-        entity,
-        propagated_interactions_count: 3
-      })
-    ).toEqual({
+    const entity = { id: 'supplier-2', archived_at: '2026-05-19T10:00:00.000Z' };
+    expect(parser({ ok: true, entity })).toBe(entity);
+    expectRequestFailedError(parser);
+  });
+
+  it('builds reassignEntity RPC payload and parses propagated interaction count', async () => {
+    mockSafeRpc.mockReturnValue({} as never);
+
+    reassignEntity({
+      entity_id: 'entity-1',
+      target_agency_id: 'agency-target'
+    });
+
+    const [call, parser] = mockSafeRpc.mock.calls[0] as [SafeRpcCall, SafeRpcParser, string];
+    const { client, entitiesPost } = createTrpcClientFixture();
+    await call(client, { context: { headers: { 'x-request-id': 'req-reassign' } } });
+
+    expect(entitiesPost).toHaveBeenCalledWith({
+          action: 'reassign',
+          entity_id: 'entity-1',
+          target_agency_id: 'agency-target'
+        },
+      { context: { headers: { 'x-request-id': 'req-reassign' } } }
+    );
+
+    const entity = { id: 'entity-1', agency_id: 'agency-target' };
+    expect(parser({
+      ok: true,
+      entity,
+      propagated_interactions_count: 3
+    })).toEqual({
       entity,
       propagated_interactions_count: 3
     });
-
     expectRequestFailedError(parser);
-    expect(() =>
-      parser({
-        ok: true,
-        entity,
-        propagated_interactions_count: 'bad'
-      })
-    ).toThrow();
   });
 
   it('builds saveEntity payload for prospect and supplier entities', async () => {

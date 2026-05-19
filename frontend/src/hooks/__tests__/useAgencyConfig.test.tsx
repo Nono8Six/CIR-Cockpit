@@ -2,9 +2,9 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import type { PropsWithChildren } from 'react';
-import type { ResolvedConfigSnapshot } from 'shared/schemas/config.schema';
+import type { ResolvedConfigSnapshot } from '../../../../shared/schemas/system/config.schema';
 
-import { useAgencyConfig } from '@/hooks/useAgencyConfig';
+import { useAgencyConfig } from '../admin/agencies/core/useAgencyConfig';
 import { createTestQueryClient } from '@/__tests__/test-utils';
 import { getConfigSnapshot } from '@/services/config';
 

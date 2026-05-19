@@ -1,6 +1,6 @@
 import { ResultAsync } from 'neverthrow';
 
-import { dataInteractionsMutationResponseSchema } from 'shared/schemas/api-responses';
+import { dataInteractionsMutationResponseSchema } from '../../../../shared/schemas/system/api-responses';
 import { isInternalRelationValue, isSolicitationRelationValue, isSupplierRelationValue } from '@/constants/relations';
 import type { Interaction, InteractionDraft } from '@/types';
 import { safeTrpc } from '@/services/api/safeTrpc';

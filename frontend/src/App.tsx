@@ -12,12 +12,12 @@ import { getAppGate } from '@/app/getAppGate';
 import { getPathForTab, isInteractionTab, isShellNavItemActive } from '@/app/appRoutes';
 import AppLayout from '@/components/AppLayout';
 import type { AppMainViewState } from '@/components/app-main/AppMainContent.types';
-import { useAppQueries } from '@/hooks/useAppQueries';
-import { useAppSessionActions, useAppSessionStateContext } from '@/hooks/useAppSession';
-import { useAppViewState } from '@/hooks/useAppViewState';
-import { useSaveInteraction } from '@/hooks/useSaveInteraction';
+import { useAppQueries } from './hooks/session/useAppQueries';
+import { useAppSessionActions, useAppSessionStateContext } from './hooks/session/useAppSession';
+import { useAppViewState } from './hooks/session/useAppViewState';
+import { useSaveInteraction } from './hooks/interactions/core/actions/useSaveInteraction';
 import type { UserProfile } from '@/services/auth/getProfile';
-import { notifySuccess } from '@/services/errors/notify';
+import { notifySuccess } from '@/services/errors/notifySuccess';
 import type { InteractionDraft } from '@/types';
 import { DEFAULT_DIRECTORY_SEARCH } from '@/components/client-directory/clientDirectorySearch';
 

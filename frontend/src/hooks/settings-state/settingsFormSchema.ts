@@ -1,8 +1,8 @@
 import { z } from 'zod/v4';
-import type { ResolvedConfigSnapshot } from 'shared/schemas/config.schema';
-import { uuidSchema } from 'shared/schemas/auth.schema';
+import type { ResolvedConfigSnapshot } from '../../../../shared/schemas/system/config.schema';
+import { uuidSchema } from '../../../../shared/schemas/admin/auth.schema';
 
-import { normalizeStatusesForUi } from '../useSettingsState.helpers';
+import { normalizeStatusesForUi } from './use-settings-state.helpers';
 
 const MAX_CONFIG_LABEL_LENGTH = 120;
 

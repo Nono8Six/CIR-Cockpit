@@ -1,9 +1,9 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { TierV1DirectoryRow, TierV1SearchInput } from 'shared/schemas/tier-v1.schema';
-import { useInteractionSearch } from '@/hooks/useInteractionSearch';
-import { useUnifiedEntitySearch } from '@/hooks/useUnifiedEntitySearch';
+import type { TierV1DirectoryRow, TierV1SearchInput } from '../../../../shared/schemas/interaction/tier-v1.schema';
+import { useInteractionSearch } from '../interactions/core/queries/useInteractionSearch';
+import { useUnifiedEntitySearch } from '../directory/core/useUnifiedEntitySearch';
 import type { Entity, EntityContact } from '@/types';
 
 type SearchHookReturn = {
@@ -12,7 +12,7 @@ type SearchHookReturn = {
   isError: boolean;
 };
 
-vi.mock('@/hooks/useUnifiedEntitySearch', () => ({
+vi.mock('@/hooks/directory/core/useUnifiedEntitySearch', () => ({
   useUnifiedEntitySearch: vi.fn()
 }));
 

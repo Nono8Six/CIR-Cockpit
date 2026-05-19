@@ -1,7 +1,7 @@
 import { ChevronRight, Trash2 } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import { TableCell, TableRow } from '@/components/ui/table';
+import { Button } from '../../ui/inputs/basic/Button';
+import { TableCell, TableRow } from '../../ui/data-display/Table';
 import { formatDate } from '@/utils/date/formatDate';
 import { formatTime } from '@/utils/date/formatTime';
 import DashboardFamilyBadges from './DashboardFamilyBadges';

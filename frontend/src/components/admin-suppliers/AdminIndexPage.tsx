@@ -1,5 +1,5 @@
 import AdminPanel from '@/components/AdminPanel';
-import { useAppSessionStateContext } from '@/hooks/useAppSession';
+import { useAppSessionStateContext } from '../../hooks/session/useAppSession';
 
 const AdminIndexPage = () => {
   const sessionState = useAppSessionStateContext();

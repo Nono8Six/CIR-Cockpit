@@ -1,7 +1,7 @@
 import { Inbox, Loader2, TriangleAlert } from 'lucide-react';
 
 import { Agency } from '@/types';
-import { Button } from '@/components/ui/button';
+import { Button } from '../ui/inputs/basic/Button';
 import AgencyCard from './AgencyCard';
 
 type AgenciesManagerListProps = {

@@ -1,8 +1,8 @@
 import { z } from 'zod/v4';
 
 import { Channel } from '@/types';
-import { readObject } from '@/utils/recordNarrowing';
-import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
+import { readObject } from '@/utils/recordNarrowing/readObject';
+import type { InteractionFormValues } from '../../../../shared/schemas/interaction/interaction.schema';
 
 export type InteractionDraftPayload = {
   values: Partial<InteractionFormValues>;

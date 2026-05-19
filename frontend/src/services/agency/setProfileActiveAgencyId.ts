@@ -1,9 +1,9 @@
 import type { ResultAsync } from 'neverthrow';
 
-import { dataProfileResponseSchema } from 'shared/schemas/api-responses';
+import { dataProfileResponseSchema } from '../../../../shared/schemas/system/api-responses';
 
 import { safeAsync } from '@/lib/result';
-import { invokeTrpc } from '@/services/api/safeTrpc';
+import { invokeTrpc } from '@/services/api/invokeTrpc';
 import { createAppError, type AppError } from '@/services/errors/AppError';
 import { normalizeError } from '@/services/errors/normalizeError';
 

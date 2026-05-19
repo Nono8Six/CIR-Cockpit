@@ -1,16 +1,16 @@
 import type { Dispatch, SetStateAction } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 
-import type { ProductOnboardingConfig } from 'shared/schemas/config.schema';
+import type { ProductOnboardingConfig } from '../../../../shared/schemas/system/config.schema';
 import type {
   DirectoryCompanySearchResult,
   DirectoryDuplicateMatch,
   DirectoryListRow,
-} from 'shared/schemas/directory.schema';
+} from '../../../../shared/schemas/system/directory.schema';
 
 import type { ClientPayload } from '@/services/clients/saveClient';
 import type { EntityPayload } from '@/services/entities/saveEntity';
-import type { useDirectoryCompanyDetails } from '@/hooks/useDirectoryCompanyDetails';
+import type { useDirectoryCompanyDetails } from '../../hooks/directory/company/useDirectoryCompanyDetails';
 import type { UserRole } from '@/types';
 
 import type {

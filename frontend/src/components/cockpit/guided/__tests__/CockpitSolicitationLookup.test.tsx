@@ -4,10 +4,10 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import CockpitSolicitationLookup from '@/components/cockpit/guided/CockpitSolicitationLookup';
-import { useCockpitPhoneLookup } from '@/hooks/useCockpitPhoneLookup';
+import { useCockpitPhoneLookup } from '../../../../hooks/cockpit-utils/useCockpitPhoneLookup';
 import type { Interaction } from '@/types';
 
-vi.mock('@/hooks/useCockpitPhoneLookup', () => ({
+vi.mock('@/hooks/cockpit-utils/useCockpitPhoneLookup', () => ({
   useCockpitPhoneLookup: vi.fn()
 }));
 

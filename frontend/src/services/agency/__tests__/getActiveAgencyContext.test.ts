@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getCurrentUserId } from '@/services/auth/getCurrentUserId';
-import { getActiveAgencyContext, setActiveAgencyId } from '@/services/agency/getActiveAgencyContext';
+import { getActiveAgencyContext } from '@/services/agency/getActiveAgencyContext';
+import { setActiveAgencyId } from '@/services/agency/setActiveAgencyId';
 import { getActiveAgencyId } from '@/services/agency/getActiveAgencyId';
 import { getAgencyMemberships } from '@/services/agency/getAgencyMemberships';
 

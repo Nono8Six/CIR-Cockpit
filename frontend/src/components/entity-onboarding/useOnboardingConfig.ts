@@ -5,9 +5,9 @@ import {
   DEFAULT_APP_SETTINGS,
   resolveOnboardingConfig,
   type ProductOnboardingConfig,
-} from 'shared/schemas/config.schema';
+} from '../../../../shared/schemas/system/config.schema';
 
-import { useConfigSnapshot } from '@/hooks/useConfigSnapshot';
+import { useConfigSnapshot } from '../../hooks/cockpit-utils/useConfigSnapshot';
 
 export type DepartmentOption = {
   value: string;

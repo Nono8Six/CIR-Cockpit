@@ -1,8 +1,8 @@
 import { MapPin, UserRound, ShieldCheck, Building2 } from "lucide-react";
 
 import type { Agency } from "@/types";
-import { Badge } from "@/components/ui/badge";
-import type { DirectoryCompanySearchResult } from "shared/schemas/directory.schema";
+import { Badge } from '../ui/data-display/Badge';
+import type { DirectoryCompanySearchResult } from '../../../../shared/schemas/system/directory.schema';
 import type { OnboardingValues } from "./entityOnboarding.schema";
 import type { DuplicateMatch } from "./entityOnboarding.types";
 import {

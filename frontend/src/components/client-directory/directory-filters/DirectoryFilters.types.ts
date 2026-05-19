@@ -2,7 +2,7 @@ import type {
   DirectoryDensity,
   DirectoryCommercialOption,
   DirectorySearchState
-} from 'shared/schemas/directory.schema';
+} from '../../../../../shared/schemas/system/directory.schema';
 
 export interface DirectoryFilterOption {
   value: string;

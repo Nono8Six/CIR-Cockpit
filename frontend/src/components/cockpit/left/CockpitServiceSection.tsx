@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FieldErrors, UseFormSetValue } from 'react-hook-form';
 
-import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
+import type { InteractionFormValues } from '../../../../../shared/schemas/interaction/interaction.schema';
 import CockpitFieldError from './CockpitFieldError';
 import CockpitServicePicker from './CockpitServicePicker';
 import CockpitServiceQuickToggles from './CockpitServiceQuickToggles';

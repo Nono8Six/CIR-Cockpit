@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getCurrentUserId } from '@/services/auth/getCurrentUserId';
-import { invokeTrpc } from '@/services/api/safeTrpc';
+import { invokeTrpc } from '@/services/api/invokeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 import { mapPostgrestError } from '@/services/errors/mapPostgrestError';
 import { getAgencies } from '@/services/agency/getAgencies';
@@ -10,7 +10,7 @@ import { setProfileActiveAgencyId } from '@/services/agency/setProfileActiveAgen
 import { requireSupabaseClient } from '@/services/supabase/requireSupabaseClient';
 
 vi.mock('../../auth/getCurrentUserId');
-vi.mock('../../api/safeTrpc');
+vi.mock('../../api/invokeTrpc');
 vi.mock('../../errors/mapPostgrestError');
 vi.mock('../../supabase/requireSupabaseClient');
 

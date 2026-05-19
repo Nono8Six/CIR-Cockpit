@@ -1,5 +1,5 @@
 import type { VisibilityState } from '@tanstack/react-table';
-import type { DirectorySortBy } from 'shared/schemas/directory.schema';
+import type { DirectorySortBy } from '../../../../shared/schemas/system/directory.schema';
 
 export const SUPPLIER_COLUMN_ORDER: DirectorySortBy[] = [
   'entity_type',

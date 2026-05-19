@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { DirectoryRecord } from 'shared/schemas/directory.schema';
+import type { DirectoryRecord } from '../../../../shared/schemas/system/directory.schema';
 
 import type { Interaction } from '@/types';
 import { formatRelativeTime } from '@/utils/date/formatRelativeTime';

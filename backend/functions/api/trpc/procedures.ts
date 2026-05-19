@@ -2,7 +2,7 @@ import { TRPCError, initTRPC } from '@trpc/server';
 import { ZodError } from 'zod/v4';
 
 import type { ErrorCode } from '../../../../shared/errors/types.ts';
-import { authenticateAccessToken, authenticateSuperAdminAccessToken, getAccessTokenFromHeaders } from '../middleware/auth.ts';
+import { authenticateAccessToken, authenticateSuperAdminAccessToken, getAccessTokenFromHeaders } from '../middleware/auth/auth.ts';
 import { httpError, type HttpError } from '../middleware/errorHandler.ts';
 import type { TrpcContext } from './context.ts';
 

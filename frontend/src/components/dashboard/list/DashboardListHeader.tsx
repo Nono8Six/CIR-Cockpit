@@ -1,4 +1,4 @@
-import { TableHead, TableRow } from '@/components/ui/table';
+import { TableHead, TableRow } from '../../ui/data-display/Table';
 
 const DashboardListHeader = () => (
   <TableRow className="bg-surface-1 hover:bg-surface-1">

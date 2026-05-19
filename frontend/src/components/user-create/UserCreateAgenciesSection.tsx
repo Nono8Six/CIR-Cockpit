@@ -3,10 +3,10 @@ import { useMemo, useState } from 'react';
 import { Check, ChevronsUpDown, X } from 'lucide-react';
 
 import type { Agency } from '@/types';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Badge } from '../ui/data-display/Badge';
+import { Button } from '../ui/inputs/basic/Button';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../ui/inputs/selects/Command';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/navigation/Popover';
 
 type UserCreateAgenciesSectionProps = {
   agencies: Agency[];

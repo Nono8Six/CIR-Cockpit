@@ -28,7 +28,7 @@ vi.mock('@/components/app-header/AppHeaderSearchButton', () => ({
   default: () => <button type="button">Recherche</button>
 }));
 
-vi.mock('@/components/ui/dropdown-menu', async () => {
+vi.mock('@/components/ui/navigation/DropdownMenu', async () => {
   const React = await import('react');
   type MockMenuChildProps = {
     className?: string;

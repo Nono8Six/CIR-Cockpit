@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 
-import { useNotifyError } from '@/hooks/useNotifyError';
+import { useNotifyError } from '../cockpit-utils/useNotifyError';
 import { createAppError } from '@/services/errors/AppError';
 import { handleUiError } from '@/services/errors/handleUiError';
 

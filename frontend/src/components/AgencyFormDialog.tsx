@@ -2,10 +2,10 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { agencyFormSchema, type AgencyFormValues } from 'shared/schemas/agency.schema';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
+import { agencyFormSchema, type AgencyFormValues } from '../../../shared/schemas/admin/agency.schema';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/feedback/Dialog';
+import { Button } from './ui/inputs/basic/Button';
+import { Input } from './ui/inputs/basic/Input';
 
 interface AgencyFormDialogProps {
   open: boolean;

@@ -2,7 +2,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import type { ChangeEvent } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useClientContactDialog } from '@/hooks/useClientContactDialog';
+import { useClientContactDialog } from '../entities/contacts/useClientContactDialog';
 import type { EntityContact } from '@/types';
 
 const buildContact = (overrides: Partial<EntityContact> = {}): EntityContact => ({

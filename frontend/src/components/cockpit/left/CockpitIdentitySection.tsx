@@ -3,7 +3,7 @@ import type { FieldErrors, UseFormRegisterReturn, UseFormSetValue } from 'react-
 
 import type { RelationMode } from '@/constants/relations';
 import type { Entity } from '@/types';
-import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
+import type { InteractionFormValues } from '../../../../../shared/schemas/interaction/interaction.schema';
 import CockpitFieldError from './CockpitFieldError';
 import CockpitIdentityEditor from './CockpitIdentityEditor';
 import CockpitSelectedEntityCard from './CockpitSelectedEntityCard';

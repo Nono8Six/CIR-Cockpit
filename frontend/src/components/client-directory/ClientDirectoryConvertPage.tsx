@@ -1,13 +1,13 @@
 import { useNavigate, useSearch } from '@tanstack/react-router';
-import type { DirectoryListRow } from 'shared/schemas/directory.schema';
+import type { DirectoryListRow } from '../../../../shared/schemas/system/directory.schema';
 
 import EntityOnboardingDialog from '@/components/EntityOnboardingDialog';
-import { useAgencies } from '@/hooks/useAgencies';
-import { useAppSessionStateContext } from '@/hooks/useAppSession';
-import { useDirectoryOptionCommercials } from '@/hooks/useDirectoryOptionCommercials';
-import { useDirectoryRecord } from '@/hooks/useDirectoryRecord';
-import { useSaveClient } from '@/hooks/useSaveClient';
-import { notifySuccess } from '@/services/errors/notify';
+import { useAgencies } from '../../hooks/admin/agencies/core/useAgencies';
+import { useAppSessionStateContext } from '../../hooks/session/useAppSession';
+import { useDirectoryOptionCommercials } from '../../hooks/directory/options/useDirectoryOptionCommercials';
+import { useDirectoryRecord } from '../../hooks/directory/core/useDirectoryRecord';
+import { useSaveClient } from '../../hooks/entities/clients/useSaveClient';
+import { notifySuccess } from '@/services/errors/notifySuccess';
 import { isProspectEntityType, toSelectedAgenciesScope } from './clientDirectorySearch';
 
 type ClientDirectoryConvertPageProps = {

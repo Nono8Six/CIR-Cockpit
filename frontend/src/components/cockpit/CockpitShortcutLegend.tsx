@@ -1,9 +1,9 @@
 import { Save } from 'lucide-react';
 
 import { getPlatformShortcutLabel } from '@/app/appConstants';
-import { Button } from '@/components/ui/button';
-import { Kbd } from '@/components/ui/kbd';
-import type { CockpitGuidedStep } from '@/hooks/useCockpitGuidedFlow';
+import { Button } from '../ui/inputs/basic/Button';
+import { Kbd } from '../ui/data-display/Kbd';
+import type { CockpitGuidedStep } from '../../hooks/cockpit/useCockpitGuidedFlow';
 
 type ShortcutStep = CockpitGuidedStep | 'readonly';
 

@@ -4,7 +4,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue
-} from '@/components/ui/select';
+} from '../../ui/inputs/selects/Select';
 
 type InteractionFooterStatusSelectProps = {
   statusOptions: { id: string; label: string }[];

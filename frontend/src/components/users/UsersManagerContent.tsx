@@ -1,4 +1,4 @@
-import type { useUsersManager } from '@/hooks/useUsersManager';
+import type { useUsersManager } from '../../hooks/admin/users/identity/useUsersManager';
 import UsersManagerHeader from './UsersManagerHeader';
 import UsersManagerList from './UsersManagerList';
 import UsersManagerSearch from './UsersManagerSearch';

@@ -1,6 +1,6 @@
 import { AppError, isAppError } from './AppError';
 import { normalizeError } from './normalizeError';
-import { notifyError } from './notify';
+import { notifyError } from './notifyError';
 import { reportError } from './reportError';
 
 type ErrorContext = Record<string, unknown> | undefined;

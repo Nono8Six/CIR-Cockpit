@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { getVisibleGuidedAnswerSteps } from '@/components/cockpit/guided/CockpitGuidedEntry';
 import type { CockpitFormLeftPaneProps } from '@/components/cockpit/CockpitPaneTypes';
-import type { CockpitGuidedStep } from '@/hooks/useCockpitGuidedFlow';
+import type { CockpitGuidedStep } from '../../../../hooks/cockpit/useCockpitGuidedFlow';
 import type { EntityContact } from '@/types';
 
 const buildFlow = (activeStep: CockpitGuidedStep) => ({

@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useLoginScreenForm } from '@/hooks/useLoginScreenForm';
+import { useLoginScreenForm } from '../session/useLoginScreenForm';
 import { createAppError } from '@/services/errors/AppError';
 import { signInWithPassword } from '@/services/auth/signInWithPassword';
 import { normalizeError } from '@/services/errors/normalizeError';

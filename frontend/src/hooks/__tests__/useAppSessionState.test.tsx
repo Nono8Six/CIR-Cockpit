@@ -4,7 +4,7 @@ import type { PropsWithChildren } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createTestQueryClient } from '@/__tests__/test-utils';
-import { useAppSessionState } from '@/hooks/useAppSessionState';
+import { useAppSessionState } from '../session/useAppSessionState';
 import { createAppError } from '@/services/errors/AppError';
 import { handleUiError } from '@/services/errors/handleUiError';
 
@@ -51,7 +51,7 @@ vi.mock('@/services/agency/setProfileActiveAgencyId', () => ({
   setProfileActiveAgencyId: authMocks.setProfileActiveAgencyId
 }));
 
-vi.mock('@/services/agency/getActiveAgencyContext', () => ({
+vi.mock('@/services/agency/setActiveAgencyId', () => ({
   setActiveAgencyId: authMocks.setActiveAgencyId
 }));
 

@@ -1,4 +1,4 @@
-import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/navigation/Tabs';
 import UsersManager from './UsersManager';
 import AgenciesManager from './AgenciesManager';
 import AuditLogsPanel from './AuditLogsPanel';

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Channel, type InteractionRow } from '@/types';
 import { getActiveAgencyId } from '@/services/agency/getActiveAgencyId';
-import { invokeTrpc } from '@/services/api/safeTrpc';
+import { invokeTrpc } from '@/services/api/invokeTrpc';
 import { deleteInteractionDraft } from '@/services/interactions/deleteInteractionDraft';
 import { getInteractionDraft } from '@/services/interactions/getInteractionDraft';
 import { getInteractions } from '@/services/interactions/getInteractions';
@@ -13,7 +13,7 @@ vi.mock('@/services/agency/getActiveAgencyId', () => ({
   getActiveAgencyId: vi.fn()
 }));
 
-vi.mock('@/services/api/safeTrpc', () => ({
+vi.mock('@/services/api/invokeTrpc', () => ({
   invokeTrpc: vi.fn()
 }));
 

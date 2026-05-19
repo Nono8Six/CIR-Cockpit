@@ -1,12 +1,12 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { useAddTimelineEvent } from '@/hooks/useAddTimelineEvent';
-import { useDeleteInteraction } from '@/hooks/useDeleteInteraction';
-import { useEntityInteractions } from '@/hooks/useEntityInteractions';
+import { useAddTimelineEvent } from '../../hooks/interactions/timeline/useAddTimelineEvent';
+import { useDeleteInteraction } from '../../hooks/interactions/core/actions/useDeleteInteraction';
+import { useEntityInteractions } from '../../hooks/interactions/core/queries/useEntityInteractions';
 import { isAppError } from '@/services/errors/AppError';
 import { handleUiError } from '@/services/errors/handleUiError';
-import { notifySuccess } from '@/services/errors/notify';
+import { notifySuccess } from '@/services/errors/notifySuccess';
 import {
   invalidateEntityInteractionsQueries,
   invalidateInteractionsQuery

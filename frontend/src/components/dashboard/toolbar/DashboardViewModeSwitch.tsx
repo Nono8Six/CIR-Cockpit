@@ -1,6 +1,6 @@
 import { Columns3, LayoutList } from 'lucide-react';
 
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '../../ui/navigation/Tabs';
 
 type ViewMode = 'kanban' | 'list';
 

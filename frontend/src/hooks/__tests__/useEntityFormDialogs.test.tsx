@@ -1,10 +1,10 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { useClientFormDialog } from '@/hooks/useClientFormDialog';
-import { useProspectFormDialog } from '@/hooks/useProspectFormDialog';
-import type { ClientCompanyFormValues } from 'shared/schemas/client.schema';
-import type { ProspectFormValues } from 'shared/schemas/prospect.schema';
+import { useClientFormDialog } from '../entities/clients/useClientFormDialog';
+import { useProspectFormDialog } from '../entities/prospects/useProspectFormDialog';
+import type { ClientCompanyFormValues } from '../../../../shared/schemas/entity/client.schema';
+import type { ProspectFormValues } from '../../../../shared/schemas/entity/prospect.schema';
 
 const AGENCY_ID = '11111111-1111-1111-1111-111111111111';
 const agency = {

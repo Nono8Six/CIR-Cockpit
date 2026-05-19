@@ -5,7 +5,7 @@ import type {
   OnboardingIntent,
   OnboardingMode,
 } from "@/components/entity-onboarding/entityOnboarding.types";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from '../ui/data-display/Badge';
 import { cn } from "@/lib/utils";
 
 type ChoiceOption = { id: string; title: string; body: string };

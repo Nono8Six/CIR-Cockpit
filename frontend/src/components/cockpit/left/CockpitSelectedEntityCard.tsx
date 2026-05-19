@@ -1,7 +1,7 @@
 import { Building2 } from 'lucide-react';
 
 import type { Entity } from '@/types';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '../../ui/data-display/Badge';
 
 type CockpitSelectedEntityCardProps = {
   selectedEntity: Entity;

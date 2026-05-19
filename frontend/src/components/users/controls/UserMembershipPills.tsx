@@ -1,6 +1,6 @@
 import { UserCog } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '../../ui/inputs/basic/Button';
 import type { AdminUserSummary } from '@/services/admin/getAdminUsers';
 
 type UserMembershipPillsProps = {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { DirectorySavedViewState } from 'shared/schemas/directory.schema';
+import type { DirectorySavedViewState } from '../../../../../shared/schemas/system/directory.schema';
 import {
   DEFAULT_DIRECTORY_DENSITY,
   DEFAULT_DIRECTORY_SEARCH,

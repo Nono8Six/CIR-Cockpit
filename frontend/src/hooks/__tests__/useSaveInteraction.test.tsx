@@ -4,20 +4,18 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { okAsync, errAsync } from 'neverthrow';
 import type { PropsWithChildren } from 'react';
 
-import { useSaveInteraction } from '@/hooks/useSaveInteraction';
+import { useSaveInteraction } from '../interactions/core/actions/useSaveInteraction';
 import { interactionsKey } from '@/services/query/queryKeys';
 import { createTestQueryClient } from '@/__tests__/test-utils';
 import type { Interaction } from '@/types';
 import { saveInteraction } from '@/services/interactions/saveInteraction';
-import { notifyError } from '@/services/errors/notify';
+import { notifyError } from '@/services/errors/notifyError';
 import { createAppError } from '@/services/errors/AppError';
 
 vi.mock('@/services/interactions/saveInteraction', () => ({
   saveInteraction: vi.fn()
 }));
-vi.mock('@/services/errors/notify', () => ({
-  notifyError: vi.fn()
-}));
+vi.mock('@/services/errors/notifyError', () => ({ notifyError: vi.fn() }));
 vi.mock('@/services/errors/reportError', () => ({
   reportError: vi.fn()
 }));

@@ -1,4 +1,4 @@
-import type { TierV1DirectoryRow } from 'shared/schemas/tier-v1.schema';
+import type { TierV1DirectoryRow } from '../../../../shared/schemas/interaction/tier-v1.schema';
 import type { Entity } from '@/types';
 import InteractionSearchRecents from './InteractionSearchRecents';
 import InteractionSearchResults from './InteractionSearchResults';

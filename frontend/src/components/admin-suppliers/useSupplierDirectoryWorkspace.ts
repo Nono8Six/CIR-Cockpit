@@ -5,17 +5,17 @@ import type {
   DirectorySavedView,
   DirectorySavedViewSaveInput,
   DirectorySearchState
-} from 'shared/schemas/directory.schema';
+} from '../../../../shared/schemas/system/directory.schema';
 
-import { useAppSessionStateContext } from '@/hooks/useAppSession';
-import { useDeleteDirectorySavedView } from '@/hooks/useDeleteDirectorySavedView';
-import { useDirectoryOptionDepartments } from '@/hooks/useDirectoryOptionDepartments';
-import { useDirectoryPage } from '@/hooks/useDirectoryPage';
-import { useDirectorySavedViews } from '@/hooks/useDirectorySavedViews';
-import { useSaveDirectorySavedView } from '@/hooks/useSaveDirectorySavedView';
-import { useSetDefaultDirectorySavedView } from '@/hooks/useSetDefaultDirectorySavedView';
+import { useAppSessionStateContext } from '../../hooks/session/useAppSession';
+import { useDeleteDirectorySavedView } from '../../hooks/directory/views/useDeleteDirectorySavedView';
+import { useDirectoryOptionDepartments } from '../../hooks/directory/options/useDirectoryOptionDepartments';
+import { useDirectoryPage } from '../../hooks/directory/core/useDirectoryPage';
+import { useDirectorySavedViews } from '../../hooks/directory/views/useDirectorySavedViews';
+import { useSaveDirectorySavedView } from '../../hooks/directory/views/useSaveDirectorySavedView';
+import { useSetDefaultDirectorySavedView } from '../../hooks/directory/views/useSetDefaultDirectorySavedView';
 import { handleUiError } from '@/services/errors/handleUiError';
-import { notifySuccess } from '@/services/errors/notify';
+import { notifySuccess } from '@/services/errors/notifySuccess';
 import { getIsMobileDirectoryViewport, MOBILE_DIRECTORY_QUERY } from '@/components/client-directory/directoryViewport';
 import type { DirectoryOptionRequest } from '@/components/client-directory/directory-filters/DirectoryFilters.types';
 

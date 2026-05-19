@@ -6,19 +6,19 @@ export {
   getDirectoryOptionDepartments,
   getDirectoryRecord,
   listDirectory
-} from './directoryListing.ts';
+} from './directory/listing/directoryListing.ts';
 export {
   buildCompanySearchUrl,
   getDirectoryCompanyDetails,
   getDirectoryCompanySearch
-} from './directoryCompany.ts';
+} from './directory/company/directoryCompany.ts';
 export {
   buildCompanyDuplicateReason,
   getDirectoryDuplicates,
   rankIndividualDuplicate,
   type DirectoryDuplicateLookupRow
-} from './directoryDuplicates.ts';
+} from './directory/duplicates/directoryDuplicates.ts';
 export {
   normalizeBooleanFlag,
   normalizeTextArray
-} from './directoryShared.ts';
+} from './directory/core/directoryShared.ts';

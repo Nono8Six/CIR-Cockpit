@@ -1,6 +1,6 @@
 import { ResultAsync } from 'neverthrow';
 
-import { dataEntityContactsResponseSchema } from 'shared/schemas/api-responses';
+import { dataEntityContactsResponseSchema } from '../../../../shared/schemas/system/api-responses';
 import { EntityContact } from '@/types';
 import { createAppError, type AppError } from '@/services/errors/AppError';
 import { safeTrpc } from '@/services/api/safeTrpc';

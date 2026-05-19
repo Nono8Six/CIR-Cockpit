@@ -1,8 +1,8 @@
 import type { UseFormSetValue } from 'react-hook-form';
 
-import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
+import type { InteractionFormValues } from '../../../../../shared/schemas/interaction/interaction.schema';
 import { cn } from '@/lib/utils';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { ToggleGroup, ToggleGroupItem } from '../../ui/inputs/basic/ToggleGroup';
 
 type CockpitServiceQuickTogglesProps = {
   quickServices: string[];

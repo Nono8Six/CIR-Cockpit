@@ -2,9 +2,9 @@ import {
   adminUsersListResponseSchema,
   type AdminUserMembership,
   type AdminUserSummary
-} from 'shared/schemas/api-responses';
+} from '../../../../shared/schemas/system/api-responses';
 
-import { invokeTrpc } from '@/services/api/safeTrpc';
+import { invokeTrpc } from '@/services/api/invokeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 
 export type { AdminUserMembership, AdminUserSummary };

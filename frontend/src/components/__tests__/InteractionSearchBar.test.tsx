@@ -3,11 +3,11 @@ import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ComponentProps } from 'react';
 
-import type { TierV1DirectoryRow, TierV1SearchInput } from 'shared/schemas/tier-v1.schema';
+import type { TierV1DirectoryRow, TierV1SearchInput } from '../../../../shared/schemas/interaction/tier-v1.schema';
 import InteractionSearchBar from '../InteractionSearchBar';
 import { renderWithProviders } from '@/__tests__/test-utils';
 import type { Entity, EntityContact } from '@/types';
-import { useUnifiedEntitySearch } from '@/hooks/useUnifiedEntitySearch';
+import { useUnifiedEntitySearch } from '../../hooks/directory/core/useUnifiedEntitySearch';
 
 type SearchHookReturn = {
   data?: { ok: true; results: TierV1DirectoryRow[] };
@@ -15,7 +15,7 @@ type SearchHookReturn = {
   isError: boolean;
 };
 
-vi.mock('@/hooks/useUnifiedEntitySearch', () => ({
+vi.mock('@/hooks/directory/core/useUnifiedEntitySearch', () => ({
   useUnifiedEntitySearch: vi.fn()
 }));
 

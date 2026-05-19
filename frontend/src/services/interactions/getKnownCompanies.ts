@@ -1,7 +1,7 @@
-import { dataInteractionsKnownCompaniesResponseSchema } from 'shared/schemas/api-responses';
+import { dataInteractionsKnownCompaniesResponseSchema } from '../../../../shared/schemas/system/api-responses';
 
 import { getActiveAgencyId } from '@/services/agency/getActiveAgencyId';
-import { invokeTrpc } from '@/services/api/safeTrpc';
+import { invokeTrpc } from '@/services/api/invokeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 
 const parseKnownCompaniesResponse = (payload: unknown): string[] => {

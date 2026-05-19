@@ -3,7 +3,7 @@ import { Pencil, Trash2 } from 'lucide-react';
 import EntityContactRow from '@/components/entity-contact/EntityContactRow';
 import { getEntityContactName } from '@/components/entity-contact/entityContactRow.utils';
 import type { ClientContact } from '@/types';
-import { Button } from './ui/button';
+import { Button } from './ui/inputs/basic/Button';
 
 interface ClientContactsListProps {
   contacts: ClientContact[];

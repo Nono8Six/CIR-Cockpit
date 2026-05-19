@@ -2,13 +2,15 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { AnchorHTMLAttributes, ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { DirectoryListRow, DirectorySearchState } from 'shared/schemas/directory.schema';
+import type { DirectoryListRow, DirectorySearchState } from '../../../../../shared/schemas/system/directory.schema';
 
 import AdminSuppliersPage from '@/components/admin-suppliers/AdminSuppliersPage';
-import { useAppSessionStateContext } from '@/hooks/useAppSession';
-import { useDirectoryPage } from '@/hooks/useDirectoryPage';
-import { useDirectorySavedViews } from '@/hooks/useDirectorySavedViews';
-import { useDeleteSupplier, useSaveSupplier, useSetSupplierArchived } from '@/hooks/useSaveSupplier';
+import { useAppSessionStateContext } from '../../../hooks/session/useAppSession';
+import { useDirectoryPage } from '../../../hooks/directory/core/useDirectoryPage';
+import { useDirectorySavedViews } from '../../../hooks/directory/views/useDirectorySavedViews';
+import { useDeleteSupplier } from '../../../hooks/entities/suppliers/useDeleteSupplier';
+import { useSaveSupplier } from '../../../hooks/entities/suppliers/useSaveSupplier';
+import { useSetSupplierArchived } from '../../../hooks/entities/suppliers/useSetSupplierArchived';
 
 type MockLinkProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
   children: ReactNode;
@@ -40,41 +42,47 @@ vi.mock('@tanstack/react-router', () => ({
   useSearch: () => searchState
 }));
 
-vi.mock('@/hooks/useAppSession', () => ({
+vi.mock('@/hooks/session/useAppSession', () => ({
   useAppSessionStateContext: vi.fn()
 }));
 
-vi.mock('@/hooks/useDirectoryPage', () => ({
+vi.mock('@/hooks/directory/core/useDirectoryPage', () => ({
   useDirectoryPage: vi.fn()
 }));
 
-vi.mock('@/hooks/useDirectoryOptionAgencies', () => ({
+vi.mock('@/hooks/directory/options/useDirectoryOptionAgencies', () => ({
   useDirectoryOptionAgencies: vi.fn(() => ({ data: { agencies: [] } }))
 }));
 
-vi.mock('@/hooks/useDirectoryOptionDepartments', () => ({
+vi.mock('@/hooks/directory/options/useDirectoryOptionDepartments', () => ({
   useDirectoryOptionDepartments: vi.fn(() => ({ data: { departments: [] } }))
 }));
 
-vi.mock('@/hooks/useDirectorySavedViews', () => ({
+vi.mock('@/hooks/directory/views/useDirectorySavedViews', () => ({
   useDirectorySavedViews: vi.fn(() => ({ data: { views: [] }, isLoading: false }))
 }));
 
-vi.mock('@/hooks/useSaveDirectorySavedView', () => ({
+vi.mock('@/hooks/directory/views/useSaveDirectorySavedView', () => ({
   useSaveDirectorySavedView: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false }))
 }));
 
-vi.mock('@/hooks/useDeleteDirectorySavedView', () => ({
+vi.mock('@/hooks/directory/views/useDeleteDirectorySavedView', () => ({
   useDeleteDirectorySavedView: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false }))
 }));
 
-vi.mock('@/hooks/useSaveSupplier', () => ({
-  useSaveSupplier: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
-  useSetSupplierArchived: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
+vi.mock('@/hooks/entities/suppliers/useSaveSupplier', () => ({
+  useSaveSupplier: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false }))
+}));
+
+vi.mock('@/hooks/entities/suppliers/useSetSupplierArchived', () => ({
+  useSetSupplierArchived: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false }))
+}));
+
+vi.mock('@/hooks/entities/suppliers/useDeleteSupplier', () => ({
   useDeleteSupplier: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false }))
 }));
 
-vi.mock('@/hooks/useSetDefaultDirectorySavedView', () => ({
+vi.mock('@/hooks/directory/views/useSetDefaultDirectorySavedView', () => ({
   useSetDefaultDirectorySavedView: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false }))
 }));
 

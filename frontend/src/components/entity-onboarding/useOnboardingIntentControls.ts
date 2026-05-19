@@ -1,7 +1,7 @@
 import { useCallback, type Dispatch, type SetStateAction } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 
-import type { ProductOnboardingConfig } from 'shared/schemas/config.schema';
+import type { ProductOnboardingConfig } from '../../../../shared/schemas/system/config.schema';
 
 import type {
   OnboardingFormInput,

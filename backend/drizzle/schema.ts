@@ -4,9 +4,9 @@ import type {
   AgencyOnboardingOverrides,
   ProductFeatureFlags,
   ProductOnboardingConfig
-} from '../../shared/schemas/config.schema.ts';
+} from '../../shared/schemas/system/config.schema.ts';
 import type { Database } from '../../shared/supabase.types.ts';
-import type { DirectorySavedViewState } from '../../shared/schemas/directory.schema.ts';
+import type { DirectorySavedViewState } from '../../shared/schemas/system/directory.schema.ts';
 
 type AccountType = Database['public']['Enums']['account_type'];
 type UserRole = Database['public']['Enums']['user_role'];

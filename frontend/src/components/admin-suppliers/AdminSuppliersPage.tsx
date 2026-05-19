@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { Loader2, Plus } from 'lucide-react';
-import type { DirectoryListRow, DirectorySearchState } from 'shared/schemas/directory.schema';
+import type { DirectoryListRow, DirectorySearchState } from '../../../../shared/schemas/system/directory.schema';
 
 import ClientDirectoryFilters from '@/components/client-directory/ClientDirectoryFilters';
 import DirectorySavedViewsBar from '@/components/client-directory/DirectorySavedViewsBar';
@@ -14,8 +14,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle
-} from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
+} from '../ui/feedback/AlertDialog';
+import { Button } from '../ui/inputs/basic/Button';
 import {
   Dialog,
   DialogContent,
@@ -23,13 +23,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Textarea } from '@/components/ui/textarea';
-import { TooltipProvider } from '@/components/ui/tooltip';
-import { useDeleteSupplier, useSaveSupplier, useSetSupplierArchived } from '@/hooks/useSaveSupplier';
-import { notifySuccess } from '@/services/errors/notify';
+} from '../ui/feedback/Dialog';
+import { Input } from '../ui/inputs/basic/Input';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/navigation/Popover';
+import { Textarea } from '../ui/inputs/basic/Textarea';
+import { TooltipProvider } from '../ui/feedback/Tooltip';
+import { useSaveSupplier } from '../../hooks/entities/suppliers/useSaveSupplier';
+import { useSetSupplierArchived } from '../../hooks/entities/suppliers/useSetSupplierArchived';
+import { useDeleteSupplier } from '../../hooks/entities/suppliers/useDeleteSupplier';
+import { notifySuccess } from '@/services/errors/notifySuccess';
 
 import AdminSuppliersTable from './AdminSuppliersTable';
 import { useSupplierDirectoryWorkspace } from './useSupplierDirectoryWorkspace';

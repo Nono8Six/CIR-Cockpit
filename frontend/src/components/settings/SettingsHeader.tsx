@@ -1,45 +1,27 @@
-import { RotateCcw, Save } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Settings } from 'lucide-react';
 
-type SettingsHeaderProps = {
-  readOnly: boolean;
-  isSaving: boolean;
-  onReset: () => void;
-  onSave: () => Promise<void>;
-};
-
-const SettingsHeader = ({ readOnly, isSaving, onReset, onSave }: SettingsHeaderProps) => {
+/**
+ * Premium header for the Settings module, illustrating Warm Editorial styling.
+ *
+ * @returns {JSX.Element} The rendered header.
+ */
+const SettingsHeader = () => {
   return (
-    <div className="shrink-0 border-b border-border bg-card px-4 py-3 sm:px-6 sm:py-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-base font-semibold text-foreground sm:text-lg">Parametrage agence</h2>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={onReset}
-            className="h-9 text-xs sm:text-sm"
-          >
-            <RotateCcw size={14} className="mr-1" /> Recharger
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            onClick={onSave}
-            className="h-9 text-xs sm:text-sm"
-            disabled={readOnly || isSaving}
-            aria-disabled={readOnly || isSaving}
-            data-testid="settings-save-button"
-          >
-            <Save size={15} className="mr-1" /> {isSaving ? 'Enregistrement...' : 'Enregistrer'}
-          </Button>
+    <header className="shrink-0 border-b border-border bg-card px-6 py-5" aria-label="En-tête des paramètres">
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-sm">
+          <Settings className="size-5" />
+        </div>
+        <div className="space-y-0.5">
+          <h2 className="text-lg font-bold tracking-tight text-foreground sm:text-xl">
+            Configuration de l&apos;Agence
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            Gérez les habilitations, les listes de valeurs globales et le workflow Kanban.
+          </p>
         </div>
       </div>
-      <div className="sr-only" aria-live="polite">
-        {isSaving ? 'Enregistrement en cours.' : 'Aucun enregistrement en cours.'}
-      </div>
-    </div>
+    </header>
   );
 };
 

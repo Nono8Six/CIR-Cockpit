@@ -1,6 +1,6 @@
-import { dataInteractionDraftResponseSchema } from 'shared/schemas/api-responses';
+import { dataInteractionDraftResponseSchema } from '../../../../shared/schemas/system/api-responses';
 
-import { invokeTrpc } from '@/services/api/safeTrpc';
+import { invokeTrpc } from '@/services/api/invokeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 
 type DeleteInteractionDraftInput = {

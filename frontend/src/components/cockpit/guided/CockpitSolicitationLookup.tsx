@@ -2,14 +2,14 @@ import { useEffect, useMemo, useState, type ChangeEvent, type RefObject } from '
 import type { FieldErrors, UseFormRegisterReturn, UseFormSetValue } from 'react-hook-form';
 import { History, Megaphone, Phone, PhoneCall, Search, X } from 'lucide-react';
 
-import { useCockpitPhoneLookup } from '@/hooks/useCockpitPhoneLookup';
+import { useCockpitPhoneLookup } from '../../../hooks/cockpit-utils/useCockpitPhoneLookup';
 import { formatDate } from '@/utils/date/formatDate';
 import { formatFrenchPhone } from '@/utils/formatFrenchPhone';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Button } from '../../ui/inputs/basic/Button';
+import { Input } from '../../ui/inputs/basic/Input';
 import { isSolicitationRelationValue } from '@/constants/relations';
 import type { Interaction } from '@/types';
-import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
+import type { InteractionFormValues } from '../../../../../shared/schemas/interaction/interaction.schema';
 import GuidedTierSearchShell from './GuidedTierSearchShell';
 
 type CockpitSolicitationLookupProps = {

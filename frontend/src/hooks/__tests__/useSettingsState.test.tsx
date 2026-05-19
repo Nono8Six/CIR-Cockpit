@@ -1,27 +1,26 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ResolvedConfigSnapshot } from 'shared/schemas/config.schema';
+import type { ResolvedConfigSnapshot } from '../../../../shared/schemas/system/config.schema';
 
-import { useSettingsState } from '@/hooks/useSettingsState';
-import { notifyInfo, notifySuccess } from '@/services/errors/notify';
+import { useSettingsState } from '@/hooks/settings-state/useSettingsState';
+import { notifySuccess } from '@/services/errors/notifySuccess';
+import { notifyInfo } from '@/services/errors/notifyInfo';
 
 const settingsMocks = vi.hoisted(() => ({
   useSaveAgencyConfig: vi.fn(),
   useSaveProductConfig: vi.fn()
 }));
 
-vi.mock('@/hooks/useSaveAgencyConfig', () => ({
+vi.mock('@/hooks/admin/agencies/actions/useSaveAgencyConfig', () => ({
   useSaveAgencyConfig: settingsMocks.useSaveAgencyConfig
 }));
 
-vi.mock('@/hooks/useSaveProductConfig', () => ({
+vi.mock('@/hooks/entities/core/useSaveProductConfig', () => ({
   useSaveProductConfig: settingsMocks.useSaveProductConfig
 }));
 
-vi.mock('@/services/errors/notify', () => ({
-  notifyInfo: vi.fn(),
-  notifySuccess: vi.fn()
-}));
+vi.mock('@/services/errors/notifyInfo', () => ({ notifyInfo: vi.fn() }));
+vi.mock('@/services/errors/notifySuccess', () => ({ notifySuccess: vi.fn() }));
 
 const BASE_SNAPSHOT: ResolvedConfigSnapshot = {
   product: {

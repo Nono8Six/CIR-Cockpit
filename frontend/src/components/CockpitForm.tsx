@@ -3,7 +3,7 @@ import CockpitFormDialogs from './cockpit/CockpitFormDialogs';
 import CockpitReadonlyView from './cockpit/CockpitReadonlyView';
 import CockpitGuidedEntry from './cockpit/guided/CockpitGuidedEntry';
 import type { CockpitFormProps } from './cockpit/CockpitForm.types';
-import { useCockpitFormController } from '@/hooks/useCockpitFormController';
+import { useCockpitFormController } from '../hooks/cockpit/useCockpitFormController';
 
 const EMPTY_ENTITIES: CockpitFormProps['recentEntities'] = [];
 const EMPTY_INTERACTIONS: NonNullable<CockpitFormProps['interactions']> = [];

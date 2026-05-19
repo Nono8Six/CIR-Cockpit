@@ -1,10 +1,11 @@
 import {
   directoryRecordResponseSchema,
   type DirectoryRecordResponse
-} from 'shared/schemas/api-responses';
-import { type DirectoryRouteRef } from 'shared/schemas/directory.schema';
+} from '../../../../shared/schemas/system/api-responses';
+import { type DirectoryRouteRef } from '../../../../shared/schemas/system/directory.schema';
 import { createAppError } from '@/services/errors/AppError';
-import { invokeTrpc } from '@/services/api/safeTrpc';
+import { invokeTrpc } from '@/services/api/invokeTrpc';
+
 
 const parseDirectoryRecordResponse = (payload: unknown): DirectoryRecordResponse => {
   const parsed = directoryRecordResponseSchema.safeParse(payload);

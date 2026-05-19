@@ -1,7 +1,7 @@
 import { Archive, ArchiveRestore, Building2, Pencil, Trash2 } from 'lucide-react';
 
 import { formatClientNumber } from '@/utils/clients/formatClientNumber';
-import { Button } from '@/components/ui/button';
+import { Button } from '../ui/inputs/basic/Button';
 import type { ClientDetailHeaderProps } from './ClientDetailPanel.types';
 
 const ClientDetailHeader = ({

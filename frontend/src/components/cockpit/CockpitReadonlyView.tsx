@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Bell, Car, CheckCircle2, Clock, FileText, Mail, Phone, Store, Tag, User } from 'lucide-react';
 
 import { getPlatformShortcutLabel } from '@/app/appConstants';
-import { Button } from '@/components/ui/button';
+import { Button } from '../ui/inputs/basic/Button';
 import { isInternalRelationValue, isSolicitationRelationValue, isSupplierRelationValue } from '@/constants/relations';
 import type { AgencyConfig } from '@/services/config';
 import { Channel, type InteractionDraft } from '@/types';

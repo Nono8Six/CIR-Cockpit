@@ -6,10 +6,10 @@ import {
   INTERNAL_COMPANY_NAME,
   INTERNAL_RELATION_LABEL
 } from '@/constants/relations';
-import { useCockpitRelationChange } from '@/hooks/useCockpitRelationChange';
+import { useCockpitRelationChange } from '../cockpit-utils/useCockpitRelationChange';
 import type { AgencyConfig } from '@/services/config';
 import { Channel, type Entity, type EntityContact } from '@/types';
-import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
+import type { InteractionFormValues } from '../../../../shared/schemas/interaction/interaction.schema';
 
 const filledClientValues: InteractionFormValues = {
   channel: Channel.PHONE,

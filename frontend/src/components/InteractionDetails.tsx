@@ -1,5 +1,5 @@
 import type { AgencyStatus, Interaction, InteractionUpdate, TimelineEvent } from '@/types';
-import { useInteractionDetailsState } from '@/hooks/useInteractionDetailsState';
+import { useInteractionDetailsState } from '../hooks/interactions/core/queries/useInteractionDetailsState';
 import InteractionDetailsFooter from './interactions/InteractionDetailsFooter';
 import InteractionDetailsHeader from './interactions/InteractionDetailsHeader';
 import InteractionDetailsSubjectCard from './interactions/InteractionDetailsSubjectCard';

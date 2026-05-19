@@ -232,7 +232,7 @@ if (!rootPackage.scripts?.["backend:test:integration"]) {
   fail("package.json must expose backend:test:integration for local and CI QA gates.");
 }
 
-const configSchemaSource = readText("shared/schemas/config.schema.ts");
+const configSchemaSource = readText("shared/schemas/system/config.schema.ts");
 for (const requiredSymbol of [
   "configGetInputSchema",
   "configSaveAgencyInputSchema",

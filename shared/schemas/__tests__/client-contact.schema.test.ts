@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { clientContactFormSchema } from '../client-contact.schema';
+import { clientContactFormSchema } from '../entity/client-contact.schema.ts';
 
 describe('clientContactFormSchema', () => {
   it('rejects when phone and email are missing', () => {

@@ -1,4 +1,4 @@
-import { dataEntitiesListResponseSchema } from 'shared/schemas/api-responses';
+import { dataEntitiesListResponseSchema } from '../../../../shared/schemas/system/api-responses';
 
 import { Entity } from '@/types';
 import { safeTrpc } from '@/services/api/safeTrpc';

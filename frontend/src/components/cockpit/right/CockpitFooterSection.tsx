@@ -4,7 +4,7 @@ import type { RefObject } from 'react';
 
 import type { AgencyConfig } from '@/services/config';
 import type { AgencyStatus, StatusCategory } from '@/types';
-import { Input } from '@/components/ui/input';
+import { Input } from '../../ui/inputs/basic/Input';
 import CockpitStatusControl from './CockpitStatusControl';
 import CockpitReminderControl from './CockpitReminderControl';
 

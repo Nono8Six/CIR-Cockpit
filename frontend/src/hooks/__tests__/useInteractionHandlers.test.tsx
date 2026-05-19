@@ -3,12 +3,12 @@ import { act, renderHook } from '@testing-library/react';
 import { useForm } from 'react-hook-form';
 import { describe, expect, it, vi } from 'vitest';
 
-import { useInteractionHandlers } from '@/hooks/useInteractionHandlers';
+import { useInteractionHandlers } from '../interactions/handlers/useInteractionHandlers';
 import { Channel, type Entity } from '@/types';
 import type { ClientPayload } from '@/services/clients/saveClient';
 import type { EntityPayload } from '@/services/entities/saveEntity';
 import type { EntityContactPayload } from '@/services/entities/saveEntityContact';
-import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
+import type { InteractionFormValues } from '../../../../shared/schemas/interaction/interaction.schema';
 
 const DEFAULT_VALUES: InteractionFormValues = {
   channel: Channel.PHONE,

@@ -1,7 +1,7 @@
 import { useCallback, type Dispatch, type SetStateAction } from 'react';
 
-import { clientFormSchema } from 'shared/schemas/client.schema';
-import { prospectFormSchema } from 'shared/schemas/prospect.schema';
+import { clientFormSchema } from '../../../../shared/schemas/entity/client.schema';
+import { prospectFormSchema } from '../../../../shared/schemas/entity/prospect.schema';
 
 import type { ClientPayload } from '@/services/clients/saveClient';
 import { createAppError } from '@/services/errors/AppError';

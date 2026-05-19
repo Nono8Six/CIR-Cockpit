@@ -1,15 +1,15 @@
 import { useMemo, useState } from 'react';
 import { Mail, Plus, UserPlus, X } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Button } from '../../ui/inputs/basic/Button';
+import { Input } from '../../ui/inputs/basic/Input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from '@/components/ui/select';
+} from '../../ui/inputs/selects/Select';
 
 type QuickContactState = {
   firstName: string;

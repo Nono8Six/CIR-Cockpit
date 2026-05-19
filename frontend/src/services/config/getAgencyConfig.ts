@@ -1,4 +1,4 @@
-import type { ResolvedConfigSnapshot } from 'shared/schemas/config.schema';
+import type { ResolvedConfigSnapshot } from '../../../../shared/schemas/system/config.schema';
 
 import type { AgencyStatus } from '@/types';
 import { getConfigSnapshot } from './getConfigSnapshot';

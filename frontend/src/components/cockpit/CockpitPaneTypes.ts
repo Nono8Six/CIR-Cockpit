@@ -1,10 +1,10 @@
 import type { ChangeEvent, RefObject } from 'react';
 import type { FieldErrors, UseFormRegisterReturn, UseFormSetValue } from 'react-hook-form';
 
-import type { TierV1DirectoryRow } from 'shared/schemas/tier-v1.schema';
+import type { TierV1DirectoryRow } from '../../../../shared/schemas/interaction/tier-v1.schema';
 import type { RelationMode } from '@/constants/relations';
 import type { Agency, Entity, EntityContact, Interaction } from '@/types';
-import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
+import type { InteractionFormValues } from '../../../../shared/schemas/interaction/interaction.schema';
 import type { AgencyConfig } from '@/services/config';
 import type { AgencyStatus, StatusCategory } from '@/types';
 

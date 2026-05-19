@@ -3,9 +3,9 @@ import { act, renderHook } from '@testing-library/react';
 import type { PropsWithChildren } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { TierV1DirectoryRow } from 'shared/schemas/tier-v1.schema';
+import type { TierV1DirectoryRow } from '../../../../shared/schemas/interaction/tier-v1.schema';
 import { Channel, type Entity, type Interaction } from '@/types';
-import { useCockpitFormController } from '@/hooks/useCockpitFormController';
+import { useCockpitFormController } from '../cockpit/useCockpitFormController';
 
 const controllerMocks = vi.hoisted(() => ({
   useCockpitDialogsState: vi.fn(),
@@ -30,64 +30,64 @@ const controllerMocks = vi.hoisted(() => ({
   useEntityInteractions: vi.fn()
 }));
 
-vi.mock('@/hooks/useCockpitDialogsState', () => ({
+vi.mock('@/hooks/cockpit/useCockpitDialogsState', () => ({
   useCockpitDialogsState: controllerMocks.useCockpitDialogsState
 }));
-vi.mock('@/hooks/useCockpitFormRefs', () => ({
+vi.mock('@/hooks/cockpit/useCockpitFormRefs', () => ({
   useCockpitFormRefs: controllerMocks.useCockpitFormRefs
 }));
-vi.mock('@/hooks/useInteractionFormState', () => ({
+vi.mock('@/hooks/interactions/drafts/useInteractionFormState', () => ({
   useInteractionFormState: controllerMocks.useInteractionFormState
 }));
-vi.mock('@/hooks/useInteractionFormEffects', () => ({
+vi.mock('@/hooks/interactions/drafts/useInteractionFormEffects', () => ({
   useInteractionFormEffects: controllerMocks.useInteractionFormEffects
 }));
-vi.mock('@/hooks/useKnownCompanies', () => ({
+vi.mock('@/hooks/directory/company/useKnownCompanies', () => ({
   useKnownCompanies: controllerMocks.useKnownCompanies
 }));
-vi.mock('@/hooks/useInteractionHandlers', () => ({
+vi.mock('@/hooks/interactions/handlers/useInteractionHandlers', () => ({
   useInteractionHandlers: controllerMocks.useInteractionHandlers
 }));
-vi.mock('@/hooks/useCockpitDerivedState', () => ({
+vi.mock('@/hooks/cockpit/useCockpitDerivedState', () => ({
   useCockpitDerivedState: controllerMocks.useCockpitDerivedState
 }));
-vi.mock('@/hooks/useInteractionDraft', () => ({
+vi.mock('@/hooks/interactions/drafts/useInteractionDraft', () => ({
   useInteractionDraft: controllerMocks.useInteractionDraft
 }));
-vi.mock('@/hooks/useInteractionGateState', () => ({
+vi.mock('@/hooks/interactions/drafts/useInteractionGateState', () => ({
   useInteractionGateState: controllerMocks.useInteractionGateState
 }));
-vi.mock('@/hooks/useInteractionStepper', () => ({
+vi.mock('@/hooks/interactions/core/queries/useInteractionStepper', () => ({
   useInteractionStepper: controllerMocks.useInteractionStepper
 }));
-vi.mock('@/hooks/useInteractionFocus', () => ({
+vi.mock('@/hooks/interactions/handlers/useInteractionFocus', () => ({
   useInteractionFocus: controllerMocks.useInteractionFocus
 }));
-vi.mock('@/hooks/useInteractionSubmit', () => ({
+vi.mock('@/hooks/interactions/core/actions/useInteractionSubmit', () => ({
   useInteractionSubmit: controllerMocks.useInteractionSubmit
 }));
-vi.mock('@/hooks/useInteractionInvalidHandler', () => ({
+vi.mock('@/hooks/interactions/handlers/useInteractionInvalidHandler', () => ({
   useInteractionInvalidHandler: controllerMocks.useInteractionInvalidHandler
 }));
-vi.mock('@/hooks/useInteractionHotkeys', () => ({
+vi.mock('@/hooks/interactions/handlers/useInteractionHotkeys', () => ({
   useInteractionHotkeys: controllerMocks.useInteractionHotkeys
 }));
-vi.mock('@/hooks/useCockpitRegisterFields', () => ({
+vi.mock('@/hooks/cockpit-utils/useCockpitRegisterFields', () => ({
   useCockpitRegisterFields: controllerMocks.useCockpitRegisterFields
 }));
-vi.mock('@/hooks/useCockpitPaneProps', () => ({
+vi.mock('@/hooks/cockpit-utils/useCockpitPaneProps', () => ({
   useCockpitPaneProps: controllerMocks.useCockpitPaneProps
 }));
-vi.mock('@/hooks/useSaveClient', () => ({
+vi.mock('@/hooks/entities/clients/useSaveClient', () => ({
   useSaveClient: controllerMocks.useSaveClient
 }));
-vi.mock('@/hooks/useSaveProspect', () => ({
+vi.mock('@/hooks/entities/prospects/useSaveProspect', () => ({
   useSaveProspect: controllerMocks.useSaveProspect
 }));
-vi.mock('@/hooks/useSaveEntityContact', () => ({
+vi.mock('@/hooks/entities/contacts/useSaveEntityContact', () => ({
   useSaveEntityContact: controllerMocks.useSaveEntityContact
 }));
-vi.mock('@/hooks/useEntityInteractions', () => ({
+vi.mock('@/hooks/interactions/core/queries/useEntityInteractions', () => ({
   useEntityInteractions: controllerMocks.useEntityInteractions
 }));
 

@@ -1,9 +1,9 @@
 import { SlidersHorizontal } from 'lucide-react';
-import type { DirectorySearchState } from 'shared/schemas/directory.schema';
+import type { DirectorySearchState } from '../../../../../shared/schemas/system/directory.schema';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Badge } from '../../ui/data-display/Badge';
+import { Button } from '../../ui/inputs/basic/Button';
+import { Popover, PopoverContent, PopoverTrigger } from '../../ui/navigation/Popover';
 import DirectoryCityAutocomplete from './DirectoryCityAutocomplete';
 import DirectoryFilterCombobox from './DirectoryFilterCombobox';
 import type { DirectoryFilterOption, DirectoryOptionRequest } from './DirectoryFilters.types';

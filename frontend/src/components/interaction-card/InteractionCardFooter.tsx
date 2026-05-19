@@ -1,6 +1,6 @@
 import { Clock3, FileText } from 'lucide-react';
 
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '../ui/data-display/Badge';
 import type { Interaction, StatusCategory } from '@/types';
 import { formatDate } from '@/utils/date/formatDate';
 import { isBeforeNow } from '@/utils/date/isBeforeNow';

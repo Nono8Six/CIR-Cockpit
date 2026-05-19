@@ -5,7 +5,7 @@ import type { RefObject } from 'react';
 import type { AgencyConfig } from '@/services/config';
 import type { AgencyStatus, StatusCategory } from '@/types';
 import { STATUS_CATEGORY_LABELS, STATUS_CATEGORY_ORDER } from '@/constants/statusCategories';
-import { Button } from '@/components/ui/button';
+import { Button } from '../../ui/inputs/basic/Button';
 import { cn } from '@/lib/utils';
 import {
   Command,
@@ -14,8 +14,8 @@ import {
   CommandInput,
   CommandItem,
   CommandList
-} from '@/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+} from '../../ui/inputs/selects/Command';
+import { Popover, PopoverContent, PopoverTrigger } from '../../ui/navigation/Popover';
 
 type CockpitStatusControlProps = {
   footerLabelStyle: string;

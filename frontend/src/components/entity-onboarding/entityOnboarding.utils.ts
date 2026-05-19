@@ -3,8 +3,8 @@ import type {
   DirectoryCompanySearchEstablishmentStatus,
   DirectoryCompanySearchResult,
   DirectoryListRow
-} from 'shared/schemas/directory.schema';
-import type { ProductOnboardingConfig } from 'shared/schemas/config.schema';
+} from '../../../../shared/schemas/system/directory.schema';
+import type { ProductOnboardingConfig } from '../../../../shared/schemas/system/config.schema';
 
 import type { OnboardingValues } from './entityOnboarding.schema';
 import type {

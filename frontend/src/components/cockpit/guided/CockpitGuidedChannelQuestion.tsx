@@ -3,9 +3,9 @@ import type { FieldErrors, UseFormSetValue } from 'react-hook-form';
 import { Car, Mail, Phone, Store, type LucideIcon } from 'lucide-react';
 
 import { Channel } from '@/types';
-import { Kbd } from '@/components/ui/kbd';
+import { Kbd } from '../../ui/data-display/Kbd';
 import { cn } from '@/lib/utils';
-import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
+import type { InteractionFormValues } from '../../../../../shared/schemas/interaction/interaction.schema';
 
 type CockpitGuidedChannelQuestionProps = {
   channel: Channel;

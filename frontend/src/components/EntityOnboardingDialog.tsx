@@ -4,13 +4,13 @@ import { AnimatePresence, motion } from "motion/react";
 import type {
   DirectoryCommercialOption,
   DirectoryListRow,
-} from "shared/schemas/directory.schema";
+} from '../../../shared/schemas/system/directory.schema';
 import type { ClientPayload } from "@/services/clients/saveClient";
 import type { EntityPayload } from "@/services/entities/saveEntity";
 import { cn } from "@/lib/utils";
 import type { Agency, UserRole } from "@/types";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from './ui/data-display/Badge';
+import { Button } from './ui/inputs/basic/Button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,13 +20,13 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from './ui/feedback/AlertDialog';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from './ui/feedback/Dialog';
 import EntityOnboardingDetailsStep from "@/components/entity-onboarding/EntityOnboardingDetailsStep";
 import EntityOnboardingIntentStep from "@/components/entity-onboarding/EntityOnboardingIntentStep";
 import EntityOnboardingReviewStep from "@/components/entity-onboarding/EntityOnboardingReviewStep";

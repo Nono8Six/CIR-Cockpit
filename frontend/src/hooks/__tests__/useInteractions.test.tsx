@@ -4,15 +4,15 @@ import type { PropsWithChildren } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createTestQueryClient } from '@/__tests__/test-utils';
-import { useInteractions } from '@/hooks/useInteractions';
-import { useNotifyError } from '@/hooks/useNotifyError';
+import { useInteractions } from '../interactions/core/queries/useInteractions';
+import { useNotifyError } from '../cockpit-utils/useNotifyError';
 import { getInteractions } from '@/services/interactions/getInteractions';
 
 vi.mock('@/services/interactions/getInteractions', () => ({
   getInteractions: vi.fn()
 }));
 
-vi.mock('@/hooks/useNotifyError', () => ({
+vi.mock('@/hooks/cockpit-utils/useNotifyError', () => ({
   useNotifyError: vi.fn()
 }));
 

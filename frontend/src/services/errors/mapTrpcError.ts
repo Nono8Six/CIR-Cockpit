@@ -1,7 +1,9 @@
 import { isTRPCClientError } from '@trpc/client';
 
 import { createAppError, type AppError, type ErrorCode } from './AppError';
-import { isRecord, readObject, readString } from '@/utils/recordNarrowing';
+import { isRecord } from '@/utils/recordNarrowing/isRecord';
+import { readObject } from '@/utils/recordNarrowing/readObject';
+import { readString } from '@/utils/recordNarrowing/readString';
 
 const STATUS_TO_CODE: Record<number, ErrorCode> = {
   400: 'INVALID_PAYLOAD',

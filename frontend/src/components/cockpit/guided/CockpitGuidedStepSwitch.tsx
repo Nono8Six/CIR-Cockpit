@@ -2,9 +2,9 @@ import { useCallback, useEffect } from 'react';
 import { ArrowRight } from 'lucide-react';
 
 import { isApplePlatform } from '@/app/appConstants';
-import { Button } from '@/components/ui/button';
-import { Kbd } from '@/components/ui/kbd';
-import type { useCockpitGuidedFlow } from '@/hooks/useCockpitGuidedFlow';
+import { Button } from '../../ui/inputs/basic/Button';
+import { Kbd } from '../../ui/data-display/Kbd';
+import type { useCockpitGuidedFlow } from '../../../hooks/cockpit/useCockpitGuidedFlow';
 import type { CockpitFormLeftPaneProps, CockpitFormRightPaneProps } from '../CockpitPaneTypes';
 import type { CockpitLeftEntitySectionsProps } from '../CockpitLeftEntitySectionsProps';
 import CockpitContactSection from '../left/CockpitContactSection';

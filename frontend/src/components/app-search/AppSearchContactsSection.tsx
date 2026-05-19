@@ -1,6 +1,6 @@
 import type { EntityContact } from '@/types';
 import { UserRound } from 'lucide-react';
-import { CommandGroup, CommandItem } from '@/components/ui/command';
+import { CommandGroup, CommandItem } from '../ui/inputs/selects/Command';
 
 type AppSearchContactsSectionProps = {
   contacts: EntityContact[];

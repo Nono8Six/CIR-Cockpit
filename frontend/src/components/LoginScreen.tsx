@@ -1,13 +1,13 @@
 import type { Session } from '@supabase/supabase-js';
 
-import { useLoginScreenForm } from '@/hooks/useLoginScreenForm';
+import { useLoginScreenForm } from '../hooks/session/useLoginScreenForm';
 import {
   Card,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader
-} from '@/components/ui/card';
+} from './ui/data-display/Card';
 import LoginScreenBrand from './login/LoginScreenBrand';
 import LoginScreenForm from './login/LoginScreenForm';
 

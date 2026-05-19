@@ -1,14 +1,14 @@
 import { Inbox, Loader2, TriangleAlert } from 'lucide-react';
 
 import { AuditLogEntry } from '@/services/admin/getAuditLogs';
-import { Button } from '@/components/ui/button';
+import { Button } from '../ui/inputs/basic/Button';
 import {
   Table,
   TableBody,
   TableHead,
   TableHeader,
   TableRow
-} from '@/components/ui/table';
+} from '../ui/data-display/Table';
 import AuditLogsRow from './AuditLogsRow';
 
 type AuditLogsTableProps = {

@@ -1,6 +1,6 @@
 import { getErrorCatalogEntry } from '../../../../shared/errors/catalog.ts';
 import type { ErrorCode } from '../../../../shared/errors/types.ts';
-import { edgeErrorPayloadSchema, type EdgeErrorPayload } from '../../../../shared/schemas/edge-error.schema.ts';
+import { edgeErrorPayloadSchema, type EdgeErrorPayload } from '../../../../shared/schemas/system/edge-error.schema.ts';
 
 export type HttpError = Error & { status?: number; code?: ErrorCode; details?: string };
 

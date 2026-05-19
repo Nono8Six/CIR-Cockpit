@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { type DirectoryDensity } from 'shared/schemas/directory.schema';
+import { type DirectoryDensity } from '../../../../shared/schemas/system/directory.schema';
 
-import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Button } from '../ui/inputs/basic/Button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/feedback/Tooltip';
 import { cn } from '@/lib/utils';
 import { DEFAULT_DIRECTORY_DENSITY, countActiveDirectoryFilters } from './clientDirectorySearch';
 import DirectoryMobileFilterSheet from './DirectoryMobileFilterSheet';

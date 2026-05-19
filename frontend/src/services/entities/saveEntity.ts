@@ -1,6 +1,6 @@
 import { ResultAsync } from 'neverthrow';
 
-import { dataEntitiesResponseSchema } from 'shared/schemas/api-responses';
+import { dataEntitiesResponseSchema } from '../../../../shared/schemas/system/api-responses';
 import { Entity } from '@/types';
 import { createAppError, type AppError } from '@/services/errors/AppError';
 import { safeTrpc } from '@/services/api/safeTrpc';
@@ -64,6 +64,12 @@ const requireEntityText = (value: string | null | undefined, message: string): s
 const optionalEntityText = (value: string | null | undefined): string | undefined =>
   value ?? undefined;
 
+/**
+ * Saves a prospect or supplier entity.
+ *
+ * @param payload - The entity payload containing entity data.
+ * @returns A ResultAsync containing the saved Entity or an AppError.
+ */
 export const saveEntity = (payload: EntityPayload): ResultAsync<Entity, AppError> => {
   const commonEntity = {
     name: payload.name,
@@ -116,25 +122,3 @@ export const saveEntity = (payload: EntityPayload): ResultAsync<Entity, AppError
     "Impossible d'enregistrer l'entite."
   );
 };
-
-export const setSupplierArchived = (supplierId: string, archived: boolean): ResultAsync<Entity, AppError> =>
-  safeTrpc(
-    (api, options) => api.data.entities.mutate({
-        action: 'archive',
-        entity_id: supplierId,
-        archived
-      }, options),
-    parseEntityResponse,
-    'Impossible de mettre a jour le fournisseur.'
-  );
-
-export const deleteSupplier = (supplierId: string): ResultAsync<Entity, AppError> =>
-  safeTrpc(
-    (api, options) => api.data.entities.mutate({
-        action: 'delete',
-        entity_id: supplierId,
-        delete_related_interactions: false
-      }, options),
-    parseEntityResponse,
-    'Impossible de supprimer le fournisseur.'
-  );

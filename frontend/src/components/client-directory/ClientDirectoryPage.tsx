@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 
-import type { DirectoryListRow, DirectorySearchState } from 'shared/schemas/directory.schema';
+import type { DirectoryListRow, DirectorySearchState } from '../../../../shared/schemas/system/directory.schema';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import ClientDirectoryWorkspace from './ClientDirectoryWorkspace';

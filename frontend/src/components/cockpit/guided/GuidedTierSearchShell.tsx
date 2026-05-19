@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { Switch } from '@/components/ui/switch';
+import { Switch } from '../../ui/inputs/basic/Switch';
 import { cn } from '@/lib/utils';
 
 type GuidedTierSearchShellProps = {

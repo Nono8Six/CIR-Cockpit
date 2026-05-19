@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { convertClientSchema } from '../convert-client.schema';
+import { convertClientSchema } from '../entity/convert-client.schema.ts';
 
 describe('convertClientSchema', () => {
   it('accepts valid payload', () => {

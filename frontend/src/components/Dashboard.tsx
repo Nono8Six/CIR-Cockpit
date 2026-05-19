@@ -6,7 +6,7 @@ import DashboardKanban from './dashboard/DashboardKanban';
 import DashboardList from './dashboard/DashboardList';
 import DashboardDetailsOverlay from './dashboard/DashboardDetailsOverlay';
 import ConfirmDialog from './ConfirmDialog';
-import { useDashboardState } from '@/hooks/useDashboardState';
+import { useDashboardState } from '@/hooks/dashboard-state/useDashboardState';
 
 interface DashboardProps {
   interactions: Interaction[];

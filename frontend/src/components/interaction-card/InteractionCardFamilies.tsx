@@ -1,4 +1,4 @@
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '../ui/data-display/Badge';
 
 type InteractionCardFamiliesProps = {
   families: string[];

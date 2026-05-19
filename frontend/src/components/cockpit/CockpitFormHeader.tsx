@@ -3,7 +3,7 @@ import { Circle } from 'lucide-react';
 import { getPlatformShortcutLabel } from '@/app/appConstants';
 import { cn } from '@/lib/utils';
 
-import type { DraftStatus } from '@/hooks/useInteractionDraft';
+import type { DraftStatus } from '../../hooks/interactions/drafts/useInteractionDraft';
 
 type CockpitFormHeaderProps = {
   canSave: boolean;

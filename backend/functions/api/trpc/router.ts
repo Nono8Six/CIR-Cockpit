@@ -26,19 +26,19 @@ import {
   directorySavedViewsListResponseSchema,
   tierV1DirectoryListResponseSchema,
   tierV1SearchResponseSchema
-} from '../../../../shared/schemas/api-responses.ts';
-import { adminAgenciesPayloadSchema } from '../../../../shared/schemas/agency.schema.ts';
+} from '../../../../shared/schemas/system/api-responses.ts';
+import { adminAgenciesPayloadSchema } from '../../../../shared/schemas/admin/agency.schema.ts';
 import {
   cockpitAgencyMembersInputSchema,
   cockpitAgencyMembersResponseSchema,
   cockpitPhoneLookupInputSchema,
   cockpitPhoneLookupResponseSchema
-} from '../../../../shared/schemas/cockpit.schema.ts';
+} from '../../../../shared/schemas/interaction/cockpit.schema.ts';
 import {
   configGetInputSchema,
   configSaveAgencyInputSchema,
   configSaveProductInputSchema
-} from '../../../../shared/schemas/config.schema.ts';
+} from '../../../../shared/schemas/system/config.schema.ts';
 import {
   dataConfigPayloadSchema,
   dataEntitiesPayloadSchema,
@@ -46,7 +46,7 @@ import {
   dataInteractionsPayloadSchema,
   dataProfilePayloadSchema,
   type DataEntitiesPayload
-} from '../../../../shared/schemas/data.schema.ts';
+} from '../../../../shared/schemas/system/data.schema.ts';
 import {
   directoryCitySuggestionsInputSchema,
   directoryCompanyDetailsInputSchema,
@@ -61,28 +61,28 @@ import {
   directorySavedViewSaveInputSchema,
   directorySavedViewSetDefaultInputSchema,
   directorySavedViewsListInputSchema
-} from '../../../../shared/schemas/directory.schema.ts';
+} from '../../../../shared/schemas/system/directory.schema.ts';
 import {
   tierV1DirectoryListInputSchema,
   tierV1SearchInputSchema
-} from '../../../../shared/schemas/tier-v1.schema.ts';
+} from '../../../../shared/schemas/interaction/tier-v1.schema.ts';
 import {
   adminAuditLogsInputSchema,
   adminUsersListInputSchema,
   adminUsersPayloadSchema
-} from '../../../../shared/schemas/user.schema.ts';
-import { handleAdminAgenciesAction } from '../services/adminAgencies.ts';
-import { listAdminAuditLogs, listAdminUsers } from '../services/adminQueries.ts';
-import { handleAdminUsersAction } from '../services/adminUsers.ts';
-import { saveAgencyConfigSettings, saveProductConfigSettings } from '../services/configSettings.ts';
-import { getConfigSnapshot } from '../services/configSnapshot.ts';
-import { handleDataConfigAction } from '../services/dataConfig.ts';
-import { handleDataEntitiesAction } from '../services/dataEntities.ts';
-import { handleDataEntityContactsAction } from '../services/dataEntityContacts.ts';
-import { handleDataInteractionsAction } from '../services/dataInteractions.ts';
-import { handleDataProfileAction } from '../services/dataProfile.ts';
-import { searchEntitiesUnified } from '../services/dataSearchEntitiesUnified.ts';
-import { listCockpitAgencyMembers, lookupCockpitPhone } from '../services/cockpit.ts';
+} from '../../../../shared/schemas/admin/user.schema.ts';
+import { handleAdminAgenciesAction } from '../services/admin/adminAgencies.ts';
+import { listAdminAuditLogs, listAdminUsers } from '../services/admin/adminQueries.ts';
+import { handleAdminUsersAction } from '../services/admin/adminUsers.ts';
+import { saveAgencyConfigSettings, saveProductConfigSettings } from '../services/config/configSettings.ts';
+import { getConfigSnapshot } from '../services/config/configSnapshot.ts';
+import { handleDataConfigAction } from '../services/data/dataConfig.ts';
+import { handleDataEntitiesAction } from '../services/entities/core/dataEntities.ts';
+import { handleDataEntityContactsAction } from '../services/entities/contacts/dataEntityContacts.ts';
+import { handleDataInteractionsAction } from '../services/entities/interactions/dataInteractions.ts';
+import { handleDataProfileAction } from '../services/data/dataProfile.ts';
+import { searchEntitiesUnified } from '../services/search/dataSearchEntitiesUnified.ts';
+import { listCockpitAgencyMembers, lookupCockpitPhone } from '../services/config/cockpit.ts';
 import {
   getDirectoryCitySuggestions,
   getDirectoryCompanyDetails,
@@ -100,7 +100,7 @@ import {
   listDirectorySavedViews,
   saveDirectorySavedView,
   setDefaultDirectorySavedView
-} from '../services/directorySavedViews.ts';
+} from '../services/directory/core/directorySavedViews.ts';
 import type { DbClient } from '../types.ts';
 import { httpError } from '../middleware/errorHandler.ts';
 import { authedProcedure, router, superAdminProcedure } from './procedures.ts';

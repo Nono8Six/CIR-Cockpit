@@ -1,9 +1,9 @@
 import { useCallback, useState } from 'react';
 
-import { Button } from './ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
+import { Button } from './ui/inputs/basic/Button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/data-display/Card';
 import { exportErrorJournal, clearErrorJournal } from '@/services/errors/journal';
-import { notifySuccess } from '@/services/errors/notify';
+import { notifySuccess } from '@/services/errors/notifySuccess';
 import { handleUiError } from '@/services/errors/handleUiError';
 
 const ErrorJournalExport = () => {

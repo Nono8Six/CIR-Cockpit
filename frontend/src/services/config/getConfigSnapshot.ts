@@ -1,11 +1,12 @@
 import {
   configGetResponseSchema,
   type ConfigGetResponse
-} from 'shared/schemas/api-responses';
-import type { ConfigGetInput, ResolvedConfigSnapshot } from 'shared/schemas/config.schema';
+} from '../../../../shared/schemas/system/api-responses';
+import type { ConfigGetInput, ResolvedConfigSnapshot } from '../../../../shared/schemas/system/config.schema';
 
 import { createAppError } from '@/services/errors/AppError';
-import { invokeTrpc } from '@/services/api/safeTrpc';
+import { invokeTrpc } from '@/services/api/invokeTrpc';
+
 import { getActiveAgencyId } from '@/services/agency/getActiveAgencyId';
 
 const parseConfigGetResponse = (payload: unknown): ConfigGetResponse => {

@@ -2,10 +2,11 @@ import {
   cockpitAgencyMembersResponseSchema,
   type CockpitAgencyMembersInput,
   type CockpitAgencyMembersResponse
-} from 'shared/schemas/cockpit.schema';
-
+} from '../../../../shared/schemas/interaction/cockpit.schema';
+
+
 import { createAppError } from '@/services/errors/AppError';
-import { invokeTrpc } from '@/services/api/safeTrpc';
+import { invokeTrpc } from '@/services/api/invokeTrpc';
 
 const parseCockpitAgencyMembersResponse = (payload: unknown): CockpitAgencyMembersResponse => {
   const parsed = cockpitAgencyMembersResponseSchema.safeParse(payload);

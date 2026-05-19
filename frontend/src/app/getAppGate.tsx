@@ -2,7 +2,7 @@ import { lazy, Suspense, type ReactNode } from 'react';
 
 import type { UserProfile } from '@/services/auth/getProfile';
 import type { Session } from '@supabase/supabase-js';
-import { Button } from '@/components/ui/button';
+import { Button } from '../components/ui/inputs/basic/Button';
 
 const ChangePasswordScreen = lazy(() => import('@/components/ChangePasswordScreen'));
 const LoginScreen = lazy(() => import('@/components/LoginScreen'));

@@ -1,7 +1,7 @@
 import { Trash2, UserRound, X } from 'lucide-react';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from '../ui/data-display/Badge';
+import { Button } from '../ui/inputs/basic/Button';
 import type { Interaction } from '@/types';
 
 type InteractionDetailsHeaderProps = {

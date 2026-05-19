@@ -12,8 +12,8 @@ import {
   tierV1SearchInputSchema,
   tierV1SolicitationInteractionOnlyPayloadSchema,
   tierV1SupplierPayloadSchema
-} from '../tier-v1.schema';
-import { supplierFormSchema } from '../supplier.schema';
+} from '../interaction/tier-v1.schema.ts';
+import { supplierFormSchema } from '../entity/supplier.schema.ts';
 
 const agencyId = '11111111-1111-4111-8111-111111111111';
 const cirAgencyId = '22222222-2222-4222-8222-222222222222';

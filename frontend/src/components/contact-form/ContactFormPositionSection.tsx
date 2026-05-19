@@ -1,6 +1,6 @@
 import type { UseFormRegisterReturn } from 'react-hook-form';
 
-import { Input } from '@/components/ui/input';
+import { Input } from '../ui/inputs/basic/Input';
 
 type ContactFormPositionSectionProps = {
   positionField: UseFormRegisterReturn;

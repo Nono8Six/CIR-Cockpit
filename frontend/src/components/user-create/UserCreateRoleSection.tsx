@@ -1,4 +1,4 @@
-import { Input } from '@/components/ui/input';
+import { Input } from '../ui/inputs/basic/Input';
 import type { UserRole } from '@/types';
 import { isUserRole } from '@/utils/typeGuards';
 import {
@@ -7,7 +7,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue
-} from '@/components/ui/select';
+} from '../ui/inputs/selects/Select';
 
 type UserCreateRoleSectionProps = {
   role: UserRole;

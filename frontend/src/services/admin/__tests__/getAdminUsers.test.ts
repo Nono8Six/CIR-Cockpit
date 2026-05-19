@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { TrpcClient } from '@/services/api/trpcClient';
-import { invokeTrpc } from '@/services/api/safeTrpc';
+import { invokeTrpc } from '@/services/api/invokeTrpc';
 import { getAdminUsers } from '@/services/admin/getAdminUsers';
 
-vi.mock('../../api/safeTrpc');
+vi.mock('../../api/invokeTrpc');
 
 const mockInvokeTrpc = vi.mocked(invokeTrpc);
 

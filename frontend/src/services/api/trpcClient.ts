@@ -4,7 +4,7 @@ import type { AppRouter } from 'shared/api/trpc';
 
 import { createAppError } from '@/services/errors/AppError';
 import { requireSupabaseClient } from '@/services/supabase/requireSupabaseClient';
-import { isRecord } from '@/utils/recordNarrowing';
+import { isRecord } from '@/utils/recordNarrowing/isRecord';
 
 const TOKEN_REFRESH_SAFETY_WINDOW_SECONDS = 30;
 

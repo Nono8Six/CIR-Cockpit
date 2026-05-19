@@ -1,4 +1,4 @@
-import { useUsersManager } from '@/hooks/useUsersManager';
+import { useUsersManager } from '../hooks/admin/users/identity/useUsersManager';
 import UsersManagerContent from './users/UsersManagerContent';
 import UsersManagerDialogs from './users/UsersManagerDialogs';
 

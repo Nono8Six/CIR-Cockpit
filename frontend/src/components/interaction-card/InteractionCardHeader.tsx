@@ -1,10 +1,10 @@
 import { Trash2 } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '../ui/inputs/basic/Button';
 import type { Interaction } from '@/types';
 import { formatDate } from '@/utils/date/formatDate';
 import { formatTime } from '@/utils/date/formatTime';
-import { getInteractionChannelIcon } from './getInteractionChannelIcon';
+import { getInteractionChannelIcon } from './InteractionChannelIcon';
 
 type InteractionCardHeaderProps = {
   data: Interaction;

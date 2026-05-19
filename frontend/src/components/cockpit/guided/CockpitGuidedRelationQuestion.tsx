@@ -11,7 +11,7 @@ import {
   TERM_CLIENT_RELATION_LABEL
 } from '@/constants/relations';
 import { cn } from '@/lib/utils';
-import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
+import type { InteractionFormValues } from '../../../../../shared/schemas/interaction/interaction.schema';
 
 type CockpitGuidedRelationQuestionProps = {
   entityType: string;

@@ -1,8 +1,8 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { ChevronDown, Plus, X } from 'lucide-react';
-import type { DirectorySearchState } from 'shared/schemas/directory.schema';
+import type { DirectorySearchState } from '../../../../../shared/schemas/system/directory.schema';
 
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '../../ui/navigation/Popover';
 import { cn } from '@/lib/utils';
 import DirectoryCityAutocomplete from './DirectoryCityAutocomplete';
 import {

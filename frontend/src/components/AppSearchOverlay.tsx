@@ -5,7 +5,7 @@ import { AlertTriangle, Loader2 } from 'lucide-react';
 import { applyAppSearchScope, parseAppSearchQuery, type AppSearchScope } from '@/app/useAppSearchData';
 import type { Entity, EntityContact, Interaction } from '@/types';
 import { handleUiError } from '@/services/errors/handleUiError';
-import { Button } from '@/components/ui/button';
+import { Button } from './ui/inputs/basic/Button';
 import {
   Command,
   CommandDialog,
@@ -13,7 +13,7 @@ import {
   CommandInput,
   CommandList,
   CommandLoading
-} from '@/components/ui/command';
+} from './ui/inputs/selects/Command';
 import { cn } from '@/lib/utils';
 import type { ConvertClientEntity } from './ConvertClientDialog';
 import AppSearchResults from './app-search/AppSearchResults';

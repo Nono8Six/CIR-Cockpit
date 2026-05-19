@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { dataInteractionsPayloadSchema } from 'shared/schemas/data.schema';
-import { interactionFormSchema } from 'shared/schemas/interaction.schema';
+import { dataInteractionsPayloadSchema } from '../../../../shared/schemas/system/data.schema';
+import { interactionFormSchema } from '../../../../shared/schemas/interaction/interaction.schema';
 import { Channel } from '@/types';
 
 const base = {

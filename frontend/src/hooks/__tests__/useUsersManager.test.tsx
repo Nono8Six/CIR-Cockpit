@@ -1,8 +1,8 @@
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useUsersManager } from '@/hooks/useUsersManager';
-import { notifySuccess } from '@/services/errors/notify';
+import { useUsersManager } from '../admin/users/identity/useUsersManager';
+import { notifySuccess } from '@/services/errors/notifySuccess';
 import type { AdminUserSummary } from '@/services/admin/getAdminUsers';
 
 const usersMocks = vi.hoisted(() => ({
@@ -18,40 +18,38 @@ const usersMocks = vi.hoisted(() => ({
   useDeleteUser: vi.fn()
 }));
 
-vi.mock('@/hooks/useAdminUsers', () => ({
+vi.mock('@/hooks/admin/users/access/useAdminUsers', () => ({
   useAdminUsers: usersMocks.useAdminUsers
 }));
-vi.mock('@/hooks/useAgencies', () => ({
+vi.mock('@/hooks/admin/agencies/core/useAgencies', () => ({
   useAgencies: usersMocks.useAgencies
 }));
-vi.mock('@/hooks/useCreateAdminUser', () => ({
+vi.mock('@/hooks/admin/users/identity/useCreateAdminUser', () => ({
   useCreateAdminUser: usersMocks.useCreateAdminUser
 }));
-vi.mock('@/hooks/useSetUserRole', () => ({
+vi.mock('@/hooks/admin/users/access/useSetUserRole', () => ({
   useSetUserRole: usersMocks.useSetUserRole
 }));
-vi.mock('@/hooks/useSetUserMemberships', () => ({
+vi.mock('@/hooks/admin/users/access/useSetUserMemberships', () => ({
   useSetUserMemberships: usersMocks.useSetUserMemberships
 }));
-vi.mock('@/hooks/useResetUserPassword', () => ({
+vi.mock('@/hooks/admin/users/access/useResetUserPassword', () => ({
   useResetUserPassword: usersMocks.useResetUserPassword
 }));
-vi.mock('@/hooks/useArchiveUser', () => ({
+vi.mock('@/hooks/admin/users/access/useArchiveUser', () => ({
   useArchiveUser: usersMocks.useArchiveUser
 }));
-vi.mock('@/hooks/useUnarchiveUser', () => ({
+vi.mock('@/hooks/admin/users/access/useUnarchiveUser', () => ({
   useUnarchiveUser: usersMocks.useUnarchiveUser
 }));
-vi.mock('@/hooks/useUpdateUserIdentity', () => ({
+vi.mock('@/hooks/admin/users/identity/useUpdateUserIdentity', () => ({
   useUpdateUserIdentity: usersMocks.useUpdateUserIdentity
 }));
-vi.mock('@/hooks/useDeleteUser', () => ({
+vi.mock('@/hooks/admin/users/access/useDeleteUser', () => ({
   useDeleteUser: usersMocks.useDeleteUser
 }));
 
-vi.mock('@/services/errors/notify', () => ({
-  notifySuccess: vi.fn()
-}));
+vi.mock('@/services/errors/notifySuccess', () => ({ notifySuccess: vi.fn() }));
 
 const createUser = (overrides?: Partial<AdminUserSummary>): AdminUserSummary => ({
   id: overrides?.id ?? 'user-1',

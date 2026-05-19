@@ -1,8 +1,8 @@
 import type { Column } from '@tanstack/react-table';
 import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from '../../ui/data-display/Badge';
+import { Button } from '../../ui/inputs/basic/Button';
 
 interface DataTableColumnHeaderProps<TData, TValue> {
   column: Column<TData, TValue>;

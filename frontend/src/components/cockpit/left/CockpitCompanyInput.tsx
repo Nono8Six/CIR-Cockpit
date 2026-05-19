@@ -1,8 +1,8 @@
 import type { RefObject } from 'react';
 import type { FieldErrors, UseFormRegisterReturn, UseFormSetValue } from 'react-hook-form';
 
-import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
-import { Input } from '@/components/ui/input';
+import type { InteractionFormValues } from '../../../../../shared/schemas/interaction/interaction.schema';
+import { Input } from '../../ui/inputs/basic/Input';
 
 type CockpitCompanyInputProps = {
   errors: FieldErrors<InteractionFormValues>;

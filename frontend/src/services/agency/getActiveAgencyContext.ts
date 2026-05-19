@@ -1,33 +1,28 @@
-import { AgencyContext } from '@/types';
+import type { AgencyContext } from '@/types';
 import { getCurrentUserId } from '@/services/auth/getCurrentUserId';
 import { createAppError } from '@/services/errors/AppError';
 import { getAgencyMemberships } from './getAgencyMemberships';
+import { agencyContextCache } from './agencyContextCache';
 
-let cachedContext: AgencyContext | null = null;
-let cachedUserId: string | null = null;
-let preferredAgencyId: string | null = null;
-
-export const setActiveAgencyId = (agencyId: string | null): void => {
-  if (preferredAgencyId === agencyId) return;
-  preferredAgencyId = agencyId;
-  cachedContext = null;
-};
-
+/**
+ * @description Retrieves the active agency context for the current user, utilizing caching.
+ * @returns {Promise<AgencyContext>} The active agency context.
+ */
 export const getActiveAgencyContext = async (): Promise<AgencyContext> => {
   const userId = await getCurrentUserId();
 
   if (
-    cachedContext &&
-    cachedUserId === userId &&
-    (!preferredAgencyId || cachedContext.agency_id === preferredAgencyId)
+    agencyContextCache.cachedContext &&
+    agencyContextCache.cachedUserId === userId &&
+    (!agencyContextCache.preferredAgencyId || agencyContextCache.cachedContext.agency_id === agencyContextCache.preferredAgencyId)
   ) {
-    return cachedContext;
+    return agencyContextCache.cachedContext;
   }
 
   const memberships = await getAgencyMemberships();
   const selected =
-    (preferredAgencyId &&
-      memberships.find(member => member.agency_id === preferredAgencyId)) ||
+    (agencyContextCache.preferredAgencyId &&
+      memberships.find(member => member.agency_id === agencyContextCache.preferredAgencyId)) ||
     memberships[0];
 
   if (!selected) {
@@ -43,8 +38,8 @@ export const getActiveAgencyContext = async (): Promise<AgencyContext> => {
     agency_name: selected.agency_name
   };
 
-  cachedContext = context;
-  cachedUserId = userId;
-  preferredAgencyId = context.agency_id;
+  agencyContextCache.cachedContext = context;
+  agencyContextCache.cachedUserId = userId;
+  agencyContextCache.preferredAgencyId = context.agency_id;
   return context;
 };

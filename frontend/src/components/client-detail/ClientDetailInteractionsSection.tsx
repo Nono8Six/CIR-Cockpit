@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight, RefreshCcw, Trash2 } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '../ui/inputs/basic/Button';
 import { formatDate } from '@/utils/date/formatDate';
 import { formatTime } from '@/utils/date/formatTime';
 import type { ClientDetailInteractionsSectionProps } from './ClientDetailPanel.types';

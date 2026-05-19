@@ -1,4 +1,4 @@
-import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
+import type { InteractionFormValues } from '../../../../shared/schemas/interaction/interaction.schema';
 
 import type { AgencyConfig } from '@/services/config';
 import {

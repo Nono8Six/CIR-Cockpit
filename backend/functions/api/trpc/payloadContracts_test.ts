@@ -5,19 +5,19 @@ import {
   dataEntityContactsPayloadSchema,
   dataInteractionsPayloadSchema,
   dataProfilePayloadSchema
-} from '../../../../shared/schemas/data.schema.ts';
+} from '../../../../shared/schemas/system/data.schema.ts';
 import {
   directoryDuplicatesInputSchema,
   directoryListInputSchema,
   directoryOptionsFacetInputSchema,
   directorySavedViewStateSchema
-} from '../../../../shared/schemas/directory.schema.ts';
+} from '../../../../shared/schemas/system/directory.schema.ts';
 import {
   tierV1DirectoryListInputSchema,
   tierV1DirectoryRowSchema,
   tierV1PayloadSchema,
   tierV1SearchInputSchema
-} from '../../../../shared/schemas/tier-v1.schema.ts';
+} from '../../../../shared/schemas/interaction/tier-v1.schema.ts';
 
 Deno.test('dataEntitiesPayloadSchema supports delete action for super-admin workflows', () => {
   const deletePayload = {

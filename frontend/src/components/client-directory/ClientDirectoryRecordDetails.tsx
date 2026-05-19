@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 
-import type { DirectoryRouteRef, DirectorySearchState } from 'shared/schemas/directory.schema';
+import type { DirectoryRouteRef, DirectorySearchState } from '../../../../shared/schemas/system/directory.schema';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useNavigate } from '@tanstack/react-router';
 
@@ -10,18 +10,18 @@ import ConfirmDialog from '@/components/ConfirmDialog';
 import EntityContactsPanelSection from '@/components/entity-contact/EntityContactsPanelSection';
 import { getEntityContactName } from '@/components/entity-contact/entityContactRow.utils';
 import ProspectFormDialog from '@/components/ProspectFormDialog';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useAgencies } from '@/hooks/useAgencies';
-import { useAppSessionStateContext } from '@/hooks/useAppSession';
-import { useDeleteClient } from '@/hooks/useSetClientArchived';
-import { useDirectoryOptionCommercials } from '@/hooks/useDirectoryOptionCommercials';
-import { useDirectoryRecord } from '@/hooks/useDirectoryRecord';
-import { useEntityContactActions } from '@/hooks/useEntityContactActions';
-import { useEntityContacts } from '@/hooks/useEntityContacts';
-import { useEntityInteractions } from '@/hooks/useEntityInteractions';
-import { useSaveClient } from '@/hooks/useSaveClient';
-import { useSaveProspect } from '@/hooks/useSaveProspect';
-import { notifySuccess } from '@/services/errors/notify';
+import { Skeleton } from '../ui/feedback/Skeleton';
+import { useAgencies } from '../../hooks/admin/agencies/core/useAgencies';
+import { useAppSessionStateContext } from '../../hooks/session/useAppSession';
+import { useDeleteClient } from '../../hooks/entities/clients/useDeleteClient';
+import { useDirectoryOptionCommercials } from '../../hooks/directory/options/useDirectoryOptionCommercials';
+import { useDirectoryRecord } from '../../hooks/directory/core/useDirectoryRecord';
+import { useEntityContactActions } from '../../hooks/entities/contacts/useEntityContactActions';
+import { useEntityContacts } from '../../hooks/entities/contacts/useEntityContacts';
+import { useEntityInteractions } from '../../hooks/interactions/core/queries/useEntityInteractions';
+import { useSaveClient } from '../../hooks/entities/clients/useSaveClient';
+import { useSaveProspect } from '../../hooks/entities/prospects/useSaveProspect';
+import { notifySuccess } from '@/services/errors/notifySuccess';
 
 import ClientDirectoryRecordActionsBar from './ClientDirectoryRecordActionsBar';
 import ClientDirectoryRecordIdentityCard from './ClientDirectoryRecordIdentityCard';

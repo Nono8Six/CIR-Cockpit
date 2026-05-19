@@ -1,10 +1,11 @@
 import {
   directorySavedViewResponseSchema,
   type DirectorySavedViewResponse
-} from 'shared/schemas/api-responses';
-import { type DirectorySavedViewSetDefaultInput } from 'shared/schemas/directory.schema';
+} from '../../../../shared/schemas/system/api-responses';
+import { type DirectorySavedViewSetDefaultInput } from '../../../../shared/schemas/system/directory.schema';
 
-import { invokeTrpc } from '@/services/api/safeTrpc';
+import { invokeTrpc } from '@/services/api/invokeTrpc';
+
 import { createAppError } from '@/services/errors/AppError';
 
 const parseSetDefaultDirectorySavedViewResponse = (payload: unknown): DirectorySavedViewResponse => {

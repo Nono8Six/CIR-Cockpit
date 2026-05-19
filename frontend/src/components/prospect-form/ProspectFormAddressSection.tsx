@@ -1,8 +1,8 @@
 import type { ChangeEvent } from 'react';
 import type { FieldErrors, UseFormRegisterReturn } from 'react-hook-form';
 
-import type { ProspectFormValues } from 'shared/schemas/prospect.schema';
-import { Input } from '@/components/ui/input';
+import type { ProspectFormValues } from '../../../../shared/schemas/entity/prospect.schema';
+import { Input } from '../ui/inputs/basic/Input';
 
 type ProspectFormAddressSectionProps = {
   addressField: UseFormRegisterReturn;

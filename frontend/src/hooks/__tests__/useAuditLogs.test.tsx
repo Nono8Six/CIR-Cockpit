@@ -4,7 +4,7 @@ import type { PropsWithChildren } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createTestQueryClient } from '@/__tests__/test-utils';
-import { useAuditLogs } from '@/hooks/useAuditLogs';
+import { useAuditLogs } from '../admin/audit/useAuditLogs';
 import { getAuditLogs } from '@/services/admin/getAuditLogs';
 import { createAppError } from '@/services/errors/AppError';
 import { handleUiError } from '@/services/errors/handleUiError';

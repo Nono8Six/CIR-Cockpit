@@ -1,6 +1,6 @@
 import { initTRPC, type inferRouterInputs, type inferRouterOutputs } from '@trpc/server';
 
-import { adminAgenciesPayloadSchema } from '../schemas/agency.schema.ts';
+import { adminAgenciesPayloadSchema } from '../schemas/admin/agency.schema.ts';
 import {
   configGetResponseSchema,
   configSaveAgencyResponseSchema,
@@ -28,26 +28,26 @@ import {
   directorySavedViewResponseSchema,
   directorySavedViewsListResponseSchema,
   tierV1SearchResponseSchema
-} from '../schemas/api-responses.ts';
+} from '../schemas/system/api-responses.ts';
 import {
   cockpitAgencyMembersInputSchema,
   cockpitAgencyMembersResponseSchema,
   cockpitPhoneLookupInputSchema,
   cockpitPhoneLookupResponseSchema
-} from '../schemas/cockpit.schema.ts';
+} from '../schemas/interaction/cockpit.schema.ts';
 import {
   configGetInputSchema,
   configSaveAgencyInputSchema,
   configSaveProductInputSchema
-} from '../schemas/config.schema.ts';
+} from '../schemas/system/config.schema.ts';
 import {
   dataConfigPayloadSchema,
   dataEntitiesPayloadSchema,
   dataEntityContactsPayloadSchema,
   dataInteractionsPayloadSchema,
   dataProfilePayloadSchema
-} from '../schemas/data.schema.ts';
-import { tierV1SearchInputSchema } from '../schemas/tier-v1.schema.ts';
+} from '../schemas/system/data.schema.ts';
+import { tierV1SearchInputSchema } from '../schemas/interaction/tier-v1.schema.ts';
 import {
   directoryCitySuggestionsInputSchema,
   directoryCompanyDetailsInputSchema,
@@ -62,12 +62,12 @@ import {
   directorySavedViewSaveInputSchema,
   directorySavedViewSetDefaultInputSchema,
   directorySavedViewsListInputSchema
-} from '../schemas/directory.schema.ts';
+} from '../schemas/system/directory.schema.ts';
 import {
   adminAuditLogsInputSchema,
   adminUsersListInputSchema,
   adminUsersPayloadSchema
-} from '../schemas/user.schema.ts';
+} from '../schemas/admin/user.schema.ts';
 
 const t = initTRPC.create();
 

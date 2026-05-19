@@ -16,17 +16,17 @@ import type {
   DirectoryListRow,
   DirectorySortBy,
   DirectorySortingRule
-} from 'shared/schemas/directory.schema';
+} from '../../../../shared/schemas/system/directory.schema';
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/data-display/Table';
+import { Button } from '../ui/inputs/basic/Button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
+} from '../ui/navigation/DropdownMenu';
 import { cn } from '@/lib/utils';
 import { formatRelativeTime } from '@/utils/date/formatRelativeTime';
 import DataTableColumnHeader from '@/components/client-directory/data-table/DataTableColumnHeader';

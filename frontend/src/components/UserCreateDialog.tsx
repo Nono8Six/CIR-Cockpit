@@ -1,7 +1,7 @@
 import { Agency } from '@/types';
-import { CreateAdminUserPayload } from '@/services/admin/adminUsersCreate';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
-import { useUserCreateDialog } from '@/hooks/useUserCreateDialog';
+import { CreateAdminUserPayload } from '@/services/admin/createAdminUser';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/feedback/Dialog';
+import { useUserCreateDialog } from '../hooks/admin/users/identity/useUserCreateDialog';
 import UserCreateIdentitySection from './user-create/UserCreateIdentitySection';
 import UserCreateRoleSection from './user-create/UserCreateRoleSection';
 import UserCreateAgenciesSection from './user-create/UserCreateAgenciesSection';

@@ -1,13 +1,13 @@
 import { useCallback, useMemo } from 'react';
 
-import type { DirectoryRouteRef, DirectorySearchState } from 'shared/schemas/directory.schema';
+import type { DirectoryRouteRef, DirectorySearchState } from '../../../../shared/schemas/system/directory.schema';
 import { useCanGoBack, useNavigate } from '@tanstack/react-router';
 
 import ClientDirectoryRecordDetails from './ClientDirectoryRecordDetails';
 import { toDirectoryListInput } from './clientDirectorySearch';
 import { getDirectoryRouteRefFromRow } from './directoryRouting';
-import { useAppSessionStateContext } from '@/hooks/useAppSession';
-import { useDirectoryPage } from '@/hooks/useDirectoryPage';
+import { useAppSessionStateContext } from '../../hooks/session/useAppSession';
+import { useDirectoryPage } from '../../hooks/directory/core/useDirectoryPage';
 
 type ClientDirectoryDetailPageProps = {
   routeRef: DirectoryRouteRef;

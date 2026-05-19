@@ -3,7 +3,7 @@ import type { NavigateFn } from '@tanstack/react-router';
 import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useAppViewState } from '@/hooks/useAppViewState';
+import { useAppViewState } from '../session/useAppViewState';
 import { prefetchAdminPanelQueries } from '@/services/query/queryPrefetch';
 
 vi.mock('@/services/query/queryPrefetch', () => ({

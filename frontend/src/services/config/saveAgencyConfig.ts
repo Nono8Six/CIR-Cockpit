@@ -1,5 +1,5 @@
 import { ResultAsync } from 'neverthrow';
-import type { ConfigSaveAgencyInput } from 'shared/schemas/config.schema';
+import type { ConfigSaveAgencyInput } from '../../../../shared/schemas/system/config.schema';
 
 import { type AppError } from '@/services/errors/AppError';
 import { safeTrpc } from '@/services/api/safeTrpc';

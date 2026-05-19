@@ -1,6 +1,6 @@
 import { ResultAsync } from 'neverthrow';
 
-import { dataInteractionsDeleteResponseSchema } from 'shared/schemas/api-responses';
+import { dataInteractionsDeleteResponseSchema } from '../../../../shared/schemas/system/api-responses';
 import { type AppError, createAppError } from '@/services/errors/AppError';
 import { safeTrpc } from '@/services/api/safeTrpc';
 

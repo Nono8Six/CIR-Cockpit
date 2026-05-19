@@ -1,4 +1,4 @@
-import type { DirectoryListRow, DirectoryRouteRef } from 'shared/schemas/directory.schema';
+import type { DirectoryListRow, DirectoryRouteRef } from '../../../../shared/schemas/system/directory.schema';
 
 import { isProspectEntityType } from './clientDirectorySearch';
 

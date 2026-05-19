@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createAppError } from '@/services/errors/AppError';
-import { invokeTrpc, safeTrpc } from '@/services/api/safeTrpc';
+import { safeTrpc } from '@/services/api/safeTrpc';
+import { invokeTrpc } from '@/services/api/invokeTrpc';
 import { buildRpcRequestInit, createTrpcCallOptions, getTrpcClient } from '@/services/api/trpcClient';
 
 const mockTrpcClient = {
@@ -35,7 +36,7 @@ describe('safeTrpc', () => {
         ok: true,
         payload: { id: 'item-1' }
       }),
-      (payload) => payload,
+      (payload: unknown) => payload,
       'Fallback'
     );
 
@@ -52,7 +53,7 @@ describe('safeTrpc', () => {
     await expect(
       invokeTrpc(
         async () => null,
-        (payload) => payload,
+        (payload: unknown) => payload,
         'Fallback'
       )
     ).rejects.toMatchObject({ code: 'EDGE_FUNCTION_ERROR' });
@@ -63,7 +64,7 @@ describe('safeTrpc', () => {
           ok: false,
           error: 'Erreur serveur'
         }),
-        (payload) => payload,
+        (payload: unknown) => payload,
         'Fallback'
       )
     ).rejects.toMatchObject({ code: 'EDGE_FUNCTION_ERROR' });
@@ -75,7 +76,7 @@ describe('safeTrpc', () => {
         async () => {
           throw new Error('fetch failed');
         },
-        (payload) => payload,
+        (payload: unknown) => payload,
         'Fallback'
       )
     ).rejects.toMatchObject({ code: 'NETWORK_ERROR' });
@@ -90,7 +91,7 @@ describe('safeTrpc', () => {
         async () => {
           throw appError;
         },
-        (payload) => payload,
+        (payload: unknown) => payload,
         'Fallback'
       )
     ).rejects.toBe(appError);
@@ -99,7 +100,7 @@ describe('safeTrpc', () => {
   it('returns ResultAsync success and failure for safeTrpc', async () => {
     const success = await safeTrpc(
       async () => ({ ok: true, value: 42 }),
-      (payload) => (typeof payload === 'object' && payload ? Reflect.get(payload, 'value') : null),
+      (payload: unknown) => (typeof payload === 'object' && payload ? Reflect.get(payload, 'value') : null),
       'Fallback'
     ).match(
       (result) => result,
@@ -110,7 +111,7 @@ describe('safeTrpc', () => {
       async () => {
         throw new Error('network down');
       },
-      (payload) => payload,
+      (payload: unknown) => payload,
       'Fallback'
     ).match(
       () => '',

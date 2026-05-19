@@ -1,7 +1,7 @@
 import { Clock } from 'lucide-react';
 import type { UseFormRegisterReturn } from 'react-hook-form';
 
-import { Input } from '@/components/ui/input';
+import { Input } from '../../ui/inputs/basic/Input';
 import { cn } from '@/lib/utils';
 
 type CockpitReminderControlProps = {

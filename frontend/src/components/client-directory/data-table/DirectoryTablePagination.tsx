@@ -1,14 +1,14 @@
-import { DIRECTORY_PAGE_SIZES } from 'shared/schemas/directory.schema';
+import { DIRECTORY_PAGE_SIZES } from '../../../../../shared/schemas/system/directory.schema';
 import { ChevronsLeft, ChevronsRight } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '../../ui/inputs/basic/Button';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from '@/components/ui/select';
+} from '../../ui/inputs/selects/Select';
 
 interface DirectoryTablePaginationProps {
   page: number;

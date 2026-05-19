@@ -1,15 +1,15 @@
 import type { FieldErrors, UseFormRegisterReturn } from 'react-hook-form';
 
 import type { Agency, UserRole } from '@/types';
-import type { ProspectFormValues } from 'shared/schemas/prospect.schema';
-import { Input } from '@/components/ui/input';
+import type { ProspectFormValues } from '../../../../shared/schemas/entity/prospect.schema';
+import { Input } from '../ui/inputs/basic/Input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from '@/components/ui/select';
+} from '../ui/inputs/selects/Select';
 
 type ProspectFormMetaSectionProps = {
   siretField: UseFormRegisterReturn;

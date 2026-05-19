@@ -1,7 +1,7 @@
 import type { Entity } from '@/types';
 import { Building2 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { CommandGroup, CommandItem } from '@/components/ui/command';
+import { Badge } from '../ui/data-display/Badge';
+import { CommandGroup, CommandItem } from '../ui/inputs/selects/Command';
 import { formatClientNumber } from '@/utils/clients/formatClientNumber';
 
 type AppSearchClientsSectionProps = {

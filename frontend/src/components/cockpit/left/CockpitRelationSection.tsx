@@ -2,7 +2,7 @@ import type { RefObject } from 'react';
 import { Building2, Factory, Megaphone, Sprout, Store, UserRound, Users } from 'lucide-react';
 import type { FieldErrors } from 'react-hook-form';
 
-import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
+import type { InteractionFormValues } from '../../../../../shared/schemas/interaction/interaction.schema';
 import {
   CASH_CLIENT_RELATION_LABEL,
   INDIVIDUAL_RELATION_LABEL,
@@ -20,8 +20,8 @@ import {
   ComboboxInput,
   ComboboxItem,
   ComboboxList
-} from '@/components/ui/combobox';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+} from '../../ui/inputs/selects/Combobox';
+import { ToggleGroup, ToggleGroupItem } from '../../ui/inputs/basic/ToggleGroup';
 
 type CockpitRelationSectionProps = {
   labelStyle: string;

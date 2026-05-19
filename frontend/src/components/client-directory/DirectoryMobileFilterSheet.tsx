@@ -1,9 +1,9 @@
 import { useState, type ReactNode } from 'react';
 import { SlidersHorizontal } from 'lucide-react';
-import type { DirectorySearchState } from 'shared/schemas/directory.schema';
+import type { DirectorySearchState } from '../../../../shared/schemas/system/directory.schema';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from '../ui/data-display/Badge';
+import { Button } from '../ui/inputs/basic/Button';
 import {
   Sheet,
   SheetContent,
@@ -11,7 +11,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger
-} from '@/components/ui/sheet';
+} from '../ui/feedback/Sheet';
 import DirectoryCityAutocomplete from './directory-filters/DirectoryCityAutocomplete';
 import DirectoryFilterCombobox from './directory-filters/DirectoryFilterCombobox';
 import type { DirectoryFilterOption, DirectoryOptionRequest } from './directory-filters/DirectoryFilters.types';

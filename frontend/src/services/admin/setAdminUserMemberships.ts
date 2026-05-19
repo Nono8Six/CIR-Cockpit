@@ -1,0 +1,39 @@
+import {
+  adminUsersSetMembershipsResponseSchema,
+  type AdminUsersSetMembershipsResponse
+} from '../../../../shared/schemas/system/api-responses';
+import { safeTrpc } from '@/services/api/safeTrpc';
+import { createAppError } from '@/services/errors/AppError';
+
+export type MembershipMode = 'replace' | 'add' | 'remove';
+
+export type SetUserMembershipsResponse = AdminUsersSetMembershipsResponse;
+
+const parseSetUserMembershipsResponse = (payload: unknown): SetUserMembershipsResponse => {
+  const parsed = adminUsersSetMembershipsResponseSchema.safeParse(payload);
+  if (!parsed.success) {
+    throw createAppError({
+      code: 'EDGE_INVALID_RESPONSE',
+      message: 'Reponse serveur invalide.',
+      source: 'edge',
+      details: parsed.error.message
+    });
+  }
+  return parsed.data;
+};
+
+export const setAdminUserMemberships = (
+  userId: string,
+  agencyIds: string[],
+  mode: MembershipMode = 'replace'
+) =>
+  safeTrpc(
+    (api, options) => api.admin.users.mutate({
+      action: 'set_memberships',
+      user_id: userId,
+      agency_ids: agencyIds,
+      mode
+      }, options),
+    parseSetUserMembershipsResponse,
+    "Impossible de mettre a jour les agences."
+  );

@@ -3,9 +3,9 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, CheckCircle2, Plus, Search, UserRound } from 'lucide-react';
 
 import type { CockpitFormLeftPaneProps } from '../CockpitPaneTypes';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Kbd } from '@/components/ui/kbd';
+import { Button } from '../../ui/inputs/basic/Button';
+import { Input } from '../../ui/inputs/basic/Input';
+import { Kbd } from '../../ui/data-display/Kbd';
 import { saveEntityContact } from '@/services/entities/saveEntityContact';
 import { handleUiError } from '@/services/errors/handleUiError';
 import { invalidateClientContactsQuery } from '@/services/query/queryInvalidation';

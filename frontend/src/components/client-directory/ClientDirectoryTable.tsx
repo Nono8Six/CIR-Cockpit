@@ -16,9 +16,9 @@ import type {
   DirectoryListRow,
   DirectorySortBy,
   DirectorySortingRule
-} from 'shared/schemas/directory.schema';
+} from '../../../../shared/schemas/system/directory.schema';
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/data-display/Table';
 import { cn } from '@/lib/utils';
 import { formatClientNumber } from '@/utils/clients/formatClientNumber';
 import { formatRelativeTime } from '@/utils/date/formatRelativeTime';

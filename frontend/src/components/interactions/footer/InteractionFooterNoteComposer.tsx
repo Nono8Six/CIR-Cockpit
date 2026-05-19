@@ -1,7 +1,7 @@
 import { Paperclip, SendHorizontal } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { Button } from '../../ui/inputs/basic/Button';
+import { Textarea } from '../../ui/inputs/basic/Textarea';
 
 type InteractionFooterNoteComposerProps = {
   note: string;

@@ -1,56 +1,16 @@
 import { ResultAsync } from 'neverthrow';
 
 import { safeApiCall } from '@/lib/result';
-import { createAppError, isAppError, type AppError } from '@/services/errors/AppError';
-import { mapEdgeError } from '@/services/errors/mapEdgeError';
-import { mapTrpcError } from '@/services/errors/mapTrpcError';
-import { isRecord, readBoolean } from '@/utils/recordNarrowing';
-import {
-  buildRpcRequestInit,
-  createTrpcCallOptions,
-  type TrpcClient,
-  getTrpcClient
-} from './trpcClient';
+import type { AppError } from '@/services/errors/AppError';
+import { invokeTrpc, type ParseTrpcResponse, type TrpcCall } from './invokeTrpc';
 
-type ParseTrpcResponse<TResponse> = (payload: unknown) => TResponse;
-type TrpcCallOptions = ReturnType<typeof createTrpcCallOptions>;
-type TrpcCall = (client: TrpcClient, options: TrpcCallOptions) => Promise<unknown>;
-
-const runTrpcCall = async (
-  call: TrpcCall,
-  fallbackMessage: string
-): Promise<unknown> => {
-  const requestInit = await buildRpcRequestInit();
-
-  try {
-    return await call(getTrpcClient(), createTrpcCallOptions(requestInit));
-  } catch (error) {
-    if (isAppError(error)) {
-      throw error;
-    }
-    throw mapTrpcError(error, fallbackMessage);
-  }
-};
-
-export const invokeTrpc = async <TResponse>(
-  call: TrpcCall,
-  parseResponse: ParseTrpcResponse<TResponse>,
-  fallbackMessage: string
-): Promise<TResponse> => {
-  const payload = await runTrpcCall(call, fallbackMessage);
-  if (!isRecord(payload)) {
-    throw createAppError({
-      code: 'EDGE_FUNCTION_ERROR',
-      message: 'Reponse serveur invalide.',
-      source: 'edge'
-    });
-  }
-  if (readBoolean(payload, 'ok') === false) {
-    throw mapEdgeError(payload, fallbackMessage);
-  }
-  return parseResponse(payload);
-};
-
+/**
+ * @description Safely executes a tRPC call returning a neverthrow ResultAsync wrapper around AppError.
+ * @param {TrpcCall} call - The tRPC call to execute.
+ * @param {ParseTrpcResponse<TResponse>} parseResponse - Function to parse the raw payload into TResponse.
+ * @param {string} fallbackMessage - Fallback error message.
+ * @returns {ResultAsync<TResponse, AppError>} ResultAsync wrapping the successful parsed response or mapped AppError.
+ */
 export const safeTrpc = <TResponse>(
   call: TrpcCall,
   parseResponse: ParseTrpcResponse<TResponse>,

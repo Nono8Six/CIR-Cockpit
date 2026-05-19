@@ -1,6 +1,6 @@
 import type { Interaction } from '@/types';
 import { ClipboardList } from 'lucide-react';
-import { CommandGroup, CommandItem } from '@/components/ui/command';
+import { CommandGroup, CommandItem } from '../ui/inputs/selects/Command';
 import { formatDate } from '@/utils/date/formatDate';
 
 type AppSearchInteractionsSectionProps = {

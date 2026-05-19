@@ -1,5 +1,5 @@
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
-import { Button } from './ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/feedback/Dialog';
+import { Button } from './ui/inputs/basic/Button';
 
 interface TemporaryPasswordDialogProps {
   open: boolean;

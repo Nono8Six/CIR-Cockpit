@@ -11,7 +11,7 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle
-} from '@/components/ui/sheet';
+} from '../ui/feedback/Sheet';
 
 type DashboardDetailsOverlayProps = {
   interaction: Interaction;

@@ -6,7 +6,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue
-} from '@/components/ui/select';
+} from '../../ui/inputs/selects/Select';
 
 type UserRoleSelectProps = { role: UserRole; onRoleChange: (role: UserRole) => void };
 

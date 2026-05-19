@@ -3,8 +3,8 @@ import { renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { UseFormSetFocus, UseFormSetValue } from 'react-hook-form';
 
-import { useInteractionHotkeys } from '@/hooks/useInteractionHotkeys';
-import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
+import { useInteractionHotkeys } from '../interactions/handlers/useInteractionHotkeys';
+import type { InteractionFormValues } from '../../../../shared/schemas/interaction/interaction.schema';
 
 const setup = (canStartNewEntryFromShortcut: boolean) => {
   const onReset = vi.fn();

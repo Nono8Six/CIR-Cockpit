@@ -3,7 +3,7 @@ import TemporaryPasswordDialog from '@/components/TemporaryPasswordDialog';
 import UserCreateDialog from '@/components/UserCreateDialog';
 import UserIdentityDialog from '@/components/UserIdentityDialog';
 import UserMembershipDialog from '@/components/UserMembershipDialog';
-import type { useUsersManager } from '@/hooks/useUsersManager';
+import type { useUsersManager } from '../../hooks/admin/users/identity/useUsersManager';
 
 type UsersManagerState = ReturnType<typeof useUsersManager>;
 

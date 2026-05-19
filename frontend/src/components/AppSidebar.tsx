@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { motion, useReducedMotion, type Transition } from 'motion/react';
 
 import type { AppShellNavSection } from '@/app/appConstants';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Sheet, SheetContent } from './ui/feedback/Sheet';
 import type { AppTab } from '@/types';
 
 import AppSidebarContent from './app-sidebar/AppSidebarContent';

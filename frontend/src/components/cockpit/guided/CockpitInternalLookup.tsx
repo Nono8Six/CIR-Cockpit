@@ -3,17 +3,17 @@ import type { UseFormSetValue } from 'react-hook-form';
 import { ChevronDown, Search } from 'lucide-react';
 
 import { INTERNAL_COMPANY_NAME } from '@/constants/relations';
-import { useCockpitAgencyMembersByAgencyIds } from '@/hooks/useCockpitAgencyMembers';
-import { Button } from '@/components/ui/button';
+import { useCockpitAgencyMembersByAgencyIds } from '../../../hooks/admin/agencies/core/useCockpitAgencyMembers';
+import { Button } from '../../ui/inputs/basic/Button';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
+} from '../../ui/navigation/DropdownMenu';
+import { Input } from '../../ui/inputs/basic/Input';
 import type { Agency } from '@/types';
-import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
+import type { InteractionFormValues } from '../../../../../shared/schemas/interaction/interaction.schema';
 import CockpitInternalMembersList, {
   getCockpitInternalMemberDisplayName
 } from './CockpitInternalMembersList';

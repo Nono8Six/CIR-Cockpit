@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { type Interaction, Channel } from '@/types';
-import { invokeTrpc } from '@/services/api/safeTrpc';
+import { invokeTrpc } from '@/services/api/invokeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 import { getInteractionsByEntity } from '@/services/interactions/getInteractionsByEntity';
 
-vi.mock('@/services/api/safeTrpc', () => ({
+vi.mock('@/services/api/invokeTrpc', () => ({
   invokeTrpc: vi.fn()
 }));
 

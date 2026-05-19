@@ -1,15 +1,15 @@
 import {
   directoryCompanySearchResponseSchema,
   type DirectoryCompanySearchResponse
-} from 'shared/schemas/api-responses';
+} from '../../../../shared/schemas/system/api-responses';
 import {
   directoryCompanySearchResultSchema,
   type DirectoryCompanySearchInput,
   type DirectoryCompanySearchResult
-} from 'shared/schemas/directory.schema';
+} from '../../../../shared/schemas/system/directory.schema';
 import { z } from 'zod/v4';
 
-import { invokeTrpc } from '@/services/api/safeTrpc';
+import { invokeTrpc } from '@/services/api/invokeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 
 const COMPANY_SEARCH_URL = 'https://recherche-entreprises.api.gouv.fr/search';

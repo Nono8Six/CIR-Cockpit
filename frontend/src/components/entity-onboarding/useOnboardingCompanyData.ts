@@ -6,9 +6,9 @@ import {
 } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 
-import type { DirectoryCompanySearchResult } from 'shared/schemas/directory.schema';
+import type { DirectoryCompanySearchResult } from '../../../../shared/schemas/system/directory.schema';
 
-import { useDirectoryCompanyDetails } from '@/hooks/useDirectoryCompanyDetails';
+import { useDirectoryCompanyDetails } from '../../hooks/directory/company/useDirectoryCompanyDetails';
 import type { UserRole } from '@/types';
 
 import {

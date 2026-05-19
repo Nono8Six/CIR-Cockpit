@@ -1,5 +1,5 @@
 import type { Json } from '@/types/supabase';
-import { isRecord } from './recordNarrowing';
+import { isRecord } from './recordNarrowing/isRecord';
 
 export const toJsonValue = (value: unknown): Json => {
   if (value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {

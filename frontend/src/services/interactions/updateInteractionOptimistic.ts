@@ -1,6 +1,6 @@
-import { dataInteractionsMutationResponseSchema } from 'shared/schemas/api-responses';
+import { dataInteractionsMutationResponseSchema } from '../../../../shared/schemas/system/api-responses';
 import { Interaction, InteractionUpdate, TimelineEvent } from '@/types';
-import { invokeTrpc } from '@/services/api/safeTrpc';
+import { invokeTrpc } from '@/services/api/invokeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 import { hydrateTimeline } from './hydrateTimeline';
 

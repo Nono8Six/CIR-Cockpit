@@ -1,7 +1,7 @@
 import { renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { useRecentOwnInteractions } from '@/hooks/useRecentOwnInteractions';
+import { useRecentOwnInteractions } from '../interactions/core/queries/useRecentOwnInteractions';
 import { Channel, type Interaction } from '@/types';
 
 const buildInteraction = (overrides: Partial<Interaction>): Interaction => ({

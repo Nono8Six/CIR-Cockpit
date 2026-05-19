@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { prospectFormSchema } from '../prospect.schema';
+import { prospectFormSchema } from '../entity/prospect.schema.ts';
 
 describe('prospectFormSchema', () => {
   it('accepts valid payload', () => {

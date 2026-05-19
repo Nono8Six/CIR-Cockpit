@@ -30,7 +30,7 @@ vi.mock('@/components/cockpit/left/CockpitChannelSection', () => ({
 vi.mock('@/components/cockpit/guided/CockpitGuidedEntry', () => ({
   default: () => <section data-testid="cockpit-guided-entry" />
 }));
-vi.mock('@/hooks/useCockpitFormController', () => ({
+vi.mock('@/hooks/cockpit/useCockpitFormController', () => ({
   useCockpitFormController: () => ({
     canSave: true,
     gateMessage: null,

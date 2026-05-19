@@ -1,90 +1,16 @@
-import type { ReactNode } from 'react';
-import { Layers3, Settings2, Sparkles } from 'lucide-react';
+import GeneralSettingsCard from './general/GeneralSettingsCard';
+import ProductSettingsCard from './product/ProductSettingsCard';
+import ReferentialsSection from './referentials/ReferentialsSection';
+import KanbanSection from './kanban/KanbanSection';
+import type { SettingsSectionsProps } from './settings-sections.types';
 
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
-import SettingsConfigColumns from './config/SettingsConfigColumns';
-import SettingsStatusColumn from './SettingsStatusColumn';
-import type { SettingsSectionsProps } from './SettingsSections.types';
-
-type SettingsCardProps = {
-  title: string;
-  description: string;
-  icon: typeof Settings2;
-  badge: string;
-  readOnly: boolean;
-  children: ReactNode;
-};
-
-const SettingsCard = ({
-  title,
-  description,
-  icon: Icon,
-  badge,
-  readOnly,
-  children
-}: SettingsCardProps) => (
-  <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
-    <div className="mb-4 flex items-start justify-between gap-3">
-      <div className="space-y-1">
-        <div className="flex items-center gap-2">
-          <Icon className="size-4 text-muted-foreground" aria-hidden="true" />
-          <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-        </div>
-        <p className="text-xs leading-relaxed text-muted-foreground">{description}</p>
-      </div>
-      <Badge variant="outline" className="border-border bg-surface-1 text-[10px] font-bold uppercase tracking-[0.12em]">
-        {readOnly ? `${badge} lecture seule` : badge}
-      </Badge>
-    </div>
-    <div className="space-y-4">{children}</div>
-  </section>
-);
-
-type SettingsSelectFieldProps = {
-  label: string;
-  description: string;
-  value: string;
-  onValueChange: (value: string) => void;
-  disabled: boolean;
-  items: Array<{ value: string; label: string }>;
-};
-
-const SettingsSelectField = ({
-  label,
-  description,
-  value,
-  onValueChange,
-  disabled,
-  items
-}: SettingsSelectFieldProps) => (
-  <div className="space-y-2">
-    <div>
-      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{label}</p>
-      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{description}</p>
-    </div>
-    <Select value={value} onValueChange={onValueChange} disabled={disabled}>
-      <SelectTrigger density="dense" className="w-full bg-background">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        {items.map((item) => (
-          <SelectItem key={item.value} value={item.value}>
-            {item.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  </div>
-);
-
+/**
+ * Renders the settings sections by grouping General onboarding, Product-wide settings,
+ * Referentials columns, and Kanban workflow stages into a cohesive section stack.
+ *
+ * @param {SettingsSectionsProps} props - The component properties.
+ * @returns {JSX.Element} The rendered settings sections view.
+ */
 const SettingsSections = ({
   readOnly,
   canEditAgencySettings,
@@ -123,142 +49,77 @@ const SettingsSections = ({
   setServices,
   setEntities,
   setInteractionTypes,
+  setStatuses,
   addStatus,
   removeStatus,
   updateStatusLabel,
-  updateStatusCategory
+  updateStatusCategory,
 }: SettingsSectionsProps) => {
   const agencyReadOnly = !canEditAgencySettings;
   const productReadOnly = !canEditProductSettings;
 
   return (
-    <div className="space-y-6" data-read-only={readOnly} data-testid="settings-sections">
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <SettingsCard
-          title="Paramètres onboarding agence"
-          description="Ces surcharges s'appliquent seulement à l'agence active et complètent les valeurs par défaut du produit."
-          icon={Layers3}
-          badge="Agence"
-          readOnly={agencyReadOnly}
-        >
-          <SettingsSelectField
-            label="Saisie manuelle"
-            description="Choisit si l'agence hérite du comportement global ou force l'activation ou la désactivation de la saisie manuelle."
-            value={allowManualEntryOverride}
-            onValueChange={(value) => setAllowManualEntryOverride(value as 'inherit' | 'enabled' | 'disabled')}
-            disabled={agencyReadOnly}
-            items={[
-              { value: 'inherit', label: 'Hériter du produit' },
-              { value: 'enabled', label: 'Toujours autoriser' },
-              { value: 'disabled', label: 'Toujours bloquer' }
-            ]}
-          />
+    <div className="space-y-8" data-read-only={readOnly} data-testid="settings-sections">
+      {/* General Settings Section */}
+      <GeneralSettingsCard
+        allowManualEntryOverride={allowManualEntryOverride}
+        defaultCompanyAccountTypeOverride={defaultCompanyAccountTypeOverride}
+        productAllowManualEntry={productAllowManualEntry}
+        productDefaultCompanyAccountType={productDefaultCompanyAccountType}
+        readOnly={agencyReadOnly}
+        setAllowManualEntryOverride={setAllowManualEntryOverride}
+        setDefaultCompanyAccountTypeOverride={setDefaultCompanyAccountTypeOverride}
+      />
 
-          <SettingsSelectField
-            label="Compte entreprise par défaut"
-            description="Fixe le type de compte appliqué par défaut lors de la création d'un client société."
-            value={defaultCompanyAccountTypeOverride}
-            onValueChange={(value) => setDefaultCompanyAccountTypeOverride(value as 'inherit' | 'term' | 'cash')}
-            disabled={agencyReadOnly}
-            items={[
-              { value: 'inherit', label: 'Hériter du produit' },
-              { value: 'term', label: 'A terme' },
-              { value: 'cash', label: 'Comptant' }
-            ]}
-          />
+      {/* Product Settings Section */}
+      <ProductSettingsCard
+        productAllowManualEntry={productAllowManualEntry}
+        productDefaultCompanyAccountType={productDefaultCompanyAccountType}
+        productUiShellV2={productUiShellV2}
+        readOnly={productReadOnly}
+        setProductAllowManualEntry={setProductAllowManualEntry}
+        setProductDefaultCompanyAccountType={setProductDefaultCompanyAccountType}
+        setProductUiShellV2={setProductUiShellV2}
+      />
 
-          <div className="rounded-md border border-border-subtle bg-surface-1/40 px-3 py-2 text-xs text-muted-foreground">
-            Les particuliers restent forcés en <strong>comptant</strong>. Ce point est volontairement hors paramétrage.
-          </div>
-        </SettingsCard>
+      {/* Referentials Section */}
+      <ReferentialsSection
+        readOnly={agencyReadOnly}
+        families={families}
+        services={services}
+        entities={entities}
+        interactionTypes={interactionTypes}
+        newFamily={newFamily}
+        newService={newService}
+        newEntity={newEntity}
+        newInteractionType={newInteractionType}
+        setNewFamily={setNewFamily}
+        setNewService={setNewService}
+        setNewEntity={setNewEntity}
+        setNewInteractionType={setNewInteractionType}
+        addItem={addItem}
+        removeItem={removeItem}
+        updateItem={updateItem}
+        setFamilies={setFamilies}
+        setServices={setServices}
+        setEntities={setEntities}
+        setInteractionTypes={setInteractionTypes}
+      />
 
-        <SettingsCard
-          title="Paramètres produit"
-          description="Drapeaux et valeurs par défaut globaux partagés par toutes les agences. Cette zone reste réservée aux super_admin."
-          icon={Sparkles}
-          badge="Produit"
-          readOnly={productReadOnly}
-        >
-          <div className="flex items-start justify-between gap-4 rounded-md border border-border-subtle bg-surface-1/40 px-3 py-3">
-            <div className="space-y-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">UI shell v2</p>
-              <p className="text-xs leading-relaxed text-muted-foreground">
-                Active le shell v2 comme mode par défaut. Les surcharges utilisateur `?ui=` et le stockage local restent prioritaires.
-              </p>
-            </div>
-            <Switch
-              checked={productUiShellV2}
-              onCheckedChange={setProductUiShellV2}
-              disabled={productReadOnly}
-              aria-label="Activer le shell UI v2"
-            />
-          </div>
-
-          <div className="flex items-start justify-between gap-4 rounded-md border border-border-subtle bg-surface-1/40 px-3 py-3">
-            <div className="space-y-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Saisie manuelle</p>
-              <p className="text-xs leading-relaxed text-muted-foreground">
-                Contrôle le comportement par défaut du parcours onboarding tant qu&apos;une agence ne le surcharge pas.
-              </p>
-            </div>
-            <Switch
-              checked={productAllowManualEntry}
-              onCheckedChange={setProductAllowManualEntry}
-              disabled={productReadOnly}
-              aria-label="Autoriser la saisie manuelle par défaut"
-            />
-          </div>
-
-          <SettingsSelectField
-            label="Compte entreprise par défaut"
-            description="Valeur globale appliquée à la création d'un client entreprise en l'absence de surcharge agence."
-            value={productDefaultCompanyAccountType}
-            onValueChange={(value) => setProductDefaultCompanyAccountType(value as 'term' | 'cash')}
-            disabled={productReadOnly}
-            items={[
-              { value: 'term', label: 'A terme' },
-              { value: 'cash', label: 'Comptant' }
-            ]}
-          />
-        </SettingsCard>
-      </div>
-
-      <div className="grid min-h-[500px] grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5 lg:gap-6">
-        <SettingsConfigColumns
-          readOnly={agencyReadOnly}
-          families={families}
-          services={services}
-          entities={entities}
-          interactionTypes={interactionTypes}
-          newFamily={newFamily}
-          newService={newService}
-          newEntity={newEntity}
-          newInteractionType={newInteractionType}
-          setNewFamily={setNewFamily}
-          setNewService={setNewService}
-          setNewEntity={setNewEntity}
-          setNewInteractionType={setNewInteractionType}
-          addItem={addItem}
-          removeItem={removeItem}
-          updateItem={updateItem}
-          setFamilies={setFamilies}
-          setServices={setServices}
-          setEntities={setEntities}
-          setInteractionTypes={setInteractionTypes}
-        />
-        <SettingsStatusColumn
-          statuses={statuses}
-          newStatus={newStatus}
-          newStatusCategory={newStatusCategory}
-          setNewStatus={setNewStatus}
-          setNewStatusCategory={setNewStatusCategory}
-          addStatus={addStatus}
-          removeStatus={removeStatus}
-          updateStatusLabel={updateStatusLabel}
-          updateStatusCategory={updateStatusCategory}
-          readOnly={agencyReadOnly}
-        />
-      </div>
+      {/* Kanban Stages Section */}
+      <KanbanSection
+        readOnly={agencyReadOnly}
+        statuses={statuses}
+        newStatus={newStatus}
+        newStatusCategory={newStatusCategory}
+        setNewStatus={setNewStatus}
+        setNewStatusCategory={setNewStatusCategory}
+        addStatus={addStatus}
+        removeStatus={removeStatus}
+        updateStatusLabel={updateStatusLabel}
+        updateStatusCategory={updateStatusCategory}
+        setStatuses={setStatuses}
+      />
     </div>
   );
 };

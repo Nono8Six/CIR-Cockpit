@@ -1,6 +1,6 @@
 import type { UseFormSetValue } from 'react-hook-form';
 
-import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
+import type { InteractionFormValues } from '../../../../../shared/schemas/interaction/interaction.schema';
 import { cn } from '@/lib/utils';
 import {
   Combobox,
@@ -9,7 +9,7 @@ import {
   ComboboxInput,
   ComboboxItem,
   ComboboxList
-} from '@/components/ui/combobox';
+} from '../../ui/inputs/selects/Combobox';
 
 type CockpitServicePickerProps = {
   servicePickerOpen: boolean;

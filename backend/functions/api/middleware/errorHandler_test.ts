@@ -2,7 +2,7 @@ import { assertEquals, assertMatch, assert } from 'std/assert';
 
 import { handleError, httpError } from './errorHandler.ts';
 import { getErrorCatalogEntry } from '../../../../shared/errors/catalog.ts';
-import { edgeErrorPayloadSchema } from '../../../../shared/schemas/edge-error.schema.ts';
+import { edgeErrorPayloadSchema } from '../../../../shared/schemas/system/edge-error.schema.ts';
 
 type ContextLike = {
   get: (key: string) => string | undefined;

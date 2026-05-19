@@ -1,8 +1,8 @@
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useAgenciesManager } from '@/hooks/useAgenciesManager';
-import { notifySuccess } from '@/services/errors/notify';
+import { useAgenciesManager } from '../admin/agencies/core/useAgenciesManager';
+import { notifySuccess } from '@/services/errors/notifySuccess';
 import type { Agency } from '@/types';
 
 const agenciesMocks = vi.hoisted(() => ({
@@ -14,28 +14,26 @@ const agenciesMocks = vi.hoisted(() => ({
   useHardDeleteAgency: vi.fn()
 }));
 
-vi.mock('@/hooks/useAgencies', () => ({
+vi.mock('@/hooks/admin/agencies/core/useAgencies', () => ({
   useAgencies: agenciesMocks.useAgencies
 }));
-vi.mock('@/hooks/useCreateAgency', () => ({
+vi.mock('@/hooks/admin/agencies/actions/useCreateAgency', () => ({
   useCreateAgency: agenciesMocks.useCreateAgency
 }));
-vi.mock('@/hooks/useRenameAgency', () => ({
+vi.mock('@/hooks/admin/agencies/actions/useRenameAgency', () => ({
   useRenameAgency: agenciesMocks.useRenameAgency
 }));
-vi.mock('@/hooks/useArchiveAgency', () => ({
+vi.mock('@/hooks/admin/agencies/actions/useArchiveAgency', () => ({
   useArchiveAgency: agenciesMocks.useArchiveAgency
 }));
-vi.mock('@/hooks/useUnarchiveAgency', () => ({
+vi.mock('@/hooks/admin/agencies/actions/useUnarchiveAgency', () => ({
   useUnarchiveAgency: agenciesMocks.useUnarchiveAgency
 }));
-vi.mock('@/hooks/useHardDeleteAgency', () => ({
+vi.mock('@/hooks/admin/agencies/actions/useHardDeleteAgency', () => ({
   useHardDeleteAgency: agenciesMocks.useHardDeleteAgency
 }));
 
-vi.mock('@/services/errors/notify', () => ({
-  notifySuccess: vi.fn()
-}));
+vi.mock('@/services/errors/notifySuccess', () => ({ notifySuccess: vi.fn() }));
 
 const createAgency = (overrides?: Partial<Agency>): Agency => ({
   id: overrides?.id ?? 'agency-1',

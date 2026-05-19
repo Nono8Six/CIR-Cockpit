@@ -21,8 +21,8 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
       include: [
-        'src/components/ui/status-dot.tsx',
-        'src/components/ui/avatar-initials.tsx',
+        'src/components/ui/StatusDot.tsx',
+        'src/components/ui/AvatarInitials.tsx',
         'src/services/admin/**/*.ts',
         'src/services/agency/**/*.ts',
         'src/services/api/**/*.ts',
@@ -134,13 +134,13 @@ export default defineConfig({
           functions: 80,
           lines: 60
         },
-        'src/components/ui/status-dot.tsx': {
+        'src/components/ui/StatusDot.tsx': {
           statements: 100,
           branches: 100,
           functions: 100,
           lines: 100
         },
-        'src/components/ui/avatar-initials.tsx': {
+        'src/components/ui/AvatarInitials.tsx': {
           statements: 100,
           branches: 100,
           functions: 100,

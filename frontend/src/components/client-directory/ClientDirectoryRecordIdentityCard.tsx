@@ -1,9 +1,9 @@
 import { MapPin } from 'lucide-react';
 
-import type { DirectoryRecord } from 'shared/schemas/directory.schema';
+import type { DirectoryRecord } from '../../../../shared/schemas/system/directory.schema';
 
-import { Badge } from '@/components/ui/badge';
-import StatusDot from '@/components/ui/status-dot';
+import { Badge } from '../ui/data-display/Badge';
+import StatusDot from '../ui/data-display/StatusDot';
 import type { EntityContact } from '@/types';
 import { formatDate } from '@/utils/date/formatDate';
 import { formatRelativeTime } from '@/utils/date/formatRelativeTime';

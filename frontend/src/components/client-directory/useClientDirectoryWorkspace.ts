@@ -5,19 +5,19 @@ import type {
   DirectorySearchState,
   DirectorySavedView,
   DirectorySavedViewSaveInput,
-} from 'shared/schemas/directory.schema';
+} from '../../../../shared/schemas/system/directory.schema';
 
-import { useAppSessionStateContext } from '@/hooks/useAppSession';
-import { useDeleteDirectorySavedView } from '@/hooks/useDeleteDirectorySavedView';
-import { useDirectoryOptionAgencies } from '@/hooks/useDirectoryOptionAgencies';
-import { useDirectoryOptionCommercials } from '@/hooks/useDirectoryOptionCommercials';
-import { useDirectoryOptionDepartments } from '@/hooks/useDirectoryOptionDepartments';
-import { useDirectoryPage } from '@/hooks/useDirectoryPage';
-import { useDirectorySavedViews } from '@/hooks/useDirectorySavedViews';
-import { useSaveDirectorySavedView } from '@/hooks/useSaveDirectorySavedView';
-import { useSetDefaultDirectorySavedView } from '@/hooks/useSetDefaultDirectorySavedView';
+import { useAppSessionStateContext } from '../../hooks/session/useAppSession';
+import { useDeleteDirectorySavedView } from '../../hooks/directory/views/useDeleteDirectorySavedView';
+import { useDirectoryOptionAgencies } from '../../hooks/directory/options/useDirectoryOptionAgencies';
+import { useDirectoryOptionCommercials } from '../../hooks/directory/options/useDirectoryOptionCommercials';
+import { useDirectoryOptionDepartments } from '../../hooks/directory/options/useDirectoryOptionDepartments';
+import { useDirectoryPage } from '../../hooks/directory/core/useDirectoryPage';
+import { useDirectorySavedViews } from '../../hooks/directory/views/useDirectorySavedViews';
+import { useSaveDirectorySavedView } from '../../hooks/directory/views/useSaveDirectorySavedView';
+import { useSetDefaultDirectorySavedView } from '../../hooks/directory/views/useSetDefaultDirectorySavedView';
 import { handleUiError } from '@/services/errors/handleUiError';
-import { notifySuccess } from '@/services/errors/notify';
+import { notifySuccess } from '@/services/errors/notifySuccess';
 
 import {
   DEFAULT_DIRECTORY_DENSITY,

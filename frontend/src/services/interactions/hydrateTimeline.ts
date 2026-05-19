@@ -1,7 +1,9 @@
 import type { Json } from '@/types/supabase';
 import { Channel, type Interaction, type InteractionRow, type TimelineEvent } from '@/types';
 import { createAppError } from '@/services/errors/AppError';
-import { isRecord, readObject, readString } from '@/utils/recordNarrowing';
+import { isRecord } from '@/utils/recordNarrowing/isRecord';
+import { readObject } from '@/utils/recordNarrowing/readObject';
+import { readString } from '@/utils/recordNarrowing/readString';
 import { toJsonValue } from '@/utils/toJsonValue';
 
 const CHANNEL_VALUES = Object.values(Channel);

@@ -5,8 +5,8 @@ import {
   type DirectoryCompanySearchMatchQuality,
   type DirectoryCompanySearchResult,
   type DirectoryListRow
-} from 'shared/schemas/directory.schema';
-import { accountTypeSchema } from 'shared/schemas/client.schema';
+} from '../../../../shared/schemas/system/directory.schema';
+import { accountTypeSchema } from '../../../../shared/schemas/entity/client.schema';
 
 export type OnboardingIntent = 'client' | 'prospect';
 export type OnboardingMode = 'create' | 'convert';

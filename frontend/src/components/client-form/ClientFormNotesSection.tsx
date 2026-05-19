@@ -1,6 +1,6 @@
 import type { UseFormRegisterReturn } from 'react-hook-form';
 
-import { Textarea } from '@/components/ui/textarea';
+import { Textarea } from '../ui/inputs/basic/Textarea';
 
 type ClientFormNotesSectionProps = {
   notesField: UseFormRegisterReturn;

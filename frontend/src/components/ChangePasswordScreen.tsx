@@ -1,4 +1,4 @@
-import { useChangePasswordState } from '@/hooks/useChangePasswordState';
+import { useChangePasswordState } from '../hooks/session/useChangePasswordState';
 import ChangePasswordHeader from './change-password/ChangePasswordHeader';
 import ChangePasswordRules from './change-password/ChangePasswordRules';
 import ChangePasswordFields from './change-password/ChangePasswordFields';

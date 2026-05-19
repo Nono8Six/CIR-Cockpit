@@ -3,9 +3,9 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import AdminSupplierCreatePage from '@/components/admin-suppliers/AdminSupplierCreatePage';
-import { useAppSessionStateContext } from '@/hooks/useAppSession';
-import { useDirectoryCompanySearch } from '@/hooks/useDirectoryCompanySearch';
-import { useSaveSupplier } from '@/hooks/useSaveSupplier';
+import { useAppSessionStateContext } from '../../../hooks/session/useAppSession';
+import { useDirectoryCompanySearch } from '../../../hooks/directory/company/useDirectoryCompanySearch';
+import { useSaveSupplier } from '../../../hooks/entities/suppliers/useSaveSupplier';
 
 const navigateMock = vi.hoisted(() => vi.fn());
 
@@ -13,21 +13,19 @@ vi.mock('@tanstack/react-router', () => ({
   useNavigate: () => navigateMock
 }));
 
-vi.mock('@/hooks/useAppSession', () => ({
+vi.mock('@/hooks/session/useAppSession', () => ({
   useAppSessionStateContext: vi.fn()
 }));
 
-vi.mock('@/hooks/useDirectoryCompanySearch', () => ({
+vi.mock('@/hooks/directory/company/useDirectoryCompanySearch', () => ({
   useDirectoryCompanySearch: vi.fn()
 }));
 
-vi.mock('@/hooks/useSaveSupplier', () => ({
+vi.mock('@/hooks/entities/suppliers/useSaveSupplier', () => ({
   useSaveSupplier: vi.fn()
 }));
 
-vi.mock('@/services/errors/notify', () => ({
-  notifySuccess: vi.fn()
-}));
+vi.mock('@/services/errors/notifySuccess', () => ({ notifySuccess: vi.fn() }));
 
 const sessionState = {
   profile: { role: 'agency_admin' },

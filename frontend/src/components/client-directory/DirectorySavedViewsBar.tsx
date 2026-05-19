@@ -4,10 +4,10 @@ import type {
   DirectorySavedView,
   DirectorySavedViewSaveInput,
   DirectorySavedViewState
-} from 'shared/schemas/directory.schema';
+} from '../../../../shared/schemas/system/directory.schema';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from '../ui/data-display/Badge';
+import { Button } from '../ui/inputs/basic/Button';
 import {
   Dialog,
   DialogContent,
@@ -15,9 +15,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+} from '../ui/feedback/Dialog';
+import { Input } from '../ui/inputs/basic/Input';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/navigation/Popover';
 
 interface DirectorySavedViewsBarProps {
   views: DirectorySavedView[];

@@ -1,7 +1,7 @@
 import { RotateCcw } from 'lucide-react';
 
 import EntityContactRow from '@/components/entity-contact/EntityContactRow';
-import { Button } from '@/components/ui/button';
+import { Button } from '../../ui/inputs/basic/Button';
 import type { EntityContact } from '@/types';
 
 type CockpitSelectedContactCardProps = {

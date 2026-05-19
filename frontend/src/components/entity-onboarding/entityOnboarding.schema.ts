@@ -1,8 +1,8 @@
 import { z } from 'zod/v4';
 
-import { accountTypeSchema, clientKindSchema, clientNumberSchema } from 'shared/schemas/client.schema';
-import { optionalEntityDepartmentCodeSchema } from 'shared/schemas/department.schema';
-import { officialDataSourceSchema } from 'shared/schemas/directory.schema';
+import { accountTypeSchema, clientKindSchema, clientNumberSchema } from '../../../../shared/schemas/entity/client.schema';
+import { optionalEntityDepartmentCodeSchema } from '../../../../shared/schemas/admin/department.schema';
+import { officialDataSourceSchema } from '../../../../shared/schemas/system/directory.schema';
 
 const optionalTextSchema = z.union([z.string(), z.null(), z.undefined()]).transform((value) => value?.trim() ?? '');
 const optionalPostalCodeSchema = optionalTextSchema.refine((value) => value.length === 0 || /^\d{5}$/.test(value), {

@@ -1,7 +1,7 @@
 import { Archive, ArchiveRestore, Pencil, Trash2 } from 'lucide-react';
 
 import { Agency } from '@/types';
-import { Button } from '@/components/ui/button';
+import { Button } from '../ui/inputs/basic/Button';
 
 type AgencyCardProps = {
   agency: Agency;

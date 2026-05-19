@@ -1,9 +1,9 @@
 import { Building2, Copy, LoaderCircle, Sparkles } from 'lucide-react';
 
-import type { DirectoryCompanyDetails, DirectoryCompanySearchResult } from 'shared/schemas/directory.schema';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { notifySuccess } from '@/services/errors/notify';
+import type { DirectoryCompanyDetails, DirectoryCompanySearchResult } from '../../../../shared/schemas/system/directory.schema';
+import { Badge } from '../ui/data-display/Badge';
+import { Button } from '../ui/inputs/basic/Button';
+import { notifySuccess } from '@/services/errors/notifySuccess';
 
 import type { CompanySearchGroup } from './entityOnboarding.types';
 import { formatOfficialDate } from './entityOnboarding.utils';

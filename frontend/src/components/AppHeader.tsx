@@ -6,9 +6,9 @@ import { Bell, ChevronDown, Menu, User } from 'lucide-react';
 
 import type { AppHeaderProps } from '@/components/app-header/AppHeader.types';
 import AppHeaderSearchButton from '@/components/app-header/AppHeaderSearchButton';
-import AvatarInitials from '@/components/ui/avatar-initials';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import AvatarInitials from './ui/data-display/AvatarInitials';
+import { Badge } from './ui/data-display/Badge';
+import { Button } from './ui/inputs/basic/Button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +16,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
+} from './ui/navigation/DropdownMenu';
 import { cn } from '@/lib/utils';
 import type { AppTab } from '@/types';
 

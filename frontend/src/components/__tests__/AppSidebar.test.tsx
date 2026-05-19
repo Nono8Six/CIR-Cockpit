@@ -19,7 +19,7 @@ vi.mock('@tanstack/react-router', () => ({
   )
 }));
 
-vi.mock('@/components/ui/tooltip', () => ({
+vi.mock('@/components/ui/feedback/Tooltip', () => ({
   TooltipProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
   Tooltip: ({ children }: { children: ReactNode }) => <>{children}</>,
   TooltipTrigger: ({ children }: { children: ReactNode }) => <>{children}</>,

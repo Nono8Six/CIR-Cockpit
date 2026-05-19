@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { useCockpitGuidedFlow } from '@/hooks/useCockpitGuidedFlow';
+import { useCockpitGuidedFlow } from '../cockpit/useCockpitGuidedFlow';
 
 const buildParams = (overrides: Partial<Parameters<typeof useCockpitGuidedFlow>[0]> = {}) => ({
   relationMode: 'prospect' as const,

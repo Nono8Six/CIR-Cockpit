@@ -1,9 +1,9 @@
 import type { FormEvent } from 'react';
 import { CircleAlert, LoaderCircle, LockKeyhole, Mail } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import type { LoginSubmitState } from '@/hooks/useLoginScreenForm';
+import { Button } from '../ui/inputs/basic/Button';
+import { Input } from '../ui/inputs/basic/Input';
+import type { LoginSubmitState } from '../../hooks/session/useLoginScreenForm';
 
 type LoginScreenFormProps = {
   email: string;

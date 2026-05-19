@@ -2,17 +2,17 @@ import { useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, Building2, CheckCircle2, Filter, Globe2, Hash, Loader2, Search } from 'lucide-react';
 
-import type { DirectoryCompanySearchInput, DirectoryCompanySearchResult } from 'shared/schemas/directory.schema';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { useAppSessionStateContext } from '@/hooks/useAppSession';
-import { useDirectoryCompanySearch } from '@/hooks/useDirectoryCompanySearch';
-import { useSaveSupplier } from '@/hooks/useSaveSupplier';
-import { notifySuccess } from '@/services/errors/notify';
+import type { DirectoryCompanySearchInput, DirectoryCompanySearchResult } from '../../../../shared/schemas/system/directory.schema';
+import { Badge } from '../ui/data-display/Badge';
+import { Button } from '../ui/inputs/basic/Button';
+import { Input } from '../ui/inputs/basic/Input';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '../ui/inputs/selects/Select';
+import { Textarea } from '../ui/inputs/basic/Textarea';
+import { ToggleGroup, ToggleGroupItem } from '../ui/inputs/basic/ToggleGroup';
+import { useAppSessionStateContext } from '../../hooks/session/useAppSession';
+import { useDirectoryCompanySearch } from '../../hooks/directory/company/useDirectoryCompanySearch';
+import { useSaveSupplier } from '../../hooks/entities/suppliers/useSaveSupplier';
+import { notifySuccess } from '@/services/errors/notifySuccess';
 import { cn } from '@/lib/utils';
 import { DEFAULT_SUPPLIER_SEARCH } from './supplierDirectorySearch';
 

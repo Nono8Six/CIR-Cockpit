@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 
-import type { DirectoryCompanySearchResult } from 'shared/schemas/directory.schema';
+import type { DirectoryCompanySearchResult } from '../../../../shared/schemas/system/directory.schema';
 
-import { useDirectoryDuplicates } from '@/hooks/useDirectoryDuplicates';
+import { useDirectoryDuplicates } from '../../hooks/directory/duplicates/useDirectoryDuplicates';
 import type { UserRole } from '@/types';
 import { toSelectedAgenciesScope } from '@/components/client-directory/clientDirectorySearch';
 

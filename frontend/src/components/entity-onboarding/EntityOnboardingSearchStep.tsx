@@ -15,11 +15,11 @@ import type {
   DirectoryCompanySearchMatchQuality,
   DirectoryCompanySearchResult,
   DirectoryListRow,
-} from "shared/schemas/directory.schema";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+} from '../../../../shared/schemas/system/directory.schema';
+import { Badge } from '../ui/data-display/Badge';
+import { Button } from '../ui/inputs/basic/Button';
+import { ScrollArea } from '../ui/data-display/ScrollArea';
+import { ToggleGroup, ToggleGroupItem } from '../ui/inputs/basic/ToggleGroup';
 import { cn } from "@/lib/utils";
 import DirectoryFilterCombobox from "@/components/client-directory/directory-filters/DirectoryFilterCombobox";
 import type {

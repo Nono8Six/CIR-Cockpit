@@ -1,9 +1,9 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useInteractionDraft } from '@/hooks/useInteractionDraft';
+import { useInteractionDraft } from '../interactions/drafts/useInteractionDraft';
 import { Channel, type Entity, type EntityContact } from '@/types';
-import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
+import type { InteractionFormValues } from '../../../../shared/schemas/interaction/interaction.schema';
 import { createAppError } from '@/services/errors/AppError';
 import { handleUiError } from '@/services/errors/handleUiError';
 import { normalizeError } from '@/services/errors/normalizeError';

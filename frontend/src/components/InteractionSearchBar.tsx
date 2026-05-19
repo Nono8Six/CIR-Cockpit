@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
-import { Command } from './ui/command';
-import { useInteractionSearch } from '@/hooks/useInteractionSearch';
+import { Command } from './ui/inputs/selects/Command';
+import { useInteractionSearch } from '../hooks/interactions/core/queries/useInteractionSearch';
 import {
   getRelationLabelForTierType,
   getTierTypeDisplayLabel
@@ -15,7 +15,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle
-} from '@/components/ui/alert-dialog';
+} from './ui/feedback/AlertDialog';
 import type { InteractionSearchBarProps } from './interaction-search/InteractionSearchBar.types';
 import InteractionSearchContainer from './interaction-search/InteractionSearchContainer';
 import InteractionSearchFooter from './interaction-search/InteractionSearchFooter';

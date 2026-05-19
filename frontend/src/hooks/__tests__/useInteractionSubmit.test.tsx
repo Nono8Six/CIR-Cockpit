@@ -3,7 +3,7 @@ import { act, renderHook } from '@testing-library/react';
 import { errAsync, okAsync } from 'neverthrow';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useInteractionSubmit } from '@/hooks/useInteractionSubmit';
+import { useInteractionSubmit } from '../interactions/core/actions/useInteractionSubmit';
 import { INTERNAL_COMPANY_NAME, INTERNAL_RELATION_LABEL } from '@/constants/relations';
 import { createAppError } from '@/services/errors/AppError';
 import { handleUiError } from '@/services/errors/handleUiError';
@@ -14,7 +14,7 @@ import {
   invalidateEntitySearchIndexQueries
 } from '@/services/query/queryInvalidation';
 import type { Entity, EntityContact, InteractionDraft } from '@/types';
-import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
+import type { InteractionFormValues } from '../../../../shared/schemas/interaction/interaction.schema';
 
 vi.mock('@/services/entities/saveEntity', () => ({
   saveEntity: vi.fn()

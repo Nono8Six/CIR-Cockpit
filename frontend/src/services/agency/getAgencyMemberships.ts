@@ -3,7 +3,9 @@ import { getCurrentUserId } from '@/services/auth/getCurrentUserId';
 import { createAppError } from '@/services/errors/AppError';
 import { mapPostgrestError } from '@/services/errors/mapPostgrestError';
 import { requireSupabaseClient } from '@/services/supabase/requireSupabaseClient';
-import { isRecord, readObject, readString } from '@/utils/recordNarrowing';
+import { isRecord } from '@/utils/recordNarrowing/isRecord';
+import { readObject } from '@/utils/recordNarrowing/readObject';
+import { readString } from '@/utils/recordNarrowing/readString';
 
 type AgencyMembershipRow = { agency_id: string; agencies: { id: string; name: string } | null };
 

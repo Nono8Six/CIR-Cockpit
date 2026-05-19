@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Building2, CheckCircle2, Phone, Search, UserRound } from 'lucide-react';
 
-import type { TierV1DirectoryRow } from 'shared/schemas/tier-v1.schema';
+import type { TierV1DirectoryRow } from '../../../../../shared/schemas/interaction/tier-v1.schema';
 import { isApplePlatform } from '@/app/appConstants';
 import type { CockpitFormLeftPaneProps } from '../CockpitPaneTypes';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Kbd } from '@/components/ui/kbd';
-import { useUnifiedEntitySearch } from '@/hooks/useUnifiedEntitySearch';
+import { Button } from '../../ui/inputs/basic/Button';
+import { Input } from '../../ui/inputs/basic/Input';
+import { Kbd } from '../../ui/data-display/Kbd';
+import { useUnifiedEntitySearch } from '../../../hooks/directory/core/useUnifiedEntitySearch';
 import GuidedTierSearchShell from './GuidedTierSearchShell';
 
 type CockpitSupplierLookupProps = Pick<

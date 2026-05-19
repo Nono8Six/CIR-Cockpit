@@ -1,8 +1,8 @@
 import { Check, Columns3, Rows3 } from 'lucide-react';
-import type { DirectoryDensity } from 'shared/schemas/directory.schema';
+import type { DirectoryDensity } from '../../../../../shared/schemas/system/directory.schema';
 
-import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '../../ui/inputs/basic/Button';
+import { Popover, PopoverContent, PopoverTrigger } from '../../ui/navigation/Popover';
 import { cn } from '@/lib/utils';
 
 interface DirectoryTableViewColumn {

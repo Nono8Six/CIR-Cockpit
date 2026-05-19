@@ -1,6 +1,6 @@
 import type { ReactNode, Ref } from 'react';
 
-import type { TierV1DirectoryRow } from 'shared/schemas/tier-v1.schema';
+import type { TierV1DirectoryRow } from '../../../../shared/schemas/interaction/tier-v1.schema';
 import type { Entity, EntityContact } from '@/types';
 
 export type InteractionSearchBarProps = {

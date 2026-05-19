@@ -13,8 +13,8 @@ import type {
   DirectoryCompanyDetails,
   DirectoryCompanySearchResult,
   DirectoryListRow
-} from 'shared/schemas/directory.schema';
-import { Badge } from '@/components/ui/badge';
+} from '../../../../shared/schemas/system/directory.schema';
+import { Badge } from '../ui/data-display/Badge';
 
 import { EntityOnboardingCompanySummary } from './EntityOnboardingCompanySummary';
 import { SidebarInfoRow, SidebarSection } from './EntityOnboardingSidebarSection';

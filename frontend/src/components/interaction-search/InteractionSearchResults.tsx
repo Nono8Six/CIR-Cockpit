@@ -1,5 +1,5 @@
-import type { TierV1DirectoryRow } from 'shared/schemas/tier-v1.schema';
-import { CommandGroup, CommandList } from '@/components/ui/command';
+import type { TierV1DirectoryRow } from '../../../../shared/schemas/interaction/tier-v1.schema';
+import { CommandGroup, CommandList } from '../ui/inputs/selects/Command';
 import InteractionSearchEntityItem from './InteractionSearchEntityItem';
 import InteractionSearchStatusMessage, { type InteractionSearchStatus } from './InteractionSearchStatusMessage';
 

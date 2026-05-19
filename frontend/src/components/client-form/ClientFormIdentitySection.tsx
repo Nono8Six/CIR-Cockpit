@@ -1,15 +1,15 @@
 import type { FieldErrors, UseFormRegisterReturn } from 'react-hook-form';
 
-import type { DirectoryCommercialOption } from 'shared/schemas/directory.schema';
-import type { ClientCompanyFormValues } from 'shared/schemas/client.schema';
-import { Input } from '@/components/ui/input';
+import type { DirectoryCommercialOption } from '../../../../shared/schemas/system/directory.schema';
+import type { ClientCompanyFormValues } from '../../../../shared/schemas/entity/client.schema';
+import { Input } from '../ui/inputs/basic/Input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from '@/components/ui/select';
+} from '../ui/inputs/selects/Select';
 
 type ClientFormIdentitySectionProps = {
   nameField: UseFormRegisterReturn;

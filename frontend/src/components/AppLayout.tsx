@@ -6,21 +6,21 @@ import type { AppHeaderProps } from '@/components/app-header/AppHeader.types';
 import AppMainContent from '@/components/AppMainContent';
 import type { AppMainContentProps } from '@/components/app-main/AppMainContent.types';
 import AppSidebar from '@/components/AppSidebar';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from './ui/data-display/Badge';
+import { Button } from './ui/inputs/basic/Button';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from '@/components/ui/select';
+} from './ui/inputs/selects/Select';
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle
-} from '@/components/ui/sheet';
+} from './ui/feedback/Sheet';
 
 const SIDEBAR_STORAGE_KEY = 'cir_shell_sidebar_collapsed';
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createErrorFingerprint } from '../fingerprint';
+import { createErrorFingerprint } from '../fingerprint.ts';
 
 describe('createErrorFingerprint', () => {
   it('is stable for identical inputs', () => {

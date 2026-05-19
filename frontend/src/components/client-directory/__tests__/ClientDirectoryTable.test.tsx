@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import type { DirectoryListRow, DirectorySortingRule } from 'shared/schemas/directory.schema';
+import type { DirectoryListRow, DirectorySortingRule } from '../../../../../shared/schemas/system/directory.schema';
 
 import ClientDirectoryTable from '../ClientDirectoryTable';
 

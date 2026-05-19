@@ -1,4 +1,4 @@
-import type { DirectoryCompanySearchInput, DirectoryCompanySearchResult } from '../schemas/directory.schema.ts';
+import type { DirectoryCompanySearchInput, DirectoryCompanySearchResult } from '../schemas/system/directory.schema.ts';
 
 const COMPANY_SEARCH_IGNORED_TOKENS = new Set([
   'cir',

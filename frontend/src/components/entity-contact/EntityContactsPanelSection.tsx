@@ -1,7 +1,7 @@
 import { Plus } from 'lucide-react';
 
 import ClientContactsList from '@/components/ClientContactsList';
-import { Button } from '@/components/ui/button';
+import { Button } from '../ui/inputs/basic/Button';
 import type { ClientContact } from '@/types';
 
 interface EntityContactsPanelSectionProps {

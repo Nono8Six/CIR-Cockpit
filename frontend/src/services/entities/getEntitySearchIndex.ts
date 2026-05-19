@@ -1,4 +1,4 @@
-import { dataEntitiesSearchIndexResponseSchema } from 'shared/schemas/api-responses';
+import { dataEntitiesSearchIndexResponseSchema } from '../../../../shared/schemas/system/api-responses';
 
 import { Entity, EntityContact } from '@/types';
 import { safeTrpc } from '@/services/api/safeTrpc';

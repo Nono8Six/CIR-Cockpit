@@ -1,6 +1,6 @@
 import { Archive, ArchiveRestore, KeyRound, Pencil, Trash2 } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '../ui/inputs/basic/Button';
 import type { AdminUserSummary } from '@/services/admin/getAdminUsers';
 import type { UserRole } from '@/types';
 import UserRoleSelect from './controls/UserRoleSelect';

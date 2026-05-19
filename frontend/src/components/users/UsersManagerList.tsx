@@ -3,7 +3,7 @@ import type { UseQueryResult } from '@tanstack/react-query';
 
 import type { AdminUserSummary } from '@/services/admin/getAdminUsers';
 import type { UserRole } from '@/types';
-import { Button } from '@/components/ui/button';
+import { Button } from '../ui/inputs/basic/Button';
 import UserCard from './UserCard';
 
 type UsersManagerListProps = {

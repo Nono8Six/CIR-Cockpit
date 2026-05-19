@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { useDirectoryCompanySearch } from '@/hooks/useDirectoryCompanySearch';
+import { useDirectoryCompanySearch } from '../../hooks/directory/company/useDirectoryCompanySearch';
 
 import type {
   CompanySearchGroup,

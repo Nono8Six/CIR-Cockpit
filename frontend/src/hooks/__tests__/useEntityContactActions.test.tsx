@@ -5,12 +5,12 @@ import type { PropsWithChildren } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createTestQueryClient } from '@/__tests__/test-utils';
-import { useEntityContactActions } from '@/hooks/useEntityContactActions';
+import { useEntityContactActions } from '../entities/contacts/useEntityContactActions';
 import { deleteEntityContact } from '@/services/entities/deleteEntityContact';
 import { saveEntityContact, type EntityContactPayload } from '@/services/entities/saveEntityContact';
 import { createAppError } from '@/services/errors/AppError';
 import { handleUiError } from '@/services/errors/handleUiError';
-import { notifySuccess } from '@/services/errors/notify';
+import { notifySuccess } from '@/services/errors/notifySuccess';
 import { clientContactsKey } from '@/services/query/queryKeys';
 import type { EntityContact } from '@/types';
 
@@ -26,9 +26,7 @@ vi.mock('@/services/errors/handleUiError', () => ({
   handleUiError: vi.fn()
 }));
 
-vi.mock('@/services/errors/notify', () => ({
-  notifySuccess: vi.fn()
-}));
+vi.mock('@/services/errors/notifySuccess', () => ({ notifySuccess: vi.fn() }));
 
 const contact = {
   id: 'contact-1',

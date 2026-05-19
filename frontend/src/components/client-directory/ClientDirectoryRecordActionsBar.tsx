@@ -1,6 +1,6 @@
 import { ArrowLeftRight, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '../ui/inputs/basic/Button';
 
 export interface ClientDirectoryRecordActionsBarProps {
   isProspect: boolean;

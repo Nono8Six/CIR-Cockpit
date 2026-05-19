@@ -1,6 +1,6 @@
 import type { CockpitFormLeftPaneProps } from '../CockpitPaneTypes';
 import type { CockpitLeftEntitySectionsProps } from '../CockpitLeftEntitySectionsProps';
-import { Button } from '@/components/ui/button';
+import { Button } from '../../ui/inputs/basic/Button';
 import CockpitSearchSection from '../left/CockpitSearchSection';
 import CockpitIdentitySection from '../left/CockpitIdentitySection';
 import CockpitGuidedQuestionFrame from './CockpitGuidedQuestionFrame';

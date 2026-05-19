@@ -4,16 +4,16 @@ import type { PropsWithChildren } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createTestQueryClient } from '@/__tests__/test-utils';
-import { useDirectoryDuplicates } from '@/hooks/useDirectoryDuplicates';
-import { useNotifyError } from '@/hooks/useNotifyError';
+import { useDirectoryDuplicates } from '../directory/duplicates/useDirectoryDuplicates';
+import { useNotifyError } from '../cockpit-utils/useNotifyError';
 import { getDirectoryDuplicates } from '@/services/directory/getDirectoryDuplicates';
-import type { DirectoryDuplicatesInput } from 'shared/schemas/directory.schema';
+import type { DirectoryDuplicatesInput } from '../../../../shared/schemas/system/directory.schema';
 
 vi.mock('@/services/directory/getDirectoryDuplicates', () => ({
   getDirectoryDuplicates: vi.fn(),
 }));
 
-vi.mock('@/hooks/useNotifyError', () => ({
+vi.mock('@/hooks/cockpit-utils/useNotifyError', () => ({
   useNotifyError: vi.fn(),
 }));
 

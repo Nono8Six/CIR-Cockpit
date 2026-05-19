@@ -14,15 +14,15 @@ Deno.test('buildAuthContext.toUniqueAgencyIds trims and deduplicates agency ids'
 
 Deno.test('buildAuthContext.isProfileAccessRevoked detects archived or system profiles', () => {
   assertEquals(
-    isProfileAccessRevoked({ role: 'tcs', archived_at: '2026-02-16T00:00:00.000Z', is_system: false }),
+    isProfileAccessRevoked({ role: 'tcs', archived_at: '2026-02-16T00:00:00.000Z', is_system: false, active_agency_id: null }),
     true
   );
   assertEquals(
-    isProfileAccessRevoked({ role: 'tcs', archived_at: null, is_system: true }),
+    isProfileAccessRevoked({ role: 'tcs', archived_at: null, is_system: true, active_agency_id: null }),
     true
   );
   assertEquals(
-    isProfileAccessRevoked({ role: 'tcs', archived_at: null, is_system: false }),
+    isProfileAccessRevoked({ role: 'tcs', archived_at: null, is_system: false, active_agency_id: null }),
     false
   );
 });

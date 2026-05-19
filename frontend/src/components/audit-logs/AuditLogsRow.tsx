@@ -1,7 +1,7 @@
 import { AuditLogEntry } from '@/services/admin/getAuditLogs';
 import { formatDate } from '@/utils/date/formatDate';
 import { formatAuditMetadata } from '@/utils/audit/formatAuditMetadata';
-import { TableCell, TableRow } from '@/components/ui/table';
+import { TableCell, TableRow } from '../ui/data-display/Table';
 
 type AuditLogsRowProps = {
   log: AuditLogEntry;

@@ -1,6 +1,6 @@
 import { UserRound } from 'lucide-react';
 
-import type { CockpitAgencyMember } from 'shared/schemas/cockpit.schema';
+import type { CockpitAgencyMember } from '../../../../../shared/schemas/interaction/cockpit.schema';
 
 type CockpitInternalMemberListItem = CockpitAgencyMember & { agencyName?: string };
 

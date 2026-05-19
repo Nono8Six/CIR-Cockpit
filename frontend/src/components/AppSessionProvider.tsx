@@ -2,7 +2,7 @@ import { createContext } from 'react';
 import type { ReactNode } from 'react';
 
 import type { AppSessionActions, AppSessionContextValue, AppSessionState } from '@/types/app-session';
-import { useAppSessionState } from '@/hooks/useAppSessionState';
+import { useAppSessionState } from '../hooks/session/useAppSessionState';
 
 export const AppSessionContext = createContext<AppSessionContextValue | null>(null);
 export const AppSessionStateContext = createContext<AppSessionState | null>(null);

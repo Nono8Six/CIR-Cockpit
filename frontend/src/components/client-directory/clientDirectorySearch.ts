@@ -8,7 +8,7 @@ import {
   type DirectorySavedViewState,
   type DirectorySortingRule,
   type DirectoryDensity
-} from 'shared/schemas/directory.schema';
+} from '../../../../shared/schemas/system/directory.schema';
 
 export const DEFAULT_DIRECTORY_SORTING: DirectorySortingRule[] = [{ id: 'name', desc: false }];
 export const DIRECTORY_PAGE_SIZE = 50;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { clientFormSchema } from '../client.schema';
+import { clientFormSchema } from '../entity/client.schema.ts';
 
 describe('clientFormSchema', () => {
   it('parses and normalizes client_number', () => {

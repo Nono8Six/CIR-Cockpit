@@ -1,10 +1,10 @@
 import {
   directoryOptionsAgenciesResponseSchema,
   type DirectoryOptionsAgenciesResponse
-} from 'shared/schemas/api-responses';
-import type { DirectoryOptionsAgenciesInput } from 'shared/schemas/directory.schema';
+} from '../../../../shared/schemas/system/api-responses';
+import type { DirectoryOptionsAgenciesInput } from '../../../../shared/schemas/system/directory.schema';
 
-import { invokeTrpc } from '@/services/api/safeTrpc';
+import { invokeTrpc } from '@/services/api/invokeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 
 const parseDirectoryOptionAgenciesResponse = (payload: unknown): DirectoryOptionsAgenciesResponse => {

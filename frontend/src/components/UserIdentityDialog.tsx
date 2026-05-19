@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import type { UpdateUserIdentityPayload } from '@/services/admin/adminUsersUpdateIdentity';
+import type { UpdateUserIdentityPayload } from '@/services/admin/updateAdminUserIdentity';
 import type { AdminUserSummary } from '@/services/admin/getAdminUsers';
 import { handleUiError } from '@/services/errors/handleUiError';
-import { userIdentityFormSchema, type UserIdentityFormValues } from 'shared/schemas/user.schema';
-import { Button } from './ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
-import { Input } from './ui/input';
+import { userIdentityFormSchema, type UserIdentityFormValues } from '../../../shared/schemas/admin/user.schema';
+import { Button } from './ui/inputs/basic/Button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/feedback/Dialog';
+import { Input } from './ui/inputs/basic/Input';
 
 type UserIdentityDialogProps = {
   open: boolean;

@@ -3,26 +3,26 @@ import { format, isValid, parseISO } from 'date-fns';
 import { Calendar as CalendarIcon, CircleHelp } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
 
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
+import { Button } from '../../ui/inputs/basic/Button';
+import { Calendar } from '../../ui/inputs/selects/Calendar';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger
-} from '@/components/ui/popover';
+} from '../../ui/navigation/Popover';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from '@/components/ui/select';
+} from '../../ui/inputs/selects/Select';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger
-} from '@/components/ui/tooltip';
+} from '../../ui/feedback/Tooltip';
 import { formatDateInputValue } from '@/utils/date/formatDateInputValue';
 import type { FilterPeriod } from '@/utils/date/getPresetDateRange';
 import { isFilterPeriod } from '@/utils/typeGuards';

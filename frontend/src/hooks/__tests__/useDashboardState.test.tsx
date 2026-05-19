@@ -4,7 +4,7 @@ import type { PropsWithChildren } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createTestQueryClient } from '@/__tests__/test-utils';
-import { useDashboardState } from '@/hooks/useDashboardState';
+import { useDashboardState } from '@/hooks/dashboard-state/useDashboardState';
 import { createAppError } from '@/services/errors/AppError';
 import { handleUiError } from '@/services/errors/handleUiError';
 import { addTimelineEvent } from '@/services/interactions/addTimelineEvent';
@@ -18,13 +18,9 @@ vi.mock('@/services/interactions/addTimelineEvent', () => ({
   addTimelineEvent: vi.fn()
 }));
 
-vi.mock('@/services/errors/notify', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/services/errors/notify')>();
-  return {
-    ...actual,
-    notifySuccess: vi.fn()
-  };
-});
+vi.mock('@/services/errors/notifySuccess', () => ({
+  notifySuccess: vi.fn()
+}));
 
 const mockHandleUiError = vi.mocked(handleUiError);
 const mockAddTimelineEvent = vi.mocked(addTimelineEvent);

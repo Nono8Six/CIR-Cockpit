@@ -1,9 +1,9 @@
 import type { ChangeEvent } from 'react';
 import type { FieldErrors, UseFormRegisterReturn } from 'react-hook-form';
 
-import type { DirectoryCommercialOption } from 'shared/schemas/directory.schema';
+import type { DirectoryCommercialOption } from '../../../../shared/schemas/system/directory.schema';
 import type { Agency, UserRole } from '@/types';
-import type { ClientCompanyFormValues } from 'shared/schemas/client.schema';
+import type { ClientCompanyFormValues } from '../../../../shared/schemas/entity/client.schema';
 import ClientFormAccountSection from './ClientFormAccountSection';
 import ClientFormAddressSection from './ClientFormAddressSection';
 import ClientFormAgencySection from './ClientFormAgencySection';

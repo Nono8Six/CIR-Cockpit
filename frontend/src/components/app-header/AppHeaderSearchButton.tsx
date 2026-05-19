@@ -4,7 +4,7 @@ import {
   getSearchShortcutLabel,
   SEARCH_SHORTCUT_ARIA
 } from '@/app/appConstants';
-import { Kbd } from '@/components/ui/kbd';
+import { Kbd } from '../ui/data-display/Kbd';
 
 type AppHeaderSearchButtonProps = {
   onOpenSearch: () => void;

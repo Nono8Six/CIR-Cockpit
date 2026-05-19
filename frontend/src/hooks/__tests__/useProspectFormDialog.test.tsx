@@ -2,7 +2,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import type { ChangeEvent } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useProspectFormDialog } from '@/hooks/useProspectFormDialog';
+import { useProspectFormDialog } from '../entities/prospects/useProspectFormDialog';
 import type { Agency } from '@/types';
 
 const AGENCY_ONE = '11111111-1111-4111-8111-111111111111';

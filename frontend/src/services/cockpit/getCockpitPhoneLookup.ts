@@ -2,10 +2,11 @@ import {
   cockpitPhoneLookupResponseSchema,
   type CockpitPhoneLookupInput,
   type CockpitPhoneLookupResponse
-} from 'shared/schemas/cockpit.schema';
-
+} from '../../../../shared/schemas/interaction/cockpit.schema';
+
+
 import { createAppError } from '@/services/errors/AppError';
-import { invokeTrpc } from '@/services/api/safeTrpc';
+import { invokeTrpc } from '@/services/api/invokeTrpc';
 
 const parseCockpitPhoneLookupResponse = (payload: unknown): CockpitPhoneLookupResponse => {
   const parsed = cockpitPhoneLookupResponseSchema.safeParse(payload);

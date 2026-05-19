@@ -1,7 +1,7 @@
 import type { EntityContact } from '@/types';
 import type { EntityContactPayload } from '@/services/entities/saveEntityContact';
-import { useClientContactDialog } from '@/hooks/useClientContactDialog';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from './ui/dialog';
+import { useClientContactDialog } from '../hooks/entities/contacts/useClientContactDialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from './ui/feedback/Dialog';
 import ContactFormHeader from './contact-form/ContactFormHeader';
 import ContactFormIdentitySection from './contact-form/ContactFormIdentitySection';
 import ContactFormContactSection from './contact-form/ContactFormContactSection';

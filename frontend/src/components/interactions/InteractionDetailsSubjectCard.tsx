@@ -1,6 +1,6 @@
 import { FileText } from 'lucide-react';
 
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '../ui/data-display/Badge';
 import type { Interaction } from '@/types';
 
 type InteractionDetailsSubjectCardProps = {

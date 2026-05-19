@@ -4,8 +4,8 @@ import { AnimatePresence, motion, type Transition } from 'motion/react';
 import { APP_SHELL_SECTION_LABELS } from '@/app/appConstants';
 import { getPathForShellNavItem } from '@/app/appRoutes';
 import type { AppShellNavItem } from '@/app/appConstants';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Kbd } from '@/components/ui/kbd';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/feedback/Tooltip';
+import { Kbd } from '../ui/data-display/Kbd';
 import { cn } from '@/lib/utils';
 
 const buildCollapsedNavLabel = (item: AppShellNavItem): string => {

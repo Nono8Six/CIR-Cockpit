@@ -6,12 +6,12 @@ import { Check, ChevronsUpDown, X } from 'lucide-react';
 
 import { Agency } from '@/types';
 import { handleUiError } from '@/services/errors/handleUiError';
-import { userMembershipsFormSchema, type UserMembershipsFormValues } from 'shared/schemas/user.schema';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from './ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { userMembershipsFormSchema, type UserMembershipsFormValues } from '../../../shared/schemas/admin/user.schema';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/feedback/Dialog';
+import { Button } from './ui/inputs/basic/Button';
+import { Badge } from './ui/data-display/Badge';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from './ui/inputs/selects/Command';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/navigation/Popover';
 
 interface UserMembershipDialogProps {
   open: boolean;

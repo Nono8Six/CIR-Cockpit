@@ -1,10 +1,10 @@
 import {
   adminAuditLogsResponseSchema,
   type AdminAuditLogEntry
-} from 'shared/schemas/api-responses';
-import type { AdminAuditLogsInput } from 'shared/schemas/user.schema';
+} from '../../../../shared/schemas/system/api-responses';
+import type { AdminAuditLogsInput } from '../../../../shared/schemas/admin/user.schema';
 
-import { invokeTrpc } from '@/services/api/safeTrpc';
+import { invokeTrpc } from '@/services/api/invokeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 
 export type AuditLogEntry = AdminAuditLogEntry;

@@ -1,7 +1,7 @@
 import { CheckCircle2, ChevronRight } from 'lucide-react';
 import type { ReactNode, Ref } from 'react';
 
-import AvatarInitials from '@/components/ui/avatar-initials';
+import AvatarInitials from '../ui/data-display/AvatarInitials';
 import type { EntityContact } from '@/types';
 import { cn } from '@/lib/utils';
 import { getEntityContactDetail, getEntityContactName } from './entityContactRow.utils';

@@ -10,7 +10,7 @@ import {
   getEntityRecordHref,
   renderClientInteraction,
   renderInfoItems
-} from './CockpitGuidedContextPanel.helpers';
+} from './cockpit-guided-context-panel-helpers';
 
 type CockpitGuidedContextPanelProps = {
   selectedEntity: Entity | null;

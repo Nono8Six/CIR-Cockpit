@@ -1,7 +1,7 @@
 import { useCallback, type Dispatch, type SetStateAction } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 
-import type { DirectoryCompanySearchResult } from 'shared/schemas/directory.schema';
+import type { DirectoryCompanySearchResult } from '../../../../shared/schemas/system/directory.schema';
 
 import {
   type OnboardingFormInput,

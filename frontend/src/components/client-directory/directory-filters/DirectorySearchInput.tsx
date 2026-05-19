@@ -1,7 +1,7 @@
 import { Search } from 'lucide-react';
 import type { KeyboardEvent } from 'react';
 
-import { Input } from '@/components/ui/input';
+import { Input } from '../../ui/inputs/basic/Input';
 
 interface DirectorySearchInputProps {
   value: string;

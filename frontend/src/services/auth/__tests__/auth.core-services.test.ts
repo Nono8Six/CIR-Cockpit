@@ -5,7 +5,7 @@ import { mapPostgrestError } from '@/services/errors/mapPostgrestError';
 import { mapSupabaseAuthError } from '@/services/errors/mapSupabaseAuthError';
 import { reportError } from '@/services/errors/reportError';
 import { requireSupabaseClient } from '@/services/supabase/requireSupabaseClient';
-import { invokeTrpc } from '@/services/api/safeTrpc';
+import { invokeTrpc } from '@/services/api/invokeTrpc';
 import { getCurrentUserId } from '@/services/auth/getCurrentUserId';
 import { getCurrentUserLabel } from '@/services/auth/getCurrentUserLabel';
 import { getProfile } from '@/services/auth/getProfile';
@@ -18,7 +18,7 @@ vi.mock('../../supabase/requireSupabaseClient');
 vi.mock('../../errors/mapSupabaseAuthError');
 vi.mock('../../errors/mapPostgrestError');
 vi.mock('../../errors/reportError');
-vi.mock('../../api/safeTrpc');
+vi.mock('../../api/invokeTrpc');
 
 const mockRequireSupabase = vi.mocked(requireSupabaseClient);
 const mockMapSupabaseAuthError = vi.mocked(mapSupabaseAuthError);

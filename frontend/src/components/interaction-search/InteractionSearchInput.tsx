@@ -1,6 +1,6 @@
 import type { Ref } from 'react';
 
-import { CommandInput } from '@/components/ui/command';
+import { CommandInput } from '../ui/inputs/selects/Command';
 
 type InteractionSearchInputProps = {
   query: string;

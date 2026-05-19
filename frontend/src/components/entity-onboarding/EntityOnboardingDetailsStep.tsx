@@ -5,17 +5,17 @@ import { Building2, UserRound } from "lucide-react";
 import type {
   DirectoryCommercialOption,
   DirectoryCompanySearchResult,
-} from "shared/schemas/directory.schema";
+} from '../../../../shared/schemas/system/directory.schema';
 import type { Agency, UserRole } from "@/types";
-import { Input } from "@/components/ui/input";
+import { Input } from '../ui/inputs/basic/Input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+} from '../ui/inputs/selects/Select';
+import { Textarea } from '../ui/inputs/basic/Textarea';
 import { cn } from "@/lib/utils";
 import type {
   OnboardingFormInput,

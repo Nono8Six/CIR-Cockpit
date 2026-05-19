@@ -8,7 +8,7 @@ import CockpitGuidedAnswerRow from '@/components/cockpit/guided/CockpitGuidedAns
 import CockpitGuidedStepSwitch from '@/components/cockpit/guided/CockpitGuidedStepSwitch';
 import type { CockpitLeftEntitySectionsProps } from '@/components/cockpit/CockpitLeftEntitySectionsProps';
 import type { CockpitFormLeftPaneProps, CockpitFormRightPaneProps } from '@/components/cockpit/CockpitPaneTypes';
-import type { useCockpitGuidedFlow } from '@/hooks/useCockpitGuidedFlow';
+import type { useCockpitGuidedFlow } from '../../../../hooks/cockpit/useCockpitGuidedFlow';
 import { saveEntityContact } from '@/services/entities/saveEntityContact';
 import type { EntityContact } from '@/types';
 
@@ -21,7 +21,7 @@ const buildField = (name: string) => ({
   ref: vi.fn()
 });
 
-vi.mock('@/hooks/useCockpitAgencyMembers', () => ({
+vi.mock('@/hooks/admin/agencies/core/useCockpitAgencyMembers', () => ({
   useCockpitAgencyMembers: () => ({
     data: {
       members: [

@@ -1,11 +1,11 @@
 import type { Agency, UserRole } from '@/types';
 import type { EntityPayload } from '@/services/entities/saveEntity';
-import { useProspectFormDialog } from '@/hooks/useProspectFormDialog';
-import { useProspectFormDialogFields } from '@/hooks/useProspectFormDialogFields';
+import { useProspectFormDialog } from '../hooks/entities/prospects/useProspectFormDialog';
+import { useProspectFormDialogFields } from '../hooks/entities/prospects/useProspectFormDialogFields';
 import EntityOnboardingDialog from './EntityOnboardingDialog';
 import ProspectFormContent from './prospect-form/ProspectFormContent';
 import ProspectFormHeader from './prospect-form/ProspectFormHeader';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from './ui/feedback/Dialog';
 
 type ProspectDialogValue = {
   id: string;

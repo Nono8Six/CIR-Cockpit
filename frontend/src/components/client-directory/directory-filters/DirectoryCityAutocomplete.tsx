@@ -4,17 +4,17 @@ import type {
   DirectoryCitySuggestionsInput,
   DirectoryEntityType,
   DirectoryScopeInput
-} from 'shared/schemas/directory.schema';
+} from '../../../../../shared/schemas/system/directory.schema';
 
-import { useDirectoryCitySuggestions } from '@/hooks/useDirectoryCitySuggestions';
+import { useDirectoryCitySuggestions } from '../../../hooks/directory/company/useDirectoryCitySuggestions';
 import {
   Command,
   CommandEmpty,
   CommandItem,
   CommandList,
   CommandLoading
-} from '@/components/ui/command';
-import { Input } from '@/components/ui/input';
+} from '../../ui/inputs/selects/Command';
+import { Input } from '../../ui/inputs/basic/Input';
 import { cn } from '@/lib/utils';
 
 interface DirectoryCityAutocompleteProps {

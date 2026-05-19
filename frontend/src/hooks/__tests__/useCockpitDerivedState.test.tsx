@@ -1,7 +1,7 @@
 import { renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { useCockpitDerivedState } from '@/hooks/useCockpitDerivedState';
+import { useCockpitDerivedState } from '../cockpit/useCockpitDerivedState';
 import { Channel } from '@/types';
 
 const buildParams = (overrides: Partial<Parameters<typeof useCockpitDerivedState>[0]> = {}) => ({

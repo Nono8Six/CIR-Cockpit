@@ -2,7 +2,7 @@ import AuditLogsDateRange from './audit-logs/AuditLogsDateRange';
 import AuditLogsFilters from './audit-logs/AuditLogsFilters';
 import AuditLogsHeader from './audit-logs/AuditLogsHeader';
 import AuditLogsTable from './audit-logs/AuditLogsTable';
-import { useAuditLogsPanel } from '@/hooks/useAuditLogsPanel';
+import { useAuditLogsPanel } from '../hooks/admin/audit/useAuditLogsPanel';
 import { UserRole } from '@/types';
 
 interface AuditLogsPanelProps {

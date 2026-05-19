@@ -3,8 +3,8 @@ import { ErrorBoundary as ReactErrorBoundary, type FallbackProps } from 'react-e
 
 import { createAppError } from '@/services/errors/AppError';
 import { handleUiError } from '@/services/errors/handleUiError';
-import { Button } from './ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
+import { Button } from './ui/inputs/basic/Button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/data-display/Card';
 
 type ErrorBoundaryProps = {
   children: React.ReactNode;

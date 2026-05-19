@@ -9,8 +9,8 @@ import {
 } from '@/app/appConstants';
 import { getPathForTab, isShellNavItemActive } from '@/app/appRoutes';
 import type { AppShellNavSection } from '@/app/appConstants';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Kbd } from '@/components/ui/kbd';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/feedback/Tooltip';
+import { Kbd } from '../ui/data-display/Kbd';
 import { cn } from '@/lib/utils';
 import type { AppTab } from '@/types';
 

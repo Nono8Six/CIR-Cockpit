@@ -1,7 +1,7 @@
 import { ResultAsync } from 'neverthrow';
 
-import { dataEntitiesResponseSchema } from 'shared/schemas/api-responses';
-import type { ClientPrimaryContactFormValues } from 'shared/schemas/client.schema';
+import { dataEntitiesResponseSchema } from '../../../../shared/schemas/system/api-responses';
+import type { ClientPrimaryContactFormValues } from '../../../../shared/schemas/entity/client.schema';
 import { AccountType, Client } from '@/types';
 import { createAppError, type AppError } from '@/services/errors/AppError';
 import { safeTrpc } from '@/services/api/safeTrpc';

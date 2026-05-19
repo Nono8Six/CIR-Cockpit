@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ResolvedConfigSnapshot } from 'shared/schemas/config.schema';
+import type { ResolvedConfigSnapshot } from '../../../../shared/schemas/system/config.schema';
 
 import { renderWithProviders } from '@/__tests__/test-utils';
 import EntityOnboardingDialog from '@/components/EntityOnboardingDialog';
@@ -42,19 +42,19 @@ const BASE_CONFIG_SNAPSHOT: ResolvedConfigSnapshot = {
   }
 };
 
-vi.mock('@/hooks/useDirectoryCompanySearch', () => ({
+vi.mock('@/hooks/directory/company/useDirectoryCompanySearch', () => ({
   useDirectoryCompanySearch: (...args: unknown[]) => useDirectoryCompanySearchMock(...args)
 }));
 
-vi.mock('@/hooks/useDirectoryCompanyDetails', () => ({
+vi.mock('@/hooks/directory/company/useDirectoryCompanyDetails', () => ({
   useDirectoryCompanyDetails: (...args: unknown[]) => useDirectoryCompanyDetailsMock(...args)
 }));
 
-vi.mock('@/hooks/useDirectoryDuplicates', () => ({
+vi.mock('@/hooks/directory/duplicates/useDirectoryDuplicates', () => ({
   useDirectoryDuplicates: (...args: unknown[]) => useDirectoryDuplicatesMock(...args)
 }));
 
-vi.mock('@/hooks/useConfigSnapshot', () => ({
+vi.mock('@/hooks/cockpit-utils/useConfigSnapshot', () => ({
   useConfigSnapshot: (...args: unknown[]) => useConfigSnapshotMock(...args)
 }));
 

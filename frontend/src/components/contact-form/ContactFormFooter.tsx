@@ -1,6 +1,6 @@
 import { ClipboardList } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '../ui/inputs/basic/Button';
 
 type ContactFormFooterProps = {
   isEdit: boolean;

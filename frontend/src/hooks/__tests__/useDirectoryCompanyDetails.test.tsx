@@ -4,16 +4,16 @@ import type { PropsWithChildren } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createTestQueryClient } from '@/__tests__/test-utils';
-import { useDirectoryCompanyDetails } from '@/hooks/useDirectoryCompanyDetails';
-import { useNotifyError } from '@/hooks/useNotifyError';
+import { useDirectoryCompanyDetails } from '../directory/company/useDirectoryCompanyDetails';
+import { useNotifyError } from '../cockpit-utils/useNotifyError';
 import { getDirectoryCompanyDetails } from '@/services/directory/getDirectoryCompanyDetails';
-import type { DirectoryCompanyDetailsResponse } from 'shared/schemas/api-responses';
+import type { DirectoryCompanyDetailsResponse } from '../../../../shared/schemas/system/api-responses';
 
 vi.mock('@/services/directory/getDirectoryCompanyDetails', () => ({
   getDirectoryCompanyDetails: vi.fn(),
 }));
 
-vi.mock('@/hooks/useNotifyError', () => ({
+vi.mock('@/hooks/cockpit-utils/useNotifyError', () => ({
   useNotifyError: vi.fn(),
 }));
 

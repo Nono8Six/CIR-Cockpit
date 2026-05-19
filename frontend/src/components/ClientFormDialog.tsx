@@ -1,13 +1,13 @@
-import type { DirectoryCommercialOption } from 'shared/schemas/directory.schema';
+import type { DirectoryCommercialOption } from '../../../shared/schemas/system/directory.schema';
 
 import type { AccountType, Agency, UserRole } from '@/types';
 import type { ClientPayload } from '@/services/clients/saveClient';
-import { useClientFormDialog } from '@/hooks/useClientFormDialog';
-import { useClientFormDialogFields } from '@/hooks/useClientFormDialogFields';
+import { useClientFormDialog } from '../hooks/entities/clients/useClientFormDialog';
+import { useClientFormDialogFields } from '../hooks/entities/clients/useClientFormDialogFields';
 import EntityOnboardingDialog from './EntityOnboardingDialog';
 import ClientFormContent from './client-form/ClientFormContent';
 import ClientFormHeader from './client-form/ClientFormHeader';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from './ui/feedback/Dialog';
 
 type ClientDialogValue = {
   id: string;

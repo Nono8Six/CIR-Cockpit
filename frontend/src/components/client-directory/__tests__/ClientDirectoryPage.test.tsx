@@ -1,11 +1,11 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { DirectorySearchState } from 'shared/schemas/directory.schema';
+import type { DirectorySearchState } from '../../../../../shared/schemas/system/directory.schema';
 
-import { useDirectoryOptionCommercials } from '@/hooks/useDirectoryOptionCommercials';
-import { useDirectoryOptionDepartments } from '@/hooks/useDirectoryOptionDepartments';
-import { useDirectoryPage } from '@/hooks/useDirectoryPage';
+import { useDirectoryOptionCommercials } from '../../../hooks/directory/options/useDirectoryOptionCommercials';
+import { useDirectoryOptionDepartments } from '../../../hooks/directory/options/useDirectoryOptionDepartments';
+import { useDirectoryPage } from '../../../hooks/directory/core/useDirectoryPage';
 
 import ClientDirectoryPage from '../ClientDirectoryPage';
 
@@ -74,7 +74,7 @@ vi.mock('@tanstack/react-router', () => ({
   useSearch: () => searchState
 }));
 
-vi.mock('@/hooks/useAppSession', () => ({
+vi.mock('@/hooks/session/useAppSession', () => ({
   useAppSessionStateContext: vi.fn(() => ({
     session: { user: { id: 'user-1', email: 'admin@example.com' } },
     profile: { role: 'super_admin' },
@@ -82,7 +82,7 @@ vi.mock('@/hooks/useAppSession', () => ({
   }))
 }));
 
-vi.mock('@/hooks/useDirectoryPage', () => ({
+vi.mock('@/hooks/directory/core/useDirectoryPage', () => ({
   useDirectoryPage: vi.fn(() => ({
     isFetching: false,
     isPending: false,
@@ -95,52 +95,52 @@ vi.mock('@/hooks/useDirectoryPage', () => ({
   }))
 }));
 
-vi.mock('@/hooks/useDirectoryOptionAgencies', () => ({
+vi.mock('@/hooks/directory/options/useDirectoryOptionAgencies', () => ({
   useDirectoryOptionAgencies: vi.fn(() => ({
     data: { agencies: [] },
     isFetching: false
   }))
 }));
 
-vi.mock('@/hooks/useDirectoryOptionCommercials', () => ({
+vi.mock('@/hooks/directory/options/useDirectoryOptionCommercials', () => ({
   useDirectoryOptionCommercials: vi.fn(() => ({
     data: { commercials: [] },
     isFetching: false
   }))
 }));
 
-vi.mock('@/hooks/useDirectoryOptionDepartments', () => ({
+vi.mock('@/hooks/directory/options/useDirectoryOptionDepartments', () => ({
   useDirectoryOptionDepartments: vi.fn(() => ({
     data: { departments: [] },
     isFetching: false
   }))
 }));
 
-vi.mock('@/hooks/useAgencies', () => ({
+vi.mock('@/hooks/admin/agencies/core/useAgencies', () => ({
   useAgencies: vi.fn(() => ({ data: [] }))
 }));
 
-vi.mock('@/hooks/useSaveClient', () => ({
+vi.mock('@/hooks/entities/clients/useSaveClient', () => ({
   useSaveClient: vi.fn(() => ({ mutateAsync: vi.fn() }))
 }));
 
-vi.mock('@/hooks/useSaveProspect', () => ({
+vi.mock('@/hooks/entities/prospects/useSaveProspect', () => ({
   useSaveProspect: vi.fn(() => ({ mutateAsync: vi.fn() }))
 }));
 
-vi.mock('@/hooks/useDirectorySavedViews', () => ({
+vi.mock('@/hooks/directory/views/useDirectorySavedViews', () => ({
   useDirectorySavedViews: vi.fn(() => ({ data: { views: [] }, isLoading: false }))
 }));
 
-vi.mock('@/hooks/useSaveDirectorySavedView', () => ({
+vi.mock('@/hooks/directory/views/useSaveDirectorySavedView', () => ({
   useSaveDirectorySavedView: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false }))
 }));
 
-vi.mock('@/hooks/useDeleteDirectorySavedView', () => ({
+vi.mock('@/hooks/directory/views/useDeleteDirectorySavedView', () => ({
   useDeleteDirectorySavedView: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false }))
 }));
 
-vi.mock('@/hooks/useSetDefaultDirectorySavedView', () => ({
+vi.mock('@/hooks/directory/views/useSetDefaultDirectorySavedView', () => ({
   useSetDefaultDirectorySavedView: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false }))
 }));
 

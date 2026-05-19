@@ -1,8 +1,8 @@
-import { dataInteractionsListResponseSchema } from 'shared/schemas/api-responses';
+import { dataInteractionsListResponseSchema } from '../../../../shared/schemas/system/api-responses';
 
 import type { Interaction } from '@/types';
 import { getActiveAgencyId } from '@/services/agency/getActiveAgencyId';
-import { invokeTrpc } from '@/services/api/safeTrpc';
+import { invokeTrpc } from '@/services/api/invokeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 import { hydrateTimeline } from './hydrateTimeline';
 

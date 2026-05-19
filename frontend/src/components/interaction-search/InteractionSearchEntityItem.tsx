@@ -1,6 +1,6 @@
-import type { TierV1DirectoryRow } from 'shared/schemas/tier-v1.schema';
+import type { TierV1DirectoryRow } from '../../../../shared/schemas/interaction/tier-v1.schema';
 import { getTierTypeDisplayLabel } from '@/constants/relations';
-import { CommandItem } from '@/components/ui/command';
+import { CommandItem } from '../ui/inputs/selects/Command';
 import HighlightedText from './HighlightedText';
 
 type InteractionSearchEntityItemProps = {

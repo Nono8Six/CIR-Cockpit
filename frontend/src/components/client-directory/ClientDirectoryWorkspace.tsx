@@ -1,9 +1,9 @@
 import { Plus } from 'lucide-react';
-import type { DirectoryListRow, DirectorySearchState } from 'shared/schemas/directory.schema';
+import type { DirectoryListRow, DirectorySearchState } from '../../../../shared/schemas/system/directory.schema';
 
-import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { TooltipProvider } from '@/components/ui/tooltip';
+import { Button } from '../ui/inputs/basic/Button';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/navigation/Popover';
+import { TooltipProvider } from '../ui/feedback/Tooltip';
 
 import ClientDirectoryFilters from './ClientDirectoryFilters';
 import ClientDirectoryTable from './ClientDirectoryTable';

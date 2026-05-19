@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createAppError } from '@/services/errors/AppError';
-import { invokeTrpc } from '@/services/api/safeTrpc';
+import { invokeTrpc } from '@/services/api/invokeTrpc';
 
-vi.mock('@/services/api/safeTrpc', () => ({
+vi.mock('@/services/api/invokeTrpc', () => ({
   invokeTrpc: vi.fn()
 }));
 

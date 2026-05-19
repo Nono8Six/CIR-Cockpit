@@ -1,15 +1,15 @@
 import { useMemo, useState } from 'react';
 import { Check, ChevronsUpDown } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '../../ui/inputs/basic/Button';
 import {
   Command,
   CommandEmpty,
   CommandInput,
   CommandItem,
   CommandList
-} from '@/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+} from '../../ui/inputs/selects/Command';
+import { Popover, PopoverContent, PopoverTrigger } from '../../ui/navigation/Popover';
 import { cn } from '@/lib/utils';
 import type { DirectoryFilterOption } from './DirectoryFilters.types';
 

@@ -1,7 +1,7 @@
 import type { Entity } from '@/types';
 import { CircleArrowUp } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { CommandGroup, CommandItem } from '@/components/ui/command';
+import { Badge } from '../ui/data-display/Badge';
+import { CommandGroup, CommandItem } from '../ui/inputs/selects/Command';
 import type { ConvertClientEntity } from '@/components/ConvertClientDialog';
 
 type AppSearchProspectsSectionProps = {

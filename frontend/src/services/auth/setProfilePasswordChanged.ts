@@ -1,4 +1,4 @@
-import { invokeTrpc } from '@/services/api/safeTrpc';
+import { invokeTrpc } from '@/services/api/invokeTrpc';
 
 const parseVoidResponse = (): void => undefined;
 

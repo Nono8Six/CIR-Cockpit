@@ -1,8 +1,9 @@
-import { dataInteractionDraftResponseSchema } from 'shared/schemas/api-responses';
+import { dataInteractionDraftResponseSchema } from '../../../../shared/schemas/system/api-responses';
 
-import { invokeTrpc } from '@/services/api/safeTrpc';
+import { invokeTrpc } from '@/services/api/invokeTrpc';
 import { createAppError } from '@/services/errors/AppError';
-import { readObject, readString } from '@/utils/recordNarrowing';
+import { readObject } from '@/utils/recordNarrowing/readObject';
+import { readString } from '@/utils/recordNarrowing/readString';
 import { toJsonValue } from '@/utils/toJsonValue';
 import {
   parseInteractionDraftPayload,

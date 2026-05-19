@@ -3,12 +3,12 @@ import { assertStrictEquals } from 'std/assert';
 import {
   cockpitAgencyMembersInputSchema,
   cockpitPhoneLookupInputSchema
-} from '../../../../shared/schemas/cockpit.schema.ts';
-import { dataEntitiesPayloadSchema } from '../../../../shared/schemas/data.schema.ts';
+} from '../../../../shared/schemas/interaction/cockpit.schema.ts';
+import { dataEntitiesPayloadSchema } from '../../../../shared/schemas/system/data.schema.ts';
 import {
   adminAuditLogsInputSchema,
   adminUsersListInputSchema
-} from '../../../../shared/schemas/user.schema.ts';
+} from '../../../../shared/schemas/admin/user.schema.ts';
 import type { DbClient } from '../types.ts';
 import { selectDataEntitiesDb } from './router.ts';
 

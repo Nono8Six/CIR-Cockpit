@@ -1,7 +1,7 @@
 import { type RefObject } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 
-import type { TierV1DirectoryRow } from 'shared/schemas/tier-v1.schema';
+import type { TierV1DirectoryRow } from '../../../../../shared/schemas/interaction/tier-v1.schema';
 import type { RelationMode } from '@/constants/relations';
 import type { Entity, EntityContact } from '@/types';
 import InteractionSearchBar from '@/components/InteractionSearchBar';

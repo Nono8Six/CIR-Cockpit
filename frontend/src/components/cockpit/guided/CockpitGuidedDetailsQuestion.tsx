@@ -2,11 +2,11 @@ import type { ChangeEvent } from 'react';
 import { ArrowRight, RotateCcw } from 'lucide-react';
 
 import type { CockpitFormLeftPaneProps, CockpitFormRightPaneProps } from '../CockpitPaneTypes';
-import AvatarInitials from '@/components/ui/avatar-initials';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Kbd } from '@/components/ui/kbd';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import AvatarInitials from '../../ui/data-display/AvatarInitials';
+import { Button } from '../../ui/inputs/basic/Button';
+import { Input } from '../../ui/inputs/basic/Input';
+import { Kbd } from '../../ui/data-display/Kbd';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/inputs/selects/Select';
 import { cn } from '@/lib/utils';
 import CockpitReminderControl from '../right/CockpitReminderControl';
 import CockpitStatusControl from '../right/CockpitStatusControl';

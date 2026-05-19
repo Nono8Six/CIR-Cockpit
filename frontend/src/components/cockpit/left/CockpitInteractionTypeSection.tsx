@@ -1,8 +1,8 @@
 import type { RefObject } from 'react';
 import type { FieldErrors, UseFormSetValue } from 'react-hook-form';
 
-import type { InteractionFormValues } from 'shared/schemas/interaction.schema';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import type { InteractionFormValues } from '../../../../../shared/schemas/interaction/interaction.schema';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/inputs/selects/Select';
 
 type CockpitInteractionTypeSectionProps = {
   labelStyle: string;

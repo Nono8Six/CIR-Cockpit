@@ -4,10 +4,10 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import CockpitSupplierLookup from '@/components/cockpit/guided/CockpitSupplierLookup';
-import { useUnifiedEntitySearch } from '@/hooks/useUnifiedEntitySearch';
+import { useUnifiedEntitySearch } from '../../../../hooks/directory/core/useUnifiedEntitySearch';
 import type { Entity } from '@/types';
 
-vi.mock('@/hooks/useUnifiedEntitySearch', () => ({
+vi.mock('@/hooks/directory/core/useUnifiedEntitySearch', () => ({
   useUnifiedEntitySearch: vi.fn()
 }));
 

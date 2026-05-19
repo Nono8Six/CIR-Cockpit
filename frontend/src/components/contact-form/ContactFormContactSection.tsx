@@ -1,8 +1,8 @@
 import type { ChangeEvent } from 'react';
 import type { FieldErrors, UseFormRegisterReturn } from 'react-hook-form';
 
-import type { ClientContactFormValues } from 'shared/schemas/client-contact.schema';
-import { Input } from '@/components/ui/input';
+import type { ClientContactFormValues } from '../../../../shared/schemas/entity/client-contact.schema';
+import { Input } from '../ui/inputs/basic/Input';
 
 type ContactFormContactSectionProps = {
   emailField: UseFormRegisterReturn;

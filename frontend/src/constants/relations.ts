@@ -1,4 +1,4 @@
-import type { TierV1DirectoryRow } from 'shared/schemas/tier-v1.schema';
+import type { TierV1DirectoryRow } from '../../../shared/schemas/interaction/tier-v1.schema';
 
 export const INTERNAL_RELATION_LABEL = 'Interne (CIR)';
 export const SOLICITATION_RELATION_NORMALIZED = 'sollicitation';

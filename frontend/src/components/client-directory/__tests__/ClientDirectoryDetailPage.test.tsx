@@ -2,7 +2,7 @@ import { screen, waitFor } from '@testing-library/react';
 import { okAsync } from 'neverthrow';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { DirectoryListRow, DirectorySearchState } from 'shared/schemas/directory.schema';
+import type { DirectoryListRow, DirectorySearchState } from '../../../../../shared/schemas/system/directory.schema';
 
 import { renderWithProviders } from '@/__tests__/test-utils';
 import { deleteEntityContact } from '@/services/entities/deleteEntityContact';
@@ -31,43 +31,43 @@ vi.mock('@tanstack/react-router', () => ({
   useNavigate: () => mockNavigate
 }));
 
-vi.mock('@/hooks/useAppSession', () => ({
+vi.mock('@/hooks/session/useAppSession', () => ({
   useAppSessionStateContext: vi.fn()
 }));
 
-vi.mock('@/hooks/useDirectoryRecord', () => ({
+vi.mock('@/hooks/directory/core/useDirectoryRecord', () => ({
   useDirectoryRecord: vi.fn()
 }));
 
-vi.mock('@/hooks/useDirectoryPage', () => ({
+vi.mock('@/hooks/directory/core/useDirectoryPage', () => ({
   useDirectoryPage: vi.fn()
 }));
 
-vi.mock('@/hooks/useDirectoryOptionCommercials', () => ({
+vi.mock('@/hooks/directory/options/useDirectoryOptionCommercials', () => ({
   useDirectoryOptionCommercials: vi.fn(() => ({ data: { commercials: [] } }))
 }));
 
-vi.mock('@/hooks/useAgencies', () => ({
+vi.mock('@/hooks/admin/agencies/core/useAgencies', () => ({
   useAgencies: vi.fn(() => ({ data: [] }))
 }));
 
-vi.mock('@/hooks/useEntityContacts', () => ({
+vi.mock('@/hooks/entities/contacts/useEntityContacts', () => ({
   useEntityContacts: vi.fn(() => ({ data: [] }))
 }));
 
-vi.mock('@/hooks/useEntityInteractions', () => ({
+vi.mock('@/hooks/interactions/core/queries/useEntityInteractions', () => ({
   useEntityInteractions: vi.fn(() => ({ data: { interactions: [] } }))
 }));
 
-vi.mock('@/hooks/useSaveClient', () => ({
+vi.mock('@/hooks/entities/clients/useSaveClient', () => ({
   useSaveClient: vi.fn(() => ({ mutateAsync: vi.fn() }))
 }));
 
-vi.mock('@/hooks/useSaveProspect', () => ({
+vi.mock('@/hooks/entities/prospects/useSaveProspect', () => ({
   useSaveProspect: vi.fn(() => ({ mutateAsync: vi.fn() }))
 }));
 
-vi.mock('@/hooks/useSetClientArchived', () => ({
+vi.mock('@/hooks/entities/clients/useDeleteClient', () => ({
   useDeleteClient: vi.fn(() => ({ mutateAsync: mockDeleteMutateAsync }))
 }));
 
@@ -95,15 +95,13 @@ vi.mock('@/services/entities/convertEntityToClient', () => ({
   convertEntityToClient: vi.fn()
 }));
 
-vi.mock('@/services/errors/notify', () => ({
-  notifySuccess: vi.fn()
-}));
+vi.mock('@/services/errors/notifySuccess', () => ({ notifySuccess: vi.fn() }));
 
-const { useAppSessionStateContext } = await import('@/hooks/useAppSession');
-const { useDirectoryRecord } = await import('@/hooks/useDirectoryRecord');
-const { useDirectoryPage } = await import('@/hooks/useDirectoryPage');
-const { useEntityContacts } = await import('@/hooks/useEntityContacts');
-const { notifySuccess } = await import('@/services/errors/notify');
+const { useAppSessionStateContext } = await import('@/hooks/session/useAppSession');
+const { useDirectoryRecord } = await import('@/hooks/directory/core/useDirectoryRecord');
+const { useDirectoryPage } = await import('@/hooks/directory/core/useDirectoryPage');
+const { useEntityContacts } = await import('@/hooks/entities/contacts/useEntityContacts');
+const { notifySuccess } = await import('@/services/errors/notifySuccess');
 
 const mockedSessionState = vi.mocked(useAppSessionStateContext);
 const mockedDirectoryRecord = vi.mocked(useDirectoryRecord);

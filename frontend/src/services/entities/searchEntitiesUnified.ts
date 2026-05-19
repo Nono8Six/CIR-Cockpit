@@ -1,8 +1,8 @@
 import {
   tierV1SearchResponseSchema,
   type TierV1SearchResponse
-} from 'shared/schemas/api-responses';
-import type { TierV1SearchInput } from 'shared/schemas/tier-v1.schema';
+} from '../../../../shared/schemas/system/api-responses';
+import type { TierV1SearchInput } from '../../../../shared/schemas/interaction/tier-v1.schema';
 
 import { safeTrpc } from '@/services/api/safeTrpc';
 import { createAppError } from '@/services/errors/AppError';

@@ -2,7 +2,7 @@ import AgenciesManagerDialogs from './agencies/AgenciesManagerDialogs';
 import AgenciesManagerHeader from './agencies/AgenciesManagerHeader';
 import AgenciesManagerList from './agencies/AgenciesManagerList';
 import AgenciesManagerSearch from './agencies/AgenciesManagerSearch';
-import { useAgenciesManager } from '@/hooks/useAgenciesManager';
+import { useAgenciesManager } from '../hooks/admin/agencies/core/useAgenciesManager';
 
 const AgenciesManager = () => {
   const {

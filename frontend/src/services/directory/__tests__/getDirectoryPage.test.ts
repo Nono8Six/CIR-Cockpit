@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { DirectoryListInput } from 'shared/schemas/directory.schema';
+import type { DirectoryListInput } from '../../../../../shared/schemas/system/directory.schema';
 
-import { invokeTrpc } from '@/services/api/safeTrpc';
+import { invokeTrpc } from '@/services/api/invokeTrpc';
 
-vi.mock('@/services/api/safeTrpc', () => ({
+vi.mock('@/services/api/invokeTrpc', () => ({
   invokeTrpc: vi.fn()
 }));
 

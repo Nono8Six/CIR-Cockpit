@@ -9,8 +9,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle
-} from './ui/alert-dialog';
-import { buttonVariants } from './ui/button';
+} from './ui/feedback/AlertDialog';
+import { buttonVariants } from './ui/inputs/basic/Button';
 import { cn } from '@/lib/utils';
 
 interface ConfirmDialogProps {

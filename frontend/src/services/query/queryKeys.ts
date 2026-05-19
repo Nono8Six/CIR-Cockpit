@@ -10,8 +10,8 @@ import type {
   DirectorySavedViewType,
   DirectoryScopeInput,
   DirectoryRouteRef
-} from 'shared/schemas/directory.schema';
-import type { TierV1SearchInput } from 'shared/schemas/tier-v1.schema';
+} from '../../../../shared/schemas/system/directory.schema';
+import type { TierV1SearchInput } from '../../../../shared/schemas/interaction/tier-v1.schema';
 
 export const QUERY_ROOTS = {
   configSnapshot: 'config-snapshot',

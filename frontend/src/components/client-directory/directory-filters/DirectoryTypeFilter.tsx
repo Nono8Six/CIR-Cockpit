@@ -1,12 +1,12 @@
-import { type DirectoryEntityType } from 'shared/schemas/directory.schema';
+import { type DirectoryEntityType } from '../../../../../shared/schemas/system/directory.schema';
 
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger
-} from '@/components/ui/select';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+} from '../../ui/inputs/selects/Select';
+import { ToggleGroup, ToggleGroupItem } from '../../ui/inputs/basic/ToggleGroup';
 import { cn } from '@/lib/utils';
 
 const DIRECTORY_TYPES: Array<{ value: DirectoryEntityType; label: string }> = [

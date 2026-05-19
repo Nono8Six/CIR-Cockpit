@@ -2,9 +2,9 @@ import { RotateCcw } from 'lucide-react';
 
 import type { CockpitFormLeftPaneProps, CockpitFormRightPaneProps } from '../CockpitPaneTypes';
 import type { Interaction } from '@/types';
-import { Button } from '@/components/ui/button';
+import { Button } from '../../ui/inputs/basic/Button';
 import { buildCockpitLeftEntitySectionsProps } from '../buildCockpitLeftEntitySectionsProps';
-import { GUIDED_STEP_ORDER, type CockpitGuidedStep, useCockpitGuidedFlow } from '@/hooks/useCockpitGuidedFlow';
+import { GUIDED_STEP_ORDER, type CockpitGuidedStep, useCockpitGuidedFlow } from '../../../hooks/cockpit/useCockpitGuidedFlow';
 import { cn } from '@/lib/utils';
 import CockpitShortcutLegend from '../CockpitShortcutLegend';
 import CockpitGuidedAnswerRow from './CockpitGuidedAnswerRow';
