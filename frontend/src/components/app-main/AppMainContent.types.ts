@@ -32,7 +32,6 @@ export type AppMainContentProps = {
   entitySearchLoading: boolean;
   canAccessSettings: boolean;
   canEditAgencySettings: boolean;
-  canEditProductSettings: boolean;
   canAccessAdmin: boolean;
   focusedClientId: string | null;
   focusedContactId: string | null;

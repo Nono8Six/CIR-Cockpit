@@ -1,10 +1,5 @@
 import { boolean, integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
-import type {
-  AgencyOnboardingOverrides,
-  ProductFeatureFlags,
-  ProductOnboardingConfig
-} from '../../shared/schemas/system/config.schema.ts';
 import type { Database } from '../../shared/supabase.types.ts';
 import type { DirectorySavedViewState } from '../../shared/schemas/system/directory.schema.ts';
 
@@ -74,21 +69,6 @@ export const directory_saved_views = pgTable('directory_saved_views', {
   name: text('name').notNull(),
   state: jsonb('state').$type<DirectorySavedViewState>().notNull(),
   is_default: boolean('is_default').$type<boolean>().notNull(),
-  created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull(),
-  updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
-});
-
-export const app_settings = pgTable('app_settings', {
-  id: integer('id').$type<number>().primaryKey(),
-  feature_flags: jsonb('feature_flags').$type<ProductFeatureFlags>().notNull(),
-  onboarding: jsonb('onboarding').$type<ProductOnboardingConfig>().notNull(),
-  created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull(),
-  updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
-});
-
-export const agency_settings = pgTable('agency_settings', {
-  agency_id: uuid('agency_id').$type<string>().primaryKey(),
-  onboarding: jsonb('onboarding').$type<AgencyOnboardingOverrides>().notNull(),
   created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull(),
   updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
 });
@@ -210,15 +190,6 @@ export const agency_services = pgTable('agency_services', {
   updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
 });
 
-export const agency_entities = pgTable('agency_entities', {
-  id: uuid('id').$type<string>().defaultRandom().primaryKey(),
-  agency_id: uuid('agency_id').$type<string>().notNull(),
-  label: text('label').notNull(),
-  sort_order: integer('sort_order').notNull(),
-  created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull(),
-  updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
-});
-
 export const agency_families = pgTable('agency_families', {
   id: uuid('id').$type<string>().defaultRandom().primaryKey(),
   agency_id: uuid('agency_id').$type<string>().notNull(),
@@ -252,8 +223,6 @@ export const drizzleSchema = {
   agency_members,
   audit_logs,
   directory_saved_views,
-  app_settings,
-  agency_settings,
   reference_departments,
   entities,
   entity_contacts,
@@ -261,7 +230,6 @@ export const drizzleSchema = {
   interaction_drafts,
   agency_statuses,
   agency_services,
-  agency_entities,
   agency_families,
   agency_interaction_types,
   agency_system_users

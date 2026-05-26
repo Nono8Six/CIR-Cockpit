@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { Boxes, Layers3, ListTodo, ShieldAlert } from 'lucide-react';
+import { Boxes, ListTodo } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
@@ -18,8 +18,6 @@ type SettingsSidebarProps = {
 };
 
 const SIDEBAR_ITEMS: SidebarItem[] = [
-  { id: 'general', label: 'Onboarding agence', description: 'Surcharges', icon: Layers3 },
-  { id: 'product', label: 'Paramètres produit', description: 'Globaux', icon: ShieldAlert },
   { id: 'workflow', label: 'Statuts interactions', description: 'Workflow', icon: ListTodo },
   { id: 'lists', label: 'Listes de saisie', description: 'Formulaires', icon: Boxes },
 ];

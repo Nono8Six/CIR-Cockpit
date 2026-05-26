@@ -41,7 +41,6 @@ Deno.test({
       agency_id: foreignAgencyId,
       statuses: context.configStatuses,
       services: context.configServices,
-      entities: context.configEntities,
       families: context.configFamilies,
       interactionTypes: context.configInteractionTypes
     });
@@ -217,7 +216,6 @@ Deno.test({
       agency_id: context.agencyId,
       statuses: context.configStatuses,
       services: context.configServices,
-      entities: context.configEntities,
       families: context.configFamilies,
       interactionTypes: context.configInteractionTypes
     });
@@ -228,7 +226,6 @@ Deno.test({
       agency_id: context.agencyId,
       statuses: [{ id: context.statusId, label: 'invalid status', category: 'invalid' }],
       services: context.configServices,
-      entities: context.configEntities,
       families: context.configFamilies,
       interactionTypes: context.configInteractionTypes
     });

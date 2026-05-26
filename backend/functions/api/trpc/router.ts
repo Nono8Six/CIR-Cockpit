@@ -2,8 +2,6 @@ import {
   configGetResponseSchema,
   configUsageResponseSchema,
   configReferenceActionResponseSchema,
-  configSaveAgencyResponseSchema,
-  configSaveProductResponseSchema,
   adminAgenciesResponseSchema,
   adminAuditLogsResponseSchema,
   adminUsersListResponseSchema,
@@ -39,9 +37,7 @@ import {
 import {
   configGetInputSchema,
   configUsageInputSchema,
-  configReferenceActionInputSchema,
-  configSaveAgencyInputSchema,
-  configSaveProductInputSchema
+  configReferenceActionInputSchema
 } from '../../../../shared/schemas/system/config.schema.ts';
 import {
   dataConfigPayloadSchema,
@@ -78,7 +74,7 @@ import {
 import { handleAdminAgenciesAction } from '../services/admin/adminAgencies.ts';
 import { listAdminAuditLogs, listAdminUsers } from '../services/admin/adminQueries.ts';
 import { handleAdminUsersAction } from '../services/admin/adminUsers.ts';
-import { handleConfigReferenceAction, saveAgencyConfigSettings, saveProductConfigSettings } from '../services/config/configSettings.ts';
+import { handleConfigReferenceAction } from '../services/config/configSettings.ts';
 import { getConfigSnapshot } from '../services/config/configSnapshot.ts';
 import { getConfigUsage } from '../services/config/configUsage.ts';
 import { handleDataConfigAction } from '../services/data/dataConfig.ts';
@@ -198,15 +194,7 @@ export const appRouter = router({
     reference: authedProcedure
       .input(configReferenceActionInputSchema)
       .output(configReferenceActionResponseSchema)
-      .mutation(withAuthedHandler(handleConfigReferenceAction)),
-    'save-agency': authedProcedure
-      .input(configSaveAgencyInputSchema)
-      .output(configSaveAgencyResponseSchema)
-      .mutation(withAuthedHandler(saveAgencyConfigSettings)),
-    'save-product': superAdminProcedure
-      .input(configSaveProductInputSchema)
-      .output(configSaveProductResponseSchema)
-      .mutation(withSuperAdminHandler(saveProductConfigSettings))
+      .mutation(withAuthedHandler(handleConfigReferenceAction))
   }),
   directory: router({
     list: authedProcedure

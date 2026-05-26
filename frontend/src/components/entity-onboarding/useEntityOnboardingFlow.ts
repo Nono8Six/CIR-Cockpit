@@ -108,7 +108,7 @@ export const useEntityOnboardingFlow = ({
     : values.intent;
   const isIndividualClient =
     effectiveIntent === 'client' && values.client_kind === 'individual';
-  const allowManualEntry = onboardingConfig.allow_manual_entry;
+  const allowManualEntry = onboardingConfig.allowManualEntry;
   const currentStepIndex = stepper.state.current.index;
 
   const {

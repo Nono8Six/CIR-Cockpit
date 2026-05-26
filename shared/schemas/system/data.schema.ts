@@ -253,7 +253,6 @@ export const dataConfigPayloadSchema = z.strictObject({
   agency_id: uuidSchema,
   statuses: z.array(statusItemSchema).min(1, 'Au moins un statut requis'),
   services: z.array(z.string().trim().max(MAX_CONFIG_LABEL_LENGTH, 'Label service trop long')),
-  entities: z.array(z.string().trim().max(MAX_CONFIG_LABEL_LENGTH, 'Label entite trop long')),
   families: z.array(z.string().trim().max(MAX_CONFIG_LABEL_LENGTH, 'Label famille trop long')),
   interactionTypes: z.array(z.string().trim().max(MAX_CONFIG_LABEL_LENGTH, "Label type d'interaction trop long"))
 });

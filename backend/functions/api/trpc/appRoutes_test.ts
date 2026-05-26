@@ -44,6 +44,24 @@ Deno.test('tRPC unknown procedure returns NOT_FOUND with aligned appCode/httpSta
   assertMatch(readString(data, 'requestId') ?? '', /^[0-9a-fA-F-]{36}$/);
 });
 
+Deno.test('removed config settings procedures return NOT_FOUND', async () => {
+  const appModule = await import('../app.ts');
+
+  for (const procedure of ['config.save-agency', 'config.save-product']) {
+    const response = await appModule.default.request(`/trpc/${procedure}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: '{}'
+    });
+
+    const data = await readErrorData(response);
+    assertEquals(response.status, 404);
+    assertEquals(readString(data, 'code'), 'NOT_FOUND');
+    assertEquals(readString(data, 'appCode'), 'NOT_FOUND');
+    assertEquals(readNumber(data, 'httpStatus'), 404);
+  }
+});
+
 Deno.test('tRPC routes reject missing Authorization header', async () => {
   const appModule = await import('../app.ts');
   const response = await appModule.default.request('/trpc/data.profile', {

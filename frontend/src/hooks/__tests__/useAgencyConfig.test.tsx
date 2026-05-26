@@ -19,23 +19,9 @@ vi.mock('@/services/config', async (importOriginal) => {
 const mockGetConfigSnapshot = vi.mocked(getConfigSnapshot);
 
 const BASE_SNAPSHOT: ResolvedConfigSnapshot = {
-  product: {
-    feature_flags: {
-      ui_shell_v2: false
-    },
-    onboarding: {
-      allow_manual_entry: true,
-      default_account_type_company: 'term',
-      default_account_type_individual: 'cash'
-    }
-  },
-  agency: {
-    onboarding: {}
-  },
   references: {
     statuses: [],
     services: [],
-    entities: [],
     families: [],
     interaction_types: [],
     departments: []
@@ -68,7 +54,6 @@ describe('useAgencyConfig', () => {
       expect(result.current.data).toEqual({
         statuses: [],
         services: [],
-        entities: [],
         families: [],
         interactionTypes: []
       });

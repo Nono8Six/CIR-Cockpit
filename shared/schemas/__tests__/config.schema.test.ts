@@ -30,7 +30,6 @@ const usageSnapshot = {
         state: 'used_not_in_reference'
       }
     ],
-    entities: []
   },
   totals: {
     used_not_in_reference: 1,
@@ -117,7 +116,7 @@ describe('configReferenceActionInputSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('accepts agency tier labels as editable settings references', () => {
+  it('rejects agency tier labels as editable settings references', () => {
     const result = configReferenceActionInputSchema.safeParse({
       action: 'delete',
       agency_id: agencyId,
@@ -125,6 +124,6 @@ describe('configReferenceActionInputSchema', () => {
       label: 'Client'
     });
 
-    expect(result.success).toBe(true);
+    expect(result.success).toBe(false);
   });
 });

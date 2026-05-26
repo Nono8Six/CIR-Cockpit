@@ -1,4 +1,4 @@
-import { AlertTriangle, Boxes, PhoneCall, Tags, Users2 } from 'lucide-react';
+import { AlertTriangle, Boxes, PhoneCall, Users2 } from 'lucide-react';
 import type {
   ConfigUsageSnapshot,
   EditableConfigReferenceDimension
@@ -11,15 +11,12 @@ type ReferentialsSectionProps = {
   usage: ConfigUsageSnapshot | null;
   families: string[];
   services: string[];
-  entities: string[];
   interactionTypes: string[];
   newFamily: string;
   newService: string;
-  newEntity: string;
   newInteractionType: string;
   setNewFamily: (value: string) => void;
   setNewService: (value: string) => void;
-  setNewEntity: (value: string) => void;
   setNewInteractionType: (value: string) => void;
   addItem: (
     dimension: EditableConfigReferenceDimension,
@@ -52,7 +49,6 @@ type ReferentialsSectionProps = {
   ) => void;
   setFamilies: (next: string[]) => void;
   setServices: (next: string[]) => void;
-  setEntities: (next: string[]) => void;
   setInteractionTypes: (next: string[]) => void;
 };
 
@@ -61,15 +57,12 @@ const ReferentialsSection = ({
   usage,
   families,
   services,
-  entities,
   interactionTypes,
   newFamily,
   newService,
-  newEntity,
   newInteractionType,
   setNewFamily,
   setNewService,
-  setNewEntity,
   setNewInteractionType,
   addItem,
   removeItem,
@@ -77,14 +70,12 @@ const ReferentialsSection = ({
   renameItem,
   setFamilies,
   setServices,
-  setEntities,
   setInteractionTypes,
 }: ReferentialsSectionProps) => {
   const dimensions = usage?.dimensions;
   const orphanRows = [
     ...(dimensions?.services ?? []),
     ...(dimensions?.families ?? []),
-    ...(dimensions?.entities ?? []),
     ...(dimensions?.interaction_types ?? [])
   ].filter((row) => row.state === 'used_not_in_reference');
 
@@ -92,7 +83,7 @@ const ReferentialsSection = ({
     <SettingsSectionShell
       id="settings-section-referentials"
       title="Listes de saisie des interactions"
-      description={"Ces valeurs alimentent directement la saisie : types de tiers, service appelé, familles produits et type d'interaction."}
+      description={"Ces valeurs alimentent directement la saisie : service appelé, familles produits et type d'interaction."}
       icon={Boxes}
       badge={readOnly ? 'Lecture seule' : 'Édition'}
       badgeTone={readOnly ? 'warning' : 'default'}
@@ -121,26 +112,6 @@ const ReferentialsSection = ({
       )}
 
       <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,22rem),1fr))] items-start gap-3">
-        <ReferentialColumn
-          title="Types de tiers"
-          description="Libellés métier proposés pour qualifier le tiers rattaché à une interaction."
-          icon={Tags}
-          namePrefix="entities"
-          count={entities.length}
-          list={entities}
-          usageRows={dimensions ? dimensions.entities : null}
-          setList={setEntities}
-          newItem={newEntity}
-          setNewItem={setNewEntity}
-          onAdd={() => addItem('entities', newEntity, entities, setEntities, () => setNewEntity(''))}
-          onRemove={(index) => removeItem('entities', index, entities, setEntities)}
-          onUpdate={(index, value) => updateItem(index, value, entities, setEntities)}
-          onRename={(index, value) => renameItem('entities', index, value, entities, setEntities)}
-          placeholder="Ex: Client, Prospect…"
-          addLabel="Ajouter un type de tiers"
-          readOnly={readOnly}
-        />
-
         <ReferentialColumn
           title="Familles produits"
           description="Tags techniques ajoutés sur une interaction. Ils servent au pilotage et au filtrage métier."

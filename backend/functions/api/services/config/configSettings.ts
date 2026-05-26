@@ -1,19 +1,14 @@
 import { and, eq, sql } from 'drizzle-orm';
 
 import {
-  agency_entities,
   agency_families,
   agency_interaction_types,
   agency_services,
-  agency_settings,
   agency_statuses,
-  app_settings,
   interactions
 } from '../../../../drizzle/schema.ts';
 import type {
   ConfigReferenceActionResponse,
-  ConfigSaveAgencyResponse,
-  ConfigSaveProductResponse,
   DataConfigResponse
 } from '../../../../../shared/schemas/system/api-responses.ts';
 import type {
@@ -23,8 +18,6 @@ import type {
   ConfigReferenceDeleteInput,
   ConfigReferenceRenameInput,
   ConfigReferenceReorderInput,
-  ConfigSaveAgencyInput,
-  ConfigSaveProductInput
 } from '../../../../../shared/schemas/system/config.schema.ts';
 import type { DataConfigPayload } from '../../../../../shared/schemas/system/data.schema.ts';
 import type { AuthContext, DbClient } from '../../types.ts';
@@ -33,7 +26,6 @@ import { ensureAgencyAccess, ensureDataRateLimit } from '../data/dataAccess.ts';
 
 type LabelTable =
   | typeof agency_services
-  | typeof agency_entities
   | typeof agency_families
   | typeof agency_interaction_types;
 
@@ -42,7 +34,7 @@ type ExistingStatusRow = {
   label: string;
 };
 
-type LabelDimension = 'services' | 'entities' | 'families' | 'interaction_types';
+type LabelDimension = 'services' | 'families' | 'interaction_types';
 
 type StatusUpsertRow = {
   id?: string;
@@ -54,7 +46,6 @@ type StatusUpsertRow = {
   is_terminal: boolean;
 };
 
-const APP_SETTINGS_SINGLETON_ID = 1;
 const STATUS_CATEGORIES = ['todo', 'in_progress', 'done'] as const;
 
 export const normalizeLabelList = (labels: string[]): string[] => {
@@ -104,7 +95,7 @@ export const buildStatusUpsertRows = (
   });
 };
 
-const ensureAgencySettingsWriteAccess = (authContext: AuthContext): void => {
+const ensureReferenceWriteAccess = (authContext: AuthContext): void => {
   if (authContext.role === 'tcs') {
     throw httpError(403, 'AUTH_FORBIDDEN', 'Acces interdit.');
   }
@@ -112,7 +103,6 @@ const ensureAgencySettingsWriteAccess = (authContext: AuthContext): void => {
 
 const getLabelTable = (dimension: LabelDimension): LabelTable => {
   if (dimension === 'services') return agency_services;
-  if (dimension === 'entities') return agency_entities;
   if (dimension === 'families') return agency_families;
   return agency_interaction_types;
 };
@@ -201,8 +191,6 @@ const countLabelUsage = async (
   const usageExpression =
     dimension === 'services'
       ? sql<boolean>`lower(${interactions.contact_service}) = ${normalizedLabel}`
-      : dimension === 'entities'
-        ? sql<boolean>`lower(${interactions.entity_type}) = ${normalizedLabel}`
       : dimension === 'interaction_types'
         ? sql<boolean>`lower(${interactions.interaction_type}) = ${normalizedLabel}`
         : sql<boolean>`exists (
@@ -236,14 +224,6 @@ const updateInteractionLabel = async (
         .update(interactions)
         .set({ contact_service: nextLabel })
         .where(and(eq(interactions.agency_id, agencyId), eq(interactions.contact_service, previous)));
-      return;
-    }
-
-    if (dimension === 'entities') {
-      await db
-        .update(interactions)
-        .set({ entity_type: nextLabel })
-        .where(and(eq(interactions.agency_id, agencyId), eq(interactions.entity_type, previous)));
       return;
     }
 
@@ -361,28 +341,6 @@ const syncStatuses = async (
     }
   } catch {
     throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de mettre a jour les statuts.');
-  }
-};
-
-const syncAgencySettings = async (
-  db: DbClient,
-  input: ConfigSaveAgencyInput
-): Promise<void> => {
-  try {
-    await db
-      .insert(agency_settings)
-      .values({
-        agency_id: input.agency_id,
-        onboarding: input.onboarding
-      })
-      .onConflictDoUpdate({
-        target: agency_settings.agency_id,
-        set: {
-          onboarding: sql`excluded.onboarding`
-        }
-      });
-  } catch {
-    throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de mettre a jour les parametres agence.');
   }
 };
 
@@ -524,7 +482,7 @@ export const handleConfigReferenceAction = async (
   input: ConfigReferenceActionInput
 ): Promise<ConfigReferenceActionResponse> => {
   await ensureDataRateLimit('config:reference', authContext.userId);
-  ensureAgencySettingsWriteAccess(authContext);
+  ensureReferenceWriteAccess(authContext);
   const agencyId = ensureAgencyAccess(authContext, input.agency_id);
 
   let usageCount = 0;
@@ -560,89 +518,49 @@ export const handleConfigReferenceAction = async (
   };
 };
 
-export const saveAgencyConfigSettings = async (
+const saveReferenceConfig = async (
   db: DbClient,
   authContext: AuthContext,
   requestId: string | undefined,
-  input: ConfigSaveAgencyInput
-): Promise<ConfigSaveAgencyResponse> => {
-  await ensureDataRateLimit('config:save-agency', authContext.userId);
-  ensureAgencySettingsWriteAccess(authContext);
+  input: DataConfigPayload
+): Promise<DataConfigResponse> => {
+  await ensureDataRateLimit('data:config', authContext.userId);
+  ensureReferenceWriteAccess(authContext);
   const resolvedAgencyId = ensureAgencyAccess(authContext, input.agency_id);
 
-  const normalizedInput: ConfigSaveAgencyInput = {
+  const normalizedInput: DataConfigPayload = {
     ...input,
     agency_id: resolvedAgencyId
   };
 
   await db.transaction(async (tx) => {
-    await syncAgencySettings(tx, normalizedInput);
-    await syncStatuses(tx, resolvedAgencyId, normalizedInput.references.statuses);
-    await syncLabelTable(tx, agency_services, resolvedAgencyId, normalizedInput.references.services);
-    await syncLabelTable(tx, agency_entities, resolvedAgencyId, normalizedInput.references.entities);
-    await syncLabelTable(tx, agency_families, resolvedAgencyId, normalizedInput.references.families);
+    await syncStatuses(
+      tx,
+      resolvedAgencyId,
+      normalizedInput.statuses.map((status) => ({
+        id: status.id,
+        label: status.label,
+        category: status.category as AgencyStatusInput['category']
+      }))
+    );
+    await syncLabelTable(tx, agency_services, resolvedAgencyId, normalizedInput.services);
+    await syncLabelTable(tx, agency_families, resolvedAgencyId, normalizedInput.families);
     await syncLabelTable(
       tx,
       agency_interaction_types,
       resolvedAgencyId,
-      normalizedInput.references.interaction_types
+      normalizedInput.interactionTypes
     );
   });
 
   return { request_id: requestId, ok: true };
 };
 
-export const saveProductConfigSettings = async (
-  db: DbClient,
-  callerId: string,
-  requestId: string | undefined,
-  input: ConfigSaveProductInput
-): Promise<ConfigSaveProductResponse> => {
-  await ensureDataRateLimit('config:save-product', callerId);
-
-  try {
-    await db
-      .insert(app_settings)
-      .values({
-        id: APP_SETTINGS_SINGLETON_ID,
-        feature_flags: input.feature_flags,
-        onboarding: input.onboarding
-      })
-      .onConflictDoUpdate({
-        target: app_settings.id,
-        set: {
-          feature_flags: sql`excluded.feature_flags`,
-          onboarding: sql`excluded.onboarding`
-        }
-      });
-  } catch {
-    throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de mettre a jour les parametres produit.');
-  }
-
-  return { request_id: requestId, ok: true };
-};
-
-export const saveLegacyDataConfig = async (
+export const saveLegacyDataConfig = (
   db: DbClient,
   authContext: AuthContext,
   requestId: string | undefined,
   data: DataConfigPayload
 ): Promise<DataConfigResponse> => {
-  await saveAgencyConfigSettings(db, authContext, requestId, {
-    agency_id: data.agency_id,
-    onboarding: {},
-    references: {
-      statuses: data.statuses.map((status) => ({
-        id: status.id,
-        label: status.label,
-        category: status.category as AgencyStatusInput['category']
-      })),
-      services: data.services,
-      entities: data.entities,
-      families: data.families,
-      interaction_types: data.interactionTypes
-    }
-  });
-
-  return { request_id: requestId, ok: true };
+  return saveReferenceConfig(db, authContext, requestId, data);
 };

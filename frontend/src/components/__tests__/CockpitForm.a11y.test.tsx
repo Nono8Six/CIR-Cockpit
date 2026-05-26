@@ -71,7 +71,6 @@ const config: AgencyConfig = {
     }
   ],
   services: ['Atelier'],
-  entities: ['Client'],
   families: ['Freinage'],
   interactionTypes: ['Demande']
 };

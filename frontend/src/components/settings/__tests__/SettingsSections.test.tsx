@@ -46,21 +46,12 @@ const usage: ConfigUsageSnapshot = {
       }
     ],
     families: [],
-    interaction_types: [],
-    entities: [
-      {
-        label: 'Client',
-        reference_id: 'entity-1',
-        sort_order: 1,
-        usage_count: 3,
-        state: 'reference_used'
-      }
-    ]
+    interaction_types: []
   },
   totals: {
     used_not_in_reference: 1,
-    referenced_values: 2,
-    used_values: 3
+    referenced_values: 1,
+    used_values: 2
   }
 };
 
@@ -68,33 +59,19 @@ const baseProps = {
   readOnly: false,
   activeSection: 'workflow',
   canEditAgencySettings: true,
-  canEditProductSettings: true,
   usage: null as ConfigUsageSnapshot | null,
   usageLoading: false,
-  allowManualEntryOverride: 'inherit' as const,
-  defaultCompanyAccountTypeOverride: 'inherit' as const,
-  productAllowManualEntry: true,
-  productDefaultCompanyAccountType: 'term' as const,
-  productUiShellV2: false,
   families: ['MOTORISATION'],
   services: ['Maintenance'],
-  entities: ['Client'],
   interactionTypes: ['SAV'],
   statuses,
   newFamily: '',
   newService: '',
-  newEntity: '',
   newInteractionType: '',
   newStatus: '',
   newStatusCategory: 'todo' as const,
-  setAllowManualEntryOverride: vi.fn(),
-  setDefaultCompanyAccountTypeOverride: vi.fn(),
-  setProductAllowManualEntry: vi.fn(),
-  setProductDefaultCompanyAccountType: vi.fn(),
-  setProductUiShellV2: vi.fn(),
   setNewFamily: vi.fn(),
   setNewService: vi.fn(),
-  setNewEntity: vi.fn(),
   setNewInteractionType: vi.fn(),
   setNewStatus: vi.fn(),
   setNewStatusCategory: vi.fn(),
@@ -104,7 +81,6 @@ const baseProps = {
   renameItem: vi.fn(),
   setFamilies: vi.fn(),
   setServices: vi.fn(),
-  setEntities: vi.fn(),
   setInteractionTypes: vi.fn(),
   setStatuses: vi.fn(),
   addStatus: vi.fn(),
@@ -124,18 +100,6 @@ describe('SettingsSections', () => {
     expect(screen.queryByRole('heading', { name: 'Listes de saisie des interactions' })).not.toBeInTheDocument();
   });
 
-  it('renders agency and product settings as dedicated subpages', () => {
-    const { rerender } = render(<SettingsSections {...baseProps} activeSection="general" />);
-
-    expect(screen.getByRole('heading', { name: 'Paramètres onboarding agence' })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Paramètres globaux produit' })).not.toBeInTheDocument();
-
-    rerender(<SettingsSections {...baseProps} activeSection="product" />);
-
-    expect(screen.getByRole('heading', { name: 'Paramètres globaux produit' })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Paramètres onboarding agence' })).not.toBeInTheDocument();
-  });
-
   it('passes read-only agency permissions to editable subpages', () => {
     render(
       <SettingsSections
@@ -149,12 +113,12 @@ describe('SettingsSections', () => {
     expect(screen.queryByRole('button', { name: /ajouter un service/i })).not.toBeInTheDocument();
   });
 
-  it('shows usage impact and editable tier types', () => {
+  it('shows usage impact without editable tier types', () => {
     render(<SettingsSections {...baseProps} activeSection="lists" usage={usage} />);
 
     expect(screen.getByText('Valeurs déjà utilisées mais absentes des listes')).toBeInTheDocument();
     expect(screen.getByText(/Fournisseur · 1/)).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Types de tiers' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Types de tiers' })).not.toBeInTheDocument();
   });
 
   it('hides list deletion when usage impact is unavailable', () => {

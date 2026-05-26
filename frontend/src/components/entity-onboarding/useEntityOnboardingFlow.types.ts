@@ -1,7 +1,6 @@
 import type { Dispatch, SetStateAction } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 
-import type { ProductOnboardingConfig } from '../../../../shared/schemas/system/config.schema';
 import type {
   DirectoryCompanySearchResult,
   DirectoryDuplicateMatch,
@@ -25,7 +24,7 @@ import type {
   OnboardingIntent,
   OnboardingMode,
 } from './entityOnboarding.types';
-import type { DepartmentOption } from './useOnboardingConfig';
+import type { DepartmentOption, OnboardingConfig } from './useOnboardingConfig';
 
 type SavedEntityResult = {
   id?: string;
@@ -62,7 +61,7 @@ export interface EntityOnboardingFlowState {
   isIntentLocked: boolean;
   shouldSkipIntent: boolean;
   currentStepIndex: number;
-  onboardingConfig: ProductOnboardingConfig;
+  onboardingConfig: OnboardingConfig;
   departmentOptions: DepartmentOption[];
   isConfigReady: boolean;
 

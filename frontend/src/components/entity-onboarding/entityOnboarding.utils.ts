@@ -4,7 +4,6 @@ import type {
   DirectoryCompanySearchResult,
   DirectoryListRow
 } from '../../../../shared/schemas/system/directory.schema';
-import type { ProductOnboardingConfig } from '../../../../shared/schemas/system/config.schema';
 
 import type { OnboardingValues } from './entityOnboarding.schema';
 import type {
@@ -13,15 +12,13 @@ import type {
   EntityOnboardingSeed,
   OnboardingIntent
 } from './entityOnboarding.types';
+import type { OnboardingConfig } from './useOnboardingConfig';
 
 export const buildValues = (
   activeAgencyId: string | null,
   defaultIntent: OnboardingIntent,
   initialEntity: EntityOnboardingSeed | null | undefined,
-  onboardingConfig: Pick<
-    ProductOnboardingConfig,
-    'default_account_type_company' | 'default_account_type_individual'
-  >,
+  onboardingConfig: Pick<OnboardingConfig, 'defaultCompanyAccountType' | 'individualAccountType'>,
   defaultClientKind: 'company' | 'individual' = 'company'
 ): OnboardingValues => ({
   intent: defaultIntent,
@@ -47,8 +44,8 @@ export const buildValues = (
   agency_id: initialEntity?.agency_id ?? activeAgencyId ?? '',
   client_number: initialEntity?.client_number ?? '',
   account_type: initialEntity?.client_kind === 'individual' || (!initialEntity && defaultClientKind === 'individual')
-    ? onboardingConfig.default_account_type_individual
-    : initialEntity?.account_type ?? onboardingConfig.default_account_type_company,
+    ? onboardingConfig.individualAccountType
+    : initialEntity?.account_type ?? onboardingConfig.defaultCompanyAccountType,
   cir_commercial_id: initialEntity?.cir_commercial_id ?? ''
 });
 

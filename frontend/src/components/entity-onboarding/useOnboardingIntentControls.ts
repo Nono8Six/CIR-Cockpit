@@ -1,13 +1,12 @@
 import { useCallback, type Dispatch, type SetStateAction } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 
-import type { ProductOnboardingConfig } from '../../../../shared/schemas/system/config.schema';
-
 import type {
   OnboardingFormInput,
   OnboardingValues,
 } from './entityOnboarding.schema';
 import type { AccountType, OnboardingIntent } from './entityOnboarding.types';
+import type { OnboardingConfig } from './useOnboardingConfig';
 
 interface UseOnboardingIntentControlsInput {
   clearOfficialSelection: () => void;
@@ -15,7 +14,7 @@ interface UseOnboardingIntentControlsInput {
   initialAccountType: AccountType | null | undefined;
   initialManualEntry: boolean;
   intents: OnboardingIntent[];
-  onboardingConfig: ProductOnboardingConfig;
+  onboardingConfig: OnboardingConfig;
   setManualEntry: Dispatch<SetStateAction<boolean>>;
   setStepError: Dispatch<SetStateAction<string | null>>;
 }
@@ -46,7 +45,7 @@ export const useOnboardingIntentControls = ({
         form.setValue('client_kind', 'company', { shouldDirty: true });
         form.setValue(
           'account_type',
-          onboardingConfig.default_account_type_company,
+          onboardingConfig.defaultCompanyAccountType,
           {
             shouldDirty: true,
             shouldValidate: true,
@@ -59,7 +58,7 @@ export const useOnboardingIntentControls = ({
       }
       setStepError(null);
     },
-    [form, intents, onboardingConfig.default_account_type_company, setStepError],
+    [form, intents, onboardingConfig.defaultCompanyAccountType, setStepError],
   );
 
   const handleClientKindChange = useCallback(
@@ -72,7 +71,7 @@ export const useOnboardingIntentControls = ({
       if (clientKind === 'individual') {
         form.setValue(
           'account_type',
-          onboardingConfig.default_account_type_individual,
+          onboardingConfig.individualAccountType,
           {
             shouldDirty: true,
             shouldValidate: true,
@@ -90,7 +89,7 @@ export const useOnboardingIntentControls = ({
 
       form.setValue(
         'account_type',
-        initialAccountType ?? onboardingConfig.default_account_type_company,
+        initialAccountType ?? onboardingConfig.defaultCompanyAccountType,
         {
           shouldDirty: true,
           shouldValidate: true,
@@ -104,8 +103,8 @@ export const useOnboardingIntentControls = ({
       form,
       initialAccountType,
       initialManualEntry,
-      onboardingConfig.default_account_type_company,
-      onboardingConfig.default_account_type_individual,
+      onboardingConfig.defaultCompanyAccountType,
+      onboardingConfig.individualAccountType,
       setManualEntry,
       setStepError,
     ],

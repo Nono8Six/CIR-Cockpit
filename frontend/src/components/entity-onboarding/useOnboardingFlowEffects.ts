@@ -1,7 +1,6 @@
 import { useEffect, type Dispatch, type RefObject, type SetStateAction } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 
-import type { ProductOnboardingConfig } from '../../../../shared/schemas/system/config.schema';
 import type { DirectoryCompanySearchResult } from '../../../../shared/schemas/system/directory.schema';
 
 import {
@@ -16,6 +15,7 @@ import type {
 } from './entityOnboarding.types';
 import { buildValues } from './entityOnboarding.utils';
 import type { EntityOnboardingStepper } from './entityOnboardingSteps';
+import type { OnboardingConfig } from './useOnboardingConfig';
 
 interface UseOnboardingFlowEffectsInput {
   activeAgencyId: string | null;
@@ -28,7 +28,7 @@ interface UseOnboardingFlowEffectsInput {
   initialManualEntry: boolean;
   isConfigReady: boolean;
   manualEntry: boolean;
-  onboardingConfig: ProductOnboardingConfig;
+  onboardingConfig: OnboardingConfig;
   open: boolean;
   resolvedIntent: OnboardingIntent;
   defaultClientKind: 'company' | 'individual';

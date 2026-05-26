@@ -2,8 +2,6 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { AgencyConfig } from '@/services/config';
 import {
-  DEFAULT_AGENCY_SETTINGS,
-  DEFAULT_APP_SETTINGS,
   type ConfigUsageSnapshot
 } from '../../../shared/schemas/system/config.schema';
 import { useConfigSnapshot } from '../hooks/cockpit-utils/useConfigSnapshot';
@@ -20,7 +18,6 @@ import SettingsActionDrawer from './settings/ui/SettingsActionDrawer';
 interface SettingsProps {
   config: AgencyConfig;
   canEditAgencySettings: boolean;
-  canEditProductSettings: boolean;
   agencyId: string | null;
 }
 
@@ -32,14 +29,12 @@ interface SettingsProps {
  * @param {SettingsProps} props - The component properties.
  * @param {AgencyConfig} props.config - Pre-loaded default configuration context.
  * @param {boolean} props.canEditAgencySettings - Flag indicating whether user can edit agency-level settings.
- * @param {boolean} props.canEditProductSettings - Flag indicating whether user can edit product-level settings.
  * @param {string | null} props.agencyId - The active agency ID.
  * @returns {JSX.Element} The rendered settings dashboard screen.
  */
 const Settings = ({
   config,
   canEditAgencySettings,
-  canEditProductSettings,
   agencyId
 }: SettingsProps) => {
   const snapshotQuery = useConfigSnapshot(agencyId, Boolean(agencyId));
@@ -59,12 +54,9 @@ const Settings = ({
     staleTime: 60_000
   });
   const snapshot = snapshotQuery.data ?? {
-    product: DEFAULT_APP_SETTINGS,
-    agency: DEFAULT_AGENCY_SETTINGS,
     references: {
       statuses: config.statuses,
       services: config.services,
-      entities: config.entities,
       families: config.families,
       interaction_types: config.interactionTypes,
       departments: []
@@ -73,30 +65,17 @@ const Settings = ({
   const {
     readOnly,
     isSaving,
-    allowManualEntryOverride,
-    defaultCompanyAccountTypeOverride,
-    productAllowManualEntry,
-    productDefaultCompanyAccountType,
-    productUiShellV2,
     families,
     services,
-    entities,
     interactionTypes,
     statuses,
     newFamily,
     newService,
-    newEntity,
     newInteractionType,
     newStatus,
     newStatusCategory,
-    setAllowManualEntryOverride,
-    setDefaultCompanyAccountTypeOverride,
-    setProductAllowManualEntry,
-    setProductDefaultCompanyAccountType,
-    setProductUiShellV2,
     setNewFamily,
     setNewService,
-    setNewEntity,
     setNewInteractionType,
     setNewStatus,
     setNewStatusCategory,
@@ -108,7 +87,6 @@ const Settings = ({
     renameItem,
     setFamilies,
     setServices,
-    setEntities,
     setInteractionTypes,
     addStatus,
     removeStatus,
@@ -120,11 +98,10 @@ const Settings = ({
   } = useSettingsState({
     snapshot,
     canEditAgencySettings,
-    canEditProductSettings,
     agencyId
   });
 
-  const [activeSection, setActiveSection] = useState<string>('general');
+  const [activeSection, setActiveSection] = useState<string>('workflow');
   const usage = usageQuery.data ?? null;
 
   return (
@@ -153,33 +130,19 @@ const Settings = ({
             readOnly={readOnly}
             activeSection={activeSection}
             canEditAgencySettings={canEditAgencySettings}
-            canEditProductSettings={canEditProductSettings}
             usage={usage}
             usageLoading={usageQuery.isLoading}
-            allowManualEntryOverride={allowManualEntryOverride}
-            defaultCompanyAccountTypeOverride={defaultCompanyAccountTypeOverride}
-            productAllowManualEntry={productAllowManualEntry}
-            productDefaultCompanyAccountType={productDefaultCompanyAccountType}
-            productUiShellV2={productUiShellV2}
             families={families}
             services={services}
-            entities={entities}
             interactionTypes={interactionTypes}
             statuses={statuses}
             newFamily={newFamily}
             newService={newService}
-            newEntity={newEntity}
             newInteractionType={newInteractionType}
             newStatus={newStatus}
             newStatusCategory={newStatusCategory}
-            setAllowManualEntryOverride={setAllowManualEntryOverride}
-            setDefaultCompanyAccountTypeOverride={setDefaultCompanyAccountTypeOverride}
-            setProductAllowManualEntry={setProductAllowManualEntry}
-            setProductDefaultCompanyAccountType={setProductDefaultCompanyAccountType}
-            setProductUiShellV2={setProductUiShellV2}
             setNewFamily={setNewFamily}
             setNewService={setNewService}
-            setNewEntity={setNewEntity}
             setNewInteractionType={setNewInteractionType}
             setNewStatus={setNewStatus}
             setNewStatusCategory={setNewStatusCategory}
@@ -189,7 +152,6 @@ const Settings = ({
             renameItem={renameItem}
             setFamilies={setFamilies}
             setServices={setServices}
-            setEntities={setEntities}
             setInteractionTypes={setInteractionTypes}
             setStatuses={setStatuses}
             addStatus={addStatus}

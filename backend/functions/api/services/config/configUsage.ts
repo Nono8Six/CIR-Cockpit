@@ -1,7 +1,6 @@
 import { asc, eq, sql } from 'drizzle-orm';
 
 import {
-  agency_entities,
   agency_families,
   agency_interaction_types,
   agency_services,
@@ -40,8 +39,7 @@ const EMPTY_DIMENSIONS: Record<ConfigUsageDimension, ConfigUsageRow[]> = {
   statuses: [],
   services: [],
   families: [],
-  interaction_types: [],
-  entities: []
+  interaction_types: []
 };
 
 const normalizeKey = (value: string): string => value.trim().toLowerCase();
@@ -138,9 +136,8 @@ const loadLabelReferences = async (
   services: ReferenceRow[];
   families: ReferenceRow[];
   interaction_types: ReferenceRow[];
-  entities: ReferenceRow[];
 }> => {
-  const [services, families, interactionTypes, entities] = await Promise.all([
+  const [services, families, interactionTypes] = await Promise.all([
     db
       .select({ id: agency_services.id, label: agency_services.label, sort_order: agency_services.sort_order })
       .from(agency_services)
@@ -159,15 +156,10 @@ const loadLabelReferences = async (
       })
       .from(agency_interaction_types)
       .where(eq(agency_interaction_types.agency_id, agencyId))
-      .orderBy(asc(agency_interaction_types.sort_order)),
-    db
-      .select({ id: agency_entities.id, label: agency_entities.label, sort_order: agency_entities.sort_order })
-      .from(agency_entities)
-      .where(eq(agency_entities.agency_id, agencyId))
-      .orderBy(asc(agency_entities.sort_order))
+      .orderBy(asc(agency_interaction_types.sort_order))
   ]);
 
-  return { services, families, interaction_types: interactionTypes, entities };
+  return { services, families, interaction_types: interactionTypes };
 };
 
 const loadUsageCounts = async (
@@ -178,9 +170,8 @@ const loadUsageCounts = async (
   services: UsageCountRow[];
   families: UsageCountRow[];
   interaction_types: UsageCountRow[];
-  entities: UsageCountRow[];
 }> => {
-  const [statuses, services, interactionTypes, entities] = await Promise.all([
+  const [statuses, services, interactionTypes] = await Promise.all([
     db
       .select({
         reference_id: interactions.status_id,
@@ -199,12 +190,7 @@ const loadUsageCounts = async (
       .select({ label: interactions.interaction_type, usage_count: sql<number>`count(*)::int` })
       .from(interactions)
       .where(eq(interactions.agency_id, agencyId))
-      .groupBy(interactions.interaction_type),
-    db
-      .select({ label: interactions.entity_type, usage_count: sql<number>`count(*)::int` })
-      .from(interactions)
-      .where(eq(interactions.agency_id, agencyId))
-      .groupBy(interactions.entity_type)
+      .groupBy(interactions.interaction_type)
   ]);
 
   const familyRows = await db.execute<UsageCountRow>(sql`
@@ -214,7 +200,7 @@ const loadUsageCounts = async (
     group by family
   `);
 
-  return { statuses, services, families: familyRows, interaction_types: interactionTypes, entities };
+  return { statuses, services, families: familyRows, interaction_types: interactionTypes };
 };
 
 export const getConfigUsage = async (
@@ -241,8 +227,7 @@ export const getConfigUsage = async (
       statuses: mergeStatusUsage(statusReferences, usage.statuses),
       services: mergeLabelUsage(references.services, usage.services),
       families: mergeLabelUsage(references.families, usage.families),
-      interaction_types: mergeLabelUsage(references.interaction_types, usage.interaction_types),
-      entities: mergeLabelUsage(references.entities, usage.entities)
+      interaction_types: mergeLabelUsage(references.interaction_types, usage.interaction_types)
     };
 
     return {

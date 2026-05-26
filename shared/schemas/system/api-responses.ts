@@ -193,12 +193,10 @@ export const configGetResponseSchema = apiSuccessSchema.extend({
 export const configUsageResponseSchema = apiSuccessSchema.extend({
   usage: configUsageSnapshotSchema
 });
-export const configSaveAgencyResponseSchema = apiSuccessSchema;
 export const configReferenceActionResponseSchema = apiSuccessSchema.extend({
   usage_count: z.number().int().nonnegative(),
   migrated_interactions_count: z.number().int().nonnegative().optional()
 });
-export const configSaveProductResponseSchema = apiSuccessSchema;
 export const directoryListResponseSchema = apiSuccessSchema.extend({
   rows: z.array(directoryListRowSchema),
   total: z.number().int().nonnegative().optional(),
@@ -383,9 +381,7 @@ export type DataConfigResponse = z.infer<typeof dataConfigResponseSchema>;
 export type DataProfileResponse = z.infer<typeof dataProfileResponseSchema>;
 export type ConfigGetResponse = z.infer<typeof configGetResponseSchema>;
 export type ConfigUsageResponse = z.infer<typeof configUsageResponseSchema>;
-export type ConfigSaveAgencyResponse = z.infer<typeof configSaveAgencyResponseSchema>;
 export type ConfigReferenceActionResponse = z.infer<typeof configReferenceActionResponseSchema>;
-export type ConfigSaveProductResponse = z.infer<typeof configSaveProductResponseSchema>;
 export type DirectoryListResponse = z.infer<typeof directoryListResponseSchema>;
 export type DirectoryOptionsAgenciesResponse = z.infer<typeof directoryOptionsAgenciesResponseSchema>;
 export type DirectoryOptionsCommercialsResponse = z.infer<typeof directoryOptionsCommercialsResponseSchema>;

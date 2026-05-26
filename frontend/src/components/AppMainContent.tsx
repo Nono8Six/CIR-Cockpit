@@ -16,7 +16,6 @@ const AppMainContent = ({
   entitySearchLoading,
   canAccessSettings,
   canEditAgencySettings,
-  canEditProductSettings,
   canAccessAdmin,
   focusedClientId,
   focusedContactId,
@@ -48,7 +47,6 @@ const AppMainContent = ({
               entitySearchLoading={entitySearchLoading}
               canAccessSettings={canAccessSettings}
               canEditAgencySettings={canEditAgencySettings}
-              canEditProductSettings={canEditProductSettings}
               canAccessAdmin={canAccessAdmin}
               focusedClientId={focusedClientId}
               focusedContactId={focusedContactId}

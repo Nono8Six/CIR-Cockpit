@@ -1,8 +1,6 @@
 import { useMemo } from 'react';
 import { useWatch, type UseFormReturn } from 'react-hook-form';
 
-import type { ProductOnboardingConfig } from '../../../../shared/schemas/system/config.schema';
-
 import {
   type OnboardingFormInput,
   type OnboardingValues,
@@ -12,12 +10,13 @@ import type {
   OnboardingIntent,
 } from './entityOnboarding.types';
 import { buildValues } from './entityOnboarding.utils';
+import type { OnboardingConfig } from './useOnboardingConfig';
 
 interface UseOnboardingValuesInput {
   activeAgencyId: string | null;
   form: UseFormReturn<OnboardingFormInput, unknown, OnboardingValues>;
   initialEntity: EntityOnboardingSeed | null;
-  onboardingConfig: ProductOnboardingConfig;
+  onboardingConfig: OnboardingConfig;
   resolvedIntent: OnboardingIntent;
 }
 

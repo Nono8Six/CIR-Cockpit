@@ -37,7 +37,6 @@ export type IntegrationContext = {
   interactionType: string;
   configStatuses: Array<Pick<StatusRow, 'id' | 'label' | 'category'>>;
   configServices: string[];
-  configEntities: string[];
   configFamilies: string[];
   configInteractionTypes: string[];
 };
@@ -280,10 +279,6 @@ const buildContext = async (): Promise<IntegrationContext> => {
     `/agency_services?select=label&agency_id=eq.${agencyId}&order=sort_order.asc`,
     userSession.accessToken
   );
-  const entityRows = await fetchRows(
-    `/agency_entities?select=label&agency_id=eq.${agencyId}&order=sort_order.asc`,
-    userSession.accessToken
-  );
   const familyRows = await fetchRows(
     `/agency_families?select=label&agency_id=eq.${agencyId}&order=sort_order.asc`,
     userSession.accessToken
@@ -301,7 +296,6 @@ const buildContext = async (): Promise<IntegrationContext> => {
       category: status.category
     })),
     configServices: serviceRows.map((row, index) => toLabel(row, 'agency_services', index)),
-    configEntities: entityRows.map((row, index) => toLabel(row, 'agency_entities', index)),
     configFamilies: familyRows.map((row, index) => toLabel(row, 'agency_families', index)),
     configInteractionTypes: interactionTypeRows.map((row, index) =>
       toLabel(row, 'agency_interaction_types', index)

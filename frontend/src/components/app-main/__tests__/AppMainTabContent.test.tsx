@@ -23,7 +23,6 @@ vi.mock('@/components/AdminPanel', () => ({
 const config: AgencyConfig = {
   statuses: [],
   services: [],
-  entities: [],
   families: [],
   interactionTypes: []
 };
@@ -39,7 +38,6 @@ const baseProps = {
   entitySearchLoading: false,
   canAccessSettings: true,
   canEditAgencySettings: true,
-  canEditProductSettings: false,
   canAccessAdmin: true,
   focusedClientId: null,
   focusedContactId: null,

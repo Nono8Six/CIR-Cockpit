@@ -1,10 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ConfigReferenceActionInput } from '../../../../shared/schemas/system/config.schema';
-import { saveConfigReferenceAction } from '@/services/config';
+import type { DataConfigPayload } from '../../../../shared/schemas/system/data.schema';
+import { saveConfigReferenceAction, saveSettingsReferences } from '@/services/config';
 import { handleUiError } from '@/services/errors/handleUiError';
 import { agencyConfigKey, configUsageKey } from '@/services/query/queryKeys';
-import { useSaveAgencyConfig } from '../admin/agencies/actions/useSaveAgencyConfig';
-import { useSaveProductConfig } from '../entities/core/useSaveProductConfig';
 
 /**
  * Custom hook to manage React Query mutations for settings actions and updates.
@@ -14,8 +13,28 @@ import { useSaveProductConfig } from '../entities/core/useSaveProductConfig';
  */
 export const useSettingsMutations = (agencyId: string | null) => {
   const queryClient = useQueryClient();
-  const saveAgencyConfigMutation = useSaveAgencyConfig(agencyId);
-  const saveProductConfigMutation = useSaveProductConfig(agencyId);
+
+  const saveReferencesMutation = useMutation({
+    mutationFn: (input: DataConfigPayload) =>
+      saveSettingsReferences(input).match(
+        (response) => response,
+        (error) => {
+          throw error;
+        }
+      ),
+    onSuccess: async () => {
+      if (!agencyId) return;
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: agencyConfigKey(agencyId) }),
+        queryClient.invalidateQueries({ queryKey: configUsageKey(agencyId) })
+      ]);
+    },
+    onError: (error) => {
+      handleUiError(error, 'Impossible de sauvegarder les referentiels.', {
+        source: 'useSettingsState.saveReferences'
+      });
+    }
+  });
 
   const referenceActionMutation = useMutation({
     mutationFn: (input: ConfigReferenceActionInput) =>
@@ -40,8 +59,7 @@ export const useSettingsMutations = (agencyId: string | null) => {
   });
 
   return {
-    saveAgencyConfigMutation,
-    saveProductConfigMutation,
+    saveReferencesMutation,
     referenceActionMutation
   };
 };

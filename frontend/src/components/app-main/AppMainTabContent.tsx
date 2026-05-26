@@ -42,7 +42,6 @@ type AppMainTabContentProps = {
   entitySearchLoading: boolean;
   canAccessSettings: boolean;
   canEditAgencySettings: boolean;
-  canEditProductSettings: boolean;
   canAccessAdmin: boolean;
   focusedClientId: string | null;
   focusedContactId: string | null;
@@ -67,7 +66,6 @@ const AppMainTabContent = (props: AppMainTabContentProps) => {
     entitySearchLoading,
     canAccessSettings,
     canEditAgencySettings,
-    canEditProductSettings,
     canAccessAdmin,
     onSaveInteraction,
     onRequestConvert,
@@ -155,7 +153,6 @@ const AppMainTabContent = (props: AppMainTabContentProps) => {
                   <Settings
                     config={config}
                     canEditAgencySettings={canEditAgencySettings}
-                    canEditProductSettings={canEditProductSettings}
                     agencyId={activeAgencyId}
                   />
                 </Suspense>

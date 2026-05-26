@@ -2,27 +2,18 @@ import { asc, eq } from 'drizzle-orm';
 import type { ZodType } from 'zod/v4';
 
 import {
-  agency_entities,
   agency_families,
   agency_interaction_types,
   agency_services,
-  agency_settings,
   agency_statuses,
-  app_settings,
   reference_departments
 } from '../../../../drizzle/schema.ts';
 import type { ConfigGetResponse } from '../../../../../shared/schemas/system/api-responses.ts';
 import {
-  agencySettingsSchema,
-  appSettingsSchema,
   configStatusCategorySchema,
-  DEFAULT_AGENCY_SETTINGS,
-  DEFAULT_APP_SETTINGS,
   EMPTY_AGENCY_REFERENCE_CONFIG,
   type AgencyReferenceConfig,
-  type AgencySettings,
   type AgencyStatusConfig,
-  type AppSettings,
   type ConfigStatusCategory,
   type ConfigGetInput,
   type DepartmentReference
@@ -93,62 +84,6 @@ export const mapAgencyReferenceStatuses = (
     category: parseStatusCategory(row.category)
   }));
 
-const loadAppSettings = async (db: DbClient): Promise<AppSettings> => {
-  try {
-    const rows = await db
-      .select({
-        feature_flags: app_settings.feature_flags,
-        onboarding: app_settings.onboarding
-      })
-      .from(app_settings)
-      .where(eq(app_settings.id, 1))
-      .limit(1);
-
-    const row = rows[0];
-    if (!row) {
-      return DEFAULT_APP_SETTINGS;
-    }
-
-    return parseStoredJson(row, appSettingsSchema, 'les parametres produit');
-  } catch (error) {
-    if (typeof error === 'object' && error !== null && Reflect.get(error, 'code') === 'DB_READ_FAILED') {
-      throw error;
-    }
-    throw httpError(500, 'DB_READ_FAILED', 'Impossible de charger les parametres produit.');
-  }
-};
-
-const loadAgencySettings = async (
-  db: DbClient,
-  agencyId: string | null
-): Promise<AgencySettings> => {
-  if (!agencyId) {
-    return DEFAULT_AGENCY_SETTINGS;
-  }
-
-  try {
-    const rows = await db
-      .select({
-        onboarding: agency_settings.onboarding
-      })
-      .from(agency_settings)
-      .where(eq(agency_settings.agency_id, agencyId))
-      .limit(1);
-
-    const row = rows[0];
-    if (!row) {
-      return DEFAULT_AGENCY_SETTINGS;
-    }
-
-    return parseStoredJson({ onboarding: row.onboarding }, agencySettingsSchema, "les parametres d'agence");
-  } catch (error) {
-    if (typeof error === 'object' && error !== null && Reflect.get(error, 'code') === 'DB_READ_FAILED') {
-      throw error;
-    }
-    throw httpError(500, 'DB_READ_FAILED', "Impossible de charger les parametres d'agence.");
-  }
-};
-
 const loadDepartments = async (db: DbClient): Promise<DepartmentReference[]> => {
   try {
     return await db
@@ -175,7 +110,7 @@ const loadAgencyReferences = async (
   }
 
   try {
-    const [statuses, services, entities, families, interactionTypes] = await Promise.all([
+    const [statuses, services, families, interactionTypes] = await Promise.all([
       db
         .select({
           id: agency_statuses.id,
@@ -195,11 +130,6 @@ const loadAgencyReferences = async (
         .where(eq(agency_services.agency_id, agencyId))
         .orderBy(asc(agency_services.sort_order)),
       db
-        .select({ label: agency_entities.label })
-        .from(agency_entities)
-        .where(eq(agency_entities.agency_id, agencyId))
-        .orderBy(asc(agency_entities.sort_order)),
-      db
         .select({ label: agency_families.label })
         .from(agency_families)
         .where(eq(agency_families.agency_id, agencyId))
@@ -214,7 +144,6 @@ const loadAgencyReferences = async (
     return {
       statuses: mapAgencyReferenceStatuses(statuses),
       services: services.map((row) => row.label),
-      entities: entities.map((row) => row.label),
       families: families.map((row) => row.label),
       interaction_types: interactionTypes.map((row) => row.label)
     };
@@ -235,9 +164,7 @@ export const getConfigSnapshot = async (
   await ensureDataRateLimit('config:get', authContext.userId);
   const resolvedAgencyId = resolveConfigAgencyId(authContext, input.agency_id);
 
-  const [product, agency, departments, references] = await Promise.all([
-    loadAppSettings(db),
-    loadAgencySettings(db, resolvedAgencyId),
+  const [departments, references] = await Promise.all([
     loadDepartments(db),
     loadAgencyReferences(db, resolvedAgencyId)
   ]);
@@ -246,8 +173,6 @@ export const getConfigSnapshot = async (
     request_id: requestId,
     ok: true,
     snapshot: {
-      product,
-      agency,
       references: {
         ...references,
         departments

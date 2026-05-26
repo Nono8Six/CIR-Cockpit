@@ -1,13 +1,18 @@
 import { useMemo } from 'react';
 
-import {
-  DEFAULT_AGENCY_SETTINGS,
-  DEFAULT_APP_SETTINGS,
-  resolveOnboardingConfig,
-  type ProductOnboardingConfig,
-} from '../../../../shared/schemas/system/config.schema';
-
 import { useConfigSnapshot } from '../../hooks/cockpit-utils/useConfigSnapshot';
+
+export type OnboardingConfig = {
+  allowManualEntry: true;
+  defaultCompanyAccountType: 'term';
+  individualAccountType: 'cash';
+};
+
+export const ONBOARDING_CONFIG: OnboardingConfig = {
+  allowManualEntry: true,
+  defaultCompanyAccountType: 'term',
+  individualAccountType: 'cash',
+};
 
 export type DepartmentOption = {
   value: string;
@@ -15,7 +20,7 @@ export type DepartmentOption = {
 };
 
 export interface OnboardingConfigState {
-  onboardingConfig: ProductOnboardingConfig;
+  onboardingConfig: OnboardingConfig;
   departmentOptions: DepartmentOption[];
   isConfigReady: boolean;
 }
@@ -29,25 +34,14 @@ export const useOnboardingConfig = (
     open && Boolean(activeAgencyId),
   );
   const configSnapshot = configSnapshotQuery.data ?? {
-    product: DEFAULT_APP_SETTINGS,
-    agency: DEFAULT_AGENCY_SETTINGS,
     references: {
       statuses: [],
       services: [],
-      entities: [],
       families: [],
       interaction_types: [],
       departments: [],
     },
   };
-  const onboardingConfig = useMemo(
-    () =>
-      resolveOnboardingConfig(
-        configSnapshot.product.onboarding,
-        configSnapshot.agency.onboarding,
-      ),
-    [configSnapshot.agency.onboarding, configSnapshot.product.onboarding],
-  );
   const departmentOptions = useMemo<DepartmentOption[]>(
     () =>
       configSnapshot.references.departments.map((department) => ({
@@ -62,7 +56,7 @@ export const useOnboardingConfig = (
   const isConfigReady = !open || !activeAgencyId || !configSnapshotQuery.isLoading;
 
   return {
-    onboardingConfig,
+    onboardingConfig: ONBOARDING_CONFIG,
     departmentOptions,
     isConfigReady,
   };

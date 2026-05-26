@@ -11,9 +11,6 @@ import {
 } from './use-settings-state.helpers';
 import {
   buildSettingsFormDefaultValues,
-  toAgencyOnboardingPayload,
-  type AccountTypeOverrideValue,
-  type BooleanOverrideValue,
   type SettingsFormValues,
 } from './settingsFormSchema';
 
@@ -25,7 +22,6 @@ import { useReferenceStatuses } from './use-reference-statuses';
 type UseSettingsStateParams = {
   snapshot: ResolvedConfigSnapshot;
   canEditAgencySettings: boolean;
-  canEditProductSettings: boolean;
   agencyId: string | null;
 };
 
@@ -38,28 +34,20 @@ type UseSettingsStateParams = {
 export const useSettingsState = ({
   snapshot,
   canEditAgencySettings,
-  canEditProductSettings,
   agencyId,
 }: UseSettingsStateParams) => {
-  const readOnly = !canEditAgencySettings && !canEditProductSettings;
+  const readOnly = !canEditAgencySettings;
 
-  const { saveAgencyConfigMutation, saveProductConfigMutation, referenceActionMutation } = useSettingsMutations(agencyId);
+  const { saveReferencesMutation, referenceActionMutation } = useSettingsMutations(agencyId);
 
   const {
     form,
-    allowManualEntryOverride,
-    defaultCompanyAccountTypeOverride,
-    productAllowManualEntry,
-    productDefaultCompanyAccountType,
-    productUiShellV2,
     families,
     services,
-    entities,
     interactionTypes,
     statuses,
     newFamily,
     newService,
-    newEntity,
     newInteractionType,
     newStatus,
     newStatusCategory
@@ -81,51 +69,8 @@ export const useSettingsState = ({
     [setValue],
   );
 
-  const setBooleanField = useCallback(
-    (field: keyof SettingsFormValues, value: boolean) => {
-      setValue(field, value as never, { shouldDirty: true, shouldValidate: true });
-    },
-    [setValue],
-  );
-
-  const setAllowManualEntryOverride = useCallback(
-    (value: BooleanOverrideValue) => {
-      setValue('agencyAllowManualEntry', value, { shouldDirty: true, shouldValidate: true });
-    },
-    [setValue],
-  );
-
-  const setDefaultCompanyAccountTypeOverride = useCallback(
-    (value: AccountTypeOverrideValue) => {
-      setValue('agencyDefaultCompanyAccountType', value, { shouldDirty: true, shouldValidate: true });
-    },
-    [setValue],
-  );
-
-  const setProductAllowManualEntry = useCallback(
-    (value: boolean) => {
-      setBooleanField('productAllowManualEntry', value);
-    },
-    [setBooleanField],
-  );
-
-  const setProductDefaultCompanyAccountType = useCallback(
-    (value: 'term' | 'cash') => {
-      setValue('productDefaultCompanyAccountType', value, { shouldDirty: true, shouldValidate: true });
-    },
-    [setValue],
-  );
-
-  const setProductUiShellV2 = useCallback(
-    (value: boolean) => {
-      setBooleanField('productUiShellV2', value);
-    },
-    [setBooleanField],
-  );
-
   const setNewFamily = useCallback((value: string) => setStringField('newFamily', value), [setStringField]);
   const setNewService = useCallback((value: string) => setStringField('newService', value), [setStringField]);
-  const setNewEntity = useCallback((value: string) => setStringField('newEntity', value), [setStringField]);
   const setNewInteractionType = useCallback(
     (value: string) => setStringField('newInteractionType', value),
     [setStringField],
@@ -141,7 +86,6 @@ export const useSettingsState = ({
 
   const setFamilies = useCallback((next: string[]) => setArrayField('families', next), [setArrayField]);
   const setServices = useCallback((next: string[]) => setArrayField('services', next), [setArrayField]);
-  const setEntities = useCallback((next: string[]) => setArrayField('entities', next), [setArrayField]);
   const setInteractionTypes = useCallback(
     (next: string[]) => setArrayField('interactionTypes', next),
     [setArrayField],
@@ -162,37 +106,26 @@ export const useSettingsState = ({
     const submit = handleSubmit(
       async (values) => {
         try {
-          if (canEditAgencySettings) {
-            await saveAgencyConfigMutation.mutateAsync({
-              agency_id: values.agency_id,
-              onboarding: toAgencyOnboardingPayload(values),
-              references: {
-                statuses: normalizeStatusesForUi(values.statuses).map((status) => ({
-                  id: status.id,
-                  label: status.label,
-                  category: status.category,
-                })),
-                services: values.services,
-                entities: values.entities,
-                families: values.families,
-                interaction_types: values.interactionTypes,
-              },
-            });
-          }
-
-          if (canEditProductSettings) {
-            await saveProductConfigMutation.mutateAsync({
-              feature_flags: {
-                ui_shell_v2: values.productUiShellV2,
-              },
-              onboarding: {
-                allow_manual_entry: values.productAllowManualEntry,
-                default_account_type_company: values.productDefaultCompanyAccountType,
-                default_account_type_individual: snapshot.product.onboarding.default_account_type_individual,
-              },
-            });
-          }
-
+          await saveReferencesMutation.mutateAsync({
+            agency_id: values.agency_id,
+            statuses: normalizeStatusesForUi(values.statuses).map((status) => ({
+              id: status.id,
+              label: status.label,
+              category: status.category,
+            })),
+            services: values.services,
+            families: values.families,
+            interactionTypes: values.interactionTypes,
+          });
+          reset({
+            ...values,
+            statuses: normalizeStatusesForUi(values.statuses),
+            newFamily: '',
+            newService: '',
+            newInteractionType: '',
+            newStatus: '',
+            newStatusCategory: 'todo',
+          });
           notifySuccess('Configuration sauvegardee');
         } catch {
           return;
@@ -202,7 +135,6 @@ export const useSettingsState = ({
         const firstError =
           formState.errors.statuses?.message ??
           formState.errors.services?.message ??
-          formState.errors.entities?.message ??
           formState.errors.families?.message ??
           formState.errors.interactionTypes?.message ??
           formState.errors.agency_id?.message ??
@@ -243,31 +175,18 @@ export const useSettingsState = ({
 
   return {
     readOnly,
-    isSaving: saveAgencyConfigMutation.isPending || saveProductConfigMutation.isPending || referenceActionMutation.isPending,
-    allowManualEntryOverride,
-    defaultCompanyAccountTypeOverride,
-    productAllowManualEntry,
-    productDefaultCompanyAccountType,
-    productUiShellV2,
+    isSaving: saveReferencesMutation.isPending || referenceActionMutation.isPending,
     families,
     services,
-    entities,
     interactionTypes,
     statuses,
     newFamily,
     newService,
-    newEntity,
     newInteractionType,
     newStatus,
     newStatusCategory,
-    setAllowManualEntryOverride,
-    setDefaultCompanyAccountTypeOverride,
-    setProductAllowManualEntry,
-    setProductDefaultCompanyAccountType,
-    setProductUiShellV2,
     setNewFamily,
     setNewService,
-    setNewEntity,
     setNewInteractionType,
     setNewStatus,
     setNewStatusCategory,
@@ -284,7 +203,6 @@ export const useSettingsState = ({
     renameStatus,
     setFamilies,
     setServices,
-    setEntities,
     setInteractionTypes,
     setStatuses,
     isDirty: formState.isDirty,

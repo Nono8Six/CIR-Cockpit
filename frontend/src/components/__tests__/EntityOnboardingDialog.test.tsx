@@ -12,23 +12,9 @@ const useDirectoryDuplicatesMock = vi.fn();
 const useConfigSnapshotMock = vi.fn();
 
 const BASE_CONFIG_SNAPSHOT: ResolvedConfigSnapshot = {
-  product: {
-    feature_flags: {
-      ui_shell_v2: false
-    },
-    onboarding: {
-      allow_manual_entry: true,
-      default_account_type_company: 'term',
-      default_account_type_individual: 'cash'
-    }
-  },
-  agency: {
-    onboarding: {}
-  },
   references: {
     statuses: [],
     services: [],
-    entities: [],
     families: [],
     interaction_types: [],
     departments: [

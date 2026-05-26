@@ -5,8 +5,6 @@ import {
   configGetResponseSchema,
   configUsageResponseSchema,
   configReferenceActionResponseSchema,
-  configSaveAgencyResponseSchema,
-  configSaveProductResponseSchema,
   adminAgenciesResponseSchema,
   adminAuditLogsResponseSchema,
   adminUsersListResponseSchema,
@@ -40,9 +38,7 @@ import {
 import {
   configGetInputSchema,
   configUsageInputSchema,
-  configReferenceActionInputSchema,
-  configSaveAgencyInputSchema,
-  configSaveProductInputSchema
+  configReferenceActionInputSchema
 } from '../schemas/system/config.schema.ts';
 import {
   dataConfigPayloadSchema,
@@ -142,14 +138,6 @@ const appRouterType = t.router({
     reference: t.procedure
       .input(configReferenceActionInputSchema)
       .output(configReferenceActionResponseSchema)
-      .mutation(() => undefined as never),
-    'save-agency': t.procedure
-      .input(configSaveAgencyInputSchema)
-      .output(configSaveAgencyResponseSchema)
-      .mutation(() => undefined as never),
-    'save-product': t.procedure
-      .input(configSaveProductInputSchema)
-      .output(configSaveProductResponseSchema)
       .mutation(() => undefined as never)
   }),
   directory: t.router({

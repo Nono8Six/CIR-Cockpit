@@ -85,7 +85,6 @@ const App = () => {
   );
   const canAccessSettings = resolvedUserRole !== null && resolvedUserRole !== 'tcs';
   const canEditAgencySettings = canAccessSettings;
-  const canEditProductSettings = resolvedUserRole === 'super_admin';
   const canAccessAdmin = canAccessSettings;
   const viewState = useAppViewState({
     pathname,
@@ -249,7 +248,6 @@ const App = () => {
         entitySearchLoading: queries.entitySearchQuery.isLoading,
         canAccessSettings,
         canEditAgencySettings,
-        canEditProductSettings,
         canAccessAdmin,
         focusedClientId: viewState.focusedClientId,
         focusedContactId: viewState.focusedContactId,
