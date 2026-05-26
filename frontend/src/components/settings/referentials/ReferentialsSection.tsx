@@ -1,9 +1,14 @@
-import { Boxes, Users2, Tags, PhoneCall, LayoutGrid } from 'lucide-react';
-import { Badge } from '../../ui/data-display/Badge';
+import { AlertTriangle, Boxes, PhoneCall, Tags, Users2 } from 'lucide-react';
+import type {
+  ConfigUsageSnapshot,
+  EditableConfigReferenceDimension
+} from '../../../../../shared/schemas/system/config.schema';
+import SettingsSectionShell from '../ui/SettingsSectionShell';
 import ReferentialColumn from './ReferentialColumn';
 
 type ReferentialsSectionProps = {
   readOnly: boolean;
+  usage: ConfigUsageSnapshot | null;
   families: string[];
   services: string[];
   entities: string[];
@@ -17,16 +22,30 @@ type ReferentialsSectionProps = {
   setNewEntity: (value: string) => void;
   setNewInteractionType: (value: string) => void;
   addItem: (
+    dimension: EditableConfigReferenceDimension,
     item: string,
     list: string[],
     setList: (list: string[]) => void,
     clearInput: () => void,
     uppercase?: boolean,
   ) => void;
-  removeItem: (index: number, list: string[], setList: (list: string[]) => void) => void;
+  removeItem: (
+    dimension: EditableConfigReferenceDimension,
+    index: number,
+    list: string[],
+    setList: (list: string[]) => void
+  ) => void;
   updateItem: (
     index: number,
     value: string,
+    list: string[],
+    setList: (list: string[]) => void,
+    uppercase?: boolean,
+  ) => void;
+  renameItem: (
+    dimension: EditableConfigReferenceDimension,
+    index: number,
+    nextLabel: string,
     list: string[],
     setList: (list: string[]) => void,
     uppercase?: boolean,
@@ -37,34 +56,9 @@ type ReferentialsSectionProps = {
   setInteractionTypes: (next: string[]) => void;
 };
 
-/**
- * Section grouping all referentials in a beautiful, interactive responsive grid.
- *
- * @param {ReferentialsSectionProps} props - The component props.
- * @param {boolean} props.readOnly - Read-only permissions state.
- * @param {string[]} props.families - List of families.
- * @param {string[]} props.services - List of services.
- * @param {string[]} props.entities - List of entities.
- * @param {string[]} props.interactionTypes - List of interactions.
- * @param {string} props.newFamily - Input for new family.
- * @param {string} props.newService - Input for new service.
- * @param {string} props.newEntity - Input for new entity.
- * @param {string} props.newInteractionType - Input for new interaction.
- * @param {function} props.setNewFamily - State modifier for family input.
- * @param {function} props.setNewService - State modifier for service input.
- * @param {function} props.setNewEntity - State modifier for entity input.
- * @param {function} props.setNewInteractionType - State modifier for interaction input.
- * @param {function} props.addItem - Helper function to add elements.
- * @param {function} props.removeItem - Helper function to remove elements.
- * @param {function} props.updateItem - Helper function to update elements.
- * @param {function} props.setFamilies - Callback to update families list.
- * @param {function} props.setServices - Callback to update services list.
- * @param {function} props.setEntities - Callback to update entities list.
- * @param {function} props.setInteractionTypes - Callback to update interactions list.
- * @returns {JSX.Element} The rendered referentials grid section.
- */
 const ReferentialsSection = ({
   readOnly,
+  usage,
   families,
   services,
   entities,
@@ -80,118 +74,147 @@ const ReferentialsSection = ({
   addItem,
   removeItem,
   updateItem,
+  renameItem,
   setFamilies,
   setServices,
   setEntities,
   setInteractionTypes,
 }: ReferentialsSectionProps) => {
+  const dimensions = usage?.dimensions;
+  const orphanRows = [
+    ...(dimensions?.services ?? []),
+    ...(dimensions?.families ?? []),
+    ...(dimensions?.entities ?? []),
+    ...(dimensions?.interaction_types ?? [])
+  ].filter((row) => row.state === 'used_not_in_reference');
+
   return (
-    <section
+    <SettingsSectionShell
       id="settings-section-referentials"
-      className="scroll-mt-6 rounded-xl border border-border/80 bg-card p-6 shadow-sm transition-all hover:shadow-md"
+      title="Listes de saisie des interactions"
+      description={"Ces valeurs alimentent directement la saisie : types de tiers, service appelé, familles produits et type d'interaction."}
+      icon={Boxes}
+      badge={readOnly ? 'Lecture seule' : 'Édition'}
+      badgeTone={readOnly ? 'warning' : 'default'}
     >
-      <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <LayoutGrid className="size-4" />
-            </div>
-            <h3 className="text-sm font-semibold text-foreground">
-              Référentiels et listes de valeurs
-            </h3>
-          </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Gérez les valeurs globales utilisées dans les différents modules et formulaires de l&apos;application. Glissez-déposez pour réordonner.
+      {orphanRows.length > 0 && (
+        <div className="mb-3 border border-amber-300 bg-amber-50 p-3">
+          <h4 className="mb-2 flex items-center gap-2 text-xs font-semibold text-amber-950">
+            <AlertTriangle className="size-4" aria-hidden="true" />
+            Valeurs déjà utilisées mais absentes des listes
+          </h4>
+          <p className="mb-2 max-w-[72ch] text-xs leading-relaxed text-amber-950/80">
+            Ces libellés existent dans des interactions historiques. Ils sont affichés ici pour éviter
+            de croire qu&apos;une suppression de liste efface l&apos;historique.
           </p>
+          <div className="flex flex-wrap gap-2">
+            {orphanRows.map((row) => (
+              <span
+                key={`${row.label}-${row.usage_count}`}
+                className="border border-amber-300 bg-amber-50 px-2 py-1 text-[11px] text-amber-950"
+              >
+                {row.label} · {row.usage_count}
+              </span>
+            ))}
+          </div>
         </div>
-        <Badge
-          variant="outline"
-          className="w-fit border-border bg-surface-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground"
-        >
-          {readOnly ? 'Lecture Seule' : 'Édition'}
-        </Badge>
-      </div>
+      )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {/* Familles */}
-        <ReferentialColumn
-          title="Familles produits"
-          icon={Boxes}
-          namePrefix="families"
-          count={families.length}
-          list={families}
-          setList={setFamilies}
-          newItem={newFamily}
-          setNewItem={setNewFamily}
-          onAdd={() => addItem(newFamily, families, setFamilies, () => setNewFamily(''), true)}
-          onRemove={(index) => removeItem(index, families, setFamilies)}
-          onUpdate={(index, value) => updateItem(index, value, families, setFamilies, true)}
-          placeholder="NOUVELLE FAMILLE..."
-          uppercase
-          readOnly={readOnly}
-        />
-
-        {/* Services */}
-        <ReferentialColumn
-          title="Services"
-          icon={Users2}
-          namePrefix="services"
-          count={services.length}
-          list={services}
-          setList={setServices}
-          newItem={newService}
-          setNewItem={setNewService}
-          onAdd={() => addItem(newService, services, setServices, () => setNewService(''))}
-          onRemove={(index) => removeItem(index, services, setServices)}
-          onUpdate={(index, value) => updateItem(index, value, services, setServices)}
-          placeholder="Nouveau service..."
-          readOnly={readOnly}
-        />
-
-        {/* Types de tiers */}
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,22rem),1fr))] items-start gap-3">
         <ReferentialColumn
           title="Types de tiers"
+          description="Libellés métier proposés pour qualifier le tiers rattaché à une interaction."
           icon={Tags}
           namePrefix="entities"
           count={entities.length}
           list={entities}
+          usageRows={dimensions ? dimensions.entities : null}
           setList={setEntities}
           newItem={newEntity}
           setNewItem={setNewEntity}
-          onAdd={() => addItem(newEntity, entities, setEntities, () => setNewEntity(''))}
-          onRemove={(index) => removeItem(index, entities, setEntities)}
+          onAdd={() => addItem('entities', newEntity, entities, setEntities, () => setNewEntity(''))}
+          onRemove={(index) => removeItem('entities', index, entities, setEntities)}
           onUpdate={(index, value) => updateItem(index, value, entities, setEntities)}
-          placeholder="Ex: Client Export..."
+          onRename={(index, value) => renameItem('entities', index, value, entities, setEntities)}
+          placeholder="Ex: Client, Prospect…"
+          addLabel="Ajouter un type de tiers"
           readOnly={readOnly}
         />
 
-        {/* Types d'interactions */}
+        <ReferentialColumn
+          title="Familles produits"
+          description="Tags techniques ajoutés sur une interaction. Ils servent au pilotage et au filtrage métier."
+          icon={Boxes}
+          namePrefix="families"
+          count={families.length}
+          list={families}
+          usageRows={dimensions ? dimensions.families : null}
+          setList={setFamilies}
+          newItem={newFamily}
+          setNewItem={setNewFamily}
+          onAdd={() => addItem('families', newFamily, families, setFamilies, () => setNewFamily(''), true)}
+          onRemove={(index) => removeItem('families', index, families, setFamilies)}
+          onUpdate={(index, value) => updateItem(index, value, families, setFamilies, true)}
+          onRename={(index, value) => renameItem('families', index, value, families, setFamilies, true)}
+          placeholder="NOUVELLE FAMILLE…"
+          addLabel="Ajouter une famille produit"
+          uppercase
+          readOnly={readOnly}
+        />
+
+        <ReferentialColumn
+          title="Services"
+          description="Service CIR ou interlocuteur interne rattaché à la demande dans le formulaire de saisie."
+          icon={Users2}
+          namePrefix="services"
+          count={services.length}
+          list={services}
+          usageRows={dimensions ? dimensions.services : null}
+          setList={setServices}
+          newItem={newService}
+          setNewItem={setNewService}
+          onAdd={() => addItem('services', newService, services, setServices, () => setNewService(''))}
+          onRemove={(index) => removeItem('services', index, services, setServices)}
+          onUpdate={(index, value) => updateItem(index, value, services, setServices)}
+          onRename={(index, value) => renameItem('services', index, value, services, setServices)}
+          placeholder="Nouveau service…"
+          addLabel="Ajouter un service"
+          readOnly={readOnly}
+        />
+
         <ReferentialColumn
           title="Types d'interaction"
+          description={"Classification obligatoire de l'échange : devis, SAV, relance ou autre catégorie suivie."}
           icon={PhoneCall}
           namePrefix="interaction-types"
           count={interactionTypes.length}
           list={interactionTypes}
+          usageRows={dimensions ? dimensions.interaction_types : null}
           setList={setInteractionTypes}
           newItem={newInteractionType}
           setNewItem={setNewInteractionType}
           onAdd={() =>
             addItem(
+              'interaction_types',
               newInteractionType,
               interactionTypes,
               setInteractionTypes,
               () => setNewInteractionType(''),
             )
           }
-          onRemove={(index) => removeItem(index, interactionTypes, setInteractionTypes)}
+          onRemove={(index) => removeItem('interaction_types', index, interactionTypes, setInteractionTypes)}
           onUpdate={(index, value) =>
             updateItem(index, value, interactionTypes, setInteractionTypes)
           }
-          placeholder="Ex: Devis, SAV..."
+          onRename={(index, value) =>
+            renameItem('interaction_types', index, value, interactionTypes, setInteractionTypes)
+          }
+          placeholder="Ex: Devis, SAV…"
+          addLabel="Ajouter un type d'interaction"
           readOnly={readOnly}
         />
       </div>
-    </section>
+    </SettingsSectionShell>
   );
 };
 

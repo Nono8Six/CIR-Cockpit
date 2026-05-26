@@ -8,6 +8,7 @@ export const useCockpitDialogsState = () => {
   const [selectedEntity, setSelectedEntity] = useState<Entity | null>(null);
   const [selectedContact, setSelectedContact] = useState<EntityContact | null>(null);
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
+  const [clientDialogKind, setClientDialogKind] = useState<'company' | 'individual'>('company');
   const [isProspectDialogOpen, setIsProspectDialogOpen] = useState(false);
   const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
   const [isConvertDialogOpen, setIsConvertDialogOpen] = useState(false);
@@ -31,12 +32,25 @@ export const useCockpitDialogsState = () => {
     }
   }, []);
 
+  const openClientDialog = useCallback((kind: 'company' | 'individual' = 'company') => {
+    setClientDialogKind(kind);
+    setIsClientDialogOpen(true);
+  }, []);
+
+  const handleClientDialogChange = useCallback((open: boolean) => {
+    setIsClientDialogOpen(open);
+    if (!open) {
+      setClientDialogKind('company');
+    }
+  }, []);
+
   return {
     showSuggestions,
     servicePickerOpen,
     selectedEntity,
     selectedContact,
     isClientDialogOpen,
+    clientDialogKind,
     isProspectDialogOpen,
     isContactDialogOpen,
     isConvertDialogOpen,
@@ -45,7 +59,8 @@ export const useCockpitDialogsState = () => {
     setServicePickerOpen,
     setSelectedEntity,
     setSelectedContact,
-    setIsClientDialogOpen,
+    openClientDialog,
+    handleClientDialogChange,
     setIsProspectDialogOpen,
     setIsContactDialogOpen,
     handleOpenConvertDialog,

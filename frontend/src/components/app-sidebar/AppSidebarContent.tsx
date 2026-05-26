@@ -58,10 +58,10 @@ const AppSidebarContent = ({
 
   return (
     <TooltipProvider>
-      <div className="flex h-full flex-col bg-surface-2">
-        <div className={cn('flex h-12 items-center border-b border-border', collapsed ? 'justify-center px-2' : 'gap-2 px-3.5')}>
+      <div className="flex h-full flex-col bg-surface-1">
+        <div className={cn('flex h-12 items-center border-b border-border/70', collapsed ? 'justify-center px-2' : 'gap-2 px-3')}>
           <div className={cn('flex items-center gap-2.5', collapsed && 'justify-center')}>
-            <span className="inline-flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-[7px] bg-primary text-[13px] font-black text-white shadow-sm">
+            <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary text-[13px] font-black text-white shadow-soft">
               C
             </span>
             <AnimatePresence initial={false}>
@@ -73,7 +73,7 @@ const AppSidebarContent = ({
                   transition={fadeSlideTransition}
                   className="inline-flex min-w-0 flex-col overflow-hidden leading-tight"
                 >
-                  <span className="whitespace-nowrap text-[13px] font-semibold text-foreground">
+                  <span className="whitespace-nowrap text-[13px] font-bold text-foreground">
                     CIR Cockpit
                   </span>
                   <span className="whitespace-nowrap font-mono text-[10px] text-muted-foreground">
@@ -86,13 +86,13 @@ const AppSidebarContent = ({
         </div>
 
         {!collapsed && mobileAccountSlot ? (
-          <div className="m-2 rounded-md border border-border bg-card p-3">{mobileAccountSlot}</div>
+          <div className="m-2 rounded-lg border border-border bg-card p-3 shadow-soft">{mobileAccountSlot}</div>
         ) : null}
 
         {!collapsed && agencyName ? (
           <button
             type="button"
-            className="mx-2.5 mt-2 flex h-[34px] items-center gap-2 rounded-md border border-border bg-card px-2 text-left text-xs shadow-sm transition-colors hover:bg-surface-1"
+            className="mx-2.5 mt-2 flex h-9 items-center gap-2 rounded-lg border border-border bg-card px-2.5 text-left text-xs shadow-soft transition-[background-color,border-color] hover:border-border/80 hover:bg-background"
           >
             <span className="h-1.5 w-1.5 rounded-full bg-success shadow-[0_0_0_2px_hsl(var(--success)/0.14)]" aria-hidden="true" />
             <span className="min-w-0 flex-1 leading-tight">
@@ -107,7 +107,7 @@ const AppSidebarContent = ({
           <div className="px-2.5 py-2">
             <Link
               to={getPathForTab('cockpit')}
-              className="flex h-[30px] w-full items-center justify-start gap-2 rounded-md bg-primary px-2.5 text-xs font-semibold text-primary-foreground shadow-sm transition-[background-color,transform] hover:bg-primary/90 active:scale-[0.98]"
+              className="flex h-8 w-full items-center justify-start gap-2 rounded-lg bg-primary px-2.5 text-xs font-semibold text-primary-foreground shadow-soft transition-[background-color,transform] hover:bg-primary/90 active:scale-[0.98]"
             >
               <Plus size={14} aria-hidden="true" />
               Nouvelle interaction
@@ -119,14 +119,14 @@ const AppSidebarContent = ({
             <Link
               to={getPathForTab('cockpit')}
               aria-label="Nouvelle interaction"
-              className="flex h-8 w-full items-center justify-center rounded-md bg-primary text-primary-foreground shadow-sm transition-transform active:scale-[0.98]"
+              className="flex h-8 w-full items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-soft transition-transform active:scale-[0.98]"
             >
               <Plus size={15} aria-hidden="true" />
             </Link>
           </div>
         )}
 
-        <nav className="min-h-0 flex-1 space-y-3 overflow-y-auto px-1.5 py-2">
+        <nav className="min-h-0 flex-1 space-y-3 overflow-y-auto px-2 py-2">
           {safeSections.map((section, sectionIndex) => (
             <div key={section.id} className="space-y-1">
               <AnimatePresence initial={false}>
@@ -140,7 +140,7 @@ const AppSidebarContent = ({
                         ? fadeSlideTransition
                         : { ...fadeSlideTransition, delay: sectionIndex * 0.05 }
                     }
-                    className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70"
+                    className="px-2 pb-1 text-[11px] font-medium text-muted-foreground"
                   >
                     {section.title}
                   </motion.p>
@@ -175,10 +175,10 @@ const AppSidebarContent = ({
         </nav>
 
         {onToggleCollapsed && (
-          <div className="mt-auto border-t border-border px-1.5 py-1.5">
+          <div className="mt-auto border-t border-border/70 px-2 py-2">
             {userName ? (
-              <div className={cn('mb-1 flex min-w-0 items-center gap-2 rounded-md px-1.5 py-1.5', collapsed ? 'justify-center' : '')}>
-                <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/12 text-[11px] font-bold text-primary">
+              <div className={cn('mb-1.5 flex min-w-0 items-center gap-2 rounded-lg px-1 py-1.5', collapsed ? 'justify-center' : '')}>
+                <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/12 text-[11px] font-bold text-primary">
                   {(userInitials || userName.slice(0, 2)).toUpperCase()}
                 </span>
                 <AnimatePresence initial={false}>
@@ -208,10 +208,10 @@ const AppSidebarContent = ({
                   aria-keyshortcuts={SIDEBAR_TOGGLE_SHORTCUT_ARIA}
                   onClick={onToggleCollapsed}
                   className={cn(
-                    'group flex h-8 w-full items-center rounded-md text-xs transition-[background-color,color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98]',
+                    'group flex h-8 w-full items-center rounded-lg text-xs transition-[background-color,color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98]',
                     collapsed
-                      ? 'justify-center px-0 text-muted-foreground hover:bg-card/85 hover:text-foreground'
-                      : 'justify-between px-2 text-muted-foreground hover:bg-card/85 hover:text-foreground',
+                      ? 'justify-center px-0 text-muted-foreground hover:bg-card hover:text-foreground'
+                      : 'justify-between px-2 text-muted-foreground hover:bg-card hover:text-foreground',
                   )}
                 >
                   <div className="flex items-center gap-2.5">

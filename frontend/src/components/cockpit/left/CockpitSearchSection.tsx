@@ -19,7 +19,7 @@ type CockpitSearchSectionProps = {
   onSelectEntityFromSearch: (entity: Entity) => void;
   onSelectContactFromSearch: (contact: EntityContact, entity: Entity | null) => void;
   onSelectUnifiedSearchResult: (result: TierV1DirectoryRow) => void;
-  onOpenClientDialog: () => void;
+  onOpenClientDialog: (clientKind?: 'company' | 'individual') => void;
   onOpenProspectDialog: () => void;
   onOpenGlobalSearch?: () => void;
   searchInputRef: RefObject<HTMLInputElement | null>;
@@ -62,12 +62,14 @@ const CockpitSearchSection = ({
     void navigate({ to: '/admin/suppliers/new' });
   };
   const handleCreateEntity = relationMode === 'client'
-    ? onOpenClientDialog
+    ? () => onOpenClientDialog('company')
     : relationMode === 'prospect'
       ? onOpenProspectDialog
       : relationMode === 'supplier'
         ? handleCreateSupplier
-        : undefined;
+        : relationMode === 'individual'
+          ? () => onOpenClientDialog('individual')
+          : undefined;
   const createLabel = getCreateLabel(relationMode, entityType);
   const isSupplier = relationMode === 'supplier';
 

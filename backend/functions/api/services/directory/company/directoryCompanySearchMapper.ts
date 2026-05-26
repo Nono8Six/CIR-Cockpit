@@ -1,4 +1,5 @@
 import type { DirectoryCompanySearchResult } from '../../../../../../shared/schemas/system/directory.schema.ts';
+import { resolveOfficialNafCode } from '../../../../../../shared/reference/officialLabels.ts';
 import {
   normalizeBooleanFlag,
   normalizeEstablishmentStatus,
@@ -54,8 +55,11 @@ const mapEnterpriseApiEstablishment = (
   match_explanation: null,
   siret: normalizeNullableText(establishment.siret),
   siren: normalizeNullableText(company.siren),
-  naf_code: normalizeNullableText(
-    establishment.activite_principale ?? company.activite_principale,
+  naf_code: resolveOfficialNafCode(
+    establishment.activite_principale_naf25,
+    company.activite_principale_naf25,
+    establishment.activite_principale,
+    company.activite_principale,
   ),
   official_name: normalizeNullableText(company.nom_raison_sociale) ??
     normalizeNullableText(company.nom_complet) ??

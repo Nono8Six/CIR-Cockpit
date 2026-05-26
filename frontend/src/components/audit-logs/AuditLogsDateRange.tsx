@@ -17,24 +17,30 @@ const AuditLogsDateRange = ({
   const toInputId = 'admin-audit-date-to-input';
 
   return (
-    <div className="grid grid-cols-1 gap-3 md:grid-cols-2" data-testid="admin-audit-date-range">
-      <div>
-        <label htmlFor={fromInputId} className="text-xs font-medium text-muted-foreground">Du</label>
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2" data-testid="admin-audit-date-range">
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor={fromInputId} className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+          Du
+        </label>
         <Input
           id={fromInputId}
           type="date"
           value={fromDate}
           onChange={(event) => onFromDateChange(event.target.value)}
+          className="h-10 rounded-xl bg-muted/10 border-border/60 focus-visible:ring-primary/20 hover:bg-background/50 hover:border-border/80 transition-all duration-200"
           data-testid="admin-audit-date-from"
         />
       </div>
-      <div>
-        <label htmlFor={toInputId} className="text-xs font-medium text-muted-foreground">Au</label>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor={toInputId} className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+          Au
+        </label>
         <Input
           id={toInputId}
           type="date"
           value={toDate}
           onChange={(event) => onToDateChange(event.target.value)}
+          className="h-10 rounded-xl bg-muted/10 border-border/60 focus-visible:ring-primary/20 hover:bg-background/50 hover:border-border/80 transition-all duration-200"
           data-testid="admin-audit-date-to"
         />
       </div>

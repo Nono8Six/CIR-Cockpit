@@ -23,6 +23,8 @@ export const useDirectoryCompanySearch = (
   const normalizedNafCode = input.naf_code?.trim() ?? '';
   const normalizedActivitySection = input.activity_section?.trim() ?? '';
   const normalizedHeadOffice = input.head_office ?? 'all';
+  const normalizedPage = input.page ?? 1;
+  const normalizedPerPage = input.per_page ?? 20;
   const debounceMs = options.debounceMs ?? 450;
   const [debouncedInput, setDebouncedInput] = useState({
     query: normalizedQuery,
@@ -31,7 +33,9 @@ export const useDirectoryCompanySearch = (
     postal_code: normalizedPostalCode,
     naf_code: normalizedNafCode,
     activity_section: normalizedActivitySection,
-    head_office: normalizedHeadOffice
+    head_office: normalizedHeadOffice,
+    page: normalizedPage,
+    per_page: normalizedPerPage
   });
 
   useEffect(() => {
@@ -43,7 +47,9 @@ export const useDirectoryCompanySearch = (
         postal_code: normalizedPostalCode,
         naf_code: normalizedNafCode,
         activity_section: normalizedActivitySection,
-        head_office: normalizedHeadOffice
+        head_office: normalizedHeadOffice,
+        page: normalizedPage,
+        per_page: normalizedPerPage
       });
       return undefined;
     }
@@ -56,7 +62,9 @@ export const useDirectoryCompanySearch = (
         postal_code: normalizedPostalCode,
         naf_code: normalizedNafCode,
         activity_section: normalizedActivitySection,
-        head_office: normalizedHeadOffice
+        head_office: normalizedHeadOffice,
+        page: normalizedPage,
+        per_page: normalizedPerPage
       });
     }, debounceMs);
 
@@ -68,6 +76,8 @@ export const useDirectoryCompanySearch = (
     normalizedDepartment,
     normalizedHeadOffice,
     normalizedNafCode,
+    normalizedPage,
+    normalizedPerPage,
     normalizedPostalCode,
     normalizedQuery
   ]);
@@ -79,7 +89,9 @@ export const useDirectoryCompanySearch = (
     postal_code: debouncedInput.postal_code || undefined,
     naf_code: debouncedInput.naf_code || undefined,
     activity_section: debouncedInput.activity_section || undefined,
-    head_office: debouncedInput.head_office
+    head_office: debouncedInput.head_office,
+    page: debouncedInput.page,
+    per_page: debouncedInput.per_page
   };
 
   const query = useQuery({

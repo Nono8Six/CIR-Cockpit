@@ -23,6 +23,18 @@ Invoquer le skill correspondant AVANT d'ecrire du code (voir liste dans CLAUDE.m
 - `drizzle-orm` pour toute creation/migration Drizzle
 - `find-skills` quand une capability manque ou doit etre cherchee
 
+## Routage design / UI / UX
+
+Ces skills completent `web-design-guidelines` sans remplacer les regles React, QA et accessibilite du projet :
+
+- `impeccable` : obligatoire avant tout travail de design, redesign, polish, clarification UX, onboarding, empty state, formulaire, dashboard ou composant visible. Pour CIR Cockpit, traiter l'application comme un registre **product** : interface metier dense, sobre, utile, sans effet marketing gratuit.
+- `design-taste-frontend` : obligatoire avant toute implementation UI qui demande une decision visuelle (hierarchie, layout, etats interactifs, responsive, motion, couleurs). Appliquer ses garde-fous anti-UI generique, mais toujours verifier `package.json` avant toute dependance et ne jamais introduire Framer/GSAP/Three sans demande explicite ou justification acceptee.
+- `layers-intro` puis le skill `layers-*` pertinent : obligatoire quand la demande touche au modele produit, vocabulaire metier, parcours, onboarding complexe, architecture d'information, objets/relations, etats, ou decisions UX avant surface. Par defaut : `layers-orient` si le niveau de probleme est flou, `layers-conceptual-model` pour objets/vocabulaire, `layers-interaction-flow` pour parcours, `layers-surface` pour audit de surface.
+- `superdesign` : a utiliser seulement pour exploration de variantes, draft visuel, inspiration, extraction de composants de design, ou quand l'utilisateur le demande explicitement. Ne pas l'utiliser automatiquement sur chaque modification UI, car il peut creer `.superdesign/`, necessite le CLI/login, et ajoute une boucle de generation externe.
+- `gpt-taste` : ne pas utiliser par defaut pour CIR Cockpit. Il est oriente pages marketing/Awwwards/GSAP/AIDA et peut contredire le besoin d'outil metier sobre. L'utiliser uniquement si l'utilisateur demande explicitement une page vitrine ou une experience tres motion/hero.
+
+Ordre recommande pour une feature UI significative : `layers-*` si le probleme de parcours/modele n'est pas stabilise, puis `impeccable`, puis `design-taste-frontend`, puis `vercel-react-best-practices`/`vercel-composition-patterns` avant le code, puis `web-design-guidelines` pour l'audit UI/accessibilite.
+
 ## Regle Context7 (obligatoire)
 
 - Pour toute decision d'implementation sur une librairie/framework (React, TanStack Router/Query, tRPC, Drizzle, Vitest, Playwright), consulter Context7 avant de coder.

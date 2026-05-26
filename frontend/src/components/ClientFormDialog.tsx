@@ -42,6 +42,7 @@ type ClientFormDialogProps = {
   userRole: UserRole;
   activeAgencyId: string | null;
   commercials?: DirectoryCommercialOption[];
+  defaultClientKind?: 'company' | 'individual';
   onSave: (payload: ClientPayload) => Promise<void>;
 };
 
@@ -149,6 +150,7 @@ const ClientFormDialog = (props: ClientFormDialogProps) => {
         commercials={props.commercials}
         allowedIntents={['client']}
         defaultIntent="client"
+        defaultClientKind={props.defaultClientKind}
         initialEntity={props.client}
         sourceLabel={props.client ? 'Edition client' : 'Creation'}
         onSaveClient={props.onSave}

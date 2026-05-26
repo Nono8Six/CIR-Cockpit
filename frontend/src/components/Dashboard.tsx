@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { AgencyStatus, Interaction } from '@/types';
 import { ConvertClientEntity } from './ConvertClientDialog';
 import DashboardToolbar from './dashboard/DashboardToolbar';
@@ -45,12 +45,173 @@ const Dashboard = ({ interactions, statuses, agencyId, onRequestConvert }: Dashb
     handleConfirmDeleteInteraction
   } = useDashboardState({ interactions, statuses, agencyId, onRequestConvert });
 
+  const [activeInteractionId, setActiveInteractionId] = useState<string | null>(null);
+  
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const dateFiltersRef = useRef<HTMLButtonElement>(null);
+
+  const handleSelectInteraction = useCallback((interaction: Interaction) => {
+    setActiveInteractionId(interaction.id);
+    setSelectedInteraction(interaction);
+  }, [setSelectedInteraction]);
+
+  // Keyboard navigation & shortcuts hook
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const activeEl = document.activeElement;
+      
+      // Prevent shortcut interference if typing in form controls
+      if (
+        activeEl instanceof HTMLInputElement ||
+        activeEl instanceof HTMLTextAreaElement ||
+        (activeEl as HTMLElement)?.isContentEditable ||
+        activeEl?.closest('[role="dialog"]') ||
+        activeEl?.closest('[role="menu"]')
+      ) {
+        return;
+      }
+
+      // 1. Focus Search Input: "/"
+      if (event.key === '/') {
+        event.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+        return;
+      }
+
+      // 2. Focus Date Filters: "d" or "D"
+      if (event.key.toLowerCase() === 'd') {
+        event.preventDefault();
+        dateFiltersRef.current?.focus();
+        return;
+      }
+
+      // 3. Toggle View Mode: "v" or "V"
+      if (event.key.toLowerCase() === 'v') {
+        event.preventDefault();
+        setViewMode(viewMode === 'kanban' ? 'list' : 'kanban');
+        return;
+      }
+
+      // 4. Arrow Key Navigation
+      if (viewMode === 'list') {
+        const rowsCount = filteredData.length;
+        if (rowsCount === 0) return;
+
+        const currentIndex = filteredData.findIndex((item) => item.id === activeInteractionId);
+
+        if (event.key === 'ArrowDown') {
+          event.preventDefault();
+          const nextIndex = currentIndex === -1 ? 0 : Math.min(currentIndex + 1, rowsCount - 1);
+          setActiveInteractionId(filteredData[nextIndex]?.id ?? null);
+        } else if (event.key === 'ArrowUp') {
+          event.preventDefault();
+          const nextIndex = currentIndex === -1 ? 0 : Math.max(currentIndex - 1, 0);
+          setActiveInteractionId(filteredData[nextIndex]?.id ?? null);
+        }
+      } else {
+        if (!kanbanColumns) return;
+        const columnsList = [
+          { key: 'urgencies' as const, items: kanbanColumns.urgencies },
+          { key: 'inProgress' as const, items: kanbanColumns.inProgress },
+          { key: 'completed' as const, items: kanbanColumns.completed }
+        ];
+
+        let currentColIdx = -1;
+        let currentItemIdx = -1;
+
+        for (let c = 0; c < 3; c++) {
+          const idx = columnsList[c].items.findIndex((item) => item.id === activeInteractionId);
+          if (idx !== -1) {
+            currentColIdx = c;
+            currentItemIdx = idx;
+            break;
+          }
+        }
+
+        if (event.key === 'ArrowDown') {
+          event.preventDefault();
+          if (currentColIdx === -1) {
+            const firstNonEmptyCol = columnsList.find((col) => col.items.length > 0);
+            if (firstNonEmptyCol) {
+              setActiveInteractionId(firstNonEmptyCol.items[0].id);
+            }
+          } else {
+            const colItems = columnsList[currentColIdx].items;
+            const nextIdx = Math.min(currentItemIdx + 1, colItems.length - 1);
+            setActiveInteractionId(colItems[nextIdx].id);
+          }
+        } else if (event.key === 'ArrowUp') {
+          event.preventDefault();
+          if (currentColIdx !== -1) {
+            const colItems = columnsList[currentColIdx].items;
+            const nextIdx = Math.max(currentItemIdx - 1, 0);
+            setActiveInteractionId(colItems[nextIdx].id);
+          }
+        } else if (event.key === 'ArrowRight') {
+          event.preventDefault();
+          if (currentColIdx !== -1 && currentColIdx < 2) {
+            const nextColIdx = currentColIdx + 1;
+            const nextColItems = columnsList[nextColIdx].items;
+            if (nextColItems.length > 0) {
+              const targetIdx = Math.min(currentItemIdx, nextColItems.length - 1);
+              setActiveInteractionId(nextColItems[targetIdx].id);
+            }
+          }
+        } else if (event.key === 'ArrowLeft') {
+          event.preventDefault();
+          if (currentColIdx > 0) {
+            const nextColIdx = currentColIdx - 1;
+            const nextColItems = columnsList[nextColIdx].items;
+            if (nextColItems.length > 0) {
+              const targetIdx = Math.min(currentItemIdx, nextColItems.length - 1);
+              setActiveInteractionId(nextColItems[targetIdx].id);
+            }
+          }
+        }
+      }
+
+      // 5. Open selected item: "Enter" or "o"
+      if (activeInteractionId && (event.key === 'Enter' || event.key.toLowerCase() === 'o')) {
+        event.preventDefault();
+        const activeItem = filteredData.find((item) => item.id === activeInteractionId);
+        if (activeItem) {
+          setSelectedInteraction(activeItem);
+        }
+        return;
+      }
+
+      // 6. Delete selected item: "Backspace" or "Delete"
+      if (activeInteractionId && (event.key === 'Backspace' || event.key === 'Delete')) {
+        event.preventDefault();
+        const activeItem = filteredData.find((item) => item.id === activeInteractionId);
+        if (activeItem) {
+          handleRequestDeleteInteraction(activeItem);
+        }
+        return;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [
+    viewMode,
+    filteredData,
+    activeInteractionId,
+    kanbanColumns,
+    setSelectedInteraction,
+    setViewMode,
+    handleRequestDeleteInteraction
+  ]);
+
   return (
     <div
-      className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card shadow-sm"
+      className="relative flex h-full min-h-0 flex-col overflow-hidden bg-transparent"
       data-testid="dashboard-root"
     >
       <DashboardToolbar
+        searchRef={searchInputRef}
+        dateFiltersRef={dateFiltersRef}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         period={period}
@@ -66,24 +227,26 @@ const Dashboard = ({ interactions, statuses, agencyId, onRequestConvert }: Dashb
       />
 
       <div className="relative flex-1 min-h-0 bg-surface-1">
-        {viewMode === 'kanban' && kanbanColumns && (
+        {viewMode === 'kanban' && kanbanColumns ? (
           <DashboardKanban
             columns={kanbanColumns}
-            onSelectInteraction={setSelectedInteraction}
+            onSelectInteraction={handleSelectInteraction}
             getStatusMeta={getStatusMeta}
             onDeleteInteraction={handleRequestDeleteInteraction}
+            activeInteractionId={activeInteractionId}
           />
-        )}
+        ) : null}
 
-        {viewMode === 'list' && (
+        {viewMode === 'list' ? (
           <DashboardList
             rows={filteredData}
             getChannelIcon={getChannelIcon}
             getStatusBadgeClass={getStatusBadgeClass}
-            onSelectInteraction={setSelectedInteraction}
+            onSelectInteraction={handleSelectInteraction}
             onDeleteInteraction={handleRequestDeleteInteraction}
+            activeInteractionId={activeInteractionId}
           />
-        )}
+        ) : null}
       </div>
 
       {selectedInteraction && (
@@ -105,14 +268,13 @@ const Dashboard = ({ interactions, statuses, agencyId, onRequestConvert }: Dashb
           }
         }}
         title="Supprimer cette interaction"
-        description={`L'interaction "${interactionToDelete?.subject ?? ''}" sera definitivement supprimee.`}
-        confirmLabel={isDeleteInteractionPending ? 'Suppression...' : 'Supprimer'}
+        description={`L'interaction "${interactionToDelete?.subject ?? ''}" sera définitivement supprimée.`}
+        confirmLabel={isDeleteInteractionPending ? 'Suppression…' : 'Supprimer'}
         variant="destructive"
         onConfirm={() => {
           void handleConfirmDeleteInteraction();
         }}
       />
-
     </div>
   );
 };

@@ -12,6 +12,25 @@ const referenceLabelSchema = z
   .max(MAX_CONFIG_LABEL_LENGTH, 'Label trop long');
 
 export const configStatusCategorySchema = z.enum(['todo', 'in_progress', 'done']);
+export const configUsageDimensionSchema = z.enum([
+  'statuses',
+  'services',
+  'families',
+  'interaction_types',
+  'entities'
+]);
+export const editableConfigReferenceDimensionSchema = z.enum([
+  'statuses',
+  'services',
+  'entities',
+  'families',
+  'interaction_types'
+]);
+export const configUsageStateSchema = z.enum([
+  'reference_used',
+  'reference_unused',
+  'used_not_in_reference'
+]);
 
 export const agencyStatusInputSchema = z.strictObject({
   id: uuidSchema.optional(),
@@ -83,11 +102,53 @@ export const configGetInputSchema = z.strictObject({
   agency_id: uuidSchema.optional()
 });
 
+export const configUsageInputSchema = z.strictObject({
+  agency_id: uuidSchema
+});
+
 export const configSaveAgencyInputSchema = z.strictObject({
   agency_id: uuidSchema,
   onboarding: agencyOnboardingOverridesSchema,
   references: agencyReferenceConfigInputSchema
 });
+
+const configReferenceBaseActionSchema = z.strictObject({
+  agency_id: uuidSchema,
+  dimension: editableConfigReferenceDimensionSchema
+});
+
+export const configReferenceAddInputSchema = configReferenceBaseActionSchema.extend({
+  action: z.literal('add'),
+  label: referenceLabelSchema,
+  status_id: uuidSchema.optional(),
+  category: configStatusCategorySchema.optional()
+});
+
+export const configReferenceRenameInputSchema = configReferenceBaseActionSchema.extend({
+  action: z.literal('rename'),
+  reference_id: uuidSchema.optional(),
+  previous_label: referenceLabelSchema.optional(),
+  next_label: referenceLabelSchema
+});
+
+export const configReferenceDeleteInputSchema = configReferenceBaseActionSchema.extend({
+  action: z.literal('delete'),
+  reference_id: uuidSchema.optional(),
+  label: referenceLabelSchema.optional()
+});
+
+export const configReferenceReorderInputSchema = configReferenceBaseActionSchema.extend({
+  action: z.literal('reorder'),
+  reference_ids: z.array(uuidSchema).optional(),
+  labels: z.array(referenceLabelSchema).optional()
+});
+
+export const configReferenceActionInputSchema = z.union([
+  configReferenceAddInputSchema,
+  configReferenceRenameInputSchema,
+  configReferenceDeleteInputSchema,
+  configReferenceReorderInputSchema
+]);
 
 export const configSaveProductInputSchema = appSettingsSchema;
 
@@ -96,6 +157,24 @@ export const resolvedConfigSnapshotSchema = z.strictObject({
   agency: agencySettingsSchema,
   references: agencyReferenceConfigSchema.extend({
     departments: z.array(departmentReferenceSchema)
+  })
+});
+
+export const configUsageRowSchema = z.strictObject({
+  label: referenceLabelSchema,
+  reference_id: uuidSchema.nullable(),
+  sort_order: z.number().int().min(1, 'Ordre invalide').nullable(),
+  usage_count: z.number().int().min(0, 'Compteur invalide'),
+  state: configUsageStateSchema
+});
+
+export const configUsageSnapshotSchema = z.strictObject({
+  agency_id: uuidSchema,
+  dimensions: z.record(configUsageDimensionSchema, z.array(configUsageRowSchema)),
+  totals: z.strictObject({
+    used_not_in_reference: z.number().int().min(0, 'Compteur invalide'),
+    referenced_values: z.number().int().min(0, 'Compteur invalide'),
+    used_values: z.number().int().min(0, 'Compteur invalide')
   })
 });
 
@@ -138,6 +217,9 @@ export const resolveOnboardingConfig = (
 });
 
 export type ConfigStatusCategory = z.infer<typeof configStatusCategorySchema>;
+export type ConfigUsageDimension = z.infer<typeof configUsageDimensionSchema>;
+export type EditableConfigReferenceDimension = z.infer<typeof editableConfigReferenceDimensionSchema>;
+export type ConfigUsageState = z.infer<typeof configUsageStateSchema>;
 export type AgencyStatusInput = z.infer<typeof agencyStatusInputSchema>;
 export type AgencyStatusConfig = z.infer<typeof agencyStatusSchema>;
 export type AgencyReferenceConfigInput = z.infer<typeof agencyReferenceConfigInputSchema>;
@@ -149,6 +231,14 @@ export type AgencyOnboardingOverrides = z.infer<typeof agencyOnboardingOverrides
 export type AppSettings = z.infer<typeof appSettingsSchema>;
 export type AgencySettings = z.infer<typeof agencySettingsSchema>;
 export type ConfigGetInput = z.infer<typeof configGetInputSchema>;
+export type ConfigUsageInput = z.infer<typeof configUsageInputSchema>;
 export type ConfigSaveAgencyInput = z.infer<typeof configSaveAgencyInputSchema>;
+export type ConfigReferenceActionInput = z.infer<typeof configReferenceActionInputSchema>;
+export type ConfigReferenceAddInput = z.infer<typeof configReferenceAddInputSchema>;
+export type ConfigReferenceRenameInput = z.infer<typeof configReferenceRenameInputSchema>;
+export type ConfigReferenceDeleteInput = z.infer<typeof configReferenceDeleteInputSchema>;
+export type ConfigReferenceReorderInput = z.infer<typeof configReferenceReorderInputSchema>;
 export type ConfigSaveProductInput = z.infer<typeof configSaveProductInputSchema>;
 export type ResolvedConfigSnapshot = z.infer<typeof resolvedConfigSnapshotSchema>;
+export type ConfigUsageRow = z.infer<typeof configUsageRowSchema>;
+export type ConfigUsageSnapshot = z.infer<typeof configUsageSnapshotSchema>;

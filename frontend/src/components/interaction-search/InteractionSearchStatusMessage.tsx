@@ -34,7 +34,7 @@ const InteractionSearchStatusMessage = ({
 
   if (status === 'error') {
     return (
-      <CommandEmpty className="text-xs text-warning py-5" aria-live="polite">
+      <CommandEmpty className="px-5 py-5 text-center text-xs text-warning" aria-live="polite">
         Recherche indisponible. Réessayez ou continuez en création rapide.
       </CommandEmpty>
     );
@@ -42,7 +42,7 @@ const InteractionSearchStatusMessage = ({
 
   if (status === 'idle') {
     return (
-      <CommandEmpty className="text-xs text-muted-foreground/80 py-5" aria-live="polite">
+      <CommandEmpty className="px-5 py-5 text-center text-xs text-muted-foreground/80" aria-live="polite">
         Nom, téléphone, email, n° client, SIRET…
       </CommandEmpty>
     );
@@ -50,7 +50,7 @@ const InteractionSearchStatusMessage = ({
 
   if (status === 'empty') {
     return (
-      <CommandEmpty className="text-xs text-muted-foreground/80 py-5" aria-live="polite">
+      <CommandEmpty className="px-5 py-5 text-center text-xs text-muted-foreground/80" aria-live="polite">
         Aucun tiers trouvé. Créez une entrée pour cette interaction.
       </CommandEmpty>
     );

@@ -12,6 +12,7 @@ type CockpitFormDialogsProps = {
   activeAgencyId: string | null;
   selectedEntity: Entity | null;
   isClientDialogOpen: boolean;
+  clientDialogKind: 'company' | 'individual';
   isProspectDialogOpen: boolean;
   isContactDialogOpen: boolean;
   isConvertDialogOpen: boolean;
@@ -32,6 +33,7 @@ const CockpitFormDialogs = ({
   activeAgencyId,
   selectedEntity,
   isClientDialogOpen,
+  clientDialogKind,
   isProspectDialogOpen,
   isContactDialogOpen,
   isConvertDialogOpen,
@@ -54,8 +56,9 @@ const CockpitFormDialogs = ({
         agencies={agencies}
         userRole={userRole}
         activeAgencyId={activeAgencyId}
-          onSave={onSaveClient}
-        />
+        defaultClientKind={clientDialogKind}
+        onSave={onSaveClient}
+      />
       <EntityOnboardingDialog
         open={isProspectDialogOpen}
         onOpenChange={onProspectDialogChange}

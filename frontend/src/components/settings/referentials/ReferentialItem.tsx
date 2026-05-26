@@ -1,4 +1,4 @@
-import { Trash2, GripVertical } from 'lucide-react';
+import { GripVertical } from 'lucide-react';
 import { Button } from '../../ui/inputs/basic/Button';
 import { Input } from '../../ui/inputs/basic/Input';
 
@@ -8,7 +8,9 @@ type ReferentialItemProps = {
   readOnly: boolean;
   namePrefix: string;
   uppercase: boolean;
+  usageCount: number | null;
   onUpdate: (index: number, value: string) => void;
+  onRename: (index: number, value: string) => void;
   onRemove: (index: number) => void;
   onDragStart: (e: React.DragEvent, index: number) => void;
   onDragOver: (e: React.DragEvent) => void;
@@ -38,25 +40,41 @@ const ReferentialItem = ({
   readOnly,
   namePrefix,
   uppercase,
+  usageCount,
   onUpdate,
+  onRename,
   onRemove,
   onDragStart,
   onDragOver,
   onDrop,
 }: ReferentialItemProps) => {
+  const usageKnown = usageCount !== null;
+  const handleRename = () => {
+    const nextLabel = prompt(`Renommer "${item}"`, item);
+    if (!nextLabel?.trim() || nextLabel.trim() === item.trim()) return;
+    if (
+      usageKnown
+      && usageCount > 0
+      && !confirm(`${usageCount} interaction(s) utilisent "${item}". Renommer et mettre a jour l'historique ?`)
+    ) {
+      return;
+    }
+    onRename(index, nextLabel);
+  };
+
   return (
     <div
       draggable={!readOnly}
       onDragStart={(e) => onDragStart(e, index)}
       onDragOver={onDragOver}
       onDrop={(e) => onDrop(e, index)}
-      className={`group flex items-center gap-2 rounded-lg border border-border/40 bg-surface-1/40 px-2 py-1.5 transition-all duration-200 hover:border-border hover:bg-surface-1/80 ${
+      className={`group grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 border border-border/50 bg-background px-2 py-1.5 transition-[background-color,border-color] duration-200 hover:border-border hover:bg-card sm:grid-cols-[auto_minmax(0,1fr)_4.5rem_auto_auto] ${
         readOnly ? '' : 'cursor-grab active:cursor-grabbing'
       }`}
       data-testid={`${namePrefix}-row-${index}`}
     >
       {!readOnly && (
-        <div className="flex shrink-0 text-muted-foreground/45 transition-colors group-hover:text-muted-foreground/80">
+        <div className="flex shrink-0 text-muted-foreground/45 transition-colors group-hover:text-muted-foreground/80" aria-hidden="true">
           <GripVertical className="size-4" />
         </div>
       )}
@@ -64,29 +82,46 @@ const ReferentialItem = ({
         type="text"
         value={item}
         onChange={(event) => onUpdate(index, event.target.value)}
-        className={`h-8 flex-1 border-transparent bg-transparent py-0 text-xs shadow-none focus-visible:ring-1 focus-visible:ring-primary/20 ${
+        className={`h-8 min-w-0 flex-1 border-transparent bg-transparent py-0 text-xs shadow-none focus-visible:ring-1 focus-visible:ring-primary/20 ${
           uppercase ? 'font-bold uppercase tracking-wider' : ''
         } ${readOnly ? 'text-muted-foreground/80' : 'text-foreground'}`}
-        readOnly={readOnly}
+        readOnly
         disabled={readOnly}
         name={`${namePrefix}-${index}`}
         aria-label={`${namePrefix} ${index + 1}`}
         autoComplete="off"
       />
-      <Button
-        type="button"
-        onClick={() => onRemove(index)}
-        variant="ghost"
-        size="icon"
-        className={`size-7 shrink-0 text-muted-foreground/50 hover:bg-primary/15 hover:text-primary transition-all ${
-          readOnly ? 'hidden' : 'opacity-0 group-hover:opacity-100'
-        }`}
-        disabled={readOnly}
-        aria-disabled={readOnly}
-        aria-label="Supprimer l'élément"
-      >
-        <Trash2 className="size-3.5" />
-      </Button>
+      {usageKnown ? (
+        <span className="hidden text-right font-mono text-[10px] text-muted-foreground tabular-nums sm:block">
+          {usageCount} usage
+        </span>
+      ) : null}
+      {!readOnly && (
+        <Button
+          type="button"
+          onClick={handleRename}
+          variant="ghost"
+          size="sm"
+          className="h-7 shrink-0 px-2 text-[11px] text-muted-foreground transition-[background-color,color] hover:bg-accent hover:text-foreground"
+          aria-label={`Renommer ${item}`}
+        >
+          Renommer
+        </Button>
+      )}
+      {!readOnly && usageKnown && usageCount === 0 && (
+        <Button
+          type="button"
+          onClick={() => onRemove(index)}
+          variant="ghost"
+          size="sm"
+          className="h-7 shrink-0 px-2 text-[11px] text-muted-foreground transition-[background-color,color] hover:bg-destructive/10 hover:text-destructive disabled:opacity-40"
+          disabled={false}
+          aria-disabled={false}
+          aria-label={`Supprimer ${item}`}
+        >
+          Supprimer
+        </Button>
+      )}
     </div>
   );
 };

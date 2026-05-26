@@ -21,6 +21,7 @@ type DashboardListProps = {
   getStatusBadgeClass: (interaction: Interaction) => string;
   onSelectInteraction: (interaction: Interaction) => void;
   onDeleteInteraction: (interaction: Interaction) => void;
+  activeInteractionId?: string | null;
 };
 
 type DashboardListMobileCardProps = {
@@ -29,6 +30,7 @@ type DashboardListMobileCardProps = {
   getStatusBadgeClass: (interaction: Interaction) => string;
   onSelectInteraction: (interaction: Interaction) => void;
   onDeleteInteraction: (interaction: Interaction) => void;
+  activeInteractionId?: string | null;
 };
 
 const DashboardListMobileCard = ({
@@ -36,76 +38,86 @@ const DashboardListMobileCard = ({
   getChannelIcon,
   getStatusBadgeClass,
   onSelectInteraction,
-  onDeleteInteraction
-}: DashboardListMobileCardProps) => (
-  <article className="space-y-2 px-3 py-3">
-    <div className="flex items-center justify-between gap-2">
-      <div className="flex min-w-0 items-center gap-2">
-        <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-muted-foreground">
-          {getChannelIcon(item.channel)}
-        </span>
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-foreground">{item.company_name}</p>
-          <p className="truncate text-xs text-muted-foreground">{item.contact_name}</p>
+  onDeleteInteraction,
+  activeInteractionId
+}: DashboardListMobileCardProps) => {
+  const isActive = activeInteractionId === item.id;
+
+  return (
+    <article className={`space-y-2 px-4 py-3.5 border-l-2 transition-[background-color,border-color] duration-150 ${
+      isActive 
+        ? 'bg-primary/5 border-l-primary/70' 
+        : 'border-l-transparent hover:bg-surface-1/40'
+    }`}>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/40 text-muted-foreground/80">
+            {getChannelIcon(item.channel)}
+          </span>
+          <div className="min-w-0">
+            <p className="truncate text-xs font-semibold text-foreground/90">{item.company_name}</p>
+            <p className="truncate text-[10px] text-muted-foreground">{item.contact_name}</p>
+          </div>
         </div>
-      </div>
-      <span
-        className={`inline-flex shrink-0 items-center rounded border px-1.5 py-0.5 text-xs font-semibold uppercase ${getStatusBadgeClass(item)}`}
-      >
-        {item.status}
-      </span>
-    </div>
-    <p className="line-clamp-2 text-sm text-foreground">{item.subject}</p>
-    <div className="flex items-center justify-between gap-2">
-      <p className="text-xs text-muted-foreground">
-        {formatDate(item.last_action_at)} a {formatTime(item.last_action_at)}
-      </p>
-      {item.order_ref && (
-        <span className="truncate rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-xs text-muted-foreground">
-          #{item.order_ref}
+        <span
+          className={`inline-flex shrink-0 items-center rounded border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider ${getStatusBadgeClass(item)}`}
+        >
+          {item.status}
         </span>
-      )}
-    </div>
-    <DashboardFamilyBadges families={item.mega_families} />
-    <div className="flex items-center gap-2">
-      <Button
-        type="button"
-        variant="ghost"
-        size="dense"
-        className="h-8 flex-1 justify-between text-primary hover:text-primary"
-        onClick={() => onSelectInteraction(item)}
-        aria-label={`Ouvrir ${item.company_name}`}
-      >
-        Ouvrir les details
-        <ChevronRight size={14} aria-hidden="true" />
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className="size-8 text-destructive hover:text-destructive"
-        onClick={() => onDeleteInteraction(item)}
-        aria-label={`Supprimer ${item.company_name}`}
-      >
-        <Trash2 size={14} aria-hidden="true" />
-      </Button>
-    </div>
-  </article>
-);
+      </div>
+      <p className="line-clamp-2 text-xs text-foreground/85">{item.subject}</p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="font-mono text-[9px] text-muted-foreground/80 tabular-nums">
+          {formatDate(item.last_action_at)} à {formatTime(item.last_action_at)}
+        </p>
+        {item.order_ref && (
+          <span className="truncate rounded border border-border/40 bg-muted/40 px-1.5 py-0.5 font-mono text-[9px] font-medium text-muted-foreground">
+            #{item.order_ref}
+          </span>
+        )}
+      </div>
+      <DashboardFamilyBadges families={item.mega_families} />
+      <div className="flex items-center gap-2 pt-1">
+        <Button
+          type="button"
+          variant="ghost"
+          size="dense"
+          className="h-8 flex-1 justify-between text-xs text-primary hover:text-primary"
+          onClick={() => onSelectInteraction(item)}
+          aria-label={`Ouvrir ${item.company_name}`}
+        >
+          Ouvrir les détails
+          <ChevronRight size={12} aria-hidden="true" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-8 text-destructive hover:text-destructive"
+          onClick={() => onDeleteInteraction(item)}
+          aria-label={`Supprimer ${item.company_name}`}
+        >
+          <Trash2 size={12} aria-hidden="true" />
+        </Button>
+      </div>
+    </article>
+  );
+};
 
 const DashboardList = ({
   rows,
   getChannelIcon,
   getStatusBadgeClass,
   onSelectInteraction,
-  onDeleteInteraction
+  onDeleteInteraction,
+  activeInteractionId
 }: DashboardListProps) => (
-  <div className="h-full min-h-0 overflow-y-auto p-3 sm:p-4" data-testid="dashboard-list">
-    <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
-      <div className="divide-y divide-border/70 md:hidden">
+  <div className="h-full min-h-0 overflow-y-auto pt-3 pb-3 px-0" data-testid="dashboard-list">
+    <div className="overflow-hidden rounded-lg border border-border bg-card shadow-soft">
+      <div className="divide-y divide-border/60 md:hidden">
         {rows.length === 0 ? (
-          <div className="px-3 py-10 text-center text-sm text-muted-foreground">
-            Aucune interaction trouvee.
+          <div className="px-4 py-12 text-center text-xs text-muted-foreground">
+            Aucune interaction trouvée.
           </div>
         ) : (
           rows.map((item) => (
@@ -116,6 +128,7 @@ const DashboardList = ({
               getStatusBadgeClass={getStatusBadgeClass}
               onSelectInteraction={onSelectInteraction}
               onDeleteInteraction={onDeleteInteraction}
+              activeInteractionId={activeInteractionId}
             />
           ))
         )}
@@ -126,7 +139,7 @@ const DashboardList = ({
           <TableHeader>
             <DashboardListHeader />
           </TableHeader>
-          <TableBody className="divide-y divide-border/70">
+          <TableBody className="divide-y divide-border/60">
             {rows.length === 0 ? (
               <DashboardListEmptyRow />
             ) : (
@@ -138,6 +151,7 @@ const DashboardList = ({
                   getStatusBadgeClass={getStatusBadgeClass}
                   onSelectInteraction={onSelectInteraction}
                   onDeleteInteraction={onDeleteInteraction}
+                  activeInteractionId={activeInteractionId}
                 />
               ))
             )}

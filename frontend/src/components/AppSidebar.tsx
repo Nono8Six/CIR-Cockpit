@@ -47,9 +47,9 @@ const AppSidebar = ({
     <>
       <motion.aside
         initial={false}
-        animate={{ width: collapsed ? 48 : 232 }}
+        animate={{ width: collapsed ? 52 : 240 }}
         transition={sidebarTransition}
-        className="relative hidden overflow-hidden border-r border-border bg-surface-2 md:flex md:flex-col"
+        className="relative hidden overflow-hidden border-r border-border/80 bg-surface-1 md:flex md:flex-col"
       >
         <AppSidebarContent
           sections={sections}

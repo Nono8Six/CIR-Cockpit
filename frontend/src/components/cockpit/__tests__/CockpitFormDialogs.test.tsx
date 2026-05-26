@@ -4,7 +4,9 @@ import { describe, expect, it, vi } from 'vitest';
 import CockpitFormDialogs from '@/components/cockpit/CockpitFormDialogs';
 
 vi.mock('@/components/ClientFormDialog', () => ({
-  default: () => null
+  default: ({ defaultClientKind }: { defaultClientKind?: string }) => (
+    <div data-testid="client-form-dialog" data-default-client-kind={defaultClientKind ?? ''} />
+  )
 }));
 
 vi.mock('@/components/ClientContactDialog', () => ({
@@ -45,6 +47,7 @@ const baseProps = {
   activeAgencyId: 'agency-1',
   selectedEntity: null,
   isClientDialogOpen: false,
+  clientDialogKind: 'company' as const,
   isProspectDialogOpen: false,
   isContactDialogOpen: false,
   isConvertDialogOpen: false,
@@ -60,6 +63,21 @@ const baseProps = {
 };
 
 describe('CockpitFormDialogs', () => {
+  it('transmet le type particulier au dialog client quand demandé par le cockpit', () => {
+    render(
+      <CockpitFormDialogs
+        {...baseProps}
+        isClientDialogOpen
+        clientDialogKind="individual"
+      />
+    );
+
+    expect(screen.getByTestId('client-form-dialog')).toHaveAttribute(
+      'data-default-client-kind',
+      'individual'
+    );
+  });
+
   it('rend le dialog onboarding verrouille sur Prospect pour la creation inline', () => {
     render(
       <CockpitFormDialogs

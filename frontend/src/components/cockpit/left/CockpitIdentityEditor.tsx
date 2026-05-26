@@ -39,7 +39,7 @@ const CockpitIdentityEditor = ({
       relationMode={relationMode}
     />
     {relationMode !== 'internal' && relationMode !== 'client' && relationMode !== 'individual' && (
-      <>
+      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_2px_8px_-1px_rgba(0,0,0,0.02)] transition-all duration-200 focus-within:border-primary/50 focus-within:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.03)]">
         <CockpitCompanyInput
           errors={errors}
           companyField={companyField}
@@ -49,6 +49,7 @@ const CockpitIdentityEditor = ({
           companySuggestions={companySuggestions}
           companyInputRef={companyInputRef}
           setValue={setValue}
+          isProspect={relationMode === 'prospect'}
         />
         {relationMode === 'prospect' && (
           <CockpitCompanyCityField
@@ -57,7 +58,7 @@ const CockpitIdentityEditor = ({
             error={errors.company_city?.message}
           />
         )}
-      </>
+      </div>
     )}
   </div>
 );

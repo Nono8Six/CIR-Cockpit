@@ -1,8 +1,16 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { AgencyConfig } from '@/services/config';
-import { DEFAULT_AGENCY_SETTINGS, DEFAULT_APP_SETTINGS } from '../../../shared/schemas/system/config.schema';
+import {
+  DEFAULT_AGENCY_SETTINGS,
+  DEFAULT_APP_SETTINGS,
+  type ConfigUsageSnapshot
+} from '../../../shared/schemas/system/config.schema';
 import { useConfigSnapshot } from '../hooks/cockpit-utils/useConfigSnapshot';
 import { useSettingsState } from '@/hooks/settings-state/useSettingsState';
+import { getConfigUsage } from '@/services/config';
+import { createAppError } from '@/services/errors/AppError';
+import { configUsageKey } from '@/services/query/queryKeys';
 import SettingsHeader from './settings/SettingsHeader';
 import SettingsReadOnlyBanner from './settings/SettingsReadOnlyBanner';
 import SettingsSections from './settings/SettingsSections';
@@ -24,7 +32,7 @@ interface SettingsProps {
  * @param {SettingsProps} props - The component properties.
  * @param {AgencyConfig} props.config - Pre-loaded default configuration context.
  * @param {boolean} props.canEditAgencySettings - Flag indicating whether user can edit agency-level settings.
- * @param {boolean} props.canEditProductSettings - Flag indicating whether user can edit product-wide settings.
+ * @param {boolean} props.canEditProductSettings - Flag indicating whether user can edit product-level settings.
  * @param {string | null} props.agencyId - The active agency ID.
  * @returns {JSX.Element} The rendered settings dashboard screen.
  */
@@ -35,6 +43,21 @@ const Settings = ({
   agencyId
 }: SettingsProps) => {
   const snapshotQuery = useConfigSnapshot(agencyId, Boolean(agencyId));
+  const usageQuery = useQuery<ConfigUsageSnapshot>({
+    queryKey: agencyId ? configUsageKey(agencyId) : ['config-usage', 'none'],
+    queryFn: () => {
+      if (!agencyId) {
+        return Promise.reject(createAppError({
+          code: 'AGENCY_ID_INVALID',
+          message: 'Identifiant agence requis.',
+          source: 'validation'
+        }));
+      }
+      return getConfigUsage(agencyId);
+    },
+    enabled: Boolean(agencyId),
+    staleTime: 60_000
+  });
   const snapshot = snapshotQuery.data ?? {
     product: DEFAULT_APP_SETTINGS,
     agency: DEFAULT_AGENCY_SETTINGS,
@@ -66,22 +89,23 @@ const Settings = ({
     newInteractionType,
     newStatus,
     newStatusCategory,
+    setAllowManualEntryOverride,
+    setDefaultCompanyAccountTypeOverride,
+    setProductAllowManualEntry,
+    setProductDefaultCompanyAccountType,
+    setProductUiShellV2,
     setNewFamily,
     setNewService,
     setNewEntity,
     setNewInteractionType,
     setNewStatus,
     setNewStatusCategory,
-    setAllowManualEntryOverride,
-    setDefaultCompanyAccountTypeOverride,
-    setProductAllowManualEntry,
-    setProductDefaultCompanyAccountType,
-    setProductUiShellV2,
     handleSave,
     handleReset,
     addItem,
     removeItem,
     updateItem,
+    renameItem,
     setFamilies,
     setServices,
     setEntities,
@@ -90,6 +114,7 @@ const Settings = ({
     removeStatus,
     updateStatusLabel,
     updateStatusCategory,
+    renameStatus,
     setStatuses,
     isDirty
   } = useSettingsState({
@@ -100,67 +125,37 @@ const Settings = ({
   });
 
   const [activeSection, setActiveSection] = useState<string>('general');
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    const sections = ['general', 'product', 'referentials', 'kanban'];
-    const observedElements: HTMLElement[] = [];
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const id = entry.target.id.replace('settings-section-', '');
-            setActiveSection(id);
-          }
-        });
-      },
-      {
-        root: container,
-        rootMargin: '-5% 0px -80% 0px',
-        threshold: 0,
-      }
-    );
-
-    sections.forEach((secId) => {
-      const element = document.getElementById(`settings-section-${secId}`);
-      if (element) {
-        observer.observe(element);
-        observedElements.push(element);
-      }
-    });
-
-    return () => {
-      observedElements.forEach((el) => observer.unobserve(el));
-      observer.disconnect();
-    };
-  }, []);
+  const usage = usageQuery.data ?? null;
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-lg border border-border bg-card shadow-sm" data-testid="settings-root">
-      <SettingsHeader />
+    <div className="flex h-full flex-col overflow-hidden border border-border bg-surface-1" data-testid="settings-root">
+      <SettingsHeader
+        readOnly={readOnly}
+      />
 
-      {(readOnly || !canEditProductSettings) && (
+      {readOnly && (
         <SettingsReadOnlyBanner
           readOnly={readOnly}
-          canEditProductSettings={canEditProductSettings}
         />
       )}
 
-      <div className="flex flex-1 flex-col overflow-hidden lg:flex-row">
-        {/* Sticky left/top sidebar panel */}
-        <div className="shrink-0 border-b border-border p-4 bg-card/30 lg:w-64 lg:border-b-0 lg:border-r lg:p-4">
-          <SettingsSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
+      <div className="grid flex-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden lg:grid-cols-[18rem_minmax(0,1fr)] lg:grid-rows-1">
+        <div className="shrink-0 border-b border-border bg-surface-2 p-3 lg:border-b-0 lg:border-r">
+          <SettingsSidebar
+            activeSection={activeSection}
+            readOnly={readOnly}
+            isDirty={isDirty}
+            onSectionChange={setActiveSection}
+          />
         </div>
-        {/* Main scrollable section stack */}
-        <div ref={scrollContainerRef} className="flex-1 overflow-auto bg-surface-1/70 p-4 sm:p-6 scroll-smooth">
+        <div className="overflow-auto bg-background p-4">
           <SettingsSections
             readOnly={readOnly}
+            activeSection={activeSection}
             canEditAgencySettings={canEditAgencySettings}
             canEditProductSettings={canEditProductSettings}
+            usage={usage}
+            usageLoading={usageQuery.isLoading}
             allowManualEntryOverride={allowManualEntryOverride}
             defaultCompanyAccountTypeOverride={defaultCompanyAccountTypeOverride}
             productAllowManualEntry={productAllowManualEntry}
@@ -177,20 +172,21 @@ const Settings = ({
             newInteractionType={newInteractionType}
             newStatus={newStatus}
             newStatusCategory={newStatusCategory}
+            setAllowManualEntryOverride={setAllowManualEntryOverride}
+            setDefaultCompanyAccountTypeOverride={setDefaultCompanyAccountTypeOverride}
+            setProductAllowManualEntry={setProductAllowManualEntry}
+            setProductDefaultCompanyAccountType={setProductDefaultCompanyAccountType}
+            setProductUiShellV2={setProductUiShellV2}
             setNewFamily={setNewFamily}
             setNewService={setNewService}
             setNewEntity={setNewEntity}
             setNewInteractionType={setNewInteractionType}
             setNewStatus={setNewStatus}
             setNewStatusCategory={setNewStatusCategory}
-            setAllowManualEntryOverride={setAllowManualEntryOverride}
-            setDefaultCompanyAccountTypeOverride={setDefaultCompanyAccountTypeOverride}
-            setProductAllowManualEntry={setProductAllowManualEntry}
-            setProductDefaultCompanyAccountType={setProductDefaultCompanyAccountType}
-            setProductUiShellV2={setProductUiShellV2}
             addItem={addItem}
             removeItem={removeItem}
             updateItem={updateItem}
+            renameItem={renameItem}
             setFamilies={setFamilies}
             setServices={setServices}
             setEntities={setEntities}
@@ -200,6 +196,7 @@ const Settings = ({
             removeStatus={removeStatus}
             updateStatusLabel={updateStatusLabel}
             updateStatusCategory={updateStatusCategory}
+            renameStatus={renameStatus}
           />
         </div>
       </div>

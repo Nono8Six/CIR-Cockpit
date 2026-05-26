@@ -47,7 +47,10 @@ describe('DashboardToolbar', () => {
     await user.click(screen.getByTestId('dashboard-period-select'));
     await user.click(screen.getByRole('option', { name: /mois dernier/i }));
     expect(onPeriodChange).toHaveBeenCalledWith('lastMonth');
-    expect(screen.getByTestId('dashboard-date-range-help')).toBeInTheDocument();
+    expect(screen.getByTestId('dashboard-date-range-trigger')).toHaveAttribute(
+      'title',
+      expect.stringContaining("dernière action")
+    );
 
     await user.click(screen.getByTestId('dashboard-date-range-trigger'));
     expect(screen.getByTestId('dashboard-date-range-apply')).toBeInTheDocument();

@@ -27,7 +27,7 @@ export type UseCockpitPanePropsParams = {
   onSelectEntityFromSearch: (entity: Entity) => void;
   onSelectContactFromSearch: (contact: EntityContact, entity: Entity | null) => void;
   onSelectUnifiedSearchResult: (result: TierV1DirectoryRow) => void;
-  onOpenClientDialog: () => void;
+  onOpenClientDialog: (clientKind?: 'company' | 'individual') => void;
   onOpenProspectDialog: () => void;
   onOpenGlobalSearch?: () => void;
   recentEntities: Entity[];

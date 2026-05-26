@@ -8,14 +8,18 @@ import {
   SelectValue
 } from '../../ui/inputs/selects/Select';
 
-type UserRoleSelectProps = { role: UserRole; onRoleChange: (role: UserRole) => void };
+type UserRoleSelectProps = {
+  role: UserRole;
+  onRoleChange: (role: UserRole) => void;
+  className?: string;
+};
 
-const UserRoleSelect = ({ role, onRoleChange }: UserRoleSelectProps) => (
+const UserRoleSelect = ({ role, onRoleChange, className }: UserRoleSelectProps) => (
   <Select
     value={role}
     onValueChange={(value) => { if (isUserRole(value)) onRoleChange(value); }}
   >
-    <SelectTrigger className="mt-1">
+    <SelectTrigger className={className ?? "mt-1"}>
       <SelectValue />
     </SelectTrigger>
     <SelectContent>

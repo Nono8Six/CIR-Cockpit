@@ -1,17 +1,25 @@
-import { Trash2, GripVertical } from 'lucide-react';
+import { GripVertical } from 'lucide-react';
 import type { AgencyStatus, StatusCategory } from '@/types';
 import { STATUS_CATEGORY_LABELS } from '@/constants/statusCategories';
-import { isStatusCategory } from '@/utils/typeGuards';
 import { Button } from '../../ui/inputs/basic/Button';
 import { Input } from '../../ui/inputs/basic/Input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../ui/inputs/selects/Select';
 
 type KanbanRowProps = {
   status: AgencyStatus;
   index: number;
   readOnly: boolean;
+  usageCount: number | null;
   onRemove: (index: number) => void;
   onLabelUpdate: (index: number, value: string) => void;
   onCategoryUpdate: (index: number, value: StatusCategory) => void;
+  onRename: (index: number, value: string) => void;
   onDragStart: (e: React.DragEvent, index: number) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent, index: number) => void;
@@ -37,88 +45,124 @@ const KanbanRow = ({
   status,
   index,
   readOnly,
+  usageCount,
   onRemove,
   onLabelUpdate,
   onCategoryUpdate,
+  onRename,
   onDragStart,
   onDragOver,
   onDrop,
 }: KanbanRowProps) => {
+  const usageKnown = usageCount !== null;
+  const handleRename = () => {
+    const nextLabel = prompt(`Renommer "${status.label}"`, status.label);
+    if (!nextLabel?.trim() || nextLabel.trim() === status.label.trim()) return;
+    if (
+      usageKnown
+      && usageCount > 0
+      && !confirm(`${usageCount} interaction(s) utilisent ce statut. Renommer et mettre a jour l'historique ?`)
+    ) {
+      return;
+    }
+    onRename(index, nextLabel);
+  };
+
   return (
     <div
       draggable={!readOnly}
       onDragStart={(e) => onDragStart(e, index)}
       onDragOver={onDragOver}
       onDrop={(e) => onDrop(e, index)}
-      className={`group flex items-center gap-3 rounded-lg border border-border/40 bg-surface-1/40 px-3 py-2 transition-all duration-200 hover:border-border hover:bg-surface-1/80 ${
+      className={`group grid grid-cols-[auto_minmax(0,1fr)] gap-2 border border-border/50 bg-background px-2 py-2 transition-[background-color,border-color] duration-200 hover:border-border hover:bg-card sm:grid-cols-[auto_minmax(0,1fr)_10rem_auto_auto_auto_auto] sm:items-center ${
         readOnly ? '' : 'cursor-grab active:cursor-grabbing'
       }`}
       data-testid={`settings-status-row-${index}`}
     >
-      {!readOnly && (
-        <div className="flex shrink-0 text-muted-foreground/45 transition-colors group-hover:text-muted-foreground/80">
-          <GripVertical className="size-4" />
-        </div>
-      )}
+      <div
+        className="flex shrink-0 text-muted-foreground/45 transition-colors group-hover:text-muted-foreground/80"
+        aria-hidden="true"
+      >
+        {!readOnly && <GripVertical className="size-4" />}
+      </div>
 
       {/* Status Label Input */}
       <Input
         type="text"
         value={status.label}
         onChange={(event) => onLabelUpdate(index, event.target.value)}
-        className={`h-8 flex-1 border-transparent bg-transparent py-0 text-xs shadow-none focus-visible:ring-1 focus-visible:ring-primary/20 ${
+        className={`h-8 min-w-0 border-transparent bg-transparent py-0 text-xs shadow-none focus-visible:ring-1 focus-visible:ring-primary/20 ${
           readOnly ? 'text-muted-foreground/80' : 'text-foreground'
         }`}
-        readOnly={readOnly}
+        readOnly
         disabled={readOnly}
         name={`status-label-${index}`}
         aria-label={`Statut ${index + 1}`}
         autoComplete="off"
       />
 
-      {/* Category Dropdown */}
-      <select
-        value={status.category}
-        disabled={readOnly}
-        onChange={(e) => {
-          const val = e.target.value;
-          if (isStatusCategory(val)) {
-            onCategoryUpdate(index, val);
-          }
-        }}
-        className="h-8 rounded-md border border-border bg-background px-2 py-1 text-[11px] font-medium text-foreground shadow-sm transition-all focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
-        aria-label={`Catégorie du statut ${index + 1}`}
-        data-testid={`settings-status-row-category-${index}`}
-      >
-        {Object.entries(STATUS_CATEGORY_LABELS).map(([value, label]) => (
-          <option key={value} value={value}>
-            {label}
-          </option>
-        ))}
-      </select>
+      <div className="col-span-2 sm:col-span-1">
+        <Select
+          value={status.category}
+          disabled={readOnly}
+          onValueChange={(value) => onCategoryUpdate(index, value as StatusCategory)}
+        >
+          <SelectTrigger
+            density="dense"
+            aria-label={`Catégorie du statut ${index + 1}`}
+            data-testid={`settings-status-row-category-${index}`}
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {Object.entries(STATUS_CATEGORY_LABELS).map(([value, label]) => (
+              <SelectItem key={value} value={value} className="text-xs">
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-      {/* Default Badge for the first status */}
       {index === 0 && (
-        <span className="shrink-0 rounded-full border border-primary/25 bg-primary/5 px-2 py-0.5 text-[10px] font-semibold text-primary">
+        <span className="col-span-1 w-fit shrink-0 border border-primary/25 bg-primary/5 px-2 py-0.5 text-[10px] font-semibold text-primary sm:col-span-1">
           Par défaut
         </span>
       )}
 
-      {/* Remove Button */}
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        onClick={() => onRemove(index)}
-        className={`size-8 shrink-0 text-muted-foreground/50 hover:bg-primary/15 hover:text-primary transition-all ${
-          readOnly ? 'hidden' : 'opacity-0 group-hover:opacity-100'
-        }`}
-        disabled={readOnly}
-        aria-disabled={readOnly}
-        aria-label="Supprimer le statut"
-      >
-        <Trash2 className="size-3.5" />
-      </Button>
+      {usageKnown ? (
+        <span className="font-mono text-[10px] text-muted-foreground tabular-nums">
+          {usageCount} usage
+        </span>
+      ) : null}
+
+      {!readOnly && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={handleRename}
+          className="ml-auto h-7 shrink-0 px-2 text-[11px] text-muted-foreground transition-[background-color,color] hover:bg-accent hover:text-foreground"
+          aria-label={`Renommer le statut ${status.label}`}
+        >
+          Renommer
+        </Button>
+      )}
+
+      {!readOnly && usageKnown && usageCount === 0 && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => onRemove(index)}
+          className="ml-auto h-7 shrink-0 px-2 text-[11px] text-muted-foreground transition-[background-color,color] hover:bg-destructive/10 hover:text-destructive disabled:opacity-40"
+          disabled={false}
+          aria-disabled={false}
+          aria-label={`Supprimer le statut ${status.label}`}
+        >
+          Supprimer
+        </Button>
+      )}
     </div>
   );
 };

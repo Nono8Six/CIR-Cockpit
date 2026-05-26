@@ -57,6 +57,7 @@ type EntityOnboardingDialogProps = {
   commercials?: DirectoryCommercialOption[];
   mode?: OnboardingMode;
   defaultIntent?: OnboardingIntent;
+  defaultClientKind?: "company" | "individual";
   allowedIntents?: OnboardingIntent[];
   initialEntity?: EntityOnboardingSeed | null;
   sourceLabel?: OnboardingSourceLabel;
@@ -81,6 +82,7 @@ const EntityOnboardingDialog = ({
   commercials = [],
   mode = "create",
   defaultIntent = "client",
+  defaultClientKind = "company",
   allowedIntents,
   initialEntity = null,
   sourceLabel = "Annuaire",
@@ -98,6 +100,7 @@ const EntityOnboardingDialog = ({
     activeAgencyId,
     mode,
     defaultIntent,
+    defaultClientKind,
     allowedIntents,
     initialEntity,
     onSaveClient,

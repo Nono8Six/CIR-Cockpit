@@ -10,13 +10,13 @@ const DashboardFamilyBadges = ({ families }: DashboardFamilyBadgesProps) => (
       <Badge
         key={family}
         variant="outline"
-        className="border-border bg-surface-1 px-1.5 py-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground"
+        className="border-border/50 bg-surface-1 px-1 py-0.5 font-mono text-[9px] font-medium uppercase tracking-wider text-muted-foreground"
       >
         {family}
       </Badge>
     ))}
     {families.length > 2 && (
-      <span className="text-xs font-medium text-muted-foreground">+{families.length - 2}</span>
+      <span className="font-mono text-[9px] font-medium text-muted-foreground/80">+{families.length - 2}</span>
     )}
   </div>
 );

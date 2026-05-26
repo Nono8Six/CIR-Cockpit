@@ -20,43 +20,51 @@ type AuditLogsTableProps = {
 
 const AuditLogsTable = ({ logs, isLoading, isError, onRetry }: AuditLogsTableProps) => {
   return (
-    <div className="overflow-hidden rounded-lg border border-border" data-testid="admin-audit-table">
+    <div className="overflow-hidden rounded-2xl border border-border/50 bg-card shadow-[0_8px_30px_rgba(0,0,0,0.015)]" data-testid="admin-audit-table">
       {isLoading && (
-        <div className="p-4 text-sm text-muted-foreground">
-          <span className="inline-flex items-center gap-2">
-            <Loader2 size={16} className="animate-spin" /> Chargement des audits...
+        <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground bg-muted/20">
+          <span className="inline-flex flex-col items-center gap-3">
+            <Loader2 size={24} className="animate-spin text-primary" />
+            <span>Chargement des journaux d&apos;audit...</span>
           </span>
         </div>
       )}
+
       {isError && !isLoading && (
-        <div className="border-b border-warning/35 bg-warning/15 p-4 text-sm text-warning-foreground">
-          <p className="inline-flex items-center gap-2 font-medium">
-            <TriangleAlert size={16} /> La liste des audits est indisponible.
+        <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-6 text-center text-sm text-destructive">
+          <p className="inline-flex flex-col items-center gap-2 font-medium">
+            <TriangleAlert size={24} className="text-destructive" />
+            <span>La liste des journaux d&apos;audit est temporairement indisponible.</span>
           </p>
-          <Button type="button" variant="outline" size="sm" className="mt-3" onClick={onRetry}>
-            Reessayer
-          </Button>
+          <div className="mt-4">
+            <Button type="button" variant="outline" size="sm" onClick={onRetry}>
+              Réessayer le chargement
+            </Button>
+          </div>
         </div>
       )}
+
       {!isLoading && !isError && logs.length === 0 && (
-        <div className="p-4 text-sm text-muted-foreground">
-          <span className="inline-flex items-center gap-2">
-            <Inbox size={16} /> Aucun audit.
+        <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground bg-muted/10">
+          <span className="inline-flex flex-col items-center gap-2">
+            <Inbox size={24} className="text-muted-foreground/60" />
+            <span>Aucun journal d&apos;audit trouvé.</span>
           </span>
         </div>
       )}
+
       {!isLoading && !isError && logs.length > 0 && (
         <>
           <div className="hidden md:block">
             <Table>
-              <TableHeader className="bg-muted">
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Action</TableHead>
-                  <TableHead>Table</TableHead>
-                  <TableHead>Agence</TableHead>
-                  <TableHead>Acteur</TableHead>
-                  <TableHead>Metadata</TableHead>
+              <TableHeader className="bg-muted/5 border-b border-border/40">
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="py-3 pl-6 font-semibold text-[10px] tracking-wider uppercase text-muted-foreground/80">Date</TableHead>
+                  <TableHead className="py-3 font-semibold text-[10px] tracking-wider uppercase text-muted-foreground/80">Action</TableHead>
+                  <TableHead className="py-3 font-semibold text-[10px] tracking-wider uppercase text-muted-foreground/80">Table</TableHead>
+                  <TableHead className="py-3 font-semibold text-[10px] tracking-wider uppercase text-muted-foreground/80">Agence</TableHead>
+                  <TableHead className="py-3 font-semibold text-[10px] tracking-wider uppercase text-muted-foreground/80">Acteur</TableHead>
+                  <TableHead className="py-3 font-semibold text-[10px] tracking-wider uppercase text-muted-foreground/80">Détails / Métadonnées</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -66,7 +74,7 @@ const AuditLogsTable = ({ logs, isLoading, isError, onRetry }: AuditLogsTablePro
               </TableBody>
             </Table>
           </div>
-          <div className="space-y-2 p-3 md:hidden">
+          <div className="space-y-3 p-4 md:hidden bg-muted/5">
             {logs.map((log) => (
               <AuditLogsRow key={log.id} log={log} variant="card" />
             ))}
@@ -74,7 +82,7 @@ const AuditLogsTable = ({ logs, isLoading, isError, onRetry }: AuditLogsTablePro
         </>
       )}
       <div className="sr-only" aria-live="polite">
-        {isLoading ? 'Chargement des audits.' : `${logs.length} audits affiches.`}
+        {isLoading ? 'Chargement des audits.' : `${logs.length} audits affichés.`}
       </div>
     </div>
   );

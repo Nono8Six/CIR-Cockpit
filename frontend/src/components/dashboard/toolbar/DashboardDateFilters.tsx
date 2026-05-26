@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { forwardRef, useEffect, useMemo, useState } from 'react';
 import { format, isValid, parseISO } from 'date-fns';
-import { Calendar as CalendarIcon, CircleHelp } from 'lucide-react';
+import { Calendar as CalendarIcon } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
 
 import { Button } from '../../ui/inputs/basic/Button';
@@ -17,12 +17,6 @@ import {
   SelectTrigger,
   SelectValue
 } from '../../ui/inputs/selects/Select';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from '../../ui/feedback/Tooltip';
 import { formatDateInputValue } from '@/utils/date/formatDateInputValue';
 import type { FilterPeriod } from '@/utils/date/getPresetDateRange';
 import { isFilterPeriod } from '@/utils/typeGuards';
@@ -44,7 +38,7 @@ const PERIOD_OPTIONS: Array<{ value: FilterPeriod; label: string }> = [
   { value: 'last7', label: '7 derniers jours' },
   { value: 'thisMonth', label: 'Mois en cours' },
   { value: 'lastMonth', label: 'Mois dernier' },
-  { value: 'custom', label: 'Periode personnalisee' }
+  { value: 'custom', label: 'Période personnalisée' }
 ];
 
 const parseIsoDate = (value: string): Date | undefined => {
@@ -69,11 +63,11 @@ const buildDateRange = (startDate: string, endDate: string): DateRange | undefin
 
 const formatRangeLabel = (range: DateRange | undefined): string => {
   if (!range?.from) {
-    return 'Selectionner une plage de dates (derniere action)';
+    return 'Sélectionner une plage (dernière action)';
   }
 
   if (!range.to) {
-    return `Du ${format(range.from, 'dd/MM/yyyy')} au ...`;
+    return `Du ${format(range.from, 'dd/MM/yyyy')} au …`;
   }
 
   return `Du ${format(range.from, 'dd/MM/yyyy')} au ${format(range.to, 'dd/MM/yyyy')}`;
@@ -84,7 +78,7 @@ type CompleteDateRange = { from: Date; to: Date };
 const canApplyRange = (range: DateRange | undefined): range is CompleteDateRange =>
   Boolean(range?.from && range?.to);
 
-const DashboardDateFilters = ({
+const DashboardDateFilters = forwardRef<HTMLButtonElement, DashboardDateFiltersProps>(({
   period,
   onPeriodChange,
   periodErrorMessage,
@@ -93,7 +87,7 @@ const DashboardDateFilters = ({
   onDateRangeChange,
   onStartDateChange,
   onEndDateChange
-}: DashboardDateFiltersProps) => {
+}, ref) => {
   const [isDesktop, setIsDesktop] = useState(false);
   const [isRangePopoverOpen, setIsRangePopoverOpen] = useState(false);
   const selectedRange = useMemo(
@@ -117,11 +111,8 @@ const DashboardDateFilters = ({
   }, []);
 
   return (
-    <div
-      className="w-full rounded-md border border-border bg-surface-1 p-1"
-      data-testid="dashboard-date-filters"
-    >
-      <div className="grid gap-1 sm:grid-cols-[minmax(150px,190px)_minmax(0,1fr)_auto] lg:grid-cols-[minmax(170px,210px)_minmax(0,1fr)_auto] lg:items-center">
+    <div className="min-w-0 flex-1" data-testid="dashboard-date-filters">
+      <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(9.5rem,12rem)_minmax(14rem,18rem)] sm:items-center lg:max-w-[31rem]">
         <Select
           value={period}
           onValueChange={(value) => {
@@ -131,12 +122,13 @@ const DashboardDateFilters = ({
           }}
         >
           <SelectTrigger
+            ref={ref}
             data-testid="dashboard-period-select"
             density="dense"
-            className="h-8 bg-card px-2 text-sm"
-            aria-label="Periode de filtrage"
+            className="h-8 w-full border-border bg-card px-2.5 text-xs shadow-soft hover:bg-surface-1 focus-visible:border-primary/40 focus-visible:ring-1 focus-visible:ring-primary/40"
+            aria-label="Période de filtrage"
           >
-            <SelectValue placeholder="Periode de filtrage" />
+            <SelectValue placeholder="Période de filtrage" />
           </SelectTrigger>
           <SelectContent>
             {PERIOD_OPTIONS.map((option) => (
@@ -162,10 +154,10 @@ const DashboardDateFilters = ({
             <Button
               type="button"
               variant="outline"
-              className="h-8 justify-start border-border bg-card px-2 text-left text-xs font-medium text-foreground sm:text-sm"
+              className="h-8 min-w-0 justify-start border-border bg-card px-3 text-left text-xs font-medium text-foreground/90 shadow-soft hover:bg-surface-1 focus-visible:border-primary/40 focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:ring-offset-0"
               data-testid="dashboard-date-range-trigger"
               aria-label="Selectionner la plage de dates"
-              title={formatRangeLabel(activeRange)}
+              title={`${formatRangeLabel(activeRange)}. Le filtre période s'applique sur la date de dernière action des dossiers.`}
             >
               <CalendarIcon size={14} className="shrink-0 text-muted-foreground" />
               <span className="truncate">{formatRangeLabel(activeRange)}</span>
@@ -235,31 +227,6 @@ const DashboardDateFilters = ({
           </PopoverContent>
         </Popover>
 
-        <div className="justify-self-end" data-testid="dashboard-date-range-help">
-          <TooltipProvider delayDuration={150}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  className="inline-flex h-8 items-center justify-center gap-1 rounded-md border border-border bg-card px-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                  aria-label="Aide filtre periode"
-                  data-testid="dashboard-date-range-help-trigger"
-                >
-                  <CircleHelp size={12} />
-                  <span className="hidden sm:inline">Aide</span>
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="max-w-[19rem]">
-                Selectionnez une plage pour afficher les dossiers dont la derniere action
-                est comprise entre ces deux dates. Exemple: du 22/01/2026 au 10/02/2026.
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <span className="sr-only">
-            Le filtre periode s applique sur la date de derniere action des dossiers.
-          </span>
-        </div>
-
         <input
           id="dashboard-start-date"
           name="dashboard-start-date"
@@ -294,6 +261,8 @@ const DashboardDateFilters = ({
       )}
     </div>
   );
-};
+});
+
+DashboardDateFilters.displayName = 'DashboardDateFilters';
 
 export default DashboardDateFilters;

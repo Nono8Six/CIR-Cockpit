@@ -14,6 +14,7 @@ import type {
   DirectoryCompanySearchResult,
   DirectoryListRow
 } from '../../../../shared/schemas/system/directory.schema';
+import { formatOfficialNaf, formatOfficialRegion } from '../../../../shared/reference/officialLabels';
 import { Badge } from '../ui/data-display/Badge';
 
 import { EntityOnboardingCompanySummary } from './EntityOnboardingCompanySummary';
@@ -79,6 +80,8 @@ const EntityOnboardingSidebar = ({
   );
 
   const establishmentStatus = company ? getCompanySearchStatusLabel(company.establishment_status) : null;
+  const establishmentRegion = formatOfficialRegion(company?.region);
+  const establishmentNaf = formatOfficialNaf(company?.naf_code);
 
   return (
     <aside
@@ -132,7 +135,8 @@ const EntityOnboardingSidebar = ({
                     <div className="space-y-2.5">
                       {company.siret ? <SidebarInfoRow label="SIRET" value={company.siret} /> : null}
                       {company.city ? <SidebarInfoRow label="Ville" value={company.city} /> : null}
-                      {company.region ? <SidebarInfoRow label="Region" value={company.region} /> : null}
+                      {establishmentRegion ? <SidebarInfoRow label="Région" value={establishmentRegion} /> : null}
+                      {establishmentNaf ? <SidebarInfoRow label="Activité" value={establishmentNaf} /> : null}
                       {company.date_debut_activite ? (
                         <SidebarInfoRow
                           label="Debut d activite"

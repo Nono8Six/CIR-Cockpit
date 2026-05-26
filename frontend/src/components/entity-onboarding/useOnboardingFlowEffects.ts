@@ -31,6 +31,7 @@ interface UseOnboardingFlowEffectsInput {
   onboardingConfig: ProductOnboardingConfig;
   open: boolean;
   resolvedIntent: OnboardingIntent;
+  defaultClientKind: 'company' | 'individual';
   selectedCompany: DirectoryCompanySearchResult | undefined;
   selectedGroupId: string | null;
   setDepartmentFilter: Dispatch<SetStateAction<string>>;
@@ -60,6 +61,7 @@ export const useOnboardingFlowEffects = ({
   onboardingConfig,
   open,
   resolvedIntent,
+  defaultClientKind,
   selectedCompany,
   selectedGroupId,
   setDepartmentFilter,
@@ -138,6 +140,7 @@ export const useOnboardingFlowEffects = ({
         resolvedIntent,
         initialEntity,
         onboardingConfig,
+        defaultClientKind,
       ),
     );
     stepper.metadata.reset();
@@ -158,6 +161,7 @@ export const useOnboardingFlowEffects = ({
     });
   }, [
     activeAgencyId,
+    defaultClientKind,
     form,
     hasInitializedOpenRef,
     initialEntity,

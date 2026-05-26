@@ -1,6 +1,7 @@
 import { Building2, Copy, LoaderCircle, Sparkles } from 'lucide-react';
 
 import type { DirectoryCompanyDetails, DirectoryCompanySearchResult } from '../../../../shared/schemas/system/directory.schema';
+import { formatOfficialNaf } from '../../../../shared/reference/officialLabels';
 import { Badge } from '../ui/data-display/Badge';
 import { Button } from '../ui/inputs/basic/Button';
 import { notifySuccess } from '@/services/errors/notifySuccess';
@@ -64,6 +65,7 @@ export const EntityOnboardingCompanySummary = ({
   const openCount =
     companyDetails?.company_open_establishments_count ?? selectedGroup?.openEstablishmentCount ?? company?.company_open_establishments_count ?? null;
   const clipboardValue = buildCommercialClipboard(company, companyDetails);
+  const activityLabel = formatOfficialNaf(companyDetails?.activite_principale_naf25 ?? company?.naf_code);
 
   if (!companyName) {
     return (
@@ -117,8 +119,8 @@ export const EntityOnboardingCompanySummary = ({
           <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
             Code NAF
           </p>
-          <p className="mt-1 font-mono text-[12px] font-medium text-foreground">
-            {companyDetails?.activite_principale_naf25 ?? company?.naf_code ?? '-'}
+          <p className="mt-1 text-[12px] font-medium leading-snug text-foreground">
+            {activityLabel ?? '-'}
           </p>
         </div>
       </div>

@@ -98,7 +98,7 @@ export const normalizeInteractionUpdates = (
   return normalized;
 };
 
-const saveInteraction = async (
+export const saveInteraction = async (
   db: DbClient,
   authContext: AuthContext,
   payload: SaveInteractionPayload
@@ -157,7 +157,7 @@ const saveInteraction = async (
   }
 };
 
-const addTimelineEvent = async (
+export const addTimelineEvent = async (
   db: DbClient,
   authContext: AuthContext,
   payload: AddTimelineEventPayload
@@ -274,7 +274,7 @@ export const normalizeKnownCompanies = (rows: Array<{ company_name: string | nul
   return [...companies.values()].sort((left, right) => left.localeCompare(right, 'fr'));
 };
 
-const listInteractionsByAgency = async (
+export const listInteractionsByAgency = async (
   db: DbClient,
   authContext: AuthContext,
   payload: ListByAgencyPayload
@@ -312,7 +312,7 @@ const listInteractionsByAgency = async (
   }
 };
 
-const listInteractionsByEntity = async (
+export const listInteractionsByEntity = async (
   db: DbClient,
   authContext: AuthContext,
   payload: ListByEntityPayload
@@ -357,7 +357,7 @@ const listInteractionsByEntity = async (
   }
 };
 
-const listKnownCompanies = async (
+export const listKnownCompanies = async (
   db: DbClient,
   authContext: AuthContext,
   payload: KnownCompaniesPayload
@@ -383,7 +383,7 @@ const listKnownCompanies = async (
   }
 };
 
-const getInteractionDraft = async (
+export const getInteractionDraft = async (
   db: DbClient,
   authContext: AuthContext,
   payload: DraftGetPayload
@@ -414,7 +414,7 @@ const getInteractionDraft = async (
   }
 };
 
-const saveInteractionDraft = async (
+export const saveInteractionDraft = async (
   db: DbClient,
   authContext: AuthContext,
   payload: DraftSavePayload
@@ -466,7 +466,7 @@ const saveInteractionDraft = async (
   }
 };
 
-const deleteInteractionDraft = async (
+export const deleteInteractionDraft = async (
   db: DbClient,
   authContext: AuthContext,
   payload: DraftDeletePayload
@@ -488,7 +488,7 @@ const deleteInteractionDraft = async (
   }
 };
 
-const deleteInteraction = async (
+export const deleteInteraction = async (
   db: DbClient,
   authContext: AuthContext,
   payload: DeleteInteractionPayload

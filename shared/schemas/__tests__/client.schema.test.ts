@@ -40,6 +40,38 @@ describe('clientFormSchema', () => {
     expect(result.success).toBe(false);
   });
 
+  it('accepts individual clients with cash account and a primary contact', () => {
+    const result = clientFormSchema.safeParse({
+      client_number: '5678',
+      client_kind: 'individual',
+      account_type: 'cash',
+      name: 'Martin Alice',
+      address: '',
+      postal_code: '33000',
+      department: '33',
+      city: 'Bordeaux',
+      siret: null,
+      notes: null,
+      cir_commercial_id: null,
+      agency_id: '11111111-1111-4111-8111-111111111111',
+      primary_contact: {
+        first_name: 'Alice',
+        last_name: 'Martin',
+        phone: '0601020304',
+        email: '',
+        position: '',
+        notes: ''
+      }
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.client_kind).toBe('individual');
+      expect(result.data.account_type).toBe('cash');
+      expect(result.data.primary_contact.last_name).toBe('Martin');
+    }
+  });
+
   it('rejects departments that do not match the entities table constraint', () => {
     const result = clientFormSchema.safeParse({
       client_number: '1234',

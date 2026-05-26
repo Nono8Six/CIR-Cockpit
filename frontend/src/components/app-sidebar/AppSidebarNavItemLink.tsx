@@ -51,10 +51,10 @@ const AppSidebarNavItemLink = ({
       to={getPathForShellNavItem(item)}
       onClick={() => onMobileOpenChange?.(false)}
       className={cn(
-        'group relative flex h-7 w-full items-center rounded-md px-2 text-left text-[12.5px] transition-[background-color,color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98]',
+        'group relative flex h-8 w-full items-center rounded-md px-2 text-left text-[13px] transition-[background-color,border-color,color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98]',
         isActive
-          ? 'border border-border bg-card font-semibold text-foreground shadow-sm'
-          : 'border border-transparent text-muted-foreground hover:bg-card/70 hover:text-foreground',
+          ? 'border border-primary/25 bg-primary/[0.07] font-semibold text-foreground shadow-[0_1px_2px_hsl(var(--foreground)/0.06),0_0_0_1px_hsl(var(--primary)/0.06)]'
+          : 'border border-transparent text-muted-foreground hover:bg-card/75 hover:text-foreground',
         collapsed ? 'justify-center px-0' : 'gap-2.5',
       )}
       aria-current={isActive ? 'page' : undefined}
@@ -65,15 +65,21 @@ const AppSidebarNavItemLink = ({
         <motion.span
           layoutId="active-nav-indicator"
           className={cn(
-            'absolute -left-[7px] top-[21%] h-[58%] rounded-r-full bg-primary',
-            collapsed ? 'w-[2px]' : 'w-[3px]',
+            'absolute left-0 top-1/2 -translate-y-1/2 rounded-r-full bg-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.18),0_0_10px_hsl(var(--primary)/0.16)]',
+            collapsed ? 'h-4 w-[2px]' : 'h-[18px] w-[3px]',
           )}
           initial={false}
           transition={activeIndicatorTransition}
         />
       ) : null}
 
-      <item.icon size={14} className={cn('relative z-10 shrink-0', isActive ? 'text-primary' : 'text-muted-foreground')} />
+      <item.icon
+        size={15}
+        className={cn(
+          'relative z-10 shrink-0 transition-colors',
+          isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground',
+        )}
+      />
 
       <AnimatePresence initial={false}>
         {!collapsed ? (
@@ -92,7 +98,14 @@ const AppSidebarNavItemLink = ({
                 </span>
               ) : null}
               {item.shortcut ? (
-                <span className="font-mono text-[10px] text-muted-foreground/60">{item.shortcut}</span>
+                <span
+                  className={cn(
+                    'font-mono text-[10px] transition-colors',
+                    isActive ? 'text-primary/70' : 'text-muted-foreground/55 group-hover:text-muted-foreground/75',
+                  )}
+                >
+                  {item.shortcut}
+                </span>
               ) : null}
             </span>
           </motion.span>

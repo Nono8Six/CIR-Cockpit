@@ -70,12 +70,12 @@ describe('AdminSupplierCreatePage', () => {
           official_name: 'SIEMENS SAS',
           siret: '56201677400020',
           siren: '562016774',
-          naf_code: '46.69B',
+          naf_code: '43.21A',
           address: '40 Avenue des Fruitiers',
           postal_code: '93210',
           city: 'Saint-Denis',
           department: '93',
-          region: null,
+          region: '75',
           date_creation: null,
           date_debut_activite: null,
           employee_range: null,
@@ -90,6 +90,35 @@ describe('AdminSupplierCreatePage', () => {
           commercial_name: null,
           company_establishments_count: 1,
           company_open_establishments_count: 1,
+          match_quality: 'exact',
+          match_explanation: null,
+          official_data_source: 'api-recherche-entreprises',
+          official_data_synced_at: '2026-05-16T00:00:00.000Z'
+        }, {
+          name: 'SIEMENS SAS',
+          official_name: 'SIEMENS SAS',
+          siret: '56201677400038',
+          siren: '562016774',
+          naf_code: '43.21A',
+          address: '12 Rue Secondaire',
+          postal_code: '69000',
+          city: 'Lyon',
+          department: '69',
+          region: '84',
+          date_creation: null,
+          date_debut_activite: null,
+          employee_range: null,
+          employee_range_year: null,
+          is_employer: null,
+          establishment_diffusion_status: null,
+          brands: [],
+          is_head_office: false,
+          is_former_head_office: false,
+          establishment_status: 'open',
+          establishment_closed_at: null,
+          commercial_name: null,
+          company_establishments_count: 2,
+          company_open_establishments_count: 2,
           match_quality: 'exact',
           match_explanation: null,
           official_data_source: 'api-recherche-entreprises',
@@ -109,7 +138,21 @@ describe('AdminSupplierCreatePage', () => {
 
     await user.type(screen.getByRole('textbox', { name: /recherche officielle fournisseur admin/i }), 'Siemens');
     await user.click(screen.getByRole('button', { name: /^rechercher$/i }));
+    expect(screen.getAllByRole('button', { name: /SIEMENS SAS SIREN 562016774/i })).toHaveLength(1);
+    expect(screen.queryByRole('textbox', { name: /code interne fournisseur/i })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /SIEMENS SAS SIREN 562016774/i }));
+    const establishmentButtons = screen.getAllByRole('button', { name: /NAF 43\.21A/i });
+    expect(establishmentButtons[0]).toHaveTextContent(/siège/i);
+    expect(establishmentButtons[0]).toHaveTextContent(/Travaux d'installation électrique/i);
+
     await user.click(screen.getByRole('button', { name: /saint-denis/i }));
+    expect(screen.queryByRole('textbox', { name: /code interne fournisseur/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('complementary', { name: /prévisualisation fournisseur/i })).toHaveTextContent('56201677400020');
+    expect(screen.getByRole('complementary', { name: /prévisualisation fournisseur/i })).toHaveTextContent('Nouvelle-Aquitaine');
+    expect(screen.getByRole('complementary', { name: /prévisualisation fournisseur/i })).toHaveTextContent("43.21A - Travaux d'installation électrique dans tous locaux");
+
+    await user.click(screen.getByRole('button', { name: /utiliser cet établissement/i }));
     await user.type(screen.getByRole('textbox', { name: /code interne fournisseur/i }), 'sie1');
     await user.type(screen.getByRole('textbox', { name: /numéro fournisseur/i }), '445566');
     await user.type(screen.getByRole('textbox', { name: /email fournisseur admin/i }), 'contact@siemens.example');

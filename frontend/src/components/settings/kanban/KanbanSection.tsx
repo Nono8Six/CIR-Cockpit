@@ -1,12 +1,14 @@
 import { Kanban } from 'lucide-react';
+import type { ConfigUsageSnapshot } from '../../../../../shared/schemas/system/config.schema';
 import type { AgencyStatus, StatusCategory } from '@/types';
-import { Badge } from '../../ui/data-display/Badge';
+import SettingsSectionShell from '../ui/SettingsSectionShell';
 import KanbanAddBar from './KanbanAddBar';
 import KanbanRow from './KanbanRow';
 import KanbanSimulator from './KanbanSimulator';
 
 type KanbanSectionProps = {
   readOnly: boolean;
+  usage: ConfigUsageSnapshot | null;
   statuses: AgencyStatus[];
   newStatus: string;
   newStatusCategory: StatusCategory;
@@ -16,6 +18,7 @@ type KanbanSectionProps = {
   removeStatus: (index: number) => void;
   updateStatusLabel: (index: number, label: string) => void;
   updateStatusCategory: (index: number, category: StatusCategory) => void;
+  renameStatus: (index: number, nextLabel: string) => void;
   setStatuses: (next: AgencyStatus[]) => void;
 };
 
@@ -39,6 +42,7 @@ type KanbanSectionProps = {
  */
 const KanbanSection = ({
   readOnly,
+  usage,
   statuses,
   newStatus,
   newStatusCategory,
@@ -48,8 +52,17 @@ const KanbanSection = ({
   removeStatus,
   updateStatusLabel,
   updateStatusCategory,
+  renameStatus,
   setStatuses,
 }: KanbanSectionProps) => {
+  const statusUsageById = new Map(
+    (usage?.dimensions.statuses ?? [])
+      .filter((row) => row.reference_id)
+      .map((row) => [row.reference_id as string, row.usage_count])
+  );
+  const orphanStatuses = (usage?.dimensions.statuses ?? []).filter(
+    (row) => row.state === 'used_not_in_reference'
+  );
   const handleDragStart = (e: React.DragEvent, index: number) => {
     e.dataTransfer.setData('text/plain', index.toString());
     e.dataTransfer.effectAllowed = 'move';
@@ -73,33 +86,33 @@ const KanbanSection = ({
   };
 
   return (
-    <section
+    <SettingsSectionShell
       id="settings-section-kanban"
-      className="scroll-mt-6 rounded-xl border border-border/80 bg-card p-6 shadow-sm transition-all hover:shadow-md"
+      title="Statuts des interactions"
+      description="Ordre et catégorie des statuts visibles dans le pilotage. Le premier statut reste la valeur appliquée par défaut."
+      icon={Kanban}
+      badge={readOnly ? 'Lecture seule' : 'Édition'}
+      badgeTone={readOnly ? 'warning' : 'default'}
     >
-      <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <Kanban className="size-4" />
-            </div>
-            <h3 className="text-sm font-semibold text-foreground">
-              Statuts et étapes du workflow Kanban
-            </h3>
+      {usage && orphanStatuses.length > 0 && (
+        <div className="mb-3 border border-amber-300 bg-amber-50 p-3 text-xs text-amber-950">
+          <div className="font-semibold">Statuts déjà utilisés mais absents du workflow</div>
+          <div className="mt-1 max-w-[72ch] leading-relaxed">
+            Ces valeurs existent dans des interactions historiques. Elles doivent être réintégrées
+            ou migrées avant de considérer le workflow propre.
           </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Organisez et gérez les étapes par lesquelles passent vos dossiers clients. Le premier statut est appliqué par défaut.
-          </p>
         </div>
-        <Badge
-          variant="outline"
-          className="w-fit border-border bg-surface-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground"
-        >
-          {readOnly ? 'Lecture Seule' : 'Édition'}
-        </Badge>
-      </div>
+      )}
 
-      {/* Add Bar */}
+      {usage && (
+        <div className="mb-3 border border-border bg-background p-3 text-xs">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Statuts configurés
+          </div>
+          <div className="mt-1 font-mono text-lg font-semibold tabular-nums">{statuses.length}</div>
+        </div>
+      )}
+
       <KanbanAddBar
         newStatus={newStatus}
         newStatusCategory={newStatusCategory}
@@ -109,11 +122,18 @@ const KanbanSection = ({
         onAdd={addStatus}
       />
 
-      {/* List Container */}
-      <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-3 text-xs">
+            <span className="font-semibold text-foreground">Statuts configurés</span>
+            <span className="font-mono text-muted-foreground tabular-nums">
+              {statuses.length}
+            </span>
+          </div>
+          <div className="max-h-[360px] space-y-1.5 overflow-y-auto pr-1">
         {statuses.length === 0 ? (
-          <div className="flex h-24 items-center justify-center rounded-xl border border-dashed border-border/60 text-xs text-muted-foreground/60">
-            Aucun statut de configuré
+          <div className="flex h-28 items-center justify-center border border-dashed border-border/70 bg-surface-1/45 px-3 text-center text-xs text-muted-foreground">
+            Aucun statut configuré
           </div>
         ) : (
           statuses.map((status, index) => (
@@ -122,20 +142,23 @@ const KanbanSection = ({
               status={status}
               index={index}
               readOnly={readOnly}
+              usageCount={usage && status.id ? statusUsageById.get(status.id) ?? 0 : null}
               onRemove={removeStatus}
               onLabelUpdate={updateStatusLabel}
               onCategoryUpdate={updateStatusCategory}
+              onRename={renameStatus}
               onDragStart={handleDragStart}
               onDragOver={handleDragOver}
               onDrop={handleDrop}
             />
           ))
         )}
-      </div>
+          </div>
+        </div>
 
-      {/* Live Kanban Preview */}
-      <KanbanSimulator statuses={statuses} />
-    </section>
+        <KanbanSimulator statuses={statuses} />
+      </div>
+    </SettingsSectionShell>
   );
 };
 

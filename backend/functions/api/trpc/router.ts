@@ -1,5 +1,7 @@
 import {
   configGetResponseSchema,
+  configUsageResponseSchema,
+  configReferenceActionResponseSchema,
   configSaveAgencyResponseSchema,
   configSaveProductResponseSchema,
   adminAgenciesResponseSchema,
@@ -36,6 +38,8 @@ import {
 } from '../../../../shared/schemas/interaction/cockpit.schema.ts';
 import {
   configGetInputSchema,
+  configUsageInputSchema,
+  configReferenceActionInputSchema,
   configSaveAgencyInputSchema,
   configSaveProductInputSchema
 } from '../../../../shared/schemas/system/config.schema.ts';
@@ -74,8 +78,9 @@ import {
 import { handleAdminAgenciesAction } from '../services/admin/adminAgencies.ts';
 import { listAdminAuditLogs, listAdminUsers } from '../services/admin/adminQueries.ts';
 import { handleAdminUsersAction } from '../services/admin/adminUsers.ts';
-import { saveAgencyConfigSettings, saveProductConfigSettings } from '../services/config/configSettings.ts';
+import { handleConfigReferenceAction, saveAgencyConfigSettings, saveProductConfigSettings } from '../services/config/configSettings.ts';
 import { getConfigSnapshot } from '../services/config/configSnapshot.ts';
+import { getConfigUsage } from '../services/config/configUsage.ts';
 import { handleDataConfigAction } from '../services/data/dataConfig.ts';
 import { handleDataEntitiesAction } from '../services/entities/core/dataEntities.ts';
 import { handleDataEntityContactsAction } from '../services/entities/contacts/dataEntityContacts.ts';
@@ -186,6 +191,14 @@ export const appRouter = router({
       .input(configGetInputSchema)
       .output(configGetResponseSchema)
       .query(withAuthedHandler(getConfigSnapshot)),
+    usage: authedProcedure
+      .input(configUsageInputSchema)
+      .output(configUsageResponseSchema)
+      .query(withAuthedHandler(getConfigUsage)),
+    reference: authedProcedure
+      .input(configReferenceActionInputSchema)
+      .output(configReferenceActionResponseSchema)
+      .mutation(withAuthedHandler(handleConfigReferenceAction)),
     'save-agency': authedProcedure
       .input(configSaveAgencyInputSchema)
       .output(configSaveAgencyResponseSchema)

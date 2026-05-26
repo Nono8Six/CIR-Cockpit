@@ -4,7 +4,15 @@ import { useQueryClient } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import type { TierV1DirectoryRow } from '../../../../shared/schemas/interaction/tier-v1.schema';
-import { Channel, type Interaction, type InteractionDraft, type StatusCategory, type Entity, type EntityContact, type UserRole } from '@/types';
+import {
+  Channel,
+  type Interaction,
+  type InteractionDraft,
+  type StatusCategory,
+  type Entity,
+  type EntityContact,
+  type UserRole
+} from '@/types';
 import {
   getRelationLabelForTierType,
   INTERNAL_COMPANY_NAME
@@ -12,7 +20,10 @@ import {
 import { useRecentOwnInteractions } from '../interactions/core/queries/useRecentOwnInteractions';
 import { useEntityInteractions } from '../interactions/core/queries/useEntityInteractions';
 import type { AgencyConfig } from '@/services/config';
-import { interactionFormSchema, type InteractionFormValues } from '../../../../shared/schemas/interaction/interaction.schema';
+import {
+  interactionFormSchema,
+  type InteractionFormValues
+} from '../../../../shared/schemas/interaction/interaction.schema';
 import { useSaveClient } from '../entities/clients/useSaveClient';
 import { useSaveProspect } from '../entities/prospects/useSaveProspect';
 import { useSaveEntityContact } from '../entities/contacts/useSaveEntityContact';
@@ -34,15 +45,65 @@ import { useCockpitRegisterFields } from '../cockpit-utils/useCockpitRegisterFie
 import { useCockpitPaneProps } from '../cockpit-utils/useCockpitPaneProps';
 import { useCockpitRelationChange } from '../cockpit-utils/useCockpitRelationChange';
 
-type UseCockpitFormControllerParams = { onSave: (interaction: InteractionDraft) => Promise<boolean>; config: AgencyConfig; activeAgencyId: string | null; userId: string | null; userRole: UserRole; recentEntities?: Entity[]; interactions?: Interaction[]; entitySearchIndex: { entities: Entity[]; contacts: EntityContact[] }; entitySearchLoading: boolean; onOpenGlobalSearch?: () => void };
-const DEFAULT_FORM_VALUES: InteractionFormValues = { channel: Channel.PHONE, entity_type: '', contact_service: '', company_name: '', company_city: '', contact_first_name: '', contact_last_name: '', contact_position: '', contact_name: '', contact_phone: '', contact_email: '', subject: '', mega_families: [], status_id: '', interaction_type: '', order_ref: '', reminder_at: '', notes: '', entity_id: '', contact_id: '' };
-const STATUS_CATEGORY_BADGES: Record<StatusCategory, string> = { todo: 'bg-destructive/10 text-destructive border-destructive/25', in_progress: 'bg-warning/15 text-warning-foreground border-warning/25', done: 'bg-success/12 text-success border-success/25' };
+type UseCockpitFormControllerParams = {
+  onSave: (interaction: InteractionDraft) => Promise<boolean>;
+  config: AgencyConfig;
+  activeAgencyId: string | null;
+  userId: string | null;
+  userRole: UserRole;
+  recentEntities?: Entity[];
+  interactions?: Interaction[];
+  entitySearchIndex: {
+    entities: Entity[];
+    contacts: EntityContact[];
+  };
+  entitySearchLoading: boolean;
+  onOpenGlobalSearch?: () => void;
+};
+
+const DEFAULT_FORM_VALUES: InteractionFormValues = {
+  channel: Channel.PHONE,
+  entity_type: '',
+  contact_service: '',
+  company_name: '',
+  company_city: '',
+  contact_first_name: '',
+  contact_last_name: '',
+  contact_position: '',
+  contact_name: '',
+  contact_phone: '',
+  contact_email: '',
+  subject: '',
+  mega_families: [],
+  status_id: '',
+  interaction_type: '',
+  order_ref: '',
+  reminder_at: '',
+  notes: '',
+  entity_id: '',
+  contact_id: ''
+};
+
+const STATUS_CATEGORY_BADGES: Record<StatusCategory, string> = {
+  todo: 'bg-destructive/10 text-destructive border-destructive/25',
+  in_progress: 'bg-warning/15 text-warning-foreground border-warning/25',
+  done: 'bg-success/12 text-success border-success/25'
+};
+
 const LABEL_STYLE = 'text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5 block';
 const FOOTER_LABEL_STYLE = 'text-xs font-semibold text-muted-foreground/80 uppercase tracking-wide';
 const EMPTY_ENTITIES: Entity[] = [];
 const EMPTY_INTERACTIONS: Interaction[] = [];
 const CLIENT_CONTEXT_INTERACTIONS_PAGE_SIZE = 6;
 
+/**
+ * Converts a unified search result from the directory to a standardized Entity model.
+ *
+ * @param result - The directory search row to convert.
+ * @param relationLabel - The label associated with the relation (e.g. client, prospect).
+ * @param activeAgencyId - The current active agency ID.
+ * @returns The converted Entity object matching the application state types.
+ */
 const toEntityFromUnifiedSearchResult = (
   result: TierV1DirectoryRow,
   relationLabel: string,
@@ -73,31 +134,238 @@ const toEntityFromUnifiedSearchResult = (
   primary_email: result.email
 });
 
-export const useCockpitFormController = ({ onSave, config, activeAgencyId, userId, userRole, recentEntities = EMPTY_ENTITIES, interactions = EMPTY_INTERACTIONS, entitySearchIndex, entitySearchLoading, onOpenGlobalSearch }: UseCockpitFormControllerParams) => {
-  const dialogs = useCockpitDialogsState(); const refs = useCockpitFormRefs(); const queryClient = useQueryClient();
-  const form = useForm<InteractionFormValues>({ resolver: zodResolver(interactionFormSchema), defaultValues: DEFAULT_FORM_VALUES });
-  const formState = useInteractionFormState({ control: form.control, config, activeAgencyId, entitySearchIndex, selectedEntity: dialogs.selectedEntity, selectedContact: dialogs.selectedContact });
+/**
+ * Custom hook orchestrating the cockpit form controller state, actions, and effects.
+ *
+ * @param params - The controller configuration parameters.
+ * @returns The form controller state, submit handlers, pane props, and dialog controls.
+ */
+export const useCockpitFormController = ({
+  onSave,
+  config,
+  activeAgencyId,
+  userId,
+  userRole,
+  recentEntities = EMPTY_ENTITIES,
+  interactions = EMPTY_INTERACTIONS,
+  entitySearchIndex,
+  entitySearchLoading,
+  onOpenGlobalSearch
+}: UseCockpitFormControllerParams) => {
+  const dialogs = useCockpitDialogsState();
+  const refs = useCockpitFormRefs();
+  const queryClient = useQueryClient();
 
-  useInteractionFormEffects({ register: form.register, setValue: form.setValue, clearErrors: form.clearErrors, config, defaultStatusId: formState.defaultStatusId, statusId: formState.statusId, contactService: formState.contactService, interactionType: formState.interactionType, normalizedRelation: formState.normalizedRelation, selectedEntity: dialogs.selectedEntity, setSelectedEntity: dialogs.setSelectedEntity, setSelectedContact: dialogs.setSelectedContact, entityId: formState.entityId, isInternalRelation: formState.isInternalRelation, isSolicitationRelation: formState.isSolicitationRelation, onCloseContactDialog: () => dialogs.setIsContactDialogOpen(false) });
-  const onRelationChange = useCockpitRelationChange({ reset: form.reset, clearErrors: form.clearErrors, channel: formState.channel, entityType: formState.entityType, config, defaultStatusId: formState.defaultStatusId, setSelectedEntity: dialogs.setSelectedEntity, setSelectedContact: dialogs.setSelectedContact });
+  const form = useForm<InteractionFormValues>({
+    resolver: zodResolver(interactionFormSchema),
+    defaultValues: DEFAULT_FORM_VALUES
+  });
+
+  const formState = useInteractionFormState({
+    control: form.control,
+    config,
+    activeAgencyId,
+    entitySearchIndex,
+    selectedEntity: dialogs.selectedEntity,
+    selectedContact: dialogs.selectedContact
+  });
+
+  useInteractionFormEffects({
+    register: form.register,
+    setValue: form.setValue,
+    clearErrors: form.clearErrors,
+    config,
+    defaultStatusId: formState.defaultStatusId,
+    statusId: formState.statusId,
+    contactService: formState.contactService,
+    interactionType: formState.interactionType,
+    normalizedRelation: formState.normalizedRelation,
+    selectedEntity: dialogs.selectedEntity,
+    setSelectedEntity: dialogs.setSelectedEntity,
+    setSelectedContact: dialogs.setSelectedContact,
+    entityId: formState.entityId,
+    isInternalRelation: formState.isInternalRelation,
+    isSolicitationRelation: formState.isSolicitationRelation,
+    onCloseContactDialog: () => dialogs.setIsContactDialogOpen(false)
+  });
+
+  const onRelationChange = useCockpitRelationChange({
+    reset: form.reset,
+    clearErrors: form.clearErrors,
+    channel: formState.channel,
+    entityType: formState.entityType,
+    config,
+    defaultStatusId: formState.defaultStatusId,
+    setSelectedEntity: dialogs.setSelectedEntity,
+    setSelectedContact: dialogs.setSelectedContact
+  });
 
   const { knownCompanies, setKnownCompanies } = useKnownCompanies();
-  const handlers = useInteractionHandlers({ setValue: form.setValue, clearErrors: form.clearErrors, normalizedRelation: formState.normalizedRelation, contacts: formState.contacts, megaFamilies: formState.megaFamilies, contactFirstName: formState.contactFirstName, contactLastName: formState.contactLastName, activeAgencyId, queryClient, setSelectedEntity: dialogs.setSelectedEntity, setSelectedContact: dialogs.setSelectedContact, saveClientMutation: useSaveClient(activeAgencyId, false), saveProspectMutation: useSaveProspect(activeAgencyId, false, false), saveContactMutation: useSaveEntityContact(dialogs.selectedEntity?.id ?? null, false, activeAgencyId), onConvertComplete: dialogs.closeConvertDialog });
-  const derived = useCockpitDerivedState({ channel: formState.channel, entityType: formState.entityType, contactService: formState.contactService, interactionType: formState.interactionType, companyName: formState.companyName, companyCity: formState.companyCity, contactFirstName: formState.contactFirstName, contactLastName: formState.contactLastName, contactPosition: formState.contactPosition, contactName: formState.contactName, contactPhone: formState.contactPhone, contactEmail: formState.contactEmail, subject: formState.subject, megaFamilies: formState.megaFamilies, statusId: formState.statusId, orderRef: formState.orderRef, reminderAt: formState.reminderAt, notes: formState.notes, entityId: formState.entityId, contactId: formState.contactId, config, knownCompanies, selectedEntity: dialogs.selectedEntity, isClientRelation: formState.isClientRelation });
 
-  const { handleReset, draftStatus, lastSavedAt } = useInteractionDraft({ activeAgencyId, userId, defaultValues: DEFAULT_FORM_VALUES, relationOptions: formState.relationOptions, config, defaultStatusId: formState.defaultStatusId, reset: form.reset, setSelectedEntity: dialogs.setSelectedEntity, setSelectedContact: dialogs.setSelectedContact, entities: formState.entities, contacts: formState.contacts, entitySearchLoading, contactsLoading: formState.contactsQuery.isLoading, entityId: formState.entityId, contactId: formState.contactId, selectedEntity: dialogs.selectedEntity, selectedContact: dialogs.selectedContact, draftPayload: derived.draftPayload, hasDraftContent: derived.hasDraftContent });
+  const handlers = useInteractionHandlers({
+    setValue: form.setValue,
+    clearErrors: form.clearErrors,
+    normalizedRelation: formState.normalizedRelation,
+    contacts: formState.contacts,
+    megaFamilies: formState.megaFamilies,
+    contactFirstName: formState.contactFirstName,
+    contactLastName: formState.contactLastName,
+    activeAgencyId,
+    queryClient,
+    setSelectedEntity: dialogs.setSelectedEntity,
+    setSelectedContact: dialogs.setSelectedContact,
+    saveClientMutation: useSaveClient(activeAgencyId, false),
+    saveProspectMutation: useSaveProspect(activeAgencyId, false, false),
+    saveContactMutation: useSaveEntityContact(dialogs.selectedEntity?.id ?? null, false, activeAgencyId),
+    onConvertComplete: dialogs.closeConvertDialog
+  });
+
+  const derived = useCockpitDerivedState({
+    channel: formState.channel,
+    entityType: formState.entityType,
+    contactService: formState.contactService,
+    interactionType: formState.interactionType,
+    companyName: formState.companyName,
+    companyCity: formState.companyCity,
+    contactFirstName: formState.contactFirstName,
+    contactLastName: formState.contactLastName,
+    contactPosition: formState.contactPosition,
+    contactName: formState.contactName,
+    contactPhone: formState.contactPhone,
+    contactEmail: formState.contactEmail,
+    subject: formState.subject,
+    megaFamilies: formState.megaFamilies,
+    statusId: formState.statusId,
+    orderRef: formState.orderRef,
+    reminderAt: formState.reminderAt,
+    notes: formState.notes,
+    entityId: formState.entityId,
+    contactId: formState.contactId,
+    config,
+    knownCompanies,
+    selectedEntity: dialogs.selectedEntity,
+    isClientRelation: formState.isClientRelation
+  });
+
+  const { handleReset, draftStatus, lastSavedAt } = useInteractionDraft({
+    activeAgencyId,
+    userId,
+    defaultValues: DEFAULT_FORM_VALUES,
+    relationOptions: formState.relationOptions,
+    config,
+    defaultStatusId: formState.defaultStatusId,
+    reset: form.reset,
+    setSelectedEntity: dialogs.setSelectedEntity,
+    setSelectedContact: dialogs.setSelectedContact,
+    entities: formState.entities,
+    contacts: formState.contacts,
+    entitySearchLoading,
+    contactsLoading: formState.contactsQuery.isLoading,
+    entityId: formState.entityId,
+    contactId: formState.contactId,
+    selectedEntity: dialogs.selectedEntity,
+    selectedContact: dialogs.selectedContact,
+    draftPayload: derived.draftPayload,
+    hasDraftContent: derived.hasDraftContent
+  });
+
   const [lastSavedInteraction, setLastSavedInteraction] = useState<InteractionDraft | null>(null);
-  const onStartNewEntry = useCallback(() => { setLastSavedInteraction(null); handleReset(); }, [handleReset]);
-  const gateState = useInteractionGateState({ channel: formState.channel, entityType: formState.entityType, contactService: formState.contactService, interactionType: formState.interactionType, subject: formState.subject, statusId: formState.statusId, companyName: formState.companyName, companyCity: formState.companyCity, contactFirstName: formState.contactFirstName, contactLastName: formState.contactLastName, contactPosition: formState.contactPosition, contactName: formState.contactName, contactPhone: formState.contactPhone, contactEmail: formState.contactEmail, isClientRelation: formState.isClientRelation, isInternalRelation: formState.isInternalRelation, hasSelectedEntity: Boolean(dialogs.selectedEntity), hasSelectedContact: Boolean(dialogs.selectedContact) });
-  const { stepperSteps, currentStepIndex } = useInteractionStepper({ channel: formState.channel, entityType: formState.entityType, companyName: formState.companyName, companyCity: formState.companyCity, contactFirstName: formState.contactFirstName, contactLastName: formState.contactLastName, contactPosition: formState.contactPosition, contactPhone: formState.contactPhone, contactService: formState.contactService, interactionType: formState.interactionType, hasContactMethod: gateState.hasContactMethod, isClientRelation: formState.isClientRelation, isIndividualRelation: formState.isIndividualRelation, isProspectRelation: formState.isProspectRelation, isSupplierRelation: formState.isSupplierRelation, isInternalRelation: formState.isInternalRelation, isSolicitationRelation: formState.isSolicitationRelation, selectedEntity: dialogs.selectedEntity, selectedContact: dialogs.selectedContact });
 
-  const focusCurrentStep = useInteractionFocus({ currentStepIndex, isClientRelation: formState.isClientRelation, selectedEntity: dialogs.selectedEntity, channelButtonRef: refs.channelButtonRef, relationButtonRef: refs.relationButtonRef, interactionTypeRef: refs.interactionTypeRef, companyInputRef: refs.companyInputRef, contactFirstNameInputRef: refs.contactFirstNameInputRef, contactSelectRef: refs.contactSelectRef, searchInputRef: refs.searchInputRef, formRef: refs.formRef });
-  const { onSubmit } = useInteractionSubmit({ activeAgencyId, selectedEntity: dialogs.selectedEntity, selectedContact: dialogs.selectedContact, onSave, handleSelectEntity: handlers.handleSelectEntity, handleSelectContact: handlers.handleSelectContact, queryClient, handleReset, onSaveSuccess: setLastSavedInteraction, setKnownCompanies });
-  const onInvalid = useInteractionInvalidHandler({ setFocus: form.setFocus, searchInputRef: refs.searchInputRef, contactSelectRef: refs.contactSelectRef, statusTriggerRef: refs.statusTriggerRef });
+  const onStartNewEntry = useCallback(() => {
+    setLastSavedInteraction(null);
+    handleReset();
+  }, [handleReset]);
+
+  const gateState = useInteractionGateState({
+    channel: formState.channel,
+    entityType: formState.entityType,
+    contactService: formState.contactService,
+    interactionType: formState.interactionType,
+    subject: formState.subject,
+    statusId: formState.statusId,
+    companyName: formState.companyName,
+    companyCity: formState.companyCity,
+    contactFirstName: formState.contactFirstName,
+    contactLastName: formState.contactLastName,
+    contactPosition: formState.contactPosition,
+    contactName: formState.contactName,
+    contactPhone: formState.contactPhone,
+    contactEmail: formState.contactEmail,
+    isClientRelation: formState.isClientRelation,
+    isInternalRelation: formState.isInternalRelation,
+    hasSelectedEntity: Boolean(dialogs.selectedEntity),
+    hasSelectedContact: Boolean(dialogs.selectedContact)
+  });
+
+  const { stepperSteps, currentStepIndex } = useInteractionStepper({
+    channel: formState.channel,
+    entityType: formState.entityType,
+    companyName: formState.companyName,
+    companyCity: formState.companyCity,
+    contactFirstName: formState.contactFirstName,
+    contactLastName: formState.contactLastName,
+    contactPosition: formState.contactPosition,
+    contactPhone: formState.contactPhone,
+    contactService: formState.contactService,
+    interactionType: formState.interactionType,
+    hasContactMethod: gateState.hasContactMethod,
+    isClientRelation: formState.isClientRelation,
+    isIndividualRelation: formState.isIndividualRelation,
+    isProspectRelation: formState.isProspectRelation,
+    isSupplierRelation: formState.isSupplierRelation,
+    isInternalRelation: formState.isInternalRelation,
+    isSolicitationRelation: formState.isSolicitationRelation,
+    selectedEntity: dialogs.selectedEntity,
+    selectedContact: dialogs.selectedContact
+  });
+
+  const focusCurrentStep = useInteractionFocus({
+    currentStepIndex,
+    isClientRelation: formState.isClientRelation,
+    selectedEntity: dialogs.selectedEntity,
+    channelButtonRef: refs.channelButtonRef,
+    relationButtonRef: refs.relationButtonRef,
+    interactionTypeRef: refs.interactionTypeRef,
+    companyInputRef: refs.companyInputRef,
+    contactFirstNameInputRef: refs.contactFirstNameInputRef,
+    contactSelectRef: refs.contactSelectRef,
+    searchInputRef: refs.searchInputRef,
+    formRef: refs.formRef
+  });
+
+  const { onSubmit } = useInteractionSubmit({
+    activeAgencyId,
+    selectedEntity: dialogs.selectedEntity,
+    selectedContact: dialogs.selectedContact,
+    onSave,
+    handleSelectEntity: handlers.handleSelectEntity,
+    handleSelectContact: handlers.handleSelectContact,
+    queryClient,
+    handleReset,
+    onSaveSuccess: setLastSavedInteraction,
+    setKnownCompanies
+  });
+
+  const onInvalid = useInteractionInvalidHandler({
+    setFocus: form.setFocus,
+    searchInputRef: refs.searchInputRef,
+    contactSelectRef: refs.contactSelectRef,
+    statusTriggerRef: refs.statusTriggerRef
+  });
+
   const canStartNewEntryFromShortcut = Boolean(lastSavedInteraction);
-  useInteractionHotkeys({ formRef: refs.formRef, searchInputRef: refs.searchInputRef, setFocus: form.setFocus, setValue: form.setValue, onReset: onStartNewEntry, canStartNewEntryFromShortcut });
+
+  useInteractionHotkeys({
+    formRef: refs.formRef,
+    searchInputRef: refs.searchInputRef,
+    setFocus: form.setFocus,
+    setValue: form.setValue,
+    onReset: onStartNewEntry,
+    canStartNewEntryFromShortcut
+  });
 
   const registerFields = useCockpitRegisterFields({ register: form.register });
+
   const handleSelectUnifiedSearchResult = useCallback((result: TierV1DirectoryRow) => {
     const relationLabel = getRelationLabelForTierType(result.type);
     if (formState.entityType !== relationLabel) {
@@ -129,18 +397,156 @@ export const useCockpitFormController = ({ onSave, config, activeAgencyId, userI
     handlers,
     onRelationChange
   ]);
-  const paneProps = useCockpitPaneProps({ labelStyle: LABEL_STYLE, footerLabelStyle: FOOTER_LABEL_STYLE, errors: form.formState.errors, setValue: form.setValue, channel: formState.channel, channelButtonRef: refs.channelButtonRef, relationOptions: formState.relationOptions, entityType: formState.entityType, onRelationChange, relationButtonRef: refs.relationButtonRef, relationMode: formState.relationMode, activeAgencyId, agencies: formState.agencies, entitySearchIndex, entitySearchLoading, onSelectEntityFromSearch: handlers.handleSelectEntityFromSearch, onSelectContactFromSearch: handlers.handleSelectContactFromSearch, onSelectUnifiedSearchResult: handleSelectUnifiedSearchResult, onOpenClientDialog: () => dialogs.setIsClientDialogOpen(true), onOpenProspectDialog: () => dialogs.setIsProspectDialogOpen(true), onOpenGlobalSearch, recentEntities, interactions, searchInputRef: refs.searchInputRef, selectedEntity: dialogs.selectedEntity, selectedContact: dialogs.selectedContact, selectedEntityMeta: formState.selectedEntityMeta, selectedContactMeta: formState.selectedContactMeta, canConvertToClient: formState.canConvertToClient, onOpenConvertDialog: dialogs.handleOpenConvertDialog, onClearSelectedEntity: () => handlers.handleSelectEntity(null), onClearSelectedContact: () => handlers.handleSelectContact(null), companyField: registerFields.companyField, companyCityField: registerFields.companyCityField, companyName: formState.companyName, companyCity: formState.companyCity, showSuggestions: dialogs.showSuggestions, onShowSuggestionsChange: dialogs.setShowSuggestions, companySuggestions: derived.companySuggestions, companyInputRef: refs.companyInputRef, contactSelectValue: formState.contactSelectValue, contacts: formState.contacts, contactsLoading: formState.contactsQuery.isLoading, onContactSelect: handlers.handleContactSelect, contactSelectRef: refs.contactSelectRef, onOpenContactDialog: () => dialogs.setIsContactDialogOpen(true), contactFirstNameField: registerFields.contactFirstNameField, contactLastNameField: registerFields.contactLastNameField, contactPositionField: registerFields.contactPositionField, contactPhoneField: registerFields.contactPhoneField, contactEmailField: registerFields.contactEmailField, contactFirstNameInputRef: refs.contactFirstNameInputRef, contactFirstName: formState.contactFirstName, contactLastName: formState.contactLastName, contactPosition: formState.contactPosition, contactName: formState.contactName, contactPhone: formState.contactPhone, contactEmail: formState.contactEmail, onContactFirstNameChange: handlers.handleContactFirstNameChange, onContactLastNameChange: handlers.handleContactLastNameChange, onContactPhoneChange: handlers.handlePhoneChange, interactionType: formState.interactionType, hasInteractionTypes: formState.hasInteractionTypes, interactionTypeHelpId: formState.interactionTypeHelpId, interactionTypeRef: refs.interactionTypeRef, contactService: formState.contactService, quickServices: derived.quickServices, remainingServices: derived.remainingServices, servicePickerOpen: dialogs.servicePickerOpen, onServicePickerOpenChange: dialogs.setServicePickerOpen, config, subject: formState.subject, notes: formState.notes, subjectField: registerFields.subjectField, notesField: registerFields.notesField, orderRefField: registerFields.orderRefField, reminderField: registerFields.reminderField, reminderAt: formState.reminderAt, megaFamilies: formState.megaFamilies, onToggleFamily: handlers.toggleFamily, statusMeta: formState.statusMeta ?? null, statusCategoryLabel: formState.statusCategoryLabel, statusCategoryBadges: STATUS_CATEGORY_BADGES, statusTriggerRef: refs.statusTriggerRef, statusValue: formState.statusId, onStatusChange: (statusId: string) => { form.setValue('status_id', statusId, { shouldDirty: true, shouldValidate: true }); }, statusGroups: formState.statusGroups, hasStatuses: formState.hasStatuses, statusHelpId: formState.statusHelpId, onSetReminder: handlers.setReminder, onReset: handleReset });
+
+  const paneProps = useCockpitPaneProps({
+    labelStyle: LABEL_STYLE,
+    footerLabelStyle: FOOTER_LABEL_STYLE,
+    errors: form.formState.errors,
+    setValue: form.setValue,
+    channel: formState.channel,
+    channelButtonRef: refs.channelButtonRef,
+    relationOptions: formState.relationOptions,
+    entityType: formState.entityType,
+    onRelationChange,
+    relationButtonRef: refs.relationButtonRef,
+    relationMode: formState.relationMode,
+    activeAgencyId,
+    agencies: formState.agencies,
+    entitySearchIndex,
+    entitySearchLoading,
+    onSelectEntityFromSearch: handlers.handleSelectEntityFromSearch,
+    onSelectContactFromSearch: handlers.handleSelectContactFromSearch,
+    onSelectUnifiedSearchResult: handleSelectUnifiedSearchResult,
+    onOpenClientDialog: dialogs.openClientDialog,
+    onOpenProspectDialog: () => dialogs.setIsProspectDialogOpen(true),
+    onOpenGlobalSearch,
+    recentEntities,
+    interactions,
+    searchInputRef: refs.searchInputRef,
+    selectedEntity: dialogs.selectedEntity,
+    selectedContact: dialogs.selectedContact,
+    selectedEntityMeta: formState.selectedEntityMeta,
+    selectedContactMeta: formState.selectedContactMeta,
+    canConvertToClient: formState.canConvertToClient,
+    onOpenConvertDialog: dialogs.handleOpenConvertDialog,
+    onClearSelectedEntity: () => handlers.handleSelectEntity(null),
+    onClearSelectedContact: () => handlers.handleSelectContact(null),
+    companyField: registerFields.companyField,
+    companyCityField: registerFields.companyCityField,
+    companyName: formState.companyName,
+    companyCity: formState.companyCity,
+    showSuggestions: dialogs.showSuggestions,
+    onShowSuggestionsChange: dialogs.setShowSuggestions,
+    companySuggestions: derived.companySuggestions,
+    companyInputRef: refs.companyInputRef,
+    contactSelectValue: formState.contactSelectValue,
+    contacts: formState.contacts,
+    contactsLoading: formState.contactsQuery.isLoading,
+    onContactSelect: handlers.handleContactSelect,
+    contactSelectRef: refs.contactSelectRef,
+    onOpenContactDialog: () => dialogs.setIsContactDialogOpen(true),
+    contactFirstNameField: registerFields.contactFirstNameField,
+    contactLastNameField: registerFields.contactLastNameField,
+    contactPositionField: registerFields.contactPositionField,
+    contactPhoneField: registerFields.contactPhoneField,
+    contactEmailField: registerFields.contactEmailField,
+    contactFirstNameInputRef: refs.contactFirstNameInputRef,
+    contactFirstName: formState.contactFirstName,
+    contactLastName: formState.contactLastName,
+    contactPosition: formState.contactPosition,
+    contactName: formState.contactName,
+    contactPhone: formState.contactPhone,
+    contactEmail: formState.contactEmail,
+    onContactFirstNameChange: handlers.handleContactFirstNameChange,
+    onContactLastNameChange: handlers.handleContactLastNameChange,
+    onContactPhoneChange: handlers.handlePhoneChange,
+    interactionType: formState.interactionType,
+    hasInteractionTypes: formState.hasInteractionTypes,
+    interactionTypeHelpId: formState.interactionTypeHelpId,
+    interactionTypeRef: refs.interactionTypeRef,
+    contactService: formState.contactService,
+    quickServices: derived.quickServices,
+    remainingServices: derived.remainingServices,
+    servicePickerOpen: dialogs.servicePickerOpen,
+    onServicePickerOpenChange: dialogs.setServicePickerOpen,
+    config,
+    subject: formState.subject,
+    notes: formState.notes,
+    subjectField: registerFields.subjectField,
+    notesField: registerFields.notesField,
+    orderRefField: registerFields.orderRefField,
+    reminderField: registerFields.reminderField,
+    reminderAt: formState.reminderAt,
+    megaFamilies: formState.megaFamilies,
+    onToggleFamily: handlers.toggleFamily,
+    statusMeta: formState.statusMeta ?? null,
+    statusCategoryLabel: formState.statusCategoryLabel,
+    statusCategoryBadges: STATUS_CATEGORY_BADGES,
+    statusTriggerRef: refs.statusTriggerRef,
+    statusValue: formState.statusId,
+    onStatusChange: (statusId: string) => {
+      form.setValue('status_id', statusId, { shouldDirty: true, shouldValidate: true });
+    },
+    statusGroups: formState.statusGroups,
+    hasStatuses: formState.hasStatuses,
+    statusHelpId: formState.statusHelpId,
+    onSetReminder: handlers.setReminder,
+    onReset: handleReset
+  });
 
   const recentOwnInteractions = useRecentOwnInteractions(interactions, userId);
   const clientContextEntityId = dialogs.selectedEntity?.id ?? dialogs.selectedContact?.entity_id ?? null;
+
   const clientContextInteractionsQuery = useEntityInteractions(
     clientContextEntityId,
     1,
     CLIENT_CONTEXT_INTERACTIONS_PAGE_SIZE,
     Boolean(clientContextEntityId)
   );
+
   const clientContextInteractionsPage = clientContextInteractionsQuery.data;
   const showEntryRecents = !dialogs.selectedEntity && !derived.hasDraftContent && recentOwnInteractions.length > 0;
 
-  return { canSave: gateState.canSave, gateMessage: gateState.gateMessage, stepperSteps, formRef: refs.formRef, handleFormSubmit: form.handleSubmit(onSubmit, onInvalid), focusCurrentStep, leftPaneProps: paneProps.leftPaneProps, rightPaneProps: paneProps.rightPaneProps, draftStatus, lastSavedAt, lastSavedInteraction, onStartNewEntry, recentOwnInteractions, clientContextInteractions: clientContextInteractionsPage?.interactions ?? EMPTY_INTERACTIONS, clientContextInteractionsTotal: clientContextInteractionsPage?.total ?? 0, isClientContextInteractionsLoading: clientContextInteractionsQuery.isLoading, hasClientContextInteractionsError: clientContextInteractionsQuery.isError, onSelectRecent: handlers.handleSelectRecent, showEntryRecents, searchIndexEntities: entitySearchIndex.entities, dialogs: { agencies: formState.agencies, userRole, activeAgencyId, selectedEntity: dialogs.selectedEntity, isClientDialogOpen: dialogs.isClientDialogOpen, isProspectDialogOpen: dialogs.isProspectDialogOpen, isContactDialogOpen: dialogs.isContactDialogOpen, isConvertDialogOpen: dialogs.isConvertDialogOpen, convertTarget: dialogs.convertTarget, onClientDialogChange: dialogs.setIsClientDialogOpen, onProspectDialogChange: dialogs.setIsProspectDialogOpen, onContactDialogChange: dialogs.setIsContactDialogOpen, onConvertDialogChange: dialogs.handleConvertDialogChange, onSaveClient: handlers.handleSaveClient, onSaveProspect: handlers.handleSaveProspect, onSaveContact: handlers.handleSaveContact, onConvertClient: handlers.handleConvertClient } };
+  return {
+    canSave: gateState.canSave,
+    gateMessage: gateState.gateMessage,
+    stepperSteps,
+    formRef: refs.formRef,
+    handleFormSubmit: form.handleSubmit(onSubmit, onInvalid),
+    focusCurrentStep,
+    leftPaneProps: paneProps.leftPaneProps,
+    rightPaneProps: paneProps.rightPaneProps,
+    draftStatus,
+    lastSavedAt,
+    lastSavedInteraction,
+    onStartNewEntry,
+    recentOwnInteractions,
+    clientContextInteractions: clientContextInteractionsPage?.interactions ?? EMPTY_INTERACTIONS,
+    clientContextInteractionsTotal: clientContextInteractionsPage?.total ?? 0,
+    isClientContextInteractionsLoading: clientContextInteractionsQuery.isLoading,
+    hasClientContextInteractionsError: clientContextInteractionsQuery.isError,
+    onSelectRecent: handlers.handleSelectRecent,
+    showEntryRecents,
+    searchIndexEntities: entitySearchIndex.entities,
+    dialogs: {
+      agencies: formState.agencies,
+      userRole,
+      activeAgencyId,
+      selectedEntity: dialogs.selectedEntity,
+      isClientDialogOpen: dialogs.isClientDialogOpen,
+      clientDialogKind: dialogs.clientDialogKind,
+      isProspectDialogOpen: dialogs.isProspectDialogOpen,
+      isContactDialogOpen: dialogs.isContactDialogOpen,
+      isConvertDialogOpen: dialogs.isConvertDialogOpen,
+      convertTarget: dialogs.convertTarget,
+      onClientDialogChange: dialogs.handleClientDialogChange,
+      onProspectDialogChange: dialogs.setIsProspectDialogOpen,
+      onContactDialogChange: dialogs.setIsContactDialogOpen,
+      onConvertDialogChange: dialogs.handleConvertDialogChange,
+      onSaveClient: handlers.handleSaveClient,
+      onSaveProspect: handlers.handleSaveProspect,
+      onSaveContact: handlers.handleSaveContact,
+      onConvertClient: handlers.handleConvertClient
+    }
+  };
 };

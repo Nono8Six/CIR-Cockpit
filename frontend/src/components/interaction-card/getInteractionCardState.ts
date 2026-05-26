@@ -17,12 +17,7 @@ export const getInteractionCardState = (
   const statusLabel = statusMeta?.label ?? data.status;
   const statusTone: StatusCategory = isDone ? 'done' : isTodo || isLate ? 'todo' : 'in_progress';
 
-  const statusClass =
-    statusTone === 'todo'
-      ? 'border-destructive/40 border-l-4'
-      : statusTone === 'done'
-        ? 'border-success/40 border-l-4'
-        : 'border-warning/40 border-l-4';
+  const statusClass = 'border border-border/30';
 
   return { isDone, isLate, statusTone, statusLabel, statusClass };
 };

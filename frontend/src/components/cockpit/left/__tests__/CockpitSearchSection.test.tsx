@@ -85,6 +85,24 @@ describe('CockpitSearchSection', () => {
     expect(onOpenClientDialog).not.toHaveBeenCalled();
   });
 
+  it('ouvre la creation client en mode particulier quand la relation est particulier', async () => {
+    const user = userEvent.setup();
+    const onOpenClientDialog = vi.fn();
+
+    renderSection(buildProps({
+      entityType: 'Particulier',
+      relationMode: 'individual',
+      onOpenClientDialog
+    }));
+
+    const createButton = screen.getByRole('button', { name: 'Créer un particulier' });
+    expect(createButton).toBeEnabled();
+
+    await user.click(createButton);
+
+    expect(onOpenClientDialog).toHaveBeenCalledWith('individual');
+  });
+
   it('ouvre la création fournisseur complète depuis le cockpit', async () => {
     const user = userEvent.setup();
     renderSection(buildProps({ relationMode: 'supplier', entityType: 'Fournisseur' }));

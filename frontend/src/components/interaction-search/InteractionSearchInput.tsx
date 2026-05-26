@@ -14,13 +14,14 @@ const InteractionSearchInput = ({
   inputRef
 }: InteractionSearchInputProps) => (
   <CommandInput
-    placeholder="Nom, téléphone, email, n° client, SIRET…"
+    placeholder="Rechercher par nom, téléphone, email, n° client, SIRET…"
     value={query}
     onValueChange={onQueryChange}
     autoComplete="off"
     ref={inputRef}
-    className="h-10 text-[13px]"
+    className="h-12 text-[14px] font-medium text-foreground placeholder:text-muted-foreground/75 transition-all duration-200"
   />
 );
 
 export default InteractionSearchInput;
+

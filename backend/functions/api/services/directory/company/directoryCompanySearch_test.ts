@@ -175,6 +175,7 @@ Deno.test("fetchEnterpriseApiSearchResponse tolerates partial official payloads 
         nom_raison_sociale: "SIEMENS",
         sigle: null,
         activite_principale: "46.69B",
+        activite_principale_naf25: "46.69Y",
         caractere_employeur: "O",
         nombre_etablissements: "12",
         nombre_etablissements_ouverts: "9",
@@ -187,6 +188,8 @@ Deno.test("fetchEnterpriseApiSearchResponse tolerates partial official payloads 
           departement: "93",
           region: "ILE-DE-FRANCE",
           est_siege: "true",
+          activite_principale: "43.21A",
+          activite_principale_naf25: "43.21G",
           ancien_siege: "false",
           etat_administratif: "A",
           liste_enseignes: [null, "SIEMENS"],
@@ -204,6 +207,7 @@ Deno.test("fetchEnterpriseApiSearchResponse tolerates partial official payloads 
       assertEquals(companies[0]?.is_head_office, true);
       assertEquals(companies[0]?.is_former_head_office, false);
       assertEquals(companies[0]?.company_establishments_count, 12);
+      assertEquals(companies[0]?.naf_code, "43.21G");
       assertEquals(companies[0]?.brands, ["SIEMENS"]);
     },
   );

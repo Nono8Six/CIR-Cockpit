@@ -39,14 +39,20 @@ const AuditLogsFilters = ({
   const tableInputId = 'admin-audit-filter-table';
 
   return (
-    <div className="grid grid-cols-1 gap-3 md:grid-cols-3" data-testid="admin-audit-filters">
-      <div>
-        <label htmlFor={agencySelectId} className="text-xs font-medium text-muted-foreground">Agence</label>
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-3" data-testid="admin-audit-filters">
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor={agencySelectId} className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+          Agence
+        </label>
         <Select
           value={resolvedAgencyId}
           onValueChange={(value) => onAgencyChange(value === 'all' ? null : value)}
         >
-          <SelectTrigger id={agencySelectId} className="mt-1" data-testid="admin-audit-filter-agency-trigger">
+          <SelectTrigger
+            id={agencySelectId}
+            className="h-10 rounded-xl bg-muted/10 border-border/60 focus-visible:ring-primary/20 text-xs sm:text-sm hover:bg-background/50 hover:border-border/80 transition-all duration-200"
+            data-testid="admin-audit-filter-agency-trigger"
+          >
             <SelectValue placeholder="Toutes les agences" />
           </SelectTrigger>
           <SelectContent>
@@ -59,14 +65,21 @@ const AuditLogsFilters = ({
           </SelectContent>
         </Select>
       </div>
+
       {userRole === 'super_admin' ? (
-        <div>
-          <label htmlFor={actorSelectId} className="text-xs font-medium text-muted-foreground">Utilisateur</label>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor={actorSelectId} className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+            Utilisateur
+          </label>
           <Select
             value={resolvedActorId}
             onValueChange={(value) => onActorChange(value === 'all' ? null : value)}
           >
-            <SelectTrigger id={actorSelectId} className="mt-1" data-testid="admin-audit-filter-user-trigger">
+            <SelectTrigger
+              id={actorSelectId}
+              className="h-10 rounded-xl bg-muted/10 border-border/60 focus-visible:ring-primary/20 text-xs sm:text-sm hover:bg-background/50 hover:border-border/80 transition-all duration-200"
+              data-testid="admin-audit-filter-user-trigger"
+            >
               <SelectValue placeholder="Tous les utilisateurs" />
             </SelectTrigger>
             <SelectContent>
@@ -80,14 +93,18 @@ const AuditLogsFilters = ({
           </Select>
         </div>
       ) : null}
-      <div>
-        <label htmlFor={tableInputId} className="text-xs font-medium text-muted-foreground">Table</label>
+
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor={tableInputId} className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+          Table
+        </label>
         <Input
           id={tableInputId}
           type="text"
           value={entityTable}
           onChange={(event) => onEntityTableChange(event.target.value)}
           placeholder="clients, interactions..."
+          className="h-10 rounded-xl bg-muted/10 border-border/60 focus-visible:ring-primary/20 hover:bg-background/50 hover:border-border/80 transition-all duration-200"
           data-testid="admin-audit-filter-table-input"
         />
       </div>

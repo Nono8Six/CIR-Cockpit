@@ -1,4 +1,4 @@
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 
 import {
   agency_entities,
@@ -7,15 +7,22 @@ import {
   agency_services,
   agency_settings,
   agency_statuses,
-  app_settings
+  app_settings,
+  interactions
 } from '../../../../drizzle/schema.ts';
 import type {
+  ConfigReferenceActionResponse,
   ConfigSaveAgencyResponse,
   ConfigSaveProductResponse,
   DataConfigResponse
 } from '../../../../../shared/schemas/system/api-responses.ts';
 import type {
   AgencyStatusInput,
+  ConfigReferenceActionInput,
+  ConfigReferenceAddInput,
+  ConfigReferenceDeleteInput,
+  ConfigReferenceRenameInput,
+  ConfigReferenceReorderInput,
   ConfigSaveAgencyInput,
   ConfigSaveProductInput
 } from '../../../../../shared/schemas/system/config.schema.ts';
@@ -30,13 +37,12 @@ type LabelTable =
   | typeof agency_families
   | typeof agency_interaction_types;
 
-const APP_SETTINGS_SINGLETON_ID = 1;
-const STATUS_CATEGORIES = ['todo', 'in_progress', 'done'] as const;
-
 type ExistingStatusRow = {
   id: string;
   label: string;
 };
+
+type LabelDimension = 'services' | 'entities' | 'families' | 'interaction_types';
 
 type StatusUpsertRow = {
   id?: string;
@@ -47,6 +53,9 @@ type StatusUpsertRow = {
   category: string;
   is_terminal: boolean;
 };
+
+const APP_SETTINGS_SINGLETON_ID = 1;
+const STATUS_CATEGORIES = ['todo', 'in_progress', 'done'] as const;
 
 export const normalizeLabelList = (labels: string[]): string[] => {
   const seen = new Set<string>();
@@ -101,6 +110,162 @@ const ensureAgencySettingsWriteAccess = (authContext: AuthContext): void => {
   }
 };
 
+const getLabelTable = (dimension: LabelDimension): LabelTable => {
+  if (dimension === 'services') return agency_services;
+  if (dimension === 'entities') return agency_entities;
+  if (dimension === 'families') return agency_families;
+  return agency_interaction_types;
+};
+
+const requireReferenceId = (value: string | undefined, message: string): string => {
+  if (!value?.trim()) {
+    throw httpError(400, 'CONFIG_INVALID', message);
+  }
+  return value;
+};
+
+const requireLabel = (value: string | undefined, message: string): string => {
+  const label = value?.trim();
+  if (!label) {
+    throw httpError(400, 'CONFIG_INVALID', message);
+  }
+  return label;
+};
+
+const normalizeReferenceKey = (value: string): string => value.trim().toLowerCase();
+
+const ensureStatusLabelAvailable = async (
+  db: DbClient,
+  agencyId: string,
+  label: string,
+  currentStatusId?: string
+): Promise<void> => {
+  const rows = await db
+    .select({ id: agency_statuses.id, label: agency_statuses.label })
+    .from(agency_statuses)
+    .where(eq(agency_statuses.agency_id, agencyId));
+  const nextKey = normalizeReferenceKey(label);
+  const duplicate = rows.some((row) =>
+    row.id !== currentStatusId && normalizeReferenceKey(row.label) === nextKey
+  );
+  if (duplicate) {
+    throw httpError(409, 'CONFLICT', `Le statut "${label}" existe deja.`);
+  }
+};
+
+const ensureLabelAvailable = async (
+  db: DbClient,
+  table: LabelTable,
+  agencyId: string,
+  label: string,
+  currentLabel?: string
+): Promise<void> => {
+  const rows = await db
+    .select({ label: table.label })
+    .from(table)
+    .where(eq(table.agency_id, agencyId));
+  const nextKey = normalizeReferenceKey(label);
+  const currentKey = currentLabel ? normalizeReferenceKey(currentLabel) : null;
+  const duplicate = rows.some((row) => {
+    const rowKey = normalizeReferenceKey(row.label);
+    return rowKey !== currentKey && rowKey === nextKey;
+  });
+  if (duplicate) {
+    throw httpError(409, 'CONFLICT', `La valeur "${label}" existe deja dans cette liste.`);
+  }
+};
+
+const countStatusUsage = async (
+  db: DbClient,
+  agencyId: string,
+  statusId: string
+): Promise<number> => {
+  try {
+    const rows = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(interactions)
+      .where(and(eq(interactions.agency_id, agencyId), eq(interactions.status_id, statusId)));
+    return rows[0]?.count ?? 0;
+  } catch {
+    throw httpError(500, 'DB_READ_FAILED', "Impossible de verifier l'utilisation du statut.");
+  }
+};
+
+const countLabelUsage = async (
+  db: DbClient,
+  agencyId: string,
+  dimension: LabelDimension,
+  label: string
+): Promise<number> => {
+  const normalizedLabel = label.trim().toLowerCase();
+  const usageExpression =
+    dimension === 'services'
+      ? sql<boolean>`lower(${interactions.contact_service}) = ${normalizedLabel}`
+      : dimension === 'entities'
+        ? sql<boolean>`lower(${interactions.entity_type}) = ${normalizedLabel}`
+      : dimension === 'interaction_types'
+        ? sql<boolean>`lower(${interactions.interaction_type}) = ${normalizedLabel}`
+        : sql<boolean>`exists (
+            select 1
+            from unnest(${interactions.mega_families}) as family
+            where lower(family) = ${normalizedLabel}
+          )`;
+
+  try {
+    const rows = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(interactions)
+      .where(and(eq(interactions.agency_id, agencyId), usageExpression));
+    return rows[0]?.count ?? 0;
+  } catch {
+    throw httpError(500, 'DB_READ_FAILED', "Impossible de verifier l'utilisation du referentiel.");
+  }
+};
+
+const updateInteractionLabel = async (
+  db: DbClient,
+  agencyId: string,
+  dimension: LabelDimension,
+  previousLabel: string,
+  nextLabel: string
+): Promise<void> => {
+  const previous = previousLabel.trim();
+  try {
+    if (dimension === 'services') {
+      await db
+        .update(interactions)
+        .set({ contact_service: nextLabel })
+        .where(and(eq(interactions.agency_id, agencyId), eq(interactions.contact_service, previous)));
+      return;
+    }
+
+    if (dimension === 'entities') {
+      await db
+        .update(interactions)
+        .set({ entity_type: nextLabel })
+        .where(and(eq(interactions.agency_id, agencyId), eq(interactions.entity_type, previous)));
+      return;
+    }
+
+    if (dimension === 'interaction_types') {
+      await db
+        .update(interactions)
+        .set({ interaction_type: nextLabel })
+        .where(and(eq(interactions.agency_id, agencyId), eq(interactions.interaction_type, previous)));
+      return;
+    }
+
+    await db.execute(sql`
+      update public.interactions
+      set mega_families = array_replace(mega_families, ${previous}, ${nextLabel})
+      where agency_id = ${agencyId}
+        and ${previous} = any(mega_families)
+    `);
+  } catch {
+    throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de migrer les interactions rattachees.');
+  }
+};
+
 const syncLabelTable = async (
   db: DbClient,
   table: LabelTable,
@@ -108,53 +273,24 @@ const syncLabelTable = async (
   labels: string[]
 ): Promise<void> => {
   const desired = normalizeLabelList(labels);
-  const desiredSet = new Set(desired.map((label) => label.toLowerCase()));
+  if (desired.length === 0) return;
 
-  let existing: Array<{ label: string }> = [];
+  const rows = desired.map((label, index) => ({
+    agency_id: agencyId,
+    label,
+    sort_order: index + 1
+  }));
+
   try {
-    existing = await db
-      .select({ label: table.label })
-      .from(table)
-      .where(eq(table.agency_id, agencyId));
+    await db
+      .insert(table)
+      .values(rows)
+      .onConflictDoUpdate({
+        target: [table.agency_id, table.label],
+        set: { sort_order: sql`excluded.sort_order` }
+      });
   } catch {
-    throw httpError(500, 'DB_READ_FAILED', 'Impossible de charger la configuration.');
-  }
-
-  const toDelete = (existing ?? [])
-    .map((item) => item.label)
-    .filter((label) => !desiredSet.has(label.toLowerCase()));
-
-  if (desired.length > 0) {
-    const rows = desired.map((label, index) => ({
-      agency_id: agencyId,
-      label,
-      sort_order: index + 1
-    }));
-
-    try {
-      await db
-        .insert(table)
-        .values(rows)
-        .onConflictDoUpdate({
-          target: [table.agency_id, table.label],
-          set: { sort_order: sql`excluded.sort_order` }
-        });
-    } catch {
-      throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de mettre a jour la configuration.');
-    }
-  }
-
-  if (toDelete.length > 0) {
-    try {
-      await db
-        .delete(table)
-        .where(and(
-          eq(table.agency_id, agencyId),
-          inArray(table.label, toDelete)
-        ));
-    } catch {
-      throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de mettre a jour la configuration.');
-    }
+    throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de mettre a jour la configuration.');
   }
 };
 
@@ -181,9 +317,7 @@ const syncStatuses = async (
     throw httpError(500, 'DB_READ_FAILED', 'Impossible de charger les statuts.');
   }
 
-  const existingRows = existing ?? [];
-  const rows = buildStatusUpsertRows(statuses, agencyId, existingRows);
-
+  const rows = buildStatusUpsertRows(statuses, agencyId, existing ?? []);
   const rowsWithId = rows.filter((row): row is StatusUpsertRow & { id: string } => typeof row.id === 'string');
   const rowsWithoutId = rows.filter((row) => typeof row.id !== 'string');
 
@@ -202,6 +336,13 @@ const syncStatuses = async (
             is_terminal: sql`excluded.is_terminal`
           }
         });
+
+      await Promise.all(rowsWithId.map((row) =>
+        db
+          .update(interactions)
+          .set({ status: row.label, status_is_terminal: row.is_terminal })
+          .where(and(eq(interactions.agency_id, agencyId), eq(interactions.status_id, row.id)))
+      ));
     }
 
     if (rowsWithoutId.length > 0) {
@@ -220,26 +361,6 @@ const syncStatuses = async (
     }
   } catch {
     throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de mettre a jour les statuts.');
-  }
-
-  const desiredIds = new Set(
-    rows.map((row) => row.id).filter((value): value is string => typeof value === 'string')
-  );
-  const toDeleteIds = existingRows
-    .map((row) => row.id)
-    .filter((id) => !desiredIds.has(id));
-
-  if (toDeleteIds.length > 0) {
-    try {
-      await db
-        .delete(agency_statuses)
-        .where(and(
-          eq(agency_statuses.agency_id, agencyId),
-          inArray(agency_statuses.id, toDeleteIds)
-        ));
-    } catch {
-      throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de supprimer les statuts obsoletes.');
-    }
   }
 };
 
@@ -263,6 +384,180 @@ const syncAgencySettings = async (
   } catch {
     throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de mettre a jour les parametres agence.');
   }
+};
+
+const handleReferenceAdd = async (
+  db: DbClient,
+  agencyId: string,
+  input: ConfigReferenceAddInput
+): Promise<void> => {
+  const label = input.label.trim();
+  if (input.dimension === 'statuses') {
+    if (!input.category) {
+      throw httpError(400, 'CONFIG_INVALID', 'Categorie de statut requise.');
+    }
+    await ensureStatusLabelAvailable(db, agencyId, label);
+    const rows = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(agency_statuses)
+      .where(eq(agency_statuses.agency_id, agencyId));
+    const count = rows[0]?.count ?? 0;
+    await db.insert(agency_statuses).values({
+      ...(input.status_id ? { id: input.status_id } : {}),
+      agency_id: agencyId,
+      label,
+      sort_order: count + 1,
+      is_default: count === 0,
+      category: input.category,
+      is_terminal: input.category === 'done'
+    });
+    return;
+  }
+
+  const table = getLabelTable(input.dimension);
+  await ensureLabelAvailable(db, table, agencyId, label);
+  const rows = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(table)
+    .where(eq(table.agency_id, agencyId));
+  await db.insert(table).values({
+    agency_id: agencyId,
+    label,
+    sort_order: (rows[0]?.count ?? 0) + 1
+  });
+};
+
+const handleReferenceDelete = async (
+  db: DbClient,
+  agencyId: string,
+  input: ConfigReferenceDeleteInput
+): Promise<number> => {
+  if (input.dimension === 'statuses') {
+    const statusId = requireReferenceId(input.reference_id, 'Identifiant statut requis.');
+    const usageCount = await countStatusUsage(db, agencyId, statusId);
+    if (usageCount > 0) {
+      throw httpError(409, 'CONFLICT', `Impossible de supprimer ce statut : ${usageCount} interaction(s) l'utilisent encore. Renommez le statut pour mettre a jour l'historique.`);
+    }
+    await db.delete(agency_statuses).where(and(eq(agency_statuses.agency_id, agencyId), eq(agency_statuses.id, statusId)));
+    return usageCount;
+  }
+
+  const label = requireLabel(input.label, 'Libelle de referentiel requis.');
+  const usageCount = await countLabelUsage(db, agencyId, input.dimension, label);
+  if (usageCount > 0) {
+    throw httpError(409, 'CONFLICT', `Impossible de supprimer "${label}" : ${usageCount} interaction(s) l'utilisent encore. Renommez la valeur pour mettre a jour l'historique.`);
+  }
+  const table = getLabelTable(input.dimension);
+  await db.delete(table).where(and(eq(table.agency_id, agencyId), eq(table.label, label)));
+  return usageCount;
+};
+
+const handleReferenceRename = async (
+  db: DbClient,
+  agencyId: string,
+  input: ConfigReferenceRenameInput
+): Promise<number> => {
+  const nextLabel = input.next_label.trim();
+  if (input.dimension === 'statuses') {
+    const statusId = requireReferenceId(input.reference_id, 'Identifiant statut requis.');
+    const usageCount = await countStatusUsage(db, agencyId, statusId);
+    await ensureStatusLabelAvailable(db, agencyId, nextLabel, statusId);
+    await db
+      .update(agency_statuses)
+      .set({ label: nextLabel })
+      .where(and(eq(agency_statuses.agency_id, agencyId), eq(agency_statuses.id, statusId)));
+    await db
+      .update(interactions)
+      .set({ status: nextLabel })
+      .where(and(eq(interactions.agency_id, agencyId), eq(interactions.status_id, statusId)));
+    return usageCount;
+  }
+
+  const previousLabel = requireLabel(input.previous_label, 'Libelle actuel requis.');
+  const usageCount = await countLabelUsage(db, agencyId, input.dimension, previousLabel);
+  const table = getLabelTable(input.dimension);
+  await ensureLabelAvailable(db, table, agencyId, nextLabel, previousLabel);
+  await db
+    .update(table)
+    .set({ label: nextLabel })
+    .where(and(eq(table.agency_id, agencyId), eq(table.label, previousLabel)));
+  await updateInteractionLabel(db, agencyId, input.dimension, previousLabel, nextLabel);
+  return usageCount;
+};
+
+const handleReferenceReorder = async (
+  db: DbClient,
+  agencyId: string,
+  input: ConfigReferenceReorderInput
+): Promise<void> => {
+  if (input.dimension === 'statuses') {
+    const ids = input.reference_ids ?? [];
+    if (ids.length === 0) {
+      throw httpError(400, 'CONFIG_INVALID', 'Ordre des statuts requis.');
+    }
+    await Promise.all(ids.map((id, index) =>
+      db
+        .update(agency_statuses)
+        .set({ sort_order: index + 1, is_default: index === 0 })
+        .where(and(eq(agency_statuses.agency_id, agencyId), eq(agency_statuses.id, id)))
+    ));
+    return;
+  }
+
+  const labels = input.labels ?? [];
+  if (labels.length === 0) {
+    throw httpError(400, 'CONFIG_INVALID', 'Ordre du referentiel requis.');
+  }
+  const table = getLabelTable(input.dimension);
+  await Promise.all(labels.map((label, index) =>
+    db
+      .update(table)
+      .set({ sort_order: index + 1 })
+      .where(and(eq(table.agency_id, agencyId), eq(table.label, label.trim())))
+  ));
+};
+
+export const handleConfigReferenceAction = async (
+  db: DbClient,
+  authContext: AuthContext,
+  requestId: string | undefined,
+  input: ConfigReferenceActionInput
+): Promise<ConfigReferenceActionResponse> => {
+  await ensureDataRateLimit('config:reference', authContext.userId);
+  ensureAgencySettingsWriteAccess(authContext);
+  const agencyId = ensureAgencyAccess(authContext, input.agency_id);
+
+  let usageCount = 0;
+  try {
+    await db.transaction(async (tx) => {
+      if (input.action === 'add') {
+        await handleReferenceAdd(tx, agencyId, input);
+        return;
+      }
+      if (input.action === 'delete') {
+        usageCount = await handleReferenceDelete(tx, agencyId, input);
+        return;
+      }
+      if (input.action === 'rename') {
+        usageCount = await handleReferenceRename(tx, agencyId, input);
+        return;
+      }
+      await handleReferenceReorder(tx, agencyId, input);
+    });
+  } catch (error) {
+    const code = typeof error === 'object' && error !== null ? Reflect.get(error, 'code') : null;
+    if (code === 'CONFLICT' || code === 'CONFIG_INVALID' || code === 'AUTH_FORBIDDEN') {
+      throw error;
+    }
+    throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de mettre a jour le referentiel.');
+  }
+
+  return {
+    request_id: requestId,
+    ok: true,
+    usage_count: usageCount,
+    ...(input.action === 'rename' ? { migrated_interactions_count: usageCount } : {})
+  };
 };
 
 export const saveAgencyConfigSettings = async (

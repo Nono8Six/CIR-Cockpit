@@ -8,4 +8,5 @@ export type DashboardListRowProps = {
   getStatusBadgeClass: (interaction: Interaction) => string;
   onSelectInteraction: (interaction: Interaction) => void;
   onDeleteInteraction: (interaction: Interaction) => void;
+  activeInteractionId?: string | null;
 };

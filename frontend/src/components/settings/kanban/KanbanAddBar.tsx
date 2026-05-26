@@ -3,6 +3,13 @@ import type { StatusCategory } from '@/types';
 import { STATUS_CATEGORY_LABELS } from '@/constants/statusCategories';
 import { Button } from '../../ui/inputs/basic/Button';
 import { Input } from '../../ui/inputs/basic/Input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../ui/inputs/selects/Select';
 
 type KanbanAddBarProps = {
   newStatus: string;
@@ -45,41 +52,41 @@ const KanbanAddBar = ({
   if (readOnly) return null;
 
   return (
-    <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
-      {/* Label Input */}
+    <div className="mb-3 grid gap-2 lg:grid-cols-[minmax(0,1fr)_11rem_auto] lg:items-center">
       <Input
         type="text"
         value={newStatus}
         onChange={(event) => onStatusChange(event.target.value)}
         onKeyDown={handleKeyDown}
-        className="h-8 flex-1 border-border/80 bg-surface-1/40 text-xs focus-visible:ring-1 focus-visible:ring-primary/20 placeholder:text-muted-foreground/50"
-        placeholder="Nom du nouveau statut (ex: En attente validation)"
+        className="h-8 border-border/80 bg-background text-xs focus-visible:ring-1 focus-visible:ring-primary/20 placeholder:text-muted-foreground/50"
+        placeholder="Ex: En attente validation…"
         name="status-new-label"
         aria-label="Nouveau statut"
         autoComplete="off"
         data-testid="settings-status-add-input"
       />
 
-      {/* Category Dropdown */}
-      <select
+      <Select
         value={newStatusCategory}
-        onChange={(e) => onCategoryChange(e.target.value as StatusCategory)}
-        className="h-8 rounded-md border border-border bg-background px-2.5 py-1 text-xs text-foreground shadow-sm transition-all focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20 shrink-0"
-        aria-label="Catégorie par défaut"
+        onValueChange={(value) => onCategoryChange(value as StatusCategory)}
       >
-        {Object.entries(STATUS_CATEGORY_LABELS).map(([value, label]) => (
-          <option key={value} value={value}>
-            {label}
-          </option>
-        ))}
-      </select>
+        <SelectTrigger density="dense" aria-label="Catégorie par défaut">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {Object.entries(STATUS_CATEGORY_LABELS).map(([value, label]) => (
+            <SelectItem key={value} value={value} className="text-xs">
+              {label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
-      {/* Add Button */}
       <Button
         type="button"
         onClick={onAdd}
         size="sm"
-        className="h-8 bg-primary hover:bg-primary/95 text-primary-foreground shadow-sm transition-colors shrink-0 gap-1"
+        className="h-8 shrink-0 gap-1 bg-primary text-primary-foreground shadow-sm transition-colors hover:bg-primary/95"
         disabled={readOnly || !newStatus.trim()}
         aria-disabled={readOnly || !newStatus.trim()}
         aria-label="Ajouter le statut"

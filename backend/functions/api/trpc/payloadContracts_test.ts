@@ -93,6 +93,43 @@ Deno.test('dataEntitiesPayloadSchema rejects entity departments outside the live
   }).success, true);
 });
 
+Deno.test('dataEntitiesPayloadSchema supports individual client creation with primary contact', () => {
+  const payload = {
+    action: 'save',
+    agency_id: '11111111-1111-4111-8111-111111111111',
+    entity_type: 'Client',
+    entity: {
+      client_number: '1002',
+      client_kind: 'individual',
+      account_type: 'cash',
+      name: 'Martin Alice',
+      address: '',
+      postal_code: '33000',
+      department: '33',
+      city: 'Bordeaux',
+      notes: '',
+      agency_id: '11111111-1111-4111-8111-111111111111',
+      primary_contact: {
+        first_name: 'Alice',
+        last_name: 'Martin',
+        phone: '0601020304',
+        email: '',
+        position: '',
+        notes: ''
+      }
+    }
+  };
+
+  assertEquals(dataEntitiesPayloadSchema.safeParse(payload).success, true);
+  assertEquals(dataEntitiesPayloadSchema.safeParse({
+    ...payload,
+    entity: {
+      ...payload.entity,
+      account_type: 'term'
+    }
+  }).success, false);
+});
+
 Deno.test('dataEntitiesPayloadSchema supports supplier save action', () => {
   const supplierPayload = {
     action: 'save',

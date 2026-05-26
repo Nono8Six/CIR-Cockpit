@@ -95,6 +95,7 @@ const CockpitForm = ({
         activeAgencyId={dialogs.activeAgencyId}
         selectedEntity={dialogs.selectedEntity}
         isClientDialogOpen={dialogs.isClientDialogOpen}
+        clientDialogKind={dialogs.clientDialogKind}
         isProspectDialogOpen={dialogs.isProspectDialogOpen}
         isContactDialogOpen={dialogs.isContactDialogOpen}
         isConvertDialogOpen={dialogs.isConvertDialogOpen}

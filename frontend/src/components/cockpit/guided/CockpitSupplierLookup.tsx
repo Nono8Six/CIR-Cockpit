@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Building2, CheckCircle2, Phone, Search, UserRound } from 'lucide-react';
+import { motion, useReducedMotion } from 'motion/react';
 
 import type { TierV1DirectoryRow } from '../../../../../shared/schemas/interaction/tier-v1.schema';
 import { isApplePlatform } from '@/app/appConstants';
@@ -38,6 +39,7 @@ const CockpitSupplierLookup = ({
   setValue,
   onComplete
 }: CockpitSupplierLookupProps) => {
+  const shouldReduceMotion = useReducedMotion();
   const [query, setQuery] = useState('');
   const [temporaryName, setTemporaryName] = useState(companyName);
   const searchQuery = useUnifiedEntitySearch({
@@ -75,67 +77,93 @@ const CockpitSupplierLookup = ({
   };
 
   return (
-    <GuidedTierSearchShell archiveSupport="hidden" contentClassName="min-h-[280px] p-3">
-      <div className="space-y-3" data-testid="cockpit-supplier-lookup">
-        <div className="grid items-stretch gap-2 md:grid-cols-[minmax(0,1fr)_auto]">
-          <div className="relative">
-            <Search size={15} aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Nom fournisseur, contact, téléphone…"
-              aria-label="Rechercher un fournisseur enregistré"
-              name="supplier-search"
-              className="h-10 pl-9 text-[13px]"
-              autoComplete="off"
-            />
+    <GuidedTierSearchShell archiveSupport="hidden" contentClassName="min-h-[280px] bg-card">
+      <div className="space-y-0" data-testid="cockpit-supplier-lookup">
+        {/* Cellule de recherche fournisseur style compartiment details */}
+        <div className="relative border-b border-border/60 bg-card px-5 py-3.5 focus-within:bg-surface-1/30 transition-all duration-150">
+          <label className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground select-none block mb-1.5" htmlFor="supplier-search">
+            Recherche Fournisseur
+          </label>
+          <div className="grid items-center gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
+            <div className="relative flex items-center gap-2">
+              <Search size={14} aria-hidden="true" className="pointer-events-none text-muted-foreground/60 transition-colors duration-150" />
+              <Input
+                id="supplier-search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Nom fournisseur, contact, téléphone…"
+                aria-label="Rechercher un fournisseur enregistré"
+                name="supplier-search"
+                className="h-9 w-full min-w-0 text-[13px] font-semibold border-none bg-transparent p-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-none placeholder:text-muted-foreground/75 text-foreground"
+                autoComplete="off"
+              />
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="comfortable"
+              className="h-9 text-xs font-bold shrink-0 shadow-sm cursor-pointer"
+              onClick={useTemporarySupplier}
+              disabled={!canUseTemporary}
+            >
+              Fournisseur ponctuel
+            </Button>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="comfortable"
-            className="h-10"
-            onClick={useTemporarySupplier}
-            disabled={!canUseTemporary}
-          >
-            Fournisseur ponctuel
-          </Button>
         </div>
 
+        {/* Fournisseur sélectionné avec liseré vert success style rattaché */}
         {selectedEntity ? (
-          <section className="rounded-md border border-success/25 bg-success/5 p-2.5">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex min-w-0 items-center gap-2.5">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-success/10 text-success">
-                  <CheckCircle2 size={15} aria-hidden="true" />
+          <div className="px-4 py-3 bg-surface-1/40 border-b border-border/60">
+            <motion.div
+              whileHover={shouldReduceMotion ? {} : { y: -0.5 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              className="flex items-center justify-between gap-4 rounded-xl border border-success/25 border-l-4 border-l-success bg-success/5 px-5 py-4 shadow-sm transition-all duration-200"
+            >
+              <div className="flex items-center gap-4 min-w-0 flex-1">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-success/10 text-success shadow-sm ring-1 ring-success/20">
+                  <CheckCircle2 size={16} aria-hidden="true" />
                 </span>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-foreground">{selectedEntity.name}</p>
-                  <p className="truncate text-xs text-muted-foreground">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[13px] font-bold text-foreground">{selectedEntity.name}</p>
+                  <p className="truncate text-[11px] font-medium text-muted-foreground/80 mt-0.5">
                     {[selectedEntity.primary_phone, selectedEntity.primary_email, selectedEntity.city].filter(Boolean).join(' · ') || 'Fournisseur sélectionné'}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Button type="button" variant="ghost" size="dense" onClick={onClearSelectedEntity}>Changer</Button>
-                <Button type="button" size="dense" onClick={onComplete}>
+              <div className="flex items-center gap-2.5 shrink-0">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="dense"
+                  onClick={onClearSelectedEntity}
+                  className="rounded-md bg-card border border-border px-2.5 py-1 text-xs font-bold text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors shadow-sm cursor-pointer"
+                >
+                  Changer
+                </Button>
+                <Button
+                  type="button"
+                  size="dense"
+                  onClick={onComplete}
+                  className="bg-primary hover:bg-primary/95 text-xs font-bold px-3 shadow-sm active:scale-[0.98] inline-flex items-center gap-1.5 cursor-pointer"
+                >
                   Continuer
-                  <Kbd className="ml-1 border-primary-foreground/30 bg-primary-foreground/15 text-primary-foreground">
+                  <Kbd className="border-primary-foreground/30 bg-primary-foreground/15 text-primary-foreground shadow-sm">
                     {continueShortcutLabel}
                   </Kbd>
                 </Button>
               </div>
-            </div>
-          </section>
+            </motion.div>
+          </div>
         ) : null}
 
+        {/* Liste de résultats sous forme de boutons rounded-xl interactifs */}
         {!selectedEntity && query.trim().length >= 2 ? (
-          <div className="rounded-md border border-border bg-card">
-            <div className="max-h-60 space-y-1.5 overflow-y-auto p-2">
+          <div className="p-3 bg-surface-1/30 border-b border-border/60">
+            <div className="max-h-60 space-y-1.5 overflow-y-auto pr-1">
               {searchQuery.isFetching ? (
-                <div className="p-2 text-xs text-muted-foreground">Recherche…</div>
+                <div className="p-4 text-xs font-medium text-muted-foreground/80 italic text-center">Recherche en cours…</div>
               ) : searchQuery.data?.results.length ? searchQuery.data.results.map((result) => (
-                <button
+                <motion.button
                   key={`${result.source}-${result.id}`}
                   type="button"
                   onClick={() => {
@@ -144,21 +172,22 @@ const CockpitSupplierLookup = ({
                     setValue('contact_phone', result.phone ?? '', { shouldDirty: true, shouldValidate: true });
                     setValue('contact_email', result.email ?? '', { shouldDirty: true, shouldValidate: true });
                   }}
-                  className="grid min-h-12 w-full grid-cols-[32px_minmax(0,1fr)_auto] items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  whileHover={shouldReduceMotion ? {} : { y: -0.5 }}
+                  className="grid min-h-12 w-full grid-cols-[36px_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-border/60 bg-card px-3 py-2.5 text-left transition-all duration-200 hover:border-primary/30 hover:bg-surface-1/50 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 cursor-pointer"
                 >
-                  <span className="flex size-8 items-center justify-center rounded-md bg-primary/10 text-primary">
+                  <span className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary shadow-sm ring-1 ring-primary/5">
                     {result.match_kind === 'contact' ? <UserRound size={15} aria-hidden="true" /> : result.match_kind === 'phone' ? <Phone size={15} aria-hidden="true" /> : <Building2 size={15} aria-hidden="true" />}
                   </span>
                   <span className="min-w-0">
-                    <span className="block truncate text-[13px] font-semibold text-foreground">{result.label}</span>
-                    <span className="block truncate text-xs text-muted-foreground">{getMatchLabel(result)}</span>
+                    <span className="block truncate text-[13px] font-bold text-foreground">{result.label}</span>
+                    <span className="block truncate text-[11px] text-muted-foreground mt-0.5">{getMatchLabel(result)}</span>
                   </span>
-                  <span className="rounded-full border border-border bg-muted/50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  <span className="rounded-full border border-border/80 bg-muted/60 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground shrink-0">
                     Fournisseur
                   </span>
-                </button>
+                </motion.button>
               )) : (
-                <div className="rounded-lg border border-dashed border-border bg-surface-1/40 p-4 text-center text-xs text-muted-foreground">
+                <div className="rounded-xl border border-dashed border-border bg-card p-5 text-center text-xs font-medium text-muted-foreground">
                   Aucun fournisseur enregistré. Utilise un fournisseur ponctuel pour cette saisie.
                 </div>
               )}
@@ -166,23 +195,36 @@ const CockpitSupplierLookup = ({
           </div>
         ) : null}
 
+        {/* Module de fournisseur ponctuel sous forme de sous-carte fine */}
         {!selectedEntity ? (
-          <section className="rounded-md border border-dashed border-border bg-card p-2.5">
-            <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_auto]">
-              <Input
-                value={temporaryName}
-                onChange={(event) => setTemporaryName(event.target.value)}
-                placeholder="Nom du fournisseur ponctuel…"
-                aria-label="Nom du fournisseur ponctuel"
-                name="temporary-supplier-name"
-                className="h-9"
-                autoComplete="organization"
-              />
-              <Button type="button" size="sm" onClick={useTemporarySupplier} disabled={!canUseTemporary}>
-                Utiliser pour cette saisie
-              </Button>
+          <div className="p-4 bg-surface-1/40">
+            <div className="rounded-xl border border-dashed border-border bg-card p-4">
+              <label className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground select-none block mb-2.5" htmlFor="temporary-supplier-name">
+                Saisie ponctuelle
+              </label>
+              <div className="grid gap-2.5 md:grid-cols-[minmax(0,1fr)_auto]">
+                <Input
+                  id="temporary-supplier-name"
+                  value={temporaryName}
+                  onChange={(event) => setTemporaryName(event.target.value)}
+                  placeholder="Nom du fournisseur ponctuel…"
+                  aria-label="Nom du fournisseur ponctuel"
+                  name="temporary-supplier-name"
+                  className="h-9 text-[13px] font-semibold"
+                  autoComplete="organization"
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={useTemporarySupplier}
+                  disabled={!canUseTemporary}
+                  className="h-9 px-4 font-bold shrink-0 cursor-pointer"
+                >
+                  Utiliser pour cette saisie
+                </Button>
+              </div>
             </div>
-          </section>
+          </div>
         ) : null}
       </div>
     </GuidedTierSearchShell>

@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ConfigSaveAgencyInput } from '../../../../../../shared/schemas/system/config.schema';
 
 import { saveAgencyConfig } from '@/services/config';
-import { agencyConfigKey } from '@/services/query/queryKeys';
+import { agencyConfigKey, configUsageKey } from '@/services/query/queryKeys';
 import { handleUiError } from '@/services/errors/handleUiError';
 import { mapSettingsDomainError } from '@/services/errors/mapSettingsDomainError';
 import type { AppError } from '@/services/errors/AppError';
@@ -20,7 +20,10 @@ export const useSaveAgencyConfig = (agencyId: string | null) => {
       ),
     onSuccess: async () => {
       if (!agencyId) return;
-      await queryClient.invalidateQueries({ queryKey: agencyConfigKey(agencyId) });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: agencyConfigKey(agencyId) }),
+        queryClient.invalidateQueries({ queryKey: configUsageKey(agencyId) })
+      ]);
     },
     onError: (err) => {
       const appError = mapSettingsDomainError(err, {

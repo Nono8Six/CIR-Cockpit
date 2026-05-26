@@ -39,6 +39,7 @@ export interface UseEntityOnboardingFlowInput {
   activeAgencyId: string | null;
   mode: OnboardingMode;
   defaultIntent: OnboardingIntent;
+  defaultClientKind?: 'company' | 'individual';
   allowedIntents: OnboardingIntent[] | undefined;
   initialEntity: EntityOnboardingSeed | null;
   onSaveClient?: (payload: ClientPayload) => Promise<SavedEntityResult | void>;

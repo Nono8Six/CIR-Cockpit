@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { RotateCcw, Save, AlertCircle } from 'lucide-react';
 import { Button } from '../../ui/inputs/basic/Button';
 
@@ -22,23 +22,25 @@ const SettingsActionDrawer = ({
   onSave,
 }: SettingsActionDrawerProps) => {
   const showDrawer = isDirty && !readOnly;
+  const shouldReduceMotion = useReducedMotion();
 
   return (
     <AnimatePresence>
       {showDrawer && (
         <motion.div
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 100, opacity: 0 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="fixed bottom-6 left-1/2 z-50 w-[90%] max-w-2xl -translate-x-1/2 rounded-xl border border-primary/20 bg-background/95 p-4 shadow-xl backdrop-blur-md md:w-full"
+          initial={shouldReduceMotion ? { opacity: 0 } : { y: 80, opacity: 0 }}
+          animate={shouldReduceMotion ? { opacity: 1 } : { y: 0, opacity: 1 }}
+          exit={shouldReduceMotion ? { opacity: 0 } : { y: 80, opacity: 0 }}
+          transition={{ duration: shouldReduceMotion ? 0.12 : 0.18, ease: [0.16, 1, 0.3, 1] }}
+          className="fixed bottom-4 left-1/2 z-30 w-[calc(100%-2rem)] max-w-3xl -translate-x-1/2 border border-primary/25 bg-background/95 p-3 shadow-xl backdrop-blur-md md:w-full"
           role="region"
           aria-label="Actions de modification"
+          aria-live="polite"
         >
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <div className="flex items-center gap-3 text-left">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <AlertCircle className="size-5" />
+              <div className="flex size-9 shrink-0 items-center justify-center border border-primary/20 bg-primary/10 text-primary">
+                <AlertCircle className="size-5" aria-hidden="true" />
               </div>
               <div>
                 <h4 className="text-sm font-semibold text-foreground">
@@ -55,21 +57,21 @@ const SettingsActionDrawer = ({
                 variant="outline"
                 size="sm"
                 onClick={onReset}
-                className="h-9 px-4 text-xs font-semibold uppercase tracking-wider transition-all hover:bg-muted"
+                className="h-9 px-4 text-xs font-semibold uppercase tracking-wider transition-[background-color,color,border-color] hover:bg-muted"
                 disabled={isSaving}
               >
-                <RotateCcw size={14} className="mr-1.5" /> Réinitialiser
+                <RotateCcw size={14} className="mr-1.5" aria-hidden="true" /> Réinitialiser
               </Button>
               <Button
                 type="button"
                 size="sm"
                 onClick={onSave}
-                className="h-9 px-5 bg-primary text-primary-foreground text-xs font-semibold uppercase tracking-wider shadow-sm transition-all hover:bg-primary/90"
+                className="h-9 bg-primary px-5 text-xs font-semibold uppercase tracking-wider text-primary-foreground shadow-sm transition-[background-color,color] hover:bg-primary/90"
                 disabled={isSaving}
                 data-testid="settings-save-button"
               >
-                <Save size={14} className="mr-1.5" />
-                {isSaving ? 'Enregistrement...' : 'Enregistrer'}
+                <Save size={14} className="mr-1.5" aria-hidden="true" />
+                {isSaving ? 'Enregistrement…' : 'Enregistrer'}
               </Button>
             </div>
           </div>

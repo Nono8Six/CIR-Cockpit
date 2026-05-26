@@ -104,7 +104,7 @@ const InteractionSearchBar = ({
           onIncludeArchivedChange={setIncludeArchived}
           footer={footer}
         >
-          <Command className="h-auto overflow-visible rounded-none bg-transparent" shouldFilter={false}>
+          <Command className="h-auto overflow-visible rounded-none bg-transparent [&_[data-cmdk-input-wrapper]]:h-12 [&_[data-cmdk-input-wrapper]]:border-b [&_[data-cmdk-input-wrapper]]:border-border/60 [&_[data-cmdk-input-wrapper]]:bg-card [&_[data-cmdk-input-wrapper]]:focus-within:bg-surface-1/30 [&_[data-cmdk-input-wrapper]]:transition-all [&_[data-cmdk-input-wrapper]]:duration-150 [&_[data-cmdk-input-wrapper]]:px-5 [&_[data-cmdk-input-wrapper]_svg]:h-4 [&_[data-cmdk-input-wrapper]_svg]:w-4 [&_[data-cmdk-input-wrapper]_svg]:text-muted-foreground/60 [&_[data-cmdk-input-wrapper]_svg]:transition-colors [&_[data-cmdk-input-wrapper]:focus-within_svg]:text-primary" shouldFilter={false}>
             <InteractionSearchInput query={query} onQueryChange={setQuery} inputRef={inputRef} />
             <InteractionSearchListArea
               panelState={panelState}

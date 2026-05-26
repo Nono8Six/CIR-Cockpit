@@ -129,4 +129,95 @@ describe('useUsersManager', () => {
       'Utilisateur supprime. 3 interaction(s) reattribuee(s).'
     );
   });
+
+  describe('multi-selection and bulk actions', () => {
+    it('toggles selection of single users and clears selection', () => {
+      const { result } = renderHook(() => useUsersManager());
+
+      expect(result.current.selectedUserIds).toEqual([]);
+
+      act(() => {
+        result.current.toggleSelectUser('user-1');
+      });
+      expect(result.current.selectedUserIds).toEqual(['user-1']);
+
+      act(() => {
+        result.current.toggleSelectUser('user-2');
+      });
+      expect(result.current.selectedUserIds).toEqual(['user-1', 'user-2']);
+
+      act(() => {
+        result.current.toggleSelectUser('user-1');
+      });
+      expect(result.current.selectedUserIds).toEqual(['user-2']);
+
+      act(() => {
+        result.current.clearSelection();
+      });
+      expect(result.current.selectedUserIds).toEqual([]);
+    });
+
+    it('toggles selection for all visible users', () => {
+      const { result } = renderHook(() => useUsersManager());
+      const visibleUsers = [
+        createUser({ id: 'user-1' }),
+        createUser({ id: 'user-2' })
+      ];
+
+      act(() => {
+        result.current.toggleSelectAll(visibleUsers);
+      });
+      expect(result.current.selectedUserIds).toEqual(['user-1', 'user-2']);
+
+      act(() => {
+        result.current.toggleSelectAll(visibleUsers);
+      });
+      expect(result.current.selectedUserIds).toEqual([]);
+    });
+
+    it('executes bulk archiving successfully', async () => {
+      const archiveMutateMock = vi.fn().mockResolvedValue(undefined);
+      usersMocks.useArchiveUser.mockReturnValue({ mutateAsync: archiveMutateMock });
+
+      const { result } = renderHook(() => useUsersManager());
+
+      act(() => {
+        result.current.handleBulkArchive(['user-1', 'user-2'], true);
+      });
+      expect(result.current.confirmBulkArchive).toEqual({
+        userIds: ['user-1', 'user-2'],
+        nextArchived: true
+      });
+
+      await act(async () => {
+        await result.current.executeBulkArchive();
+      });
+
+      expect(archiveMutateMock).toHaveBeenCalledTimes(2);
+      expect(notifySuccess).toHaveBeenCalledWith('2 utilisateur(s) archivé(s).');
+      expect(result.current.selectedUserIds).toEqual([]);
+      expect(result.current.confirmBulkArchive).toBeNull();
+    });
+
+    it('executes bulk deleting successfully', async () => {
+      const deleteMutateMock = vi.fn().mockResolvedValue({ anonymized_interactions: 2 });
+      usersMocks.useDeleteUser.mockReturnValue({ mutateAsync: deleteMutateMock });
+
+      const { result } = renderHook(() => useUsersManager());
+
+      act(() => {
+        result.current.handleBulkDelete(['user-1', 'user-2']);
+      });
+      expect(result.current.confirmBulkDelete).toEqual(['user-1', 'user-2']);
+
+      await act(async () => {
+        await result.current.executeBulkDelete();
+      });
+
+      expect(deleteMutateMock).toHaveBeenCalledTimes(2);
+      expect(notifySuccess).toHaveBeenCalledWith('2 utilisateur(s) supprimé(s). 4 interaction(s) réattribuée(s).');
+      expect(result.current.selectedUserIds).toEqual([]);
+      expect(result.current.confirmBulkDelete).toBeNull();
+    });
+  });
 });

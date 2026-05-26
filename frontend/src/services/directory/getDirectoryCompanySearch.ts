@@ -7,6 +7,7 @@ import {
   type DirectoryCompanySearchInput,
   type DirectoryCompanySearchResult
 } from '../../../../shared/schemas/system/directory.schema';
+import { resolveOfficialNafCode } from '../../../../shared/reference/officialLabels';
 import { z } from 'zod/v4';
 
 import { invokeTrpc } from '@/services/api/invokeTrpc';
@@ -32,6 +33,7 @@ const enterpriseApiEstablishmentSchema = z.looseObject({
   region: z.string().trim().nullable().optional(),
   est_siege: enterpriseApiBooleanLikeSchema,
   activite_principale: z.string().trim().nullable().optional(),
+  activite_principale_naf25: z.string().trim().nullable().optional(),
   etat_administratif: z.string().trim().nullable().optional(),
   date_creation: z.string().trim().nullable().optional(),
   date_debut_activite: z.string().trim().nullable().optional(),
@@ -51,6 +53,7 @@ const enterpriseApiCompanySchema = z.looseObject({
   nom_raison_sociale: z.string().trim().nullable().optional(),
   sigle: z.string().trim().nullable().optional(),
   activite_principale: z.string().trim().nullable().optional(),
+  activite_principale_naf25: z.string().trim().nullable().optional(),
   nombre_etablissements: z.union([z.number(), z.string(), z.null(), z.undefined()]),
   nombre_etablissements_ouverts: z.union([z.number(), z.string(), z.null(), z.undefined()]),
   siege: enterpriseApiEstablishmentSchema.nullable().optional(),
@@ -170,7 +173,12 @@ const mapEnterpriseApiEstablishment = (
   match_explanation: null,
   siret: normalizeNullableText(establishment.siret),
   siren: normalizeNullableText(company.siren),
-  naf_code: normalizeNullableText(establishment.activite_principale ?? company.activite_principale),
+  naf_code: resolveOfficialNafCode(
+    establishment.activite_principale_naf25,
+    company.activite_principale_naf25,
+    establishment.activite_principale,
+    company.activite_principale
+  ),
   official_name: normalizeNullableText(company.nom_raison_sociale)
     ?? normalizeNullableText(company.nom_complet)
     ?? company.siren,

@@ -29,7 +29,6 @@ type CockpitIdentitySectionProps = {
 };
 
 const CockpitIdentitySection = ({
-  labelStyle,
   errors,
   selectedEntity,
   selectedEntityMeta,
@@ -48,7 +47,7 @@ const CockpitIdentitySection = ({
   setValue
 }: CockpitIdentitySectionProps) => (
   <div className="space-y-2">
-    <p className={labelStyle}>Identité</p>
+    <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground select-none block mb-1.5">Identité</p>
     {selectedEntity ? (
       <CockpitSelectedEntityCard
         selectedEntity={selectedEntity}

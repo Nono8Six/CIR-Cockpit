@@ -1,6 +1,7 @@
 import { Layers3 } from 'lucide-react';
-import SettingsSelectField from './SettingsSelectField';
+
 import { Badge } from '../../ui/data-display/Badge';
+import SettingsSelectField from './SettingsSelectField';
 
 type GeneralSettingsCardProps = {
   allowManualEntryOverride: 'inherit' | 'enabled' | 'disabled';
@@ -12,10 +13,6 @@ type GeneralSettingsCardProps = {
   setDefaultCompanyAccountTypeOverride: (value: 'inherit' | 'term' | 'cash') => void;
 };
 
-/**
- * Bento card representing Agency-level onboarding parameters.
- * Visualizes visual inheritance clearly using select overlays.
- */
 const GeneralSettingsCard = ({
   allowManualEntryOverride,
   defaultCompanyAccountTypeOverride,
@@ -38,13 +35,13 @@ const GeneralSettingsCard = ({
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <div className="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <Layers3 className="size-4" />
+              <Layers3 className="size-4" aria-hidden="true" />
             </div>
             <h3 className="text-sm font-semibold text-foreground">
               Paramètres onboarding agence
             </h3>
           </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
+          <p className="text-xs leading-relaxed text-muted-foreground">
             Ces surcharges s&apos;appliquent seulement à l&apos;agence active et complètent les valeurs par défaut du produit.
           </p>
         </div>
@@ -52,7 +49,7 @@ const GeneralSettingsCard = ({
           variant="outline"
           className="w-fit border-border bg-surface-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground"
         >
-          {readOnly ? 'Agence • Lecture Seule' : 'Agence'}
+          {readOnly ? 'Agence • Lecture seule' : 'Agence'}
         </Badge>
       </div>
 
@@ -61,8 +58,8 @@ const GeneralSettingsCard = ({
           label="Saisie manuelle"
           description="Choisit si l'agence hérite du comportement global ou force l'activation/désactivation de la saisie manuelle."
           value={allowManualEntryOverride}
-          onValueChange={(val) =>
-            setAllowManualEntryOverride(val as 'inherit' | 'enabled' | 'disabled')
+          onValueChange={(value) =>
+            setAllowManualEntryOverride(value as 'inherit' | 'enabled' | 'disabled')
           }
           disabled={readOnly}
           parentValueLabel={parentManualEntryLabel}
@@ -77,8 +74,8 @@ const GeneralSettingsCard = ({
           label="Compte entreprise par défaut"
           description="Fixe le type de compte appliqué par défaut lors de la création d'un client société."
           value={defaultCompanyAccountTypeOverride}
-          onValueChange={(val) =>
-            setDefaultCompanyAccountTypeOverride(val as 'inherit' | 'term' | 'cash')
+          onValueChange={(value) =>
+            setDefaultCompanyAccountTypeOverride(value as 'inherit' | 'term' | 'cash')
           }
           disabled={readOnly}
           parentValueLabel={parentAccountTypeLabel}

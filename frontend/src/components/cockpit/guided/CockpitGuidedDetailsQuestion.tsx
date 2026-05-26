@@ -1,9 +1,9 @@
-import type { ChangeEvent } from 'react';
+import { type ChangeEvent, useEffect, useState } from 'react';
 import { ArrowRight, RotateCcw } from 'lucide-react';
+import { motion, useReducedMotion } from 'motion/react';
 
 import type { CockpitFormLeftPaneProps, CockpitFormRightPaneProps } from '../CockpitPaneTypes';
 import AvatarInitials from '../../ui/data-display/AvatarInitials';
-import { Button } from '../../ui/inputs/basic/Button';
 import { Input } from '../../ui/inputs/basic/Input';
 import { Kbd } from '../../ui/data-display/Kbd';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/inputs/selects/Select';
@@ -36,12 +36,6 @@ const buildContactName = (props: CockpitFormLeftPaneProps): string => {
 const buildContactPosition = (props: CockpitFormLeftPaneProps): string =>
   props.selectedContact?.position?.trim() || props.contactPosition?.trim() || '';
 
-const SectionDivider = () => (
-  <div aria-hidden="true" className="h-px w-full bg-[hsl(var(--border-subtle))]" />
-);
-
-const fieldRowStyle = 'grid min-w-0 gap-2 sm:grid-cols-[170px_minmax(0,1fr)] sm:items-start';
-
 export const buildDescriptionOnlySubject = (
   description: string,
   interactionType: string,
@@ -61,12 +55,35 @@ const CockpitGuidedDetailsQuestion = ({
   onEditContact,
   continueShortcutLabel
 }: CockpitGuidedDetailsQuestionProps) => {
+  const shouldReduceMotion = useReducedMotion();
+  const [isShortcutPressed, setIsShortcutPressed] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && event.key === 'Enter') {
+        setIsShortcutPressed(true);
+      }
+    };
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (event.key === 'Control' || event.key === 'Meta' || event.key === 'Enter') {
+        setIsShortcutPressed(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
+
   const handleOrderRefChange = (event: ChangeEvent<HTMLInputElement>) => {
     event.currentTarget.value = event.currentTarget.value.replace(/\D/g, '').slice(0, 6);
     void rightPaneProps.orderRefField.onChange(event);
   };
 
-  const labelStyle = rightPaneProps.labelStyle;
+  const refinedLabelStyle = 'text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground select-none block mb-1.5';
+
   const fullName = buildContactName(leftPaneProps);
   const position = buildContactPosition(leftPaneProps);
   const hasContact = fullName.length > 0;
@@ -89,12 +106,12 @@ const CockpitGuidedDetailsQuestion = ({
             : 'Conserve uniquement le contexte utile de l’appel.'}
       >
         <div className="rounded-lg border border-border bg-card p-4 sm:p-5">
-          <label className={labelStyle} htmlFor="interaction-notes">Description</label>
+          <label className={refinedLabelStyle} htmlFor="interaction-notes">Description</label>
           <textarea
             id="interaction-notes"
             {...rightPaneProps.notesField}
             rows={7}
-            className="min-h-[210px] w-full resize-none rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground transition-colors placeholder:text-muted-foreground/80 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className="min-h-[210px] w-full resize-none rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.02)] transition-all duration-200 placeholder:text-muted-foreground/80 focus-visible:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/10 focus-visible:ring-offset-0 focus-visible:ring-offset-background mt-2 font-medium"
             placeholder={isInternal
               ? 'Résumé de l’échange interne, décision, suite à donner…'
               : isSupplier
@@ -105,23 +122,29 @@ const CockpitGuidedDetailsQuestion = ({
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-          <Button
+          <motion.button
             type="button"
-            variant="ghost"
-            size="sm"
             onClick={onReset}
-            className="gap-1.5 text-muted-foreground hover:text-foreground"
+            whileHover={shouldReduceMotion ? {} : { scale: 1.01 }}
+            whileTap={shouldReduceMotion ? {} : { scale: 0.98 }}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer px-2 py-1 rounded-md"
           >
-            <RotateCcw size={13} aria-hidden="true" />
+            <RotateCcw size={13} aria-hidden="true" className="text-muted-foreground/80" />
             Effacer le formulaire
-          </Button>
+          </motion.button>
           {onComplete ? (
-            <Button
+            <motion.button
               type="button"
-              size="sm"
               onClick={onComplete}
               disabled={!canComplete}
-              className="gap-1.5 shadow-sm"
+              whileHover={shouldReduceMotion ? {} : { scale: 1.01 }}
+              whileTap={shouldReduceMotion ? {} : { scale: 0.98 }}
+              animate={!shouldReduceMotion && isShortcutPressed ? { scale: 0.96 } : {}}
+              initial="initial"
+              className={cn(
+                "inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 disabled:pointer-events-none disabled:opacity-50 cursor-pointer gap-1.5",
+                isShortcutPressed && "bg-primary/95"
+              )}
             >
               Continuer
               {continueShortcutLabel ? (
@@ -132,8 +155,16 @@ const CockpitGuidedDetailsQuestion = ({
                   {continueShortcutLabel}
                 </Kbd>
               ) : null}
-              <ArrowRight size={14} aria-hidden="true" />
-            </Button>
+              <motion.span
+                variants={{
+                  initial: { x: 0 },
+                  hover: { x: 3 }
+                }}
+                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+              >
+                <ArrowRight size={14} aria-hidden="true" />
+              </motion.span>
+            </motion.button>
           ) : null}
         </div>
       </CockpitGuidedQuestionFrame>
@@ -146,48 +177,44 @@ const CockpitGuidedDetailsQuestion = ({
       title="Résumer la demande"
       description="Quelques infos pour finaliser cette interaction."
     >
-      <div className="space-y-5 rounded-lg border border-border bg-card p-5 sm:p-6">
-        {/* Bloc 1 — Demande */}
-        <div className="space-y-3">
-          <div className={cn(fieldRowStyle, 'sm:items-center')}>
-            <label className={cn(labelStyle, 'mb-0')} htmlFor="subject-input">Titre *</label>
-            <div className="min-w-0 space-y-1.5">
-              <Input
-                id="subject-input"
-                type="text"
-                {...rightPaneProps.subjectField}
-                className="h-10 w-full min-w-0 text-[15px] font-medium"
-                placeholder="Vérin ISO 15552 Ø80 course 200…"
-                aria-invalid={!!rightPaneProps.errors.subject}
-                autoComplete="off"
-              />
-            </div>
+      <div className="space-y-6">
+        {/* Groupe 1 — Demande (Titre & Description) Fusionné */}
+        <div className="overflow-hidden rounded-xl border border-border bg-card shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_2px_8px_-1px_rgba(0,0,0,0.02)] transition-all duration-200 focus-within:border-primary/50 focus-within:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.03)]">
+          <div className="px-5 py-4 border-b border-border/60 bg-card focus-within:bg-surface-1/30 transition-all duration-150">
+            <label className={refinedLabelStyle} htmlFor="subject-input">Titre *</label>
+            <Input
+              id="subject-input"
+              type="text"
+              {...rightPaneProps.subjectField}
+              className="h-9 w-full min-w-0 text-[13px] font-semibold border-none bg-transparent p-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-none mt-1 placeholder:text-muted-foreground/75 text-foreground"
+              placeholder="Vérin ISO 15552 Ø80 course 200…"
+              aria-invalid={!!rightPaneProps.errors.subject}
+              autoComplete="off"
+            />
             {rightPaneProps.errors.subject ? (
-              <p className="text-xs text-destructive sm:col-start-2" role="status" aria-live="polite">
+              <p className="text-xs text-destructive mt-1 font-medium" role="status" aria-live="polite">
                 {rightPaneProps.errors.subject.message}
               </p>
             ) : null}
           </div>
 
-          <div className={fieldRowStyle}>
-            <label className={labelStyle} htmlFor="interaction-notes">Description</label>
+          <div className="px-5 py-4 bg-card focus-within:bg-surface-1/30 transition-all duration-150">
+            <label className={refinedLabelStyle} htmlFor="interaction-notes">Description</label>
             <textarea
               id="interaction-notes"
               {...rightPaneProps.notesField}
               rows={4}
-              className="min-h-[120px] w-full resize-none rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground transition-colors placeholder:text-muted-foreground/80 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              className="min-h-[100px] w-full resize-none border-none bg-transparent p-0 text-[13px] font-medium text-foreground shadow-none outline-none focus:outline-none focus:ring-0 mt-1 placeholder:text-muted-foreground/75 font-medium"
               placeholder="Détails techniques, références constructeur, contexte…"
               autoComplete="off"
             />
           </div>
         </div>
 
-        <SectionDivider />
-
-        {/* Bloc 2 — Qualification */}
-        <div className="space-y-3">
-          <div className={cn(fieldRowStyle, 'sm:items-center')}>
-            <label className={cn(labelStyle, 'mb-0')} htmlFor="interaction-type">Type d&apos;interaction</label>
+        {/* Groupe 2 — Qualification (Type & Statut) Fusionné */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 overflow-hidden rounded-xl border border-border bg-card shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_2px_8px_-1px_rgba(0,0,0,0.02)] transition-all duration-200 focus-within:border-primary/50 focus-within:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.03)]">
+          <div className="px-5 py-4 border-b sm:border-b-0 sm:border-r border-border/60 bg-card focus-within:bg-surface-1/30 transition-all duration-150 flex flex-col justify-center min-h-[85px]">
+            <label className={refinedLabelStyle} htmlFor="interaction-type">Type d&apos;interaction</label>
             <Select
               value={leftPaneProps.interactionType}
               onValueChange={(value) =>
@@ -199,51 +226,52 @@ const CockpitGuidedDetailsQuestion = ({
                 id="interaction-type"
                 ref={leftPaneProps.interactionTypeRef}
                 aria-describedby={leftPaneProps.hasInteractionTypes ? undefined : leftPaneProps.interactionTypeHelpId}
-                className="h-10 w-full min-w-0 text-sm font-medium"
+                className="h-9 w-full min-w-0 text-[13px] font-semibold border-none bg-transparent p-0 shadow-none focus:ring-0 focus:ring-offset-0 mt-1 cursor-pointer"
               >
                 <SelectValue placeholder="Choisir un type…" />
               </SelectTrigger>
               <SelectContent className="max-h-64">
                 {leftPaneProps.interactionTypes.map((type) => (
-                  <SelectItem key={type} value={type} className="text-sm">
+                  <SelectItem key={type} value={type} className="text-sm font-semibold">
                     {type}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             {!leftPaneProps.hasInteractionTypes ? (
-              <p id={leftPaneProps.interactionTypeHelpId} className="text-xs text-warning">
-                Ajoutez des types d&apos;interaction dans Paramètres.
+              <p id={leftPaneProps.interactionTypeHelpId} className="text-[10px] text-warning mt-1 font-medium">
+                Ajoutez des types dans Paramètres.
               </p>
             ) : null}
             {leftPaneProps.errors.interaction_type ? (
-              <p className="text-xs text-destructive sm:col-start-2" role="status" aria-live="polite">
+              <p className="text-xs text-destructive mt-1 font-medium" role="status" aria-live="polite">
                 {leftPaneProps.errors.interaction_type.message}
               </p>
             ) : null}
           </div>
 
-          <CockpitStatusControl
-            footerLabelStyle={labelStyle}
-            statusMeta={rightPaneProps.statusMeta}
-            statusCategoryLabel={rightPaneProps.statusCategoryLabel}
-            statusCategoryBadges={rightPaneProps.statusCategoryBadges}
-            statusTriggerRef={rightPaneProps.statusTriggerRef}
-            statusValue={rightPaneProps.statusValue}
-            onStatusChange={rightPaneProps.onStatusChange}
-            statusGroups={rightPaneProps.statusGroups}
-            hasStatuses={rightPaneProps.hasStatuses}
-            statusHelpId={rightPaneProps.statusHelpId}
-            layout="inline"
-          />
+          <div className="px-5 py-4 bg-card focus-within:bg-surface-1/30 transition-all duration-150 flex flex-col justify-center min-h-[85px]">
+            <CockpitStatusControl
+              footerLabelStyle={refinedLabelStyle}
+              statusMeta={rightPaneProps.statusMeta}
+              statusCategoryLabel={rightPaneProps.statusCategoryLabel}
+              statusCategoryBadges={rightPaneProps.statusCategoryBadges}
+              statusTriggerRef={rightPaneProps.statusTriggerRef}
+              statusValue={rightPaneProps.statusValue}
+              onStatusChange={rightPaneProps.onStatusChange}
+              statusGroups={rightPaneProps.statusGroups}
+              hasStatuses={rightPaneProps.hasStatuses}
+              statusHelpId={rightPaneProps.statusHelpId}
+              layout="stacked"
+              variant="fused"
+            />
+          </div>
         </div>
 
-        <SectionDivider />
-
-        {/* Bloc 3 — Suivi */}
-        <div className="space-y-3">
-          <div className={cn(fieldRowStyle, 'sm:items-center')}>
-            <label className={cn(labelStyle, 'mb-0')} htmlFor="interaction-order-ref">N° dossier</label>
+        {/* Groupe 3 — Suivi (N° dossier & Rappel) Fusionné */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 overflow-hidden rounded-xl border border-border bg-card shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_2px_8px_-1px_rgba(0,0,0,0.02)] transition-all duration-200 focus-within:border-primary/50 focus-within:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.03)]">
+          <div className="px-5 py-4 border-b sm:border-b-0 sm:border-r border-border/60 bg-card focus-within:bg-surface-1/30 transition-all duration-150 flex flex-col justify-center min-h-[85px]">
+            <label className={refinedLabelStyle} htmlFor="interaction-order-ref">N° dossier</label>
             <Input
               id="interaction-order-ref"
               type="text"
@@ -252,73 +280,84 @@ const CockpitGuidedDetailsQuestion = ({
               inputMode="numeric"
               pattern="[0-9]*"
               maxLength={6}
-              className="h-10 w-full font-mono text-sm"
+              className="h-9 w-full font-mono text-[13px] border-none bg-transparent p-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-none mt-1 placeholder:text-muted-foreground/75 text-foreground font-semibold"
               placeholder="123456"
               autoComplete="off"
             />
             {rightPaneProps.errors.order_ref ? (
-              <p className="text-xs text-destructive sm:col-start-2" role="status" aria-live="polite">
+              <p className="text-xs text-destructive mt-1 font-medium" role="status" aria-live="polite">
                 {rightPaneProps.errors.order_ref.message}
               </p>
             ) : null}
           </div>
 
-          <CockpitReminderControl
-            footerLabelStyle={labelStyle}
-            reminderField={rightPaneProps.reminderField}
-            reminderAt={rightPaneProps.reminderAt}
-            onSetReminder={rightPaneProps.onSetReminder}
-            layout="inline"
-          />
+          <div className="px-5 py-4 bg-card focus-within:bg-surface-1/30 transition-all duration-150 flex flex-col justify-center min-h-[85px]">
+            <CockpitReminderControl
+              footerLabelStyle={refinedLabelStyle}
+              reminderField={rightPaneProps.reminderField}
+              reminderAt={rightPaneProps.reminderAt}
+              onSetReminder={rightPaneProps.onSetReminder}
+              layout="stacked"
+              variant="fused"
+            />
+          </div>
         </div>
 
         {hasContact ? (
-          <>
-            <SectionDivider />
-            {/* Bloc 4 — Contact rattaché */}
-            <div className={cn(fieldRowStyle, 'sm:items-center')}>
-              <p className={cn(labelStyle, 'mb-0')}>Contact rattaché</p>
-              <div className="flex items-center gap-3 rounded-md bg-surface-1/60 px-3 py-2.5">
-                <AvatarInitials name={fullName} size="sm" className="rounded-md" />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-foreground">
-                    {fullName}
-                    {position ? <span className="text-muted-foreground"> · {position}</span> : null}
-                  </p>
-                </div>
-                {onEditContact ? (
-                  <button
-                    type="button"
-                    onClick={onEditContact}
-                    className="shrink-0 rounded-md px-1.5 py-0.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:underline"
-                  >
-                    Modifier
-                  </button>
-                ) : null}
+          /* Bloc 4 — Contact rattaché */
+          <div className="space-y-2">
+            <p className={refinedLabelStyle}>Contact rattaché</p>
+            <motion.div
+              whileHover={shouldReduceMotion ? {} : { y: -0.5 }}
+              className="flex items-center gap-4 rounded-xl border border-border border-l-4 border-l-primary bg-surface-1/50 hover:bg-surface-1 px-5 py-4 shadow-sm transition-all duration-200"
+            >
+              <AvatarInitials name={fullName} size="sm" className="rounded-md ring-1 ring-border/50 shadow-sm" />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[13px] font-bold text-foreground">
+                  {fullName}
+                  {position ? <span className="text-[11px] font-medium text-muted-foreground/80"> · {position}</span> : null}
+                </p>
               </div>
-            </div>
-          </>
+              {onEditContact ? (
+                <motion.button
+                  type="button"
+                  onClick={onEditContact}
+                  whileHover={shouldReduceMotion ? {} : { scale: 1.02 }}
+                  whileTap={shouldReduceMotion ? {} : { scale: 0.96 }}
+                  className="shrink-0 rounded-md bg-card border border-border px-2.5 py-1 text-xs font-bold text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 cursor-pointer"
+                >
+                  Modifier
+                </motion.button>
+              ) : null}
+            </motion.div>
+          </div>
         ) : null}
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-        <Button
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-4">
+        <motion.button
           type="button"
-          variant="ghost"
-          size="sm"
           onClick={onReset}
-          className="gap-1.5 text-muted-foreground hover:text-foreground"
+          whileHover={shouldReduceMotion ? {} : { scale: 1.01 }}
+          whileTap={shouldReduceMotion ? {} : { scale: 0.98 }}
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer px-2 py-1 rounded-md"
         >
-          <RotateCcw size={13} aria-hidden="true" />
+          <RotateCcw size={13} aria-hidden="true" className="text-muted-foreground/80" />
           Effacer le formulaire
-        </Button>
+        </motion.button>
         {onComplete ? (
-          <Button
+          <motion.button
             type="button"
-            size="sm"
             onClick={onComplete}
             disabled={!canComplete}
-            className="gap-1.5 shadow-sm"
+            whileHover={shouldReduceMotion ? {} : { scale: 1.01 }}
+            whileTap={shouldReduceMotion ? {} : { scale: 0.98 }}
+            animate={!shouldReduceMotion && isShortcutPressed ? { scale: 0.96 } : {}}
+            initial="initial"
+            className={cn(
+              "inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 disabled:pointer-events-none disabled:opacity-50 cursor-pointer gap-1.5",
+              isShortcutPressed && "bg-primary/95"
+            )}
           >
             Continuer
             {continueShortcutLabel ? (
@@ -329,8 +368,16 @@ const CockpitGuidedDetailsQuestion = ({
                 {continueShortcutLabel}
               </Kbd>
             ) : null}
-            <ArrowRight size={14} aria-hidden="true" />
-          </Button>
+            <motion.span
+              variants={{
+                initial: { x: 0 },
+                hover: { x: 3 }
+              }}
+              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            >
+              <ArrowRight size={14} aria-hidden="true" />
+            </motion.span>
+          </motion.button>
         ) : null}
       </div>
     </CockpitGuidedQuestionFrame>

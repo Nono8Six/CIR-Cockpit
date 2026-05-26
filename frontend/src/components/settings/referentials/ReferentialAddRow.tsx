@@ -8,6 +8,7 @@ type ReferentialAddRowProps = {
   onAdd: () => void;
   placeholder: string;
   namePrefix: string;
+  addLabel: string;
   uppercase?: boolean;
   readOnly?: boolean;
 };
@@ -31,6 +32,7 @@ const ReferentialAddRow = ({
   onAdd,
   placeholder,
   namePrefix,
+  addLabel,
   uppercase = false,
   readOnly = false,
 }: ReferentialAddRowProps) => {
@@ -44,28 +46,33 @@ const ReferentialAddRow = ({
   if (readOnly) return null;
 
   return (
-    <div className="mb-4 flex items-center gap-2">
-      <Input
-        type="text"
-        placeholder={placeholder}
-        value={newItem}
-        onChange={(event) =>
-          setNewItem(uppercase ? event.target.value.toUpperCase() : event.target.value)
-        }
-        onKeyDown={handleKeyDown}
-        className="h-8 flex-1 border-border/80 bg-surface-1/40 text-xs focus-visible:ring-1 focus-visible:ring-primary/20 placeholder:text-muted-foreground/50"
-        name={`new-${namePrefix}`}
-        autoComplete="off"
-      />
-      <Button
-        type="button"
-        onClick={onAdd}
-        size="icon"
-        className="size-8 bg-primary hover:bg-primary/95 text-primary-foreground shadow-sm transition-colors shrink-0"
-        aria-label="Ajouter un élément"
-      >
-        <Plus className="size-3.5" />
-      </Button>
+    <div className="border-b border-border/70 p-2">
+      <div className="flex items-center gap-2">
+        <Input
+          type="text"
+          placeholder={placeholder}
+          value={newItem}
+          onChange={(event) =>
+            setNewItem(uppercase ? event.target.value.toUpperCase() : event.target.value)
+          }
+          onKeyDown={handleKeyDown}
+          className="h-8 flex-1 border-border/80 bg-background text-xs focus-visible:ring-1 focus-visible:ring-primary/20 placeholder:text-muted-foreground/50"
+          name={`new-${namePrefix}`}
+          aria-label={addLabel}
+          autoComplete="off"
+        />
+        <Button
+          type="button"
+          onClick={onAdd}
+          size="icon"
+          className="size-8 shrink-0 bg-primary text-primary-foreground shadow-sm transition-colors hover:bg-primary/95"
+          aria-label={addLabel}
+          disabled={!newItem.trim()}
+          aria-disabled={!newItem.trim()}
+        >
+          <Plus className="size-3.5" aria-hidden="true" />
+        </Button>
+      </div>
     </div>
   );
 };

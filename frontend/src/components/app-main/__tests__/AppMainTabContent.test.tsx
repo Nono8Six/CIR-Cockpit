@@ -39,7 +39,7 @@ const baseProps = {
   entitySearchLoading: false,
   canAccessSettings: true,
   canEditAgencySettings: true,
-  canEditProductSettings: true,
+  canEditProductSettings: false,
   canAccessAdmin: true,
   focusedClientId: null,
   focusedContactId: null,

@@ -21,10 +21,11 @@ export const buildValues = (
   onboardingConfig: Pick<
     ProductOnboardingConfig,
     'default_account_type_company' | 'default_account_type_individual'
-  >
+  >,
+  defaultClientKind: 'company' | 'individual' = 'company'
 ): OnboardingValues => ({
   intent: defaultIntent,
-  client_kind: initialEntity?.client_kind === 'individual' ? 'individual' : 'company',
+  client_kind: initialEntity?.client_kind === 'individual' ? 'individual' : defaultClientKind,
   name: initialEntity?.name ?? '',
   first_name: initialEntity?.first_name ?? '',
   last_name: initialEntity?.last_name ?? '',
@@ -45,7 +46,7 @@ export const buildValues = (
   notes: initialEntity?.notes ?? '',
   agency_id: initialEntity?.agency_id ?? activeAgencyId ?? '',
   client_number: initialEntity?.client_number ?? '',
-  account_type: initialEntity?.client_kind === 'individual'
+  account_type: initialEntity?.client_kind === 'individual' || (!initialEntity && defaultClientKind === 'individual')
     ? onboardingConfig.default_account_type_individual
     : initialEntity?.account_type ?? onboardingConfig.default_account_type_company,
   cir_commercial_id: initialEntity?.cir_commercial_id ?? ''

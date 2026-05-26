@@ -37,6 +37,7 @@ export const useEntityOnboardingFlow = ({
   activeAgencyId,
   mode,
   defaultIntent,
+  defaultClientKind = 'company',
   allowedIntents,
   initialEntity,
   onSaveClient,
@@ -54,6 +55,7 @@ export const useEntityOnboardingFlow = ({
     useOnboardingConfig(activeAgencyId, open);
   const initialManualEntry =
     initialEntity?.client_kind === 'individual' ||
+    (mode === 'create' && defaultClientKind === 'individual') ||
     (mode === 'convert' && !initialEntity?.name);
 
   const stepper = useEntityOnboardingStepper({
@@ -66,6 +68,7 @@ export const useEntityOnboardingFlow = ({
       resolvedIntent,
       initialEntity,
       onboardingConfig,
+      defaultClientKind,
     ),
   });
 
@@ -160,6 +163,7 @@ export const useEntityOnboardingFlow = ({
     onboardingConfig,
     open,
     resolvedIntent,
+    defaultClientKind,
     selectedCompany,
     selectedGroupId,
     setDepartmentFilter,

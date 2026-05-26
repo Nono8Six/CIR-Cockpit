@@ -325,6 +325,44 @@ Deno.test('buildSaveEntityRows stores missing optional location fields as null f
   assertEquals(insertRow.supplier_number, '445566');
 });
 
+Deno.test('buildSaveEntityRows stores individual clients with cash account and primary contact', () => {
+  const { updateRow, insertRow, primaryContact, isIndividualClient } = buildSaveEntityRows({
+    action: 'save',
+    agency_id: 'agency-1',
+    entity_type: 'Client',
+    entity: {
+      client_number: '10 02',
+      client_kind: 'individual',
+      account_type: 'cash',
+      name: 'Martin Alice',
+      address: '',
+      postal_code: '33000',
+      department: '33',
+      city: 'Bordeaux',
+      notes: '',
+      agency_id: 'agency-1',
+      primary_contact: {
+        first_name: 'Alice',
+        last_name: 'Martin',
+        phone: '0601020304',
+        email: '',
+        position: '',
+        notes: ''
+      }
+    }
+  }, 'agency-1', 'user-1');
+
+  assertEquals(isIndividualClient, true);
+  assertEquals(updateRow.client_kind, 'individual');
+  assertEquals(updateRow.client_number, '1002');
+  assertEquals(updateRow.account_type, 'cash');
+  assertEquals(updateRow.cir_commercial_id, null);
+  assertEquals(insertRow.client_kind, 'individual');
+  assertEquals(primaryContact?.first_name, 'Alice');
+  assertEquals(primaryContact?.last_name, 'Martin');
+  assertEquals(primaryContact?.phone, '0601020304');
+});
+
 Deno.test('reassignEntity rejects non-orphan entities', async () => {
   const { db } = createDbMock({
     entityRow: null,

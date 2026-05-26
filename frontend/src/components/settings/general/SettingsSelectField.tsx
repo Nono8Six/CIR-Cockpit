@@ -1,3 +1,5 @@
+import { ArrowDownLeft, Info } from 'lucide-react';
+
 import {
   Select,
   SelectContent,
@@ -5,7 +7,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../ui/inputs/selects/Select';
-import { ArrowDownLeft, Info } from 'lucide-react';
 
 type SettingsSelectFieldProps = {
   label: string;
@@ -17,9 +18,6 @@ type SettingsSelectFieldProps = {
   parentValueLabel?: string;
 };
 
-/**
- * Custom select field illustrating visual inheritance when inheriting from product.
- */
 const SettingsSelectField = ({
   label,
   description,
@@ -43,31 +41,29 @@ const SettingsSelectField = ({
           </p>
         </div>
 
-        {/* Visual inheritance indicator badge */}
-        {parentValueLabel && (
-          <div className="flex items-center shrink-0">
+        {parentValueLabel ? (
+          <div className="flex shrink-0 items-center">
             {isInherited ? (
-              <span className="inline-flex items-center gap-1 rounded bg-muted/60 px-2 py-0.5 font-mono text-[10px] text-muted-foreground border border-dashed border-border">
-                <ArrowDownLeft className="size-3" />
+              <span className="inline-flex items-center gap-1 rounded border border-dashed border-border bg-muted/60 px-2 py-0.5 font-mono text-[10px] text-muted-foreground">
+                <ArrowDownLeft className="size-3" aria-hidden="true" />
                 Hérité : {parentValueLabel}
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 rounded bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary border border-primary/20">
+              <span className="inline-flex items-center gap-1 rounded border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
                 Surcharge active
               </span>
             )}
           </div>
-        )}
+        ) : null}
       </div>
 
       <div className="relative mt-2 flex items-center gap-2">
-        {/* Dotted indicator line for active visual inheritance */}
-        {isInherited && parentValueLabel && (
+        {isInherited && parentValueLabel ? (
           <div
             className="absolute -top-3 left-4 h-3 w-0 border-l border-dashed border-border"
             aria-hidden="true"
           />
-        )}
+        ) : null}
         <Select value={value} onValueChange={onValueChange} disabled={disabled}>
           <SelectTrigger density="dense" className="w-full bg-background font-medium">
             <SelectValue />
@@ -82,12 +78,12 @@ const SettingsSelectField = ({
         </Select>
       </div>
 
-      {isInherited && parentValueLabel && (
+      {isInherited && parentValueLabel ? (
         <div className="flex items-center gap-1.5 pt-1 text-[11px] text-muted-foreground/70">
-          <Info className="size-3" />
+          <Info className="size-3" aria-hidden="true" />
           <span>Utilise le comportement global par défaut du produit</span>
         </div>
-      )}
+      ) : null}
     </div>
   );
 };

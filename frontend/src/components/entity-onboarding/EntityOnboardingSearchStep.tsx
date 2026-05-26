@@ -16,6 +16,7 @@ import type {
   DirectoryCompanySearchResult,
   DirectoryListRow,
 } from '../../../../shared/schemas/system/directory.schema';
+import { formatOfficialNaf } from '../../../../shared/reference/officialLabels';
 import { Badge } from '../ui/data-display/Badge';
 import { Button } from '../ui/inputs/basic/Button';
 import { ScrollArea } from '../ui/data-display/ScrollArea';
@@ -546,6 +547,7 @@ const EntityOnboardingSearchStep = ({
                                     formatOfficialDate(
                                       establishment.establishment_closed_at,
                                     );
+                                  const formattedNaf = formatOfficialNaf(establishment.naf_code);
 
                                   return (
                                     <button
@@ -637,9 +639,9 @@ const EntityOnboardingSearchStep = ({
                                             <span className="rounded border border-border-subtle bg-surface-1 px-1.5 font-mono font-medium tabular-nums">
                                               {establishment.siret}
                                             </span>
-                                            {establishment.naf_code ? (
-                                              <span className="font-mono tabular-nums">
-                                                NAF {establishment.naf_code}
+                                            {formattedNaf ? (
+                                              <span className="font-medium tabular-nums">
+                                                NAF {formattedNaf}
                                               </span>
                                             ) : null}
                                           </div>

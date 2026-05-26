@@ -26,6 +26,8 @@ const UsersManagerDialogs = ({ state }: UsersManagerDialogsProps) => {
     editIdentityOpen,
     editIdentityUser,
     confirmDeleteUser,
+    confirmBulkDelete,
+    confirmBulkArchive,
     agencies,
     handleCreateUser,
     handleMembershipSave,
@@ -36,7 +38,11 @@ const UsersManagerDialogs = ({ state }: UsersManagerDialogsProps) => {
     executeArchiveToggle,
     closeEditIdentityDialog,
     closeDeleteConfirm,
-    executeDeleteUser
+    executeDeleteUser,
+    closeBulkDeleteConfirm,
+    closeBulkArchiveConfirm,
+    executeBulkDelete,
+    executeBulkArchive
   } = state;
 
   return (
@@ -118,6 +124,34 @@ const UsersManagerDialogs = ({ state }: UsersManagerDialogsProps) => {
         confirmLabel="Supprimer"
         variant="destructive"
         onConfirm={executeDeleteUser}
+      />
+
+      <ConfirmDialog
+        open={confirmBulkDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) closeBulkDeleteConfirm();
+        }}
+        title="Supprimer les utilisateurs"
+        description={`Les ${confirmBulkDelete?.length ?? 0} utilisateurs sélectionnés seront définitivement supprimés. Leurs interactions resteront historisées et réattribuées à un compte système.`}
+        confirmLabel="Supprimer"
+        variant="destructive"
+        onConfirm={executeBulkDelete}
+      />
+
+      <ConfirmDialog
+        open={confirmBulkArchive !== null}
+        onOpenChange={(open) => {
+          if (!open) closeBulkArchiveConfirm();
+        }}
+        title={confirmBulkArchive?.nextArchived ? "Archiver les utilisateurs" : "Restaurer les utilisateurs"}
+        description={
+          confirmBulkArchive?.nextArchived
+            ? `Les ${confirmBulkArchive?.userIds.length ?? 0} utilisateurs sélectionnés seront archivés.`
+            : `Les ${confirmBulkArchive?.userIds.length ?? 0} utilisateurs sélectionnés seront restaurés.`
+        }
+        confirmLabel={confirmBulkArchive?.nextArchived ? 'Archiver' : 'Restaurer'}
+        variant={confirmBulkArchive?.nextArchived ? 'destructive' : 'default'}
+        onConfirm={executeBulkArchive}
       />
     </>
   );

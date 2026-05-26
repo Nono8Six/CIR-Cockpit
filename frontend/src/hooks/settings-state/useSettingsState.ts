@@ -1,29 +1,26 @@
-import { useCallback, useEffect } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import type { ResolvedConfigSnapshot } from '../../../../shared/schemas/system/config.schema';
+import { useCallback } from 'react';
+import type {
+  ResolvedConfigSnapshot
+} from '../../../../shared/schemas/system/config.schema';
 
 import type { AgencyStatus, StatusCategory } from '@/types';
 import { notifySuccess } from '@/services/errors/notifySuccess';
 import { notifyInfo } from '@/services/errors/notifyInfo';
-
-import { useSaveAgencyConfig } from '../admin/agencies/actions/useSaveAgencyConfig';
-import { useSaveProductConfig } from '../entities/core/useSaveProductConfig';
 import {
-  addUniqueItem,
-  createStatus,
   normalizeStatusesForUi,
-  removeItemAt,
-  updateItemAt,
 } from './use-settings-state.helpers';
 import {
   buildSettingsFormDefaultValues,
-  settingsFormSchema,
   toAgencyOnboardingPayload,
   type AccountTypeOverrideValue,
   type BooleanOverrideValue,
   type SettingsFormValues,
 } from './settingsFormSchema';
+
+import { useSettingsMutations } from './use-settings-mutations';
+import { useSettingsForm } from './use-settings-form';
+import { useReferenceItems } from './use-reference-items';
+import { useReferenceStatuses } from './use-reference-statuses';
 
 type UseSettingsStateParams = {
   snapshot: ResolvedConfigSnapshot;
@@ -31,6 +28,13 @@ type UseSettingsStateParams = {
   canEditProductSettings: boolean;
   agencyId: string | null;
 };
+
+/**
+ * Orchestrator hook for managing settings workspace state, form sync, and reference mutations.
+ *
+ * @param params - Hook parameters.
+ * @returns Combined settings workspace actions and values.
+ */
 export const useSettingsState = ({
   snapshot,
   canEditAgencySettings,
@@ -38,38 +42,30 @@ export const useSettingsState = ({
   agencyId,
 }: UseSettingsStateParams) => {
   const readOnly = !canEditAgencySettings && !canEditProductSettings;
-  const saveAgencyConfigMutation = useSaveAgencyConfig(agencyId);
-  const saveProductConfigMutation = useSaveProductConfig(agencyId);
-  const form = useForm<SettingsFormValues>({
-    resolver: zodResolver(settingsFormSchema),
-    defaultValues: buildSettingsFormDefaultValues(snapshot, agencyId),
-    mode: 'onChange',
-  });
 
-  const { control, setValue, reset, handleSubmit, formState } = form;
+  const { saveAgencyConfigMutation, saveProductConfigMutation, referenceActionMutation } = useSettingsMutations(agencyId);
 
-  const allowManualEntryOverride = useWatch({ control, name: 'agencyAllowManualEntry' }) ?? 'inherit';
-  const defaultCompanyAccountTypeOverride =
-    useWatch({ control, name: 'agencyDefaultCompanyAccountType' }) ?? 'inherit';
-  const productAllowManualEntry = useWatch({ control, name: 'productAllowManualEntry' }) ?? true;
-  const productDefaultCompanyAccountType =
-    useWatch({ control, name: 'productDefaultCompanyAccountType' }) ?? 'term';
-  const productUiShellV2 = useWatch({ control, name: 'productUiShellV2' }) ?? false;
-  const families = useWatch({ control, name: 'families' }) ?? [];
-  const services = useWatch({ control, name: 'services' }) ?? [];
-  const entities = useWatch({ control, name: 'entities' }) ?? [];
-  const interactionTypes = useWatch({ control, name: 'interactionTypes' }) ?? [];
-  const statuses = (useWatch({ control, name: 'statuses' }) ?? []) as AgencyStatus[];
-  const newFamily = useWatch({ control, name: 'newFamily' }) ?? '';
-  const newService = useWatch({ control, name: 'newService' }) ?? '';
-  const newEntity = useWatch({ control, name: 'newEntity' }) ?? '';
-  const newInteractionType = useWatch({ control, name: 'newInteractionType' }) ?? '';
-  const newStatus = useWatch({ control, name: 'newStatus' }) ?? '';
-  const newStatusCategory = useWatch({ control, name: 'newStatusCategory' }) ?? 'todo';
+  const {
+    form,
+    allowManualEntryOverride,
+    defaultCompanyAccountTypeOverride,
+    productAllowManualEntry,
+    productDefaultCompanyAccountType,
+    productUiShellV2,
+    families,
+    services,
+    entities,
+    interactionTypes,
+    statuses,
+    newFamily,
+    newService,
+    newEntity,
+    newInteractionType,
+    newStatus,
+    newStatusCategory
+  } = useSettingsForm(snapshot, agencyId);
 
-  useEffect(() => {
-    reset(buildSettingsFormDefaultValues(snapshot, agencyId));
-  }, [agencyId, reset, snapshot]);
+  const { setValue, reset, handleSubmit, formState } = form;
 
   const setStringField = useCallback(
     (field: keyof SettingsFormValues, value: string) => {
@@ -77,12 +73,14 @@ export const useSettingsState = ({
     },
     [setValue],
   );
+
   const setArrayField = useCallback(
     (field: keyof SettingsFormValues, value: string[] | AgencyStatus[]) => {
       setValue(field, value as never, { shouldDirty: true, shouldValidate: true });
     },
     [setValue],
   );
+
   const setBooleanField = useCallback(
     (field: keyof SettingsFormValues, value: boolean) => {
       setValue(field, value as never, { shouldDirty: true, shouldValidate: true });
@@ -96,30 +94,35 @@ export const useSettingsState = ({
     },
     [setValue],
   );
+
   const setDefaultCompanyAccountTypeOverride = useCallback(
     (value: AccountTypeOverrideValue) => {
       setValue('agencyDefaultCompanyAccountType', value, { shouldDirty: true, shouldValidate: true });
     },
     [setValue],
   );
+
   const setProductAllowManualEntry = useCallback(
     (value: boolean) => {
       setBooleanField('productAllowManualEntry', value);
     },
     [setBooleanField],
   );
+
   const setProductDefaultCompanyAccountType = useCallback(
     (value: 'term' | 'cash') => {
       setValue('productDefaultCompanyAccountType', value, { shouldDirty: true, shouldValidate: true });
     },
     [setValue],
   );
+
   const setProductUiShellV2 = useCallback(
     (value: boolean) => {
       setBooleanField('productUiShellV2', value);
     },
     [setBooleanField],
   );
+
   const setNewFamily = useCallback((value: string) => setStringField('newFamily', value), [setStringField]);
   const setNewService = useCallback((value: string) => setStringField('newService', value), [setStringField]);
   const setNewEntity = useCallback((value: string) => setStringField('newEntity', value), [setStringField]);
@@ -128,12 +131,14 @@ export const useSettingsState = ({
     [setStringField],
   );
   const setNewStatus = useCallback((value: string) => setStringField('newStatus', value), [setStringField]);
+  
   const setNewStatusCategory = useCallback(
     (value: StatusCategory) => {
       setValue('newStatusCategory', value, { shouldDirty: true, shouldValidate: true });
     },
     [setValue],
   );
+
   const setFamilies = useCallback((next: string[]) => setArrayField('families', next), [setArrayField]);
   const setServices = useCallback((next: string[]) => setArrayField('services', next), [setArrayField]);
   const setEntities = useCallback((next: string[]) => setArrayField('entities', next), [setArrayField]);
@@ -141,6 +146,7 @@ export const useSettingsState = ({
     (next: string[]) => setArrayField('interactionTypes', next),
     [setArrayField],
   );
+  
   const setStatuses = useCallback(
     (next: AgencyStatus[]) => {
       setArrayField('statuses', normalizeStatusesForUi(next));
@@ -213,78 +219,31 @@ export const useSettingsState = ({
     reset(buildSettingsFormDefaultValues(snapshot, agencyId));
   }, [agencyId, reset, snapshot]);
 
-  const addItem = useCallback(
-    (
-      item: string,
-      list: string[],
-      setList: (list: string[]) => void,
-      clearInput: () => void,
-      uppercase = false,
-    ) => {
-      const next = addUniqueItem(item, list, uppercase);
-      if (next !== list) {
-        setList(next);
-        clearInput();
-      }
-    },
-    [],
-  );
+  const { addItem, removeItem, renameItem, updateItem } = useReferenceItems({
+    agencyId,
+    referenceActionMutation
+  });
 
-  const removeItem = useCallback((index: number, list: string[], setList: (list: string[]) => void) => {
-    const label = list[index]?.trim();
-    if (!confirm(label ? `Supprimer l'element "${label}" ?` : 'Supprimer cet element ?')) return;
-    setList(removeItemAt(index, list));
-  }, []);
-
-  const updateItem = useCallback(
-    (index: number, value: string, list: string[], setList: (list: string[]) => void, uppercase = false) => {
-      setList(updateItemAt(index, value, list, uppercase));
-    },
-    [],
-  );
-
-  const addStatus = useCallback(() => {
-    if (statuses.some((status) => status.label.trim().toLowerCase() === newStatus.trim().toLowerCase()))
-      return;
-    const nextStatus = createStatus(newStatus, newStatusCategory, statuses.length + 1);
-    if (!nextStatus)
-      return void notifyInfo('Impossible de generer un identifiant de statut. Rechargez la page.');
-    setStatuses([...statuses, nextStatus]);
-    setNewStatus('');
-    setNewStatusCategory('todo');
-  }, [newStatus, newStatusCategory, setNewStatus, setNewStatusCategory, setStatuses, statuses]);
-
-  const removeStatus = useCallback(
-    (index: number) => {
-      const label = statuses[index]?.label?.trim();
-      if (!confirm(label ? `Supprimer le statut "${label}" ?` : 'Supprimer ce statut ?')) return;
-      setStatuses(statuses.filter((_, currentIndex) => currentIndex !== index));
-    },
-    [setStatuses, statuses],
-  );
-
-  const updateStatusLabel = useCallback(
-    (index: number, label: string) => {
-      setStatuses(
-        statuses.map((status, currentIndex) => (currentIndex === index ? { ...status, label } : status)),
-      );
-    },
-    [setStatuses, statuses],
-  );
-  const updateStatusCategory = useCallback(
-    (index: number, category: StatusCategory) => {
-      setStatuses(
-        statuses.map((status, currentIndex) =>
-          currentIndex === index ? { ...status, category, is_terminal: category === 'done' } : status,
-        ),
-      );
-    },
-    [setStatuses, statuses],
-  );
+  const {
+    addStatus,
+    removeStatus,
+    updateStatusLabel,
+    updateStatusCategory,
+    renameStatus
+  } = useReferenceStatuses({
+    agencyId,
+    referenceActionMutation,
+    statuses,
+    setStatuses,
+    newStatus,
+    setNewStatus,
+    newStatusCategory,
+    setNewStatusCategory
+  });
 
   return {
     readOnly,
-    isSaving: saveAgencyConfigMutation.isPending || saveProductConfigMutation.isPending,
+    isSaving: saveAgencyConfigMutation.isPending || saveProductConfigMutation.isPending || referenceActionMutation.isPending,
     allowManualEntryOverride,
     defaultCompanyAccountTypeOverride,
     productAllowManualEntry,
@@ -317,10 +276,12 @@ export const useSettingsState = ({
     addItem,
     removeItem,
     updateItem,
+    renameItem,
     addStatus,
     removeStatus,
     updateStatusLabel,
     updateStatusCategory,
+    renameStatus,
     setFamilies,
     setServices,
     setEntities,
