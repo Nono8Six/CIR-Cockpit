@@ -1,4 +1,4 @@
-import { asc, eq } from 'drizzle-orm';
+import { and, asc, eq, isNotNull, sql } from 'drizzle-orm';
 import type { ZodType } from 'zod/v4';
 
 import {
@@ -6,6 +6,7 @@ import {
   agency_interaction_types,
   agency_services,
   agency_statuses,
+  interactions,
   reference_departments
 } from '../../../../drizzle/schema.ts';
 import type { ConfigGetResponse } from '../../../../../shared/schemas/system/api-responses.ts';
@@ -23,6 +24,10 @@ import { httpError } from '../../middleware/errorHandler.ts';
 import { ensureAgencyAccess, ensureDataRateLimit } from '../data/dataAccess.ts';
 
 type AgencyStatusRow = Omit<AgencyStatusConfig, 'category'> & { category: string };
+type StatusUsageRow = {
+  reference_id: string | null;
+  usage_count: number;
+};
 
 export const parseStoredJson = <T>(
   value: unknown,
@@ -110,7 +115,7 @@ const loadAgencyReferences = async (
   }
 
   try {
-    const [statuses, services, families, interactionTypes] = await Promise.all([
+    const [statuses, historicalStatuses, statusUsage, services, families, interactionTypes] = await Promise.all([
       db
         .select({
           id: agency_statuses.id,
@@ -119,11 +124,34 @@ const loadAgencyReferences = async (
           category: agency_statuses.category,
           is_default: agency_statuses.is_default,
           is_terminal: agency_statuses.is_terminal,
+          is_active: agency_statuses.is_active,
           sort_order: agency_statuses.sort_order
         })
         .from(agency_statuses)
-        .where(eq(agency_statuses.agency_id, agencyId))
+        .where(and(eq(agency_statuses.agency_id, agencyId), eq(agency_statuses.is_active, true)))
         .orderBy(asc(agency_statuses.sort_order)),
+      db
+        .select({
+          id: agency_statuses.id,
+          agency_id: agency_statuses.agency_id,
+          label: agency_statuses.label,
+          category: agency_statuses.category,
+          is_default: agency_statuses.is_default,
+          is_terminal: agency_statuses.is_terminal,
+          is_active: agency_statuses.is_active,
+          sort_order: agency_statuses.sort_order
+        })
+        .from(agency_statuses)
+        .where(and(eq(agency_statuses.agency_id, agencyId), eq(agency_statuses.is_active, false)))
+        .orderBy(asc(agency_statuses.sort_order)),
+      db
+        .select({
+          reference_id: interactions.status_id,
+          usage_count: sql<number>`count(*)::int`
+        })
+        .from(interactions)
+        .where(and(eq(interactions.agency_id, agencyId), isNotNull(interactions.status_id)))
+        .groupBy(interactions.status_id),
       db
         .select({ label: agency_services.label })
         .from(agency_services)
@@ -141,8 +169,17 @@ const loadAgencyReferences = async (
         .orderBy(asc(agency_interaction_types.sort_order))
     ]);
 
+    const usageByStatusId = new Map<string, number>(
+      (statusUsage as StatusUsageRow[])
+        .filter((row): row is StatusUsageRow & { reference_id: string } => row.reference_id !== null)
+        .map((row) => [row.reference_id, row.usage_count])
+    );
+
     return {
       statuses: mapAgencyReferenceStatuses(statuses),
+      historical_statuses: mapAgencyReferenceStatuses(
+        historicalStatuses.filter((status) => (status.id ? usageByStatusId.get(status.id) ?? 0 : 0) > 0)
+      ),
       services: services.map((row) => row.label),
       families: families.map((row) => row.label),
       interaction_types: interactionTypes.map((row) => row.label)

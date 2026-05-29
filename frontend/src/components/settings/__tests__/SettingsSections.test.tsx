@@ -12,6 +12,7 @@ const statuses: AgencyStatus[] = [
     category: 'todo',
     is_terminal: false,
     is_default: true,
+    is_active: true,
     sort_order: 0,
   },
   {
@@ -20,6 +21,7 @@ const statuses: AgencyStatus[] = [
     category: 'done',
     is_terminal: true,
     is_default: false,
+    is_active: true,
     sort_order: 1,
   },
 ];
@@ -32,6 +34,8 @@ const usage: ConfigUsageSnapshot = {
         label: 'À faire',
         reference_id: 'status-1',
         sort_order: 1,
+        category: 'todo',
+        is_active: true,
         usage_count: 2,
         state: 'reference_used'
       }
@@ -41,6 +45,8 @@ const usage: ConfigUsageSnapshot = {
         label: 'Fournisseur',
         reference_id: null,
         sort_order: null,
+        category: null,
+        is_active: true,
         usage_count: 1,
         state: 'used_not_in_reference'
       }
@@ -121,12 +127,18 @@ describe('SettingsSections', () => {
     expect(screen.queryByRole('heading', { name: 'Types de tiers' })).not.toBeInTheDocument();
   });
 
-  it('hides list deletion when usage impact is unavailable', () => {
+  it('keeps deletion available when usage impact is unavailable', () => {
     render(<SettingsSections {...baseProps} activeSection="lists" usage={null} />);
 
     expect(screen.queryByText(/Suppression indisponible actuellement/i)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /renommer maintenance/i })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /supprimer maintenance/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /supprimer maintenance/i })).toBeInTheDocument();
+  });
+
+  it('keeps status deletion available when usage impact is unavailable', () => {
+    render(<SettingsSections {...baseProps} activeSection="workflow" usage={null} />);
+
+    expect(screen.getByRole('button', { name: /supprimer le statut à faire/i })).toBeInTheDocument();
   });
 
   it('shows deletion only for unused values when usage impact is known', () => {
@@ -135,5 +147,38 @@ describe('SettingsSections', () => {
     expect(screen.getByRole('button', { name: /renommer maintenance/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /supprimer maintenance/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /supprimer fournisseur/i })).not.toBeInTheDocument();
+  });
+
+  it('shows used statuses as removable from the active workflow', () => {
+    render(<SettingsSections {...baseProps} activeSection="workflow" usage={usage} />);
+
+    expect(screen.getByRole('button', { name: /supprimer le statut à faire/i })).toBeInTheDocument();
+  });
+
+  it('shows historical statuses as a non editable audit section', () => {
+    const usageWithHistorical: ConfigUsageSnapshot = {
+      ...usage,
+      dimensions: {
+        ...usage.dimensions,
+        statuses: [
+          ...usage.dimensions.statuses,
+          {
+            label: 'Archive',
+            reference_id: 'status-history',
+            sort_order: 3,
+            category: 'done',
+            is_active: false,
+            usage_count: 7,
+            state: 'historical_used'
+          }
+        ]
+      }
+    };
+
+    render(<SettingsSections {...baseProps} activeSection="workflow" usage={usageWithHistorical} />);
+
+    expect(screen.getByText('Statuts historiques')).toBeInTheDocument();
+    expect(screen.getByText('Archive')).toBeInTheDocument();
+    expect(screen.getByText('7')).toBeInTheDocument();
   });
 });

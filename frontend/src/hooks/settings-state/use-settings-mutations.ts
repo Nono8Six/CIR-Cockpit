@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ConfigReferenceActionInput } from '../../../../shared/schemas/system/config.schema';
+import type { ConfigReferenceActionResponse } from '../../../../shared/schemas/system/api-responses';
 import type { DataConfigPayload } from '../../../../shared/schemas/system/data.schema';
 import { saveConfigReferenceAction, saveSettingsReferences } from '@/services/config';
 import { handleUiError } from '@/services/errors/handleUiError';
@@ -36,7 +37,7 @@ export const useSettingsMutations = (agencyId: string | null) => {
     }
   });
 
-  const referenceActionMutation = useMutation({
+  const referenceActionMutation = useMutation<ConfigReferenceActionResponse, Error, ConfigReferenceActionInput>({
     mutationFn: (input: ConfigReferenceActionInput) =>
       saveConfigReferenceAction(input).match(
         (response) => response,

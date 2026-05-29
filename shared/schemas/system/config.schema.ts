@@ -25,6 +25,7 @@ export const editableConfigReferenceDimensionSchema = z.enum([
 export const configUsageStateSchema = z.enum([
   'reference_used',
   'reference_unused',
+  'historical_used',
   'used_not_in_reference'
 ]);
 
@@ -38,6 +39,7 @@ export const agencyStatusSchema = agencyStatusInputSchema.extend({
   agency_id: uuidSchema.optional(),
   is_default: z.boolean(),
   is_terminal: z.boolean(),
+  is_active: z.boolean(),
   sort_order: z.number().int().min(1, 'Ordre invalide')
 });
 
@@ -52,6 +54,7 @@ export const agencyReferenceConfigInputSchema = z.strictObject({
 
 export const agencyReferenceConfigSchema = z.strictObject({
   statuses: z.array(agencyStatusSchema),
+  historical_statuses: z.array(agencyStatusSchema),
   services: referenceLabelsInputSchema,
   families: referenceLabelsInputSchema,
   interaction_types: referenceLabelsInputSchema
@@ -123,6 +126,8 @@ export const configUsageRowSchema = z.strictObject({
   label: referenceLabelSchema,
   reference_id: uuidSchema.nullable(),
   sort_order: z.number().int().min(1, 'Ordre invalide').nullable(),
+  category: configStatusCategorySchema.nullable(),
+  is_active: z.boolean(),
   usage_count: z.number().int().min(0, 'Compteur invalide'),
   state: configUsageStateSchema
 });
@@ -139,6 +144,7 @@ export const configUsageSnapshotSchema = z.strictObject({
 
 export const EMPTY_AGENCY_REFERENCE_CONFIG: AgencyReferenceConfig = {
   statuses: [],
+  historical_statuses: [],
   services: [],
   families: [],
   interaction_types: []

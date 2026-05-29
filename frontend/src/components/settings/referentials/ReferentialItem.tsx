@@ -1,6 +1,9 @@
-import { GripVertical } from 'lucide-react';
+import { useState } from 'react';
+import { GripVertical, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '../../ui/inputs/basic/Button';
 import { Input } from '../../ui/inputs/basic/Input';
+import RenameDialog from '../ui/RenameDialog';
+import ConfirmDialog from '../../ConfirmDialog';
 
 type ReferentialItemProps = {
   item: string;
@@ -48,19 +51,22 @@ const ReferentialItem = ({
   onDragOver,
   onDrop,
 }: ReferentialItemProps) => {
+  const [isRenameOpen, setIsRenameOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
   const usageKnown = usageCount !== null;
-  const handleRename = () => {
-    const nextLabel = prompt(`Renommer "${item}"`, item);
-    if (!nextLabel?.trim() || nextLabel.trim() === item.trim()) return;
-    if (
-      usageKnown
-      && usageCount > 0
-      && !confirm(`${usageCount} interaction(s) utilisent "${item}". Renommer et mettre a jour l'historique ?`)
-    ) {
-      return;
-    }
-    onRename(index, nextLabel);
+  const canRemove = !readOnly && (!usageKnown || usageCount === 0);
+
+  const handleRenameConfirm = (newValue: string) => {
+    onRename(index, newValue);
   };
+
+  const handleDeleteConfirm = () => {
+    onRemove(index);
+  };
+
+  const deleteTitle = "Supprimer l'élément";
+  const deleteDescription = `Êtes-vous sûr de vouloir supprimer définitivement l'élément "${item}" de cette liste ?`;
 
   return (
     <div
@@ -99,28 +105,54 @@ const ReferentialItem = ({
       {!readOnly && (
         <Button
           type="button"
-          onClick={handleRename}
+          onClick={() => setIsRenameOpen(true)}
           variant="ghost"
           size="sm"
-          className="h-7 shrink-0 px-2 text-[11px] text-muted-foreground transition-[background-color,color] hover:bg-accent hover:text-foreground"
+          className="h-7 w-7 p-0 flex items-center justify-center text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground active:scale-95"
           aria-label={`Renommer ${item}`}
+          title="Renommer"
         >
-          Renommer
+          <Pencil className="size-3.5" aria-hidden="true" />
         </Button>
       )}
-      {!readOnly && usageKnown && usageCount === 0 && (
+      {canRemove && (
         <Button
           type="button"
-          onClick={() => onRemove(index)}
+          onClick={() => setIsDeleteOpen(true)}
           variant="ghost"
           size="sm"
-          className="h-7 shrink-0 px-2 text-[11px] text-muted-foreground transition-[background-color,color] hover:bg-destructive/10 hover:text-destructive disabled:opacity-40"
+          className="h-7 w-7 p-0 flex items-center justify-center text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive active:scale-95 disabled:opacity-40"
           disabled={false}
           aria-disabled={false}
           aria-label={`Supprimer ${item}`}
+          title="Supprimer"
         >
-          Supprimer
+          <Trash2 className="size-3.5" aria-hidden="true" />
         </Button>
+      )}
+
+      {!readOnly && (
+        <RenameDialog
+          open={isRenameOpen}
+          onOpenChange={setIsRenameOpen}
+          title={`Renommer "${item}"`}
+          defaultValue={item}
+          usageCount={usageCount}
+          onConfirm={handleRenameConfirm}
+        />
+      )}
+
+      {canRemove && (
+        <ConfirmDialog
+          open={isDeleteOpen}
+          onOpenChange={setIsDeleteOpen}
+          title={deleteTitle}
+          description={deleteDescription}
+          confirmLabel="Supprimer"
+          cancelLabel="Annuler"
+          variant="destructive"
+          onConfirm={handleDeleteConfirm}
+        />
       )}
     </div>
   );

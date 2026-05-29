@@ -22,6 +22,7 @@ vi.mock('@/components/AdminPanel', () => ({
 
 const config: AgencyConfig = {
   statuses: [],
+  historicalStatuses: [],
   services: [],
   families: [],
   interactionTypes: []

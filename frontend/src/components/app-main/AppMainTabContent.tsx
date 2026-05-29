@@ -140,6 +140,7 @@ const AppMainTabContent = (props: AppMainTabContentProps) => {
                   <Dashboard
                     interactions={interactions}
                     statuses={config.statuses}
+                    historicalStatuses={config.historicalStatuses}
                     agencyId={activeAgencyId}
                     onRequestConvert={onRequestConvert}
                   />

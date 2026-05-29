@@ -21,6 +21,7 @@ const mockGetConfigSnapshot = vi.mocked(getConfigSnapshot);
 const BASE_SNAPSHOT: ResolvedConfigSnapshot = {
   references: {
     statuses: [],
+    historical_statuses: [],
     services: [],
     families: [],
     interaction_types: [],
@@ -53,6 +54,7 @@ describe('useAgencyConfig', () => {
       expect(mockGetConfigSnapshot).toHaveBeenCalledWith('agency-1');
       expect(result.current.data).toEqual({
         statuses: [],
+        historicalStatuses: [],
         services: [],
         families: [],
         interactionTypes: []

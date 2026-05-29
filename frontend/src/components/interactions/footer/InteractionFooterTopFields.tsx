@@ -3,7 +3,7 @@ import InteractionFooterReminderInput from './InteractionFooterReminderInput';
 import InteractionFooterStatusSelect from './InteractionFooterStatusSelect';
 
 type InteractionFooterTopFieldsProps = {
-  statusOptions: { id: string; label: string }[];
+  statusOptions: { id: string; label: string; isHistorical?: boolean }[];
   statusId: string;
   onStatusChange: (value: string) => void;
   reminder: string;

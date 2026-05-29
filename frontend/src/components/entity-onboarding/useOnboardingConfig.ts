@@ -36,6 +36,7 @@ export const useOnboardingConfig = (
   const configSnapshot = configSnapshotQuery.data ?? {
     references: {
       statuses: [],
+      historical_statuses: [],
       services: [],
       families: [],
       interaction_types: [],

@@ -10,6 +10,7 @@ import { buildInteractionEvents } from '@/utils/interactions/buildInteractionEve
 type InteractionDetailsStateInput = {
   interaction: Interaction;
   statuses: AgencyStatus[];
+  historicalStatuses?: AgencyStatus[];
   onUpdate: (
     interaction: Interaction,
     event: TimelineEvent,
@@ -26,7 +27,12 @@ const interactionDetailsFormSchema = z.strictObject({
 
 type InteractionDetailsFormValues = z.infer<typeof interactionDetailsFormSchema>;
 
-export const useInteractionDetailsState = ({ interaction, statuses, onUpdate }: InteractionDetailsStateInput) => {
+export const useInteractionDetailsState = ({
+  interaction,
+  statuses,
+  historicalStatuses = [],
+  onUpdate
+}: InteractionDetailsStateInput) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const form = useForm<InteractionDetailsFormValues>({
@@ -46,16 +52,38 @@ export const useInteractionDetailsState = ({ interaction, statuses, onUpdate }: 
   const reminder = useWatch({ control, name: 'reminder' }) ?? '';
   const orderRef = useWatch({ control, name: 'orderRef' }) ?? '';
 
-  const statusById = useMemo(() => { const map = new Map<string, AgencyStatus>(); statuses.forEach(status => { if (status.id) map.set(status.id, status); }); return map; }, [statuses]);
+  const allStatuses = useMemo(
+    () => [...statuses, ...historicalStatuses],
+    [historicalStatuses, statuses]
+  );
+  const statusById = useMemo(() => {
+    const map = new Map<string, AgencyStatus>();
+    allStatuses.forEach(status => { if (status.id) map.set(status.id, status); });
+    return map;
+  }, [allStatuses]);
   const resolvedStatusId = useMemo(
-    () => interaction.status_id ?? statuses.find((status) => status.label === interaction.status)?.id ?? '',
-    [interaction.status, interaction.status_id, statuses]
+    () => interaction.status_id ?? allStatuses.find((status) => status.label === interaction.status)?.id ?? '',
+    [allStatuses, interaction.status, interaction.status_id]
   );
   const statusOptions = useMemo(() => {
-    const options = statuses.filter((status): status is AgencyStatus & { id: string } => typeof status.id === 'string').map(status => ({ id: status.id, label: status.label }));
-    if (interaction.status_id && !statusById.has(interaction.status_id)) options.push({ id: interaction.status_id, label: interaction.status });
-    return options;
-  }, [interaction.status, interaction.status_id, statusById, statuses]);
+    const activeOptions = statuses
+      .filter((status): status is AgencyStatus & { id: string } => typeof status.id === 'string')
+      .map(status => ({ id: status.id, label: status.label, isHistorical: false }));
+    const currentHistorical = historicalStatuses.find((status) => status.id === interaction.status_id);
+    if (currentHistorical?.id) {
+      return [
+        { id: currentHistorical.id, label: currentHistorical.label, isHistorical: true },
+        ...activeOptions
+      ];
+    }
+    if (interaction.status_id && !statusById.has(interaction.status_id)) {
+      return [
+        { id: interaction.status_id, label: interaction.status, isHistorical: true },
+        ...activeOptions
+      ];
+    }
+    return activeOptions;
+  }, [historicalStatuses, interaction.status, interaction.status_id, statusById, statuses]);
 
   const canConvert = useMemo(() => Boolean(interaction.entity_id && isProspectRelationValue(interaction.entity_type)), [interaction.entity_id, interaction.entity_type]);
   const isSubmitDisabled = useMemo(() => !note.trim() && statusId === (interaction.status_id ?? '') && reminder === (interaction.reminder_at || '') && orderRef === (interaction.order_ref || ''), [interaction.order_ref, interaction.reminder_at, interaction.status_id, note, orderRef, reminder, statusId]);

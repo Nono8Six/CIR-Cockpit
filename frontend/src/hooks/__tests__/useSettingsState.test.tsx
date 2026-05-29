@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ResolvedConfigSnapshot } from '../../../../shared/schemas/system/config.schema';
@@ -34,9 +34,11 @@ const BASE_SNAPSHOT: ResolvedConfigSnapshot = {
         category: 'todo',
         is_terminal: false,
         is_default: true,
+        is_active: true,
         sort_order: 1,
       },
     ],
+    historical_statuses: [],
     services: ['Atelier'],
     families: ['Freinage'],
     interaction_types: ['Devis'],
@@ -126,9 +128,7 @@ describe('useSettingsState', () => {
     );
   });
 
-  it('asks confirmation before resetting local form state', async () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
-
+  it('resets local form state back to snapshot defaults', async () => {
     const { result } = renderHook(
       () =>
         useSettingsState({
@@ -140,11 +140,14 @@ describe('useSettingsState', () => {
     );
 
     act(() => {
+      result.current.setNewFamily('NouveauGroupe');
+    });
+    expect(result.current.newFamily).toBe('NouveauGroupe');
+
+    act(() => {
       result.current.handleReset();
     });
 
-    await waitFor(() => {
-      expect(confirmSpy).toHaveBeenCalledTimes(1);
-    });
+    expect(result.current.newFamily).toBe('');
   });
 });

@@ -1,4 +1,4 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, asc, eq, sql } from 'drizzle-orm';
 
 import {
   agency_families,
@@ -32,6 +32,7 @@ type LabelTable =
 type ExistingStatusRow = {
   id: string;
   label: string;
+  is_active: boolean;
 };
 
 type LabelDimension = 'services' | 'families' | 'interaction_types';
@@ -44,6 +45,13 @@ type StatusUpsertRow = {
   is_default: boolean;
   category: string;
   is_terminal: boolean;
+  is_active: boolean;
+  deactivated_at: null;
+};
+
+type ReferenceDeleteResult = {
+  usageCount: number;
+  deactivated: boolean;
 };
 
 const STATUS_CATEGORIES = ['todo', 'in_progress', 'done'] as const;
@@ -77,7 +85,7 @@ export const buildStatusUpsertRows = (
   existingRows: ExistingStatusRow[]
 ): StatusUpsertRow[] => {
   const existingByLabel = new Map(
-    existingRows.map((row) => [row.label.toLowerCase(), row.id])
+    existingRows.filter((row) => row.is_active !== false).map((row) => [row.label.toLowerCase(), row.id])
   );
 
   return statuses.map((status, index) => {
@@ -90,7 +98,9 @@ export const buildStatusUpsertRows = (
       sort_order: index + 1,
       is_default: index === 0,
       category: status.category,
-      is_terminal: status.category === 'done'
+      is_terminal: status.category === 'done',
+      is_active: true,
+      deactivated_at: null
     };
   });
 };
@@ -143,6 +153,37 @@ const ensureStatusLabelAvailable = async (
   }
 };
 
+const ensureStatusesAreEditable = (
+  requestedStatuses: AgencyStatusInput[],
+  existingRows: ExistingStatusRow[]
+): void => {
+  const inactiveRows = existingRows.filter((row) => !row.is_active);
+  const inactiveById = new Set(inactiveRows.map((row) => row.id));
+  const inactiveByLabel = new Map(
+    inactiveRows.map((row) => [normalizeReferenceKey(row.label), row.label])
+  );
+
+  for (const status of requestedStatuses) {
+    if (status.id && inactiveById.has(status.id)) {
+      throw httpError(409, 'CONFLICT', `Le statut historique "${status.label}" n'est plus editable.`);
+    }
+    const historicalLabel = inactiveByLabel.get(normalizeReferenceKey(status.label));
+    if (historicalLabel && !status.id) {
+      throw httpError(409, 'CONFLICT', `Le statut historique "${historicalLabel}" existe deja.`);
+    }
+  }
+};
+
+export const resolveStatusDeleteMode = (
+  usageCount: number,
+  activeCount: number
+): 'delete' | 'deactivate' => {
+  if (activeCount <= 1) {
+    throw httpError(400, 'CONFIG_INVALID', 'Au moins un statut actif est requis.');
+  }
+  return usageCount > 0 ? 'deactivate' : 'delete';
+};
+
 const ensureLabelAvailable = async (
   db: DbClient,
   table: LabelTable,
@@ -179,6 +220,51 @@ const countStatusUsage = async (
   } catch {
     throw httpError(500, 'DB_READ_FAILED', "Impossible de verifier l'utilisation du statut.");
   }
+};
+
+const countActiveStatuses = async (
+  db: DbClient,
+  agencyId: string
+): Promise<number> => {
+  try {
+    const rows = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(agency_statuses)
+      .where(and(eq(agency_statuses.agency_id, agencyId), eq(agency_statuses.is_active, true)));
+    return rows[0]?.count ?? 0;
+  } catch {
+    throw httpError(500, 'DB_READ_FAILED', 'Impossible de verifier les statuts actifs.');
+  }
+};
+
+const ensureActiveDefaultStatus = async (
+  db: DbClient,
+  agencyId: string
+): Promise<void> => {
+  const activeStatuses = await db
+    .select({
+      id: agency_statuses.id,
+      is_default: agency_statuses.is_default
+    })
+    .from(agency_statuses)
+    .where(and(eq(agency_statuses.agency_id, agencyId), eq(agency_statuses.is_active, true)))
+    .orderBy(asc(agency_statuses.sort_order));
+
+  if (activeStatuses.length === 0) {
+    throw httpError(400, 'CONFIG_INVALID', 'Au moins un statut actif est requis.');
+  }
+  if (activeStatuses.some((status) => status.is_default)) {
+    return;
+  }
+
+  const defaultStatusId = activeStatuses[0]?.id;
+  if (!defaultStatusId) {
+    throw httpError(400, 'CONFIG_INVALID', 'Statut actif par defaut introuvable.');
+  }
+  await db
+    .update(agency_statuses)
+    .set({ is_default: true })
+    .where(and(eq(agency_statuses.agency_id, agencyId), eq(agency_statuses.id, defaultStatusId)));
 };
 
 const countLabelUsage = async (
@@ -289,7 +375,8 @@ const syncStatuses = async (
     existing = await db
       .select({
         id: agency_statuses.id,
-        label: agency_statuses.label
+        label: agency_statuses.label,
+        is_active: agency_statuses.is_active
       })
       .from(agency_statuses)
       .where(eq(agency_statuses.agency_id, agencyId));
@@ -297,6 +384,7 @@ const syncStatuses = async (
     throw httpError(500, 'DB_READ_FAILED', 'Impossible de charger les statuts.');
   }
 
+  ensureStatusesAreEditable(statuses, existing ?? []);
   const rows = buildStatusUpsertRows(statuses, agencyId, existing ?? []);
   const rowsWithId = rows.filter((row): row is StatusUpsertRow & { id: string } => typeof row.id === 'string');
   const rowsWithoutId = rows.filter((row) => typeof row.id !== 'string');
@@ -313,7 +401,9 @@ const syncStatuses = async (
             sort_order: sql`excluded.sort_order`,
             is_default: sql`excluded.is_default`,
             category: sql`excluded.category`,
-            is_terminal: sql`excluded.is_terminal`
+            is_terminal: sql`excluded.is_terminal`,
+            is_active: sql`excluded.is_active`,
+            deactivated_at: sql`excluded.deactivated_at`
           }
         });
 
@@ -335,7 +425,9 @@ const syncStatuses = async (
             sort_order: sql`excluded.sort_order`,
             is_default: sql`excluded.is_default`,
             category: sql`excluded.category`,
-            is_terminal: sql`excluded.is_terminal`
+            is_terminal: sql`excluded.is_terminal`,
+            is_active: sql`excluded.is_active`,
+            deactivated_at: sql`excluded.deactivated_at`
           }
         });
     }
@@ -358,7 +450,7 @@ const handleReferenceAdd = async (
     const rows = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(agency_statuses)
-      .where(eq(agency_statuses.agency_id, agencyId));
+      .where(and(eq(agency_statuses.agency_id, agencyId), eq(agency_statuses.is_active, true)));
     const count = rows[0]?.count ?? 0;
     await db.insert(agency_statuses).values({
       ...(input.status_id ? { id: input.status_id } : {}),
@@ -367,7 +459,9 @@ const handleReferenceAdd = async (
       sort_order: count + 1,
       is_default: count === 0,
       category: input.category,
-      is_terminal: input.category === 'done'
+      is_terminal: input.category === 'done',
+      is_active: true,
+      deactivated_at: null
     });
     return;
   }
@@ -389,15 +483,43 @@ const handleReferenceDelete = async (
   db: DbClient,
   agencyId: string,
   input: ConfigReferenceDeleteInput
-): Promise<number> => {
+): Promise<ReferenceDeleteResult> => {
   if (input.dimension === 'statuses') {
     const statusId = requireReferenceId(input.reference_id, 'Identifiant statut requis.');
+    const statusRows = await db
+      .select({
+        id: agency_statuses.id,
+        label: agency_statuses.label,
+        is_active: agency_statuses.is_active
+      })
+      .from(agency_statuses)
+      .where(and(eq(agency_statuses.agency_id, agencyId), eq(agency_statuses.id, statusId)));
+    const status = statusRows[0];
+    if (!status) {
+      throw httpError(400, 'CONFIG_INVALID', 'Statut introuvable.');
+    }
+    if (!status.is_active) {
+      throw httpError(409, 'CONFLICT', `Le statut historique "${status.label}" n'est plus supprimable.`);
+    }
+
+    const activeCount = await countActiveStatuses(db, agencyId);
     const usageCount = await countStatusUsage(db, agencyId, statusId);
-    if (usageCount > 0) {
-      throw httpError(409, 'CONFLICT', `Impossible de supprimer ce statut : ${usageCount} interaction(s) l'utilisent encore. Renommez le statut pour mettre a jour l'historique.`);
+    const mode = resolveStatusDeleteMode(usageCount, activeCount);
+    if (mode === 'deactivate') {
+      await db
+        .update(agency_statuses)
+        .set({
+          is_active: false,
+          is_default: false,
+          deactivated_at: sql`now()`
+        })
+        .where(and(eq(agency_statuses.agency_id, agencyId), eq(agency_statuses.id, statusId)));
+      await ensureActiveDefaultStatus(db, agencyId);
+      return { usageCount, deactivated: true };
     }
     await db.delete(agency_statuses).where(and(eq(agency_statuses.agency_id, agencyId), eq(agency_statuses.id, statusId)));
-    return usageCount;
+    await ensureActiveDefaultStatus(db, agencyId);
+    return { usageCount, deactivated: false };
   }
 
   const label = requireLabel(input.label, 'Libelle de referentiel requis.');
@@ -407,7 +529,7 @@ const handleReferenceDelete = async (
   }
   const table = getLabelTable(input.dimension);
   await db.delete(table).where(and(eq(table.agency_id, agencyId), eq(table.label, label)));
-  return usageCount;
+  return { usageCount, deactivated: false };
 };
 
 const handleReferenceRename = async (
@@ -420,10 +542,18 @@ const handleReferenceRename = async (
     const statusId = requireReferenceId(input.reference_id, 'Identifiant statut requis.');
     const usageCount = await countStatusUsage(db, agencyId, statusId);
     await ensureStatusLabelAvailable(db, agencyId, nextLabel, statusId);
-    await db
+    const updated = await db
       .update(agency_statuses)
       .set({ label: nextLabel })
-      .where(and(eq(agency_statuses.agency_id, agencyId), eq(agency_statuses.id, statusId)));
+      .where(and(
+        eq(agency_statuses.agency_id, agencyId),
+        eq(agency_statuses.id, statusId),
+        eq(agency_statuses.is_active, true)
+      ))
+      .returning({ id: agency_statuses.id });
+    if (updated.length === 0) {
+      throw httpError(409, 'CONFLICT', "Ce statut n'est plus editable.");
+    }
     await db
       .update(interactions)
       .set({ status: nextLabel })
@@ -457,7 +587,11 @@ const handleReferenceReorder = async (
       db
         .update(agency_statuses)
         .set({ sort_order: index + 1, is_default: index === 0 })
-        .where(and(eq(agency_statuses.agency_id, agencyId), eq(agency_statuses.id, id)))
+        .where(and(
+          eq(agency_statuses.agency_id, agencyId),
+          eq(agency_statuses.id, id),
+          eq(agency_statuses.is_active, true)
+        ))
     ));
     return;
   }
@@ -486,6 +620,7 @@ export const handleConfigReferenceAction = async (
   const agencyId = ensureAgencyAccess(authContext, input.agency_id);
 
   let usageCount = 0;
+  let deactivated = false;
   try {
     await db.transaction(async (tx) => {
       if (input.action === 'add') {
@@ -493,7 +628,9 @@ export const handleConfigReferenceAction = async (
         return;
       }
       if (input.action === 'delete') {
-        usageCount = await handleReferenceDelete(tx, agencyId, input);
+        const result = await handleReferenceDelete(tx, agencyId, input);
+        usageCount = result.usageCount;
+        deactivated = result.deactivated;
         return;
       }
       if (input.action === 'rename') {
@@ -514,6 +651,7 @@ export const handleConfigReferenceAction = async (
     request_id: requestId,
     ok: true,
     usage_count: usageCount,
+    ...(deactivated ? { deactivated } : {}),
     ...(input.action === 'rename' ? { migrated_interactions_count: usageCount } : {})
   };
 };

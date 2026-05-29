@@ -3,7 +3,12 @@ import type { DataConfigPayload } from '../../../../../shared/schemas/system/dat
 import type { AuthContext, DbClient } from '../../types.ts';
 import { saveLegacyDataConfig } from '../config/configSettings.ts';
 
-export { assertValidStatusCategories, buildStatusUpsertRows, normalizeLabelList } from '../config/configSettings.ts';
+export {
+  assertValidStatusCategories,
+  buildStatusUpsertRows,
+  normalizeLabelList,
+  resolveStatusDeleteMode
+} from '../config/configSettings.ts';
 
 export const handleDataConfigAction = (
   db: DbClient,

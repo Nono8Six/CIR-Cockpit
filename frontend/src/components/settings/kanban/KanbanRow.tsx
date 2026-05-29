@@ -1,4 +1,5 @@
-import { GripVertical } from 'lucide-react';
+import { useState } from 'react';
+import { GripVertical, Pencil, Trash2 } from 'lucide-react';
 import type { AgencyStatus, StatusCategory } from '@/types';
 import { STATUS_CATEGORY_LABELS } from '@/constants/statusCategories';
 import { Button } from '../../ui/inputs/basic/Button';
@@ -10,13 +11,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../ui/inputs/selects/Select';
+import RenameDialog from '../ui/RenameDialog';
+import ConfirmDialog from '../../ConfirmDialog';
 
 type KanbanRowProps = {
   status: AgencyStatus;
   index: number;
   readOnly: boolean;
   usageCount: number | null;
-  onRemove: (index: number) => void;
+  onRemove: (index: number, usageCount?: number | null) => void;
   onLabelUpdate: (index: number, value: string) => void;
   onCategoryUpdate: (index: number, value: StatusCategory) => void;
   onRename: (index: number, value: string) => void;
@@ -54,19 +57,26 @@ const KanbanRow = ({
   onDragOver,
   onDrop,
 }: KanbanRowProps) => {
+  const [isRenameOpen, setIsRenameOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
   const usageKnown = usageCount !== null;
-  const handleRename = () => {
-    const nextLabel = prompt(`Renommer "${status.label}"`, status.label);
-    if (!nextLabel?.trim() || nextLabel.trim() === status.label.trim()) return;
-    if (
-      usageKnown
-      && usageCount > 0
-      && !confirm(`${usageCount} interaction(s) utilisent ce statut. Renommer et mettre a jour l'historique ?`)
-    ) {
-      return;
-    }
-    onRename(index, nextLabel);
+  const canRemove = !readOnly && Boolean(status.id);
+
+  const handleRenameConfirm = (newValue: string) => {
+    onRename(index, newValue);
   };
+
+  const handleDeleteConfirm = () => {
+    onRemove(index, usageCount);
+  };
+
+  const deleteTitle = "Supprimer le statut";
+  const deleteDescription = typeof usageCount !== 'number'
+    ? `Supprimer le statut "${status.label}" ? S'il est déjà utilisé, il sera retiré du workflow actif et conservé dans l'historique.`
+    : usageCount > 0
+      ? `Retirer le statut "${status.label}" du workflow actif ? ${usageCount} interaction(s) existante(s) le conserveront dans l'historique.`
+      : `Supprimer définitivement le statut "${status.label}" ?`;
 
   return (
     <div
@@ -141,27 +151,53 @@ const KanbanRow = ({
           type="button"
           variant="ghost"
           size="sm"
-          onClick={handleRename}
-          className="ml-auto h-7 shrink-0 px-2 text-[11px] text-muted-foreground transition-[background-color,color] hover:bg-accent hover:text-foreground"
+          onClick={() => setIsRenameOpen(true)}
+          className="h-7 w-7 p-0 flex items-center justify-center text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground active:scale-95"
           aria-label={`Renommer le statut ${status.label}`}
+          title="Renommer"
         >
-          Renommer
+          <Pencil className="size-3.5" aria-hidden="true" />
         </Button>
       )}
 
-      {!readOnly && usageKnown && usageCount === 0 && (
+      {canRemove && (
         <Button
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => onRemove(index)}
-          className="ml-auto h-7 shrink-0 px-2 text-[11px] text-muted-foreground transition-[background-color,color] hover:bg-destructive/10 hover:text-destructive disabled:opacity-40"
+          onClick={() => setIsDeleteOpen(true)}
+          className="h-7 w-7 p-0 flex items-center justify-center text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive active:scale-95 disabled:opacity-40"
           disabled={false}
           aria-disabled={false}
           aria-label={`Supprimer le statut ${status.label}`}
+          title="Supprimer"
         >
-          Supprimer
+          <Trash2 className="size-3.5" aria-hidden="true" />
         </Button>
+      )}
+
+      {!readOnly && (
+        <RenameDialog
+          open={isRenameOpen}
+          onOpenChange={setIsRenameOpen}
+          title={`Renommer "${status.label}"`}
+          defaultValue={status.label}
+          usageCount={usageCount}
+          onConfirm={handleRenameConfirm}
+        />
+      )}
+
+      {canRemove && (
+        <ConfirmDialog
+          open={isDeleteOpen}
+          onOpenChange={setIsDeleteOpen}
+          title={deleteTitle}
+          description={deleteDescription}
+          confirmLabel="Supprimer"
+          cancelLabel="Annuler"
+          variant="destructive"
+          onConfirm={handleDeleteConfirm}
+        />
       )}
     </div>
   );

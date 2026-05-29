@@ -14,6 +14,7 @@ interface Props {
     updates?: InteractionUpdate
   ) => Promise<void> | void;
   statuses: AgencyStatus[];
+  historicalStatuses?: AgencyStatus[];
   onRequestConvert: (interaction: Interaction) => void;
   onDeleteInteraction: (interaction: Interaction) => void;
 }
@@ -23,6 +24,7 @@ const InteractionDetails = ({
   onClose,
   onUpdate,
   statuses,
+  historicalStatuses = [],
   onRequestConvert,
   onDeleteInteraction
 }: Props) => {
@@ -41,7 +43,7 @@ const InteractionDetails = ({
     isSubmitDisabled,
     errorMessage,
     handleSubmit
-  } = useInteractionDetailsState({ interaction, statuses, onUpdate });
+  } = useInteractionDetailsState({ interaction, statuses, historicalStatuses, onUpdate });
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-card">

@@ -185,12 +185,43 @@ export type Database = {
           },
         ]
       }
+      agency_settings: {
+        Row: {
+          agency_id: string
+          created_at: string
+          onboarding: Json
+          updated_at: string
+        }
+        Insert: {
+          agency_id: string
+          created_at?: string
+          onboarding?: Json
+          updated_at?: string
+        }
+        Update: {
+          agency_id?: string
+          created_at?: string
+          onboarding?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agency_settings_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: true
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agency_statuses: {
         Row: {
           agency_id: string
           category: string
           created_at: string
+          deactivated_at: string | null
           id: string
+          is_active: boolean
           is_default: boolean
           is_terminal: boolean
           label: string
@@ -201,7 +232,9 @@ export type Database = {
           agency_id: string
           category?: string
           created_at?: string
+          deactivated_at?: string | null
           id?: string
+          is_active?: boolean
           is_default?: boolean
           is_terminal?: boolean
           label: string
@@ -212,7 +245,9 @@ export type Database = {
           agency_id?: string
           category?: string
           created_at?: string
+          deactivated_at?: string | null
           id?: string
+          is_active?: boolean
           is_default?: boolean
           is_terminal?: boolean
           label?: string
@@ -264,6 +299,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      app_settings: {
+        Row: {
+          created_at: string
+          feature_flags: Json
+          id: number
+          onboarding: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          feature_flags: Json
+          id: number
+          onboarding: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          feature_flags?: Json
+          id?: number
+          onboarding?: Json
+          updated_at?: string
+        }
+        Relationships: []
       }
       audit_logs: {
         Row: {

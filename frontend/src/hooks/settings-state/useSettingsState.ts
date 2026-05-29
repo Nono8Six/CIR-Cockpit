@@ -147,7 +147,6 @@ export const useSettingsState = ({
   };
 
   const handleReset = useCallback(() => {
-    if (!confirm('Recharger la configuration depuis la base ?')) return;
     reset(buildSettingsFormDefaultValues(snapshot, agencyId));
   }, [agencyId, reset, snapshot]);
 

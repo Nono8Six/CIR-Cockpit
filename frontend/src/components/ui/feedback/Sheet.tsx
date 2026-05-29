@@ -55,11 +55,19 @@ type SheetContentProps = React.ComponentPropsWithoutRef<typeof SheetPrimitive.Co
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps
->(({ side = "right" as const, className, children, showCloseButton = true, ...props }, ref) => (
+>(({
+  side = "right" as const,
+  className,
+  children,
+  showCloseButton = true,
+  "aria-describedby": ariaDescribedBy,
+  ...props
+}, ref) => (
   <SheetPortal>
     <SheetOverlay />
     <SheetPrimitive.Content
       ref={ref}
+      aria-describedby={ariaDescribedBy}
       className={cn(sheetVariants({ side }), className)}
       {...props}
     >

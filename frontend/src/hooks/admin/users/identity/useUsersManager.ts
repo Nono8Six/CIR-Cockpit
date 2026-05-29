@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { useAdminUsers } from '../access/useAdminUsers';
 import { useAgencies } from '../../agencies/core/useAgencies';
 import { useArchiveUser } from '../access/useArchiveUser';
+import { useBulkDeleteUsers } from '../access/useBulkDeleteUsers';
 import { useCreateAdminUser } from './useCreateAdminUser';
 import { useDeleteUser } from '../access/useDeleteUser';
 import { useResetUserPassword } from '../access/useResetUserPassword';
@@ -53,6 +54,7 @@ export const useUsersManager = () => {
   const unarchiveMutation = useUnarchiveUser();
   const updateIdentityMutation = useUpdateUserIdentity();
   const deleteUserMutation = useDeleteUser();
+  const bulkDeleteUsersMutation = useBulkDeleteUsers();
 
   const filteredUsers = useMemo(() => {
     const visibleUsers = showArchived ? users : users.filter((user) => !user.archived_at);
@@ -197,26 +199,13 @@ export const useUsersManager = () => {
   const executeBulkDelete = async (): Promise<void> => {
     if (!confirmBulkDelete) return;
     try {
-      let anonymizedTotal = 0;
-      let successCount = 0;
-      for (const id of confirmBulkDelete) {
-        try {
-          const response = await deleteUserMutation.mutateAsync(id);
-          anonymizedTotal += response.anonymized_interactions ?? 0;
-          successCount++;
-        } catch (error) {
-          handleUiError(error, 'Impossible de supprimer un utilisateur sélectionné.', {
-            source: 'useUsersManager.bulkDelete',
-            user_id: id
-          });
-        }
-      }
-      if (successCount > 0) {
-        if (anonymizedTotal > 0) {
-          notifySuccess(`${successCount} utilisateur(s) supprimé(s). ${anonymizedTotal} interaction(s) réattribuée(s).`);
-        } else {
-          notifySuccess(`${successCount} utilisateur(s) supprimé(s).`);
-        }
+      const response = await bulkDeleteUsersMutation.mutateAsync(confirmBulkDelete);
+      if (response.anonymized_interactions > 0) {
+        notifySuccess(
+          `${response.deleted_count} utilisateur(s) supprimé(s). ${response.anonymized_interactions} interaction(s) réattribuée(s).`
+        );
+      } else {
+        notifySuccess(`${response.deleted_count} utilisateur(s) supprimé(s).`);
       }
       setSelectedUserIds([]);
       setConfirmBulkDelete(null);

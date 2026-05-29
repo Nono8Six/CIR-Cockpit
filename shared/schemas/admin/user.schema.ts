@@ -109,6 +109,20 @@ const deleteUserSchema = z.strictObject({
   user_id: uuidSchema
 });
 
+const bulkDeleteUsersSchema = z.strictObject({
+  action: z.literal('bulk_delete'),
+  user_ids: z.array(uuidSchema)
+    .min(1, 'Au moins un utilisateur requis')
+    .max(100, "Trop d'utilisateurs selectionnes")
+    .superRefine((userIds, ctx) => {
+      if (new Set(userIds).size === userIds.length) return;
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'La selection contient des doublons.'
+      });
+    })
+});
+
 export const adminUsersPayloadSchema = z.discriminatedUnion('action', [
   createUserSchema,
   setRoleSchema,
@@ -117,7 +131,8 @@ export const adminUsersPayloadSchema = z.discriminatedUnion('action', [
   resetPasswordSchema,
   archiveSchema,
   unarchiveSchema,
-  deleteUserSchema
+  deleteUserSchema,
+  bulkDeleteUsersSchema
 ]);
 
 export const adminUsersListInputSchema = z.strictObject({});

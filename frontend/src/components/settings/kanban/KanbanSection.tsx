@@ -1,6 +1,7 @@
 import { Kanban } from 'lucide-react';
 import type { ConfigUsageSnapshot } from '../../../../../shared/schemas/system/config.schema';
 import type { AgencyStatus, StatusCategory } from '@/types';
+import { STATUS_CATEGORY_LABELS } from '@/constants/statusCategories';
 import SettingsSectionShell from '../ui/SettingsSectionShell';
 import KanbanAddBar from './KanbanAddBar';
 import KanbanRow from './KanbanRow';
@@ -15,7 +16,7 @@ type KanbanSectionProps = {
   setNewStatus: (value: string) => void;
   setNewStatusCategory: (value: StatusCategory) => void;
   addStatus: () => void;
-  removeStatus: (index: number) => void;
+  removeStatus: (index: number, usageCount?: number | null) => void;
   updateStatusLabel: (index: number, label: string) => void;
   updateStatusCategory: (index: number, category: StatusCategory) => void;
   renameStatus: (index: number, nextLabel: string) => void;
@@ -60,6 +61,9 @@ const KanbanSection = ({
       .filter((row) => row.reference_id)
       .map((row) => [row.reference_id as string, row.usage_count])
   );
+  const historicalStatuses = (usage?.dimensions.statuses ?? []).filter(
+    (row) => row.state === 'historical_used'
+  );
   const orphanStatuses = (usage?.dimensions.statuses ?? []).filter(
     (row) => row.state === 'used_not_in_reference'
   );
@@ -96,10 +100,36 @@ const KanbanSection = ({
     >
       {usage && orphanStatuses.length > 0 && (
         <div className="mb-3 border border-amber-300 bg-amber-50 p-3 text-xs text-amber-950">
-          <div className="font-semibold">Statuts déjà utilisés mais absents du workflow</div>
+          <div className="font-semibold">Statuts orphelins sans référentiel</div>
           <div className="mt-1 max-w-[72ch] leading-relaxed">
-            Ces valeurs existent dans des interactions historiques. Elles doivent être réintégrées
-            ou migrées avant de considérer le workflow propre.
+            Ces valeurs existent dans des interactions, mais ne pointent plus vers un statut connu.
+            Elles doivent être auditées séparément.
+          </div>
+        </div>
+      )}
+
+      {usage && historicalStatuses.length > 0 && (
+        <div className="mb-3 border border-border bg-surface-1 p-3 text-xs">
+          <div className="font-semibold text-foreground">Statuts historiques</div>
+          <div className="mt-1 max-w-[72ch] leading-relaxed text-muted-foreground">
+            Retirés du workflow actif. Les interactions existantes conservent leur statut, mais les
+            nouvelles saisies doivent utiliser un statut actif.
+          </div>
+          <div className="mt-3 divide-y divide-border/70 border border-border bg-background">
+            {historicalStatuses.map((row) => (
+              <div
+                key={row.reference_id ?? row.label}
+                className="grid grid-cols-[minmax(0,1fr)_7rem_5rem] items-center gap-3 px-3 py-2"
+              >
+                <span className="truncate font-medium text-foreground">{row.label}</span>
+                <span className="text-muted-foreground">
+                  {row.category ? STATUS_CATEGORY_LABELS[row.category] : 'Non classé'}
+                </span>
+                <span className="text-right font-mono text-muted-foreground tabular-nums">
+                  {row.usage_count}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       )}

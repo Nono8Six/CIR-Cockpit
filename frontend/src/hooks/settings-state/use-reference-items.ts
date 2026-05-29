@@ -60,7 +60,6 @@ export const useReferenceItems = ({
       setList: (list: string[]) => void
     ) => {
       const label = list[index]?.trim();
-      if (!confirm(label ? `Supprimer l'element "${label}" ?` : 'Supprimer cet element ?')) return;
       if (!agencyId || !label) {
         return void notifyInfo('Identifiant agence requis.');
       }

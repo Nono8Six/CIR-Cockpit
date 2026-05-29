@@ -42,9 +42,11 @@ const config: AgencyConfig = {
       category: 'todo',
       is_terminal: false,
       is_default: true,
+      is_active: true,
       sort_order: 1
     }
   ],
+  historicalStatuses: [],
   services: ['Atelier'],
   families: ['Freinage'],
   interactionTypes: ['Demande', INTERNAL_RELATION_LABEL]

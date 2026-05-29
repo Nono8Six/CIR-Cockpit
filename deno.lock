@@ -1,5 +1,13 @@
 {
   "version": "5",
+  "specifiers": {
+    "jsr:@supabase/functions-js@2.92.0": "2.92.0"
+  },
+  "jsr": {
+    "@supabase/functions-js@2.92.0": {
+      "integrity": "8b72ff85c14f96114500632e94156870f8a58b4173116e5102533cb5b1b13eae"
+    }
+  },
   "workspace": {
     "dependencies": [
       "jsr:@supabase/functions-js@2.92.0",
@@ -7,7 +15,7 @@
       "npm:@supabase/supabase-js@2.95.3",
       "npm:@trpc/server@11.10.0",
       "npm:drizzle-orm@0.45.1",
-      "npm:hono@4.11.9",
+      "npm:hono@4.12.4",
       "npm:jose@5.9.6",
       "npm:postgres@3.4.8",
       "npm:zod@4.3.6"

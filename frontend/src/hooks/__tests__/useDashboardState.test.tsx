@@ -69,6 +69,7 @@ const terminalStatus: AgencyStatus = {
   category: 'done',
   is_terminal: true,
   is_default: false,
+  is_active: true,
   sort_order: 4
 };
 

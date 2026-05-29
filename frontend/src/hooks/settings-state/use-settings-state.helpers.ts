@@ -1,7 +1,13 @@
 import type { AgencyStatus, StatusCategory } from '@/types';
 
 export const normalizeStatusesForUi = (list: AgencyStatus[]): AgencyStatus[] =>
-  list.map((status, index) => ({ ...status, is_default: index === 0, sort_order: index + 1, is_terminal: status.category === 'done' }));
+  list.map((status, index) => ({
+    ...status,
+    is_default: index === 0,
+    sort_order: index + 1,
+    is_terminal: status.category === 'done',
+    is_active: true
+  }));
 
 export const generateStatusId = (): string | null => {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
@@ -27,5 +33,13 @@ export const createStatus = (label: string, category: StatusCategory, sortOrder:
   if (!trimmed) return null;
   const id = generateStatusId();
   if (!id) return null;
-  return { id, label: trimmed, category, is_terminal: category === 'done', is_default: false, sort_order: sortOrder };
+  return {
+    id,
+    label: trimmed,
+    category,
+    is_terminal: category === 'done',
+    is_default: false,
+    is_active: true,
+    sort_order: sortOrder
+  };
 };

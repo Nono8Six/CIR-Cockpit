@@ -14,6 +14,8 @@ import SettingsReadOnlyBanner from './settings/SettingsReadOnlyBanner';
 import SettingsSections from './settings/SettingsSections';
 import SettingsSidebar from './settings/sidebar/SettingsSidebar';
 import SettingsActionDrawer from './settings/ui/SettingsActionDrawer';
+import ConfirmDialog from './ConfirmDialog';
+
 
 interface SettingsProps {
   config: AgencyConfig;
@@ -56,6 +58,7 @@ const Settings = ({
   const snapshot = snapshotQuery.data ?? {
     references: {
       statuses: config.statuses,
+      historical_statuses: config.historicalStatuses,
       services: config.services,
       families: config.families,
       interaction_types: config.interactionTypes,
@@ -102,6 +105,7 @@ const Settings = ({
   });
 
   const [activeSection, setActiveSection] = useState<string>('workflow');
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
   const usage = usageQuery.data ?? null;
 
   return (
@@ -167,8 +171,19 @@ const Settings = ({
         isDirty={isDirty}
         isSaving={isSaving}
         readOnly={readOnly}
-        onReset={handleReset}
+        onReset={() => setIsResetConfirmOpen(true)}
         onSave={handleSave}
+      />
+
+      <ConfirmDialog
+        open={isResetConfirmOpen}
+        onOpenChange={setIsResetConfirmOpen}
+        title="Réinitialiser la configuration"
+        description="Êtes-vous sûr de vouloir recharger la configuration depuis la base ? Toutes vos modifications non enregistrées seront perdues."
+        confirmLabel="Réinitialiser"
+        cancelLabel="Annuler"
+        variant="destructive"
+        onConfirm={handleReset}
       />
     </div>
   );

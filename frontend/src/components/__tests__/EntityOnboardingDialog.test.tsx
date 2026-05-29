@@ -14,6 +14,7 @@ const useConfigSnapshotMock = vi.fn();
 const BASE_CONFIG_SNAPSHOT: ResolvedConfigSnapshot = {
   references: {
     statuses: [],
+    historical_statuses: [],
     services: [],
     families: [],
     interaction_types: [],

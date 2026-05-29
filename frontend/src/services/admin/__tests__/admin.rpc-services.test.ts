@@ -8,6 +8,7 @@ import { hardDeleteAdminAgency } from '@/services/admin/hardDeleteAdminAgency';
 import { renameAdminAgency } from '@/services/admin/renameAdminAgency';
 import { unarchiveAdminAgency } from '@/services/admin/unarchiveAdminAgency';
 import { archiveAdminUser } from '@/services/admin/archiveAdminUser';
+import { bulkDeleteAdminUsers } from '@/services/admin/bulkDeleteAdminUsers';
 import { createAdminUser } from '@/services/admin/createAdminUser';
 import { deleteAdminUser } from '@/services/admin/deleteAdminUser';
 import { resetAdminUserPassword } from '@/services/admin/resetAdminUserPassword';
@@ -137,6 +138,22 @@ const cases: RpcCase[] = [
     expectedJson: { action: 'delete', user_id: 'user-2' },
     validResponse: { ok: true, user_id: 'user-2', deleted: true },
     fallbackMessage: "Impossible de supprimer l'utilisateur."
+  },
+  {
+    label: 'bulkDeleteAdminUsers',
+    run: () => bulkDeleteAdminUsers(['user-2', 'user-3']),
+    endpoint: 'users',
+    expectedJson: { action: 'bulk_delete', user_ids: ['user-2', 'user-3'] },
+    validResponse: {
+      ok: true,
+      deleted: true,
+      deleted_count: 2,
+      user_ids: ['user-2', 'user-3'],
+      anonymized_interactions: 0,
+      anonymized_agency_ids: [],
+      anonymized_orphan_interactions: 0
+    },
+    fallbackMessage: 'Impossible de supprimer les utilisateurs selectionnes.'
   },
   {
     label: 'resetAdminUserPassword',

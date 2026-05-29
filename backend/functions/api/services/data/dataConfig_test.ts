@@ -3,7 +3,8 @@ import { assertEquals, assertThrows } from 'std/assert';
 import {
   assertValidStatusCategories,
   buildStatusUpsertRows,
-  normalizeLabelList
+  normalizeLabelList,
+  resolveStatusDeleteMode
 } from './dataConfig.ts';
 
 Deno.test('normalizeLabelList trims values and deduplicates case-insensitively', () => {
@@ -31,7 +32,7 @@ Deno.test('buildStatusUpsertRows reuses existing ids by label and marks first as
       { id: 'explicit-id', label: 'Termine', category: 'done' }
     ] as Parameters<typeof buildStatusUpsertRows>[0],
     'agency-1',
-    [{ id: 'existing-id', label: 'A traiter' }]
+    [{ id: 'existing-id', label: 'A traiter', is_active: true }]
   );
 
   assertEquals(rows, [
@@ -42,7 +43,9 @@ Deno.test('buildStatusUpsertRows reuses existing ids by label and marks first as
       sort_order: 1,
       is_default: true,
       category: 'todo',
-      is_terminal: false
+      is_terminal: false,
+      is_active: true,
+      deactivated_at: null
     },
     {
       id: 'explicit-id',
@@ -51,7 +54,25 @@ Deno.test('buildStatusUpsertRows reuses existing ids by label and marks first as
       sort_order: 2,
       is_default: false,
       category: 'done',
-      is_terminal: true
+      is_terminal: true,
+      is_active: true,
+      deactivated_at: null
     }
   ]);
+});
+
+Deno.test('resolveStatusDeleteMode deletes unused statuses physically', () => {
+  assertEquals(resolveStatusDeleteMode(0, 2), 'delete');
+});
+
+Deno.test('resolveStatusDeleteMode deactivates used statuses', () => {
+  assertEquals(resolveStatusDeleteMode(3, 2), 'deactivate');
+});
+
+Deno.test('resolveStatusDeleteMode rejects deleting the last active status', () => {
+  assertThrows(
+    () => resolveStatusDeleteMode(0, 1),
+    Error,
+    'Au moins un statut actif est requis'
+  );
 });

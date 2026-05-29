@@ -6,6 +6,7 @@ import type { AppTab, UserRole } from '@/types';
 
 export const EMPTY_CONFIG: AgencyConfig = {
   statuses: [],
+  historicalStatuses: [],
   services: [],
   families: [],
   interactionTypes: []

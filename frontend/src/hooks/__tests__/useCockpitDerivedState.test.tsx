@@ -33,9 +33,11 @@ const buildParams = (overrides: Partial<Parameters<typeof useCockpitDerivedState
         category: 'todo' as const,
         is_terminal: false,
         is_default: true,
+        is_active: true,
         sort_order: 1
       }
     ],
+    historicalStatuses: [],
     services: ['Atelier'],
     entities: ['Client'],
     families: ['Freinage'],

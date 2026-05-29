@@ -29,6 +29,33 @@ import {
 } from '../adminUsers/validation/validators.ts';
 
 type UserRole = Database['public']['Enums']['user_role'];
+type DeletedAdminUserSummary = {
+  userId: string;
+  anonymizedInteractions: number;
+  anonymizedAgencyIds: string[];
+  anonymizedOrphanInteractions: number;
+};
+
+const deleteAdminUser = async (
+  db: DbClient,
+  callerId: string,
+  userId: string
+): Promise<DeletedAdminUserSummary> => {
+  if (userId === callerId) {
+    throw httpError(409, 'USER_DELETE_SELF_FORBIDDEN', 'Impossible de supprimer votre propre compte.');
+  }
+
+  await ensureUserExists(db, userId);
+  const anonymization = await anonymizeUserInteractionsBeforeDelete(db, userId);
+  await deleteAuthUser(userId);
+
+  return {
+    userId,
+    anonymizedInteractions: anonymization.reassignedCount,
+    anonymizedAgencyIds: anonymization.reassignedAgencyIds,
+    anonymizedOrphanInteractions: anonymization.orphanReassignedCount
+  };
+};
 
 export const handleAdminUsersAction = async (
   db: DbClient,
@@ -171,22 +198,49 @@ export const handleAdminUsersAction = async (
       return { request_id: requestId, ok: true, user_id: data.user_id, archived: false };
     }
     case 'delete': {
-      if (data.user_id === callerId) {
-        throw httpError(409, 'USER_DELETE_SELF_FORBIDDEN', 'Impossible de supprimer votre propre compte.');
-      }
-
-      await ensureUserExists(db, data.user_id);
-      const anonymization = await anonymizeUserInteractionsBeforeDelete(db, data.user_id);
-      await deleteAuthUser(data.user_id);
+      const deleted = await deleteAdminUser(db, callerId, data.user_id);
 
       return {
         request_id: requestId,
         ok: true,
-        user_id: data.user_id,
+        user_id: deleted.userId,
         deleted: true,
-        anonymized_interactions: anonymization.reassignedCount,
-        anonymized_agency_ids: anonymization.reassignedAgencyIds,
-        anonymized_orphan_interactions: anonymization.orphanReassignedCount
+        anonymized_interactions: deleted.anonymizedInteractions,
+        anonymized_agency_ids: deleted.anonymizedAgencyIds,
+        anonymized_orphan_interactions: deleted.anonymizedOrphanInteractions
+      };
+    }
+    case 'bulk_delete': {
+      for (const userId of data.user_ids) {
+        if (userId === callerId) {
+          throw httpError(409, 'USER_DELETE_SELF_FORBIDDEN', 'Impossible de supprimer votre propre compte.');
+        }
+        await ensureUserExists(db, userId);
+      }
+
+      const deletedUsers: DeletedAdminUserSummary[] = [];
+      for (const userId of data.user_ids) {
+        deletedUsers.push(await deleteAdminUser(db, callerId, userId));
+      }
+
+      const agencyIds = new Set<string>();
+      let anonymizedInteractions = 0;
+      let anonymizedOrphanInteractions = 0;
+      for (const deleted of deletedUsers) {
+        anonymizedInteractions += deleted.anonymizedInteractions;
+        anonymizedOrphanInteractions += deleted.anonymizedOrphanInteractions;
+        deleted.anonymizedAgencyIds.forEach((agencyId) => agencyIds.add(agencyId));
+      }
+
+      return {
+        request_id: requestId,
+        ok: true,
+        deleted: true,
+        deleted_count: deletedUsers.length,
+        user_ids: deletedUsers.map((deleted) => deleted.userId),
+        anonymized_interactions: anonymizedInteractions,
+        anonymized_agency_ids: Array.from(agencyIds),
+        anonymized_orphan_interactions: anonymizedOrphanInteractions
       };
     }
     default:

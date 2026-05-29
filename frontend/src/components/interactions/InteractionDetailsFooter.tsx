@@ -2,7 +2,7 @@ import InteractionFooterNoteComposer from './footer/InteractionFooterNoteCompose
 import InteractionFooterTopFields from './footer/InteractionFooterTopFields';
 
 type InteractionDetailsFooterProps = {
-  statusOptions: { id: string; label: string }[];
+  statusOptions: { id: string; label: string; isHistorical?: boolean }[];
   statusId: string;
   onStatusChange: (value: string) => void;
   reminder: string;

@@ -56,10 +56,10 @@ const SettingsSidebar = ({
                 type="button"
                 onClick={() => handleClick(item.id)}
                 className={cn(
-                  'flex min-w-[9rem] items-center gap-2 px-3 py-2 text-left transition-[background-color,color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 lg:min-w-0',
+                  'flex min-w-[9rem] items-center gap-2 px-3 py-2 text-left transition-[background-color,color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 lg:min-w-0 border-l-2',
                   isActive
-                    ? 'bg-foreground text-background shadow-soft'
-                    : 'text-muted-foreground hover:bg-surface-1 hover:text-foreground'
+                    ? 'bg-accent text-accent-foreground border-primary font-semibold shadow-sm'
+                    : 'text-muted-foreground hover:bg-surface-1 hover:text-foreground border-transparent'
                 )}
                 aria-current={isActive ? 'page' : undefined}
               >

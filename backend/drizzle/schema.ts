@@ -177,6 +177,8 @@ export const agency_statuses = pgTable('agency_statuses', {
   is_default: boolean('is_default').notNull(),
   category: text('category').notNull(),
   is_terminal: boolean('is_terminal').notNull(),
+  is_active: boolean('is_active').$type<boolean>().default(true).notNull(),
+  deactivated_at: timestamp('deactivated_at', timestamptz).$type<string | null>(),
   created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull(),
   updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
 });

@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AgencyStatus, Interaction } from '@/types';
 import { ConvertClientEntity } from './ConvertClientDialog';
 import DashboardToolbar from './dashboard/DashboardToolbar';
@@ -11,11 +11,22 @@ import { useDashboardState } from '@/hooks/dashboard-state/useDashboardState';
 interface DashboardProps {
   interactions: Interaction[];
   statuses: AgencyStatus[];
+  historicalStatuses?: AgencyStatus[];
   agencyId: string | null;
   onRequestConvert: (entity: ConvertClientEntity) => void;
 }
 
-const Dashboard = ({ interactions, statuses, agencyId, onRequestConvert }: DashboardProps) => {
+const Dashboard = ({
+  interactions,
+  statuses,
+  historicalStatuses = [],
+  agencyId,
+  onRequestConvert
+}: DashboardProps) => {
+  const displayStatuses = useMemo(
+    () => [...statuses, ...historicalStatuses],
+    [historicalStatuses, statuses]
+  );
   const {
     viewMode,
     searchTerm,
@@ -43,7 +54,7 @@ const Dashboard = ({ interactions, statuses, agencyId, onRequestConvert }: Dashb
     setInteractionToDelete,
     handleRequestDeleteInteraction,
     handleConfirmDeleteInteraction
-  } = useDashboardState({ interactions, statuses, agencyId, onRequestConvert });
+  } = useDashboardState({ interactions, statuses: displayStatuses, agencyId, onRequestConvert });
 
   const [activeInteractionId, setActiveInteractionId] = useState<string | null>(null);
   
@@ -255,6 +266,7 @@ const Dashboard = ({ interactions, statuses, agencyId, onRequestConvert }: Dashb
           onClose={() => setSelectedInteraction(null)}
           onUpdate={handleInteractionUpdate}
           statuses={statuses}
+          historicalStatuses={historicalStatuses}
           onRequestConvert={handleConvertRequest}
           onDeleteInteraction={handleRequestDeleteInteraction}
         />

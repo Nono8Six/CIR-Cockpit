@@ -19,6 +19,7 @@ export type AgencyStatus = {
   category: StatusCategory;
   is_terminal: boolean;
   is_default: boolean;
+  is_active: boolean;
   sort_order: number;
 };
 

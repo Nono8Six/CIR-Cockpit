@@ -235,8 +235,8 @@ if (!rootPackage.scripts?.["backend:test:integration"]) {
 const configSchemaSource = readText("shared/schemas/system/config.schema.ts");
 for (const requiredSymbol of [
   "configGetInputSchema",
-  "configSaveAgencyInputSchema",
-  "configSaveProductInputSchema",
+  "configReferenceActionInputSchema",
+  "configUsageInputSchema",
   "resolvedConfigSnapshotSchema",
 ]) {
   if (!configSchemaSource.includes(requiredSymbol)) {
@@ -248,8 +248,8 @@ const routerSource = readText("backend/functions/api/trpc/router.ts");
 for (const requiredRouterFragment of [
   "config: router({",
   "get: authedProcedure",
-  "'save-agency': authedProcedure",
-  "'save-product': superAdminProcedure",
+  "usage: authedProcedure",
+  "reference: authedProcedure",
 ]) {
   if (!routerSource.includes(requiredRouterFragment)) {
     fail(`backend/functions/api/trpc/router.ts is missing router fragment ${JSON.stringify(requiredRouterFragment)}.`);
@@ -261,8 +261,8 @@ for (const requiredTrpcFragment of [
   "export type AppRouter",
   "inferRouterInputs<AppRouter>",
   "inferRouterOutputs<AppRouter>",
-  "'save-agency': t.procedure",
-  "'save-product': t.procedure",
+  "usage: t.procedure",
+  "reference: t.procedure",
 ]) {
   if (!sharedTrpcSource.includes(requiredTrpcFragment)) {
     fail(`shared/api/trpc.ts is missing typed tRPC fragment ${JSON.stringify(requiredTrpcFragment)}.`);

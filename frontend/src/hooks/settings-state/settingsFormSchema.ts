@@ -20,6 +20,7 @@ const settingsStatusSchema = z
     category: statusCategorySchema,
     is_terminal: z.boolean(),
     is_default: z.boolean(),
+    is_active: z.boolean(),
     sort_order: z.number().int(),
   })
   ;

@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import type { UseMutationResult } from '@tanstack/react-query';
 import type { ConfigReferenceActionInput } from '../../../../shared/schemas/system/config.schema';
+import type { ConfigReferenceActionResponse } from '../../../../shared/schemas/system/api-responses';
 import type { AgencyStatus, StatusCategory } from '@/types';
 import { notifySuccess } from '@/services/errors/notifySuccess';
 import { notifyInfo } from '@/services/errors/notifyInfo';
@@ -8,7 +9,7 @@ import { createStatus } from './use-settings-state.helpers';
 
 type UseReferenceStatusesParams = {
   agencyId: string | null;
-  referenceActionMutation: UseMutationResult<unknown, Error, ConfigReferenceActionInput>;
+  referenceActionMutation: UseMutationResult<ConfigReferenceActionResponse, Error, ConfigReferenceActionInput>;
   statuses: AgencyStatus[];
   setStatuses: (statuses: AgencyStatus[]) => void;
   newStatus: string;
@@ -71,13 +72,12 @@ export const useReferenceStatuses = ({
 
   const removeStatus = useCallback(
     async (index: number) => {
-      const label = statuses[index]?.label?.trim();
-      if (!confirm(label ? `Supprimer le statut "${label}" ?` : 'Supprimer ce statut ?')) return;
       if (!agencyId || !statuses[index]?.id) {
         return void notifyInfo('Identifiant statut requis.');
       }
+      let response: ConfigReferenceActionResponse;
       try {
-        await referenceActionMutation.mutateAsync({
+        response = await referenceActionMutation.mutateAsync({
           action: 'delete',
           agency_id: agencyId,
           dimension: 'statuses',
@@ -87,7 +87,7 @@ export const useReferenceStatuses = ({
         return;
       }
       setStatuses(statuses.filter((_, currentIndex) => currentIndex !== index));
-      notifySuccess('Statut supprime.');
+      notifySuccess(response.deactivated ? 'Statut retire du workflow actif.' : 'Statut supprime.');
     },
     [agencyId, referenceActionMutation, setStatuses, statuses]
   );

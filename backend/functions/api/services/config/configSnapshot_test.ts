@@ -100,6 +100,7 @@ Deno.test('mapAgencyReferenceStatuses keeps valid categories', () => {
       category: 'todo',
       is_default: true,
       is_terminal: false,
+      is_active: true,
       sort_order: 1
     }
   ]);
@@ -117,6 +118,7 @@ Deno.test('mapAgencyReferenceStatuses throws when the stored category is invalid
         category: 'broken',
         is_default: true,
         is_terminal: false,
+        is_active: true,
         sort_order: 1
       }
     ])

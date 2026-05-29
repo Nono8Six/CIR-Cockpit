@@ -15,6 +15,8 @@ const usageSnapshot = {
         label: 'À traiter',
         reference_id: '22222222-2222-4222-8222-222222222222',
         sort_order: 1,
+        category: 'todo',
+        is_active: true,
         usage_count: 4,
         state: 'reference_used'
       }
@@ -26,6 +28,8 @@ const usageSnapshot = {
         label: 'Ancien type',
         reference_id: null,
         sort_order: null,
+        category: null,
+        is_active: true,
         usage_count: 1,
         state: 'used_not_in_reference'
       }

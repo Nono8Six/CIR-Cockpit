@@ -16,6 +16,7 @@ import {
 type DashboardDetailsOverlayProps = {
   interaction: Interaction;
   statuses: AgencyStatus[];
+  historicalStatuses?: AgencyStatus[];
   onClose: () => void;
   onUpdate: (
     interaction: Interaction,
@@ -29,6 +30,7 @@ type DashboardDetailsOverlayProps = {
 const DashboardDetailsOverlay = ({
   interaction,
   statuses,
+  historicalStatuses = [],
   onClose,
   onUpdate,
   onRequestConvert,
@@ -59,6 +61,7 @@ const DashboardDetailsOverlay = ({
         onClose={onClose}
         onUpdate={onUpdate}
         statuses={statuses}
+        historicalStatuses={historicalStatuses}
         onRequestConvert={onRequestConvert}
         onDeleteInteraction={onDeleteInteraction}
       />
