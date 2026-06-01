@@ -18,6 +18,7 @@
     "backend:typecheck": "deno check --config backend/deno.json backend/functions/api/index.ts",
     "backend:test": "deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api",
     "backend:test:integration": "node ./scripts/run-backend-integration-tests.mjs",
+    "deploy:api": "pwsh -NoLogo -File scripts/deploy-api.ps1",
     "qa:fast": "pnpm run repo:check && pnpm --dir frontend run typecheck && pnpm --dir frontend run lint && pnpm --dir frontend run test:run && pnpm --dir frontend run check:error-compliance && deno lint backend/functions/api && deno check --config backend/deno.json backend/functions/api/index.ts && deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api",
     "qa": "pwsh -NoLogo -File scripts/qa-gate.ps1",
     "qa:audit": "pnpm --dir frontend exec pnpm audit --audit-level=high"

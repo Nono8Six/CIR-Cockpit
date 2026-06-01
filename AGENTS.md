@@ -56,6 +56,7 @@ Ordre recommande pour une feature UI significative : `layers-*` si le probleme d
 - Import map de deploy : utiliser `deno.json` racine avec mapping explicite `zod`, `zod/v4`, `zod/`.
 - Commande de deploy de reference :
   - `supabase functions deploy api --project-ref <project_ref> --use-api --import-map deno.json --no-verify-jwt`
+- En local, deployer via `pnpm run deploy:api` apres `supabase login`, sans fichier temporaire ni `SUPABASE_ACCESS_TOKEN` persistant.
 - Si une action UI Supabase est requise, demander explicitement a l'utilisateur de la faire et attendre sa confirmation.
 
 ## Regles agents

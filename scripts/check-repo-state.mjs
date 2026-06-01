@@ -90,6 +90,7 @@ const REMOTE_TO_LOCAL_MODERN_MIGRATION_COMPATIBILITY = {
   20260513151526n: "20260513144739_add_tier_v1_foundation.sql",
   20260518041315n: "20260518103000_directory_saved_views_view_type.sql",
   20260518121057n: "20260518143000_global_suppliers_clear_agency.sql",
+  20260529162631n: "20260526130000_retire_used_statuses.sql",
 };
 
 function readJson(relativePath) {
