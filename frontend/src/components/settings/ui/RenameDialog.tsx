@@ -60,7 +60,7 @@ const RenameDialog = ({
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>
-              Saisissez la nouvelle valeur ci-dessous.
+              Corrigez le libellé. Cette action réécrit définitivement l&apos;historique existant.
             </DialogDescription>
           </DialogHeader>
 
@@ -80,7 +80,7 @@ const RenameDialog = ({
                 <AlertCircle className="size-4 shrink-0 text-warning mt-0.5" aria-hidden="true" />
                 <div className="leading-normal">
                   <span className="font-semibold">Attention : </span>
-                  {usageCount} interaction(s) utilisent actuellement cette valeur. Renommer mettra à jour tout l&apos;historique de manière définitive.
+                  {usageCount} interaction(s) utilisent actuellement cette valeur. La correction mettra à jour tout l&apos;historique de manière définitive. Pour préserver le sens historique, annulez puis utilisez l&apos;action de retrait.
                 </div>
               </div>
             )}
@@ -100,7 +100,7 @@ const RenameDialog = ({
               disabled={isUnchanged}
               className="text-xs"
             >
-              Enregistrer
+              Corriger le libellé
             </Button>
           </DialogFooter>
         </form>

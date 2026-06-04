@@ -1,10 +1,15 @@
 import { useCallback, useMemo } from 'react';
 
 import type { AgencyStatus, Interaction } from '@/types';
+import type { AgencyConfig } from '@/services/config';
 import { inferStatusCategoryFromLabel } from '@/utils/dashboard/dashboardAggregates';
 import { isBeforeNow } from '@/utils/date/isBeforeNow';
+import { resolveReferenceLabel } from '@/utils/references/resolveReferenceLabel';
 
-export const useDashboardStatusHelpers = (statuses: AgencyStatus[]) => {
+export const useDashboardStatusHelpers = (
+  statuses: AgencyStatus[],
+  resolutions: NonNullable<AgencyConfig['resolutions']> = [],
+) => {
   const statusById = useMemo(() => {
     const map = new Map<string, AgencyStatus>();
     statuses.forEach((status) => {
@@ -23,30 +28,30 @@ export const useDashboardStatusHelpers = (statuses: AgencyStatus[]) => {
   const getStatusMeta = useCallback(
     (interaction: Interaction) => {
       if (interaction.status_id) {
-        return (
-          statusById.get(interaction.status_id) ?? statusByLabel.get(interaction.status.toLowerCase())
-        );
+        const byId = statusById.get(interaction.status_id);
+        if (byId) return byId;
       }
 
-      return statusByLabel.get(interaction.status.toLowerCase());
+      const resolvedLabel = resolveReferenceLabel('statuses', interaction.status, resolutions);
+      return statusByLabel.get(resolvedLabel.toLowerCase());
     },
-    [statusById, statusByLabel],
+    [resolutions, statusById, statusByLabel],
   );
 
   const isStatusDone = useCallback(
     (interaction: Interaction) => {
-      if (typeof interaction.status_is_terminal === 'boolean') {
-        return interaction.status_is_terminal;
-      }
-
       const statusMeta = getStatusMeta(interaction);
       if (statusMeta) {
         return Boolean(statusMeta.is_terminal || statusMeta.category === 'done');
       }
 
-      return inferStatusCategoryFromLabel(interaction.status) === 'done';
+      if (typeof interaction.status_is_terminal === 'boolean') {
+        return interaction.status_is_terminal;
+      }
+
+      return inferStatusCategoryFromLabel(resolveReferenceLabel('statuses', interaction.status, resolutions)) === 'done';
     },
-    [getStatusMeta],
+    [getStatusMeta, resolutions],
   );
 
   const isStatusTodo = useCallback(
@@ -56,9 +61,9 @@ export const useDashboardStatusHelpers = (statuses: AgencyStatus[]) => {
         return Boolean(statusMeta.category === 'todo' || statusMeta.is_default);
       }
 
-      return inferStatusCategoryFromLabel(interaction.status) === 'todo';
+      return inferStatusCategoryFromLabel(resolveReferenceLabel('statuses', interaction.status, resolutions)) === 'todo';
     },
-    [getStatusMeta],
+    [getStatusMeta, resolutions],
   );
 
   const getStatusBadgeClass = useCallback(
@@ -68,7 +73,9 @@ export const useDashboardStatusHelpers = (statuses: AgencyStatus[]) => {
         typeof interaction.status_is_terminal === 'boolean'
           ? interaction.status_is_terminal
           : meta?.is_terminal;
-      const inferredCategory = inferStatusCategoryFromLabel(interaction.status);
+      const inferredCategory = inferStatusCategoryFromLabel(
+        resolveReferenceLabel('statuses', interaction.status, resolutions),
+      );
 
       if (meta?.category === 'todo' || meta?.is_default || inferredCategory === 'todo') {
         return 'border-destructive/50 bg-destructive/15 text-destructive';
@@ -80,7 +87,7 @@ export const useDashboardStatusHelpers = (statuses: AgencyStatus[]) => {
 
       return 'border-warning/45 bg-warning/20 text-warning-foreground';
     },
-    [getStatusMeta],
+    [getStatusMeta, resolutions],
   );
 
   const isReminderOverdue = useCallback(

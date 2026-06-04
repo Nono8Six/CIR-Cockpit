@@ -26,7 +26,7 @@ export const useSettingsForm = (
     mode: 'onChange'
   });
 
-  const { control, reset } = form;
+  const { control, reset, formState } = form;
 
   const families = useWatch({ control, name: 'families' }) ?? [];
   const services = useWatch({ control, name: 'services' }) ?? [];
@@ -39,8 +39,9 @@ export const useSettingsForm = (
   const newStatusCategory = useWatch({ control, name: 'newStatusCategory' }) ?? 'todo';
 
   useEffect(() => {
+    if (formState.isDirty) return;
     reset(buildSettingsFormDefaultValues(snapshot, agencyId));
-  }, [agencyId, reset, snapshot]);
+  }, [agencyId, formState.isDirty, reset, snapshot]);
 
   return {
     form,

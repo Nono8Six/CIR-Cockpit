@@ -10,6 +10,9 @@ export type SettingsSectionsProps = {
   canEditAgencySettings: boolean;
   usage: ConfigUsageSnapshot | null;
   usageLoading: boolean;
+  agencyId?: string | null;
+  onExamineIntegrity?: () => void;
+  canRunImmediateAction: () => boolean;
   families: string[];
   services: string[];
   interactionTypes: string[];

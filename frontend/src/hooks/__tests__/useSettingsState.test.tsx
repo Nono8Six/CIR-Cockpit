@@ -139,15 +139,60 @@ describe('useSettingsState', () => {
       { wrapper: createWrapper() },
     );
 
-    act(() => {
+    await act(async () => {
       result.current.setNewFamily('NouveauGroupe');
+      await Promise.resolve();
     });
     expect(result.current.newFamily).toBe('NouveauGroupe');
 
-    act(() => {
+    await act(async () => {
       result.current.handleReset();
+      await Promise.resolve();
     });
 
     expect(result.current.newFamily).toBe('');
+  });
+
+  it('blocks immediate actions while a saved-form change is pending', async () => {
+    const { result } = renderHook(
+      () =>
+        useSettingsState({
+          snapshot: BASE_SNAPSHOT,
+          canEditAgencySettings: true,
+          agencyId: '11111111-1111-4111-8111-111111111111',
+        }),
+      { wrapper: createWrapper() },
+    );
+
+    await act(async () => {
+      result.current.updateStatusCategory(0, 'in_progress');
+      await Promise.resolve();
+    });
+
+    expect(result.current.isDirty).toBe(true);
+    expect(result.current.canRunImmediateAction()).toBe(false);
+    expect(notifyInfo).toHaveBeenCalledWith(
+      'Enregistrez ou annulez les changements en cours avant cette action.',
+    );
+  });
+
+  it('does not mark a new-value input as a persisted draft', async () => {
+    const { result } = renderHook(
+      () =>
+        useSettingsState({
+          snapshot: BASE_SNAPSHOT,
+          canEditAgencySettings: true,
+          agencyId: '11111111-1111-4111-8111-111111111111',
+        }),
+      { wrapper: createWrapper() },
+    );
+
+    await act(async () => {
+      result.current.setNewFamily('Transmission');
+      await Promise.resolve();
+    });
+
+    expect(result.current.isDirty).toBe(false);
+    expect(result.current.canRunImmediateAction()).toBe(true);
   });
 });

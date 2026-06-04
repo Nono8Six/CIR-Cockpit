@@ -38,7 +38,7 @@ export type Database = {
         }
         Relationships: []
       }
-      agency_families: {
+      agency_entities: {
         Row: {
           agency_id: string
           created_at: string
@@ -57,6 +57,44 @@ export type Database = {
         }
         Update: {
           agency_id?: string
+          created_at?: string
+          id?: string
+          label?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agency_entities_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agency_families: {
+        Row: {
+          agency_id: string
+          archived_at: string | null
+          created_at: string
+          id: string
+          label: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          agency_id: string
+          archived_at?: string | null
+          created_at?: string
+          id?: string
+          label: string
+          sort_order: number
+          updated_at?: string
+        }
+        Update: {
+          agency_id?: string
+          archived_at?: string | null
           created_at?: string
           id?: string
           label?: string
@@ -150,9 +188,95 @@ export type Database = {
           },
         ]
       }
+      agency_reference_resolutions: {
+        Row: {
+          agency_id: string
+          dimension: string
+          id: string
+          resolved_at: string
+          resolved_by: string | null
+          source_label: string
+          target_family_id: string | null
+          target_interaction_type_id: string | null
+          target_service_id: string | null
+          target_status_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          agency_id: string
+          dimension: string
+          id?: string
+          resolved_at?: string
+          resolved_by?: string | null
+          source_label: string
+          target_family_id?: string | null
+          target_interaction_type_id?: string | null
+          target_service_id?: string | null
+          target_status_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agency_id?: string
+          dimension?: string
+          id?: string
+          resolved_at?: string
+          resolved_by?: string | null
+          source_label?: string
+          target_family_id?: string | null
+          target_interaction_type_id?: string | null
+          target_service_id?: string | null
+          target_status_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agency_reference_resolutions_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agency_reference_resolutions_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agency_reference_resolutions_target_family_id_fkey"
+            columns: ["target_family_id"]
+            isOneToOne: false
+            referencedRelation: "agency_families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agency_reference_resolutions_target_interaction_type_id_fkey"
+            columns: ["target_interaction_type_id"]
+            isOneToOne: false
+            referencedRelation: "agency_interaction_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agency_reference_resolutions_target_service_id_fkey"
+            columns: ["target_service_id"]
+            isOneToOne: false
+            referencedRelation: "agency_services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agency_reference_resolutions_target_status_id_fkey"
+            columns: ["target_status_id"]
+            isOneToOne: false
+            referencedRelation: "agency_statuses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agency_services: {
         Row: {
           agency_id: string
+          archived_at: string | null
           created_at: string
           id: string
           label: string
@@ -161,6 +285,7 @@ export type Database = {
         }
         Insert: {
           agency_id: string
+          archived_at?: string | null
           created_at?: string
           id?: string
           label: string
@@ -169,6 +294,7 @@ export type Database = {
         }
         Update: {
           agency_id?: string
+          archived_at?: string | null
           created_at?: string
           id?: string
           label?: string

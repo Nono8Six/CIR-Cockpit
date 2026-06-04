@@ -9,6 +9,7 @@ export type AgencyConfig = {
   services: string[];
   families: string[];
   interactionTypes: string[];
+  resolutions?: NonNullable<ResolvedConfigSnapshot['references']['resolutions']>;
 };
 
 export const mapSnapshotToAgencyConfig = (
@@ -18,7 +19,8 @@ export const mapSnapshotToAgencyConfig = (
   historicalStatuses: snapshot.references.historical_statuses,
   services: snapshot.references.services,
   families: snapshot.references.families,
-  interactionTypes: snapshot.references.interaction_types
+  interactionTypes: snapshot.references.interaction_types,
+  resolutions: snapshot.references.resolutions ?? []
 });
 
 export const getAgencyConfig = async (

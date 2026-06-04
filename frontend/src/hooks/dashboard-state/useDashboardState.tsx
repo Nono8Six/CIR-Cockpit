@@ -10,6 +10,7 @@ import { handleUiError } from '@/services/errors/handleUiError';
 import { notifySuccess } from '@/services/errors/notifySuccess';
 import { invalidateInteractionsQuery } from '@/services/query/queryInvalidation';
 import type { AgencyStatus, Interaction, InteractionUpdate, TimelineEvent } from '@/types';
+import type { AgencyConfig } from '@/services/config';
 import { buildKanbanColumns } from '@/utils/dashboard/dashboardAggregates';
 
 import { useAddTimelineEvent } from '../interactions/timeline/useAddTimelineEvent';
@@ -24,6 +25,7 @@ type UseDashboardStateParams = {
   statuses: AgencyStatus[];
   agencyId: string | null;
   onRequestConvert: (entity: ConvertClientEntity) => void;
+  resolutions?: NonNullable<AgencyConfig['resolutions']>;
 };
 
 const buildTimelineSuccessMessage = (
@@ -55,6 +57,7 @@ export const useDashboardState = ({
   statuses,
   agencyId,
   onRequestConvert,
+  resolutions,
 }: UseDashboardStateParams) => {
   const [viewMode, setViewMode] = useState<ViewMode>('kanban');
   const [selectedInteraction, setSelectedInteraction] = useState<Interaction | null>(null);
@@ -66,7 +69,7 @@ export const useDashboardState = ({
   const lastPeriodErrorMessageRef = useRef<string | null>(null);
 
   const { statusById, getStatusMeta, isStatusDone, isStatusTodo, getStatusBadgeClass, isReminderOverdue } =
-    useDashboardStatusHelpers(statuses);
+    useDashboardStatusHelpers(statuses, resolutions);
 
   const {
     searchTerm,
@@ -84,6 +87,7 @@ export const useDashboardState = ({
     interactions,
     viewMode,
     isStatusDone,
+    resolutions,
   });
 
   useEffect(() => {

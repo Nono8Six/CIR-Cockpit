@@ -37,7 +37,7 @@ const usage: ConfigUsageSnapshot = {
         category: 'todo',
         is_active: true,
         usage_count: 2,
-        state: 'reference_used'
+        state: 'active_used'
       }
     ],
     services: [
@@ -48,14 +48,17 @@ const usage: ConfigUsageSnapshot = {
         category: null,
         is_active: true,
         usage_count: 1,
-        state: 'used_not_in_reference'
+        state: 'unresolved'
       }
     ],
     families: [],
     interaction_types: []
   },
   totals: {
-    used_not_in_reference: 1,
+    unresolved: 1,
+    archived: 0,
+    resolved: 0,
+    system_managed: 0,
     referenced_values: 1,
     used_values: 2
   }
@@ -67,6 +70,7 @@ const baseProps = {
   canEditAgencySettings: true,
   usage: null as ConfigUsageSnapshot | null,
   usageLoading: false,
+  canRunImmediateAction: vi.fn(() => true),
   families: ['MOTORISATION'],
   services: ['Maintenance'],
   interactionTypes: ['SAV'],
@@ -122,37 +126,37 @@ describe('SettingsSections', () => {
   it('shows usage impact without editable tier types', () => {
     render(<SettingsSections {...baseProps} activeSection="lists" usage={usage} />);
 
-    expect(screen.getByText('Valeurs déjà utilisées mais absentes des listes')).toBeInTheDocument();
-    expect(screen.getByText(/Fournisseur · 1/)).toBeInTheDocument();
+    expect(screen.getByText(/1 anomalie/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Examiner' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Types de tiers' })).not.toBeInTheDocument();
   });
 
-  it('keeps deletion available when usage impact is unavailable', () => {
+  it('keeps archive available when usage impact is unavailable', () => {
     render(<SettingsSections {...baseProps} activeSection="lists" usage={null} />);
 
     expect(screen.queryByText(/Suppression indisponible actuellement/i)).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /renommer maintenance/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /corriger le libellé maintenance/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /supprimer maintenance/i })).toBeInTheDocument();
   });
 
-  it('keeps status deletion available when usage impact is unavailable', () => {
+  it('keeps status archive available when usage impact is unavailable', () => {
     render(<SettingsSections {...baseProps} activeSection="workflow" usage={null} />);
 
     expect(screen.getByRole('button', { name: /supprimer le statut à faire/i })).toBeInTheDocument();
   });
 
-  it('shows deletion only for unused values when usage impact is known', () => {
+  it('shows archive for active values when usage impact is known', () => {
     render(<SettingsSections {...baseProps} activeSection="lists" usage={usage} />);
 
-    expect(screen.getByRole('button', { name: /renommer maintenance/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /corriger le libellé maintenance/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /supprimer maintenance/i })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /supprimer fournisseur/i })).not.toBeInTheDocument();
   });
 
   it('shows used statuses as removable from the active workflow', () => {
     render(<SettingsSections {...baseProps} activeSection="workflow" usage={usage} />);
 
-    expect(screen.getByRole('button', { name: /supprimer le statut à faire/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /archiver le statut à faire/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /descendre le statut à faire/i })).toBeInTheDocument();
   });
 
   it('shows historical statuses as a non editable audit section', () => {
@@ -169,7 +173,7 @@ describe('SettingsSections', () => {
             category: 'done',
             is_active: false,
             usage_count: 7,
-            state: 'historical_used'
+            state: 'archived_used'
           }
         ]
       }

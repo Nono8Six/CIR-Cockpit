@@ -3,6 +3,7 @@ import { and, asc, eq, sql } from 'drizzle-orm';
 import {
   agency_families,
   agency_interaction_types,
+  agency_reference_resolutions,
   agency_services,
   agency_statuses,
   interactions
@@ -15,7 +16,10 @@ import type {
   AgencyStatusInput,
   ConfigReferenceActionInput,
   ConfigReferenceAddInput,
-  ConfigReferenceDeleteInput,
+  ConfigReferenceArchiveInput,
+  ConfigReferenceResolveInput,
+  ConfigReferenceRestoreInput,
+  ConfigReferenceUnresolveInput,
   ConfigReferenceRenameInput,
   ConfigReferenceReorderInput,
 } from '../../../../../shared/schemas/system/config.schema.ts';
@@ -105,7 +109,7 @@ export const buildStatusUpsertRows = (
   });
 };
 
-const ensureReferenceWriteAccess = (authContext: AuthContext): void => {
+export const ensureReferenceWriteAccess = (authContext: AuthContext): void => {
   if (authContext.role === 'tcs') {
     throw httpError(403, 'AUTH_FORBIDDEN', 'Acces interdit.');
   }
@@ -133,6 +137,12 @@ const requireLabel = (value: string | undefined, message: string): string => {
 };
 
 const normalizeReferenceKey = (value: string): string => value.trim().toLowerCase();
+
+export const ensureOneAffectedRow = (rows: unknown[], message: string): void => {
+  if (rows.length !== 1) {
+    throw httpError(409, 'CONFLICT', message);
+  }
+};
 
 const ensureStatusLabelAvailable = async (
   db: DbClient,
@@ -302,31 +312,44 @@ const updateInteractionLabel = async (
   dimension: LabelDimension,
   previousLabel: string,
   nextLabel: string
-): Promise<void> => {
-  const previous = previousLabel.trim();
+): Promise<number> => {
+  const previous = previousLabel.trim().toLowerCase();
   try {
     if (dimension === 'services') {
-      await db
+      const updated = await db
         .update(interactions)
         .set({ contact_service: nextLabel })
-        .where(and(eq(interactions.agency_id, agencyId), eq(interactions.contact_service, previous)));
-      return;
+        .where(and(eq(interactions.agency_id, agencyId), sql`lower(${interactions.contact_service}) = ${previous}`))
+        .returning({ id: interactions.id });
+      return updated.length;
     }
 
     if (dimension === 'interaction_types') {
-      await db
+      const updated = await db
         .update(interactions)
         .set({ interaction_type: nextLabel })
-        .where(and(eq(interactions.agency_id, agencyId), eq(interactions.interaction_type, previous)));
-      return;
+        .where(and(eq(interactions.agency_id, agencyId), sql`lower(${interactions.interaction_type}) = ${previous}`))
+        .returning({ id: interactions.id });
+      return updated.length;
     }
 
-    await db.execute(sql`
+    const updated = await db.execute<{ id: string }>(sql`
       update public.interactions
-      set mega_families = array_replace(mega_families, ${previous}, ${nextLabel})
+      set mega_families = (
+        select array_agg(
+          case when lower(family) = ${previous} then ${nextLabel} else family end
+          order by position
+        )
+        from unnest(mega_families) with ordinality as values(family, position)
+      )
       where agency_id = ${agencyId}
-        and ${previous} = any(mega_families)
+        and exists (
+          select 1 from unnest(mega_families) as family
+          where lower(family) = ${previous}
+        )
+      returning id
     `);
+    return updated.length;
   } catch {
     throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de migrer les interactions rattachees.');
   }
@@ -479,10 +502,10 @@ const handleReferenceAdd = async (
   });
 };
 
-const handleReferenceDelete = async (
+const handleReferenceArchive = async (
   db: DbClient,
   agencyId: string,
-  input: ConfigReferenceDeleteInput
+  input: ConfigReferenceArchiveInput
 ): Promise<ReferenceDeleteResult> => {
   if (input.dimension === 'statuses') {
     const statusId = requireReferenceId(input.reference_id, 'Identifiant statut requis.');
@@ -505,31 +528,100 @@ const handleReferenceDelete = async (
     const activeCount = await countActiveStatuses(db, agencyId);
     const usageCount = await countStatusUsage(db, agencyId, statusId);
     const mode = resolveStatusDeleteMode(usageCount, activeCount);
-    if (mode === 'deactivate') {
-      await db
-        .update(agency_statuses)
-        .set({
-          is_active: false,
-          is_default: false,
-          deactivated_at: sql`now()`
-        })
-        .where(and(eq(agency_statuses.agency_id, agencyId), eq(agency_statuses.id, statusId)));
-      await ensureActiveDefaultStatus(db, agencyId);
-      return { usageCount, deactivated: true };
-    }
-    await db.delete(agency_statuses).where(and(eq(agency_statuses.agency_id, agencyId), eq(agency_statuses.id, statusId)));
+    const updated = mode === 'delete'
+      ? await db.delete(agency_statuses)
+        .where(and(eq(agency_statuses.agency_id, agencyId), eq(agency_statuses.id, statusId)))
+        .returning({ id: agency_statuses.id })
+      : await db.update(agency_statuses)
+        .set({ is_active: false, is_default: false, deactivated_at: sql`now()` })
+        .where(and(eq(agency_statuses.agency_id, agencyId), eq(agency_statuses.id, statusId)))
+        .returning({ id: agency_statuses.id });
+    ensureOneAffectedRow(updated, 'Ce statut a deja ete modifie. Rechargez la page.');
     await ensureActiveDefaultStatus(db, agencyId);
-    return { usageCount, deactivated: false };
+    return { usageCount, deactivated: mode === 'deactivate' };
   }
 
   const label = requireLabel(input.label, 'Libelle de referentiel requis.');
   const usageCount = await countLabelUsage(db, agencyId, input.dimension, label);
-  if (usageCount > 0) {
-    throw httpError(409, 'CONFLICT', `Impossible de supprimer "${label}" : ${usageCount} interaction(s) l'utilisent encore. Renommez la valeur pour mettre a jour l'historique.`);
-  }
   const table = getLabelTable(input.dimension);
-  await db.delete(table).where(and(eq(table.agency_id, agencyId), eq(table.label, label)));
-  return { usageCount, deactivated: false };
+  const updated = usageCount === 0
+    ? await db.delete(table)
+      .where(and(eq(table.agency_id, agencyId), eq(table.label, label), sql`${table.archived_at} is null`))
+      .returning({ id: table.id })
+    : await db.update(table)
+      .set({ archived_at: sql`now()` })
+      .where(and(eq(table.agency_id, agencyId), eq(table.label, label), sql`${table.archived_at} is null`))
+      .returning({ id: table.id });
+  ensureOneAffectedRow(updated, 'Cette valeur a deja ete modifiee. Rechargez la page.');
+  return { usageCount, deactivated: usageCount > 0 };
+};
+
+const handleReferenceRestore = async (db: DbClient, agencyId: string, input: ConfigReferenceRestoreInput): Promise<void> => {
+  if (input.dimension === 'statuses') {
+    const statusId = requireReferenceId(input.reference_id, 'Identifiant statut requis.');
+    const updated = await db.update(agency_statuses).set({ is_active: true, deactivated_at: null })
+      .where(and(eq(agency_statuses.agency_id, agencyId), eq(agency_statuses.id, statusId), eq(agency_statuses.is_active, false)))
+      .returning({ id: agency_statuses.id });
+    ensureOneAffectedRow(updated, 'Ce statut a deja ete reactive. Rechargez la page.');
+    await ensureActiveDefaultStatus(db, agencyId);
+    return;
+  }
+  const label = requireLabel(input.label, 'Libelle de referentiel requis.');
+  const table = getLabelTable(input.dimension);
+  const updated = await db.update(table).set({ archived_at: null })
+    .where(and(eq(table.agency_id, agencyId), eq(table.label, label), sql`${table.archived_at} is not null`))
+    .returning({ id: table.id });
+  ensureOneAffectedRow(updated, 'Cette valeur a deja ete reactivee. Rechargez la page.');
+};
+
+const targetColumn = (dimension: ConfigReferenceResolveInput['dimension'], targetId: string) => ({
+  target_status_id: dimension === 'statuses' ? targetId : null,
+  target_service_id: dimension === 'services' ? targetId : null,
+  target_family_id: dimension === 'families' ? targetId : null,
+  target_interaction_type_id: dimension === 'interaction_types' ? targetId : null
+});
+
+const ensureResolutionTarget = async (db: DbClient, agencyId: string, input: ConfigReferenceResolveInput): Promise<void> => {
+  const active = input.dimension === 'statuses'
+    ? sql`select 1 from public.agency_statuses where id=${input.target_reference_id} and agency_id=${agencyId} and is_active=true`
+    : input.dimension === 'services'
+      ? sql`select 1 from public.agency_services where id=${input.target_reference_id} and agency_id=${agencyId} and archived_at is null`
+      : input.dimension === 'families'
+        ? sql`select 1 from public.agency_families where id=${input.target_reference_id} and agency_id=${agencyId} and archived_at is null`
+        : sql`select 1 from public.agency_interaction_types where id=${input.target_reference_id} and agency_id=${agencyId} and archived_at is null`;
+  const rows = await db.execute<{ '?column?': number }>(active);
+  if (rows.length === 0) throw httpError(409, 'CONFLICT', 'La valeur cible doit etre active dans cette agence.');
+};
+
+const handleReferenceResolve = async (db: DbClient, auth: AuthContext, agencyId: string, input: ConfigReferenceResolveInput): Promise<void> => {
+  await ensureResolutionTarget(db, agencyId, input);
+  const target = targetColumn(input.dimension, input.target_reference_id);
+  const updated = await db.execute<{ id: string }>(sql`
+    insert into public.agency_reference_resolutions (
+      agency_id, dimension, source_label, resolved_by,
+      target_status_id, target_service_id, target_family_id, target_interaction_type_id
+    ) values (
+      ${agencyId}, ${input.dimension}, ${input.source_label.trim()}, ${auth.userId},
+      ${target.target_status_id}, ${target.target_service_id}, ${target.target_family_id}, ${target.target_interaction_type_id}
+    )
+    on conflict (agency_id, dimension, lower(btrim(source_label))) do update set
+      resolved_by = excluded.resolved_by,
+      resolved_at = now(),
+      target_status_id = excluded.target_status_id,
+      target_service_id = excluded.target_service_id,
+      target_family_id = excluded.target_family_id,
+      target_interaction_type_id = excluded.target_interaction_type_id
+    returning id
+  `);
+  ensureOneAffectedRow(updated, "Le rattachement historique n'a pas pu etre enregistre.");
+};
+
+const handleReferenceUnresolve = async (db: DbClient, agencyId: string, input: ConfigReferenceUnresolveInput): Promise<void> => {
+  const updated = await db.delete(agency_reference_resolutions).where(and(
+    eq(agency_reference_resolutions.agency_id, agencyId),
+    eq(agency_reference_resolutions.id, input.resolution_id)
+  )).returning({ id: agency_reference_resolutions.id });
+  ensureOneAffectedRow(updated, 'Ce rattachement a deja ete annule. Rechargez la page.');
 };
 
 const handleReferenceRename = async (
@@ -565,12 +657,17 @@ const handleReferenceRename = async (
   const usageCount = await countLabelUsage(db, agencyId, input.dimension, previousLabel);
   const table = getLabelTable(input.dimension);
   await ensureLabelAvailable(db, table, agencyId, nextLabel, previousLabel);
-  await db
+  const updated = await db
     .update(table)
     .set({ label: nextLabel })
-    .where(and(eq(table.agency_id, agencyId), eq(table.label, previousLabel)));
-  await updateInteractionLabel(db, agencyId, input.dimension, previousLabel, nextLabel);
-  return usageCount;
+    .where(and(eq(table.agency_id, agencyId), eq(table.label, previousLabel), sql`${table.archived_at} is null`))
+    .returning({ id: table.id });
+  ensureOneAffectedRow(updated, "Cette valeur n'est plus editable. Rechargez la page.");
+  const migratedCount = await updateInteractionLabel(db, agencyId, input.dimension, previousLabel, nextLabel);
+  if (migratedCount !== usageCount) {
+    throw httpError(409, 'CONFLICT', "L'historique a change pendant la correction. Rechargez la page.");
+  }
+  return migratedCount;
 };
 
 const handleReferenceReorder = async (
@@ -583,7 +680,13 @@ const handleReferenceReorder = async (
     if (ids.length === 0) {
       throw httpError(400, 'CONFIG_INVALID', 'Ordre des statuts requis.');
     }
-    await Promise.all(ids.map((id, index) =>
+    const uniqueIds = new Set(ids);
+    const activeRows = await db.select({ id: agency_statuses.id }).from(agency_statuses)
+      .where(and(eq(agency_statuses.agency_id, agencyId), eq(agency_statuses.is_active, true)));
+    if (uniqueIds.size !== ids.length || activeRows.length !== ids.length || activeRows.some((row) => !uniqueIds.has(row.id))) {
+      throw httpError(409, 'CONFLICT', 'La liste des statuts a change. Rechargez la page.');
+    }
+    const updated = await Promise.all(ids.map((id, index) =>
       db
         .update(agency_statuses)
         .set({ sort_order: index + 1, is_default: index === 0 })
@@ -592,7 +695,9 @@ const handleReferenceReorder = async (
           eq(agency_statuses.id, id),
           eq(agency_statuses.is_active, true)
         ))
+        .returning({ id: agency_statuses.id })
     ));
+    if (updated.some((rows) => rows.length !== 1)) throw httpError(409, 'CONFLICT', 'La liste des statuts a change. Rechargez la page.');
     return;
   }
 
@@ -601,12 +706,21 @@ const handleReferenceReorder = async (
     throw httpError(400, 'CONFIG_INVALID', 'Ordre du referentiel requis.');
   }
   const table = getLabelTable(input.dimension);
-  await Promise.all(labels.map((label, index) =>
+  const normalizedLabels = labels.map((label) => label.trim());
+  const uniqueLabels = new Set(normalizedLabels.map(normalizeReferenceKey));
+  const activeRows = await db.select({ label: table.label }).from(table)
+    .where(and(eq(table.agency_id, agencyId), sql`${table.archived_at} is null`));
+  if (uniqueLabels.size !== labels.length || activeRows.length !== labels.length || activeRows.some((row) => !uniqueLabels.has(normalizeReferenceKey(row.label)))) {
+    throw httpError(409, 'CONFLICT', 'La liste des valeurs a change. Rechargez la page.');
+  }
+  const updated = await Promise.all(normalizedLabels.map((label, index) =>
     db
       .update(table)
       .set({ sort_order: index + 1 })
       .where(and(eq(table.agency_id, agencyId), eq(table.label, label.trim())))
+      .returning({ id: table.id })
   ));
+  if (updated.some((rows) => rows.length !== 1)) throw httpError(409, 'CONFLICT', 'La liste des valeurs a change. Rechargez la page.');
 };
 
 export const handleConfigReferenceAction = async (
@@ -627,8 +741,8 @@ export const handleConfigReferenceAction = async (
         await handleReferenceAdd(tx, agencyId, input);
         return;
       }
-      if (input.action === 'delete') {
-        const result = await handleReferenceDelete(tx, agencyId, input);
+      if (input.action === 'archive') {
+        const result = await handleReferenceArchive(tx, agencyId, input);
         usageCount = result.usageCount;
         deactivated = result.deactivated;
         return;
@@ -637,6 +751,9 @@ export const handleConfigReferenceAction = async (
         usageCount = await handleReferenceRename(tx, agencyId, input);
         return;
       }
+      if (input.action === 'restore') return void await handleReferenceRestore(tx, agencyId, input);
+      if (input.action === 'resolve') return void await handleReferenceResolve(tx, authContext, agencyId, input);
+      if (input.action === 'unresolve') return void await handleReferenceUnresolve(tx, agencyId, input);
       await handleReferenceReorder(tx, agencyId, input);
     });
   } catch (error) {

@@ -2,6 +2,7 @@ import { z } from 'zod/v4';
 
 import type { Database } from '../../supabase.types.ts';
 import {
+  configIntegrityInteractionRowSchema,
   configUsageSnapshotSchema,
   resolvedConfigSnapshotSchema
 } from './config.schema.ts';
@@ -198,6 +199,15 @@ export const configReferenceActionResponseSchema = apiSuccessSchema.extend({
   deactivated: z.boolean().optional(),
   migrated_interactions_count: z.number().int().nonnegative().optional()
 });
+export const configIntegrityInteractionsResponseSchema = apiSuccessSchema.extend({
+  interactions: z.array(configIntegrityInteractionRowSchema),
+  page: z.number().int().positive(),
+  page_size: z.number().int().positive(),
+  total: z.number().int().nonnegative()
+});
+export const configIntegrityInteractionUpdateResponseSchema = apiSuccessSchema.extend({
+  interaction_id: z.string().trim().min(1, 'Identifiant interaction requis')
+});
 export const directoryListResponseSchema = apiSuccessSchema.extend({
   rows: z.array(directoryListRowSchema),
   total: z.number().int().nonnegative().optional(),
@@ -393,6 +403,8 @@ export type DataProfileResponse = z.infer<typeof dataProfileResponseSchema>;
 export type ConfigGetResponse = z.infer<typeof configGetResponseSchema>;
 export type ConfigUsageResponse = z.infer<typeof configUsageResponseSchema>;
 export type ConfigReferenceActionResponse = z.infer<typeof configReferenceActionResponseSchema>;
+export type ConfigIntegrityInteractionsResponse = z.infer<typeof configIntegrityInteractionsResponseSchema>;
+export type ConfigIntegrityInteractionUpdateResponse = z.infer<typeof configIntegrityInteractionUpdateResponseSchema>;
 export type DirectoryListResponse = z.infer<typeof directoryListResponseSchema>;
 export type DirectoryOptionsAgenciesResponse = z.infer<typeof directoryOptionsAgenciesResponseSchema>;
 export type DirectoryOptionsCommercialsResponse = z.infer<typeof directoryOptionsCommercialsResponseSchema>;

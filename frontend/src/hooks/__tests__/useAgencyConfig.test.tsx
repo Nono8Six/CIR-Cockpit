@@ -57,7 +57,8 @@ describe('useAgencyConfig', () => {
         historicalStatuses: [],
         services: [],
         families: [],
-        interactionTypes: []
+        interactionTypes: [],
+        resolutions: []
       });
     });
   });

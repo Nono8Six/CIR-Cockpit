@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { Boxes, ListTodo } from 'lucide-react';
+import { Boxes, History, ListTodo } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
@@ -15,11 +15,13 @@ type SettingsSidebarProps = {
   readOnly: boolean;
   isDirty: boolean;
   onSectionChange: (sectionId: string) => void;
+  unresolvedCount: number;
 };
 
 const SIDEBAR_ITEMS: SidebarItem[] = [
   { id: 'workflow', label: 'Statuts interactions', description: 'Workflow', icon: ListTodo },
   { id: 'lists', label: 'Listes de saisie', description: 'Formulaires', icon: Boxes },
+  { id: 'integrity', label: 'Historique & intégrité', description: 'Audit', icon: History },
 ];
 
 const SettingsSidebar = ({
@@ -27,6 +29,7 @@ const SettingsSidebar = ({
   readOnly,
   isDirty,
   onSectionChange,
+  unresolvedCount,
 }: SettingsSidebarProps) => {
   const handleClick = (id: string) => {
     onSectionChange(id);
@@ -70,6 +73,7 @@ const SettingsSidebar = ({
                     {item.description}
                   </span>
                 </span>
+                {item.id === 'integrity' && unresolvedCount > 0 ? <span className="ml-auto bg-warning/20 px-1.5 py-0.5 font-mono text-[10px] text-warning-foreground">{unresolvedCount}</span> : null}
               </button>
             );
           })}

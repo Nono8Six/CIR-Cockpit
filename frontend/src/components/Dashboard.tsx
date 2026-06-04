@@ -1,4 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 import { AgencyStatus, Interaction } from '@/types';
 import { ConvertClientEntity } from './ConvertClientDialog';
 import DashboardToolbar from './dashboard/DashboardToolbar';
@@ -7,6 +8,8 @@ import DashboardList from './dashboard/DashboardList';
 import DashboardDetailsOverlay from './dashboard/DashboardDetailsOverlay';
 import ConfirmDialog from './ConfirmDialog';
 import { useDashboardState } from '@/hooks/dashboard-state/useDashboardState';
+import { dashboardSearchStateSchema } from '@/app/dashboardSearch';
+import type { AgencyConfig } from '@/services/config';
 
 interface DashboardProps {
   interactions: Interaction[];
@@ -14,6 +17,7 @@ interface DashboardProps {
   historicalStatuses?: AgencyStatus[];
   agencyId: string | null;
   onRequestConvert: (entity: ConvertClientEntity) => void;
+  resolutions?: NonNullable<AgencyConfig['resolutions']>;
 }
 
 const Dashboard = ({
@@ -21,8 +25,13 @@ const Dashboard = ({
   statuses,
   historicalStatuses = [],
   agencyId,
-  onRequestConvert
+  onRequestConvert,
+  resolutions = []
 }: DashboardProps) => {
+  const navigate = useNavigate({ from: '/dashboard' });
+  const rawSearch = useSearch({ strict: false });
+  const dashboardSearch = dashboardSearchStateSchema.safeParse(rawSearch);
+  const requestedInteractionId = dashboardSearch.success ? dashboardSearch.data.interactionId : undefined;
   const displayStatuses = useMemo(
     () => [...statuses, ...historicalStatuses],
     [historicalStatuses, statuses]
@@ -54,12 +63,23 @@ const Dashboard = ({
     setInteractionToDelete,
     handleRequestDeleteInteraction,
     handleConfirmDeleteInteraction
-  } = useDashboardState({ interactions, statuses: displayStatuses, agencyId, onRequestConvert });
+  } = useDashboardState({ interactions, statuses: displayStatuses, agencyId, onRequestConvert, resolutions });
 
   const [activeInteractionId, setActiveInteractionId] = useState<string | null>(null);
   
   const searchInputRef = useRef<HTMLInputElement>(null);
   const dateFiltersRef = useRef<HTMLButtonElement>(null);
+  const requestedInteraction = useMemo(
+    () => interactions.find((item) => item.id === requestedInteractionId) ?? null,
+    [interactions, requestedInteractionId]
+  );
+  const displayedInteraction = selectedInteraction ?? requestedInteraction;
+  const displayedActiveInteractionId = activeInteractionId ?? requestedInteractionId ?? null;
+  useEffect(() => {
+    if (!requestedInteractionId) return;
+    if (requestedInteraction) return;
+    void navigate({ search: (previous) => ({ ...previous, interactionId: undefined }), replace: true });
+  }, [navigate, requestedInteraction, requestedInteractionId]);
 
   const handleSelectInteraction = useCallback((interaction: Interaction) => {
     setActiveInteractionId(interaction.id);
@@ -244,7 +264,7 @@ const Dashboard = ({
             onSelectInteraction={handleSelectInteraction}
             getStatusMeta={getStatusMeta}
             onDeleteInteraction={handleRequestDeleteInteraction}
-            activeInteractionId={activeInteractionId}
+            activeInteractionId={displayedActiveInteractionId}
           />
         ) : null}
 
@@ -255,15 +275,18 @@ const Dashboard = ({
             getStatusBadgeClass={getStatusBadgeClass}
             onSelectInteraction={handleSelectInteraction}
             onDeleteInteraction={handleRequestDeleteInteraction}
-            activeInteractionId={activeInteractionId}
+            activeInteractionId={displayedActiveInteractionId}
           />
         ) : null}
       </div>
 
-      {selectedInteraction && (
+      {displayedInteraction && (
         <DashboardDetailsOverlay
-          interaction={selectedInteraction}
-          onClose={() => setSelectedInteraction(null)}
+          interaction={displayedInteraction}
+          onClose={() => {
+            setSelectedInteraction(null);
+            void navigate({ search: (previous) => ({ ...previous, interactionId: undefined }), replace: true });
+          }}
           onUpdate={handleInteractionUpdate}
           statuses={statuses}
           historicalStatuses={historicalStatuses}

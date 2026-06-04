@@ -18,19 +18,16 @@ const login = async (page: Page) => {
   await page.getByLabel('Email').fill(email!);
   await page.getByLabel('Mot de passe').fill(password!);
   await page.getByRole('button', { name: /se connecter/i }).click();
-  await expect(page.getByTestId('app-header-tabs-scroll')).toBeVisible();
+  await expect(page.getByRole('button', { name: /ouvrir la recherche rapide/i })).toBeVisible();
 };
 
 const openAdminTab = async (page: Page) => {
-  const adminTab = page.getByRole('tab', { name: /admin \(f4\)/i });
-  await expect(adminTab).toBeVisible();
-  await adminTab.click();
-  await expect(adminTab).toHaveAttribute('data-state', 'active');
+  await page.goto('/admin');
   await expect(page.getByTestId('admin-panel')).toBeVisible();
 };
 
 const openSettingsTab = async (page: Page) => {
-  await page.keyboard.press('F3');
+  await page.goto('/settings');
   await expect(page.getByTestId('settings-root')).toBeVisible();
 };
 
@@ -101,16 +98,56 @@ test('P07 - Admin/Settings mobile-first, actions, tabs, erreurs et anti-overflow
   await page.getByTestId('admin-audit-filter-table-input').fill('clients');
 
   await openSettingsTab(page);
+  await expect(page.getByRole('button', { name: 'Archiver le statut Attente éléments du client' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Supprimer le statut Offre de prix envoyé' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Corriger le libellé du statut Attente éléments du client' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Descendre le statut Attente éléments du client' }).click();
+  await expect(page.getByRole('heading', { name: /modifications non enregistrées/i })).toBeVisible();
+  await page.getByRole('button', { name: 'Archiver le statut Attente éléments du client' }).click();
+  await page.getByRole('alertdialog', { name: /archiver le statut/i }).getByRole('button', { name: 'Archiver' }).click();
+  await expect(page.getByText(/enregistrez ou annulez les changements en cours avant cette action/i)).toBeVisible();
+  await expect(page.getByRole('alertdialog', { name: /archiver le statut/i })).toBeHidden();
+  await page.getByRole('button', { name: /réinitialiser/i }).click();
+  await page.getByRole('alertdialog', { name: /réinitialiser la configuration/i }).getByRole('button', { name: /réinitialiser/i }).click();
+
   const statusCategoryTrigger = page.getByTestId('settings-status-row-category-0');
   if ((await statusCategoryTrigger.count()) > 0) {
     await statusCategoryTrigger.click();
     await page.getByRole('option', { name: /en cours/i }).first().click();
   }
+  await page.getByRole('button', { name: /historique & intégrité/i }).click();
+  await expect(page.getByRole('heading', { name: 'Historique & intégrité' })).toBeVisible();
+  const systemValues = page.getByText(/parcours automatiques \(\d+\)/i);
+  await expect(systemValues).toBeVisible();
+  await systemValues.click();
+  await expect(page.getByText(/ils ne sont ni supprimés, ni à corriger/i)).toBeVisible();
+
+  const inspectButtons = page.getByRole('button', { name: /examiner|voir les interactions/i });
+  if ((await inspectButtons.count()) > 0) {
+    await inspectButtons.first().click();
+    const interactionsSheet = page.getByRole('dialog', { name: /inspecter les interactions/i });
+    await expect(interactionsSheet).toBeVisible();
+    const detailButtons = interactionsSheet.getByRole('button', { name: /détails/i });
+    if ((await detailButtons.count()) > 0) await detailButtons.first().click();
+    const openDashboard = interactionsSheet.getByRole('button', { name: /ouvrir dans le pilotage/i });
+    if ((await openDashboard.count()) > 0) {
+      await openDashboard.first().click();
+      await expect(page).toHaveURL(/\/dashboard\?interactionId=/);
+      await expect(page.getByRole('dialog', { name: /details interaction/i })).toBeVisible();
+      await page.keyboard.press('Escape');
+      await expect(page).toHaveURL(/\/dashboard$/);
+      await page.goto('/settings');
+      await expect(page.getByTestId('settings-root')).toBeVisible();
+    } else {
+      await page.keyboard.press('Escape');
+    }
+  }
 
   for (const viewport of P07_VIEWPORTS) {
     await page.setViewportSize(viewport);
 
-    await page.keyboard.press('F4');
+    await page.goto('/admin');
     await expect(page.getByTestId('admin-panel')).toBeVisible();
     const adminMetrics = await page.evaluate(() => {
       return {
@@ -119,8 +156,9 @@ test('P07 - Admin/Settings mobile-first, actions, tabs, erreurs et anti-overflow
     });
     expect(adminMetrics.documentHasHorizontalOverflow).toBe(false);
 
-    await page.keyboard.press('F3');
+    await page.goto('/settings');
     await expect(page.getByTestId('settings-root')).toBeVisible();
+    await page.getByRole('button', { name: /historique & intégrité/i }).click();
     const settingsMetrics = await page.evaluate(() => {
       const settingsRoot = document.querySelector<HTMLElement>('[data-testid="settings-root"]');
       const sections = document.querySelector<HTMLElement>('[data-testid="settings-sections"]');
@@ -140,7 +178,7 @@ test('P07 - Admin/Settings mobile-first, actions, tabs, erreurs et anti-overflow
 });
 
 test('P07 - etat erreur utilisateur sur les audits admin', async ({ page }) => {
-  await page.route('**/rest/v1/audit_logs*', async (route) => {
+  await page.route('**/functions/v1/api/trpc/admin.audit-logs*', async (route) => {
     await route.fulfill({
       status: 500,
       contentType: 'application/json',
@@ -152,7 +190,7 @@ test('P07 - etat erreur utilisateur sur les audits admin', async ({ page }) => {
   await openAdminTab(page);
 
   await page.getByTestId('admin-tab-audit').click();
-  await expect(page.getByText(/la liste des audits est indisponible/i)).toBeVisible();
-  await page.getByRole('button', { name: /reessayer/i }).click();
-  await expect(page.getByText(/la liste des audits est indisponible/i)).toBeVisible();
+  await expect(page.getByText(/la liste des journaux d'audit est temporairement indisponible/i)).toBeVisible();
+  await page.getByRole('button', { name: /réessayer/i }).click();
+  await expect(page.getByText(/la liste des journaux d'audit est temporairement indisponible/i)).toBeVisible();
 });

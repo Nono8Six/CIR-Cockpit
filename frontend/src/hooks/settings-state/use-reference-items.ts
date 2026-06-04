@@ -3,11 +3,12 @@ import type { UseMutationResult } from '@tanstack/react-query';
 import type { ConfigReferenceActionInput, EditableConfigReferenceDimension } from '../../../../shared/schemas/system/config.schema';
 import { notifySuccess } from '@/services/errors/notifySuccess';
 import { notifyInfo } from '@/services/errors/notifyInfo';
-import { addUniqueItem, removeItemAt, updateItemAt } from './use-settings-state.helpers';
+import { addUniqueItem, updateItemAt } from './use-settings-state.helpers';
 
 type UseReferenceItemsParams = {
   agencyId: string | null;
   referenceActionMutation: UseMutationResult<unknown, Error, ConfigReferenceActionInput>;
+  canRunImmediateAction: () => boolean;
 };
 
 /**
@@ -18,19 +19,22 @@ type UseReferenceItemsParams = {
  */
 export const useReferenceItems = ({
   agencyId,
-  referenceActionMutation
+  referenceActionMutation,
+  canRunImmediateAction
 }: UseReferenceItemsParams) => {
   const addItem = useCallback(
     async (
       dimension: EditableConfigReferenceDimension,
       item: string,
       list: string[],
-      setList: (list: string[]) => void,
+      _setList: (list: string[]) => void,
       clearInput: () => void,
       uppercase = false
     ) => {
+      void _setList;
       const next = addUniqueItem(item, list, uppercase);
       if (next !== list) {
+        if (!canRunImmediateAction()) return;
         if (!agencyId) {
           return void notifyInfo('Identifiant agence requis.');
         }
@@ -44,12 +48,11 @@ export const useReferenceItems = ({
         } catch {
           return;
         }
-        setList(next);
         clearInput();
         notifySuccess('Valeur ajoutee.');
       }
     },
-    [agencyId, referenceActionMutation]
+    [agencyId, canRunImmediateAction, referenceActionMutation]
   );
 
   const removeItem = useCallback(
@@ -57,15 +60,17 @@ export const useReferenceItems = ({
       dimension: EditableConfigReferenceDimension,
       index: number,
       list: string[],
-      setList: (list: string[]) => void
+      _setList: (list: string[]) => void
     ) => {
+      void _setList;
       const label = list[index]?.trim();
+      if (!canRunImmediateAction()) return;
       if (!agencyId || !label) {
         return void notifyInfo('Identifiant agence requis.');
       }
       try {
         await referenceActionMutation.mutateAsync({
-          action: 'delete',
+          action: 'archive',
           agency_id: agencyId,
           dimension,
           label
@@ -73,10 +78,9 @@ export const useReferenceItems = ({
       } catch {
         return;
       }
-      setList(removeItemAt(index, list));
-      notifySuccess('Valeur supprimee.');
+      notifySuccess('Valeur retiree.');
     },
-    [agencyId, referenceActionMutation]
+    [agencyId, canRunImmediateAction, referenceActionMutation]
   );
 
   const renameItem = useCallback(
@@ -85,12 +89,14 @@ export const useReferenceItems = ({
       index: number,
       nextLabel: string,
       list: string[],
-      setList: (list: string[]) => void,
+      _setList: (list: string[]) => void,
       uppercase = false
     ) => {
+      void _setList;
       const previousLabel = list[index]?.trim();
       const normalizedNextLabel = uppercase ? nextLabel.trim().toUpperCase() : nextLabel.trim();
       if (!agencyId || !previousLabel || !normalizedNextLabel || previousLabel === normalizedNextLabel) return;
+      if (!canRunImmediateAction()) return;
 
       try {
         await referenceActionMutation.mutateAsync({
@@ -103,10 +109,9 @@ export const useReferenceItems = ({
       } catch {
         return;
       }
-      setList(updateItemAt(index, normalizedNextLabel, list, false));
-      notifySuccess('Valeur renommee.');
+      notifySuccess('Libelle corrige.');
     },
-    [agencyId, referenceActionMutation]
+    [agencyId, canRunImmediateAction, referenceActionMutation]
   );
 
   const updateItem = useCallback(

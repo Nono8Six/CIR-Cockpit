@@ -1,5 +1,49 @@
 # Plan de travail
 
+## 2026-06-02 - Fiabilisation des paramètres agence
+
+### Décisions métier verrouillées
+
+- [x] supprimer physiquement une valeur inutilisée et archiver une valeur utilisée historiquement
+- [x] conserver les valeurs automatiques `Fournisseur`, `Interne CIR` et statut initial vide hors des listes configurables
+- [x] appliquer les rattachements historiques à toutes les lectures : recherche, filtres, agrégats et pilotage
+- [x] bloquer les actions immédiates tant qu'un ordre ou une catégorie comporte des changements non enregistrés
+- [x] distinguer la correction définitive d'un libellé du retrait préservant l'historique
+
+### Corrections
+
+- [x] corriger la fonction privée `sync_interaction_status()` réellement appelée par le trigger Supabase
+- [x] supprimer la fonction publique résiduelle recréée après le durcissement Phase 3
+- [x] supprimer les référentiels inutilisés et archiver uniquement les référentiels utilisés
+- [x] vérifier les lignes réellement modifiées pour les actions concurrentes ou obsolètes
+- [x] migrer les variantes de casse lors d'une correction de libellé historique
+- [x] résoudre les anciens statuts dans le Kanban, les badges et la recherche
+- [x] protéger le brouillon Settings contre les actions immédiates et la fermeture de page
+- [x] désactiver le retrait du dernier statut actif et ajouter des commandes accessibles de réordonnancement
+- [x] réinitialiser la pagination de l'inspecteur lors d'un changement de valeur auditée
+- [x] déployer les migrations et l'Edge Function sur le backend Supabase lié
+- [x] exécuter la gate QA complète du runbook
+- [x] exécuter les probes runtime API et CORS du runbook
+- [x] exécuter le scénario E2E ciblé Settings P07
+
+## 2026-06-01 - Historique et integrite des referentiels
+
+### Objectif
+
+- [x] distinguer valeurs actives, archives, systeme, rattachements historiques et anomalies reelles
+- [x] remplacer la suppression visible des referentiels par un archivage reversible
+- [x] exposer une interface Settings dediee avec inspection des interactions concernees
+- [x] conserver les libelles historiques bruts et resoudre les agregations via rattachements auditables
+
+### Tranche en cours
+
+- [x] baseline repo, runtime Supabase, advisors et policies existantes
+- [x] migration DB, RLS, audit, types Supabase et schema Drizzle
+- [x] contrats Zod et procedures tRPC
+- [x] backend classification, cycle de vie, rattachements et pagination
+- [x] UI Settings et deep-link Dashboard
+- [x] validation intermediaire, deploy API et gate QA complete
+
 ## 2026-04-17
 
 ### Programme de remise a niveau professionnelle

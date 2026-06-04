@@ -4,7 +4,7 @@ import type { ConfigReferenceActionResponse } from '../../../../shared/schemas/s
 import type { DataConfigPayload } from '../../../../shared/schemas/system/data.schema';
 import { saveConfigReferenceAction, saveSettingsReferences } from '@/services/config';
 import { handleUiError } from '@/services/errors/handleUiError';
-import { agencyConfigKey, configUsageKey } from '@/services/query/queryKeys';
+import { agencyConfigKey, auditLogsRootKey, configIntegrityInteractionsRootKey, configUsageKey, interactionsRootKey } from '@/services/query/queryKeys';
 
 /**
  * Custom hook to manage React Query mutations for settings actions and updates.
@@ -27,7 +27,10 @@ export const useSettingsMutations = (agencyId: string | null) => {
       if (!agencyId) return;
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: agencyConfigKey(agencyId) }),
-        queryClient.invalidateQueries({ queryKey: configUsageKey(agencyId) })
+        queryClient.invalidateQueries({ queryKey: configUsageKey(agencyId) }),
+        queryClient.invalidateQueries({ queryKey: configIntegrityInteractionsRootKey() }),
+        queryClient.invalidateQueries({ queryKey: interactionsRootKey() }),
+        queryClient.invalidateQueries({ queryKey: auditLogsRootKey() })
       ]);
     },
     onError: (error) => {
@@ -49,7 +52,10 @@ export const useSettingsMutations = (agencyId: string | null) => {
       if (!agencyId) return;
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: agencyConfigKey(agencyId) }),
-        queryClient.invalidateQueries({ queryKey: configUsageKey(agencyId) })
+        queryClient.invalidateQueries({ queryKey: configUsageKey(agencyId) }),
+        queryClient.invalidateQueries({ queryKey: configIntegrityInteractionsRootKey() }),
+        queryClient.invalidateQueries({ queryKey: interactionsRootKey() }),
+        queryClient.invalidateQueries({ queryKey: auditLogsRootKey() })
       ]);
     },
     onError: (error) => {

@@ -1,9 +1,10 @@
-import { and, asc, eq, isNotNull, sql } from 'drizzle-orm';
+import { and, asc, eq, isNotNull, isNull, sql } from 'drizzle-orm';
 import type { ZodType } from 'zod/v4';
 
 import {
   agency_families,
   agency_interaction_types,
+  agency_reference_resolutions,
   agency_services,
   agency_statuses,
   interactions,
@@ -115,7 +116,7 @@ const loadAgencyReferences = async (
   }
 
   try {
-    const [statuses, historicalStatuses, statusUsage, services, families, interactionTypes] = await Promise.all([
+    const [statuses, historicalStatuses, statusUsage, services, families, interactionTypes, resolutions] = await Promise.all([
       db
         .select({
           id: agency_statuses.id,
@@ -155,18 +156,37 @@ const loadAgencyReferences = async (
       db
         .select({ label: agency_services.label })
         .from(agency_services)
-        .where(eq(agency_services.agency_id, agencyId))
+        .where(and(eq(agency_services.agency_id, agencyId), isNull(agency_services.archived_at)))
         .orderBy(asc(agency_services.sort_order)),
       db
         .select({ label: agency_families.label })
         .from(agency_families)
-        .where(eq(agency_families.agency_id, agencyId))
+        .where(and(eq(agency_families.agency_id, agencyId), isNull(agency_families.archived_at)))
         .orderBy(asc(agency_families.sort_order)),
       db
         .select({ label: agency_interaction_types.label })
         .from(agency_interaction_types)
-        .where(eq(agency_interaction_types.agency_id, agencyId))
+        .where(and(eq(agency_interaction_types.agency_id, agencyId), isNull(agency_interaction_types.archived_at)))
         .orderBy(asc(agency_interaction_types.sort_order))
+      ,
+      db.execute<{
+        id: string;
+        dimension: NonNullable<AgencyReferenceConfig['resolutions']>[number]['dimension'];
+        source_label: string;
+        target_reference_id: string;
+        target_label: string;
+      }>(sql`
+        select r.id, r.dimension,
+          coalesce(r.target_status_id, r.target_service_id, r.target_family_id, r.target_interaction_type_id)::text as target_reference_id,
+          coalesce(s.label, sv.label, f.label, it.label) as target_label,
+          r.source_label
+        from ${agency_reference_resolutions} r
+        left join ${agency_statuses} s on s.id = r.target_status_id
+        left join ${agency_services} sv on sv.id = r.target_service_id
+        left join ${agency_families} f on f.id = r.target_family_id
+        left join ${agency_interaction_types} it on it.id = r.target_interaction_type_id
+        where r.agency_id = ${agencyId}
+      `)
     ]);
 
     const usageByStatusId = new Map<string, number>(
@@ -182,7 +202,8 @@ const loadAgencyReferences = async (
       ),
       services: services.map((row) => row.label),
       families: families.map((row) => row.label),
-      interaction_types: interactionTypes.map((row) => row.label)
+      interaction_types: interactionTypes.map((row) => row.label),
+      resolutions
     };
   } catch (error) {
     if (typeof error === 'object' && error !== null && Reflect.get(error, 'code') === 'DB_READ_FAILED') {

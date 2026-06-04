@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { AgencyConfig } from '@/services/config';
 import {
@@ -62,6 +62,7 @@ const Settings = ({
       services: config.services,
       families: config.families,
       interaction_types: config.interactionTypes,
+      resolutions: config.resolutions ?? [],
       departments: []
     }
   };
@@ -97,6 +98,7 @@ const Settings = ({
     updateStatusCategory,
     renameStatus,
     setStatuses,
+    canRunImmediateAction,
     isDirty
   } = useSettingsState({
     snapshot,
@@ -107,6 +109,16 @@ const Settings = ({
   const [activeSection, setActiveSection] = useState<string>('workflow');
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
   const usage = usageQuery.data ?? null;
+
+  useEffect(() => {
+    if (!isDirty) return;
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
 
   return (
     <div className="flex h-full flex-col overflow-hidden border border-border bg-surface-1" data-testid="settings-root">
@@ -127,6 +139,7 @@ const Settings = ({
             readOnly={readOnly}
             isDirty={isDirty}
             onSectionChange={setActiveSection}
+            unresolvedCount={usage?.totals.unresolved ?? 0}
           />
         </div>
         <div className="overflow-auto bg-background p-4">
@@ -136,6 +149,9 @@ const Settings = ({
             canEditAgencySettings={canEditAgencySettings}
             usage={usage}
             usageLoading={usageQuery.isLoading}
+            agencyId={agencyId}
+            onExamineIntegrity={() => setActiveSection('integrity')}
+            canRunImmediateAction={canRunImmediateAction}
             families={families}
             services={services}
             interactionTypes={interactionTypes}

@@ -12,10 +12,12 @@ import type {
   DirectoryRouteRef
 } from '../../../../shared/schemas/system/directory.schema';
 import type { TierV1SearchInput } from '../../../../shared/schemas/interaction/tier-v1.schema';
+import type { ConfigIntegrityInteractionsInput } from '../../../../shared/schemas/system/config.schema';
 
 export const QUERY_ROOTS = {
   configSnapshot: 'config-snapshot',
   configUsage: 'config-usage',
+  configIntegrityInteractions: 'config-integrity-interactions',
   interactions: 'interactions',
   clients: 'clients',
   prospects: 'prospects',
@@ -48,6 +50,9 @@ const archiveScope = (includeArchived: boolean): 'with-archived' | 'active' =>
 export const configSnapshotKey = (agencyId: string) => [QUERY_ROOTS.configSnapshot, agencyId] as const;
 export const agencyConfigKey = (agencyId: string) => configSnapshotKey(agencyId);
 export const configUsageKey = (agencyId: string) => [QUERY_ROOTS.configUsage, agencyId] as const;
+export const configIntegrityInteractionsRootKey = () => [QUERY_ROOTS.configIntegrityInteractions] as const;
+export const configIntegrityInteractionsKey = (input: ConfigIntegrityInteractionsInput) =>
+  [QUERY_ROOTS.configIntegrityInteractions, input] as const;
 
 export const interactionsRootKey = () => [QUERY_ROOTS.interactions] as const;
 export const interactionsKey = (agencyId: string | null) =>

@@ -63,6 +63,21 @@ describe('dashboardFilters', () => {
     expect(filtered.map((row) => row.id)).toEqual(['match']);
   });
 
+  it('finds a historical status through its active resolution', () => {
+    const interaction = buildInteraction({ status: 'Ancien statut' });
+    const filtered = filterInteractionsBySearch([interaction], 'traité', 'traité', [
+      {
+        id: '11111111-1111-4111-8111-111111111111',
+        dimension: 'statuses',
+        source_label: 'Ancien statut',
+        target_reference_id: '22222222-2222-4222-8222-222222222222',
+        target_label: 'Traité',
+      },
+    ]);
+
+    expect(filtered).toEqual([interaction]);
+  });
+
   it('filters by date bounds in list mode and sorts by latest activity', () => {
     const inRangeNewest = buildInteraction({
       id: 'newest',

@@ -4,10 +4,12 @@ import type {
   EditableConfigReferenceDimension
 } from '../../../../../shared/schemas/system/config.schema';
 import SettingsSectionShell from '../ui/SettingsSectionShell';
+import { Button } from '@/components/ui/inputs/basic/Button';
 import ReferentialColumn from './ReferentialColumn';
 
 type ReferentialsSectionProps = {
   readOnly: boolean;
+  onExamineIntegrity?: () => void;
   usage: ConfigUsageSnapshot | null;
   families: string[];
   services: string[];
@@ -54,6 +56,7 @@ type ReferentialsSectionProps = {
 
 const ReferentialsSection = ({
   readOnly,
+  onExamineIntegrity = () => undefined,
   usage,
   families,
   services,
@@ -77,7 +80,7 @@ const ReferentialsSection = ({
     ...(dimensions?.services ?? []),
     ...(dimensions?.families ?? []),
     ...(dimensions?.interaction_types ?? [])
-  ].filter((row) => row.state === 'used_not_in_reference');
+  ].filter((row) => row.state === 'unresolved');
 
   return (
     <SettingsSectionShell
@@ -92,22 +95,12 @@ const ReferentialsSection = ({
         <div className="mb-3 border border-amber-300 bg-amber-50 p-3">
           <h4 className="mb-2 flex items-center gap-2 text-xs font-semibold text-amber-950">
             <AlertTriangle className="size-4" aria-hidden="true" />
-            Valeurs déjà utilisées mais absentes des listes
+            {orphanRows.length} anomalie(s) historique(s) nécessite(nt) une vérification
           </h4>
           <p className="mb-2 max-w-[72ch] text-xs leading-relaxed text-amber-950/80">
-            Ces libellés existent dans des interactions historiques. Ils sont affichés ici pour éviter
-            de croire qu&apos;une suppression de liste efface l&apos;historique.
+            Examinez ces valeurs dans Historique &amp; intégrité pour les rattacher ou créer une valeur active.
           </p>
-          <div className="flex flex-wrap gap-2">
-            {orphanRows.map((row) => (
-              <span
-                key={`${row.label}-${row.usage_count}`}
-                className="border border-amber-300 bg-amber-50 px-2 py-1 text-[11px] text-amber-950"
-              >
-                {row.label} · {row.usage_count}
-              </span>
-            ))}
-          </div>
+          <Button size="dense" variant="outline" onClick={onExamineIntegrity}>Examiner</Button>
         </div>
       )}
 

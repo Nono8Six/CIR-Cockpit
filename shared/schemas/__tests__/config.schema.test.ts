@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  configIntegrityInteractionUpdateInputSchema,
   configReferenceActionInputSchema,
   configUsageSnapshotSchema
 } from '../system/config.schema.ts';
@@ -18,7 +19,7 @@ const usageSnapshot = {
         category: 'todo',
         is_active: true,
         usage_count: 4,
-        state: 'reference_used'
+        state: 'active_used'
       }
     ],
     services: [],
@@ -31,12 +32,15 @@ const usageSnapshot = {
         category: null,
         is_active: true,
         usage_count: 1,
-        state: 'used_not_in_reference'
+        state: 'unresolved'
       }
     ],
   },
   totals: {
-    used_not_in_reference: 1,
+    unresolved: 1,
+    archived: 0,
+    resolved: 0,
+    system_managed: 0,
     referenced_values: 1,
     used_values: 2
   }
@@ -84,10 +88,37 @@ describe('configUsageSnapshotSchema', () => {
   });
 });
 
+describe('configIntegrityInteractionUpdateInputSchema', () => {
+  it('accepts a targeted correction toward an active reference', () => {
+    const result = configIntegrityInteractionUpdateInputSchema.safeParse({
+      agency_id: agencyId,
+      interaction_id: 'interaction-1',
+      dimension: 'interaction_types',
+      source_label: 'Autre',
+      target_reference_id: '22222222-2222-4222-8222-222222222222'
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects unknown fields on targeted corrections', () => {
+    const result = configIntegrityInteractionUpdateInputSchema.safeParse({
+      agency_id: agencyId,
+      interaction_id: 'interaction-1',
+      dimension: 'interaction_types',
+      source_label: 'Autre',
+      target_reference_id: '22222222-2222-4222-8222-222222222222',
+      update_all: true
+    });
+
+    expect(result.success).toBe(false);
+  });
+});
+
 describe('configReferenceActionInputSchema', () => {
-  it('accepts an explicit delete action for an unused service label', () => {
+  it('accepts an explicit archive action for a service label', () => {
     const result = configReferenceActionInputSchema.safeParse({
-      action: 'delete',
+      action: 'archive',
       agency_id: agencyId,
       dimension: 'services',
       label: 'Atelier'
@@ -110,7 +141,7 @@ describe('configReferenceActionInputSchema', () => {
 
   it('rejects unknown fields on reference actions', () => {
     const result = configReferenceActionInputSchema.safeParse({
-      action: 'delete',
+      action: 'archive',
       agency_id: agencyId,
       dimension: 'families',
       label: 'FREINAGE',
@@ -122,7 +153,7 @@ describe('configReferenceActionInputSchema', () => {
 
   it('rejects agency tier labels as editable settings references', () => {
     const result = configReferenceActionInputSchema.safeParse({
-      action: 'delete',
+      action: 'archive',
       agency_id: agencyId,
       dimension: 'entities',
       label: 'Client'

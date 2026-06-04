@@ -18,6 +18,20 @@ import {
   tierV1PayloadSchema,
   tierV1SearchInputSchema
 } from '../../../../shared/schemas/interaction/tier-v1.schema.ts';
+import { configIntegrityInteractionUpdateInputSchema } from '../../../../shared/schemas/system/config.schema.ts';
+
+Deno.test('config integrity targeted correction contract is strict', () => {
+  const payload = {
+    agency_id: '11111111-1111-4111-8111-111111111111',
+    interaction_id: 'interaction-1',
+    dimension: 'interaction_types',
+    source_label: 'Autre',
+    target_reference_id: '22222222-2222-4222-8222-222222222222'
+  };
+
+  assertEquals(configIntegrityInteractionUpdateInputSchema.safeParse(payload).success, true);
+  assertEquals(configIntegrityInteractionUpdateInputSchema.safeParse({ ...payload, update_all: true }).success, false);
+});
 
 Deno.test('dataEntitiesPayloadSchema supports delete action for super-admin workflows', () => {
   const deletePayload = {

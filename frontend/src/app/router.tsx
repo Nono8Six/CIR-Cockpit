@@ -17,6 +17,7 @@ import AdminIndexPage from '@/components/admin-suppliers/AdminIndexPage';
 import AdminSupplierCreatePage from '@/components/admin-suppliers/AdminSupplierCreatePage';
 import AdminSuppliersPage from '@/components/admin-suppliers/AdminSuppliersPage';
 import { validateSupplierDirectorySearch } from '@/components/admin-suppliers/supplierDirectorySearch';
+import { validateDashboardSearch } from '@/app/dashboardSearch';
 
 const rootRoute = createRootRoute({
   component: App,
@@ -35,9 +36,10 @@ const cockpitRoute = createRoute({
   component: () => null
 });
 
-const dashboardRoute = createRoute({
+export const dashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'dashboard',
+  validateSearch: validateDashboardSearch,
   component: () => null
 });
 

@@ -9,7 +9,8 @@ export const EMPTY_CONFIG: AgencyConfig = {
   historicalStatuses: [],
   services: [],
   families: [],
-  interactionTypes: []
+  interactionTypes: [],
+  resolutions: []
 };
 
 export const ROLE_LABELS: Record<UserRole, string> = {

@@ -3,6 +3,8 @@ import { initTRPC, type inferRouterInputs, type inferRouterOutputs } from '@trpc
 import { adminAgenciesPayloadSchema } from '../schemas/admin/agency.schema.ts';
 import {
   configGetResponseSchema,
+  configIntegrityInteractionUpdateResponseSchema,
+  configIntegrityInteractionsResponseSchema,
   configUsageResponseSchema,
   configReferenceActionResponseSchema,
   adminAgenciesResponseSchema,
@@ -37,6 +39,8 @@ import {
 } from '../schemas/interaction/cockpit.schema.ts';
 import {
   configGetInputSchema,
+  configIntegrityInteractionUpdateInputSchema,
+  configIntegrityInteractionsInputSchema,
   configUsageInputSchema,
   configReferenceActionInputSchema
 } from '../schemas/system/config.schema.ts';
@@ -135,6 +139,14 @@ const appRouterType = t.router({
       .input(configUsageInputSchema)
       .output(configUsageResponseSchema)
       .query(() => undefined as never),
+    'integrity-interactions': t.procedure
+      .input(configIntegrityInteractionsInputSchema)
+      .output(configIntegrityInteractionsResponseSchema)
+      .query(() => undefined as never),
+    'integrity-interaction-update': t.procedure
+      .input(configIntegrityInteractionUpdateInputSchema)
+      .output(configIntegrityInteractionUpdateResponseSchema)
+      .mutation(() => undefined as never),
     reference: t.procedure
       .input(configReferenceActionInputSchema)
       .output(configReferenceActionResponseSchema)

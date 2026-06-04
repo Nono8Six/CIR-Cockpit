@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { parseConfigUsageResponse } from '../getConfigUsage';
 
 describe('parseConfigUsageResponse', () => {
-  it('normalizes legacy usage rows without category and active state', () => {
+  it('normalizes usage rows without category and active state', () => {
     const response = parseConfigUsageResponse({
       ok: true,
       usage: {
@@ -15,7 +15,7 @@ describe('parseConfigUsageResponse', () => {
               reference_id: '22222222-2222-4222-8222-222222222222',
               sort_order: 1,
               usage_count: 2,
-              state: 'reference_used'
+              state: 'active_used'
             }
           ],
           services: [],
@@ -23,7 +23,10 @@ describe('parseConfigUsageResponse', () => {
           interaction_types: []
         },
         totals: {
-          used_not_in_reference: 0,
+          unresolved: 0,
+          archived: 0,
+          resolved: 0,
+          system_managed: 0,
           referenced_values: 1,
           used_values: 1
         }

@@ -91,6 +91,9 @@ const REMOTE_TO_LOCAL_MODERN_MIGRATION_COMPATIBILITY = {
   20260518041315n: "20260518103000_directory_saved_views_view_type.sql",
   20260518121057n: "20260518143000_global_suppliers_clear_agency.sql",
   20260529162631n: "20260526130000_retire_used_statuses.sql",
+  20260601114239n: "20260601120000_reference_integrity_archive.sql",
+  20260601143358n: "20260601170000_integrity_interaction_audit_metadata.sql",
+  20260602140857n: "20260602100000_fix_private_sync_interaction_status.sql",
 };
 
 function readJson(relativePath) {
@@ -294,6 +297,14 @@ const backendDeno = readJson("backend/deno.json");
 const rootImports = rootDeno.imports ?? {};
 const backendImports = backendDeno.imports ?? {};
 const migrationFilenames = listFiles("backend/migrations").filter((filename) => filename.endsWith(".sql"));
+const privateStatusSyncFix = readText("backend/migrations/20260602100000_fix_private_sync_interaction_status.sql");
+if (
+  !privateStatusSyncFix.includes("create or replace function private.sync_interaction_status()")
+  || !privateStatusSyncFix.includes("and s.is_active = true")
+  || !privateStatusSyncFix.includes("drop function if exists public.sync_interaction_status()")
+) {
+  fail("The private status synchronization migration must block archived statuses and remove public drift.");
+}
 
 for (const legacyMigration of REQUIRED_LEGACY_MIGRATIONS) {
   if (!migrationFilenames.includes(legacyMigration)) {

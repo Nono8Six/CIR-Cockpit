@@ -255,4 +255,33 @@ describe('useDashboardState', () => {
     expect(result.current.kanbanColumns?.inProgress).toHaveLength(0);
     expect(result.current.kanbanColumns?.completed).toHaveLength(0);
   });
+
+  it('classe un ancien statut selon son rattachement historique', () => {
+    const interaction = {
+      ...buildInteraction(),
+      status: 'Ancien statut terminé',
+      status_id: null,
+      status_is_terminal: false,
+      last_action_at: new Date().toISOString(),
+    };
+    const { result } = renderHook(
+      () =>
+        useDashboardState({
+          interactions: [interaction],
+          statuses: [terminalStatus],
+          agencyId: 'agency-1',
+          onRequestConvert: vi.fn(),
+          resolutions: [{
+            id: '11111111-1111-4111-8111-111111111111',
+            dimension: 'statuses',
+            source_label: 'Ancien statut terminé',
+            target_reference_id: 'status-done',
+            target_label: terminalStatus.label,
+          }],
+        }),
+      { wrapper: buildWrapper() },
+    );
+
+    expect(result.current.kanbanColumns?.completed).toHaveLength(1);
+  });
 });

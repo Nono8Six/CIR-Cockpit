@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { GripVertical, Pencil, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, GripVertical, Pencil, Trash2 } from 'lucide-react';
 import type { AgencyStatus, StatusCategory } from '@/types';
 import { STATUS_CATEGORY_LABELS } from '@/constants/statusCategories';
 import { Button } from '../../ui/inputs/basic/Button';
@@ -17,6 +17,8 @@ import ConfirmDialog from '../../ConfirmDialog';
 type KanbanRowProps = {
   status: AgencyStatus;
   index: number;
+  isLast: boolean;
+  canRemoveStatus: boolean;
   readOnly: boolean;
   usageCount: number | null;
   onRemove: (index: number, usageCount?: number | null) => void;
@@ -26,6 +28,7 @@ type KanbanRowProps = {
   onDragStart: (e: React.DragEvent, index: number) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent, index: number) => void;
+  onMove: (index: number, direction: -1 | 1) => void;
 };
 
 /**
@@ -47,6 +50,8 @@ type KanbanRowProps = {
 const KanbanRow = ({
   status,
   index,
+  isLast,
+  canRemoveStatus,
   readOnly,
   usageCount,
   onRemove,
@@ -56,6 +61,7 @@ const KanbanRow = ({
   onDragStart,
   onDragOver,
   onDrop,
+  onMove,
 }: KanbanRowProps) => {
   const [isRenameOpen, setIsRenameOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -71,12 +77,12 @@ const KanbanRow = ({
     onRemove(index, usageCount);
   };
 
-  const deleteTitle = "Supprimer le statut";
-  const deleteDescription = typeof usageCount !== 'number'
-    ? `Supprimer le statut "${status.label}" ? S'il est déjà utilisé, il sera retiré du workflow actif et conservé dans l'historique.`
-    : usageCount > 0
-      ? `Retirer le statut "${status.label}" du workflow actif ? ${usageCount} interaction(s) existante(s) le conserveront dans l'historique.`
-      : `Supprimer définitivement le statut "${status.label}" ?`;
+  const isUsed = typeof usageCount === 'number' && usageCount > 0;
+  const deleteTitle = isUsed ? 'Archiver le statut' : 'Supprimer le statut';
+  const deleteDescription = isUsed
+    ? `Archiver "${status.label}" ? Il disparaîtra des futures saisies. ${usageCount} interaction(s) existante(s) le conserveront dans l'historique et l'action sera réversible.`
+    : `Supprimer "${status.label}" ? Ce statut inutilisé sera définitivement supprimé.`;
+  const deleteLabel = isUsed ? 'Archiver' : 'Supprimer';
 
   return (
     <div
@@ -84,7 +90,7 @@ const KanbanRow = ({
       onDragStart={(e) => onDragStart(e, index)}
       onDragOver={onDragOver}
       onDrop={(e) => onDrop(e, index)}
-      className={`group grid grid-cols-[auto_minmax(0,1fr)] gap-2 border border-border/50 bg-background px-2 py-2 transition-[background-color,border-color] duration-200 hover:border-border hover:bg-card sm:grid-cols-[auto_minmax(0,1fr)_10rem_auto_auto_auto_auto] sm:items-center ${
+      className={`group grid grid-cols-[auto_minmax(0,1fr)] gap-2 border border-border/50 bg-background px-2 py-2 transition-[background-color,border-color] duration-200 hover:border-border hover:bg-card sm:grid-cols-[auto_minmax(0,1fr)_10rem_auto_auto_auto_auto_auto_auto] sm:items-center ${
         readOnly ? '' : 'cursor-grab active:cursor-grabbing'
       }`}
       data-testid={`settings-status-row-${index}`}
@@ -147,17 +153,25 @@ const KanbanRow = ({
       ) : null}
 
       {!readOnly && (
+        <>
+        <Button type="button" variant="ghost" size="sm" disabled={index === 0} onClick={() => onMove(index, -1)} className="h-7 w-7 p-0" aria-label={`Monter le statut ${status.label}`} title="Monter">
+          <ChevronUp className="size-3.5" aria-hidden="true" />
+        </Button>
+        <Button type="button" variant="ghost" size="sm" disabled={isLast} onClick={() => onMove(index, 1)} className="h-7 w-7 p-0" aria-label={`Descendre le statut ${status.label}`} title="Descendre">
+          <ChevronDown className="size-3.5" aria-hidden="true" />
+        </Button>
         <Button
           type="button"
           variant="ghost"
           size="sm"
           onClick={() => setIsRenameOpen(true)}
-          className="h-7 w-7 p-0 flex items-center justify-center text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground active:scale-95"
-          aria-label={`Renommer le statut ${status.label}`}
-          title="Renommer"
+          className="h-7 w-7 p-0 flex items-center justify-center text-muted-foreground transition-[background-color,color,transform] hover:bg-accent hover:text-accent-foreground active:scale-95"
+          aria-label={`Corriger le libellé du statut ${status.label}`}
+          title="Corriger le libellé"
         >
           <Pencil className="size-3.5" aria-hidden="true" />
         </Button>
+        </>
       )}
 
       {canRemove && (
@@ -167,10 +181,9 @@ const KanbanRow = ({
           size="sm"
           onClick={() => setIsDeleteOpen(true)}
           className="h-7 w-7 p-0 flex items-center justify-center text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive active:scale-95 disabled:opacity-40"
-          disabled={false}
-          aria-disabled={false}
-          aria-label={`Supprimer le statut ${status.label}`}
-          title="Supprimer"
+          disabled={!canRemoveStatus}
+          aria-label={canRemoveStatus ? `${deleteLabel} le statut ${status.label}` : 'Au moins un statut actif est requis'}
+          title={canRemoveStatus ? deleteLabel : 'Au moins un statut actif est requis'}
         >
           <Trash2 className="size-3.5" aria-hidden="true" />
         </Button>
@@ -180,7 +193,7 @@ const KanbanRow = ({
         <RenameDialog
           open={isRenameOpen}
           onOpenChange={setIsRenameOpen}
-          title={`Renommer "${status.label}"`}
+          title={`Corriger le libellé "${status.label}"`}
           defaultValue={status.label}
           usageCount={usageCount}
           onConfirm={handleRenameConfirm}
@@ -193,7 +206,7 @@ const KanbanRow = ({
           onOpenChange={setIsDeleteOpen}
           title={deleteTitle}
           description={deleteDescription}
-          confirmLabel="Supprimer"
+          confirmLabel={deleteLabel}
           cancelLabel="Annuler"
           variant="destructive"
           onConfirm={handleDeleteConfirm}

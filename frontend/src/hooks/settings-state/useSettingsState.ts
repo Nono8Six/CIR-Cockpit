@@ -57,7 +57,7 @@ export const useSettingsState = ({
 
   const setStringField = useCallback(
     (field: keyof SettingsFormValues, value: string) => {
-      setValue(field, value as never, { shouldDirty: true, shouldValidate: true });
+      setValue(field, value as never, { shouldDirty: false, shouldValidate: true });
     },
     [setValue],
   );
@@ -79,7 +79,7 @@ export const useSettingsState = ({
   
   const setNewStatusCategory = useCallback(
     (value: StatusCategory) => {
-      setValue('newStatusCategory', value, { shouldDirty: true, shouldValidate: true });
+      setValue('newStatusCategory', value, { shouldDirty: false, shouldValidate: true });
     },
     [setValue],
   );
@@ -150,9 +150,16 @@ export const useSettingsState = ({
     reset(buildSettingsFormDefaultValues(snapshot, agencyId));
   }, [agencyId, reset, snapshot]);
 
+  const canRunImmediateAction = useCallback(() => {
+    if (!formState.isDirty) return true;
+    notifyInfo('Enregistrez ou annulez les changements en cours avant cette action.');
+    return false;
+  }, [formState.isDirty]);
+
   const { addItem, removeItem, renameItem, updateItem } = useReferenceItems({
     agencyId,
-    referenceActionMutation
+    referenceActionMutation,
+    canRunImmediateAction,
   });
 
   const {
@@ -169,7 +176,8 @@ export const useSettingsState = ({
     newStatus,
     setNewStatus,
     newStatusCategory,
-    setNewStatusCategory
+    setNewStatusCategory,
+    canRunImmediateAction,
   });
 
   return {
@@ -204,6 +212,7 @@ export const useSettingsState = ({
     setServices,
     setInteractionTypes,
     setStatuses,
+    canRunImmediateAction,
     isDirty: formState.isDirty,
   };
 };

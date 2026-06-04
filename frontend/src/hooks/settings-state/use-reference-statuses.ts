@@ -16,6 +16,7 @@ type UseReferenceStatusesParams = {
   setNewStatus: (value: string) => void;
   newStatusCategory: StatusCategory;
   setNewStatusCategory: (value: StatusCategory) => void;
+  canRunImmediateAction: () => boolean;
 };
 
 /**
@@ -32,7 +33,8 @@ export const useReferenceStatuses = ({
   newStatus,
   setNewStatus,
   newStatusCategory,
-  setNewStatusCategory
+  setNewStatusCategory,
+  canRunImmediateAction
 }: UseReferenceStatusesParams) => {
   const addStatus = useCallback(async () => {
     if (statuses.some((status) => status.label.trim().toLowerCase() === newStatus.trim().toLowerCase()))
@@ -43,6 +45,7 @@ export const useReferenceStatuses = ({
     if (!agencyId) {
       return void notifyInfo('Identifiant agence requis.');
     }
+    if (!canRunImmediateAction()) return;
     try {
       await referenceActionMutation.mutateAsync({
         action: 'add',
@@ -55,30 +58,29 @@ export const useReferenceStatuses = ({
     } catch {
       return;
     }
-    setStatuses([...statuses, nextStatus]);
     setNewStatus('');
     setNewStatusCategory('todo');
     notifySuccess('Statut ajoute.');
   }, [
     agencyId,
+    canRunImmediateAction,
     newStatus,
     newStatusCategory,
     referenceActionMutation,
     setNewStatus,
     setNewStatusCategory,
-    setStatuses,
     statuses
   ]);
 
   const removeStatus = useCallback(
     async (index: number) => {
+      if (!canRunImmediateAction()) return;
       if (!agencyId || !statuses[index]?.id) {
         return void notifyInfo('Identifiant statut requis.');
       }
-      let response: ConfigReferenceActionResponse;
       try {
-        response = await referenceActionMutation.mutateAsync({
-          action: 'delete',
+        await referenceActionMutation.mutateAsync({
+          action: 'archive',
           agency_id: agencyId,
           dimension: 'statuses',
           reference_id: statuses[index]?.id
@@ -86,10 +88,9 @@ export const useReferenceStatuses = ({
       } catch {
         return;
       }
-      setStatuses(statuses.filter((_, currentIndex) => currentIndex !== index));
-      notifySuccess(response.deactivated ? 'Statut retire du workflow actif.' : 'Statut supprime.');
+      notifySuccess('Statut retire.');
     },
-    [agencyId, referenceActionMutation, setStatuses, statuses]
+    [agencyId, canRunImmediateAction, referenceActionMutation, statuses]
   );
 
   const updateStatusLabel = useCallback(
@@ -117,6 +118,7 @@ export const useReferenceStatuses = ({
       const status = statuses[index];
       const normalizedNextLabel = nextLabel.trim();
       if (!agencyId || !status?.id || !normalizedNextLabel || status.label === normalizedNextLabel) return;
+      if (!canRunImmediateAction()) return;
 
       try {
         await referenceActionMutation.mutateAsync({
@@ -129,14 +131,9 @@ export const useReferenceStatuses = ({
       } catch {
         return;
       }
-      setStatuses(
-        statuses.map((current, currentIndex) =>
-          currentIndex === index ? { ...current, label: normalizedNextLabel } : current
-        )
-      );
-      notifySuccess('Statut renomme.');
+      notifySuccess('Libelle du statut corrige.');
     },
-    [agencyId, referenceActionMutation, setStatuses, statuses]
+    [agencyId, canRunImmediateAction, referenceActionMutation, statuses]
   );
 
   return {

@@ -141,6 +141,7 @@ const AppMainTabContent = (props: AppMainTabContentProps) => {
                     interactions={interactions}
                     statuses={config.statuses}
                     historicalStatuses={config.historicalStatuses}
+                    resolutions={config.resolutions}
                     agencyId={activeAgencyId}
                     onRequestConvert={onRequestConvert}
                   />

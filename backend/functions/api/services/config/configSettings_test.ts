@@ -2,6 +2,7 @@ import { assertEquals, assertThrows } from 'std/assert';
 import {
   assertValidStatusCategories,
   buildStatusUpsertRows,
+  ensureOneAffectedRow,
   normalizeLabelList
 } from './configSettings.ts';
 
@@ -80,7 +81,7 @@ Deno.test('buildStatusUpsertRows resolves id by matching existing label case-ins
   const rows = buildStatusUpsertRows(
     [{ id: undefined, label: 'Nouveau', category: 'todo' }],
     'agency-1',
-    [{ id: 'existing-id', label: 'nouveau' }]
+    [{ id: 'existing-id', label: 'nouveau', is_active: true }]
   );
   assertEquals(rows[0].id, 'existing-id');
 });
@@ -89,7 +90,7 @@ Deno.test('buildStatusUpsertRows leaves id undefined for new labels with no exis
   const rows = buildStatusUpsertRows(
     [{ id: undefined, label: 'Nouveau', category: 'todo' }],
     'agency-1',
-    [{ id: 'other-id', label: 'Autre' }]
+    [{ id: 'other-id', label: 'Autre', is_active: true }]
   );
   assertEquals(rows[0].id, undefined);
 });
@@ -115,4 +116,16 @@ Deno.test('buildStatusUpsertRows sets agency_id on every row', () => {
   for (const row of rows) {
     assertEquals(row.agency_id, 'agency-42');
   }
+});
+
+Deno.test('ensureOneAffectedRow rejects stale concurrent updates', () => {
+  assertThrows(
+    () => ensureOneAffectedRow([], 'Rechargez la page.'),
+    Error,
+    'Rechargez la page.'
+  );
+});
+
+Deno.test('ensureOneAffectedRow accepts exactly one updated row', () => {
+  ensureOneAffectedRow([{ id: 'row-1' }], 'Rechargez la page.');
 });

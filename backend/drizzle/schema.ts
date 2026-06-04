@@ -188,6 +188,7 @@ export const agency_services = pgTable('agency_services', {
   agency_id: uuid('agency_id').$type<string>().notNull(),
   label: text('label').notNull(),
   sort_order: integer('sort_order').notNull(),
+  archived_at: timestamp('archived_at', timestamptz).$type<string | null>(),
   created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull(),
   updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
 });
@@ -197,6 +198,7 @@ export const agency_families = pgTable('agency_families', {
   agency_id: uuid('agency_id').$type<string>().notNull(),
   label: text('label').notNull(),
   sort_order: integer('sort_order').notNull(),
+  archived_at: timestamp('archived_at', timestamptz).$type<string | null>(),
   created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull(),
   updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
 });
@@ -208,6 +210,20 @@ export const agency_interaction_types = pgTable('agency_interaction_types', {
   label: text('label').notNull(),
   sort_order: integer('sort_order').notNull(),
   created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull(),
+  updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
+});
+
+export const agency_reference_resolutions = pgTable('agency_reference_resolutions', {
+  id: uuid('id').$type<string>().defaultRandom().primaryKey(),
+  agency_id: uuid('agency_id').$type<string>().notNull(),
+  dimension: text('dimension').$type<'statuses' | 'services' | 'families' | 'interaction_types'>().notNull(),
+  source_label: text('source_label').notNull(),
+  target_status_id: uuid('target_status_id').$type<string | null>(),
+  target_service_id: uuid('target_service_id').$type<string | null>(),
+  target_family_id: uuid('target_family_id').$type<string | null>(),
+  target_interaction_type_id: uuid('target_interaction_type_id').$type<string | null>(),
+  resolved_by: uuid('resolved_by').$type<string | null>(),
+  resolved_at: timestamp('resolved_at', timestamptz).$type<string>().defaultNow().notNull(),
   updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
 });
 
@@ -234,5 +250,6 @@ export const drizzleSchema = {
   agency_services,
   agency_families,
   agency_interaction_types,
+  agency_reference_resolutions,
   agency_system_users
 };

@@ -10,17 +10,20 @@ import {
 } from '@/utils/dashboard/dashboardFilters';
 import { getPresetDateRange, type FilterPeriod } from '@/utils/date/getPresetDateRange';
 import { getTodayIsoDate } from '@/utils/date/getTodayIsoDate';
+import type { AgencyConfig } from '@/services/config';
 
 type UseDashboardFiltersParams = {
   interactions: Interaction[];
   viewMode: DashboardViewMode;
   isStatusDone: (interaction: Interaction) => boolean;
+  resolutions?: NonNullable<AgencyConfig['resolutions']>;
 };
 
 export const useDashboardFilters = ({
   interactions,
   viewMode,
-  isStatusDone
+  isStatusDone,
+  resolutions = []
 }: UseDashboardFiltersParams) => {
   const today = getTodayIsoDate();
   const [searchTerm, setSearchTerm] = useState('');
@@ -76,7 +79,8 @@ export const useDashboardFilters = ({
     const searchFiltered = filterInteractionsBySearch(
       interactions,
       normalizedSearchTerm,
-      compactSearchTerm
+      compactSearchTerm,
+      resolutions
     );
 
     return filterInteractionsByViewMode({
@@ -85,7 +89,7 @@ export const useDashboardFilters = ({
       dateBounds,
       isStatusDone
     });
-  }, [compactSearchTerm, dateBounds, interactions, isStatusDone, normalizedSearchTerm, viewMode]);
+  }, [compactSearchTerm, dateBounds, interactions, isStatusDone, normalizedSearchTerm, resolutions, viewMode]);
 
   const setCustomDateRange = useCallback((nextStartDate: string, nextEndDate: string) => {
     startDateRef.current = nextStartDate;

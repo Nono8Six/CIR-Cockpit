@@ -1,5 +1,7 @@
 import {
   configGetResponseSchema,
+  configIntegrityInteractionUpdateResponseSchema,
+  configIntegrityInteractionsResponseSchema,
   configUsageResponseSchema,
   configReferenceActionResponseSchema,
   adminAgenciesResponseSchema,
@@ -36,6 +38,8 @@ import {
 } from '../../../../shared/schemas/interaction/cockpit.schema.ts';
 import {
   configGetInputSchema,
+  configIntegrityInteractionUpdateInputSchema,
+  configIntegrityInteractionsInputSchema,
   configUsageInputSchema,
   configReferenceActionInputSchema
 } from '../../../../shared/schemas/system/config.schema.ts';
@@ -76,6 +80,8 @@ import { listAdminAuditLogs, listAdminUsers } from '../services/admin/adminQueri
 import { handleAdminUsersAction } from '../services/admin/adminUsers.ts';
 import { handleConfigReferenceAction } from '../services/config/configSettings.ts';
 import { getConfigSnapshot } from '../services/config/configSnapshot.ts';
+import { getConfigIntegrityInteractions } from '../services/config/configIntegrityInteractions.ts';
+import { updateConfigIntegrityInteraction } from '../services/config/configIntegrityInteractionUpdate.ts';
 import { getConfigUsage } from '../services/config/configUsage.ts';
 import { handleDataConfigAction } from '../services/data/dataConfig.ts';
 import { handleDataEntitiesAction } from '../services/entities/core/dataEntities.ts';
@@ -191,6 +197,14 @@ export const appRouter = router({
       .input(configUsageInputSchema)
       .output(configUsageResponseSchema)
       .query(withAuthedHandler(getConfigUsage)),
+    'integrity-interactions': authedProcedure
+      .input(configIntegrityInteractionsInputSchema)
+      .output(configIntegrityInteractionsResponseSchema)
+      .query(withAuthedHandler(getConfigIntegrityInteractions)),
+    'integrity-interaction-update': authedProcedure
+      .input(configIntegrityInteractionUpdateInputSchema)
+      .output(configIntegrityInteractionUpdateResponseSchema)
+      .mutation(withAuthedHandler(updateConfigIntegrityInteraction)),
     reference: authedProcedure
       .input(configReferenceActionInputSchema)
       .output(configReferenceActionResponseSchema)

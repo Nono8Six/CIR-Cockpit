@@ -1,5 +1,6 @@
 import ReferentialsSection from './referentials/ReferentialsSection';
 import KanbanSection from './kanban/KanbanSection';
+import IntegritySection from './integrity/IntegritySection';
 import type { SettingsSectionsProps } from './settings-sections.types';
 
 /**
@@ -13,6 +14,9 @@ const SettingsSections = ({
   activeSection,
   canEditAgencySettings,
   usage,
+  agencyId = null,
+  onExamineIntegrity = () => undefined,
+  canRunImmediateAction,
   families,
   services,
   interactionTypes,
@@ -49,6 +53,7 @@ const SettingsSections = ({
         <ReferentialsSection
           readOnly={agencyReadOnly}
           usage={usage}
+          onExamineIntegrity={onExamineIntegrity}
           families={families}
           services={services}
           interactionTypes={interactionTypes}
@@ -72,6 +77,7 @@ const SettingsSections = ({
         <KanbanSection
           readOnly={agencyReadOnly}
           usage={usage}
+          onExamineIntegrity={onExamineIntegrity}
           statuses={statuses}
           newStatus={newStatus}
           newStatusCategory={newStatusCategory}
@@ -85,6 +91,7 @@ const SettingsSections = ({
           setStatuses={setStatuses}
         />
       )}
+      {activeSection === 'integrity' ? <IntegritySection agencyId={agencyId} readOnly={agencyReadOnly} usage={usage} canRunImmediateAction={canRunImmediateAction} /> : null}
     </div>
   );
 };

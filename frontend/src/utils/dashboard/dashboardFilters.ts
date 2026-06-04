@@ -6,6 +6,8 @@ import {
 } from '@/utils/dashboard/dashboardSort';
 import { getEndOfDay } from '@/utils/date/getEndOfDay';
 import { getStartOfDay } from '@/utils/date/getStartOfDay';
+import type { AgencyConfig } from '@/services/config';
+import { resolveReferenceLabel } from '@/utils/references/resolveReferenceLabel';
 
 export type DateBounds = {
   start: number;
@@ -50,7 +52,8 @@ export const isTimestampWithinBounds = (timestamp: number, bounds: DateBounds): 
 export const filterInteractionsBySearch = (
   interactions: Interaction[],
   normalizedSearchTerm: string,
-  compactSearchTerm: string
+  compactSearchTerm: string,
+  resolutions: NonNullable<AgencyConfig['resolutions']> = []
 ): Interaction[] => {
   if (!normalizedSearchTerm) {
     return interactions;
@@ -68,7 +71,11 @@ export const filterInteractionsBySearch = (
     )
     || interaction.mega_families.some((family) =>
       family.toLowerCase().includes(normalizedSearchTerm)
+      || resolveReferenceLabel('families', family, resolutions).toLowerCase().includes(normalizedSearchTerm)
     )
+    || resolveReferenceLabel('services', interaction.contact_service, resolutions).toLowerCase().includes(normalizedSearchTerm)
+    || resolveReferenceLabel('interaction_types', interaction.interaction_type, resolutions).toLowerCase().includes(normalizedSearchTerm)
+    || resolveReferenceLabel('statuses', interaction.status, resolutions).toLowerCase().includes(normalizedSearchTerm)
   );
 };
 

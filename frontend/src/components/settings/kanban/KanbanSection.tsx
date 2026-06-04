@@ -6,9 +6,11 @@ import SettingsSectionShell from '../ui/SettingsSectionShell';
 import KanbanAddBar from './KanbanAddBar';
 import KanbanRow from './KanbanRow';
 import KanbanSimulator from './KanbanSimulator';
+import { Button } from '@/components/ui/inputs/basic/Button';
 
 type KanbanSectionProps = {
   readOnly: boolean;
+  onExamineIntegrity?: () => void;
   usage: ConfigUsageSnapshot | null;
   statuses: AgencyStatus[];
   newStatus: string;
@@ -43,6 +45,7 @@ type KanbanSectionProps = {
  */
 const KanbanSection = ({
   readOnly,
+  onExamineIntegrity = () => undefined,
   usage,
   statuses,
   newStatus,
@@ -62,10 +65,10 @@ const KanbanSection = ({
       .map((row) => [row.reference_id as string, row.usage_count])
   );
   const historicalStatuses = (usage?.dimensions.statuses ?? []).filter(
-    (row) => row.state === 'historical_used'
+    (row) => row.state === 'archived_used'
   );
   const orphanStatuses = (usage?.dimensions.statuses ?? []).filter(
-    (row) => row.state === 'used_not_in_reference'
+    (row) => row.state === 'unresolved'
   );
   const handleDragStart = (e: React.DragEvent, index: number) => {
     e.dataTransfer.setData('text/plain', index.toString());
@@ -88,6 +91,14 @@ const KanbanSection = ({
     newStatuses.splice(targetIndex, 0, removed);
     setStatuses(newStatuses);
   };
+  const handleMove = (index: number, direction: -1 | 1) => {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= statuses.length) return;
+    const nextStatuses = [...statuses];
+    const [removed] = nextStatuses.splice(index, 1);
+    nextStatuses.splice(targetIndex, 0, removed);
+    setStatuses(nextStatuses);
+  };
 
   return (
     <SettingsSectionShell
@@ -105,6 +116,7 @@ const KanbanSection = ({
             Ces valeurs existent dans des interactions, mais ne pointent plus vers un statut connu.
             Elles doivent être auditées séparément.
           </div>
+          <Button className="mt-2" size="dense" variant="outline" onClick={onExamineIntegrity}>Examiner</Button>
         </div>
       )}
 
@@ -171,6 +183,8 @@ const KanbanSection = ({
               key={status.id || `${index}-${status.label}`}
               status={status}
               index={index}
+              isLast={index === statuses.length - 1}
+              canRemoveStatus={statuses.length > 1}
               readOnly={readOnly}
               usageCount={usage && status.id ? statusUsageById.get(status.id) ?? 0 : null}
               onRemove={removeStatus}
@@ -180,6 +194,7 @@ const KanbanSection = ({
               onDragStart={handleDragStart}
               onDragOver={handleDragOver}
               onDrop={handleDrop}
+              onMove={handleMove}
             />
           ))
         )}
