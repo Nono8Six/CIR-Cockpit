@@ -66,7 +66,7 @@ const getNextEnabledIndex = (
 };
 
 const cardClasses =
-  "group relative flex items-center justify-between rounded-md border px-4 py-3 text-left transition-[border-color,background-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20";
+  "group relative flex items-center justify-between rounded-xl border px-5 py-4 text-left transition-all duration-250 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20";
 
 const EntityOnboardingIntentStep = ({
   effectiveIntent,
@@ -235,7 +235,7 @@ const EntityOnboardingIntentStep = ({
                 className={cn(
                   cardClasses,
                   isActive
-                    ? "border-border bg-surface-1/50 shadow-sm"
+                    ? "border-primary bg-primary/[0.02] shadow-sm"
                     : "border-border-subtle hover:border-border hover:bg-surface-1/30",
                   isIntentLocked && "cursor-not-allowed opacity-60",
                 )}
@@ -303,7 +303,7 @@ const EntityOnboardingIntentStep = ({
                   className={cn(
                     cardClasses,
                     isActive
-                      ? "border-border bg-surface-1/50 shadow-sm"
+                      ? "border-primary bg-primary/[0.02] shadow-sm"
                       : "border-border-subtle hover:border-border hover:bg-surface-1/30",
                     isDisabled && "cursor-not-allowed opacity-40",
                   )}

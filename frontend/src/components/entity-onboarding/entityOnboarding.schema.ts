@@ -37,58 +37,86 @@ export const onboardingFormSchema = z.strictObject({
   account_type: accountTypeSchema.default('term'),
   cir_commercial_id: optionalUuidSchema
 }).superRefine((values, ctx) => {
-  const isIndividualClient = values.intent === 'client' && values.client_kind === 'individual';
+  const isClient = values.intent === 'client';
+  const isIndividual = values.client_kind === 'individual';
 
-  if (!isIndividualClient) {
-    return;
+  if (isClient) {
+    if (!values.client_number.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Numero client requis',
+        path: ['client_number']
+      });
+    }
+
+    if (!isIndividual) {
+      if (!values.address.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Adresse requise',
+          path: ['address']
+        });
+      }
+      if (!values.postal_code.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Code postal requis',
+          path: ['postal_code']
+        });
+      }
+    }
   }
 
-  if (!values.first_name.trim()) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: 'Prenom requis',
-      path: ['first_name']
-    });
-  }
+  const isIndividualClient = isClient && isIndividual;
 
-  if (!values.last_name.trim()) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: 'Nom requis',
-      path: ['last_name']
-    });
-  }
+  if (isIndividualClient) {
+    if (!values.first_name.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Prenom requis',
+        path: ['first_name']
+      });
+    }
 
-  if (!values.phone.trim() && !values.email.trim()) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: 'Telephone ou email requis',
-      path: ['phone']
-    });
-  }
+    if (!values.last_name.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Nom requis',
+        path: ['last_name']
+      });
+    }
 
-  if (!values.postal_code.trim()) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: 'Code postal requis',
-      path: ['postal_code']
-    });
-  }
+    if (!values.phone.trim() && !values.email.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Telephone ou email requis',
+        path: ['phone']
+      });
+    }
 
-  if ((values.account_type ?? 'term') !== 'cash') {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: 'Le client particulier est toujours comptant',
-      path: ['account_type']
-    });
-  }
+    if (!values.postal_code.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Code postal requis',
+        path: ['postal_code']
+      });
+    }
 
-  if (values.cir_commercial_id.trim().length > 0) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: 'Aucun commercial ne doit etre affecte a un client particulier',
-      path: ['cir_commercial_id']
-    });
+    if ((values.account_type ?? 'term') !== 'cash') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Le client particulier est toujours comptant',
+        path: ['account_type']
+      });
+    }
+
+    if (values.cir_commercial_id.trim().length > 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Aucun commercial ne doit etre affecte a un client particulier',
+        path: ['cir_commercial_id']
+      });
+    }
   }
 });
 

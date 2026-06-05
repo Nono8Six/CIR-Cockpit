@@ -30,7 +30,7 @@ export const buildValues = (
   email: initialEntity?.email ?? '',
   address: initialEntity?.address ?? '',
   postal_code: initialEntity?.postal_code ?? '',
-  department: initialEntity?.department ?? '',
+  department: initialEntity?.department || (initialEntity?.postal_code && initialEntity.postal_code.trim().length >= 2 ? getDepartmentFromPostalCode(initialEntity.postal_code) : ''),
   city: initialEntity?.city ?? '',
   siret: initialEntity?.siret ?? '',
   siren: initialEntity?.siren ?? '',

@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ResolvedConfigSnapshot } from '../../../../shared/schemas/system/config.schema';
@@ -125,7 +125,7 @@ const reachManualReviewStep = async (
   await user.click(await screen.findByRole('button', { name: /saisie manuelle/i }));
   await user.click(screen.getByRole('button', { name: /^continuer$/i }));
 
-  const companyNameInput = await screen.findByLabelText(/nom de la societe/i);
+  const companyNameInput = await screen.findByLabelText(/nom de la soci(e|é)t(e|é)/i);
   const cityInput = await screen.findByLabelText(/^ville$/i);
 
   await user.clear(companyNameInput);
@@ -146,7 +146,7 @@ const reachManualReviewStep = async (
   }
 
   if (values.clientNumber) {
-    const clientNumberInput = await screen.findByLabelText(/^numero de compte$/i);
+    const clientNumberInput = await screen.findByLabelText(/num(e|é)ro de compte/i);
     await user.clear(clientNumberInput);
     await user.type(clientNumberInput, values.clientNumber);
   }
@@ -745,12 +745,50 @@ describe('EntityOnboardingDialog', () => {
       postalCode: '33000',
       clientNumber: '1001'
     });
-    await user.click(screen.getByRole('button', { name: /creer le client/i }));
+    await user.click(screen.getByRole('button', { name: /créer le client/i }));
 
     expect(
       (await screen.findAllByText(/action d'enregistrement client indisponible/i)).length
     ).toBeGreaterThan(0);
     expect(onOpenChange).not.toHaveBeenCalledWith(false);
+  }, 15_000);
+
+  it('saves a complete manual client instead of returning to details', async () => {
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
+    const onSaveClient = vi.fn(async () => ({
+      id: 'client-1',
+      client_number: '958475'
+    }));
+
+    renderOnboardingDialog({
+      onOpenChange,
+      allowedIntents: ['client'],
+      onSaveClient,
+      onSaveProspect: vi.fn(async () => undefined)
+    });
+
+    await reachManualReviewStep(user, {
+      name: 'E2M',
+      city: 'CANEJAN',
+      address: '5 AV DU PONT GRIS ZA DU COURNEAU',
+      postalCode: '33610',
+      clientNumber: '958475'
+    });
+    await user.click(screen.getByRole('button', { name: /créer le client/i }));
+
+    await waitFor(() => {
+      expect(onSaveClient).toHaveBeenCalledWith(
+        expect.objectContaining({
+          agency_id: TEST_AGENCY_ID,
+          city: 'CANEJAN',
+          client_number: '958475',
+          department: '33',
+          name: 'E2M'
+        })
+      );
+    });
+    expect(onOpenChange).toHaveBeenCalledWith(false);
   }, 15_000);
 
   it('surfaces a controlled error when prospect save callback is missing', async () => {
@@ -768,7 +806,7 @@ describe('EntityOnboardingDialog', () => {
       name: 'Prospect Sans Callback',
       city: 'Bordeaux'
     });
-    await user.click(screen.getByRole('button', { name: /creer le prospect/i }));
+    await user.click(screen.getByRole('button', { name: /créer le prospect/i }));
 
     expect(
       (await screen.findAllByText(/action d'enregistrement prospect indisponible/i)).length

@@ -15,6 +15,13 @@ type DashboardKanbanProps = {
   activeInteractionId?: string | null;
 };
 
+/**
+ * DashboardKanban component for displaying the Kanban board columns grid.
+ * Configures responsive column structures and gap layouts.
+ * 
+ * @param {DashboardKanbanProps} props - The component props.
+ * @returns {React.JSX.Element} The rendered Kanban grid.
+ */
 const DashboardKanban = ({
   columns,
   onSelectInteraction,
@@ -23,14 +30,13 @@ const DashboardKanban = ({
   activeInteractionId
 }: DashboardKanbanProps) => (
   <div
-    className="grid h-full min-h-0 grid-cols-1 gap-4 overflow-y-auto pt-3 pb-3 px-0 lg:grid-cols-2 xl:grid-cols-3 xl:gap-5"
+    className="grid h-full min-h-0 grid-cols-1 gap-5 overflow-y-auto pt-3 pb-3 px-0.5 lg:grid-cols-2 xl:grid-cols-3 xl:gap-6"
     data-testid="dashboard-kanban"
   >
     <KanbanColumn
       columnId="urgencies"
       title="À traiter / urgent"
-      dotClassName="bg-destructive"
-      toneClassName="border-destructive/18 bg-destructive/7"
+      className="bg-[#fdf8f7] border-destructive/10"
       interactions={columns.urgencies}
       emptyLabel="Tout est à jour."
       onSelectInteraction={onSelectInteraction}
@@ -41,8 +47,7 @@ const DashboardKanban = ({
     <KanbanColumn
       columnId="in-progress"
       title="En cours / attente"
-      dotClassName="bg-warning"
-      toneClassName="border-warning/22 bg-warning/9"
+      className="bg-[#fbf9f5] border-warning/10"
       interactions={columns.inProgress}
       emptyLabel="Aucun dossier en attente."
       onSelectInteraction={onSelectInteraction}
@@ -53,8 +58,7 @@ const DashboardKanban = ({
     <KanbanColumn
       columnId="completed"
       title="Terminés (période)"
-      dotClassName="bg-success"
-      toneClassName="border-success/20 bg-success/8"
+      className="bg-[#f7faf8] border-success/10"
       interactions={columns.completed}
       emptyLabel="Rien terminé sur cette période."
       onSelectInteraction={onSelectInteraction}

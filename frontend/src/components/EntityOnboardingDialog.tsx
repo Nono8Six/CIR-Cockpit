@@ -1,4 +1,4 @@
-import { ArrowLeft, LoaderCircle, Sparkles } from "lucide-react";
+import { ArrowLeft, LoaderCircle, Sparkles, ChevronRight } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
 import type {
@@ -190,6 +190,7 @@ const EntityOnboardingDialog = ({
 
     return step;
   });
+
   const showHeaderBack = surface === "page";
   const showFooterBack =
     stepper.flow.is("review") ||
@@ -199,17 +200,17 @@ const EntityOnboardingDialog = ({
     ? mode === "convert"
       ? "Convertir en client"
       : effectiveIntent === "client"
-        ? "Creer le client"
-        : "Creer le prospect"
+        ? "Créer le client"
+        : "Créer le prospect"
     : "Continuer";
   const footerMessage =
     stepError ??
     (stepper.flow.is("company")
-      ? "Selection et doublons visibles avant creation."
+      ? "Sélection et doublons visibles avant création."
       : stepper.flow.is("details")
-        ? "Champs obligatoires verifies en ligne."
+        ? "Champs obligatoires vérifiés en ligne."
         : stepper.flow.is("review")
-          ? "Resume final exactement conforme aux donnees sauvegardees."
+          ? "Résumé final exactement conforme aux données sauvegardées."
           : "Le type choisi ajuste tout le reste du parcours.");
   const stepMotionProps = reducedMotion
     ? {}
@@ -227,7 +228,7 @@ const EntityOnboardingDialog = ({
         surface === "page" ? "flex-1" : "border-0",
       )}
     >
-      <header className="flex min-h-14 shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-border-subtle bg-background px-4 py-2 sm:px-6 lg:flex-nowrap lg:py-0">
+      <header className="flex min-h-[56px] shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-border bg-background px-6 py-2 lg:flex-nowrap lg:py-0">
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1.5">
           {showHeaderBack ? (
             <Button
@@ -246,22 +247,22 @@ const EntityOnboardingDialog = ({
             <Badge
               variant="outline"
               density="dense"
-              className="gap-1.5 border-border-subtle bg-surface-1/50 text-muted-foreground"
+              className="gap-1.5 border-border bg-surface-2 text-foreground font-medium"
             >
               {mode === "convert" ? "Conversion" : "Nouveau"}
             </Badge>
             <Badge
               variant="outline"
               density="dense"
-              className="border-border-subtle bg-background/80 text-muted-foreground"
+              className="border-border bg-surface-2 text-foreground font-medium"
             >
               {sourceLabel}
             </Badge>
             {values.official_data_source ? (
               <Badge
-                variant="success"
+                variant="outline"
                 density="dense"
-                className="border-success/20 bg-success/5 text-success"
+                className="border-success/20 bg-success/5 text-success font-medium"
               >
                 <Sparkles className="mr-1 size-3" aria-hidden="true" />
                 Officiel
@@ -270,52 +271,59 @@ const EntityOnboardingDialog = ({
           </div>
           <div
             aria-hidden="true"
-            className="hidden h-4 w-px bg-border-subtle md:block"
+            className="hidden h-4 w-px bg-border md:block"
           />
 
           <nav
             aria-label="Progression du parcours"
             className="hidden min-w-0 md:block"
           >
-            <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] font-medium">
+            <ol className="flex items-center gap-3 text-xs">
               {renderedSteps.map((step, index) => {
                 const isCurrent = currentStepIndex === index;
                 const isClickable = index < currentStepIndex;
 
                 return (
-                  <li
-                    key={step.id}
-                    className="flex items-center"
-                    aria-current={isCurrent ? "step" : undefined}
-                  >
+                  <li key={step.id} className="flex items-center gap-3" aria-current={isCurrent ? "step" : undefined}>
                     {isClickable ? (
                       <button
                         type="button"
                         aria-label={`Revenir à l'étape ${step.title}`}
                         onClick={() => goToCompletedStep(step.id)}
-                        className="rounded-sm px-1 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
-                      >
-                        {step.title}
-                      </button>
-                    ) : (
-                      <span
                         className={cn(
-                          "px-1",
-                          isCurrent
-                            ? "text-foreground"
-                            : "text-muted-foreground/60",
+                          "flex items-center gap-1.5 text-muted-foreground hover:text-foreground font-medium transition-colors duration-200",
+                          "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1"
                         )}
                       >
-                        {step.title}
-                      </span>
+                        <span className="flex size-4 items-center justify-center rounded-full bg-success/10 text-success text-[10px] font-bold">
+                          ✓
+                        </span>
+                        <span>{step.title}</span>
+                      </button>
+                    ) : (
+                      <div
+                        className={cn(
+                          "flex items-center gap-1.5 font-medium transition-colors duration-200",
+                          isCurrent
+                            ? "text-foreground font-semibold"
+                            : "text-muted-foreground/45"
+                        )}
+                      >
+                        {isCurrent ? (
+                          <span className="size-1.5 rounded-full bg-primary animate-pulse" />
+                        ) : (
+                          <span className="flex size-4 items-center justify-center rounded-full border border-border bg-surface-1 text-[9px] font-medium text-muted-foreground/60">
+                            {index + 1}
+                          </span>
+                        )}
+                        <span>{step.title}</span>
+                      </div>
                     )}
                     {index < renderedSteps.length - 1 && (
-                      <span
+                      <ChevronRight
                         aria-hidden="true"
-                        className="ml-1 text-muted-foreground/40"
-                      >
-                        ›
-                      </span>
+                        className="size-3.5 text-muted-foreground/25"
+                      />
                     )}
                   </li>
                 );
@@ -490,8 +498,8 @@ const EntityOnboardingDialog = ({
                       Confirmation finale
                     </h2>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Verifie les informations avant l insertion dans la base de
-                      donnees.
+                      Vérifie les informations avant l&apos;insertion dans la base de
+                      données.
                     </p>
                   </div>
                   <EntityOnboardingReviewStep
@@ -528,11 +536,11 @@ const EntityOnboardingDialog = ({
 
   const closeConfirmDialog = (
     <AlertDialog open={isCloseConfirmOpen} onOpenChange={setIsCloseConfirmOpen}>
-      <AlertDialogContent className="border-border-subtle">
+      <AlertDialogContent className="border-border">
         <AlertDialogHeader>
           <AlertDialogTitle>Quitter le parcours ?</AlertDialogTitle>
           <AlertDialogDescription>
-            Les modifications non enregistrees seront perdues si tu fermes
+            Les modifications non enregistrées seront perdues si tu fermes
             maintenant ce flux.
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -561,11 +569,11 @@ const EntityOnboardingDialog = ({
         <DialogContent
           showCloseButton={false}
           overlayClassName="bg-foreground/25 backdrop-blur-[6px]"
-          className="h-[min(92vh,880px)] w-[min(94vw,1240px)] max-w-[1240px] overflow-hidden rounded-xl border border-border-subtle bg-background p-0 shadow-2xl sm:rounded-xl"
+          className="h-[min(92vh,880px)] w-[min(94vw,1240px)] max-w-[1240px] overflow-hidden rounded-xl border border-border bg-background p-0 shadow-2xl sm:rounded-xl"
         >
           <DialogTitle className="sr-only">{title}</DialogTitle>
           <DialogDescription className="sr-only">
-            Flux de creation et de conversion d entreprise integre a l annuaire.
+            Flux de création et de conversion d&apos;entreprise intégré à l&apos;annuaire.
           </DialogDescription>
           {content}
         </DialogContent>

@@ -1,8 +1,12 @@
-import { MapPin, UserRound, ShieldCheck, Building2 } from "lucide-react";
+import { useState } from "react";
+import { MapPin, UserRound, ShieldCheck, Building2, Copy, Check, AlertCircle } from "lucide-react";
 
 import type { Agency } from "@/types";
 import { Badge } from '../ui/data-display/Badge';
-import type { DirectoryCompanySearchResult } from '../../../../shared/schemas/system/directory.schema';
+import type {
+  DirectoryCommercialOption,
+  DirectoryCompanySearchResult,
+} from '../../../../shared/schemas/system/directory.schema';
 import type { OnboardingValues } from "./entityOnboarding.schema";
 import type { DuplicateMatch } from "./entityOnboarding.types";
 import {
@@ -10,6 +14,7 @@ import {
   getAgencyLabel,
   getCompanySearchStatusLabel,
 } from "./entityOnboarding.utils";
+import { cn } from "@/lib/utils";
 
 interface EntityOnboardingReviewStepProps {
   values: OnboardingValues;
@@ -18,16 +23,65 @@ interface EntityOnboardingReviewStepProps {
   isIndividualClient: boolean;
   selectedCompany: DirectoryCompanySearchResult | undefined;
   duplicateMatches: DuplicateMatch[];
+  commercials?: DirectoryCommercialOption[];
 }
 
-const ReviewRow = ({ label, value }: { label: string; value: string }) => (
-  <div className="flex items-start justify-between gap-3 border-b border-border-subtle/50 py-3 last:border-b-0">
-    <span className="text-[13px] text-muted-foreground">{label}</span>
-    <span className="text-right text-[13px] font-medium text-foreground">
-      {value}
-    </span>
-  </div>
-);
+const ReviewField = ({
+  label,
+  value,
+  copyable = false,
+}: {
+  label: string;
+  value: string;
+  copyable?: boolean;
+}) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    if (!value || value === "Non renseigné" || value === "Non renseignée" || value === "À renseigner") return;
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // ignore
+    }
+  };
+
+  const isPlaceholder = !value || value === "Non renseigné" || value === "Non renseignée" || value === "À renseigner";
+
+  return (
+    <div className="group relative rounded-lg border border-border bg-surface-1/40 p-3.5 transition-all duration-200 hover:border-foreground/20 hover:bg-surface-1/85">
+      <span className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 mb-1 select-none">
+        {label}
+      </span>
+      <div className="flex items-center justify-between gap-2">
+        <span
+          className={cn(
+            "text-[13px] font-semibold select-all leading-tight break-words flex-1",
+            isPlaceholder ? "text-muted-foreground/60 font-medium italic" : "text-foreground"
+          )}
+        >
+          {value}
+        </span>
+        {copyable && !isPlaceholder && (
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-1 rounded hover:bg-surface-3 text-muted-foreground hover:text-foreground"
+            title="Copier"
+          >
+            {copied ? (
+              <Check className="size-3.5 text-success animate-scale" />
+            ) : (
+              <Copy className="size-3.5" />
+            )}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const EntityOnboardingReviewStep = ({
   values,
@@ -35,6 +89,8 @@ const EntityOnboardingReviewStep = ({
   effectiveIntent,
   isIndividualClient,
   selectedCompany,
+  duplicateMatches = [],
+  commercials = [],
 }: EntityOnboardingReviewStepProps) => {
   const displayName = isIndividualClient
     ? [values.last_name, values.first_name]
@@ -46,118 +102,171 @@ const EntityOnboardingReviewStep = ({
     selectedCompany?.establishment_closed_at ?? null,
   );
 
+  const commercialLabel = isIndividualClient
+    ? "Non applicable (client particulier)"
+    : values.cir_commercial_id
+      ? (commercials.find((c) => c.id === values.cir_commercial_id)?.display_name ?? "Affecté")
+      : "Non affecté";
+
   return (
-    <div className="flex h-full flex-col space-y-12 pb-8">
-      <div className="space-y-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            {displayName}
-          </h2>
-          <Badge
-            variant="secondary"
-            className="text-[10px] uppercase tracking-widest"
-          >
-            {effectiveIntent === "client" ? "Client" : "Prospect"}
-          </Badge>
-          {isIndividualClient && (
-            <Badge
-              variant="outline"
-              className="text-[10px] uppercase tracking-widest"
-            >
-              Particulier
-            </Badge>
-          )}
-          {values.official_data_source && (
-            <Badge
-              variant="outline"
-              className="text-[10px] uppercase tracking-widest border-success/20 bg-success/5 text-success"
-            >
-              Source officielle
-            </Badge>
+    <div className="flex h-full flex-col space-y-5 pb-8">
+      {/* PROFILE HEADER CARD */}
+      <div className="rounded-xl border border-border bg-surface-2/30 p-5 flex items-start gap-4 shadow-sm">
+        <div className="flex size-12 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
+          {isIndividualClient ? (
+            <UserRound className="size-6" />
+          ) : (
+            <Building2 className="size-6" />
           )}
         </div>
-        <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
-          Controle final avant enregistrement. Verifie attentivement ces
-          donnees, elles serviront de base pour le compte.
-        </p>
+        <div className="space-y-1.5 flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-xl font-bold tracking-tight text-foreground truncate">
+              {displayName}
+            </h2>
+            <Badge
+              variant="outline"
+              density="dense"
+              className={cn(
+                "text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5",
+                effectiveIntent === "client"
+                  ? "border-primary/20 bg-primary/5 text-primary"
+                  : "border-warning/30 bg-warning/5 text-warning-foreground"
+              )}
+            >
+              {effectiveIntent === "client" ? "Client" : "Prospect"}
+            </Badge>
+            {isIndividualClient && (
+              <Badge
+                variant="outline"
+                density="dense"
+                className="text-[10px] uppercase tracking-wider border-border bg-surface-3 text-muted-foreground font-semibold px-2 py-0.5"
+              >
+                Particulier
+              </Badge>
+            )}
+            {values.official_data_source && (
+              <Badge
+                variant="outline"
+                density="dense"
+                className="text-[10px] uppercase tracking-wider border-success/20 bg-success/5 text-success font-semibold px-2 py-0.5"
+              >
+                Source officielle
+              </Badge>
+            )}
+          </div>
+          <p className="text-[12px] leading-relaxed text-muted-foreground">
+            Contrôle final avant enregistrement. Vérifie attentivement ces données, elles serviront de base pour le compte.
+          </p>
+        </div>
       </div>
 
-      <div className="grid gap-x-16 gap-y-12 md:grid-cols-2">
-        <section className="space-y-4">
-          <div className="flex items-center gap-2 border-b border-border-subtle pb-2 text-sm font-medium text-foreground">
-            <MapPin className="size-4 text-muted-foreground" />
-            <h3>Coordonnees</h3>
+      {/* DUPLICATE ALERTS IF ANY */}
+      {duplicateMatches.length > 0 && (
+        <div className="flex items-start gap-3 rounded-lg border border-warning/30 bg-warning/5 p-4 text-warning-foreground shadow-sm">
+          <AlertCircle className="size-4 shrink-0 mt-0.5 text-warning" />
+          <div className="text-[12px] leading-relaxed">
+            <p className="font-bold">Doublons potentiels détectés ({duplicateMatches.length})</p>
+            <p className="mt-0.5 opacity-90">
+              Des fiches similaires existent déjà dans la base de données. Assure-toi qu&apos;il s&apos;agit bien d&apos;une nouvelle entité avant de valider.
+            </p>
           </div>
-          <div>
-            <ReviewRow
-              label="Adresse"
-              value={values.address || "Non renseignee"}
-            />
-            <ReviewRow
-              label="Ville"
+        </div>
+      )}
+
+      <div className="grid gap-5 md:grid-cols-2">
+        {/* COORDONNEES */}
+        <section className="rounded-xl border border-border bg-background p-5 space-y-4 shadow-sm">
+          <div className="flex items-center gap-2 border-b border-border pb-3 text-sm font-bold text-foreground">
+            <MapPin className="size-4 text-primary" />
+            <h3 className="text-[13px] uppercase tracking-wider">Coordonnées</h3>
+          </div>
+          <div className="grid gap-3.5 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <ReviewField
+                label="Adresse"
+                value={values.address || "Non renseignée"}
+                copyable
+              />
+            </div>
+            <ReviewField
+              label="Ville & CP"
               value={
                 [values.postal_code, values.city].filter(Boolean).join(" ") ||
-                "Non renseignee"
+                "Non renseignée"
               }
+              copyable
             />
-            <ReviewRow
+            <ReviewField
               label="Agence"
               value={getAgencyLabel(agencies, values.agency_id)}
             />
           </div>
         </section>
 
+        {/* DETAILS CONTACT / DONNEES OFFICIELLES */}
         {isIndividualClient ? (
-          <section className="space-y-4">
-            <div className="flex items-center gap-2 border-b border-border-subtle pb-2 text-sm font-medium text-foreground">
-              <UserRound className="size-4 text-muted-foreground" />
-              <h3>Contact principal</h3>
+          <section className="rounded-xl border border-border bg-background p-5 space-y-4 shadow-sm">
+            <div className="flex items-center gap-2 border-b border-border pb-3 text-sm font-bold text-foreground">
+              <UserRound className="size-4 text-primary" />
+              <h3 className="text-[13px] uppercase tracking-wider">Contact principal</h3>
             </div>
-            <div>
-              <ReviewRow
-                label="Nom complet"
-                value={
-                  [values.first_name, values.last_name]
-                    .filter(Boolean)
-                    .join(" ") || "Non renseigne"
-                }
+            <div className="grid gap-3.5 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <ReviewField
+                  label="Nom complet"
+                  value={
+                    [values.first_name, values.last_name]
+                      .filter(Boolean)
+                      .join(" ") || "Non renseigné"
+                  }
+                  copyable
+                />
+              </div>
+              <ReviewField
+                label="Téléphone"
+                value={values.phone || "Non renseigné"}
+                copyable
               />
-              <ReviewRow
-                label="Telephone"
-                value={values.phone || "Non renseigne"}
-              />
-              <ReviewRow
+              <ReviewField
                 label="Email"
-                value={values.email || "Non renseigne"}
+                value={values.email || "Non renseigné"}
+                copyable
               />
             </div>
           </section>
         ) : (
-          <section className="space-y-4">
-            <div className="flex items-center gap-2 border-b border-border-subtle pb-2 text-sm font-medium text-foreground">
-              <ShieldCheck className="size-4 text-muted-foreground" />
-              <h3>Donnees officielles</h3>
+          <section className="rounded-xl border border-border bg-background p-5 space-y-4 shadow-sm">
+            <div className="flex items-center gap-2 border-b border-border pb-3 text-sm font-bold text-foreground">
+              <ShieldCheck className="size-4 text-primary" />
+              <h3 className="text-[13px] uppercase tracking-wider">Données officielles</h3>
             </div>
-            <div>
-              <ReviewRow
-                label="Nom officiel"
-                value={values.official_name || "Non renseigne"}
-              />
-              <ReviewRow
+            <div className="grid gap-3.5 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <ReviewField
+                  label="Nom officiel"
+                  value={values.official_name || "Non renseigné"}
+                  copyable
+                />
+              </div>
+              <ReviewField
                 label="SIRET"
-                value={values.siret || "Non renseigne"}
+                value={values.siret || "Non renseigné"}
+                copyable
               />
-              <ReviewRow
+              <ReviewField
                 label="SIREN"
-                value={values.siren || "Non renseigne"}
+                value={values.siren || "Non renseigné"}
+                copyable
               />
-              <ReviewRow
+              <ReviewField
                 label="Code NAF"
-                value={values.naf_code || "Non renseigne"}
+                value={values.naf_code || "Non renseigné"}
+                copyable
               />
               {selectedCompany ? (
-                <ReviewRow
-                  label="Statut etablissement"
+                <ReviewField
+                  label="Statut établissement"
                   value={
                     selectedCompany.establishment_status === "closed" && closedAt
                       ? `${getCompanySearchStatusLabel(selectedCompany.establishment_status)} le ${closedAt}`
@@ -166,46 +275,43 @@ const EntityOnboardingReviewStep = ({
                         )
                   }
                 />
-              ) : null}
+              ) : (
+                <ReviewField
+                  label="Statut établissement"
+                  value="Non renseigné"
+                />
+              )}
             </div>
           </section>
         )}
 
+        {/* COMPTE CLIENT */}
         {effectiveIntent === "client" && (
-          <section className="space-y-4 md:col-span-2">
-            <div className="flex items-center gap-2 border-b border-border-subtle pb-2 text-sm font-medium text-foreground">
-              <Building2 className="size-4 text-muted-foreground" />
-              <h3>Compte client</h3>
+          <section className="rounded-xl border border-border bg-background p-5 space-y-4 md:col-span-2 shadow-sm">
+            <div className="flex items-center gap-2 border-b border-border pb-3 text-sm font-bold text-foreground">
+              <Building2 className="size-4 text-primary" />
+              <h3 className="text-[13px] uppercase tracking-wider">Compte client</h3>
             </div>
-            <div className="grid gap-x-16 md:grid-cols-2">
-              <div>
-                <ReviewRow
-                  label="Numero client"
-                  value={values.client_number || "A renseigner"}
-                />
-                <ReviewRow
-                  label="Type"
-                  value={
-                    isIndividualClient
+            <div className="grid gap-3.5 sm:grid-cols-3">
+              <ReviewField
+                label="Numéro client"
+                value={values.client_number || "À renseigner"}
+                copyable
+              />
+              <ReviewField
+                label="Type de compte"
+                value={
+                  isIndividualClient
+                    ? "Comptant"
+                    : values.account_type === "cash"
                       ? "Comptant"
-                      : values.account_type === "cash"
-                        ? "Comptant"
-                        : "Compte a terme"
-                  }
-                />
-              </div>
-              <div>
-                <ReviewRow
-                  label="Commercial CIR"
-                  value={
-                    isIndividualClient
-                      ? "Aucun"
-                      : values.cir_commercial_id
-                        ? "Affecte"
-                        : "Non affecte"
-                  }
-                />
-              </div>
+                      : "Compte à terme"
+                }
+              />
+              <ReviewField
+                label="Commercial CIR"
+                value={commercialLabel}
+              />
             </div>
           </section>
         )}

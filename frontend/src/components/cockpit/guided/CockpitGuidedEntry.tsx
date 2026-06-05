@@ -188,6 +188,7 @@ const CockpitGuidedEntry = ({
         )}
       >
         <main
+          data-cockpit-scroll-root
           className={cn(
             'min-h-0 min-w-0 overflow-y-auto px-3 pt-6 sm:px-6 lg:px-10',
             flow.activeStep === 'details' ? 'pb-28' : 'pb-10'

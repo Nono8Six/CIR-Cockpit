@@ -5,24 +5,29 @@ import InteractionCardHeader from './interaction-card/InteractionCardHeader';
 import { getInteractionCardState } from './interaction-card/getInteractionCardState';
 import type { InteractionCardProps } from './interaction-card/InteractionCard.types';
 
-const InteractionCard = ({ data, statusMeta, onDeleteInteraction }: InteractionCardProps) => {
+/**
+ * Premium Kanban board interaction card component.
+ * Features a modern hover-lift effect, custom action items, and clear status tones.
+ * 
+ * @param {InteractionCardProps} props - The component props.
+ * @returns {React.JSX.Element} The rendered interaction card.
+ */
+const InteractionCard = ({ data, statusMeta, onDeleteInteraction, onSelectInteraction }: InteractionCardProps) => {
   const { isDone, isLate, statusTone, statusLabel } = getInteractionCardState(
     data,
     statusMeta
   );
 
-  const accentColor =
-    statusTone === 'done'
-      ? 'border-l-success'
-      : statusTone === 'todo'
-        ? 'border-l-primary'
-        : 'border-l-warning';
-
   return (
     <article
-      className={`group relative overflow-hidden rounded-lg border border-border border-l-[3px] ${accentColor} bg-card p-3 shadow-soft transition-[box-shadow,border-color] duration-150 hover:border-border-subtle hover:shadow-sm`}
+      className="group relative overflow-hidden rounded-2xl border border-border/80 bg-card p-4 shadow-soft transition-all duration-200 hover:shadow-md hover:border-border"
     >
-      <InteractionCardHeader data={data} statusTone={statusTone} onDeleteInteraction={onDeleteInteraction} />
+      <InteractionCardHeader
+        data={data}
+        statusTone={statusTone}
+        onDeleteInteraction={onDeleteInteraction}
+        onSelectInteraction={onSelectInteraction}
+      />
       <InteractionCardBody data={data} />
       <InteractionCardFamilies families={data.mega_families} />
       <InteractionCardFooter

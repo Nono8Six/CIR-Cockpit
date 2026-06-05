@@ -1,53 +1,112 @@
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { Clock, Check, Folder, Inbox } from 'lucide-react';
 import type { AgencyStatus, Interaction } from '@/types';
 import InteractionCard from '@/components/InteractionCard';
 
 type KanbanColumnProps = {
   columnId: string;
   title: string;
-  dotClassName: string;
-  toneClassName?: string;
   interactions: Interaction[];
   emptyLabel: string;
   onSelectInteraction: (interaction: Interaction) => void;
   onDeleteInteraction: (interaction: Interaction) => void;
   getStatusMeta: (interaction: Interaction) => AgencyStatus | undefined;
   activeInteractionId?: string | null;
+  className?: string;
+  dotClassName?: string;
 };
 
+/**
+ * KanbanColumn component representing a single status lane on the dashboard.
+ * Manages item layout animation, pulsing indicators, and card spacing.
+ * 
+ * @param {KanbanColumnProps} props - The component props.
+ * @returns {React.JSX.Element} The rendered column.
+ */
 const KanbanColumn = ({
   columnId,
   title,
-  dotClassName,
-  toneClassName = 'border-border-subtle bg-surface-1',
   interactions,
   emptyLabel,
   onSelectInteraction,
   onDeleteInteraction,
   getStatusMeta,
-  activeInteractionId
+  activeInteractionId,
+  className = ''
 }: KanbanColumnProps) => {
   const reducedMotion = useReducedMotion();
+  const isEmpty = interactions.length === 0;
+  const columnMinHeightClass = 'min-h-[18rem] lg:h-full';
+  const columnBodyFlexClass = 'flex-1';
+
+  const renderHeaderIcon = () => {
+    switch (columnId) {
+      case 'urgencies':
+        return (
+          <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-destructive text-[12.5px] font-bold text-white leading-none">
+            !
+          </div>
+        );
+      case 'in-progress':
+        return (
+          <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-warning text-white">
+            <Clock size={11} className="stroke-[3.5]" />
+          </div>
+        );
+      case 'completed':
+        return (
+          <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-success text-white">
+            <Check size={11} className="stroke-[3.5]" />
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const renderHeaderCountBadge = () => {
+    switch (columnId) {
+      case 'urgencies':
+        return (
+          <span className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-destructive/10 px-1.5 font-sans text-[10px] font-bold text-destructive">
+            {interactions.length}
+          </span>
+        );
+      case 'in-progress':
+        return (
+          <span className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-warning/15 px-1.5 font-sans text-[10px] font-bold text-warning-foreground">
+            {interactions.length}
+          </span>
+        );
+      case 'completed':
+        return (
+          <span className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-success/15 px-1.5 font-sans text-[10px] font-bold text-success">
+            {interactions.length}
+          </span>
+        );
+      default:
+        return (
+          <span className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-muted/65 px-1.5 font-sans text-[10px] font-bold text-muted-foreground">
+            {interactions.length}
+          </span>
+        );
+    }
+  };
 
   return (
     <section
-      className="flex min-h-[17rem] min-w-0 flex-col overflow-hidden rounded-lg border border-border bg-surface-2 p-2 shadow-soft"
+      className={`flex ${columnMinHeightClass} min-w-0 flex-col overflow-hidden rounded-2xl border p-4 shadow-[0_4px_20px_rgba(0,0,0,0.015),0_1px_3px_rgba(0,0,0,0.02)] ${className}`}
       data-testid={`dashboard-kanban-column-${columnId}`}
     >
-      <header className={`mb-2 flex items-center justify-between rounded-md border px-2 py-2 shadow-[inset_0_1px_0_hsl(var(--background)/0.75)] ${toneClassName}`}>
-        <h3 className="flex min-w-0 items-center gap-2 text-xs font-semibold text-foreground">
-          <span className="relative flex size-2">
-            <span className={`absolute inline-flex h-full w-full rounded-full opacity-20 ${dotClassName}`} style={{ transform: 'scale(2)' }} />
-            <span className={`relative inline-flex size-2 rounded-full ${dotClassName}`} aria-hidden="true" />
-          </span>
+      <header className="mb-4 flex items-center justify-between px-0.5 py-0.5 select-none">
+        <h3 className="flex min-w-0 items-center gap-2.5 text-[12.5px] font-extrabold uppercase tracking-wider text-foreground">
+          {renderHeaderIcon()}
           <span className="truncate">{title}</span>
         </h3>
-        <span className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-md border border-border/70 bg-background/80 px-1.5 font-mono text-[10px] font-semibold text-foreground shadow-soft">
-          {interactions.length}
-        </span>
+        {renderHeaderCountBadge()}
       </header>
       <div
-        className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto px-1 py-1"
+        className={`flex min-h-0 ${columnBodyFlexClass} flex-col gap-3 overflow-y-auto px-0.5 py-0.5`}
         data-testid={`dashboard-kanban-column-body-${columnId}`}
       >
         <AnimatePresence mode="popLayout" initial={!reducedMotion}>
@@ -74,7 +133,7 @@ const KanbanColumn = ({
                     onSelectInteraction(interaction);
                   }
                 }}
-                className={`w-full rounded-lg text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:ring-offset-1 transition-[box-shadow] duration-150 ${
+                className={`w-full rounded-2xl text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:ring-offset-1 transition-[box-shadow] duration-150 ${
                   isActive 
                     ? 'ring-2 ring-primary/40 shadow-md' 
                     : ''
@@ -86,15 +145,21 @@ const KanbanColumn = ({
                   data={interaction}
                   statusMeta={getStatusMeta(interaction)}
                   onDeleteInteraction={onDeleteInteraction}
+                  onSelectInteraction={onSelectInteraction}
                 />
               </motion.div>
             );
           })}
         </AnimatePresence>
         
-        {interactions.length === 0 && (
-          <div className="rounded-md border border-dashed border-border bg-card/80 py-12 text-center text-xs font-medium text-muted-foreground">
-            {emptyLabel}
+        {isEmpty && (
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-white py-16 px-4 text-center shadow-soft">
+            {columnId === 'in-progress' ? (
+              <Folder size={26} className="text-muted-foreground/45 mb-3" />
+            ) : (
+              <Inbox size={26} className="text-success/70 mb-3" />
+            )}
+            <p className="text-[12px] font-bold text-muted-foreground/80 tracking-wide">{emptyLabel}</p>
           </div>
         )}
       </div>

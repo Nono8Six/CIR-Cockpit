@@ -95,8 +95,10 @@ describe('KanbanColumn', () => {
     await user.click(card);
     expect(onSelectInteraction).toHaveBeenCalledTimes(1);
 
-    const deleteButton = screen.getByRole('button', { name: /supprimer p06 overlay client/i });
-    await user.click(deleteButton);
+    const actionsButton = screen.getByRole('button', { name: /actions pour p06 overlay client/i });
+    await user.click(actionsButton);
+    const deleteItem = screen.getByRole('menuitem', { name: /supprimer/i });
+    await user.click(deleteItem);
     expect(onDeleteInteraction).toHaveBeenCalledTimes(1);
     expect(onSelectInteraction).toHaveBeenCalledTimes(1);
 

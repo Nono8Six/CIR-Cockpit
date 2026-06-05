@@ -139,7 +139,11 @@ const AppHeader = ({
 
           <div className="w-px h-4 bg-border/60 hidden xl:block mx-1" />
 
-          <AppHeaderSearchButton onOpenSearch={onOpenSearch} onSearchIntent={onSearchIntent} />
+          <AppHeaderSearchButton
+            onOpenSearch={onOpenSearch}
+            onSearchIntent={onSearchIntent}
+            isCompact={activeTab === 'dashboard'}
+          />
 
           <button
             type="button"

@@ -77,6 +77,17 @@ const AppMainTabContent = (props: AppMainTabContentProps) => {
     void loadSettings();
   }, []);
 
+  const previousActiveTabRef = useRef(activeTab);
+  useEffect(() => {
+    const previousActiveTab = previousActiveTabRef.current;
+    previousActiveTabRef.current = activeTab;
+
+    if (activeTab !== 'cockpit' || previousActiveTab === 'cockpit') return;
+
+    const cockpitScrollRoot = document.querySelector<HTMLElement>('[data-cockpit-scroll-root]');
+    cockpitScrollRoot?.scrollTo({ top: 0, left: 0 });
+  }, [activeTab]);
+
   const visitedTabsRef = useRef<Record<AppTab, boolean>>({
     cockpit: activeTab === 'cockpit',
     dashboard: activeTab === 'dashboard',

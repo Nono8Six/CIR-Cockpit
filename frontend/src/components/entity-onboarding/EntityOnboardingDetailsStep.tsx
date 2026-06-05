@@ -34,7 +34,7 @@ interface FieldShellProps {
 }
 
 const labelClasses =
-  "text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground";
+  "text-[12px] font-medium text-foreground/85";
 const inputGhostClasses =
   "h-10 rounded-md border border-border bg-surface-1/60 px-3 text-base font-medium text-foreground shadow-sm transition-[color,background-color,border-color,box-shadow] hover:border-border-strong hover:bg-background focus-visible:border-primary focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-primary/20 sm:text-[14px]";
 const selectGhostClasses =
@@ -49,12 +49,12 @@ const FieldShell = ({
   children,
 }: FieldShellProps) => (
   <div className={className}>
-    <div className="grid gap-1">
+    <div className="grid gap-1.5">
       <label htmlFor={htmlFor} className={labelClasses}>
         {label}
       </label>
       {children}
-      {error ? <p className="text-xs text-destructive">{error}</p> : null}
+      {error ? <p className="text-xs text-destructive font-medium">{error}</p> : null}
       {!error && helper ? (
         <p className="text-xs text-muted-foreground/60">{helper}</p>
       ) : null}
@@ -87,23 +87,23 @@ const EntityOnboardingDetailsStep = ({
   const { errors } = form.formState;
 
   return (
-    <div className="flex h-full flex-col space-y-12 pb-8">
+    <div className="flex h-full flex-col space-y-6 pb-8">
       {/* SECTION IDENTITE */}
-      <section className="space-y-6">
-        <div className="flex items-center gap-2 border-b border-border-subtle pb-2 text-sm text-foreground font-medium">
+      <section className="rounded-xl border border-border-subtle bg-surface-1/30 p-6 space-y-6">
+        <div className="flex items-center gap-2 border-b border-border-subtle pb-3 text-sm text-foreground font-semibold">
           {isIndividualClient ? (
-            <UserRound className="size-4" />
+            <UserRound className="size-4 text-primary" />
           ) : (
-            <Building2 className="size-4" />
+            <Building2 className="size-4 text-primary" />
           )}
-          <h3>
+          <h3 className="text-[15px]">
             {isIndividualClient
-              ? "Identite et contact principal"
-              : "Identite & Adresse"}
+              ? "Identité et contact principal"
+              : "Identité & Adresse"}
           </h3>
         </div>
 
-        <div className="grid gap-x-12 gap-y-8 md:grid-cols-2">
+        <div className="grid gap-x-6 gap-y-4 md:grid-cols-2">
           {isIndividualClient ? (
             <>
               <FieldShell
@@ -119,7 +119,7 @@ const EntityOnboardingDetailsStep = ({
               </FieldShell>
               <FieldShell
                 htmlFor="first_name"
-                label="Prenom"
+                label="Prénom"
                 error={errors.first_name?.message}
               >
                 <Input
@@ -130,7 +130,7 @@ const EntityOnboardingDetailsStep = ({
               </FieldShell>
               <FieldShell
                 htmlFor="phone"
-                label="Telephone"
+                label="Téléphone"
                 error={errors.phone?.message}
               >
                 <Input
@@ -159,7 +159,7 @@ const EntityOnboardingDetailsStep = ({
           ) : (
             <FieldShell
               htmlFor="name"
-              label="Nom de la societe"
+              label="Nom de la société"
               error={errors.name?.message}
               className="md:col-span-2"
             >
@@ -174,6 +174,7 @@ const EntityOnboardingDetailsStep = ({
           <FieldShell
             htmlFor="address"
             label="Adresse"
+            error={errors.address?.message}
             className="md:col-span-2"
           >
             <Input
@@ -220,12 +221,16 @@ const EntityOnboardingDetailsStep = ({
             />
           </FieldShell>
 
-          <FieldShell htmlFor="department" label="Departement">
+          <FieldShell
+            htmlFor="department"
+            label="Département"
+            error={errors.department?.message}
+          >
             <Input
               id="department"
               value={values.department ?? ""}
               readOnly
-              className={cn(inputGhostClasses, "text-muted-foreground")}
+              className={cn(inputGhostClasses, "text-muted-foreground bg-surface-2/60 cursor-not-allowed")}
             />
           </FieldShell>
 
@@ -241,7 +246,7 @@ const EntityOnboardingDetailsStep = ({
               disabled={userRole === "tcs"}
             >
               <SelectTrigger aria-label="Agence" className={selectGhostClasses}>
-                <SelectValue placeholder="Selectionner une agence" />
+                <SelectValue placeholder="Sélectionner une agence" />
               </SelectTrigger>
               <SelectContent>
                 {agencies.map((agency) => (
@@ -265,11 +270,11 @@ const EntityOnboardingDetailsStep = ({
 
       {/* SECTION DONNEES OFFICIELLES (Société uniquement) */}
       {!isIndividualClient && (
-        <section className="space-y-6">
-          <div className="flex items-center gap-2 border-b border-border-subtle pb-2 text-sm text-foreground font-medium">
-            <h3>Donnees officielles</h3>
+        <section className="rounded-xl border border-border-subtle bg-surface-1/30 p-6 space-y-6">
+          <div className="flex items-center gap-2 border-b border-border-subtle pb-3 text-sm text-foreground font-semibold">
+            <h3 className="text-[15px]">Données officielles</h3>
           </div>
-          <div className="grid gap-x-12 gap-y-8 md:grid-cols-3">
+          <div className="grid gap-x-6 gap-y-4 md:grid-cols-3">
             <FieldShell htmlFor="siret" label="SIRET">
               <Input
                 id="siret"
@@ -314,7 +319,7 @@ const EntityOnboardingDetailsStep = ({
                     : "Saisie manuelle"
                 }
                 readOnly
-                className={cn(inputGhostClasses, "text-muted-foreground")}
+                className={cn(inputGhostClasses, "text-muted-foreground bg-surface-2/60 cursor-not-allowed")}
               />
             </FieldShell>
           </div>
@@ -323,14 +328,14 @@ const EntityOnboardingDetailsStep = ({
 
       {/* SECTION COMPTE CLIENT */}
       {effectiveIntent === "client" && (
-        <section className="space-y-6">
-          <div className="flex items-center gap-2 border-b border-border-subtle pb-2 text-sm text-foreground font-medium">
-            <h3>Compte client</h3>
+        <section className="rounded-xl border border-border-subtle bg-surface-1/30 p-6 space-y-6">
+          <div className="flex items-center gap-2 border-b border-border-subtle pb-3 text-sm text-foreground font-semibold">
+            <h3 className="text-[15px]">Compte client</h3>
           </div>
-          <div className="grid gap-x-12 gap-y-8 md:grid-cols-2">
+          <div className="grid gap-x-6 gap-y-4 md:grid-cols-2">
             <FieldShell
               htmlFor="client_number"
-              label="Numero de compte"
+              label="Numéro de compte"
               error={errors.client_number?.message}
             >
               <Input
@@ -354,7 +359,7 @@ const EntityOnboardingDetailsStep = ({
                   aria-label="Type de compte"
                   value="Comptant"
                   readOnly
-                  className={cn(inputGhostClasses, "text-muted-foreground")}
+                  className={cn(inputGhostClasses, "text-muted-foreground bg-surface-2/60 cursor-not-allowed")}
                 />
               ) : (
                 <Select
@@ -373,7 +378,7 @@ const EntityOnboardingDetailsStep = ({
                     <SelectValue placeholder="Type de compte" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="term">Compte a terme</SelectItem>
+                    <SelectItem value="term">Compte à terme</SelectItem>
                     <SelectItem value="cash">Comptant</SelectItem>
                   </SelectContent>
                 </Select>
@@ -384,9 +389,9 @@ const EntityOnboardingDetailsStep = ({
               {isIndividualClient ? (
                 <Input
                   aria-label="Commercial CIR"
-                  value="Aucun commercial affecte"
+                  value="Aucun commercial affecté"
                   readOnly
-                  className={cn(inputGhostClasses, "text-muted-foreground")}
+                  className={cn(inputGhostClasses, "text-muted-foreground bg-surface-2/60 cursor-not-allowed")}
                 />
               ) : (
                 <Select
@@ -403,11 +408,11 @@ const EntityOnboardingDetailsStep = ({
                     aria-label="Commercial CIR"
                     className={selectGhostClasses}
                   >
-                    <SelectValue placeholder="Aucun commercial affecte" />
+                    <SelectValue placeholder="Aucun commercial affecté" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__none__">
-                      Aucun commercial affecte
+                      Aucun commercial affecté
                     </SelectItem>
                     {commercials.map((commercial) => (
                       <SelectItem key={commercial.id} value={commercial.id}>

@@ -5,7 +5,7 @@ import AppMainTabContent from '@/components/app-main/AppMainTabContent';
 import type { AgencyConfig } from '@/services/config';
 
 vi.mock('@/components/CockpitForm', () => ({
-  default: () => <div data-testid="mock-cockpit-form">Cockpit</div>
+  default: () => <div data-cockpit-scroll-root data-testid="mock-cockpit-form">Cockpit</div>
 }));
 vi.mock('@/components/Dashboard', () => ({
   default: () => <div data-testid="mock-dashboard">Dashboard</div>
@@ -65,5 +65,21 @@ describe('AppMainTabContent', () => {
     expect(hiddenCockpitPanel).not.toHaveAttribute('aria-hidden');
     expect(activeClientsPanel).not.toHaveAttribute('hidden');
     expect(activeClientsPanel).toHaveAttribute('data-state', 'active');
+  });
+
+  it('resets the cockpit scroll position when returning to the cockpit tab', async () => {
+    const { rerender } = render(<AppMainTabContent {...baseProps} activeTab="cockpit" />);
+    const cockpitScrollRoot = await screen.findByTestId('mock-cockpit-form');
+
+    cockpitScrollRoot.scrollTo = vi.fn(({ top }) => {
+      cockpitScrollRoot.scrollTop = Number(top);
+    });
+    cockpitScrollRoot.scrollTop = 240;
+
+    rerender(<AppMainTabContent {...baseProps} activeTab="clients" />);
+    rerender(<AppMainTabContent {...baseProps} activeTab="cockpit" />);
+
+    expect(cockpitScrollRoot.scrollTo).toHaveBeenCalledWith({ top: 0, left: 0 });
+    expect(cockpitScrollRoot.scrollTop).toBe(0);
   });
 });

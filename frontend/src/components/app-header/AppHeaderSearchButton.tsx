@@ -9,9 +9,17 @@ import { Kbd } from '../ui/data-display/Kbd';
 type AppHeaderSearchButtonProps = {
   onOpenSearch: () => void;
   onSearchIntent?: () => void;
+  isCompact?: boolean;
 };
 
-const AppHeaderSearchButton = ({ onOpenSearch, onSearchIntent }: AppHeaderSearchButtonProps) => {
+/**
+ * Button component for triggering the global search overlay.
+ * Supports a compact mode for dashboard layout where vertical space and duplication is minimized.
+ * 
+ * @param {AppHeaderSearchButtonProps} props - The component props.
+ * @returns {React.JSX.Element} The rendered search button.
+ */
+const AppHeaderSearchButton = ({ onOpenSearch, onSearchIntent, isCompact = false }: AppHeaderSearchButtonProps) => {
   const shortcutLabel = getSearchShortcutLabel();
 
   const handleSearchIntent = () => {
@@ -22,7 +30,9 @@ const AppHeaderSearchButton = ({ onOpenSearch, onSearchIntent }: AppHeaderSearch
     <button
       type="button"
       data-testid="app-header-search-button"
-      className="group inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-[background-color,border-color,color,box-shadow] hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background lg:w-[17.5rem] lg:justify-start lg:gap-2 lg:px-2.5"
+      className={`group inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-[background-color,border-color,color,box-shadow] hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+        isCompact ? '' : 'lg:w-[17.5rem] lg:justify-start lg:gap-2 lg:px-2.5'
+      }`}
       onClick={onOpenSearch}
       onMouseEnter={handleSearchIntent}
       onFocus={handleSearchIntent}
@@ -31,15 +41,19 @@ const AppHeaderSearchButton = ({ onOpenSearch, onSearchIntent }: AppHeaderSearch
       aria-keyshortcuts={SEARCH_SHORTCUT_ARIA}
     >
       <Search size={14} className="shrink-0 transition-colors group-hover:text-foreground" />
-      <span
-        data-testid="app-header-search-label"
-        className="hidden text-xs font-medium transition-colors group-hover:text-foreground lg:inline"
-      >
-        Clients, devis, interactions…
-      </span>
-      <span className="ml-auto hidden items-center lg:inline-flex">
-        <Kbd className="group-hover:bg-background/80 group-hover:text-foreground transition-colors">{shortcutLabel}</Kbd>
-      </span>
+      {!isCompact && (
+        <>
+          <span
+            data-testid="app-header-search-label"
+            className="hidden text-xs font-medium transition-colors group-hover:text-foreground lg:inline"
+          >
+            Clients, devis, interactions…
+          </span>
+          <span className="ml-auto hidden items-center lg:inline-flex">
+            <Kbd className="group-hover:bg-background/80 group-hover:text-foreground transition-colors">{shortcutLabel}</Kbd>
+          </span>
+        </>
+      )}
     </button>
   );
 };

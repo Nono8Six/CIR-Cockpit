@@ -69,9 +69,9 @@ export const EntityOnboardingCompanySummary = ({
 
   if (!companyName) {
     return (
-      <div className="flex h-32 flex-col items-center justify-center rounded-lg border border-dashed border-border-subtle bg-surface-1/20 px-6 text-center">
-        <Building2 className="mb-2 size-6 text-muted-foreground/40" />
-        <p className="text-[12px] leading-snug text-muted-foreground">
+      <div className="flex h-32 flex-col items-center justify-center rounded-lg border border-dashed border-border bg-surface-1/40 px-6 text-center">
+        <Building2 className="mb-2 size-6 text-muted-foreground/30" />
+        <p className="text-[12px] leading-snug text-muted-foreground/85">
           Sélectionnez une entreprise pour voir son intelligence commerciale
         </p>
       </div>
@@ -79,27 +79,27 @@ export const EntityOnboardingCompanySummary = ({
   }
 
   return (
-    <div className="space-y-4 rounded-lg border border-border-subtle bg-background p-4 shadow-sm">
+    <div className="space-y-4 pb-4 border-b border-border">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1">
-          <p className="text-sm font-bold text-foreground">{companyName}</p>
+          <p className="text-sm font-bold text-foreground leading-snug">{companyName}</p>
           {companySubtitle ? (
-            <p className="text-[12px] text-muted-foreground">{companySubtitle}</p>
+            <p className="text-[11px] text-muted-foreground">{companySubtitle}</p>
           ) : null}
           {companyDetailsLoading ? (
             <div className="flex items-center gap-2 pt-1 text-[11px] text-muted-foreground">
-              <LoaderCircle className="size-3 animate-spin" />
-              Chargement des donnees officielles enrichies
+              <LoaderCircle className="size-3 animate-spin text-primary" />
+              Chargement des données officielles...
             </div>
           ) : null}
           {companyDetailsUnavailable ? (
-            <p className="pt-1 text-[11px] leading-relaxed text-warning">
-              Données enrichies indisponibles. La sélection reste utilisable.
+            <p className="pt-1 text-[11px] leading-relaxed text-warning font-medium">
+              Données enrichies indisponibles.
             </p>
           ) : null}
         </div>
         {companyDetails ? (
-          <Badge variant="success" density="dense" className="gap-1 border-success/20 bg-success/5 text-success">
+          <Badge variant="outline" density="dense" className="gap-1 border-success/20 bg-success/5 text-success font-medium">
             <Sparkles className="size-3" />
             Officiel
           </Badge>
@@ -107,37 +107,37 @@ export const EntityOnboardingCompanySummary = ({
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-md border border-border-subtle/60 bg-surface-1/40 p-3">
-          <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+        <div className="rounded-lg border border-border bg-surface-2/40 p-3">
+          <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/80">
             SIREN
           </p>
-          <p className="mt-1 font-mono text-[12px] font-medium text-foreground">
+          <p className="mt-1 font-mono text-[12px] font-bold text-foreground">
             {companyDetails?.siren ?? company?.siren ?? '-'}
           </p>
         </div>
-        <div className="rounded-md border border-border-subtle/60 bg-surface-1/40 p-3">
-          <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+        <div className="rounded-lg border border-border bg-surface-2/40 p-3">
+          <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/80">
             Code NAF
           </p>
-          <p className="mt-1 text-[12px] font-medium leading-snug text-foreground">
+          <p className="mt-1 text-[12px] font-bold leading-snug text-foreground break-words">
             {activityLabel ?? '-'}
           </p>
         </div>
       </div>
 
-      <div className="space-y-2.5">
+      <div className="space-y-2 pt-1">
         {companyDetails?.nature_juridique ? (
           <SidebarInfoRow label="Nature juridique" value={companyDetails.nature_juridique} />
         ) : null}
         {companyDetails?.categorie_entreprise ? (
-          <SidebarInfoRow label="Categorie" value={companyDetails.categorie_entreprise} />
+          <SidebarInfoRow label="Catégorie" value={companyDetails.categorie_entreprise} />
         ) : null}
         {companyDetails?.employee_range ? (
           <SidebarInfoRow label="Effectif" value={companyDetails.employee_range} />
         ) : null}
         {companyDetails?.date_creation ? (
           <SidebarInfoRow
-            label="Creation"
+            label="Création"
             value={formatOfficialDate(companyDetails.date_creation) ?? companyDetails.date_creation}
           />
         ) : null}
@@ -159,14 +159,14 @@ export const EntityOnboardingCompanySummary = ({
           type="button"
           variant="ghost"
           size="dense"
-          className="w-full justify-between border border-dashed border-border-subtle text-[11px] text-muted-foreground"
+          className="w-full justify-between border border-border hover:bg-surface-2 bg-surface-1/50 text-[11px] text-muted-foreground hover:text-foreground font-medium rounded-lg py-2"
           onClick={() => {
             void navigator.clipboard.writeText(clipboardValue);
             notifySuccess('Données copiées');
           }}
         >
           <span>Presse-papier commercial</span>
-          <Copy className="size-3" />
+          <Copy className="size-3.5" />
         </Button>
       ) : null}
     </div>

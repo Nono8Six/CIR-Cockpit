@@ -11,6 +11,7 @@ import type {
   CompanySearchGroup,
   CompanySearchStatusFilter,
 } from './entityOnboarding.types';
+import { getDepartmentFromPostalCode } from './entityOnboarding.utils';
 
 interface UseOnboardingCompanySelectionInput {
   companyGroups: CompanySearchGroup[];
@@ -61,7 +62,11 @@ export const useOnboardingCompanySelection = ({
       });
       form.setValue('address', company.address ?? '', { shouldDirty: true });
       form.setValue('postal_code', company.postal_code ?? '', { shouldDirty: true });
-      form.setValue('department', company.department ?? '', { shouldDirty: true });
+      
+      const postalCode = company.postal_code ?? '';
+      const department = company.department || (postalCode.trim().length >= 2 ? getDepartmentFromPostalCode(postalCode) : '');
+      form.setValue('department', department, { shouldDirty: true });
+
       form.setValue('city', company.city ?? '', {
         shouldDirty: true,
         shouldValidate: true,

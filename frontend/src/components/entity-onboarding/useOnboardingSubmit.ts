@@ -89,7 +89,7 @@ export const useOnboardingSubmit = ({
           throw createMissingSaveCallbackError('client');
         }
 
-        const parsed = clientFormSchema.safeParse({
+        const clientParseInput = {
           client_number: values.client_number,
           client_kind: values.client_kind,
           account_type: values.account_type,
@@ -114,18 +114,21 @@ export const useOnboardingSubmit = ({
           official_data_synced_at: values.official_data_synced_at,
           notes: values.notes,
           cir_commercial_id: values.cir_commercial_id,
-          primary_contact: isIndividualClient
-            ? {
-                first_name: values.first_name,
-                last_name: values.last_name,
-                email: values.email,
-                phone: values.phone,
-                position: '',
-                notes: '',
-              }
-            : undefined,
           agency_id: agencyId,
-        });
+          ...(isIndividualClient
+            ? {
+                primary_contact: {
+                  first_name: values.first_name,
+                  last_name: values.last_name,
+                  email: values.email,
+                  phone: values.phone,
+                  position: '',
+                  notes: '',
+                },
+              }
+            : {}),
+        };
+        const parsed = clientFormSchema.safeParse(clientParseInput);
 
         if (!parsed.success) {
           setStepError(

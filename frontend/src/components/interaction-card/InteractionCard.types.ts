@@ -4,6 +4,7 @@ export type InteractionCardProps = {
   data: Interaction;
   statusMeta?: AgencyStatus;
   onDeleteInteraction?: (interaction: Interaction) => void;
+  onSelectInteraction?: (interaction: Interaction) => void;
 };
 
 export type InteractionCardComputedState = {
