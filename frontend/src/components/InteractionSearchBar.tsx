@@ -81,7 +81,7 @@ const InteractionSearchBar = ({
         setShowInlineCreate((current) => !current);
         setIsOpen(true);
       }
-    : onCreateEntity;
+    : onCreateEntity ? () => onCreateEntity(query) : undefined;
   const footer = createLabel || canOpenGlobalSearch
     ? (
       <InteractionSearchFooter

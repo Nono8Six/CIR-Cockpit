@@ -9,6 +9,7 @@ import {
 } from './entityOnboarding.schema';
 import type {
   CompanySearchGroup,
+  CompanySearchHeadOfficeFilter,
   CompanySearchStatusFilter,
   EntityOnboardingSeed,
   OnboardingIntent,
@@ -34,10 +35,15 @@ interface UseOnboardingFlowEffectsInput {
   defaultClientKind: 'company' | 'individual';
   selectedCompany: DirectoryCompanySearchResult | undefined;
   selectedGroupId: string | null;
+  setActivitySectionFilter: Dispatch<SetStateAction<string>>;
+  setCityFilter: Dispatch<SetStateAction<string>>;
   setDepartmentFilter: Dispatch<SetStateAction<string>>;
+  setHeadOfficeFilter: Dispatch<SetStateAction<CompanySearchHeadOfficeFilter>>;
   setIsCloseConfirmOpen: Dispatch<SetStateAction<boolean>>;
   setIsSaving: Dispatch<SetStateAction<boolean>>;
   setManualEntry: Dispatch<SetStateAction<boolean>>;
+  setNafCodeFilter: Dispatch<SetStateAction<string>>;
+  setPostalCodeFilter: Dispatch<SetStateAction<string>>;
   setSearchDraft: Dispatch<SetStateAction<string>>;
   setSelectedGroupId: Dispatch<SetStateAction<string | null>>;
   setStatusFilter: Dispatch<SetStateAction<CompanySearchStatusFilter>>;
@@ -64,10 +70,15 @@ export const useOnboardingFlowEffects = ({
   defaultClientKind,
   selectedCompany,
   selectedGroupId,
+  setActivitySectionFilter,
+  setCityFilter,
   setDepartmentFilter,
+  setHeadOfficeFilter,
   setIsCloseConfirmOpen,
   setIsSaving,
   setManualEntry,
+  setNafCodeFilter,
+  setPostalCodeFilter,
   setSearchDraft,
   setSelectedGroupId,
   setStatusFilter,
@@ -152,6 +163,11 @@ export const useOnboardingFlowEffects = ({
     queueMicrotask(() => {
       setSearchDraft(initialEntity?.name ?? '');
       setDepartmentFilter(initialEntity?.department ?? '');
+      setPostalCodeFilter(initialEntity?.postal_code ?? '');
+      setCityFilter(initialEntity?.city ?? '');
+      setNafCodeFilter(initialEntity?.naf_code ?? '');
+      setActivitySectionFilter('');
+      setHeadOfficeFilter('all');
       setStatusFilter('all');
       setManualEntry(initialManualEntry);
       setSelectedGroupId(null);
@@ -170,10 +186,15 @@ export const useOnboardingFlowEffects = ({
     onboardingConfig,
     open,
     resolvedIntent,
+    setActivitySectionFilter,
+    setCityFilter,
     setDepartmentFilter,
+    setHeadOfficeFilter,
     setIsCloseConfirmOpen,
     setIsSaving,
     setManualEntry,
+    setNafCodeFilter,
+    setPostalCodeFilter,
     setSearchDraft,
     setSelectedGroupId,
     setStatusFilter,

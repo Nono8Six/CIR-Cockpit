@@ -15,6 +15,7 @@ import {
   getCompanySearchStatusLabel,
 } from "./entityOnboarding.utils";
 import { cn } from "@/lib/utils";
+import { EntityRecordWizardSection } from "@/components/entity-record-wizard/EntityRecordWizardFields";
 
 interface EntityOnboardingReviewStepProps {
   values: OnboardingValues;
@@ -68,6 +69,7 @@ const ReviewField = ({
           <button
             type="button"
             onClick={handleCopy}
+            aria-label={`Copier ${label}`}
             className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-1 rounded hover:bg-surface-3 text-muted-foreground hover:text-foreground"
             title="Copier"
           >
@@ -109,10 +111,9 @@ const EntityOnboardingReviewStep = ({
       : "Non affecté";
 
   return (
-    <div className="flex h-full flex-col space-y-5 pb-8">
-      {/* PROFILE HEADER CARD */}
-      <div className="rounded-xl border border-border bg-surface-2/30 p-5 flex items-start gap-4 shadow-sm">
-        <div className="flex size-12 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
+    <div className="flex flex-col gap-4 pb-8">
+      <div className="border border-border bg-card p-4 flex items-start gap-4">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-md border border-primary/20 bg-primary/10 text-primary">
           {isIndividualClient ? (
             <UserRound className="size-6" />
           ) : (
@@ -161,9 +162,8 @@ const EntityOnboardingReviewStep = ({
         </div>
       </div>
 
-      {/* DUPLICATE ALERTS IF ANY */}
       {duplicateMatches.length > 0 && (
-        <div className="flex items-start gap-3 rounded-lg border border-warning/30 bg-warning/5 p-4 text-warning-foreground shadow-sm">
+        <div className="flex items-start gap-3 border border-warning/30 bg-warning/5 p-4 text-warning-foreground">
           <AlertCircle className="size-4 shrink-0 mt-0.5 text-warning" />
           <div className="text-[12px] leading-relaxed">
             <p className="font-bold">Doublons potentiels détectés ({duplicateMatches.length})</p>
@@ -175,11 +175,9 @@ const EntityOnboardingReviewStep = ({
       )}
 
       <div className="grid gap-5 md:grid-cols-2">
-        {/* COORDONNEES */}
-        <section className="rounded-xl border border-border bg-background p-5 space-y-4 shadow-sm">
-          <div className="flex items-center gap-2 border-b border-border pb-3 text-sm font-bold text-foreground">
+        <EntityRecordWizardSection title="Coordonnées" eyebrow="Adresse">
+          <div className="mb-4 flex items-center gap-2 text-sm font-bold text-foreground">
             <MapPin className="size-4 text-primary" />
-            <h3 className="text-[13px] uppercase tracking-wider">Coordonnées</h3>
           </div>
           <div className="grid gap-3.5 sm:grid-cols-2">
             <div className="sm:col-span-2">
@@ -202,14 +200,12 @@ const EntityOnboardingReviewStep = ({
               value={getAgencyLabel(agencies, values.agency_id)}
             />
           </div>
-        </section>
+        </EntityRecordWizardSection>
 
-        {/* DETAILS CONTACT / DONNEES OFFICIELLES */}
         {isIndividualClient ? (
-          <section className="rounded-xl border border-border bg-background p-5 space-y-4 shadow-sm">
-            <div className="flex items-center gap-2 border-b border-border pb-3 text-sm font-bold text-foreground">
+          <EntityRecordWizardSection title="Contact principal" eyebrow="Particulier">
+            <div className="mb-4 flex items-center gap-2 text-sm font-bold text-foreground">
               <UserRound className="size-4 text-primary" />
-              <h3 className="text-[13px] uppercase tracking-wider">Contact principal</h3>
             </div>
             <div className="grid gap-3.5 sm:grid-cols-2">
               <div className="sm:col-span-2">
@@ -234,12 +230,11 @@ const EntityOnboardingReviewStep = ({
                 copyable
               />
             </div>
-          </section>
+          </EntityRecordWizardSection>
         ) : (
-          <section className="rounded-xl border border-border bg-background p-5 space-y-4 shadow-sm">
-            <div className="flex items-center gap-2 border-b border-border pb-3 text-sm font-bold text-foreground">
+          <EntityRecordWizardSection title="Données officielles" eyebrow="Base SIRENE">
+            <div className="mb-4 flex items-center gap-2 text-sm font-bold text-foreground">
               <ShieldCheck className="size-4 text-primary" />
-              <h3 className="text-[13px] uppercase tracking-wider">Données officielles</h3>
             </div>
             <div className="grid gap-3.5 sm:grid-cols-2">
               <div className="sm:col-span-2">
@@ -282,15 +277,13 @@ const EntityOnboardingReviewStep = ({
                 />
               )}
             </div>
-          </section>
+          </EntityRecordWizardSection>
         )}
 
-        {/* COMPTE CLIENT */}
         {effectiveIntent === "client" && (
-          <section className="rounded-xl border border-border bg-background p-5 space-y-4 md:col-span-2 shadow-sm">
-            <div className="flex items-center gap-2 border-b border-border pb-3 text-sm font-bold text-foreground">
+          <EntityRecordWizardSection title="Compte client" eyebrow="Référentiel CIR" className="md:col-span-2">
+            <div className="mb-4 flex items-center gap-2 text-sm font-bold text-foreground">
               <Building2 className="size-4 text-primary" />
-              <h3 className="text-[13px] uppercase tracking-wider">Compte client</h3>
             </div>
             <div className="grid gap-3.5 sm:grid-cols-3">
               <ReviewField
@@ -313,7 +306,7 @@ const EntityOnboardingReviewStep = ({
                 value={commercialLabel}
               />
             </div>
-          </section>
+          </EntityRecordWizardSection>
         )}
       </div>
     </div>

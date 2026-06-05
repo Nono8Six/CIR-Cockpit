@@ -62,6 +62,10 @@ export type CompanySearchGroup = {
 export type CompanySearchStatusFilter =
   | 'all'
   | DirectoryCompanySearchEstablishmentStatus;
+export type CompanySearchHeadOfficeFilter =
+  | 'all'
+  | 'head_office'
+  | 'secondary';
 
 export type DuplicateMatch = {
   record: DirectoryListRow;

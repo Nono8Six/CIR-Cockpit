@@ -49,7 +49,8 @@ const sheetVariants = cva(
 
 type SheetContentProps = React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content> &
   VariantProps<typeof sheetVariants> & {
-    showCloseButton?: boolean
+    showCloseButton?: boolean;
+    overlayClassName?: string;
   }
 
 const SheetContent = React.forwardRef<
@@ -60,11 +61,12 @@ const SheetContent = React.forwardRef<
   className,
   children,
   showCloseButton = true,
+  overlayClassName,
   "aria-describedby": ariaDescribedBy,
   ...props
 }, ref) => (
   <SheetPortal>
-    <SheetOverlay />
+    <SheetOverlay className={overlayClassName} />
     <SheetPrimitive.Content
       ref={ref}
       aria-describedby={ariaDescribedBy}

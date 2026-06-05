@@ -17,6 +17,7 @@ import {
 } from './entityOnboarding.schema';
 import { getMissingChecklist } from './entityOnboardingChecklist';
 import type {
+  CompanySearchHeadOfficeFilter,
   CompanySearchStatusFilter,
   OnboardingIntent,
 } from './entityOnboarding.types';
@@ -27,14 +28,24 @@ import { useOnboardingDuplicateChecks } from './useOnboardingDuplicateChecks';
 
 interface UseOnboardingCompanyDataInput {
   activeAgencyId: string | null;
+  activitySectionFilter: string;
+  cityFilter: string;
+  deferredActivitySectionFilter: string;
+  deferredCityFilter: string;
   deferredDepartmentFilter: string;
+  deferredHeadOfficeFilter: CompanySearchHeadOfficeFilter;
+  deferredNafCodeFilter: string;
+  deferredPostalCodeFilter: string;
   deferredSearchDraft: string;
   departmentFilter: string;
   effectiveIntent: OnboardingIntent;
   form: UseFormReturn<OnboardingFormInput, unknown, OnboardingValues>;
+  headOfficeFilter: CompanySearchHeadOfficeFilter;
   isIndividualClient: boolean;
   manualEntry: boolean;
+  nafCodeFilter: string;
   open: boolean;
+  postalCodeFilter: string;
   searchDraft: string;
   selectedGroupId: string | null;
   setSelectedGroupId: Dispatch<SetStateAction<string | null>>;
@@ -47,14 +58,24 @@ interface UseOnboardingCompanyDataInput {
 
 export const useOnboardingCompanyData = ({
   activeAgencyId,
+  activitySectionFilter,
+  cityFilter,
+  deferredActivitySectionFilter,
+  deferredCityFilter,
   deferredDepartmentFilter,
+  deferredHeadOfficeFilter,
+  deferredNafCodeFilter,
+  deferredPostalCodeFilter,
   deferredSearchDraft,
   departmentFilter,
   effectiveIntent,
   form,
+  headOfficeFilter,
   isIndividualClient,
   manualEntry,
+  nafCodeFilter,
   open,
+  postalCodeFilter,
   searchDraft,
   selectedGroupId,
   setSelectedGroupId,
@@ -74,11 +95,21 @@ export const useOnboardingCompanyData = ({
     [stepper.metadata],
   );
   const search = useOnboardingCompanySearch({
+    activitySectionFilter,
+    cityFilter,
+    deferredActivitySectionFilter,
+    deferredCityFilter,
     deferredDepartmentFilter,
+    deferredHeadOfficeFilter,
+    deferredNafCodeFilter,
+    deferredPostalCodeFilter,
     deferredSearchDraft,
     departmentFilter,
     enabled:
       open && stepper.flow.is('company') && !manualEntry && !isIndividualClient,
+    headOfficeFilter,
+    nafCodeFilter,
+    postalCodeFilter,
     searchDraft,
     statusFilter,
   });

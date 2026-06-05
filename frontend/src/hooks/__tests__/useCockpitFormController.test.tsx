@@ -191,6 +191,8 @@ describe('useCockpitFormController', () => {
       setIsContactDialogOpen: vi.fn(),
       openClientDialog: vi.fn(),
       handleClientDialogChange: vi.fn(),
+      openProspectDialog: vi.fn(),
+      handleProspectDialogChange: vi.fn(),
       setIsProspectDialogOpen: vi.fn(),
       setShowSuggestions: vi.fn(),
       setServicePickerOpen: vi.fn(),
@@ -203,6 +205,7 @@ describe('useCockpitFormController', () => {
       isContactDialogOpen: false,
       isConvertDialogOpen: false,
       convertTarget: null,
+      dialogSearchQuery: '',
       showSuggestions: false,
       servicePickerOpen: false,
       agencies: []
@@ -451,12 +454,14 @@ describe('useCockpitFormController', () => {
   });
 
   it('wires prospect creation into pane props and dialogs', () => {
-    const setIsProspectDialogOpen = vi.fn();
+    const openProspectDialog = vi.fn();
+    const handleProspectDialogChange = vi.fn();
     const handleSaveProspect = vi.fn();
     controllerMocks.useCockpitDialogsState.mockReturnValue({
       ...controllerMocks.useCockpitDialogsState(),
       isProspectDialogOpen: true,
-      setIsProspectDialogOpen
+      openProspectDialog,
+      handleProspectDialogChange
     });
     controllerMocks.useInteractionHandlers.mockReturnValue({
       ...controllerMocks.useInteractionHandlers(),
@@ -479,10 +484,11 @@ describe('useCockpitFormController', () => {
     );
 
     const lastCallArgs = controllerMocks.useCockpitPaneProps.mock.calls.at(-1)?.[0];
-    lastCallArgs?.onOpenProspectDialog();
+    lastCallArgs?.onOpenProspectDialog('testQuery');
 
-    expect(setIsProspectDialogOpen).toHaveBeenCalledWith(true);
+    expect(openProspectDialog).toHaveBeenCalledWith('testQuery');
     expect(result.current.dialogs.isProspectDialogOpen).toBe(true);
+    expect(result.current.dialogs.onProspectDialogChange).toBe(handleProspectDialogChange);
     expect(result.current.dialogs.onSaveProspect).toBe(handleSaveProspect);
   });
 

@@ -29,7 +29,7 @@ const EstablishmentSubList = ({ group, selection }: EstablishmentSubListProps) =
   const { filteredEstablishments, paginatedEstablishments, totalPages, currentPage } = computed;
 
   return (
-    <div className="ml-4 rounded-xl border border-border-subtle bg-surface-1/30 p-4 space-y-4">
+    <div className="border-b border-border-subtle bg-surface-1/45 px-4 py-3">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
           <span>Établissements</span>
@@ -51,7 +51,7 @@ const EstablishmentSubList = ({ group, selection }: EstablishmentSubListProps) =
                 setLocalEstablishmentPage(1);
               }}
               className="h-7 pl-8 pr-2 text-xs bg-background border-border-subtle hover:border-border transition-colors rounded-md focus-visible:ring-ring/45"
-              placeholder="Filtrer par ville, CP, adresse..."
+              placeholder="Filtrer par ville, CP, adresse…"
               aria-label="Filtrer les établissements"
             />
             {localEstablishmentFilter && (
@@ -71,7 +71,7 @@ const EstablishmentSubList = ({ group, selection }: EstablishmentSubListProps) =
       </div>
 
       {paginatedEstablishments.length > 0 ? (
-        <div className="space-y-2.5">
+        <div className="mt-3 border border-border bg-card">
           {paginatedEstablishments.map((establishment) => {
             const isSelected = selectedCompany?.siret === establishment.siret;
             const formattedNaf = formatOfficialNaf(establishment.naf_code);
@@ -81,19 +81,14 @@ const EstablishmentSubList = ({ group, selection }: EstablishmentSubListProps) =
                 type="button"
                 aria-pressed={isSelected}
                 className={cn(
-                  'group/est relative flex w-full items-start gap-3 rounded-lg border p-3.5 pl-6 text-left transition-[border-color,background-color,box-shadow,color] duration-150 cursor-pointer',
+                  'group/est relative flex w-full items-start gap-3 border-b border-border-subtle px-3 py-3 text-left transition-[border-color,background-color,box-shadow,color] duration-150 cursor-pointer last:border-b-0',
                   isSelected
-                    ? 'border-border bg-card font-semibold text-foreground shadow-sm'
-                    : 'border-transparent bg-transparent text-muted-foreground hover:bg-card/70 hover:text-foreground',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20'
+                    ? 'bg-primary/[0.035] font-semibold text-foreground shadow-[inset_3px_0_0_hsl(var(--primary))]'
+                    : 'bg-transparent text-muted-foreground hover:bg-surface-1/55 hover:text-foreground',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 focus-visible:ring-inset'
                 )}
                 onClick={() => handleEstablishmentSelect(establishment)}
               >
-                {/* Selected Indicator matching active nav items style */}
-                {isSelected ? (
-                  <span className="absolute left-[7px] top-[21%] h-[58%] w-[3px] rounded-r-full bg-primary" />
-                ) : null}
-
                 <span className="min-w-0 flex-1 space-y-1.5">
                   <span className="flex flex-wrap items-center gap-2">
                     <span className={cn(

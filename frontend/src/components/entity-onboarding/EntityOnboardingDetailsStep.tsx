@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { Building2, UserRound } from "lucide-react";
 
@@ -17,6 +16,12 @@ import {
 } from '../ui/inputs/selects/Select';
 import { Textarea } from '../ui/inputs/basic/Textarea';
 import { cn } from "@/lib/utils";
+import {
+  EntityRecordWizardField as FieldShell,
+  EntityRecordWizardSection,
+  wizardInputClasses,
+  wizardReadOnlyInputClasses,
+} from "@/components/entity-record-wizard/EntityRecordWizardFields";
 import type {
   OnboardingFormInput,
   OnboardingValues,
@@ -24,43 +29,8 @@ import type {
 import type { DuplicateMatch } from "./entityOnboarding.types";
 import { getDepartmentFromPostalCode } from "./entityOnboarding.utils";
 
-interface FieldShellProps {
-  label: string;
-  htmlFor?: string;
-  helper?: string;
-  error?: string;
-  className?: string;
-  children: ReactNode;
-}
-
-const labelClasses =
-  "text-[12px] font-medium text-foreground/85";
-const inputGhostClasses =
-  "h-10 rounded-md border border-border bg-surface-1/60 px-3 text-base font-medium text-foreground shadow-sm transition-[color,background-color,border-color,box-shadow] hover:border-border-strong hover:bg-background focus-visible:border-primary focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-primary/20 sm:text-[14px]";
-const selectGhostClasses =
-  "h-10 rounded-md border border-border bg-surface-1/60 px-3 text-base font-medium text-foreground shadow-sm transition-[color,background-color,border-color,box-shadow] hover:border-border-strong hover:bg-background focus:ring-2 focus:ring-primary/20 sm:text-[14px]";
-
-const FieldShell = ({
-  label,
-  htmlFor,
-  helper,
-  error,
-  className,
-  children,
-}: FieldShellProps) => (
-  <div className={className}>
-    <div className="grid gap-1.5">
-      <label htmlFor={htmlFor} className={labelClasses}>
-        {label}
-      </label>
-      {children}
-      {error ? <p className="text-xs text-destructive font-medium">{error}</p> : null}
-      {!error && helper ? (
-        <p className="text-xs text-muted-foreground/60">{helper}</p>
-      ) : null}
-    </div>
-  </div>
-);
+const inputGhostClasses = wizardInputClasses;
+const selectGhostClasses = wizardInputClasses;
 
 interface EntityOnboardingDetailsStepProps {
   form: UseFormReturn<OnboardingFormInput, unknown, OnboardingValues>;
@@ -87,20 +57,17 @@ const EntityOnboardingDetailsStep = ({
   const { errors } = form.formState;
 
   return (
-    <div className="flex h-full flex-col space-y-6 pb-8">
-      {/* SECTION IDENTITE */}
-      <section className="rounded-xl border border-border-subtle bg-surface-1/30 p-6 space-y-6">
-        <div className="flex items-center gap-2 border-b border-border-subtle pb-3 text-sm text-foreground font-semibold">
+    <div className="flex flex-col gap-4 pb-8">
+      <EntityRecordWizardSection
+        title={isIndividualClient ? "Identité et contact principal" : "Identité & Adresse"}
+        eyebrow={isIndividualClient ? "Particulier" : "Entreprise"}
+      >
+        <div className="mb-4 flex items-center gap-2 text-sm text-foreground font-semibold">
           {isIndividualClient ? (
             <UserRound className="size-4 text-primary" />
           ) : (
             <Building2 className="size-4 text-primary" />
           )}
-          <h3 className="text-[15px]">
-            {isIndividualClient
-              ? "Identité et contact principal"
-              : "Identité & Adresse"}
-          </h3>
         </div>
 
         <div className="grid gap-x-6 gap-y-4 md:grid-cols-2">
@@ -230,7 +197,7 @@ const EntityOnboardingDetailsStep = ({
               id="department"
               value={values.department ?? ""}
               readOnly
-              className={cn(inputGhostClasses, "text-muted-foreground bg-surface-2/60 cursor-not-allowed")}
+              className={cn(inputGhostClasses, wizardReadOnlyInputClasses)}
             />
           </FieldShell>
 
@@ -262,18 +229,14 @@ const EntityOnboardingDetailsStep = ({
             <Textarea
               id="notes"
               {...form.register("notes")}
-              className="min-h-[80px] rounded-md border border-border-subtle bg-surface-1/30 p-3 text-base shadow-sm hover:border-border hover:bg-background focus-visible:border-primary focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-primary/20 transition-[border-color,background-color,box-shadow] sm:text-[14px]"
+              className="min-h-[80px] rounded-md border border-border bg-background p-3 text-[13px] font-medium shadow-none transition-[border-color,background-color,box-shadow] hover:border-border-strong focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
             />
           </FieldShell>
         </div>
-      </section>
+      </EntityRecordWizardSection>
 
-      {/* SECTION DONNEES OFFICIELLES (Société uniquement) */}
       {!isIndividualClient && (
-        <section className="rounded-xl border border-border-subtle bg-surface-1/30 p-6 space-y-6">
-          <div className="flex items-center gap-2 border-b border-border-subtle pb-3 text-sm text-foreground font-semibold">
-            <h3 className="text-[15px]">Données officielles</h3>
-          </div>
+        <EntityRecordWizardSection title="Données officielles" eyebrow="Base SIRENE">
           <div className="grid gap-x-6 gap-y-4 md:grid-cols-3">
             <FieldShell htmlFor="siret" label="SIRET">
               <Input
@@ -319,19 +282,15 @@ const EntityOnboardingDetailsStep = ({
                     : "Saisie manuelle"
                 }
                 readOnly
-                className={cn(inputGhostClasses, "text-muted-foreground bg-surface-2/60 cursor-not-allowed")}
+                className={cn(inputGhostClasses, wizardReadOnlyInputClasses)}
               />
             </FieldShell>
           </div>
-        </section>
+        </EntityRecordWizardSection>
       )}
 
-      {/* SECTION COMPTE CLIENT */}
       {effectiveIntent === "client" && (
-        <section className="rounded-xl border border-border-subtle bg-surface-1/30 p-6 space-y-6">
-          <div className="flex items-center gap-2 border-b border-border-subtle pb-3 text-sm text-foreground font-semibold">
-            <h3 className="text-[15px]">Compte client</h3>
-          </div>
+        <EntityRecordWizardSection title="Compte client" eyebrow="Référentiel CIR">
           <div className="grid gap-x-6 gap-y-4 md:grid-cols-2">
             <FieldShell
               htmlFor="client_number"
@@ -359,7 +318,7 @@ const EntityOnboardingDetailsStep = ({
                   aria-label="Type de compte"
                   value="Comptant"
                   readOnly
-                  className={cn(inputGhostClasses, "text-muted-foreground bg-surface-2/60 cursor-not-allowed")}
+                  className={cn(inputGhostClasses, wizardReadOnlyInputClasses)}
                 />
               ) : (
                 <Select
@@ -391,7 +350,7 @@ const EntityOnboardingDetailsStep = ({
                   aria-label="Commercial CIR"
                   value="Aucun commercial affecté"
                   readOnly
-                  className={cn(inputGhostClasses, "text-muted-foreground bg-surface-2/60 cursor-not-allowed")}
+                  className={cn(inputGhostClasses, wizardReadOnlyInputClasses)}
                 />
               ) : (
                 <Select
@@ -424,7 +383,7 @@ const EntityOnboardingDetailsStep = ({
               )}
             </FieldShell>
           </div>
-        </section>
+        </EntityRecordWizardSection>
       )}
     </div>
   );

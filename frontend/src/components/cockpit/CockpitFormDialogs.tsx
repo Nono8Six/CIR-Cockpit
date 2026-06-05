@@ -17,6 +17,7 @@ type CockpitFormDialogsProps = {
   isContactDialogOpen: boolean;
   isConvertDialogOpen: boolean;
   convertTarget: Entity | null;
+  dialogSearchQuery?: string;
   onClientDialogChange: (open: boolean) => void;
   onProspectDialogChange: (open: boolean) => void;
   onContactDialogChange: (open: boolean) => void;
@@ -38,6 +39,7 @@ const CockpitFormDialogs = ({
   isContactDialogOpen,
   isConvertDialogOpen,
   convertTarget,
+  dialogSearchQuery = '',
   onClientDialogChange,
   onProspectDialogChange,
   onContactDialogChange,
@@ -57,6 +59,7 @@ const CockpitFormDialogs = ({
         userRole={userRole}
         activeAgencyId={activeAgencyId}
         defaultClientKind={clientDialogKind}
+        defaultName={dialogSearchQuery}
         onSave={onSaveClient}
       />
       <EntityOnboardingDialog
@@ -67,6 +70,7 @@ const CockpitFormDialogs = ({
         activeAgencyId={activeAgencyId}
         allowedIntents={['prospect']}
         defaultIntent="prospect"
+        initialEntity={dialogSearchQuery ? { name: dialogSearchQuery } : null}
         sourceLabel="Cockpit"
         onSaveProspect={onSaveProspect}
       />

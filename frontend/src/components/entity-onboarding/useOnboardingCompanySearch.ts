@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { useDirectoryCompanySearch } from '../../hooks/directory/company/useDirectoryCompanySearch';
 
 import type {
+  CompanySearchHeadOfficeFilter,
   CompanySearchGroup,
   CompanySearchStatusFilter,
 } from './entityOnboarding.types';
@@ -12,10 +13,20 @@ import {
 } from './entityOnboarding.utils';
 
 interface UseOnboardingCompanySearchInput {
+  activitySectionFilter: string;
+  cityFilter: string;
+  deferredActivitySectionFilter: string;
+  deferredCityFilter: string;
   deferredDepartmentFilter: string;
+  deferredHeadOfficeFilter: CompanySearchHeadOfficeFilter;
+  deferredNafCodeFilter: string;
+  deferredPostalCodeFilter: string;
   deferredSearchDraft: string;
   departmentFilter: string;
   enabled: boolean;
+  headOfficeFilter: CompanySearchHeadOfficeFilter;
+  nafCodeFilter: string;
+  postalCodeFilter: string;
   searchDraft: string;
   statusFilter: CompanySearchStatusFilter;
 }
@@ -28,10 +39,20 @@ interface OnboardingCompanySearch {
 }
 
 export const useOnboardingCompanySearch = ({
+  activitySectionFilter,
+  cityFilter,
+  deferredActivitySectionFilter,
+  deferredCityFilter,
   deferredDepartmentFilter,
+  deferredHeadOfficeFilter,
+  deferredNafCodeFilter,
+  deferredPostalCodeFilter,
   deferredSearchDraft,
   departmentFilter,
   enabled,
+  headOfficeFilter,
+  nafCodeFilter,
+  postalCodeFilter,
   searchDraft,
   statusFilter,
 }: UseOnboardingCompanySearchInput): OnboardingCompanySearch => {
@@ -39,6 +60,11 @@ export const useOnboardingCompanySearch = ({
     {
       query: searchDraft,
       department: departmentFilter || undefined,
+      city: cityFilter || undefined,
+      postal_code: postalCodeFilter || undefined,
+      naf_code: nafCodeFilter || undefined,
+      activity_section: activitySectionFilter || undefined,
+      head_office: headOfficeFilter,
     },
     enabled,
   );
@@ -58,6 +84,11 @@ export const useOnboardingCompanySearch = ({
   const isSearchStale =
     searchDraft.trim() !== deferredSearchDraft ||
     departmentFilter.trim() !== deferredDepartmentFilter ||
+    postalCodeFilter.trim() !== deferredPostalCodeFilter ||
+    cityFilter.trim() !== deferredCityFilter ||
+    nafCodeFilter.trim() !== deferredNafCodeFilter ||
+    activitySectionFilter.trim() !== deferredActivitySectionFilter ||
+    headOfficeFilter !== deferredHeadOfficeFilter ||
     companySearchQuery.isFetching;
 
   return {

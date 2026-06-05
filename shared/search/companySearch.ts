@@ -27,6 +27,10 @@ const COMPANY_SEARCH_CONTEXT_IGNORED_TOKENS = new Set([
   'general'
 ]);
 
+const COMPANY_SEARCH_TOKEN_EXPANSIONS = new Map<string, string[]>([
+  ['elec', ['electrique']]
+]);
+
 const DEFAULT_RESPONSE_PAGE = 1;
 const DEFAULT_RESPONSE_PAGE_SIZE = 20;
 const EXACT_QUERY_PAGE_SIZE = 10;
@@ -135,6 +139,25 @@ const toMeaningfulTokens = (value: string): string[] =>
 
 const collapseTokens = (tokens: string[]): string =>
   tokens.join('');
+
+const buildTokenExpansionQueries = (tokens: string[]): string[] => {
+  if (tokens.length < 2 || tokens.length > 4) {
+    return [];
+  }
+
+  const queries: string[] = [];
+  tokens.forEach((token, index) => {
+    const expansions = COMPANY_SEARCH_TOKEN_EXPANSIONS.get(token) ?? [];
+    for (const expansion of expansions) {
+      const expandedTokens = tokens.map((entry, tokenIndex) =>
+        tokenIndex === index ? expansion : entry
+      );
+      queries.push(expandedTokens.join(' '));
+    }
+  });
+
+  return queries;
+};
 
 const isCompactAlphaSingleTokenQuery = (
   tokens: string[],
@@ -306,6 +329,15 @@ const buildSearchPlans = (input: DirectoryCompanySearchInput): CompanySearchPlan
       query: collapseTokens(queryTokens),
       pages: exactPages,
       perPage: exactPerPage
+    });
+  }
+
+  for (const expandedQuery of buildTokenExpansionQueries(queryTokens)) {
+    addPlan({
+      kind: 'contextual',
+      query: expandedQuery,
+      pages: exactPages,
+      perPage: Math.max(input.per_page ?? CONTEXTUAL_QUERY_PAGE_SIZE, CITY_FILTER_QUERY_PAGE_SIZE)
     });
   }
 
@@ -785,9 +817,19 @@ const rankCompanies = (
 ): DirectoryCompanySearchResult[] =>
   Array.from(collectedCompanies.values())
     .sort((left, right) => {
+      const leftMatch = scoreCompany(left.company, input);
+      const rightMatch = scoreCompany(right.company, input);
       const scoreDelta = right.score - left.score;
       const sourceDelta = COMPANY_SEARCH_SOURCE_PRIORITY[left.sourceKind]
         - COMPANY_SEARCH_SOURCE_PRIORITY[right.sourceKind];
+
+      if (leftMatch.allTokensMatched !== rightMatch.allTokensMatched) {
+        return Number(rightMatch.allTokensMatched) - Number(leftMatch.allTokensMatched);
+      }
+
+      if (leftMatch.startsWithSequence !== rightMatch.startsWithSequence) {
+        return Number(rightMatch.startsWithSequence) - Number(leftMatch.startsWithSequence);
+      }
 
       if (sourceDelta !== 0 && Math.abs(scoreDelta) <= 30) {
         return sourceDelta;

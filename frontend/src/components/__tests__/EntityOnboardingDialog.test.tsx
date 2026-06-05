@@ -202,8 +202,10 @@ describe('EntityOnboardingDialog', () => {
     );
 
     expect(await screen.findByRole('dialog', { name: /nouvelle fiche entreprise/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /département/i })).toBeInTheDocument();
-    expect(screen.getByRole('group', { name: /filtre statut etablissement/i })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /département client/i })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /code postal client/i })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /section activité client/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /etablissements actifs/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^continuer$/i })).toBeDisabled();
   });
 
@@ -538,9 +540,7 @@ describe('EntityOnboardingDialog', () => {
 
     expect(continueButton).toBeEnabled();
 
-    await user.click(
-      screen.getByRole('radio', { name: /etablissements actifs/i })
-    );
+    await user.click(screen.getByRole('button', { name: /etablissements actifs/i }));
 
     expect(continueButton).toBeDisabled();
     expect(

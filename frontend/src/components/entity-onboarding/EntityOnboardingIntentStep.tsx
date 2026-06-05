@@ -66,7 +66,7 @@ const getNextEnabledIndex = (
 };
 
 const cardClasses =
-  "group relative flex items-center justify-between rounded-xl border px-5 py-4 text-left transition-all duration-250 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20";
+  "group relative flex items-center justify-between border border-border bg-card px-4 py-3.5 text-left transition-[background-color,border-color,box-shadow,color] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35";
 
 const EntityOnboardingIntentStep = ({
   effectiveIntent,
@@ -203,9 +203,9 @@ const EntityOnboardingIntentStep = ({
   };
 
   return (
-    <div className="flex h-full flex-col space-y-12">
-      <div className="space-y-6">
-        <div className="flex items-center gap-2 border-b border-border-subtle pb-2 text-sm font-medium text-foreground">
+    <div className="flex flex-col gap-8">
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 border-b border-border-subtle bg-surface-1/45 px-3 py-2 text-sm font-medium text-foreground">
           <Building2 aria-hidden="true" className="size-4 text-muted-foreground" />
           <h3>Intention de creation</h3>
           {isIntentLocked ? (
@@ -215,7 +215,7 @@ const EntityOnboardingIntentStep = ({
           ) : null}
         </div>
 
-        <div role="radiogroup" aria-label="Intention" className="flex flex-col gap-2">
+        <div role="radiogroup" aria-label="Intention" className="flex flex-col">
           {visibleIntentOptions.map((option, index) => {
             const isActive = effectiveIntent === option.id;
             return (
@@ -235,8 +235,8 @@ const EntityOnboardingIntentStep = ({
                 className={cn(
                   cardClasses,
                   isActive
-                    ? "border-primary bg-primary/[0.02] shadow-sm"
-                    : "border-border-subtle hover:border-border hover:bg-surface-1/30",
+                    ? "border-primary/35 bg-primary/[0.035] shadow-[inset_3px_0_0_hsl(var(--primary))]"
+                    : "hover:bg-surface-1/55",
                   isIntentLocked && "cursor-not-allowed opacity-60",
                 )}
               >
@@ -267,8 +267,8 @@ const EntityOnboardingIntentStep = ({
       </div>
 
       {effectiveIntent === "client" ? (
-        <div className="space-y-6">
-          <div className="flex items-center gap-2 border-b border-border-subtle pb-2 text-sm font-medium text-foreground">
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 border-b border-border-subtle bg-surface-1/45 px-3 py-2 text-sm font-medium text-foreground">
             <Building2 aria-hidden="true" className="size-4 text-muted-foreground" />
             <h3>Nature du compte</h3>
             {mode === "convert" ? (
@@ -278,7 +278,7 @@ const EntityOnboardingIntentStep = ({
             ) : null}
           </div>
 
-          <div role="radiogroup" aria-label="Cadre client" className="flex flex-col gap-2">
+          <div role="radiogroup" aria-label="Cadre client" className="flex flex-col">
             {CLIENT_KIND_OPTIONS.map((option, index) => {
               const isActive = clientKind === option.id;
               const isDisabled =
@@ -303,8 +303,8 @@ const EntityOnboardingIntentStep = ({
                   className={cn(
                     cardClasses,
                     isActive
-                      ? "border-primary bg-primary/[0.02] shadow-sm"
-                      : "border-border-subtle hover:border-border hover:bg-surface-1/30",
+                      ? "border-primary/35 bg-primary/[0.035] shadow-[inset_3px_0_0_hsl(var(--primary))]"
+                      : "hover:bg-surface-1/55",
                     isDisabled && "cursor-not-allowed opacity-40",
                   )}
                 >

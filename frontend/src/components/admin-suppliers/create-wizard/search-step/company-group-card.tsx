@@ -1,6 +1,7 @@
 import { ChevronsRight, MapPin } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+import { EntityRecordWizardRecordRow } from '@/components/entity-record-wizard/EntityRecordWizardRows';
 import type { CompanySearchGroup } from '../../../entity-onboarding/entityOnboarding.types';
 import { Badge } from '../../../ui/data-display/Badge';
 
@@ -20,23 +21,17 @@ const CompanyGroupCard = ({ group, isActive, onSelect }: CompanyGroupCardProps) 
   const cities = Array.from(new Set(group.establishments.map((company) => company.city).filter(Boolean))).slice(0, 3);
 
   return (
+    <EntityRecordWizardRecordRow active={isActive}>
     <button
       type="button"
       aria-expanded={isActive}
       className={cn(
-        'group/grp relative flex w-full flex-col items-start gap-3 rounded-xl border p-5 pl-7 text-left transition-[border-color,background-color,box-shadow,color] duration-200 cursor-pointer',
-        isActive
-          ? 'border-border bg-card shadow-md font-bold'
-          : 'border-transparent bg-transparent hover:border-border/60 hover:bg-card/50 text-muted-foreground',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20'
+        'group/grp relative flex w-full flex-col items-start gap-3 px-4 py-4 text-left transition-[background-color,color] duration-200 cursor-pointer',
+        isActive ? 'font-bold' : 'text-muted-foreground hover:bg-surface-1/55',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 focus-visible:ring-inset'
       )}
       onClick={onSelect}
     >
-      {/* Left selection line matching the sidebar style */}
-      {isActive ? (
-        <span className="absolute left-1.5 top-[15%] h-[70%] w-[3.5px] rounded-r-full bg-primary" />
-      ) : null}
-
       <span className="flex w-full items-start justify-between gap-4">
         <span className="min-w-0 space-y-2">
           <span className="flex flex-wrap items-center gap-2">
@@ -100,6 +95,7 @@ const CompanyGroupCard = ({ group, isActive, onSelect }: CompanyGroupCardProps) 
         </span>
       ) : null}
     </button>
+    </EntityRecordWizardRecordRow>
   );
 };
 

@@ -138,7 +138,7 @@ const ClientFormDialogLegacy = ({
   );
 };
 
-const ClientFormDialog = (props: ClientFormDialogProps) => {
+const ClientFormDialog = (props: ClientFormDialogProps & { defaultName?: string }) => {
   if (!props.client || props.client.client_kind === 'individual') {
     return (
       <EntityOnboardingDialog
@@ -151,7 +151,7 @@ const ClientFormDialog = (props: ClientFormDialogProps) => {
         allowedIntents={['client']}
         defaultIntent="client"
         defaultClientKind={props.defaultClientKind}
-        initialEntity={props.client}
+        initialEntity={props.client ?? (props.defaultName ? { name: props.defaultName } : null)}
         sourceLabel={props.client ? 'Edition client' : 'Creation'}
         onSaveClient={props.onSave}
       />

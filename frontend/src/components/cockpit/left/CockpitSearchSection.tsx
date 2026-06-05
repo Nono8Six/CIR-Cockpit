@@ -5,6 +5,7 @@ import type { TierV1DirectoryRow } from '../../../../../shared/schemas/interacti
 import type { RelationMode } from '@/constants/relations';
 import type { Entity, EntityContact } from '@/types';
 import InteractionSearchBar from '@/components/InteractionSearchBar';
+import { DEFAULT_DIRECTORY_SEARCH } from '@/components/client-directory/clientDirectorySearch';
 
 type CockpitSearchSectionProps = {
   activeAgencyId: string | null;
@@ -19,8 +20,8 @@ type CockpitSearchSectionProps = {
   onSelectEntityFromSearch: (entity: Entity) => void;
   onSelectContactFromSearch: (contact: EntityContact, entity: Entity | null) => void;
   onSelectUnifiedSearchResult: (result: TierV1DirectoryRow) => void;
-  onOpenClientDialog: (clientKind?: 'company' | 'individual') => void;
-  onOpenProspectDialog: () => void;
+  onOpenClientDialog: (clientKind?: 'company' | 'individual', initialQuery?: string) => void;
+  onOpenProspectDialog: (initialQuery?: string) => void;
   onOpenGlobalSearch?: () => void;
   searchInputRef: RefObject<HTMLInputElement | null>;
 };
@@ -47,7 +48,6 @@ const CockpitSearchSection = ({
   onSelectEntityFromSearch,
   onSelectContactFromSearch,
   onSelectUnifiedSearchResult,
-  onOpenClientDialog,
   onOpenProspectDialog,
   onOpenGlobalSearch,
   searchInputRef
@@ -61,14 +61,17 @@ const CockpitSearchSection = ({
   const handleCreateSupplier = () => {
     void navigate({ to: '/admin/suppliers/new' });
   };
+  const handleCreateClient = () => {
+    void navigate({ to: '/clients/new', search: () => DEFAULT_DIRECTORY_SEARCH });
+  };
   const handleCreateEntity = relationMode === 'client'
-    ? () => onOpenClientDialog('company')
+    ? handleCreateClient
     : relationMode === 'prospect'
-      ? onOpenProspectDialog
+      ? (query?: string) => typeof query === 'string' ? onOpenProspectDialog(query) : onOpenProspectDialog()
       : relationMode === 'supplier'
         ? handleCreateSupplier
         : relationMode === 'individual'
-          ? () => onOpenClientDialog('individual')
+          ? handleCreateClient
           : undefined;
   const createLabel = getCreateLabel(relationMode, entityType);
   const isSupplier = relationMode === 'supplier';

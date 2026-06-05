@@ -12,7 +12,7 @@ export type InteractionSearchBarProps = {
   onSelectEntity: (entity: Entity) => void;
   onSelectContact: (contact: EntityContact, entity: Entity | null) => void;
   onSelectSearchResult: (result: TierV1DirectoryRow) => void;
-  onCreateEntity?: () => void;
+  onCreateEntity?: (query?: string) => void;
   createLabel?: string;
   createMode?: 'dialog' | 'inline' | 'none';
   createDisabled?: boolean;

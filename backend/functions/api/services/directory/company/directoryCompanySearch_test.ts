@@ -166,6 +166,65 @@ Deno.test("executeCompanySearch filters by head office when requested", async ()
   assertEquals(result.companies[0]?.siret, "56201677400038");
 });
 
+Deno.test("executeCompanySearch expands common elec abbreviation before giving up", async () => {
+  const expectedCompany = createCompanySearchResult({
+    name: "AQUITAINE ELECTRIQUE",
+    official_name: "AQUITAINE ELECTRIQUE",
+    city: "LOUPIAC-DE-LA-REOLE",
+    department: "33",
+    postal_code: "33190",
+    siren: "444541890",
+    siret: "44454189000018",
+  });
+  const noisyExactResult = createCompanySearchResult({
+    name: "ELEC AQUITAINE",
+    official_name: "ELEC AQUITAINE",
+    city: "LE HAILLAN",
+    department: "33",
+    postal_code: "33185",
+    siren: "435091616",
+    siret: "43509161600021",
+  });
+  const broadAquitaineNoise = createCompanySearchResult({
+    name: "FEDERATION NOUVELLE-AQUITAINE SCOP-BTP",
+    official_name: "FEDERATION NOUVELLE-AQUITAINE SCOP-BTP",
+    city: "ARTIGUES-PRES-BORDEAUX",
+    department: "33",
+    postal_code: "33370",
+    siren: "884076670",
+    siret: "88407667000012",
+  });
+  const fetchPage = (
+    request: CompanySearchPageRequest,
+  ): Promise<DirectoryCompanySearchResult[]> => {
+    if (request.query === "aquitaine elec") {
+      return Promise.resolve([broadAquitaineNoise, noisyExactResult]);
+    }
+
+    if (request.query === "aquitaine electrique") {
+      return Promise.resolve([expectedCompany]);
+    }
+
+    return Promise.resolve([]);
+  };
+
+  const result = await executeCompanySearch(
+    { query: "aquitaine elec", department: "33" },
+    fetchPage,
+    () => "fatal",
+  );
+
+  assertEquals(
+    result.attempts.some((attempt) => attempt.query === "aquitaine electrique"),
+    true,
+  );
+  assertEquals(
+    result.companies.some((company) => company.siren === "444541890"),
+    true,
+  );
+  assertEquals(result.companies[0]?.siren, "444541890");
+});
+
 Deno.test("fetchEnterpriseApiSearchResponse tolerates partial official payloads before mapping", async () => {
   await withFetchStub(
     Response.json({

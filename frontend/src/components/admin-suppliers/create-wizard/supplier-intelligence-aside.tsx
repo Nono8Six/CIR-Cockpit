@@ -4,6 +4,7 @@ import type { DirectoryCompanySearchResult } from '../../../../../shared/schemas
 import { formatOfficialNaf, formatOfficialRegion } from '../../../../../shared/reference/officialLabels';
 import { Badge } from '../../ui/data-display/Badge';
 import { Button } from '../../ui/inputs/basic/Button';
+import { EntityRecordWizardAside } from '@/components/entity-record-wizard/EntityRecordWizardRows';
 import type { CompanySearchGroup } from '../../entity-onboarding/entityOnboarding.types';
 import { formatOfficialDate, getCompanySearchStatusLabel } from '../../entity-onboarding/entityOnboarding.utils';
 import { cn } from '@/lib/utils';
@@ -33,9 +34,9 @@ const SupplierIntelligenceAside = ({
   importSelectedCompany
 }: SupplierIntelligenceAsideProps) => {
   return (
-    <aside aria-label="Prévisualisation fournisseur" className="hidden min-h-0 overflow-y-auto border-l border-border-subtle bg-surface-2 p-5 lg:block">
+    <EntityRecordWizardAside label="Prévisualisation fournisseur" className="max-h-[38vh] lg:max-h-none">
       <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">
-        <Globe2 className="size-4 text-primary animate-pulse" aria-hidden="true" />
+        <Globe2 className="size-4 text-primary" aria-hidden="true" />
         Intelligence fournisseur
       </div>
 
@@ -244,7 +245,7 @@ const SupplierIntelligenceAside = ({
           {draft.city ? <Badge variant="outline" className="text-[10px]">{draft.city}</Badge> : null}
         </div>
       ) : null}
-    </aside>
+    </EntityRecordWizardAside>
   );
 };
 

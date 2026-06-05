@@ -7,6 +7,10 @@ import {
   type DirectoryCompanySearchInput,
   type DirectoryCompanySearchResult
 } from '../../../../shared/schemas/system/directory.schema';
+import {
+  type CompanySearchPageRequest,
+  executeCompanySearch
+} from '../../../../shared/search/companySearch';
 import { resolveOfficialNafCode } from '../../../../shared/reference/officialLabels';
 import { z } from 'zod/v4';
 
@@ -119,7 +123,7 @@ const normalizeEstablishmentStatus = (value: unknown): DirectoryCompanySearchRes
   return 'unknown';
 };
 
-const buildCompanySearchUrl = (input: DirectoryCompanySearchInput): string => {
+const buildCompanySearchUrl = (input: CompanySearchPageRequest): string => {
   const url = new URL(COMPANY_SEARCH_URL);
   url.searchParams.set('q', input.query);
   url.searchParams.set('minimal', 'true');
@@ -137,8 +141,8 @@ const buildCompanySearchUrl = (input: DirectoryCompanySearchInput): string => {
     url.searchParams.set('section_activite_principale', input.activity_section);
   }
   url.searchParams.set('limite_matching_etablissements', String(COMPANY_MATCHING_ESTABLISHMENTS_LIMIT));
-  url.searchParams.set('page', String(input.page ?? 1));
-  url.searchParams.set('per_page', String(input.per_page ?? 10));
+  url.searchParams.set('page', String(input.page));
+  url.searchParams.set('per_page', String(input.per_page));
   return url.toString();
 };
 
@@ -196,46 +200,49 @@ const mapEnterpriseApiCompany = (company: EnterpriseApiCompany): DirectoryCompan
 const fetchOfficialCompanySearch = async (
   input: DirectoryCompanySearchInput
 ): Promise<DirectoryCompanySearchResponse> => {
-  const response = await fetch(buildCompanySearchUrl(input), {
-    headers: { Accept: 'application/json' }
-  });
-  if (!response.ok) {
-    throw createAppError({
-      code: response.status === 429 ? 'RATE_LIMITED' : 'REQUEST_FAILED',
-      message: 'Le service entreprises est indisponible.',
-      source: 'edge',
-      status: response.status,
-      details: `status=${response.status}`
-    });
-  }
+  const result = await executeCompanySearch(
+    input,
+    async (request) => {
+      const response = await fetch(buildCompanySearchUrl(request), {
+        headers: { Accept: 'application/json' }
+      });
+      if (!response.ok) {
+        throw createAppError({
+          code: response.status === 429 ? 'RATE_LIMITED' : 'REQUEST_FAILED',
+          message: 'Le service entreprises est indisponible.',
+          source: 'edge',
+          status: response.status,
+          details: `status=${response.status}`
+        });
+      }
 
-  const rawPayload = await response.json();
-  const parsed = enterpriseApiSearchResponseSchema.safeParse(rawPayload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'REQUEST_FAILED',
-      message: 'Réponse invalide du service entreprises.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
+      const rawPayload = await response.json();
+      const parsed = enterpriseApiSearchResponseSchema.safeParse(rawPayload);
+      if (!parsed.success) {
+        throw createAppError({
+          code: 'REQUEST_FAILED',
+          message: 'Réponse invalide du service entreprises.',
+          source: 'edge',
+          details: parsed.error.message
+        });
+      }
 
-  const cityFilter = input.city?.trim().toLowerCase();
-  const headOfficeFilter = input.head_office ?? 'all';
-  const companies = parsed.data.results
-    .flatMap(mapEnterpriseApiCompany)
-    .filter((company) => !cityFilter || company.city?.toLowerCase().includes(cityFilter))
-    .filter((company) => {
-      if (headOfficeFilter === 'head_office') return company.is_head_office;
-      if (headOfficeFilter === 'secondary') return !company.is_head_office;
-      return true;
-    })
-    .filter((company) => directoryCompanySearchResultSchema.safeParse(company).success);
+      return parsed.data.results
+        .flatMap(mapEnterpriseApiCompany)
+        .filter((company) => directoryCompanySearchResultSchema.safeParse(company).success);
+    },
+    (error) =>
+      typeof error === 'object'
+        && error !== null
+        && Reflect.get(error, 'code') === 'RATE_LIMITED'
+        ? 'rate-limited'
+        : 'fatal'
+  );
 
   return {
     ok: true,
     request_id: 'official-api-direct',
-    companies
+    companies: result.companies
   };
 };
 

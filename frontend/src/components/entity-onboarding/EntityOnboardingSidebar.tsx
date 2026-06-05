@@ -16,6 +16,7 @@ import type {
 } from '../../../../shared/schemas/system/directory.schema';
 import { formatOfficialNaf, formatOfficialRegion } from '../../../../shared/reference/officialLabels';
 import { Badge } from '../ui/data-display/Badge';
+import { EntityRecordWizardAside } from "@/components/entity-record-wizard/EntityRecordWizardRows";
 
 import { EntityOnboardingCompanySummary } from './EntityOnboardingCompanySummary';
 import { SidebarInfoRow, SidebarSection } from './EntityOnboardingSidebarSection';
@@ -84,12 +85,12 @@ const EntityOnboardingSidebar = ({
   const establishmentNaf = formatOfficialNaf(company?.naf_code);
 
   return (
-    <aside
-      aria-label="Intelligence commerciale et doublons"
-      className="flex max-h-[38vh] w-full shrink-0 flex-col border-t border-border bg-surface-1/25 lg:max-h-none lg:w-[320px] lg:border-l lg:border-t-0 xl:w-[380px]"
+    <EntityRecordWizardAside
+      label="Intelligence commerciale et doublons"
+      className="flex max-h-[38vh] w-full shrink-0 flex-col p-0 lg:max-h-none"
     >
-      <div className="flex h-full flex-col">
-        <div className="border-b border-border bg-surface-1/40 px-5 py-4">
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div className="border-b border-border bg-surface-1/70 px-5 py-4">
           <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-foreground/80">
             <ShieldCheck className="size-3.5 text-primary" aria-hidden="true" />
             Intelligence Commerciale
@@ -315,7 +316,7 @@ const EntityOnboardingSidebar = ({
           </div>
         </div>
       </div>
-    </aside>
+    </EntityRecordWizardAside>
   );
 };
 

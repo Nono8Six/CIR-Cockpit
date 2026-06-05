@@ -85,7 +85,23 @@ describe('CockpitSearchSection', () => {
     expect(onOpenClientDialog).not.toHaveBeenCalled();
   });
 
-  it('ouvre la creation client en mode particulier quand la relation est particulier', async () => {
+  it('ouvre le parcours annuaire client quand la relation est client', async () => {
+    const user = userEvent.setup();
+    const onOpenClientDialog = vi.fn();
+
+    renderSection(buildProps({
+      entityType: 'Client à terme',
+      relationMode: 'client',
+      onOpenClientDialog
+    }));
+
+    await user.click(screen.getByRole('button', { name: 'Créer un client à terme' }));
+
+    expect(onOpenClientDialog).not.toHaveBeenCalled();
+    expect(navigateMock).toHaveBeenCalledWith(expect.objectContaining({ to: '/clients/new' }));
+  });
+
+  it('ouvre le parcours annuaire client quand la relation est particulier', async () => {
     const user = userEvent.setup();
     const onOpenClientDialog = vi.fn();
 
@@ -100,7 +116,8 @@ describe('CockpitSearchSection', () => {
 
     await user.click(createButton);
 
-    expect(onOpenClientDialog).toHaveBeenCalledWith('individual');
+    expect(onOpenClientDialog).not.toHaveBeenCalled();
+    expect(navigateMock).toHaveBeenCalledWith(expect.objectContaining({ to: '/clients/new' }));
   });
 
   it('ouvre la création fournisseur complète depuis le cockpit', async () => {

@@ -1,3 +1,6 @@
+import { Search } from 'lucide-react';
+
+import { EntityRecordWizardEmptyState } from '@/components/entity-record-wizard/EntityRecordWizardRows';
 import CompanyGroupCard from './company-group-card';
 import EstablishmentSubList from './establishment-sub-list';
 import type useSupplierSearchFilters from './use-supplier-search-filters';
@@ -23,10 +26,10 @@ const SearchResultsList = ({ searchFilters, selection }: SearchResultsListProps)
     return (
       <div className="space-y-4">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground animate-pulse">
-          Recherche en cours...
+          Recherche en cours…
         </p>
         {[1, 2, 3].map((n) => (
-          <div key={n} className="relative overflow-hidden rounded-xl border border-border bg-card p-5 space-y-4">
+          <div key={n} className="relative overflow-hidden border border-border bg-card p-5 space-y-4">
             <div
               className="absolute inset-0 bg-gradient-to-r from-transparent via-muted/20 to-transparent animate-shimmer"
               style={{ transform: 'translateX(-100%)', animation: 'shimmer 1.5s infinite' }}
@@ -49,17 +52,18 @@ const SearchResultsList = ({ searchFilters, selection }: SearchResultsListProps)
   }
 
   return (
-    <div className="flex flex-col gap-4 mt-2">
+    <div className="mt-2 flex flex-col">
       {visibleGroups.length > 0 ? (
-        <p aria-live="polite" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <p aria-live="polite" className="border border-b-0 border-border bg-surface-1/55 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {visibleGroups.length} entreprise{visibleGroups.length > 1 ? 's' : ''} trouvée{visibleGroups.length > 1 ? 's' : ''}
         </p>
       ) : null}
 
+      <div className={visibleGroups.length > 0 ? 'border border-border bg-card' : undefined}>
       {visibleGroups.map((group) => {
         const isActive = selectedGroup?.id === group.id;
         return (
-          <div key={group.id} className="space-y-3">
+          <div key={group.id}>
             <CompanyGroupCard
               group={group}
               isActive={isActive}
@@ -71,11 +75,14 @@ const SearchResultsList = ({ searchFilters, selection }: SearchResultsListProps)
           </div>
         );
       })}
+      </div>
 
       {submittedSearch && visibleGroups.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-border p-8 text-center text-sm font-medium text-muted-foreground">
-          Aucun établissement trouvé.
-        </p>
+        <EntityRecordWizardEmptyState
+          icon={<Search aria-hidden="true" className="size-9" />}
+          title="Aucun établissement trouvé"
+          body="Ajuste la recherche officielle ou poursuis en saisie manuelle."
+        />
       ) : null}
     </div>
   );

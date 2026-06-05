@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import {
   Building2,
@@ -7,6 +8,8 @@ import {
   MapPin,
   Search,
   AlertTriangle,
+  SlidersHorizontal,
+  Filter,
 } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
@@ -19,10 +22,15 @@ import type {
 import { formatOfficialNaf } from '../../../../shared/reference/officialLabels';
 import { Badge } from '../ui/data-display/Badge';
 import { Button } from '../ui/inputs/basic/Button';
+import { Input } from '../ui/inputs/basic/Input';
 import { ScrollArea } from '../ui/data-display/ScrollArea';
-import { ToggleGroup, ToggleGroupItem } from '../ui/inputs/basic/ToggleGroup';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '../ui/inputs/selects/Select';
 import { cn } from "@/lib/utils";
-import DirectoryFilterCombobox from "@/components/client-directory/directory-filters/DirectoryFilterCombobox";
+import {
+  EntityRecordWizardField,
+  EntityRecordWizardSection,
+  wizardInputClasses,
+} from "@/components/entity-record-wizard/EntityRecordWizardFields";
 import type {
   OnboardingFormInput,
   OnboardingValues,
@@ -30,6 +38,7 @@ import type {
 import type {
   CompanySearchGroup,
   DuplicateMatch,
+  CompanySearchHeadOfficeFilter,
   CompanySearchStatusFilter,
 } from "./entityOnboarding.types";
 import { formatOfficialDate } from "./entityOnboarding.utils";
@@ -57,6 +66,16 @@ interface EntityOnboardingSearchStepProps {
   onSearchDraftChange: (value: string) => void;
   department: string;
   onDepartmentChange: (value: string) => void;
+  postalCode: string;
+  onPostalCodeChange: (value: string) => void;
+  city: string;
+  onCityChange: (value: string) => void;
+  nafCode: string;
+  onNafCodeChange: (value: string) => void;
+  activitySection: string;
+  onActivitySectionChange: (value: string) => void;
+  headOffice: CompanySearchHeadOfficeFilter;
+  onHeadOfficeChange: (filter: CompanySearchHeadOfficeFilter) => void;
   statusFilter: CompanySearchStatusFilter;
   onStatusFilterChange: (filter: CompanySearchStatusFilter) => void;
   departmentOptions: Array<{ value: string; label: string }>;
@@ -78,6 +97,28 @@ interface EntityOnboardingSearchStepProps {
 
 const labelClasses =
   "text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground";
+
+const activitySections = [
+  ["A", "A - Agriculture"],
+  ["B", "B - Industries extractives"],
+  ["C", "C - Industrie manufacturière"],
+  ["D", "D - Énergie"],
+  ["E", "E - Eau et déchets"],
+  ["F", "F - Construction"],
+  ["G", "G - Commerce"],
+  ["H", "H - Transports"],
+  ["I", "I - Hébergement"],
+  ["J", "J - Information"],
+  ["K", "K - Finance"],
+  ["L", "L - Immobilier"],
+  ["M", "M - Activités spécialisées"],
+  ["N", "N - Services administratifs"],
+  ["O", "O - Administration"],
+  ["P", "P - Enseignement"],
+  ["Q", "Q - Santé"],
+  ["R", "R - Arts"],
+  ["S", "S - Autres services"],
+] as const;
 
 const STATUS_FILTER_OPTIONS: Array<{
   value: CompanySearchStatusFilter;
@@ -101,6 +142,9 @@ const STATUS_FILTER_OPTIONS: Array<{
     compactLabel: "Inconnus",
   },
 ];
+
+const normalizeNafCode = (value: string): string =>
+  value.trim().replace(/\s+/g, '').toUpperCase().replace(/^(\d{2})\.?(\d{2})([A-Z])$/, '$1.$2$3');
 
 const getStatusBadgeCopy = (
   status: DirectoryCompanySearchEstablishmentStatus,
@@ -184,9 +228,18 @@ const EntityOnboardingSearchStep = ({
   onSearchDraftChange,
   department,
   onDepartmentChange,
+  postalCode,
+  onPostalCodeChange,
+  city,
+  onCityChange,
+  nafCode,
+  onNafCodeChange,
+  activitySection,
+  onActivitySectionChange,
+  headOffice,
+  onHeadOfficeChange,
   statusFilter,
   onStatusFilterChange,
-  departmentOptions,
   allowManualEntry,
   manualEntry,
   onToggleManualEntry,
@@ -200,6 +253,15 @@ const EntityOnboardingSearchStep = ({
   onEstablishmentSelect,
 }: EntityOnboardingSearchStepProps) => {
   const reducedMotion = useReducedMotion();
+  const [showFilters, setShowFilters] = useState(true);
+  const activeOfficialFilterCount =
+    (department ? 1 : 0) +
+    (postalCode ? 1 : 0) +
+    (city ? 1 : 0) +
+    (nafCode ? 1 : 0) +
+    (activitySection ? 1 : 0) +
+    (headOffice !== "all" ? 1 : 0) +
+    (statusFilter !== "all" ? 1 : 0);
 
   if (isIndividualClient) {
     return <EntityOnboardingIndividualSearchStep form={form} values={values} />;
@@ -249,79 +311,183 @@ const EntityOnboardingSearchStep = ({
         </div>
       ) : (
         <div className="flex flex-col flex-1 min-h-0 space-y-4">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground/60" />
-            <input
-              id="company-search"
-              name="company-search"
-              aria-label="Recherche entreprise"
-              autoComplete="off"
-              spellCheck={false}
-              value={searchDraft}
-              onChange={(event) => onSearchDraftChange(event.target.value)}
-              placeholder="Nom de societe, SIREN ou SIRET…"
-              className="h-12 w-full rounded-lg border border-border bg-surface-1/30 pl-12 pr-4 text-lg font-medium tracking-tight text-foreground shadow-sm transition-[border-color,background-color,box-shadow] placeholder:text-muted-foreground/40 focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
-            />
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground/60" />
+              <input
+                id="company-search"
+                name="company-search"
+                aria-label="Recherche entreprise"
+                autoComplete="off"
+                spellCheck={false}
+                value={searchDraft}
+                onChange={(event) => onSearchDraftChange(event.target.value)}
+                placeholder="Nom de societe, SIREN ou SIRET…"
+                className="h-12 w-full rounded-lg border border-border bg-surface-1/30 pl-12 pr-12 text-lg font-medium tracking-tight text-foreground shadow-sm transition-[border-color,background-color,box-shadow] placeholder:text-muted-foreground/40 focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+              {isFetching && (
+                <LoaderCircle className="absolute right-4 top-1/2 size-5 -translate-y-1/2 animate-spin text-primary" />
+              )}
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowFilters(!showFilters)}
+              className={cn(
+                "h-12 px-4 border-border bg-background text-muted-foreground hover:bg-surface-2 hover:text-foreground shadow-sm transition-[border-color,background-color,color,box-shadow]",
+                showFilters && "border-primary/30 bg-primary/5 text-primary hover:bg-primary/5 hover:text-primary"
+              )}
+            >
+              <SlidersHorizontal className="size-4 mr-2" />
+              {showFilters ? "Masquer les filtres" : "Filtres"}
+              {activeOfficialFilterCount > 0 && (
+                <span className="ml-1.5 flex size-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground">
+                  {activeOfficialFilterCount}
+                </span>
+              )}
+            </Button>
           </div>
 
-          <div className="flex flex-wrap items-end gap-4 border-b border-border-subtle pb-4">
-            <div className="flex flex-col gap-1.5">
-              <p className={labelClasses}>Département</p>
-              <div className="w-48">
-                <DirectoryFilterCombobox
-                  items={departmentOptions}
-                  values={department ? [department] : []}
-                  onValuesChange={(nextValues) =>
-                    onDepartmentChange(nextValues[0] ?? "")
-                  }
-                  placeholder="Tous"
-                  allLabel="Tous les departements"
-                  searchPlaceholder="Code…"
-                  emptyLabel="Aucun."
-                  searchInputName="official-search-department"
-                  triggerAriaLabel="Département"
-                  className="h-9 rounded-md border-border bg-surface-1/30 shadow-sm"
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <p className={labelClasses}>Statut établissement</p>
-              <ToggleGroup
-                type="single"
-                value={statusFilter}
-                variant="outline"
-                size="sm"
-                aria-label="Filtre statut etablissement"
-                onValueChange={(nextValue) => {
-                  if (nextValue) {
-                    onStatusFilterChange(
-                      nextValue as CompanySearchStatusFilter,
-                    );
-                  }
-                }}
-                className="justify-start gap-1"
-              >
-                {STATUS_FILTER_OPTIONS.map((option) => (
-                  <ToggleGroupItem
-                    key={option.value}
-                    value={option.value}
-                    aria-label={option.label}
-                    className="h-9 min-w-[84px] rounded-md border-border bg-surface-1/30 px-3 text-[11px] font-bold shadow-sm transition-[border-color,background-color,color,box-shadow] data-[state=on]:border-primary/40 data-[state=on]:bg-primary/5 data-[state=on]:text-primary"
+          {showFilters && (
+            <EntityRecordWizardSection title="Filtres officiels" eyebrow="Recherche" className="animate-in fade-in-0 duration-200">
+              <div className="grid gap-4 md:grid-cols-3">
+                <EntityRecordWizardField label="Département">
+                  <Input
+                    name="client-official-filter-department"
+                    value={department}
+                    onChange={(event) => onDepartmentChange(event.target.value.toUpperCase())}
+                    placeholder="Ex: 69"
+                    aria-label="Département client"
+                    autoComplete="off"
+                    className={wizardInputClasses}
+                  />
+                </EntityRecordWizardField>
+                <EntityRecordWizardField label="Code postal">
+                  <Input
+                    name="client-official-filter-postal-code"
+                    value={postalCode}
+                    onChange={(event) => onPostalCodeChange(event.target.value.replace(/\D/g, '').slice(0, 5))}
+                    placeholder="Ex: 69002"
+                    aria-label="Code postal client"
+                    inputMode="numeric"
+                    autoComplete="off"
+                    className={wizardInputClasses}
+                  />
+                </EntityRecordWizardField>
+                <EntityRecordWizardField label="Ville">
+                  <Input
+                    name="client-official-filter-city"
+                    value={city}
+                    onChange={(event) => onCityChange(event.target.value)}
+                    placeholder="Ex: Lyon"
+                    aria-label="Ville client"
+                    autoComplete="off"
+                    className={wizardInputClasses}
+                  />
+                </EntityRecordWizardField>
+                <EntityRecordWizardField label="Code NAF">
+                  <Input
+                    name="client-official-filter-naf"
+                    value={nafCode}
+                    onChange={(event) => onNafCodeChange(normalizeNafCode(event.target.value))}
+                    placeholder="Ex: 46.69B"
+                    aria-label="Code NAF client"
+                    autoComplete="off"
+                    spellCheck={false}
+                    className={cn(wizardInputClasses, 'font-mono uppercase')}
+                  />
+                </EntityRecordWizardField>
+                <EntityRecordWizardField label="Section d'activité">
+                  <Select
+                    name="client-official-activity-section"
+                    value={activitySection || 'all'}
+                    onValueChange={(value) => onActivitySectionChange(value === 'all' ? '' : value)}
                   >
-                    {option.compactLabel}
-                  </ToggleGroupItem>
-                ))}
-              </ToggleGroup>
-            </div>
-
-            {isFetching && (
-              <div className="ml-auto flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                <LoaderCircle className="size-3.5 animate-spin text-primary" />
-                Recherche
+                    <SelectTrigger aria-label="Section activité client" className={wizardInputClasses}>
+                      <SelectValue placeholder="Toutes les sections" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-72">
+                      <SelectGroup>
+                        <SelectItem value="all">Toutes les sections</SelectItem>
+                        {activitySections.map(([value, label]) => (
+                          <SelectItem key={value} value={value}>
+                            {label}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </EntityRecordWizardField>
+                <div className="flex items-end">
+                  <Button
+                    type="button"
+                    disabled={searchDraft.trim().length < 3 || isFetching}
+                    onClick={() => onSearchDraftChange(searchDraft.trim())}
+                    className="h-9 w-full transition-transform active:scale-[0.98]"
+                  >
+                    {isFetching ? (
+                      <LoaderCircle data-icon="inline-start" className="animate-spin" aria-hidden="true" />
+                    ) : (
+                      <Filter data-icon="inline-start" aria-hidden="true" />
+                    )}
+                    Rechercher
+                  </Button>
+                </div>
               </div>
-            )}
-          </div>
+              <div className="mt-4 grid gap-4 border-t border-border-subtle pt-4 md:grid-cols-2">
+                <div className="flex flex-col gap-1.5">
+                  <span className={labelClasses}>Type d&apos;établissement</span>
+                  <div className="flex h-9 w-full items-center gap-0.5 rounded-lg border border-border-subtle bg-surface-2 p-0.5">
+                    {(['all', 'head_office', 'secondary'] as const).map((value) => {
+                      const isSelected = headOffice === value;
+                      const labels = { all: 'Tous', head_office: 'Siège', secondary: 'Secondaire' };
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => onHeadOfficeChange(value)}
+                          aria-pressed={isSelected}
+                          className={cn(
+                            'h-full flex-1 cursor-pointer rounded-md border text-xs font-medium transition-[background-color,color,box-shadow,transform] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25',
+                            isSelected
+                              ? 'border-border/40 bg-card font-semibold text-foreground shadow-sm'
+                              : 'border-transparent bg-transparent text-muted-foreground hover:bg-card/40 hover:text-foreground'
+                          )}
+                        >
+                          {labels[value]}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <span className={labelClasses}>Statut d&apos;activité</span>
+                  <div className="flex h-9 w-full items-center gap-0.5 rounded-lg border border-border-subtle bg-surface-2 p-0.5">
+                    {STATUS_FILTER_OPTIONS.map((option) => {
+                      const isSelected = statusFilter === option.value;
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => onStatusFilterChange(option.value)}
+                          aria-label={option.label}
+                          aria-pressed={isSelected}
+                          className={cn(
+                            'h-full flex-1 cursor-pointer rounded-md border text-xs font-medium transition-[background-color,color,box-shadow,transform] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25',
+                            isSelected
+                              ? 'border-border/40 bg-card font-semibold text-foreground shadow-sm'
+                              : 'border-transparent bg-transparent text-muted-foreground hover:bg-card/40 hover:text-foreground'
+                          )}
+                        >
+                          {option.compactLabel}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </EntityRecordWizardSection>
+          )}
 
           <div
             className={cn(

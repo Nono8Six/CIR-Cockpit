@@ -13,6 +13,7 @@ export const useCockpitDialogsState = () => {
   const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
   const [isConvertDialogOpen, setIsConvertDialogOpen] = useState(false);
   const [convertTarget, setConvertTarget] = useState<Entity | null>(null);
+  const [dialogSearchQuery, setDialogSearchQuery] = useState<string>('');
 
   const handleOpenConvertDialog = useCallback(() => {
     if (!selectedEntity) return;
@@ -32,8 +33,9 @@ export const useCockpitDialogsState = () => {
     }
   }, []);
 
-  const openClientDialog = useCallback((kind: 'company' | 'individual' = 'company') => {
+  const openClientDialog = useCallback((kind: 'company' | 'individual' = 'company', query: string = '') => {
     setClientDialogKind(kind);
+    setDialogSearchQuery(query);
     setIsClientDialogOpen(true);
   }, []);
 
@@ -41,6 +43,19 @@ export const useCockpitDialogsState = () => {
     setIsClientDialogOpen(open);
     if (!open) {
       setClientDialogKind('company');
+      setDialogSearchQuery('');
+    }
+  }, []);
+
+  const openProspectDialog = useCallback((query: string = '') => {
+    setDialogSearchQuery(query);
+    setIsProspectDialogOpen(true);
+  }, []);
+
+  const handleProspectDialogChange = useCallback((open: boolean) => {
+    setIsProspectDialogOpen(open);
+    if (!open) {
+      setDialogSearchQuery('');
     }
   }, []);
 
@@ -55,12 +70,15 @@ export const useCockpitDialogsState = () => {
     isContactDialogOpen,
     isConvertDialogOpen,
     convertTarget,
+    dialogSearchQuery,
     setShowSuggestions,
     setServicePickerOpen,
     setSelectedEntity,
     setSelectedContact,
     openClientDialog,
     handleClientDialogChange,
+    openProspectDialog,
+    handleProspectDialogChange,
     setIsProspectDialogOpen,
     setIsContactDialogOpen,
     handleOpenConvertDialog,

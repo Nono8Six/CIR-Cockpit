@@ -3,6 +3,11 @@ import { AlertCircle } from 'lucide-react';
 import { Input } from '../../ui/inputs/basic/Input';
 import { Textarea } from '../../ui/inputs/basic/Textarea';
 import { cn } from '@/lib/utils';
+import {
+  EntityRecordWizardField,
+  EntityRecordWizardSection,
+  wizardInputClasses
+} from '@/components/entity-record-wizard/EntityRecordWizardFields';
 import type { SupplierDraft } from './use-supplier-onboarding';
 
 interface SupplierDetailsStepProps {
@@ -39,16 +44,9 @@ const SupplierDetailsStep = ({
       </div>
       <div className="flex flex-col gap-6">
         {/* General Info */}
-        <div className="rounded-xl border border-border bg-card p-6 space-y-5 shadow-sm">
-          <h2 className="text-[10.5px] font-bold uppercase tracking-[0.1em] text-primary border-b border-border-subtle/80 pb-2.5 flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-            Informations Générales
-          </h2>
+        <EntityRecordWizardSection title="Informations Générales" eyebrow="Fournisseur">
           <div className="grid gap-4 md:grid-cols-12">
-            <div className="flex flex-col gap-1 md:col-span-6">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                Nom du fournisseur <span className="text-destructive">*</span>
-              </p>
+            <EntityRecordWizardField label="Nom du fournisseur" required className="md:col-span-6">
               <Input
                 name="admin-supplier-name"
                 value={draft.name}
@@ -56,28 +54,26 @@ const SupplierDetailsStep = ({
                 placeholder="Ex: EDF SAS"
                 aria-label="Nom fournisseur admin"
                 aria-invalid={hasAttemptedNext && !isNameValid ? 'true' : 'false'}
-                className={cn('focus-visible:ring-ring/45', hasAttemptedNext && !isNameValid && 'border-destructive focus-visible:ring-destructive/30')}
+                className={cn(wizardInputClasses, hasAttemptedNext && !isNameValid && 'border-destructive focus-visible:ring-destructive/30')}
               />
               {hasAttemptedNext && !isNameValid ? (
                 <span className="text-[10px] font-semibold text-destructive flex items-center gap-1 mt-0.5">
                   <AlertCircle className="size-3" /> Le nom est requis.
                 </span>
               ) : null}
-            </div>
-            <div className="flex flex-col gap-1 md:col-span-3">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Code interne</p>
+            </EntityRecordWizardField>
+            <EntityRecordWizardField label="Code interne" className="md:col-span-3">
               <Input
                 name="admin-supplier-code"
                 value={draft.supplier_code}
                 onChange={(event) => updateSupplierCode(event.target.value)}
                 placeholder="Ex: EDF"
                 aria-label="Code interne fournisseur"
-                className="font-mono uppercase focus-visible:ring-ring/45"
+                className={cn(wizardInputClasses, 'font-mono uppercase')}
                 maxLength={4}
               />
-            </div>
-            <div className="flex flex-col gap-1 md:col-span-3">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">N° fournisseur</p>
+            </EntityRecordWizardField>
+            <EntityRecordWizardField label="N° fournisseur" className="md:col-span-3">
               <Input
                 name="admin-supplier-number"
                 value={draft.supplier_number}
@@ -85,24 +81,16 @@ const SupplierDetailsStep = ({
                 placeholder="Ex: 400123"
                 aria-label="Numéro fournisseur"
                 inputMode="numeric"
-                className="focus-visible:ring-ring/45"
+                className={wizardInputClasses}
                 maxLength={15}
               />
-            </div>
+            </EntityRecordWizardField>
           </div>
-        </div>
+        </EntityRecordWizardSection>
 
-        {/* Contacts */}
-        <div className="rounded-xl border border-border bg-card p-6 space-y-5 shadow-sm">
-          <h2 className="text-[10.5px] font-bold uppercase tracking-[0.1em] text-primary border-b border-border-subtle/80 pb-2.5 flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-            Contacts Principaux
-          </h2>
+        <EntityRecordWizardSection title="Contacts Principaux" eyebrow="Contact">
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="flex flex-col gap-1">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                Téléphone principal <span className="text-destructive">*</span>
-              </p>
+            <EntityRecordWizardField label="Téléphone principal" required>
               <Input
                 name="admin-supplier-phone"
                 value={draft.primary_phone}
@@ -110,13 +98,10 @@ const SupplierDetailsStep = ({
                 placeholder="Ex: +33 4 72 00 00 00"
                 aria-label="Téléphone fournisseur admin"
                 aria-invalid={hasAttemptedNext && !isContactValid ? 'true' : 'false'}
-                className={cn('focus-visible:ring-ring/45', hasAttemptedNext && !isContactValid && 'border-destructive focus-visible:ring-destructive/30')}
+                className={cn(wizardInputClasses, hasAttemptedNext && !isContactValid && 'border-destructive focus-visible:ring-destructive/30')}
               />
-            </div>
-            <div className="flex flex-col gap-1">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                Email principal <span className="text-destructive">*</span>
-              </p>
+            </EntityRecordWizardField>
+            <EntityRecordWizardField label="Email principal" required>
               <Input
                 name="admin-supplier-email"
                 value={draft.primary_email}
@@ -125,132 +110,109 @@ const SupplierDetailsStep = ({
                 aria-label="Email fournisseur admin"
                 type="email"
                 aria-invalid={hasAttemptedNext && !isContactValid ? 'true' : 'false'}
-                className={cn('focus-visible:ring-ring/45', hasAttemptedNext && !isContactValid && 'border-destructive focus-visible:ring-destructive/30')}
+                className={cn(wizardInputClasses, hasAttemptedNext && !isContactValid && 'border-destructive focus-visible:ring-destructive/30')}
               />
-            </div>
+            </EntityRecordWizardField>
           </div>
           {hasAttemptedNext && !isContactValid ? (
             <span className="text-[10px] font-semibold text-destructive flex items-center gap-1 mt-0.5">
               <AlertCircle className="size-3" /> Un numéro de téléphone ou un email de contact est requis.
             </span>
           ) : null}
-        </div>
+        </EntityRecordWizardSection>
 
-        {/* Location */}
-        <div className="rounded-xl border border-border bg-card p-6 space-y-5 shadow-sm">
-          <h2 className="text-[10.5px] font-bold uppercase tracking-[0.1em] text-primary border-b border-border-subtle/80 pb-2.5 flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-            Localisation
-          </h2>
+        <EntityRecordWizardSection title="Localisation" eyebrow="Adresse">
           <div className="grid gap-4 md:grid-cols-12">
-            <div className="flex flex-col gap-1 md:col-span-12">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Adresse</p>
+            <EntityRecordWizardField label="Adresse" className="md:col-span-12">
               <Input
                 name="admin-supplier-address"
                 value={draft.address}
                 onChange={(event) => updateDraft('address', event.target.value)}
                 placeholder="Ex: 20 rue de la République"
                 aria-label="Adresse fournisseur admin"
-                className="focus-visible:ring-ring/45"
+                className={wizardInputClasses}
               />
-            </div>
-            <div className="flex flex-col gap-1 md:col-span-3">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Code postal</p>
+            </EntityRecordWizardField>
+            <EntityRecordWizardField label="Code postal" className="md:col-span-3">
               <Input
                 name="admin-supplier-postal-code"
                 value={draft.postal_code}
                 onChange={(event) => updateDraft('postal_code', event.target.value.replace(/\D/g, '').slice(0, 5))}
                 placeholder="Ex: 69002"
                 aria-label="Code postal fiche fournisseur"
-                className="focus-visible:ring-ring/45"
+                className={wizardInputClasses}
               />
-            </div>
-            <div className="flex flex-col gap-1 md:col-span-6">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Ville</p>
+            </EntityRecordWizardField>
+            <EntityRecordWizardField label="Ville" className="md:col-span-6">
               <Input
                 name="admin-supplier-city"
                 value={draft.city}
                 onChange={(event) => updateDraft('city', event.target.value)}
                 placeholder="Ex: Lyon"
                 aria-label="Ville fiche fournisseur"
-                className="focus-visible:ring-ring/45"
+                className={wizardInputClasses}
               />
-            </div>
-            <div className="flex flex-col gap-1 md:col-span-3">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Département</p>
+            </EntityRecordWizardField>
+            <EntityRecordWizardField label="Département" className="md:col-span-3">
               <Input
                 name="admin-supplier-department"
                 value={draft.department}
                 onChange={(event) => updateDraft('department', event.target.value.toUpperCase())}
                 placeholder="Ex: 69"
                 aria-label="Département fiche fournisseur"
-                className="focus-visible:ring-ring/45"
+                className={wizardInputClasses}
               />
-            </div>
+            </EntityRecordWizardField>
           </div>
-        </div>
+        </EntityRecordWizardSection>
 
-        {/* Identifiers */}
-        <div className="rounded-xl border border-border bg-card p-6 space-y-5 shadow-sm">
-          <h2 className="text-[10.5px] font-bold uppercase tracking-[0.1em] text-primary border-b border-border-subtle/80 pb-2.5 flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-            Identifiants Légaux
-          </h2>
+        <EntityRecordWizardSection title="Identifiants Légaux" eyebrow="Base SIRENE">
           <div className="grid gap-4 md:grid-cols-3">
-            <div className="flex flex-col gap-1">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">SIREN</p>
+            <EntityRecordWizardField label="SIREN">
               <Input
                 name="admin-supplier-siren"
                 value={draft.siren}
                 onChange={(event) => updateDraft('siren', event.target.value)}
                 placeholder="Ex: 552081317"
                 aria-label="SIREN fournisseur"
-                className="focus-visible:ring-ring/45"
+                className={wizardInputClasses}
               />
-            </div>
-            <div className="flex flex-col gap-1">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">SIRET</p>
+            </EntityRecordWizardField>
+            <EntityRecordWizardField label="SIRET">
               <Input
                 name="admin-supplier-siret"
                 value={draft.siret}
                 onChange={(event) => updateDraft('siret', event.target.value)}
                 placeholder="Ex: 55208131700010"
                 aria-label="SIRET fournisseur"
-                className="focus-visible:ring-ring/45"
+                className={wizardInputClasses}
               />
-            </div>
-            <div className="flex flex-col gap-1">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Code NAF / APE</p>
+            </EntityRecordWizardField>
+            <EntityRecordWizardField label="Code NAF / APE">
               <Input
                 name="admin-supplier-naf"
                 value={draft.naf_code}
                 onChange={(event) => updateDraft('naf_code', event.target.value)}
                 placeholder="Ex: 35.11Z"
                 aria-label="NAF fiche fournisseur"
-                className="font-mono uppercase focus-visible:ring-ring/45"
+                className={cn(wizardInputClasses, 'font-mono uppercase')}
               />
-            </div>
+            </EntityRecordWizardField>
           </div>
-        </div>
+        </EntityRecordWizardSection>
 
-        {/* Notes */}
-        <div className="rounded-xl border border-border bg-card p-6 space-y-5 shadow-sm">
-          <h2 className="text-[10.5px] font-bold uppercase tracking-[0.1em] text-primary border-b border-border-subtle/80 pb-2.5 flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-            Notes & Observations
-          </h2>
-          <div className="flex flex-col gap-1">
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Notes complémentaires</p>
+        <EntityRecordWizardSection title="Notes & Observations" eyebrow="Suivi">
+          <EntityRecordWizardField label="Notes complémentaires">
             <Textarea
               name="admin-supplier-notes"
               value={draft.notes}
               onChange={(event) => updateDraft('notes', event.target.value)}
-              placeholder="Observations, conditions commerciales, interlocuteurs principaux..."
+              placeholder="Observations, conditions commerciales, interlocuteurs principaux…"
               aria-label="Notes fournisseur admin"
-              className="min-h-24 text-sm focus-visible:ring-ring/45"
+              className="min-h-24 rounded-md border-border bg-background text-sm shadow-none focus-visible:ring-ring/45"
             />
-          </div>
-        </div>
+          </EntityRecordWizardField>
+        </EntityRecordWizardSection>
       </div>
     </>
   );

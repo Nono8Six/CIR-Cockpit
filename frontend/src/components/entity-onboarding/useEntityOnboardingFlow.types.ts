@@ -19,6 +19,7 @@ import type {
 import type { EntityOnboardingStepper } from './entityOnboardingSteps';
 import type {
   CompanySearchGroup,
+  CompanySearchHeadOfficeFilter,
   CompanySearchStatusFilter,
   EntityOnboardingSeed,
   OnboardingIntent,
@@ -69,6 +70,16 @@ export interface EntityOnboardingFlowState {
   setSearchDraft: Dispatch<SetStateAction<string>>;
   departmentFilter: string;
   setDepartmentFilter: Dispatch<SetStateAction<string>>;
+  postalCodeFilter: string;
+  setPostalCodeFilter: Dispatch<SetStateAction<string>>;
+  cityFilter: string;
+  setCityFilter: Dispatch<SetStateAction<string>>;
+  nafCodeFilter: string;
+  setNafCodeFilter: Dispatch<SetStateAction<string>>;
+  activitySectionFilter: string;
+  setActivitySectionFilter: Dispatch<SetStateAction<string>>;
+  headOfficeFilter: CompanySearchHeadOfficeFilter;
+  setHeadOfficeFilter: Dispatch<SetStateAction<CompanySearchHeadOfficeFilter>>;
   statusFilter: CompanySearchStatusFilter;
   setStatusFilter: Dispatch<SetStateAction<CompanySearchStatusFilter>>;
   manualEntry: boolean;
