@@ -28,6 +28,8 @@ import type { AuthContext, DbClient } from '../../types.ts';
 import { httpError } from '../../middleware/errorHandler.ts';
 import { ensureAgencyAccess, ensureDataRateLimit } from '../data/dataAccess.ts';
 
+const CONFIG_REFERENCE_RATE_LIMIT_MAX = 60;
+
 type LabelTable =
   | typeof agency_services
   | typeof agency_families
@@ -729,7 +731,9 @@ export const handleConfigReferenceAction = async (
   requestId: string | undefined,
   input: ConfigReferenceActionInput
 ): Promise<ConfigReferenceActionResponse> => {
-  await ensureDataRateLimit('config:reference', authContext.userId);
+  await ensureDataRateLimit('config:reference', authContext.userId, {
+    max: CONFIG_REFERENCE_RATE_LIMIT_MAX
+  });
   ensureReferenceWriteAccess(authContext);
   const agencyId = ensureAgencyAccess(authContext, input.agency_id);
 
@@ -779,7 +783,9 @@ const saveReferenceConfig = async (
   requestId: string | undefined,
   input: DataConfigPayload
 ): Promise<DataConfigResponse> => {
-  await ensureDataRateLimit('data:config', authContext.userId);
+  await ensureDataRateLimit('data:config', authContext.userId, {
+    max: CONFIG_REFERENCE_RATE_LIMIT_MAX
+  });
   ensureReferenceWriteAccess(authContext);
   const resolvedAgencyId = ensureAgencyAccess(authContext, input.agency_id);
 

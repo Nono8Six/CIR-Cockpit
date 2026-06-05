@@ -162,6 +162,7 @@ export const entitySearchIndexKey = (agencyId: string | null, includeArchived: b
   archiveScope(includeArchived)
 ] as const;
 
+export const entityUnifiedSearchRootKey = () => [QUERY_ROOTS.entityUnifiedSearch] as const;
 export const entityUnifiedSearchKey = (input: TierV1SearchInput) => [
   QUERY_ROOTS.entityUnifiedSearch,
   input.agency_id ?? 'all',

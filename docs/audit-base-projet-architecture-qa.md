@@ -1,7 +1,7 @@
 # Audit base projet - architecture et QA
 
 Date: 2026-04-25  
-Derniere mise a jour: 2026-04-26
+Derniere mise a jour: 2026-06-05
 Perimetre: audit du repo `CIR-Cockpit`, avec mise a jour de l'etat reel du 2026-04-26 et migrations applicatives admin/audit, interactions et brouillons vers backend/tRPC. L'application reste locale; seul le projet Supabase `rbjtrcorlezvocayluok` est un runtime distant lie. Aucune migration DB live n'est appliquee dans cette tranche.
 
 ## Verdict executif
@@ -68,6 +68,8 @@ Regle de suivi: chaque action terminee doit etre cochee ici avec une preuve cour
   - [x] Avancement cible 2026-04-26: annuaire entreprise et data save decoupes (`directoryCompany*`, `directoryListing*`, `directoryDuplicates*`, `dataEntitiesSave*`), avec validations Deno ciblees documentees dans `docs/plan.md`.
   - [ ] Reste ouvert: le router tRPC et plusieurs services transverses restent horizontaux; aucune convention de domaines backend n'est encore imposee mecaniquement.
 - [ ] 7. P2 - Traiter la dette UI/perf/a11y non bloquante.
+  - [x] Avancement cible 2026-06-05: correction rationnelle de l'audit Gemini. Les validations row-level `api-responses.ts` sont durcies, les invalidations TanStack Query de tiers/contacts sont centralisees, les transitions ciblees remplacent les `transition-all` identifies, et `frontend/index.html` contient une metadata descriptive minimale.
+  - [x] Decision cible 2026-06-05: les points Gemini `Max 7 files/dir` et JSDoc global sont documentes comme non canoniques. Aucun deplacement massif de dossiers ni JSDoc decorative n'est applique tant qu'il ne reduit pas un risque concret.
 
 ## Cartographie actuelle
 
@@ -206,7 +208,7 @@ Ecarts ou vigilances factuels:
 - `entities.department`: contrainte live `department IS NULL OR department ~ '^[0-9]{2}$'`. Decision appliquee le 2026-04-26: les fiches entites restent alignees sur deux chiffres uniquement; les schemas client/prospect/fournisseur/onboarding rejettent les codes hors contrainte, et le backend persiste `NULL` quand le departement est absent. Les codes `2A/2B` restent valides uniquement pour `reference_departments`; les accepter sur les fiches entites necessiterait une migration DB explicite.
 - `interaction_drafts`: la table live a `agency_id` non nullable et une unique key `(user_id, agency_id, form_type)`. Le schema formulaire `interactionDraftSchema` accepte un `agency_id` optionnel car il valide un etat UI transitoire, pas la ligne DB finale. La migration backend/tRPC appliquee le 2026-04-26 separe donc le transport JSON persiste (`draft_*`) du parsing UI brouillon conserve cote frontend.
 - `profiles.first_name`: live nullable, `profiles.last_name` non nullable. Le fallback legacy frontend de `getAdminUsers` a ete supprime avec la migration backend/tRPC; la liste admin consomme maintenant le schema live via Drizzle et le contrat `adminUsersListResponseSchema`.
-- `api-responses.ts`: les rows `entities`, `entity_contacts` et `interactions` sont validees par `z.custom` avec gardes minimaux, pas par une validation colonne par colonne. C'est acceptable comme contrat de transport tant que les rows viennent du backend, mais insuffisant si une sortie exposee devient publique ou recombine plusieurs sources.
+- `api-responses.ts`: les rows `entities`, `entity_contacts`, `interactions` et `interaction_drafts` sont maintenant validees par des schemas Zod explicites champ par champ. Les champs JSON (`timeline`, `payload`) sont bornes par un schema JSON recursif; les champs requis vides, manquants ou mal types sont rejetes avant hydratation frontend.
 - Les direct reads/writes metier `interactions`, `interaction_drafts` et preference agence active ont ete migres vers tRPC. Les usages Supabase directs restants concernent auth/session, bootstrap agence tolere et realtime.
 
 Decision: l'alignement n'est pas bloquant pour continuer le refactor par domaines, mais il interdit les suppressions opportunistes de colonnes/index/policies. Le modele Drizzle `interactions.id` et le contrat applicatif `entities.department` sont maintenant alignes avec le schema live; la vigilance restante porte surtout sur la validation row-level des sorties API.
@@ -215,8 +217,8 @@ Decision: l'alignement n'est pas bloquant pour continuer le refactor par domaine
 
 La base UI a des signaux positifs: tests a11y presents, nombreux `aria-label`, `aria-live`, focus rings visibles, primitives Radix/shadcn. La dette restante est de niveau P2:
 
-- `transition-all` subsiste dans quelques composants (`tabs.tsx`, `DirectoryTypeFilter.tsx`, `EntityOnboardingDetailsStep.tsx`), a remplacer par des transitions ciblees.
-- `frontend/index.html` ne contient qu'un `<title>CIR Cockpit</title>`; les metadata descriptives minimales restent pauvres.
+- Les `transition-all` identifies dans `Tabs.tsx` et `EntityOnboardingDetailsStep.tsx` sont remplaces par des transitions ciblees. Les autres occurrences doivent etre traitees au fil des fichiers touches, pas via un big bang visuel.
+- `frontend/index.html` contient maintenant une meta description sobre. Le fichier reste volontairement minimal car l'application est locale/authentifiee, pas une surface SEO publique.
 - La strategie date doit rester centralisee: beaucoup d'appels passent par `utils/date`, mais `toLocaleDateString()` existe encore dans `calendar.tsx` pour un attribut.
 - La virtualisation est disponible (`@tanstack/react-virtual`) et referencee par Vite, mais les grandes listes doivent etre auditees au cas par cas avant volumes reels.
 
@@ -370,6 +372,7 @@ Revalidation effectuee le 2026-04-26 pour cette mise a jour:
 | Tests cibles sidebar onboarding | `pnpm --dir frontend run test:run -- src/components/__tests__/EntityOnboardingDialog.test.tsx` | PASS: `9` tests. |
 | Typecheck/lint frontend sidebar | `pnpm --dir frontend run typecheck`, `pnpm --dir frontend run lint` | PASS. |
 | Gate locale P1 frontend sidebar | `pnpm run qa:fast`, `pnpm run qa` | PASS: `qa:fast` puis gate complete `QA Gate PASS`; `433` tests frontend, `147` tests backend, `9` integrations backend ignorees hors environnement dedie. |
+| Correction audit Gemini | `api-responses.ts`, `queryInvalidation.ts`, hooks entites/contacts, transitions ciblees, metadata HTML | PASS 2026-06-05: tests cibles PASS, `pnpm run qa:fast` PASS, `pnpm run qa` PASS avec `QA Gate PASS`. |
 
 Validation non executee automatiquement:
 

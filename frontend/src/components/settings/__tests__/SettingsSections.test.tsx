@@ -156,7 +156,15 @@ describe('SettingsSections', () => {
     render(<SettingsSections {...baseProps} activeSection="workflow" usage={usage} />);
 
     expect(screen.getByRole('button', { name: /archiver le statut à faire/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /descendre le statut à faire/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /monter le statut/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /descendre le statut/i })).not.toBeInTheDocument();
+  });
+
+  it('hides manual move buttons from referential lists', () => {
+    render(<SettingsSections {...baseProps} activeSection="lists" usage={usage} />);
+
+    expect(screen.queryByRole('button', { name: /monter maintenance/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /descendre maintenance/i })).not.toBeInTheDocument();
   });
 
   it('shows historical statuses as a non editable audit section', () => {

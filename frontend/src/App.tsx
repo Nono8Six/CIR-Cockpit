@@ -284,12 +284,13 @@ const App = () => {
               viewState.handleTabChange('dashboard');
               viewState.handleSearchOpenChange(false);
             }}
-            onFocusClient={(clientId) => {
+            onFocusClient={(clientId, _contactId, clientNumber) => {
               const targetEntity = queries.entitySearchIndex.entities.find((entity) => entity.id === clientId);
-              if (targetEntity?.client_number) {
+              const targetClientNumber = clientNumber ?? targetEntity?.client_number;
+              if (targetClientNumber) {
                 void navigate({
                   to: '/clients/$clientNumber',
-                  params: { clientNumber: targetEntity.client_number },
+                  params: { clientNumber: targetClientNumber },
                   search: () => DEFAULT_DIRECTORY_SEARCH
                 }).finally(() => {
                   viewState.handleSearchOpenChange(false);

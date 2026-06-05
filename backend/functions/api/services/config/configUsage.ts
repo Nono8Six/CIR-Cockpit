@@ -21,6 +21,8 @@ import { httpError } from '../../middleware/errorHandler.ts';
 import type { AuthContext, DbClient } from '../../types.ts';
 import { ensureAgencyAccess, ensureDataRateLimit } from '../data/dataAccess.ts';
 
+const CONFIG_READ_RATE_LIMIT_MAX = 60;
+
 type ReferenceRow = {
   id: string;
   label: string;
@@ -175,7 +177,9 @@ const loadReferences = async (db: DbClient, agencyId: string) => {
 };
 
 export const getConfigUsage = async (db: DbClient, auth: AuthContext, requestId: string | undefined, input: ConfigUsageInput): Promise<ConfigUsageResponse> => {
-  await ensureDataRateLimit('config:usage', auth.userId);
+  await ensureDataRateLimit('config:usage', auth.userId, {
+    max: CONFIG_READ_RATE_LIMIT_MAX
+  });
   const agencyId = ensureAgencyAccess(auth, input.agency_id);
   try {
     const [references, usage] = await Promise.all([loadReferences(db, agencyId), loadUsage(db, agencyId)]);

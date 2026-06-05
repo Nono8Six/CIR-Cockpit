@@ -25,8 +25,7 @@ interface SettingsProps {
 
 /**
  * Main Settings component that orchestrates agency and product configurations.
- * Coordinates layout split into a sticky sidebar and bento scroll stack,
- * and mounts the floating bottom actions drawer.
+ * Coordinates the compact settings workspace and mounts the floating bottom actions drawer.
  *
  * @param {SettingsProps} props - The component properties.
  * @param {AgencyConfig} props.config - Pre-loaded default configuration context.
@@ -121,7 +120,7 @@ const Settings = ({
   }, [isDirty]);
 
   return (
-    <div className="flex h-full flex-col overflow-hidden border border-border bg-surface-1" data-testid="settings-root">
+    <div className="flex h-full flex-col overflow-hidden bg-surface-1 sm:border sm:border-border" data-testid="settings-root">
       <SettingsHeader
         readOnly={readOnly}
       />
@@ -132,8 +131,8 @@ const Settings = ({
         />
       )}
 
-      <div className="grid flex-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden lg:grid-cols-[18rem_minmax(0,1fr)] lg:grid-rows-1">
-        <div className="shrink-0 border-b border-border bg-surface-2 p-3 lg:border-b-0 lg:border-r">
+      <div className="grid flex-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden">
+        <div className="shrink-0 border-b border-border bg-surface-2 px-2 py-1.5 sm:px-3 sm:py-2">
           <SettingsSidebar
             activeSection={activeSection}
             readOnly={readOnly}
@@ -142,7 +141,7 @@ const Settings = ({
             unresolvedCount={usage?.totals.unresolved ?? 0}
           />
         </div>
-        <div className="overflow-auto bg-background p-4">
+        <div className="overflow-auto bg-background p-2 sm:p-3">
           <SettingsSections
             readOnly={readOnly}
             activeSection={activeSection}

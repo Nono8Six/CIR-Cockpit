@@ -6,10 +6,13 @@ import type { DataProfilePayload } from '../../../../../shared/schemas/system/da
 import type { AuthContext, DbClient } from '../../types.ts';
 import { httpError } from '../../middleware/errorHandler.ts';
 import { ensureAgencyAccess, ensureDataRateLimit } from './dataAccess.ts';
+import type { RateLimitOptions } from '../rate-limiting/rateLimit.ts';
 
 type DataProfileDependencies = {
-  ensureRateLimit: (scope: string, callerId: string) => Promise<void>;
+  ensureRateLimit: (scope: string, callerId: string, options?: RateLimitOptions) => Promise<void>;
 };
+
+const DATA_PROFILE_RATE_LIMIT_MAX = 60;
 
 const defaultDependencies: DataProfileDependencies = {
   ensureRateLimit: ensureDataRateLimit
@@ -39,7 +42,9 @@ export const handleDataProfileAction = async (
   data: DataProfilePayload,
   dependencies: DataProfileDependencies = defaultDependencies
 ): Promise<DataProfileResponse> => {
-  await dependencies.ensureRateLimit(`data_profile:${data.action}`, authContext.userId);
+  await dependencies.ensureRateLimit(`data_profile:${data.action}`, authContext.userId, {
+    max: DATA_PROFILE_RATE_LIMIT_MAX
+  });
 
   switch (data.action) {
     case 'password_changed': {

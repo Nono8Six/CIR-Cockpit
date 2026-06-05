@@ -71,6 +71,8 @@ const seaRecord = {
 };
 
 const buildTrpcEnvelope = (data: unknown) => ({ result: { data } });
+const buildTrpcBody = (responses: unknown[]): string =>
+  JSON.stringify(responses.length === 1 ? responses[0] : responses);
 
 const installQuickSearchMocks = async (page: Page): Promise<void> => {
   await page.route('**/rest/v1/entities*', async (route) => {
@@ -93,10 +95,42 @@ const installQuickSearchMocks = async (page: Page): Promise<void> => {
     const url = new URL(route.request().url());
     const procedurePath = url.pathname.split('/functions/v1/api/trpc/')[1] ?? url.pathname.split('/trpc/')[1] ?? '';
     const procedures = procedurePath.split(',').filter(Boolean);
-    const input = url.searchParams.get('input') ?? '';
+    const input = `${url.searchParams.get('input') ?? ''} ${route.request().postData() ?? ''}`;
 
     const responses = procedures.map((procedure) => {
       switch (procedure) {
+        case 'data.interactions':
+          if (input.includes('known_companies')) {
+            return buildTrpcEnvelope({
+              request_id: 'req-known-companies',
+              ok: true,
+              companies: []
+            });
+          }
+
+          if (input.includes('draft_get')) {
+            return buildTrpcEnvelope({
+              request_id: 'req-draft-get',
+              ok: true,
+              draft: null
+            });
+          }
+
+          return buildTrpcEnvelope({
+            request_id: 'req-interactions-list',
+            ok: true,
+            interactions: [],
+            page: 1,
+            page_size: 200,
+            total: 0
+          });
+        case 'data.entities':
+          return buildTrpcEnvelope({
+            request_id: 'req-entity-search-index',
+            ok: true,
+            entities: [seaEntity],
+            contacts: []
+          });
         case 'directory.record':
           return buildTrpcEnvelope({
             request_id: 'req-directory-record',
@@ -160,7 +194,7 @@ const installQuickSearchMocks = async (page: Page): Promise<void> => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify(responses)
+      body: buildTrpcBody(responses)
     });
   });
 
@@ -201,7 +235,7 @@ test('global search opens a full-page client record and remains responsive', asy
   await installQuickSearchMocks(page);
   await login(page);
 
-  await page.getByRole('button', { name: /ouvrir la recherche rapide/i }).click();
+  await page.keyboard.press('Control+K');
   const searchInput = page.getByTestId('app-search-input');
   await expect(searchInput).toBeVisible();
   await searchInput.fill('SEA');
@@ -221,7 +255,7 @@ test('global search opens a full-page client record and remains responsive', asy
 
   for (const viewport of SEARCH_VIEWPORTS) {
     await page.setViewportSize(viewport);
-    await page.getByRole('button', { name: /ouvrir la recherche rapide/i }).click();
+    await page.keyboard.press('Control+K');
     await expect(page.getByTestId('app-search-list')).toBeVisible();
 
     const metrics = await page.evaluate(() => {
@@ -247,19 +281,21 @@ test('global search opens a full-page client record and remains responsive', asy
 });
 
 test('global search exposes an explicit user error state when entity index fails', async ({ page }) => {
-  await page.route('**/rest/v1/entities*', async (route) => {
+  await page.route('**/functions/v1/api/trpc/data.entities*', async (route) => {
     await route.fulfill({
       status: 500,
       contentType: 'application/json',
-      body: JSON.stringify({ message: 'Erreur backend' })
-    });
-  });
-
-  await page.route('**/rest/v1/entity_contacts*', async (route) => {
-    await route.fulfill({
-      status: 500,
-      contentType: 'application/json',
-      body: JSON.stringify({ message: 'Erreur backend' })
+      body: JSON.stringify({
+        error: {
+          message: 'Erreur backend',
+          code: -32603,
+          data: {
+            code: 'INTERNAL_SERVER_ERROR',
+            appCode: 'DB_READ_FAILED',
+            httpStatus: 500
+          }
+        }
+      })
     });
   });
 

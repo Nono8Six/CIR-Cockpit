@@ -46,7 +46,7 @@ type AppSearchOverlayProps = {
   onRetrySearch?: () => Promise<unknown>;
   entityNameById: Map<string, string>;
   onOpenInteraction: (interaction: Interaction) => void;
-  onFocusClient: (clientId: string, contactId?: string | null) => void;
+  onFocusClient: (clientId: string, contactId?: string | null, clientNumber?: string | null) => void;
   onRequestConvert: (entity: ConvertClientEntity) => void;
   footerLeft?: ReactNode;
   footerRight?: ReactNode;
@@ -118,9 +118,9 @@ const AppSearchOverlay = ({
     });
   }, [onRetrySearch]);
 
-  const handleFocusClient = useCallback((clientId: string, contactId?: string | null) => {
+  const handleFocusClient = useCallback((clientId: string, contactId?: string | null, clientNumber?: string | null) => {
     try {
-      onFocusClient(clientId, contactId);
+      onFocusClient(clientId, contactId, clientNumber);
     } catch (error) {
       handleUiError(error, "Impossible d'ouvrir le client.", {
         source: 'AppSearchOverlay.focusClient'

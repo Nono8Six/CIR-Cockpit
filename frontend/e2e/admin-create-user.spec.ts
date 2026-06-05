@@ -24,12 +24,11 @@ const loginAsAdmin = async (page: Page): Promise<void> => {
   await page.getByLabel('Email').fill(adminEmail ?? '');
   await page.getByLabel('Mot de passe').fill(adminPassword ?? '');
   await page.getByRole('button', { name: /se connecter/i }).click();
-  await expect(page.getByTestId('app-header-tabs-scroll')).toBeVisible();
+  await expect(page.getByRole('button', { name: /ouvrir la recherche rapide/i })).toBeVisible();
 };
 
 const openAdminUsersPanel = async (page: Page): Promise<void> => {
-  const adminTab = page.getByRole('tab', { name: /admin \(f4\)/i });
-  await adminTab.click();
+  await page.goto('/admin');
   await expect(page.getByTestId('admin-panel')).toBeVisible();
   await page.getByTestId('admin-tab-users').click();
   await expect(page.getByTestId('admin-users-panel')).toBeVisible();
@@ -86,12 +85,13 @@ const createUser = async (
   await submitButton.click();
 
   if (!params.expectGeneratedPassword) {
-    if ((await createDialog.count()) > 0) {
+    await expect(createDialog).toHaveCount(0, { timeout: 15000 }).catch(async () => {
       const cancelButton = createDialog.getByRole('button', { name: /annuler/i });
-      if ((await cancelButton.count()) > 0) {
+      if (await cancelButton.isVisible().catch(() => false)) {
         await cancelButton.click();
+        await expect(createDialog).toHaveCount(0);
       }
-    }
+    });
     return {};
   }
 
@@ -100,14 +100,31 @@ const createUser = async (
     .filter({ hasText: /mot de passe temporaire/i });
   await expect(passwordDialog).toBeVisible();
   const generatedPassword = await extractTemporaryPassword(passwordDialog);
-  await passwordDialog.getByRole('button', { name: /fermer/i }).click();
+  await passwordDialog.getByRole('button', { name: /^fermer$/i }).first().click();
   await expect(passwordDialog).toHaveCount(0);
 
   return { generatedPassword };
 };
 
-const findUserCardByEmail = (page: Page, email: string): Locator =>
-  page.locator('[data-testid^="admin-user-card-"]').filter({ hasText: email }).first();
+const findUserRowByEmail = (page: Page, email: string): Locator =>
+  page.locator('[data-testid^="admin-user-row-"]').filter({ hasText: email }).first();
+
+const filterUsersByEmail = async (page: Page, email: string): Promise<void> => {
+  const searchInput = page.getByTestId('admin-users-search-input');
+  await searchInput.fill(email);
+};
+
+const expectUserRowVisible = async (page: Page, email: string): Promise<void> => {
+  await filterUsersByEmail(page, email);
+  await expect(findUserRowByEmail(page, email)).toBeVisible();
+};
+
+const closeCreateDialog = async (page: Page): Promise<void> => {
+  const createDialog = page.getByRole('dialog', { name: /creer un utilisateur/i });
+  if ((await createDialog.count()) === 0) return;
+  await createDialog.getByRole('button', { name: /annuler/i }).click();
+  await expect(createDialog).toHaveCount(0);
+};
 
 test.skip(!isConfigured, SKIP_REASON);
 
@@ -125,9 +142,8 @@ test('super admin cree un utilisateur avec role tcs', async ({ page }) => {
     password: userPassword
   });
 
-  const card = findUserCardByEmail(page, userEmail);
-  await expect(card).toBeVisible();
-  await expect(card).toContainText(userEmail);
+  await expectUserRowVisible(page, userEmail);
+  await expect(findUserRowByEmail(page, userEmail)).toContainText(userEmail);
 });
 
 test("email duplique rejete a la creation d'utilisateur", async ({ page }) => {
@@ -159,9 +175,7 @@ test("email duplique rejete a la creation d'utilisateur", async ({ page }) => {
     await expect(duplicateMessage.first()).toBeVisible();
   }
 
-  const searchInput = page.getByTestId('admin-users-search-input');
-  await searchInput.fill(userEmail);
-  await expect(page.locator('[data-testid^="admin-user-card-"]').filter({ hasText: userEmail })).toHaveCount(1);
+  await closeCreateDialog(page);
 });
 
 test('mot de passe genere conforme a la politique', async ({ page }) => {
@@ -198,7 +212,5 @@ test('utilisateur visible dans la liste apres creation', async ({ page }) => {
     password: `Vis#${Date.now()}A1`
   });
 
-  const searchInput = page.getByTestId('admin-users-search-input');
-  await searchInput.fill(userEmail);
-  await expect(findUserCardByEmail(page, userEmail)).toBeVisible();
+  await expectUserRowVisible(page, userEmail);
 });

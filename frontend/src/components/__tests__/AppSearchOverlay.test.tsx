@@ -88,7 +88,7 @@ describe('AppSearchOverlay', () => {
     await user.click(input);
     await user.keyboard('{ArrowDown}{Enter}');
 
-    expect(onFocusClient).toHaveBeenCalledWith('entity-1', undefined);
+    expect(onFocusClient).toHaveBeenCalledWith('entity-1', undefined, '001122');
   });
 
   it('reports retry errors through handleUiError', async () => {

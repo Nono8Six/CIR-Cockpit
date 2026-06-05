@@ -18,6 +18,8 @@ import { ensureAgencyAccess, ensureDataRateLimit } from '../data/dataAccess.ts';
 import { checkRateLimit } from '../rate-limiting/rateLimit.ts';
 
 const DEFAULT_AUDIT_LOG_LIMIT = 200;
+const ADMIN_AUDIT_LOG_RATE_LIMIT_MAX = 60;
+const ADMIN_USERS_LIST_RATE_LIMIT_MAX = 60;
 
 const toMembershipsByUser = (
   rows: Array<{ user_id: string; agency_id: string; agency_name: string }>
@@ -42,7 +44,9 @@ export const listAdminUsers = async (
   requestId: string | undefined,
   _input: AdminUsersListInput
 ): Promise<AdminUsersListResponse> => {
-  const allowed = await checkRateLimit('admin-users:list', callerId);
+  const allowed = await checkRateLimit('admin-users:list', callerId, {
+    max: ADMIN_USERS_LIST_RATE_LIMIT_MAX
+  });
   if (!allowed) {
     throw httpError(429, 'RATE_LIMITED', 'Trop de requetes. Reessayez plus tard.');
   }
@@ -164,7 +168,9 @@ export const listAdminAuditLogs = async (
   requestId: string | undefined,
   input: AdminAuditLogsInput
 ): Promise<AdminAuditLogsResponse> => {
-  await ensureDataRateLimit('admin:audit_logs', authContext.userId);
+  await ensureDataRateLimit('admin:audit_logs', authContext.userId, {
+    max: ADMIN_AUDIT_LOG_RATE_LIMIT_MAX
+  });
 
   const conditions = buildAuditLogAccessConditions(authContext, input);
   if (input.actor_id) conditions.push(eq(audit_logs.actor_id, input.actor_id));

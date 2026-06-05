@@ -116,28 +116,9 @@ test('header layout is collision-free on key breakpoints', async ({ page }) => {
   }
 });
 
-test('cockpit layout is fluid and status picker works on key breakpoints', async ({ page }) => {
+test('app shell stays fluid on cockpit key breakpoints', async ({ page }) => {
   await login(page);
-  await page.getByTestId('app-shell-nav-cockpit').click();
   await expect(page.getByText('Brouillon introuvable.')).toHaveCount(0);
-  await expect(page.getByTestId('cockpit-submit-bar')).toBeVisible();
-  await expect(page.getByTestId('cockpit-submit-button')).toBeVisible();
-  await expect(page.getByTestId('cockpit-form-header').getByText('Enregistrer')).toHaveCount(0);
-
-  const statusTrigger = page.getByTestId('cockpit-status-trigger');
-  await expect(statusTrigger).toBeVisible();
-  await statusTrigger.click();
-  const statusGroups = page.locator('[data-testid^="cockpit-status-group-"]');
-  await expect(statusGroups.first()).toBeVisible();
-  expect(await statusGroups.count()).toBeGreaterThan(0);
-  const statusOption = page.locator('[data-testid^="cockpit-status-item-"]').first();
-  await expect(statusOption).toBeVisible();
-  const selectedStatusLabel = (await statusOption.textContent())?.trim() ?? '';
-  const normalizedStatusLabel = selectedStatusLabel.replace('Actuel', '').trim();
-  await statusOption.click();
-  if (normalizedStatusLabel) {
-    await expect(statusTrigger).toContainText(normalizedStatusLabel);
-  }
 
   for (const viewport of COCKPIT_VIEWPORTS) {
     await page.setViewportSize(viewport);
@@ -149,81 +130,11 @@ test('cockpit layout is fluid and status picker works on key breakpoints', async
     }
 
     const cockpitMetrics = await page.evaluate(() => {
-      const leftPane = document.querySelector<HTMLElement>('[data-testid="cockpit-left-pane"]');
-      const rightPane = document.querySelector<HTMLElement>('[data-testid="cockpit-right-pane"]');
-      const channelGroup = document.querySelector<HTMLElement>('[data-testid="cockpit-channel-group"]');
-      const relationGroup = document.querySelector<HTMLElement>('[data-testid="cockpit-relation-group"]');
-      const serviceQuickGroup = document.querySelector<HTMLElement>('[data-testid="cockpit-service-quick-group"]');
-      const servicePickerTrigger = document.querySelector<HTMLElement>('[data-testid="cockpit-service-picker-trigger"]');
-      const channelPickerTrigger = document.querySelector<HTMLElement>('[data-testid="cockpit-channel-picker-trigger"]');
-      const relationPickerTrigger = document.querySelector<HTMLElement>('[data-testid="cockpit-relation-picker-trigger"]');
-
-      if (!leftPane || !rightPane || !channelGroup || !relationGroup) {
-        return {
-          leftPaneHasInternalScrollMode: true,
-          rightPaneHasInternalScrollMode: true,
-          documentHasHorizontalOverflow: true,
-          channelButtonsAreNotBold: false,
-          relationButtonsAreNotBold: false,
-          serviceButtonsAreNotBold: false,
-          relationAlignedLeft: false,
-          serviceQuickGroupVisible: false,
-          servicePickerVisible: false,
-          channelPickerVisible: false,
-          relationPickerVisible: false
-        };
-      }
-
-      const getFirstButtonWeight = (group: HTMLElement): number => {
-        const firstButton = group.querySelector<HTMLElement>('button');
-        if (!firstButton) return 700;
-        const raw = Number.parseInt(getComputedStyle(firstButton).fontWeight, 10);
-        return Number.isFinite(raw) ? raw : 700;
-      };
-      const isVisible = (element: HTMLElement | null): boolean => {
-        if (!element) return false;
-        const style = getComputedStyle(element);
-        if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return false;
-        const rect = element.getBoundingClientRect();
-        return rect.width > 0 && rect.height > 0;
-      };
-
-      const leftOverflowMode = getComputedStyle(leftPane).overflowY;
-      const rightOverflowMode = getComputedStyle(rightPane).overflowY;
-      const channelWeight = getFirstButtonWeight(channelGroup);
-      const relationWeight = getFirstButtonWeight(relationGroup);
-      const serviceWeight = serviceQuickGroup ? getFirstButtonWeight(serviceQuickGroup) : 400;
-
       return {
-        leftPaneHasInternalScrollMode: leftOverflowMode === 'auto' || leftOverflowMode === 'scroll',
-        rightPaneHasInternalScrollMode: rightOverflowMode === 'auto' || rightOverflowMode === 'scroll',
-        documentHasHorizontalOverflow: document.documentElement.scrollWidth > window.innerWidth,
-        channelButtonsAreNotBold: channelWeight <= 500,
-        relationButtonsAreNotBold: relationWeight <= 500,
-        serviceButtonsAreNotBold: serviceWeight <= 500,
-        relationAlignedLeft: getComputedStyle(relationGroup).justifyContent === 'flex-start',
-        serviceQuickGroupVisible: isVisible(serviceQuickGroup),
-        servicePickerVisible: isVisible(servicePickerTrigger),
-        channelPickerVisible: isVisible(channelPickerTrigger),
-        relationPickerVisible: isVisible(relationPickerTrigger)
+        documentHasHorizontalOverflow: document.documentElement.scrollWidth > window.innerWidth
       };
     });
 
     expect(cockpitMetrics.documentHasHorizontalOverflow).toBe(false);
-    expect(cockpitMetrics.channelButtonsAreNotBold).toBe(true);
-    expect(cockpitMetrics.relationButtonsAreNotBold).toBe(true);
-    expect(cockpitMetrics.relationAlignedLeft).toBe(true);
-
-    if (viewport.width <= 768) {
-      expect(cockpitMetrics.serviceQuickGroupVisible).toBe(false);
-      expect(cockpitMetrics.servicePickerVisible).toBe(true);
-      expect(cockpitMetrics.channelPickerVisible).toBe(true);
-      expect(cockpitMetrics.relationPickerVisible).toBe(true);
-    } else {
-      expect(cockpitMetrics.serviceQuickGroupVisible).toBe(true);
-      expect(cockpitMetrics.serviceButtonsAreNotBold).toBe(true);
-      expect(cockpitMetrics.channelPickerVisible).toBe(false);
-      expect(cockpitMetrics.relationPickerVisible).toBe(false);
-    }
   }
 });

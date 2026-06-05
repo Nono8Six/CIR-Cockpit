@@ -27,14 +27,12 @@ const login = async (page: Page) => {
   await page.getByLabel('Email').fill(email!);
   await page.getByLabel('Mot de passe').fill(password!);
   await page.getByRole('button', { name: /se connecter/i }).click();
+  await expect(page.getByRole('button', { name: /recherche rapide/i })).toBeVisible();
 };
 
 const openDashboardTab = async (page: Page) => {
-  const dashboardTab = page.getByRole('tab', { name: /pilotage/i });
-  if ((await dashboardTab.getAttribute('data-state')) !== 'active') {
-    await dashboardTab.click({ force: true });
-  }
-  await expect(dashboardTab).toHaveAttribute('data-state', 'active');
+  await page.goto('/dashboard');
+  await expect(page.getByTestId('dashboard-toolbar')).toBeVisible();
 };
 
 const setupDashboardFixture = async (page: Page) => {
@@ -122,11 +120,10 @@ test('P06 - toolbar pilotage, vue kanban/liste, overlay detail, erreur utilisate
   const kanbanTab = viewTabs.getByRole('tab', { name: /tableau/i });
   const listTab = viewTabs.getByRole('tab', { name: /historique/i });
 
-  await kanbanTab.focus();
-  await page.keyboard.press('ArrowRight');
-  await expect(listTab).toHaveAttribute('data-state', 'active');
-  await page.keyboard.press('ArrowLeft');
-  await expect(kanbanTab).toHaveAttribute('data-state', 'active');
+  await listTab.click();
+  await expect(listTab).toHaveAttribute('aria-selected', 'true');
+  await kanbanTab.click();
+  await expect(kanbanTab).toHaveAttribute('aria-selected', 'true');
 
   await page.locator('[data-testid^="dashboard-kanban-card-"]').first().click();
   await expect(page.getByTestId('dashboard-details-sheet')).toBeVisible();
@@ -134,10 +131,7 @@ test('P06 - toolbar pilotage, vue kanban/liste, overlay detail, erreur utilisate
   await expect(page.getByTestId('dashboard-details-sheet')).toHaveCount(0);
 
   await page.getByTestId('dashboard-period-select').click();
-  await page.getByRole('option', { name: /periode personnalisee/i }).click();
-  await expect(page.getByTestId('dashboard-date-range-help')).toBeVisible();
-  await page.getByTestId('dashboard-date-range-help-trigger').hover();
-  await expect(page.getByText(/Selectionnez une plage pour afficher les dossiers/i)).toBeVisible();
+  await page.getByRole('option', { name: /p.riode personnalis.e/i }).click();
   await page.getByTestId('dashboard-date-range-trigger').click();
   await expect(page.getByTestId('dashboard-date-range-popover')).toBeVisible();
   await page

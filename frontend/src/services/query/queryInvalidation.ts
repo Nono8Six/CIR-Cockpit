@@ -7,6 +7,9 @@ import {
   clientsKey,
   clientsRootKey,
   directoryCitySuggestionsRootKey,
+  directoryCompanyDetailsRootKey,
+  directoryCompanySearchRootKey,
+  directoryDuplicatesRootKey,
   directoryOptionAgenciesRootKey,
   directoryOptionCitiesRootKey,
   directoryOptionCommercialsRootKey,
@@ -17,6 +20,7 @@ import {
   entityInteractionsRootKey,
   entitySearchIndexKey,
   entitySearchIndexRootKey,
+  entityUnifiedSearchRootKey,
   interactionsKey,
   prospectsKey,
   prospectsRootKey
@@ -25,6 +29,16 @@ import {
 type EntityDirectoryScope = {
   agencyId: string | null;
   orphansOnly?: boolean;
+};
+
+type EntityMutationScope = EntityDirectoryScope & {
+  includeArchived?: boolean;
+};
+
+type EntityContactMutationScope = {
+  agencyId: string | null;
+  entityId: string | null;
+  includeArchived?: boolean;
 };
 
 export const invalidateAgenciesQueries = async (queryClient: QueryClient): Promise<void> => {
@@ -141,6 +155,9 @@ export const invalidateDirectoryQueries = async (
 ): Promise<void> => {
   await Promise.all([
     queryClient.invalidateQueries({ queryKey: directoryRootKey() }),
+    queryClient.invalidateQueries({ queryKey: directoryCompanyDetailsRootKey() }),
+    queryClient.invalidateQueries({ queryKey: directoryCompanySearchRootKey() }),
+    queryClient.invalidateQueries({ queryKey: directoryDuplicatesRootKey() }),
     queryClient.invalidateQueries({ queryKey: directoryOptionAgenciesRootKey() }),
     queryClient.invalidateQueries({ queryKey: directoryOptionCommercialsRootKey() }),
     queryClient.invalidateQueries({ queryKey: directoryOptionDepartmentsRootKey() }),
@@ -159,6 +176,32 @@ export const invalidateEntityDirectoryQueries = async (
     invalidateClientsQueries(queryClient, agencyId),
     invalidateProspectsQueries(queryClient, { agencyId, orphansOnly }),
     invalidateEntitySearchIndexQueries(queryClient, agencyId),
+    queryClient.invalidateQueries({ queryKey: entityUnifiedSearchRootKey() }),
+    invalidateDirectoryQueries(queryClient)
+  ]);
+};
+
+export const invalidateEntityMutationQueries = async (
+  queryClient: QueryClient,
+  { agencyId, includeArchived, orphansOnly = false }: EntityMutationScope
+): Promise<void> => {
+  await Promise.all([
+    invalidateClientsQueries(queryClient, agencyId, includeArchived),
+    invalidateProspectsQueries(queryClient, { agencyId, includeArchived, orphansOnly }),
+    invalidateEntitySearchIndexQueries(queryClient, agencyId, includeArchived),
+    queryClient.invalidateQueries({ queryKey: entityUnifiedSearchRootKey() }),
+    invalidateDirectoryQueries(queryClient)
+  ]);
+};
+
+export const invalidateEntityContactMutationQueries = async (
+  queryClient: QueryClient,
+  { agencyId, entityId, includeArchived = false }: EntityContactMutationScope
+): Promise<void> => {
+  await Promise.all([
+    invalidateClientContactsQuery(queryClient, entityId, includeArchived),
+    invalidateEntitySearchIndexQueries(queryClient, agencyId, includeArchived),
+    queryClient.invalidateQueries({ queryKey: entityUnifiedSearchRootKey() }),
     invalidateDirectoryQueries(queryClient)
   ]);
 };

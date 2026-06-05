@@ -13,6 +13,7 @@ import { httpError } from '../../middleware/errorHandler.ts';
 import { ensureAgencyAccess, ensureDataRateLimit } from '../data/dataAccess.ts';
 
 const DEFAULT_PHONE_LOOKUP_LIMIT = 5;
+const COCKPIT_READ_RATE_LIMIT_MAX = 120;
 
 const normalizePhone = (value: string): string => value.replace(/\D/g, '');
 
@@ -23,7 +24,9 @@ export const listCockpitAgencyMembers = async (
   input: CockpitAgencyMembersInput
 ): Promise<CockpitAgencyMembersResponse> => {
   const agencyId = ensureAgencyAccess(authContext, input.agency_id);
-  await ensureDataRateLimit('cockpit:agency_members', authContext.userId);
+  await ensureDataRateLimit('cockpit:agency_members', authContext.userId, {
+    max: COCKPIT_READ_RATE_LIMIT_MAX
+  });
 
   try {
     const rows = await db
@@ -66,7 +69,9 @@ export const lookupCockpitPhone = async (
   input: CockpitPhoneLookupInput
 ): Promise<CockpitPhoneLookupResponse> => {
   const agencyId = ensureAgencyAccess(authContext, input.agency_id);
-  await ensureDataRateLimit('cockpit:phone_lookup', authContext.userId);
+  await ensureDataRateLimit('cockpit:phone_lookup', authContext.userId, {
+    max: COCKPIT_READ_RATE_LIMIT_MAX
+  });
 
   const normalizedPhone = normalizePhone(input.phone);
   if (!normalizedPhone) {

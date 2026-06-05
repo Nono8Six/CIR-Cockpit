@@ -1,11 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { saveEntity, EntityPayload } from '@/services/entities/saveEntity';
-import {
-  invalidateDirectoryQueries,
-  invalidateEntitySearchIndexQueries,
-  invalidateProspectsQueries
-} from '@/services/query/queryInvalidation';
+import { invalidateEntityMutationQueries } from '@/services/query/queryInvalidation';
 import { handleUiError } from '@/services/errors/handleUiError';
 
 export const useSaveProspect = (
@@ -22,11 +18,9 @@ export const useSaveProspect = (
         (error) => {
           throw error;
         }
-      ),
+    ),
     onSuccess: () => {
-      void invalidateProspectsQueries(queryClient, { agencyId, includeArchived, orphansOnly });
-      void invalidateEntitySearchIndexQueries(queryClient, agencyId, includeArchived);
-      void invalidateDirectoryQueries(queryClient);
+      void invalidateEntityMutationQueries(queryClient, { agencyId, includeArchived, orphansOnly });
     },
     onError: (error) => {
       handleUiError(error, "Impossible d'enregistrer le prospect.", {

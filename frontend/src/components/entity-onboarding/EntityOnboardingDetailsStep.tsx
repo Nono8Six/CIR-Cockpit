@@ -36,9 +36,9 @@ interface FieldShellProps {
 const labelClasses =
   "text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground";
 const inputGhostClasses =
-  "h-10 rounded-md border border-border bg-surface-1/60 px-3 text-base font-medium text-foreground shadow-sm hover:border-border-strong hover:bg-background focus-visible:border-primary focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-primary/20 transition-all sm:text-[14px]";
+  "h-10 rounded-md border border-border bg-surface-1/60 px-3 text-base font-medium text-foreground shadow-sm transition-[color,background-color,border-color,box-shadow] hover:border-border-strong hover:bg-background focus-visible:border-primary focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-primary/20 sm:text-[14px]";
 const selectGhostClasses =
-  "h-10 rounded-md border border-border bg-surface-1/60 px-3 text-base font-medium text-foreground shadow-sm hover:border-border-strong hover:bg-background focus:ring-2 focus:ring-primary/20 transition-all sm:text-[14px]";
+  "h-10 rounded-md border border-border bg-surface-1/60 px-3 text-base font-medium text-foreground shadow-sm transition-[color,background-color,border-color,box-shadow] hover:border-border-strong hover:bg-background focus:ring-2 focus:ring-primary/20 sm:text-[14px]";
 
 const FieldShell = ({
   label,

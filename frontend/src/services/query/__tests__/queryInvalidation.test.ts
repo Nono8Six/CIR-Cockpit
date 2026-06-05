@@ -3,13 +3,21 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   invalidateClientsQueries,
+  invalidateDirectoryQueries,
+  invalidateEntityContactMutationQueries,
   invalidateEntityDirectoryQueries,
+  invalidateEntityMutationQueries,
   invalidateEntitySearchIndexQueries,
   invalidateProspectsQueries
 } from '@/services/query/queryInvalidation';
 import {
   clientsKey,
   clientsRootKey,
+  directoryCompanyDetailsRootKey,
+  directoryCompanySearchRootKey,
+  directoryDuplicatesRootKey,
+  directoryRootKey,
+  entityUnifiedSearchRootKey,
   entitySearchIndexKey,
   prospectsKey
 } from '@/services/query/queryKeys';
@@ -63,6 +71,25 @@ describe('queryInvalidation', () => {
     });
   });
 
+  it('invalidates all directory query families', async () => {
+    const queryClient = createQueryClientMock();
+
+    await invalidateDirectoryQueries(queryClient);
+
+    expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: directoryRootKey()
+    });
+    expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: directoryCompanyDetailsRootKey()
+    });
+    expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: directoryCompanySearchRootKey()
+    });
+    expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: directoryDuplicatesRootKey()
+    });
+  });
+
   it('invalidates the full entity directory scope for one agency', async () => {
     const queryClient = createQueryClientMock();
 
@@ -88,6 +115,52 @@ describe('queryInvalidation', () => {
     });
     expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
       queryKey: entitySearchIndexKey('agency-1', true)
+    });
+    expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: entityUnifiedSearchRootKey()
+    });
+  });
+
+  it('invalidates entity mutation dependencies atomically', async () => {
+    const queryClient = createQueryClientMock();
+
+    await invalidateEntityMutationQueries(queryClient, {
+      agencyId: 'agency-1',
+      includeArchived: false,
+      orphansOnly: false
+    });
+
+    expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: clientsKey('agency-1', false)
+    });
+    expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: prospectsKey('agency-1', false, false)
+    });
+    expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: entitySearchIndexKey('agency-1', false)
+    });
+    expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: entityUnifiedSearchRootKey()
+    });
+  });
+
+  it('invalidates contact mutation dependencies atomically', async () => {
+    const queryClient = createQueryClientMock();
+
+    await invalidateEntityContactMutationQueries(queryClient, {
+      agencyId: 'agency-1',
+      entityId: 'entity-1',
+      includeArchived: false
+    });
+
+    expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: entitySearchIndexKey('agency-1', false)
+    });
+    expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: entityUnifiedSearchRootKey()
+    });
+    expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: directoryRootKey()
     });
   });
 });

@@ -1,12 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { deleteClient } from '@/services/clients/deleteClient';
-import {
-  invalidateClientsQueries,
-  invalidateDirectoryQueries,
-  invalidateEntitySearchIndexQueries,
-  invalidateProspectsQueries
-} from '@/services/query/queryInvalidation';
+import { invalidateEntityMutationQueries } from '@/services/query/queryInvalidation';
 import { handleUiError } from '@/services/errors/handleUiError';
 
 /**
@@ -26,14 +21,9 @@ export const useDeleteClient = (agencyId: string | null, orphansOnly = false) =>
         (error) => {
           throw error;
         }
-      ),
+    ),
     onSuccess: () => {
-      void Promise.all([
-        invalidateClientsQueries(queryClient, agencyId),
-        invalidateProspectsQueries(queryClient, { agencyId, orphansOnly }),
-        invalidateEntitySearchIndexQueries(queryClient, agencyId),
-        invalidateDirectoryQueries(queryClient)
-      ]);
+      void invalidateEntityMutationQueries(queryClient, { agencyId, orphansOnly });
     },
     onError: (error) => {
       handleUiError(error, 'Impossible de supprimer le client.', {

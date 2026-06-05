@@ -5,11 +5,7 @@ import { deleteEntityContact } from '@/services/entities/deleteEntityContact';
 import { saveEntityContact, type EntityContactPayload } from '@/services/entities/saveEntityContact';
 import { handleUiError } from '@/services/errors/handleUiError';
 import { notifySuccess } from '@/services/errors/notifySuccess';
-import {
-  invalidateClientContactsQuery,
-  invalidateDirectoryQueries,
-  invalidateEntitySearchIndexQueries
-} from '@/services/query/queryInvalidation';
+import { invalidateEntityContactMutationQueries } from '@/services/query/queryInvalidation';
 import { clientContactsKey } from '@/services/query/queryKeys';
 import type { EntityContact } from '@/types';
 import {
@@ -36,11 +32,7 @@ export const useEntityContactActions = ({
   const contactsQueryKey = entityId ? clientContactsKey(entityId, includeArchived) : null;
 
   const invalidateContactDependencies = async () => {
-    await Promise.all([
-      invalidateClientContactsQuery(queryClient, entityId, includeArchived),
-      invalidateEntitySearchIndexQueries(queryClient, agencyId, includeArchived),
-      invalidateDirectoryQueries(queryClient)
-    ]);
+    await invalidateEntityContactMutationQueries(queryClient, { agencyId, entityId, includeArchived });
   };
 
   const saveContactMutation = useMutation<EntityContact, unknown, EntityContactPayload, ContactCacheSnapshot>({

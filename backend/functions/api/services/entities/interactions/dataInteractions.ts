@@ -33,6 +33,8 @@ const DEFAULT_INTERACTIONS_PAGE = 1;
 const DEFAULT_INTERACTIONS_PAGE_SIZE = 20;
 const DEFAULT_AGENCY_INTERACTIONS_LIMIT = 200;
 const DEFAULT_KNOWN_COMPANIES_LIMIT = 2000;
+const INTERACTION_ACTION_RATE_LIMIT_MAX = 60;
+const INTERACTION_READ_RATE_LIMIT_MAX = 120;
 
 const toNullableString = (value: unknown): string | null | undefined => {
   if (value === null) return null;
@@ -554,12 +556,19 @@ export const handleDataInteractionsAction = async (
   requestId: string | undefined,
   data: DataInteractionsPayload
 ): Promise<DataInteractionsResponse> => {
+  const isReadAction =
+    data.action === 'list_by_agency'
+    || data.action === 'list_by_entity'
+    || data.action === 'known_companies'
+    || data.action === 'draft_get';
   await ensureDataRateLimit(
     `data_interactions:${data.action}`,
     authContext.userId,
     data.action === 'draft_save'
       ? { max: DRAFT_RATE_LIMIT_MAX, windowSeconds: DRAFT_RATE_LIMIT_WINDOW_SECONDS }
-      : undefined
+      : isReadAction
+        ? { max: INTERACTION_READ_RATE_LIMIT_MAX }
+        : { max: INTERACTION_ACTION_RATE_LIMIT_MAX }
   );
 
   switch (data.action) {

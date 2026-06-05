@@ -1,6 +1,6 @@
 import { z } from 'zod/v4';
 
-import type { Database } from '../../supabase.types.ts';
+import type { Database, Json } from '../../supabase.types.ts';
 import {
   configIntegrityInteractionRowSchema,
   configUsageSnapshotSchema,
@@ -20,9 +20,6 @@ import {
 import { membershipModeSchema, userRoleSchema } from '../admin/user.schema.ts';
 import { tierV1DirectoryRowSchema } from '../interaction/tier-v1.schema.ts';
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
-
 type EntityRow = Database['public']['Tables']['entities']['Row'];
 type EntityContactRow = Database['public']['Tables']['entity_contacts']['Row'];
 type InteractionRow = Database['public']['Tables']['interactions']['Row'];
@@ -30,31 +27,103 @@ type InteractionDraftRow = Pick<Database['public']['Tables']['interaction_drafts
 type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 type AgencyMemberRow = Database['public']['Tables']['agency_members']['Row'];
 
-const isEntityRow = (value: unknown): value is EntityRow =>
-  isRecord(value) && typeof value.id === 'string' && value.id.trim().length > 0;
+const jsonSchema: z.ZodType<Json> = z.lazy(() =>
+  z.union([
+    z.string(),
+    z.number(),
+    z.boolean(),
+    z.null(),
+    z.array(jsonSchema),
+    z.record(z.string(), jsonSchema)
+  ])
+);
 
-const isEntityContactRow = (value: unknown): value is EntityContactRow =>
-  isRecord(value) && typeof value.id === 'string' && value.id.trim().length > 0;
+const nonEmptyStringSchema = (message: string) => z.string().trim().min(1, message);
+const nullableStringSchema = z.string().nullable();
+const accountTypeSchema = z.enum(['term', 'cash']).nullable();
 
-const isInteractionRow = (value: unknown): value is InteractionRow =>
-  isRecord(value)
-  && typeof value.id === 'string'
-  && value.id.trim().length > 0
-  && typeof value.channel === 'string'
-  && Array.isArray(value.timeline);
+const entityRowSchema: z.ZodType<EntityRow> = z.strictObject({
+  account_type: accountTypeSchema,
+  address: nullableStringSchema,
+  agency_id: nullableStringSchema,
+  archived_at: nullableStringSchema,
+  cir_agency_id: nullableStringSchema,
+  cir_commercial_id: nullableStringSchema,
+  city: nullableStringSchema,
+  client_kind: nullableStringSchema,
+  client_number: nullableStringSchema,
+  country: nonEmptyStringSchema('Pays requis'),
+  created_at: nonEmptyStringSchema('Date de creation requise'),
+  created_by: nullableStringSchema,
+  department: nullableStringSchema,
+  entity_type: nonEmptyStringSchema('Type de tiers requis'),
+  first_name: nullableStringSchema,
+  id: nonEmptyStringSchema('Identifiant entite requis'),
+  last_name: nullableStringSchema,
+  naf_code: nullableStringSchema,
+  name: nonEmptyStringSchema('Nom requis'),
+  notes: nullableStringSchema,
+  official_data_source: nullableStringSchema,
+  official_data_synced_at: nullableStringSchema,
+  official_name: nullableStringSchema,
+  postal_code: nullableStringSchema,
+  primary_email: nullableStringSchema,
+  primary_phone: nullableStringSchema,
+  siren: nullableStringSchema,
+  siret: nullableStringSchema,
+  supplier_code: nullableStringSchema,
+  supplier_number: nullableStringSchema,
+  updated_at: nonEmptyStringSchema('Date de mise a jour requise')
+});
 
-const isInteractionDraftRow = (value: unknown): value is InteractionDraftRow =>
-  isRecord(value)
-  && typeof value.id === 'string'
-  && value.id.trim().length > 0
-  && typeof value.updated_at === 'string'
-  && value.updated_at.trim().length > 0
-  && 'payload' in value;
+const entityContactRowSchema: z.ZodType<EntityContactRow> = z.strictObject({
+  archived_at: nullableStringSchema,
+  created_at: nonEmptyStringSchema('Date de creation requise'),
+  email: nullableStringSchema,
+  entity_id: nonEmptyStringSchema('Identifiant entite requis'),
+  first_name: nullableStringSchema,
+  id: nonEmptyStringSchema('Identifiant contact requis'),
+  last_name: nonEmptyStringSchema('Nom du contact requis'),
+  notes: nullableStringSchema,
+  phone: nullableStringSchema,
+  position: nullableStringSchema,
+  updated_at: nonEmptyStringSchema('Date de mise a jour requise')
+});
 
-const entityRowSchema = z.custom<EntityRow>((value) => isEntityRow(value), 'Entite invalide.');
-const entityContactRowSchema = z.custom<EntityContactRow>((value) => isEntityContactRow(value), 'Contact invalide.');
-const interactionRowSchema = z.custom<InteractionRow>((value) => isInteractionRow(value), 'Interaction invalide.');
-const interactionDraftRowSchema = z.custom<InteractionDraftRow>((value) => isInteractionDraftRow(value), 'Brouillon invalide.');
+const interactionRowSchema: z.ZodType<InteractionRow> = z.strictObject({
+  agency_id: nullableStringSchema,
+  channel: nonEmptyStringSchema('Canal requis'),
+  company_name: z.string(),
+  contact_email: nullableStringSchema,
+  contact_id: nullableStringSchema,
+  contact_name: z.string(),
+  contact_phone: nullableStringSchema,
+  contact_service: z.string(),
+  created_at: nonEmptyStringSchema('Date de creation requise'),
+  created_by: nonEmptyStringSchema('Createur requis'),
+  entity_id: nullableStringSchema,
+  entity_type: nonEmptyStringSchema('Type de tiers requis'),
+  id: nonEmptyStringSchema('Identifiant interaction requis'),
+  interaction_type: nonEmptyStringSchema("Type d'interaction requis"),
+  last_action_at: nonEmptyStringSchema('Date de derniere action requise'),
+  mega_families: z.array(z.string()),
+  notes: nullableStringSchema,
+  order_ref: nullableStringSchema,
+  reminder_at: nullableStringSchema,
+  status: z.string(),
+  status_id: nullableStringSchema,
+  status_is_terminal: z.boolean(),
+  subject: z.string(),
+  timeline: jsonSchema,
+  updated_at: nonEmptyStringSchema('Date de mise a jour requise'),
+  updated_by: nullableStringSchema
+});
+
+const interactionDraftRowSchema: z.ZodType<InteractionDraftRow> = z.strictObject({
+  id: nonEmptyStringSchema('Identifiant brouillon requis'),
+  payload: jsonSchema,
+  updated_at: nonEmptyStringSchema('Date de mise a jour requise')
+});
 
 const apiSuccessSchema = z.strictObject({
   request_id: z.string().trim().min(1).optional(),

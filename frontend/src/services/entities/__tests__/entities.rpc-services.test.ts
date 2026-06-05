@@ -21,6 +21,56 @@ type SafeRpcParser = Parameters<typeof safeTrpc>[1];
 
 const mockSafeRpc = vi.mocked(safeTrpc);
 
+const entityRow = (overrides: Record<string, unknown> = {}) => ({
+  account_type: null,
+  address: null,
+  agency_id: 'agency-1',
+  archived_at: null,
+  cir_agency_id: null,
+  cir_commercial_id: null,
+  city: 'Paris',
+  client_kind: null,
+  client_number: null,
+  country: 'France',
+  created_at: '2026-06-01T10:00:00.000Z',
+  created_by: 'user-1',
+  department: '75',
+  entity_type: 'Client',
+  first_name: null,
+  id: 'entity-1',
+  last_name: null,
+  naf_code: null,
+  name: 'Entite test',
+  notes: null,
+  official_data_source: null,
+  official_data_synced_at: null,
+  official_name: null,
+  postal_code: '75001',
+  primary_email: null,
+  primary_phone: null,
+  siren: null,
+  siret: null,
+  supplier_code: null,
+  supplier_number: null,
+  updated_at: '2026-06-01T10:00:00.000Z',
+  ...overrides
+});
+
+const contactRow = (overrides: Record<string, unknown> = {}) => ({
+  archived_at: null,
+  created_at: '2026-06-01T10:00:00.000Z',
+  email: null,
+  entity_id: 'entity-1',
+  first_name: 'Jean',
+  id: 'contact-1',
+  last_name: 'Dupont',
+  notes: null,
+  phone: null,
+  position: null,
+  updated_at: '2026-06-01T10:00:00.000Z',
+  ...overrides
+});
+
 const createTrpcClientFixture = () => {
   const entitiesPost = vi.fn().mockResolvedValue(new Response('{}', { status: 200 }));
   const entityContactsPost = vi.fn().mockResolvedValue(new Response('{}', { status: 200 }));
@@ -85,7 +135,10 @@ describe('entities RPC services', () => {
       { context: { headers: { 'x-request-id': 'req-clients' } } }
     );
 
-    const clients = [{ id: 'client-1' }, { id: 'client-2' }];
+    const clients = [
+      entityRow({ id: 'client-1', name: 'Client 1' }),
+      entityRow({ id: 'client-2', name: 'Client 2' })
+    ];
     expect(parser({ ok: true, entities: clients })).toEqual(clients);
     expectRequestFailedError(parser);
   });
@@ -141,7 +194,7 @@ describe('entities RPC services', () => {
       {}
     );
 
-    const prospects = [{ id: 'prospect-1' }];
+    const prospects = [entityRow({ id: 'prospect-1', entity_type: 'Prospect', name: 'Prospect 1' })];
     expect(parser({ ok: true, entities: prospects })).toEqual(prospects);
     expectRequestFailedError(parser);
   });
@@ -170,7 +223,7 @@ describe('entities RPC services', () => {
       {}
     );
 
-    const contacts = [{ id: 'contact-1' }];
+    const contacts = [contactRow({ id: 'contact-1' })];
     expect(parser({ ok: true, contacts })).toEqual(contacts);
     expectRequestFailedError(parser);
   });
@@ -215,8 +268,8 @@ describe('entities RPC services', () => {
       {}
     );
 
-    const entities = [{ id: 'entity-1' }];
-    const contacts = [{ id: 'contact-1', entity_id: 'entity-1' }];
+    const entities = [entityRow({ id: 'entity-1' })];
+    const contacts = [contactRow({ id: 'contact-1', entity_id: 'entity-1' })];
     expect(parser({ ok: true, entities, contacts })).toEqual({ entities, contacts });
     expectRequestFailedError(parser);
   });
@@ -329,8 +382,8 @@ describe('entities RPC services', () => {
       { context: { headers: { 'x-request-id': 'req-delete-supplier' } } }
     );
 
-    const entity = { id: 'supplier-1' };
-    expect(parser({ ok: true, entity })).toBe(entity);
+    const entity = entityRow({ id: 'supplier-1', entity_type: 'Fournisseur', agency_id: null });
+    expect(parser({ ok: true, entity })).toEqual(entity);
     expectRequestFailedError(parser);
   });
 
@@ -351,8 +404,13 @@ describe('entities RPC services', () => {
       {}
     );
 
-    const entity = { id: 'supplier-2', archived_at: '2026-05-19T10:00:00.000Z' };
-    expect(parser({ ok: true, entity })).toBe(entity);
+    const entity = entityRow({
+      id: 'supplier-2',
+      entity_type: 'Fournisseur',
+      agency_id: null,
+      archived_at: '2026-05-19T10:00:00.000Z'
+    });
+    expect(parser({ ok: true, entity })).toEqual(entity);
     expectRequestFailedError(parser);
   });
 
@@ -376,7 +434,7 @@ describe('entities RPC services', () => {
       { context: { headers: { 'x-request-id': 'req-reassign' } } }
     );
 
-    const entity = { id: 'entity-1', agency_id: 'agency-target' };
+    const entity = entityRow({ id: 'entity-1', agency_id: 'agency-target' });
     expect(parser({
       ok: true,
       entity,
@@ -455,8 +513,8 @@ describe('entities RPC services', () => {
       {}
     );
 
-    const entity = { id: 'entity-3' };
-    expect(parser({ ok: true, entity })).toBe(entity);
+    const entity = entityRow({ id: 'entity-3', entity_type: 'Fournisseur', agency_id: null });
+    expect(parser({ ok: true, entity })).toEqual(entity);
     expectRequestFailedError(parser);
   });
 
@@ -494,8 +552,8 @@ describe('entities RPC services', () => {
       {}
     );
 
-    const contact = { id: 'contact-2' };
-    expect(parser({ ok: true, contact })).toBe(contact);
+    const contact = contactRow({ id: 'contact-2', entity_id: 'entity-2' });
+    expect(parser({ ok: true, contact })).toEqual(contact);
     expectRequestFailedError(parser);
   });
 });

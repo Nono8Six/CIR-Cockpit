@@ -91,15 +91,6 @@ const KanbanSection = ({
     newStatuses.splice(targetIndex, 0, removed);
     setStatuses(newStatuses);
   };
-  const handleMove = (index: number, direction: -1 | 1) => {
-    const targetIndex = index + direction;
-    if (targetIndex < 0 || targetIndex >= statuses.length) return;
-    const nextStatuses = [...statuses];
-    const [removed] = nextStatuses.splice(index, 1);
-    nextStatuses.splice(targetIndex, 0, removed);
-    setStatuses(nextStatuses);
-  };
-
   return (
     <SettingsSectionShell
       id="settings-section-kanban"
@@ -183,7 +174,6 @@ const KanbanSection = ({
               key={status.id || `${index}-${status.label}`}
               status={status}
               index={index}
-              isLast={index === statuses.length - 1}
               canRemoveStatus={statuses.length > 1}
               readOnly={readOnly}
               usageCount={usage && status.id ? statusUsageById.get(status.id) ?? 0 : null}
@@ -194,14 +184,15 @@ const KanbanSection = ({
               onDragStart={handleDragStart}
               onDragOver={handleDragOver}
               onDrop={handleDrop}
-              onMove={handleMove}
             />
           ))
         )}
           </div>
         </div>
 
-        <KanbanSimulator statuses={statuses} />
+        <div className="hidden xl:block">
+          <KanbanSimulator statuses={statuses} />
+        </div>
       </div>
     </SettingsSectionShell>
   );

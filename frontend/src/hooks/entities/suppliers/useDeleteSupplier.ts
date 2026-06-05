@@ -1,9 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { deleteSupplier } from '@/services/entities/deleteSupplier';
-import {
-  invalidateDirectoryQueries,
-  invalidateEntitySearchIndexQueries
-} from '@/services/query/queryInvalidation';
+import { invalidateEntityMutationQueries } from '@/services/query/queryInvalidation';
 import { handleUiError } from '@/services/errors/handleUiError';
 
 /**
@@ -22,10 +19,9 @@ export const useDeleteSupplier = (includeArchived: boolean) => {
         (error) => {
           throw error;
         }
-      ),
+    ),
     onSuccess: () => {
-      void invalidateEntitySearchIndexQueries(queryClient, null, includeArchived);
-      void invalidateDirectoryQueries(queryClient);
+      void invalidateEntityMutationQueries(queryClient, { agencyId: null, includeArchived });
     },
     onError: (error) => {
       handleUiError(error, 'Impossible de supprimer le fournisseur.', {

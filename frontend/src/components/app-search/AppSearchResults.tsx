@@ -11,7 +11,7 @@ type AppSearchResultsProps = {
   filteredProspects: Entity[];
   filteredContacts: EntityContact[];
   entityNameById: Map<string, string>;
-  onFocusClient: (clientId: string, contactId?: string | null) => void;
+  onFocusClient: (clientId: string, contactId?: string | null, clientNumber?: string | null) => void;
   onRequestConvert: (entity: ConvertClientEntity) => void;
   onOpenInteraction: (interaction: Interaction) => void;
 };

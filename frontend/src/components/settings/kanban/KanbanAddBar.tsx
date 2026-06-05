@@ -52,13 +52,13 @@ const KanbanAddBar = ({
   if (readOnly) return null;
 
   return (
-    <div className="mb-3 grid gap-2 lg:grid-cols-[minmax(0,1fr)_11rem_auto] lg:items-center">
+    <div className="mb-3 grid grid-cols-[minmax(0,1fr)_auto] gap-2 lg:grid-cols-[minmax(0,1fr)_11rem_auto] lg:items-center">
       <Input
         type="text"
         value={newStatus}
         onChange={(event) => onStatusChange(event.target.value)}
         onKeyDown={handleKeyDown}
-        className="h-8 border-border/80 bg-background text-xs focus-visible:ring-1 focus-visible:ring-primary/20 placeholder:text-muted-foreground/50"
+        className="col-span-2 h-8 border-border/80 bg-background text-xs focus-visible:ring-1 focus-visible:ring-primary/20 placeholder:text-muted-foreground/50 lg:col-span-1"
         placeholder="Ex: En attente validation…"
         name="status-new-label"
         aria-label="Nouveau statut"
@@ -66,21 +66,23 @@ const KanbanAddBar = ({
         data-testid="settings-status-add-input"
       />
 
-      <Select
-        value={newStatusCategory}
-        onValueChange={(value) => onCategoryChange(value as StatusCategory)}
-      >
-        <SelectTrigger density="dense" aria-label="Catégorie par défaut">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {Object.entries(STATUS_CATEGORY_LABELS).map(([value, label]) => (
-            <SelectItem key={value} value={value} className="text-xs">
-              {label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className="min-w-0">
+        <Select
+          value={newStatusCategory}
+          onValueChange={(value) => onCategoryChange(value as StatusCategory)}
+        >
+          <SelectTrigger density="dense" aria-label="Catégorie par défaut">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {Object.entries(STATUS_CATEGORY_LABELS).map(([value, label]) => (
+              <SelectItem key={value} value={value} className="text-xs">
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       <Button
         type="button"

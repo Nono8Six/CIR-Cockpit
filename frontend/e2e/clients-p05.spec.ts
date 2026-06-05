@@ -130,6 +130,8 @@ const cashRecord = {
 };
 
 const buildTrpcEnvelope = (data: unknown) => ({ result: { data } });
+const buildTrpcBody = (responses: unknown[]): string =>
+  JSON.stringify(responses.length === 1 ? responses[0] : responses);
 
 const installDirectoryMocks = async (page: Page): Promise<void> => {
   await page.route('**/functions/v1/api/trpc/**', async (route) => {
@@ -183,7 +185,7 @@ const installDirectoryMocks = async (page: Page): Promise<void> => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify(responses)
+      body: buildTrpcBody(responses)
     });
   });
 

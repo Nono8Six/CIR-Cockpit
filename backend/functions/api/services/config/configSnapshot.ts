@@ -30,6 +30,8 @@ type StatusUsageRow = {
   usage_count: number;
 };
 
+const CONFIG_READ_RATE_LIMIT_MAX = 60;
+
 export const parseStoredJson = <T>(
   value: unknown,
   parser: ZodType<T>,
@@ -219,7 +221,9 @@ export const getConfigSnapshot = async (
   requestId: string | undefined,
   input: ConfigGetInput
 ): Promise<ConfigGetResponse> => {
-  await ensureDataRateLimit('config:get', authContext.userId);
+  await ensureDataRateLimit('config:get', authContext.userId, {
+    max: CONFIG_READ_RATE_LIMIT_MAX
+  });
   const resolvedAgencyId = resolveConfigAgencyId(authContext, input.agency_id);
 
   const [departments, references] = await Promise.all([

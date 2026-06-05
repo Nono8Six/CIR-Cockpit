@@ -6,6 +6,8 @@ import { httpError } from '../../middleware/errorHandler.ts';
 import type { AuthContext, DbClient } from '../../types.ts';
 import { ensureAgencyAccess, ensureDataRateLimit } from '../data/dataAccess.ts';
 
+const CONFIG_READ_RATE_LIMIT_MAX = 60;
+
 const conditionFor = (input: ConfigIntegrityInteractionsInput) => {
   const normalized = input.source_label.trim().toLowerCase();
   if (input.dimension === 'services') return sql`lower(i.contact_service) = ${normalized}`;
@@ -21,7 +23,9 @@ export const getConfigIntegrityInteractions = async (
   requestId: string | undefined,
   input: ConfigIntegrityInteractionsInput
 ): Promise<ConfigIntegrityInteractionsResponse> => {
-  await ensureDataRateLimit('config:integrity-interactions', auth.userId);
+  await ensureDataRateLimit('config:integrity-interactions', auth.userId, {
+    max: CONFIG_READ_RATE_LIMIT_MAX
+  });
   const agencyId = ensureAgencyAccess(auth, input.agency_id);
   const offset = (input.page - 1) * input.page_size;
   const condition = conditionFor(input);

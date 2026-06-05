@@ -44,13 +44,20 @@ export const ensureSupplierWriteAccess = (authContext: AuthContext): void => {
   throw httpError(403, 'AUTH_FORBIDDEN', 'Creation fournisseur reservee aux administrateurs.');
 };
 
+const ENTITY_ACTION_RATE_LIMIT_MAX = 60;
+const ENTITY_READ_RATE_LIMIT_MAX = 120;
+
 export const handleDataEntitiesAction = async (
   db: DbClient,
   authContext: AuthContext,
   requestId: string | undefined,
   data: DataEntitiesPayload
 ): Promise<DataEntitiesRouteResponse> => {
-  await ensureDataRateLimit(`data_entities:${data.action}`, authContext.userId);
+  await ensureDataRateLimit(`data_entities:${data.action}`, authContext.userId, {
+    max: data.action === 'list' || data.action === 'search_index'
+      ? ENTITY_READ_RATE_LIMIT_MAX
+      : ENTITY_ACTION_RATE_LIMIT_MAX
+  });
 
   switch (data.action) {
     case 'list': {

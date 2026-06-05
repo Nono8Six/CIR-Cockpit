@@ -36,6 +36,8 @@ type DeletedAdminUserSummary = {
   anonymizedOrphanInteractions: number;
 };
 
+const ADMIN_USERS_ACTION_RATE_LIMIT_MAX = 60;
+
 const deleteAdminUser = async (
   db: DbClient,
   callerId: string,
@@ -63,7 +65,9 @@ export const handleAdminUsersAction = async (
   requestId: string | undefined,
   data: AdminUsersPayload
 ): Promise<AdminUsersResponse> => {
-  const allowed = await checkRateLimit('admin-users', callerId);
+  const allowed = await checkRateLimit('admin-users', callerId, {
+    max: ADMIN_USERS_ACTION_RATE_LIMIT_MAX
+  });
   if (!allowed) {
     throw httpError(429, 'RATE_LIMITED', 'Trop de requetes. Reessayez plus tard.');
   }

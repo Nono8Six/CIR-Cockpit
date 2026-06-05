@@ -1,10 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { saveEntity, type EntityPayload } from '@/services/entities/saveEntity';
-import {
-  invalidateDirectoryQueries,
-  invalidateEntitySearchIndexQueries
-} from '@/services/query/queryInvalidation';
+import { invalidateEntityMutationQueries } from '@/services/query/queryInvalidation';
 import { handleUiError } from '@/services/errors/handleUiError';
 
 /**
@@ -27,8 +24,7 @@ export const useSaveSupplier = (
         }
     ),
     onSuccess: () => {
-      void invalidateEntitySearchIndexQueries(queryClient, null, includeArchived);
-      void invalidateDirectoryQueries(queryClient);
+      void invalidateEntityMutationQueries(queryClient, { agencyId: null, includeArchived });
     },
     onError: (error) => {
       handleUiError(error, "Impossible d'enregistrer le fournisseur.", {

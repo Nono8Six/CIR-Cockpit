@@ -90,15 +90,6 @@ const ReferentialColumn = ({
     newList.splice(targetIndex, 0, removed);
     setList(newList);
   };
-  const handleMove = (index: number, direction: -1 | 1) => {
-    const targetIndex = index + direction;
-    if (targetIndex < 0 || targetIndex >= list.length) return;
-    const newList = [...list];
-    const [removed] = newList.splice(index, 1);
-    newList.splice(targetIndex, 0, removed);
-    setList(newList);
-  };
-
   return (
     <section className="flex min-w-0 flex-col border border-border/70 bg-surface-1/45">
       <header className="border-b border-border/70 p-3">
@@ -108,7 +99,7 @@ const ReferentialColumn = ({
           </span>
           <div className="min-w-0 flex-1">
             <h4 className="truncate text-xs font-semibold text-foreground">{title}</h4>
-            <p className="mt-1 text-[11px] leading-4 text-muted-foreground">
+            <p className="mt-1 hidden text-[11px] leading-4 text-muted-foreground sm:block">
               {description}
             </p>
           </div>
@@ -140,7 +131,6 @@ const ReferentialColumn = ({
               key={`${namePrefix}-${index}-${item}`}
               item={item}
               index={index}
-              isLast={index === list.length - 1}
               readOnly={readOnly || false}
               namePrefix={namePrefix}
               uppercase={uppercase}
@@ -148,7 +138,6 @@ const ReferentialColumn = ({
               onUpdate={onUpdate}
               onRename={onRename}
               onRemove={onRemove}
-              onMove={handleMove}
               onDragStart={handleDragStart}
               onDragOver={handleDragOver}
               onDrop={handleDrop}

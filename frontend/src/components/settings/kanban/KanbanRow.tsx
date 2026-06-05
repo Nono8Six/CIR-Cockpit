@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, GripVertical, Pencil, Trash2 } from 'lucide-react';
+import { GripVertical, Pencil, Trash2 } from 'lucide-react';
 import type { AgencyStatus, StatusCategory } from '@/types';
 import { STATUS_CATEGORY_LABELS } from '@/constants/statusCategories';
 import { Button } from '../../ui/inputs/basic/Button';
@@ -17,7 +17,6 @@ import ConfirmDialog from '../../ConfirmDialog';
 type KanbanRowProps = {
   status: AgencyStatus;
   index: number;
-  isLast: boolean;
   canRemoveStatus: boolean;
   readOnly: boolean;
   usageCount: number | null;
@@ -28,7 +27,6 @@ type KanbanRowProps = {
   onDragStart: (e: React.DragEvent, index: number) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent, index: number) => void;
-  onMove: (index: number, direction: -1 | 1) => void;
 };
 
 /**
@@ -50,7 +48,6 @@ type KanbanRowProps = {
 const KanbanRow = ({
   status,
   index,
-  isLast,
   canRemoveStatus,
   readOnly,
   usageCount,
@@ -61,7 +58,6 @@ const KanbanRow = ({
   onDragStart,
   onDragOver,
   onDrop,
-  onMove,
 }: KanbanRowProps) => {
   const [isRenameOpen, setIsRenameOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -90,7 +86,7 @@ const KanbanRow = ({
       onDragStart={(e) => onDragStart(e, index)}
       onDragOver={onDragOver}
       onDrop={(e) => onDrop(e, index)}
-      className={`group grid grid-cols-[auto_minmax(0,1fr)] gap-2 border border-border/50 bg-background px-2 py-2 transition-[background-color,border-color] duration-200 hover:border-border hover:bg-card sm:grid-cols-[auto_minmax(0,1fr)_10rem_auto_auto_auto_auto_auto_auto] sm:items-center ${
+      className={`group grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2 gap-y-2 border border-border/50 bg-background px-2.5 py-2 transition-[background-color,border-color] duration-200 hover:border-border hover:bg-card sm:grid-cols-[auto_minmax(0,1fr)_10rem_auto_auto_auto_auto] sm:px-2 ${
         readOnly ? '' : 'cursor-grab active:cursor-grabbing'
       }`}
       data-testid={`settings-status-row-${index}`}
@@ -107,7 +103,7 @@ const KanbanRow = ({
         type="text"
         value={status.label}
         onChange={(event) => onLabelUpdate(index, event.target.value)}
-        className={`h-8 min-w-0 border-transparent bg-transparent py-0 text-xs shadow-none focus-visible:ring-1 focus-visible:ring-primary/20 ${
+        className={`h-8 min-w-0 border-transparent bg-transparent py-0 text-xs font-medium shadow-none focus-visible:ring-1 focus-visible:ring-primary/20 sm:font-normal ${
           readOnly ? 'text-muted-foreground/80' : 'text-foreground'
         }`}
         readOnly
@@ -117,7 +113,7 @@ const KanbanRow = ({
         autoComplete="off"
       />
 
-      <div className="col-span-2 sm:col-span-1">
+      <div className="col-span-2 min-w-0 sm:col-span-1">
         <Select
           value={status.category}
           disabled={readOnly}
@@ -140,54 +136,54 @@ const KanbanRow = ({
         </Select>
       </div>
 
-      {index === 0 && (
-        <span className="col-span-1 w-fit shrink-0 border border-primary/25 bg-primary/5 px-2 py-0.5 text-[10px] font-semibold text-primary sm:col-span-1">
-          Par défaut
+      <div className="col-span-2 flex min-w-0 items-center justify-between gap-2 border-t border-border/60 pt-1.5 sm:contents sm:border-0 sm:pt-0">
+        {index === 0 ? (
+          <span className="w-fit shrink-0 border border-primary/25 bg-primary/5 px-2 py-0.5 text-[10px] font-semibold text-primary">
+            Par défaut
+          </span>
+        ) : (
+          <span className="hidden sm:block" aria-hidden="true" />
+        )}
+
+        {usageKnown ? (
+          <span className="font-mono text-[10px] text-muted-foreground tabular-nums">
+            {usageCount} usage
+          </span>
+        ) : (
+          <span className="hidden sm:block" aria-hidden="true" />
+        )}
+
+        <span className="ml-auto flex items-center gap-1 sm:contents">
+          {!readOnly && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsRenameOpen(true)}
+              className="h-7 w-7 p-0 flex items-center justify-center text-muted-foreground transition-[background-color,color,transform] hover:bg-accent hover:text-accent-foreground active:scale-95"
+              aria-label={`Corriger le libellé du statut ${status.label}`}
+              title="Corriger le libellé"
+            >
+              <Pencil className="size-3.5" aria-hidden="true" />
+            </Button>
+          )}
+
+          {canRemove && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsDeleteOpen(true)}
+              className="h-7 w-7 p-0 flex items-center justify-center text-muted-foreground transition-[background-color,color,opacity,transform] hover:bg-destructive/10 hover:text-destructive active:scale-95 disabled:opacity-40"
+              disabled={!canRemoveStatus}
+              aria-label={canRemoveStatus ? `${deleteLabel} le statut ${status.label}` : 'Au moins un statut actif est requis'}
+              title={canRemoveStatus ? deleteLabel : 'Au moins un statut actif est requis'}
+            >
+              <Trash2 className="size-3.5" aria-hidden="true" />
+            </Button>
+          )}
         </span>
-      )}
-
-      {usageKnown ? (
-        <span className="font-mono text-[10px] text-muted-foreground tabular-nums">
-          {usageCount} usage
-        </span>
-      ) : null}
-
-      {!readOnly && (
-        <>
-        <Button type="button" variant="ghost" size="sm" disabled={index === 0} onClick={() => onMove(index, -1)} className="h-7 w-7 p-0" aria-label={`Monter le statut ${status.label}`} title="Monter">
-          <ChevronUp className="size-3.5" aria-hidden="true" />
-        </Button>
-        <Button type="button" variant="ghost" size="sm" disabled={isLast} onClick={() => onMove(index, 1)} className="h-7 w-7 p-0" aria-label={`Descendre le statut ${status.label}`} title="Descendre">
-          <ChevronDown className="size-3.5" aria-hidden="true" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsRenameOpen(true)}
-          className="h-7 w-7 p-0 flex items-center justify-center text-muted-foreground transition-[background-color,color,transform] hover:bg-accent hover:text-accent-foreground active:scale-95"
-          aria-label={`Corriger le libellé du statut ${status.label}`}
-          title="Corriger le libellé"
-        >
-          <Pencil className="size-3.5" aria-hidden="true" />
-        </Button>
-        </>
-      )}
-
-      {canRemove && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsDeleteOpen(true)}
-          className="h-7 w-7 p-0 flex items-center justify-center text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive active:scale-95 disabled:opacity-40"
-          disabled={!canRemoveStatus}
-          aria-label={canRemoveStatus ? `${deleteLabel} le statut ${status.label}` : 'Au moins un statut actif est requis'}
-          title={canRemoveStatus ? deleteLabel : 'Au moins un statut actif est requis'}
-        >
-          <Trash2 className="size-3.5" aria-hidden="true" />
-        </Button>
-      )}
+      </div>
 
       {!readOnly && (
         <RenameDialog
