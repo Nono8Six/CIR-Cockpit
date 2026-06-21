@@ -28,6 +28,9 @@ Guide operationnel pour les agents autonomes dans CIR Cockpit.
 
 Invoquer le skill pertinent avant d'ecrire du code:
 
+- `cir-cockpit-agent-router`: orientation repo locale, choix des docs/MCP/skills utiles et reduction du contexte charge.
+- `cir-cockpit-qa-validation`: choix de validation CIR Cockpit par impact et rapport QA court.
+- `cir-cockpit-api-contracts`: contrats tRPC, schemas Zod partages, services RPC front et routes/actions backend.
 - `vercel-react-best-practices`: composants, hooks ou pages React.
 - `vercel-composition-patterns`: refactoring de composants React.
 - `web-design-guidelines`: audit UI, accessibilite, UX.
@@ -48,6 +51,7 @@ Invoquer le skill pertinent avant d'ecrire du code:
 
 - Context7 est requis pour une decision d'implementation sur React, TanStack, tRPC, Drizzle, Vitest, Playwright, Zod ou autre librairie/framework. Pas requis pour une simple relecture documentaire ou un changement de texte.
 - Supabase MCP est requis avant toute action DB, migration, RLS, Edge Function, deploy ou diagnostic runtime Supabase.
+- Si le site doit etre verifie en direct dans Codex, utiliser le navigateur in-app Codex [@Navigateur](plugin://browser@openai-bundled) en priorite pour ouvrir, naviguer et inspecter le rendu. Garder Playwright/E2E pour les scenarios automatises, traces, screenshots reproductibles ou demandes explicites.
 - Chrome DevTools/Playwright seulement si un parcours UI doit etre verifie; ne pas lancer d'E2E automatiquement sans demande utilisateur.
 - shadcn MCP seulement pour rechercher/installer/verifier des composants UI.
 
