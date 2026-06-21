@@ -12,6 +12,7 @@ export const useCockpitRegisterFields = ({ register }: UseCockpitRegisterFieldsP
   const contactFirstNameField = register('contact_first_name');
   const contactLastNameField = register('contact_last_name');
   const contactPositionField = register('contact_position');
+  const contactServiceLabelField = register('contact_service_label');
   const contactPhoneField = register('contact_phone');
   const contactEmailField = register('contact_email');
   const notesField = register('notes');
@@ -25,6 +26,7 @@ export const useCockpitRegisterFields = ({ register }: UseCockpitRegisterFieldsP
     contactFirstNameField,
     contactLastNameField,
     contactPositionField,
+    contactServiceLabelField,
     contactPhoneField,
     contactEmailField,
     notesField,

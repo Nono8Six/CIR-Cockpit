@@ -14,6 +14,16 @@ export type ParseTrpcResponse<TResponse> = (payload: unknown) => TResponse;
 export type TrpcCallOptions = ReturnType<typeof createTrpcCallOptions>;
 export type TrpcCall = (client: TrpcClient, options: TrpcCallOptions) => Promise<unknown>;
 
+const describeInvalidPayload = (payload: unknown): string => {
+  if (payload === null) {
+    return 'Payload null.';
+  }
+  if (Array.isArray(payload)) {
+    return 'Payload tableau.';
+  }
+  return `Payload ${typeof payload}.`;
+};
+
 /**
  * @description Runs a tRPC call safely by wrapping it in try-catch and mapping any thrown error to an AppError.
  * @param {TrpcCall} call - The tRPC call to execute.
@@ -53,7 +63,8 @@ export const invokeTrpc = async <TResponse>(
     throw createAppError({
       code: 'EDGE_FUNCTION_ERROR',
       message: 'Reponse serveur invalide.',
-      source: 'edge'
+      source: 'edge',
+      details: describeInvalidPayload(payload)
     });
   }
   if (readBoolean(payload, 'ok') === false) {

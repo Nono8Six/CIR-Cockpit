@@ -100,7 +100,8 @@ const CockpitSupplierContactStep = ({
       last_name: quickContact.lastName,
       phone: quickContact.phone || null,
       email: quickContact.email || null,
-      position: quickContact.position || null
+      position: quickContact.position || null,
+      service_label: null
     }).match(
       (createdContact) => createdContact,
       (error) => {

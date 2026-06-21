@@ -29,10 +29,12 @@ const createDbMock = (
 ): {
   db: DbClient;
   getInsertedEntityId: () => string | null;
+  getInsertedValues: () => Record<string, unknown> | null;
   getDeletedCount: () => number;
   getListOrderArgsCount: () => number;
 } => {
   let insertedEntityId: string | null = null;
+  let insertedValues: Record<string, unknown> | null = null;
   let deletedCount = 0;
   let listOrderArgsCount = 0;
 
@@ -49,6 +51,7 @@ const createDbMock = (
     }),
     insert: () => ({
       values: (values: Record<string, unknown>) => {
+        insertedValues = values;
         insertedEntityId = typeof values.entity_id === 'string' ? values.entity_id : null;
         return {
           returning: () => Promise.resolve(contactRows)
@@ -70,12 +73,18 @@ const createDbMock = (
           return Promise.resolve(rows);
         }
       })
-    })
+    }),
+    transaction: (callback: (tx: DbClient) => Promise<unknown>) =>
+      callback({
+        ...db,
+        execute: () => Promise.resolve([])
+      } as unknown as DbClient)
   } as unknown as DbClient;
 
   return {
     db,
     getInsertedEntityId: () => insertedEntityId,
+    getInsertedValues: () => insertedValues,
     getDeletedCount: () => deletedCount,
     getListOrderArgsCount: () => listOrderArgsCount
   };
@@ -83,9 +92,9 @@ const createDbMock = (
 
 Deno.test('handleDataEntityContactsAction lists contacts by entity', async () => {
   const contactRows = [
-    { id: 'contact-2', first_name: 'Zoé', last_name: 'Martin', created_at: '2026-02-02T00:00:00Z' },
-    { id: 'contact-1', first_name: 'Alice', last_name: 'Martin', created_at: '2026-02-01T00:00:00Z' },
-    { id: 'contact-3', first_name: 'Bruno', last_name: 'Durand', created_at: '2026-02-03T00:00:00Z' }
+    { id: 'contact-2', first_name: 'Zoé', last_name: 'Martin', is_primary: true, created_at: '2026-02-02T00:00:00Z' },
+    { id: 'contact-1', first_name: 'Alice', last_name: 'Martin', is_primary: false, created_at: '2026-02-01T00:00:00Z' },
+    { id: 'contact-3', first_name: 'Bruno', last_name: 'Durand', is_primary: false, created_at: '2026-02-03T00:00:00Z' }
   ] as ContactRow[];
   const mock = createDbMock(contactRows);
 
@@ -108,9 +117,9 @@ Deno.test('handleDataEntityContactsAction lists contacts by entity', async () =>
 
   assertEquals(response.ok, true);
   assertEquals('contacts' in response, true);
-  assertEquals(mock.getListOrderArgsCount(), 3);
+  assertEquals(mock.getListOrderArgsCount(), 4);
   if ('contacts' in response) {
-    assertEquals(response.contacts.map((contact) => contact.id), ['contact-3', 'contact-1', 'contact-2']);
+    assertEquals(response.contacts.map((contact) => contact.id), ['contact-2', 'contact-3', 'contact-1']);
   }
 });
 
@@ -131,6 +140,7 @@ Deno.test('handleDataEntityContactsAction saves contact', async () => {
         email: '',
         phone: '0102030405',
         position: '',
+        service_label: 'Maintenance',
         notes: ''
       }
     },
@@ -145,6 +155,7 @@ Deno.test('handleDataEntityContactsAction saves contact', async () => {
   assertEquals(response.ok, true);
   assertEquals('contact' in response, true);
   assertEquals(mock.getInsertedEntityId(), 'entity-1');
+  assertEquals(mock.getInsertedValues()?.service_label, 'Maintenance');
 });
 
 Deno.test('handleDataEntityContactsAction deletes contact', async () => {
@@ -246,7 +257,16 @@ Deno.test('handleDataEntityContactsAction throws DB_WRITE_FAILED when save retur
       values: () => ({
         returning: () => Promise.resolve([])
       })
-    })
+    }),
+    transaction: (callback: (tx: DbClient) => Promise<unknown>) =>
+      callback({
+        insert: () => ({
+          values: () => ({
+            returning: () => Promise.resolve([])
+          })
+        }),
+        execute: () => Promise.resolve([])
+      } as unknown as DbClient)
   } as unknown as DbClient;
 
   await assertRejects(

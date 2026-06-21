@@ -174,6 +174,41 @@ const renderSupplierContactStep = (
   );
 };
 
+const buildSubjectRightPaneProps = (
+  overrides: Partial<CockpitFormRightPaneProps> = {}
+): CockpitFormRightPaneProps => ({
+  subject: 'Vérin ISO 15552',
+  notes: '',
+  subjectField: buildField('subject'),
+  notesField: buildField('notes'),
+  orderRefField: buildField('order_ref'),
+  reminderField: buildField('reminder_at'),
+  errors: {},
+  labelStyle: '',
+  footerLabelStyle: '',
+  statusMeta: null,
+  statusCategoryLabel: 'En cours',
+  statusCategoryBadges: {},
+  statusTriggerRef: { current: null },
+  statusValue: 'status-1',
+  onStatusChange: vi.fn(),
+  statusGroups: {
+    todo: [],
+    in_progress: [],
+    done: []
+  },
+  hasStatuses: true,
+  statusHelpId: 'status-help',
+  reminderAt: '',
+  onSetReminder: vi.fn(),
+  onReset: vi.fn(),
+  families: ['MOTORISATION', 'AUTOMATISME'],
+  megaFamilies: [],
+  requiresProductFamilies: false,
+  onToggleFamily: vi.fn(),
+  ...overrides
+} as CockpitFormRightPaneProps);
+
 describe('CockpitGuidedStepSwitch', () => {
   it('keeps Continue disabled until the contact step is complete', () => {
     render(
@@ -265,6 +300,83 @@ describe('CockpitGuidedStepSwitch', () => {
     await user.keyboard('{Control>}{Enter}{/Control}');
 
     expect(flow.completeStep).toHaveBeenCalledWith('subject');
+  });
+
+  it('masque les familles produits quand le type d interaction ne les exige pas', () => {
+    render(
+      <CockpitGuidedStepSwitch
+        flow={buildFlow(true, {
+          activeStep: 'subject',
+          subjectComplete: true
+        })}
+        leftPaneProps={{
+          relationMode: 'client',
+          interactionType: 'SAV',
+          hasInteractionTypes: true,
+          interactionTypes: ['SAV'],
+          interactionTypeRef: { current: null },
+          setValue: vi.fn(),
+          errors: {},
+          selectedContact: {
+            id: 'contact-1',
+            entity_id: 'entity-1',
+            first_name: 'Patrick',
+            last_name: 'DZIURA',
+            position: 'Directeur',
+            service_label: null
+          }
+        } as unknown as CockpitFormLeftPaneProps}
+        rightPaneProps={buildSubjectRightPaneProps({
+          requiresProductFamilies: false,
+          families: ['MOTORISATION']
+        })}
+        entityProps={entityProps}
+        onReset={vi.fn()}
+      />
+    );
+
+    expect(screen.queryByText(/familles produits/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /motorisation/i })).not.toBeInTheDocument();
+  });
+
+  it('affiche les familles produits et le message obligatoire quand le type les exige', () => {
+    render(
+      <CockpitGuidedStepSwitch
+        flow={buildFlow(true, {
+          activeStep: 'subject',
+          subjectComplete: false
+        })}
+        leftPaneProps={{
+          relationMode: 'client',
+          interactionType: 'Demande de devis',
+          hasInteractionTypes: true,
+          interactionTypes: ['Demande de devis'],
+          interactionTypeRef: { current: null },
+          setValue: vi.fn(),
+          errors: {},
+          selectedContact: {
+            id: 'contact-1',
+            entity_id: 'entity-1',
+            first_name: 'Patrick',
+            last_name: 'DZIURA',
+            position: 'Directeur',
+            service_label: null
+          }
+        } as unknown as CockpitFormLeftPaneProps}
+        rightPaneProps={buildSubjectRightPaneProps({
+          requiresProductFamilies: true,
+          families: ['MOTORISATION'],
+          megaFamilies: []
+        })}
+        entityProps={entityProps}
+        onReset={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText(/familles produits/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /motorisation/i })).toBeInTheDocument();
+    expect(screen.getByText(/au moins une famille produit est requise/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /continuer/i })).toBeDisabled();
   });
 
   it('limite l etape sujet sollicitation a la description et genere le sujet technique', async () => {
@@ -552,7 +664,8 @@ describe('CockpitGuidedStepSwitch', () => {
       last_name: 'Martin',
       phone: '06 22 33 44 55',
       email: 'marc@example.com',
-      position: 'Commercial'
+      position: 'Commercial',
+      service_label: null
     });
     expect(onSelectContactFromSearch).toHaveBeenCalledWith(expect.objectContaining({
       id: 'contact-2',

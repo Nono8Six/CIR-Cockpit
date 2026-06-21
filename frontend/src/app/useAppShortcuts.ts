@@ -22,7 +22,8 @@ export const useAppShortcuts = ({
       [APP_TAB_SHORTCUTS.dashboard, 'dashboard'],
       [APP_TAB_SHORTCUTS.settings, 'settings'],
       [APP_TAB_SHORTCUTS.admin, 'admin'],
-      [APP_TAB_SHORTCUTS.clients, 'clients']
+      [APP_TAB_SHORTCUTS.clients, 'clients'],
+      [APP_TAB_SHORTCUTS.suppliers, 'suppliers']
     ]);
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -41,6 +42,9 @@ export const useAppShortcuts = ({
         return;
       }
       if (mappedTab === 'admin' && !canAccessAdmin) {
+        return;
+      }
+      if (mappedTab === 'suppliers' && !canAccessAdmin) {
         return;
       }
 

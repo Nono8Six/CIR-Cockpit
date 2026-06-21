@@ -30,6 +30,7 @@ export const useClientContactDialog = ({
       email: '',
       phone: '',
       position: '',
+      service_label: '',
       notes: ''
     }
   });
@@ -44,6 +45,7 @@ export const useClientContactDialog = ({
       email: contact?.email ?? '',
       phone: contact?.phone ?? '',
       position: contact?.position ?? '',
+      service_label: contact?.service_label ?? '',
       notes: contact?.notes ?? ''
     });
   }, [contact, open, reset]);
@@ -63,6 +65,7 @@ export const useClientContactDialog = ({
       email: values.email?.trim() || null,
       phone: values.phone?.trim() || null,
       position: values.position?.trim() || null,
+      service_label: values.service_label?.trim() || null,
       notes: values.notes?.trim() || null
     };
 

@@ -140,6 +140,7 @@ export const adminUsersListInputSchema = z.strictObject({});
 export const adminAuditLogsInputSchema = z.strictObject({
   agency_id: uuidSchema.nullish(),
   actor_id: uuidSchema.nullish(),
+  entity_id: uuidSchema.nullish(),
   entity_table: z.string().trim().min(1, 'Table requise').max(80, 'Table trop longue').nullish(),
   from: z.string().trim().datetime({ offset: true }).nullish(),
   to: z.string().trim().datetime({ offset: true }).nullish(),

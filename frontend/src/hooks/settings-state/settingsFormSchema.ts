@@ -1,5 +1,5 @@
 import { z } from 'zod/v4';
-import type { ResolvedConfigSnapshot } from '../../../../shared/schemas/system/config.schema';
+import type { AgencyInteractionTypeConfig, ResolvedConfigSnapshot } from '../../../../shared/schemas/system/config.schema';
 import { uuidSchema } from '../../../../shared/schemas/admin/auth.schema';
 
 import { normalizeStatusesForUi } from './use-settings-state.helpers';
@@ -25,15 +25,21 @@ const settingsStatusSchema = z
   })
   ;
 
+const settingsInteractionTypeSchema = z.object({
+  id: z.string().optional(),
+  agency_id: z.string().optional(),
+  label: z.string().trim().min(1, 'Label requis').max(MAX_CONFIG_LABEL_LENGTH, "Label type d'interaction trop long"),
+  requires_product_families: z.boolean(),
+  sort_order: z.number().int(),
+});
+
 export const settingsFormSchema = z
   .object({
     agency_id: uuidSchema,
     statuses: z.array(settingsStatusSchema).min(1, 'Au moins un statut requis'),
     services: z.array(z.string().trim().max(MAX_CONFIG_LABEL_LENGTH, 'Label service trop long')),
     families: z.array(z.string().trim().max(MAX_CONFIG_LABEL_LENGTH, 'Label famille trop long')),
-    interactionTypes: z.array(
-      z.string().trim().max(MAX_CONFIG_LABEL_LENGTH, "Label type d'interaction trop long"),
-    ),
+    interactionTypes: z.array(settingsInteractionTypeSchema),
     newFamily: z.string(),
     newService: z.string(),
     newInteractionType: z.string(),
@@ -52,7 +58,10 @@ export const buildSettingsFormDefaultValues = (
   statuses: normalizeStatusesForUi(snapshot.references.statuses),
   services: snapshot.references.services,
   families: snapshot.references.families,
-  interactionTypes: snapshot.references.interaction_types,
+  interactionTypes: snapshot.references.interaction_types.map((type, index): AgencyInteractionTypeConfig => ({
+    ...type,
+    sort_order: type.sort_order ?? index + 1,
+  })),
   newFamily: '',
   newService: '',
   newInteractionType: '',

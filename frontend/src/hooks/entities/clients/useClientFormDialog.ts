@@ -1,15 +1,82 @@
 import { useEffect, type ChangeEvent } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useQueryClient } from '@tanstack/react-query';
 
 import type { Agency, UserRole } from '@/types';
 import type { DirectoryCommercialOption } from '../../../../../shared/schemas/system/directory.schema';
 import {
-  clientCompanyFormSchema,
-  type ClientCompanyFormValues
+  clientNumberSchema,
+  accountTypeSchema,
 } from '../../../../../shared/schemas/entity/client.schema';
+import { entityDepartmentCodeSchema } from '../../../../../shared/schemas/admin/department.schema';
+import { uuidSchema } from '../../../../../shared/schemas/admin/auth.schema';
 import type { ClientPayload } from '@/services/clients/saveClient';
+import { saveEntityContact } from '@/services/entities/saveEntityContact';
+import { invalidateEntityContactMutationQueries } from '@/services/query/queryInvalidation';
 import { stripClientNumber } from '@/utils/clients/formatClientNumber';
+
+const optionalCommercialIdSchema = z
+  .union([uuidSchema, z.literal(''), z.null(), z.undefined()])
+  .transform((value) => {
+    if (typeof value !== 'string') {
+      return null;
+    }
+
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  });
+
+const optionalEmail = z
+  .string()
+  .trim()
+  .email('Email invalide')
+  .optional()
+  .or(z.literal(''));
+
+export const clientCompanyFormUiSchema = z.strictObject({
+  client_number: clientNumberSchema,
+  client_kind: z.literal('company'),
+  account_type: accountTypeSchema,
+  name: z.string().trim().min(1, 'Nom requis'),
+  postal_code: z.string().regex(/^\d{5}$/, 'Code postal invalide'),
+  department: entityDepartmentCodeSchema,
+  city: z.string().trim().min(1, 'Ville requise'),
+  notes: z.string().trim().optional().nullable(),
+  agency_id: uuidSchema,
+  address: z.string().trim().min(1, 'Adresse requise'),
+  cir_commercial_id: optionalCommercialIdSchema.optional(),
+
+  // Official fields
+  siret: z.string().trim().optional().nullable(),
+  siren: z.string().trim().optional().nullable(),
+  naf_code: z.string().trim().optional().nullable(),
+  official_name: z.string().trim().optional().nullable(),
+  official_data_source: z
+    .union([z.literal('api-recherche-entreprises'), z.null(), z.undefined()])
+    .transform((value) => value ?? null)
+    .optional(),
+  official_data_synced_at: z.string().trim().optional().nullable(),
+
+  // Primary contact fields
+  first_name: z.string().trim().min(1, 'Prénom requis'),
+  last_name: z.string().trim().min(1, 'Nom requis'),
+  email: optionalEmail,
+  phone: z.string().trim().optional().or(z.literal(''))
+}).superRefine((values, ctx) => {
+  const hasPhone = Boolean(values.phone?.trim());
+  const hasEmail = Boolean(values.email?.trim());
+  if (!hasPhone && !hasEmail) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Téléphone ou email requis',
+      path: ['phone']
+    });
+  }
+});
+
+export type ClientCompanyFormUiValues = z.input<typeof clientCompanyFormUiSchema>;
 
 type UseClientFormDialogInput = {
   open: boolean;
@@ -32,6 +99,11 @@ type UseClientFormDialogInput = {
     notes: string | null;
     agency_id: string | null;
     cir_commercial_id?: string | null;
+    first_name?: string | null;
+    last_name?: string | null;
+    phone?: string | null;
+    email?: string | null;
+    primary_contact_id?: string | null;
   } | null;
   agencies: Agency[];
   userRole: UserRole;
@@ -51,8 +123,10 @@ export const useClientFormDialog = ({
   onSave,
   onOpenChange
 }: UseClientFormDialogInput) => {
-  const form = useForm<ClientCompanyFormValues>({
-    resolver: zodResolver(clientCompanyFormSchema),
+  const queryClient = useQueryClient();
+
+  const form = useForm<ClientCompanyFormUiValues>({
+    resolver: zodResolver(clientCompanyFormUiSchema),
     defaultValues: {
       client_number: '',
       client_kind: 'company',
@@ -70,7 +144,11 @@ export const useClientFormDialog = ({
       official_data_synced_at: null,
       notes: '',
       cir_commercial_id: null,
-      agency_id: activeAgencyId ?? ''
+      agency_id: activeAgencyId ?? '',
+      first_name: '',
+      last_name: '',
+      email: '',
+      phone: ''
     }
   });
 
@@ -97,7 +175,11 @@ export const useClientFormDialog = ({
       official_data_synced_at: client?.official_data_synced_at ?? null,
       notes: client?.notes ?? '',
       cir_commercial_id: client?.cir_commercial_id ?? null,
-      agency_id: client?.agency_id ?? activeAgencyId ?? ''
+      agency_id: client?.agency_id ?? activeAgencyId ?? '',
+      first_name: client?.first_name ?? '',
+      last_name: client?.last_name ?? '',
+      email: client?.email ?? '',
+      phone: client?.phone ?? ''
     });
   }, [activeAgencyId, client, open, reset]);
 
@@ -117,7 +199,7 @@ export const useClientFormDialog = ({
     setValue('department', digits.slice(0, 2), { shouldDirty: true });
   };
 
-  const onSubmit = async (values: ClientCompanyFormValues) => {
+  const onSubmit = async (values: ClientCompanyFormUiValues) => {
     const resolvedAgencyId = userRole === 'tcs'
       ? (activeAgencyId ?? values.agency_id)
       : values.agency_id;
@@ -146,10 +228,36 @@ export const useClientFormDialog = ({
     };
 
     try {
+      // 1. Enregistrer le client
       await onSave(payload);
+
+      // 2. Enregistrer le contact principal (si le client existe)
+      if (client?.id) {
+        await saveEntityContact({
+          id: client.primary_contact_id ?? undefined,
+          entity_id: client.id,
+          first_name: values.first_name.trim(),
+          last_name: values.last_name.trim(),
+          email: values.email?.trim() || null,
+          phone: values.phone?.trim() || null,
+          position: 'Contact Principal'
+        }).match(
+          () => {},
+          (err) => {
+            throw err;
+          }
+        );
+
+        // Invalider les requêtes de contact pour mettre à jour la fiche
+        await invalidateEntityContactMutationQueries(queryClient, {
+          agencyId: resolvedAgencyId,
+          entityId: client.id
+        });
+      }
+
       onOpenChange(false);
     } catch {
-      setError('root', { type: 'server', message: "Impossible d'enregistrer le client." });
+      setError('root', { type: 'server', message: "Impossible d'enregistrer le client ou son contact principal." });
     }
   };
 

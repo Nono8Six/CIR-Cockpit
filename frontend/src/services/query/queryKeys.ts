@@ -148,9 +148,15 @@ export const clientContactsKey = (clientId: string, includeArchived: boolean) =>
 ] as const;
 
 export const entityInteractionsRootKey = () => [QUERY_ROOTS.entityInteractions] as const;
-export const entityInteractionsKey = (entityId: string | null, page: number, pageSize: number) => [
+export const entityInteractionsKey = (
+  entityId: string | null,
+  page: number,
+  pageSize: number,
+  scope: 'open' | 'closed' | 'all' = 'all'
+) => [
   QUERY_ROOTS.entityInteractions,
   entityId ?? 'none',
+  scope,
   page,
   pageSize
 ] as const;

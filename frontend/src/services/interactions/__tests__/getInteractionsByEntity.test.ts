@@ -71,6 +71,33 @@ describe('getInteractionsByEntity', () => {
     expect(result.interactions).toHaveLength(1);
   });
 
+  it('sends the requested scope to the RPC payload', async () => {
+    const mutate = vi.fn().mockResolvedValue({});
+    mockInvokeRpc.mockImplementationOnce(async (call, parseResponse) => {
+      await call({ data: { interactions: { mutate } } } as never, undefined as never);
+      return parseResponse({
+        ok: true,
+        interactions: [],
+        page: 2,
+        page_size: 10,
+        total: 0
+      });
+    });
+
+    await getInteractionsByEntity('entity-1', 2, 10, 'open');
+
+    expect(mutate).toHaveBeenCalledWith(
+      {
+        action: 'list_by_entity',
+        entity_id: 'entity-1',
+        scope: 'open',
+        page: 2,
+        page_size: 10
+      },
+      undefined
+    );
+  });
+
   it('throws RPC errors without fallback to a global interactions read', async () => {
     const error = createAppError({
       code: 'INVALID_PAYLOAD',

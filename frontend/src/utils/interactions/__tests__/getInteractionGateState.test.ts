@@ -94,4 +94,15 @@ describe('getInteractionGateState', () => {
     expect(result.canSave).toBe(true);
     expect(result.gateMessage).toBe('');
   });
+
+  it('blocks when product families are required and none is selected', () => {
+    const result = getInteractionGateState({
+      ...base,
+      requiresProductFamilies: true,
+      megaFamilies: []
+    });
+
+    expect(result.canSave).toBe(false);
+    expect(result.gateMessage).toBe('Selectionnez au moins une famille produit.');
+  });
 });

@@ -1,10 +1,12 @@
 import { AlertTriangle, Boxes, PhoneCall, Users2 } from 'lucide-react';
 import type {
+  AgencyInteractionTypeConfig,
   ConfigUsageSnapshot,
   EditableConfigReferenceDimension
 } from '../../../../../shared/schemas/system/config.schema';
 import SettingsSectionShell from '../ui/SettingsSectionShell';
 import { Button } from '@/components/ui/inputs/basic/Button';
+import { normalizeInteractionTypeConfig, type AgencyInteractionTypeLike } from '@/services/config';
 import ReferentialColumn from './ReferentialColumn';
 
 type ReferentialsSectionProps = {
@@ -13,7 +15,7 @@ type ReferentialsSectionProps = {
   usage: ConfigUsageSnapshot | null;
   families: string[];
   services: string[];
-  interactionTypes: string[];
+  interactionTypes: AgencyInteractionTypeLike[];
   newFamily: string;
   newService: string;
   newInteractionType: string;
@@ -51,8 +53,26 @@ type ReferentialsSectionProps = {
   ) => void;
   setFamilies: (next: string[]) => void;
   setServices: (next: string[]) => void;
-  setInteractionTypes: (next: string[]) => void;
+  setInteractionTypes: (next: AgencyInteractionTypeConfig[]) => void;
 };
+
+const toInteractionTypeLabels = (items: AgencyInteractionTypeLike[]): string[] =>
+  items.map((item) => typeof item === 'string' ? item : item.label);
+
+const buildInteractionTypeList = (
+  labels: string[],
+  previous: AgencyInteractionTypeConfig[]
+): AgencyInteractionTypeConfig[] =>
+  labels.map((label, index) => {
+    const current = previous.find((item) => item.label === label);
+    return {
+      ...(current?.id ? { id: current.id } : {}),
+      ...(current?.agency_id ? { agency_id: current.agency_id } : {}),
+      label,
+      requires_product_families: current?.requires_product_families ?? false,
+      sort_order: index + 1
+    };
+  });
 
 const ReferentialsSection = ({
   readOnly,
@@ -81,7 +101,11 @@ const ReferentialsSection = ({
     ...(dimensions?.families ?? []),
     ...(dimensions?.interaction_types ?? [])
   ].filter((row) => row.state === 'unresolved');
-
+  const normalizedInteractionTypes = normalizeInteractionTypeConfig(interactionTypes);
+  const interactionTypeLabels = toInteractionTypeLabels(normalizedInteractionTypes);
+  const setInteractionTypeLabels = (labels: string[]) => {
+    setInteractionTypes(buildInteractionTypeList(labels, normalizedInteractionTypes));
+  };
   return (
     <SettingsSectionShell
       id="settings-section-referentials"
@@ -151,27 +175,27 @@ const ReferentialsSection = ({
           description={"Classification obligatoire de l'échange : devis, SAV, relance ou autre catégorie suivie."}
           icon={PhoneCall}
           namePrefix="interaction-types"
-          count={interactionTypes.length}
-          list={interactionTypes}
+          count={normalizedInteractionTypes.length}
+          list={interactionTypeLabels}
           usageRows={dimensions ? dimensions.interaction_types : null}
-          setList={setInteractionTypes}
+          setList={setInteractionTypeLabels}
           newItem={newInteractionType}
           setNewItem={setNewInteractionType}
           onAdd={() =>
             addItem(
               'interaction_types',
               newInteractionType,
-              interactionTypes,
-              setInteractionTypes,
+              interactionTypeLabels,
+              setInteractionTypeLabels,
               () => setNewInteractionType(''),
             )
           }
-          onRemove={(index) => removeItem('interaction_types', index, interactionTypes, setInteractionTypes)}
+          onRemove={(index) => removeItem('interaction_types', index, interactionTypeLabels, setInteractionTypeLabels)}
           onUpdate={(index, value) =>
-            updateItem(index, value, interactionTypes, setInteractionTypes)
+            updateItem(index, value, interactionTypeLabels, setInteractionTypeLabels)
           }
           onRename={(index, value) =>
-            renameItem('interaction_types', index, value, interactionTypes, setInteractionTypes)
+            renameItem('interaction_types', index, value, interactionTypeLabels, setInteractionTypeLabels)
           }
           placeholder="Ex: Devis, SAV…"
           addLabel="Ajouter un type d'interaction"

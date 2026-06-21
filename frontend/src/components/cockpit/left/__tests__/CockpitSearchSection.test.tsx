@@ -127,7 +127,7 @@ describe('CockpitSearchSection', () => {
     expect(screen.getByTestId('interaction-search-bar')).toHaveAttribute('data-create-mode', 'dialog');
     expect(screen.getByRole('button', { name: 'Créer un fournisseur' })).toBeEnabled();
     await user.click(screen.getByRole('button', { name: 'Créer un fournisseur' }));
-    expect(navigateMock).toHaveBeenCalledWith({ to: '/admin/suppliers/new' });
+    expect(navigateMock).toHaveBeenCalledWith({ to: '/suppliers/new' });
   });
 
   it('active toujours les badges type pour les resultats cross-type', () => {

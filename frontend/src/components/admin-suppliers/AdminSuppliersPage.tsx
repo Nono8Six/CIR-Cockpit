@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
-import { Loader2, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import type { DirectoryListRow, DirectorySearchState } from '../../../../shared/schemas/system/directory.schema';
 
 import ClientDirectoryFilters from '@/components/client-directory/ClientDirectoryFilters';
@@ -16,19 +16,8 @@ import {
   AlertDialogTitle
 } from '../ui/feedback/AlertDialog';
 import { Button } from '../ui/inputs/basic/Button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from '../ui/feedback/Dialog';
-import { Input } from '../ui/inputs/basic/Input';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/navigation/Popover';
-import { Textarea } from '../ui/inputs/basic/Textarea';
 import { TooltipProvider } from '../ui/feedback/Tooltip';
-import { useSaveSupplier } from '../../hooks/entities/suppliers/useSaveSupplier';
 import { useSetSupplierArchived } from '../../hooks/entities/suppliers/useSetSupplierArchived';
 import { useDeleteSupplier } from '../../hooks/entities/suppliers/useDeleteSupplier';
 import { notifySuccess } from '@/services/errors/notifySuccess';
@@ -36,66 +25,20 @@ import { notifySuccess } from '@/services/errors/notifySuccess';
 import AdminSuppliersTable from './AdminSuppliersTable';
 import { useSupplierDirectoryWorkspace } from './useSupplierDirectoryWorkspace';
 
-type SupplierEditDraft = {
-  id: string;
-  name: string;
-  supplier_code: string;
-  supplier_number: string;
-  primary_phone: string;
-  primary_email: string;
-  address: string;
-  postal_code: string;
-  department: string;
-  city: string;
-  siren: string;
-  siret: string;
-  naf_code: string;
-  official_name: string;
-  official_data_source: 'api-recherche-entreprises' | null;
-  official_data_synced_at: string | null;
-  notes: string;
-};
-
-const toEditDraft = (row: DirectoryListRow): SupplierEditDraft => ({
-  id: row.id,
-  name: row.name,
-  supplier_code: row.supplier_code ?? '',
-  supplier_number: row.supplier_number ?? '',
-  primary_phone: row.primary_phone ?? '',
-  primary_email: row.primary_email ?? '',
-  address: row.address ?? '',
-  postal_code: row.postal_code ?? '',
-  department: row.department ?? '',
-  city: row.city ?? '',
-  siren: row.siren ?? '',
-  siret: row.siret ?? '',
-  naf_code: row.naf_code ?? '',
-  official_name: row.official_name ?? '',
-  official_data_source: row.official_data_source ?? null,
-  official_data_synced_at: row.official_data_synced_at ?? null,
-  notes: row.notes ?? ''
-});
-
-const normalizeSupplierCode = (value: string): string =>
-  value.trim().replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 4);
-
-const normalizeSupplierNumber = (value: string): string =>
-  value.replace(/\D/g, '').slice(0, 15);
-
-const normalizeNafCode = (value: string): string =>
-  value.trim().replace(/\s+/g, '').toUpperCase().replace(/^(\d{2})\.?(\d{2})([A-Z])$/, '$1.$2$3');
-
 const AdminSuppliersPage = () => {
-  const navigate = useNavigate({ from: '/admin/suppliers' });
-  const search = useSearch({ from: '/admin/suppliers' });
-  const [editingSupplier, setEditingSupplier] = useState<SupplierEditDraft | null>(null);
+  const navigate = useNavigate({ from: '/suppliers' });
+  const search = useSearch({ from: '/suppliers' }) as DirectorySearchState;
   const [archiveTarget, setArchiveTarget] = useState<DirectoryListRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DirectoryListRow | null>(null);
+  const [deleteRelatedInteractions, setDeleteRelatedInteractions] = useState(true);
 
   const handleSearchChange = useCallback(
     (updater: (previous: DirectorySearchState) => DirectorySearchState) => {
       void navigate({
-        search: (previous) => updater({ ...search, ...previous })
+        search: (previous) => updater({
+          ...search,
+          ...(previous as Partial<DirectorySearchState>)
+        })
       });
     },
     [navigate, search]
@@ -134,48 +77,16 @@ const AdminSuppliersPage = () => {
     handleResetFilters,
     requestDirectoryOptions
   } = useSupplierDirectoryWorkspace({ search, onSearchChange: handleSearchChange });
-  const saveSupplier = useSaveSupplier(effectiveSearch.includeArchived);
   const archiveSupplier = useSetSupplierArchived(effectiveSearch.includeArchived);
   const deleteSupplier = useDeleteSupplier(effectiveSearch.includeArchived);
   const canHardDeleteSuppliers = userRole === 'super_admin';
-  const canSaveEditedSupplier = Boolean(
-    editingSupplier?.name.trim()
-      && (editingSupplier.primary_phone.trim() || editingSupplier.primary_email.trim())
-  );
 
-  const updateEditingSupplier = useCallback((key: keyof SupplierEditDraft, value: string) => {
-    setEditingSupplier((current) => {
-      if (!current) return current;
-      return { ...current, [key]: value };
+  const handleEditSupplier = useCallback((row: DirectoryListRow) => {
+    void navigate({
+      to: '/suppliers/$supplierId/edit',
+      params: { supplierId: row.id }
     });
-  }, []);
-
-  const handleSaveEditedSupplier = useCallback(async () => {
-    if (!editingSupplier || !canSaveEditedSupplier || saveSupplier.isPending) return;
-
-    await saveSupplier.mutateAsync({
-      id: editingSupplier.id,
-      entity_type: 'Fournisseur',
-      name: editingSupplier.name,
-      supplier_code: editingSupplier.supplier_code,
-      supplier_number: editingSupplier.supplier_number,
-      primary_phone: editingSupplier.primary_phone,
-      primary_email: editingSupplier.primary_email,
-      address: editingSupplier.address,
-      postal_code: editingSupplier.postal_code,
-      department: editingSupplier.department,
-      city: editingSupplier.city,
-      siren: editingSupplier.siren,
-      siret: editingSupplier.siret,
-      naf_code: editingSupplier.naf_code,
-      official_name: editingSupplier.official_name,
-      official_data_source: editingSupplier.official_data_source,
-      official_data_synced_at: editingSupplier.official_data_synced_at,
-      notes: editingSupplier.notes
-    });
-    notifySuccess('Fournisseur modifié.');
-    setEditingSupplier(null);
-  }, [canSaveEditedSupplier, editingSupplier, saveSupplier]);
+  }, [navigate]);
 
   const handleConfirmArchive = useCallback(async () => {
     if (!archiveTarget || archiveSupplier.isPending) return;
@@ -187,10 +98,14 @@ const AdminSuppliersPage = () => {
 
   const handleConfirmDelete = useCallback(async () => {
     if (!deleteTarget || deleteSupplier.isPending) return;
-    await deleteSupplier.mutateAsync(deleteTarget.id);
+    await deleteSupplier.mutateAsync({
+      supplierId: deleteTarget.id,
+      deleteRelatedInteractions
+    });
     notifySuccess('Fournisseur supprimé définitivement.');
     setDeleteTarget(null);
-  }, [deleteSupplier, deleteTarget]);
+    setDeleteRelatedInteractions(true);
+  }, [deleteRelatedInteractions, deleteSupplier, deleteTarget]);
 
   const renderSavedViewsControl = () => (
     <DirectorySavedViewsBar
@@ -237,7 +152,7 @@ const AdminSuppliersPage = () => {
 
           <div className="hidden items-center gap-2 sm:flex">
             <Button asChild size="sm">
-              <Link to="/admin/suppliers/new">
+              <Link to="/suppliers/new">
                 <Plus className="size-4" />
                 Nouveau fournisseur
               </Link>
@@ -254,7 +169,7 @@ const AdminSuppliersPage = () => {
               </PopoverTrigger>
               <PopoverContent align="end" className="w-[220px] space-y-2">
                 <Button asChild variant="outline" size="sm" className="w-full justify-start">
-                  <Link to="/admin/suppliers/new">
+                  <Link to="/suppliers/new">
                     <Plus className="size-4" />
                     Nouveau fournisseur
                   </Link>
@@ -308,53 +223,13 @@ const AdminSuppliersPage = () => {
               onSortChange={(nextSorting) => handleSearchPatch({ sorting: nextSorting, page: 1 })}
               onPageChange={(page) => handleSearchPatch({ page })}
               onPageSizeChange={(nextPageSize) => handleSearchPatch({ pageSize: nextPageSize, page: 1 })}
-              onEditSupplier={(row) => setEditingSupplier(toEditDraft(row))}
+              onEditSupplier={handleEditSupplier}
               onArchiveSupplier={setArchiveTarget}
               onDeleteSupplier={setDeleteTarget}
               canHardDelete={canHardDeleteSuppliers}
             />
           </div>
         </div>
-
-        <Dialog open={Boolean(editingSupplier)} onOpenChange={(open) => !open && setEditingSupplier(null)}>
-          <DialogContent className="max-h-[92vh] max-w-3xl overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Modifier le fournisseur</DialogTitle>
-              <DialogDescription>
-                Les changements sont enregistrés dans le référentiel global CIR.
-              </DialogDescription>
-            </DialogHeader>
-            {editingSupplier ? (
-              <div className="grid gap-4 md:grid-cols-2">
-                <Input name="edit-supplier-name" value={editingSupplier.name} onChange={(event) => updateEditingSupplier('name', event.target.value)} placeholder="Nom fournisseur…" aria-label="Nom fournisseur" autoComplete="off" />
-                <Input name="edit-supplier-code" value={editingSupplier.supplier_code} onChange={(event) => updateEditingSupplier('supplier_code', normalizeSupplierCode(event.target.value))} placeholder="Code interne…" aria-label="Code interne fournisseur" className="font-mono uppercase" maxLength={4} autoComplete="off" spellCheck={false} />
-                <Input name="edit-supplier-number" value={editingSupplier.supplier_number} onChange={(event) => updateEditingSupplier('supplier_number', normalizeSupplierNumber(event.target.value))} placeholder="N° fournisseur…" aria-label="Numéro fournisseur" inputMode="numeric" maxLength={15} autoComplete="off" />
-                <Input name="edit-supplier-phone" value={editingSupplier.primary_phone} onChange={(event) => updateEditingSupplier('primary_phone', event.target.value)} placeholder="Téléphone principal…" aria-label="Téléphone fournisseur" type="tel" autoComplete="off" />
-                <Input name="edit-supplier-email" value={editingSupplier.primary_email} onChange={(event) => updateEditingSupplier('primary_email', event.target.value)} placeholder="Email principal…" aria-label="Email fournisseur" type="email" autoComplete="off" spellCheck={false} />
-                <Input name="edit-supplier-address" value={editingSupplier.address} onChange={(event) => updateEditingSupplier('address', event.target.value)} placeholder="Adresse…" aria-label="Adresse fournisseur" className="md:col-span-2" autoComplete="off" />
-                <Input name="edit-supplier-postal-code" value={editingSupplier.postal_code} onChange={(event) => updateEditingSupplier('postal_code', event.target.value.replace(/\D/g, '').slice(0, 5))} placeholder="Code postal…" aria-label="Code postal fournisseur" inputMode="numeric" autoComplete="off" />
-                <Input name="edit-supplier-city" value={editingSupplier.city} onChange={(event) => updateEditingSupplier('city', event.target.value)} placeholder="Ville…" aria-label="Ville fournisseur" autoComplete="off" />
-                <Input name="edit-supplier-department" value={editingSupplier.department} onChange={(event) => updateEditingSupplier('department', event.target.value.toUpperCase())} placeholder="Département…" aria-label="Département fournisseur" autoComplete="off" />
-                <Input name="edit-supplier-naf" value={editingSupplier.naf_code} onChange={(event) => updateEditingSupplier('naf_code', normalizeNafCode(event.target.value))} placeholder="NAF…" aria-label="NAF fournisseur" className="font-mono uppercase" autoComplete="off" spellCheck={false} />
-                <Input name="edit-supplier-siren" value={editingSupplier.siren} onChange={(event) => updateEditingSupplier('siren', event.target.value.replace(/\D/g, '').slice(0, 9))} placeholder="SIREN…" aria-label="SIREN fournisseur" inputMode="numeric" autoComplete="off" />
-                <Input name="edit-supplier-siret" value={editingSupplier.siret} onChange={(event) => updateEditingSupplier('siret', event.target.value.replace(/\D/g, '').slice(0, 14))} placeholder="SIRET…" aria-label="SIRET fournisseur" inputMode="numeric" autoComplete="off" />
-                <Textarea name="edit-supplier-notes" value={editingSupplier.notes} onChange={(event) => updateEditingSupplier('notes', event.target.value)} placeholder="Notes…" aria-label="Notes fournisseur" className="md:col-span-2" />
-                {!canSaveEditedSupplier ? (
-                  <p className="md:col-span-2 text-sm text-destructive">Nom et téléphone ou email sont requis.</p>
-                ) : null}
-              </div>
-            ) : null}
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setEditingSupplier(null)}>
-                Annuler
-              </Button>
-              <Button type="button" disabled={!canSaveEditedSupplier || saveSupplier.isPending} onClick={() => void handleSaveEditedSupplier()}>
-                {saveSupplier.isPending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
-                Enregistrer
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
 
         <AlertDialog open={Boolean(archiveTarget)} onOpenChange={(open) => !open && setArchiveTarget(null)}>
           <AlertDialogContent>
@@ -375,14 +250,33 @@ const AdminSuppliersPage = () => {
           </AlertDialogContent>
         </AlertDialog>
 
-        <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialog
+          open={Boolean(deleteTarget)}
+          onOpenChange={(open) => {
+            if (!open) {
+              setDeleteTarget(null);
+              setDeleteRelatedInteractions(true);
+            }
+          }}
+        >
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Supprimer définitivement ce fournisseur ?</AlertDialogTitle>
               <AlertDialogDescription>
-                Cette action est réservée aux super admins et supprime la fiche. Si des interactions y sont encore liées, le backend peut refuser la suppression.
+                Cette action est réservée aux super admins et supprime la fiche fournisseur.
               </AlertDialogDescription>
             </AlertDialogHeader>
+            <label className="flex items-start gap-3 rounded-md border border-border bg-surface-1/60 p-3 text-sm">
+              <input
+                type="checkbox"
+                className="mt-0.5 h-4 w-4 accent-destructive"
+                checked={deleteRelatedInteractions}
+                onChange={(event) => {
+                  setDeleteRelatedInteractions(event.target.checked);
+                }}
+              />
+              <span>Supprimer aussi toutes les interactions rattachées à ce fournisseur.</span>
+            </label>
             <AlertDialogFooter>
               <AlertDialogCancel>Annuler</AlertDialogCancel>
               <AlertDialogAction

@@ -64,7 +64,7 @@ export const useInteractionSubmit = ({ activeAgencyId, selectedEntity, selectedC
           handleUiError(createAppError({ code: 'NOT_FOUND', message: "Entite introuvable pour creer le contact.", source: 'validation' }), "Impossible de creer le contact.", { source: 'CockpitForm.saveEntityContact' });
           return;
         }
-        resolvedContact = await saveEntityContact({ entity_id: resolvedEntity.id, first_name: values.contact_first_name?.trim() ?? '', last_name: values.contact_last_name?.trim() ?? '', email: values.contact_email?.trim() || null, phone: values.contact_phone?.trim() || null, position: values.contact_position?.trim() || null }).match(contact => contact, error => { handleUiError(error, "Impossible d'enregistrer le contact.", { source: 'CockpitForm.saveEntityContact' }); return null; });
+        resolvedContact = await saveEntityContact({ entity_id: resolvedEntity.id, first_name: values.contact_first_name?.trim() ?? '', last_name: values.contact_last_name?.trim() ?? '', email: values.contact_email?.trim() || null, phone: values.contact_phone?.trim() || null, position: values.contact_position?.trim() || null, service_label: values.contact_service_label?.trim() || null }).match(contact => contact, error => { handleUiError(error, "Impossible d'enregistrer le contact.", { source: 'CockpitForm.saveEntityContact' }); return null; });
         if (!resolvedContact) return;
         void invalidateClientContactsQuery(queryClient, resolvedEntity.id, false); void invalidateEntitySearchIndexQueries(queryClient, activeAgencyId); handleSelectContact(resolvedContact);
       }

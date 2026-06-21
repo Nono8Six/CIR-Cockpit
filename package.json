@@ -19,6 +19,9 @@
     "backend:test": "deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api",
     "backend:test:integration": "node ./scripts/run-backend-integration-tests.mjs",
     "deploy:api": "pwsh -NoLogo -File scripts/deploy-api.ps1",
+    "qa:docs": "pnpm run repo:check && git diff --check -- AGENTS.md CLAUDE.md docs package.json pnpm-workspace.yaml deno.json backend/deno.json frontend/package.json shared/package.json .github scripts .husky supabase/config.toml frontend/vite.config.ts frontend/vitest.config.ts frontend/playwright.config.ts frontend/eslint.config.js frontend/tsconfig.json frontend/tailwind.config.cjs frontend/postcss.config.cjs",
+    "qa:front": "pnpm run repo:check && pnpm run frontend:typecheck && pnpm run frontend:lint && pnpm run frontend:test && pnpm run frontend:error-compliance",
+    "qa:back": "pnpm run repo:check && pnpm run backend:lint && pnpm run backend:typecheck && pnpm run backend:test",
     "qa:fast": "pnpm run repo:check && pnpm --dir frontend run typecheck && pnpm --dir frontend run lint && pnpm --dir frontend run test:run && pnpm --dir frontend run check:error-compliance && deno lint backend/functions/api && deno check --config backend/deno.json backend/functions/api/index.ts && deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api",
     "qa": "pwsh -NoLogo -File scripts/qa-gate.ps1",
     "qa:audit": "pnpm --dir frontend exec pnpm audit --audit-level=high"

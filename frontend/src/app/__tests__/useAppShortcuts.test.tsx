@@ -6,7 +6,9 @@ import { useAppShortcuts } from '@/app/useAppShortcuts';
 type HarnessProps = {
   canAccessAdmin: boolean;
   canAccessSettings: boolean;
-  setActiveTab: (tab: 'cockpit' | 'dashboard' | 'settings' | 'clients' | 'admin') => void;
+  setActiveTab: (
+    tab: 'cockpit' | 'dashboard' | 'settings' | 'clients' | 'suppliers' | 'admin'
+  ) => void;
   setIsSearchOpen: (open: boolean) => void;
 };
 
@@ -34,6 +36,7 @@ describe('useAppShortcuts', () => {
     );
 
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F1' }));
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F2' }));
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F3' }));
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F4' }));
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F7' }));
@@ -42,6 +45,7 @@ describe('useAppShortcuts', () => {
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
 
     expect(setActiveTab).toHaveBeenCalledWith('clients');
+    expect(setActiveTab).toHaveBeenCalledWith('suppliers');
     expect(setActiveTab).toHaveBeenCalledWith('cockpit');
     expect(setActiveTab).toHaveBeenCalledWith('dashboard');
     expect(setActiveTab).toHaveBeenCalledWith('admin');
@@ -63,9 +67,11 @@ describe('useAppShortcuts', () => {
     );
 
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F7' }));
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F2' }));
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F8' }));
 
     expect(setActiveTab).not.toHaveBeenCalledWith('settings');
     expect(setActiveTab).not.toHaveBeenCalledWith('admin');
+    expect(setActiveTab).not.toHaveBeenCalledWith('suppliers');
   });
 });

@@ -18,21 +18,43 @@ interface EntityContactRowProps {
   emptyDetailLabel?: string;
 }
 
+/**
+ * Computes the className for a contact row based on state and interactivity.
+ *
+ * @param variant - The selection variant ('default', 'selectable', 'selected', 'focused').
+ * @param isButton - True if the row is rendered as an interactive button.
+ * @param className - Additional custom class names.
+ * @returns Combined Tailwind class names.
+ */
 const getRowClassName = (
   variant: EntityContactRowVariant,
   isButton: boolean,
   className?: string
 ): string => cn(
-  'group grid min-h-[54px] w-full grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-2.5 rounded-md border px-2.5 py-2 text-left text-sm transition-[background-color,border-color,box-shadow,transform]',
+  'group grid min-h-[48px] w-full grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-3 rounded-md border px-3 py-2 text-left text-xs transition-all duration-150',
   variant === 'selected'
-    ? 'border-foreground/15 bg-primary/[0.025] shadow-[inset_2px_0_0_0_hsl(var(--primary)/0.55)]'
-    : 'border-border/70 bg-card/90',
-  variant === 'focused' && 'border-ring bg-primary/[0.04]',
-  isButton && 'hover:border-foreground/20 hover:bg-surface-1/70 hover:shadow-soft active:scale-[0.995] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-  !isButton && 'hover:bg-surface-1/50',
+    ? 'border-neutral-300 bg-neutral-50/50 shadow-[inset_2px_0_0_0_hsl(var(--primary))]'
+    : 'border-neutral-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.01)]',
+  variant === 'focused' && 'border-neutral-300 bg-neutral-50/20',
+  isButton && 'hover:border-neutral-300 hover:bg-neutral-50/70 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400/20 focus-visible:ring-offset-1',
+  !isButton && 'hover:bg-neutral-50/40',
   className
 );
 
+/**
+ * Renders a contact row item displaying initials avatar, name, and position/contact info.
+ * Provides edit/delete actions that reveal or layout dynamically.
+ *
+ * @param props - The component properties.
+ * @param props.contact - The contact entity record.
+ * @param props.variant - The visual variant (default, selected, focused, selectable).
+ * @param props.onSelect - Callback triggered when selecting the contact.
+ * @param props.buttonRef - Ref for the button element.
+ * @param props.actions - Renders action buttons.
+ * @param props.className - Extra styles.
+ * @param props.emptyDetailLabel - Default label for empty contact details.
+ * @returns The rendered JSX element.
+ */
 const EntityContactRow = ({
   contact,
   variant = 'default',
@@ -46,23 +68,23 @@ const EntityContactRow = ({
   const detail = getEntityContactDetail(contact, emptyDetailLabel);
   const content = (
     <>
-      <AvatarInitials name={name} size="sm" className="rounded-md" />
+      <AvatarInitials name={name} size="sm" className="rounded bg-neutral-100 text-neutral-600 font-mono text-[10px] font-bold" />
       <span className="min-w-0">
         <span className="flex min-w-0 items-center gap-1.5">
-          <span className="truncate font-semibold leading-5 text-foreground">{name}</span>
+          <span className="truncate font-bold text-neutral-900 leading-none">{name}</span>
           {variant === 'selected' ? (
-            <CheckCircle2 size={13} className="shrink-0 text-primary" aria-hidden="true" />
+            <CheckCircle2 size={12} className="shrink-0 text-emerald-600" aria-hidden="true" />
           ) : null}
         </span>
-        <span className="block truncate text-[12px] leading-4 text-muted-foreground">
+        <span className="block truncate text-[11px] leading-relaxed text-neutral-500 mt-0.5 font-mono">
           {detail}
         </span>
       </span>
-      <span className="flex shrink-0 items-center justify-end gap-1.5">
+      <span className="flex shrink-0 items-center justify-end gap-1">
         {actions}
         {variant === 'selectable' ? (
           <ChevronRight
-            size={14}
+            size={13}
             aria-hidden="true"
             className="text-muted-foreground/35 transition-colors group-hover:text-muted-foreground"
           />

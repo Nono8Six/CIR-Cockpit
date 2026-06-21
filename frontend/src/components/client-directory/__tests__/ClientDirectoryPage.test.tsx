@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DirectorySearchState } from '../../../../../shared/schemas/system/directory.schema';
@@ -49,6 +50,7 @@ const prospectRow = {
   id: 'prospect-1',
   entity_type: 'Prospect',
   client_number: null,
+  name: 'Prospect Test',
   account_type: null
 };
 
@@ -69,7 +71,28 @@ const mockMatchMedia = () => {
   });
 };
 
+type MockLinkProps = {
+  'aria-label'?: string;
+  children: ReactNode;
+  className?: string;
+  params?: Record<string, string | null | undefined>;
+  to: string;
+};
+
+const buildMockHref = (to: string, params?: MockLinkProps['params']): string => {
+  if (!params) return to;
+  return Object.entries(params).reduce(
+    (path, [key, value]) => path.replace(`$${key}`, value ?? ''),
+    to
+  );
+};
+
 vi.mock('@tanstack/react-router', () => ({
+  Link: ({ children, params, to, ...props }: MockLinkProps) => (
+    <a href={buildMockHref(to, params)} {...props}>
+      {children}
+    </a>
+  ),
   useNavigate: () => mockNavigate,
   useSearch: () => searchState
 }));
@@ -152,15 +175,6 @@ vi.mock('../DirectorySavedViewsBar', () => ({
   default: () => <div data-testid="directory-saved-views" />
 }));
 
-vi.mock('../ClientDirectoryTable', () => ({
-  default: ({ onOpenRecord }: { onOpenRecord: (row: typeof clientRow | typeof prospectRow) => void }) => (
-    <div>
-      <button type="button" onClick={() => onOpenRecord(clientRow)}>Ouvrir client</button>
-      <button type="button" onClick={() => onOpenRecord(prospectRow)}>Ouvrir prospect</button>
-    </div>
-  )
-}));
-
 vi.mock('@/components/ClientFormDialog', () => ({
   default: () => null
 }));
@@ -212,38 +226,16 @@ describe('ClientDirectoryPage', () => {
     );
   });
 
-  it('opens a client detail route while preserving directory search params', async () => {
-    const user = userEvent.setup();
-
+  it('renders canonical client and prospect detail links without directory search params', () => {
     render(<ClientDirectoryPage />);
 
-    await user.click(screen.getByRole('button', { name: /ouvrir client/i }));
+    const clientLink = screen.getByRole('link', { name: /ouvrir la fiche test comptant/i });
+    const prospectLink = screen.getByRole('link', { name: /ouvrir la fiche prospect test/i });
 
-    expect(mockNavigate).toHaveBeenCalledWith({
-      to: '/clients/$clientNumber',
-      params: { clientNumber: '98568547' },
-      search: expect.any(Function)
-    });
-
-    const navigateCall = mockNavigate.mock.calls.at(-1)?.[0];
-    expect(navigateCall?.search()).toEqual(defaultSearchState);
-  });
-
-  it('opens a prospect detail route while preserving directory search params', async () => {
-    const user = userEvent.setup();
-
-    render(<ClientDirectoryPage />);
-
-    await user.click(screen.getByRole('button', { name: /ouvrir prospect/i }));
-
-    expect(mockNavigate).toHaveBeenCalledWith({
-      to: '/clients/prospects/$prospectId',
-      params: { prospectId: 'prospect-1' },
-      search: expect.any(Function)
-    });
-
-    const navigateCall = mockNavigate.mock.calls.at(-1)?.[0];
-    expect(navigateCall?.search()).toEqual(defaultSearchState);
+    expect(clientLink).toHaveAttribute('href', '/clients/98568547');
+    expect(clientLink.getAttribute('href')).not.toContain('?');
+    expect(prospectLink).toHaveAttribute('href', '/clients/prospects/prospect-1');
+    expect(prospectLink.getAttribute('href')).not.toContain('?');
   });
 
   it('opens the integrated create route while preserving directory search', async () => {

@@ -8,6 +8,8 @@ import { convertClientSchema } from '../entity/convert-client.schema.ts';
 import { addSharedInteractionRules, interactionBaseSchema } from '../interaction/interaction.schema.ts';
 import { prospectFormSchema } from '../entity/prospect.schema.ts';
 import { supplierFormSchema } from '../entity/supplier.schema.ts';
+import { agencyInteractionTypeInputSchema } from './config.schema.ts';
+import { officialDataSourceSchema } from './directory.schema.ts';
 
 const MAX_TIMELINE_CONTENT_LENGTH = 5000;
 const MAX_TIMELINE_AUTHOR_LENGTH = 120;
@@ -27,11 +29,56 @@ const jsonValueSchema: z.ZodType<Json> = z.lazy(() =>
 
 // --- Entities ---
 
+export const officialDataResyncFieldSchema = z.enum([
+  'siret',
+  'siren',
+  'naf_code',
+  'official_name',
+  'official_data_source',
+  'official_data_synced_at',
+  'address',
+  'postal_code',
+  'department',
+  'city'
+]);
+
+export const officialDataResyncIdentityModeSchema = z.enum([
+  'persisted_identifier',
+  'manual_candidate_selection'
+]);
+
+export const officialDataResyncPayloadSchema = z.strictObject({
+  identity_mode: officialDataResyncIdentityModeSchema,
+  base_siren: z.string().trim().regex(/^\d{9}$/, 'SIREN de verification invalide.'),
+  selected_fields: z
+    .array(officialDataResyncFieldSchema)
+    .min(1, 'Au moins un champ officiel doit etre selectionne.')
+    .refine(
+      (fields) => new Set(fields).size === fields.length,
+      'Champs de resynchronisation dupliques.'
+    ),
+  source: officialDataSourceSchema,
+  synced_at: z.string().trim().datetime({ offset: true })
+}).superRefine((payload, ctx) => {
+  if (
+    payload.identity_mode === 'manual_candidate_selection' &&
+    !payload.selected_fields.includes('siren')
+  ) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Le rattachement officiel manuel doit enregistrer le SIREN.',
+      path: ['selected_fields']
+    });
+  }
+});
+
 const saveClientEntitySchema = z.strictObject({
   action: z.literal('save'),
   agency_id: uuidSchema,
   entity_type: z.literal('Client'),
   id: uuidSchema.optional(),
+  primary_contact_id: z.union([uuidSchema, z.null()]).optional(),
+  official_data_resync: officialDataResyncPayloadSchema.optional(),
   entity: clientFormSchema
 });
 
@@ -40,6 +87,8 @@ const saveProspectEntitySchema = z.strictObject({
   agency_id: uuidSchema,
   entity_type: z.literal('Prospect'),
   id: uuidSchema.optional(),
+  primary_contact_id: z.union([uuidSchema, z.null()]).optional(),
+  official_data_resync: officialDataResyncPayloadSchema.optional(),
   entity: prospectFormSchema
 });
 
@@ -104,6 +153,9 @@ export const dataEntitiesPayloadSchema = z.union([
 ]);
 
 export type DataEntitiesPayload = z.infer<typeof dataEntitiesPayloadSchema>;
+export type OfficialDataResyncPayload = z.infer<typeof officialDataResyncPayloadSchema>;
+export type OfficialDataResyncField = z.infer<typeof officialDataResyncFieldSchema>;
+export type OfficialDataResyncIdentityMode = z.infer<typeof officialDataResyncIdentityModeSchema>;
 
 // --- Entity Contacts ---
 
@@ -176,9 +228,12 @@ const addTimelineEventSchema = z.strictObject({
   updates: timelineUpdatesSchema.optional()
 });
 
+const listByEntityScopeSchema = z.enum(['open', 'closed', 'all']);
+
 const listByEntitySchema = z.strictObject({
   action: z.literal('list_by_entity'),
   entity_id: uuidSchema,
+  scope: listByEntityScopeSchema.optional(),
   page: z.number().int().min(1, 'Page invalide').optional(),
   page_size: z.number().int().min(1, 'Taille de page invalide').max(50, 'Taille de page trop grande').optional()
 });
@@ -254,7 +309,7 @@ export const dataConfigPayloadSchema = z.strictObject({
   statuses: z.array(statusItemSchema).min(1, 'Au moins un statut requis'),
   services: z.array(z.string().trim().max(MAX_CONFIG_LABEL_LENGTH, 'Label service trop long')),
   families: z.array(z.string().trim().max(MAX_CONFIG_LABEL_LENGTH, 'Label famille trop long')),
-  interactionTypes: z.array(z.string().trim().max(MAX_CONFIG_LABEL_LENGTH, "Label type d'interaction trop long"))
+  interactionTypes: z.array(agencyInteractionTypeInputSchema)
 });
 
 export type DataConfigPayload = z.infer<typeof dataConfigPayloadSchema>;

@@ -41,7 +41,7 @@ const BASE_SNAPSHOT: ResolvedConfigSnapshot = {
     historical_statuses: [],
     services: ['Atelier'],
     families: ['Freinage'],
-    interaction_types: ['Devis'],
+    interaction_types: [{ label: 'Devis', requires_product_families: false, sort_order: 1 }],
     departments: [],
   },
 };
@@ -96,7 +96,13 @@ describe('useSettingsState', () => {
       agency_id: '11111111-1111-4111-8111-111111111111',
       families: ['Freinage'],
       services: ['Atelier'],
-      interactionTypes: ['Devis'],
+      interactionTypes: [
+        {
+          id: undefined,
+          label: 'Devis',
+          requires_product_families: false,
+        },
+      ],
       statuses: [
         {
           id: 'status-1',

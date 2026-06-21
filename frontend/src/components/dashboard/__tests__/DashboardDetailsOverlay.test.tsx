@@ -6,7 +6,7 @@ import DashboardDetailsOverlay from '@/components/dashboard/DashboardDetailsOver
 import KanbanColumn from '@/components/dashboard/kanban/KanbanColumn';
 import { Channel, type Interaction } from '@/types';
 
-const buildInteraction = (): Interaction => ({
+const buildInteraction = (overrides: Partial<Interaction> = {}): Interaction => ({
   id: 'interaction-overlay-1',
   agency_id: 'agency-1',
   channel: Channel.PHONE,
@@ -39,7 +39,8 @@ const buildInteraction = (): Interaction => ({
     }
   ],
   updated_at: '2026-02-01T09:00:00.000Z',
-  updated_by: null
+  updated_by: null,
+  ...overrides
 });
 
 describe('DashboardDetailsOverlay', () => {
@@ -106,5 +107,26 @@ describe('KanbanColumn', () => {
     await user.keyboard('{Enter}');
     await user.keyboard(' ');
     expect(onSelectInteraction).toHaveBeenCalledTimes(3);
+  });
+
+  it('garde le nom de la societe lisible dans le header de carte', () => {
+    const companyName = 'Societe Bordelaise de Maintenance Industrielle';
+    const { container } = render(
+      <KanbanColumn
+        columnId="urgencies"
+        title="A traiter"
+        dotClassName="bg-destructive"
+        interactions={[buildInteraction({ company_name: companyName })]}
+        emptyLabel="Aucune interaction"
+        onSelectInteraction={vi.fn()}
+        onDeleteInteraction={vi.fn()}
+        getStatusMeta={() => undefined}
+      />
+    );
+
+    const companyNode = container.querySelector(`[title="${companyName}"]`);
+    expect(screen.getByText(companyName)).toBeInTheDocument();
+    expect(companyNode).toHaveClass('break-words');
+    expect(companyNode).not.toHaveClass('truncate');
   });
 });

@@ -1,440 +1,196 @@
-# QA Runbook Ultra Complet (Local + CI)
+# QA Runbook Local + CI
 
-Date de reference: 2026-04-17
-Portee par defaut: tout le repo (`frontend/`, `backend/`, `shared/`, docs critiques)
-Mode: gate locale stricte + CI miroir sur PR
+Date de reference: 2026-06-20
+Portee: CIR Cockpit local + backend Supabase lie.
 
-## 1. Objectif
+## 1. Principe
 
-Ce runbook complete la CI par un gate qualite local et un rapport manuel.
-Une tache n'est pas terminee tant que toutes les etapes obligatoires ne sont pas vertes.
+La validation se choisit par impact. Ne pas lancer `qa:fast` ou `qa` par reflexe: ces gates sont utiles, mais couteuses en temps, contexte et bruit.
 
-Objectifs obligatoires:
-1. Verifier tests, lint, typecheck et build.
-2. Verifier la coherence repo/lock/install et les gardes-fous de source de verite.
-3. Verifier la gestion d'erreurs front/back.
-4. Verifier la conformite aux regles `CLAUDE.md` et `AGENTS.md`.
-5. Verifier le runtime Supabase quand le backend API est impacte.
+`pnpm run qa` reste la gate finale de livraison. Elle n'est obligatoire que pour une livraison/merge/deploiement/PR, une demande explicite de verification complete, ou un changement large qui touche plusieurs couches.
 
-## 2. Regles d'execution
+## 2. Matrice d'impact
 
-0. Avant chaque prompt de travail envoye au LLM: lire ce runbook puis appliquer la matrice d'impact ci-dessous.
-1. Pendant l'implementation: utiliser des checks cibles par impact ou `pnpm run qa:fast` (validation intermediaire, non livrable).
-2. Avant livraison/merge: ordre strict, executer les phases dans l'ordre selon la matrice d'impact.
-3. Si une commande KO: STOP, corriger, puis relancer la phase.
-4. Aucune livraison sans preuve ecrite en fin de runbook.
-5. Les exceptions doivent etre explicites et justifiees.
-6. Sur PR, la CI GitHub Actions doit etre verte en plus de la gate locale.
+| Perimetre | Commande standard | Quand l'utiliser |
+| --- | --- | --- |
+| Analyse, plan, audit sans edition | Aucune suite QA | Commandes read-only ciblees seulement |
+| Docs/config agents/QA | `pnpm run qa:docs` | AGENTS, CLAUDE, docs, scripts QA, hooks, configs |
+| Frontend pur | `pnpm run qa:front` | `frontend/src/**`, hooks, services front, composants |
+| Backend pur | `pnpm run qa:back` | `backend/functions/api/**`, Deno, services backend |
+| Shared/API/erreurs/transversal | checks front + back cibles, ou `pnpm run qa:fast` | `shared/**`, tRPC, schemas partages, pipeline erreurs |
+| Livraison finale/merge/deploy/PR | `pnpm run qa` | Gate complet local, puis CI si PR |
 
-## 3. Perimetre et conditions de skip
+Regle de prudence: si le perimetre est incertain ou large, utiliser `qa:fast` en validation intermediaire. Utiliser `qa` seulement en gate finale.
 
-Par defaut: full repo.
+## 3. Commandes
 
-Skips autorises uniquement si justifies dans le rapport final:
-1. `RUN_E2E=1 pnpm run test:e2e` peut etre saute si aucun parcours UI n'est impacte.
-2. Les probes runtime Supabase peuvent etre sautees si aucun changement backend API/DB n'est livre.
-3. Les tests d'integration backend opt-in peuvent etre ignores si variables d'env absentes.
-4. Exception: avant validation des couches 9 et 12, `RUN_API_INTEGRATION=1` devient obligatoire.
-
-## 3.1 Matrice d'impact (obligatoire)
-
-Appliquer la matrice la plus stricte en cas de doute:
-1. Changement frontend pur (`frontend/src/**` sans impact backend):
-   - Phases A, B, D, E (partie front).
-2. Changement backend/API/auth/error handling/DB:
-   - Phases A, B, C, D, E, F.
-3. Changement transversal front + back:
-   - Phases A, B, C, D, E, F complet.
-4. Changement docs uniquement:
-   - Phase A + relecture coherente des references docs + rapport final.
-
-## 3.2 Protocole standard par cycle LLM (2 vitesses)
-
-Pour chaque cycle "demande -> modification -> livraison":
-1. Boucle intermediaire (pendant implementation, non livrable):
-   - Identifier le perimetre exact (front/back/transversal/docs).
-   - Lancer des checks cibles selon la matrice d'impact, ou `pnpm run qa:fast` depuis la racine.
-   - `qa:fast` inclut: controle repo + typecheck + lint + tests (sans coverage) + error-compliance + backend lint/check/test.
-   - Si KO: corriger immediatement avant de continuer.
-2. Gate final (avant livraison/merge, livrable):
-   - Executer `pnpm run qa` depuis la racine (gate complet sans audit reseau).
-   - Verifier que le workflow GitHub Actions `qa.yml` passe si une PR est ouverte.
-   - Pour un audit de securite des deps: `pnpm run qa:audit` (separe, necessite reseau).
-   - Produire un rapport QA manuel dans la reponse de livraison.
-   - Si une etape bloquante est KO: ne pas livrer.
-
-Note: le hook `pre-push` execute `qa:fast` (pas le full gate). Le full `qa` reste obligatoire localement avant merge.
-
-## 4. Pre-requis
-
-## 4.1 Outils
-
-1. Node + pnpm installes.
-2. Deno installe.
-3. `rg` (ripgrep) disponible.
-4. Dependances installees:
+Racine:
 
 ```bash
-pnpm install --frozen-lockfile
-```
-
-## 4.2 Variables
-
-Frontend:
-1. `frontend/.env` doit contenir `VITE_SUPABASE_URL` et `VITE_SUPABASE_ANON_KEY`.
-2. E2E admin (si parcours admin testes): `E2E_ADMIN_EMAIL` et `E2E_ADMIN_PASSWORD` via `frontend/.env.e2e`.
-3. E2E utilisateur general (hors admin): `E2E_USER_EMAIL` et `E2E_USER_PASSWORD` selon les specs.
-
-Backend:
-1. Variables minimales dans l'environnement shell (ou fichier charge) selon `backend/.env.example`.
-2. Pour integration API opt-in: copier `backend/.env.test.example` vers `backend/.env.test`, renseigner `RUN_API_INTEGRATION=1` + variables `API_INT_*`, ou fournir ces variables directement via l'environnement shell.
-3. Si backend impacte: verification fail-fast obligatoire des variables avant execution.
-
-## 5. Phase A - Baseline repo
-
-Executer depuis la racine:
-
-```bash
-git status --short
 pnpm run repo:check
+pnpm run qa:docs
+pnpm run qa:front
+pnpm run qa:back
+pnpm run qa:fast
+pnpm run qa
+pnpm run qa:audit
 ```
 
-Controle fail-fast (backend impacte):
+Frontend cible:
 
-```bash
-if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_ANON_KEY:-}" ]; then echo "ENV backend manquant"; exit 1; fi
-```
-
-PowerShell equivalent:
-
-```powershell
-if ([string]::IsNullOrWhiteSpace($env:SUPABASE_URL) -or [string]::IsNullOrWhiteSpace($env:SUPABASE_ANON_KEY)) { Write-Error "ENV backend manquant"; exit 1 }
-```
-
-PASS:
-1. L'etat du worktree est compris.
-2. Les fichiers modifies par la tache sont identifies.
-3. `repo:check` confirme l'absence de shadow repo, de temp files suivis, de drift Deno/import-map connu et d'inventaire migrations repo/remote silencieusement incomplet.
-
-FAIL:
-1. Changements inattendus non analyses.
-
-## 6. Phase B - Validation frontend obligatoire (gate final)
-
-Note boucle intermediaire (optionnelle, non suffisante pour livrer):
 ```bash
 pnpm --dir frontend run typecheck
 pnpm --dir frontend run lint
 pnpm --dir frontend run test:run
+pnpm --dir frontend run test:coverage
+pnpm --dir frontend run check:error-compliance
+pnpm --dir frontend run build
 ```
 
-Executer depuis `frontend/`:
-
-```bash
-pnpm run typecheck
-pnpm run lint
-pnpm run test:coverage
-pnpm run check:error-compliance
-pnpm run build
-```
-
-Portee actuelle de la gate couverture (Vitest):
-0. Seuil global minimal: `55/50/50/58`.
-1. `src/services/admin/**`
-2. `src/services/agency/**`
-3. `src/services/api/**`
-4. `src/services/auth/**`
-5. `src/services/entities/**`
-6. `src/services/errors/**`
-7. Seuils additionnels specifiques sur certains hooks, composants UI et utilitaires selon `frontend/vitest.config.ts`.
-
-Si UI/parcours impacte:
-
-```bash
-RUN_E2E=1 pnpm run test:e2e
-```
-
-PASS:
-1. Toutes les commandes retournent exit code 0.
-2. `check:error-compliance` retourne `Error compliance check passed.`
-3. Build Vite termine sans erreur.
-4. Couverture Vitest respecte les seuils configures dans `frontend/vitest.config.ts`: global `55/50/50/58`, domaines critiques `80/70/80/80`, et seuils cibles explicites.
-
-FAIL:
-1. Un seul echec bloque la livraison.
-
-## 7. Phase C - Validation backend obligatoire (gate final)
-
-Note boucle intermediaire (optionnelle, non suffisante pour livrer):
-```bash
-deno lint backend/functions/api
-deno check --config backend/deno.json backend/functions/api/index.ts
-deno test --allow-env --no-check --config backend/deno.json backend/functions/api
-```
-
-Executer depuis la racine:
+Backend cible:
 
 ```bash
 deno lint backend/functions/api
 deno check --config backend/deno.json backend/functions/api/index.ts
-deno test --allow-env --no-check --config backend/deno.json backend/functions/api
+deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api
 pnpm run backend:test:integration
 ```
 
-PASS:
-1. Lint Deno vert.
-2. Typecheck backend vert.
-3. Tests backend verts (les tests `ignored` documentes sont acceptes si non applicables).
-4. `backend:test:integration` fonctionne avec `backend/.env.test` si present, sinon retombe explicitement sur l'environnement shell sans exposer de secret.
+E2E:
 
-FAIL:
-1. Echec lint/type/test = blocage.
+```bash
+RUN_E2E=1 pnpm --dir frontend run test:e2e
+```
 
-## 8. Phase D - Relecture code ultra stricte (regles projet)
+E2E seulement si un parcours UI est impacte et que l'utilisateur le demande ou le confirme.
 
-Executer depuis la racine.
+## 4. Gates
 
-## 8.1 Regles erreurs interdites
+### `qa:docs`
+
+Gate legere pour docs/config:
+
+1. `repo:check`
+2. `git diff --check` sur AGENTS, CLAUDE, docs, scripts, hooks et configs principales.
+
+Ne valide pas le runtime applicatif.
+
+### `qa:front`
+
+Gate frontend intermediaire:
+
+1. `repo:check`
+2. TypeScript frontend.
+3. ESLint frontend.
+4. Vitest sans coverage.
+5. Error compliance frontend.
+
+Ne lance pas build, coverage, backend, E2E.
+
+### `qa:back`
+
+Gate backend intermediaire:
+
+1. `repo:check`
+2. Deno lint.
+3. Deno check.
+4. Tests backend unitaires.
+
+Ne lance pas tests d'integration backend ni probes Supabase runtime.
+
+### `qa:fast`
+
+Gate intermediaire large:
+
+1. `repo:check`
+2. Frontend typecheck/lint/tests sans coverage/error compliance.
+3. Backend lint/check/tests.
+
+Utiliser quand le changement traverse plusieurs couches ou quand les checks cibles ne suffisent plus.
+
+### `qa`
+
+Gate final complet:
+
+1. `repo:check`
+2. Frontend typecheck.
+3. Frontend lint.
+4. Frontend tests avec coverage.
+5. Frontend error compliance.
+6. Frontend build.
+7. E2E seulement si `RUN_E2E=1`.
+8. Backend lint.
+9. Backend check.
+10. Backend tests.
+11. Backend integration runner.
+
+## 5. Conditions de skip
+
+Skips autorises si justifies dans le rapport final:
+
+- E2E saute si aucun parcours UI n'est impacte.
+- Probes runtime Supabase sautees si aucun backend/API/DB/Edge Function n'est impacte.
+- `backend:test:integration` peut ignorer ses tests si `backend/.env.test` ou les variables d'integration sont absents.
+- `qa:audit` est separe car il depend du reseau.
+
+## 6. Relecture stricte
+
+Pour code livre, verifier selon impact:
 
 ```bash
 rg -n "throw new Error\(" frontend/src backend/functions/api shared --glob "!**/*.test.*" --glob "!**/*_test.ts"
 rg -n "console\.error\(" frontend/src backend/functions/api shared --glob "!**/*.test.*" --glob "!**/*_test.ts"
 rg -n "toast\.error\(" frontend/src
-```
-
-PASS:
-1. Aucun `throw new Error(` hors tests.
-2. Aucun `console.error(` hors tests.
-3. `toast.error(` uniquement dans `frontend/src/services/errors/notify.ts`.
-
-## 8.2 Regles TypeScript strictes
-
-```bash
 rg -n "@ts-ignore|@ts-expect-error" frontend/src backend/functions/api shared
 rg -n "\bany\b" frontend/src backend/functions/api shared --glob "!**/*.test.*" --glob "!**/*_test.ts"
-```
-
-PASS:
-1. Zero `@ts-ignore` / `@ts-expect-error` non documentes.
-2. Zero `any` non justifie.
-
-## 8.3 Regles architecture/imports
-
-```bash
-rg -n "from '\.\./\.\./\.\./|from '\.\./\.\./\.\./\.\./" frontend/src
-```
-
-PASS:
-1. Les imports front respectent l'alias `@/*` pour le code applicatif.
-2. Aucun import circulaire connu.
-
-Note:
-1. Cette commande est un detecteur de suspicion; une verification manuelle reste obligatoire.
-
-## 8.4 Contrat auth HTTP (P2)
-
-Commande de controle:
-
-```bash
 rg -n "x-client-authorization" frontend/src/services/api backend/functions/api/middleware backend/functions/api/app.ts
 ```
 
-PASS:
-1. Aucune acceptance/envoi runtime de `x-client-authorization` dans le code applicatif.
-2. Le contrat runtime repose sur `Authorization: Bearer <token>` uniquement.
+Attendus:
 
-## 8.5 Taille et responsabilite des fichiers
+- Pas de `throw new Error`, `console.error`, `toast.error` direct hors exceptions documentees.
+- Pas de `any`, `@ts-ignore`, `@ts-expect-error` non documente.
+- Contrat runtime auth: `Authorization: Bearer <token>` uniquement.
+- Messages d'erreur en francais.
 
-Commande de controle:
+## 7. Supabase runtime
 
-```bash
-pwsh -NoLogo -Command "$files = rg --files frontend/src backend/functions/api shared | ? { $_ -match '\.(ts|tsx)$' }; foreach($f in $files){ $n=(Get-Content $f | Measure-Object -Line).Lines; if($n -gt 150){ '{0,4} {1}' -f $n,$f } }"
-```
+Obligatoire seulement si routes API, middleware auth, error handling backend, migrations DB, Edge Function ou contrat `/functions/v1/api/*` sont modifies.
 
-PASS:
-1. Les depassements >150 lignes sont rares et justifies.
-2. Les orchestrateurs restent lisibles et les extractions utiles.
+Avec Supabase MCP:
 
-## 9. Phase E - Relecture specialisee gestion d'erreurs
+1. `list_edge_functions` sur le projet lie.
+2. Verifier `api` actif, version/hash attendu, entrypoint `source/supabase/functions/api/index.ts`, import map `source/deno.json`, `verify_jwt=false`.
+3. Prober les routes tRPC impactees: aucun `404`.
+4. Prober `OPTIONS` sur routes impactees: `200` + headers CORS attendus.
+5. Si DB/RLS impacte: verifier policies, grants, indexes, advisors et types generes selon les tables touchees.
 
-Checklist manuelle obligatoire:
-1. Front:
-   - `handleUiError()` utilise dans les handlers UI.
-   - `normalizeError()` / mappers utilises dans services/hooks.
-   - `notifyError()` utilise pour feedback utilisateur.
-2. Back:
-   - `httpError()` utilise dans routes/services.
-   - `handleError()` global mappe vers catalog.
-3. Shared:
-   - Nouveau code erreur ajoute dans `shared/errors/types.ts` ET `shared/errors/catalog.ts`.
-4. Retry policy:
-   - Codes non retryables alignes dans `frontend/src/services/query/queryClient.ts`.
-5. Messages:
-   - Messages utilisateur en francais.
+## 8. CI
 
-Commande de securite additionnelle:
+Le workflow `.github/workflows/qa.yml` execute `pnpm run qa` sur PR et `workflow_dispatch`.
 
-```bash
-pnpm --dir frontend run check:error-compliance
-```
+CI verte ne remplace pas le rapport local quand une livraison est demandee. Pour une PR ouverte, les checks GitHub Actions requis doivent etre verts avant merge.
 
-PASS:
-1. Pipeline erreurs coherent front/back/shared.
-2. Aucun contournement local des mappers.
-3. Tous les codes `httpError(...)` backend existent dans `shared/errors/types.ts` et `shared/errors/catalog.ts`.
+## 9. Rapport final minimal
 
-## 10. Phase F - Verifications runtime Supabase (si backend impacte)
-
-Obligatoire si routes API, middleware auth, error handling backend, migrations DB, ou contracts `/functions/v1/api/*` modifies.
-
-## 10.1 Etat des fonctions
-
-Avec MCP Supabase:
-1. `list_edge_functions` sur le projet.
-2. Verifier:
-   - slug `api` actif,
-   - version/hash attendus,
-   - entrypoint `source/supabase/functions/api/index.ts`,
-   - import map conforme,
-   - `verify_jwt` conforme a la politique en cours.
-
-## 10.2 Probes HTTP minimales
-
-Attendus minimaux:
-1. `POST /functions/v1/api/trpc/data.entities` ne retourne pas `404`.
-2. `POST /functions/v1/api/trpc/data.entity-contacts` ne retourne pas `404`.
-3. `POST /functions/v1/api/trpc/data.interactions` ne retourne pas `404`.
-4. `OPTIONS` sur routes impactees retourne `200` avec headers CORS.
-5. `POST` avec seul header `x-client-authorization` retourne `401 AUTH_REQUIRED` sur une route tRPC protegee.
-
-Exemple de probe (anonyme):
-
-```bash
-curl -i -X POST "$SUPABASE_URL/functions/v1/api/trpc/data.entities" -H "Content-Type: application/json" -d "{}"
-curl -i -X OPTIONS "$SUPABASE_URL/functions/v1/api/trpc/data.entities" -H "Origin: http://localhost:3000" -H "Access-Control-Request-Method: POST"
-```
-
-PASS:
-1. Plus aucun `404` sur `/functions/v1/api/trpc/*` (routes impactees).
-2. Preflight `OPTIONS` = `200` sur routes impactees.
-3. Contrat `Authorization-only` respecte en runtime.
-
-## 10.3 Controles DB/RLS supplementaires (obligatoire si migrations SQL)
-
-Executer via MCP Supabase ou SQL equivalent:
-1. Baseline avant/apres:
-   - `get_advisors` (`performance`, `security`)
-   - `pg_stat_user_indexes` (au minimum indexes cibles)
-   - `pg_policies` sur tables impactees
-2. Si routines sensibles impactees:
-   - `information_schema.routine_privileges` sur routines ciblees
-   - `pg_proc.proconfig` pour confirmer `search_path` attendu
-   - `pg_proc` + `pg_namespace` pour confirmer qu'aucune routine custom sensible n'est encore dans `public`
-   - `pg_trigger` + `pg_get_triggerdef(...)` pour confirmer les bindings `private.*`
-3. Si suppression d'indexes:
-   - classifier `supprimer` vs `garder` avec justification explicite
-   - verifier qu'aucune contrainte PK/UNIQUE/FK n'est censee etre couverte par erreur
-   - documenter un rollback SQL pret a l'emploi
-4. Si chantier Phase 3 Hardening Supabase:
-   - verifier `pg_extension` pour confirmer `pg_trgm -> extensions`
-   - verifier `pg_class.relforcerowsecurity` sur `app_settings`, `agency_settings`, `directory_saved_views`, `reference_departments`
-   - verifier `information_schema.routine_privileges`:
-     - zero `EXECUTE` sur fonctions custom `public.*` pour `PUBLIC`
-     - `authenticated` limite a `private.is_super_admin`, `private.is_member`, `private.has_agency_role`, `private.has_role`, `private.user_role`
-     - `service_role` limite aux routines backend/cron attendues (`check_rate_limit`, `hard_delete_agency`, `set_audit_actor`, retention audit)
-   - verifier les indexes FK attendus:
-     - `idx_audit_logs_archive_actor_id`
-     - `idx_audit_logs_archive_agency_id`
-     - `interaction_drafts_agency_id_idx`
-     - `idx_interactions_contact_id`
-     - `idx_interactions_created_by`
-     - `idx_interactions_status_id_only`
-     - `idx_interactions_updated_by`
-     - `idx_profiles_active_agency_id`
-   - noter explicitement les waivers conserves:
-     - indexes `unused` recents gardes par prudence
-     - `auth_leaked_password_protection` non traite si la politique projet le maintient `N/A`
-
-PASS:
-1. Preuves before/after ecrites dans le rapport final.
-2. Aucun nouveau risque critique non traite (security/performance).
-3. Matrice roles `anon/authenticated/service_role` revalidee pour les routes impactees.
-
-## 11. Matrice PASS/FAIL (bloquante)
-
-Bloquant immediate:
-1. Typecheck/lint/tests/build KO.
-2. `check:error-compliance` KO.
-3. Violations `throw new Error`, `console.error`, `toast.error` hors exceptions.
-4. Runtime API en `404` sur routes impactees.
-
-Bloquant conditionnel (si backend impacte):
-1. `deno lint` ou `deno check` KO.
-2. Probes CORS/POST KO.
-
-Non bloquant mais a tracer:
-1. Tests `ignored` opt-in non executes faute d'environnement.
-2. E2E saute avec justification explicite.
-
-Regle de gouvernance:
-1. Deux skips consecutifs sur le meme controle obligent un plan de remediation documente.
-
-## 12. Rapport de validation obligatoire (template)
-
-Copier-coller ce bloc dans PR, ticket, ou message de livraison:
+Inclure dans la reponse de livraison:
 
 ```md
-## Rapport QA Manuel (Local + CI)
+## Rapport QA
 
-- Date:
-- Branche/commit:
 - Perimetre:
-- Validation intermediaire: `qa:fast` ou checks cibles (details)
+- Gate executee:
 - Backend impacte: oui/non
 - UI impactee: oui/non
+- Supabase runtime requis: oui/non
 - CI GitHub Actions: verte / non lancee / justification
 
-### Resultats commandes
-- [ ] frontend typecheck
-- [ ] frontend lint --max-warnings=0
-- [ ] frontend test:coverage
-- [ ] frontend test:e2e (ou justification skip)
-- [ ] frontend check:error-compliance
-- [ ] frontend build
-- [ ] deno lint backend/functions/api
-- [ ] deno check backend/functions/api/index.ts
-- [ ] deno test backend/functions/api
-- [ ] backend:test:integration
+### Resultats
+- [ ] qa:docs / qa:front / qa:back / qa:fast / qa
+- [ ] E2E execute ou skip justifie
+- [ ] Probes Supabase executees ou skip justifie
 
-### Relecture regles
-- [ ] zero throw new Error hors tests
-- [ ] zero console.error hors tests
-- [ ] toast.error uniquement via notify.ts
-- [ ] zero any/ts-ignore/ts-expect-error non documentes
-- [ ] erreurs front/back mappees au catalog
-- [ ] messages FR
-- [ ] contrat auth `Authorization-only` respecte (pas de fallback `x-client-authorization`)
-
-### Runtime Supabase (si backend impacte)
-- [ ] list_edge_functions valide
-- [ ] POST /functions/v1/api/trpc/* sans 404
-- [ ] OPTIONS routes impactees = 200 + CORS
-
-### Ecarts connus / justifications
-- ...
-
-### Decision livraison
-- [ ] LIVRABLE AUTORISE
-- [ ] LIVRABLE BLOQUE (au moins un controle bloquant KO)
+### Decision
+- [ ] Livrable autorise
+- [ ] Livrable bloque
 ```
-
-## 13. Liens de reference
-
-1. `AGENTS.md`
-2. `CLAUDE.md`
-3. `docs/stack.md`
-4. `docs/plan.md`
-5. `frontend/scripts/check-error-compliance.mjs`
-6. `.github/workflows/qa.yml`
-7. `scripts/qa-gate.ps1`
-8. `scripts/qa-gate.sh`

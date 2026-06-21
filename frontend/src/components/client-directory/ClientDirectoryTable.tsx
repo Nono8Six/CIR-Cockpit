@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Link } from '@tanstack/react-router';
 import {
   createColumnHelper,
   type Column,
@@ -26,6 +27,7 @@ import { isProspectEntityType } from './clientDirectorySearch';
 import DataTableColumnHeader from './data-table/DataTableColumnHeader';
 import DirectoryTablePagination from './data-table/DirectoryTablePagination';
 import { DIRECTORY_COLUMN_LABELS, DIRECTORY_COLUMN_ORDER } from './directoryGridConfig';
+import { getDirectoryRouteRefFromRow } from './directoryRouting';
 
 type ClientDirectoryTableProps = {
   rows: DirectoryListRow[];
@@ -40,13 +42,60 @@ type ClientDirectoryTableProps = {
   onSortChange: (sorting: DirectorySortingRule[]) => void;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
-  onOpenRecord: (row: DirectoryListRow) => void;
 };
 
 const toDirectorySortBy = (value: string): DirectorySortBy =>
   DIRECTORY_COLUMN_ORDER.find((candidate) => candidate === value) ?? 'name';
 
 const columnHelper = createColumnHelper<DirectoryListRow>();
+const recordLinkClassName =
+  'inline-flex min-w-0 max-w-full items-center rounded-md font-semibold text-foreground transition-colors duration-150 hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background';
+
+interface DirectoryRecordNameLinkProps {
+  row: DirectoryListRow;
+}
+
+const DirectoryRecordNameLink = ({ row }: DirectoryRecordNameLinkProps) => {
+  const routeRef = getDirectoryRouteRefFromRow(row);
+  const label = `Ouvrir la fiche ${row.name}`;
+
+  if (routeRef.kind === 'client') {
+    return (
+      <Link
+        to="/clients/$clientNumber"
+        params={{ clientNumber: routeRef.clientNumber }}
+        aria-label={label}
+        className={recordLinkClassName}
+      >
+        <span className="truncate">{row.name}</span>
+      </Link>
+    );
+  }
+
+  if (routeRef.kind === 'supplier') {
+    return (
+      <Link
+        to="/suppliers/$supplierId"
+        params={{ supplierId: routeRef.id }}
+        aria-label={label}
+        className={recordLinkClassName}
+      >
+        <span className="truncate">{row.name}</span>
+      </Link>
+    );
+  }
+
+  return (
+    <Link
+      to="/clients/prospects/$prospectId"
+      params={{ prospectId: routeRef.id }}
+      aria-label={label}
+      className={recordLinkClassName}
+    >
+      <span className="truncate">{row.name}</span>
+    </Link>
+  );
+};
 
 const renderHeader = (
   column: Column<DirectoryListRow, unknown>,
@@ -72,8 +121,7 @@ const ClientDirectoryTable = ({
   density,
   onSortChange,
   onPageChange,
-  onPageSizeChange,
-  onOpenRecord
+  onPageSizeChange
 }: ClientDirectoryTableProps) => {
   const tableSorting = useMemo<SortingState>(
     () => sorting.map((rule) => ({ id: rule.id, desc: rule.desc })),
@@ -85,7 +133,8 @@ const ClientDirectoryTable = ({
       id: 'entity_type',
       header: ({ column }) => renderHeader(column, DIRECTORY_COLUMN_LABELS.entity_type, sorting),
       cell: ({ row }) => {
-        const isProspect = isProspectEntityType(row.original.entity_type ?? '');
+        const isSupplier = row.original.entity_type === 'Fournisseur';
+        const isProspect = !isSupplier && isProspectEntityType(row.original.entity_type ?? '');
         const isArchived = Boolean(row.original.archived_at);
 
         if (isArchived) {
@@ -100,6 +149,14 @@ const ClientDirectoryTable = ({
           return (
             <span className="inline-flex items-center rounded-full border border-blue-500/20 bg-blue-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-600">
               Prospect
+            </span>
+          );
+        }
+
+        if (isSupplier) {
+          return (
+            <span className="inline-flex items-center rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sky-600">
+              Fournisseur
             </span>
           );
         }
@@ -120,16 +177,7 @@ const ClientDirectoryTable = ({
       id: 'name',
       header: ({ column }) => renderHeader(column, DIRECTORY_COLUMN_LABELS.name, sorting),
       enableHiding: false,
-      cell: ({ row }) => (
-        <button
-          type="button"
-          aria-label={`Ouvrir la fiche ${row.original.name}`}
-          className="inline-flex min-w-0 max-w-full items-center rounded-md font-semibold text-foreground transition-colors duration-150 hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-          onClick={() => onOpenRecord(row.original)}
-        >
-          <span className="truncate">{row.original.name}</span>
-        </button>
-      )
+      cell: ({ row }) => <DirectoryRecordNameLink row={row.original} />
     }),
     columnHelper.accessor((row) => row.city ?? '', {
       id: 'city',
@@ -156,7 +204,7 @@ const ClientDirectoryTable = ({
       header: ({ column }) => renderHeader(column, DIRECTORY_COLUMN_LABELS.updated_at, sorting),
       cell: ({ row }) => formatRelativeTime(row.original.updated_at)
     })
-  ], [onOpenRecord, sorting]);
+  ], [sorting]);
 
   const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
     const nextSorting = typeof updater === 'function' ? updater(tableSorting) : updater;

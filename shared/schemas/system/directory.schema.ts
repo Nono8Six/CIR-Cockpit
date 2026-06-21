@@ -178,9 +178,15 @@ export const directoryProspectRouteRefSchema = z.strictObject({
   id: uuidSchema
 });
 
+export const directorySupplierRouteRefSchema = z.strictObject({
+  kind: z.literal('supplier'),
+  id: uuidSchema
+});
+
 export const directoryRouteRefSchema = z.discriminatedUnion('kind', [
   directoryClientRouteRefSchema,
-  directoryProspectRouteRefSchema
+  directoryProspectRouteRefSchema,
+  directorySupplierRouteRefSchema
 ]);
 
 const directoryNullableTextSchema = z.string().nullable();
@@ -321,6 +327,8 @@ export const directoryRecordSchema = z.strictObject({
   entity_type: z.string().trim().min(1, 'Type requis'),
   client_kind: directoryNullableClientKindSchema,
   client_number: directoryNullableTextSchema,
+  supplier_code: directoryNullableTextSchema.optional(),
+  supplier_number: directoryNullableTextSchema.optional(),
   account_type: z.enum(['term', 'cash']).nullable(),
   name: z.string().trim().min(1, 'Nom requis'),
   address: directoryNullableTextSchema,
@@ -329,6 +337,8 @@ export const directoryRecordSchema = z.strictObject({
   city: directoryNullableTextSchema,
   country: z.string().trim().min(1, 'Pays requis'),
   ...officialCompanyFieldsSchema.shape,
+  primary_phone: directoryNullableTextSchema.optional(),
+  primary_email: directoryNullableTextSchema.optional(),
   notes: directoryNullableTextSchema,
   agency_id: z.string().nullable(),
   agency_name: directoryNullableTextSchema,

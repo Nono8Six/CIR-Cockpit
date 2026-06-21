@@ -13,6 +13,7 @@ export type UseCockpitDerivedStateParams = {
   contactFirstName: string;
   contactLastName: string;
   contactPosition: string;
+  contactServiceLabel?: string;
   contactName: string;
   contactPhone: string;
   contactEmail: string;

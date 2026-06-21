@@ -22,6 +22,8 @@ type InteractionGateStateInput = {
   isInternalRelation: boolean;
   hasSelectedEntity: boolean;
   hasSelectedContact: boolean;
+  requiresProductFamilies: boolean;
+  megaFamilies: string[];
 };
 
 export const useInteractionGateState = ({
@@ -42,7 +44,9 @@ export const useInteractionGateState = ({
   isClientRelation,
   isInternalRelation,
   hasSelectedEntity,
-  hasSelectedContact
+  hasSelectedContact,
+  requiresProductFamilies,
+  megaFamilies
 }: InteractionGateStateInput) =>
   useMemo(
     () =>
@@ -64,7 +68,9 @@ export const useInteractionGateState = ({
         isClientRelation,
         isInternalRelation,
         hasSelectedEntity,
-        hasSelectedContact
+        hasSelectedContact,
+        requiresProductFamilies,
+        megaFamilies
       }),
     [
       channel,
@@ -83,6 +89,8 @@ export const useInteractionGateState = ({
       isInternalRelation,
       hasSelectedContact,
       hasSelectedEntity,
+      megaFamilies,
+      requiresProductFamilies,
       statusId,
       subject
     ]

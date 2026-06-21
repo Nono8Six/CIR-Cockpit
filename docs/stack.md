@@ -1,14 +1,14 @@
 # Stack Technique - CIR Cockpit
 
 > Reference documentaire de la stack du projet.
-> Derniere mise a jour: 2026-05-04
+> Derniere mise a jour: 2026-06-20
 > Etat verifie contre les manifests et configs du repo.
 
 ## Resume executif
 
 - Frontend: React 19, Vite 7, TypeScript 5.9, Tailwind CSS 4, shadcn/ui + Radix UI, TanStack Router, TanStack Query, React Hook Form + Zod, TanStack Table/Virtual, Motion, Sonner, Supabase JS.
 - Backend: Supabase (Postgres + Auth + Realtime), Edge Function Deno unique `api`, Hono + tRPC, Drizzle ORM + `postgres`, `jose` pour la verification JWT.
-- Qualite: `pnpm` workspace, ESLint 9, Vitest 4, Playwright, Husky, lint-staged, gate locale `qa:fast` / `qa`, workflow GitHub Actions `qa.yml`.
+- Qualite: `pnpm` workspace, ESLint 9, Vitest 4, Playwright, Husky, lint-staged, gates locales par impact (`qa:docs`, `qa:front`, `qa:back`, `qa:fast`, `qa`), workflow GitHub Actions `qa.yml`.
 
 ## Sources de verite
 
@@ -31,8 +31,11 @@ Cette page doit suivre en priorite:
 | Workspace | `frontend`, `shared` | `pnpm-workspace.yaml` |
 | Git hooks | Husky `9.1.7` | `package.json` |
 | Pre-commit cible | lint-staged `15.5.2` | `package.json` |
-| Gate rapide | `pnpm run qa:fast` | `package.json` |
-| Gate final | `pnpm run qa` | `package.json` |
+| Gate docs/config | `pnpm run qa:docs` | `package.json` |
+| Gate frontend | `pnpm run qa:front` | `package.json` |
+| Gate backend | `pnpm run qa:back` | `package.json` |
+| Gate intermediaire large | `pnpm run qa:fast` | `package.json` |
+| Gate final complet | `pnpm run qa` | `package.json` |
 | Audit deps reseau | `pnpm run qa:audit` | `package.json` |
 | CLI Supabase locale | `2.98.1` | `supabase --version` |
 | Overrides securite pnpm | `flatted@3.4.2`, `picomatch@2.3.2/4.0.4`, `lodash-es@4.18.1` | `package.json` |
@@ -49,7 +52,7 @@ Cette page doit suivre en priorite:
 | TypeScript | `5.9.3` | typage strict |
 | Tailwind CSS | `4.1.18` | styling utilitaire |
 | `@tailwindcss/vite` | `4.1.18` | integration Vite |
-| PostCSS | `8.5.6` | pipeline CSS |
+| PostCSS | `8.5.15` | pipeline CSS |
 | Autoprefixer | `10.4.23` | prefixing CSS |
 
 ### Navigation, state et data fetching
@@ -150,7 +153,7 @@ Autrement dit: le frontend ne repose pas sur une couche API unique. Le repo comb
 |-------------|---------|------|
 | Drizzle ORM | `0.45.1` | queries SQL typees |
 | `postgres` | `3.4.8` | driver SQL |
-| Supabase JS | `2.97.0` | auth/admin clients et contexte utilisateur |
+| Supabase JS | `2.95.3` | auth/admin clients et contexte utilisateur via import map Deno |
 | Zod | `4.3.6` | validation input/output |
 | `jose` | `5.9.6` | verification JWT via JWKS |
 
@@ -190,9 +193,9 @@ Cet alignement est verifie par `pnpm run repo:check`.
 
 | Technologie | Version | Role |
 |-------------|---------|------|
-| Vitest | `4.0.18` | unit/integration tests |
-| `@vitest/coverage-v8` | `4.0.18` | couverture |
-| `@vitest/ui` | `4.0.18` | UI locale Vitest |
+| Vitest | `4.1.8` | unit/integration tests |
+| `@vitest/coverage-v8` | `4.1.8` | couverture |
+| `@vitest/ui` | `4.1.8` | UI locale Vitest |
 | Testing Library React | `16.3.0` | tests composants |
 | Testing Library user-event | `14.6.1` | interactions utilisateur |
 | `@testing-library/jest-dom` | `6.6.3` | matchers DOM |
@@ -215,7 +218,10 @@ Cet alignement est verifie par `pnpm run repo:check`.
 
 ### Execution des gates
 
-- Boucle intermediaire: `pnpm run qa:fast`
+- Docs/config: `pnpm run qa:docs`
+- Frontend: `pnpm run qa:front`
+- Backend: `pnpm run qa:back`
+- Intermediaire large: `pnpm run qa:fast`
 - Gate final local: `pnpm run qa`
 - Gate PR: workflow GitHub Actions `qa.yml`
 

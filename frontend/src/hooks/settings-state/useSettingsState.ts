@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import type {
+  AgencyInteractionTypeConfig,
   ResolvedConfigSnapshot
 } from '../../../../shared/schemas/system/config.schema';
 
@@ -63,7 +64,7 @@ export const useSettingsState = ({
   );
 
   const setArrayField = useCallback(
-    (field: keyof SettingsFormValues, value: string[] | AgencyStatus[]) => {
+    (field: keyof SettingsFormValues, value: string[] | AgencyStatus[] | AgencyInteractionTypeConfig[]) => {
       setValue(field, value as never, { shouldDirty: true, shouldValidate: true });
     },
     [setValue],
@@ -87,7 +88,7 @@ export const useSettingsState = ({
   const setFamilies = useCallback((next: string[]) => setArrayField('families', next), [setArrayField]);
   const setServices = useCallback((next: string[]) => setArrayField('services', next), [setArrayField]);
   const setInteractionTypes = useCallback(
-    (next: string[]) => setArrayField('interactionTypes', next),
+    (next: AgencyInteractionTypeConfig[]) => setArrayField('interactionTypes', next),
     [setArrayField],
   );
   
@@ -115,7 +116,11 @@ export const useSettingsState = ({
             })),
             services: values.services,
             families: values.families,
-            interactionTypes: values.interactionTypes,
+            interactionTypes: values.interactionTypes.map((type) => ({
+              id: type.id,
+              label: type.label,
+              requires_product_families: type.requires_product_families
+            })),
           });
           reset({
             ...values,

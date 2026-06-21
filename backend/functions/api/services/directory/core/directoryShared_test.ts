@@ -169,6 +169,18 @@ Deno.test('directory list and option where clauses reject all_accessible_agencie
   );
 });
 
+Deno.test('directory client filters normalize entity_type casing', () => {
+  const rendered = renderCondition(buildBaseWhereClause(memberOneAgencyContext, {
+    scope: { mode: 'active_agency' },
+    type: 'client',
+    includeArchived: false
+  }));
+
+  assert(rendered, 'expected a SQL condition for client directory');
+  assertStringIncludes(rendered.sql, 'lower');
+  assertStringIncludes(rendered.sql, '= \'client\'');
+});
+
 Deno.test('supplier directory where clause is global CIR and does not require agency scope', () => {
   const rendered = renderCondition(buildListWhereClause(memberZeroAgenciesContext, {
     scope: { mode: 'all_accessible_agencies' },

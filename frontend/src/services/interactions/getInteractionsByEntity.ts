@@ -13,6 +13,8 @@ export type EntityInteractionsPage = {
   totalPages: number;
 };
 
+export type EntityInteractionsScope = 'open' | 'closed' | 'all';
+
 const parseListResponse = (payload: unknown): EntityInteractionsPage => {
   const parsed = dataInteractionsListResponseSchema.safeParse(payload);
   if (!parsed.success) {
@@ -41,12 +43,14 @@ const parseListResponse = (payload: unknown): EntityInteractionsPage => {
 export const getInteractionsByEntity = async (
   entityId: string,
   page = 1,
-  pageSize = 20
+  pageSize = 20,
+  scope: EntityInteractionsScope = 'all'
 ): Promise<EntityInteractionsPage> => {
   return invokeTrpc(
     (api, options) => api.data.interactions.mutate({
       action: 'list_by_entity',
       entity_id: entityId,
+      scope,
       page,
       page_size: pageSize
     }, options),

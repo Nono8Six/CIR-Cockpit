@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 
 interface StatusDotProps {
-  entityType: 'Client' | 'Prospect';
+  entityType: 'Client' | 'Prospect' | 'Fournisseur';
   archivedAt: string | null;
   className?: string;
 }
@@ -12,13 +12,17 @@ const StatusDot = ({ entityType, archivedAt, className }: StatusDotProps) => {
     ? 'bg-amber-400'
     : entityType === 'Client'
       ? 'bg-emerald-500'
-      : 'bg-blue-500';
+      : entityType === 'Fournisseur'
+        ? 'bg-sky-500'
+        : 'bg-blue-500';
 
   const label = isArchived
     ? 'Archivé'
     : entityType === 'Client'
       ? 'Client actif'
-      : 'Prospect actif';
+      : entityType === 'Fournisseur'
+        ? 'Fournisseur actif'
+        : 'Prospect actif';
 
   return (
     <span

@@ -1,5 +1,5 @@
 import { Plus } from 'lucide-react';
-import type { DirectoryListRow, DirectorySearchState } from '../../../../shared/schemas/system/directory.schema';
+import type { DirectorySearchState } from '../../../../shared/schemas/system/directory.schema';
 
 import { Button } from '../ui/inputs/basic/Button';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/navigation/Popover';
@@ -13,14 +13,12 @@ import { useClientDirectoryWorkspace } from './useClientDirectoryWorkspace';
 export interface ClientDirectoryWorkspaceProps {
   search: DirectorySearchState;
   onSearchChange: (updater: (previous: DirectorySearchState) => DirectorySearchState) => void;
-  onOpenRecord: (row: DirectoryListRow, effectiveSearch: DirectorySearchState) => void;
   onCreateRecord: (effectiveSearch: DirectorySearchState) => void;
 }
 
 const ClientDirectoryWorkspace = ({
   search,
   onSearchChange,
-  onOpenRecord,
   onCreateRecord,
 }: ClientDirectoryWorkspaceProps) => {
   const {
@@ -162,7 +160,6 @@ const ClientDirectoryWorkspace = ({
               onSortChange={(nextSorting) => handleSearchPatch({ sorting: nextSorting, page: 1 })}
               onPageChange={(page) => handleSearchPatch({ page })}
               onPageSizeChange={(nextPageSize) => handleSearchPatch({ pageSize: nextPageSize, page: 1 })}
-              onOpenRecord={(row) => onOpenRecord(row, effectiveSearch)}
             />
           </div>
         </div>

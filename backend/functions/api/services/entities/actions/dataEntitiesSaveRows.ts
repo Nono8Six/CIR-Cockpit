@@ -82,6 +82,8 @@ const buildPrimaryContactInsert = (
   email: payload.entity.primary_contact.email?.trim() || null,
   phone: payload.entity.primary_contact.phone?.trim() || null,
   position: payload.entity.primary_contact.position?.trim() || null,
+  service_label: payload.entity.primary_contact.service_label?.trim() || null,
+  is_primary: true,
   notes: payload.entity.primary_contact.notes?.trim() || null,
 });
 

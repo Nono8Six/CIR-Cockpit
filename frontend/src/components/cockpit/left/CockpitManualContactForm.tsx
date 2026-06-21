@@ -1,6 +1,7 @@
 import CockpitContactNameFields from './CockpitContactNameFields';
 import CockpitContactPhoneEmailFields from './CockpitContactPhoneEmailFields';
 import CockpitContactPositionField from './CockpitContactPositionField';
+import { Input } from '../../ui/inputs/basic/Input';
 import type { CockpitManualContactFormProps } from './CockpitManualContactForm.types';
 
 const CockpitManualContactForm = ({
@@ -9,6 +10,7 @@ const CockpitManualContactForm = ({
   contactFirstNameField,
   contactLastNameField,
   contactPositionField,
+  contactServiceLabelField,
   contactPhoneField,
   contactEmailField,
   contactFirstNameInputRef,
@@ -39,6 +41,15 @@ const CockpitManualContactForm = ({
         <CockpitContactPositionField
           positionField={contactPositionField}
           positionError={errors.contact_position?.message}
+        />
+      )}
+      {relationMode !== 'internal' && (
+        <Input
+          type="text"
+          {...contactServiceLabelField}
+          placeholder="Service du contact…"
+          aria-label="Service du contact"
+          autoComplete="organization"
         />
       )}
       {relationMode !== 'internal' && (

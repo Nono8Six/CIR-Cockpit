@@ -29,6 +29,7 @@ export type CockpitManualContactProps = CockpitContactCommonProps & {
   contactFirstNameField: UseFormRegisterReturn;
   contactLastNameField: UseFormRegisterReturn;
   contactPositionField: UseFormRegisterReturn;
+  contactServiceLabelField: UseFormRegisterReturn;
   contactPhoneField: UseFormRegisterReturn;
   contactEmailField: UseFormRegisterReturn;
   contactFirstNameInputRef: RefObject<HTMLInputElement | null>;

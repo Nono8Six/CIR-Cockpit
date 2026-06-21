@@ -124,6 +124,8 @@ export const entity_contacts = pgTable('entity_contacts', {
   email: text('email').$type<string | null>(),
   phone: text('phone').$type<string | null>(),
   position: text('position').$type<string | null>(),
+  service_label: text('service_label').$type<string | null>(),
+  is_primary: boolean('is_primary').$type<boolean>().default(false).notNull(),
   notes: text('notes').$type<string | null>(),
   archived_at: timestamp('archived_at', timestamptz).$type<string | null>(),
   created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull(),
@@ -209,6 +211,7 @@ export const agency_interaction_types = pgTable('agency_interaction_types', {
   archived_at: timestamp('archived_at', timestamptz).$type<string | null>(),
   label: text('label').notNull(),
   sort_order: integer('sort_order').notNull(),
+  requires_product_families: boolean('requires_product_families').$type<boolean>().default(false).notNull(),
   created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull(),
   updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
 });

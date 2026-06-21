@@ -51,7 +51,7 @@ type AppMainTabContentProps = {
   onOpenGlobalSearch: () => void;
 };
 
-const KEEP_ALIVE_TABS: AppTab[] = ['cockpit', 'dashboard', 'clients', 'settings', 'admin'];
+const KEEP_ALIVE_TABS: AppTab[] = ['cockpit', 'dashboard', 'clients', 'suppliers', 'settings', 'admin'];
 
 const AppMainTabContent = (props: AppMainTabContentProps) => {
   const {
@@ -71,12 +71,6 @@ const AppMainTabContent = (props: AppMainTabContentProps) => {
     onRequestConvert,
     onOpenGlobalSearch
   } = props;
-  useEffect(() => {
-    void loadCockpitForm();
-    void loadDashboard();
-    void loadSettings();
-  }, []);
-
   const previousActiveTabRef = useRef(activeTab);
   useEffect(() => {
     const previousActiveTab = previousActiveTabRef.current;
@@ -92,13 +86,15 @@ const AppMainTabContent = (props: AppMainTabContentProps) => {
     cockpit: activeTab === 'cockpit',
     dashboard: activeTab === 'dashboard',
     clients: activeTab === 'clients',
+    suppliers: activeTab === 'suppliers' && canAccessAdmin,
     settings: activeTab === 'settings' && canAccessSettings,
     admin: activeTab === 'admin' && canAccessAdmin
   });
 
   const isAllowedActiveTab =
     (activeTab !== 'settings' || canAccessSettings)
-    && (activeTab !== 'admin' || canAccessAdmin);
+    && (activeTab !== 'admin' || canAccessAdmin)
+    && (activeTab !== 'suppliers' || canAccessAdmin);
   if (isAllowedActiveTab) {
     visitedTabsRef.current[activeTab] = true;
   }
@@ -110,7 +106,7 @@ const AppMainTabContent = (props: AppMainTabContentProps) => {
         const isAllowed =
           tab === 'settings'
             ? canAccessSettings
-            : tab === 'admin'
+            : tab === 'admin' || tab === 'suppliers'
               ? canAccessAdmin
               : true;
 
@@ -173,6 +169,12 @@ const AppMainTabContent = (props: AppMainTabContentProps) => {
             ) : null}
 
             {tab === 'clients' ? (
+              <div className="min-h-0 flex-1">
+                {isActive ? <Outlet /> : null}
+              </div>
+            ) : null}
+
+            {tab === 'suppliers' ? (
               <div className="min-h-0 flex-1">
                 {isActive ? <Outlet /> : null}
               </div>

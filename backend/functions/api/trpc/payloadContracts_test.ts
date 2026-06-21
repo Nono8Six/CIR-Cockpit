@@ -10,6 +10,7 @@ import {
   directoryDuplicatesInputSchema,
   directoryListInputSchema,
   directoryOptionsFacetInputSchema,
+  directoryRouteRefSchema,
   directorySavedViewStateSchema
 } from '../../../../shared/schemas/system/directory.schema.ts';
 import {
@@ -19,6 +20,8 @@ import {
   tierV1SearchInputSchema
 } from '../../../../shared/schemas/interaction/tier-v1.schema.ts';
 import { configIntegrityInteractionUpdateInputSchema } from '../../../../shared/schemas/system/config.schema.ts';
+
+const OFFICIAL_RESYNC_SOURCE = 'api-recherche-entreprises';
 
 Deno.test('config integrity targeted correction contract is strict', () => {
   const payload = {
@@ -142,6 +145,104 @@ Deno.test('dataEntitiesPayloadSchema supports individual client creation with pr
       account_type: 'term'
     }
   }).success, false);
+});
+
+Deno.test('dataEntitiesPayloadSchema supports explicit primary contact selection for company and prospect', () => {
+  const agencyId = '11111111-1111-4111-8111-111111111111';
+  const contactId = '22222222-2222-4222-8222-222222222222';
+  const companyPayload = {
+    action: 'save',
+    agency_id: agencyId,
+    entity_type: 'Client',
+    id: '33333333-3333-4333-8333-333333333333',
+    primary_contact_id: contactId,
+    official_data_resync: {
+      identity_mode: 'persisted_identifier',
+      base_siren: '123456789',
+      selected_fields: ['siren', 'official_name', 'official_data_source', 'official_data_synced_at'],
+      source: OFFICIAL_RESYNC_SOURCE,
+      synced_at: '2026-06-17T10:00:00.000Z'
+    },
+    entity: {
+      client_number: '1003',
+      client_kind: 'company',
+      account_type: 'term',
+      name: 'ACME',
+      address: '1 rue de Paris',
+      postal_code: '75001',
+      department: '75',
+      city: 'Paris',
+      notes: '',
+      agency_id: agencyId
+    }
+  };
+  const prospectPayload = {
+    action: 'save',
+    agency_id: agencyId,
+    entity_type: 'Prospect',
+    id: '44444444-4444-4444-8444-444444444444',
+    primary_contact_id: null,
+    entity: {
+      name: 'Prospect ACME',
+      address: '',
+      postal_code: '',
+      department: '',
+      city: 'Paris',
+      notes: '',
+      agency_id: agencyId
+    }
+  };
+
+  assertEquals(dataEntitiesPayloadSchema.safeParse(companyPayload).success, true);
+  assertEquals(dataEntitiesPayloadSchema.safeParse(prospectPayload).success, true);
+  assertEquals(dataEntitiesPayloadSchema.safeParse({
+    ...companyPayload,
+    primary_contact_id: 'archived-contact'
+  }).success, false);
+  assertEquals(dataEntitiesPayloadSchema.safeParse({
+    ...companyPayload,
+    official_data_resync: true
+  }).success, false);
+  assertEquals(dataEntitiesPayloadSchema.safeParse({
+    ...companyPayload,
+    official_data_resync: {
+      identity_mode: 'persisted_identifier',
+      base_siren: '123456789',
+      selected_fields: ['siren', 'siren'],
+      source: OFFICIAL_RESYNC_SOURCE,
+      synced_at: '2026-06-17T10:00:00.000Z'
+    }
+  }).success, false);
+  assertEquals(dataEntitiesPayloadSchema.safeParse({
+    ...companyPayload,
+    official_data_resync: {
+      identity_mode: 'persisted_identifier',
+      base_siren: '123456789',
+      selected_fields: ['client_number'],
+      source: OFFICIAL_RESYNC_SOURCE,
+      synced_at: '2026-06-17T10:00:00.000Z'
+    }
+  }).success, false);
+  assertEquals(dataEntitiesPayloadSchema.safeParse({
+    ...companyPayload,
+    official_data_resync: {
+      identity_mode: 'manual_candidate_selection',
+      base_siren: '123456789',
+      selected_fields: ['official_name', 'official_data_synced_at'],
+      source: OFFICIAL_RESYNC_SOURCE,
+      synced_at: '2026-06-17T10:00:00.000Z'
+    }
+  }).success, false);
+  assertEquals(dataEntitiesPayloadSchema.safeParse({
+    ...companyPayload,
+    official_data_resync: {
+      identity_mode: 'manual_candidate_selection',
+      base_siren: '123456789',
+      selected_fields: ['siren', 'official_name', 'official_data_synced_at'],
+      source: OFFICIAL_RESYNC_SOURCE,
+      synced_at: '2026-06-17T10:00:00.000Z'
+    }
+  }).success, true);
 });
 
 Deno.test('dataEntitiesPayloadSchema supports supplier save action', () => {
@@ -270,6 +371,10 @@ Deno.test('dataInteractionsPayloadSchema supports save, add_timeline_event, agen
     page: 1,
     page_size: 20
   };
+  const scopedListPayload = {
+    ...listPayload,
+    scope: 'closed'
+  };
   const listByAgencyPayload = {
     action: 'list_by_agency',
     agency_id: '11111111-1111-4111-8111-111111111111',
@@ -317,6 +422,8 @@ Deno.test('dataInteractionsPayloadSchema supports save, add_timeline_event, agen
   assertEquals(dataInteractionsPayloadSchema.safeParse(draftSavePayload).success, true);
   assertEquals(dataInteractionsPayloadSchema.safeParse(draftDeletePayload).success, true);
   assertEquals(dataInteractionsPayloadSchema.safeParse(listPayload).success, true);
+  assertEquals(dataInteractionsPayloadSchema.safeParse(scopedListPayload).success, true);
+  assertEquals(dataInteractionsPayloadSchema.safeParse({ ...listPayload, scope: 'pending' }).success, false);
   assertEquals(dataInteractionsPayloadSchema.safeParse(deletePayload).success, true);
   assertEquals(dataInteractionsPayloadSchema.safeParse({ ...listByAgencyPayload, limit: 501 }).success, false);
   assertEquals(dataInteractionsPayloadSchema.safeParse({ ...draftGetPayload, form_type: '' }).success, false);
@@ -369,6 +476,10 @@ Deno.test('directory contracts accept scoped payloads and reject legacy shortcut
   assertEquals(directoryOptionsFacetInputSchema.safeParse({ ...scopedFacetPayload, department: '33' }).success, false);
   assertEquals(directoryDuplicatesInputSchema.safeParse(duplicatePayload).success, true);
   assertEquals(directoryDuplicatesInputSchema.safeParse({ ...duplicatePayload, cirCommercialId: '11111111-1111-4111-8111-111111111111' }).success, false);
+  assertEquals(directoryRouteRefSchema.safeParse({
+    kind: 'supplier',
+    id: '11111111-1111-4111-8111-111111111111'
+  }).success, true);
 });
 
 Deno.test('directory contracts parse all_accessible_agencies only as explicit scope value', () => {

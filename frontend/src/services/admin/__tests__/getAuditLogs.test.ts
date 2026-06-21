@@ -23,6 +23,7 @@ describe('getAuditLogs', () => {
         {
           agency_id: '22222222-2222-4222-8222-222222222222',
           actor_id: '11111111-1111-4111-8111-111111111111',
+          entity_id: null,
           entity_table: 'profiles',
           from: '2026-02-01T00:00:00.000Z',
           to: '2026-02-28T23:59:59.999Z',
@@ -103,6 +104,7 @@ describe('getAuditLogs', () => {
         {
           agency_id: null,
           actor_id: null,
+          entity_id: null,
           entity_table: null,
           from: null,
           to: null,

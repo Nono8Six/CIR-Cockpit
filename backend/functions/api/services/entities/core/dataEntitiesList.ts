@@ -1,4 +1,4 @@
-import { and, asc, eq, ilike, inArray, isNull, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, ilike, inArray, isNull, or, sql } from 'drizzle-orm';
 
 import { entities, entity_contacts } from '../../../../../drizzle/schema.ts';
 import type { AuthContext, DbClient } from '../../../types.ts';
@@ -138,7 +138,7 @@ export const getEntitySearchIndex = async (
       .select()
       .from(entity_contacts)
       .where(and(...contactConditions) ?? sql<boolean>`true`)
-      .orderBy(asc(entity_contacts.last_name));
+      .orderBy(desc(entity_contacts.is_primary), asc(entity_contacts.last_name), asc(entity_contacts.first_name));
     return { entities: entityRows, contacts };
   } catch (error) {
     throw httpError(

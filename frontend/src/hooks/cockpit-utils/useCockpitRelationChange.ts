@@ -6,7 +6,7 @@ import {
   INTERNAL_COMPANY_NAME,
   isInternalRelationValue
 } from '@/constants/relations';
-import type { AgencyConfig } from '@/services/config';
+import { getInteractionTypeLabels, type AgencyConfig } from '@/services/config';
 import type { Entity, EntityContact } from '@/types';
 import type { InteractionFormValues } from '../../../../shared/schemas/interaction/interaction.schema';
 
@@ -40,13 +40,14 @@ export const buildRelationChangeValues = ({
   contact_first_name: '',
   contact_last_name: '',
   contact_position: '',
+  contact_service_label: '',
   contact_name: '',
   contact_phone: '',
   contact_email: '',
   subject: '',
   mega_families: [],
   status_id: defaultStatusId,
-  interaction_type: getDefaultInteractionTypeForRelation(entityType, config.interactionTypes),
+  interaction_type: getDefaultInteractionTypeForRelation(entityType, getInteractionTypeLabels(config.interactionTypes)),
   order_ref: '',
   reminder_at: '',
   notes: '',

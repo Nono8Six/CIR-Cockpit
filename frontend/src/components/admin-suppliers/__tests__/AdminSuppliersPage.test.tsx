@@ -9,7 +9,6 @@ import { useAppSessionStateContext } from '../../../hooks/session/useAppSession'
 import { useDirectoryPage } from '../../../hooks/directory/core/useDirectoryPage';
 import { useDirectorySavedViews } from '../../../hooks/directory/views/useDirectorySavedViews';
 import { useDeleteSupplier } from '../../../hooks/entities/suppliers/useDeleteSupplier';
-import { useSaveSupplier } from '../../../hooks/entities/suppliers/useSaveSupplier';
 import { useSetSupplierArchived } from '../../../hooks/entities/suppliers/useSetSupplierArchived';
 
 type MockLinkProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
@@ -68,10 +67,6 @@ vi.mock('@/hooks/directory/views/useSaveDirectorySavedView', () => ({
 
 vi.mock('@/hooks/directory/views/useDeleteDirectorySavedView', () => ({
   useDeleteDirectorySavedView: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false }))
-}));
-
-vi.mock('@/hooks/entities/suppliers/useSaveSupplier', () => ({
-  useSaveSupplier: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false }))
 }));
 
 vi.mock('@/hooks/entities/suppliers/useSetSupplierArchived', () => ({
@@ -207,7 +202,6 @@ beforeEach(() => {
     isFetching: false,
     isPending: false
   } as unknown as ReturnType<typeof useDirectoryPage>);
-  vi.mocked(useSaveSupplier).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as unknown as ReturnType<typeof useSaveSupplier>);
   vi.mocked(useSetSupplierArchived).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as unknown as ReturnType<typeof useSetSupplierArchived>);
   vi.mocked(useDeleteSupplier).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as unknown as ReturnType<typeof useDeleteSupplier>);
 });
@@ -217,7 +211,7 @@ describe('AdminSuppliersPage', () => {
     render(<AdminSuppliersPage />);
 
     expect(screen.getByRole('heading', { name: /fournisseurs/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /nouveau fournisseur/i })).toHaveAttribute('href', '/admin/suppliers/new');
+    expect(screen.getByRole('link', { name: /nouveau fournisseur/i })).toHaveAttribute('href', '/suppliers/new');
     expect(screen.getByText('Meca Service')).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/SIRET, SIREN/i)).toBeInTheDocument();
     expect(screen.getByTestId('supplier-filter-flags')).toHaveTextContent('no-commercial-no-type');
@@ -269,29 +263,47 @@ describe('AdminSuppliersPage', () => {
     expect(screen.getByText(/réservée aux administrateurs/i)).toBeInTheDocument();
   });
 
-  it('opens supplier edit and archive actions from a row', async () => {
+  it('navigates to supplier edit and archives from a row', async () => {
     const user = userEvent.setup();
-    const saveMutateAsync = vi.fn().mockResolvedValue(supplierRow());
     const archiveMutateAsync = vi.fn().mockResolvedValue(supplierRow({ archived_at: '2026-01-03T00:00:00.000Z' }));
-    vi.mocked(useSaveSupplier).mockReturnValue({ mutateAsync: saveMutateAsync, isPending: false } as unknown as ReturnType<typeof useSaveSupplier>);
     vi.mocked(useSetSupplierArchived).mockReturnValue({ mutateAsync: archiveMutateAsync, isPending: false } as unknown as ReturnType<typeof useSetSupplierArchived>);
 
     render(<AdminSuppliersPage />);
 
     await user.click(screen.getByRole('button', { name: /modifier fournisseur/i }));
-    await user.clear(screen.getByLabelText(/^nom fournisseur$/i));
-    await user.type(screen.getByLabelText(/^nom fournisseur$/i), 'Meca Service Sud');
-    await user.click(screen.getByRole('button', { name: /^enregistrer$/i }));
-
-    expect(saveMutateAsync).toHaveBeenCalledWith(expect.objectContaining({
-      id: 'supplier-1',
-      entity_type: 'Fournisseur',
-      name: 'Meca Service Sud'
-    }));
+    expect(mockNavigate).toHaveBeenCalledWith({
+      to: '/suppliers/$supplierId/edit',
+      params: { supplierId: 'supplier-1' }
+    });
 
     await user.click(screen.getByRole('button', { name: /archiver fournisseur/i }));
     await user.click(screen.getByRole('button', { name: /^archiver$/i }));
 
     expect(archiveMutateAsync).toHaveBeenCalledWith({ supplierId: 'supplier-1', archived: true });
+  });
+
+  it('deletes suppliers with related interactions when confirmed by a super admin', async () => {
+    const user = userEvent.setup();
+    const deleteMutateAsync = vi.fn().mockResolvedValue(supplierRow());
+    vi.mocked(useAppSessionStateContext).mockReturnValue({
+      session: { user: { id: 'user-1' } },
+      profile: { role: 'super_admin' },
+      activeAgencyId: null
+    } as ReturnType<typeof useAppSessionStateContext>);
+    vi.mocked(useDeleteSupplier).mockReturnValue({
+      mutateAsync: deleteMutateAsync,
+      isPending: false
+    } as unknown as ReturnType<typeof useDeleteSupplier>);
+
+    render(<AdminSuppliersPage />);
+
+    await user.click(screen.getByRole('button', { name: /supprimer fournisseur/i }));
+    expect(screen.getByRole('checkbox')).toBeChecked();
+    await user.click(screen.getByRole('button', { name: /^supprimer définitivement$/i }));
+
+    expect(deleteMutateAsync).toHaveBeenCalledWith({
+      supplierId: 'supplier-1',
+      deleteRelatedInteractions: true
+    });
   });
 });

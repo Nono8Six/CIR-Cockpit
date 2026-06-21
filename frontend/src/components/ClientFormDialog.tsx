@@ -32,6 +32,7 @@ type ClientDialogValue = {
   last_name?: string | null;
   phone?: string | null;
   email?: string | null;
+  primary_contact_id?: string | null;
 };
 
 type ClientFormDialogProps = {
@@ -86,8 +87,15 @@ const ClientFormDialogLegacy = ({
     cityField,
     postalCodeField,
     siretField,
+    sirenField,
+    nafCodeField,
+    officialNameField,
     agencyField,
     notesField,
+    firstNameField,
+    lastNameField,
+    emailField,
+    phoneField,
     cirCommercialValue,
     errors,
     isSubmitting,
@@ -97,18 +105,19 @@ const ClientFormDialogLegacy = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        overlayClassName="bg-foreground/20 backdrop-blur-[2px]"
-        className="w-[min(92vw,780px)] max-w-3xl overflow-hidden rounded-2xl border border-border/70 p-0 shadow-2xl"
+        showCloseButton={false}
+        overlayClassName="bg-neutral-950/20 backdrop-blur-sm"
+        className="w-[min(95vw,680px)] max-w-2xl overflow-hidden rounded-xl border border-neutral-200/60 p-0 shadow-2xl shadow-neutral-900/8 bg-white animate-in fade-in-0 zoom-in-[0.98] duration-200"
       >
         <DialogTitle className="sr-only">Modifier un client</DialogTitle>
         <DialogDescription className="sr-only">Formulaire de saisie client.</DialogDescription>
         <ClientFormHeader isEdit />
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 px-6 py-5">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col max-h-[min(85vh,720px)]">
           <ClientFormContent
-            isEdit
             isSubmitting={isSubmitting}
             agencies={agencies}
             userRole={userRole}
+            form={form}
             clientNumberField={clientNumberField}
             clientNumber={clientNumber}
             onClientNumberChange={handleClientNumberChange}
@@ -125,13 +134,19 @@ const ClientFormDialogLegacy = ({
             postalCode={postalCode}
             onPostalCodeChange={handlePostalCodeChange}
             siretField={siretField}
+            sirenField={sirenField}
+            nafCodeField={nafCodeField}
+            officialNameField={officialNameField}
             agencyField={agencyField}
             agencyValue={agencyValue}
             agencyLabel={agencyLabel}
             notesField={notesField}
+            firstNameField={firstNameField}
+            lastNameField={lastNameField}
+            emailField={emailField}
+            phoneField={phoneField}
             onCancel={() => onOpenChange(false)}
           />
-          {errors.root?.message ? <p className="text-sm text-destructive">{errors.root.message}</p> : null}
         </form>
       </DialogContent>
     </Dialog>

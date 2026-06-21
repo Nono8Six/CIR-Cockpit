@@ -18,6 +18,7 @@ export const useInteractionFormState = ({ control, config, activeAgencyId, entit
   const contactFirstName = useWatch({ control, name: 'contact_first_name' }) ?? '';
   const contactLastName = useWatch({ control, name: 'contact_last_name' }) ?? '';
   const contactPosition = useWatch({ control, name: 'contact_position' }) ?? '';
+  const contactServiceLabel = useWatch({ control, name: 'contact_service_label' }) ?? '';
   const contactName = useWatch({ control, name: 'contact_name' }) ?? '';
   const contactPhone = useWatch({ control, name: 'contact_phone' }) ?? '';
   const contactEmail = useWatch({ control, name: 'contact_email' }) ?? '';
@@ -63,7 +64,7 @@ export const useInteractionFormState = ({ control, config, activeAgencyId, entit
 
   const selectedContactMeta = useMemo(() => {
     if (!selectedContact) return '';
-    const parts = [selectedContact.position ?? '', selectedContact.email ?? selectedContact.phone ?? ''].filter(Boolean);
+    const parts = [selectedContact.position ?? '', selectedContact.service_label ?? '', selectedContact.email ?? selectedContact.phone ?? ''].filter(Boolean);
     return parts.join(' • ');
   }, [selectedContact]);
 
@@ -76,6 +77,7 @@ export const useInteractionFormState = ({ control, config, activeAgencyId, entit
     contactFirstName,
     contactLastName,
     contactPosition,
+    contactServiceLabel,
     contactName,
     contactPhone,
     contactEmail,

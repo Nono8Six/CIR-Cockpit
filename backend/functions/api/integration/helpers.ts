@@ -38,7 +38,10 @@ export type IntegrationContext = {
   configStatuses: Array<Pick<StatusRow, 'id' | 'label' | 'category'>>;
   configServices: string[];
   configFamilies: string[];
-  configInteractionTypes: string[];
+  configInteractionTypes: Array<{
+    label: string;
+    requires_product_families: boolean;
+  }>;
 };
 
 export const missingEnv = missingIntegrationEnv;
@@ -224,6 +227,11 @@ const toStatusRow = (value: unknown, index: number): StatusRow => ({
 const toLabel = (value: unknown, resource: string, index: number): string =>
   requireString(value, 'label', `${resource}[${index}]`);
 
+const toInteractionTypeConfig = (value: unknown, index: number): IntegrationContext['configInteractionTypes'][number] => ({
+  label: requireString(value, 'label', `agency_interaction_types[${index}]`),
+  requires_product_families: readBoolean(value, 'requires_product_families') ?? false
+});
+
 const signIn = async (email: string, password: string): Promise<AuthSession> => {
   const response = await fetch(`${authBaseUrl}/token?grant_type=password`, {
     method: 'POST',
@@ -267,7 +275,7 @@ const buildContext = async (): Promise<IntegrationContext> => {
   assert(statuses.length > 0, `No status found for agency ${agencyId}.`);
 
   const interactionTypeRows = await fetchRows(
-    `/agency_interaction_types?select=label&agency_id=eq.${agencyId}&order=sort_order.asc`,
+    `/agency_interaction_types?select=label,requires_product_families&agency_id=eq.${agencyId}&order=sort_order.asc`,
     userSession.accessToken
   );
   const interactionType = interactionTypeRows
@@ -297,9 +305,7 @@ const buildContext = async (): Promise<IntegrationContext> => {
     })),
     configServices: serviceRows.map((row, index) => toLabel(row, 'agency_services', index)),
     configFamilies: familyRows.map((row, index) => toLabel(row, 'agency_families', index)),
-    configInteractionTypes: interactionTypeRows.map((row, index) =>
-      toLabel(row, 'agency_interaction_types', index)
-    )
+    configInteractionTypes: interactionTypeRows.map(toInteractionTypeConfig)
   };
 };
 

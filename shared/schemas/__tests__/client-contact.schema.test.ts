@@ -19,9 +19,13 @@ describe('clientContactFormSchema', () => {
       first_name: 'Jean',
       last_name: 'Dupont',
       email: 'jean@example.com',
-      phone: ''
+      phone: '',
+      service_label: 'Maintenance'
     });
 
     expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.service_label).toBe('Maintenance');
+    }
   });
 });

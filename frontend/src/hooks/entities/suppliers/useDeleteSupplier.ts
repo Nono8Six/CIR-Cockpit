@@ -3,6 +3,11 @@ import { deleteSupplier } from '@/services/entities/deleteSupplier';
 import { invalidateEntityMutationQueries } from '@/services/query/queryInvalidation';
 import { handleUiError } from '@/services/errors/handleUiError';
 
+type DeleteSupplierVariables = {
+  supplierId: string;
+  deleteRelatedInteractions?: boolean;
+};
+
 /**
  * Custom hook to delete a supplier entity.
  *
@@ -13,8 +18,8 @@ export const useDeleteSupplier = (includeArchived: boolean) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (supplierId: string) =>
-      deleteSupplier(supplierId).match(
+    mutationFn: ({ supplierId, deleteRelatedInteractions = false }: DeleteSupplierVariables) =>
+      deleteSupplier(supplierId, deleteRelatedInteractions).match(
         (entity) => entity,
         (error) => {
           throw error;

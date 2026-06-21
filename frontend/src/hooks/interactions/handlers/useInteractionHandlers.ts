@@ -24,7 +24,7 @@ export const useInteractionHandlers = ({ setValue, clearErrors, normalizedRelati
   }, [setStringField]);
 
   const resetContactFields = useCallback(() => {
-    setStringField('contact_first_name', ''); setStringField('contact_last_name', ''); setStringField('contact_position', ''); setStringField('contact_name', ''); setStringField('contact_phone', ''); setStringField('contact_email', '');
+    setStringField('contact_first_name', ''); setStringField('contact_last_name', ''); setStringField('contact_position', ''); setStringField('contact_service_label', ''); setStringField('contact_name', ''); setStringField('contact_phone', ''); setStringField('contact_email', '');
   }, [setStringField]);
 
   const handlePhoneChange = useCallback((event: ChangeEvent<HTMLInputElement>) => setStringField('contact_phone', formatFrenchPhone(event.target.value)), [setStringField]);
@@ -50,7 +50,7 @@ export const useInteractionHandlers = ({ setValue, clearErrors, normalizedRelati
     setSelectedContact(contact); setStringField('contact_id', contact?.id ?? '');
     if (!contact) return resetContactFields();
     setContactIdentity(contact.first_name ?? '', contact.last_name ?? '');
-    setStringField('contact_position', contact.position ?? ''); setStringField('contact_phone', contact.phone ?? ''); setStringField('contact_email', contact.email ?? '');
+    setStringField('contact_position', contact.position ?? ''); setStringField('contact_service_label', contact.service_label ?? ''); setStringField('contact_phone', contact.phone ?? ''); setStringField('contact_email', contact.email ?? '');
   }, [resetContactFields, setContactIdentity, setSelectedContact, setStringField]);
 
   const handleContactSelect = useCallback((value: string) => handleSelectContact(value === 'none' ? null : (contacts.find(contact => contact.id === value) ?? null)), [contacts, handleSelectContact]);

@@ -47,7 +47,27 @@ describe('useEntityInteractions', () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
-    expect(getInteractionsByEntity).toHaveBeenCalledWith('entity-1', 1, 20);
+    expect(getInteractionsByEntity).toHaveBeenCalledWith('entity-1', 1, 20, 'all');
+  });
+
+  it('loads entity interactions with the requested scope', async () => {
+    vi.mocked(getInteractionsByEntity).mockResolvedValue({
+      interactions: [],
+      page: 2,
+      pageSize: 10,
+      total: 0,
+      totalPages: 1
+    });
+
+    const { result } = renderHook(() => useEntityInteractions('entity-1', 2, 10, true, 'open'), {
+      wrapper: buildWrapper()
+    });
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
+    expect(getInteractionsByEntity).toHaveBeenCalledWith('entity-1', 2, 10, 'open');
   });
 
   it('forwards query errors to useNotifyError', async () => {

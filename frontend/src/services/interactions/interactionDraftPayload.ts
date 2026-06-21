@@ -24,6 +24,7 @@ const interactionDraftValuesSnapshotSchema = z.strictObject({
   contact_first_name: z.string().optional(),
   contact_last_name: z.string().optional(),
   contact_position: z.string().optional(),
+  contact_service_label: z.string().optional(),
   contact_name: z.string().optional(),
   contact_phone: z.string().optional(),
   contact_email: z.string().optional(),

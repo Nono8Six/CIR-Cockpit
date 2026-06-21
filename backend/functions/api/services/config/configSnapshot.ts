@@ -166,7 +166,13 @@ const loadAgencyReferences = async (
         .where(and(eq(agency_families.agency_id, agencyId), isNull(agency_families.archived_at)))
         .orderBy(asc(agency_families.sort_order)),
       db
-        .select({ label: agency_interaction_types.label })
+        .select({
+          id: agency_interaction_types.id,
+          agency_id: agency_interaction_types.agency_id,
+          label: agency_interaction_types.label,
+          sort_order: agency_interaction_types.sort_order,
+          requires_product_families: agency_interaction_types.requires_product_families
+        })
         .from(agency_interaction_types)
         .where(and(eq(agency_interaction_types.agency_id, agencyId), isNull(agency_interaction_types.archived_at)))
         .orderBy(asc(agency_interaction_types.sort_order))
@@ -204,7 +210,7 @@ const loadAgencyReferences = async (
       ),
       services: services.map((row) => row.label),
       families: families.map((row) => row.label),
-      interaction_types: interactionTypes.map((row) => row.label),
+      interaction_types: interactionTypes,
       resolutions
     };
   } catch (error) {

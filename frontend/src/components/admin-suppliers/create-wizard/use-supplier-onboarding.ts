@@ -80,7 +80,7 @@ const buildDraftFromOfficial = (company: DirectoryCompanySearchResult): Supplier
  * @returns {object} State values and action handlers.
  */
 const useSupplierOnboarding = () => {
-  const navigate = useNavigate({ from: '/admin/suppliers/new' });
+  const navigate = useNavigate({ from: '/suppliers/new' });
   const [step, setStep] = useState<Step>('search');
   const [draft, setDraft] = useState<SupplierDraft>(() => emptyDraft());
   const [hasAttemptedNext, setHasAttemptedNext] = useState(false);
@@ -161,7 +161,7 @@ const useSupplierOnboarding = () => {
       notes: draft.notes
     });
     notifySuccess('Fournisseur créé.');
-    void navigate({ to: '/admin/suppliers', search: () => DEFAULT_SUPPLIER_SEARCH });
+    void navigate({ to: '/suppliers', search: () => DEFAULT_SUPPLIER_SEARCH });
   };
 
   /**

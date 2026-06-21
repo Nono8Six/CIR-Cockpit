@@ -164,7 +164,9 @@ const CockpitGuidedEntry = ({
     interactionType: leftPaneProps.interactionType,
     contactService: leftPaneProps.contactService,
     statusValue: rightPaneProps.statusValue,
-    subject: rightPaneProps.subject
+    subject: rightPaneProps.subject,
+    megaFamilies: rightPaneProps.megaFamilies,
+    requiresProductFamilies: rightPaneProps.requiresProductFamilies
   });
 
   const handleReset = () => {

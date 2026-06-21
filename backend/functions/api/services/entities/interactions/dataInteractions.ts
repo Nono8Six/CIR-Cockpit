@@ -1,6 +1,6 @@
 import { and, desc, eq, isNotNull, ne, sql } from 'drizzle-orm';
 
-import { interaction_drafts, interactions } from '../../../../../drizzle/schema.ts';
+import { agency_interaction_types, interaction_drafts, interactions } from '../../../../../drizzle/schema.ts';
 import type { Database } from '../../../../../../shared/supabase.types.ts';
 import type { DataInteractionsResponse } from '../../../../../../shared/schemas/system/api-responses.ts';
 import type { DataInteractionsPayload } from '../../../../../../shared/schemas/system/data.schema.ts';
@@ -41,6 +41,48 @@ const toNullableString = (value: unknown): string | null | undefined => {
   if (typeof value !== 'string') return undefined;
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
+};
+
+const isSpecialFamilyOptionalRelation = (value?: string | null): boolean => {
+  const normalized = (value ?? '').trim().toLowerCase();
+  return normalized === 'sollicitation'
+    || normalized === 'fournisseur'
+    || (normalized.startsWith('interne') && normalized.includes('cir'));
+};
+
+const requireConfiguredProductFamilies = async (
+  db: DbClient,
+  agencyId: string,
+  interactionType: string,
+  entityType: string,
+  families: string[]
+): Promise<void> => {
+  if (isSpecialFamilyOptionalRelation(entityType) || families.length > 0) return;
+
+  try {
+    const rows = await db
+      .select({ requires_product_families: agency_interaction_types.requires_product_families })
+      .from(agency_interaction_types)
+      .where(and(
+        eq(agency_interaction_types.agency_id, agencyId),
+        sql`lower(${agency_interaction_types.label}) = ${interactionType.trim().toLowerCase()}`,
+        sql`${agency_interaction_types.archived_at} is null`
+      ))
+      .limit(1);
+
+    if (rows[0]?.requires_product_families) {
+      throw httpError(400, 'VALIDATION_ERROR', 'Au moins une famille produit est requise pour ce type d\'interaction.');
+    }
+  } catch (error) {
+    if (
+      typeof error === 'object'
+      && error !== null
+      && Reflect.get(error, 'code') === 'VALIDATION_ERROR'
+    ) {
+      throw error;
+    }
+    throw httpError(500, 'DB_READ_FAILED', "Impossible de verifier l'obligation des familles produits.");
+  }
 };
 
 export const normalizeInteractionUpdates = (
@@ -107,6 +149,14 @@ export const saveInteraction = async (
 ): Promise<InteractionRow> => {
   const { interaction } = payload;
   const resolvedAgencyId = ensureAgencyAccess(authContext, payload.agency_id);
+  const megaFamilies = interaction.mega_families ?? [];
+  await requireConfiguredProductFamilies(
+    db,
+    resolvedAgencyId,
+    interaction.interaction_type,
+    interaction.entity_type,
+    megaFamilies
+  );
   const row: InteractionInsert = {
     id: interaction.id,
     agency_id: resolvedAgencyId,
@@ -118,7 +168,7 @@ export const saveInteraction = async (
     contact_phone: interaction.contact_phone?.trim() || null,
     contact_email: interaction.contact_email?.trim() || null,
     subject: interaction.subject,
-    mega_families: interaction.mega_families ?? [],
+    mega_families: megaFamilies,
     status: '',
     status_id: interaction.status_id?.trim() || null,
     interaction_type: interaction.interaction_type,
@@ -240,6 +290,25 @@ export const resolvePagination = (payload: Pick<ListByEntityPayload, 'page' | 'p
   };
 };
 
+export const resolveEntityInteractionsScope = (
+  scope: ListByEntityPayload['scope']
+): NonNullable<ListByEntityPayload['scope']> => scope ?? 'all';
+
+const buildListByEntityWhereClause = (payload: Pick<ListByEntityPayload, 'entity_id' | 'scope'>) => {
+  const entityCondition = eq(interactions.entity_id, payload.entity_id);
+  const scope = resolveEntityInteractionsScope(payload.scope);
+
+  if (scope === 'open') {
+    return and(entityCondition, eq(interactions.status_is_terminal, false));
+  }
+
+  if (scope === 'closed') {
+    return and(entityCondition, eq(interactions.status_is_terminal, true));
+  }
+
+  return entityCondition;
+};
+
 const resolveLimit = (limit: number | undefined, defaultLimit: number): number =>
   limit ?? defaultLimit;
 
@@ -332,20 +401,21 @@ export const listInteractionsByEntity = async (
     pageSize,
     offset
   } = resolvePagination(payload);
+  const whereClause = buildListByEntityWhereClause(payload);
 
   try {
     const [rows, countRows] = await Promise.all([
       db
         .select()
         .from(interactions)
-        .where(eq(interactions.entity_id, payload.entity_id))
+        .where(whereClause)
         .orderBy(desc(interactions.last_action_at), desc(interactions.created_at))
         .limit(pageSize)
         .offset(offset),
       db
         .select({ count: sql<number>`count(*)::int` })
         .from(interactions)
-        .where(eq(interactions.entity_id, payload.entity_id))
+        .where(whereClause)
     ]);
 
     return {

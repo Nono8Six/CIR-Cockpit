@@ -64,6 +64,7 @@ const interactionCoreSchema = z.strictObject({
   contact_first_name: optionalText,
   contact_last_name: optionalText,
   contact_position: optionalText,
+  contact_service_label: optionalText,
   contact_name: optionalText,
   contact_phone: z.string().trim().max(32, 'Numero de telephone trop long').optional().or(z.literal('')),
   contact_email: z.string().trim().email('Email invalide').max(254, 'Email trop long').optional().or(z.literal('')),

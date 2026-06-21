@@ -44,6 +44,7 @@ export type Database = {
           created_at: string
           id: string
           label: string
+          requires_product_families: boolean
           sort_order: number
           updated_at: string
         }
@@ -127,6 +128,7 @@ export type Database = {
           created_at?: string
           id?: string
           label: string
+          requires_product_families?: boolean
           sort_order?: number
           updated_at?: string
         }
@@ -136,6 +138,7 @@ export type Database = {
           created_at?: string
           id?: string
           label?: string
+          requires_product_families?: boolean
           sort_order?: number
           updated_at?: string
         }
@@ -759,10 +762,12 @@ export type Database = {
           entity_id: string
           first_name: string | null
           id: string
+          is_primary: boolean
           last_name: string
           notes: string | null
           phone: string | null
           position: string | null
+          service_label: string | null
           updated_at: string
         }
         Insert: {
@@ -772,10 +777,12 @@ export type Database = {
           entity_id: string
           first_name?: string | null
           id?: string
+          is_primary?: boolean
           last_name: string
           notes?: string | null
           phone?: string | null
           position?: string | null
+          service_label?: string | null
           updated_at?: string
         }
         Update: {
@@ -785,10 +792,12 @@ export type Database = {
           entity_id?: string
           first_name?: string | null
           id?: string
+          is_primary?: boolean
           last_name?: string
           notes?: string | null
           phone?: string | null
           position?: string | null
+          service_label?: string | null
           updated_at?: string
         }
         Relationships: [

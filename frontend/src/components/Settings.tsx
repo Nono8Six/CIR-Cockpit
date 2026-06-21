@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { AgencyConfig } from '@/services/config';
+import { AgencyConfig, normalizeInteractionTypeConfig } from '@/services/config';
 import {
   type ConfigUsageSnapshot
 } from '../../../shared/schemas/system/config.schema';
@@ -60,7 +60,7 @@ const Settings = ({
       historical_statuses: config.historicalStatuses,
       services: config.services,
       families: config.families,
-      interaction_types: config.interactionTypes,
+      interaction_types: normalizeInteractionTypeConfig(config.interactionTypes),
       resolutions: config.resolutions ?? [],
       departments: []
     }

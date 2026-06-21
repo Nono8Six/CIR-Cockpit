@@ -26,13 +26,19 @@ const EntityContactsPanelSection = ({
   <section className="flex min-h-0 flex-col gap-3">
     <div className="flex items-center justify-between gap-3">
       <div className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground/80">
+        <h3 className="text-[10px] font-mono font-bold text-neutral-400 uppercase tracking-wider">
           Contacts
-        </p>
-        <p className="text-sm text-muted-foreground">{contacts.length} contact(s)</p>
+        </h3>
+        <p className="text-xs text-neutral-500 font-medium mt-0.5">{contacts.length} contact(s)</p>
       </div>
-      <Button type="button" variant="outline" size="sm" onClick={onAddContact}>
-        <Plus size={14} aria-hidden="true" />
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="h-8 gap-1.5 border-neutral-200 hover:bg-neutral-50 text-neutral-800 text-xs px-3 shadow-sm font-semibold transition-all"
+        onClick={onAddContact}
+      >
+        <Plus size={13} strokeWidth={1.5} className="text-neutral-500" />
         Ajouter
       </Button>
     </div>

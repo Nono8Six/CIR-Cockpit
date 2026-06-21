@@ -59,7 +59,7 @@ const CockpitSearchSection = ({
   }
 
   const handleCreateSupplier = () => {
-    void navigate({ to: '/admin/suppliers/new' });
+    void navigate({ to: '/suppliers/new' });
   };
   const handleCreateClient = () => {
     void navigate({ to: '/clients/new', search: () => DEFAULT_DIRECTORY_SEARCH });

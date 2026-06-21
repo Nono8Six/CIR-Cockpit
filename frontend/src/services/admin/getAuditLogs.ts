@@ -11,6 +11,7 @@ export type AuditLogEntry = AdminAuditLogEntry;
 export type AuditLogFilters = {
   agencyId?: string | null;
   actorId?: string | null;
+  entityId?: string | null;
   from?: string | null;
   to?: string | null;
   entityTable?: string | null;
@@ -34,6 +35,7 @@ const parseAuditLogsResponse = (payload: unknown): AuditLogEntry[] => {
 const toAuditLogsInput = (filters: AuditLogFilters): AdminAuditLogsInput => ({
   agency_id: filters.agencyId ?? null,
   actor_id: filters.actorId ?? null,
+  entity_id: filters.entityId ?? null,
   from: filters.from ?? null,
   to: filters.to ?? null,
   entity_table: filters.entityTable ?? null,

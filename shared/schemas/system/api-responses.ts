@@ -83,10 +83,12 @@ const entityContactRowSchema: z.ZodType<EntityContactRow> = z.strictObject({
   entity_id: nonEmptyStringSchema('Identifiant entite requis'),
   first_name: nullableStringSchema,
   id: nonEmptyStringSchema('Identifiant contact requis'),
+  is_primary: z.boolean(),
   last_name: nonEmptyStringSchema('Nom du contact requis'),
   notes: nullableStringSchema,
   phone: nullableStringSchema,
   position: nullableStringSchema,
+  service_label: nullableStringSchema,
   updated_at: nonEmptyStringSchema('Date de mise a jour requise')
 });
 

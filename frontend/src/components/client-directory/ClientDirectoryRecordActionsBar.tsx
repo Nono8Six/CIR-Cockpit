@@ -1,104 +1,85 @@
-import { ArrowLeftRight, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
+import { ArrowLeftRight, Pencil, Trash2 } from 'lucide-react';
 
 import { Button } from '../ui/inputs/basic/Button';
 
 export interface ClientDirectoryRecordActionsBarProps {
   isProspect: boolean;
+  isSupplier: boolean;
   canDeleteRecord: boolean;
   deleteLabel: string;
-  relativeNavigation: {
-    previousDisabled: boolean;
-    nextDisabled: boolean;
-    onOpenPrevious?: () => void;
-    onOpenNext?: () => void;
-  } | null | undefined;
   onEditClient: () => void;
   onEditProspect: () => void;
+  onEditSupplier: () => void;
   onConvertProspect: () => void;
   onRequestDelete: () => void;
 }
 
+/**
+ * Renders the actions toolbar for client/prospect detail view.
+ * Includes buttons for editing, deleting, or converting a prospect to a client.
+ * Styling is optimized for a compact, clean layout with subtle hover states.
+ *
+ * @param props - The component properties.
+ * @param props.isProspect - True if the entity is a prospect.
+ * @param props.canDeleteRecord - True if the current user is authorized to delete the record.
+ * @param props.deleteLabel - Label for the delete button.
+ * @param props.onEditClient - Callback to edit client details.
+ * @param props.onEditProspect - Callback to edit prospect details.
+ * @param props.onConvertProspect - Callback to convert prospect to client.
+ * @param props.onRequestDelete - Callback to open delete confirmation dialog.
+ * @returns The rendered JSX element.
+ */
 const ClientDirectoryRecordActionsBar = ({
   isProspect,
+  isSupplier,
   canDeleteRecord,
   deleteLabel,
-  relativeNavigation,
   onEditClient,
   onEditProspect,
+  onEditSupplier,
   onConvertProspect,
   onRequestDelete,
-}: ClientDirectoryRecordActionsBarProps) => (
-  <div className="flex flex-wrap items-center justify-between gap-2">
-    {relativeNavigation ? (
-      <div className="flex flex-wrap items-center gap-2">
+}: ClientDirectoryRecordActionsBarProps) => {
+  const handleEdit = isSupplier
+    ? onEditSupplier
+    : isProspect ? onEditProspect : onEditClient;
+
+  return (
+    <div className="flex flex-wrap items-center justify-end gap-2">
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="border-border text-foreground"
+        onClick={handleEdit}
+      >
+        <Pencil aria-hidden="true" />
+        Modifier
+      </Button>
+      {canDeleteRecord ? (
         <Button
           type="button"
           variant="outline"
           size="sm"
-          aria-label="Fiche précédente"
-          disabled={relativeNavigation.previousDisabled}
-          onClick={relativeNavigation.onOpenPrevious}
+          className="border-destructive/25 text-destructive hover:bg-destructive/10"
+          onClick={onRequestDelete}
         >
-          <ChevronLeft size={14} />
-          Précédent
+          <Trash2 aria-hidden="true" />
+          {deleteLabel}
         </Button>
+      ) : null}
+      {isProspect && !isSupplier ? (
         <Button
           type="button"
-          variant="outline"
           size="sm"
-          aria-label="Fiche suivante"
-          disabled={relativeNavigation.nextDisabled}
-          onClick={relativeNavigation.onOpenNext}
+          onClick={onConvertProspect}
         >
-          Suivant
-          <ChevronRight size={14} />
+          <ArrowLeftRight aria-hidden="true" />
+          Convertir en client
         </Button>
-      </div>
-    ) : null}
-    <div className="flex flex-wrap items-center gap-2">
-      {isProspect ? (
-        <>
-          <Button type="button" variant="outline" size="sm" onClick={onEditProspect}>
-            Modifier
-          </Button>
-          {canDeleteRecord ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="gap-2 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
-              onClick={onRequestDelete}
-            >
-              <Trash2 size={14} />
-              {deleteLabel}
-            </Button>
-          ) : null}
-          <Button type="button" size="sm" className="gap-2" onClick={onConvertProspect}>
-            <ArrowLeftRight size={14} />
-            Convertir en client
-          </Button>
-        </>
-      ) : (
-        <>
-          <Button type="button" size="sm" onClick={onEditClient}>
-            Modifier
-          </Button>
-          {canDeleteRecord ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="gap-2 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
-              onClick={onRequestDelete}
-            >
-              <Trash2 size={14} />
-              {deleteLabel}
-            </Button>
-          ) : null}
-        </>
-      )}
+      ) : null}
     </div>
-  </div>
-);
+  );
+};
 
 export default ClientDirectoryRecordActionsBar;

@@ -14,6 +14,7 @@ import type {
 } from '../../../../../shared/schemas/system/api-responses.ts';
 import type {
   AgencyStatusInput,
+  AgencyInteractionTypeInput,
   ConfigReferenceActionInput,
   ConfigReferenceAddInput,
   ConfigReferenceArchiveInput,
@@ -55,6 +56,14 @@ type StatusUpsertRow = {
   deactivated_at: null;
 };
 
+type InteractionTypeUpsertRow = {
+  id?: string;
+  agency_id: string;
+  label: string;
+  sort_order: number;
+  requires_product_families: boolean;
+};
+
 type ReferenceDeleteResult = {
   usageCount: number;
   deactivated: boolean;
@@ -70,6 +79,23 @@ export const normalizeLabelList = (labels: string[]): string[] => {
     if (!trimmed || seen.has(trimmed.toLowerCase())) continue;
     seen.add(trimmed.toLowerCase());
     result.push(trimmed);
+  }
+  return result;
+};
+
+const normalizeInteractionTypes = (items: AgencyInteractionTypeInput[]): AgencyInteractionTypeInput[] => {
+  const seen = new Set<string>();
+  const result: AgencyInteractionTypeInput[] = [];
+  for (const item of items) {
+    const label = item.label.trim();
+    const key = label.toLowerCase();
+    if (!label || seen.has(key)) continue;
+    seen.add(key);
+    result.push({
+      ...(item.id ? { id: item.id } : {}),
+      label,
+      requires_product_families: item.requires_product_families
+    });
   }
   return result;
 };
@@ -382,6 +408,72 @@ const syncLabelTable = async (
       });
   } catch {
     throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de mettre a jour la configuration.');
+  }
+};
+
+const syncInteractionTypes = async (
+  db: DbClient,
+  agencyId: string,
+  interactionTypes: AgencyInteractionTypeInput[]
+): Promise<void> => {
+  const desired = normalizeInteractionTypes(interactionTypes);
+  if (desired.length === 0) return;
+
+  let existing: Array<{ id: string; label: string }> = [];
+  try {
+    existing = await db
+      .select({ id: agency_interaction_types.id, label: agency_interaction_types.label })
+      .from(agency_interaction_types)
+      .where(eq(agency_interaction_types.agency_id, agencyId));
+  } catch {
+    throw httpError(500, 'DB_READ_FAILED', "Impossible de charger les types d'interaction.");
+  }
+
+  const existingByLabel = new Map(
+    existing.map((row) => [normalizeReferenceKey(row.label), row.id])
+  );
+  const rows = desired.map((item, index): InteractionTypeUpsertRow => {
+    const resolvedId = item.id ?? existingByLabel.get(normalizeReferenceKey(item.label));
+    return {
+      ...(resolvedId ? { id: resolvedId } : {}),
+      agency_id: agencyId,
+      label: item.label,
+      sort_order: index + 1,
+      requires_product_families: item.requires_product_families
+    };
+  });
+  const rowsWithId = rows.filter((row): row is InteractionTypeUpsertRow & { id: string } => typeof row.id === 'string');
+  const rowsWithoutId = rows.filter((row) => typeof row.id !== 'string');
+
+  try {
+    if (rowsWithId.length > 0) {
+      await db
+        .insert(agency_interaction_types)
+        .values(rowsWithId)
+        .onConflictDoUpdate({
+          target: agency_interaction_types.id,
+          set: {
+            label: sql`excluded.label`,
+            sort_order: sql`excluded.sort_order`,
+            requires_product_families: sql`excluded.requires_product_families`
+          }
+        });
+    }
+
+    if (rowsWithoutId.length > 0) {
+      await db
+        .insert(agency_interaction_types)
+        .values(rowsWithoutId)
+        .onConflictDoUpdate({
+          target: [agency_interaction_types.agency_id, agency_interaction_types.label],
+          set: {
+            sort_order: sql`excluded.sort_order`,
+            requires_product_families: sql`excluded.requires_product_families`
+          }
+        });
+    }
+  } catch {
+    throw httpError(500, 'DB_WRITE_FAILED', "Impossible de mettre a jour les types d'interaction.");
   }
 };
 
@@ -806,12 +898,7 @@ const saveReferenceConfig = async (
     );
     await syncLabelTable(tx, agency_services, resolvedAgencyId, normalizedInput.services);
     await syncLabelTable(tx, agency_families, resolvedAgencyId, normalizedInput.families);
-    await syncLabelTable(
-      tx,
-      agency_interaction_types,
-      resolvedAgencyId,
-      normalizedInput.interactionTypes
-    );
+    await syncInteractionTypes(tx, resolvedAgencyId, normalizedInput.interactionTypes);
   });
 
   return { request_id: requestId, ok: true };

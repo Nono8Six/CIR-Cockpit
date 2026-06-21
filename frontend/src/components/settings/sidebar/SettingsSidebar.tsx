@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { Boxes, History, ListTodo } from 'lucide-react';
+import { Boxes, ClipboardCheck, History, ListTodo } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
@@ -22,6 +22,7 @@ type SettingsSidebarProps = {
 const SIDEBAR_ITEMS: SidebarItem[] = [
   { id: 'workflow', label: 'Statuts interactions', shortLabel: 'Statuts', description: 'Workflow', icon: ListTodo },
   { id: 'lists', label: 'Listes de saisie', shortLabel: 'Listes', description: 'Formulaires', icon: Boxes },
+  { id: 'input-rules', label: 'Règles de saisie', shortLabel: 'Règles', description: 'Obligations', icon: ClipboardCheck },
   { id: 'integrity', label: 'Historique & intégrité', shortLabel: 'Historique', description: 'Audit', icon: History },
 ];
 
@@ -49,7 +50,7 @@ const SettingsSidebar = ({
             </span>
           )}
         </div>
-        <nav className="grid min-w-0 flex-1 grid-cols-3 gap-1 sm:flex sm:overflow-x-auto" aria-label="Navigation des paramètres">
+        <nav className="grid min-w-0 flex-1 grid-cols-4 gap-1 sm:flex sm:overflow-x-auto" aria-label="Navigation des paramètres">
           {SIDEBAR_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive = activeSection === item.id;

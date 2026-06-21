@@ -1,4 +1,5 @@
 import type { CockpitFormLeftPaneProps, CockpitFormRightPaneProps } from '@/components/cockpit/CockpitPaneTypes';
+import { getInteractionTypeLabels } from '@/services/config';
 import type { UseCockpitPanePropsParams } from './use-cockpit-pane-props.types';
 
 export const useCockpitPaneProps = (params: UseCockpitPanePropsParams) => {
@@ -51,12 +52,14 @@ export const useCockpitPaneProps = (params: UseCockpitPanePropsParams) => {
     contactFirstNameField: params.contactFirstNameField,
     contactLastNameField: params.contactLastNameField,
     contactPositionField: params.contactPositionField,
+    contactServiceLabelField: params.contactServiceLabelField,
     contactPhoneField: params.contactPhoneField,
     contactEmailField: params.contactEmailField,
     contactFirstNameInputRef: params.contactFirstNameInputRef,
     contactFirstName: params.contactFirstName,
     contactLastName: params.contactLastName,
     contactPosition: params.contactPosition,
+    contactServiceLabel: params.contactServiceLabel,
     contactName: params.contactName,
     contactPhone: params.contactPhone,
     contactEmail: params.contactEmail,
@@ -67,7 +70,7 @@ export const useCockpitPaneProps = (params: UseCockpitPanePropsParams) => {
     hasInteractionTypes: params.hasInteractionTypes,
     interactionTypeHelpId: params.interactionTypeHelpId,
     interactionTypeRef: params.interactionTypeRef,
-    interactionTypes: params.config.interactionTypes,
+    interactionTypes: getInteractionTypeLabels(params.config.interactionTypes),
     contactService: params.contactService,
     quickServices: params.quickServices,
     remainingServices: params.remainingServices,
@@ -90,6 +93,7 @@ export const useCockpitPaneProps = (params: UseCockpitPanePropsParams) => {
     families: params.config.families,
     megaFamilies: params.megaFamilies,
     onToggleFamily: params.onToggleFamily,
+    requiresProductFamilies: params.requiresProductFamilies,
     statusMeta: params.statusMeta,
     statusCategoryLabel: params.statusCategoryLabel,
     statusCategoryBadges: params.statusCategoryBadges,

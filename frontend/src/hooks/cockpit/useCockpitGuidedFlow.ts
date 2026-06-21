@@ -28,6 +28,8 @@ type UseCockpitGuidedFlowParams = {
   contactService: string;
   statusValue: string;
   subject: string;
+  megaFamilies?: string[];
+  requiresProductFamilies?: boolean;
 };
 
 export const GUIDED_STEP_ORDER: CockpitGuidedStep[] = [
@@ -58,7 +60,9 @@ export const useCockpitGuidedFlow = ({
   interactionType,
   contactService,
   statusValue,
-  subject
+  subject,
+  megaFamilies = [],
+  requiresProductFamilies = false
 }: UseCockpitGuidedFlowParams) => {
   const hasExistingProgress = Boolean(selectedEntity || selectedContact)
     || [entityType, companyName, companyCity, contactFirstName, contactLastName, contactName, contactPhone, contactEmail, interactionType, contactService, statusValue, subject].some(hasText);
@@ -115,7 +119,8 @@ export const useCockpitGuidedFlow = ({
   }, [contactFirstName, contactLastName, contactPosition, hasContactMethod, identityComplete, relationMode, selectedContact]);
 
   const qualificationComplete = hasText(interactionType) && hasText(contactService) && hasText(statusValue);
-  const subjectComplete = hasText(subject) && qualificationComplete;
+  const familiesComplete = !requiresProductFamilies || megaFamilies.length > 0;
+  const subjectComplete = hasText(subject) && qualificationComplete && familiesComplete;
 
   const firstIncompleteStep = useMemo<CockpitGuidedStep>(() => {
     if (!isChannelConfirmed) return 'channel';
@@ -125,7 +130,7 @@ export const useCockpitGuidedFlow = ({
     if (!contactComplete) return 'contact';
     if (!subjectComplete) return 'subject';
     return 'details';
-  }, [contactComplete, identityComplete, isChannelConfirmed, isRelationConfirmed, isSupplierContactConfirmed, qualificationComplete, relationMode, subjectComplete]);
+  }, [contactComplete, identityComplete, isChannelConfirmed, isRelationConfirmed, isSupplierContactConfirmed, relationMode, subjectComplete]);
 
   const activeStep = editingStep ?? firstIncompleteStep;
 

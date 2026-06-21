@@ -2,7 +2,10 @@ import { sql } from 'drizzle-orm';
 
 import { entities } from '../../../../../drizzle/schema.ts';
 import type { Database } from '../../../../../../shared/supabase.types.ts';
-import type { DataEntitiesPayload } from '../../../../../../shared/schemas/system/data.schema.ts';
+import type {
+  DataEntitiesPayload,
+  OfficialDataResyncPayload,
+} from '../../../../../../shared/schemas/system/data.schema.ts';
 
 export type EntityRow = Database['public']['Tables']['entities']['Row'];
 export type EntityContactRow = Database['public']['Tables']['entity_contacts']['Row'];
@@ -10,6 +13,7 @@ export type EntityInsert = typeof entities.$inferInsert;
 export type EntityUpdate = Omit<EntityInsert, 'created_by'>;
 export type AgencyLookupRow = Pick<Database['public']['Tables']['agencies']['Row'], 'id' | 'archived_at'>;
 export type SaveEntityPayload = Extract<DataEntitiesPayload, { action: 'save' }>;
+export type SaveOfficialDataResyncPayload = OfficialDataResyncPayload;
 export type SaveClientPayload = Extract<SaveEntityPayload, { entity_type: 'Client' }>;
 export type SaveIndividualClientPayload = SaveClientPayload & {
   entity: Extract<SaveClientPayload['entity'], { client_kind: 'individual' }>;

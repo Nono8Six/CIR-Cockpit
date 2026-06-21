@@ -19,6 +19,7 @@ const CockpitContactSection = ({
   contactFirstNameField,
   contactLastNameField,
   contactPositionField,
+  contactServiceLabelField,
   contactPhoneField,
   contactEmailField,
   contactFirstNameInputRef,
@@ -60,6 +61,7 @@ const CockpitContactSection = ({
       contactFirstNameField={contactFirstNameField}
       contactLastNameField={contactLastNameField}
       contactPositionField={contactPositionField}
+      contactServiceLabelField={contactServiceLabelField}
       contactPhoneField={contactPhoneField}
       contactEmailField={contactEmailField}
       contactFirstNameInputRef={contactFirstNameInputRef}

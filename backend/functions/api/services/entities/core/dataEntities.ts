@@ -1,3 +1,5 @@
+import { sql } from 'drizzle-orm';
+
 import type { DataEntitiesRouteResponse } from '../../../../../../shared/schemas/system/api-responses.ts';
 import type { DataEntitiesPayload } from '../../../../../../shared/schemas/system/data.schema.ts';
 import type { AuthContext, DbClient } from '../../../types.ts';
@@ -47,6 +49,16 @@ export const ensureSupplierWriteAccess = (authContext: AuthContext): void => {
 const ENTITY_ACTION_RATE_LIMIT_MAX = 60;
 const ENTITY_READ_RATE_LIMIT_MAX = 120;
 
+const withAuditActor = async <T>(
+  db: DbClient,
+  actorId: string,
+  action: (db: DbClient) => Promise<T>
+): Promise<T> =>
+  await db.transaction(async (tx) => {
+    await tx.execute(sql`select private.set_audit_actor(${actorId}::uuid)`);
+    return await action(tx as unknown as DbClient);
+  });
+
 export const handleDataEntitiesAction = async (
   db: DbClient,
   authContext: AuthContext,
@@ -71,11 +83,15 @@ export const handleDataEntitiesAction = async (
     case 'save': {
       if (data.entity_type === 'Fournisseur') {
         ensureSupplierWriteAccess(authContext);
-        const entity = await saveEntity(db, data, null, authContext.userId);
+        const entity = await withAuditActor(db, authContext.userId, (auditDb) =>
+          saveEntity(auditDb, data, null, authContext.userId)
+        );
         return { request_id: requestId, ok: true, entity };
       }
       const agencyId = ensureAgencyAccess(authContext, data.agency_id);
-      const entity = await saveEntity(db, data, agencyId, authContext.userId);
+      const entity = await withAuditActor(db, authContext.userId, (auditDb) =>
+        saveEntity(auditDb, data, agencyId, authContext.userId)
+      );
       return { request_id: requestId, ok: true, entity };
     }
     case 'archive': {
@@ -85,12 +101,16 @@ export const handleDataEntitiesAction = async (
       } else {
         ensureOptionalAgencyAccess(authContext, accessInfo.agencyId);
       }
-      const entity = await archiveEntity(db, data.entity_id, data.archived);
+      const entity = await withAuditActor(db, authContext.userId, (auditDb) =>
+        archiveEntity(auditDb, data.entity_id, data.archived)
+      );
       return { request_id: requestId, ok: true, entity };
     }
     case 'delete': {
       ensureDeleteSuperAdmin(authContext);
-      const { entity, deletedInteractionsCount } = await deleteEntity(db, data);
+      const { entity, deletedInteractionsCount } = await withAuditActor(db, authContext.userId, (auditDb) =>
+        deleteEntity(auditDb, data)
+      );
       return {
         request_id: requestId,
         ok: true,
@@ -101,17 +121,21 @@ export const handleDataEntitiesAction = async (
     case 'convert_to_client': {
       const agencyId = await getEntityAgencyId(db, data.entity_id);
       ensureOptionalAgencyAccess(authContext, agencyId);
-      const entity = await convertToClient(
-        db,
-        data.entity_id,
-        data.convert.client_number,
-        data.convert.account_type
+      const entity = await withAuditActor(db, authContext.userId, (auditDb) =>
+        convertToClient(
+          auditDb,
+          data.entity_id,
+          data.convert.client_number,
+          data.convert.account_type
+        )
       );
       return { request_id: requestId, ok: true, entity };
     }
     case 'reassign': {
       ensureReassignSuperAdmin(authContext);
-      const { entity, propagatedInteractionsCount } = await reassignEntity(db, data);
+      const { entity, propagatedInteractionsCount } = await withAuditActor(db, authContext.userId, (auditDb) =>
+        reassignEntity(auditDb, data)
+      );
       return {
         request_id: requestId,
         ok: true,

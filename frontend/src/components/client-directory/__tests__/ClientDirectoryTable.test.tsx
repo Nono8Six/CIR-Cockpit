@@ -1,9 +1,34 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import type { DirectoryListRow, DirectorySortingRule } from '../../../../../shared/schemas/system/directory.schema';
 
 import ClientDirectoryTable from '../ClientDirectoryTable';
+
+type MockLinkProps = {
+  'aria-label'?: string;
+  children: ReactNode;
+  className?: string;
+  params?: Record<string, string | null | undefined>;
+  to: string;
+};
+
+const buildMockHref = (to: string, params?: MockLinkProps['params']): string => {
+  if (!params) return to;
+  return Object.entries(params).reduce(
+    (path, [key, value]) => path.replace(`$${key}`, value ?? ''),
+    to
+  );
+};
+
+vi.mock('@tanstack/react-router', () => ({
+  Link: ({ children, params, to, ...props }: MockLinkProps) => (
+    <a href={buildMockHref(to, params)} {...props}>
+      {children}
+    </a>
+  )
+}));
 
 const baseRow: DirectoryListRow = {
   id: '11111111-1111-1111-1111-111111111111',
@@ -25,14 +50,12 @@ const baseRow: DirectoryListRow = {
 interface RenderTableOptions {
   sorting?: DirectorySortingRule[];
   onSortChange?: (sorting: DirectorySortingRule[]) => void;
-  onOpenRecord?: (row: DirectoryListRow) => void;
   rows?: DirectoryListRow[];
 }
 
 const renderTable = ({
   sorting = [{ id: 'updated_at', desc: false }],
   onSortChange = vi.fn(),
-  onOpenRecord = vi.fn(),
   rows = [baseRow]
 }: RenderTableOptions = {}) => {
   render(
@@ -49,11 +72,10 @@ const renderTable = ({
       onSortChange={onSortChange}
       onPageChange={vi.fn()}
       onPageSizeChange={vi.fn()}
-      onOpenRecord={onOpenRecord}
     />
   );
 
-  return { onSortChange, onOpenRecord };
+  return { onSortChange };
 };
 
 describe('ClientDirectoryTable', () => {
@@ -90,22 +112,28 @@ describe('ClientDirectoryTable', () => {
     ]);
   });
 
-  it("n'ouvre pas la fiche quand on clique sur un header", async () => {
-    const user = userEvent.setup();
-    const { onOpenRecord } = renderTable();
+  it('affiche le nom client comme lien canonique', () => {
+    renderTable();
 
-    await user.click(screen.getByRole('button', { name: 'Trier la colonne Nom' }));
-
-    expect(onOpenRecord).not.toHaveBeenCalled();
+    expect(screen.getByRole('link', { name: 'Ouvrir la fiche SEA' })).toHaveAttribute(
+      'href',
+      '/clients/116277'
+    );
   });
 
-  it('ouvre la fiche depuis le bouton du nom', async () => {
-    const user = userEvent.setup();
-    const { onOpenRecord } = renderTable();
+  it('affiche le nom prospect comme lien canonique', () => {
+    renderTable({
+      rows: [{
+        ...baseRow,
+        entity_type: 'Prospect',
+        client_number: null
+      }]
+    });
 
-    await user.click(screen.getByRole('button', { name: 'Ouvrir la fiche SEA' }));
-
-    expect(onOpenRecord).toHaveBeenCalledWith(baseRow);
+    expect(screen.getByRole('link', { name: 'Ouvrir la fiche SEA' })).toHaveAttribute(
+      'href',
+      `/clients/prospects/${baseRow.id}`
+    );
   });
 
   it('affiche un badge Archive quand archived_at est renseigne', () => {

@@ -63,10 +63,12 @@ const contactRow = (overrides: Record<string, unknown> = {}) => ({
   entity_id: 'entity-1',
   first_name: 'Jean',
   id: 'contact-1',
+  is_primary: false,
   last_name: 'Dupont',
   notes: null,
   phone: null,
   position: null,
+  service_label: null,
   updated_at: '2026-06-01T10:00:00.000Z',
   ...overrides
 });
@@ -368,7 +370,7 @@ describe('entities RPC services', () => {
   it('builds deleteSupplier RPC payload and parses deleted entity response', async () => {
     mockSafeRpc.mockReturnValue({} as never);
 
-    deleteSupplier('supplier-1');
+    deleteSupplier('supplier-1', true);
 
     const [call, parser] = mockSafeRpc.mock.calls[0] as [SafeRpcCall, SafeRpcParser, string];
     const { client, entitiesPost } = createTrpcClientFixture();
@@ -377,7 +379,7 @@ describe('entities RPC services', () => {
     expect(entitiesPost).toHaveBeenCalledWith({
           action: 'delete',
           entity_id: 'supplier-1',
-          delete_related_interactions: false
+          delete_related_interactions: true
         },
       { context: { headers: { 'x-request-id': 'req-delete-supplier' } } }
     );
@@ -464,6 +466,8 @@ describe('entities RPC services', () => {
           agency_id: 'agency-1',
           entity_type: 'Prospect',
           id: undefined,
+          primary_contact_id: null,
+          official_data_resync: undefined,
           entity: {
             name: 'Prospect 1',
             city: '',
@@ -471,6 +475,11 @@ describe('entities RPC services', () => {
             postal_code: undefined,
             department: undefined,
             siret: undefined,
+            siren: undefined,
+            naf_code: undefined,
+            official_name: undefined,
+            official_data_source: undefined,
+            official_data_synced_at: undefined,
             notes: undefined,
             agency_id: 'agency-1'
           }
@@ -546,6 +555,7 @@ describe('entities RPC services', () => {
             email: 'jean@cir.fr',
             phone: '0102030405',
             position: 'Directeur',
+            service_label: '',
             notes: 'VIP'
           }
         },

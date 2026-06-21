@@ -16,7 +16,10 @@ import { validateDirectorySearch } from '@/components/client-directory/clientDir
 import AdminIndexPage from '@/components/admin-suppliers/AdminIndexPage';
 import AdminSupplierCreatePage from '@/components/admin-suppliers/AdminSupplierCreatePage';
 import AdminSuppliersPage from '@/components/admin-suppliers/AdminSuppliersPage';
-import { validateSupplierDirectorySearch } from '@/components/admin-suppliers/supplierDirectorySearch';
+import {
+  DEFAULT_SUPPLIER_SEARCH,
+  validateSupplierDirectorySearch
+} from '@/components/admin-suppliers/supplierDirectorySearch';
 import { validateDashboardSearch } from '@/app/dashboardSearch';
 
 const rootRoute = createRootRoute({
@@ -27,7 +30,7 @@ const rootRoute = createRootRoute({
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  component: () => <Navigate to={APP_TAB_PATHS.cockpit} replace />
+  component: () => null
 });
 
 const cockpitRoute = createRoute({
@@ -49,6 +52,12 @@ export const clientsRoute = createRoute({
   component: () => <Outlet />
 });
 
+export const suppliersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'suppliers',
+  component: () => <Outlet />
+});
+
 export const clientsIndexRoute = createRoute({
   getParentRoute: () => clientsRoute,
   path: '/',
@@ -66,18 +75,24 @@ export const clientsCreateRoute = createRoute({
 export const clientRecordRoute = createRoute({
   getParentRoute: () => clientsRoute,
   path: '$clientNumber',
-  validateSearch: validateDirectorySearch,
   component: () => {
     const { clientNumber } = clientRecordRoute.useParams();
-    const search = clientRecordRoute.useSearch();
-    return <ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber }} search={search} />;
+    return <ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber }} />;
+  }
+});
+
+export const clientRecordEditRoute = createRoute({
+  getParentRoute: () => clientsRoute,
+  path: '$clientNumber/edit',
+  component: () => {
+    const { clientNumber } = clientRecordEditRoute.useParams();
+    return <ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber }} isEditOpen />;
   }
 });
 
 export const prospectConvertRoute = createRoute({
   getParentRoute: () => clientsRoute,
   path: 'prospects/$prospectId/convert',
-  validateSearch: validateDirectorySearch,
   component: () => {
     const { prospectId } = prospectConvertRoute.useParams();
     return <ClientDirectoryConvertPage prospectId={prospectId} />;
@@ -87,11 +102,49 @@ export const prospectConvertRoute = createRoute({
 export const prospectRecordRoute = createRoute({
   getParentRoute: () => clientsRoute,
   path: 'prospects/$prospectId',
-  validateSearch: validateDirectorySearch,
   component: () => {
     const { prospectId } = prospectRecordRoute.useParams();
-    const search = prospectRecordRoute.useSearch();
-    return <ClientDirectoryDetailPage routeRef={{ kind: 'prospect', id: prospectId }} search={search} />;
+    return <ClientDirectoryDetailPage routeRef={{ kind: 'prospect', id: prospectId }} />;
+  }
+});
+
+export const prospectRecordEditRoute = createRoute({
+  getParentRoute: () => clientsRoute,
+  path: 'prospects/$prospectId/edit',
+  component: () => {
+    const { prospectId } = prospectRecordEditRoute.useParams();
+    return <ClientDirectoryDetailPage routeRef={{ kind: 'prospect', id: prospectId }} isEditOpen />;
+  }
+});
+
+export const suppliersIndexRoute = createRoute({
+  getParentRoute: () => suppliersRoute,
+  path: '/',
+  validateSearch: validateSupplierDirectorySearch,
+  component: AdminSuppliersPage
+});
+
+export const supplierCreateRoute = createRoute({
+  getParentRoute: () => suppliersRoute,
+  path: 'new',
+  component: AdminSupplierCreatePage
+});
+
+export const supplierRecordRoute = createRoute({
+  getParentRoute: () => suppliersRoute,
+  path: '$supplierId',
+  component: () => {
+    const { supplierId } = supplierRecordRoute.useParams();
+    return <ClientDirectoryDetailPage routeRef={{ kind: 'supplier', id: supplierId }} />;
+  }
+});
+
+export const supplierRecordEditRoute = createRoute({
+  getParentRoute: () => suppliersRoute,
+  path: '$supplierId/edit',
+  component: () => {
+    const { supplierId } = supplierRecordEditRoute.useParams();
+    return <ClientDirectoryDetailPage routeRef={{ kind: 'supplier', id: supplierId }} isEditOpen />;
   }
 });
 
@@ -110,14 +163,14 @@ const adminIndexRoute = createRoute({
 const adminSupplierCreateRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: 'suppliers/new',
-  component: AdminSupplierCreatePage
+  component: () => <Navigate to="/suppliers/new" replace />
 });
 
 const adminSuppliersRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: 'suppliers',
   validateSearch: validateSupplierDirectorySearch,
-  component: AdminSuppliersPage
+  component: () => <Navigate to="/suppliers" search={() => DEFAULT_SUPPLIER_SEARCH} replace />
 });
 
 const settingsRoute = createRoute({
@@ -134,8 +187,16 @@ const routeTree = rootRoute.addChildren([
     clientsIndexRoute,
     clientsCreateRoute,
     prospectConvertRoute,
+    clientRecordEditRoute,
+    prospectRecordEditRoute,
     clientRecordRoute,
     prospectRecordRoute
+  ]),
+  suppliersRoute.addChildren([
+    suppliersIndexRoute,
+    supplierCreateRoute,
+    supplierRecordEditRoute,
+    supplierRecordRoute
   ]),
   adminRoute.addChildren([
     adminIndexRoute,

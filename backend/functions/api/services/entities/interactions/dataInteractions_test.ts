@@ -4,10 +4,12 @@ import {
   normalizeInteractionUpdates,
   normalizeKnownCompanies,
   resolveDraftFormType,
+  resolveEntityInteractionsScope,
   resolvePagination,
   saveInteraction,
   addTimelineEvent,
   listInteractionsByAgency,
+  listInteractionsByEntity,
   listKnownCompanies,
   getInteractionDraft,
   saveInteractionDraft,
@@ -89,6 +91,12 @@ Deno.test('resolvePagination computes offset from page and page_size', () => {
   });
 });
 
+Deno.test('resolveEntityInteractionsScope defaults to all when omitted', () => {
+  assertEquals(resolveEntityInteractionsScope(undefined), 'all');
+  assertEquals(resolveEntityInteractionsScope('open'), 'open');
+  assertEquals(resolveEntityInteractionsScope('closed'), 'closed');
+});
+
 Deno.test('normalizeKnownCompanies trims, removes empty names, deduplicates case-insensitively and sorts in French', () => {
   const companies = normalizeKnownCompanies([
     { company_name: '  Zebra Industrie  ' },
@@ -130,6 +138,7 @@ type MockThen = <T = MockRow[]>(
 
 type MockConfig = {
   selectRows?: MockRow[];
+  selectRowsQueue?: MockRow[][];
   insertRows?: MockRow[];
   updateRows?: MockRow[];
   deleteRows?: MockRow[];
@@ -170,7 +179,8 @@ const createMockDb = (config: MockConfig = {}) => {
         },
         // Comportement Thenable standard (Promesse résolue)
         then: ((onFulfilled, onRejected) => {
-          return Promise.resolve(config.selectRows ?? []).then(onFulfilled, onRejected);
+          const rows = config.selectRowsQueue?.shift() ?? config.selectRows ?? [];
+          return Promise.resolve(rows).then(onFulfilled, onRejected);
         }) as MockThen
       };
 
@@ -264,6 +274,38 @@ Deno.test('saveInteraction allows member user to save in allowed agency', async 
   assertEquals(insertCalls[0].values.agency_id, 'agency-1');
 });
 
+Deno.test('saveInteraction rejects missing product family when interaction type requires it', async () => {
+  const { db } = createMockDb({
+    selectRows: [{ requires_product_families: true }],
+    insertRows: [{ id: 'int-1' }]
+  });
+  const auth = createAuthContext();
+
+  const error = await assertRejects(
+    () => saveInteraction(db, auth, {
+      action: 'save',
+      agency_id: 'agency-1',
+      interaction: {
+        id: '11111111-1111-4111-8111-111111111111',
+        channel: 'Email',
+        entity_type: 'Client',
+        contact_service: 'Atelier',
+        company_name: 'ACME',
+        contact_name: 'Alice Martin',
+        contact_phone: '0102030405',
+        subject: 'Demande vérin',
+        interaction_type: 'Devis',
+        status_id: '22222222-2222-4222-8222-222222222222',
+        mega_families: [],
+        timeline: []
+      }
+    })
+  );
+
+  assertEquals(Reflect.get(error, 'status'), 400);
+  assertEquals(Reflect.get(error, 'code'), 'VALIDATION_ERROR');
+});
+
 Deno.test('saveInteraction rejects member user trying to save in non-member agency', async () => {
   const { db } = createMockDb();
   const auth = createAuthContext();
@@ -325,6 +367,34 @@ Deno.test('listInteractionsByAgency rejects member trying to fetch non-member ag
 
   assertEquals(Reflect.get(error, 'status'), 403);
   assertEquals(Reflect.get(error, 'code'), 'AUTH_FORBIDDEN');
+});
+
+// --- Tests sur listInteractionsByEntity ---
+
+Deno.test('listInteractionsByEntity supports scoped open interactions', async () => {
+  const rows = [{ id: 'int-open', agency_id: 'agency-1', entity_id: 'entity-1', status_is_terminal: false }];
+  const { db, selectCalls } = createMockDb({
+    selectRowsQueue: [
+      [{ agency_id: 'agency-1' }],
+      rows,
+      [{ count: 1 }]
+    ]
+  });
+  const auth = createAuthContext();
+
+  const result = await listInteractionsByEntity(db, auth, {
+    action: 'list_by_entity',
+    entity_id: 'entity-1',
+    scope: 'open',
+    page: 1,
+    page_size: 10
+  });
+
+  assertEquals(result.interactions, rows);
+  assertEquals(result.page, 1);
+  assertEquals(result.page_size, 10);
+  assertEquals(result.total, 1);
+  assertEquals(selectCalls.length, 3);
 });
 
 // --- Tests sur listKnownCompanies ---

@@ -1,10 +1,11 @@
 import ReferentialsSection from './referentials/ReferentialsSection';
 import KanbanSection from './kanban/KanbanSection';
 import IntegritySection from './integrity/IntegritySection';
+import InputRulesSection from './input-rules/InputRulesSection';
 import type { SettingsSectionsProps } from './settings-sections.types';
 
 /**
- * Renders settings as focused internal subpages for workflow and form lists.
+ * Renders settings as focused internal subpages for workflow, form lists and rules.
  *
  * @param {SettingsSectionsProps} props - The component properties.
  * @returns {JSX.Element} The rendered settings sections view.
@@ -89,6 +90,13 @@ const SettingsSections = ({
           updateStatusCategory={updateStatusCategory}
           renameStatus={renameStatus}
           setStatuses={setStatuses}
+        />
+      )}
+      {activeSection === 'input-rules' && (
+        <InputRulesSection
+          readOnly={agencyReadOnly}
+          interactionTypes={interactionTypes}
+          setInteractionTypes={setInteractionTypes}
         />
       )}
       {activeSection === 'integrity' ? <IntegritySection agencyId={agencyId} readOnly={agencyReadOnly} usage={usage} canRunImmediateAction={canRunImmediateAction} /> : null}

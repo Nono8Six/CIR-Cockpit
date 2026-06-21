@@ -2,6 +2,7 @@ import { ResultAsync } from 'neverthrow';
 
 import { dataEntitiesResponseSchema } from '../../../../shared/schemas/system/api-responses';
 import type { ClientPrimaryContactFormValues } from '../../../../shared/schemas/entity/client.schema';
+import type { OfficialDataResyncPayload } from '../../../../shared/schemas/system/data.schema';
 import { AccountType, Client } from '@/types';
 import { createAppError, type AppError } from '@/services/errors/AppError';
 import { safeTrpc } from '@/services/api/safeTrpc';
@@ -25,6 +26,8 @@ export type ClientPayload = {
   official_data_synced_at?: string | null;
   notes?: string | null;
   cir_commercial_id?: string | null;
+  primary_contact_id?: string | null;
+  official_data_resync?: OfficialDataResyncPayload;
   primary_contact?: ClientPrimaryContactFormValues | null;
 };
 
@@ -84,6 +87,8 @@ export const saveClient = (payload: ClientPayload): ResultAsync<Client, AppError
           agency_id: agencyId,
           entity_type: 'Client',
           id: payload.id,
+          primary_contact_id: payload.primary_contact_id ?? null,
+          official_data_resync: payload.official_data_resync,
           entity
         }, options),
       parseEntityResponse,
@@ -127,6 +132,7 @@ export const saveClient = (payload: ClientPayload): ResultAsync<Client, AppError
         agency_id: agencyId,
         entity_type: 'Client',
         id: payload.id,
+        official_data_resync: payload.official_data_resync,
         entity
       }, options),
     parseEntityResponse,

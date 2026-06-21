@@ -49,6 +49,7 @@ const ClientContactDialog = ({
   const emailField = register('email');
   const phoneField = register('phone');
   const positionField = register('position');
+  const serviceLabelField = register('service_label');
   const notesField = register('notes');
 
   return (
@@ -77,7 +78,10 @@ const ClientContactDialog = ({
             onPhoneChange={handlePhoneChange}
             errors={errors}
           />
-          <ContactFormPositionSection positionField={positionField} />
+          <ContactFormPositionSection
+            positionField={positionField}
+            serviceLabelField={serviceLabelField}
+          />
           <ContactFormNotesSection notesField={notesField} />
           {errors.root?.message ? <p className="text-sm text-destructive">{errors.root.message}</p> : null}
           <ContactFormFooter

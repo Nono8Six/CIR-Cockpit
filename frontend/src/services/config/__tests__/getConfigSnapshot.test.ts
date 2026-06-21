@@ -28,7 +28,7 @@ describe('parseConfigGetResponse', () => {
           entities: ['Client'],
           services: ['Atelier'],
           families: ['Freinage'],
-          interaction_types: ['Devis'],
+          interaction_types: [{ label: 'Devis', requires_product_families: false, sort_order: 1 }],
           departments: []
         }
       }

@@ -1,4 +1,4 @@
-import { and, asc, eq, isNull, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, isNull, sql } from 'drizzle-orm';
 
 import { entity_contacts } from '../../../../../drizzle/schema.ts';
 import type { Database } from '../../../../../../shared/supabase.types.ts';
@@ -32,6 +32,16 @@ const defaultDependencies: DataEntityContactsDependencies = {
   ensureAgencyAccess: ensureOptionalAgencyAccess
 };
 
+const withAuditActor = async <T>(
+  db: DbClient,
+  actorId: string,
+  action: (db: DbClient) => Promise<T>
+): Promise<T> =>
+  await db.transaction(async (tx) => {
+    await tx.execute(sql`select private.set_audit_actor(${actorId}::uuid)`);
+    return await action(tx as unknown as DbClient);
+  });
+
 const saveContact = async (
   db: DbClient,
   entityId: string,
@@ -44,6 +54,7 @@ const saveContact = async (
     email: contact.email?.trim() || null,
     phone: contact.phone?.trim() || null,
     position: contact.position?.trim() || null,
+    service_label: contact.service_label?.trim() || null,
     notes: contact.notes?.trim() || null
   };
 
@@ -123,7 +134,8 @@ const compareText = (left: string | null, right: string | null): number => {
 
 const sortContacts = (contacts: ContactRow[]): ContactRow[] =>
   contacts.toSorted((left, right) =>
-    compareText(left.last_name, right.last_name)
+    Number(right.is_primary) - Number(left.is_primary)
+    || compareText(left.last_name, right.last_name)
     || compareText(left.first_name, right.first_name)
     || left.created_at.localeCompare(right.created_at)
   );
@@ -142,7 +154,12 @@ const listContactsByEntity = async (
       .select()
       .from(entity_contacts)
       .where(and(...conditions) ?? sql<boolean>`true`)
-      .orderBy(asc(entity_contacts.last_name), asc(entity_contacts.first_name), asc(entity_contacts.created_at));
+      .orderBy(
+        desc(entity_contacts.is_primary),
+        asc(entity_contacts.last_name),
+        asc(entity_contacts.first_name),
+        asc(entity_contacts.created_at)
+      );
     return sortContacts(contacts);
   } catch {
     throw httpError(500, 'DB_READ_FAILED', 'Impossible de charger les contacts.');
@@ -168,14 +185,16 @@ export const handleDataEntityContactsAction = async (
     case 'save': {
       const agencyId = await dependencies.getEntityAgencyId(db, data.entity_id);
       dependencies.ensureAgencyAccess(authContext, agencyId);
-      const contact = await saveContact(db, data.entity_id, data.id, data.contact);
+      const contact = await withAuditActor(db, authContext.userId, (auditDb) =>
+        saveContact(auditDb, data.entity_id, data.id, data.contact)
+      );
       return { request_id: requestId, ok: true, contact };
     }
     case 'delete': {
       const entityId = await dependencies.getContactEntityId(db, data.contact_id);
       const agencyId = await dependencies.getEntityAgencyId(db, entityId);
       dependencies.ensureAgencyAccess(authContext, agencyId);
-      await deleteContact(db, data.contact_id);
+      await withAuditActor(db, authContext.userId, (auditDb) => deleteContact(auditDb, data.contact_id));
       return { request_id: requestId, ok: true, contact_id: data.contact_id };
     }
     default:

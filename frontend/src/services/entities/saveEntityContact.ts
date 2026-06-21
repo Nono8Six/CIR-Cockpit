@@ -13,6 +13,7 @@ export type EntityContactPayload = {
   email?: string | null;
   phone?: string | null;
   position?: string | null;
+  service_label?: string | null;
   notes?: string | null;
 };
 
@@ -44,6 +45,7 @@ export const saveEntityContact = (payload: EntityContactPayload): ResultAsync<En
           email: normalizeOptionalField(payload.email),
           phone: normalizeOptionalField(payload.phone),
           position: normalizeOptionalField(payload.position),
+          service_label: normalizeOptionalField(payload.service_label),
           notes: normalizeOptionalField(payload.notes)
         }
       }, options),

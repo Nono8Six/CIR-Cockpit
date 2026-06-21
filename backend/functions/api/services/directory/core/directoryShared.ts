@@ -42,6 +42,14 @@ export const PROSPECT_ENTITY_TYPE_WHERE = sql<boolean>`
   )
 `;
 
+export const CLIENT_ENTITY_TYPE_WHERE = sql<boolean>`
+  lower(${entities.entity_type}) = 'client'
+`;
+
+export const SUPPLIER_ENTITY_TYPE_WHERE = sql<boolean>`
+  ${entities.entity_type} = 'Fournisseur'
+`;
+
 export const commercialDisplayNameSql = sql<string>`
   coalesce(
     nullif(${profiles.display_name}, ''),
@@ -88,7 +96,7 @@ const toEntityTypeCondition = (
   type: DirectoryListInput['type'] | DirectoryOptionsFacetInput['type'] | DirectoryOptionsCitiesInput['type'] | DirectoryCitySuggestionsInput['type']
 ): SqlCondition | undefined => {
   if (type === 'client') {
-    return sql<boolean>`${entities.entity_type} = 'Client'`;
+    return CLIENT_ENTITY_TYPE_WHERE;
   }
 
   if (type === 'prospect') {
@@ -96,12 +104,12 @@ const toEntityTypeCondition = (
   }
 
   if (type === 'supplier') {
-    return sql<boolean>`${entities.entity_type} = 'Fournisseur'`;
+    return SUPPLIER_ENTITY_TYPE_WHERE;
   }
 
   return sql<boolean>`
     (
-      ${entities.entity_type} = 'Client'
+      ${CLIENT_ENTITY_TYPE_WHERE}
       or ${PROSPECT_ENTITY_TYPE_WHERE}
     )
   `;

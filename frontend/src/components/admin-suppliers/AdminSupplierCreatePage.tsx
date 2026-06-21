@@ -34,7 +34,7 @@ const supplierSteps = (['search', 'details', 'review'] as Step[]).map((step) => 
  * @returns {JSX.Element} The supplier creation page layout.
  */
 const AdminSupplierCreatePage = () => {
-  const navigate = useNavigate({ from: '/admin/suppliers/new' });
+  const navigate = useNavigate({ from: '/suppliers/new' });
   const sessionState = useAppSessionStateContext();
   const userRole = sessionState.profile?.role ?? 'tcs';
 
@@ -48,7 +48,7 @@ const AdminSupplierCreatePage = () => {
     );
   }
 
-  const goBackToList = () => void navigate({ to: '/admin/suppliers', search: () => DEFAULT_SUPPLIER_SEARCH });
+  const goBackToList = () => void navigate({ to: '/suppliers', search: () => DEFAULT_SUPPLIER_SEARCH });
   const headerLeading = (
     <>
           <Button

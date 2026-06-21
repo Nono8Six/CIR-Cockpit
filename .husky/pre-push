@@ -1,2 +1,54 @@
 #!/usr/bin/env sh
-pnpm run qa:fast
+set -eu
+
+base="$(git merge-base HEAD @{upstream} 2>/dev/null || git rev-parse HEAD~1 2>/dev/null || git rev-parse HEAD)"
+changed_files="$(
+  {
+    git diff --name-only "$base"...HEAD 2>/dev/null || true
+    git diff --name-only 2>/dev/null || true
+    git diff --name-only --cached 2>/dev/null || true
+  } | sort -u
+)"
+
+has_front=0
+has_back=0
+has_other=0
+
+if [ -z "$changed_files" ]; then
+  pnpm run qa:docs
+  exit 0
+fi
+
+while IFS= read -r file; do
+  [ -z "$file" ] && continue
+
+  case "$file" in
+    frontend/src/*|frontend/e2e/*|frontend/package.json|frontend/vite.config.ts|frontend/vitest.config.ts|frontend/playwright.config.ts|frontend/eslint.config.js|frontend/tsconfig.json|frontend/tailwind.config.cjs|frontend/postcss.config.cjs)
+      has_front=1
+      ;;
+    backend/*|supabase/*|deno.json)
+      has_back=1
+      ;;
+    shared/*)
+      has_front=1
+      has_back=1
+      ;;
+    AGENTS.md|CLAUDE.md|docs/*|package.json|pnpm-workspace.yaml|.github/*|scripts/*|.husky/*)
+      ;;
+    *)
+      has_other=1
+      ;;
+  esac
+done <<EOF
+$changed_files
+EOF
+
+if [ "$has_other" -eq 1 ] || { [ "$has_front" -eq 1 ] && [ "$has_back" -eq 1 ]; }; then
+  pnpm run qa:fast
+elif [ "$has_front" -eq 1 ]; then
+  pnpm run qa:front
+elif [ "$has_back" -eq 1 ]; then
+  pnpm run qa:back
+else
+  pnpm run qa:docs
+fi

@@ -40,39 +40,43 @@ const InteractionCardHeader = ({ data, statusTone, onDeleteInteraction, onSelect
   const lastActionTime = formatTime(data.last_action_at);
 
   return (
-    <div className="mb-3.5 flex items-center justify-between gap-2.5 select-none">
-      <div className="flex min-w-0 flex-1 items-center gap-2.5">
+    <div className="mb-3.5 flex items-start justify-between gap-2.5 select-none">
+      <div className="flex min-w-0 flex-1 items-start gap-2.5">
         <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg border border-border/80 bg-muted/30 text-muted-foreground shadow-soft">
           {getInteractionChannelIcon(data.channel)}
         </span>
-        <span
-          className={cn(
-            'truncate text-[13px] tracking-tight',
-            isPlaceholder
-              ? 'italic font-semibold text-muted-foreground'
-              : 'font-semibold text-foreground'
-          )}
-          title={companyName}
-        >
-          {companyName}
-        </span>
-        {statusTone && (
-          <span className={`size-1.5 shrink-0 rounded-full ${statusDotClass}`} aria-hidden="true" />
-        )}
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <span
+            className={cn(
+              'block break-words text-[13px] leading-snug tracking-tight',
+              isPlaceholder
+                ? 'italic font-semibold text-muted-foreground'
+                : 'font-semibold text-foreground'
+            )}
+            title={companyName}
+          >
+            {companyName}
+          </span>
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+            {statusTone && (
+              <span className={`size-1.5 shrink-0 rounded-full ${statusDotClass}`} aria-hidden="true" />
+            )}
+            <time
+              dateTime={data.last_action_at}
+              title="Dernière action enregistrée"
+              className="inline-flex max-w-full items-center gap-1 rounded-md border border-border/80 bg-muted/45 px-2 py-1 font-mono text-[11px] font-bold leading-none text-foreground shadow-soft tabular-nums"
+            >
+              <span className="hidden font-sans text-[10px] font-semibold uppercase tracking-normal text-muted-foreground sm:inline">
+                Dernière action
+              </span>
+              <span>{lastActionDate}</span>
+              <span className="font-sans text-muted-foreground/70">•</span>
+              <span>{lastActionTime}</span>
+            </time>
+          </div>
+        </div>
       </div>
       <div className="flex shrink-0 items-center gap-1.5">
-        <time
-          dateTime={data.last_action_at}
-          title="Dernière action enregistrée"
-          className="inline-flex items-center gap-1 rounded-md border border-border/80 bg-muted/45 px-2 py-1 font-mono text-[11px] font-bold leading-none text-foreground shadow-soft tabular-nums"
-        >
-          <span className="hidden font-sans text-[10px] font-semibold uppercase tracking-normal text-muted-foreground sm:inline">
-            Dernière action
-          </span>
-          <span>{lastActionDate}</span>
-          <span className="font-sans text-muted-foreground/70">•</span>
-          <span>{lastActionTime}</span>
-        </time>
         {onDeleteInteraction && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

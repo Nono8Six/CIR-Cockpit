@@ -87,7 +87,11 @@ export const useAppViewState = ({
       return;
     }
 
-    if ((activeTab === 'settings' && !canAccessSettings) || (activeTab === 'admin' && !canAccessAdmin)) {
+    if (
+      (activeTab === 'settings' && !canAccessSettings)
+      || (activeTab === 'admin' && !canAccessAdmin)
+      || (activeTab === 'suppliers' && !canAccessAdmin)
+    ) {
       void navigate({ to: getPathForTab('cockpit'), replace: true });
     }
   }, [activeTab, canAccessAdmin, canAccessSettings, isAccessControlReady, navigate]);

@@ -27,6 +27,7 @@ export const ROLE_BADGE_STYLES: Record<UserRole, string> = {
 
 export const APP_TAB_SHORTCUTS: Record<AppTab, string> = {
   clients: 'F1',
+  suppliers: 'F2',
   cockpit: 'F3',
   dashboard: 'F4',
   admin: 'F7',
@@ -71,12 +72,7 @@ type AppShellTabNavItem = AppShellNavItemBase & {
   id: AppTab;
 };
 
-type AppShellRouteNavItem = AppShellNavItemBase & {
-  id: 'admin-suppliers';
-  routePath: string;
-};
-
-export type AppShellNavItem = AppShellTabNavItem | AppShellRouteNavItem;
+export type AppShellNavItem = AppShellTabNavItem;
 
 export type AppShellNavSection = {
   id: AppShellSectionId;
@@ -84,16 +80,8 @@ export type AppShellNavSection = {
   items: AppShellNavItem[];
 };
 
-export const ADMIN_SUPPLIERS_NAV_ITEM: AppShellNavItem = {
-  id: 'admin-suppliers',
-  sectionId: 'admin',
-  label: 'Fournisseur',
-  icon: Factory,
-  routePath: '/admin/suppliers'
-};
-
 export const APP_SHELL_SECTION_LABELS: Record<AppShellSectionId, string> = {
-  clients: 'Clients',
+  clients: 'Tiers',
   interactions: 'Interactions',
   admin: 'Admin'
 };
@@ -113,7 +101,7 @@ export const buildShellNavigation = (
   const sections: AppShellNavSection[] = [
     {
       id: 'clients',
-      title: 'Clients',
+      title: 'Tiers',
       items: [
         {
           id: 'clients',
@@ -121,7 +109,16 @@ export const buildShellNavigation = (
           label: 'Clients',
           icon: Building2,
           shortcut: APP_TAB_SHORTCUTS.clients
-        }
+        },
+        ...(canAccessAdmin
+          ? [{
+            id: 'suppliers' as const,
+            sectionId: 'clients' as const,
+            label: 'Fournisseurs',
+            icon: Factory,
+            shortcut: APP_TAB_SHORTCUTS.suppliers
+          }]
+          : [])
       ]
     },
     {
@@ -159,7 +156,6 @@ export const buildShellNavigation = (
           icon: Shield,
           shortcut: APP_TAB_SHORTCUTS.admin
         },
-        ADMIN_SUPPLIERS_NAV_ITEM,
         {
           id: 'settings',
           sectionId: 'admin',

@@ -219,7 +219,7 @@ Deno.test('listEntities returns clients through the backend API service', async 
     agency_id: 'agency-1'
   });
 
-  assertEquals(result, rows);
+  assertEquals(result, rows as never);
   assertEquals(calls.whereCount, 1);
   assertEquals(calls.orderByCount, 1);
 });
@@ -241,7 +241,7 @@ Deno.test('listEntities returns prospect-compatible rows through the backend API
     agency_id: 'agency-1'
   });
 
-  assertEquals(result, rows);
+  assertEquals(result, rows as never);
   assertEquals(calls.whereCount, 1);
   assertEquals(calls.orderByCount, 1);
 });
@@ -275,7 +275,7 @@ Deno.test('getEntitySearchIndex loads contacts only for selected entity ids', as
     include_archived: false
   });
 
-  assertEquals(result, { entities: entityRows, contacts: contactRows });
+  assertEquals(result, { entities: entityRows, contacts: contactRows } as never);
   assertEquals(calls.entityOrderByCount, 1);
   assertEquals(calls.contactOrderByCount, 1);
 });
@@ -361,6 +361,7 @@ Deno.test('buildSaveEntityRows stores individual clients with cash account and p
   assertEquals(primaryContact?.first_name, 'Alice');
   assertEquals(primaryContact?.last_name, 'Martin');
   assertEquals(primaryContact?.phone, '0601020304');
+  assertEquals(primaryContact?.is_primary, true);
 });
 
 Deno.test('reassignEntity rejects non-orphan entities', async () => {

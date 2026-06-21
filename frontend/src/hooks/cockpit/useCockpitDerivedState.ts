@@ -14,6 +14,7 @@ export const useCockpitDerivedState = ({
   contactFirstName,
   contactLastName,
   contactPosition,
+  contactServiceLabel = '',
   contactName,
   contactPhone,
   contactEmail,
@@ -41,6 +42,7 @@ export const useCockpitDerivedState = ({
       contact_first_name: contactFirstName,
       contact_last_name: contactLastName,
       contact_position: contactPosition,
+      contact_service_label: contactServiceLabel,
       contact_name: contactName,
       contact_phone: contactPhone,
       contact_email: contactEmail,
@@ -53,12 +55,12 @@ export const useCockpitDerivedState = ({
       entity_id: entityId,
       contact_id: contactId
     }
-  }), [channel, companyCity, companyName, contactEmail, contactFirstName, contactId, contactLastName, contactName, contactPhone, contactPosition, contactService, entityId, entityType, interactionType, megaFamilies, notes, orderRef, reminderAt, statusId, subject]);
+  }), [channel, companyCity, companyName, contactEmail, contactFirstName, contactId, contactLastName, contactName, contactPhone, contactPosition, contactService, contactServiceLabel, entityId, entityType, interactionType, megaFamilies, notes, orderRef, reminderAt, statusId, subject]);
 
   const hasDraftContent = useMemo(() => {
     if (selectedEntity || entityId || contactId) return true;
-    return Boolean(channel !== Channel.PHONE || entityType.trim() || companyName.trim() || companyCity.trim() || contactFirstName.trim() || contactLastName.trim() || contactPosition.trim() || contactName.trim() || contactPhone.trim() || contactEmail.trim() || subject.trim() || notes.trim() || orderRef.trim() || reminderAt.trim() || megaFamilies.length > 0);
-  }, [channel, companyCity, companyName, contactEmail, contactFirstName, contactId, contactLastName, contactName, contactPhone, contactPosition, entityId, entityType, megaFamilies.length, notes, orderRef, reminderAt, selectedEntity, subject]);
+    return Boolean(channel !== Channel.PHONE || entityType.trim() || companyName.trim() || companyCity.trim() || contactFirstName.trim() || contactLastName.trim() || contactPosition.trim() || contactServiceLabel.trim() || contactName.trim() || contactPhone.trim() || contactEmail.trim() || subject.trim() || notes.trim() || orderRef.trim() || reminderAt.trim() || megaFamilies.length > 0);
+  }, [channel, companyCity, companyName, contactEmail, contactFirstName, contactId, contactLastName, contactName, contactPhone, contactPosition, contactServiceLabel, entityId, entityType, megaFamilies.length, notes, orderRef, reminderAt, selectedEntity, subject]);
 
   const companySuggestions = useMemo(() => {
     if (isClientRelation || selectedEntity || !companyName || companyName.length < 2) return [];

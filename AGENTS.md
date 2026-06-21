@@ -1,98 +1,84 @@
 # AGENTS.md
 
-Guide complementaire pour les agents autonomes (Codex, subagents, etc.).
+Guide operationnel pour les agents autonomes dans CIR Cockpit.
 
-## Regle de base
+## Source et routage
 
-Lire et appliquer `CLAUDE.md` en integralite. Ce fichier ajoute des regles specifiques au travail autonome.
+- Ce fichier est l'entree courte pour Codex et les subagents.
+- Ne pas lire `CLAUDE.md` par defaut. `CLAUDE.md` est l'adaptateur Claude Code et importe ces regles.
+- Lire les documents lourds seulement quand ils sont utiles:
+  - `docs/qa-runbook.md`: avant une livraison finale, une PR/merge/deploiement, une modification de QA, ou une demande explicite de verification complete.
+  - `docs/testing.md`: quand la demande touche tests, couverture, E2E ou Playwright.
+  - `docs/stack.md`: quand la demande touche versions, dependances, runtime, CI ou outillage.
+  - `docs/plan.md`: seulement pour une etape majeure produit/architecture demandee.
+- `.mcp.json` est ignore par Git et local-only. Verifier les MCP reellement exposes par l'environnement actif avant de s'y fier.
+
+## Regles de travail
+
+- Lire d'abord les fichiers directement concernes, puis agir. Ne pas explorer tout le repo si le perimetre est clair.
+- Respecter le worktree sale: ne jamais revert les changements non faits par l'agent.
+- Modifier le minimum utile. Ne pas ajouter de fonctionnalite, refactor, doc ou fichier non demande.
+- Zero donnees mockees, hardcodees, TODO non resolus ou texte decoratif dans le code livre.
+- Preferer modifier un fichier existant plutot que creer un nouveau fichier.
+- Zod: source unique dans `shared/schemas`, payloads API en `.strict()`, `safeParse` sur entrees/sorties externes, details de validation en francais.
+- Erreurs: utiliser `createAppError()` / mappers / `reportError()` / `notifyError()`. Pas de `throw new Error()`, `console.error()` ou `toast.error()` directs hors exceptions existantes documentees.
+- Garder les imports via alias `@/*` cote frontend et eviter les imports circulaires.
 
 ## Skills obligatoires
 
-Invoquer le skill correspondant AVANT d'ecrire du code (voir liste dans CLAUDE.md section "Skills obligatoires") :
+Invoquer le skill pertinent avant d'ecrire du code:
 
-- `vercel-react-best-practices` pour tout code React
-- `vercel-composition-patterns` pour tout refactoring de composants
-- `web-design-guidelines` pour tout audit UI / accessibilite
-- `supabase-postgres-best-practices` pour toute modification DB
-- `cir-error-handling` pour toute modification du systeme d'erreurs
-- `systematic-debugging` pour tout bug, echec test, ou comportement inattendu (avant correction)
-- `vitest` pour creation/mise a jour des tests unitaires/integration front
-- `playwright-cli` pour verification des parcours UI/E2E
-- `pnpm` pour toute modification package manager/workspace/dependances
-- `trpc-type-safety` pour toute creation/migration tRPC
-- `drizzle-orm` pour toute creation/migration Drizzle
-- `find-skills` quand une capability manque ou doit etre cherchee
+- `vercel-react-best-practices`: composants, hooks ou pages React.
+- `vercel-composition-patterns`: refactoring de composants React.
+- `web-design-guidelines`: audit UI, accessibilite, UX.
+- `impeccable`: design, redesign, polish, onboarding, empty state, formulaire, dashboard ou composant visible.
+- `design-taste-frontend`: decision visuelle d'implementation UI.
+- `layers-intro` puis `layers-*`: modele produit, vocabulaire metier, parcours, onboarding complexe, architecture d'information, objets/relations ou decisions UX profondes.
+- `supabase-postgres-best-practices`: DB, migrations, RLS, indexes, queries, Edge Functions accedant a la DB.
+- `cir-error-handling`: systeme d'erreurs.
+- `systematic-debugging`: bug, echec test ou comportement inattendu avant correction.
+- `vitest`: creation ou mise a jour de tests front.
+- `playwright-cli`: verification de parcours UI/E2E.
+- `pnpm`: scripts, workspace, dependances ou package manager.
+- `trpc-type-safety`: procedure ou migration tRPC.
+- `drizzle-orm`: schema ou queries Drizzle.
+- `find-skills`: competence manquante ou capability inconnue.
 
-## Routage design / UI / UX
+## Docs et MCP
 
-Ces skills completent `web-design-guidelines` sans remplacer les regles React, QA et accessibilite du projet :
+- Context7 est requis pour une decision d'implementation sur React, TanStack, tRPC, Drizzle, Vitest, Playwright, Zod ou autre librairie/framework. Pas requis pour une simple relecture documentaire ou un changement de texte.
+- Supabase MCP est requis avant toute action DB, migration, RLS, Edge Function, deploy ou diagnostic runtime Supabase.
+- Chrome DevTools/Playwright seulement si un parcours UI doit etre verifie; ne pas lancer d'E2E automatiquement sans demande utilisateur.
+- shadcn MCP seulement pour rechercher/installer/verifier des composants UI.
 
-- `impeccable` : obligatoire avant tout travail de design, redesign, polish, clarification UX, onboarding, empty state, formulaire, dashboard ou composant visible. Pour CIR Cockpit, traiter l'application comme un registre **product** : interface metier dense, sobre, utile, sans effet marketing gratuit.
-- `design-taste-frontend` : obligatoire avant toute implementation UI qui demande une decision visuelle (hierarchie, layout, etats interactifs, responsive, motion, couleurs). Appliquer ses garde-fous anti-UI generique, mais toujours verifier `package.json` avant toute dependance et ne jamais introduire Framer/GSAP/Three sans demande explicite ou justification acceptee.
-- `layers-intro` puis le skill `layers-*` pertinent : obligatoire quand la demande touche au modele produit, vocabulaire metier, parcours, onboarding complexe, architecture d'information, objets/relations, etats, ou decisions UX avant surface. Par defaut : `layers-orient` si le niveau de probleme est flou, `layers-conceptual-model` pour objets/vocabulaire, `layers-interaction-flow` pour parcours, `layers-surface` pour audit de surface.
-- `superdesign` : a utiliser seulement pour exploration de variantes, draft visuel, inspiration, extraction de composants de design, ou quand l'utilisateur le demande explicitement. Ne pas l'utiliser automatiquement sur chaque modification UI, car il peut creer `.superdesign/`, necessite le CLI/login, et ajoute une boucle de generation externe.
-- `gpt-taste` : ne pas utiliser par defaut pour CIR Cockpit. Il est oriente pages marketing/Awwwards/GSAP/AIDA et peut contredire le besoin d'outil metier sobre. L'utiliser uniquement si l'utilisateur demande explicitement une page vitrine ou une experience tres motion/hero.
+## Politique QA optimisee
 
-Ordre recommande pour une feature UI significative : `layers-*` si le probleme de parcours/modele n'est pas stabilise, puis `impeccable`, puis `design-taste-frontend`, puis `vercel-react-best-practices`/`vercel-composition-patterns` avant le code, puis `web-design-guidelines` pour l'audit UI/accessibilite.
+Choisir la validation par impact, pas par reflexe:
 
-## Regle Context7 (obligatoire)
+| Perimetre | Validation standard |
+| --- | --- |
+| Analyse, plan, audit sans edition | Aucune suite QA; lecture et commandes read-only ciblees si utiles |
+| Docs/config agents/QA uniquement | `pnpm run qa:docs` |
+| Frontend uniquement | `pnpm run qa:front` ou commandes Vitest ciblees + typecheck/lint selon impact |
+| Backend uniquement | `pnpm run qa:back` ou Deno lint/check/test cible selon impact |
+| Shared/API/erreurs/contrats transverses | Checks front + back cibles, ou `pnpm run qa:fast` si large |
+| Livraison finale, merge, PR, deploy, demande explicite | Lire `docs/qa-runbook.md`, puis `pnpm run qa` et probes conditionnelles |
 
-- Pour toute decision d'implementation sur une librairie/framework (React, TanStack Router/Query, tRPC, Drizzle, Vitest, Playwright), consulter Context7 avant de coder.
-- Prioriser les snippets/doc officielles compatibles avec les versions du repo.
+Details:
 
-## MCPs disponibles
+- `qa:docs` = gate legere docs/config.
+- `qa:front` = gate frontend sans coverage/build.
+- `qa:back` = gate backend sans integration distante.
+- `qa:fast` = gate intermediaire large, pas un reflexe apres chaque petite modification.
+- `qa` = gate final complet local.
+- `RUN_E2E=1 pnpm --dir frontend run test:e2e` seulement si parcours UI impacte et demande/confirme.
+- `pnpm run qa:audit` seulement pour audit dependances avec reseau.
 
-- **Chrome DevTools** : verifier l'UI dans le navigateur apres modification
-- **Supabase** : contexte DB, tables, migrations, Edge Functions, types generes
-- **Context7** : documentation a jour des librairies (React, TanStack Query, Zod, etc.)
-- **shadcn** : rechercher, visualiser et installer des composants UI
+## Edge Function api
 
-## Runbook Edge Function api (prod)
-
-- Toujours diagnostiquer avec MCP Supabase avant action (`list_edge_functions`, logs, version/hash/entrypoint/import_map).
-- Ne jamais considerer l'editeur Dashboard comme source de verite du code.
-- Source de verite : `backend/functions/api/`.
-- Entree CLI obligatoire : `supabase/functions/api/index.ts` (wrapper vers `backend/functions/api/index.ts`).
-- Import map de deploy : utiliser `deno.json` racine avec mapping explicite `zod`, `zod/v4`, `zod/`.
-- Commande de deploy de reference :
-  - `supabase functions deploy api --project-ref <project_ref> --use-api --import-map deno.json --no-verify-jwt`
-- En local, deployer via `pnpm run deploy:api` apres `supabase login`, sans fichier temporaire ni `SUPABASE_ACCESS_TOKEN` persistant.
-- Si une action UI Supabase est requise, demander explicitement a l'utilisateur de la faire et attendre sa confirmation.
-
-## Regles agents
-
-- Pendant l'implementation, executer des checks cibles selon l'impact (front/back) ou `pnpm run qa:fast` pour une validation intermediaire.
-- `pnpm run qa` reste obligatoire SELON ta décision en fonction de la tâche qu'on a réalisé, certaine fois ce n'est pas justifié avant de considerer une tache terminee (livraison/merge).
-- Ne lance pas forcement de test e2e automatiquement a chaque modification, demande moi de vérifier si c'est une feature que je t'ai demandé.
-- Zero donnees mockees, hardcodees, ou commentaires TODO non resolus dans le code livre
-- Ne pas creer de fichiers non demandes (README, CHANGELOG, docs, fichiers vides)
-- Preferer modifier un fichier existant plutot que d'en creer un nouveau
-- Ne pas ajouter de fonctionnalites, refactoring, ou documentation au-dela de ce qui est demande
-- Utiliser `pnpm run qa:fast`/commandes ciblees pendant la boucle de dev, puis `pnpm run qa` en gate final depuis la racine
-- Zod: source unique dans `shared/schemas`, payloads API en `.strict()`, `safeParse` obligatoire sur les entrees/sorties externes, et details de validation en francais.
-
-## Quality Gate local + CI
-
-- Reference obligatoire: `docs/qa-runbook.md`
-- Lecture obligatoire de `docs/qa-runbook.md` avant chaque prompt de travail envoye au LLM.
-- Toute livraison doit suivre ce runbook de bout en bout (ordre strict, PASS/FAIL bloquant, rapport final).
-- La CI GitHub Actions execute la meme gate que le local; un check vert ne remplace pas le rapport QA manuel.
-- Sans execution complete du runbook, une tache n'est pas consideree terminee.
-
-## Checklist pre-commit
-
-Avant de considerer le travail termine :
-
-- [ ] Validation intermediaire executee (`pnpm run qa:fast` ou checks cibles equivalents)
-- [ ] `pnpm run qa` passe
-- [ ] Checks GitHub Actions requis au vert si une PR est ouverte
-- [ ] Zero `any`, `@ts-ignore`, `@ts-expect-error` non documentes
-- [ ] Zero `console.error` direct (utiliser `reportError`)
-- [ ] Zero `toast.error()` direct (utiliser `notifyError`)
-- [ ] Erreurs gerees via `createAppError()` / mappers (pas de `throw new Error()`)
-- [ ] Messages d'erreur en francais
-- [ ] Fichiers ~150 lignes max
-- [ ] Imports corrects (path alias `@/*`, ordre respecte, zero circulaire)
-- [ ] En prod, `POST /functions/v1/api/trpc/*` ne retourne plus aucun 404
-- [ ] En prod, preflight `OPTIONS` des routes impactees retourne 200 avec headers CORS
-- [ ] En prod, `list_edge_functions` confirme `api` deploye avec le bon entrypoint/import_map et `verify_jwt` attendu
+- Source de verite: `backend/functions/api/`.
+- Wrapper CLI obligatoire: `supabase/functions/api/index.ts` vers `backend/functions/api/index.ts`.
+- Import map de deploy: `deno.json` racine.
+- `supabase/config.toml` doit garder `[functions.api] verify_jwt = false`; l'auth est geree dans le code backend.
+- Commande de reference: `supabase functions deploy api --project-ref <project_ref> --use-api --import-map deno.json --no-verify-jwt`.
+- Apres deploy backend/API: verifier via Supabase MCP `list_edge_functions`, routes tRPC impactees et preflight CORS impacte.

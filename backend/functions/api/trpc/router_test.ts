@@ -76,6 +76,7 @@ Deno.test('admin query schemas validate list users and audit log filters', () =>
   assertStrictEquals(adminAuditLogsInputSchema.safeParse({
     agency_id: agencyId,
     actor_id: actorId,
+    entity_id: '33333333-3333-4333-8333-333333333333',
     entity_table: 'profiles',
     from: '2026-02-01T00:00:00.000Z',
     to: '2026-02-28T23:59:59.999Z',

@@ -10,7 +10,7 @@ export const Channel = {
 export type Channel = (typeof Channel)[keyof typeof Channel];
 
 export type StatusCategory = 'todo' | 'in_progress' | 'done';
-export type AppTab = 'cockpit' | 'dashboard' | 'settings' | 'clients' | 'admin';
+export type AppTab = 'cockpit' | 'dashboard' | 'settings' | 'clients' | 'suppliers' | 'admin';
 
 export type AgencyStatus = {
   id?: string;
@@ -71,7 +71,10 @@ export type Entity = Omit<
   supplier_code?: Tables<'entities'>['supplier_code'];
   supplier_number?: Tables<'entities'>['supplier_number'];
 };
-export type EntityContact = Tables<'entity_contacts'>;
+export type EntityContact = Omit<Tables<'entity_contacts'>, 'service_label' | 'is_primary'> & {
+  service_label?: Tables<'entity_contacts'>['service_label'];
+  is_primary?: Tables<'entity_contacts'>['is_primary'];
+};
 
 export type EntityInsert = TablesInsert<'entities'>;
 export type EntityUpdate = TablesUpdate<'entities'>;

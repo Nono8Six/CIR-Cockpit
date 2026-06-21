@@ -1,44 +1,20 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 
-import type { DirectoryRouteRef, DirectorySearchState } from '../../../../shared/schemas/system/directory.schema';
+import type { DirectoryRouteRef } from '../../../../shared/schemas/system/directory.schema';
 import { useCanGoBack, useNavigate } from '@tanstack/react-router';
 
 import ClientDirectoryRecordDetails from './ClientDirectoryRecordDetails';
-import { toDirectoryListInput } from './clientDirectorySearch';
-import { getDirectoryRouteRefFromRow } from './directoryRouting';
-import { useAppSessionStateContext } from '../../hooks/session/useAppSession';
-import { useDirectoryPage } from '../../hooks/directory/core/useDirectoryPage';
+import { DEFAULT_DIRECTORY_SEARCH } from './clientDirectorySearch';
+import { DEFAULT_SUPPLIER_SEARCH } from '@/components/admin-suppliers/supplierDirectorySearch';
 
 type ClientDirectoryDetailPageProps = {
   routeRef: DirectoryRouteRef;
-  search: DirectorySearchState;
+  isEditOpen?: boolean;
 };
 
-const ClientDirectoryDetailPage = ({ routeRef, search }: ClientDirectoryDetailPageProps) => {
+const ClientDirectoryDetailPage = ({ routeRef, isEditOpen = false }: ClientDirectoryDetailPageProps) => {
   const canGoBack = useCanGoBack();
   const navigate = useNavigate();
-  const sessionState = useAppSessionStateContext();
-  const directoryListInput = useMemo(() => toDirectoryListInput(search), [search]);
-  const directoryPageQuery = useDirectoryPage(directoryListInput, sessionState.canLoadData);
-
-  const navigateToRouteRef = useCallback((targetRouteRef: DirectoryRouteRef) => {
-    if (targetRouteRef.kind === 'client') {
-      void navigate({
-        to: '/clients/$clientNumber',
-        params: { clientNumber: targetRouteRef.clientNumber },
-        search: () => search,
-        replace: true
-      });
-      return;
-    }
-
-    void navigate({
-      to: '/clients/prospects/$prospectId',
-      params: { prospectId: targetRouteRef.id },
-      search: () => search,
-      replace: true
-    });
-  }, [navigate, search]);
 
   const handleDeleteSuccess = useCallback(() => {
     if (canGoBack) {
@@ -46,57 +22,27 @@ const ClientDirectoryDetailPage = ({ routeRef, search }: ClientDirectoryDetailPa
       return;
     }
 
+    if (routeRef.kind === 'supplier') {
+      void navigate({
+        to: '/suppliers',
+        search: DEFAULT_SUPPLIER_SEARCH,
+        replace: true
+      });
+      return;
+    }
+
     void navigate({
       to: '/clients',
-      search: () => search,
+      search: DEFAULT_DIRECTORY_SEARCH,
       replace: true
     });
-  }, [canGoBack, navigate, search]);
-
-  const relativeNavigation = useMemo(() => {
-    const rows = directoryPageQuery.data?.rows ?? [];
-    if (rows.length === 0) {
-      return null;
-    }
-
-    const currentIndex = rows.findIndex((row) => {
-      const rowRouteRef = getDirectoryRouteRefFromRow(row);
-      if (routeRef.kind === 'client') {
-        if (rowRouteRef.kind !== 'client') {
-          return false;
-        }
-
-        return rowRouteRef.clientNumber === routeRef.clientNumber;
-      }
-
-      if (rowRouteRef.kind !== 'prospect') {
-        return false;
-      }
-
-      return rowRouteRef.id === routeRef.id;
-    });
-
-    if (currentIndex === -1) {
-      return null;
-    }
-
-    const previousRouteRef = currentIndex > 0 ? getDirectoryRouteRefFromRow(rows[currentIndex - 1]!) : null;
-    const nextRouteRef = currentIndex < (rows.length - 1) ? getDirectoryRouteRefFromRow(rows[currentIndex + 1]!) : null;
-
-    return {
-      previousDisabled: previousRouteRef === null,
-      nextDisabled: nextRouteRef === null,
-      onOpenPrevious: previousRouteRef ? () => navigateToRouteRef(previousRouteRef) : undefined,
-      onOpenNext: nextRouteRef ? () => navigateToRouteRef(nextRouteRef) : undefined
-    };
-  }, [directoryPageQuery.data?.rows, navigateToRouteRef, routeRef]);
+  }, [canGoBack, navigate, routeRef.kind]);
 
   return (
     <ClientDirectoryRecordDetails
       routeRef={routeRef}
-      search={search}
+      isEditOpen={isEditOpen}
       onDeleteSuccess={handleDeleteSuccess}
-      relativeNavigation={relativeNavigation}
     />
   );
 };

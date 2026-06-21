@@ -6,6 +6,10 @@ import {
   dataInteractionDraftResponseSchema,
   dataInteractionsMutationResponseSchema
 } from '../system/api-responses';
+import {
+  directoryRecordSchema,
+  directoryRouteRefSchema
+} from '../system/directory.schema';
 
 const entityRow = {
   account_type: null,
@@ -49,9 +53,11 @@ const contactRow = {
   first_name: 'Camille',
   id: 'contact-1',
   last_name: 'Durand',
+  is_primary: true,
   notes: null,
   phone: '0102030405',
   position: 'Direction',
+  service_label: 'Maintenance',
   updated_at: '2026-06-01T10:00:00Z'
 };
 
@@ -85,6 +91,45 @@ const interactionRow = {
 };
 
 describe('api response schemas', () => {
+  it('accepts supplier directory route refs and records', () => {
+    expect(directoryRouteRefSchema.safeParse({
+      kind: 'supplier',
+      id: '11111111-1111-4111-8111-111111111111'
+    }).success).toBe(true);
+
+    expect(directoryRecordSchema.safeParse({
+      id: '11111111-1111-4111-8111-111111111111',
+      entity_type: 'Fournisseur',
+      client_kind: null,
+      client_number: null,
+      supplier_code: 'SUP1',
+      supplier_number: '445566',
+      account_type: null,
+      name: 'Fourniture Service',
+      address: '1 rue des Stocks',
+      postal_code: '33000',
+      department: '33',
+      city: 'Bordeaux',
+      country: 'France',
+      siret: '12345678900011',
+      siren: '123456789',
+      naf_code: '46.90Z',
+      official_name: 'FOURNITURE SERVICE',
+      official_data_source: 'api-recherche-entreprises',
+      official_data_synced_at: '2026-06-01T10:00:00Z',
+      primary_phone: '0556000000',
+      primary_email: 'contact@fourniture.test',
+      notes: null,
+      agency_id: null,
+      agency_name: null,
+      cir_commercial_id: null,
+      cir_commercial_name: null,
+      archived_at: null,
+      created_at: '2026-06-01T10:00:00Z',
+      updated_at: '2026-06-01T10:00:00Z'
+    }).success).toBe(true);
+  });
+
   it('accepts valid entity, contact, interaction and draft rows', () => {
     expect(dataEntitiesResponseSchema.safeParse({
       ok: true,

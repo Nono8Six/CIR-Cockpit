@@ -94,6 +94,9 @@ const REMOTE_TO_LOCAL_MODERN_MIGRATION_COMPATIBILITY = {
   20260601114239n: "20260601120000_reference_integrity_archive.sql",
   20260601143358n: "20260601170000_integrity_interaction_audit_metadata.sql",
   20260602140857n: "20260602100000_fix_private_sync_interaction_status.sql",
+  20260607154708n: "20260607120000_contact_service_and_family_requirements.sql",
+  20260616072310n: "20260616103000_entity_contacts_primary_contact.sql",
+  20260621072251n: "20260617120000_enrich_entity_audit_changes.sql",
 };
 
 function readJson(relativePath) {

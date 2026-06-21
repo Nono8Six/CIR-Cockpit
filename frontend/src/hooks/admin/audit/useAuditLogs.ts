@@ -11,6 +11,7 @@ export const useAuditLogs = (filters: AuditLogFilters, enabled = true) => {
     queryKey: auditLogsKey({
       agencyId: filters.agencyId ?? null,
       actorId: filters.actorId ?? null,
+      entityId: filters.entityId ?? null,
       from: filters.from ?? null,
       to: filters.to ?? null,
       entityTable: filters.entityTable ?? null

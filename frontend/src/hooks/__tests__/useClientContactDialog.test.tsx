@@ -13,6 +13,7 @@ const buildContact = (overrides: Partial<EntityContact> = {}): EntityContact => 
   email: 'alice@example.com',
   phone: '0102030405',
   position: 'CEO',
+  service_label: 'Maintenance',
   notes: 'VIP',
   created_at: '2026-01-01T00:00:00.000Z',
   updated_at: '2026-01-01T00:00:00.000Z',
@@ -38,6 +39,7 @@ describe('useClientContactDialog', () => {
       expect(result.current.form.getValues('first_name')).toBe('Alice');
     });
     expect(result.current.form.getValues('last_name')).toBe('Martin');
+    expect(result.current.form.getValues('service_label')).toBe('Maintenance');
     expect(result.current.phoneValue).toBe('0102030405');
   });
 
@@ -111,6 +113,7 @@ describe('useClientContactDialog', () => {
       email: 'alice@example.com',
       phone: '0102030405',
       position: 'CEO',
+      service_label: 'Maintenance',
       notes: 'VIP',
     });
     expect(onOpenChange).toHaveBeenCalledWith(false);
@@ -174,6 +177,7 @@ describe('useClientContactDialog', () => {
       email: null,
       phone: null,
       position: null,
+      service_label: null,
       notes: null,
     });
   });

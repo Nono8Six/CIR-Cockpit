@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, inArray, lte, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, lte, or, sql, type SQL } from 'drizzle-orm';
 
 import { agencies, agency_members, audit_logs, profiles } from '../../../../drizzle/schema.ts';
 import type {
@@ -175,6 +175,19 @@ export const listAdminAuditLogs = async (
   const conditions = buildAuditLogAccessConditions(authContext, input);
   if (input.actor_id) conditions.push(eq(audit_logs.actor_id, input.actor_id));
   if (input.entity_table) conditions.push(eq(audit_logs.entity_table, input.entity_table));
+  if (input.entity_id) {
+    const entityScope = or(
+      and(
+        eq(audit_logs.entity_table, 'entities'),
+        eq(audit_logs.entity_id, input.entity_id)
+      ),
+      and(
+        eq(audit_logs.entity_table, 'entity_contacts'),
+        sql`${audit_logs.metadata}->>'entity_id' = ${input.entity_id}`
+      )
+    );
+    if (entityScope) conditions.push(entityScope);
+  }
   if (input.from) conditions.push(gte(audit_logs.created_at, input.from));
   if (input.to) conditions.push(lte(audit_logs.created_at, input.to));
 

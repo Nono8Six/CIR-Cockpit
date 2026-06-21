@@ -1,6 +1,6 @@
 import type { InteractionFormValues } from '../../../../shared/schemas/interaction/interaction.schema';
 
-import type { AgencyConfig } from '@/services/config';
+import { getInteractionTypeLabels, type AgencyConfig } from '@/services/config';
 import {
   INTERNAL_COMPANY_NAME,
   isInternalRelationValue,
@@ -22,7 +22,7 @@ export const buildInteractionDraftResetValues = ({
   ...defaultValues,
   entity_type: '',
   contact_service: config.services[0] ?? '',
-  interaction_type: config.interactionTypes[0] ?? '',
+  interaction_type: getInteractionTypeLabels(config.interactionTypes)[0] ?? '',
   status_id: defaultStatusId,
 });
 
@@ -32,6 +32,7 @@ export const normalizeInteractionDraftValues = (
 ): InteractionFormValues => {
   const defaults = buildInteractionDraftResetValues(context);
   const { config, relationOptions } = context;
+  const interactionTypeLabels = getInteractionTypeLabels(config.interactionTypes);
 
   const normalized: InteractionFormValues = {
     ...defaults,
@@ -94,8 +95,8 @@ export const normalizeInteractionDraftValues = (
   }
 
   if (
-    config.interactionTypes.length > 0 &&
-    !config.interactionTypes.includes(normalized.interaction_type)
+    interactionTypeLabels.length > 0 &&
+    !interactionTypeLabels.includes(normalized.interaction_type)
   ) {
     normalized.interaction_type = defaults.interaction_type;
   }

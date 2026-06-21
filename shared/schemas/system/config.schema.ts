@@ -48,11 +48,22 @@ export const agencyStatusSchema = agencyStatusInputSchema.extend({
 
 const referenceLabelsInputSchema = z.array(referenceLabelSchema);
 
+export const agencyInteractionTypeInputSchema = z.strictObject({
+  id: uuidSchema.optional(),
+  label: referenceLabelSchema,
+  requires_product_families: z.boolean().default(false)
+});
+
+export const agencyInteractionTypeSchema = agencyInteractionTypeInputSchema.extend({
+  agency_id: uuidSchema.optional(),
+  sort_order: z.number().int().min(1, 'Ordre invalide')
+});
+
 export const agencyReferenceConfigInputSchema = z.strictObject({
   statuses: z.array(agencyStatusInputSchema).min(1, 'Au moins un statut requis'),
   services: referenceLabelsInputSchema,
   families: referenceLabelsInputSchema,
-  interaction_types: referenceLabelsInputSchema
+  interaction_types: z.array(agencyInteractionTypeInputSchema)
 });
 
 export const agencyReferenceConfigSchema = z.strictObject({
@@ -60,7 +71,7 @@ export const agencyReferenceConfigSchema = z.strictObject({
   historical_statuses: z.array(agencyStatusSchema),
   services: referenceLabelsInputSchema,
   families: referenceLabelsInputSchema,
-  interaction_types: referenceLabelsInputSchema,
+  interaction_types: z.array(agencyInteractionTypeSchema),
   resolutions: z.array(z.strictObject({
     id: uuidSchema,
     dimension: configUsageDimensionSchema,
@@ -235,6 +246,8 @@ export type EditableConfigReferenceDimension = z.infer<typeof editableConfigRefe
 export type ConfigUsageState = z.infer<typeof configUsageStateSchema>;
 export type AgencyStatusInput = z.infer<typeof agencyStatusInputSchema>;
 export type AgencyStatusConfig = z.infer<typeof agencyStatusSchema>;
+export type AgencyInteractionTypeInput = z.infer<typeof agencyInteractionTypeInputSchema>;
+export type AgencyInteractionTypeConfig = z.infer<typeof agencyInteractionTypeSchema>;
 export type AgencyReferenceConfigInput = z.infer<typeof agencyReferenceConfigInputSchema>;
 export type AgencyReferenceConfig = z.infer<typeof agencyReferenceConfigSchema>;
 export type DepartmentReference = z.infer<typeof departmentReferenceSchema>;

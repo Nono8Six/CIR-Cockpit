@@ -1,3 +1,4 @@
+import type { AgencyInteractionTypeLike } from '@/services/config';
 import type { AgencyStatus, StatusCategory } from '@/types';
 import type {
   ConfigUsageSnapshot,
@@ -15,7 +16,7 @@ export type SettingsSectionsProps = {
   canRunImmediateAction: () => boolean;
   families: string[];
   services: string[];
-  interactionTypes: string[];
+  interactionTypes: AgencyInteractionTypeLike[];
   statuses: AgencyStatus[];
   newFamily: string;
   newService: string;
@@ -58,7 +59,7 @@ export type SettingsSectionsProps = {
   ) => void;
   setFamilies: (next: string[]) => void;
   setServices: (next: string[]) => void;
-  setInteractionTypes: (next: string[]) => void;
+  setInteractionTypes: (next: Exclude<AgencyInteractionTypeLike, string>[]) => void;
   setStatuses: (next: AgencyStatus[]) => void;
   addStatus: () => void;
   removeStatus: (index: number, usageCount?: number | null) => void;

@@ -58,12 +58,14 @@ export type UseCockpitPanePropsParams = {
   contactFirstNameField: CockpitFormLeftPaneProps['contactFirstNameField'];
   contactLastNameField: CockpitFormLeftPaneProps['contactLastNameField'];
   contactPositionField: CockpitFormLeftPaneProps['contactPositionField'];
+  contactServiceLabelField: CockpitFormLeftPaneProps['contactServiceLabelField'];
   contactPhoneField: CockpitFormLeftPaneProps['contactPhoneField'];
   contactEmailField: CockpitFormLeftPaneProps['contactEmailField'];
   contactFirstNameInputRef: RefObject<HTMLInputElement | null>;
   contactFirstName: string;
   contactLastName: string;
   contactPosition: string;
+  contactServiceLabel: string;
   contactName: string;
   contactPhone: string;
   contactEmail: string;
@@ -89,6 +91,7 @@ export type UseCockpitPanePropsParams = {
   reminderAt: string;
   megaFamilies: string[];
   onToggleFamily: (family: string) => void;
+  requiresProductFamilies: boolean;
   statusMeta: CockpitFormRightPaneProps['statusMeta'];
   statusCategoryLabel: string | null;
   statusCategoryBadges: Record<StatusCategory, string>;

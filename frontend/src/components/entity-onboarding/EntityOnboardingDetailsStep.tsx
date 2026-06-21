@@ -28,6 +28,7 @@ import type {
 } from "./entityOnboarding.schema";
 import type { DuplicateMatch } from "./entityOnboarding.types";
 import { getDepartmentFromPostalCode } from "./entityOnboarding.utils";
+import { formatFrenchPhone } from "@/utils/formatFrenchPhone";
 
 const inputGhostClasses = wizardInputClasses;
 const selectGhostClasses = wizardInputClasses;
@@ -104,7 +105,14 @@ const EntityOnboardingDetailsStep = ({
                   id="phone"
                   type="tel"
                   autoComplete="tel"
-                  {...form.register("phone")}
+                  value={values.phone ?? ""}
+                  onChange={(event) => {
+                    const formatted = formatFrenchPhone(event.target.value);
+                    form.setValue("phone", formatted, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    });
+                  }}
                   className={cn(inputGhostClasses, "font-mono tabular-nums")}
                 />
               </FieldShell>

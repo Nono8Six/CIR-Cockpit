@@ -1,6 +1,7 @@
 import { ResultAsync } from 'neverthrow';
 
 import { dataEntitiesResponseSchema } from '../../../../shared/schemas/system/api-responses';
+import type { OfficialDataResyncPayload } from '../../../../shared/schemas/system/data.schema';
 import { Entity } from '@/types';
 import { createAppError, type AppError } from '@/services/errors/AppError';
 import { safeTrpc } from '@/services/api/safeTrpc';
@@ -24,6 +25,8 @@ type EntityPayloadBase = {
 export type ProspectEntityPayload = EntityPayloadBase & {
   entity_type: 'Prospect';
   agency_id: string | null;
+  primary_contact_id?: string | null;
+  official_data_resync?: OfficialDataResyncPayload;
 };
 
 export type SupplierEntityPayload = EntityPayloadBase & {
@@ -95,6 +98,8 @@ export const saveEntity = (payload: EntityPayload): ResultAsync<Entity, AppError
           agency_id: agencyId,
           entity_type: 'Prospect',
           id: payload.id,
+          primary_contact_id: payload.primary_contact_id ?? null,
+          official_data_resync: payload.official_data_resync,
           entity: {
             ...commonEntity,
             agency_id: agencyId

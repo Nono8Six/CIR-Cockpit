@@ -10,6 +10,10 @@ export const getEntityContactDetail = (
   contact: EntityContact,
   emptyDetailLabel = 'Aucune information'
 ): string => {
-  const parts = [contact.position?.trim() ?? '', getContactReachLine(contact)].filter(Boolean);
+  const parts = [
+    contact.position?.trim() ?? '',
+    contact.service_label?.trim() ?? '',
+    getContactReachLine(contact)
+  ].filter(Boolean);
   return parts.join(' · ') || emptyDetailLabel;
 };

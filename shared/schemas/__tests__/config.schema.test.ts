@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  agencyReferenceConfigSchema,
   configIntegrityInteractionUpdateInputSchema,
   configReferenceActionInputSchema,
   configUsageSnapshotSchema
@@ -160,5 +161,27 @@ describe('configReferenceActionInputSchema', () => {
     });
 
     expect(result.success).toBe(false);
+  });
+});
+
+describe('agencyReferenceConfigSchema', () => {
+  it('accepts interaction type product family requirement metadata', () => {
+    const result = agencyReferenceConfigSchema.safeParse({
+      statuses: [],
+      historical_statuses: [],
+      services: [],
+      families: [],
+      interaction_types: [
+        {
+          id: '22222222-2222-4222-8222-222222222222',
+          agency_id: agencyId,
+          label: 'Devis',
+          requires_product_families: true,
+          sort_order: 1
+        }
+      ]
+    });
+
+    expect(result.success).toBe(true);
   });
 });

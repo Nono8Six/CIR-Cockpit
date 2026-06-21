@@ -6,6 +6,7 @@ export const APP_TAB_PATHS: Record<AppTab, string> = {
   dashboard: '/dashboard',
   settings: '/settings',
   clients: '/clients',
+  suppliers: '/suppliers',
   admin: '/admin'
 };
 
@@ -27,21 +28,15 @@ const isPathWithin = (pathname: string, routePath: string): boolean => {
 
 export const getPathForTab = (tab: AppTab): string => APP_TAB_PATHS[tab];
 
-export const getPathForShellNavItem = (item: AppShellNavItem): string => {
-  if ('routePath' in item) {
-    return item.routePath;
-  }
-
-  return getPathForTab(item.id);
-};
+export const getPathForShellNavItem = (item: AppShellNavItem): string => getPathForTab(item.id);
 
 export const isShellNavItemActive = (
   item: AppShellNavItem,
   activeTab: AppTab,
   pathname: string
 ): boolean => {
-  if ('routePath' in item) {
-    return isPathWithin(pathname, item.routePath);
+  if (item.id === 'cockpit' && normalizePathname(pathname) === '/') {
+    return true;
   }
 
   if (item.id === 'admin') {
@@ -57,6 +52,9 @@ export const getTabFromPathname = (pathname: string): AppTab => {
   if (normalizedPath === '/') return 'cockpit';
   if (normalizedPath === APP_TAB_PATHS.clients || normalizedPath.startsWith(`${APP_TAB_PATHS.clients}/`)) {
     return 'clients';
+  }
+  if (normalizedPath === APP_TAB_PATHS.suppliers || normalizedPath.startsWith(`${APP_TAB_PATHS.suppliers}/`)) {
+    return 'suppliers';
   }
   if (normalizedPath === APP_TAB_PATHS.admin || normalizedPath.startsWith(`${APP_TAB_PATHS.admin}/`)) {
     return 'admin';

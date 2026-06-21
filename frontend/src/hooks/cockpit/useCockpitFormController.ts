@@ -19,7 +19,7 @@ import {
 } from '@/constants/relations';
 import { useRecentOwnInteractions } from '../interactions/core/queries/useRecentOwnInteractions';
 import { useEntityInteractions } from '../interactions/core/queries/useEntityInteractions';
-import type { AgencyConfig } from '@/services/config';
+import { normalizeInteractionTypeConfig, type AgencyConfig } from '@/services/config';
 import {
   interactionFormSchema,
   type InteractionFormValues
@@ -70,6 +70,7 @@ const DEFAULT_FORM_VALUES: InteractionFormValues = {
   contact_first_name: '',
   contact_last_name: '',
   contact_position: '',
+  contact_service_label: '',
   contact_name: '',
   contact_phone: '',
   contact_email: '',
@@ -271,6 +272,11 @@ export const useCockpitFormController = ({
 
   const [lastSavedInteraction, setLastSavedInteraction] = useState<InteractionDraft | null>(null);
 
+  const requiresProductFamilies = Boolean(
+    normalizeInteractionTypeConfig(config.interactionTypes)
+      .find((type) => type.label === formState.interactionType)?.requires_product_families
+  ) && !formState.isSolicitationRelation && !formState.isInternalRelation && !formState.isSupplierRelation;
+
   const onStartNewEntry = useCallback(() => {
     setLastSavedInteraction(null);
     handleReset();
@@ -294,7 +300,9 @@ export const useCockpitFormController = ({
     isClientRelation: formState.isClientRelation,
     isInternalRelation: formState.isInternalRelation,
     hasSelectedEntity: Boolean(dialogs.selectedEntity),
-    hasSelectedContact: Boolean(dialogs.selectedContact)
+    hasSelectedContact: Boolean(dialogs.selectedContact),
+    requiresProductFamilies,
+    megaFamilies: formState.megaFamilies
   });
 
   const { stepperSteps, currentStepIndex } = useInteractionStepper({
@@ -448,12 +456,14 @@ export const useCockpitFormController = ({
     contactFirstNameField: registerFields.contactFirstNameField,
     contactLastNameField: registerFields.contactLastNameField,
     contactPositionField: registerFields.contactPositionField,
+    contactServiceLabelField: registerFields.contactServiceLabelField,
     contactPhoneField: registerFields.contactPhoneField,
     contactEmailField: registerFields.contactEmailField,
     contactFirstNameInputRef: refs.contactFirstNameInputRef,
     contactFirstName: formState.contactFirstName,
     contactLastName: formState.contactLastName,
     contactPosition: formState.contactPosition,
+    contactServiceLabel: formState.contactServiceLabel,
     contactName: formState.contactName,
     contactPhone: formState.contactPhone,
     contactEmail: formState.contactEmail,
@@ -479,6 +489,7 @@ export const useCockpitFormController = ({
     reminderAt: formState.reminderAt,
     megaFamilies: formState.megaFamilies,
     onToggleFamily: handlers.toggleFamily,
+    requiresProductFamilies,
     statusMeta: formState.statusMeta ?? null,
     statusCategoryLabel: formState.statusCategoryLabel,
     statusCategoryBadges: STATUS_CATEGORY_BADGES,

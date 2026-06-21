@@ -247,16 +247,16 @@ describe('AppHeader', () => {
     expect(screen.getAllByText('Pilotage').length).toBeGreaterThan(0);
   });
 
-  it('exposes the supplier admin route in the admin section menu', async () => {
+  it('exposes the supplier route in the tiers section menu', async () => {
     const onOpenSearch = vi.fn();
 
     render(
       <AppHeader
         sections={buildShellNavigation(true, 0)}
-        activeTab="admin"
-        activePath="/admin/suppliers"
-        activeSectionLabel="Admin"
-        activeItemLabel="Admin"
+        activeTab="suppliers"
+        activePath="/suppliers"
+        activeSectionLabel="Tiers"
+        activeItemLabel="Fournisseurs"
         agencyContext={{ agency_id: 'agency-1', agency_name: 'Agence Alpha' }}
         agencyMemberships={[{ agency_id: 'agency-1', agency_name: 'Agence Alpha' }]}
         hasMultipleAgencies={false}
@@ -278,11 +278,11 @@ describe('AppHeader', () => {
       />
     );
 
-    openDropdown(screen.getByRole('button', { name: /admin/i }));
+    openDropdown(screen.getByRole('button', { name: /tiers/i }));
 
-    expect(await screen.findByRole('menuitem', { name: /fournisseur/i })).toHaveAttribute(
+    expect(await screen.findByRole('menuitem', { name: /fournisseurs/i })).toHaveAttribute(
       'href',
-      '/admin/suppliers'
+      '/suppliers'
     );
   });
 

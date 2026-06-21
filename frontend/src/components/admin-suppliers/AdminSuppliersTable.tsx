@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Link } from '@tanstack/react-router';
 import {
   createColumnHelper,
   type Column,
@@ -9,7 +10,7 @@ import {
   getCoreRowModel,
   useReactTable
 } from '@tanstack/react-table';
-import { Archive, MoreHorizontal, Pencil, RotateCcw, SearchX, Trash2 } from 'lucide-react';
+import { Archive, Eye, MoreHorizontal, Pencil, RotateCcw, SearchX, Trash2 } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
 import type {
   DirectoryDensity,
@@ -137,14 +138,14 @@ const AdminSuppliersTable = ({
       enableHiding: false,
       cell: ({ row }) => (
         <div className="min-w-0">
-          <button
-            type="button"
-            aria-label={`Modifier ${row.original.name}`}
+          <Link
+            to="/suppliers/$supplierId"
+            params={{ supplierId: row.original.id }}
+            aria-label={`Ouvrir la fiche ${row.original.name}`}
             className="inline-flex min-w-0 max-w-full items-center rounded-md font-semibold text-foreground transition-colors duration-150 hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            onClick={() => onEditSupplier(row.original)}
           >
             <span className="truncate">{row.original.name}</span>
-          </button>
+          </Link>
           <p className="truncate text-[11px] text-muted-foreground">{getSupplierIdentifier(row.original) || 'Sans identifiant'}</p>
         </div>
       )
@@ -202,6 +203,12 @@ const AdminSuppliersTable = ({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem asChild>
+                  <Link to="/suppliers/$supplierId" params={{ supplierId: supplier.id }}>
+                    <Eye className="mr-2 size-4" aria-hidden="true" />
+                    Ouvrir la fiche
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onEditSupplier(supplier)}>
                   <Pencil className="mr-2 size-4" aria-hidden="true" />
                   Modifier

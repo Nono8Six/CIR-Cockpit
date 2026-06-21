@@ -102,4 +102,17 @@ describe('useAppViewState', () => {
       expect(navigate).toHaveBeenCalledWith({ to: '/cockpit', replace: true })
     );
   });
+
+  it('redirige les vrais profils tcs hors fournisseurs', async () => {
+    const { navigate } = renderViewState({
+      pathname: '/suppliers',
+      isAccessControlReady: true,
+      canAccessAdmin: false,
+      canAccessSettings: false
+    });
+
+    await waitFor(() =>
+      expect(navigate).toHaveBeenCalledWith({ to: '/cockpit', replace: true })
+    );
+  });
 });

@@ -19,6 +19,8 @@ type GateInput = {
   isInternalRelation: boolean;
   hasSelectedEntity: boolean;
   hasSelectedContact: boolean;
+  requiresProductFamilies?: boolean;
+  megaFamilies?: string[];
 };
 
 export type GateState = {
@@ -61,12 +63,15 @@ export const getInteractionGateState = (input: GateInput): GateState => {
       (input.isInternalRelation || isSupplier || hasContactMethod)
   );
 
-  const canSave = hasBaseRequired && (input.isClientRelation ? hasClientIdentity : hasNonClientIdentity);
+  const hasRequiredFamilies = !input.requiresProductFamilies || (input.megaFamilies ?? []).length > 0;
+  const canSave = hasBaseRequired && hasRequiredFamilies && (input.isClientRelation ? hasClientIdentity : hasNonClientIdentity);
 
   let gateMessage = '';
   if (!canSave) {
     if (input.isClientRelation) {
-      if (!input.hasSelectedEntity) {
+      if (!hasRequiredFamilies) {
+        gateMessage = 'Selectionnez au moins une famille produit.';
+      } else if (!input.hasSelectedEntity) {
         gateMessage = 'Selectionnez un client.';
       } else if (!input.hasSelectedContact) {
         gateMessage = 'Selectionnez un contact.';
@@ -74,7 +79,9 @@ export const getInteractionGateState = (input: GateInput): GateState => {
         gateMessage = 'Completer les informations du client.';
       }
     } else {
-      if (!input.isInternalRelation && !isIndividual && !isSolicitation && !hasValue(input.companyName)) {
+      if (!hasRequiredFamilies) {
+        gateMessage = 'Selectionnez au moins une famille produit.';
+      } else if (!input.isInternalRelation && !isIndividual && !isSolicitation && !hasValue(input.companyName)) {
         gateMessage = 'Renseignez la societe.';
       } else if (!input.isInternalRelation && needsCity && !hasValue(input.companyCity)) {
         gateMessage = 'Renseignez la ville.';

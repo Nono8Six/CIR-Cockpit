@@ -36,6 +36,9 @@ const buildContactName = (props: CockpitFormLeftPaneProps): string => {
 const buildContactPosition = (props: CockpitFormLeftPaneProps): string =>
   props.selectedContact?.position?.trim() || props.contactPosition?.trim() || '';
 
+const buildContactServiceLabel = (props: CockpitFormLeftPaneProps): string =>
+  props.selectedContact?.service_label?.trim() || props.contactServiceLabel?.trim() || '';
+
 export const buildDescriptionOnlySubject = (
   description: string,
   interactionType: string,
@@ -86,6 +89,10 @@ const CockpitGuidedDetailsQuestion = ({
 
   const fullName = buildContactName(leftPaneProps);
   const position = buildContactPosition(leftPaneProps);
+  const contactServiceLabel = buildContactServiceLabel(leftPaneProps);
+  const families = rightPaneProps.families ?? [];
+  const megaFamilies = rightPaneProps.megaFamilies ?? [];
+  const showProductFamilies = rightPaneProps.requiresProductFamilies;
   const hasContact = fullName.length > 0;
   const isDescriptionOnlyRelation = leftPaneProps.relationMode === 'solicitation'
     || leftPaneProps.relationMode === 'internal'
@@ -303,6 +310,48 @@ const CockpitGuidedDetailsQuestion = ({
           </div>
         </div>
 
+        {showProductFamilies ? (
+          <div className="rounded-xl border border-border bg-card px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_2px_8px_-1px_rgba(0,0,0,0.02)]">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <p className={refinedLabelStyle}>
+                Familles produits *
+              </p>
+              {megaFamilies.length === 0 ? (
+                <p className="text-xs font-semibold text-destructive" role="status" aria-live="polite">
+                  Au moins une famille produit est requise.
+                </p>
+              ) : null}
+            </div>
+            {families.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {families.map((family) => {
+                  const selected = megaFamilies.includes(family);
+                  return (
+                    <button
+                      key={family}
+                      type="button"
+                      onClick={() => rightPaneProps.onToggleFamily(family)}
+                      className={cn(
+                        'rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20',
+                        selected
+                          ? 'border-primary bg-primary text-primary-foreground'
+                          : 'border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                      )}
+                      aria-pressed={selected}
+                    >
+                      {family}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-xs font-medium text-muted-foreground">
+                Aucune famille produit configurée.
+              </p>
+            )}
+          </div>
+        ) : null}
+
         {hasContact ? (
           /* Bloc 4 — Contact rattaché */
           <div className="space-y-2">
@@ -316,6 +365,7 @@ const CockpitGuidedDetailsQuestion = ({
                 <p className="truncate text-[13px] font-bold text-foreground">
                   {fullName}
                   {position ? <span className="text-[11px] font-medium text-muted-foreground/80"> · {position}</span> : null}
+                  {contactServiceLabel ? <span className="text-[11px] font-medium text-muted-foreground/80"> · {contactServiceLabel}</span> : null}
                 </p>
               </div>
               {onEditContact ? (

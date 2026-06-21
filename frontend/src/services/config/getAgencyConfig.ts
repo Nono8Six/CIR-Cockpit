@@ -3,14 +3,29 @@ import type { ResolvedConfigSnapshot } from '../../../../shared/schemas/system/c
 import type { AgencyStatus } from '@/types';
 import { getConfigSnapshot } from './getConfigSnapshot';
 
+export type AgencyInteractionTypeConfig = ResolvedConfigSnapshot['references']['interaction_types'][number];
+export type AgencyInteractionTypeLike = AgencyInteractionTypeConfig | string;
+
 export type AgencyConfig = {
   statuses: AgencyStatus[];
   historicalStatuses: AgencyStatus[];
   services: string[];
   families: string[];
-  interactionTypes: string[];
+  interactionTypes: AgencyInteractionTypeLike[];
   resolutions?: NonNullable<ResolvedConfigSnapshot['references']['resolutions']>;
 };
+
+export const getInteractionTypeLabels = (
+  interactionTypes: AgencyInteractionTypeLike[]
+): string[] => interactionTypes.map((type) => typeof type === 'string' ? type : type.label);
+
+export const normalizeInteractionTypeConfig = (
+  interactionTypes: AgencyInteractionTypeLike[]
+): AgencyInteractionTypeConfig[] =>
+  interactionTypes.map((type, index) => typeof type === 'string'
+    ? { label: type, requires_product_families: false, sort_order: index + 1 }
+    : type
+  );
 
 export const mapSnapshotToAgencyConfig = (
   snapshot: ResolvedConfigSnapshot

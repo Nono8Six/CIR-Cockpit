@@ -51,12 +51,12 @@ describe('AppSidebar', () => {
     );
   });
 
-  it('renders the supplier admin entry in expanded mode', () => {
+  it('renders the supplier entry in expanded mode', () => {
     render(
       <AppSidebar
         sections={buildShellNavigation(true, 1)}
-        activeTab="admin"
-        activePath="/admin/suppliers"
+        activeTab="suppliers"
+        activePath="/suppliers"
         collapsed={false}
         onToggleCollapsed={vi.fn()}
         mobileOpen={false}
@@ -64,11 +64,11 @@ describe('AppSidebar', () => {
       />
     );
 
-    expect(screen.getByTestId('app-shell-nav-admin-suppliers')).toHaveAttribute(
+    expect(screen.getByTestId('app-shell-nav-suppliers')).toHaveAttribute(
       'href',
-      '/admin/suppliers'
+      '/suppliers'
     );
-    expect(screen.getByTestId('app-shell-nav-admin-suppliers')).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByTestId('app-shell-nav-suppliers')).toHaveAttribute('aria-current', 'page');
     expect(screen.getByTestId('app-shell-nav-admin')).not.toHaveAttribute('aria-current');
   });
 

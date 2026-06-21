@@ -60,12 +60,14 @@ export type CockpitFormLeftPaneProps = {
   contactFirstNameField: UseFormRegisterReturn;
   contactLastNameField: UseFormRegisterReturn;
   contactPositionField: UseFormRegisterReturn;
+  contactServiceLabelField: UseFormRegisterReturn;
   contactPhoneField: UseFormRegisterReturn;
   contactEmailField: UseFormRegisterReturn;
   contactFirstNameInputRef: RefObject<HTMLInputElement | null>;
   contactFirstName: string;
   contactLastName: string;
   contactPosition: string;
+  contactServiceLabel: string;
   contactName: string;
   contactPhone: string;
   contactEmail: string;
@@ -99,6 +101,7 @@ export type CockpitFormRightPaneProps = {
   families: string[];
   megaFamilies: string[];
   onToggleFamily: (family: string) => void;
+  requiresProductFamilies: boolean;
   statusMeta: AgencyStatus | null;
   statusCategoryLabel: string | null;
   statusCategoryBadges: Record<StatusCategory, string>;

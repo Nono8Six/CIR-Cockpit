@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import { getPathForTab, getTabFromPathname, isInteractionTab } from '@/app/appRoutes';
+import { buildShellNavigation } from '@/app/appConstants';
+import { getPathForTab, getTabFromPathname, isInteractionTab, isShellNavItemActive } from '@/app/appRoutes';
 
 describe('appRoutes', () => {
   it('maps tabs to expected business URLs', () => {
     expect(getPathForTab('cockpit')).toBe('/cockpit');
     expect(getPathForTab('dashboard')).toBe('/dashboard');
     expect(getPathForTab('clients')).toBe('/clients');
+    expect(getPathForTab('suppliers')).toBe('/suppliers');
     expect(getPathForTab('admin')).toBe('/admin');
     expect(getPathForTab('settings')).toBe('/settings');
   });
@@ -15,6 +17,7 @@ describe('appRoutes', () => {
     expect(getTabFromPathname('/cockpit')).toBe('cockpit');
     expect(getTabFromPathname('/dashboard')).toBe('dashboard');
     expect(getTabFromPathname('/clients/')).toBe('clients');
+    expect(getTabFromPathname('/suppliers/supplier-1')).toBe('suppliers');
     expect(getTabFromPathname('/admin')).toBe('admin');
     expect(getTabFromPathname('/settings')).toBe('settings');
     expect(getTabFromPathname('/')).toBe('cockpit');
@@ -26,6 +29,20 @@ describe('appRoutes', () => {
     expect(isInteractionTab('dashboard')).toBe(true);
     expect(isInteractionTab('settings')).toBe(true);
     expect(isInteractionTab('clients')).toBe(false);
+    expect(isInteractionTab('suppliers')).toBe(false);
     expect(isInteractionTab('admin')).toBe(false);
+  });
+
+  it('treats the root URL as the cockpit shell item', () => {
+    const items = buildShellNavigation(true, 0).flatMap((section) => section.items);
+    const cockpitItem = items.find((item) => item.id === 'cockpit');
+    const clientsItem = items.find((item) => item.id === 'clients');
+
+    if (!cockpitItem || !clientsItem) {
+      throw new Error('Missing shell navigation fixtures');
+    }
+
+    expect(isShellNavItemActive(cockpitItem, 'cockpit', '/')).toBe(true);
+    expect(isShellNavItemActive(clientsItem, 'cockpit', '/')).toBe(false);
   });
 });

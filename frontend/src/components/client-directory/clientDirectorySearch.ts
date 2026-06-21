@@ -173,6 +173,10 @@ export const isProspectEntityType = (entityType: string): boolean => {
 };
 
 export const buildDirectoryRecordPath = (row: DirectoryListRow): string => {
+  if (row.entity_type === 'Fournisseur') {
+    return `/suppliers/${row.id}`;
+  }
+
   if (!isProspectEntityType(row.entity_type) && row.client_number) {
     return `/clients/${row.client_number}`;
   }
@@ -181,7 +185,9 @@ export const buildDirectoryRecordPath = (row: DirectoryListRow): string => {
 };
 
 export const getDirectoryTypeLabel = (entityType: string): string =>
-  isProspectEntityType(entityType) ? 'Prospect' : 'Client';
+  entityType === 'Fournisseur'
+    ? 'Fournisseur'
+    : isProspectEntityType(entityType) ? 'Prospect' : 'Client';
 
 export const countActiveDirectoryFilters = (search: DirectorySearchState): number =>
   [

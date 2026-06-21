@@ -108,6 +108,7 @@ describe('SettingsSections', () => {
     expect(screen.queryByRole('heading', { name: 'Paramètres onboarding agence' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Paramètres globaux produit' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Listes de saisie des interactions' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Règles de saisie' })).not.toBeInTheDocument();
   });
 
   it('passes read-only agency permissions to editable subpages', () => {
@@ -165,6 +166,25 @@ describe('SettingsSections', () => {
 
     expect(screen.queryByRole('button', { name: /monter maintenance/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /descendre maintenance/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Règles de saisie' })).not.toBeInTheDocument();
+  });
+
+  it('renders interaction input rules in their dedicated subpage', () => {
+    render(
+      <SettingsSections
+        {...baseProps}
+        activeSection="input-rules"
+        interactionTypes={[
+          { label: 'Demande de devis', requires_product_families: true, sort_order: 1 },
+          { label: 'SAV', requires_product_families: false, sort_order: 2 },
+        ]}
+      />
+    );
+
+    expect(screen.getByRole('heading', { name: 'Règles de saisie' })).toBeInTheDocument();
+    expect(screen.getByText('Familles produits')).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'Familles produits obligatoires pour Demande de devis' })).toBeChecked();
+    expect(screen.getByRole('switch', { name: 'Familles produits obligatoires pour SAV' })).not.toBeChecked();
   });
 
   it('shows historical statuses as a non editable audit section', () => {

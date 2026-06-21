@@ -13,6 +13,7 @@ export const clientContactFormSchema = z.strictObject({
   email: optionalEmail,
   phone: z.string().trim().optional().or(z.literal('')),
   position: z.string().trim().optional().or(z.literal('')),
+  service_label: z.string().trim().optional().or(z.literal('')),
   notes: z.string().trim().optional().or(z.literal(''))
 }).superRefine((values, ctx) => {
   const hasPhone = Boolean(values.phone?.trim());

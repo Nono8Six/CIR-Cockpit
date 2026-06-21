@@ -1,26 +1,33 @@
 import { useWatch, type UseFormReturn } from 'react-hook-form';
 
-import type { ClientCompanyFormValues } from '../../../../../shared/schemas/entity/client.schema';
+import type { ClientCompanyFormUiValues } from './useClientFormDialog';
 
 type UseClientFormDialogFieldsResult = {
-  clientNumberField: ReturnType<UseFormReturn<ClientCompanyFormValues>['register']>;
-  accountTypeField: ReturnType<UseFormReturn<ClientCompanyFormValues>['register']>;
-  nameField: ReturnType<UseFormReturn<ClientCompanyFormValues>['register']>;
-  cirCommercialField: ReturnType<UseFormReturn<ClientCompanyFormValues>['register']>;
-  cirCommercialValue: ClientCompanyFormValues['cir_commercial_id'];
-  addressField: ReturnType<UseFormReturn<ClientCompanyFormValues>['register']>;
-  cityField: ReturnType<UseFormReturn<ClientCompanyFormValues>['register']>;
-  postalCodeField: ReturnType<UseFormReturn<ClientCompanyFormValues>['register']>;
-  siretField: ReturnType<UseFormReturn<ClientCompanyFormValues>['register']>;
-  agencyField: ReturnType<UseFormReturn<ClientCompanyFormValues>['register']>;
-  notesField: ReturnType<UseFormReturn<ClientCompanyFormValues>['register']>;
-  errors: UseFormReturn<ClientCompanyFormValues>['formState']['errors'];
-  isSubmitting: UseFormReturn<ClientCompanyFormValues>['formState']['isSubmitting'];
-  handleSubmit: UseFormReturn<ClientCompanyFormValues>['handleSubmit'];
+  clientNumberField: ReturnType<UseFormReturn<ClientCompanyFormUiValues>['register']>;
+  accountTypeField: ReturnType<UseFormReturn<ClientCompanyFormUiValues>['register']>;
+  nameField: ReturnType<UseFormReturn<ClientCompanyFormUiValues>['register']>;
+  cirCommercialField: ReturnType<UseFormReturn<ClientCompanyFormUiValues>['register']>;
+  cirCommercialValue: ClientCompanyFormUiValues['cir_commercial_id'];
+  addressField: ReturnType<UseFormReturn<ClientCompanyFormUiValues>['register']>;
+  cityField: ReturnType<UseFormReturn<ClientCompanyFormUiValues>['register']>;
+  postalCodeField: ReturnType<UseFormReturn<ClientCompanyFormUiValues>['register']>;
+  siretField: ReturnType<UseFormReturn<ClientCompanyFormUiValues>['register']>;
+  sirenField: ReturnType<UseFormReturn<ClientCompanyFormUiValues>['register']>;
+  nafCodeField: ReturnType<UseFormReturn<ClientCompanyFormUiValues>['register']>;
+  officialNameField: ReturnType<UseFormReturn<ClientCompanyFormUiValues>['register']>;
+  agencyField: ReturnType<UseFormReturn<ClientCompanyFormUiValues>['register']>;
+  notesField: ReturnType<UseFormReturn<ClientCompanyFormUiValues>['register']>;
+  firstNameField: ReturnType<UseFormReturn<ClientCompanyFormUiValues>['register']>;
+  lastNameField: ReturnType<UseFormReturn<ClientCompanyFormUiValues>['register']>;
+  emailField: ReturnType<UseFormReturn<ClientCompanyFormUiValues>['register']>;
+  phoneField: ReturnType<UseFormReturn<ClientCompanyFormUiValues>['register']>;
+  errors: UseFormReturn<ClientCompanyFormUiValues>['formState']['errors'];
+  isSubmitting: UseFormReturn<ClientCompanyFormUiValues>['formState']['isSubmitting'];
+  handleSubmit: UseFormReturn<ClientCompanyFormUiValues>['handleSubmit'];
 };
 
 export const useClientFormDialogFields = (
-  form: UseFormReturn<ClientCompanyFormValues>
+  form: UseFormReturn<ClientCompanyFormUiValues>
 ): UseClientFormDialogFieldsResult => {
   const {
     register,
@@ -39,8 +46,15 @@ export const useClientFormDialogFields = (
     cityField: register('city'),
     postalCodeField: register('postal_code'),
     siretField: register('siret'),
+    sirenField: register('siren'),
+    nafCodeField: register('naf_code'),
+    officialNameField: register('official_name'),
     agencyField: register('agency_id'),
     notesField: register('notes'),
+    firstNameField: register('first_name'),
+    lastNameField: register('last_name'),
+    emailField: register('email'),
+    phoneField: register('phone'),
     errors,
     isSubmitting,
     handleSubmit

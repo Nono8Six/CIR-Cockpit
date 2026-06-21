@@ -67,6 +67,20 @@ describe('AppMainTabContent', () => {
     expect(activeClientsPanel).toHaveAttribute('data-state', 'active');
   });
 
+  it('renders the routed suppliers panel for authorized users', async () => {
+    render(<AppMainTabContent {...baseProps} activeTab="suppliers" />);
+
+    expect(await screen.findByTestId('mock-clients-panel')).toBeInTheDocument();
+    expect(screen.getByTestId('app-main-tab-suppliers')).toHaveAttribute('data-state', 'active');
+  });
+
+  it('does not render suppliers when admin access is unavailable', () => {
+    render(<AppMainTabContent {...baseProps} activeTab="suppliers" canAccessAdmin={false} />);
+
+    expect(screen.queryByTestId('app-main-tab-suppliers')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('mock-clients-panel')).not.toBeInTheDocument();
+  });
+
   it('resets the cockpit scroll position when returning to the cockpit tab', async () => {
     const { rerender } = render(<AppMainTabContent {...baseProps} activeTab="cockpit" />);
     const cockpitScrollRoot = await screen.findByTestId('mock-cockpit-form');
