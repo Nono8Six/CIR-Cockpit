@@ -12,6 +12,7 @@ import {
   ensurePricingReferenceFileAccepted,
   SEGMENTS_EXPECTED_COLUMNS
 } from './referenceExcelParser.ts';
+import { resolvePricingReferenceAnalysisStatus } from './referenceImports.ts';
 
 type SheetJsTestModule = {
   utils: {
@@ -144,6 +145,7 @@ Deno.test('analyzePricingReferenceWorkbooks computes deterministic counters and 
   assertEquals(result.health_report.classification.columns_count, 6);
   assertEquals(result.health_report.classification.duplicate_cir_keys, 1);
   assertEquals(result.health_report.classification.mandatory_empty_rows, 1);
+  assertEquals(result.classification_rows.length, 1);
   assertEquals(result.health_report.segments_grids.rows_count, 5);
   assertEquals(result.health_report.segments_grids.columns_count, 25);
   assertEquals(result.health_report.segments_grids.identity_incomplete_rows, 1);
@@ -158,4 +160,100 @@ Deno.test('analyzePricingReferenceWorkbooks computes deterministic counters and 
     result.anomalies.some((anomaly) => anomaly.message.includes('Cle CIR non reconnue')),
     true
   );
+  assertEquals(resolvePricingReferenceAnalysisStatus(result), 'analyse_erreur');
+});
+
+Deno.test('analyzePricingReferenceWorkbooks preserves raw values and normalizes controlled CIR fields', async () => {
+  const classificationBytes = workbookBytes('Classification', [
+    [...CLASSIFICATION_EXPECTED_COLUMNS],
+    [' a ', ' b ', ' c ', '  Mega   texte ', ' Fam texte ', ' Sous famille ']
+  ]);
+  const segmentsBytes = workbookBytes('SEG_GRI_HA', [
+    [...SEGMENTS_EXPECTED_COLUMNS],
+    segmentRow({
+      segment: ' seg 1 ',
+      idnumerique: ' 100 ',
+      marque: ' marque a ',
+      catFab: ' cat 1 ',
+      mega: ' a ',
+      fam: ' b ',
+      sfa: ' c ',
+      numFour: ' four1 '
+    })
+  ]);
+
+  const result = await analyzePricingReferenceWorkbooks(
+    {
+      file_kind: 'classification',
+      original_filename: 'Classification.xlsx',
+      bytes: classificationBytes,
+      sha256: await computeSha256(classificationBytes)
+    },
+    {
+      file_kind: 'segments_grids',
+      original_filename: 'SEG_GRI_HA.xlsx',
+      bytes: segmentsBytes,
+      sha256: await computeSha256(segmentsBytes)
+    }
+  );
+
+  assertEquals(result.classification_rows[0]?.raw_values.MEGA, ' a ');
+  assertEquals(result.classification_rows[0]?.mega, 'A');
+  assertEquals(result.classification_rows[0]?.mega_lib, 'Mega texte');
+  assertEquals(result.segment_rows[0]?.marque, 'MARQUE A');
+  assertEquals(result.segment_rows[0]?.cat_fab, 'CAT 1');
+  assertEquals(result.link_rows[0]?.classification_cir_key, 'A_B_C');
+  assertEquals(result.purchase_grid_rows[0]?.num_four, 'FOUR1');
+  assertEquals(result.purchase_grid_rows[0]?.date_debut_normalized, '2026-01-01');
+  assertEquals(result.purchase_grid_rows[0]?.date_fin_normalized, '2026-12-31');
+  assertEquals(resolvePricingReferenceAnalysisStatus(result), 'analyse_ok');
+});
+
+Deno.test('analyzePricingReferenceWorkbooks flags unknown CIR date formats without inventing dates', async () => {
+  const classificationBytes = workbookBytes('Classification', [
+    [...CLASSIFICATION_EXPECTED_COLUMNS],
+    ['1', '2', '3', 'Mega', 'Fam', 'Sous-famille']
+  ]);
+  const invalidDateRow = segmentRow({
+    segment: 'S1',
+    idnumerique: '100',
+    marque: 'MARQUE1',
+    catFab: 'CAT1',
+    mega: '1',
+    fam: '2',
+    sfa: '3'
+  });
+  invalidDateRow[13] = 'date inconnue';
+
+  const segmentsBytes = workbookBytes('SEG_GRI_HA', [
+    [...SEGMENTS_EXPECTED_COLUMNS],
+    invalidDateRow
+  ]);
+
+  const result = await analyzePricingReferenceWorkbooks(
+    {
+      file_kind: 'classification',
+      original_filename: 'Classification.xlsx',
+      bytes: classificationBytes,
+      sha256: await computeSha256(classificationBytes)
+    },
+    {
+      file_kind: 'segments_grids',
+      original_filename: 'SEG_GRI_HA.xlsx',
+      bytes: segmentsBytes,
+      sha256: await computeSha256(segmentsBytes)
+    }
+  );
+
+  assertEquals(result.purchase_grid_rows[0]?.date_debut_raw, 'date inconnue');
+  assertEquals(result.purchase_grid_rows[0]?.date_debut_normalized, null);
+  assertEquals(
+    result.anomalies.some((anomaly) =>
+      anomaly.type === 'parse_failed'
+      && anomaly.columns.includes('DATE_DEBUT')
+      && anomaly.message === 'Date CIR invalide dans la colonne DATE_DEBUT.'
+    ),
+    true
+  );
+  assertEquals(resolvePricingReferenceAnalysisStatus(result), 'analyse_ok');
 });

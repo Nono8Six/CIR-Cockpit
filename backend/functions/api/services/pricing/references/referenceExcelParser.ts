@@ -33,6 +33,7 @@ type WorkbookTable = {
 
 type ParsedWorkbookRow = {
   source_row_number: number;
+  raw_values: Record<string, string>;
   values: Record<string, string>;
 };
 
@@ -165,13 +166,43 @@ export const PURCHASE_GRID_REQUIRED_COLUMNS = [
 const SHEET_JS = XLSX as unknown as SheetJsModule;
 const ANOMALY_SAMPLE_LIMIT = 50;
 
-const normalizeCell = (value: unknown): string => {
+const stringifyCell = (value: unknown): string => {
   if (value === null || value === undefined) return '';
   if (value instanceof Date) return value.toISOString();
-  return String(value).trim();
+  return String(value);
 };
 
+const normalizeText = (value: unknown): string => stringifyCell(value).trim().replace(/\s+/g, ' ');
+const normalizeCode = (value: unknown): string => normalizeText(value).toUpperCase();
+
+const CODE_COLUMNS = new Set([
+  'MEGA',
+  'FAM',
+  'SFA',
+  'SEGMENT',
+  'IDNUMERIQUE',
+  'MARQUE',
+  'CAT_FAB',
+  'STRATEGIQ',
+  'CODIF_FAIR',
+  'TARIF_FAB',
+  'NUM_FOUR',
+  'COL_HA',
+  'PRIORITE',
+  'TYPE_GRILL',
+  'MEGA_FAMILLE',
+  'FAMILLE',
+  'SOUS_FAMILLE'
+]);
+
+const DATE_COLUMNS = ['DATE_DEBUT', 'DATE_FIN'] as const;
+
+const normalizeHeader = (value: unknown): string => normalizeCode(value);
+const normalizeCell = (header: string, value: unknown): string =>
+  CODE_COLUMNS.has(header) ? normalizeCode(value) : normalizeText(value);
+
 const nullableValue = (value: string): string | null => value === '' ? null : value;
+const nullableRawValue = (value: string): string | null => value === '' ? null : value;
 const cirKey = (mega: string, fam: string, sfa: string): string => `${mega}_${fam}_${sfa}`;
 const segmentKey = (segment: string, idnumerique: string, marque: string, catFab: string): string =>
   `${segment}|${idnumerique}|${marque}|${catFab}`;
@@ -209,6 +240,46 @@ export const ensurePricingReferenceFileAccepted = (
   if (sizeBytes > PRICING_REFERENCE_MAX_FILE_SIZE_BYTES) {
     throw httpError(413, 'PRICING_REFERENCE_IMPORT_TOO_LARGE', 'Le fichier depasse la limite de 50 MB.');
   }
+};
+
+const isValidCalendarDate = (year: number, month: number, day: number): boolean => {
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCFullYear() === year
+    && date.getUTCMonth() === month - 1
+    && date.getUTCDate() === day;
+};
+
+const normalizeCirDate = (value: string): { normalized: string | null; valid: boolean } => {
+  const compact = normalizeText(value).replace(/\s+/g, '');
+  if (compact === '' || compact === '0') return { normalized: null, valid: true };
+
+  const isoMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(compact);
+  if (isoMatch) {
+    const [, year, month, day] = isoMatch;
+    const parsedYear = Number(year);
+    const parsedMonth = Number(month);
+    const parsedDay = Number(day);
+    const valid = isValidCalendarDate(parsedYear, parsedMonth, parsedDay);
+    return {
+      normalized: valid ? compact : null,
+      valid
+    };
+  }
+
+  const as400Match = /^1(\d{2})(\d{2})(\d{2})$/.exec(compact);
+  if (as400Match) {
+    const [, year, month, day] = as400Match;
+    const parsedYear = 2000 + Number(year);
+    const parsedMonth = Number(month);
+    const parsedDay = Number(day);
+    const valid = isValidCalendarDate(parsedYear, parsedMonth, parsedDay);
+    return {
+      normalized: valid ? `${parsedYear.toString().padStart(4, '0')}-${month}-${day}` : null,
+      valid
+    };
+  }
+
+  return { normalized: null, valid: false };
 };
 
 const buildAnomaly = (
@@ -261,7 +332,7 @@ const readWorkbookTable = (input: PricingReferenceFileInput): WorkbookTable => {
   });
 
   const headerRow = rawRows[0] ?? [];
-  const headers = headerRow.map(normalizeCell).filter((value) => value !== '');
+  const headers = headerRow.map(normalizeHeader).filter((value) => value !== '');
 
   if (headers.length === 0) {
     throw httpError(400, 'PRICING_REFERENCE_IMPORT_EMPTY', `Le fichier ${input.original_filename} ne contient aucun en-tete.`);
@@ -270,12 +341,16 @@ const readWorkbookTable = (input: PricingReferenceFileInput): WorkbookTable => {
   const rows = rawRows
     .slice(1)
     .map((row, rowIndex) => {
+      const rawValues: Record<string, string> = {};
       const values: Record<string, string> = {};
       headers.forEach((header, index) => {
-        values[header] = normalizeCell(row[index]);
+        const rawValue = stringifyCell(row[index]);
+        rawValues[header] = rawValue;
+        values[header] = normalizeCell(header, rawValue);
       });
       return {
         source_row_number: rowIndex + 2,
+        raw_values: rawValues,
         values
       };
     })
@@ -295,6 +370,14 @@ const hasEmpty = (row: ParsedWorkbookRow, columns: readonly string[]): boolean =
   columns.some((column) => (row.values[column] ?? '') === '');
 
 const toRawValues = (row: ParsedWorkbookRow, columns: readonly string[]): Record<string, string> => {
+  const values: Record<string, string> = {};
+  columns.forEach((column) => {
+    values[column] = row.raw_values[column] ?? '';
+  });
+  return values;
+};
+
+const toNormalizedValues = (row: ParsedWorkbookRow, columns: readonly string[]): Record<string, string> => {
   const values: Record<string, string> = {};
   columns.forEach((column) => {
     values[column] = row.values[column] ?? '';
@@ -336,18 +419,20 @@ const parseClassification = (
     const fam = row.values.FAM ?? '';
     const sfa = row.values.SFA ?? '';
     const key = cirKey(mega, fam, sfa);
+    const emptyColumns = CLASSIFICATION_EXPECTED_COLUMNS.filter((column) => (row.values[column] ?? '') === '');
 
-    if (hasEmpty(row, CLASSIFICATION_EXPECTED_COLUMNS)) {
+    if (emptyColumns.length > 0) {
       mandatoryEmptyRows += 1;
       anomalies.push(buildAnomaly(
         'classification_required_empty',
         'bloquante',
         'classification',
         row.source_row_number,
-        CLASSIFICATION_EXPECTED_COLUMNS.filter((column) => (row.values[column] ?? '') === ''),
+        emptyColumns,
         'Champ obligatoire vide dans la classification CIR.',
-        { cir_key: key }
+        { cir_key: key, raw_values: toRawValues(row, CLASSIFICATION_EXPECTED_COLUMNS) }
       ));
+      continue;
     }
 
     if (seenKeys.has(key)) {
@@ -359,8 +444,9 @@ const parseClassification = (
         row.source_row_number,
         ['MEGA', 'FAM', 'SFA'],
         `Cle CIR dupliquee: ${key}.`,
-        { cir_key: key }
+        { cir_key: key, raw_values: toRawValues(row, CLASSIFICATION_EXPECTED_COLUMNS) }
       ));
+      continue;
     } else {
       seenKeys.add(key);
     }
@@ -491,7 +577,7 @@ const parseSegments = (
         row.source_row_number,
         SEGMENT_IDENTITY_COLUMNS.filter((column) => (row.values[column] ?? '') === ''),
         'Identite segment fabricant incomplete.',
-        { segment_key: key }
+        { segment_key: key, raw_values: toRawValues(row, SEGMENTS_EXPECTED_COLUMNS) }
       ));
     }
 
@@ -508,7 +594,7 @@ const parseSegments = (
         tarif_fab: nullableValue(row.values.TARIF_FAB ?? ''),
         segment_key: key,
         raw_values: toRawValues(row, SEGMENTS_EXPECTED_COLUMNS),
-        normalized_values: toRawValues(row, SEGMENTS_EXPECTED_COLUMNS)
+        normalized_values: toNormalizedValues(row, SEGMENTS_EXPECTED_COLUMNS)
       });
     }
 
@@ -528,7 +614,7 @@ const parseSegments = (
         row.source_row_number,
         SEGMENT_CLASSIFICATION_COLUMNS.filter((column) => (row.values[column] ?? '') === ''),
         'Classification CIR incomplete pour le segment fabricant.',
-        { segment_key: key, cir_key: classificationKey }
+        { segment_key: key, cir_key: classificationKey, raw_values: toRawValues(row, SEGMENT_CLASSIFICATION_COLUMNS) }
       ));
     }
 
@@ -542,7 +628,7 @@ const parseSegments = (
           row.source_row_number,
           [...SEGMENT_CLASSIFICATION_COLUMNS],
           `Cle CIR non reconnue dans la classification: ${classificationKey}.`,
-          { segment_key: key, cir_key: classificationKey }
+          { segment_key: key, cir_key: classificationKey, raw_values: toRawValues(row, SEGMENT_CLASSIFICATION_COLUMNS) }
         ));
       }
     }
@@ -577,11 +663,34 @@ const parseSegments = (
         row.source_row_number,
         missingGridColumns,
         'Champ grille achat structurel manquant.',
-        { segment_key: key }
+        { segment_key: key, raw_values: toRawValues(row, missingGridColumns) }
       ));
     }
 
     if (!hasEmpty(row, SEGMENT_IDENTITY_COLUMNS)) {
+      const normalizedDates = {
+        DATE_DEBUT: normalizeCirDate(row.values.DATE_DEBUT ?? ''),
+        DATE_FIN: normalizeCirDate(row.values.DATE_FIN ?? '')
+      };
+
+      DATE_COLUMNS.forEach((column) => {
+        const dateResult = normalizedDates[column];
+        if (dateResult.valid) return;
+        anomalies.push(buildAnomaly(
+          'parse_failed',
+          'moyenne',
+          'segments_grids',
+          row.source_row_number,
+          [column],
+          `Date CIR invalide dans la colonne ${column}.`,
+          {
+            segment_key: key,
+            source_value: row.raw_values[column] ?? '',
+            normalized_value: null
+          }
+        ));
+      });
+
       purchaseGridRows.push({
         source_row_number: row.source_row_number,
         segment_key: key,
@@ -590,16 +699,16 @@ const parseSegments = (
         col_ha: nullableValue(row.values.COL_HA ?? ''),
         priorite: nullableValue(row.values.PRIORITE ?? ''),
         type_grill: nullableValue(row.values.TYPE_GRILL ?? ''),
-        date_debut_raw: nullableValue(row.values.DATE_DEBUT ?? ''),
-        date_fin_raw: nullableValue(row.values.DATE_FIN ?? ''),
-        date_debut_normalized: null,
-        date_fin_normalized: null,
+        date_debut_raw: nullableRawValue(row.raw_values.DATE_DEBUT ?? ''),
+        date_fin_raw: nullableRawValue(row.raw_values.DATE_FIN ?? ''),
+        date_debut_normalized: normalizedDates.DATE_DEBUT.normalized,
+        date_fin_normalized: normalizedDates.DATE_FIN.normalized,
         borne_acha: nullableValue(row.values.BORNE_ACHA ?? ''),
         coef_retro: nullableValue(row.values.COEF_RETRO ?? ''),
         coef_ha: nullableValue(row.values.COEF_HA ?? ''),
         coef_majvte: nullableValue(row.values.COEF_MAJVTE ?? ''),
         raw_values: toRawValues(row, SEGMENTS_EXPECTED_COLUMNS),
-        normalized_values: toRawValues(row, SEGMENTS_EXPECTED_COLUMNS)
+        normalized_values: toNormalizedValues(row, SEGMENTS_EXPECTED_COLUMNS)
       });
     }
   }

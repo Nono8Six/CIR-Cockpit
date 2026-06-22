@@ -14,12 +14,13 @@ import {
   PRICING_REFERENCE_STORAGE_BUCKET,
   PRICING_REFERENCE_XLSX_MIME,
   pricingReferenceHealthReportSchema,
+  type PricingReferenceImportAnalyzeResponse,
+  type PricingReferenceImportStatus,
   type PricingReferenceAnomaliesListInput,
   type PricingReferenceAnomaliesListResponse,
   type PricingReferenceClassificationListResponse,
   type PricingReferenceHealthGetResponse,
   type PricingReferenceImportAnalyzeInput,
-  type PricingReferenceImportAnalyzeResponse,
   type PricingReferenceImportGetInput,
   type PricingReferenceImportGetResponse,
   type PricingReferenceImportsListInput,
@@ -48,6 +49,10 @@ import {
 type ImportFileRow = typeof pricing_reference_import_files.$inferSelect;
 type ImportRow = typeof pricing_reference_imports.$inferSelect;
 type SnapshotRow = typeof pricing_reference_snapshots.$inferSelect;
+type PersistedAnalysisState = {
+  snapshotId: string;
+  importStatus: PricingReferenceImportStatus;
+};
 
 const SIGNED_UPLOAD_EXPIRES_IN_SECONDS = 60 * 60 * 2;
 const INSERT_CHUNK_SIZE = 500;
@@ -478,14 +483,20 @@ const insertAnomalyRows = async (
   }
 };
 
+export const resolvePricingReferenceAnalysisStatus = (
+  analysis: Pick<PricingReferenceAnalysisResult, 'health_report'>
+): PricingReferenceImportStatus =>
+  analysis.health_report.anomalies.bloquante > 0 ? 'analyse_erreur' : 'analyse_ok';
+
 const persistAnalysis = async (
   db: DbClient,
   importId: string,
   callerId: string,
   files: { classification: ImportFileRow; segments_grids: ImportFileRow },
   analysis: PricingReferenceAnalysisResult
-): Promise<string> => {
+): Promise<PersistedAnalysisState> => {
   const snapshotId = crypto.randomUUID();
+  const importStatus = resolvePricingReferenceAnalysisStatus(analysis);
 
   await db.transaction(async (tx) => {
     await tx.update(pricing_reference_imports)
@@ -554,7 +565,7 @@ const persistAnalysis = async (
 
     await tx.update(pricing_reference_imports)
       .set({
-        status: 'analyse_ok',
+        status: importStatus,
         analyzed_by: callerId,
         analysis_completed_at: new Date().toISOString(),
         health_report: analysis.health_report,
@@ -562,12 +573,19 @@ const persistAnalysis = async (
           classification: analysis.health_report.classification,
           segments_grids: analysis.health_report.segments_grids,
           anomalies: analysis.health_report.anomalies
-        }
+        },
+        error_code: importStatus === 'analyse_erreur' ? 'PRICING_REFERENCE_IMPORT_BLOCKING_ANOMALIES' : null,
+        error_message: importStatus === 'analyse_erreur'
+          ? 'Des anomalies bloquantes empechent l activation du snapshot referentiel.'
+          : null,
+        error_details: importStatus === 'analyse_erreur'
+          ? `${analysis.health_report.anomalies.bloquante} anomalie(s) bloquante(s) detectee(s).`
+          : null
       })
       .where(eq(pricing_reference_imports.id, importId));
   });
 
-  return snapshotId;
+  return { snapshotId, importStatus };
 };
 
 export const analyzePricingReferenceImport = async (
@@ -615,14 +633,14 @@ export const analyzePricingReferenceImport = async (
       }
     );
 
-    const snapshotId = await persistAnalysis(db, input.import_id, callerId, files, analysis);
+    const { snapshotId, importStatus } = await persistAnalysis(db, input.import_id, callerId, files, analysis);
 
     return {
       ok: true,
       request_id: requestId,
       import_id: input.import_id,
       snapshot_id: snapshotId,
-      status: 'analyse_ok',
+      status: importStatus,
       health_report: analysis.health_report
     };
   } catch (error) {

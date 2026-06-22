@@ -177,6 +177,13 @@ export const ERROR_CATALOG: Record<string, ErrorCatalogEntry> = {
   INVALID_JSON: makeEntry('INVALID_JSON', 'Payload JSON invalide.', 'validation', 'warning', 'retry'),
   INVALID_PAYLOAD: makeEntry('INVALID_PAYLOAD', 'Payload invalide.', 'validation', 'warning', 'retry'),
   PAYLOAD_TOO_LARGE: makeEntry('PAYLOAD_TOO_LARGE', 'Payload trop volumineux.', 'validation', 'warning', 'retry'),
+  PRICING_REFERENCE_IMPORT_BLOCKING_ANOMALIES: makeEntry(
+    'PRICING_REFERENCE_IMPORT_BLOCKING_ANOMALIES',
+    'Des anomalies bloquantes empechent l activation du referentiel.',
+    'validation',
+    'warning',
+    'none'
+  ),
   PRICING_REFERENCE_IMPORT_EMPTY: makeEntry(
     'PRICING_REFERENCE_IMPORT_EMPTY',
     'Le fichier referentiel est vide.',

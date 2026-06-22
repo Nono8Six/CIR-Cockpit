@@ -217,13 +217,24 @@ Limites restantes:
 
 ### Tranche 2 - Import des exports CIR
 
-- [ ] Parser le fichier classification CIR.
-- [ ] Parser le fichier segment/grille fabricant CIR.
-- [ ] Normaliser les champs texte, codes marque, categories fabricant et cles classification.
-- [ ] Detecter les lignes incompletes, doublons et liaisons impossibles.
-- [ ] Produire un rapport d'import avec compteurs, erreurs et avertissements.
-- [ ] Stocker chaque import comme snapshot historise.
-- [ ] Bloquer l'activation si des erreurs critiques existent.
+- [x] Parser le fichier classification CIR.
+- [x] Parser le fichier segment/grille fabricant CIR.
+- [x] Normaliser les champs texte, codes marque, categories fabricant et cles classification.
+- [x] Detecter les lignes incompletes, doublons et liaisons impossibles.
+- [x] Produire un rapport d'import avec compteurs, erreurs et avertissements.
+- [x] Stocker chaque import comme snapshot historise.
+- [x] Bloquer l'activation si des erreurs critiques existent.
+
+### Tranche 2 realisee - 2026-06-22
+
+Resume:
+
+- Parser CIR complete pour les deux exports: classification et segments/grilles fabricant.
+- Normalisation controlee ajoutee: texte trim/collapse, codes metier en majuscules, cles CIR/segments reconstruites depuis les valeurs normalisees.
+- Valeurs brutes conservees separement dans `raw_values`; les lignes classification vides ou dupliquees sont signalees puis exclues des tables normalisees pour respecter les contraintes snapshot.
+- Dates CIR de grille achat conservees en brut et normalisees quand le format est reconnu (`YYYY-MM-DD`, `1YYMMDD`, `0`/vide). Format inconnu signale en anomalie sans date inventee.
+- Rapport d'import et anomalies exploitables maintenus; un import contenant une anomalie `bloquante` reste en `analyse_erreur` avec code `PRICING_REFERENCE_IMPORT_BLOCKING_ANOMALIES`.
+- Snapshot historise cree non actif; aucune route d'activation ajoutee, aucun diff, aucune IA, aucun import tarif fabricant.
 
 ### Tranche 3 - Interface referentiels
 

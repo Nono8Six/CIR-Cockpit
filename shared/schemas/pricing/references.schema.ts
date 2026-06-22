@@ -328,6 +328,7 @@ export const pricingReferenceAnomaliesListResponseSchema = apiSuccessSchema.exte
 });
 
 export type PricingReferenceFileKind = z.infer<typeof pricingReferenceFileKindSchema>;
+export type PricingReferenceImportStatus = z.infer<typeof pricingReferenceImportStatusSchema>;
 export type PricingReferenceAnomalySeverity = z.infer<typeof pricingReferenceAnomalySeveritySchema>;
 export type PricingReferenceAnomalyStatus = z.infer<typeof pricingReferenceAnomalyStatusSchema>;
 export type PricingReferenceAnomalyType = z.infer<typeof pricingReferenceAnomalyTypeSchema>;
