@@ -71,6 +71,23 @@ import {
   tierV1SearchInputSchema
 } from '../../../../shared/schemas/interaction/tier-v1.schema.ts';
 import {
+  pricingReferenceAnomaliesListInputSchema,
+  pricingReferenceAnomaliesListResponseSchema,
+  pricingReferenceClassificationListResponseSchema,
+  pricingReferenceHealthGetInputSchema,
+  pricingReferenceHealthGetResponseSchema,
+  pricingReferenceImportAnalyzeInputSchema,
+  pricingReferenceImportAnalyzeResponseSchema,
+  pricingReferenceImportGetInputSchema,
+  pricingReferenceImportGetResponseSchema,
+  pricingReferenceImportsListInputSchema,
+  pricingReferenceImportsListResponseSchema,
+  pricingReferenceImportsPrepareInputSchema,
+  pricingReferenceImportsPrepareResponseSchema,
+  pricingReferenceRowsListInputSchema,
+  pricingReferenceSegmentsListResponseSchema
+} from '../../../../shared/schemas/pricing/references.schema.ts';
+import {
   adminAuditLogsInputSchema,
   adminUsersListInputSchema,
   adminUsersPayloadSchema
@@ -108,6 +125,16 @@ import {
   saveDirectorySavedView,
   setDefaultDirectorySavedView
 } from '../services/directory/core/directorySavedViews.ts';
+import {
+  analyzePricingReferenceImport,
+  getPricingReferenceHealth,
+  getPricingReferenceImport,
+  listPricingReferenceAnomalies,
+  listPricingReferenceClassification,
+  listPricingReferenceImports,
+  listPricingReferenceSegments,
+  preparePricingReferenceImport
+} from '../services/pricing/references/referenceImports.ts';
 import type { DbClient } from '../types.ts';
 import { httpError } from '../middleware/errorHandler.ts';
 import { authedProcedure, router, superAdminProcedure } from './procedures.ts';
@@ -209,6 +236,64 @@ export const appRouter = router({
       .input(configReferenceActionInputSchema)
       .output(configReferenceActionResponseSchema)
       .mutation(withAuthedHandler(handleConfigReferenceAction))
+  }),
+  pricing: router({
+    references: router({
+      imports: router({
+        prepare: superAdminProcedure
+          .input(pricingReferenceImportsPrepareInputSchema)
+          .output(pricingReferenceImportsPrepareResponseSchema)
+          .mutation(withSuperAdminHandler(preparePricingReferenceImport)),
+        analyze: superAdminProcedure
+          .input(pricingReferenceImportAnalyzeInputSchema)
+          .output(pricingReferenceImportAnalyzeResponseSchema)
+          .mutation(withSuperAdminHandler(analyzePricingReferenceImport)),
+        list: authedProcedure
+          .input(pricingReferenceImportsListInputSchema)
+          .output(pricingReferenceImportsListResponseSchema)
+          .query(withAuthedHandler((db, authContext, requestId, input) =>
+            listPricingReferenceImports(db, authContext.userId, requestId, input)
+          )),
+        get: authedProcedure
+          .input(pricingReferenceImportGetInputSchema)
+          .output(pricingReferenceImportGetResponseSchema)
+          .query(withAuthedHandler((db, authContext, requestId, input) =>
+            getPricingReferenceImport(db, authContext.userId, requestId, input)
+          ))
+      }),
+      health: router({
+        get: authedProcedure
+          .input(pricingReferenceHealthGetInputSchema)
+          .output(pricingReferenceHealthGetResponseSchema)
+          .query(withAuthedHandler((db, authContext, requestId, input) =>
+            getPricingReferenceHealth(db, authContext.userId, requestId, input)
+          ))
+      }),
+      classification: router({
+        list: authedProcedure
+          .input(pricingReferenceRowsListInputSchema)
+          .output(pricingReferenceClassificationListResponseSchema)
+          .query(withAuthedHandler((db, authContext, requestId, input) =>
+            listPricingReferenceClassification(db, authContext.userId, requestId, input)
+          ))
+      }),
+      segments: router({
+        list: authedProcedure
+          .input(pricingReferenceRowsListInputSchema)
+          .output(pricingReferenceSegmentsListResponseSchema)
+          .query(withAuthedHandler((db, authContext, requestId, input) =>
+            listPricingReferenceSegments(db, authContext.userId, requestId, input)
+          ))
+      }),
+      anomalies: router({
+        list: authedProcedure
+          .input(pricingReferenceAnomaliesListInputSchema)
+          .output(pricingReferenceAnomaliesListResponseSchema)
+          .query(withAuthedHandler((db, authContext, requestId, input) =>
+            listPricingReferenceAnomalies(db, authContext.userId, requestId, input)
+          ))
+      })
+    })
   }),
   directory: router({
     list: authedProcedure

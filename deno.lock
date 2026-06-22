@@ -53,6 +53,7 @@
       "npm:hono@4.12.4",
       "npm:jose@5.9.6",
       "npm:postgres@3.4.8",
+      "npm:xlsx@0.18.5",
       "npm:zod@4.3.6"
     ],
     "packageJson": {

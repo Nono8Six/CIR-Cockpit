@@ -177,6 +177,77 @@ export const ERROR_CATALOG: Record<string, ErrorCatalogEntry> = {
   INVALID_JSON: makeEntry('INVALID_JSON', 'Payload JSON invalide.', 'validation', 'warning', 'retry'),
   INVALID_PAYLOAD: makeEntry('INVALID_PAYLOAD', 'Payload invalide.', 'validation', 'warning', 'retry'),
   PAYLOAD_TOO_LARGE: makeEntry('PAYLOAD_TOO_LARGE', 'Payload trop volumineux.', 'validation', 'warning', 'retry'),
+  PRICING_REFERENCE_IMPORT_EMPTY: makeEntry(
+    'PRICING_REFERENCE_IMPORT_EMPTY',
+    'Le fichier referentiel est vide.',
+    'validation',
+    'warning',
+    'retry'
+  ),
+  PRICING_REFERENCE_IMPORT_HASH_MISMATCH: makeEntry(
+    'PRICING_REFERENCE_IMPORT_HASH_MISMATCH',
+    'Le hash du fichier referentiel ne correspond pas au fichier analyse.',
+    'validation',
+    'error',
+    'retry'
+  ),
+  PRICING_REFERENCE_IMPORT_INVALID_COLUMNS: makeEntry(
+    'PRICING_REFERENCE_IMPORT_INVALID_COLUMNS',
+    'Le fichier referentiel ne contient pas les colonnes attendues.',
+    'validation',
+    'warning',
+    'retry'
+  ),
+  PRICING_REFERENCE_IMPORT_INVALID_FILE: makeEntry(
+    'PRICING_REFERENCE_IMPORT_INVALID_FILE',
+    'Le fichier referentiel est invalide.',
+    'validation',
+    'warning',
+    'retry'
+  ),
+  PRICING_REFERENCE_IMPORT_NOT_FOUND: makeEntry(
+    'PRICING_REFERENCE_IMPORT_NOT_FOUND',
+    'Import referentiel introuvable.',
+    'db',
+    'warning',
+    'reload'
+  ),
+  PRICING_REFERENCE_IMPORT_PARSE_FAILED: makeEntry(
+    'PRICING_REFERENCE_IMPORT_PARSE_FAILED',
+    'Impossible de lire le fichier referentiel.',
+    'validation',
+    'error',
+    'retry'
+  ),
+  PRICING_REFERENCE_IMPORT_STORAGE_FAILED: makeEntry(
+    'PRICING_REFERENCE_IMPORT_STORAGE_FAILED',
+    'Impossible d acceder au fichier referentiel stocke.',
+    'edge',
+    'error',
+    'retry',
+    true
+  ),
+  PRICING_REFERENCE_IMPORT_TOO_LARGE: makeEntry(
+    'PRICING_REFERENCE_IMPORT_TOO_LARGE',
+    'Le fichier referentiel depasse la limite de 50 MB.',
+    'validation',
+    'warning',
+    'retry'
+  ),
+  PRICING_REFERENCE_PERMISSION_DENIED: makeEntry(
+    'PRICING_REFERENCE_PERMISSION_DENIED',
+    'Action referentiel reservee aux super administrateurs.',
+    'auth',
+    'error',
+    'relogin'
+  ),
+  PRICING_REFERENCE_SNAPSHOT_NOT_FOUND: makeEntry(
+    'PRICING_REFERENCE_SNAPSHOT_NOT_FOUND',
+    'Snapshot referentiel introuvable.',
+    'db',
+    'warning',
+    'reload'
+  ),
   ACTION_REQUIRED: makeEntry('ACTION_REQUIRED', 'Action requise.', 'validation', 'warning', 'retry'),
   ROLE_INVALID: makeEntry('ROLE_INVALID', 'Rôle invalide.', 'validation', 'warning', 'retry'),
   USER_NOT_FOUND: makeEntry('USER_NOT_FOUND', 'Utilisateur introuvable.', 'db', 'warning', 'reload'),

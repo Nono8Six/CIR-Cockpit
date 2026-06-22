@@ -2,6 +2,13 @@ import { boolean, integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle
 
 import type { Database } from '../../shared/supabase.types.ts';
 import type { DirectorySavedViewState } from '../../shared/schemas/system/directory.schema.ts';
+import type {
+  PricingReferenceAnomalySeverity,
+  PricingReferenceAnomalyStatus,
+  PricingReferenceAnomalyType,
+  PricingReferenceFileKind,
+  PricingReferenceHealthReport
+} from '../../shared/schemas/pricing/references.schema.ts';
 
 type AccountType = Database['public']['Enums']['account_type'];
 type UserRole = Database['public']['Enums']['user_role'];
@@ -132,6 +139,163 @@ export const entity_contacts = pgTable('entity_contacts', {
   updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
 });
 
+export const pricing_reference_imports = pgTable('pricing_reference_imports', {
+  id: uuid('id').$type<string>().defaultRandom().primaryKey(),
+  status: text('status').$type<'brouillon' | 'analyse_en_cours' | 'analyse_ok' | 'analyse_erreur' | 'pret_activation' | 'rejete' | 'archive'>().default('brouillon').notNull(),
+  created_by: uuid('created_by').$type<string | null>(),
+  analyzed_by: uuid('analyzed_by').$type<string | null>(),
+  analysis_started_at: timestamp('analysis_started_at', timestamptz).$type<string | null>(),
+  analysis_completed_at: timestamp('analysis_completed_at', timestamptz).$type<string | null>(),
+  health_report: jsonb('health_report').$type<PricingReferenceHealthReport | null>(),
+  counters: jsonb('counters').$type<Record<string, unknown>>().default({}).notNull(),
+  error_code: text('error_code').$type<string | null>(),
+  error_message: text('error_message').$type<string | null>(),
+  error_details: text('error_details').$type<string | null>(),
+  created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull(),
+  updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
+});
+
+export const pricing_reference_import_files = pgTable('pricing_reference_import_files', {
+  id: uuid('id').$type<string>().defaultRandom().primaryKey(),
+  import_id: uuid('import_id').$type<string>().notNull(),
+  file_kind: text('file_kind').$type<PricingReferenceFileKind>().notNull(),
+  original_filename: text('original_filename').$type<string>().notNull(),
+  storage_bucket: text('storage_bucket').$type<'pricing-reference-sources'>().default('pricing-reference-sources').notNull(),
+  storage_path: text('storage_path').$type<string>().notNull(),
+  size_bytes: integer('size_bytes').$type<number>().notNull(),
+  sha256: text('sha256').$type<string>().notNull(),
+  content_type: text('content_type').$type<string | null>(),
+  sheet_name: text('sheet_name').$type<string | null>(),
+  detected_columns: text('detected_columns').array().$type<string[]>().default([]).notNull(),
+  row_count: integer('row_count').$type<number | null>(),
+  uploaded_by: uuid('uploaded_by').$type<string | null>(),
+  created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull(),
+  updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
+});
+
+export const pricing_reference_snapshots = pgTable('pricing_reference_snapshots', {
+  id: uuid('id').$type<string>().defaultRandom().primaryKey(),
+  import_id: uuid('import_id').$type<string>().notNull(),
+  status: text('status').$type<'cree' | 'pret_activation' | 'actif' | 'archive'>().default('cree').notNull(),
+  is_active: boolean('is_active').$type<boolean>().default(false).notNull(),
+  activated_at: timestamp('activated_at', timestamptz).$type<string | null>(),
+  created_by: uuid('created_by').$type<string | null>(),
+  counters: jsonb('counters').$type<Record<string, unknown>>().default({}).notNull(),
+  created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull(),
+  updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
+});
+
+export const pricing_classification_cir = pgTable('pricing_classification_cir', {
+  id: uuid('id').$type<string>().defaultRandom().primaryKey(),
+  snapshot_id: uuid('snapshot_id').$type<string>().notNull(),
+  import_id: uuid('import_id').$type<string>().notNull(),
+  source_file_id: uuid('source_file_id').$type<string>().notNull(),
+  source_row_number: integer('source_row_number').$type<number>().notNull(),
+  mega: text('mega').$type<string>().notNull(),
+  fam: text('fam').$type<string>().notNull(),
+  sfa: text('sfa').$type<string>().notNull(),
+  mega_lib: text('mega_lib').$type<string>().notNull(),
+  fam_lib: text('fam_lib').$type<string>().notNull(),
+  sfa_lib: text('sfa_lib').$type<string>().notNull(),
+  cir_key: text('cir_key').$type<string>().notNull(),
+  raw_values: jsonb('raw_values').$type<Record<string, string>>().default({}).notNull(),
+  normalized_values: jsonb('normalized_values').$type<Record<string, string>>().default({}).notNull(),
+  created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull()
+});
+
+export const pricing_supplier_segments = pgTable('pricing_supplier_segments', {
+  id: uuid('id').$type<string>().defaultRandom().primaryKey(),
+  snapshot_id: uuid('snapshot_id').$type<string>().notNull(),
+  import_id: uuid('import_id').$type<string>().notNull(),
+  source_file_id: uuid('source_file_id').$type<string>().notNull(),
+  source_row_number: integer('source_row_number').$type<number>().notNull(),
+  segment: text('segment').$type<string>().notNull(),
+  idnumerique: text('idnumerique').$type<string>().notNull(),
+  marque: text('marque').$type<string>().notNull(),
+  cat_fab: text('cat_fab').$type<string>().notNull(),
+  cat_fab_l: text('cat_fab_l').$type<string | null>(),
+  strategiq: text('strategiq').$type<string | null>(),
+  codif_fair: text('codif_fair').$type<string | null>(),
+  tarif_fab: text('tarif_fab').$type<string | null>(),
+  segment_key: text('segment_key').$type<string>().notNull(),
+  raw_values: jsonb('raw_values').$type<Record<string, string>>().default({}).notNull(),
+  normalized_values: jsonb('normalized_values').$type<Record<string, string>>().default({}).notNull(),
+  created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull()
+});
+
+export const pricing_segment_classification_links = pgTable('pricing_segment_classification_links', {
+  id: uuid('id').$type<string>().defaultRandom().primaryKey(),
+  snapshot_id: uuid('snapshot_id').$type<string>().notNull(),
+  import_id: uuid('import_id').$type<string>().notNull(),
+  segment_id: uuid('segment_id').$type<string>().notNull(),
+  classification_id: uuid('classification_id').$type<string | null>(),
+  source_file_id: uuid('source_file_id').$type<string>().notNull(),
+  source_row_number: integer('source_row_number').$type<number>().notNull(),
+  mega_famille: text('mega_famille').$type<string | null>(),
+  famille: text('famille').$type<string | null>(),
+  sous_famille: text('sous_famille').$type<string | null>(),
+  cir_key: text('cir_key').$type<string>().notNull(),
+  link_status: text('link_status').$type<'complete_valid' | 'missing' | 'partial' | 'unknown_key' | 'ambiguous'>().notNull(),
+  raw_values: jsonb('raw_values').$type<Record<string, string>>().default({}).notNull(),
+  normalized_values: jsonb('normalized_values').$type<Record<string, string>>().default({}).notNull(),
+  created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull()
+});
+
+export const pricing_segment_purchase_grids = pgTable('pricing_segment_purchase_grids', {
+  id: uuid('id').$type<string>().defaultRandom().primaryKey(),
+  snapshot_id: uuid('snapshot_id').$type<string>().notNull(),
+  import_id: uuid('import_id').$type<string>().notNull(),
+  segment_id: uuid('segment_id').$type<string>().notNull(),
+  source_file_id: uuid('source_file_id').$type<string>().notNull(),
+  source_row_number: integer('source_row_number').$type<number>().notNull(),
+  num_four: text('num_four').$type<string | null>(),
+  remise_ha: text('remise_ha').$type<string | null>(),
+  col_ha: text('col_ha').$type<string | null>(),
+  priorite: text('priorite').$type<string | null>(),
+  type_grill: text('type_grill').$type<string | null>(),
+  date_debut_raw: text('date_debut_raw').$type<string | null>(),
+  date_fin_raw: text('date_fin_raw').$type<string | null>(),
+  date_debut_normalized: text('date_debut_normalized').$type<string | null>(),
+  date_fin_normalized: text('date_fin_normalized').$type<string | null>(),
+  borne_acha: text('borne_acha').$type<string | null>(),
+  coef_retro: text('coef_retro').$type<string | null>(),
+  coef_ha: text('coef_ha').$type<string | null>(),
+  coef_majvte: text('coef_majvte').$type<string | null>(),
+  raw_values: jsonb('raw_values').$type<Record<string, string>>().default({}).notNull(),
+  normalized_values: jsonb('normalized_values').$type<Record<string, string>>().default({}).notNull(),
+  created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull()
+});
+
+export const pricing_reference_anomalies = pgTable('pricing_reference_anomalies', {
+  id: uuid('id').$type<string>().defaultRandom().primaryKey(),
+  import_id: uuid('import_id').$type<string>().notNull(),
+  snapshot_id: uuid('snapshot_id').$type<string | null>(),
+  source_file_id: uuid('source_file_id').$type<string | null>(),
+  source_row_number: integer('source_row_number').$type<number | null>(),
+  type: text('type').$type<PricingReferenceAnomalyType>().notNull(),
+  severity: text('severity').$type<PricingReferenceAnomalySeverity>().notNull(),
+  status: text('status').$type<PricingReferenceAnomalyStatus>().default('nouvelle').notNull(),
+  object_type: text('object_type').$type<string | null>(),
+  object_id: text('object_id').$type<string | null>(),
+  columns: text('columns').array().$type<string[]>().default([]).notNull(),
+  message: text('message').$type<string>().notNull(),
+  details: jsonb('details').$type<Record<string, unknown>>().default({}).notNull(),
+  created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull(),
+  updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
+});
+
+export const pricing_reference_diffs = pgTable('pricing_reference_diffs', {
+  id: uuid('id').$type<string>().defaultRandom().primaryKey(),
+  base_snapshot_id: uuid('base_snapshot_id').$type<string | null>(),
+  target_snapshot_id: uuid('target_snapshot_id').$type<string>().notNull(),
+  diff_type: text('diff_type').$type<string>().notNull(),
+  object_type: text('object_type').$type<string>().notNull(),
+  object_key: text('object_key').$type<string>().notNull(),
+  severity: text('severity').$type<PricingReferenceAnomalySeverity>().notNull(),
+  payload: jsonb('payload').$type<Record<string, unknown>>().default({}).notNull(),
+  created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull()
+});
+
 export const interactions = pgTable('interactions', {
   id: text('id').$type<string>().primaryKey(),
   agency_id: uuid('agency_id').$type<string | null>(),
@@ -245,6 +409,15 @@ export const drizzleSchema = {
   audit_logs,
   directory_saved_views,
   reference_departments,
+  pricing_reference_imports,
+  pricing_reference_import_files,
+  pricing_reference_snapshots,
+  pricing_classification_cir,
+  pricing_supplier_segments,
+  pricing_segment_classification_links,
+  pricing_segment_purchase_grids,
+  pricing_reference_anomalies,
+  pricing_reference_diffs,
   entities,
   entity_contacts,
   interactions,

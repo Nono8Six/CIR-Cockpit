@@ -72,6 +72,23 @@ import {
   adminUsersListInputSchema,
   adminUsersPayloadSchema
 } from '../schemas/admin/user.schema.ts';
+import {
+  pricingReferenceAnomaliesListInputSchema,
+  pricingReferenceAnomaliesListResponseSchema,
+  pricingReferenceClassificationListResponseSchema,
+  pricingReferenceHealthGetInputSchema,
+  pricingReferenceHealthGetResponseSchema,
+  pricingReferenceImportAnalyzeInputSchema,
+  pricingReferenceImportAnalyzeResponseSchema,
+  pricingReferenceImportGetInputSchema,
+  pricingReferenceImportGetResponseSchema,
+  pricingReferenceImportsListInputSchema,
+  pricingReferenceImportsListResponseSchema,
+  pricingReferenceImportsPrepareInputSchema,
+  pricingReferenceImportsPrepareResponseSchema,
+  pricingReferenceRowsListInputSchema,
+  pricingReferenceSegmentsListResponseSchema
+} from '../schemas/pricing/references.schema.ts';
 
 const t = initTRPC.create();
 
@@ -151,6 +168,52 @@ const appRouterType = t.router({
       .input(configReferenceActionInputSchema)
       .output(configReferenceActionResponseSchema)
       .mutation(() => undefined as never)
+  }),
+  pricing: t.router({
+    references: t.router({
+      imports: t.router({
+        prepare: t.procedure
+          .input(pricingReferenceImportsPrepareInputSchema)
+          .output(pricingReferenceImportsPrepareResponseSchema)
+          .mutation(() => undefined as never),
+        analyze: t.procedure
+          .input(pricingReferenceImportAnalyzeInputSchema)
+          .output(pricingReferenceImportAnalyzeResponseSchema)
+          .mutation(() => undefined as never),
+        list: t.procedure
+          .input(pricingReferenceImportsListInputSchema)
+          .output(pricingReferenceImportsListResponseSchema)
+          .query(() => undefined as never),
+        get: t.procedure
+          .input(pricingReferenceImportGetInputSchema)
+          .output(pricingReferenceImportGetResponseSchema)
+          .query(() => undefined as never)
+      }),
+      health: t.router({
+        get: t.procedure
+          .input(pricingReferenceHealthGetInputSchema)
+          .output(pricingReferenceHealthGetResponseSchema)
+          .query(() => undefined as never)
+      }),
+      classification: t.router({
+        list: t.procedure
+          .input(pricingReferenceRowsListInputSchema)
+          .output(pricingReferenceClassificationListResponseSchema)
+          .query(() => undefined as never)
+      }),
+      segments: t.router({
+        list: t.procedure
+          .input(pricingReferenceRowsListInputSchema)
+          .output(pricingReferenceSegmentsListResponseSchema)
+          .query(() => undefined as never)
+      }),
+      anomalies: t.router({
+        list: t.procedure
+          .input(pricingReferenceAnomaliesListInputSchema)
+          .output(pricingReferenceAnomaliesListResponseSchema)
+          .query(() => undefined as never)
+      })
+    })
   }),
   directory: t.router({
     list: t.procedure
