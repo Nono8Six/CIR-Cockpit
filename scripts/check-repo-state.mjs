@@ -100,6 +100,11 @@ const REMOTE_TO_LOCAL_MODERN_MIGRATION_COMPATIBILITY = {
   20260622041229n: "20260622041229_pricing_reference_foundation.sql",
   20260622041709n: "20260622041709_pricing_reference_fk_indexes.sql",
   20260627105918n: "20260627090000_pricing_reference_column_mappings.sql",
+  20260627162828n: "20260627162550_ai_governance.sql",
+  20260628083710n: "20260627191500_pricing_reference_diagnose_split.sql",
+  20260628085901n: "20260628093000_ai_openrouter_provider.sql",
+  20260628092400n: "20260628102000_ai_openrouter_only.sql",
+  20260628131636n: "20260628133000_ai_deepseek_only_model.sql",
 };
 
 function readJson(relativePath) {
