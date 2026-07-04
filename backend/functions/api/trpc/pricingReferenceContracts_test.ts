@@ -4,6 +4,10 @@ import {
   PRICING_REFERENCE_MAX_FILE_SIZE_BYTES,
   pricingReferenceAnomaliesListInputSchema,
   pricingReferenceAnomaliesListResponseSchema,
+  pricingReferenceAnomaliesSummaryGetInputSchema,
+  pricingReferenceAnomaliesSummaryResponseSchema,
+  pricingReferenceClassificationListAllInputSchema,
+  pricingReferenceClassificationListAllResponseSchema,
   pricingReferenceBatchCorrectionProposalsResponseSchema,
   pricingReferenceClassificationListInputSchema,
   pricingReferenceCorrectionPlanGetInputSchema,
@@ -20,7 +24,12 @@ import {
   pricingReferenceRowsListInputSchema,
   pricingReferenceSegmentsListInputSchema
 } from '../../../../shared/schemas/pricing/references.schema.ts';
-import { buildPricingReferenceCorrectionPlanFromRows } from '../services/pricing/references/referenceImports.ts';
+import type { DbClient } from '../types.ts';
+import {
+  buildPricingReferenceCorrectionPlanFromRows,
+  getPricingReferenceAnomaliesSummary,
+  listAllPricingReferenceClassification
+} from '../services/pricing/references/referenceImports.ts';
 
 const readObject = (record: Record<string, unknown>, key: string): Record<string, unknown> | null => {
   const value = record[key];
@@ -37,6 +46,18 @@ const readString = (record: Record<string, unknown>, key: string): string | null
 const readNumber = (record: Record<string, unknown>, key: string): number | null => {
   const value = record[key];
   return typeof value === 'number' ? value : null;
+};
+
+const createExecuteOnlyDb = (responses: unknown[][]): { db: DbClient; calls: unknown[] } => {
+  const queue = [...responses];
+  const calls: unknown[] = [];
+  const db = {
+    execute: (query: unknown) => {
+      calls.push(query);
+      return Promise.resolve(queue.shift() ?? []);
+    }
+  } as unknown as DbClient;
+  return { db, calls };
 };
 
 const readErrorData = async (response: Response): Promise<Record<string, unknown>> => {
@@ -203,6 +224,165 @@ Deno.test('pricing reference list and analyze contracts reject unsupported field
     import_id: '11111111-1111-4111-8111-111111111111',
     activate: true
   }).success, false);
+});
+
+Deno.test('pricing reference summary and listAll contracts are strict', () => {
+  assertEquals(pricingReferenceAnomaliesSummaryGetInputSchema.safeParse({}).success, true);
+  assertEquals(pricingReferenceAnomaliesSummaryGetInputSchema.safeParse({
+    import_id: '11111111-1111-4111-8111-111111111111'
+  }).success, true);
+  assertEquals(pricingReferenceAnomaliesSummaryGetInputSchema.safeParse({
+    page: 1
+  }).success, false);
+  assertEquals(pricingReferenceAnomaliesListInputSchema.safeParse({
+    page: 1,
+    page_size: 50,
+    marque: 'BOSCH',
+    type: 'purchase_grid_missing'
+  }).success, true);
+  assertEquals(pricingReferenceAnomaliesListInputSchema.safeParse({
+    page: 1,
+    page_size: 50,
+    marque: ''
+  }).success, false);
+  assertEquals(pricingReferenceAnomaliesSummaryResponseSchema.safeParse({
+    ok: true,
+    total: 3,
+    marques: [{
+      marque: 'BOSCH',
+      max_severity: 'haute',
+      anomaly_count: 3,
+      types: [{
+        type: 'purchase_grid_missing',
+        max_severity: 'haute',
+        anomaly_count: 3
+      }]
+    }]
+  }).success, true);
+  assertEquals(pricingReferenceAnomaliesSummaryResponseSchema.safeParse({
+    ok: true,
+    total: 1,
+    marques: [{
+      marque: 'BOSCH',
+      max_severity: 'haute',
+      anomaly_count: 1,
+      types: []
+    }]
+  }).success, false);
+  assertEquals(pricingReferenceClassificationListAllInputSchema.safeParse({}).success, true);
+  assertEquals(pricingReferenceClassificationListAllInputSchema.safeParse({
+    search: 'abc'
+  }).success, false);
+  assertEquals(pricingReferenceClassificationListAllResponseSchema.safeParse({
+    ok: true,
+    total: 1,
+    truncated: false,
+    rows: [{
+      id: '11111111-1111-4111-8111-111111111111',
+      snapshot_id: '33333333-3333-4333-8333-333333333333',
+      import_id: '22222222-2222-4222-8222-222222222222',
+      source_row_number: 2,
+      cir_key: '9_20_99',
+      mega: '9',
+      fam: '20',
+      sfa: '99',
+      mega_lib: 'Outillage',
+      fam_lib: 'Outillage a main',
+      sfa_lib: 'Divers'
+    }]
+  }).success, true);
+  assertEquals(pricingReferenceClassificationListAllResponseSchema.safeParse({
+    ok: true,
+    total: 0,
+    rows: []
+  }).success, false);
+});
+
+Deno.test('pricing reference classification listAll returns a real total when capped', async () => {
+  const rows = [{
+    id: '11111111-1111-4111-8111-111111111111',
+    snapshot_id: '33333333-3333-4333-8333-333333333333',
+    import_id: '22222222-2222-4222-8222-222222222222',
+    source_row_number: 2,
+    cir_key: '9_20_99',
+    mega: '9',
+    fam: '20',
+    sfa: '99',
+    mega_lib: 'Outillage',
+    fam_lib: 'Outillage a main',
+    sfa_lib: 'Divers'
+  }];
+  const { db, calls } = createExecuteOnlyDb([
+    rows,
+    [{ total: 5001 }]
+  ]);
+
+  const response = await listAllPricingReferenceClassification(db, 'user-1', 'request-1', {
+    snapshot_id: '33333333-3333-4333-8333-333333333333'
+  });
+
+  assertEquals(calls.length, 2);
+  assertEquals(response.rows.length, 1);
+  assertEquals(response.total, 5001);
+  assertEquals(response.truncated, true);
+});
+
+Deno.test('pricing reference anomalies summary aggregates severities by marque and type', async () => {
+  const { db } = createExecuteOnlyDb([[
+    {
+      marque: 'BOSCH',
+      type: 'purchase_grid_missing',
+      anomaly_count: 2,
+      max_severity_weight: 2
+    },
+    {
+      marque: 'BOSCH',
+      type: 'segment_classification_unknown',
+      anomaly_count: 1,
+      max_severity_weight: 4
+    },
+    {
+      marque: 'Général',
+      type: 'invalid_file',
+      anomaly_count: 1,
+      max_severity_weight: 3
+    }
+  ]]);
+
+  const response = await getPricingReferenceAnomaliesSummary(db, 'user-1', 'request-1', {
+    snapshot_id: '33333333-3333-4333-8333-333333333333'
+  });
+
+  assertEquals(response.total, 4);
+  assertEquals(response.marques, [
+    {
+      marque: 'BOSCH',
+      max_severity: 'bloquante',
+      anomaly_count: 3,
+      types: [
+        {
+          type: 'segment_classification_unknown',
+          max_severity: 'bloquante',
+          anomaly_count: 1
+        },
+        {
+          type: 'purchase_grid_missing',
+          max_severity: 'moyenne',
+          anomaly_count: 2
+        }
+      ]
+    },
+    {
+      marque: 'Général',
+      max_severity: 'haute',
+      anomaly_count: 1,
+      types: [{
+        type: 'invalid_file',
+        max_severity: 'haute',
+        anomaly_count: 1
+      }]
+    }
+  ]);
 });
 
 Deno.test('pricing reference column mapping contracts are strict', () => {

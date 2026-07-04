@@ -8,6 +8,7 @@ import {
   pricing_reference_snapshots
 } from '../../../../../drizzle/schema.ts';
 import {
+  PRICING_REFERENCE_ANOMALY_DEFAULT_MARQUE,
   PRICING_REFERENCE_STORAGE_BUCKET,
   PRICING_REFERENCE_XLSX_MIME,
   pricingReferenceColumnAliasesSchema,
@@ -35,8 +36,13 @@ import {
   type PricingReferenceAnomaliesListInput,
   type PricingReferenceAnomaliesSortBy,
   type PricingReferenceAnomaliesListResponse,
+  type PricingReferenceAnomaliesSummaryGetInput,
+  type PricingReferenceAnomaliesSummaryMarque,
+  type PricingReferenceAnomaliesSummaryResponse,
   type PricingReferenceAnomalySeverity,
   type PricingReferenceAnomalyType,
+  type PricingReferenceClassificationListAllInput,
+  type PricingReferenceClassificationListAllResponse,
   type PricingReferenceClassificationListInput,
   type PricingReferenceClassificationSortBy,
   type PricingReferenceClassificationListResponse,
@@ -123,6 +129,19 @@ const severityWeight: Record<PricingReferenceAnomalySeverity, number> = {
   moyenne: 2,
   faible: 1
 };
+
+const severityFromWeight = (weight: number): PricingReferenceAnomalySeverity => {
+  if (weight >= severityWeight.bloquante) return 'bloquante';
+  if (weight === severityWeight.haute) return 'haute';
+  if (weight === severityWeight.moyenne) return 'moyenne';
+  return 'faible';
+};
+
+const anomalyMarqueSql = (): SQL => sql`coalesce(
+  nullif(trim(${pricing_reference_anomalies.details}->'raw_values'->>'MARQUE'), ''),
+  nullif(trim(split_part(coalesce(${pricing_reference_anomalies.details}->>'segment_key', ${pricing_reference_anomalies.object_id}, ''), '|', 3)), ''),
+  ${PRICING_REFERENCE_ANOMALY_DEFAULT_MARQUE}
+)`;
 
 const classificationSortSql = (sortBy: PricingReferenceClassificationSortBy): SQL => {
   switch (sortBy) {
@@ -2009,6 +2028,7 @@ export const listPricingReferenceAnomalies = async (
   if (snapshotId) conditions.push(eq(pricing_reference_anomalies.snapshot_id, snapshotId));
   if (input.severity) conditions.push(eq(pricing_reference_anomalies.severity, input.severity));
   if (input.type) conditions.push(eq(pricing_reference_anomalies.type, input.type));
+  if (input.marque) conditions.push(sql<boolean>`${anomalyMarqueSql()} = ${input.marque}`);
   const pattern = searchPattern(input.search);
   if (pattern) {
     conditions.push(sql<boolean>`(
@@ -2085,6 +2105,137 @@ export const listPricingReferenceAnomalies = async (
     page: input.page,
     page_size: input.page_size,
     total: totalRows[0]?.total ?? 0
+  };
+};
+
+export const getPricingReferenceAnomaliesSummary = async (
+  db: DbClient,
+  _callerId: string,
+  requestId: string,
+  input: PricingReferenceAnomaliesSummaryGetInput
+): Promise<PricingReferenceAnomaliesSummaryResponse> => {
+  const snapshotId = await resolveSnapshotId(db, input);
+  if (!snapshotId && !input.import_id) {
+    return { ok: true, request_id: requestId, total: 0, marques: [] };
+  }
+  const conditions: SQL[] = [];
+  if (input.import_id) conditions.push(eq(pricing_reference_anomalies.import_id, input.import_id));
+  if (snapshotId) conditions.push(eq(pricing_reference_anomalies.snapshot_id, snapshotId));
+  const whereClause = andSql(conditions);
+
+  const groups = await db.execute<{
+    marque: string;
+    type: PricingReferenceAnomalyType;
+    anomaly_count: number;
+    max_severity_weight: number;
+  }>(sql`
+    select
+      ${anomalyMarqueSql()} as marque,
+      ${pricing_reference_anomalies.type} as type,
+      count(*)::int as anomaly_count,
+      max(case ${pricing_reference_anomalies.severity}
+        when 'bloquante' then 4
+        when 'haute' then 3
+        when 'moyenne' then 2
+        else 1
+      end)::int as max_severity_weight
+    from public.pricing_reference_anomalies
+    where ${whereClause}
+    group by 1, 2
+    order by 1 asc, 2 asc
+  `);
+
+  const marqueMap = new Map<string, {
+    marque: string;
+    maxSeverityWeight: number;
+    anomalyCount: number;
+    types: Array<{ type: PricingReferenceAnomalyType; maxSeverityWeight: number; anomalyCount: number }>;
+  }>();
+  for (const group of groups) {
+    const entry = marqueMap.get(group.marque) ?? {
+      marque: group.marque,
+      maxSeverityWeight: 0,
+      anomalyCount: 0,
+      types: []
+    };
+    entry.anomalyCount += group.anomaly_count;
+    entry.maxSeverityWeight = Math.max(entry.maxSeverityWeight, group.max_severity_weight);
+    entry.types.push({
+      type: group.type,
+      maxSeverityWeight: group.max_severity_weight,
+      anomalyCount: group.anomaly_count
+    });
+    marqueMap.set(group.marque, entry);
+  }
+
+  const marques: PricingReferenceAnomaliesSummaryMarque[] = Array.from(marqueMap.values()).map((entry) => ({
+    marque: entry.marque,
+    max_severity: severityFromWeight(entry.maxSeverityWeight),
+    anomaly_count: entry.anomalyCount,
+    types: entry.types
+      .sort((a, b) => b.maxSeverityWeight - a.maxSeverityWeight || a.type.localeCompare(b.type))
+      .map((typeEntry) => ({
+        type: typeEntry.type,
+        max_severity: severityFromWeight(typeEntry.maxSeverityWeight),
+        anomaly_count: typeEntry.anomalyCount
+      }))
+  }));
+
+  return {
+    ok: true,
+    request_id: requestId,
+    total: marques.reduce((sum, entry) => sum + entry.anomaly_count, 0),
+    marques
+  };
+};
+
+const CLASSIFICATION_LIST_ALL_MAX_ROWS = 5000;
+
+export const listAllPricingReferenceClassification = async (
+  db: DbClient,
+  _callerId: string,
+  requestId: string,
+  input: PricingReferenceClassificationListAllInput
+): Promise<PricingReferenceClassificationListAllResponse> => {
+  const snapshotId = await resolveSnapshotId(db, input);
+  if (!snapshotId) {
+    return { ok: true, request_id: requestId, rows: [], total: 0, truncated: false };
+  }
+
+  const [rows, totalRows] = await Promise.all([
+    db.execute<{
+      id: string;
+      snapshot_id: string;
+      import_id: string;
+      source_row_number: number;
+      cir_key: string;
+      mega: string;
+      fam: string;
+      sfa: string;
+      mega_lib: string;
+      fam_lib: string;
+      sfa_lib: string;
+    }>(sql`
+      select id, snapshot_id, import_id, source_row_number, cir_key, mega, fam, sfa, mega_lib, fam_lib, sfa_lib
+      from public.pricing_classification_cir
+      where snapshot_id = ${snapshotId}
+      order by mega asc, fam asc, sfa asc
+      limit ${CLASSIFICATION_LIST_ALL_MAX_ROWS}
+    `),
+    db.execute<{ total: number }>(sql`
+      select count(*)::int as total
+      from public.pricing_classification_cir
+      where snapshot_id = ${snapshotId}
+    `)
+  ]);
+  const total = totalRows[0]?.total ?? rows.length;
+
+  return {
+    ok: true,
+    request_id: requestId,
+    rows,
+    total,
+    truncated: total > rows.length
   };
 };
 

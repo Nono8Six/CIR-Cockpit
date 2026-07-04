@@ -8,6 +8,7 @@ import PricingReferencesPage from '@/components/pricing-references/PricingRefere
 import {
   analyzePricingReferenceImport,
   confirmPricingReferenceImportMapping,
+  listAllPricingReferenceClassification,
   prepareUploadAndInspectPricingReferenceFile
 } from '@/services/pricingReferences';
 
@@ -233,6 +234,38 @@ vi.mock('@/services/pricingReferences', () => ({
     page: 1,
     page_size: 50,
     total: 1
+  })),
+  listAllPricingReferenceClassification: vi.fn(async () => ({
+    ok: true,
+    rows: [{
+      id: '00000000-0000-4000-8000-000000000003',
+      snapshot_id: snapshotId,
+      import_id: importId,
+      source_row_number: 1,
+      cir_key: '010203',
+      mega: '01',
+      fam: '02',
+      sfa: '03',
+      mega_lib: 'Outillage',
+      fam_lib: 'Electroportatif',
+      sfa_lib: 'Perceuses'
+    }],
+    total: 1,
+    truncated: false
+  })),
+  getPricingReferenceAnomaliesSummary: vi.fn(async () => ({
+    ok: true,
+    total: 1,
+    marques: [{
+      marque: 'BOSCH',
+      max_severity: 'moyenne',
+      anomaly_count: 1,
+      types: [{
+        type: 'purchase_grid_missing',
+        max_severity: 'moyenne',
+        anomaly_count: 1
+      }]
+    }]
   })),
   listPricingReferenceSegments: vi.fn(async () => ({
     ok: true,
@@ -468,6 +501,33 @@ describe('PricingReferencesPage', () => {
     vi.clearAllMocks();
   });
 
+  it('uses the route tab as the controlled source of truth', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false }
+      }
+    });
+    const onRouteTabChange = vi.fn();
+    const view = render(
+      <QueryClientProvider client={queryClient}>
+        <PricingReferencesPage userRole="agency_admin" routeTab="anomalies" onRouteTabChange={onRouteTabChange} />
+      </QueryClientProvider>
+    );
+
+    expect(await screen.findByRole('tabpanel', { name: /anomalies/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /anomalies/i })).toHaveAttribute('aria-selected', 'true');
+
+    view.rerender(
+      <QueryClientProvider client={queryClient}>
+        <PricingReferencesPage userRole="agency_admin" routeTab={undefined} onRouteTabChange={onRouteTabChange} />
+      </QueryClientProvider>
+    );
+
+    expect(await screen.findByRole('tabpanel', { name: /imports/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /imports/i })).toHaveAttribute('aria-selected', 'true');
+  });
+
   it('renders the CIR referentials workspace with import and consultation tabs', async () => {
     renderWithQueryClient(<PricingReferencesPage userRole="agency_admin" />);
 
@@ -543,6 +603,34 @@ describe('PricingReferencesPage', () => {
 
     await user.click(screen.getByRole('button', { name: /fermer le détail de l'anomalie/i }));
     expect(screen.queryByText('Message détecté')).not.toBeInTheDocument();
+  });
+
+  it('warns when the classification drilldown is capped by the backend contract', async () => {
+    vi.mocked(listAllPricingReferenceClassification).mockResolvedValueOnce({
+      ok: true,
+      rows: [{
+        id: '00000000-0000-4000-8000-000000000003',
+        snapshot_id: snapshotId,
+        import_id: importId,
+        source_row_number: 1,
+        cir_key: '010203',
+        mega: '01',
+        fam: '02',
+        sfa: '03',
+        mega_lib: 'Outillage',
+        fam_lib: 'Electroportatif',
+        sfa_lib: 'Perceuses'
+      }],
+      total: 5001,
+      truncated: true
+    });
+
+    renderWithQueryClient(
+      <PricingReferencesPage userRole="agency_admin" routeTab="classification" onRouteTabChange={vi.fn()} />
+    );
+
+    expect(await screen.findByText(/vue hiérarchique limitée/i)).toBeInTheDocument();
+    expect(screen.getByText(/5.?001/)).toBeInTheDocument();
   });
 
   it('allows importing only the classification XLSX with mapping confirmation', async () => {

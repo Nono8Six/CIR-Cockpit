@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Check, ChevronRight, Copy, Search, Sparkles } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { AlertTriangle, Check, ChevronRight, Copy, Search, Sparkles } from 'lucide-react';
 
 import type { PricingReferenceClassificationListResponse } from '../../../../../../shared/schemas/pricing/references.schema';
-import { listPricingReferenceClassification } from '@/services/pricingReferences';
+import { listAllPricingReferenceClassification } from '@/services/pricingReferences';
+import { pricingReferenceClassificationAllKey } from '@/services/query/queryKeys';
 import { Badge } from '@/components/ui/data-display/Badge';
 import { Button } from '@/components/ui/inputs/basic/Button';
 import { Input } from '@/components/ui/inputs/basic/Input';
 import { cn } from '@/lib/utils';
 import { handleUiError } from '@/services/errors/handleUiError';
+import { formatCount } from '../../utils/pricing-references-formatters';
 
 type ClassificationRow = PricingReferenceClassificationListResponse['rows'][number];
 
@@ -39,6 +42,32 @@ interface ClassificationTree {
   [megaId: string]: MegaFamilyNode;
 }
 
+const ClassificationQueryErrorState = ({ onRetry }: { onRetry: () => void }) => (
+  <div className="flex min-h-48 flex-1 items-center justify-center rounded-xl border border-red-200 bg-red-50/50 p-6 text-center">
+    <div className="max-w-sm">
+      <div className="mx-auto grid size-10 place-items-center rounded-md bg-white text-red-700 shadow-sm">
+        <AlertTriangle className="size-5" aria-hidden="true" />
+      </div>
+      <p className="mt-3 text-sm font-semibold text-red-950">
+        Classification indisponible
+      </p>
+      <p className="mt-1 text-xs leading-relaxed text-red-800/80">
+        La vue hiérarchique n&apos;a pas pu charger la classification CIR. Le problème a été transmis au
+        pipeline d&apos;erreurs.
+      </p>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={onRetry}
+        className="mt-4 h-8 border-red-200 bg-white text-xs font-semibold text-red-900 hover:bg-red-50"
+      >
+        Réessayer
+      </Button>
+    </div>
+  </div>
+);
+
 /**
  * Premium Drill-down Navigation Component (Miller Columns) for Classification CIR.
  * Solves visual cognitive load by allowing hierarchical exploration.
@@ -46,9 +75,6 @@ interface ClassificationTree {
  * @param props Contains importId to filter fetched classifications.
  */
 export const ClassificationDrillDown = ({ importId }: ClassificationDrillDownProps) => {
-  const [rows, setRows] = useState<ClassificationRow[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
   // Column search terms
   const [megaSearch, setMegaSearch] = useState('');
   const [famSearch, setFamSearch] = useState('');
@@ -62,76 +88,41 @@ export const ClassificationDrillDown = ({ importId }: ClassificationDrillDownPro
   // Copy-to-clipboard state
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
-  // Fetch all classification rows for client-side hierarchical rendering
+  const listAllInput = useMemo(
+    () => (importId ? { import_id: importId } : {}),
+    [importId]
+  );
+
+  const classificationQuery = useQuery({
+    queryKey: pricingReferenceClassificationAllKey(listAllInput),
+    queryFn: () => listAllPricingReferenceClassification(listAllInput)
+  });
+
   useEffect(() => {
-    let active = true;
-    setIsLoading(true);
+    if (classificationQuery.error) {
+      handleUiError(classificationQuery.error, 'Impossible de charger la vue hiérarchique.');
+    }
+  }, [classificationQuery.error]);
 
-    const loadData = async () => {
-      try {
-        // Page 1 fetch
-        const firstPage = await listPricingReferenceClassification({
-          import_id: importId ?? undefined,
-          page: 1,
-          page_size: 100,
-          sort_by: 'mega',
-          sort_direction: 'asc'
-        });
+  const rows = useMemo(
+    (): ClassificationRow[] => classificationQuery.data?.rows ?? [],
+    [classificationQuery.data]
+  );
+  const isLoading = classificationQuery.isLoading;
+  const isTruncated = classificationQuery.data?.truncated === true;
+  const totalRows = classificationQuery.data?.total ?? rows.length;
 
-        if (!active) return;
-        const allRows = [...firstPage.rows];
-        const total = firstPage.total;
-
-        // Fetch remaining pages in parallel if there are more than 100 records
-        if (total > 100) {
-          const remainingPages = Math.ceil(total / 100);
-          const promises = [];
-          for (let p = 2; p <= remainingPages; p++) {
-            promises.push(
-              listPricingReferenceClassification({
-                import_id: importId ?? undefined,
-                page: p,
-                page_size: 100,
-                sort_by: 'mega',
-                sort_direction: 'asc'
-              })
-            );
-          }
-          const results = await Promise.all(promises);
-          if (!active) return;
-          results.forEach((res) => {
-            allRows.push(...res.rows);
-          });
-        }
-
-        setRows(allRows);
-      } catch (error) {
-        if (active) {
-          handleUiError(error, 'Impossible de charger la vue hiérarchique.');
-        }
-      } finally {
-        if (active) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    loadData();
-
-    return () => {
-      active = false;
-    };
-  }, [importId]);
-
-  // Reset child selections on parent change
-  useEffect(() => {
+  // Reset child selections when a parent level changes
+  const handleSelectMega = (megaId: string) => {
+    setSelectedMega(megaId);
     setSelectedFam(null);
     setSelectedSfa(null);
-  }, [selectedMega]);
+  };
 
-  useEffect(() => {
+  const handleSelectFam = (famId: string) => {
+    setSelectedFam(famId);
     setSelectedSfa(null);
-  }, [selectedFam]);
+  };
 
   // Build the hierarchical lookup tree from the flat rows array
   const tree = useMemo((): ClassificationTree => {
@@ -229,14 +220,14 @@ export const ClassificationDrillDown = ({ importId }: ClassificationDrillDownPro
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 min-h-0 flex-1 overflow-hidden border border-slate-200/80 rounded-xl bg-slate-50/20 p-2 animate-pulse">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 min-h-0 flex-1 overflow-hidden border border-stone-200/80 rounded-xl bg-stone-50/20 p-2 animate-pulse">
         {Array.from({ length: 3 }).map((_, idx) => (
-          <div key={idx} className="flex flex-col min-h-0 bg-background border border-slate-200/60 rounded-lg p-3 space-y-3">
-            <div className="h-4 bg-slate-100 rounded w-1/3" />
-            <div className="h-8 bg-slate-100 rounded w-full" />
+          <div key={idx} className="flex flex-col min-h-0 bg-background border border-stone-200/60 rounded-lg p-3 space-y-3">
+            <div className="h-4 bg-stone-100 rounded w-1/3" />
+            <div className="h-8 bg-stone-100 rounded w-full" />
             <div className="flex-1 space-y-2 pt-2">
               {Array.from({ length: 6 }).map((_, itemIdx) => (
-                <div key={itemIdx} className="h-7 bg-slate-50 rounded w-full" />
+                <div key={itemIdx} className="h-7 bg-stone-50 rounded w-full" />
               ))}
             </div>
           </div>
@@ -245,15 +236,28 @@ export const ClassificationDrillDown = ({ importId }: ClassificationDrillDownPro
     );
   }
 
+  if (classificationQuery.isError) {
+    return <ClassificationQueryErrorState onRetry={() => void classificationQuery.refetch()} />;
+  }
+
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
+      {isTruncated ? (
+        <div
+          role="status"
+          className="shrink-0 rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-2 text-xs font-medium text-amber-900"
+        >
+          Vue hiérarchique limitée aux {formatCount(rows.length)} premières lignes sur {formatCount(totalRows)}.
+          Utilisez la vue tableau ou affinez la source si une clé CIR manque.
+        </div>
+      ) : null}
       {/* 3-Column Staircase layout */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 min-h-0 flex-1 overflow-hidden border border-slate-200/80 rounded-xl bg-slate-50/20 p-2">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 min-h-0 flex-1 overflow-hidden border border-stone-200/80 rounded-xl bg-stone-50/20 p-2">
         
         {/* Level 1: Méga-Familles */}
-        <section className="flex flex-col min-h-0 bg-background border border-slate-200/60 rounded-lg p-3 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2 select-none">
-            <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-800 flex items-center gap-1.5 font-sans">
+        <section className="flex flex-col min-h-0 bg-background border border-stone-200/60 rounded-lg p-3 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+          <div className="flex items-center justify-between border-b border-stone-100 pb-2 mb-2 select-none">
+            <h3 className="text-[10px] font-bold uppercase tracking-wider text-stone-800 flex items-center gap-1.5 font-sans">
               <span>Méga-Familles</span>
               <Badge variant="secondary" className="px-1.5 py-0 text-[9px] font-semibold font-mono">
                 {filteredMegas.length}
@@ -276,23 +280,23 @@ export const ClassificationDrillDown = ({ importId }: ClassificationDrillDownPro
                 <button
                   key={mega.id}
                   type="button"
-                  onClick={() => setSelectedMega(mega.id)}
+                  onClick={() => handleSelectMega(mega.id)}
                   className={cn(
                     'w-full flex items-center justify-between px-2.5 py-2 text-xs rounded-lg border border-transparent text-left transition-all active:scale-[0.99]',
                     isActive
                       ? 'bg-primary/5 border-primary/20 text-primary font-semibold'
-                      : 'hover:bg-slate-50 text-slate-700'
+                      : 'hover:bg-stone-50 text-stone-700'
                   )}
                 >
                   <span className="truncate">
-                    <span className="font-mono text-slate-400 mr-1.5 font-medium">{mega.id}</span>
+                    <span className="font-mono text-stone-400 mr-1.5 font-medium">{mega.id}</span>
                     {mega.label}
                   </span>
                   <div className="flex items-center gap-1 shrink-0 pl-2">
-                    <Badge variant="secondary" className="px-1 py-0 text-[8px] font-mono text-slate-500">
+                    <Badge variant="secondary" className="px-1 py-0 text-[8px] font-mono text-stone-500">
                       {mega.familyCount}
                     </Badge>
-                    <ChevronRight className={cn('size-3.5', isActive ? 'text-primary' : 'text-slate-400')} />
+                    <ChevronRight className={cn('size-3.5', isActive ? 'text-primary' : 'text-stone-400')} />
                   </div>
                 </button>
               );
@@ -305,11 +309,11 @@ export const ClassificationDrillDown = ({ importId }: ClassificationDrillDownPro
 
         {/* Level 2: Familles */}
         <section className={cn(
-          "flex flex-col min-h-0 bg-background border border-slate-200/60 rounded-lg p-3 shadow-[0_1px_2px_rgba(0,0,0,0.01)] transition-opacity duration-200",
+          "flex flex-col min-h-0 bg-background border border-stone-200/60 rounded-lg p-3 shadow-[0_1px_2px_rgba(0,0,0,0.01)] transition-opacity duration-200",
           !selectedMega && "opacity-50 pointer-events-none"
         )}>
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2 select-none">
-            <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-800 flex items-center gap-1.5 font-sans">
+          <div className="flex items-center justify-between border-b border-stone-100 pb-2 mb-2 select-none">
+            <h3 className="text-[10px] font-bold uppercase tracking-wider text-stone-800 flex items-center gap-1.5 font-sans">
               <span>Familles</span>
               {selectedMega && (
                 <Badge variant="secondary" className="px-1.5 py-0 text-[9px] font-semibold font-mono">
@@ -336,23 +340,23 @@ export const ClassificationDrillDown = ({ importId }: ClassificationDrillDownPro
                   <button
                     key={fam.id}
                     type="button"
-                    onClick={() => setSelectedFam(fam.id)}
+                    onClick={() => handleSelectFam(fam.id)}
                     className={cn(
                       'w-full flex items-center justify-between px-2.5 py-2 text-xs rounded-lg border border-transparent text-left transition-all active:scale-[0.99]',
                       isActive
                         ? 'bg-primary/5 border-primary/20 text-primary font-semibold'
-                        : 'hover:bg-slate-50 text-slate-700'
+                        : 'hover:bg-stone-50 text-stone-700'
                     )}
                   >
                     <span className="truncate">
-                      <span className="font-mono text-slate-400 mr-1.5 font-medium">{fam.id}</span>
+                      <span className="font-mono text-stone-400 mr-1.5 font-medium">{fam.id}</span>
                       {fam.label}
                     </span>
                     <div className="flex items-center gap-1 shrink-0 pl-2">
-                      <Badge variant="secondary" className="px-1 py-0 text-[8px] font-mono text-slate-500">
+                      <Badge variant="secondary" className="px-1 py-0 text-[8px] font-mono text-stone-500">
                         {fam.subfamilyCount}
                       </Badge>
-                      <ChevronRight className={cn('size-3.5', isActive ? 'text-primary' : 'text-slate-400')} />
+                      <ChevronRight className={cn('size-3.5', isActive ? 'text-primary' : 'text-stone-400')} />
                     </div>
                   </button>
                 );
@@ -368,11 +372,11 @@ export const ClassificationDrillDown = ({ importId }: ClassificationDrillDownPro
 
         {/* Level 3: Sous-Familles */}
         <section className={cn(
-          "flex flex-col min-h-0 bg-background border border-slate-200/60 rounded-lg p-3 shadow-[0_1px_2px_rgba(0,0,0,0.01)] transition-opacity duration-200",
+          "flex flex-col min-h-0 bg-background border border-stone-200/60 rounded-lg p-3 shadow-[0_1px_2px_rgba(0,0,0,0.01)] transition-opacity duration-200",
           !selectedFam && "opacity-50 pointer-events-none"
         )}>
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2 select-none">
-            <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-800 flex items-center gap-1.5 font-sans">
+          <div className="flex items-center justify-between border-b border-stone-100 pb-2 mb-2 select-none">
+            <h3 className="text-[10px] font-bold uppercase tracking-wider text-stone-800 flex items-center gap-1.5 font-sans">
               <span>Sous-Familles</span>
               {selectedFam && (
                 <Badge variant="secondary" className="px-1.5 py-0 text-[9px] font-semibold font-mono">
@@ -404,14 +408,14 @@ export const ClassificationDrillDown = ({ importId }: ClassificationDrillDownPro
                       'w-full flex items-center justify-between px-2.5 py-2 text-xs rounded-lg border border-transparent text-left transition-all active:scale-[0.99]',
                       isActive
                         ? 'bg-primary/5 border-primary/20 text-primary font-semibold'
-                        : 'hover:bg-slate-50 text-slate-700'
+                        : 'hover:bg-stone-50 text-stone-700'
                     )}
                   >
                     <span className="truncate">
-                      <span className="font-mono text-slate-400 mr-1.5 font-medium">{sfa.id}</span>
+                      <span className="font-mono text-stone-400 mr-1.5 font-medium">{sfa.id}</span>
                       {sfa.label}
                     </span>
-                    <span className="font-mono text-[9px] text-slate-400 bg-slate-50 px-1 py-0.5 rounded border ml-2 shrink-0">
+                    <span className="font-mono text-[9px] text-stone-400 bg-stone-50 px-1 py-0.5 rounded border ml-2 shrink-0">
                       {sfa.cir_key}
                     </span>
                   </button>
@@ -429,22 +433,22 @@ export const ClassificationDrillDown = ({ importId }: ClassificationDrillDownPro
 
       {/* Selected Leaf Detail Panel */}
       {selectedSfaDetails && (
-        <div className="border border-slate-200/80 bg-background p-4 rounded-xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div className="border border-stone-200/80 bg-background p-4 rounded-xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <div className="space-y-1">
             <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/80 flex items-center gap-1 select-none">
-              <Sparkles className="size-3 text-slate-500" />
+              <Sparkles className="size-3 text-stone-500" />
               Détail de la sélection
             </span>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-mono text-xs font-semibold bg-slate-100 border border-slate-200/60 px-2 py-0.5 rounded text-slate-800">
+              <span className="font-mono text-xs font-semibold bg-stone-100 border border-stone-200/60 px-2 py-0.5 rounded text-stone-800">
                 {selectedSfaDetails.cir_key}
               </span>
-              <span className="text-xs text-slate-900 font-bold font-sans">
+              <span className="text-xs text-stone-900 font-bold font-sans">
                 {selectedSfaDetails.label}
               </span>
             </div>
             <p className="text-[10px] text-muted-foreground">
-              Méga-Famille : <span className="font-medium text-slate-600">{selectedMega} - {tree[selectedMega!].label}</span> &middot; Famille : <span className="font-medium text-slate-600">{selectedFam} - {tree[selectedMega!].families[selectedFam!].label}</span>
+              Méga-Famille : <span className="font-medium text-stone-600">{selectedMega} - {tree[selectedMega!].label}</span> &middot; Famille : <span className="font-medium text-stone-600">{selectedFam} - {tree[selectedMega!].families[selectedFam!].label}</span>
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -453,7 +457,7 @@ export const ClassificationDrillDown = ({ importId }: ClassificationDrillDownPro
               variant="outline"
               size="sm"
               onClick={() => handleCopyKey(selectedSfaDetails.cir_key)}
-              className="h-8 text-xs font-semibold bg-background border-slate-200 hover:bg-slate-50 active:scale-[0.98] transition-all flex items-center gap-1.5"
+              className="h-8 text-xs font-semibold bg-background border-stone-200 hover:bg-stone-50 active:scale-[0.98] transition-all flex items-center gap-1.5"
             >
               {copiedKey === selectedSfaDetails.cir_key ? (
                 <>
@@ -461,7 +465,7 @@ export const ClassificationDrillDown = ({ importId }: ClassificationDrillDownPro
                 </>
               ) : (
                 <>
-                  <Copy className="size-3.5 text-slate-500" /> Copier la clé CIR
+                  <Copy className="size-3.5 text-stone-500" /> Copier la clé CIR
                 </>
               )}
             </Button>

@@ -12,7 +12,7 @@ export const anomalySeverityToneClassName: Record<PricingReferenceAnomalySeverit
   bloquante: 'border-rose-200/80 bg-rose-50 text-rose-700',
   haute: 'border-red-200/80 bg-red-50 text-red-700',
   moyenne: 'border-stone-200 bg-stone-100 text-stone-700',
-  faible: 'border-slate-200 bg-slate-100 text-slate-600'
+  faible: 'border-stone-200 bg-stone-100 text-stone-600'
 };
 
 /**

@@ -73,8 +73,12 @@ import {
 import {
   pricingReferenceAnomaliesListInputSchema,
   pricingReferenceAnomaliesListResponseSchema,
+  pricingReferenceAnomaliesSummaryGetInputSchema,
+  pricingReferenceAnomaliesSummaryResponseSchema,
   pricingReferenceBatchCorrectionProposalsGetInputSchema,
   pricingReferenceBatchCorrectionProposalsResponseSchema,
+  pricingReferenceClassificationListAllInputSchema,
+  pricingReferenceClassificationListAllResponseSchema,
   pricingReferenceClassificationListInputSchema,
   pricingReferenceClassificationListResponseSchema,
   pricingReferenceCorrectionPlanGetInputSchema,
@@ -166,11 +170,13 @@ import {
   analyzePricingReferenceImport,
   assistPricingReferenceImportMapping,
   confirmPricingReferenceImportMapping,
+  getPricingReferenceAnomaliesSummary,
   getPricingReferenceBatchCorrectionProposals,
   getPricingReferenceCorrectionPlan,
   getPricingReferenceHealth,
   getPricingReferenceImport,
   inspectPricingReferenceImport,
+  listAllPricingReferenceClassification,
   listPricingReferenceAnomalies,
   listPricingReferenceClassification,
   listPricingReferenceImports,
@@ -343,6 +349,12 @@ export const appRouter = router({
           .output(pricingReferenceClassificationListResponseSchema)
           .query(withAuthedHandler((db, authContext, requestId, input) =>
             listPricingReferenceClassification(db, authContext.userId, requestId, input)
+          )),
+        listAll: authedProcedure
+          .input(pricingReferenceClassificationListAllInputSchema)
+          .output(pricingReferenceClassificationListAllResponseSchema)
+          .query(withAuthedHandler((db, authContext, requestId, input) =>
+            listAllPricingReferenceClassification(db, authContext.userId, requestId, input)
           ))
       }),
       segments: router({
@@ -359,6 +371,12 @@ export const appRouter = router({
           .output(pricingReferenceAnomaliesListResponseSchema)
           .query(withAuthedHandler((db, authContext, requestId, input) =>
             listPricingReferenceAnomalies(db, authContext.userId, requestId, input)
+          )),
+        summary: authedProcedure
+          .input(pricingReferenceAnomaliesSummaryGetInputSchema)
+          .output(pricingReferenceAnomaliesSummaryResponseSchema)
+          .query(withAuthedHandler((db, authContext, requestId, input) =>
+            getPricingReferenceAnomaliesSummary(db, authContext.userId, requestId, input)
           )),
         correctionPlan: authedProcedure
           .input(pricingReferenceCorrectionPlanGetInputSchema)

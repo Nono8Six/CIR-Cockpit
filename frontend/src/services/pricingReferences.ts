@@ -3,7 +3,9 @@ import {
   PRICING_REFERENCE_STORAGE_BUCKET,
   PRICING_REFERENCE_XLSX_MIME,
   pricingReferenceAnomaliesListResponseSchema,
+  pricingReferenceAnomaliesSummaryResponseSchema,
   pricingReferenceBatchCorrectionProposalsResponseSchema,
+  pricingReferenceClassificationListAllResponseSchema,
   pricingReferenceClassificationListResponseSchema,
   pricingReferenceCorrectionPlanResponseSchema,
   pricingReferenceDiagnoseResponseSchema,
@@ -19,8 +21,12 @@ import {
   pricingReferenceSegmentsListResponseSchema,
   type PricingReferenceAnomaliesListInput,
   type PricingReferenceAnomaliesListResponse,
+  type PricingReferenceAnomaliesSummaryGetInput,
+  type PricingReferenceAnomaliesSummaryResponse,
   type PricingReferenceBatchCorrectionProposalsGetInput,
   type PricingReferenceBatchCorrectionProposalsResponse,
+  type PricingReferenceClassificationListAllInput,
+  type PricingReferenceClassificationListAllResponse,
   type PricingReferenceClassificationListInput,
   type PricingReferenceClassificationListResponse,
   type PricingReferenceCorrectionPlanGetInput,
@@ -236,6 +242,24 @@ export const listPricingReferenceAnomalies = (
     (api, options) => api.pricing.references.anomalies.list.query(input, options),
     (payload) => parseResponse(pricingReferenceAnomaliesListResponseSchema, payload),
     'Impossible de charger les anomalies referentielles.'
+  );
+
+export const getPricingReferenceAnomaliesSummary = (
+  input: PricingReferenceAnomaliesSummaryGetInput
+): Promise<PricingReferenceAnomaliesSummaryResponse> =>
+  invokeTrpc(
+    (api, options) => api.pricing.references.anomalies.summary.query(input, options),
+    (payload) => parseResponse(pricingReferenceAnomaliesSummaryResponseSchema, payload),
+    'Impossible de charger la synthese des anomalies.'
+  );
+
+export const listAllPricingReferenceClassification = (
+  input: PricingReferenceClassificationListAllInput
+): Promise<PricingReferenceClassificationListAllResponse> =>
+  invokeTrpc(
+    (api, options) => api.pricing.references.classification.listAll.query(input, options),
+    (payload) => parseResponse(pricingReferenceClassificationListAllResponseSchema, payload),
+    'Impossible de charger la classification complete.'
   );
 
 export const getPricingReferenceCorrectionPlan = (

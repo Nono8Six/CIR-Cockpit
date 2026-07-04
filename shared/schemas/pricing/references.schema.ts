@@ -7,6 +7,7 @@ import {
 } from '../ai.schema.ts';
 
 export const PRICING_REFERENCE_STORAGE_BUCKET = 'pricing-reference-sources';
+export const PRICING_REFERENCE_ANOMALY_DEFAULT_MARQUE = 'Général';
 export const PRICING_REFERENCE_MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
 export const PRICING_REFERENCE_XLSX_MIME =
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -348,8 +349,19 @@ export const pricingReferenceSegmentsListInputSchema = pricingReferenceRowsListI
 export const pricingReferenceAnomaliesListInputSchema = pricingReferenceRowsListInputSchema.extend({
   severity: pricingReferenceAnomalySeveritySchema.optional(),
   type: pricingReferenceAnomalyTypeSchema.optional(),
+  marque: z.string().trim().min(1).max(120).optional(),
   sort_by: pricingReferenceAnomaliesSortBySchema.default('created_at'),
   sort_direction: pricingReferenceSortDirectionSchema.default('desc')
+});
+
+export const pricingReferenceAnomaliesSummaryGetInputSchema = z.strictObject({
+  import_id: uuidSchema.optional(),
+  snapshot_id: uuidSchema.optional()
+});
+
+export const pricingReferenceClassificationListAllInputSchema = z.strictObject({
+  import_id: uuidSchema.optional(),
+  snapshot_id: uuidSchema.optional()
 });
 
 export const pricingReferenceCorrectionPlanGetInputSchema = z.strictObject({
@@ -556,6 +568,30 @@ export const pricingReferenceAnomaliesListResponseSchema = apiSuccessSchema.exte
   total: z.number().int().nonnegative()
 });
 
+export const pricingReferenceAnomaliesSummaryTypeSchema = z.strictObject({
+  type: pricingReferenceAnomalyTypeSchema,
+  max_severity: pricingReferenceAnomalySeveritySchema,
+  anomaly_count: z.number().int().positive()
+});
+
+export const pricingReferenceAnomaliesSummaryMarqueSchema = z.strictObject({
+  marque: nonEmptyStringSchema('Marque requise.'),
+  max_severity: pricingReferenceAnomalySeveritySchema,
+  anomaly_count: z.number().int().positive(),
+  types: z.array(pricingReferenceAnomaliesSummaryTypeSchema).min(1)
+});
+
+export const pricingReferenceAnomaliesSummaryResponseSchema = apiSuccessSchema.extend({
+  total: z.number().int().nonnegative(),
+  marques: z.array(pricingReferenceAnomaliesSummaryMarqueSchema)
+});
+
+export const pricingReferenceClassificationListAllResponseSchema = apiSuccessSchema.extend({
+  rows: z.array(pricingReferenceClassificationRowSchema),
+  total: z.number().int().nonnegative(),
+  truncated: z.boolean()
+});
+
 export const pricingReferenceCorrectionPlanGroupSchema = z.strictObject({
   id: nonEmptyStringSchema('Identifiant groupe requis.'),
   rank: z.number().int().positive(),
@@ -668,6 +704,8 @@ export type PricingReferenceRowsListInput = z.infer<typeof pricingReferenceRowsL
 export type PricingReferenceClassificationListInput = z.infer<typeof pricingReferenceClassificationListInputSchema>;
 export type PricingReferenceSegmentsListInput = z.infer<typeof pricingReferenceSegmentsListInputSchema>;
 export type PricingReferenceAnomaliesListInput = z.infer<typeof pricingReferenceAnomaliesListInputSchema>;
+export type PricingReferenceAnomaliesSummaryGetInput = z.infer<typeof pricingReferenceAnomaliesSummaryGetInputSchema>;
+export type PricingReferenceClassificationListAllInput = z.infer<typeof pricingReferenceClassificationListAllInputSchema>;
 export type PricingReferencePreparedFile = z.infer<typeof pricingReferencePreparedFileSchema>;
 export type PricingReferenceImportsPrepareResponse = z.infer<typeof pricingReferenceImportsPrepareResponseSchema>;
 export type PricingReferenceImportAnalyzeResponse = z.infer<typeof pricingReferenceImportAnalyzeResponseSchema>;
@@ -679,6 +717,10 @@ export type PricingReferenceHealthGetResponse = z.infer<typeof pricingReferenceH
 export type PricingReferenceClassificationListResponse = z.infer<typeof pricingReferenceClassificationListResponseSchema>;
 export type PricingReferenceSegmentsListResponse = z.infer<typeof pricingReferenceSegmentsListResponseSchema>;
 export type PricingReferenceAnomaliesListResponse = z.infer<typeof pricingReferenceAnomaliesListResponseSchema>;
+export type PricingReferenceAnomaliesSummaryType = z.infer<typeof pricingReferenceAnomaliesSummaryTypeSchema>;
+export type PricingReferenceAnomaliesSummaryMarque = z.infer<typeof pricingReferenceAnomaliesSummaryMarqueSchema>;
+export type PricingReferenceAnomaliesSummaryResponse = z.infer<typeof pricingReferenceAnomaliesSummaryResponseSchema>;
+export type PricingReferenceClassificationListAllResponse = z.infer<typeof pricingReferenceClassificationListAllResponseSchema>;
 export type PricingReferenceCorrectionPlanGroup = z.infer<typeof pricingReferenceCorrectionPlanGroupSchema>;
 export type PricingReferenceCorrectionPlanResponse = z.infer<typeof pricingReferenceCorrectionPlanResponseSchema>;
 export type PricingReferenceImportAssistMappingResponse = z.infer<typeof pricingReferenceImportAssistMappingResponseSchema>;

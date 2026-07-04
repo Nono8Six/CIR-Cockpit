@@ -1,6 +1,7 @@
-import { Suspense, lazy, useEffect, useRef } from 'react';
-import { Outlet } from '@tanstack/react-router';
+import { Suspense, lazy, useCallback, useEffect, useRef } from 'react';
+import { Outlet, useNavigate, useSearch } from '@tanstack/react-router';
 
+import type { PricingReferentialsTab } from '@/app/pricingReferentialsSearch';
 import type { AgencyConfig } from '@/services/config';
 import type { AppTab, Entity, Interaction, InteractionDraft, UserRole } from '@/types';
 import type { ConvertClientEntity } from '@/components/ConvertClientDialog';
@@ -73,6 +74,17 @@ const AppMainTabContent = (props: AppMainTabContentProps) => {
     onRequestConvert,
     onOpenGlobalSearch
   } = props;
+  const navigate = useNavigate();
+  const routeSearch = useSearch({ strict: false }) as { tab?: PricingReferentialsTab };
+  const referentialsRouteTab = activeTab === 'referentials' ? routeSearch.tab : undefined;
+
+  const handleReferentialsTabChange = useCallback(
+    (tab: PricingReferentialsTab) => {
+      navigate({ to: '/remises/referentiels', search: { tab }, replace: true });
+    },
+    [navigate]
+  );
+
   const previousActiveTabRef = useRef(activeTab);
   useEffect(() => {
     const previousActiveTab = previousActiveTabRef.current;
@@ -186,7 +198,11 @@ const AppMainTabContent = (props: AppMainTabContentProps) => {
             {tab === 'referentials' ? (
               <div className="min-h-0 flex-1">
                 <Suspense fallback={ROUTE_LOADING_FALLBACK}>
-                  <PricingReferencesPage userRole={userRole} />
+                  <PricingReferencesPage
+                    userRole={userRole}
+                    routeTab={referentialsRouteTab}
+                    onRouteTabChange={handleReferentialsTabChange}
+                  />
                 </Suspense>
               </div>
             ) : null}

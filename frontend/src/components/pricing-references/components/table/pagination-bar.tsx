@@ -29,12 +29,12 @@ export const PaginationBar = ({
   const pageEnd = Math.min(total, page * pageSize);
 
   return (
-    <div className="flex items-center justify-between gap-4 border-t border-slate-100 bg-slate-50/50 px-4 py-2 text-xs shrink-0 select-none">
+    <div className="flex items-center justify-between gap-4 border-t border-stone-100 bg-stone-50/50 px-4 py-2 text-xs shrink-0 select-none">
       <div className="flex items-center gap-2.5 text-muted-foreground">
         <span className="font-mono text-[11px] font-medium tabular-nums">
           Affichage {pageStart}-{pageEnd} sur {numberFormatter.format(total)}
         </span>
-        <div className="flex items-center gap-1.5 border-l border-slate-200 pl-2.5">
+        <div className="flex items-center gap-1.5 border-l border-stone-200 pl-2.5">
           <label htmlFor="pagination-page-size" className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
             Lignes :
           </label>
@@ -43,7 +43,7 @@ export const PaginationBar = ({
             aria-label="Nombre de lignes par page"
             value={pageSize}
             onChange={(event) => onPageSizeChange(Number(event.target.value))}
-            className="h-6 rounded-md border border-slate-200 bg-background px-1.5 font-mono text-[11px] text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary shadow-sm hover:border-slate-300 transition-colors"
+            className="h-6 rounded-md border border-stone-200 bg-background px-1.5 font-mono text-[11px] text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary shadow-sm hover:border-stone-300 transition-colors"
           >
             {PAGE_SIZE_OPTIONS.map((size) => (
               <option key={size} value={size}>

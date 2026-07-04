@@ -14,7 +14,7 @@ interface HealthStatusBannerProps {
 export const HealthStatusBanner = ({ report, isLoading }: HealthStatusBannerProps) => {
   if (isLoading) {
     return (
-      <div className="h-8 w-44 animate-pulse rounded-lg bg-slate-100 border border-slate-200/50" />
+      <div className="h-8 w-44 animate-pulse rounded-lg bg-stone-100 border border-stone-200/50" />
     );
   }
 

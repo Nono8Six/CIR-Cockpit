@@ -75,8 +75,12 @@ import {
 import {
   pricingReferenceAnomaliesListInputSchema,
   pricingReferenceAnomaliesListResponseSchema,
+  pricingReferenceAnomaliesSummaryGetInputSchema,
+  pricingReferenceAnomaliesSummaryResponseSchema,
   pricingReferenceBatchCorrectionProposalsGetInputSchema,
   pricingReferenceBatchCorrectionProposalsResponseSchema,
+  pricingReferenceClassificationListAllInputSchema,
+  pricingReferenceClassificationListAllResponseSchema,
   pricingReferenceClassificationListInputSchema,
   pricingReferenceClassificationListResponseSchema,
   pricingReferenceCorrectionPlanGetInputSchema,
@@ -248,6 +252,10 @@ const appRouterType = t.router({
         list: t.procedure
           .input(pricingReferenceClassificationListInputSchema)
           .output(pricingReferenceClassificationListResponseSchema)
+          .query(() => undefined as never),
+        listAll: t.procedure
+          .input(pricingReferenceClassificationListAllInputSchema)
+          .output(pricingReferenceClassificationListAllResponseSchema)
           .query(() => undefined as never)
       }),
       segments: t.router({
@@ -260,6 +268,10 @@ const appRouterType = t.router({
         list: t.procedure
           .input(pricingReferenceAnomaliesListInputSchema)
           .output(pricingReferenceAnomaliesListResponseSchema)
+          .query(() => undefined as never),
+        summary: t.procedure
+          .input(pricingReferenceAnomaliesSummaryGetInputSchema)
+          .output(pricingReferenceAnomaliesSummaryResponseSchema)
           .query(() => undefined as never),
         correctionPlan: t.procedure
           .input(pricingReferenceCorrectionPlanGetInputSchema)

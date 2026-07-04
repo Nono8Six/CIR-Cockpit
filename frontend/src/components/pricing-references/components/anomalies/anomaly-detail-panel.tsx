@@ -48,8 +48,8 @@ export const AnomalyDetailPanel = ({
     .slice(0, 4);
 
   return (
-    <section className="flex min-h-0 max-h-[min(78vh,44rem)] flex-col overflow-hidden bg-white text-slate-950">
-      <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-4">
+    <section className="flex min-h-0 max-h-[min(78vh,44rem)] flex-col overflow-hidden bg-white text-stone-950">
+      <div className="flex items-start justify-between gap-4 border-b border-stone-200 px-5 py-4">
         <div className="min-w-0 space-y-2">
           <Badge
             variant="outline"
@@ -57,7 +57,7 @@ export const AnomalyDetailPanel = ({
           >
             {severityLabels[anomaly.severity]}
           </Badge>
-          <DialogTitle className="text-base font-semibold leading-snug tracking-tight text-slate-950">
+          <DialogTitle className="text-base font-semibold leading-snug tracking-tight text-stone-950">
             {anomalyTypeLabels[anomaly.type]}
           </DialogTitle>
           <DialogDescription className="text-xs leading-relaxed text-muted-foreground">
@@ -68,7 +68,7 @@ export const AnomalyDetailPanel = ({
           type="button"
           variant="ghost"
           size="icon"
-          className="size-8 rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-950"
+          className="size-8 rounded-md text-stone-500 hover:bg-stone-100 hover:text-stone-950"
           onClick={onClose}
           aria-label="Fermer le détail de l'anomalie"
         >
@@ -76,12 +76,12 @@ export const AnomalyDetailPanel = ({
         </Button>
       </div>
 
-      <div className="min-h-0 flex-1 space-y-4 overflow-auto bg-slate-50/70 p-5 text-xs">
+      <div className="min-h-0 flex-1 space-y-4 overflow-auto bg-stone-50/70 p-5 text-xs">
         <section className="space-y-1.5">
-          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">
+          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-stone-500">
             Message détecté
           </p>
-          <p className="rounded-md border border-slate-200 bg-white p-3 font-medium leading-relaxed text-slate-950">
+          <p className="rounded-md border border-stone-200 bg-white p-3 font-medium leading-relaxed text-stone-950">
             {anomaly.message}
           </p>
         </section>
@@ -95,17 +95,17 @@ export const AnomalyDetailPanel = ({
             ['Segment', lineContext.segment ?? EMPTY_VALUE],
             ['ID numérique', lineContext.idnumerique ?? EMPTY_VALUE]
           ].map(([label, value]) => (
-            <div key={label} className="rounded-md border border-slate-200 bg-white px-3 py-2.5">
-              <dt className="text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500">
+            <div key={label} className="rounded-md border border-stone-200 bg-white px-3 py-2.5">
+              <dt className="text-[9px] font-bold uppercase tracking-[0.16em] text-stone-500">
                 {label}
               </dt>
-              <dd className="mt-1 min-w-0 break-words font-medium text-slate-950">{value}</dd>
+              <dd className="mt-1 min-w-0 break-words font-medium text-stone-950">{value}</dd>
             </div>
           ))}
         </dl>
 
         <section className="space-y-2">
-          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">
+          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-stone-500">
             Champs Excel à compléter
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -113,7 +113,7 @@ export const AnomalyDetailPanel = ({
               excelFields.map((field) => (
                 <span
                   key={field.code}
-                  className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-800"
+                  className="rounded-md border border-stone-200 bg-white px-2 py-1 text-[11px] font-semibold text-stone-800"
                   title={field.code}
                 >
                   {field.label}
@@ -126,24 +126,24 @@ export const AnomalyDetailPanel = ({
         </section>
 
         <section className="space-y-1.5">
-          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">
+          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-stone-500">
             Action attendue
           </p>
-          <p className="rounded-md border border-slate-200 bg-white p-3 font-medium leading-relaxed text-slate-950">
+          <p className="rounded-md border border-stone-200 bg-white p-3 font-medium leading-relaxed text-stone-950">
             {anomalyTypeActionLabels[anomaly.type]}
           </p>
         </section>
 
         {detailEntries.length > 0 && (
           <section className="space-y-2">
-            <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">
+            <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-stone-500">
               Détails complémentaires
             </p>
             <div className="grid gap-1.5">
               {detailEntries.map(([key, value]) => (
-                <div key={key} className="grid grid-cols-[7rem_minmax(0,1fr)] gap-2 rounded-md border border-slate-200 bg-white px-2.5 py-1.5">
-                  <span className="font-mono text-[10px] font-semibold text-slate-500">{key}</span>
-                  <span className="min-w-0 break-words font-mono text-[11px] text-slate-800">
+                <div key={key} className="grid grid-cols-[7rem_minmax(0,1fr)] gap-2 rounded-md border border-stone-200 bg-white px-2.5 py-1.5">
+                  <span className="font-mono text-[10px] font-semibold text-stone-500">{key}</span>
+                  <span className="min-w-0 break-words font-mono text-[11px] text-stone-800">
                     {formatDetailValue(value)}
                   </span>
                 </div>
@@ -152,11 +152,11 @@ export const AnomalyDetailPanel = ({
           </section>
         )}
 
-        <section className="space-y-1.5 border-t border-slate-200 pt-3">
-          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">
+        <section className="space-y-1.5 border-t border-stone-200 pt-3">
+          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-stone-500">
             Référence technique
           </p>
-          <p className="break-all rounded-md border border-slate-200 bg-white p-2 font-mono text-[10px] text-muted-foreground">
+          <p className="break-all rounded-md border border-stone-200 bg-white p-2 font-mono text-[10px] text-muted-foreground">
             import {anomaly.import_id} · snapshot {anomaly.snapshot_id ?? EMPTY_VALUE}
           </p>
         </section>

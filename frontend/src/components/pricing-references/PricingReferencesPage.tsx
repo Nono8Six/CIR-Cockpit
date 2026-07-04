@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 
 import {
-  pricingReferenceImportStatusSchema,
   pricingReferenceLinkStatusSchema,
   type PricingReferenceAnomalySeverity,
   type PricingReferenceClassificationListInput,
@@ -32,6 +31,7 @@ import {
 import { Badge } from '@/components/ui/data-display/Badge';
 import { Button } from '@/components/ui/inputs/basic/Button';
 import { Input } from '@/components/ui/inputs/basic/Input';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/inputs/basic/ToggleGroup';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/navigation/Tabs';
 import { cn } from '@/lib/utils';
 import {
@@ -53,6 +53,7 @@ import { FormField, NativeSelect } from './components/inputs/form-field';
 import { ReferenceTable, type DataColumn } from './components/table/reference-table';
 
 import { ImportRows } from './components/imports/import-rows';
+import { PaginationBar } from './components/table/pagination-bar';
 import { SegmentDetailPanel } from './components/segments/segment-detail-panel';
 import { HealthStrip, type TabId } from './components/health/health-strip';
 import { PricingReferenceImportDialog } from './pricing-reference-import-dialog';
@@ -91,18 +92,31 @@ const toggleSort = <TSort extends string>(
   sort_direction: currentBy === nextBy && currentDirection === 'asc' ? 'desc' : 'asc'
 });
 
+const importStatusFilters: Array<{
+  value: PricingReferenceImportStatus | 'all';
+  label: string;
+}> = [
+  { value: 'all', label: 'Tous' },
+  { value: 'analyse_ok', label: 'OK' },
+  { value: 'analyse_erreur', label: 'Erreurs' }
+];
 
-
-
+interface PricingReferencesPageProps {
+  userRole: UserRole;
+  routeTab?: TabId;
+  onRouteTabChange?: (tab: TabId) => void;
+}
 
 /**
  * Main Pricing References workspace component.
  * Allows super-admins to import raw classifications/grids, and all admins to view and analyze anomalies.
+ * Tab state is mirrored to the route search params by the parent when available.
  */
-const PricingReferencesPage = ({ userRole }: { userRole: UserRole }) => {
+const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: PricingReferencesPageProps) => {
   const [isClassificationImportOpen, setIsClassificationImportOpen] = useState(false);
   const [isSegmentsImportOpen, setIsSegmentsImportOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<TabId>('imports');
+  const [localActiveTab, setLocalActiveTab] = useState<TabId>('imports');
+  const [importSubTab, setImportSubTab] = useState<'classification' | 'segments'>('classification');
   const [selectedImportId, setSelectedImportId] = useState<string | null>(null);
   const [selectedSegment, setSelectedSegment] = useState<SegmentRow | null>(null);
 
@@ -143,6 +157,18 @@ const PricingReferencesPage = ({ userRole }: { userRole: UserRole }) => {
   });
 
   const canImport = userRole === 'super_admin';
+  const isRouteControlled = onRouteTabChange !== undefined;
+  const activeTab = isRouteControlled ? routeTab ?? 'imports' : localActiveTab;
+
+  const handleTabChange = useCallback(
+    (tab: TabId) => {
+      if (!isRouteControlled) {
+        setLocalActiveTab(tab);
+      }
+      onRouteTabChange?.(tab);
+    },
+    [isRouteControlled, onRouteTabChange]
+  );
 
   // Memoized query inputs
   const importsInput = useMemo(
@@ -209,6 +235,8 @@ const PricingReferencesPage = ({ userRole }: { userRole: UserRole }) => {
     queryKey: pricingReferenceImportsKey(importsInput),
     queryFn: () => listPricingReferenceImports(importsInput)
   });
+  const visibleImports = importsQuery.data?.imports ?? [];
+  const totalImports = importsQuery.data?.total ?? 0;
 
   const healthInput = useMemo(
     () => (selectedImportId ? { import_id: selectedImportId } : {}),
@@ -252,7 +280,7 @@ const PricingReferencesPage = ({ userRole }: { userRole: UserRole }) => {
         search?: string;
       }
     ) => {
-      setActiveTab(tab);
+      handleTabChange(tab);
       if (tab === 'links') {
         if (filters?.linkStatus !== undefined) {
           setSegmentsLinkStatus(filters.linkStatus);
@@ -260,7 +288,7 @@ const PricingReferencesPage = ({ userRole }: { userRole: UserRole }) => {
         setSegmentsPage(1);
       }
     },
-    []
+    [handleTabChange]
   );
 
   // Column definitions for ReferenceTable
@@ -270,14 +298,14 @@ const PricingReferencesPage = ({ userRole }: { userRole: UserRole }) => {
         id: 'cir_key',
         label: 'Clé CIR',
         sortBy: 'cir_key',
-        className: 'font-mono text-slate-700 tracking-tight font-semibold',
+        className: 'font-mono text-stone-700 tracking-tight font-semibold',
         render: (row) => row.cir_key
       },
       {
         id: 'mega',
         label: 'Mega',
         sortBy: 'mega',
-        className: 'font-mono text-slate-500 tabular-nums',
+        className: 'font-mono text-stone-500 tabular-nums',
         render: (row) => row.mega
       },
       { id: 'mega_lib', label: 'Libellé mega', render: (row) => row.mega_lib },
@@ -285,7 +313,7 @@ const PricingReferencesPage = ({ userRole }: { userRole: UserRole }) => {
         id: 'fam',
         label: 'Fam',
         sortBy: 'fam',
-        className: 'font-mono text-slate-500 tabular-nums',
+        className: 'font-mono text-stone-500 tabular-nums',
         render: (row) => row.fam
       },
       { id: 'fam_lib', label: 'Libellé famille', render: (row) => row.fam_lib },
@@ -293,7 +321,7 @@ const PricingReferencesPage = ({ userRole }: { userRole: UserRole }) => {
         id: 'sfa',
         label: 'SFA',
         sortBy: 'sfa',
-        className: 'font-mono text-slate-500 tabular-nums',
+        className: 'font-mono text-stone-500 tabular-nums',
         render: (row) => row.sfa
       },
       { id: 'sfa_lib', label: 'Libellé SFA', render: (row) => row.sfa_lib }
@@ -307,32 +335,32 @@ const PricingReferencesPage = ({ userRole }: { userRole: UserRole }) => {
         id: 'marque',
         label: 'Marque',
         sortBy: 'marque',
-        className: 'font-bold text-slate-900',
+        className: 'font-bold text-stone-900',
         render: (row) => row.marque
       },
       {
         id: 'cat_fab',
         label: 'Cat fab',
         sortBy: 'cat_fab',
-        className: 'font-mono text-slate-600',
+        className: 'font-mono text-stone-600',
         render: (row) => row.cat_fab
       },
       {
         id: 'segment',
         label: 'Segment',
         sortBy: 'segment',
-        className: 'font-mono text-slate-500 tabular-nums',
+        className: 'font-mono text-stone-500 tabular-nums',
         render: (row) => row.segment
       },
       {
         id: 'idnumerique',
         label: 'ID',
         sortBy: 'idnumerique',
-        className: 'font-mono text-slate-500 tabular-nums',
+        className: 'font-mono text-stone-500 tabular-nums',
         render: (row) => row.idnumerique
       },
       { id: 'cat_fab_l', label: 'Libellé', render: (row) => row.cat_fab_l ?? '-' },
-      { id: 'cir_key', label: 'Clé CIR', className: 'font-mono text-slate-700', render: (row) => row.cir_key ?? '-' },
+      { id: 'cir_key', label: 'Clé CIR', className: 'font-mono text-stone-700', render: (row) => row.cir_key ?? '-' },
       {
         id: 'link_status',
         label: 'Liaison',
@@ -350,7 +378,7 @@ const PricingReferencesPage = ({ userRole }: { userRole: UserRole }) => {
         id: 'grids',
         label: 'Grilles',
         sortBy: 'purchase_grid_rows_count',
-        className: 'font-mono text-slate-600 tabular-nums text-right pr-4',
+        className: 'font-mono text-stone-600 tabular-nums text-right pr-4',
         render: (row) => formatCount(row.purchase_grid_rows_count)
       },
       {
@@ -362,7 +390,7 @@ const PricingReferencesPage = ({ userRole }: { userRole: UserRole }) => {
             variant="outline"
             size="sm"
             onClick={() => setSelectedSegment(row)}
-            className="h-7 text-xs px-2.5 bg-background shadow-sm hover:bg-slate-50 active:scale-[0.98] transition-all"
+            className="h-7 text-xs px-2.5 bg-background shadow-sm hover:bg-stone-50 active:scale-[0.98] transition-all"
           >
             Détail
           </Button>
@@ -374,28 +402,59 @@ const PricingReferencesPage = ({ userRole }: { userRole: UserRole }) => {
 
   return (
     <div
-      className="flex h-full min-h-0 flex-col gap-4 overflow-hidden"
+      className="flex h-full min-h-0 flex-col gap-4 overflow-hidden bg-transparent px-0 text-stone-950"
       data-testid="pricing-references-page"
     >
       {/* Page Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-3 shrink-0">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-xl font-bold tracking-tight text-foreground font-sans">
-              Référentiels CIR
-            </h1>
+      <div className="shrink-0">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h1 className="text-[1.55rem] font-extrabold leading-none tracking-tight text-stone-950 text-pretty">
+                Référentiels CIR
+              </h1>
+              <Badge
+                variant="secondary"
+                className={cn(
+                  'gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.12em] shadow-none',
+                  selectedImportId
+                    ? 'border-stone-300 bg-stone-100 text-stone-800'
+                    : 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                )}
+              >
+                <span className="size-1.5 rounded-full bg-current" aria-hidden="true" />
+                {selectedImportId ? 'Import sélectionné' : 'Snapshot actif'}
+              </Badge>
+            </div>
+            <p className="mt-2 max-w-[43rem] text-xs leading-snug text-stone-600">
+              Import, contrôle d&apos;intégrité et consultation des classifications et segments de
+              remises fabricant.
+            </p>
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Importation, contrôle d&apos;intégrité et consultations paginées des exports de classification et segments.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <Badge
-            variant={selectedImportId ? 'default' : 'secondary'}
-            className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-slate-900 text-white"
-          >
-            {selectedImportId ? 'Import sélectionné' : 'Dernier snapshot actif'}
-          </Badge>
+
+          <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={!canImport}
+              onClick={() => setIsClassificationImportOpen(true)}
+              className="group h-8 rounded-md border border-stone-200/80 bg-white px-3 text-[11px] font-bold text-stone-900 transition-[background-color,border-color,color,transform] hover:border-stone-300 hover:bg-stone-50 active:scale-[0.98]"
+            >
+              <UploadCloud className="size-3.5 transition-transform duration-200 group-hover:-translate-y-0.5" aria-hidden="true" />
+              Importer la classification
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              disabled={!canImport}
+              onClick={() => setIsSegmentsImportOpen(true)}
+              className="group h-8 rounded-md bg-primary text-primary-foreground px-3 text-[11px] font-bold transition-[background-color,box-shadow,transform] hover:bg-primary/95 active:scale-[0.98]"
+            >
+              <UploadCloud className="size-3.5 transition-transform duration-200 group-hover:-translate-y-0.5" aria-hidden="true" />
+              Importer les segments et grilles
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -411,26 +470,26 @@ const PricingReferencesPage = ({ userRole }: { userRole: UserRole }) => {
       {/* Workspace Tabs */}
       <Tabs
         value={activeTab}
-        onValueChange={(value) => setActiveTab(value as TabId)}
+        onValueChange={(value) => handleTabChange(value as TabId)}
         className="flex min-h-0 flex-1 flex-col"
       >
-        <div className="overflow-x-auto shrink-0 select-none">
-          <TabsList className="flex h-9 w-full justify-start gap-5 border-b border-slate-200 bg-transparent p-0 rounded-none">
+        <div className="shrink-0 select-none overflow-x-auto pb-0.5">
+          <TabsList className="inline-flex h-10 w-max justify-start gap-1 rounded-xl border border-stone-200/70 bg-surface-3 p-1 text-stone-600 shadow-[0_12px_24px_-22px_rgba(28,25,23,0.65)]">
             {tabItems.map((tab) => (
               <TabsTrigger
                 key={tab.id}
                 value={tab.id}
-                className="relative h-9 rounded-none border-b-2 border-transparent bg-transparent px-1 pb-2 text-xs font-semibold text-muted-foreground/80 transition-all duration-200 hover:text-foreground data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none active:scale-[0.98] flex items-center gap-1.5"
+                className="relative flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-bold text-stone-600 shadow-none transition-[color,background-color,box-shadow,transform] hover:bg-white/70 hover:text-stone-950 data-[state=active]:bg-stone-950 data-[state=active]:text-white data-[state=active]:shadow-[0_10px_18px_-14px_rgba(28,25,23,0.85)] active:translate-y-px"
               >
                 <tab.icon className="size-3.5" aria-hidden="true" />
-                <span>{tab.label}</span>
-                {activeTab === tab.id && (
-                  <motion.div
-                    layoutId="pricing-references-active-tab-line"
-                    className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary"
-                    transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                <span className="whitespace-nowrap">{tab.label}</span>
+                {activeTab === tab.id ? (
+                  <motion.span
+                    layoutId="pricing-references-active-tab-dot"
+                    className="absolute inset-x-3 -bottom-1 mx-auto h-0.5 rounded-full bg-stone-950/25"
+                    transition={{ type: 'spring', stiffness: 360, damping: 32 }}
                   />
-                )}
+                ) : null}
               </TabsTrigger>
             ))}
           </TabsList>
@@ -439,134 +498,134 @@ const PricingReferencesPage = ({ userRole }: { userRole: UserRole }) => {
         {/* Tab 1: Imports */}
         <TabsContent
           value="imports"
-          className="min-h-0 flex-1 flex flex-col gap-4 overflow-y-auto pr-1 pt-2"
+          className="mt-0 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pr-1 pt-1"
         >
-          {/* Action cards for import files */}
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="border border-slate-200 bg-surface-1 p-4 rounded-xl flex flex-col justify-between gap-3 shadow-sm hover:border-slate-300 transition-colors">
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <div className="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <ListTree className="size-4" />
-                  </div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 font-sans">
-                    Classification produit CIR
-                  </h3>
-                </div>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Importez les codes MEGA/FAM/SFA et les libellés de classification produit.
-                </p>
-              </div>
-              <div className="flex items-center justify-between border-t border-slate-100 pt-2.5">
-                {!canImport && (
-                  <span className="text-[9px] text-muted-foreground/80 font-bold uppercase tracking-wide">
-                    Réservé super admin
-                  </span>
+          {/* Sub-tabs / Segmented Control */}
+          <div className="flex items-center justify-between gap-4 shrink-0 select-none pb-0.5">
+            <div className="flex items-center gap-1 border border-stone-200/50 bg-surface-3/60 p-0.5 rounded-lg text-xs h-8">
+              <button
+                type="button"
+                onClick={() => {
+                  setImportSubTab('classification');
+                  setImportPage(1);
+                }}
+                className={cn(
+                  'h-7 px-3.5 rounded-md font-semibold text-[11px] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/60',
+                  importSubTab === 'classification'
+                    ? 'bg-white text-stone-950 shadow-sm border border-stone-200/20'
+                    : 'text-stone-500 hover:text-stone-900 hover:bg-stone-100/30'
                 )}
-                <Button
-                  type="button"
-                  size="sm"
-                  disabled={!canImport}
-                  onClick={() => setIsClassificationImportOpen(true)}
-                  className="h-8 text-xs font-semibold active:scale-[0.98] transition-all"
-                >
-                  Importer la classification
-                </Button>
-              </div>
-            </div>
-
-            <div className="border border-slate-200 bg-surface-1 p-4 rounded-xl flex flex-col justify-between gap-3 shadow-sm hover:border-slate-300 transition-colors">
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <div className="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <Database className="size-4" />
-                  </div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 font-sans">
-                    Segments et grilles fabricant
-                  </h3>
-                </div>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Importez les segments fabricant, les liaisons de classification et les grilles
-                  d&apos;achat.
-                </p>
-              </div>
-              <div className="flex items-center justify-between border-t border-slate-100 pt-2.5">
-                {!canImport && (
-                  <span className="text-[9px] text-muted-foreground/80 font-bold uppercase tracking-wide">
-                    Réservé super admin
-                  </span>
+              >
+                Classification CIR
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setImportSubTab('segments');
+                  setImportPage(1);
+                }}
+                className={cn(
+                  'h-7 px-3.5 rounded-md font-semibold text-[11px] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/60',
+                  importSubTab === 'segments'
+                    ? 'bg-white text-stone-950 shadow-sm border border-stone-200/20'
+                    : 'text-stone-500 hover:text-stone-900 hover:bg-stone-100/30'
                 )}
-                <Button
-                  type="button"
-                  size="sm"
-                  disabled={!canImport}
-                  onClick={() => setIsSegmentsImportOpen(true)}
-                  className="h-8 text-xs font-semibold active:scale-[0.98] transition-all"
-                >
-                  Importer les segments et grilles
-                </Button>
-              </div>
+              >
+                Segments & grilles
+              </button>
             </div>
           </div>
 
-          {/* Import History lists */}
-          <div className="flex-1 min-h-0 flex flex-col gap-3">
-            <div className="flex flex-wrap items-center justify-between gap-3 border border-slate-200/80 bg-slate-50/50 p-3 rounded-xl shadow-sm shrink-0">
-              <h2 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          {/* Minimalist context banners (Both kept in DOM for automated tests but visual visibility is toggle-controlled) */}
+          <div className={cn("flex flex-col gap-3.5 border border-stone-200/50 bg-surface-1 px-4 py-3 rounded-xl shrink-0 transition-opacity", importSubTab !== 'classification' && 'hidden')}>
+            <div className="flex items-center justify-between gap-4">
+              <div className="min-w-0">
+                <h3 className="text-xs font-bold text-stone-900">
+                  Classification produit CIR
+                </h3>
+                <p className="mt-0.5 text-[11px] text-stone-500 leading-normal">
+                  Codes MEGA, FAM, SFA et libellés produit CIR. Cette classification constitue le socle indispensable pour l&apos;application et le contrôle de cohérence des remises.
+                </p>
+              </div>
+              {!canImport && (
+                <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-stone-400 border border-stone-200 px-2 py-0.5 rounded bg-surface-1">
+                  Réservé super admin
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className={cn("flex flex-col gap-3.5 border border-stone-200/50 bg-surface-1 px-4 py-3 rounded-xl shrink-0 transition-opacity", importSubTab !== 'segments' && 'hidden')}>
+            <div className="flex items-center justify-between gap-4">
+              <div className="min-w-0">
+                <h3 className="text-xs font-bold text-stone-900">
+                  Segments et grilles fabricant
+                </h3>
+                <p className="mt-0.5 text-[11px] text-stone-500 leading-normal">
+                  Segments fabricant, liaisons vers la classification produit CIR et grilles de taux d&apos;achat associées pour le calcul des remises.
+                </p>
+              </div>
+              {!canImport && (
+                <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-stone-400 border border-stone-200 px-2 py-0.5 rounded bg-surface-1">
+                  Réservé super admin
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Import History list */}
+          <div className="flex min-h-0 flex-1 flex-col gap-3.5">
+            <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
+              <h2 className="text-[10px] font-bold uppercase tracking-wider text-stone-500">
                 Historique des imports
               </h2>
-              <NativeSelect
-                id="pricing-import-status"
-                label="Filtrer par statut"
+              <ToggleGroup
+                type="single"
                 value={importStatus}
-                options={[
-                  { value: 'all', label: 'Tous les statuts' },
-                  ...pricingReferenceImportStatusSchema.options.map((status) => ({
-                    value: status,
-                    label: importStatusLabels[status]
-                  }))
-                ]}
-                onChange={(value) => {
+                onValueChange={(value) => {
+                  if (!value) return;
                   setImportStatus(value as PricingReferenceImportStatus | 'all');
                   setImportPage(1);
                 }}
-              />
+                spacing={0}
+                className="rounded-lg border border-stone-200/50 bg-surface-3/60 p-0.5 h-8 select-none"
+              >
+                {importStatusFilters.map((filter) => {
+                  const suffix = filter.value === 'all' ? formatCount(totalImports) : null;
+
+                  return (
+                    <ToggleGroupItem
+                      key={filter.value}
+                      value={filter.value}
+                      aria-label={`Filtrer les imports : ${filter.label}`}
+                      className="h-7 rounded-md border-0 px-3 text-[11px] font-semibold text-stone-500 shadow-none transition-colors hover:text-stone-900 data-[state=on]:bg-white data-[state=on]:text-stone-950 data-[state=on]:shadow-sm"
+                    >
+                      {suffix ? <span className="mr-1.5 font-mono text-[10px] tabular-nums">{suffix}</span> : null}
+                      {filter.label}
+                    </ToggleGroupItem>
+                  );
+                })}
+              </ToggleGroup>
             </div>
-            <div className="flex-1 min-h-0 flex flex-col">
-              <div className="hidden md:grid gap-3 px-4 py-2 border border-slate-200/80 border-b-0 bg-slate-50/50 rounded-t-xl text-[9px] font-bold text-muted-foreground uppercase tracking-wider shrink-0 select-none">
-                <span>Statut</span>
-                <span>Date d&apos;import</span>
-                <span>ID / Message d&apos;erreur</span>
-                <span>Lignes importées</span>
-                <span>Anomalies</span>
-              </div>
-              <div className="flex-1 overflow-y-auto">
+            <div className="flex min-h-0 flex-1 flex-col justify-between">
+              <div className="flex-1 overflow-y-auto pb-2">
                 <ImportRows
-                  rows={importsQuery.data?.imports ?? []}
+                  rows={visibleImports}
                   selectedImportId={selectedImportId}
                   onSelect={handleImportSelected}
+                  viewMode={importSubTab}
                 />
               </div>
-              <div className="shrink-0 bg-background border border-slate-200/80 rounded-b-xl">
-                <ReferenceTable
-                  rows={[]}
-                  columns={[]}
-                  isLoading={false}
-                  isFetching={false}
-                  page={importPage}
-                  pageSize={importPageSize}
-                  total={importsQuery.data?.total ?? 0}
-                  sortBy=""
-                  sortDirection="asc"
-                  emptyLabel=""
-                  onSort={() => {}}
-                  onPageChange={setImportPage}
-                  onPageSizeChange={(nextPageSize) => {
-                    setImportPageSize(nextPageSize);
-                    setImportPage(1);
-                  }}
-                />
-              </div>
+              <PaginationBar
+                page={importPage}
+                pageSize={importPageSize}
+                total={totalImports}
+                onPageChange={setImportPage}
+                onPageSizeChange={(nextPageSize) => {
+                  setImportPageSize(nextPageSize);
+                  setImportPage(1);
+                }}
+              />
             </div>
           </div>
         </TabsContent>
@@ -578,7 +637,7 @@ const PricingReferencesPage = ({ userRole }: { userRole: UserRole }) => {
         >
           {/* View mode toggle switcher */}
           <div className="flex items-center justify-between gap-4 shrink-0">
-            <div className="flex items-center gap-1 border border-slate-200 bg-slate-100 p-0.5 rounded-lg text-xs select-none">
+            <div className="flex items-center gap-1 border border-stone-200 bg-stone-100 p-0.5 rounded-lg text-xs select-none">
               <button
                 type="button"
                 onClick={() => setClassificationViewMode('drilldown')}
@@ -610,7 +669,7 @@ const PricingReferencesPage = ({ userRole }: { userRole: UserRole }) => {
             <ClassificationDrillDown importId={selectedImportId} />
           ) : (
             <>
-              <div className="grid gap-3.5 border border-slate-200/80 bg-slate-50/40 p-3.5 rounded-xl shadow-sm lg:grid-cols-[minmax(14rem,1fr)_8rem_8rem_auto] items-end shrink-0">
+              <div className="grid gap-3.5 border border-stone-200/80 bg-stone-50/40 p-3.5 rounded-xl shadow-sm lg:grid-cols-[minmax(14rem,1fr)_8rem_8rem_auto] items-end shrink-0">
                 <FormField label="Recherche" htmlFor="classification-search">
                   <Input
                     id="classification-search"
@@ -695,7 +754,7 @@ const PricingReferencesPage = ({ userRole }: { userRole: UserRole }) => {
           value="segments"
           className="min-h-0 flex-1 flex flex-col gap-3 overflow-hidden pt-2"
         >
-          <div className="grid gap-3.5 border border-slate-200/80 bg-slate-50/40 p-3.5 rounded-xl shadow-sm lg:grid-cols-[minmax(14rem,1fr)_10rem_10rem_12rem] items-end shrink-0">
+          <div className="grid gap-3.5 border border-stone-200/80 bg-stone-50/40 p-3.5 rounded-xl shadow-sm lg:grid-cols-[minmax(14rem,1fr)_10rem_10rem_12rem] items-end shrink-0">
             <FormField label="Recherche" htmlFor="segments-search">
               <Input
                 id="segments-search"
@@ -787,7 +846,7 @@ const PricingReferencesPage = ({ userRole }: { userRole: UserRole }) => {
           value="links"
           className="min-h-0 flex-1 flex flex-col gap-3 overflow-hidden pt-2"
         >
-          <div className="grid gap-3.5 border border-slate-200/80 bg-slate-50/40 p-3.5 rounded-xl shadow-sm lg:grid-cols-[12rem_minmax(14rem,1fr)] items-end shrink-0">
+          <div className="grid gap-3.5 border border-stone-200/80 bg-stone-50/40 p-3.5 rounded-xl shadow-sm lg:grid-cols-[12rem_minmax(14rem,1fr)] items-end shrink-0">
             <NativeSelect
               id="links-status"
               label="Statut liaison"
@@ -857,9 +916,9 @@ const PricingReferencesPage = ({ userRole }: { userRole: UserRole }) => {
               <button
                 type="button"
                 onClick={() => setShowCorrectionPlan(true)}
-                className="inline-flex h-8 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-700 shadow-sm transition-[background-color,border-color,color,transform] hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 active:scale-[0.98]"
+                className="inline-flex h-8 items-center gap-2 rounded-md border border-stone-200 bg-white px-3 text-[10px] font-bold uppercase tracking-[0.14em] text-stone-700 shadow-sm transition-[background-color,border-color,color,transform] hover:border-stone-300 hover:bg-stone-50 hover:text-stone-950 active:scale-[0.98]"
               >
-                <Sparkles className="size-3.5 text-slate-500" aria-hidden="true" />
+                <Sparkles className="size-3.5 text-stone-500" aria-hidden="true" />
                 Plan de correction
               </button>
             )}
@@ -878,8 +937,8 @@ const PricingReferencesPage = ({ userRole }: { userRole: UserRole }) => {
 
         {/* Tab 6: History */}
         <TabsContent value="history" className="min-h-0 flex-1 space-y-4 overflow-auto pt-2">
-          <section className="border border-slate-200 bg-slate-50/50 p-4 rounded-xl shadow-sm">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-800 font-sans">
+          <section className="border border-stone-200 bg-stone-50/50 p-4 rounded-xl shadow-sm">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-stone-800 font-sans">
               Historique des imports
             </h2>
             <p className="mt-1 text-xs text-muted-foreground font-sans">
@@ -890,7 +949,7 @@ const PricingReferencesPage = ({ userRole }: { userRole: UserRole }) => {
             {(importsQuery.data?.imports ?? []).map((row) => (
               <article
                 key={row.id}
-                className="grid gap-3 border border-slate-200 bg-background p-4 rounded-xl shadow-sm hover:shadow-md transition-all md:grid-cols-[10rem_minmax(0,1fr)_10rem_10rem] items-center"
+                className="grid gap-3 border border-stone-200 bg-background p-4 rounded-xl shadow-sm hover:shadow-md transition-all md:grid-cols-[10rem_minmax(0,1fr)_10rem_10rem] items-center"
               >
                 <div className="shrink-0">
                   <Badge
@@ -901,7 +960,7 @@ const PricingReferencesPage = ({ userRole }: { userRole: UserRole }) => {
                   </Badge>
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate font-mono text-xs text-slate-900 font-semibold">
+                  <p className="truncate font-mono text-xs text-stone-900 font-semibold">
                     {row.id}
                   </p>
                   <p className="mt-1 text-[11px] text-muted-foreground font-medium">

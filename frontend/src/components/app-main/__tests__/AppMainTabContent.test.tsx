@@ -14,7 +14,9 @@ vi.mock('@/components/Settings', () => ({
   default: () => <div data-testid="mock-settings">Settings</div>
 }));
 vi.mock('@tanstack/react-router', () => ({
-  Outlet: () => <div data-testid="mock-clients-panel">Clients</div>
+  Outlet: () => <div data-testid="mock-clients-panel">Clients</div>,
+  useNavigate: () => vi.fn(),
+  useSearch: () => ({})
 }));
 vi.mock('@/components/AdminPanel', () => ({
   default: () => <div data-testid="mock-admin-panel">Admin</div>

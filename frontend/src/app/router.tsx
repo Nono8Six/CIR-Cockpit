@@ -21,6 +21,7 @@ import {
   validateSupplierDirectorySearch
 } from '@/components/admin-suppliers/supplierDirectorySearch';
 import { validateDashboardSearch } from '@/app/dashboardSearch';
+import { validatePricingReferentialsSearch } from '@/app/pricingReferentialsSearch';
 
 const rootRoute = createRootRoute({
   component: App,
@@ -157,6 +158,7 @@ export const supplierRecordEditRoute = createRoute({
 export const pricingReferentialsRoute = createRoute({
   getParentRoute: () => discountsRoute,
   path: 'referentiels',
+  validateSearch: validatePricingReferentialsSearch,
   component: () => null
 });
 

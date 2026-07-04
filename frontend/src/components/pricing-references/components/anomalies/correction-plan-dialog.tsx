@@ -40,7 +40,7 @@ const severityClasses: Record<PricingReferenceAnomalySeverity, string> = {
   bloquante: 'border-rose-200 bg-rose-50 text-rose-700',
   haute: 'border-red-200 bg-red-50 text-red-700',
   moyenne: 'border-amber-200 bg-amber-50 text-amber-700',
-  faible: 'border-slate-200 bg-slate-50 text-slate-600'
+  faible: 'border-stone-200 bg-stone-50 text-stone-600'
 };
 
 type AnomalyRow = PricingReferenceAnomaliesListResponse['rows'][number];
@@ -283,56 +283,56 @@ export const CorrectionPlanDialog = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="w-[calc(100vw-1rem)] max-w-6xl gap-0 overflow-hidden border-slate-200 bg-white p-0 shadow-2xl sm:w-[min(100vw-2rem,72rem)] sm:rounded-md"
-        overlayClassName="bg-slate-950/25 backdrop-blur-[2px]"
+        className="w-[calc(100vw-1rem)] max-w-6xl gap-0 overflow-hidden border-stone-200 bg-white p-0 shadow-2xl sm:w-[min(100vw-2rem,72rem)] sm:rounded-md"
+        overlayClassName="bg-stone-950/25 backdrop-blur-[2px]"
         showCloseButton
       >
-        <div className="border-b border-slate-200 px-6 py-5">
+        <div className="border-b border-stone-200 px-6 py-5">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
-              <DialogTitle className="text-lg font-semibold tracking-tight text-slate-950">
+              <DialogTitle className="text-lg font-semibold tracking-tight text-stone-950">
                 Plan de correction
               </DialogTitle>
-              <DialogDescription className="mt-1 max-w-2xl text-sm text-slate-500">
+              <DialogDescription className="mt-1 max-w-2xl text-sm text-stone-500">
                 Regroupement deterministe des anomalies. L IA reste une aide secondaire pour interpreter et prioriser, sans modifier les donnees.
               </DialogDescription>
             </div>
             <button
               type="button"
-              className="inline-flex h-9 items-center gap-2 border border-slate-200 bg-white px-3 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50"
+              className="inline-flex h-9 items-center gap-2 border border-stone-200 bg-white px-3 text-[10px] font-bold uppercase tracking-[0.14em] text-stone-700 transition-colors hover:border-stone-300 hover:bg-stone-50"
             >
-              <Sparkles className="size-3.5 text-slate-500" aria-hidden="true" />
+              <Sparkles className="size-3.5 text-stone-500" aria-hidden="true" />
               Interpréter avec IA
             </button>
           </div>
         </div>
 
-        <div className="max-h-[min(78vh,48rem)] overflow-y-auto overscroll-contain bg-slate-50/70">
+        <div className="max-h-[min(78vh,48rem)] overflow-y-auto overscroll-contain bg-stone-50/70">
           {isLoadingPlan ? (
-            <div className="p-6 text-sm text-slate-500">Chargement du plan de correction...</div>
+            <div className="p-6 text-sm text-stone-500">Chargement du plan de correction...</div>
           ) : !plan ? (
-            <div className="p-6 text-sm text-slate-500">Plan indisponible.</div>
+            <div className="p-6 text-sm text-stone-500">Plan indisponible.</div>
           ) : (
             <div className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
-              <section className="min-w-0 border border-slate-200 bg-white">
-                <div className="border-b border-slate-200 px-4 py-3">
+              <section className="min-w-0 border border-stone-200 bg-white">
+                <div className="border-b border-stone-200 px-4 py-3">
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center justify-between gap-3">
                       <div>
-                        <h3 className="text-sm font-semibold text-slate-950">Groupes actionnables</h3>
-                        <p className="mt-0.5 text-xs text-slate-500">
+                        <h3 className="text-sm font-semibold text-stone-950">Groupes actionnables</h3>
+                        <p className="mt-0.5 text-xs text-stone-500">
                           {numberFormatter.format(visibleGroups.length)} groupe(s) sur {numberFormatter.format(plan.groups.length)}.
                           {plan.totals.total > 0 ? ` ${numberFormatter.format(plan.totals.total)} anomalie(s) source.` : ''}
                         </p>
                       </div>
-                      <Badge variant="outline" className="rounded-sm border-slate-200 text-[10px] uppercase tracking-wider">
+                      <Badge variant="outline" className="rounded-sm border-stone-200 text-[10px] uppercase tracking-wider">
                         Lecture seule
                       </Badge>
                     </div>
                     <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_9rem_10rem_7rem]">
                       <label className="relative block">
                         <span className="sr-only">Rechercher dans les groupes de correction</span>
-                        <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+                        <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-stone-400" aria-hidden="true" />
                         <input
                           type="search"
                           name="correction-plan-search"
@@ -342,7 +342,7 @@ export const CorrectionPlanDialog = ({
                             resetGroupPage();
                           }}
                           placeholder="Filtrer marque, type, colonne…"
-                          className="h-9 w-full border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-950 outline-none transition-colors placeholder:text-slate-400 hover:border-slate-300 focus-visible:border-slate-400 focus-visible:ring-2 focus-visible:ring-slate-200"
+                          className="h-9 w-full border border-stone-200 bg-white pl-9 pr-3 text-sm text-stone-950 outline-none transition-colors placeholder:text-stone-400 hover:border-stone-300 focus-visible:border-stone-400 focus-visible:ring-2 focus-visible:ring-stone-200"
                           autoComplete="off"
                         />
                       </label>
@@ -355,7 +355,7 @@ export const CorrectionPlanDialog = ({
                             setSeverityFilter(event.target.value as PricingReferenceAnomalySeverity | 'all');
                             resetGroupPage();
                           }}
-                          className="h-9 w-full border border-slate-200 bg-white px-2 text-xs font-medium text-slate-700 outline-none transition-colors hover:border-slate-300 focus-visible:border-slate-400 focus-visible:ring-2 focus-visible:ring-slate-200"
+                          className="h-9 w-full border border-stone-200 bg-white px-2 text-xs font-medium text-stone-700 outline-none transition-colors hover:border-stone-300 focus-visible:border-stone-400 focus-visible:ring-2 focus-visible:ring-stone-200"
                         >
                           <option value="all">Toutes</option>
                           <option value="bloquante">Bloquantes</option>
@@ -373,7 +373,7 @@ export const CorrectionPlanDialog = ({
                             setSortMode(event.target.value as GroupSortMode);
                             resetGroupPage();
                           }}
-                          className="h-9 w-full border border-slate-200 bg-white px-2 text-xs font-medium text-slate-700 outline-none transition-colors hover:border-slate-300 focus-visible:border-slate-400 focus-visible:ring-2 focus-visible:ring-slate-200"
+                          className="h-9 w-full border border-stone-200 bg-white px-2 text-xs font-medium text-stone-700 outline-none transition-colors hover:border-stone-300 focus-visible:border-stone-400 focus-visible:ring-2 focus-visible:ring-stone-200"
                         >
                           <option value="priority">Priorité</option>
                           <option value="volume">Volume</option>
@@ -390,7 +390,7 @@ export const CorrectionPlanDialog = ({
                             setPageSize(Number(event.target.value) as (typeof groupPageSizes)[number]);
                             resetGroupPage();
                           }}
-                          className="h-9 w-full border border-slate-200 bg-white px-2 text-xs font-medium text-slate-700 outline-none transition-colors hover:border-slate-300 focus-visible:border-slate-400 focus-visible:ring-2 focus-visible:ring-slate-200"
+                          className="h-9 w-full border border-stone-200 bg-white px-2 text-xs font-medium text-stone-700 outline-none transition-colors hover:border-stone-300 focus-visible:border-stone-400 focus-visible:ring-2 focus-visible:ring-stone-200"
                         >
                           {groupPageSizes.map((size) => (
                             <option key={size} value={size}>{size} / page</option>
@@ -400,9 +400,9 @@ export const CorrectionPlanDialog = ({
                     </div>
                   </div>
                 </div>
-                <div className="divide-y divide-slate-200">
+                <div className="divide-y divide-stone-200">
                   {paginatedGroups.length === 0 ? (
-                    <div className="flex items-center gap-3 px-4 py-6 text-sm text-slate-600">
+                    <div className="flex items-center gap-3 px-4 py-6 text-sm text-stone-600">
                       <CheckCircle2 className="size-4 text-emerald-600" aria-hidden="true" />
                       Aucun groupe ne correspond aux filtres.
                     </div>
@@ -412,12 +412,12 @@ export const CorrectionPlanDialog = ({
                       type="button"
                       onClick={() => setSelectedGroupId(group.id)}
                       className={cn(
-                        'grid w-full gap-3 px-4 py-4 text-left transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 md:grid-cols-[6rem_minmax(0,1fr)]',
-                        selectedGroup?.id === group.id && 'bg-slate-50'
+                        'grid w-full gap-3 px-4 py-4 text-left transition-colors hover:bg-stone-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 md:grid-cols-[6rem_minmax(0,1fr)]',
+                        selectedGroup?.id === group.id && 'bg-stone-50'
                       )}
                     >
                     <div>
-                      <div className="text-2xl font-semibold tabular-nums tracking-tight text-slate-950">
+                      <div className="text-2xl font-semibold tabular-nums tracking-tight text-stone-950">
                         {group.anomaly_count}
                       </div>
                       <Badge
@@ -429,45 +429,45 @@ export const CorrectionPlanDialog = ({
                     </div>
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h4 className="min-w-0 text-sm font-semibold text-slate-950">{group.message}</h4>
+                        <h4 className="min-w-0 text-sm font-semibold text-stone-950">{group.message}</h4>
                         {group.marque && (
-                          <span className="border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+                          <span className="border border-stone-200 bg-stone-50 px-2 py-0.5 text-[11px] font-medium text-stone-600">
                             {group.marque}
                           </span>
                         )}
                         {group.category && (
-                          <span className="border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+                          <span className="border border-stone-200 bg-stone-50 px-2 py-0.5 text-[11px] font-medium text-stone-600">
                             {group.category}
                           </span>
                         )}
                       </div>
-                      <p className="mt-2 text-sm text-slate-700">{group.excel_action}</p>
+                      <p className="mt-2 text-sm text-stone-700">{group.excel_action}</p>
                       <div className="mt-3 flex flex-wrap gap-1.5">
                         {group.columns.map((column) => (
                           <span
                             key={column}
-                            className="border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-700"
+                            className="border border-stone-200 bg-white px-2 py-1 text-[11px] font-medium text-stone-700"
                           >
                             {column}
                           </span>
                         ))}
                       </div>
-                      <ul className="mt-3 grid gap-1 text-xs text-slate-500">
+                      <ul className="mt-3 grid gap-1 text-xs text-stone-500">
                         {group.evidence.map((evidence) => (
                           <li key={evidence}>{evidence}</li>
                         ))}
                       </ul>
-                      <p className="mt-3 text-xs font-medium text-slate-600">
+                      <p className="mt-3 text-xs font-medium text-stone-600">
                         Source: {formatSourceFiles(group)} · lignes Excel {formatSourceRows(group)}
                       </p>
-                      <p className="mt-3 border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
+                      <p className="mt-3 border border-stone-200 bg-stone-50 px-3 py-2 text-xs text-stone-500">
                         {group.value_suggestion_reason}
                       </p>
                     </div>
                   </button>
                   ))}
                 </div>
-                <div className="flex flex-col gap-3 border-t border-slate-200 px-4 py-3 text-xs text-slate-600 md:flex-row md:items-center md:justify-between">
+                <div className="flex flex-col gap-3 border-t border-stone-200 px-4 py-3 text-xs text-stone-600 md:flex-row md:items-center md:justify-between">
                   <span>
                     Page {activePage} / {pageCount}, {numberFormatter.format(visibleGroups.length)} groupe(s) filtré(s)
                   </span>
@@ -476,7 +476,7 @@ export const CorrectionPlanDialog = ({
                       type="button"
                       onClick={() => setGroupPage((current) => Math.max(1, current - 1))}
                       disabled={activePage <= 1}
-                      className="inline-flex h-8 items-center gap-1 border border-slate-200 bg-white px-2 font-medium text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 disabled:cursor-not-allowed disabled:opacity-45"
+                      className="inline-flex h-8 items-center gap-1 border border-stone-200 bg-white px-2 font-medium text-stone-700 transition-colors hover:border-stone-300 hover:bg-stone-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 disabled:cursor-not-allowed disabled:opacity-45"
                     >
                       <ChevronLeft className="size-3.5" aria-hidden="true" />
                       Précédent
@@ -485,7 +485,7 @@ export const CorrectionPlanDialog = ({
                       type="button"
                       onClick={() => setGroupPage((current) => Math.min(pageCount, current + 1))}
                       disabled={activePage >= pageCount}
-                      className="inline-flex h-8 items-center gap-1 border border-slate-200 bg-white px-2 font-medium text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 disabled:cursor-not-allowed disabled:opacity-45"
+                      className="inline-flex h-8 items-center gap-1 border border-stone-200 bg-white px-2 font-medium text-stone-700 transition-colors hover:border-stone-300 hover:bg-stone-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 disabled:cursor-not-allowed disabled:opacity-45"
                     >
                       Suivant
                       <ChevronRight className="size-3.5" aria-hidden="true" />
@@ -495,34 +495,34 @@ export const CorrectionPlanDialog = ({
               </section>
 
               <aside className="grid content-start gap-4">
-                <section className="border border-slate-200 bg-white p-4">
+                <section className="border border-stone-200 bg-white p-4">
                   <div className="flex items-center gap-2">
                     <AlertTriangle className="size-4 text-amber-600" aria-hidden="true" />
-                    <h3 className="text-sm font-semibold text-slate-950">Intérêt du plan</h3>
+                    <h3 className="text-sm font-semibold text-stone-950">Intérêt du plan</h3>
                   </div>
-                  <p className="mt-2 text-xs leading-5 text-slate-600">
+                  <p className="mt-2 text-xs leading-5 text-stone-600">
                     La page standard montre les anomalies ligne par ligne. Ce plan regroupe les lignes qui ont la même cause,
                     les mêmes colonnes et le même contexte métier pour créer un lot de correction Excel.
                   </p>
                   <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                    <div className="border border-slate-200 p-3">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Bloquantes</div>
-                      <div className="mt-1 text-xl font-semibold text-slate-950">{displayTotals.bloquante}</div>
+                    <div className="border border-stone-200 p-3">
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-stone-500">Bloquantes</div>
+                      <div className="mt-1 text-xl font-semibold text-stone-950">{displayTotals.bloquante}</div>
                     </div>
-                    <div className="border border-slate-200 p-3">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Hautes</div>
-                      <div className="mt-1 text-xl font-semibold text-slate-950">{displayTotals.haute}</div>
+                    <div className="border border-stone-200 p-3">
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-stone-500">Hautes</div>
+                      <div className="mt-1 text-xl font-semibold text-stone-950">{displayTotals.haute}</div>
                     </div>
                   </div>
                 </section>
 
                 {selectedGroup ? (
-                  <section className="border border-slate-200 bg-white">
-                    <div className="border-b border-slate-200 p-4">
+                  <section className="border border-stone-200 bg-white">
+                    <div className="border-b border-stone-200 p-4">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <h3 className="text-sm font-semibold text-slate-950">Lot sélectionné</h3>
-                          <p className="mt-1 text-xs leading-5 text-slate-500">
+                          <h3 className="text-sm font-semibold text-stone-950">Lot sélectionné</h3>
+                          <p className="mt-1 text-xs leading-5 text-stone-500">
                             {selectedGroup.anomaly_count} ligne(s) à corriger ensemble, sans modification automatique.
                           </p>
                         </div>
@@ -537,12 +537,12 @@ export const CorrectionPlanDialog = ({
 
                     <div className="grid gap-4 p-4">
                       <div>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Où corriger</div>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-stone-500">Où corriger</div>
                         <div className="mt-2 grid gap-2">
                           {sourceFilesForGroup(selectedGroup).map((file) => (
-                            <div key={`${file.file_kind}-${file.original_filename ?? 'inferred'}`} className="border border-slate-200 bg-slate-50 p-3">
-                              <div className="text-xs font-semibold text-slate-950">{sourceFileKindLabels[file.file_kind]}</div>
-                              <div className="mt-1 break-words font-mono text-[11px] text-slate-600">
+                            <div key={`${file.file_kind}-${file.original_filename ?? 'inferred'}`} className="border border-stone-200 bg-stone-50 p-3">
+                              <div className="text-xs font-semibold text-stone-950">{sourceFileKindLabels[file.file_kind]}</div>
+                              <div className="mt-1 break-words font-mono text-[11px] text-stone-600">
                                 {file.original_filename ?? 'Nom exact non fourni par le rapport actif'}
                               </div>
                             </div>
@@ -551,14 +551,14 @@ export const CorrectionPlanDialog = ({
                       </div>
 
                       <div className="grid gap-2">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Lignes Excel</div>
-                        <div className="border border-slate-200 bg-white px-3 py-2 font-mono text-xs text-slate-700">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-stone-500">Lignes Excel</div>
+                        <div className="border border-stone-200 bg-white px-3 py-2 font-mono text-xs text-stone-700">
                           {formatSourceRows(selectedGroup)}
                         </div>
                       </div>
 
                       <div className="grid gap-2">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Contexte métier</div>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-stone-500">Contexte métier</div>
                         <div className="grid grid-cols-2 gap-2 text-xs">
                           <ContextValue label="Marque" value={selectedGroup.marque} />
                           <ContextValue label="Segment" value={selectedGroup.segment} />
@@ -568,19 +568,19 @@ export const CorrectionPlanDialog = ({
                       </div>
 
                       <div className="grid gap-2">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Colonnes à corriger</div>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-stone-500">Colonnes à corriger</div>
                         <div className="flex flex-wrap gap-1.5">
                           {selectedGroup.columns.map((column) => (
-                            <span key={column} className="border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-700">
+                            <span key={column} className="border border-stone-200 bg-stone-50 px-2 py-1 text-[11px] font-medium text-stone-700">
                               {column}
                             </span>
                           ))}
                         </div>
                       </div>
 
-                      <div className="border border-slate-200 bg-slate-50 p-3">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Action Excel</div>
-                        <p className="mt-2 text-sm leading-5 text-slate-800">{selectedGroup.excel_action}</p>
+                      <div className="border border-stone-200 bg-stone-50 p-3">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-stone-500">Action Excel</div>
+                        <p className="mt-2 text-sm leading-5 text-stone-800">{selectedGroup.excel_action}</p>
                       </div>
 
                       <div className="border border-amber-200 bg-amber-50 p-3">
@@ -603,9 +603,9 @@ export const CorrectionPlanDialog = ({
 };
 
 const ContextValue = ({ label, value }: { label: string; value: string | null }) => (
-  <div className="border border-slate-200 bg-white p-2">
-    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{label}</div>
-    <div className="mt-1 break-words text-xs font-medium text-slate-900">{value ?? '-'}</div>
+  <div className="border border-stone-200 bg-white p-2">
+    <div className="text-[10px] font-bold uppercase tracking-wider text-stone-500">{label}</div>
+    <div className="mt-1 break-words text-xs font-medium text-stone-900">{value ?? '-'}</div>
   </div>
 );
 

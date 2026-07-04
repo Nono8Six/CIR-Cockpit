@@ -103,17 +103,17 @@ export const AiReportSynthesis = ({
 
   return (
     <div
-      className="flex w-full flex-col gap-4 rounded-lg border border-slate-200 bg-white p-4 text-slate-950 shadow-sm transition-[border-color,box-shadow]"
+      className="flex w-full flex-col gap-4 rounded-lg border border-stone-200 bg-white p-4 text-stone-950 shadow-sm transition-[border-color,box-shadow]"
       data-testid="ai-diagnosis-panel"
     >
       {/* Header section with rich typography */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 pb-3">
         <div className="space-y-0.5">
           <div className="flex items-center gap-2">
-            <div className="rounded-md border border-slate-200 bg-slate-50 p-1.5 text-slate-700">
+            <div className="rounded-md border border-stone-200 bg-stone-50 p-1.5 text-stone-700">
               <Bot className="size-4" aria-hidden="true" />
             </div>
-            <h3 className="font-sans text-xs font-bold uppercase tracking-[0.14em] text-slate-950">
+            <h3 className="font-sans text-xs font-bold uppercase tracking-[0.14em] text-stone-950">
               Synthèse IA · {fileType === 'classification' ? 'Classification' : 'Segments'}
             </h3>
             {activeModel ? (
@@ -133,7 +133,7 @@ export const AiReportSynthesis = ({
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="h-7 rounded-md text-xs text-slate-500 hover:bg-slate-100 hover:text-slate-950"
+            className="h-7 rounded-md text-xs text-stone-500 hover:bg-stone-100 hover:text-stone-950"
           >
             Fermer
           </Button>
@@ -156,17 +156,17 @@ export const AiReportSynthesis = ({
       {/* Main synthesis results display or clean empty state */}
       {diagnosis?.result ? (
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
-            <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500">
-              <Sparkles className="size-3 text-slate-500" />
+          <div className="flex items-center justify-between border-b border-stone-200 pb-1.5">
+            <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-[0.16em] text-stone-500">
+              <Sparkles className="size-3 text-stone-500" />
               Rapport d&apos;analyse IA
             </span>
-            <span className="rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-slate-700">
+            <span className="rounded-md border border-stone-200 bg-stone-50 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-stone-700">
               Indice de confiance : {Math.round(diagnosis.result.confidence * 100)}%
             </span>
           </div>
 
-          <p className="rounded-md border border-slate-200 bg-slate-50 p-3 text-xs font-medium leading-relaxed text-slate-800">
+          <p className="rounded-md border border-stone-200 bg-stone-50 p-3 text-xs font-medium leading-relaxed text-stone-800">
             {diagnosis.result.summary}
           </p>
 
@@ -174,7 +174,7 @@ export const AiReportSynthesis = ({
             {diagnosis.result.priority_anomalies.map((item, index) => (
               <article
                 key={`${item.title}-${index}`}
-                className="rounded-md border border-slate-200 bg-white p-3 transition-colors hover:border-slate-300"
+                className="rounded-md border border-stone-200 bg-white p-3 transition-colors hover:border-stone-300"
               >
                 <div className="flex items-center gap-2">
                   <Badge
@@ -183,18 +183,18 @@ export const AiReportSynthesis = ({
                   >
                     {item.severity}
                   </Badge>
-                  <h4 className="font-sans text-xs font-bold text-slate-950">
+                  <h4 className="font-sans text-xs font-bold text-stone-950">
                     {item.title}
                   </h4>
                 </div>
-                <p className="mt-2 border-l border-slate-200 pl-2.5 text-xs leading-relaxed text-muted-foreground">
+                <p className="mt-2 border-l border-stone-200 pl-2.5 text-xs leading-relaxed text-muted-foreground">
                   {item.evidence}
                 </p>
-                <div className="mt-3 flex items-start gap-2 rounded-md border border-slate-200 bg-slate-50 p-2 text-xs">
-                  <span className="mt-0.5 shrink-0 text-[9px] font-bold uppercase text-slate-700">
+                <div className="mt-3 flex items-start gap-2 rounded-md border border-stone-200 bg-stone-50 p-2 text-xs">
+                  <span className="mt-0.5 shrink-0 text-[9px] font-bold uppercase text-stone-700">
                     Suggestion :
                   </span>
-                  <span className="font-normal leading-relaxed text-slate-700">
+                  <span className="font-normal leading-relaxed text-stone-700">
                     {item.recommendation}
                   </span>
                 </div>
@@ -203,22 +203,22 @@ export const AiReportSynthesis = ({
           </div>
 
           {/* Double column layout for limitations & extra tips */}
-          <div className="grid gap-4 border-t border-slate-200 pt-2.5 text-xs sm:grid-cols-2">
+          <div className="grid gap-4 border-t border-stone-200 pt-2.5 text-xs sm:grid-cols-2">
             <div className="space-y-1.5">
-              <h5 className="text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500">
+              <h5 className="text-[9px] font-bold uppercase tracking-[0.16em] text-stone-500">
                 Conseils d&apos;actions
               </h5>
-              <ul className="list-disc space-y-1 pl-4 text-[11px] leading-relaxed text-slate-700">
+              <ul className="list-disc space-y-1 pl-4 text-[11px] leading-relaxed text-stone-700">
                 {diagnosis.result.recommendations.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
             </div>
             <div className="space-y-1.5">
-              <h5 className="text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500">
+              <h5 className="text-[9px] font-bold uppercase tracking-[0.16em] text-stone-500">
                 Limites de l&apos;analyse
               </h5>
-              <ul className="list-disc space-y-1 pl-4 text-[11px] leading-relaxed text-slate-700">
+              <ul className="list-disc space-y-1 pl-4 text-[11px] leading-relaxed text-stone-700">
                 {diagnosis.result.limits.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
@@ -227,11 +227,11 @@ export const AiReportSynthesis = ({
           </div>
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center gap-2 rounded-md border border-dashed border-slate-300 bg-slate-50 py-8 text-center">
-          <div className="rounded-md border border-slate-200 bg-white p-2.5 text-slate-500">
+        <div className="flex flex-col items-center justify-center gap-2 rounded-md border border-dashed border-stone-300 bg-stone-50 py-8 text-center">
+          <div className="rounded-md border border-stone-200 bg-white p-2.5 text-stone-500">
             <Sparkles className="size-5" />
           </div>
-          <p className="text-xs font-bold text-slate-950">Aucune synthèse générée</p>
+          <p className="text-xs font-bold text-stone-950">Aucune synthèse générée</p>
           <p className="max-w-[28ch] text-[10px] leading-normal text-muted-foreground">
             Cliquez sur le bouton ci-dessous pour lancer l&apos;analyse assistée par IA.
           </p>
@@ -240,18 +240,18 @@ export const AiReportSynthesis = ({
 
       {/* Disclaimer on human validation */}
       {diagnosis?.result && (
-        <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-[10px] leading-relaxed text-muted-foreground">
-          <span className="font-semibold text-slate-700">Validation requise :</span> Les suggestions IA doivent être
+        <div className="rounded-md border border-stone-200 bg-stone-50 px-3 py-2.5 text-[10px] leading-relaxed text-muted-foreground">
+          <span className="font-semibold text-stone-700">Validation requise :</span> Les suggestions IA doivent être
           validées par un gestionnaire métier avant toute correction manuelle des anomalies.
         </div>
       )}
 
       {/* Collapse block for technical developer details */}
-      <div className="select-none border-t border-slate-200 pt-2.5">
+      <div className="select-none border-t border-stone-200 pt-2.5">
         <button
           type="button"
           onClick={() => setShowTechDetails(!showTechDetails)}
-          className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500 transition-colors hover:text-slate-950"
+          className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-[0.16em] text-stone-500 transition-colors hover:text-stone-950"
         >
           {showTechDetails ? (
             <>
@@ -265,39 +265,39 @@ export const AiReportSynthesis = ({
         </button>
 
         {showTechDetails && (
-          <div className="mt-3 grid grid-cols-2 gap-3 rounded-md border border-slate-200 bg-slate-50 p-3 animate-in fade-in duration-200 md:grid-cols-4">
+          <div className="mt-3 grid grid-cols-2 gap-3 rounded-md border border-stone-200 bg-stone-50 p-3 animate-in fade-in duration-200 md:grid-cols-4">
             <div className="space-y-0.5">
-              <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">
+              <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-stone-500">
                 Modèle
               </span>
-              <p className="truncate text-[10px] font-semibold text-slate-700" title={activeModel?.model_id}>
+              <p className="truncate text-[10px] font-semibold text-stone-700" title={activeModel?.model_id}>
                 {activeModel ? activeModel.label : 'Aucun'}
               </p>
             </div>
             <div className="space-y-0.5">
-              <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">
+              <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-stone-500">
                 Dernier coût
               </span>
-              <p className="font-mono text-[10px] font-semibold text-slate-700">
+              <p className="font-mono text-[10px] font-semibold text-stone-700">
                 {formatCost(diagnosis)}
               </p>
             </div>
             <div className="space-y-0.5">
-              <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">
+              <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-stone-500">
                 Quota global
               </span>
-              <p className="font-mono text-[10px] font-semibold text-slate-700">
+              <p className="font-mono text-[10px] font-semibold text-stone-700">
                 {quotaLabel}
               </p>
             </div>
             <div className="space-y-0.5">
-              <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">
+              <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-stone-500">
                 Cache / Latence
               </span>
-              <p className="flex items-center gap-1 font-mono text-[10px] font-semibold text-slate-700">
+              <p className="flex items-center gap-1 font-mono text-[10px] font-semibold text-stone-700">
                 {diagnosis ? (
                   <>
-                    <History className="size-3 text-slate-500" />
+                    <History className="size-3 text-stone-500" />
                     <span>{diagnosis.cache.hit ? 'Hit' : 'Miss'}</span>
                   </>
                 ) : (
@@ -310,7 +310,7 @@ export const AiReportSynthesis = ({
       </div>
 
       {/* Execution buttons & state */}
-      <div className="flex shrink-0 items-center justify-between border-t border-slate-200 pt-3">
+      <div className="flex shrink-0 items-center justify-between border-t border-stone-200 pt-3">
         <span className="font-mono text-[9px] text-muted-foreground">
           Snapshot : {report.generated_at ? new Date(report.generated_at).toLocaleString('fr-FR') : '-'}
         </span>

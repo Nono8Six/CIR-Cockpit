@@ -55,7 +55,7 @@ export const NativeSelect = ({
       <SelectTrigger
         id={id}
         density="dense"
-        className="w-full bg-background border-slate-200 text-xs shadow-sm hover:border-slate-300 transition-colors"
+        className="w-full bg-background border-stone-200 text-xs shadow-sm hover:border-stone-300 transition-colors"
       >
         <SelectValue />
       </SelectTrigger>
