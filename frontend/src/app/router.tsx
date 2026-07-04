@@ -58,6 +58,12 @@ export const suppliersRoute = createRoute({
   component: () => <Outlet />
 });
 
+export const discountsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'remises',
+  component: () => <Outlet />
+});
+
 export const clientsIndexRoute = createRoute({
   getParentRoute: () => clientsRoute,
   path: '/',
@@ -148,6 +154,18 @@ export const supplierRecordEditRoute = createRoute({
   }
 });
 
+export const pricingReferentialsRoute = createRoute({
+  getParentRoute: () => discountsRoute,
+  path: 'referentiels',
+  component: () => null
+});
+
+export const discountsIndexRoute = createRoute({
+  getParentRoute: () => discountsRoute,
+  path: '/',
+  component: () => <Navigate to="/remises/referentiels" replace />
+});
+
 const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'admin',
@@ -197,6 +215,10 @@ const routeTree = rootRoute.addChildren([
     supplierCreateRoute,
     supplierRecordEditRoute,
     supplierRecordRoute
+  ]),
+  discountsRoute.addChildren([
+    discountsIndexRoute,
+    pricingReferentialsRoute
   ]),
   adminRoute.addChildren([
     adminIndexRoute,

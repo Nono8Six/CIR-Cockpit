@@ -5,6 +5,7 @@ import UsersManager from './UsersManager';
 import AgenciesManager from './AgenciesManager';
 import AuditLogsPanel from './AuditLogsPanel';
 import ErrorJournalExport from './ErrorJournalExport';
+import AdminAiPanel from './admin-ai/AdminAiPanel';
 import { UserRole } from '@/types';
 
 interface AdminPanelProps {
@@ -90,6 +91,20 @@ const AdminPanel = ({ userRole }: AdminPanelProps) => {
             )}
           </TabsTrigger>
           <TabsTrigger
+            value="ai"
+            className="relative h-11 rounded-none border-b-2 border-transparent bg-transparent px-1 pb-3 pt-2 text-sm font-semibold text-muted-foreground transition-all duration-200 hover:text-foreground data-[state=active]:border-transparent data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none active:scale-[0.98]"
+            data-testid="admin-tab-ai"
+          >
+            <span>IA</span>
+            {activeTab === 'ai' && (
+              <motion.div
+                layoutId="admin-active-tab-line"
+                className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary"
+                transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+              />
+            )}
+          </TabsTrigger>
+          <TabsTrigger
             value="diagnostic"
             className="relative h-11 rounded-none border-b-2 border-transparent bg-transparent px-1 pb-3 pt-2 text-sm font-semibold text-muted-foreground transition-all duration-200 hover:text-foreground data-[state=active]:border-transparent data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none active:scale-[0.98]"
             data-testid="admin-tab-diagnostic"
@@ -112,6 +127,9 @@ const AdminPanel = ({ userRole }: AdminPanelProps) => {
         </TabsContent>
         <TabsContent value="audit" className="mt-4 min-h-0 flex-1 overflow-y-auto pr-1" data-testid="admin-tab-panel-audit">
           <AuditLogsPanel userRole={userRole} />
+        </TabsContent>
+        <TabsContent value="ai" className="mt-4 min-h-0 flex-1 overflow-y-auto pr-1" data-testid="admin-tab-panel-ai">
+          <AdminAiPanel />
         </TabsContent>
         <TabsContent value="diagnostic" className="mt-4 min-h-0 flex-1 overflow-y-auto pr-1" data-testid="admin-tab-panel-diagnostic">
           <ErrorJournalExport />

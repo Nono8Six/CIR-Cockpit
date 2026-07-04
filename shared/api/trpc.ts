@@ -75,20 +75,57 @@ import {
 import {
   pricingReferenceAnomaliesListInputSchema,
   pricingReferenceAnomaliesListResponseSchema,
+  pricingReferenceBatchCorrectionProposalsGetInputSchema,
+  pricingReferenceBatchCorrectionProposalsResponseSchema,
+  pricingReferenceClassificationListInputSchema,
   pricingReferenceClassificationListResponseSchema,
+  pricingReferenceCorrectionPlanGetInputSchema,
+  pricingReferenceCorrectionPlanResponseSchema,
+  pricingReferenceDiagnoseInputSchema,
+  pricingReferenceDiagnoseResponseSchema,
   pricingReferenceHealthGetInputSchema,
   pricingReferenceHealthGetResponseSchema,
   pricingReferenceImportAnalyzeInputSchema,
   pricingReferenceImportAnalyzeResponseSchema,
+  pricingReferenceImportConfirmMappingInputSchema,
+  pricingReferenceImportConfirmMappingResponseSchema,
   pricingReferenceImportGetInputSchema,
   pricingReferenceImportGetResponseSchema,
+  pricingReferenceImportAssistMappingInputSchema,
+  pricingReferenceImportAssistMappingResponseSchema,
+  pricingReferenceImportInspectInputSchema,
+  pricingReferenceImportInspectResponseSchema,
   pricingReferenceImportsListInputSchema,
   pricingReferenceImportsListResponseSchema,
   pricingReferenceImportsPrepareInputSchema,
   pricingReferenceImportsPrepareResponseSchema,
-  pricingReferenceRowsListInputSchema,
+  pricingReferenceSegmentsListInputSchema,
   pricingReferenceSegmentsListResponseSchema
 } from '../schemas/pricing/references.schema.ts';
+import {
+  aiPromptsListInputSchema,
+  aiPromptsListResponseSchema,
+  aiPromptsPublishInputSchema,
+  aiPromptsPublishResponseSchema,
+  aiPromptsRestoreInputSchema,
+  aiPromptsRestoreResponseSchema,
+  aiPromptsSaveDraftInputSchema,
+  aiPromptsSaveDraftResponseSchema,
+  aiSettingsGetInputSchema,
+  aiSettingsGetResponseSchema,
+  aiSettingsSaveModelInputSchema,
+  aiSettingsSaveModelResponseSchema,
+  aiSettingsSaveProviderInputSchema,
+  aiSettingsSaveProviderResponseSchema,
+  aiSettingsSaveQuotaInputSchema,
+  aiSettingsSaveQuotaResponseSchema,
+  aiSettingsTestProviderInputSchema,
+  aiSettingsTestProviderResponseSchema,
+  aiUsageListInputSchema,
+  aiUsageListResponseSchema,
+  aiUsageSummaryInputSchema,
+  aiUsageSummaryResponseSchema
+} from '../schemas/ai.schema.ts';
 
 const t = initTRPC.create();
 
@@ -180,6 +217,18 @@ const appRouterType = t.router({
           .input(pricingReferenceImportAnalyzeInputSchema)
           .output(pricingReferenceImportAnalyzeResponseSchema)
           .mutation(() => undefined as never),
+        inspect: t.procedure
+          .input(pricingReferenceImportInspectInputSchema)
+          .output(pricingReferenceImportInspectResponseSchema)
+          .mutation(() => undefined as never),
+        assistMapping: t.procedure
+          .input(pricingReferenceImportAssistMappingInputSchema)
+          .output(pricingReferenceImportAssistMappingResponseSchema)
+          .mutation(() => undefined as never),
+        confirmMapping: t.procedure
+          .input(pricingReferenceImportConfirmMappingInputSchema)
+          .output(pricingReferenceImportConfirmMappingResponseSchema)
+          .mutation(() => undefined as never),
         list: t.procedure
           .input(pricingReferenceImportsListInputSchema)
           .output(pricingReferenceImportsListResponseSchema)
@@ -197,13 +246,13 @@ const appRouterType = t.router({
       }),
       classification: t.router({
         list: t.procedure
-          .input(pricingReferenceRowsListInputSchema)
+          .input(pricingReferenceClassificationListInputSchema)
           .output(pricingReferenceClassificationListResponseSchema)
           .query(() => undefined as never)
       }),
       segments: t.router({
         list: t.procedure
-          .input(pricingReferenceRowsListInputSchema)
+          .input(pricingReferenceSegmentsListInputSchema)
           .output(pricingReferenceSegmentsListResponseSchema)
           .query(() => undefined as never)
       }),
@@ -211,8 +260,72 @@ const appRouterType = t.router({
         list: t.procedure
           .input(pricingReferenceAnomaliesListInputSchema)
           .output(pricingReferenceAnomaliesListResponseSchema)
+          .query(() => undefined as never),
+        correctionPlan: t.procedure
+          .input(pricingReferenceCorrectionPlanGetInputSchema)
+          .output(pricingReferenceCorrectionPlanResponseSchema)
+          .query(() => undefined as never),
+        batchProposals: t.procedure
+          .input(pricingReferenceBatchCorrectionProposalsGetInputSchema)
+          .output(pricingReferenceBatchCorrectionProposalsResponseSchema)
           .query(() => undefined as never)
-      })
+      }),
+      diagnose: t.procedure
+        .input(pricingReferenceDiagnoseInputSchema)
+        .output(pricingReferenceDiagnoseResponseSchema)
+        .mutation(() => undefined as never)
+    })
+  }),
+  ai: t.router({
+    settings: t.router({
+      get: t.procedure
+        .input(aiSettingsGetInputSchema)
+        .output(aiSettingsGetResponseSchema)
+        .query(() => undefined as never),
+      saveProvider: t.procedure
+        .input(aiSettingsSaveProviderInputSchema)
+        .output(aiSettingsSaveProviderResponseSchema)
+        .mutation(() => undefined as never),
+      saveModel: t.procedure
+        .input(aiSettingsSaveModelInputSchema)
+        .output(aiSettingsSaveModelResponseSchema)
+        .mutation(() => undefined as never),
+      saveQuota: t.procedure
+        .input(aiSettingsSaveQuotaInputSchema)
+        .output(aiSettingsSaveQuotaResponseSchema)
+        .mutation(() => undefined as never),
+      testProvider: t.procedure
+        .input(aiSettingsTestProviderInputSchema)
+        .output(aiSettingsTestProviderResponseSchema)
+        .mutation(() => undefined as never)
+    }),
+    prompts: t.router({
+      list: t.procedure
+        .input(aiPromptsListInputSchema)
+        .output(aiPromptsListResponseSchema)
+        .query(() => undefined as never),
+      saveDraft: t.procedure
+        .input(aiPromptsSaveDraftInputSchema)
+        .output(aiPromptsSaveDraftResponseSchema)
+        .mutation(() => undefined as never),
+      publish: t.procedure
+        .input(aiPromptsPublishInputSchema)
+        .output(aiPromptsPublishResponseSchema)
+        .mutation(() => undefined as never),
+      restore: t.procedure
+        .input(aiPromptsRestoreInputSchema)
+        .output(aiPromptsRestoreResponseSchema)
+        .mutation(() => undefined as never)
+    }),
+    usage: t.router({
+      summary: t.procedure
+        .input(aiUsageSummaryInputSchema)
+        .output(aiUsageSummaryResponseSchema)
+        .query(() => undefined as never),
+      list: t.procedure
+        .input(aiUsageListInputSchema)
+        .output(aiUsageListResponseSchema)
+        .query(() => undefined as never)
     })
   }),
   directory: t.router({

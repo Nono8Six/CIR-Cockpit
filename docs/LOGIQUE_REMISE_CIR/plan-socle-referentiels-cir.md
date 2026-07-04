@@ -146,14 +146,9 @@ Statuts d'un snapshot:
 | `actif` | snapshot actuellement utilise comme referentiel courant |
 | `archive` | ancien snapshot conserve en lecture |
 
-Statuts d'une anomalie:
-
-| Statut | Sens |
-| --- | --- |
-| `nouvelle` | anomalie detectee automatiquement |
-| `a_traiter` | revue humaine requise |
-| `ignoree` | anomalie acceptee avec justification tracee |
-| `resolue` | anomalie corrigee par nouvel import ou clarification source |
+Les anomalies n'ont pas de statut de traitement dans CIR Cockpit.
+Elles sont affichees comme erreurs detectees sur l'import; la correction se fait dans le fichier Excel source,
+puis via un nouvel import.
 
 ### Tranche 1 - Backend referentiels CIR
 
@@ -238,12 +233,52 @@ Resume:
 
 ### Tranche 3 - Interface referentiels
 
-- [ ] Creer l'ecran referentiels CIR.
-- [ ] Ajouter les onglets: Classification CIR, Segments fabricant, Liaisons, Imports, Anomalies, Historique.
-- [ ] Ajouter les tableaux performants avec recherche, filtres, tri et pagination.
-- [ ] Ajouter une vue detail pour chaque segment fabricant et sa liaison CIR.
-- [ ] Ajouter l'upload d'exports CIR avec suivi d'etat.
-- [ ] Ajouter les etats vides, chargement, erreur et succes.
+- [x] Creer l'ecran referentiels CIR.
+- [x] Ajouter les onglets: Classification CIR, Segments fabricant, Liaisons, Imports, Anomalies, Historique.
+- [x] Ajouter les tableaux performants avec recherche, filtres, tri et pagination.
+- [x] Ajouter une vue detail pour chaque segment fabricant et sa liaison CIR.
+- [x] Ajouter l'upload d'exports CIR avec suivi d'etat.
+- [x] Ajouter les etats vides, chargement, erreur et succes.
+
+### Tranche 3 realisee - 2026-06-22
+
+Resume:
+
+- Ecran `/remises/referentiels` ajoute dans le shell CIR Cockpit avec navigation laterale `Referentiels CIR` et raccourci `F5`.
+- Onglets Imports, Classification CIR, Segments fabricant, Liaisons, Anomalies et Historique ajoutes en lecture paginee.
+- Upload d'un ou deux exports CIR via selection fichier ou glisser-deposer, preparation Storage signee, televersement et analyse backend existante avec reutilisation du dernier referentiel disponible pour le fichier non fourni.
+- Tableaux avec recherche, filtres, tri serveur et pagination ajustable sans chargement massif.
+- Detail segment fabricant ajoute avec statut de liaison CIR et compteur de grilles achat.
+- Etats chargement, vide, succes et erreurs UI raccordes aux helpers applicatifs.
+- Hors scope conserve: aucune activation snapshot, aucun diff complet, aucune IA, aucun import tarif fabricant.
+
+### Tranche 3.1 - Assistant import et mapping de colonnes
+
+- [x] Ajouter un assistant d'import separe pour `Classification produit CIR` et `Segments et grilles fabricant`.
+- [x] Permettre l'import d'un seul referentiel a la fois, avec reutilisation du dernier referentiel disponible pour l'autre fichier lors de l'analyse.
+- [x] Ajouter l'etape obligatoire `Previsualiser -> Mapper les colonnes -> Confirmer -> Analyser`.
+- [x] Lire les onglets XLSX disponibles, afficher les colonnes detectees et un echantillon borne.
+- [x] Proposer un mapping deterministe par nom exact, normalisation, alias sauvegardes et similarite deterministe.
+- [x] Permettre le mapping manuel `champ canonique -> colonne source`.
+- [x] Sauvegarder un mapping confirme comme profil par defaut par type de fichier.
+- [x] Refuser l'analyse d'un fichier nouvellement importe tant que le mapping n'est pas confirme.
+- [x] Adapter le parser Excel pour consommer le mapping confirme sans exiger les noms exacts.
+- [x] Ajouter les contrats tRPC/Zod stricts `inspect` et `confirmMapping`.
+- [x] Ajouter la table `pricing_reference_column_mapping_profiles` et les colonnes de mapping sur `pricing_reference_import_files`.
+- [x] Ajouter une UI compacte avec zone glisser-deposer/selection, choix d'onglet, preview, rail sticky de mapping, et etats erreur/succes exploitables.
+
+### Tranche 3.1 realisee - 2026-06-27
+
+Resume:
+
+- Assistant Imports remplace le panneau unique par deux parcours explicites: `Classification produit CIR` et `Segments et grilles fabricant`.
+- Chaque parcours est autonome: un seul fichier peut etre importe, previsualise, mappe, confirme puis analyse.
+- Le backend ajoute `pricing.references.imports.inspect` et `pricing.references.imports.confirmMapping`; `imports.analyze` reste sur `{ import_id }` et exige un mapping confirme pour les fichiers courants.
+- Les mappings sont stockes sur les fichiers d'import et peuvent etre sauvegardes comme profils globaux par `file_kind`.
+- Detection automatique deterministe sans IA: nom exact, normalisation casse/accents/espaces, alias, similarite.
+- Parser XLSX adapte au mapping canonique, avec optimisation pour conserver l'analyse Edge sous limite de ressources.
+- Migration Supabase appliquee: profils de mapping, colonnes de mapping fichier, RLS lecture authentifiee/ecriture super admin.
+- Hors scope conserve: aucune activation snapshot, aucun diff complet, aucune IA, aucun import tarif fabricant, aucune application automatique de remise.
 
 ### Tranche 4 - Historique, diff et activation
 
@@ -829,8 +864,8 @@ Types de changement:
 - modifie
 - supprime
 - inchange
-- anomalie_nouvelle
-- anomalie_resolue
+- anomalie_apparue
+- anomalie_disparue
 
 ## 6. Etats et transitions
 
@@ -862,17 +897,11 @@ stateDiagram-v2
   pret_activation --> archive: decision de rejet ou remplacement
 ```
 
-### 6.3 Etats d'une anomalie
+### 6.3 Anomalies
 
-```mermaid
-stateDiagram-v2
-  [*] --> nouvelle
-  nouvelle --> a_traiter: revue requise
-  a_traiter --> resolue: correction importee ou source clarifiee
-  a_traiter --> ignoree: decision utilisateur tracee
-  ignoree --> a_traiter: reouverture
-  resolue --> [*]
-```
+Une anomalie n'a pas de cycle de traitement dans CIR Cockpit.
+Elle est detectee lors de l'analyse, affichee comme erreur exploitable, puis corrigee dans le fichier Excel source.
+La disparition d'une anomalie est constatee uniquement via un nouvel import.
 
 ### 6.4 Regles d'activation
 
@@ -890,7 +919,7 @@ Activation interdite si:
 - classification vide
 - doublon de cle CIR dans classification
 - fichier segment absent
-- erreur de parsing non resolue
+- erreur de parsing encore presente dans le dernier import
 - snapshot deja archive
 - import associe en echec
 
@@ -949,7 +978,7 @@ Contraintes attendues:
 - index compose `snapshot_id + marque + cat_fab`
 - index sur `segment`
 - index sur `idnumerique`
-- index sur `anomaly_status`
+- index sur `anomaly_severity`
 - index sur `anomaly_type`
 - index sur `created_at`
 
@@ -1365,8 +1394,8 @@ Types de diff:
 - segment modifie
 - liaison changee
 - grille achat modifiee
-- anomalie nouvelle
-- anomalie resolue
+- anomalie apparue
+- anomalie disparue
 
 UX:
 
@@ -1502,7 +1531,7 @@ Exemple logique:
   search: "SKF",
   filters: {
     marque: "SKF",
-    anomaly_status: "a_traiter"
+    severity: "haute"
   },
   sort: {
     field: "marque",
@@ -1738,10 +1767,10 @@ Questions fermees:
 
 | Question | Decision |
 | --- | --- |
-| Une anomalie peut-elle etre ignoree ? | Oui, uniquement avec justification humaine tracee; aucune correction directe de la source CIR. |
+| Comment corriger une anomalie ? | L'interface affiche les erreurs detectees; la correction ou l'acceptation metier se fait dans le fichier Excel source, puis par nouvel import. |
 | Un segment peut-il avoir seulement une mega-famille ? | Oui, la ligne est conservee avec anomalie `classification_partielle`; elle n'est pas fiable pour un matching tarifaire automatique. |
 | Plusieurs snapshots actifs sont-ils permis ? | Non, un seul snapshot actif pour le domaine referentiels CIR. |
-| Les anomalies bloquent-elles l'activation ? | Les anomalies bloquantes bloquent toujours; les anomalies hautes peuvent etre acceptees explicitement selon regle metier tracee. |
+| Les anomalies bloquent-elles l'activation ? | Les anomalies bloquantes bloquent toujours. Les autres anomalies restent visibles pour correction dans le fichier Excel source. |
 | Les imports referentiels sont-ils reserves a `super_admin` ? | Oui pour creation, analyse et activation. La lecture reste ouverte aux roles internes autorises selon permissions existantes. |
 | Faut-il conserver les fichiers sources dans Supabase Storage ? | Oui, dans un bucket prive, avec metadata DB, sans depasser le plan gratuit Supabase. |
 | Tranche 1 doit-elle parser les Excel ? | Oui, parser/analyser en read-only pour retrouver les compteurs des deux fichiers, sans activation. |

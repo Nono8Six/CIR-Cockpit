@@ -10,9 +10,13 @@ import {
   CLASSIFICATION_EXPECTED_COLUMNS,
   computeSha256,
   ensurePricingReferenceFileAccepted,
+  inspectPricingReferenceWorkbook,
   SEGMENTS_EXPECTED_COLUMNS
 } from './referenceExcelParser.ts';
-import { resolvePricingReferenceAnalysisStatus } from './referenceImports.ts';
+import {
+  assertPricingReferenceCurrentMappingsConfirmed,
+  resolvePricingReferenceAnalysisStatus
+} from './referenceImports.ts';
 
 type SheetJsTestModule = {
   utils: {
@@ -161,6 +165,101 @@ Deno.test('analyzePricingReferenceWorkbooks computes deterministic counters and 
     true
   );
   assertEquals(resolvePricingReferenceAnalysisStatus(result), 'analyse_erreur');
+});
+
+Deno.test('inspectPricingReferenceWorkbook detects exact canonical columns automatically', () => {
+  const classificationBytes = workbookBytes('Classification', [
+    [...CLASSIFICATION_EXPECTED_COLUMNS],
+    ['1', '2', '3', 'Mega', 'Fam', 'Sous-famille']
+  ]);
+
+  const inspection = inspectPricingReferenceWorkbook({
+    file_kind: 'classification',
+    original_filename: 'Classification.xlsx',
+    bytes: classificationBytes
+  });
+
+  assertEquals(inspection.mapping_status, 'auto');
+  assertEquals(inspection.candidates.every((candidate) => candidate.status === 'auto'), true);
+  assertEquals(inspection.proposed_mapping.MEGA, 'MEGA');
+  assertEquals(inspection.row_count, 1);
+});
+
+Deno.test('inspectPricingReferenceWorkbook reuses saved aliases when source columns changed', () => {
+  const classificationBytes = workbookBytes('Classification', [
+    ['MEGA', 'FAM', 'SFA', 'Libelle mega produit', 'Libelle famille produit', 'Libelle sous famille produit'],
+    ['1', '2', '3', 'Mega', 'Fam', 'Sous-famille']
+  ]);
+
+  const inspection = inspectPricingReferenceWorkbook(
+    {
+      file_kind: 'classification',
+      original_filename: 'Classification.xlsx',
+      bytes: classificationBytes
+    },
+    {
+      MEGA_LIB: ['Libelle mega produit'],
+      FAM_LIB: ['Libelle famille produit'],
+      SFA_LIB: ['Libelle sous famille produit']
+    }
+  );
+
+  assertEquals(inspection.mapping_status, 'auto');
+  assertEquals(inspection.candidates.find((candidate) => candidate.canonical_column === 'MEGA_LIB')?.status, 'alias');
+  assertEquals(inspection.proposed_mapping.FAM_LIB, 'LIBELLE FAMILLE PRODUIT');
+});
+
+Deno.test('analyzePricingReferenceWorkbooks accepts manual column mapping when classification headers changed', async () => {
+  const classificationBytes = workbookBytes('Classification', [
+    ['Mega code', 'Famille code', 'Sous famille code', 'Mega texte', 'Famille texte', 'Sous famille texte'],
+    ['1', '2', '3', 'Mega', 'Fam', 'Sous-famille']
+  ]);
+  const segmentsBytes = workbookBytes('SEG_GRI_HA', [
+    [...SEGMENTS_EXPECTED_COLUMNS],
+    segmentRow({ segment: 'S1', idnumerique: '100', marque: 'MARQUE1', catFab: 'CAT1', mega: '1', fam: '2', sfa: '3' })
+  ]);
+
+  const result = await analyzePricingReferenceWorkbooks(
+    {
+      file_kind: 'classification',
+      original_filename: 'Classification.xlsx',
+      bytes: classificationBytes,
+      sha256: await computeSha256(classificationBytes),
+      column_mapping: {
+        MEGA: 'MEGA CODE',
+        FAM: 'FAMILLE CODE',
+        SFA: 'SOUS FAMILLE CODE',
+        MEGA_LIB: 'MEGA TEXTE',
+        FAM_LIB: 'FAMILLE TEXTE',
+        SFA_LIB: 'SOUS FAMILLE TEXTE'
+      }
+    },
+    {
+      file_kind: 'segments_grids',
+      original_filename: 'SEG_GRI_HA.xlsx',
+      bytes: segmentsBytes,
+      sha256: await computeSha256(segmentsBytes)
+    }
+  );
+
+  assertEquals(result.classification_rows[0]?.cir_key, '1_2_3');
+  assertEquals(result.classification_rows[0]?.mega_lib, 'Mega');
+  assertEquals(result.health_report.files.classification.columns.missing, []);
+  assertEquals(resolvePricingReferenceAnalysisStatus(result), 'analyse_ok');
+});
+
+Deno.test('assertPricingReferenceCurrentMappingsConfirmed refuses newly uploaded files without confirmed mapping', () => {
+  const error = assertThrows(() => {
+    assertPricingReferenceCurrentMappingsConfirmed({
+      classification: {
+        original_filename: 'Classification.xlsx',
+        mapping_status: 'a_confirmer'
+      } as never
+    });
+  });
+
+  assertEquals(readErrorProperty(error, 'code'), 'PRICING_REFERENCE_MAPPING_REQUIRED');
+  assertEquals(readErrorProperty(error, 'status'), 400);
 });
 
 Deno.test('analyzePricingReferenceWorkbooks preserves raw values and normalizes controlled CIR fields', async () => {

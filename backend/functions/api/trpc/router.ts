@@ -73,20 +73,57 @@ import {
 import {
   pricingReferenceAnomaliesListInputSchema,
   pricingReferenceAnomaliesListResponseSchema,
+  pricingReferenceBatchCorrectionProposalsGetInputSchema,
+  pricingReferenceBatchCorrectionProposalsResponseSchema,
+  pricingReferenceClassificationListInputSchema,
   pricingReferenceClassificationListResponseSchema,
+  pricingReferenceCorrectionPlanGetInputSchema,
+  pricingReferenceCorrectionPlanResponseSchema,
+  pricingReferenceDiagnoseInputSchema,
+  pricingReferenceDiagnoseResponseSchema,
   pricingReferenceHealthGetInputSchema,
   pricingReferenceHealthGetResponseSchema,
   pricingReferenceImportAnalyzeInputSchema,
   pricingReferenceImportAnalyzeResponseSchema,
+  pricingReferenceImportConfirmMappingInputSchema,
+  pricingReferenceImportConfirmMappingResponseSchema,
   pricingReferenceImportGetInputSchema,
   pricingReferenceImportGetResponseSchema,
+  pricingReferenceImportAssistMappingInputSchema,
+  pricingReferenceImportAssistMappingResponseSchema,
+  pricingReferenceImportInspectInputSchema,
+  pricingReferenceImportInspectResponseSchema,
   pricingReferenceImportsListInputSchema,
   pricingReferenceImportsListResponseSchema,
   pricingReferenceImportsPrepareInputSchema,
   pricingReferenceImportsPrepareResponseSchema,
-  pricingReferenceRowsListInputSchema,
+  pricingReferenceSegmentsListInputSchema,
   pricingReferenceSegmentsListResponseSchema
 } from '../../../../shared/schemas/pricing/references.schema.ts';
+import {
+  aiPromptsListInputSchema,
+  aiPromptsListResponseSchema,
+  aiPromptsPublishInputSchema,
+  aiPromptsPublishResponseSchema,
+  aiPromptsRestoreInputSchema,
+  aiPromptsRestoreResponseSchema,
+  aiPromptsSaveDraftInputSchema,
+  aiPromptsSaveDraftResponseSchema,
+  aiSettingsGetInputSchema,
+  aiSettingsGetResponseSchema,
+  aiSettingsSaveModelInputSchema,
+  aiSettingsSaveModelResponseSchema,
+  aiSettingsSaveProviderInputSchema,
+  aiSettingsSaveProviderResponseSchema,
+  aiSettingsSaveQuotaInputSchema,
+  aiSettingsSaveQuotaResponseSchema,
+  aiSettingsTestProviderInputSchema,
+  aiSettingsTestProviderResponseSchema,
+  aiUsageListInputSchema,
+  aiUsageListResponseSchema,
+  aiUsageSummaryInputSchema,
+  aiUsageSummaryResponseSchema
+} from '../../../../shared/schemas/ai.schema.ts';
 import {
   adminAuditLogsInputSchema,
   adminUsersListInputSchema,
@@ -127,14 +164,33 @@ import {
 } from '../services/directory/core/directorySavedViews.ts';
 import {
   analyzePricingReferenceImport,
+  assistPricingReferenceImportMapping,
+  confirmPricingReferenceImportMapping,
+  getPricingReferenceBatchCorrectionProposals,
+  getPricingReferenceCorrectionPlan,
   getPricingReferenceHealth,
   getPricingReferenceImport,
+  inspectPricingReferenceImport,
   listPricingReferenceAnomalies,
   listPricingReferenceClassification,
   listPricingReferenceImports,
   listPricingReferenceSegments,
   preparePricingReferenceImport
 } from '../services/pricing/references/referenceImports.ts';
+import {
+  getAiSettings,
+  getAiUsageSummary,
+  listAiPrompts,
+  listAiUsageEvents,
+  publishAiPrompt,
+  restoreAiPrompt,
+  runPricingReferenceDiagnosis,
+  saveAiPromptDraft,
+  saveAiModel,
+  saveAiProvider,
+  saveAiQuota,
+  testAiProvider
+} from '../services/ai/aiGovernance.ts';
 import type { DbClient } from '../types.ts';
 import { httpError } from '../middleware/errorHandler.ts';
 import { authedProcedure, router, superAdminProcedure } from './procedures.ts';
@@ -248,6 +304,18 @@ export const appRouter = router({
           .input(pricingReferenceImportAnalyzeInputSchema)
           .output(pricingReferenceImportAnalyzeResponseSchema)
           .mutation(withSuperAdminHandler(analyzePricingReferenceImport)),
+        inspect: superAdminProcedure
+          .input(pricingReferenceImportInspectInputSchema)
+          .output(pricingReferenceImportInspectResponseSchema)
+          .mutation(withSuperAdminHandler(inspectPricingReferenceImport)),
+        assistMapping: superAdminProcedure
+          .input(pricingReferenceImportAssistMappingInputSchema)
+          .output(pricingReferenceImportAssistMappingResponseSchema)
+          .mutation(withSuperAdminHandler(assistPricingReferenceImportMapping)),
+        confirmMapping: superAdminProcedure
+          .input(pricingReferenceImportConfirmMappingInputSchema)
+          .output(pricingReferenceImportConfirmMappingResponseSchema)
+          .mutation(withSuperAdminHandler(confirmPricingReferenceImportMapping)),
         list: authedProcedure
           .input(pricingReferenceImportsListInputSchema)
           .output(pricingReferenceImportsListResponseSchema)
@@ -271,7 +339,7 @@ export const appRouter = router({
       }),
       classification: router({
         list: authedProcedure
-          .input(pricingReferenceRowsListInputSchema)
+          .input(pricingReferenceClassificationListInputSchema)
           .output(pricingReferenceClassificationListResponseSchema)
           .query(withAuthedHandler((db, authContext, requestId, input) =>
             listPricingReferenceClassification(db, authContext.userId, requestId, input)
@@ -279,7 +347,7 @@ export const appRouter = router({
       }),
       segments: router({
         list: authedProcedure
-          .input(pricingReferenceRowsListInputSchema)
+          .input(pricingReferenceSegmentsListInputSchema)
           .output(pricingReferenceSegmentsListResponseSchema)
           .query(withAuthedHandler((db, authContext, requestId, input) =>
             listPricingReferenceSegments(db, authContext.userId, requestId, input)
@@ -291,8 +359,76 @@ export const appRouter = router({
           .output(pricingReferenceAnomaliesListResponseSchema)
           .query(withAuthedHandler((db, authContext, requestId, input) =>
             listPricingReferenceAnomalies(db, authContext.userId, requestId, input)
+          )),
+        correctionPlan: authedProcedure
+          .input(pricingReferenceCorrectionPlanGetInputSchema)
+          .output(pricingReferenceCorrectionPlanResponseSchema)
+          .query(withAuthedHandler((db, authContext, requestId, input) =>
+            getPricingReferenceCorrectionPlan(db, authContext.userId, requestId, input)
+          )),
+        batchProposals: authedProcedure
+          .input(pricingReferenceBatchCorrectionProposalsGetInputSchema)
+          .output(pricingReferenceBatchCorrectionProposalsResponseSchema)
+          .query(withAuthedHandler((db, authContext, requestId, input) =>
+            getPricingReferenceBatchCorrectionProposals(db, authContext.userId, requestId, input)
           ))
-      })
+      }),
+      diagnose: authedProcedure
+        .input(pricingReferenceDiagnoseInputSchema)
+        .output(pricingReferenceDiagnoseResponseSchema)
+        .mutation(withAuthedHandler(runPricingReferenceDiagnosis))
+    })
+  }),
+  ai: router({
+    settings: router({
+      get: superAdminProcedure
+        .input(aiSettingsGetInputSchema)
+        .output(aiSettingsGetResponseSchema)
+        .query(withSuperAdminHandler(getAiSettings)),
+      saveProvider: superAdminProcedure
+        .input(aiSettingsSaveProviderInputSchema)
+        .output(aiSettingsSaveProviderResponseSchema)
+        .mutation(withSuperAdminHandler(saveAiProvider)),
+      saveModel: superAdminProcedure
+        .input(aiSettingsSaveModelInputSchema)
+        .output(aiSettingsSaveModelResponseSchema)
+        .mutation(withSuperAdminHandler(saveAiModel)),
+      saveQuota: superAdminProcedure
+        .input(aiSettingsSaveQuotaInputSchema)
+        .output(aiSettingsSaveQuotaResponseSchema)
+        .mutation(withSuperAdminHandler(saveAiQuota)),
+      testProvider: superAdminProcedure
+        .input(aiSettingsTestProviderInputSchema)
+        .output(aiSettingsTestProviderResponseSchema)
+        .mutation(withSuperAdminHandler(testAiProvider))
+    }),
+    prompts: router({
+      list: superAdminProcedure
+        .input(aiPromptsListInputSchema)
+        .output(aiPromptsListResponseSchema)
+        .query(withSuperAdminHandler(listAiPrompts)),
+      saveDraft: superAdminProcedure
+        .input(aiPromptsSaveDraftInputSchema)
+        .output(aiPromptsSaveDraftResponseSchema)
+        .mutation(withSuperAdminHandler(saveAiPromptDraft)),
+      publish: superAdminProcedure
+        .input(aiPromptsPublishInputSchema)
+        .output(aiPromptsPublishResponseSchema)
+        .mutation(withSuperAdminHandler(publishAiPrompt)),
+      restore: superAdminProcedure
+        .input(aiPromptsRestoreInputSchema)
+        .output(aiPromptsRestoreResponseSchema)
+        .mutation(withSuperAdminHandler(restoreAiPrompt))
+    }),
+    usage: router({
+      summary: superAdminProcedure
+        .input(aiUsageSummaryInputSchema)
+        .output(aiUsageSummaryResponseSchema)
+        .query(withSuperAdminHandler(getAiUsageSummary)),
+      list: superAdminProcedure
+        .input(aiUsageListInputSchema)
+        .output(aiUsageListResponseSchema)
+        .query(withSuperAdminHandler(listAiUsageEvents))
     })
   }),
   directory: router({

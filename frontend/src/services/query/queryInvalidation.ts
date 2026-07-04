@@ -22,6 +22,7 @@ import {
   entitySearchIndexRootKey,
   entityUnifiedSearchRootKey,
   interactionsKey,
+  pricingReferencesRootKey,
   prospectsKey,
   prospectsRootKey
 } from '@/services/query/queryKeys';
@@ -204,4 +205,10 @@ export const invalidateEntityContactMutationQueries = async (
     queryClient.invalidateQueries({ queryKey: entityUnifiedSearchRootKey() }),
     invalidateDirectoryQueries(queryClient)
   ]);
+};
+
+export const invalidatePricingReferenceQueries = async (
+  queryClient: QueryClient
+): Promise<void> => {
+  await queryClient.invalidateQueries({ queryKey: pricingReferencesRootKey() });
 };

@@ -7,6 +7,7 @@ export const APP_TAB_PATHS: Record<AppTab, string> = {
   settings: '/settings',
   clients: '/clients',
   suppliers: '/suppliers',
+  referentials: '/remises/referentiels',
   admin: '/admin'
 };
 
@@ -55,6 +56,9 @@ export const getTabFromPathname = (pathname: string): AppTab => {
   }
   if (normalizedPath === APP_TAB_PATHS.suppliers || normalizedPath.startsWith(`${APP_TAB_PATHS.suppliers}/`)) {
     return 'suppliers';
+  }
+  if (normalizedPath === '/remises' || normalizedPath === APP_TAB_PATHS.referentials || normalizedPath.startsWith(`${APP_TAB_PATHS.referentials}/`)) {
+    return 'referentials';
   }
   if (normalizedPath === APP_TAB_PATHS.admin || normalizedPath.startsWith(`${APP_TAB_PATHS.admin}/`)) {
     return 'admin';

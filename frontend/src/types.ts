@@ -10,7 +10,14 @@ export const Channel = {
 export type Channel = (typeof Channel)[keyof typeof Channel];
 
 export type StatusCategory = 'todo' | 'in_progress' | 'done';
-export type AppTab = 'cockpit' | 'dashboard' | 'settings' | 'clients' | 'suppliers' | 'admin';
+export type AppTab =
+  | 'cockpit'
+  | 'dashboard'
+  | 'settings'
+  | 'clients'
+  | 'suppliers'
+  | 'referentials'
+  | 'admin';
 
 export type AgencyStatus = {
   id?: string;

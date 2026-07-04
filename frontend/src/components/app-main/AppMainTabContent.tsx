@@ -8,10 +8,12 @@ import type { EntityContact } from '@/types';
 
 const loadCockpitForm = () => import('@/components/CockpitForm');
 const loadDashboard = () => import('@/components/Dashboard');
+const loadPricingReferencesPage = () => import('@/components/pricing-references/PricingReferencesPage');
 const loadSettings = () => import('@/components/Settings');
 
 const CockpitForm = lazy(loadCockpitForm);
 const Dashboard = lazy(loadDashboard);
+const PricingReferencesPage = lazy(loadPricingReferencesPage);
 const Settings = lazy(loadSettings);
 
 const ROUTE_LOADING_FALLBACK = (
@@ -51,7 +53,7 @@ type AppMainTabContentProps = {
   onOpenGlobalSearch: () => void;
 };
 
-const KEEP_ALIVE_TABS: AppTab[] = ['cockpit', 'dashboard', 'clients', 'suppliers', 'settings', 'admin'];
+const KEEP_ALIVE_TABS: AppTab[] = ['cockpit', 'dashboard', 'clients', 'suppliers', 'referentials', 'settings', 'admin'];
 
 const AppMainTabContent = (props: AppMainTabContentProps) => {
   const {
@@ -87,6 +89,7 @@ const AppMainTabContent = (props: AppMainTabContentProps) => {
     dashboard: activeTab === 'dashboard',
     clients: activeTab === 'clients',
     suppliers: activeTab === 'suppliers' && canAccessAdmin,
+    referentials: activeTab === 'referentials',
     settings: activeTab === 'settings' && canAccessSettings,
     admin: activeTab === 'admin' && canAccessAdmin
   });
@@ -177,6 +180,14 @@ const AppMainTabContent = (props: AppMainTabContentProps) => {
             {tab === 'suppliers' ? (
               <div className="min-h-0 flex-1">
                 {isActive ? <Outlet /> : null}
+              </div>
+            ) : null}
+
+            {tab === 'referentials' ? (
+              <div className="min-h-0 flex-1">
+                <Suspense fallback={ROUTE_LOADING_FALLBACK}>
+                  <PricingReferencesPage userRole={userRole} />
+                </Suspense>
               </div>
             ) : null}
 

@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { Building2, Factory, Gauge, PenLine, Settings, Shield } from 'lucide-react';
+import { BookOpenCheck, Building2, Factory, Gauge, PenLine, Settings, Shield } from 'lucide-react';
 
 import type { AgencyConfig } from '@/services/config';
 import type { AppTab, UserRole } from '@/types';
@@ -30,6 +30,7 @@ export const APP_TAB_SHORTCUTS: Record<AppTab, string> = {
   suppliers: 'F2',
   cockpit: 'F3',
   dashboard: 'F4',
+  referentials: 'F5',
   admin: 'F7',
   settings: 'F8'
 };
@@ -58,7 +59,7 @@ export const isSidebarToggleShortcut = (event: SidebarToggleShortcutEvent): bool
   return event.key.toLowerCase() === 'b' || event.code === 'Backslash';
 };
 
-export type AppShellSectionId = 'clients' | 'interactions' | 'admin';
+export type AppShellSectionId = 'clients' | 'interactions' | 'pricing' | 'admin';
 
 type AppShellNavItemBase = {
   sectionId: AppShellSectionId;
@@ -83,6 +84,7 @@ export type AppShellNavSection = {
 export const APP_SHELL_SECTION_LABELS: Record<AppShellSectionId, string> = {
   clients: 'Tiers',
   interactions: 'Interactions',
+  pricing: 'Remises',
   admin: 'Admin'
 };
 
@@ -139,6 +141,19 @@ export const buildShellNavigation = (
           icon: Gauge,
           shortcut: APP_TAB_SHORTCUTS.dashboard,
           metaLabel: formatPendingNavLabel(pendingCount)
+        }
+      ]
+    },
+    {
+      id: 'pricing',
+      title: 'Remises',
+      items: [
+        {
+          id: 'referentials',
+          sectionId: 'pricing',
+          label: 'Referentiels CIR',
+          icon: BookOpenCheck,
+          shortcut: APP_TAB_SHORTCUTS.referentials
         }
       ]
     }

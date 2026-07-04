@@ -44,6 +44,8 @@ describe('AppSidebar', () => {
     expect(dashboardLink).toHaveTextContent('Pilotage');
     expect(dashboardLink).toHaveTextContent('1');
     expect(dashboardLink).toHaveTextContent('F4');
+    expect(screen.getByTestId('app-shell-nav-referentials')).toHaveTextContent('Referentiels CIR');
+    expect(screen.getByTestId('app-shell-nav-referentials')).toHaveTextContent('F5');
 
     expect(screen.getByRole('button', { name: /réduire le menu/i })).toHaveAttribute(
       'aria-keyshortcuts',
@@ -71,6 +73,28 @@ describe('AppSidebar', () => {
     expect(screen.getByTestId('app-shell-nav-suppliers')).toHaveAttribute('aria-current', 'page');
     expect(screen.getByTestId('app-shell-nav-admin')).not.toHaveAttribute('aria-current');
   });
+
+  it('renders the pricing referentials entry as a first-class navigation item', () => {
+    render(
+      <AppSidebar
+        sections={buildShellNavigation(true, 1)}
+        activeTab="referentials"
+        activePath="/remises/referentiels"
+        collapsed={false}
+        onToggleCollapsed={vi.fn()}
+        mobileOpen={false}
+        onMobileOpenChange={vi.fn()}
+      />
+    );
+
+    expect(screen.getByTestId('app-shell-nav-referentials')).toHaveAttribute(
+      'href',
+      '/remises/referentiels'
+    );
+    expect(screen.getByTestId('app-shell-nav-referentials')).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByTestId('app-shell-nav-dashboard')).not.toHaveAttribute('aria-current');
+  });
+
 
   it('keeps collapsed navigation labels and tooltips descriptive', () => {
     render(

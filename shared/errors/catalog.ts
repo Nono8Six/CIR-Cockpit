@@ -107,6 +107,66 @@ export const ERROR_CATALOG: Record<string, ErrorCatalogEntry> = {
   AGENCY_UPDATE_FAILED: makeEntry('AGENCY_UPDATE_FAILED', 'Impossible de modifier l’agence.', 'db', 'error', 'retry', true),
   AGENCY_DELETE_FAILED: makeEntry('AGENCY_DELETE_FAILED', 'Impossible de supprimer l’agence.', 'db', 'error', 'retry', true),
   AGENCY_LOOKUP_FAILED: makeEntry('AGENCY_LOOKUP_FAILED', 'Impossible de charger l’agence.', 'db', 'error', 'retry', true),
+  AI_CONFIG_MISSING: makeEntry(
+    'AI_CONFIG_MISSING',
+    'Configuration IA manquante.',
+    'edge',
+    'warning',
+    'contact_support'
+  ),
+  AI_DIAGNOSTIC_ERROR: makeEntry(
+    'AI_DIAGNOSTIC_ERROR',
+    "L'analyse par l'IA a échoué. Veuillez vérifier les paramètres du modèle ou la clé API.",
+    'edge',
+    'error',
+    'retry',
+    true
+  ),
+  AI_PROVIDER_AUTH_FAILED: makeEntry(
+    'AI_PROVIDER_AUTH_FAILED',
+    'Authentification du fournisseur IA refusee.',
+    'edge',
+    'warning',
+    'retry'
+  ),
+  AI_PROVIDER_RATE_LIMITED: makeEntry(
+    'AI_PROVIDER_RATE_LIMITED',
+    'Quota fournisseur IA atteint. Reessayez plus tard.',
+    'edge',
+    'warning',
+    'retry',
+    true
+  ),
+  AI_PROVIDER_UNAVAILABLE: makeEntry(
+    'AI_PROVIDER_UNAVAILABLE',
+    'Fournisseur IA indisponible.',
+    'edge',
+    'error',
+    'retry',
+    true
+  ),
+  AI_QUOTA_EXCEEDED: makeEntry(
+    'AI_QUOTA_EXCEEDED',
+    'Quota IA interne atteint.',
+    'edge',
+    'warning',
+    'none'
+  ),
+  AI_RESPONSE_INVALID: makeEntry(
+    'AI_RESPONSE_INVALID',
+    'Reponse IA invalide.',
+    'edge',
+    'error',
+    'retry',
+    true
+  ),
+  AI_SECRET_NOT_CONFIGURED: makeEntry(
+    'AI_SECRET_NOT_CONFIGURED',
+    'Chiffrement des cles IA non configure.',
+    'edge',
+    'fatal',
+    'contact_support'
+  ),
   ENTITY_DETACH_FAILED: makeEntry('ENTITY_DETACH_FAILED', 'Impossible de détacher les entités.', 'db', 'error', 'retry', true),
   MEMBERSHIP_LOOKUP_FAILED: makeEntry(
     'MEMBERSHIP_LOOKUP_FAILED',
@@ -212,6 +272,13 @@ export const ERROR_CATALOG: Record<string, ErrorCatalogEntry> = {
     'warning',
     'retry'
   ),
+  PRICING_REFERENCE_IMPORT_FILE_NOT_FOUND: makeEntry(
+    'PRICING_REFERENCE_IMPORT_FILE_NOT_FOUND',
+    'Fichier d import referentiel introuvable.',
+    'db',
+    'warning',
+    'reload'
+  ),
   PRICING_REFERENCE_IMPORT_NOT_FOUND: makeEntry(
     'PRICING_REFERENCE_IMPORT_NOT_FOUND',
     'Import referentiel introuvable.',
@@ -226,6 +293,13 @@ export const ERROR_CATALOG: Record<string, ErrorCatalogEntry> = {
     'error',
     'retry'
   ),
+  PRICING_REFERENCE_IMPORT_SHEET_NOT_FOUND: makeEntry(
+    'PRICING_REFERENCE_IMPORT_SHEET_NOT_FOUND',
+    'Onglet Excel introuvable dans le fichier referentiel.',
+    'validation',
+    'warning',
+    'retry'
+  ),
   PRICING_REFERENCE_IMPORT_STORAGE_FAILED: makeEntry(
     'PRICING_REFERENCE_IMPORT_STORAGE_FAILED',
     'Impossible d acceder au fichier referentiel stocke.',
@@ -237,6 +311,20 @@ export const ERROR_CATALOG: Record<string, ErrorCatalogEntry> = {
   PRICING_REFERENCE_IMPORT_TOO_LARGE: makeEntry(
     'PRICING_REFERENCE_IMPORT_TOO_LARGE',
     'Le fichier referentiel depasse la limite de 50 MB.',
+    'validation',
+    'warning',
+    'retry'
+  ),
+  PRICING_REFERENCE_MAPPING_INVALID: makeEntry(
+    'PRICING_REFERENCE_MAPPING_INVALID',
+    'Mapping de colonnes referentiel invalide.',
+    'validation',
+    'warning',
+    'retry'
+  ),
+  PRICING_REFERENCE_MAPPING_REQUIRED: makeEntry(
+    'PRICING_REFERENCE_MAPPING_REQUIRED',
+    'Confirmez le mapping des colonnes avant analyse.',
     'validation',
     'warning',
     'retry'

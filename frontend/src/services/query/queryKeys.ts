@@ -1,4 +1,14 @@
 import type {
+  PricingReferenceAnomaliesListInput,
+  PricingReferenceCorrectionPlanGetInput,
+  PricingReferenceClassificationListInput,
+  PricingReferenceBatchCorrectionProposalsGetInput,
+  PricingReferenceImportGetInput,
+  PricingReferenceImportsListInput,
+  PricingReferenceSegmentsListInput,
+  PricingReferenceImportsPrepareInput
+} from '../../../../shared/schemas/pricing/references.schema';
+import type {
   DirectoryCitySuggestionsInput,
   DirectoryCompanyDetailsInput,
   DirectoryCompanySearchInput,
@@ -41,7 +51,9 @@ export const QUERY_ROOTS = {
   cockpitPhoneLookup: 'cockpit-phone-lookup',
   agencies: 'agencies',
   adminUsers: 'admin-users',
-  auditLogs: 'audit-logs'
+  auditLogs: 'audit-logs',
+  pricingReferences: 'pricing-references',
+  ai: 'ai'
 } as const;
 
 const archiveScope = (includeArchived: boolean): 'with-archived' | 'active' =>
@@ -200,4 +212,61 @@ export const auditLogsRootKey = () => [QUERY_ROOTS.auditLogs] as const;
 export const auditLogsKey = (filters: Record<string, string | null | undefined>) => [
   QUERY_ROOTS.auditLogs,
   filters
+] as const;
+
+export const pricingReferencesRootKey = () => [QUERY_ROOTS.pricingReferences] as const;
+export const pricingReferenceImportsKey = (input: PricingReferenceImportsListInput) => [
+  QUERY_ROOTS.pricingReferences,
+  'imports',
+  input
+] as const;
+export const pricingReferenceImportKey = (input: PricingReferenceImportGetInput) => [
+  QUERY_ROOTS.pricingReferences,
+  'import',
+  input
+] as const;
+export const pricingReferenceHealthKey = (input: { import_id?: string }) => [
+  QUERY_ROOTS.pricingReferences,
+  'health',
+  input
+] as const;
+export const pricingReferenceClassificationKey = (input: PricingReferenceClassificationListInput) => [
+  QUERY_ROOTS.pricingReferences,
+  'classification',
+  input
+] as const;
+export const pricingReferenceSegmentsKey = (input: PricingReferenceSegmentsListInput) => [
+  QUERY_ROOTS.pricingReferences,
+  'segments',
+  input
+] as const;
+export const pricingReferenceAnomaliesKey = (input: PricingReferenceAnomaliesListInput) => [
+  QUERY_ROOTS.pricingReferences,
+  'anomalies',
+  input
+] as const;
+export const pricingReferenceCorrectionPlanKey = (input: PricingReferenceCorrectionPlanGetInput) => [
+  QUERY_ROOTS.pricingReferences,
+  'correction-plan',
+  input
+] as const;
+export const pricingReferenceBatchCorrectionProposalsKey = (input: PricingReferenceBatchCorrectionProposalsGetInput) => [
+  QUERY_ROOTS.pricingReferences,
+  'batch-correction-proposals',
+  input
+] as const;
+export const pricingReferencePrepareKey = (input: PricingReferenceImportsPrepareInput) => [
+  QUERY_ROOTS.pricingReferences,
+  'prepare',
+  input
+] as const;
+
+export const aiSettingsKey = () => [QUERY_ROOTS.ai, 'settings'] as const;
+export const aiPromptsKey = (feature?: string) => [QUERY_ROOTS.ai, 'prompts', feature ?? 'all'] as const;
+export const aiUsageSummaryKey = (days: number) => [QUERY_ROOTS.ai, 'usage-summary', days] as const;
+export const aiUsageEventsKey = (page: number, pageSize: number) => [
+  QUERY_ROOTS.ai,
+  'usage-events',
+  page,
+  pageSize
 ] as const;

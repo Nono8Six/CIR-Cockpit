@@ -24,6 +24,12 @@ Guide operationnel pour les agents autonomes dans CIR Cockpit.
 - Erreurs: utiliser `createAppError()` / mappers / `reportError()` / `notifyError()`. Pas de `throw new Error()`, `console.error()` ou `toast.error()` directs hors exceptions existantes documentees.
 - Garder les imports via alias `@/*` cote frontend et eviter les imports circulaires.
 
+## Inspiration UI/UX
+
+- Pour toute demande de revue, refonte, polish, audit ou decision UI/UX/design, consulter les inspirations actuelles avant de proposer ou modifier l'interface: Ramp (`https://ramp.com/`), Stripe (`https://stripe.com/fr`), Attio (`https://attio.com/`) et Linear (`https://linear.app/`).
+- Utiliser ces sites comme references de direction visuelle, densite, hierarchie, micro-interactions, clarte SaaS et qualite de finition, sans copier leur contenu, leur marque, leurs assets proprietaires ou leurs textes.
+- Si l'acces reseau ou navigateur est indisponible, le signaler explicitement et s'appuyer seulement sur les principes deja connus.
+
 ## Skills obligatoires
 
 Invoquer le skill pertinent avant d'ecrire du code:

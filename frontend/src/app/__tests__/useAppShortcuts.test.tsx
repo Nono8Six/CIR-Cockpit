@@ -2,13 +2,12 @@ import { render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { useAppShortcuts } from '@/app/useAppShortcuts';
+import type { AppTab } from '@/types';
 
 type HarnessProps = {
   canAccessAdmin: boolean;
   canAccessSettings: boolean;
-  setActiveTab: (
-    tab: 'cockpit' | 'dashboard' | 'settings' | 'clients' | 'suppliers' | 'admin'
-  ) => void;
+  setActiveTab: (tab: AppTab) => void;
   setIsSearchOpen: (open: boolean) => void;
 };
 
@@ -39,6 +38,7 @@ describe('useAppShortcuts', () => {
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F2' }));
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F3' }));
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F4' }));
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F5' }));
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F7' }));
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F8' }));
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }));
@@ -48,6 +48,7 @@ describe('useAppShortcuts', () => {
     expect(setActiveTab).toHaveBeenCalledWith('suppliers');
     expect(setActiveTab).toHaveBeenCalledWith('cockpit');
     expect(setActiveTab).toHaveBeenCalledWith('dashboard');
+    expect(setActiveTab).toHaveBeenCalledWith('referentials');
     expect(setActiveTab).toHaveBeenCalledWith('admin');
     expect(setActiveTab).toHaveBeenCalledWith('settings');
     expect(setIsSearchOpen).toHaveBeenCalledWith(true);

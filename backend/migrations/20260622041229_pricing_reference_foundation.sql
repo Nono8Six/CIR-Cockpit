@@ -239,7 +239,6 @@ create table if not exists public.pricing_reference_anomalies (
   source_row_number integer check (source_row_number is null or source_row_number > 0),
   type text not null,
   severity text not null,
-  status text not null default 'nouvelle',
   object_type text,
   object_id text,
   columns text[] not null default '{}'::text[],
@@ -263,7 +262,6 @@ create table if not exists public.pricing_reference_anomalies (
     )
   ),
   constraint pricing_reference_anomalies_severity_check check (severity in ('bloquante', 'haute', 'moyenne', 'faible')),
-  constraint pricing_reference_anomalies_status_check check (status in ('nouvelle', 'a_traiter', 'ignoree', 'resolue')),
   constraint pricing_reference_anomalies_message_check check (message = btrim(message) and char_length(message) > 0)
 );
 
@@ -309,8 +307,8 @@ create index if not exists pricing_segment_grids_segment_idx
 create index if not exists pricing_segment_grids_supplier_idx
   on public.pricing_segment_purchase_grids (snapshot_id, num_four)
   where num_four is not null;
-create index if not exists pricing_reference_anomalies_import_status_idx
-  on public.pricing_reference_anomalies (import_id, status, severity);
+create index if not exists pricing_reference_anomalies_import_severity_idx
+  on public.pricing_reference_anomalies (import_id, severity);
 create index if not exists pricing_reference_anomalies_snapshot_type_idx
   on public.pricing_reference_anomalies (snapshot_id, type);
 create index if not exists pricing_reference_diffs_target_idx

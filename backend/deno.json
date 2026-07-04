@@ -9,6 +9,7 @@
     "@supabase/supabase-js": "npm:@supabase/supabase-js@2.95.3",
     "drizzle-orm": "npm:drizzle-orm@0.45.1",
     "drizzle-orm/": "npm:/drizzle-orm@0.45.1/",
+    "fflate": "npm:fflate@0.8.2",
     "postgres": "npm:postgres@3.4.8",
     "std/assert": "https://deno.land/std@0.224.0/assert/mod.ts",
     "xlsx": "npm:xlsx@0.18.5",

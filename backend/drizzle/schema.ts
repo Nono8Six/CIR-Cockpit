@@ -1,14 +1,17 @@
-import { boolean, integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { boolean, integer, jsonb, numeric, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 import type { Database } from '../../shared/supabase.types.ts';
 import type { DirectorySavedViewState } from '../../shared/schemas/system/directory.schema.ts';
 import type {
   PricingReferenceAnomalySeverity,
-  PricingReferenceAnomalyStatus,
   PricingReferenceAnomalyType,
+  PricingReferenceColumnAliases,
+  PricingReferenceColumnMapping,
   PricingReferenceFileKind,
-  PricingReferenceHealthReport
+  PricingReferenceHealthReport,
+  PricingReferenceImportMappingStatus
 } from '../../shared/schemas/pricing/references.schema.ts';
+import type { AiDiagnosisResult, AiProvider, AiPromptStatus, AiUsageStatus } from '../../shared/schemas/ai.schema.ts';
 
 type AccountType = Database['public']['Enums']['account_type'];
 type UserRole = Database['public']['Enums']['user_role'];
@@ -168,7 +171,25 @@ export const pricing_reference_import_files = pgTable('pricing_reference_import_
   sheet_name: text('sheet_name').$type<string | null>(),
   detected_columns: text('detected_columns').array().$type<string[]>().default([]).notNull(),
   row_count: integer('row_count').$type<number | null>(),
+  mapping_profile_id: uuid('mapping_profile_id').$type<string | null>(),
+  column_mapping: jsonb('column_mapping').$type<PricingReferenceColumnMapping>().default({}).notNull(),
+  mapping_status: text('mapping_status').$type<PricingReferenceImportMappingStatus>().default('non_configure').notNull(),
+  mapping_confirmed_by: uuid('mapping_confirmed_by').$type<string | null>(),
+  mapping_confirmed_at: timestamp('mapping_confirmed_at', timestamptz).$type<string | null>(),
   uploaded_by: uuid('uploaded_by').$type<string | null>(),
+  created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull(),
+  updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
+});
+
+export const pricing_reference_column_mapping_profiles = pgTable('pricing_reference_column_mapping_profiles', {
+  id: uuid('id').$type<string>().defaultRandom().primaryKey(),
+  file_kind: text('file_kind').$type<PricingReferenceFileKind>().notNull(),
+  name: text('name').$type<string>().default('Mapping referentiel CIR').notNull(),
+  column_mapping: jsonb('column_mapping').$type<PricingReferenceColumnMapping>().default({}).notNull(),
+  aliases: jsonb('aliases').$type<PricingReferenceColumnAliases>().default({}).notNull(),
+  is_default: boolean('is_default').$type<boolean>().default(false).notNull(),
+  created_by: uuid('created_by').$type<string | null>(),
+  updated_by: uuid('updated_by').$type<string | null>(),
   created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull(),
   updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
 });
@@ -274,7 +295,6 @@ export const pricing_reference_anomalies = pgTable('pricing_reference_anomalies'
   source_row_number: integer('source_row_number').$type<number | null>(),
   type: text('type').$type<PricingReferenceAnomalyType>().notNull(),
   severity: text('severity').$type<PricingReferenceAnomalySeverity>().notNull(),
-  status: text('status').$type<PricingReferenceAnomalyStatus>().default('nouvelle').notNull(),
   object_type: text('object_type').$type<string | null>(),
   object_id: text('object_id').$type<string | null>(),
   columns: text('columns').array().$type<string[]>().default([]).notNull(),
@@ -293,6 +313,132 @@ export const pricing_reference_diffs = pgTable('pricing_reference_diffs', {
   object_key: text('object_key').$type<string>().notNull(),
   severity: text('severity').$type<PricingReferenceAnomalySeverity>().notNull(),
   payload: jsonb('payload').$type<Record<string, unknown>>().default({}).notNull(),
+  created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull()
+});
+
+export const ai_provider_configs = pgTable('ai_provider_configs', {
+  id: uuid('id').$type<string>().defaultRandom().primaryKey(),
+  provider: text('provider').$type<AiProvider>().notNull(),
+  label: text('label').$type<string>().notNull(),
+  enabled: boolean('enabled').$type<boolean>().default(false).notNull(),
+  encrypted_api_key: text('encrypted_api_key').$type<string | null>(),
+  api_key_last4: text('api_key_last4').$type<string | null>(),
+  api_key_hash: text('api_key_hash').$type<string | null>(),
+  base_url: text('base_url').$type<string | null>(),
+  organization_id: text('organization_id').$type<string | null>(),
+  last_test_status: text('last_test_status').$type<'success' | 'failed' | null>(),
+  last_test_at: timestamp('last_test_at', timestamptz).$type<string | null>(),
+  last_error_code: text('last_error_code').$type<string | null>(),
+  last_error_message: text('last_error_message').$type<string | null>(),
+  created_by: uuid('created_by').$type<string | null>(),
+  updated_by: uuid('updated_by').$type<string | null>(),
+  created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull(),
+  updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
+});
+
+export const ai_model_configs = pgTable('ai_model_configs', {
+  id: uuid('id').$type<string>().defaultRandom().primaryKey(),
+  provider_config_id: uuid('provider_config_id').$type<string>().notNull(),
+  provider: text('provider').$type<AiProvider>().notNull(),
+  model_id: text('model_id').$type<string>().notNull(),
+  label: text('label').$type<string>().notNull(),
+  enabled: boolean('enabled').$type<boolean>().default(true).notNull(),
+  is_default: boolean('is_default').$type<boolean>().default(false).notNull(),
+  currency: text('currency').$type<string>().default('USD').notNull(),
+  input_price_per_million: numeric('input_price_per_million').$type<string | null>(),
+  output_price_per_million: numeric('output_price_per_million').$type<string | null>(),
+  cached_input_price_per_million: numeric('cached_input_price_per_million').$type<string | null>(),
+  reasoning_price_per_million: numeric('reasoning_price_per_million').$type<string | null>(),
+  price_effective_at: timestamp('price_effective_at', timestamptz).$type<string | null>(),
+  max_output_tokens: integer('max_output_tokens').$type<number>().default(2000).notNull(),
+  temperature: numeric('temperature').$type<string>().default('0.2').notNull(),
+  created_by: uuid('created_by').$type<string | null>(),
+  updated_by: uuid('updated_by').$type<string | null>(),
+  created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull(),
+  updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
+});
+
+export const ai_prompt_templates = pgTable('ai_prompt_templates', {
+  id: uuid('id').$type<string>().defaultRandom().primaryKey(),
+  feature: text('feature').$type<'pricing.references.diagnose' | 'pricing.references.diagnose.classification' | 'pricing.references.diagnose.segments'>().notNull(),
+  label: text('label').$type<string>().notNull(),
+  description: text('description').$type<string | null>(),
+  allowed_variables: text('allowed_variables').array().$type<string[]>().default([]).notNull(),
+  created_by: uuid('created_by').$type<string | null>(),
+  updated_by: uuid('updated_by').$type<string | null>(),
+  created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull(),
+  updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
+});
+
+export const ai_prompt_versions = pgTable('ai_prompt_versions', {
+  id: uuid('id').$type<string>().defaultRandom().primaryKey(),
+  template_id: uuid('template_id').$type<string>().notNull(),
+  version: integer('version').$type<number>().notNull(),
+  status: text('status').$type<AiPromptStatus>().default('draft').notNull(),
+  body: text('body').$type<string>().notNull(),
+  change_note: text('change_note').$type<string | null>(),
+  created_by: uuid('created_by').$type<string | null>(),
+  published_by: uuid('published_by').$type<string | null>(),
+  published_at: timestamp('published_at', timestamptz).$type<string | null>(),
+  created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull()
+});
+
+export const ai_quota_policies = pgTable('ai_quota_policies', {
+  id: uuid('id').$type<string>().defaultRandom().primaryKey(),
+  scope: text('scope').$type<'global' | 'agency' | 'user'>().notNull(),
+  agency_id: uuid('agency_id').$type<string | null>(),
+  user_id: uuid('user_id').$type<string | null>(),
+  feature: text('feature').$type<'pricing.references.diagnose' | 'pricing.references.diagnose.classification' | 'pricing.references.diagnose.segments' | null>(),
+  enabled: boolean('enabled').$type<boolean>().default(true).notNull(),
+  daily_call_limit: integer('daily_call_limit').$type<number | null>(),
+  monthly_call_limit: integer('monthly_call_limit').$type<number | null>(),
+  daily_token_limit: integer('daily_token_limit').$type<number | null>(),
+  monthly_token_limit: integer('monthly_token_limit').$type<number | null>(),
+  daily_cost_limit: numeric('daily_cost_limit').$type<string | null>(),
+  monthly_cost_limit: numeric('monthly_cost_limit').$type<string | null>(),
+  currency: text('currency').$type<string>().default('USD').notNull(),
+  created_by: uuid('created_by').$type<string | null>(),
+  updated_by: uuid('updated_by').$type<string | null>(),
+  created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull(),
+  updated_at: timestamp('updated_at', timestamptz).$type<string>().defaultNow().notNull()
+});
+
+export const ai_usage_events = pgTable('ai_usage_events', {
+  id: uuid('id').$type<string>().defaultRandom().primaryKey(),
+  request_id: text('request_id').$type<string>().notNull(),
+  feature: text('feature').$type<'pricing.references.diagnose' | 'pricing.references.diagnose.classification' | 'pricing.references.diagnose.segments'>().notNull(),
+  provider: text('provider').$type<AiProvider>().notNull(),
+  model_id: text('model_id').$type<string>().notNull(),
+  model_config_id: uuid('model_config_id').$type<string | null>(),
+  prompt_version_id: uuid('prompt_version_id').$type<string | null>(),
+  user_id: uuid('user_id').$type<string | null>(),
+  agency_id: uuid('agency_id').$type<string | null>(),
+  input_tokens: integer('input_tokens').$type<number>().default(0).notNull(),
+  output_tokens: integer('output_tokens').$type<number>().default(0).notNull(),
+  cached_input_tokens: integer('cached_input_tokens').$type<number>().default(0).notNull(),
+  reasoning_tokens: integer('reasoning_tokens').$type<number>().default(0).notNull(),
+  cost_amount: numeric('cost_amount').$type<string | null>(),
+  currency: text('currency').$type<string>().default('USD').notNull(),
+  cache_hit: boolean('cache_hit').$type<boolean>().default(false).notNull(),
+  status: text('status').$type<AiUsageStatus>().notNull(),
+  error_code: text('error_code').$type<string | null>(),
+  error_message: text('error_message').$type<string | null>(),
+  latency_ms: integer('latency_ms').$type<number | null>(),
+  metadata: jsonb('metadata').$type<Record<string, unknown>>().default({}).notNull(),
+  created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull()
+});
+
+export const ai_response_cache = pgTable('ai_response_cache', {
+  id: uuid('id').$type<string>().defaultRandom().primaryKey(),
+  feature: text('feature').$type<'pricing.references.diagnose' | 'pricing.references.diagnose.classification' | 'pricing.references.diagnose.segments'>().notNull(),
+  cache_key: text('cache_key').$type<string>().notNull(),
+  provider: text('provider').$type<AiProvider>().notNull(),
+  model_id: text('model_id').$type<string>().notNull(),
+  prompt_version_id: uuid('prompt_version_id').$type<string | null>(),
+  input_hash: text('input_hash').$type<string>().notNull(),
+  response: jsonb('response').$type<AiDiagnosisResult>().notNull(),
+  usage: jsonb('usage').$type<Record<string, unknown>>().default({}).notNull(),
+  expires_at: timestamp('expires_at', timestamptz).$type<string>().notNull(),
   created_at: timestamp('created_at', timestamptz).$type<string>().defaultNow().notNull()
 });
 
@@ -411,6 +557,7 @@ export const drizzleSchema = {
   reference_departments,
   pricing_reference_imports,
   pricing_reference_import_files,
+  pricing_reference_column_mapping_profiles,
   pricing_reference_snapshots,
   pricing_classification_cir,
   pricing_supplier_segments,
@@ -418,6 +565,13 @@ export const drizzleSchema = {
   pricing_segment_purchase_grids,
   pricing_reference_anomalies,
   pricing_reference_diffs,
+  ai_provider_configs,
+  ai_model_configs,
+  ai_prompt_templates,
+  ai_prompt_versions,
+  ai_quota_policies,
+  ai_usage_events,
+  ai_response_cache,
   entities,
   entity_contacts,
   interactions,

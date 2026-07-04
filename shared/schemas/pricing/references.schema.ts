@@ -1,15 +1,61 @@
 import { z } from 'zod/v4';
+import {
+  aiDiagnosisCacheSchema,
+  aiDiagnosisCostSchema,
+  aiDiagnosisResultSchema,
+  aiDiagnosisUsageSchema
+} from '../ai.schema.ts';
 
 export const PRICING_REFERENCE_STORAGE_BUCKET = 'pricing-reference-sources';
 export const PRICING_REFERENCE_MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
 export const PRICING_REFERENCE_XLSX_MIME =
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+export const PRICING_REFERENCE_CLASSIFICATION_COLUMNS = [
+  'MEGA',
+  'FAM',
+  'SFA',
+  'MEGA_LIB',
+  'FAM_LIB',
+  'SFA_LIB'
+] as const;
+export const PRICING_REFERENCE_SEGMENTS_GRIDS_COLUMNS = [
+  'SEGMENT',
+  'IDNUMERIQUE',
+  'MARQUE',
+  'CAT_FAB',
+  'CAT_FAB_L',
+  'STRATEGIQ',
+  'CODIF_FAIR',
+  'TARIF_FAB',
+  'NUM_FOUR',
+  'REMISE_HA',
+  'COL_HA',
+  'PRIORITE',
+  'TYPE_GRILL',
+  'DATE_DEBUT',
+  'DATE_FIN',
+  'BORNE_ACHA',
+  'COEF_RETRO',
+  'MEGA_FAMILLE',
+  'FAMILLE',
+  'SOUS_FAMILLE',
+  'MEGA_LIBELLE',
+  'FAMILLE_LIBELLE',
+  'SFAM_LIBELLE',
+  'COEF_HA',
+  'COEF_MAJVTE'
+] as const;
+export const PRICING_REFERENCE_CANONICAL_COLUMNS = [
+  ...PRICING_REFERENCE_CLASSIFICATION_COLUMNS,
+  ...PRICING_REFERENCE_SEGMENTS_GRIDS_COLUMNS
+] as const;
 
 const nonEmptyStringSchema = (message: string) => z.string().trim().min(1, { error: message });
 const uuidSchema = z.uuid({ error: 'Identifiant invalide.' });
 const nullableStringSchema = z.string().nullable();
 const optionalNullableStringSchema = z.string().trim().min(1, { error: 'Valeur invalide.' }).nullable().optional();
 const jsonValueSchema: z.ZodType<unknown> = z.unknown();
+const canonicalColumnSet = new Set<string>(PRICING_REFERENCE_CANONICAL_COLUMNS);
 
 export const pricingReferenceImportStatusSchema = z.enum([
   'brouillon',
@@ -29,8 +75,51 @@ export const pricingReferenceSnapshotStatusSchema = z.enum([
 ]);
 
 export const pricingReferenceFileKindSchema = z.enum(['classification', 'segments_grids']);
+export const pricingReferenceImportMappingStatusSchema = z.enum([
+  'non_configure',
+  'auto',
+  'a_confirmer',
+  'confirme',
+  'invalide'
+]);
+export const pricingReferenceColumnMappingCandidateStatusSchema = z.enum([
+  'auto',
+  'alias',
+  'a_confirmer',
+  'manuel',
+  'manquant'
+]);
 export const pricingReferenceAnomalySeveritySchema = z.enum(['bloquante', 'haute', 'moyenne', 'faible']);
-export const pricingReferenceAnomalyStatusSchema = z.enum(['nouvelle', 'a_traiter', 'ignoree', 'resolue']);
+export const pricingReferenceLinkStatusSchema = z.enum([
+  'complete_valid',
+  'missing',
+  'partial',
+  'unknown_key',
+  'ambiguous'
+]);
+export const pricingReferenceSortDirectionSchema = z.enum(['asc', 'desc']);
+export const pricingReferenceClassificationSortBySchema = z.enum([
+  'cir_key',
+  'mega',
+  'fam',
+  'sfa',
+  'source_row_number'
+]);
+export const pricingReferenceSegmentsSortBySchema = z.enum([
+  'marque',
+  'cat_fab',
+  'segment',
+  'idnumerique',
+  'link_status',
+  'purchase_grid_rows_count',
+  'source_row_number'
+]);
+export const pricingReferenceAnomaliesSortBySchema = z.enum([
+  'created_at',
+  'severity',
+  'type',
+  'source_row_number'
+]);
 export const pricingReferenceAnomalyTypeSchema = z.enum([
   'missing_column',
   'empty_file',
@@ -129,15 +218,89 @@ export const pricingReferencePrepareFileSchema = z.strictObject({
   content_type: z.string().trim().min(1).nullable().optional()
 });
 
+export const pricingReferencePrepareFilesSchema = z.strictObject({
+  classification: pricingReferencePrepareFileSchema.optional(),
+  segments_grids: pricingReferencePrepareFileSchema.optional()
+}).refine(
+  (files) => Boolean(files.classification || files.segments_grids),
+  { error: 'Au moins un fichier referentiel CIR est requis.' }
+);
+
 export const pricingReferenceImportsPrepareInputSchema = z.strictObject({
-  files: z.strictObject({
-    classification: pricingReferencePrepareFileSchema,
-    segments_grids: pricingReferencePrepareFileSchema
-  })
+  files: pricingReferencePrepareFilesSchema
 });
 
 export const pricingReferenceImportAnalyzeInputSchema = z.strictObject({
   import_id: uuidSchema
+});
+
+export const pricingReferenceColumnMappingSchema = z.record(
+  z.string().trim().min(1, { error: 'Champ canonique requis.' }),
+  nonEmptyStringSchema('Colonne source requise.')
+).superRefine((mapping, context) => {
+  Object.keys(mapping).forEach((key) => {
+    if (!canonicalColumnSet.has(key)) {
+      context.addIssue({
+        code: 'custom',
+        path: [key],
+        message: `Champ canonique inconnu: ${key}.`
+      });
+    }
+  });
+});
+
+export const pricingReferenceColumnAliasesSchema = z.record(
+  z.string().trim().min(1, { error: 'Champ canonique requis.' }),
+  z.array(nonEmptyStringSchema('Alias colonne requis.')).max(60)
+).superRefine((aliases, context) => {
+  Object.keys(aliases).forEach((key) => {
+    if (!canonicalColumnSet.has(key)) {
+      context.addIssue({
+        code: 'custom',
+        path: [key],
+        message: `Champ canonique inconnu: ${key}.`
+      });
+    }
+  });
+});
+
+export const pricingReferenceColumnMappingCandidateSchema = z.strictObject({
+  canonical_column: nonEmptyStringSchema('Champ canonique requis.'),
+  source_column: nullableStringSchema,
+  status: pricingReferenceColumnMappingCandidateStatusSchema,
+  confidence: z.number().min(0).max(1),
+  reason: nonEmptyStringSchema('Raison de mapping requise.')
+});
+
+export const pricingReferenceColumnMappingProfileSchema = z.strictObject({
+  id: uuidSchema,
+  file_kind: pricingReferenceFileKindSchema,
+  name: nonEmptyStringSchema('Nom du profil requis.'),
+  column_mapping: pricingReferenceColumnMappingSchema,
+  aliases: pricingReferenceColumnAliasesSchema,
+  is_default: z.boolean(),
+  created_by: nullableStringSchema,
+  updated_by: nullableStringSchema,
+  created_at: nonEmptyStringSchema('Date de creation requise.'),
+  updated_at: nonEmptyStringSchema('Date de mise a jour requise.')
+});
+
+export const pricingReferenceImportInspectInputSchema = z.strictObject({
+  import_id: uuidSchema,
+  file_id: uuidSchema,
+  file_kind: pricingReferenceFileKindSchema,
+  sheet_name: z.string().trim().min(1, { error: 'Nom onglet requis.' }).optional()
+});
+
+export const pricingReferenceImportAssistMappingInputSchema = pricingReferenceImportInspectInputSchema;
+
+export const pricingReferenceImportConfirmMappingInputSchema = z.strictObject({
+  import_id: uuidSchema,
+  file_id: uuidSchema,
+  file_kind: pricingReferenceFileKindSchema,
+  sheet_name: z.string().trim().min(1, { error: 'Nom onglet requis.' }),
+  column_mapping: pricingReferenceColumnMappingSchema,
+  save_as_default: z.boolean().default(false)
 });
 
 export const pricingReferenceHealthGetInputSchema = z.strictObject({
@@ -163,11 +326,38 @@ export const pricingReferenceRowsListInputSchema = pricingReferencePaginationSch
   search: z.string().trim().max(120).optional()
 });
 
+export const pricingReferenceClassificationListInputSchema = pricingReferenceRowsListInputSchema.extend({
+  filters: z.strictObject({
+    mega: z.string().trim().max(40).optional(),
+    fam: z.string().trim().max(40).optional()
+  }).optional(),
+  sort_by: pricingReferenceClassificationSortBySchema.default('mega'),
+  sort_direction: pricingReferenceSortDirectionSchema.default('asc')
+});
+
+export const pricingReferenceSegmentsListInputSchema = pricingReferenceRowsListInputSchema.extend({
+  filters: z.strictObject({
+    marque: z.string().trim().max(80).optional(),
+    cat_fab: z.string().trim().max(80).optional(),
+    link_status: pricingReferenceLinkStatusSchema.optional()
+  }).optional(),
+  sort_by: pricingReferenceSegmentsSortBySchema.default('marque'),
+  sort_direction: pricingReferenceSortDirectionSchema.default('asc')
+});
+
 export const pricingReferenceAnomaliesListInputSchema = pricingReferenceRowsListInputSchema.extend({
   severity: pricingReferenceAnomalySeveritySchema.optional(),
-  status: pricingReferenceAnomalyStatusSchema.optional(),
-  type: pricingReferenceAnomalyTypeSchema.optional()
+  type: pricingReferenceAnomalyTypeSchema.optional(),
+  sort_by: pricingReferenceAnomaliesSortBySchema.default('created_at'),
+  sort_direction: pricingReferenceSortDirectionSchema.default('desc')
 });
+
+export const pricingReferenceCorrectionPlanGetInputSchema = z.strictObject({
+  import_id: uuidSchema.optional(),
+  snapshot_id: uuidSchema.optional()
+});
+
+export const pricingReferenceBatchCorrectionProposalsGetInputSchema = pricingReferenceCorrectionPlanGetInputSchema;
 
 export const pricingReferencePreparedFileSchema = z.strictObject({
   id: uuidSchema,
@@ -212,6 +402,11 @@ export const pricingReferenceImportFileSchema = z.strictObject({
   sheet_name: nullableStringSchema,
   detected_columns: z.array(z.string()),
   row_count: z.number().int().nonnegative().nullable(),
+  mapping_profile_id: uuidSchema.nullable().optional(),
+  column_mapping: pricingReferenceColumnMappingSchema.optional(),
+  mapping_status: pricingReferenceImportMappingStatusSchema.optional(),
+  mapping_confirmed_by: uuidSchema.nullable().optional(),
+  mapping_confirmed_at: nullableStringSchema.optional(),
   created_at: nonEmptyStringSchema('Date de creation requise.')
 });
 
@@ -249,7 +444,7 @@ export const pricingReferenceSegmentRowSchema = z.strictObject({
   codif_fair: nullableStringSchema,
   tarif_fab: nullableStringSchema,
   cir_key: nullableStringSchema,
-  link_status: nullableStringSchema,
+  link_status: pricingReferenceLinkStatusSchema.nullable(),
   purchase_grid_rows_count: z.number().int().nonnegative()
 });
 
@@ -258,10 +453,13 @@ export const pricingReferenceAnomalyRowSchema = z.strictObject({
   import_id: uuidSchema,
   snapshot_id: uuidSchema.nullable(),
   source_file_id: uuidSchema.nullable(),
+  source_file: z.strictObject({
+    file_kind: pricingReferenceFileKindSchema,
+    original_filename: nonEmptyStringSchema('Nom de fichier requis.')
+  }).nullable().optional(),
   source_row_number: z.number().int().positive().nullable(),
   type: pricingReferenceAnomalyTypeSchema,
   severity: pricingReferenceAnomalySeveritySchema,
-  status: pricingReferenceAnomalyStatusSchema,
   object_type: optionalNullableStringSchema,
   object_id: optionalNullableStringSchema,
   columns: z.array(z.string()),
@@ -275,13 +473,18 @@ const apiSuccessSchema = z.strictObject({
   request_id: z.string().trim().min(1).optional()
 });
 
+export const pricingReferencePreparedFilesSchema = z.strictObject({
+  classification: pricingReferencePreparedFileSchema.optional(),
+  segments_grids: pricingReferencePreparedFileSchema.optional()
+}).refine(
+  (files) => Boolean(files.classification || files.segments_grids),
+  { error: 'Au moins un fichier prepare est requis.' }
+);
+
 export const pricingReferenceImportsPrepareResponseSchema = apiSuccessSchema.extend({
   import_id: uuidSchema,
   status: pricingReferenceImportStatusSchema,
-  files: z.strictObject({
-    classification: pricingReferencePreparedFileSchema,
-    segments_grids: pricingReferencePreparedFileSchema
-  })
+  files: pricingReferencePreparedFilesSchema
 });
 
 export const pricingReferenceImportAnalyzeResponseSchema = apiSuccessSchema.extend({
@@ -289,6 +492,32 @@ export const pricingReferenceImportAnalyzeResponseSchema = apiSuccessSchema.exte
   snapshot_id: uuidSchema,
   status: pricingReferenceImportStatusSchema,
   health_report: pricingReferenceHealthReportSchema
+});
+
+export const pricingReferenceImportInspectResponseSchema = apiSuccessSchema.extend({
+  import_id: uuidSchema,
+  file_id: uuidSchema,
+  file_kind: pricingReferenceFileKindSchema,
+  original_filename: nonEmptyStringSchema('Nom de fichier requis.'),
+  sheet_name: nonEmptyStringSchema('Nom onglet requis.'),
+  worksheets: z.array(nonEmptyStringSchema('Nom onglet requis.')).min(1),
+  expected_columns: z.array(nonEmptyStringSchema('Colonne attendue requise.')).min(1),
+  detected_columns: z.array(nonEmptyStringSchema('Colonne detectee requise.')),
+  row_count: z.number().int().nonnegative(),
+  sample_rows: z.array(z.record(z.string(), z.string())),
+  candidates: z.array(pricingReferenceColumnMappingCandidateSchema),
+  proposed_mapping: pricingReferenceColumnMappingSchema,
+  mapping_status: pricingReferenceImportMappingStatusSchema,
+  default_profile: pricingReferenceColumnMappingProfileSchema.nullable()
+});
+
+export const pricingReferenceImportConfirmMappingResponseSchema = apiSuccessSchema.extend({
+  import_id: uuidSchema,
+  file_id: uuidSchema,
+  file_kind: pricingReferenceFileKindSchema,
+  mapping_status: z.literal('confirme'),
+  column_mapping: pricingReferenceColumnMappingSchema,
+  saved_profile: pricingReferenceColumnMappingProfileSchema.nullable()
 });
 
 export const pricingReferenceImportsListResponseSchema = apiSuccessSchema.extend({
@@ -327,24 +556,155 @@ export const pricingReferenceAnomaliesListResponseSchema = apiSuccessSchema.exte
   total: z.number().int().nonnegative()
 });
 
+export const pricingReferenceCorrectionPlanGroupSchema = z.strictObject({
+  id: nonEmptyStringSchema('Identifiant groupe requis.'),
+  rank: z.number().int().positive(),
+  type: pricingReferenceAnomalyTypeSchema,
+  severity: pricingReferenceAnomalySeveritySchema,
+  marque: nullableStringSchema,
+  segment: nullableStringSchema,
+  category: nullableStringSchema,
+  columns: z.array(nonEmptyStringSchema('Colonne correction requise.')),
+  anomaly_count: z.number().int().nonnegative(),
+  impacted_rows: z.number().int().nonnegative(),
+  source_rows: z.array(z.number().int().positive()).max(20),
+  source_files: z.array(z.strictObject({
+    file_kind: pricingReferenceFileKindSchema,
+    original_filename: nonEmptyStringSchema('Nom fichier source requis.')
+  })),
+  message: nonEmptyStringSchema('Message correction requis.'),
+  evidence: z.array(nonEmptyStringSchema('Preuve correction requise.')).min(1),
+  excel_action: nonEmptyStringSchema('Action Excel requise.'),
+  can_suggest_values: z.boolean(),
+  value_suggestion_reason: nonEmptyStringSchema('Raison de proposition requise.')
+});
+
+export const pricingReferenceCorrectionPlanResponseSchema = apiSuccessSchema.extend({
+  import_id: uuidSchema.nullable(),
+  snapshot_id: uuidSchema.nullable(),
+  generated_at: nonEmptyStringSchema('Date generation requise.'),
+  totals: pricingReferenceAnomalySummarySchema,
+  groups: z.array(pricingReferenceCorrectionPlanGroupSchema),
+  deterministic_recommendations: z.array(nonEmptyStringSchema('Recommendation requise.')),
+  ai_policy: z.strictObject({
+    mode: z.literal('secondary_interpretation_only'),
+    can_modify_source: z.literal(false),
+    can_modify_database: z.literal(false),
+    can_invent_values: z.literal(false)
+  })
+});
+
+export const pricingReferenceImportAssistMappingResponseSchema = apiSuccessSchema.extend({
+  import_id: uuidSchema,
+  file_id: uuidSchema,
+  file_kind: pricingReferenceFileKindSchema,
+  sheet_name: nonEmptyStringSchema('Nom onglet requis.'),
+  mapping_status: pricingReferenceImportMappingStatusSchema,
+  ai_needed: z.boolean(),
+  human_validation_required: z.literal(true),
+  worksheet_score: z.number().min(0).max(1),
+  header_quality: z.number().min(0).max(1),
+  expected_columns: z.array(nonEmptyStringSchema('Colonne attendue requise.')).min(1),
+  detected_columns: z.array(nonEmptyStringSchema('Colonne detectee requise.')),
+  candidates: z.array(pricingReferenceColumnMappingCandidateSchema),
+  proposed_mapping: pricingReferenceColumnMappingSchema,
+  evidence: z.array(nonEmptyStringSchema('Preuve mapping requise.')).min(1),
+  ai_policy: z.strictObject({
+    trigger: z.enum(['not_needed', 'ambiguous_or_invalid_only']),
+    response_schema: z.literal('strict_mapping_candidate'),
+    can_confirm_mapping: z.literal(false)
+  })
+});
+
+export const pricingReferenceBatchCorrectionProposalSchema = z.strictObject({
+  id: nonEmptyStringSchema('Identifiant proposition requis.'),
+  group_id: nonEmptyStringSchema('Identifiant groupe requis.'),
+  label: nonEmptyStringSchema('Libelle proposition requis.'),
+  anomaly_count: z.number().int().nonnegative(),
+  columns: z.array(nonEmptyStringSchema('Colonne proposition requise.')),
+  source_rows: z.array(z.number().int().positive()).max(20),
+  manual_excel_action: nonEmptyStringSchema('Action Excel manuelle requise.'),
+  proposed_values: z.array(z.strictObject({
+    column: nonEmptyStringSchema('Colonne valeur requise.'),
+    value: nonEmptyStringSchema('Valeur proposee requise.'),
+    proof: nonEmptyStringSchema('Preuve valeur requise.'),
+    confidence: z.number().min(0).max(1)
+  })),
+  status: z.enum(['ready_with_deterministic_proof', 'proof_required']),
+  application_mode: z.literal('manual_excel_only')
+});
+
+export const pricingReferenceBatchCorrectionProposalsResponseSchema = apiSuccessSchema.extend({
+  import_id: uuidSchema.nullable(),
+  snapshot_id: uuidSchema.nullable(),
+  generated_at: nonEmptyStringSchema('Date generation requise.'),
+  proposals: z.array(pricingReferenceBatchCorrectionProposalSchema),
+  automatic_apply_available: z.literal(false)
+});
+
 export type PricingReferenceFileKind = z.infer<typeof pricingReferenceFileKindSchema>;
 export type PricingReferenceImportStatus = z.infer<typeof pricingReferenceImportStatusSchema>;
+export type PricingReferenceImportMappingStatus = z.infer<typeof pricingReferenceImportMappingStatusSchema>;
+export type PricingReferenceColumnMappingCandidateStatus = z.infer<typeof pricingReferenceColumnMappingCandidateStatusSchema>;
 export type PricingReferenceAnomalySeverity = z.infer<typeof pricingReferenceAnomalySeveritySchema>;
-export type PricingReferenceAnomalyStatus = z.infer<typeof pricingReferenceAnomalyStatusSchema>;
 export type PricingReferenceAnomalyType = z.infer<typeof pricingReferenceAnomalyTypeSchema>;
+export type PricingReferenceLinkStatus = z.infer<typeof pricingReferenceLinkStatusSchema>;
+export type PricingReferenceSortDirection = z.infer<typeof pricingReferenceSortDirectionSchema>;
+export type PricingReferenceClassificationSortBy = z.infer<typeof pricingReferenceClassificationSortBySchema>;
+export type PricingReferenceSegmentsSortBy = z.infer<typeof pricingReferenceSegmentsSortBySchema>;
+export type PricingReferenceAnomaliesSortBy = z.infer<typeof pricingReferenceAnomaliesSortBySchema>;
 export type PricingReferenceHealthReport = z.infer<typeof pricingReferenceHealthReportSchema>;
 export type PricingReferenceAnomalySample = z.infer<typeof pricingReferenceAnomalySampleSchema>;
 export type PricingReferenceImportsPrepareInput = z.infer<typeof pricingReferenceImportsPrepareInputSchema>;
 export type PricingReferenceImportAnalyzeInput = z.infer<typeof pricingReferenceImportAnalyzeInputSchema>;
+export type PricingReferenceImportInspectInput = z.infer<typeof pricingReferenceImportInspectInputSchema>;
+export type PricingReferenceImportAssistMappingInput = z.infer<typeof pricingReferenceImportAssistMappingInputSchema>;
+export type PricingReferenceImportConfirmMappingInput = z.infer<typeof pricingReferenceImportConfirmMappingInputSchema>;
+export type PricingReferenceCorrectionPlanGetInput = z.infer<typeof pricingReferenceCorrectionPlanGetInputSchema>;
+export type PricingReferenceBatchCorrectionProposalsGetInput = z.infer<typeof pricingReferenceBatchCorrectionProposalsGetInputSchema>;
 export type PricingReferenceImportsListInput = z.infer<typeof pricingReferenceImportsListInputSchema>;
 export type PricingReferenceImportGetInput = z.infer<typeof pricingReferenceImportGetInputSchema>;
 export type PricingReferenceRowsListInput = z.infer<typeof pricingReferenceRowsListInputSchema>;
+export type PricingReferenceClassificationListInput = z.infer<typeof pricingReferenceClassificationListInputSchema>;
+export type PricingReferenceSegmentsListInput = z.infer<typeof pricingReferenceSegmentsListInputSchema>;
 export type PricingReferenceAnomaliesListInput = z.infer<typeof pricingReferenceAnomaliesListInputSchema>;
+export type PricingReferencePreparedFile = z.infer<typeof pricingReferencePreparedFileSchema>;
 export type PricingReferenceImportsPrepareResponse = z.infer<typeof pricingReferenceImportsPrepareResponseSchema>;
 export type PricingReferenceImportAnalyzeResponse = z.infer<typeof pricingReferenceImportAnalyzeResponseSchema>;
+export type PricingReferenceImportInspectResponse = z.infer<typeof pricingReferenceImportInspectResponseSchema>;
+export type PricingReferenceImportConfirmMappingResponse = z.infer<typeof pricingReferenceImportConfirmMappingResponseSchema>;
 export type PricingReferenceImportsListResponse = z.infer<typeof pricingReferenceImportsListResponseSchema>;
 export type PricingReferenceImportGetResponse = z.infer<typeof pricingReferenceImportGetResponseSchema>;
 export type PricingReferenceHealthGetResponse = z.infer<typeof pricingReferenceHealthGetResponseSchema>;
 export type PricingReferenceClassificationListResponse = z.infer<typeof pricingReferenceClassificationListResponseSchema>;
 export type PricingReferenceSegmentsListResponse = z.infer<typeof pricingReferenceSegmentsListResponseSchema>;
 export type PricingReferenceAnomaliesListResponse = z.infer<typeof pricingReferenceAnomaliesListResponseSchema>;
+export type PricingReferenceCorrectionPlanGroup = z.infer<typeof pricingReferenceCorrectionPlanGroupSchema>;
+export type PricingReferenceCorrectionPlanResponse = z.infer<typeof pricingReferenceCorrectionPlanResponseSchema>;
+export type PricingReferenceImportAssistMappingResponse = z.infer<typeof pricingReferenceImportAssistMappingResponseSchema>;
+export type PricingReferenceBatchCorrectionProposal = z.infer<typeof pricingReferenceBatchCorrectionProposalSchema>;
+export type PricingReferenceBatchCorrectionProposalsResponse = z.infer<typeof pricingReferenceBatchCorrectionProposalsResponseSchema>;
+export type PricingReferenceColumnMapping = z.infer<typeof pricingReferenceColumnMappingSchema>;
+export type PricingReferenceColumnAliases = z.infer<typeof pricingReferenceColumnAliasesSchema>;
+export type PricingReferenceColumnMappingCandidate = z.infer<typeof pricingReferenceColumnMappingCandidateSchema>;
+export type PricingReferenceColumnMappingProfile = z.infer<typeof pricingReferenceColumnMappingProfileSchema>;
+
+export const pricingReferenceDiagnoseInputSchema = z.strictObject({
+  import_id: uuidSchema.optional(),
+  file_type: pricingReferenceFileKindSchema,
+  prompt_version_id: uuidSchema.optional(),
+  model_config_id: uuidSchema.optional()
+});
+
+export const pricingReferenceDiagnoseResponseSchema = z.strictObject({
+  ok: z.literal(true),
+  ai_available: z.boolean(),
+  result: aiDiagnosisResultSchema.nullable(),
+  usage: aiDiagnosisUsageSchema.nullable(),
+  cost: aiDiagnosisCostSchema.nullable(),
+  cache: aiDiagnosisCacheSchema,
+  fallback_reason: z.string().trim().min(1).nullable().optional()
+});
+
+export type PricingReferenceDiagnoseInput = z.infer<typeof pricingReferenceDiagnoseInputSchema>;
+export type PricingReferenceDiagnoseResponse = z.infer<typeof pricingReferenceDiagnoseResponseSchema>;

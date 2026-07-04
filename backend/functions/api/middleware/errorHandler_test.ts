@@ -101,6 +101,8 @@ Deno.test('OPTIONS request returns CORS headers for allowed origin', async () =>
 
     assertEquals(response.status, 200);
     assertEquals(response.headers.get('access-control-allow-origin'), 'https://app.cir.test');
+    assertEquals(response.headers.get('access-control-allow-methods')?.includes('GET'), true);
+    assertEquals(response.headers.get('access-control-allow-methods')?.includes('POST'), true);
     assertEquals(response.headers.get('x-content-type-options'), 'nosniff');
   } finally {
     if (previousOrigin === undefined) {

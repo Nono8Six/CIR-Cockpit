@@ -1,7 +1,7 @@
 import type { AppTab, StatusCategory, UserRole } from '@/types';
 import type { FilterPeriod } from '@/utils/date/getPresetDateRange';
 
-const APP_TABS: AppTab[] = ['cockpit', 'dashboard', 'settings', 'clients', 'suppliers', 'admin'];
+const APP_TABS: AppTab[] = ['cockpit', 'dashboard', 'settings', 'clients', 'suppliers', 'referentials', 'admin'];
 const USER_ROLES: UserRole[] = ['super_admin', 'agency_admin', 'tcs'];
 const FILTER_PERIODS: FilterPeriod[] = ['today', 'yesterday', 'last7', 'thisMonth', 'lastMonth', 'custom'];
 const STATUS_CATEGORIES: StatusCategory[] = ['todo', 'in_progress', 'done'];

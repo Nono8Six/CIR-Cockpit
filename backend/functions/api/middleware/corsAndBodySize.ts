@@ -5,7 +5,7 @@ import { httpError } from './errorHandler.ts';
 
 const BASE_CORS_HEADERS: Record<string, string> = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Expose-Headers': 'x-request-id'
 };
 
