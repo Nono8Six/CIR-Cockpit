@@ -8,9 +8,13 @@ import PricingReferencesPage from '@/components/pricing-references/PricingRefere
 import {
   analyzePricingReferenceImport,
   confirmPricingReferenceImportMapping,
+  exportPricingReferenceAnomalies,
+  getPricingReferenceAnomaliesSummary,
   listAllPricingReferenceClassification,
+  listPricingReferenceAnomalies,
   prepareUploadAndInspectPricingReferenceFile
 } from '@/services/pricingReferences';
+import { notifySuccess } from '@/services/errors/notifySuccess';
 
 const importId = '00000000-0000-4000-8000-000000000001';
 const snapshotId = '00000000-0000-4000-8000-000000000002';
@@ -253,19 +257,53 @@ vi.mock('@/services/pricingReferences', () => ({
     total: 1,
     truncated: false
   })),
-  getPricingReferenceAnomaliesSummary: vi.fn(async () => ({
+  getPricingReferenceAnomaliesSummary: vi.fn(async (input?: { severities?: string[] }) => (
+    input?.severities?.includes('bloquante')
+      ? {
+        ok: true,
+        total: 0,
+        groups_by_type: [],
+        facets: { severities: [], types: [], marques: [] }
+      }
+      : {
+        ok: true,
+        total: 2,
+        groups_by_type: [{
+          type: 'purchase_grid_missing',
+          label: 'Grille achat incomplète',
+          action_label: 'Compléter les champs de grille achat structurels dans le fichier source.',
+          count: 2,
+          max_severity: 'moyenne'
+        }],
+        facets: {
+          severities: [{
+            value: 'moyenne',
+            label: 'Moyenne',
+            count: 2,
+            max_severity: 'moyenne'
+          }],
+          types: [{
+            value: 'purchase_grid_missing',
+            label: 'Grille achat incomplète',
+            count: 2,
+            max_severity: 'moyenne'
+          }],
+          marques: [{
+            value: 'BOSCH',
+            label: 'BOSCH',
+            count: 2,
+            max_severity: 'moyenne'
+          }]
+        }
+      }
+  )),
+  exportPricingReferenceAnomalies: vi.fn(async () => ({
     ok: true,
-    total: 1,
-    marques: [{
-      marque: 'BOSCH',
-      max_severity: 'moyenne',
-      anomaly_count: 1,
-      types: [{
-        type: 'purchase_grid_missing',
-        max_severity: 'moyenne',
-        anomaly_count: 1
-      }]
-    }]
+    request_id: 'test-request',
+    download_url: 'https://example.test/export.xlsx',
+    expires_at: '2026-06-22T11:06:00.000Z',
+    filename: 'anomalies-referentiel-test.xlsx',
+    row_count: 1
   })),
   listPricingReferenceSegments: vi.fn(async () => ({
     ok: true,
@@ -318,77 +356,35 @@ vi.mock('@/services/pricingReferences', () => ({
         }
       },
       created_at: '2026-06-22T10:06:00.000Z'
+    }, {
+      id: '00000000-0000-4000-8000-000000000007',
+      import_id: importId,
+      snapshot_id: snapshotId,
+      source_file_id: fileId,
+      source_file: {
+        file_kind: 'segments_grids',
+        original_filename: 'segments.xlsx'
+      },
+      source_row_number: 12,
+      type: 'purchase_grid_missing',
+      severity: 'moyenne',
+      object_type: null,
+      object_id: null,
+      columns: ['BORNE_ACHA'],
+      message: 'Colonne borne achat vide pour la grille.',
+      details: {
+        raw_values: {
+          MARQUE: 'BOSCH',
+          CAT_FAB: 'CAT',
+          SEGMENT: '002',
+          IDNUMERIQUE: '57'
+        }
+      },
+      created_at: '2026-06-22T10:06:00.000Z'
     }],
     page: 1,
     page_size: 50,
-    total: 1
-  })),
-  getPricingReferenceCorrectionPlan: vi.fn(async () => ({
-    ok: true,
-    request_id: 'test-request',
-    import_id: importId,
-    snapshot_id: snapshotId,
-    generated_at: '2026-06-22T10:08:00.000Z',
-    totals: {
-      total: 1,
-      bloquante: 0,
-      haute: 0,
-      moyenne: 1,
-      faible: 0
-    },
-    groups: [{
-      id: 'grp-1',
-      rank: 1,
-      type: 'purchase_grid_missing',
-      severity: 'moyenne',
-      marque: 'BOSCH',
-      segment: '001',
-      category: 'CAT',
-      columns: ['NUM_FOUR'],
-      anomaly_count: 1,
-      impacted_rows: 1,
-      source_rows: [8],
-      source_files: [{
-        file_kind: 'segments_grids',
-        original_filename: 'segments.xlsx'
-      }],
-      message: 'Champ grille achat structurel manquant.',
-      evidence: ['1 anomalie(s) dans ce groupe.', 'Marque: BOSCH.', 'Lignes sources: 8.'],
-      excel_action: 'Completer dans Excel les champs de grille achat manquants: NUM_FOUR.',
-      can_suggest_values: false,
-      value_suggestion_reason: 'Aucune valeur proposee sans preuve deterministe majoritaire ou historique valide.'
-    }],
-    deterministic_recommendations: [
-      'Traiter les groupes les plus volumineux avant le reimport.',
-      'Commencer par le groupe #1: Champ grille achat structurel manquant.',
-      'Relancer un import controle apres correction du fichier Excel source.'
-    ],
-    ai_policy: {
-      mode: 'secondary_interpretation_only',
-      can_modify_source: false,
-      can_modify_database: false,
-      can_invent_values: false
-    }
-  })),
-  getPricingReferenceBatchCorrectionProposals: vi.fn(async () => ({
-    ok: true,
-    request_id: 'test-request',
-    import_id: importId,
-    snapshot_id: snapshotId,
-    generated_at: '2026-06-22T10:08:00.000Z',
-    proposals: [{
-      id: 'batch-grp-1',
-      group_id: 'grp-1',
-      label: 'BOSCH · Champ grille achat structurel manquant.',
-      anomaly_count: 1,
-      columns: ['NUM_FOUR'],
-      source_rows: [8],
-      manual_excel_action: 'Completer dans Excel les champs de grille achat manquants: NUM_FOUR.',
-      proposed_values: [],
-      status: 'proof_required',
-      application_mode: 'manual_excel_only'
-    }],
-    automatic_apply_available: false
+    total: 2
   })),
   prepareUploadAndInspectPricingReferenceFile: vi.fn(async (fileKind: 'classification' | 'segments_grids') => ({
     import_id: importId,
@@ -550,67 +546,156 @@ describe('PricingReferencesPage', () => {
     expect(await screen.findByText(/analyse ok/i)).toBeInTheDocument();
   });
 
-  it('renders factual anomaly diagnostics and opens anomaly details', async () => {
+  it('renders grouped anomaly triage with lazy rows and a navigable detail dialog', async () => {
     const user = userEvent.setup();
     renderWithQueryClient(<PricingReferencesPage userRole="agency_admin" />);
 
     await user.click(await screen.findByRole('tab', { name: /anomalies/i }));
     const anomalyPanel = await screen.findByRole('tabpanel', { name: /anomalies/i });
 
-    const correctionPlanButton = await within(anomalyPanel).findByRole('button', { name: /plan de correction/i });
-    expect(correctionPlanButton).toBeInTheDocument();
+    expect(within(anomalyPanel).queryByRole('button', { name: /plan de correction/i })).not.toBeInTheDocument();
     expect(within(anomalyPanel).queryByRole('button', { name: /synthèse ia/i })).not.toBeInTheDocument();
-    expect(within(anomalyPanel).queryByText('anomalies à corriger dans le fichier source')).not.toBeInTheDocument();
-    expect(within(anomalyPanel).queryByText('Bloquantes')).not.toBeInTheDocument();
-    expect(within(anomalyPanel).queryByText('Hautes')).not.toBeInTheDocument();
-    expect(within(anomalyPanel).queryByText('Moyennes')).not.toBeInTheDocument();
-    expect(within(anomalyPanel).queryByText('Faibles')).not.toBeInTheDocument();
+    expect(within(anomalyPanel).getByRole('button', { name: /exporter \(xlsx\)/i })).toBeEnabled();
 
-    await user.click(correctionPlanButton);
-    expect(await screen.findByRole('heading', { name: /plan de correction/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /interpréter avec ia/i })).toBeInTheDocument();
-    expect(screen.getByText(/regroupement deterministe/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/aucune valeur proposee sans preuve deterministe/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/intérêt du plan/i)).toBeInTheDocument();
-    expect(screen.getByText(/la page standard montre les anomalies ligne par ligne/i)).toBeInTheDocument();
-    expect(screen.getByText(/lot sélectionné/i)).toBeInTheDocument();
-    expect(screen.getByText(/où corriger/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/segments et grilles fabricant/i).length).toBeGreaterThan(0);
-    expect(screen.getByText('segments.xlsx')).toBeInTheDocument();
-    expect(screen.getAllByText(/lignes excel/i).length).toBeGreaterThan(0);
-    expect(screen.getByLabelText(/rechercher dans les groupes/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/filtrer par sévérité/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/trier les groupes/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/groupes par page/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /précédent/i })).toBeDisabled();
-    expect(screen.getByRole('button', { name: /suivant/i })).toBeDisabled();
-    await user.type(screen.getByLabelText(/rechercher dans les groupes/i), 'rexr');
-    expect(screen.getByText(/aucun groupe ne correspond aux filtres/i)).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /fermer/i }));
+    // Groups are visible without any click; the first group is open by default.
+    const groupHeader = await within(anomalyPanel).findByRole('button', { name: /grille achat incomplète/i });
+    expect(groupHeader).toHaveAttribute('aria-expanded', 'true');
+    const firstRow = await within(anomalyPanel).findByRole('button', { name: /ligne 8/i });
+    expect(listPricingReferenceAnomalies).toHaveBeenCalledWith(
+      expect.objectContaining({ types: ['purchase_grid_missing'] })
+    );
 
-    expect(screen.queryByText('Message détecté')).not.toBeInTheDocument();
+    await user.click(firstRow);
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText('Champ grille achat structurel manquant.')).toBeInTheDocument();
+    expect(within(dialog).getByText('Segments / grilles fabricant - segments.xlsx')).toBeInTheDocument();
+    expect(within(dialog).getByText(/valeurs excel brutes/i)).toBeInTheDocument();
+    expect(within(dialog).getByText(/compléter les champs de grille achat structurels/i)).toBeInTheDocument();
+    expect(within(dialog).getByText(/n° fournisseur/i)).toBeInTheDocument();
 
-    await user.type(screen.getByPlaceholderText('Filtrer marque...'), 'BOSCH');
-    await user.click(await within(anomalyPanel).findByRole('button', { name: /BOSCH/i }));
-    await user.type(screen.getByPlaceholderText('Filtrer type...'), 'grille');
-    await user.click(await within(anomalyPanel).findByRole('button', { name: /grille achat incomplète/i }));
-    await user.type(screen.getByPlaceholderText('Filtrer par ligne, msg...'), '8');
-    await user.click(await within(anomalyPanel).findByRole('button', { name: /ligne 8/i }));
+    // In-dialog navigation: j/k shortcuts, arrow keys and up/down buttons.
+    await user.keyboard('j');
+    expect(await within(dialog).findByText('Colonne borne achat vide pour la grille.')).toBeInTheDocument();
+    await user.keyboard('{ArrowUp}');
+    expect(await within(dialog).findByText('Champ grille achat structurel manquant.')).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: /anomalie suivante/i }));
+    expect(await within(dialog).findByText('Colonne borne achat vide pour la grille.')).toBeInTheDocument();
 
-    expect(await screen.findByText('Message détecté')).toBeInTheDocument();
-    expect(screen.getAllByText('Champ grille achat structurel manquant.').length).toBeGreaterThan(0);
-    expect(screen.getByText('Segments / grilles fabricant - segments.xlsx')).toBeInTheDocument();
-    expect(screen.getByText('Marque')).toBeInTheDocument();
-    expect(screen.getByText('Catégorie fabricant')).toBeInTheDocument();
-    expect(screen.getByText('ID numérique')).toBeInTheDocument();
-    expect(screen.getAllByText('BOSCH').length).toBeGreaterThan(0);
-    expect(screen.getByText(/correction dans le fichier excel source/i)).toBeInTheDocument();
-    expect(screen.getByText(/champs excel à compléter/i)).toBeInTheDocument();
-    expect(screen.getByText(/n° fournisseur/i)).toBeInTheDocument();
-    expect(screen.getByText(/compléter les champs de grille achat structurels/i)).toBeInTheDocument();
+    // Closing hands focus back to the row of the last viewed anomaly.
+    await user.click(within(dialog).getByRole('button', { name: /fermer le détail/i }));
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+    expect(within(anomalyPanel).getByRole('button', { name: /ligne 12/i })).toHaveFocus();
 
-    await user.click(screen.getByRole('button', { name: /fermer le détail de l'anomalie/i }));
-    expect(screen.queryByText('Message détecté')).not.toBeInTheDocument();
+    // The group collapses and hides its rows.
+    await user.click(groupHeader);
+    expect(groupHeader).toHaveAttribute('aria-expanded', 'false');
+    expect(within(anomalyPanel).queryByRole('button', { name: /ligne 8/i })).not.toBeInTheDocument();
+  });
+
+  it('combines facet filters and forwards them to the summary and list queries', async () => {
+    const user = userEvent.setup();
+    renderWithQueryClient(<PricingReferencesPage userRole="agency_admin" />);
+
+    await user.click(await screen.findByRole('tab', { name: /anomalies/i }));
+    const anomalyPanel = await screen.findByRole('tabpanel', { name: /anomalies/i });
+    await within(anomalyPanel).findByRole('button', { name: /ligne 8/i });
+
+    await user.click(within(anomalyPanel).getByRole('button', { name: 'Sévérité' }));
+    await user.click(await screen.findByRole('option', { name: /moyenne/i }));
+
+    await waitFor(() => {
+      expect(getPricingReferenceAnomaliesSummary).toHaveBeenCalledWith(
+        expect.objectContaining({ severities: ['moyenne'] })
+      );
+      expect(listPricingReferenceAnomalies).toHaveBeenCalledWith(
+        expect.objectContaining({ severities: ['moyenne'], types: ['purchase_grid_missing'] })
+      );
+    });
+
+    expect(
+      within(anomalyPanel).getByRole('button', { name: /réinitialiser le filtre sévérité/i })
+    ).toBeInTheDocument();
+  });
+
+  it('exports anomalies through the toolbar button with the signed download URL', async () => {
+    const anchorClick = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => {});
+    const user = userEvent.setup();
+    renderWithQueryClient(<PricingReferencesPage userRole="agency_admin" />);
+
+    await user.click(await screen.findByRole('tab', { name: /anomalies/i }));
+    const anomalyPanel = await screen.findByRole('tabpanel', { name: /anomalies/i });
+    await user.click(await within(anomalyPanel).findByRole('button', { name: /exporter \(xlsx\)/i }));
+
+    await waitFor(() => {
+      expect(exportPricingReferenceAnomalies).toHaveBeenCalledWith({});
+      expect(notifySuccess).toHaveBeenCalled();
+    });
+    expect(anchorClick).toHaveBeenCalled();
+    anchorClick.mockRestore();
+  });
+
+  it('preselects the blocking severity when navigating from the header status line', async () => {
+    const user = userEvent.setup();
+    renderWithQueryClient(<PricingReferencesPage userRole="agency_admin" />);
+
+    await user.click(await screen.findByRole('button', { name: /voir les anomalies bloquantes/i }));
+    const anomalyPanel = await screen.findByRole('tabpanel', { name: /anomalies/i });
+
+    await waitFor(() => {
+      expect(getPricingReferenceAnomaliesSummary).toHaveBeenCalledWith(
+        expect.objectContaining({ severities: ['bloquante'] })
+      );
+    });
+
+    // No anomaly matches the preset: distinct filtered empty state with a reset.
+    expect(
+      await within(anomalyPanel).findByText(/aucune anomalie ne correspond aux filtres/i)
+    ).toBeInTheDocument();
+    await user.click(within(anomalyPanel).getByRole('button', { name: /réinitialiser les filtres/i }));
+    expect(
+      await within(anomalyPanel).findByRole('button', { name: /grille achat incomplète/i })
+    ).toBeInTheDocument();
+  });
+
+  it('shows the healthy empty state when the referential has no anomalies', async () => {
+    vi.mocked(getPricingReferenceAnomaliesSummary).mockResolvedValueOnce({
+      ok: true,
+      total: 0,
+      groups_by_type: [],
+      facets: { severities: [], types: [], marques: [] }
+    });
+
+    renderWithQueryClient(
+      <PricingReferencesPage userRole="agency_admin" routeTab="anomalies" onRouteTabChange={vi.fn()} />
+    );
+
+    expect(await screen.findByText('Aucune anomalie détectée')).toBeInTheDocument();
+    expect(screen.queryByText(/aucune anomalie ne correspond aux filtres/i)).not.toBeInTheDocument();
+  });
+
+  it('opens the segment detail dialog from a segment row instead of an inline panel', async () => {
+    const user = userEvent.setup();
+    renderWithQueryClient(<PricingReferencesPage userRole="agency_admin" />);
+
+    const segmentRow = await screen.findByRole('row', { name: /voir le détail du segment/i });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+    await user.click(segmentRow);
+
+    const detailDialog = await screen.findByRole('dialog');
+    expect(within(detailDialog).getByText(/BOSCH · CAT/)).toBeInTheDocument();
+    expect(within(detailDialog).getByText('BOSCH|CAT|001|42')).toBeInTheDocument();
+    expect(within(detailDialog).getByText('Statut liaison')).toBeInTheDocument();
+    expect(within(detailDialog).getByText('Lignes grille achat')).toBeInTheDocument();
+
+    await user.click(within(detailDialog).getByRole('button', { name: /fermer/i }));
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
   });
 
   it('warns when the classification drilldown is capped by the backend contract', async () => {
@@ -637,8 +722,9 @@ describe('PricingReferencesPage', () => {
       <PricingReferencesPage userRole="agency_admin" routeTab="classification" onRouteTabChange={vi.fn()} />
     );
 
-    expect(await screen.findByText(/vue hiérarchique limitée/i)).toBeInTheDocument();
-    expect(screen.getByText(/5.?001/)).toBeInTheDocument();
+    const truncationStatus = await screen.findByRole('status');
+    expect(truncationStatus).toHaveTextContent(/vue hiérarchique limitée/i);
+    expect(truncationStatus).toHaveTextContent(/5.?001/);
   });
 
   it('allows importing only the classification XLSX with mapping confirmation', async () => {

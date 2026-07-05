@@ -25,16 +25,16 @@ export const SortButton = ({
     type="button"
     variant="ghost"
     size="dataRow"
-    className="w-full justify-start px-1.5 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+    className="w-full justify-start gap-1 px-0 text-[11px] font-medium normal-case text-stone-500 hover:bg-transparent hover:text-stone-800"
     aria-label={`Trier par ${label}`}
     onClick={onClick}
   >
     <span className="truncate">{label}</span>
     {active && direction === 'asc' ? (
-      <ArrowUp className="ml-auto size-3.5" aria-hidden="true" />
+      <ArrowUp className="size-3" aria-hidden="true" />
     ) : null}
     {active && direction === 'desc' ? (
-      <ArrowDown className="ml-auto size-3.5" aria-hidden="true" />
+      <ArrowDown className="size-3" aria-hidden="true" />
     ) : null}
   </Button>
 );

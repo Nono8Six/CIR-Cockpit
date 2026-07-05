@@ -19,6 +19,7 @@ export interface DataColumn<TRow> {
 interface ReferenceTableProps<TRow> {
   rows: TRow[];
   columns: Array<DataColumn<TRow>>;
+  rowKey: (row: TRow) => string;
   isLoading: boolean;
   isFetching: boolean;
   page: number;
@@ -27,6 +28,7 @@ interface ReferenceTableProps<TRow> {
   sortBy: string;
   sortDirection: PricingReferenceSortDirection;
   emptyLabel: string;
+  toolbar?: ReactNode;
   onSort: (sortBy: string) => void;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
@@ -35,12 +37,13 @@ interface ReferenceTableProps<TRow> {
 }
 
 /**
- * Premium Reference Table component.
- * Optimized for Cockpit visual density with sticky headers, custom scrollable areas, and refined typography.
+ * Single-surface reference table: optional toolbar, column headers, rows and
+ * pagination live inside one bordered container separated by hairlines.
  */
 export const ReferenceTable = <TRow,>({
   rows,
   columns,
+  rowKey,
   isLoading,
   isFetching,
   page,
@@ -49,24 +52,27 @@ export const ReferenceTable = <TRow,>({
   sortBy,
   sortDirection,
   emptyLabel,
+  toolbar,
   onSort,
   onPageChange,
   onPageSizeChange,
   onRowClick,
   rowActionLabel
 }: ReferenceTableProps<TRow>) => (
-  <div className={cn('flex min-h-0 flex-1 flex-col overflow-hidden', APP_SHELL_CLASSES.pagePanel)}>
+  <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-stone-200/60 bg-white">
+    {toolbar ? (
+      <div className="flex min-h-11 shrink-0 flex-wrap items-center gap-2 border-b border-stone-200/60 px-4 py-1.5">
+        {toolbar}
+      </div>
+    ) : null}
     <div className="min-h-0 flex-1 overflow-auto">
       <Table scrollArea={false} className="min-w-[860px] border-collapse">
-        <TableHeader className="sticky top-0 z-10 border-b border-border bg-muted/35 backdrop-blur-sm">
+        <TableHeader className="sticky top-0 z-10 bg-white">
           <TableRow className="hover:bg-transparent">
             {columns.map((column) => (
               <TableHead
                 key={column.id}
-                className={cn(
-                  'border-b border-border bg-muted/35',
-                  column.className
-                )}
+                className="h-9 border-b border-stone-200/60 bg-white px-2 font-medium normal-case text-stone-500 first:pl-4 last:pr-4"
               >
                 {column.sortBy ? (
                   <SortButton
@@ -76,7 +82,7 @@ export const ReferenceTable = <TRow,>({
                     onClick={() => onSort(column.sortBy ?? column.id)}
                   />
                 ) : (
-                  <span className="block px-1.5 text-[11px] font-semibold text-muted-foreground">
+                  <span className="block text-[11px] font-medium text-stone-500">
                     {column.label}
                   </span>
                 )}
@@ -84,12 +90,12 @@ export const ReferenceTable = <TRow,>({
             ))}
           </TableRow>
         </TableHeader>
-        <TableBody className="divide-y divide-border/55">
+        <TableBody className="divide-y divide-stone-100">
           {isLoading ? (
             Array.from({ length: Math.min(pageSize, 12) }).map((_, index) => (
               <TableRow key={`skeleton-${index}`} className="animate-pulse">
                 {columns.map((column, columnIndex) => (
-                  <TableCell key={`${column.id}-${index}`} className="px-2 py-2">
+                  <TableCell key={`${column.id}-${index}`} className="h-9 px-2 py-2 first:pl-4 last:pr-4">
                     <div
                       className={cn(
                         'h-3.5 rounded bg-muted/65',
@@ -115,9 +121,9 @@ export const ReferenceTable = <TRow,>({
               </TableCell>
             </TableRow>
           ) : (
-            rows.map((row, index) => (
+            rows.map((row) => (
               <TableRow
-                key={index}
+                key={rowKey(row)}
                 tabIndex={onRowClick ? 0 : undefined}
                 aria-label={onRowClick ? rowActionLabel : undefined}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
@@ -132,7 +138,7 @@ export const ReferenceTable = <TRow,>({
                     : undefined
                 }
                 className={cn(
-                  'border-border/55 transition-colors hover:bg-muted/35',
+                  'border-stone-100 transition-colors hover:bg-stone-50',
                   onRowClick
                     && APP_SHELL_CLASSES.dataRowInteractive,
                   isFetching && 'opacity-70'
@@ -142,7 +148,7 @@ export const ReferenceTable = <TRow,>({
                   <TableCell
                     key={column.id}
                     className={cn(
-                      'px-2 py-1.5 text-[12.5px] font-medium text-foreground',
+                      'h-9 px-2 py-2 text-[12.5px] text-foreground first:pl-4 last:pr-4',
                       column.className
                     )}
                   >

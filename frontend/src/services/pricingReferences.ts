@@ -2,12 +2,11 @@ import {
   PRICING_REFERENCE_MAX_FILE_SIZE_BYTES,
   PRICING_REFERENCE_STORAGE_BUCKET,
   PRICING_REFERENCE_XLSX_MIME,
+  pricingReferenceAnomaliesExportResponseSchema,
   pricingReferenceAnomaliesListResponseSchema,
   pricingReferenceAnomaliesSummaryResponseSchema,
-  pricingReferenceBatchCorrectionProposalsResponseSchema,
   pricingReferenceClassificationListAllResponseSchema,
   pricingReferenceClassificationListResponseSchema,
-  pricingReferenceCorrectionPlanResponseSchema,
   pricingReferenceDiagnoseResponseSchema,
   pricingReferenceHealthGetResponseSchema,
   pricingReferenceImportAnalyzeResponseSchema,
@@ -21,16 +20,14 @@ import {
   pricingReferenceSegmentsListResponseSchema,
   type PricingReferenceAnomaliesListInput,
   type PricingReferenceAnomaliesListResponse,
+  type PricingReferenceAnomaliesExportInput,
+  type PricingReferenceAnomaliesExportResponse,
   type PricingReferenceAnomaliesSummaryGetInput,
   type PricingReferenceAnomaliesSummaryResponse,
-  type PricingReferenceBatchCorrectionProposalsGetInput,
-  type PricingReferenceBatchCorrectionProposalsResponse,
   type PricingReferenceClassificationListAllInput,
   type PricingReferenceClassificationListAllResponse,
   type PricingReferenceClassificationListInput,
   type PricingReferenceClassificationListResponse,
-  type PricingReferenceCorrectionPlanGetInput,
-  type PricingReferenceCorrectionPlanResponse,
   type PricingReferenceDiagnoseInput,
   type PricingReferenceDiagnoseResponse,
   type PricingReferenceHealthGetResponse,
@@ -253,6 +250,15 @@ export const getPricingReferenceAnomaliesSummary = (
     'Impossible de charger la synthese des anomalies.'
   );
 
+export const exportPricingReferenceAnomalies = (
+  input: PricingReferenceAnomaliesExportInput
+): Promise<PricingReferenceAnomaliesExportResponse> =>
+  invokeTrpc(
+    (api, options) => api.pricing.references.anomalies.export.mutate(input, options),
+    (payload) => parseResponse(pricingReferenceAnomaliesExportResponseSchema, payload),
+    'Impossible de generer l export des anomalies.'
+  );
+
 export const listAllPricingReferenceClassification = (
   input: PricingReferenceClassificationListAllInput
 ): Promise<PricingReferenceClassificationListAllResponse> =>
@@ -260,24 +266,6 @@ export const listAllPricingReferenceClassification = (
     (api, options) => api.pricing.references.classification.listAll.query(input, options),
     (payload) => parseResponse(pricingReferenceClassificationListAllResponseSchema, payload),
     'Impossible de charger la classification complete.'
-  );
-
-export const getPricingReferenceCorrectionPlan = (
-  input: PricingReferenceCorrectionPlanGetInput
-): Promise<PricingReferenceCorrectionPlanResponse> =>
-  invokeTrpc(
-    (api, options) => api.pricing.references.anomalies.correctionPlan.query(input, options),
-    (payload) => parseResponse(pricingReferenceCorrectionPlanResponseSchema, payload),
-    'Impossible de charger le plan de correction.'
-  );
-
-export const getPricingReferenceBatchCorrectionProposals = (
-  input: PricingReferenceBatchCorrectionProposalsGetInput
-): Promise<PricingReferenceBatchCorrectionProposalsResponse> =>
-  invokeTrpc(
-    (api, options) => api.pricing.references.anomalies.batchProposals.query(input, options),
-    (payload) => parseResponse(pricingReferenceBatchCorrectionProposalsResponseSchema, payload),
-    'Impossible de charger les propositions de correction par lot.'
   );
 
 export const diagnosePricingReference = (

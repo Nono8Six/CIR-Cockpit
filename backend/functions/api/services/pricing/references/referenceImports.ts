@@ -1,4 +1,5 @@
 import { and, desc, eq, sql, type SQL } from 'drizzle-orm';
+import * as XLSX from 'xlsx';
 
 import {
   pricing_reference_anomalies,
@@ -9,13 +10,17 @@ import {
 } from '../../../../../drizzle/schema.ts';
 import {
   PRICING_REFERENCE_ANOMALY_DEFAULT_MARQUE,
+  PRICING_REFERENCE_CLASSIFICATION_COLUMNS,
+  PRICING_REFERENCE_SEGMENTS_GRIDS_COLUMNS,
   PRICING_REFERENCE_STORAGE_BUCKET,
   PRICING_REFERENCE_XLSX_MIME,
+  pricingReferenceAnomalySeverityLabels,
+  pricingReferenceAnomalyTypeActionLabels,
+  pricingReferenceAnomalyTypeLabels,
   pricingReferenceColumnAliasesSchema,
   pricingReferenceColumnMappingProfileSchema,
   pricingReferenceColumnMappingSchema,
-  pricingReferenceBatchCorrectionProposalsResponseSchema,
-  pricingReferenceCorrectionPlanResponseSchema,
+  pricingReferenceAnomaliesExportResponseSchema,
   pricingReferenceHealthReportSchema,
   pricingReferenceImportConfirmMappingResponseSchema,
   pricingReferenceImportInspectResponseSchema,
@@ -24,20 +29,16 @@ import {
   type PricingReferenceColumnMapping,
   type PricingReferenceColumnMappingProfile,
   type PricingReferenceFileKind,
-  type PricingReferenceBatchCorrectionProposalsGetInput,
-  type PricingReferenceBatchCorrectionProposalsResponse,
-  type PricingReferenceCorrectionPlanGetInput,
-  type PricingReferenceCorrectionPlanGroup,
-  type PricingReferenceCorrectionPlanResponse,
   type PricingReferenceImportAnalyzeResponse,
   type PricingReferenceImportStatus,
   type PricingReferenceImportAssistMappingInput,
   type PricingReferenceImportAssistMappingResponse,
+  type PricingReferenceAnomaliesExportInput,
+  type PricingReferenceAnomaliesExportResponse,
   type PricingReferenceAnomaliesListInput,
   type PricingReferenceAnomaliesSortBy,
   type PricingReferenceAnomaliesListResponse,
   type PricingReferenceAnomaliesSummaryGetInput,
-  type PricingReferenceAnomaliesSummaryMarque,
   type PricingReferenceAnomaliesSummaryResponse,
   type PricingReferenceAnomalySeverity,
   type PricingReferenceAnomalyType,
@@ -114,6 +115,9 @@ type JsonbRecordsetRow = Record<string, unknown>;
 type JsonbRecordsetQueryFactory = (payload: string) => SQL;
 
 const SIGNED_UPLOAD_EXPIRES_IN_SECONDS = 60 * 60 * 2;
+const EXPORT_SIGNED_URL_EXPIRES_IN_SECONDS = 60 * 60;
+const EXPORT_RETENTION_DAYS = 7;
+const ANOMALIES_EXPORT_MAX_ROWS = 50_000;
 const INSERT_CHUNK_SIZE = 250;
 const BULK_INSERT_CHUNK_SIZE = 1000;
 
@@ -142,6 +146,13 @@ const anomalyMarqueSql = (): SQL => sql`coalesce(
   nullif(trim(split_part(coalesce(${pricing_reference_anomalies.details}->>'segment_key', ${pricing_reference_anomalies.object_id}, ''), '|', 3)), ''),
   ${PRICING_REFERENCE_ANOMALY_DEFAULT_MARQUE}
 )`;
+
+const anomalySeverityWeightSql = (): SQL => sql`case ${pricing_reference_anomalies.severity}
+  when 'bloquante' then 4
+  when 'haute' then 3
+  when 'moyenne' then 2
+  else 1
+end`;
 
 const classificationSortSql = (sortBy: PricingReferenceClassificationSortBy): SQL => {
   switch (sortBy) {
@@ -200,6 +211,57 @@ const optionalExactFilter = (column: SQL, value: string | undefined): SQL | null
 
 const andSql = (conditions: SQL[]): SQL =>
   conditions.length > 0 ? sql.join(conditions, sql` and `) : sql`true`;
+
+const uniqueNonEmptyStrings = (values: string[] | undefined): string[] =>
+  uniqueValues((values ?? []).map((value) => value.trim()).filter(Boolean));
+
+const inValuesSql = (column: SQL, values: string[] | undefined): SQL | null => {
+  const normalized = uniqueNonEmptyStrings(values);
+  return normalized.length > 0
+    ? sql<boolean>`${column} in (${sql.join(normalized.map((value) => sql`${value}`), sql`, `)})`
+    : null;
+};
+
+const anomalySearchSql = (search: string | undefined): SQL | null => {
+  const pattern = searchPattern(search);
+  return pattern
+    ? sql<boolean>`(
+      lower(${pricing_reference_anomalies.message}) like ${pattern}
+      or lower(coalesce(${pricing_reference_anomalies.object_type}, '')) like ${pattern}
+      or lower(coalesce(${pricing_reference_anomalies.object_id}, '')) like ${pattern}
+      or lower(array_to_string(${pricing_reference_anomalies.columns}, ' ')) like ${pattern}
+      or lower(coalesce(${pricing_reference_anomalies.details}::text, '')) like ${pattern}
+    )`
+    : null;
+};
+
+const buildAnomalyFilterConditions = (
+  input: Pick<
+    PricingReferenceAnomaliesListInput,
+    'import_id' | 'snapshot_id' | 'search' | 'severities' | 'types' | 'marques'
+  >,
+  snapshotId: string | null,
+  omittedFacet?: 'severities' | 'types' | 'marques'
+): SQL[] => {
+  const conditions: SQL[] = [];
+  if (input.import_id) conditions.push(eq(pricing_reference_anomalies.import_id, input.import_id));
+  if (snapshotId) conditions.push(eq(pricing_reference_anomalies.snapshot_id, snapshotId));
+  if (omittedFacet !== 'severities') {
+    const severityFilter = inValuesSql(sql`${pricing_reference_anomalies.severity}`, input.severities);
+    if (severityFilter) conditions.push(severityFilter);
+  }
+  if (omittedFacet !== 'types') {
+    const typeFilter = inValuesSql(sql`${pricing_reference_anomalies.type}`, input.types);
+    if (typeFilter) conditions.push(typeFilter);
+  }
+  if (omittedFacet !== 'marques') {
+    const marqueFilter = inValuesSql(anomalyMarqueSql(), input.marques);
+    if (marqueFilter) conditions.push(marqueFilter);
+  }
+  const searchFilter = anomalySearchSql(input.search);
+  if (searchFilter) conditions.push(searchFilter);
+  return conditions;
+};
 
 const normalizeFilename = (filename: string): string =>
   filename
@@ -713,28 +775,13 @@ const assertAssistMappingResponse = (value: unknown): PricingReferenceImportAssi
   return parsed.data;
 };
 
-const assertCorrectionPlanResponse = (value: unknown): PricingReferenceCorrectionPlanResponse => {
-  const parsed = pricingReferenceCorrectionPlanResponseSchema.safeParse(value);
+const assertAnomaliesExportResponse = (value: unknown): PricingReferenceAnomaliesExportResponse => {
+  const parsed = pricingReferenceAnomaliesExportResponseSchema.safeParse(value);
   if (!parsed.success) {
     throw httpError(
       500,
       'REQUEST_FAILED',
-      'Plan de correction referentiel invalide.',
-      parsed.error.issues.map((issue) => issue.message).join(' | ')
-    );
-  }
-  return parsed.data;
-};
-
-const assertBatchCorrectionProposalsResponse = (
-  value: unknown
-): PricingReferenceBatchCorrectionProposalsResponse => {
-  const parsed = pricingReferenceBatchCorrectionProposalsResponseSchema.safeParse(value);
-  if (!parsed.success) {
-    throw httpError(
-      500,
-      'REQUEST_FAILED',
-      'Propositions de correction par lot invalides.',
+      'Reponse export anomalies invalide.',
       parsed.error.issues.map((issue) => issue.message).join(' | ')
     );
   }
@@ -755,194 +802,6 @@ const toColumnList = (columns: string[]): string[] =>
   uniqueValues(columns.map((column) => column.trim()).filter(Boolean)).sort((left, right) =>
     left.localeCompare(right)
   );
-
-const extractAnomalyContext = (
-  details: Record<string, unknown>
-): { marque: string | null; segment: string | null; category: string | null } => {
-  const rawValues = readRecord(details.raw_values) ?? {};
-  const segmentKey = readStringValue(details, 'segment_key');
-  const segmentKeyParts = segmentKey?.split('|') ?? [];
-  return {
-    segment: readStringValue(rawValues, 'SEGMENT') ?? segmentKeyParts[0] ?? null,
-    marque: readStringValue(rawValues, 'MARQUE') ?? segmentKeyParts[2] ?? null,
-    category: readStringValue(rawValues, 'CAT_FAB') ?? segmentKeyParts[3] ?? null
-  };
-};
-
-const correctionActionForType = (
-  type: PricingReferenceAnomalyType,
-  columns: string[]
-): string => {
-  switch (type) {
-    case 'purchase_grid_missing':
-      return `Completer dans Excel les champs de grille achat manquants: ${columns.join(', ')}.`;
-    case 'segment_classification_unknown':
-      return 'Corriger la cle CIR dans le fichier segments/grilles ou ajouter la classification manquante dans le referentiel classification.';
-    case 'segment_classification_incomplete':
-      return `Completer dans Excel la classification CIR du segment: ${columns.join(', ')}.`;
-    case 'segment_identity_incomplete':
-      return `Completer dans Excel l identite segment fabricant: ${columns.join(', ')}.`;
-    case 'classification_duplicate_key':
-      return 'Dedoublonner la cle CIR dans le fichier classification avant reimport.';
-    case 'classification_required_empty':
-      return `Completer dans Excel les champs obligatoires de classification: ${columns.join(', ')}.`;
-    case 'missing_column':
-      return `Ajouter ou mapper les colonnes absentes dans le fichier source: ${columns.join(', ')}.`;
-    case 'empty_file':
-      return 'Verifier que le fichier source contient bien des lignes exploitables avant reimport.';
-    case 'segment_ambiguous_link':
-      return 'Homogeneiser la classification CIR pour ce couple marque/categorie avant reimport.';
-    case 'invalid_file':
-    case 'parse_failed':
-    default:
-      return 'Corriger la valeur source signalee dans Excel, puis relancer un import controle.';
-  }
-};
-
-export const buildPricingReferenceCorrectionPlanFromRows = (
-  rows: PricingReferenceAnomalyQueryRow[],
-  requestId: string,
-  generatedAt = new Date().toISOString()
-): PricingReferenceCorrectionPlanResponse => {
-  const totals = rows.reduce(
-    (accumulator, row) => ({
-      total: accumulator.total + 1,
-      bloquante: accumulator.bloquante + (row.severity === 'bloquante' ? 1 : 0),
-      haute: accumulator.haute + (row.severity === 'haute' ? 1 : 0),
-      moyenne: accumulator.moyenne + (row.severity === 'moyenne' ? 1 : 0),
-      faible: accumulator.faible + (row.severity === 'faible' ? 1 : 0)
-    }),
-    { total: 0, bloquante: 0, haute: 0, moyenne: 0, faible: 0 }
-  );
-
-  const groupMap = new Map<string, {
-    type: PricingReferenceAnomalyType;
-    severity: PricingReferenceAnomalySeverity;
-    marque: string | null;
-    segment: string | null;
-    category: string | null;
-    columns: string[];
-    rows: PricingReferenceAnomalyQueryRow[];
-    message: string;
-  }>();
-
-  rows.forEach((row) => {
-    const context = extractAnomalyContext(row.details);
-    const columns = toColumnList(row.columns);
-    const key = [
-      row.type,
-      row.severity,
-      context.marque ?? '-',
-      context.segment ?? '-',
-      context.category ?? '-',
-      columns.join(','),
-      row.message
-    ].join('|');
-    const group = groupMap.get(key);
-    if (group) {
-      group.rows.push(row);
-      return;
-    }
-    groupMap.set(key, {
-      type: row.type,
-      severity: row.severity,
-      marque: context.marque,
-      segment: context.segment,
-      category: context.category,
-      columns,
-      rows: [row],
-      message: row.message
-    });
-  });
-
-  const groups = [...groupMap.values()]
-    .sort((left, right) => {
-      const severityDiff = severityWeight[right.severity] - severityWeight[left.severity];
-      if (severityDiff !== 0) return severityDiff;
-      const countDiff = right.rows.length - left.rows.length;
-      if (countDiff !== 0) return countDiff;
-      return left.message.localeCompare(right.message);
-    })
-    .slice(0, 40)
-    .map((group, index): PricingReferenceCorrectionPlanGroup => {
-      const sourceRows = uniqueValues(
-        group.rows
-          .map((row) => row.source_row_number)
-          .filter((rowNumber): rowNumber is number => typeof rowNumber === 'number')
-      ).sort((left, right) => left - right).slice(0, 20);
-      const sourceFiles = uniqueValues(
-        group.rows
-          .map((row) => row.source_file)
-          .filter((sourceFile): sourceFile is NonNullable<PricingReferenceAnomalyQueryRow['source_file']> =>
-            Boolean(sourceFile)
-          )
-          .map((sourceFile) => `${sourceFile.file_kind}|${sourceFile.original_filename}`)
-      ).map((value) => {
-        const [file_kind, original_filename] = value.split('|');
-        return {
-          file_kind: file_kind as PricingReferenceFileKind,
-          original_filename
-        };
-      });
-      const evidence = [
-        `${group.rows.length} anomalie(s) dans ce groupe.`,
-        group.marque ? `Marque: ${group.marque}.` : null,
-        group.segment ? `Segment: ${group.segment}.` : null,
-        group.category ? `Categorie fabricant: ${group.category}.` : null,
-        sourceFiles.length > 0
-          ? `Fichier source: ${sourceFiles.map((file) => file.original_filename).join(', ')}.`
-          : null,
-        group.columns.length > 0 ? `Colonnes: ${group.columns.join(', ')}.` : null,
-        sourceRows.length > 0 ? `Lignes sources: ${sourceRows.join(', ')}.` : null
-      ].filter((value): value is string => Boolean(value));
-      return {
-        id: `grp-${index + 1}`,
-        rank: index + 1,
-        type: group.type,
-        severity: group.severity,
-        marque: group.marque,
-        segment: group.segment,
-        category: group.category,
-        columns: group.columns,
-        anomaly_count: group.rows.length,
-        impacted_rows: sourceRows.length || group.rows.length,
-        source_rows: sourceRows,
-        source_files: sourceFiles,
-        message: group.message,
-        evidence,
-        excel_action: correctionActionForType(group.type, group.columns),
-        can_suggest_values: false,
-        value_suggestion_reason: 'Aucune valeur proposee sans preuve deterministe majoritaire ou historique valide.'
-      };
-    });
-
-  const recommendations = groups.length === 0
-    ? ['Aucune anomalie detectee sur le perimetre courant.']
-    : [
-      totals.bloquante > 0
-        ? 'Traiter les anomalies bloquantes avant toute activation de snapshot.'
-        : 'Traiter les groupes les plus volumineux avant le reimport pour reduire le bruit de controle.',
-      `Commencer par le groupe #${groups[0].rank}: ${groups[0].message}`,
-      'Relancer un import controle apres correction du fichier Excel source.'
-    ];
-
-  return assertCorrectionPlanResponse({
-    ok: true,
-    request_id: requestId,
-    import_id: rows[0]?.import_id ?? null,
-    snapshot_id: rows[0]?.snapshot_id ?? null,
-    generated_at: generatedAt,
-    totals,
-    groups,
-    deterministic_recommendations: recommendations,
-    ai_policy: {
-      mode: 'secondary_interpretation_only',
-      can_modify_source: false,
-      can_modify_database: false,
-      can_invent_values: false
-    }
-  });
-};
 
 export const inspectPricingReferenceImport = async (
   db: DbClient,
@@ -2023,23 +1882,7 @@ export const listPricingReferenceAnomalies = async (
   if (!snapshotId && !input.import_id) {
     return { ok: true, request_id: requestId, rows: [], page: input.page, page_size: input.page_size, total: 0 };
   }
-  const conditions: SQL[] = [];
-  if (input.import_id) conditions.push(eq(pricing_reference_anomalies.import_id, input.import_id));
-  if (snapshotId) conditions.push(eq(pricing_reference_anomalies.snapshot_id, snapshotId));
-  if (input.severity) conditions.push(eq(pricing_reference_anomalies.severity, input.severity));
-  if (input.type) conditions.push(eq(pricing_reference_anomalies.type, input.type));
-  if (input.marque) conditions.push(sql<boolean>`${anomalyMarqueSql()} = ${input.marque}`);
-  const pattern = searchPattern(input.search);
-  if (pattern) {
-    conditions.push(sql<boolean>`(
-      lower(${pricing_reference_anomalies.message}) like ${pattern}
-      or lower(coalesce(${pricing_reference_anomalies.object_type}, '')) like ${pattern}
-      or lower(coalesce(${pricing_reference_anomalies.object_id}, '')) like ${pattern}
-      or lower(array_to_string(${pricing_reference_anomalies.columns}, ' ')) like ${pattern}
-      or lower(coalesce(${pricing_reference_anomalies.details}::text, '')) like ${pattern}
-    )`);
-  }
-  const whereClause = andSql(conditions);
+  const whereClause = andSql(buildAnomalyFilterConditions(input, snapshotId));
   const sortBy = anomalySortSql(input.sort_by);
   const sortDirection = sortDirectionSql(input.sort_direction);
 
@@ -2116,77 +1959,335 @@ export const getPricingReferenceAnomaliesSummary = async (
 ): Promise<PricingReferenceAnomaliesSummaryResponse> => {
   const snapshotId = await resolveSnapshotId(db, input);
   if (!snapshotId && !input.import_id) {
-    return { ok: true, request_id: requestId, total: 0, marques: [] };
-  }
-  const conditions: SQL[] = [];
-  if (input.import_id) conditions.push(eq(pricing_reference_anomalies.import_id, input.import_id));
-  if (snapshotId) conditions.push(eq(pricing_reference_anomalies.snapshot_id, snapshotId));
-  const whereClause = andSql(conditions);
-
-  const groups = await db.execute<{
-    marque: string;
-    type: PricingReferenceAnomalyType;
-    anomaly_count: number;
-    max_severity_weight: number;
-  }>(sql`
-    select
-      ${anomalyMarqueSql()} as marque,
-      ${pricing_reference_anomalies.type} as type,
-      count(*)::int as anomaly_count,
-      max(case ${pricing_reference_anomalies.severity}
-        when 'bloquante' then 4
-        when 'haute' then 3
-        when 'moyenne' then 2
-        else 1
-      end)::int as max_severity_weight
-    from public.pricing_reference_anomalies
-    where ${whereClause}
-    group by 1, 2
-    order by 1 asc, 2 asc
-  `);
-
-  const marqueMap = new Map<string, {
-    marque: string;
-    maxSeverityWeight: number;
-    anomalyCount: number;
-    types: Array<{ type: PricingReferenceAnomalyType; maxSeverityWeight: number; anomalyCount: number }>;
-  }>();
-  for (const group of groups) {
-    const entry = marqueMap.get(group.marque) ?? {
-      marque: group.marque,
-      maxSeverityWeight: 0,
-      anomalyCount: 0,
-      types: []
+    return {
+      ok: true,
+      request_id: requestId,
+      total: 0,
+      groups_by_type: [],
+      facets: { severities: [], types: [], marques: [] }
     };
-    entry.anomalyCount += group.anomaly_count;
-    entry.maxSeverityWeight = Math.max(entry.maxSeverityWeight, group.max_severity_weight);
-    entry.types.push({
-      type: group.type,
-      maxSeverityWeight: group.max_severity_weight,
-      anomalyCount: group.anomaly_count
-    });
-    marqueMap.set(group.marque, entry);
   }
-
-  const marques: PricingReferenceAnomaliesSummaryMarque[] = Array.from(marqueMap.values()).map((entry) => ({
-    marque: entry.marque,
-    max_severity: severityFromWeight(entry.maxSeverityWeight),
-    anomaly_count: entry.anomalyCount,
-    types: entry.types
-      .sort((a, b) => b.maxSeverityWeight - a.maxSeverityWeight || a.type.localeCompare(b.type))
-      .map((typeEntry) => ({
-        type: typeEntry.type,
-        max_severity: severityFromWeight(typeEntry.maxSeverityWeight),
-        anomaly_count: typeEntry.anomalyCount
-      }))
-  }));
+  const whereClause = andSql(buildAnomalyFilterConditions(input, snapshotId));
+  const severitySql = anomalySeverityWeightSql();
+  const [totalRows, groups, severityFacets, typeFacets, marqueFacets] = await Promise.all([
+    db.execute<{ total: number }>(sql`
+      select count(*)::int as total
+      from public.pricing_reference_anomalies
+      where ${whereClause}
+    `),
+    db.execute<{
+      type: PricingReferenceAnomalyType;
+      count: number;
+      max_severity_weight: number;
+    }>(sql`
+      select
+        ${pricing_reference_anomalies.type} as type,
+        count(*)::int as count,
+        max(${severitySql})::int as max_severity_weight
+      from public.pricing_reference_anomalies
+      where ${whereClause}
+      group by 1
+      order by max(${severitySql}) desc, count(*) desc, 1 asc
+    `),
+    db.execute<{
+      value: PricingReferenceAnomalySeverity;
+      count: number;
+      max_severity_weight: number;
+    }>(sql`
+      select
+        ${pricing_reference_anomalies.severity} as value,
+        count(*)::int as count,
+        max(${severitySql})::int as max_severity_weight
+      from public.pricing_reference_anomalies
+      where ${andSql(buildAnomalyFilterConditions(input, snapshotId, 'severities'))}
+      group by 1
+      order by max(${severitySql}) desc, 1 asc
+    `),
+    db.execute<{
+      value: PricingReferenceAnomalyType;
+      count: number;
+      max_severity_weight: number;
+    }>(sql`
+      select
+        ${pricing_reference_anomalies.type} as value,
+        count(*)::int as count,
+        max(${severitySql})::int as max_severity_weight
+      from public.pricing_reference_anomalies
+      where ${andSql(buildAnomalyFilterConditions(input, snapshotId, 'types'))}
+      group by 1
+      order by max(${severitySql}) desc, count(*) desc, 1 asc
+    `),
+    db.execute<{
+      value: string;
+      count: number;
+      max_severity_weight: number;
+    }>(sql`
+      select
+        ${anomalyMarqueSql()} as value,
+        count(*)::int as count,
+        max(${severitySql})::int as max_severity_weight
+      from public.pricing_reference_anomalies
+      where ${andSql(buildAnomalyFilterConditions(input, snapshotId, 'marques'))}
+      group by 1
+      order by count(*) desc, 1 asc
+      limit 200
+    `)
+  ]);
 
   return {
     ok: true,
     request_id: requestId,
-    total: marques.reduce((sum, entry) => sum + entry.anomaly_count, 0),
-    marques
+    total: totalRows[0]?.total ?? 0,
+    groups_by_type: groups.map((group) => ({
+      type: group.type,
+      label: pricingReferenceAnomalyTypeLabels[group.type],
+      action_label: pricingReferenceAnomalyTypeActionLabels[group.type] ?? null,
+      count: group.count,
+      max_severity: severityFromWeight(group.max_severity_weight)
+    })),
+    facets: {
+      severities: severityFacets.map((facet) => ({
+        value: facet.value,
+        label: pricingReferenceAnomalySeverityLabels[facet.value],
+        count: facet.count,
+        max_severity: severityFromWeight(facet.max_severity_weight)
+      })),
+      types: typeFacets.map((facet) => ({
+        value: facet.value,
+        label: pricingReferenceAnomalyTypeLabels[facet.value],
+        count: facet.count,
+        max_severity: severityFromWeight(facet.max_severity_weight)
+      })),
+      marques: marqueFacets.map((facet) => ({
+        value: facet.value,
+        label: facet.value,
+        count: facet.count,
+        max_severity: severityFromWeight(facet.max_severity_weight)
+      }))
+    }
   };
+};
+
+const listAllPricingReferenceAnomaliesForExport = async (
+  db: DbClient,
+  input: PricingReferenceAnomaliesExportInput,
+  snapshotId: string | null
+): Promise<PricingReferenceAnomalyQueryRow[]> => {
+  if (!snapshotId && !input.import_id) return [];
+  const whereClause = andSql(buildAnomalyFilterConditions(input, snapshotId));
+
+  return await db.execute<PricingReferenceAnomalyQueryRow>(sql`
+    select
+      pricing_reference_anomalies.id,
+      pricing_reference_anomalies.import_id,
+      pricing_reference_anomalies.snapshot_id,
+      pricing_reference_anomalies.source_file_id,
+      case
+        when f.id is null then null
+        else jsonb_build_object(
+          'file_kind', f.file_kind,
+          'original_filename', f.original_filename
+        )
+      end as source_file,
+      pricing_reference_anomalies.source_row_number,
+      pricing_reference_anomalies.type,
+      pricing_reference_anomalies.severity,
+      pricing_reference_anomalies.object_type,
+      pricing_reference_anomalies.object_id,
+      pricing_reference_anomalies.columns,
+      pricing_reference_anomalies.message,
+      pricing_reference_anomalies.details,
+      pricing_reference_anomalies.created_at
+    from public.pricing_reference_anomalies
+    left join public.pricing_reference_import_files f on f.id = pricing_reference_anomalies.source_file_id
+    where ${whereClause}
+    order by
+      f.file_kind asc nulls last,
+      pricing_reference_anomalies.source_row_number asc nulls last,
+      ${anomalySeverityWeightSql()} desc,
+      pricing_reference_anomalies.created_at desc
+    limit ${ANOMALIES_EXPORT_MAX_ROWS + 1}
+  `);
+};
+
+const exportSourceColumnsForKind = (fileKind: PricingReferenceFileKind): readonly string[] =>
+  fileKind === 'classification'
+    ? PRICING_REFERENCE_CLASSIFICATION_COLUMNS
+    : PRICING_REFERENCE_SEGMENTS_GRIDS_COLUMNS;
+
+const exportSheetNameForKind = (fileKind: PricingReferenceFileKind | 'unknown'): string => {
+  if (fileKind === 'classification') return 'Classification';
+  if (fileKind === 'segments_grids') return 'Segments grilles';
+  return 'Anomalies sans fichier';
+};
+
+const exportFilename = (scopeId: string, requestId: string): string =>
+  `anomalies-referentiel-${scopeId}-${requestId}.xlsx`;
+
+const anomalyFallbackNote = (row: PricingReferenceAnomalyQueryRow): string => {
+  const details = row.details;
+  const context = [
+    readStringValue(details, 'marque') ? `marque=${readStringValue(details, 'marque')}` : null,
+    readStringValue(details, 'cat_fab') ? `cat_fab=${readStringValue(details, 'cat_fab')}` : null,
+    readStringValue(details, 'cir_key') ? `cir_key=${readStringValue(details, 'cir_key')}` : null,
+    readStringValue(details, 'classification_key') ? `classification_key=${readStringValue(details, 'classification_key')}` : null,
+    readStringValue(details, 'segment_key') ? `segment_key=${readStringValue(details, 'segment_key')}` : null,
+    row.object_id ? `object_id=${row.object_id}` : null
+  ].filter((value): value is string => Boolean(value));
+  return context.length > 0
+    ? `Valeurs source brutes absentes dans details.raw_values. Contexte disponible: ${context.join(' ; ')}.`
+    : 'Valeurs source brutes absentes dans details.raw_values. Aucun contexte source supplementaire disponible.';
+};
+
+const rowToExportRecord = (
+  row: PricingReferenceAnomalyQueryRow,
+  sourceColumns: readonly string[]
+): Record<string, string | number> => {
+  const rawValues = readRecord(row.details.raw_values);
+  const record: Record<string, string | number> = {};
+  for (const column of sourceColumns) {
+    const value = rawValues?.[column];
+    record[column] = typeof value === 'string' || typeof value === 'number' ? value : '';
+  }
+  const columns = toColumnList(row.columns);
+  record.LIGNE_SOURCE = row.source_row_number ?? '';
+  record.ANOMALIE_TYPE = pricingReferenceAnomalyTypeLabels[row.type];
+  record.SEVERITE = pricingReferenceAnomalySeverityLabels[row.severity];
+  record.COLONNES_CONCERNEES = columns.join(', ');
+  record.MESSAGE = row.message;
+  record.ACTION_CORRECTION = pricingReferenceAnomalyTypeActionLabels[row.type];
+  record.NOTE_EXPORT = rawValues
+    ? 'Valeurs source reconstruites depuis details.raw_values.'
+    : anomalyFallbackNote(row);
+  return record;
+};
+
+const buildAnomaliesExportWorkbook = (rows: PricingReferenceAnomalyQueryRow[]): ArrayBuffer => {
+  const workbook = XLSX.utils.book_new();
+  const rowsByKind = new Map<PricingReferenceFileKind | 'unknown', PricingReferenceAnomalyQueryRow[]>();
+  for (const row of rows) {
+    const fileKind = row.source_file?.file_kind ?? 'unknown';
+    rowsByKind.set(fileKind, [...(rowsByKind.get(fileKind) ?? []), row]);
+  }
+
+  for (const [fileKind, sheetRows] of rowsByKind) {
+    const sourceColumns = fileKind === 'unknown'
+      ? PRICING_REFERENCE_SEGMENTS_GRIDS_COLUMNS
+      : exportSourceColumnsForKind(fileKind);
+    const headers = [
+      ...sourceColumns,
+      'LIGNE_SOURCE',
+      'ANOMALIE_TYPE',
+      'SEVERITE',
+      'COLONNES_CONCERNEES',
+      'MESSAGE',
+      'ACTION_CORRECTION',
+      'NOTE_EXPORT'
+    ];
+    const worksheet = XLSX.utils.json_to_sheet(
+      sheetRows.map((row) => rowToExportRecord(row, sourceColumns)),
+      { header: headers }
+    );
+    const range = XLSX.utils.decode_range(worksheet['!ref'] ?? 'A1:A1');
+    worksheet['!autofilter'] = { ref: XLSX.utils.encode_range(range) };
+    worksheet['!cols'] = headers.map((header) => ({ wch: Math.min(Math.max(header.length + 2, 14), 48) }));
+    XLSX.utils.book_append_sheet(workbook, worksheet, exportSheetNameForKind(fileKind));
+  }
+
+  if (rowsByKind.size === 0) {
+    const worksheet = XLSX.utils.json_to_sheet([{ MESSAGE: 'Aucune anomalie exportee.' }], { header: ['MESSAGE'] });
+    worksheet['!autofilter'] = { ref: 'A1:A2' };
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Anomalies');
+  }
+
+  return XLSX.write(workbook, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer;
+};
+
+const cleanupExpiredAnomalyExports = async (): Promise<void> => {
+  const storage = getSupabaseAdmin().storage.from(PRICING_REFERENCE_STORAGE_BUCKET);
+  const cutoff = Date.now() - EXPORT_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+  const { data, error } = await storage.list('exports', {
+    limit: 100,
+    sortBy: { column: 'created_at', order: 'asc' }
+  });
+  if (error || !data) return;
+  const expiredPaths = data
+    .filter((item) => {
+      const timestamp = item.created_at ?? item.updated_at ?? item.last_accessed_at;
+      return timestamp ? new Date(timestamp).getTime() < cutoff : false;
+    })
+    .map((item) => `exports/${item.name}`)
+    .filter((path) => path.startsWith('exports/'))
+    .slice(0, 100);
+  if (expiredPaths.length > 0) {
+    await storage.remove(expiredPaths);
+  }
+};
+
+export const exportPricingReferenceAnomalies = async (
+  db: DbClient,
+  _callerId: string,
+  requestId: string,
+  input: PricingReferenceAnomaliesExportInput
+): Promise<PricingReferenceAnomaliesExportResponse> => {
+  const snapshotId = await resolveSnapshotId(db, input);
+  const rows = await listAllPricingReferenceAnomaliesForExport(db, input, snapshotId);
+  if (rows.length > ANOMALIES_EXPORT_MAX_ROWS) {
+    throw httpError(
+      413,
+      'REQUEST_FAILED',
+      'Export refuse: plus de 50 000 anomalies correspondent aux filtres.'
+    );
+  }
+
+  const scopeId = snapshotId ?? input.import_id ?? 'current';
+  const filename = exportFilename(scopeId, requestId);
+  const storagePath = `exports/${scopeId}/${requestId}.xlsx`;
+  const workbookBytes = buildAnomaliesExportWorkbook(rows);
+  const storage = getSupabaseAdmin().storage.from(PRICING_REFERENCE_STORAGE_BUCKET);
+
+  await cleanupExpiredAnomalyExports();
+
+  const { error: uploadError } = await storage.upload(
+    storagePath,
+    new Blob([workbookBytes], { type: PRICING_REFERENCE_XLSX_MIME }),
+    {
+      contentType: PRICING_REFERENCE_XLSX_MIME,
+      cacheControl: '3600',
+      upsert: false
+    }
+  );
+  if (uploadError) {
+    throw httpError(
+      500,
+      'PRICING_REFERENCE_IMPORT_STORAGE_FAILED',
+      'Impossible de stocker l export des anomalies.',
+      uploadError.message
+    );
+  }
+
+  const { data: signedUrl, error: signedUrlError } = await storage.createSignedUrl(
+    storagePath,
+    EXPORT_SIGNED_URL_EXPIRES_IN_SECONDS,
+    { download: filename }
+  );
+  if (signedUrlError || !signedUrl?.signedUrl) {
+    throw httpError(
+      500,
+      'PRICING_REFERENCE_IMPORT_STORAGE_FAILED',
+      'Impossible de generer l URL signee de l export.',
+      signedUrlError?.message
+    );
+  }
+
+  return assertAnomaliesExportResponse({
+    ok: true,
+    request_id: requestId,
+    download_url: signedUrl.signedUrl,
+    expires_at: new Date(Date.now() + EXPORT_SIGNED_URL_EXPIRES_IN_SECONDS * 1000).toISOString(),
+    filename,
+    row_count: rows.length
+  });
 };
 
 const CLASSIFICATION_LIST_ALL_MAX_ROWS = 5000;
@@ -2237,98 +2338,4 @@ export const listAllPricingReferenceClassification = async (
     total,
     truncated: total > rows.length
   };
-};
-
-const listAllPricingReferenceAnomalyRows = async (
-  db: DbClient,
-  input: PricingReferenceCorrectionPlanGetInput
-): Promise<PricingReferenceAnomalyQueryRow[]> => {
-  const snapshotId = await resolveSnapshotId(db, input);
-  if (!snapshotId && !input.import_id) return [];
-  const conditions: SQL[] = [];
-  if (input.import_id) conditions.push(eq(pricing_reference_anomalies.import_id, input.import_id));
-  if (snapshotId) conditions.push(eq(pricing_reference_anomalies.snapshot_id, snapshotId));
-  const whereClause = andSql(conditions);
-
-  return await db.execute<PricingReferenceAnomalyQueryRow>(sql`
-    select
-      pricing_reference_anomalies.id,
-      pricing_reference_anomalies.import_id,
-      pricing_reference_anomalies.snapshot_id,
-      pricing_reference_anomalies.source_file_id,
-      case
-        when f.id is null then null
-        else jsonb_build_object(
-          'file_kind', f.file_kind,
-          'original_filename', f.original_filename
-        )
-      end as source_file,
-      pricing_reference_anomalies.source_row_number,
-      pricing_reference_anomalies.type,
-      pricing_reference_anomalies.severity,
-      pricing_reference_anomalies.object_type,
-      pricing_reference_anomalies.object_id,
-      pricing_reference_anomalies.columns,
-      pricing_reference_anomalies.message,
-      pricing_reference_anomalies.details,
-      pricing_reference_anomalies.created_at
-    from public.pricing_reference_anomalies
-    left join public.pricing_reference_import_files f on f.id = pricing_reference_anomalies.source_file_id
-    where ${whereClause}
-    order by
-      case pricing_reference_anomalies.severity
-        when 'bloquante' then 4
-        when 'haute' then 3
-        when 'moyenne' then 2
-        else 1
-      end desc,
-      pricing_reference_anomalies.source_row_number asc nulls last,
-      pricing_reference_anomalies.created_at desc
-  `);
-};
-
-export const getPricingReferenceCorrectionPlan = async (
-  db: DbClient,
-  _callerId: string,
-  requestId: string,
-  input: PricingReferenceCorrectionPlanGetInput
-): Promise<PricingReferenceCorrectionPlanResponse> => {
-  const rows = await listAllPricingReferenceAnomalyRows(db, input);
-  const plan = buildPricingReferenceCorrectionPlanFromRows(rows, requestId);
-  return assertCorrectionPlanResponse({
-    ...plan,
-    import_id: plan.import_id ?? input.import_id ?? null,
-    snapshot_id: plan.snapshot_id ?? input.snapshot_id ?? null
-  });
-};
-
-export const getPricingReferenceBatchCorrectionProposals = async (
-  db: DbClient,
-  callerId: string,
-  requestId: string,
-  input: PricingReferenceBatchCorrectionProposalsGetInput
-): Promise<PricingReferenceBatchCorrectionProposalsResponse> => {
-  const plan = await getPricingReferenceCorrectionPlan(db, callerId, requestId, input);
-  const proposals = plan.groups.map((group) => ({
-    id: `batch-${group.id}`,
-    group_id: group.id,
-    label: `${group.marque ?? 'General'} · ${group.message}`,
-    anomaly_count: group.anomaly_count,
-    columns: group.columns,
-    source_rows: group.source_rows,
-    manual_excel_action: group.excel_action,
-    proposed_values: [],
-    status: 'proof_required' as const,
-    application_mode: 'manual_excel_only' as const
-  }));
-
-  return assertBatchCorrectionProposalsResponse({
-    ok: true,
-    request_id: requestId,
-    import_id: plan.import_id,
-    snapshot_id: plan.snapshot_id,
-    generated_at: new Date().toISOString(),
-    proposals,
-    automatic_apply_available: false
-  });
 };

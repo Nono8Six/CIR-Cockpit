@@ -1,10 +1,8 @@
 import type {
   PricingReferenceAnomaliesListInput,
   PricingReferenceAnomaliesSummaryGetInput,
-  PricingReferenceCorrectionPlanGetInput,
   PricingReferenceClassificationListAllInput,
   PricingReferenceClassificationListInput,
-  PricingReferenceBatchCorrectionProposalsGetInput,
   PricingReferenceImportGetInput,
   PricingReferenceImportsListInput,
   PricingReferenceSegmentsListInput,
@@ -255,16 +253,6 @@ export const pricingReferenceAnomaliesSummaryKey = (input: PricingReferenceAnoma
 export const pricingReferenceClassificationAllKey = (input: PricingReferenceClassificationListAllInput) => [
   QUERY_ROOTS.pricingReferences,
   'classification-all',
-  input
-] as const;
-export const pricingReferenceCorrectionPlanKey = (input: PricingReferenceCorrectionPlanGetInput) => [
-  QUERY_ROOTS.pricingReferences,
-  'correction-plan',
-  input
-] as const;
-export const pricingReferenceBatchCorrectionProposalsKey = (input: PricingReferenceBatchCorrectionProposalsGetInput) => [
-  QUERY_ROOTS.pricingReferences,
-  'batch-correction-proposals',
   input
 ] as const;
 export const pricingReferencePrepareKey = (input: PricingReferenceImportsPrepareInput) => [

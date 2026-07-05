@@ -135,6 +135,41 @@ export const pricingReferenceAnomalyTypeSchema = z.enum([
   'parse_failed'
 ]);
 
+export const pricingReferenceAnomalyTypeLabels = {
+  missing_column: 'Colonne obligatoire absente',
+  empty_file: 'Fichier vide',
+  classification_duplicate_key: 'Cle CIR dupliquee',
+  classification_required_empty: 'Champ classification vide',
+  segment_identity_incomplete: 'Identite segment incomplete',
+  segment_classification_incomplete: 'Classification segment incomplete',
+  segment_classification_unknown: 'Cle CIR inconnue',
+  segment_ambiguous_link: 'Liaison ambigue',
+  purchase_grid_missing: 'Grille achat incomplete',
+  invalid_file: 'Fichier invalide',
+  parse_failed: 'Valeur illisible'
+} as const satisfies Record<z.infer<typeof pricingReferenceAnomalyTypeSchema>, string>;
+
+export const pricingReferenceAnomalyTypeActionLabels = {
+  missing_column: 'Ajouter ou mapper la colonne obligatoire dans le fichier source.',
+  empty_file: 'Verifier que l onglet Excel contient les lignes attendues.',
+  classification_duplicate_key: 'Corriger la cle CIR dupliquee dans la classification source.',
+  classification_required_empty: 'Completer les champs classification obligatoires dans Excel.',
+  segment_identity_incomplete: 'Completer SEGMENT, IDNUMERIQUE, MARQUE ou CAT_FAB dans le fichier source.',
+  segment_classification_incomplete: 'Completer la classification CIR du segment dans le fichier source.',
+  segment_classification_unknown: 'Corriger la cle CIR ou importer la classification correspondante.',
+  segment_ambiguous_link: 'Departager la liaison segment vers une seule cle CIR exploitable.',
+  purchase_grid_missing: 'Completer les champs de grille achat structurels dans le fichier source.',
+  invalid_file: 'Remplacer le fichier par un export Excel valide.',
+  parse_failed: 'Corriger la valeur brute dans la colonne indiquee.'
+} as const satisfies Record<z.infer<typeof pricingReferenceAnomalyTypeSchema>, string>;
+
+export const pricingReferenceAnomalySeverityLabels = {
+  bloquante: 'Bloquante',
+  haute: 'Haute',
+  moyenne: 'Moyenne',
+  faible: 'Faible'
+} as const satisfies Record<z.infer<typeof pricingReferenceAnomalySeveritySchema>, string>;
+
 export const pricingReferenceColumnSetSchema = z.strictObject({
   expected: z.array(nonEmptyStringSchema('Colonne attendue requise.')),
   detected: z.array(nonEmptyStringSchema('Colonne detectee requise.')),
@@ -346,30 +381,37 @@ export const pricingReferenceSegmentsListInputSchema = pricingReferenceRowsListI
   sort_direction: pricingReferenceSortDirectionSchema.default('asc')
 });
 
+const pricingReferenceAnomaliesFiltersSchema = z.strictObject({
+  import_id: uuidSchema.optional(),
+  snapshot_id: uuidSchema.optional(),
+  search: z.string().trim().max(120).optional(),
+  severities: z.array(pricingReferenceAnomalySeveritySchema)
+    .max(20, { error: 'Maximum 20 severites.' })
+    .optional(),
+  types: z.array(pricingReferenceAnomalyTypeSchema)
+    .max(20, { error: 'Maximum 20 types.' })
+    .optional(),
+  marques: z.array(z.string().trim().min(1, { error: 'Marque requise.' }).max(120))
+    .max(20, { error: 'Maximum 20 marques.' })
+    .optional()
+});
+
 export const pricingReferenceAnomaliesListInputSchema = pricingReferenceRowsListInputSchema.extend({
-  severity: pricingReferenceAnomalySeveritySchema.optional(),
-  type: pricingReferenceAnomalyTypeSchema.optional(),
-  marque: z.string().trim().min(1).max(120).optional(),
+  severities: pricingReferenceAnomaliesFiltersSchema.shape.severities,
+  types: pricingReferenceAnomaliesFiltersSchema.shape.types,
+  marques: pricingReferenceAnomaliesFiltersSchema.shape.marques,
   sort_by: pricingReferenceAnomaliesSortBySchema.default('created_at'),
   sort_direction: pricingReferenceSortDirectionSchema.default('desc')
 });
 
-export const pricingReferenceAnomaliesSummaryGetInputSchema = z.strictObject({
-  import_id: uuidSchema.optional(),
-  snapshot_id: uuidSchema.optional()
-});
+export const pricingReferenceAnomaliesSummaryGetInputSchema = pricingReferenceAnomaliesFiltersSchema;
+
+export const pricingReferenceAnomaliesExportInputSchema = pricingReferenceAnomaliesFiltersSchema;
 
 export const pricingReferenceClassificationListAllInputSchema = z.strictObject({
   import_id: uuidSchema.optional(),
   snapshot_id: uuidSchema.optional()
 });
-
-export const pricingReferenceCorrectionPlanGetInputSchema = z.strictObject({
-  import_id: uuidSchema.optional(),
-  snapshot_id: uuidSchema.optional()
-});
-
-export const pricingReferenceBatchCorrectionProposalsGetInputSchema = pricingReferenceCorrectionPlanGetInputSchema;
 
 export const pricingReferencePreparedFileSchema = z.strictObject({
   id: uuidSchema,
@@ -568,66 +610,43 @@ export const pricingReferenceAnomaliesListResponseSchema = apiSuccessSchema.exte
   total: z.number().int().nonnegative()
 });
 
-export const pricingReferenceAnomaliesSummaryTypeSchema = z.strictObject({
+export const pricingReferenceAnomaliesSummaryGroupByTypeSchema = z.strictObject({
   type: pricingReferenceAnomalyTypeSchema,
-  max_severity: pricingReferenceAnomalySeveritySchema,
-  anomaly_count: z.number().int().positive()
+  label: nonEmptyStringSchema('Libelle type requis.'),
+  action_label: nonEmptyStringSchema('Action anomalie requise.').nullable(),
+  count: z.number().int().nonnegative(),
+  max_severity: pricingReferenceAnomalySeveritySchema
 });
 
-export const pricingReferenceAnomaliesSummaryMarqueSchema = z.strictObject({
-  marque: nonEmptyStringSchema('Marque requise.'),
-  max_severity: pricingReferenceAnomalySeveritySchema,
-  anomaly_count: z.number().int().positive(),
-  types: z.array(pricingReferenceAnomaliesSummaryTypeSchema).min(1)
+export const pricingReferenceAnomaliesFacetSchema = z.strictObject({
+  value: nonEmptyStringSchema('Valeur facette requise.'),
+  label: nonEmptyStringSchema('Libelle facette requis.'),
+  count: z.number().int().nonnegative(),
+  max_severity: pricingReferenceAnomalySeveritySchema.nullable()
 });
 
 export const pricingReferenceAnomaliesSummaryResponseSchema = apiSuccessSchema.extend({
   total: z.number().int().nonnegative(),
-  marques: z.array(pricingReferenceAnomaliesSummaryMarqueSchema)
+  groups_by_type: z.array(pricingReferenceAnomaliesSummaryGroupByTypeSchema),
+  facets: z.strictObject({
+    severities: z.array(pricingReferenceAnomaliesFacetSchema),
+    types: z.array(pricingReferenceAnomaliesFacetSchema),
+    marques: z.array(pricingReferenceAnomaliesFacetSchema)
+  })
+});
+
+export const pricingReferenceAnomaliesExportResponseSchema = apiSuccessSchema.extend({
+  request_id: nonEmptyStringSchema('Identifiant requete requis.'),
+  download_url: nonEmptyStringSchema('URL signee requise.'),
+  expires_at: nonEmptyStringSchema('Date expiration requise.'),
+  filename: nonEmptyStringSchema('Nom export requis.'),
+  row_count: z.number().int().nonnegative()
 });
 
 export const pricingReferenceClassificationListAllResponseSchema = apiSuccessSchema.extend({
   rows: z.array(pricingReferenceClassificationRowSchema),
   total: z.number().int().nonnegative(),
   truncated: z.boolean()
-});
-
-export const pricingReferenceCorrectionPlanGroupSchema = z.strictObject({
-  id: nonEmptyStringSchema('Identifiant groupe requis.'),
-  rank: z.number().int().positive(),
-  type: pricingReferenceAnomalyTypeSchema,
-  severity: pricingReferenceAnomalySeveritySchema,
-  marque: nullableStringSchema,
-  segment: nullableStringSchema,
-  category: nullableStringSchema,
-  columns: z.array(nonEmptyStringSchema('Colonne correction requise.')),
-  anomaly_count: z.number().int().nonnegative(),
-  impacted_rows: z.number().int().nonnegative(),
-  source_rows: z.array(z.number().int().positive()).max(20),
-  source_files: z.array(z.strictObject({
-    file_kind: pricingReferenceFileKindSchema,
-    original_filename: nonEmptyStringSchema('Nom fichier source requis.')
-  })),
-  message: nonEmptyStringSchema('Message correction requis.'),
-  evidence: z.array(nonEmptyStringSchema('Preuve correction requise.')).min(1),
-  excel_action: nonEmptyStringSchema('Action Excel requise.'),
-  can_suggest_values: z.boolean(),
-  value_suggestion_reason: nonEmptyStringSchema('Raison de proposition requise.')
-});
-
-export const pricingReferenceCorrectionPlanResponseSchema = apiSuccessSchema.extend({
-  import_id: uuidSchema.nullable(),
-  snapshot_id: uuidSchema.nullable(),
-  generated_at: nonEmptyStringSchema('Date generation requise.'),
-  totals: pricingReferenceAnomalySummarySchema,
-  groups: z.array(pricingReferenceCorrectionPlanGroupSchema),
-  deterministic_recommendations: z.array(nonEmptyStringSchema('Recommendation requise.')),
-  ai_policy: z.strictObject({
-    mode: z.literal('secondary_interpretation_only'),
-    can_modify_source: z.literal(false),
-    can_modify_database: z.literal(false),
-    can_invent_values: z.literal(false)
-  })
 });
 
 export const pricingReferenceImportAssistMappingResponseSchema = apiSuccessSchema.extend({
@@ -652,32 +671,6 @@ export const pricingReferenceImportAssistMappingResponseSchema = apiSuccessSchem
   })
 });
 
-export const pricingReferenceBatchCorrectionProposalSchema = z.strictObject({
-  id: nonEmptyStringSchema('Identifiant proposition requis.'),
-  group_id: nonEmptyStringSchema('Identifiant groupe requis.'),
-  label: nonEmptyStringSchema('Libelle proposition requis.'),
-  anomaly_count: z.number().int().nonnegative(),
-  columns: z.array(nonEmptyStringSchema('Colonne proposition requise.')),
-  source_rows: z.array(z.number().int().positive()).max(20),
-  manual_excel_action: nonEmptyStringSchema('Action Excel manuelle requise.'),
-  proposed_values: z.array(z.strictObject({
-    column: nonEmptyStringSchema('Colonne valeur requise.'),
-    value: nonEmptyStringSchema('Valeur proposee requise.'),
-    proof: nonEmptyStringSchema('Preuve valeur requise.'),
-    confidence: z.number().min(0).max(1)
-  })),
-  status: z.enum(['ready_with_deterministic_proof', 'proof_required']),
-  application_mode: z.literal('manual_excel_only')
-});
-
-export const pricingReferenceBatchCorrectionProposalsResponseSchema = apiSuccessSchema.extend({
-  import_id: uuidSchema.nullable(),
-  snapshot_id: uuidSchema.nullable(),
-  generated_at: nonEmptyStringSchema('Date generation requise.'),
-  proposals: z.array(pricingReferenceBatchCorrectionProposalSchema),
-  automatic_apply_available: z.literal(false)
-});
-
 export type PricingReferenceFileKind = z.infer<typeof pricingReferenceFileKindSchema>;
 export type PricingReferenceImportStatus = z.infer<typeof pricingReferenceImportStatusSchema>;
 export type PricingReferenceImportMappingStatus = z.infer<typeof pricingReferenceImportMappingStatusSchema>;
@@ -696,8 +689,6 @@ export type PricingReferenceImportAnalyzeInput = z.infer<typeof pricingReference
 export type PricingReferenceImportInspectInput = z.infer<typeof pricingReferenceImportInspectInputSchema>;
 export type PricingReferenceImportAssistMappingInput = z.infer<typeof pricingReferenceImportAssistMappingInputSchema>;
 export type PricingReferenceImportConfirmMappingInput = z.infer<typeof pricingReferenceImportConfirmMappingInputSchema>;
-export type PricingReferenceCorrectionPlanGetInput = z.infer<typeof pricingReferenceCorrectionPlanGetInputSchema>;
-export type PricingReferenceBatchCorrectionProposalsGetInput = z.infer<typeof pricingReferenceBatchCorrectionProposalsGetInputSchema>;
 export type PricingReferenceImportsListInput = z.infer<typeof pricingReferenceImportsListInputSchema>;
 export type PricingReferenceImportGetInput = z.infer<typeof pricingReferenceImportGetInputSchema>;
 export type PricingReferenceRowsListInput = z.infer<typeof pricingReferenceRowsListInputSchema>;
@@ -705,6 +696,7 @@ export type PricingReferenceClassificationListInput = z.infer<typeof pricingRefe
 export type PricingReferenceSegmentsListInput = z.infer<typeof pricingReferenceSegmentsListInputSchema>;
 export type PricingReferenceAnomaliesListInput = z.infer<typeof pricingReferenceAnomaliesListInputSchema>;
 export type PricingReferenceAnomaliesSummaryGetInput = z.infer<typeof pricingReferenceAnomaliesSummaryGetInputSchema>;
+export type PricingReferenceAnomaliesExportInput = z.infer<typeof pricingReferenceAnomaliesExportInputSchema>;
 export type PricingReferenceClassificationListAllInput = z.infer<typeof pricingReferenceClassificationListAllInputSchema>;
 export type PricingReferencePreparedFile = z.infer<typeof pricingReferencePreparedFileSchema>;
 export type PricingReferenceImportsPrepareResponse = z.infer<typeof pricingReferenceImportsPrepareResponseSchema>;
@@ -717,15 +709,12 @@ export type PricingReferenceHealthGetResponse = z.infer<typeof pricingReferenceH
 export type PricingReferenceClassificationListResponse = z.infer<typeof pricingReferenceClassificationListResponseSchema>;
 export type PricingReferenceSegmentsListResponse = z.infer<typeof pricingReferenceSegmentsListResponseSchema>;
 export type PricingReferenceAnomaliesListResponse = z.infer<typeof pricingReferenceAnomaliesListResponseSchema>;
-export type PricingReferenceAnomaliesSummaryType = z.infer<typeof pricingReferenceAnomaliesSummaryTypeSchema>;
-export type PricingReferenceAnomaliesSummaryMarque = z.infer<typeof pricingReferenceAnomaliesSummaryMarqueSchema>;
+export type PricingReferenceAnomaliesSummaryGroupByType = z.infer<typeof pricingReferenceAnomaliesSummaryGroupByTypeSchema>;
+export type PricingReferenceAnomaliesFacet = z.infer<typeof pricingReferenceAnomaliesFacetSchema>;
 export type PricingReferenceAnomaliesSummaryResponse = z.infer<typeof pricingReferenceAnomaliesSummaryResponseSchema>;
+export type PricingReferenceAnomaliesExportResponse = z.infer<typeof pricingReferenceAnomaliesExportResponseSchema>;
 export type PricingReferenceClassificationListAllResponse = z.infer<typeof pricingReferenceClassificationListAllResponseSchema>;
-export type PricingReferenceCorrectionPlanGroup = z.infer<typeof pricingReferenceCorrectionPlanGroupSchema>;
-export type PricingReferenceCorrectionPlanResponse = z.infer<typeof pricingReferenceCorrectionPlanResponseSchema>;
 export type PricingReferenceImportAssistMappingResponse = z.infer<typeof pricingReferenceImportAssistMappingResponseSchema>;
-export type PricingReferenceBatchCorrectionProposal = z.infer<typeof pricingReferenceBatchCorrectionProposalSchema>;
-export type PricingReferenceBatchCorrectionProposalsResponse = z.infer<typeof pricingReferenceBatchCorrectionProposalsResponseSchema>;
 export type PricingReferenceColumnMapping = z.infer<typeof pricingReferenceColumnMappingSchema>;
 export type PricingReferenceColumnAliases = z.infer<typeof pricingReferenceColumnAliasesSchema>;
 export type PricingReferenceColumnMappingCandidate = z.infer<typeof pricingReferenceColumnMappingCandidateSchema>;

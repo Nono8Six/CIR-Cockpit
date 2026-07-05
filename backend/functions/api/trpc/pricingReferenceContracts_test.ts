@@ -2,16 +2,15 @@ import { assertEquals } from 'std/assert';
 
 import {
   PRICING_REFERENCE_MAX_FILE_SIZE_BYTES,
+  pricingReferenceAnomaliesExportInputSchema,
+  pricingReferenceAnomaliesExportResponseSchema,
   pricingReferenceAnomaliesListInputSchema,
   pricingReferenceAnomaliesListResponseSchema,
   pricingReferenceAnomaliesSummaryGetInputSchema,
   pricingReferenceAnomaliesSummaryResponseSchema,
   pricingReferenceClassificationListAllInputSchema,
   pricingReferenceClassificationListAllResponseSchema,
-  pricingReferenceBatchCorrectionProposalsResponseSchema,
   pricingReferenceClassificationListInputSchema,
-  pricingReferenceCorrectionPlanGetInputSchema,
-  pricingReferenceCorrectionPlanResponseSchema,
   pricingReferenceDiagnoseInputSchema,
   pricingReferenceDiagnoseResponseSchema,
   pricingReferenceImportAssistMappingInputSchema,
@@ -26,7 +25,6 @@ import {
 } from '../../../../shared/schemas/pricing/references.schema.ts';
 import type { DbClient } from '../types.ts';
 import {
-  buildPricingReferenceCorrectionPlanFromRows,
   getPricingReferenceAnomaliesSummary,
   listAllPricingReferenceClassification
 } from '../services/pricing/references/referenceImports.ts';
@@ -155,10 +153,32 @@ Deno.test('pricing reference list and analyze contracts reject unsupported field
   assertEquals(pricingReferenceAnomaliesListInputSchema.safeParse({
     page: 1,
     page_size: 50,
-    severity: 'haute',
+    severities: ['haute'],
+    types: ['purchase_grid_missing'],
+    marques: ['BOSCH'],
     sort_by: 'severity',
     sort_direction: 'asc'
   }).success, true);
+  assertEquals(pricingReferenceAnomaliesListInputSchema.safeParse({
+    page: 1,
+    page_size: 50,
+    severities: Array(21).fill('haute')
+  }).success, false);
+  assertEquals(pricingReferenceAnomaliesListInputSchema.safeParse({
+    page: 1,
+    page_size: 50,
+    types: Array(21).fill('purchase_grid_missing')
+  }).success, false);
+  assertEquals(pricingReferenceAnomaliesListInputSchema.safeParse({
+    page: 1,
+    page_size: 50,
+    marques: Array(21).fill('BOSCH')
+  }).success, false);
+  assertEquals(pricingReferenceAnomaliesListInputSchema.safeParse({
+    page: 1,
+    page_size: 50,
+    severity: 'haute'
+  }).success, false);
   assertEquals(pricingReferenceAnomaliesListInputSchema.safeParse({
     page: 1,
     page_size: 50,
@@ -232,42 +252,92 @@ Deno.test('pricing reference summary and listAll contracts are strict', () => {
     import_id: '11111111-1111-4111-8111-111111111111'
   }).success, true);
   assertEquals(pricingReferenceAnomaliesSummaryGetInputSchema.safeParse({
+    search: 'segment',
+    severities: ['haute'],
+    types: ['purchase_grid_missing'],
+    marques: ['BOSCH']
+  }).success, true);
+  assertEquals(pricingReferenceAnomaliesSummaryGetInputSchema.safeParse({
     page: 1
   }).success, false);
   assertEquals(pricingReferenceAnomaliesListInputSchema.safeParse({
     page: 1,
     page_size: 50,
-    marque: 'BOSCH',
-    type: 'purchase_grid_missing'
+    marques: ['BOSCH'],
+    types: ['purchase_grid_missing']
   }).success, true);
   assertEquals(pricingReferenceAnomaliesListInputSchema.safeParse({
     page: 1,
     page_size: 50,
-    marque: ''
+    marques: ['']
   }).success, false);
+  assertEquals(pricingReferenceAnomaliesExportInputSchema.safeParse({
+    search: 'segment',
+    severities: ['moyenne'],
+    types: ['purchase_grid_missing'],
+    marques: ['BOSCH']
+  }).success, true);
+  assertEquals(pricingReferenceAnomaliesExportInputSchema.safeParse({
+    page: 1
+  }).success, false);
+  assertEquals(pricingReferenceAnomaliesSummaryResponseSchema.safeParse({
+    ok: true,
+    total: 3,
+    groups_by_type: [{
+      type: 'purchase_grid_missing',
+      label: 'Grille achat incomplete',
+      action_label: 'Completer les champs de grille achat structurels dans le fichier source.',
+      count: 3,
+      max_severity: 'haute'
+    }],
+    facets: {
+      severities: [{
+        value: 'haute',
+        label: 'Haute',
+        count: 3,
+        max_severity: 'haute'
+      }],
+      types: [{
+        value: 'purchase_grid_missing',
+        label: 'Grille achat incomplete',
+        count: 3,
+        max_severity: 'haute'
+      }],
+      marques: [{
+        value: 'BOSCH',
+        label: 'BOSCH',
+        count: 3,
+        max_severity: 'haute'
+      }]
+    }
+  }).success, true);
   assertEquals(pricingReferenceAnomaliesSummaryResponseSchema.safeParse({
     ok: true,
     total: 3,
     marques: [{
       marque: 'BOSCH',
       max_severity: 'haute',
-      anomaly_count: 3,
       types: [{
         type: 'purchase_grid_missing',
-        max_severity: 'haute',
-        anomaly_count: 3
+        max_severity: 'haute'
       }]
     }]
-  }).success, true);
-  assertEquals(pricingReferenceAnomaliesSummaryResponseSchema.safeParse({
+  }).success, false);
+  assertEquals(pricingReferenceAnomaliesExportResponseSchema.safeParse({
     ok: true,
-    total: 1,
-    marques: [{
-      marque: 'BOSCH',
-      max_severity: 'haute',
-      anomaly_count: 1,
-      types: []
-    }]
+    request_id: 'request-1',
+    download_url: 'https://example.test/export.xlsx',
+    expires_at: '2026-06-22T11:08:00.000Z',
+    filename: 'anomalies.xlsx',
+    row_count: 1
+  }).success, true);
+  assertEquals(pricingReferenceAnomaliesExportResponseSchema.safeParse({
+    ok: true,
+    request_id: 'request-1',
+    download_url: 'https://example.test/export.xlsx',
+    expires_at: '2026-06-22T11:08:00.000Z',
+    filename: 'anomalies.xlsx',
+    row_count: -1
   }).success, false);
   assertEquals(pricingReferenceClassificationListAllInputSchema.safeParse({}).success, true);
   assertEquals(pricingReferenceClassificationListAllInputSchema.safeParse({
@@ -327,61 +397,66 @@ Deno.test('pricing reference classification listAll returns a real total when ca
   assertEquals(response.truncated, true);
 });
 
-Deno.test('pricing reference anomalies summary aggregates severities by marque and type', async () => {
-  const { db } = createExecuteOnlyDb([[
-    {
-      marque: 'BOSCH',
-      type: 'purchase_grid_missing',
-      anomaly_count: 2,
-      max_severity_weight: 2
-    },
-    {
-      marque: 'BOSCH',
-      type: 'segment_classification_unknown',
-      anomaly_count: 1,
-      max_severity_weight: 4
-    },
-    {
-      marque: 'Général',
-      type: 'invalid_file',
-      anomaly_count: 1,
-      max_severity_weight: 3
-    }
-  ]]);
+Deno.test('pricing reference anomalies summary aggregates faceted counts', async () => {
+  const { db } = createExecuteOnlyDb([
+    [{ total: 4 }],
+    [
+      { type: 'segment_classification_unknown', count: 1, max_severity_weight: 4 },
+      { type: 'invalid_file', count: 1, max_severity_weight: 3 },
+      { type: 'purchase_grid_missing', count: 2, max_severity_weight: 2 }
+    ],
+    [
+      { value: 'bloquante', count: 1, max_severity_weight: 4 },
+      { value: 'haute', count: 1, max_severity_weight: 3 },
+      { value: 'moyenne', count: 2, max_severity_weight: 2 }
+    ],
+    [
+      { value: 'segment_classification_unknown', count: 1, max_severity_weight: 4 },
+      { value: 'invalid_file', count: 1, max_severity_weight: 3 },
+      { value: 'purchase_grid_missing', count: 2, max_severity_weight: 2 }
+    ],
+    [
+      { value: 'BOSCH', count: 3, max_severity_weight: 4 },
+      { value: 'Général', count: 1, max_severity_weight: 3 }
+    ]
+  ]);
 
   const response = await getPricingReferenceAnomaliesSummary(db, 'user-1', 'request-1', {
     snapshot_id: '33333333-3333-4333-8333-333333333333'
   });
 
   assertEquals(response.total, 4);
-  assertEquals(response.marques, [
+  assertEquals(response.groups_by_type, [
     {
-      marque: 'BOSCH',
-      max_severity: 'bloquante',
-      anomaly_count: 3,
-      types: [
-        {
-          type: 'segment_classification_unknown',
-          max_severity: 'bloquante',
-          anomaly_count: 1
-        },
-        {
-          type: 'purchase_grid_missing',
-          max_severity: 'moyenne',
-          anomaly_count: 2
-        }
-      ]
+      type: 'segment_classification_unknown',
+      label: 'Cle CIR inconnue',
+      action_label: 'Corriger la cle CIR ou importer la classification correspondante.',
+      count: 1,
+      max_severity: 'bloquante'
     },
     {
-      marque: 'Général',
+      type: 'invalid_file',
+      label: 'Fichier invalide',
+      action_label: 'Remplacer le fichier par un export Excel valide.',
+      count: 1,
       max_severity: 'haute',
-      anomaly_count: 1,
-      types: [{
-        type: 'invalid_file',
-        max_severity: 'haute',
-        anomaly_count: 1
-      }]
+    },
+    {
+      type: 'purchase_grid_missing',
+      label: 'Grille achat incomplete',
+      action_label: 'Completer les champs de grille achat structurels dans le fichier source.',
+      count: 2,
+      max_severity: 'moyenne'
     }
+  ]);
+  assertEquals(response.facets.severities, [
+    { value: 'bloquante', label: 'Bloquante', count: 1, max_severity: 'bloquante' },
+    { value: 'haute', label: 'Haute', count: 1, max_severity: 'haute' },
+    { value: 'moyenne', label: 'Moyenne', count: 2, max_severity: 'moyenne' }
+  ]);
+  assertEquals(response.facets.marques, [
+    { value: 'BOSCH', label: 'BOSCH', count: 3, max_severity: 'bloquante' },
+    { value: 'Général', label: 'Général', count: 1, max_severity: 'haute' }
   ]);
 });
 
@@ -540,59 +615,10 @@ Deno.test('pricing reference diagnose contract validates correct structure', () 
   }).success, false);
 });
 
-Deno.test('pricing reference correction assistance contracts are strict', () => {
+Deno.test('pricing reference assist mapping contracts are strict', () => {
   const scope = {
     import_id: '11111111-1111-4111-8111-111111111111'
   };
-  assertEquals(pricingReferenceCorrectionPlanGetInputSchema.safeParse(scope).success, true);
-  assertEquals(pricingReferenceCorrectionPlanGetInputSchema.safeParse({
-    ...scope,
-    auto_apply: true
-  }).success, false);
-
-  const correctionPlan = {
-    ok: true,
-    request_id: 'request-1',
-    import_id: scope.import_id,
-    snapshot_id: '22222222-2222-4222-8222-222222222222',
-    generated_at: '2026-06-22T10:08:00.000Z',
-    totals: { total: 1, bloquante: 0, haute: 0, moyenne: 1, faible: 0 },
-    groups: [{
-      id: 'grp-1',
-      rank: 1,
-      type: 'purchase_grid_missing',
-      severity: 'moyenne',
-      marque: 'PARK',
-      segment: 'OKY',
-      category: 'POMPE',
-      columns: ['NUM_FOUR'],
-      anomaly_count: 1,
-      impacted_rows: 1,
-      source_rows: [4766],
-      source_files: [{
-        file_kind: 'segments_grids',
-        original_filename: 'segments.xlsx'
-      }],
-      message: 'Champ grille achat structurel manquant.',
-      evidence: ['1 anomalie(s) dans ce groupe.'],
-      excel_action: 'Completer dans Excel les champs de grille achat manquants: NUM_FOUR.',
-      can_suggest_values: false,
-      value_suggestion_reason: 'Aucune valeur proposee sans preuve deterministe majoritaire ou historique valide.'
-    }],
-    deterministic_recommendations: ['Corriger le fichier Excel source.'],
-    ai_policy: {
-      mode: 'secondary_interpretation_only',
-      can_modify_source: false,
-      can_modify_database: false,
-      can_invent_values: false
-    }
-  };
-  assertEquals(pricingReferenceCorrectionPlanResponseSchema.safeParse(correctionPlan).success, true);
-  assertEquals(pricingReferenceCorrectionPlanResponseSchema.safeParse({
-    ...correctionPlan,
-    ai_policy: { ...correctionPlan.ai_policy, can_invent_values: true }
-  }).success, false);
-
   const assistInput = {
     import_id: scope.import_id,
     file_id: '33333333-3333-4333-8333-333333333333',
@@ -632,78 +658,4 @@ Deno.test('pricing reference correction assistance contracts are strict', () => 
       can_confirm_mapping: false
     }
   }).success, true);
-  assertEquals(pricingReferenceBatchCorrectionProposalsResponseSchema.safeParse({
-    ok: true,
-    import_id: scope.import_id,
-    snapshot_id: '22222222-2222-4222-8222-222222222222',
-    generated_at: '2026-06-22T10:08:00.000Z',
-    proposals: [{
-      id: 'batch-grp-1',
-      group_id: 'grp-1',
-      label: 'PARK · Champ grille achat structurel manquant.',
-      anomaly_count: 1,
-      columns: ['NUM_FOUR'],
-      source_rows: [4766],
-      manual_excel_action: 'Completer dans Excel.',
-      proposed_values: [],
-      status: 'proof_required',
-      application_mode: 'manual_excel_only'
-    }],
-    automatic_apply_available: false
-  }).success, true);
-});
-
-Deno.test('pricing reference correction plan groups anomalies deterministically without invented values', () => {
-  const plan = buildPricingReferenceCorrectionPlanFromRows([
-    {
-      id: 'a1',
-      import_id: '11111111-1111-4111-8111-111111111111',
-      snapshot_id: '22222222-2222-4222-8222-222222222222',
-      source_file_id: null,
-      source_file: {
-        file_kind: 'segments_grids',
-        original_filename: 'segments.xlsx'
-      },
-      source_row_number: 4766,
-      type: 'purchase_grid_missing',
-      severity: 'moyenne',
-      object_type: null,
-      object_id: null,
-      columns: ['NUM_FOUR'],
-      message: 'Champ grille achat structurel manquant.',
-      details: { segment_key: 'OKY|4661|PARK|POMPE' },
-      created_at: '2026-06-22T10:06:00.000Z'
-    },
-    {
-      id: 'a2',
-      import_id: '11111111-1111-4111-8111-111111111111',
-      snapshot_id: '22222222-2222-4222-8222-222222222222',
-      source_file_id: null,
-      source_file: {
-        file_kind: 'segments_grids',
-        original_filename: 'segments.xlsx'
-      },
-      source_row_number: 4767,
-      type: 'purchase_grid_missing',
-      severity: 'moyenne',
-      object_type: null,
-      object_id: null,
-      columns: ['NUM_FOUR'],
-      message: 'Champ grille achat structurel manquant.',
-      details: { segment_key: 'OKY|4661|PARK|POMPE' },
-      created_at: '2026-06-22T10:06:30.000Z'
-    }
-  ], 'request-1', '2026-06-22T10:08:00.000Z');
-
-  assertEquals(plan.totals.total, 2);
-  assertEquals(plan.groups.length, 1);
-  assertEquals(plan.groups[0].marque, 'PARK');
-  assertEquals(plan.groups[0].anomaly_count, 2);
-  assertEquals(plan.groups[0].source_rows, [4766, 4767]);
-  assertEquals(plan.groups[0].source_files, [{
-    file_kind: 'segments_grids',
-    original_filename: 'segments.xlsx'
-  }]);
-  assertEquals(plan.groups[0].can_suggest_values, false);
-  assertEquals(plan.groups[0].value_suggestion_reason.includes('Aucune valeur proposee'), true);
 });

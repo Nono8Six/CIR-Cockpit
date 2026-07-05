@@ -8,11 +8,18 @@ type AnomalyRow = PricingReferenceAnomaliesListResponse['rows'][number];
 
 export const EMPTY_VALUE = '-';
 
-export const anomalySeverityToneClassName: Record<PricingReferenceAnomalySeverity, string> = {
-  bloquante: 'border-rose-200/80 bg-rose-50 text-rose-700',
-  haute: 'border-red-200/80 bg-red-50 text-red-700',
-  moyenne: 'border-stone-200 bg-stone-100 text-stone-700',
-  faible: 'border-stone-200 bg-stone-100 text-stone-600'
+export const anomalySeverityDotClassName: Record<PricingReferenceAnomalySeverity, string> = {
+  bloquante: 'bg-red-500',
+  haute: 'bg-amber-500',
+  moyenne: 'bg-amber-500',
+  faible: 'bg-stone-300'
+};
+
+export const anomalySeverityRank: Record<PricingReferenceAnomalySeverity, number> = {
+  bloquante: 3,
+  haute: 2,
+  moyenne: 1,
+  faible: 0
 };
 
 /**
@@ -109,8 +116,8 @@ export const getAnomalyLineContext = (row: AnomalyRow) => {
   return {
     segment: toDisplayValue(rawValues.SEGMENT) ?? parsedKey.segment ?? null,
     idnumerique: toDisplayValue(rawValues.IDNUMERIQUE) ?? parsedKey.idnumerique ?? null,
-    marque: toDisplayValue(rawValues.MARQUE) ?? parsedKey.marque ?? null,
-    catFab: toDisplayValue(rawValues.CAT_FAB) ?? parsedKey.catFab ?? null,
+    marque: toDisplayValue(rawValues.MARQUE) ?? parsedKey.marque ?? toDisplayValue(row.details.marque) ?? null,
+    catFab: toDisplayValue(rawValues.CAT_FAB) ?? parsedKey.catFab ?? toDisplayValue(row.details.cat_fab) ?? null,
     cirKey: toDisplayValue(row.details.cir_key) ?? toDisplayValue(row.details.classification_key)
       ?? toDisplayValue(rawValues.cir_key)
   };

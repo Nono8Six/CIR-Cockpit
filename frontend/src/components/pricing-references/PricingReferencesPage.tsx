@@ -1,15 +1,12 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
-  AlertTriangle,
   ChevronDown,
   Database,
   ListTree,
   Search,
   UploadCloud,
-  Sparkles,
-  X,
-  type LucideIcon
+  X
 } from 'lucide-react';
 
 import {
@@ -27,7 +24,6 @@ import {
   type PricingReferenceSortDirection
 } from '../../../../shared/schemas/pricing/references.schema';
 
-import { Badge } from '@/components/ui/data-display/Badge';
 import { Button } from '@/components/ui/inputs/basic/Button';
 import { Input } from '@/components/ui/inputs/basic/Input';
 import {
@@ -59,12 +55,11 @@ import { ReferenceTable, type DataColumn } from './components/table/reference-ta
 
 import { ImportRows } from './components/imports/import-rows';
 import { PaginationBar } from './components/table/pagination-bar';
-import { SegmentDetailPanel } from './components/segments/segment-detail-panel';
+import { SegmentDetailDialog } from './components/segments/segment-detail-dialog';
 import { HealthStrip, type TabId } from './components/health/health-strip';
 import { PricingReferenceImportDialog } from './pricing-reference-import-dialog';
 import { ClassificationDrillDown } from './components/classification/classification-drilldown';
-import { AnomalyDrillDown } from './components/anomalies/anomaly-drilldown';
-import { CorrectionPlanDialog } from './components/anomalies/correction-plan-dialog';
+import { AnomaliesTriage, type AnomalySeverityPreset } from './components/anomalies/anomalies-triage';
 
 // Formatters and label mappings
 import { formatCount, formatDateTime, linkStatusLabels } from './utils/pricing-references-formatters';
@@ -73,11 +68,11 @@ type ClassificationRow = PricingReferenceClassificationListResponse['rows'][numb
 type SegmentRow = PricingReferenceSegmentsListResponse['rows'][number];
 const DEFAULT_PAGE_SIZE = 50;
 
-const tabItems: Array<{ id: TabId; label: string; icon: LucideIcon }> = [
-  { id: 'segments', label: 'Segments', icon: Database },
-  { id: 'classification', label: 'Classification', icon: ListTree },
-  { id: 'anomalies', label: 'Anomalies', icon: AlertTriangle },
-  { id: 'imports', label: 'Imports', icon: UploadCloud }
+const tabItems: Array<{ id: TabId; label: string }> = [
+  { id: 'segments', label: 'Segments' },
+  { id: 'classification', label: 'Classification' },
+  { id: 'anomalies', label: 'Anomalies' },
+  { id: 'imports', label: 'Imports' }
 ];
 
 const DEFAULT_TAB: TabId = 'segments';
@@ -117,9 +112,8 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
   const [localActiveTab, setLocalActiveTab] = useState<TabId>(DEFAULT_TAB);
   const [selectedImportId, setSelectedImportId] = useState<string | null>(null);
   const [selectedSegment, setSelectedSegment] = useState<SegmentRow | null>(null);
+  const [anomalySeverityPreset, setAnomalySeverityPreset] = useState<AnomalySeverityPreset | null>(null);
 
-  // Layout control states
-  const [showCorrectionPlan, setShowCorrectionPlan] = useState(false);
   const [classificationViewMode, setClassificationViewMode] = useState<'drilldown' | 'table'>('drilldown');
 
   // Pagination and filter states
@@ -305,6 +299,13 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
         setSegmentsLinkStatus(filters.linkStatus);
         setSegmentsPage(1);
       }
+      if (tab === 'anomalies' && filters?.severity !== undefined) {
+        const severity = filters.severity;
+        setAnomalySeverityPreset((current) => ({
+          id: (current?.id ?? 0) + 1,
+          severities: severity === 'all' ? [] : [severity]
+        }));
+      }
     },
     [handleTabChange]
   );
@@ -316,14 +317,14 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
         id: 'cir_key',
         label: 'Clé CIR',
         sortBy: 'cir_key',
-        className: 'font-mono font-semibold tracking-tight text-foreground',
+        className: 'font-mono font-medium tabular-nums text-foreground',
         render: (row) => row.cir_key
       },
       {
         id: 'mega',
         label: 'Mega',
         sortBy: 'mega',
-        className: 'font-mono text-muted-foreground tabular-nums',
+        className: 'text-muted-foreground tabular-nums',
         render: (row) => row.mega
       },
       { id: 'mega_lib', label: 'Libellé mega', render: (row) => row.mega_lib },
@@ -331,7 +332,7 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
         id: 'fam',
         label: 'Fam',
         sortBy: 'fam',
-        className: 'font-mono text-muted-foreground tabular-nums',
+        className: 'text-muted-foreground tabular-nums',
         render: (row) => row.fam
       },
       { id: 'fam_lib', label: 'Libellé famille', render: (row) => row.fam_lib },
@@ -339,7 +340,7 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
         id: 'sfa',
         label: 'SFA',
         sortBy: 'sfa',
-        className: 'font-mono text-muted-foreground tabular-nums',
+        className: 'text-muted-foreground tabular-nums',
         render: (row) => row.sfa
       },
       { id: 'sfa_lib', label: 'Libellé SFA', render: (row) => row.sfa_lib }
@@ -360,14 +361,14 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
         id: 'cat_fab',
         label: 'Cat fab',
         sortBy: 'cat_fab',
-        className: 'font-mono text-muted-foreground',
+        className: 'text-muted-foreground',
         render: (row) => row.cat_fab
       },
       {
         id: 'segment',
         label: 'Segment',
         sortBy: 'segment',
-        className: 'font-mono text-muted-foreground tabular-nums',
+        className: 'text-muted-foreground tabular-nums',
         render: (row) => row.segment
       },
       {
@@ -378,7 +379,7 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
         render: (row) => row.idnumerique
       },
       { id: 'cat_fab_l', label: 'Libellé', render: (row) => row.cat_fab_l ?? '-' },
-      { id: 'cir_key', label: 'Clé CIR', className: 'font-mono text-foreground', render: (row) => row.cir_key ?? '-' },
+      { id: 'cir_key', label: 'Clé CIR', className: 'font-mono tabular-nums text-foreground', render: (row) => row.cir_key ?? '-' },
       {
         id: 'link_status',
         label: 'Liaison',
@@ -403,7 +404,7 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
         id: 'grids',
         label: 'Grilles',
         sortBy: 'purchase_grid_rows_count',
-        className: 'pr-4 text-right font-mono text-muted-foreground tabular-nums',
+        className: 'text-right font-mono text-muted-foreground tabular-nums',
         render: (row) => formatCount(row.purchase_grid_rows_count)
       }
     ],
@@ -418,22 +419,20 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
       {/* Page Header */}
       <div className="flex shrink-0 flex-col gap-2">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex min-w-0 flex-wrap items-center gap-2.5">
+          <div className="flex min-w-0 flex-wrap items-baseline gap-2.5">
             <h1 className="text-xl font-semibold leading-none tracking-tight text-foreground text-pretty">
               Référentiels CIR
             </h1>
-            <Badge
-              variant="secondary"
-              className={cn(
-                'gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-medium shadow-none',
-                selectedImportId
-                  ? 'border-border bg-muted/55 text-foreground'
-                  : 'border-emerald-200 bg-emerald-50 text-emerald-800'
-              )}
-            >
-              <span className="size-1.5 rounded-full bg-current" aria-hidden="true" />
+            <span className="inline-flex items-center gap-1.5 text-[11px] text-stone-500">
+              <span
+                className={cn(
+                  'size-1.5 rounded-full',
+                  selectedImportId ? 'bg-stone-300' : 'bg-emerald-500'
+                )}
+                aria-hidden="true"
+              />
               {selectedImportId ? 'Import sélectionné' : 'Snapshot actif'}
-            </Badge>
+            </span>
           </div>
 
           {canImport ? (
@@ -495,18 +494,17 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
         onValueChange={(value) => handleTabChange(value as TabId)}
         className="flex min-h-0 flex-1 flex-col"
       >
-        <div className="shrink-0 select-none overflow-x-auto pb-0.5">
-          <TabsList className="w-max justify-start gap-0.5 text-muted-foreground">
+        <div className="shrink-0 select-none overflow-x-auto">
+          <TabsList className="h-9 w-full min-w-max justify-start gap-5 rounded-none border-0 border-b border-stone-200/60 bg-transparent p-0 text-stone-500">
             {tabItems.map((tab) => (
               <TabsTrigger
                 key={tab.id}
                 value={tab.id}
-                className="group gap-1.5 px-3 text-muted-foreground hover:bg-background/70 hover:text-foreground data-[state=active]:bg-foreground data-[state=active]:text-background"
+                className="relative h-9 gap-1.5 rounded-none px-1 text-xs font-normal text-stone-500 shadow-none after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-transparent hover:text-stone-800 data-[state=active]:bg-transparent data-[state=active]:font-medium data-[state=active]:text-stone-950 data-[state=active]:shadow-none data-[state=active]:after:bg-primary"
               >
-                <tab.icon className="size-3.5" aria-hidden="true" />
                 <span className="whitespace-nowrap">{tab.label}</span>
                 {tab.id === 'anomalies' && anomaliesBadgeCount > 0 ? (
-                  <span className="rounded-full bg-amber-100 px-1.5 py-px font-mono text-[10px] font-medium tabular-nums text-amber-800 group-data-[state=active]:bg-white/15 group-data-[state=active]:text-amber-200">
+                  <span className="font-mono text-[11px] tabular-nums text-amber-700">
                     {formatCount(anomaliesBadgeCount)}
                   </span>
                 ) : null}
@@ -606,101 +604,111 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
           value="classification"
           className="min-h-0 flex-1 flex flex-col gap-3.5 overflow-hidden pt-2"
         >
-          {/* View mode toggle switcher */}
-          <div className="flex items-center justify-between gap-4 shrink-0">
-            <SegmentedControl
-              ariaLabel="Mode d'affichage de la classification"
-              value={classificationViewMode}
-              options={[
-                { value: 'drilldown', label: 'Vue escalier' },
-                { value: 'table', label: 'Vue tableau' }
-              ]}
-              onChange={setClassificationViewMode}
-            />
-          </div>
-
           {classificationViewMode === 'drilldown' ? (
-            <ClassificationDrillDown importId={selectedImportId} />
+            <ClassificationDrillDown
+              importId={selectedImportId}
+              toolbar={
+                <SegmentedControl
+                  ariaLabel="Mode d'affichage de la classification"
+                  value={classificationViewMode}
+                  options={[
+                    { value: 'drilldown', label: 'Vue escalier' },
+                    { value: 'table', label: 'Vue tableau' }
+                  ]}
+                  onChange={setClassificationViewMode}
+                />
+              }
+            />
           ) : (
-            <>
-              <div className="flex shrink-0 flex-wrap items-center gap-2">
-                <div className="relative w-full max-w-72">
-                  <Search
-                    className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
-                    aria-hidden="true"
+            <ReferenceTable
+              rows={classificationQuery.data?.rows ?? []}
+              columns={classificationColumns}
+              rowKey={(row) => row.id}
+              isLoading={classificationQuery.isLoading}
+              isFetching={classificationQuery.isFetching}
+              page={classificationPage}
+              pageSize={classificationPageSize}
+              total={classificationQuery.data?.total ?? 0}
+              sortBy={classificationSort.sort_by}
+              sortDirection={classificationSort.sort_direction}
+              emptyLabel="Aucune classification trouvée"
+              toolbar={
+                <>
+                  <SegmentedControl
+                    ariaLabel="Mode d'affichage de la classification"
+                    value={classificationViewMode}
+                    options={[
+                      { value: 'drilldown', label: 'Vue escalier' },
+                      { value: 'table', label: 'Vue tableau' }
+                    ]}
+                    onChange={setClassificationViewMode}
                   />
+                  <div className="relative w-full max-w-64">
+                    <Search
+                      className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
+                      aria-hidden="true"
+                    />
+                    <Input
+                      id="classification-search"
+                      name="classification-search"
+                      density="dense"
+                      aria-label="Rechercher dans la classification"
+                      value={classificationSearch}
+                      placeholder="Rechercher clé ou libellé…"
+                      className="border-border pl-8 text-xs"
+                      onChange={(event) => {
+                        setClassificationSearch(event.target.value);
+                        setClassificationPage(1);
+                      }}
+                    />
+                  </div>
                   <Input
-                    id="classification-search"
-                    name="classification-search"
+                    id="classification-mega"
+                    name="classification-mega"
                     density="dense"
-                    aria-label="Rechercher dans la classification"
-                    value={classificationSearch}
-                    placeholder="Rechercher clé ou libellé…"
-                    className="border-border pl-8 text-xs"
+                    aria-label="Filtrer par méga-famille"
+                    value={classificationMega}
+                    placeholder="Mega"
+                    className="w-24 border-border text-xs"
                     onChange={(event) => {
-                      setClassificationSearch(event.target.value);
+                      setClassificationMega(event.target.value);
                       setClassificationPage(1);
                     }}
                   />
-                </div>
-                <Input
-                  id="classification-mega"
-                  name="classification-mega"
-                  density="dense"
-                  aria-label="Filtrer par méga-famille"
-                  value={classificationMega}
-                  placeholder="Mega"
-                  className="w-24 border-border text-xs"
-                  onChange={(event) => {
-                    setClassificationMega(event.target.value);
-                    setClassificationPage(1);
-                  }}
-                />
-                <Input
-                  id="classification-fam"
-                  name="classification-fam"
-                  density="dense"
-                  aria-label="Filtrer par famille"
-                  value={classificationFam}
-                  placeholder="Fam"
-                  className="w-24 border-border text-xs"
-                  onChange={(event) => {
-                    setClassificationFam(event.target.value);
-                    setClassificationPage(1);
-                  }}
-                />
-                <span className="ml-auto font-mono text-[11px] tabular-nums text-muted-foreground">
-                  {formatCount(classificationQuery.data?.total)} clés
-                </span>
-              </div>
-              <ReferenceTable
-                rows={classificationQuery.data?.rows ?? []}
-                columns={classificationColumns}
-                isLoading={classificationQuery.isLoading}
-                isFetching={classificationQuery.isFetching}
-                page={classificationPage}
-                pageSize={classificationPageSize}
-                total={classificationQuery.data?.total ?? 0}
-                sortBy={classificationSort.sort_by}
-                sortDirection={classificationSort.sort_direction}
-                emptyLabel="Aucune classification trouvée"
-                onSort={(sortBy) => {
-                  setClassificationSort((current) =>
-                    toggleSort(
-                      current.sort_by,
-                      current.sort_direction,
-                      sortBy as PricingReferenceClassificationSortBy
-                    )
-                  );
-                  setClassificationPage(1);
-                }}
-                onPageChange={setClassificationPage}
-                onPageSizeChange={(nextPageSize) => {
-                  setClassificationPageSize(nextPageSize);
-                  setClassificationPage(1);
-                }}
-              />
-            </>
+                  <Input
+                    id="classification-fam"
+                    name="classification-fam"
+                    density="dense"
+                    aria-label="Filtrer par famille"
+                    value={classificationFam}
+                    placeholder="Fam"
+                    className="w-24 border-border text-xs"
+                    onChange={(event) => {
+                      setClassificationFam(event.target.value);
+                      setClassificationPage(1);
+                    }}
+                  />
+                  <span className="ml-auto font-mono text-[11px] tabular-nums text-muted-foreground">
+                    {formatCount(classificationQuery.data?.total)} clés
+                  </span>
+                </>
+              }
+              onSort={(sortBy) => {
+                setClassificationSort((current) =>
+                  toggleSort(
+                    current.sort_by,
+                    current.sort_direction,
+                    sortBy as PricingReferenceClassificationSortBy
+                  )
+                );
+                setClassificationPage(1);
+              }}
+              onPageChange={setClassificationPage}
+              onPageSizeChange={(nextPageSize) => {
+                setClassificationPageSize(nextPageSize);
+                setClassificationPage(1);
+              }}
+            />
           )}
         </TabsContent>
 
@@ -709,153 +717,128 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
           value="segments"
           className="min-h-0 flex-1 flex flex-col gap-3 overflow-hidden pt-2"
         >
-          <div className="flex shrink-0 flex-wrap items-center gap-2">
-            <div className="relative w-full max-w-72">
-              <Search
-                className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
-                aria-hidden="true"
-              />
-              <Input
-                id="segments-search"
-                name="segments-search"
-                density="dense"
-                aria-label="Rechercher un segment"
-                value={segmentsSearch}
-                placeholder="Rechercher marque, catégorie…"
-                className="border-border pl-8 text-xs"
-                onChange={(event) => {
-                  setSegmentsSearch(event.target.value);
-                  setSegmentsPage(1);
-                }}
-              />
-            </div>
-            <Input
-              id="segments-marque"
-              name="segments-marque"
-              density="dense"
-              aria-label="Filtrer par marque"
-              value={segmentsMarque}
-              placeholder="Marque"
-              className="w-28 border-border text-xs"
-              onChange={(event) => {
-                setSegmentsMarque(event.target.value);
-                setSegmentsPage(1);
-              }}
-            />
-            <Input
-              id="segments-cat-fab"
-              name="segments-cat-fab"
-              density="dense"
-              aria-label="Filtrer par catégorie fabricant"
-              value={segmentsCatFab}
-              placeholder="Cat fab"
-              className="w-28 border-border text-xs"
-              onChange={(event) => {
-                setSegmentsCatFab(event.target.value);
-                setSegmentsPage(1);
-              }}
-            />
-            <NativeSelect
-              id="segments-link-status"
-              label="Filtrer par statut de liaison"
-              hideLabel
-              triggerClassName={cn(
-                'w-40 border-border bg-background text-xs transition-colors hover:border-border/90',
-                segmentsLinkStatus !== 'all' && 'border-amber-300 bg-amber-50 text-amber-900'
-              )}
-              value={segmentsLinkStatus}
-              options={[
-                { value: 'all', label: 'Liaison : toutes' },
-                ...pricingReferenceLinkStatusSchema.options.map((status) => ({
-                  value: status,
-                  label: linkStatusLabels[status]
-                }))
-              ]}
-              onChange={(value) => {
-                setSegmentsLinkStatus(value as PricingReferenceLinkStatus | 'all');
-                setSegmentsPage(1);
-              }}
-            />
-            {hasSegmentFilters ? (
-              <button
-                type="button"
-                onClick={resetSegmentFilters}
-                className="inline-flex h-8 items-center gap-1 rounded-lg px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted/55 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/45"
-              >
-                <X className="size-3.5" aria-hidden="true" />
-                Réinitialiser
-              </button>
-            ) : null}
-            <span className="ml-auto font-mono text-[11px] tabular-nums text-muted-foreground">
-              {formatCount(segmentsQuery.data?.total)} segments
-            </span>
-          </div>
-          <div
-            className={cn(
-              'grid min-h-0 flex-1 gap-4',
-              selectedSegment && 'xl:grid-cols-[minmax(0,1fr)_24rem]'
-            )}
-          >
-            <ReferenceTable
-              rows={segmentsQuery.data?.rows ?? []}
-              columns={segmentColumns}
-              isLoading={segmentsQuery.isLoading}
-              isFetching={segmentsQuery.isFetching}
-              page={segmentsPage}
-              pageSize={segmentsPageSize}
-              total={segmentsQuery.data?.total ?? 0}
-              sortBy={segmentsSort.sort_by}
-              sortDirection={segmentsSort.sort_direction}
-              emptyLabel="Aucun segment trouvé"
-              onRowClick={(row) => setSelectedSegment(row)}
-              rowActionLabel="Voir le détail du segment"
-              onSort={(sortBy) => {
-                setSegmentsSort((current) =>
-                  toggleSort(
-                    current.sort_by,
-                    current.sort_direction,
-                    sortBy as PricingReferenceSegmentsSortBy
-                  )
-                );
-                setSegmentsPage(1);
-              }}
-              onPageChange={setSegmentsPage}
-              onPageSizeChange={(nextPageSize) => {
-                setSegmentsPageSize(nextPageSize);
-                setSegmentsPage(1);
-              }}
-            />
-            <SegmentDetailPanel segment={selectedSegment} onClose={() => setSelectedSegment(null)} />
-          </div>
+          <ReferenceTable
+            rows={segmentsQuery.data?.rows ?? []}
+            columns={segmentColumns}
+            rowKey={(row) => row.id}
+            isLoading={segmentsQuery.isLoading}
+            isFetching={segmentsQuery.isFetching}
+            page={segmentsPage}
+            pageSize={segmentsPageSize}
+            total={segmentsQuery.data?.total ?? 0}
+            sortBy={segmentsSort.sort_by}
+            sortDirection={segmentsSort.sort_direction}
+            emptyLabel="Aucun segment trouvé"
+            toolbar={
+              <>
+                <div className="relative w-full max-w-64">
+                  <Search
+                    className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                  <Input
+                    id="segments-search"
+                    name="segments-search"
+                    density="dense"
+                    aria-label="Rechercher un segment"
+                    value={segmentsSearch}
+                    placeholder="Rechercher marque, catégorie…"
+                    className="border-border pl-8 text-xs"
+                    onChange={(event) => {
+                      setSegmentsSearch(event.target.value);
+                      setSegmentsPage(1);
+                    }}
+                  />
+                </div>
+                <Input
+                  id="segments-marque"
+                  name="segments-marque"
+                  density="dense"
+                  aria-label="Filtrer par marque"
+                  value={segmentsMarque}
+                  placeholder="Marque"
+                  className="w-28 border-border text-xs"
+                  onChange={(event) => {
+                    setSegmentsMarque(event.target.value);
+                    setSegmentsPage(1);
+                  }}
+                />
+                <Input
+                  id="segments-cat-fab"
+                  name="segments-cat-fab"
+                  density="dense"
+                  aria-label="Filtrer par catégorie fabricant"
+                  value={segmentsCatFab}
+                  placeholder="Cat fab"
+                  className="w-28 border-border text-xs"
+                  onChange={(event) => {
+                    setSegmentsCatFab(event.target.value);
+                    setSegmentsPage(1);
+                  }}
+                />
+                <NativeSelect
+                  id="segments-link-status"
+                  label="Filtrer par statut de liaison"
+                  hideLabel
+                  triggerClassName={cn(
+                    'w-40 border-border bg-background text-xs transition-colors hover:border-border/90',
+                    segmentsLinkStatus !== 'all' && 'border-amber-300 bg-amber-50 text-amber-900'
+                  )}
+                  value={segmentsLinkStatus}
+                  options={[
+                    { value: 'all', label: 'Liaison : toutes' },
+                    ...pricingReferenceLinkStatusSchema.options.map((status) => ({
+                      value: status,
+                      label: linkStatusLabels[status]
+                    }))
+                  ]}
+                  onChange={(value) => {
+                    setSegmentsLinkStatus(value as PricingReferenceLinkStatus | 'all');
+                    setSegmentsPage(1);
+                  }}
+                />
+                {hasSegmentFilters ? (
+                  <button
+                    type="button"
+                    onClick={resetSegmentFilters}
+                    className="inline-flex h-8 items-center gap-1 rounded-lg px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted/55 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/45"
+                  >
+                    <X className="size-3.5" aria-hidden="true" />
+                    Réinitialiser
+                  </button>
+                ) : null}
+                <span className="ml-auto font-mono text-[11px] tabular-nums text-muted-foreground">
+                  {formatCount(segmentsQuery.data?.total)} segments
+                </span>
+              </>
+            }
+            onRowClick={(row) => setSelectedSegment(row)}
+            rowActionLabel="Voir le détail du segment"
+            onSort={(sortBy) => {
+              setSegmentsSort((current) =>
+                toggleSort(
+                  current.sort_by,
+                  current.sort_direction,
+                  sortBy as PricingReferenceSegmentsSortBy
+                )
+              );
+              setSegmentsPage(1);
+            }}
+            onPageChange={setSegmentsPage}
+            onPageSizeChange={(nextPageSize) => {
+              setSegmentsPageSize(nextPageSize);
+              setSegmentsPage(1);
+            }}
+          />
+          <SegmentDetailDialog segment={selectedSegment} onClose={() => setSelectedSegment(null)} />
         </TabsContent>
 
-        {/* Tab 4: Anomalies & correction plan */}
+        {/* Tab 4: Anomalies */}
         <TabsContent
           value="anomalies"
           className="min-h-0 flex-1 flex flex-col gap-3 overflow-hidden pt-2"
         >
-          <div className="flex shrink-0 justify-end">
-            {healthQuery.data?.health_report && (
-              <button
-                type="button"
-                onClick={() => setShowCorrectionPlan(true)}
-                className="inline-flex h-8 items-center gap-2 rounded-lg border border-border bg-background px-3 text-xs font-medium text-muted-foreground transition-[background-color,border-color,color,transform] hover:border-border/90 hover:bg-muted/55 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/45 active:scale-[0.98]"
-              >
-                <Sparkles className="size-3.5 text-muted-foreground" aria-hidden="true" />
-                Plan de correction
-              </button>
-            )}
-          </div>
-
-          <CorrectionPlanDialog
-            open={showCorrectionPlan}
-            importId={selectedImportId}
-            onOpenChange={setShowCorrectionPlan}
-          />
-
-          <div className="flex min-h-0 flex-1 flex-col">
-            <AnomalyDrillDown importId={selectedImportId} />
-          </div>
+          <AnomaliesTriage importId={selectedImportId} severityPreset={anomalySeverityPreset} />
         </TabsContent>
       </Tabs>
 

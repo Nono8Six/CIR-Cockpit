@@ -73,16 +73,14 @@ import {
 import {
   pricingReferenceAnomaliesListInputSchema,
   pricingReferenceAnomaliesListResponseSchema,
+  pricingReferenceAnomaliesExportInputSchema,
+  pricingReferenceAnomaliesExportResponseSchema,
   pricingReferenceAnomaliesSummaryGetInputSchema,
   pricingReferenceAnomaliesSummaryResponseSchema,
-  pricingReferenceBatchCorrectionProposalsGetInputSchema,
-  pricingReferenceBatchCorrectionProposalsResponseSchema,
   pricingReferenceClassificationListAllInputSchema,
   pricingReferenceClassificationListAllResponseSchema,
   pricingReferenceClassificationListInputSchema,
   pricingReferenceClassificationListResponseSchema,
-  pricingReferenceCorrectionPlanGetInputSchema,
-  pricingReferenceCorrectionPlanResponseSchema,
   pricingReferenceDiagnoseInputSchema,
   pricingReferenceDiagnoseResponseSchema,
   pricingReferenceHealthGetInputSchema,
@@ -170,9 +168,8 @@ import {
   analyzePricingReferenceImport,
   assistPricingReferenceImportMapping,
   confirmPricingReferenceImportMapping,
+  exportPricingReferenceAnomalies,
   getPricingReferenceAnomaliesSummary,
-  getPricingReferenceBatchCorrectionProposals,
-  getPricingReferenceCorrectionPlan,
   getPricingReferenceHealth,
   getPricingReferenceImport,
   inspectPricingReferenceImport,
@@ -378,17 +375,11 @@ export const appRouter = router({
           .query(withAuthedHandler((db, authContext, requestId, input) =>
             getPricingReferenceAnomaliesSummary(db, authContext.userId, requestId, input)
           )),
-        correctionPlan: authedProcedure
-          .input(pricingReferenceCorrectionPlanGetInputSchema)
-          .output(pricingReferenceCorrectionPlanResponseSchema)
-          .query(withAuthedHandler((db, authContext, requestId, input) =>
-            getPricingReferenceCorrectionPlan(db, authContext.userId, requestId, input)
-          )),
-        batchProposals: authedProcedure
-          .input(pricingReferenceBatchCorrectionProposalsGetInputSchema)
-          .output(pricingReferenceBatchCorrectionProposalsResponseSchema)
-          .query(withAuthedHandler((db, authContext, requestId, input) =>
-            getPricingReferenceBatchCorrectionProposals(db, authContext.userId, requestId, input)
+        export: authedProcedure
+          .input(pricingReferenceAnomaliesExportInputSchema)
+          .output(pricingReferenceAnomaliesExportResponseSchema)
+          .mutation(withAuthedHandler((db, authContext, requestId, input) =>
+            exportPricingReferenceAnomalies(db, authContext.userId, requestId, input)
           ))
       }),
       diagnose: authedProcedure

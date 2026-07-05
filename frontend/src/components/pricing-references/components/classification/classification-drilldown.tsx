@@ -1,13 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { AlertTriangle, Check, ChevronRight, Copy, Search, Sparkles } from 'lucide-react';
+import { AlertTriangle, Check, ChevronRight, Copy, Search } from 'lucide-react';
 
 import type { PricingReferenceClassificationListResponse } from '../../../../../../shared/schemas/pricing/references.schema';
 import { listAllPricingReferenceClassification } from '@/services/pricingReferences';
 import { pricingReferenceClassificationAllKey } from '@/services/query/queryKeys';
-import { Badge } from '@/components/ui/data-display/Badge';
 import { Button } from '@/components/ui/inputs/basic/Button';
-import { Input } from '@/components/ui/inputs/basic/Input';
 import { cn } from '@/lib/utils';
 import { handleUiError } from '@/services/errors/handleUiError';
 import { formatCount } from '../../utils/pricing-references-formatters';
@@ -16,6 +14,7 @@ type ClassificationRow = PricingReferenceClassificationListResponse['rows'][numb
 
 interface ClassificationDrillDownProps {
   importId?: string | null;
+  toolbar?: ReactNode;
 }
 
 interface SubFamilyNode {
@@ -42,39 +41,81 @@ interface ClassificationTree {
   [megaId: string]: MegaFamilyNode;
 }
 
+const columnClassName =
+  'flex min-h-0 flex-col border-b border-stone-200/60 last:border-b-0 md:border-b-0 md:border-r md:border-stone-200/60 md:last:border-r-0';
+
+const ColumnHeader = ({ label, count }: { label: string; count: number | null }) => (
+  <div className="flex h-9 shrink-0 select-none items-center justify-between border-b border-stone-200/60 px-3">
+    <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-stone-400">{label}</span>
+    {count !== null ? (
+      <span className="font-mono text-[11px] tabular-nums text-stone-400">{formatCount(count)}</span>
+    ) : null}
+  </div>
+);
+
+const GhostSearch = ({
+  value,
+  onChange,
+  placeholder,
+  ariaLabel,
+  disabled
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  ariaLabel: string;
+  disabled?: boolean;
+}) => (
+  <div className="relative shrink-0 border-b border-stone-100 transition-colors focus-within:border-stone-300">
+    <Search
+      className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-stone-300"
+      aria-hidden="true"
+    />
+    <input
+      type="text"
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      placeholder={placeholder}
+      aria-label={ariaLabel}
+      disabled={disabled}
+      className="h-8 w-full bg-transparent pl-9 pr-3 text-xs text-stone-950 placeholder:text-stone-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+    />
+  </div>
+);
+
+const ColumnPlaceholder = ({ label }: { label: string }) => (
+  <p className="px-3 py-8 text-center text-xs text-muted-foreground">{label}</p>
+);
+
 const ClassificationQueryErrorState = ({ onRetry }: { onRetry: () => void }) => (
-  <div className="flex min-h-48 flex-1 items-center justify-center rounded-xl border border-red-200 bg-red-50/50 p-6 text-center">
-    <div className="max-w-sm">
-      <div className="mx-auto grid size-10 place-items-center rounded-md bg-white text-red-700 shadow-sm">
-        <AlertTriangle className="size-5" aria-hidden="true" />
-      </div>
-      <p className="mt-3 text-sm font-semibold text-red-950">
-        Classification indisponible
-      </p>
-      <p className="mt-1 text-xs leading-relaxed text-red-800/80">
-        La vue hiérarchique n&apos;a pas pu charger la classification CIR. Le problème a été transmis au
-        pipeline d&apos;erreurs.
-      </p>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={onRetry}
-        className="mt-4 h-8 border-red-200 bg-white text-xs font-semibold text-red-900 hover:bg-red-50"
-      >
-        Réessayer
-      </Button>
+  <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
+    <div className="grid size-9 place-items-center rounded-md bg-red-50 text-red-700">
+      <AlertTriangle className="size-4" aria-hidden="true" />
     </div>
+    <p className="mt-3 text-sm font-semibold text-red-950">Classification indisponible</p>
+    <p className="mt-1 max-w-sm text-xs leading-relaxed text-red-800/80">
+      La vue hiérarchique n&apos;a pas pu charger la classification CIR. Le problème a été transmis au
+      pipeline d&apos;erreurs.
+    </p>
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      onClick={onRetry}
+      className="mt-4 h-8 border-red-200 bg-white text-xs font-semibold text-red-900 hover:bg-red-50"
+    >
+      Réessayer
+    </Button>
   </div>
 );
 
 /**
- * Premium Drill-down Navigation Component (Miller Columns) for Classification CIR.
- * Solves visual cognitive load by allowing hierarchical exploration.
- *
- * @param props Contains importId to filter fetched classifications.
+ * Staircase (Miller columns) navigation for the CIR classification: one single
+ * surface, three hairline-separated columns, 32px rows selected by background.
+ * The view toggle lives in the shared toolbar; the selected sub-family key is
+ * exposed in a discreet copy band at the foot of the third column.
  */
-export const ClassificationDrillDown = ({ importId }: ClassificationDrillDownProps) => {
+export const ClassificationDrillDown = ({ importId, toolbar }: ClassificationDrillDownProps) => {
   // Column search terms
   const [megaSearch, setMegaSearch] = useState('');
   const [famSearch, setFamSearch] = useState('');
@@ -129,7 +170,7 @@ export const ClassificationDrillDown = ({ importId }: ClassificationDrillDownPro
     const root: ClassificationTree = {};
     rows.forEach((row) => {
       const { mega, mega_lib, fam, fam_lib, sfa, sfa_lib } = row;
-      
+
       const cleanMega = mega.trim();
       const cleanMegaLib = mega_lib.trim();
       const cleanFam = fam.trim();
@@ -156,7 +197,7 @@ export const ClassificationDrillDown = ({ importId }: ClassificationDrillDownPro
 
   // Copy handler for selected keys
   const handleCopyKey = (key: string) => {
-    navigator.clipboard.writeText(key);
+    void navigator.clipboard.writeText(key);
     setCopiedKey(key);
     setTimeout(() => {
       setCopiedKey(null);
@@ -218,258 +259,204 @@ export const ClassificationDrillDown = ({ importId }: ClassificationDrillDownPro
     return tree[selectedMega]?.families[selectedFam]?.subfamilies[selectedSfa] ?? null;
   }, [tree, selectedMega, selectedFam, selectedSfa]);
 
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 min-h-0 flex-1 overflow-hidden border border-stone-200/80 rounded-xl bg-stone-50/20 p-2 animate-pulse">
-        {Array.from({ length: 3 }).map((_, idx) => (
-          <div key={idx} className="flex flex-col min-h-0 bg-background border border-stone-200/60 rounded-lg p-3 space-y-3">
-            <div className="h-4 bg-stone-100 rounded w-1/3" />
-            <div className="h-8 bg-stone-100 rounded w-full" />
-            <div className="flex-1 space-y-2 pt-2">
-              {Array.from({ length: 6 }).map((_, itemIdx) => (
-                <div key={itemIdx} className="h-7 bg-stone-50 rounded w-full" />
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
+  const itemClassName = (isActive: boolean) =>
+    cn(
+      'flex h-8 w-full shrink-0 items-center gap-2 px-3 text-left text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/45',
+      isActive ? 'bg-surface-1 text-stone-950' : 'text-stone-700 hover:bg-stone-50'
     );
-  }
-
-  if (classificationQuery.isError) {
-    return <ClassificationQueryErrorState onRetry={() => void classificationQuery.refetch()} />;
-  }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
-      {isTruncated ? (
-        <div
-          role="status"
-          className="shrink-0 rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-2 text-xs font-medium text-amber-900"
-        >
-          Vue hiérarchique limitée aux {formatCount(rows.length)} premières lignes sur {formatCount(totalRows)}.
-          Utilisez la vue tableau ou affinez la source si une clé CIR manque.
-        </div>
-      ) : null}
-      {/* 3-Column Staircase layout */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 min-h-0 flex-1 overflow-hidden border border-stone-200/80 rounded-xl bg-stone-50/20 p-2">
-        
-        {/* Level 1: Méga-Familles */}
-        <section className="flex flex-col min-h-0 bg-background border border-stone-200/60 rounded-lg p-3 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
-          <div className="flex items-center justify-between border-b border-stone-100 pb-2 mb-2 select-none">
-            <h3 className="text-[10px] font-bold uppercase tracking-wider text-stone-800 flex items-center gap-1.5 font-sans">
-              <span>Méga-Familles</span>
-              <Badge variant="secondary" className="px-1.5 py-0 text-[9px] font-semibold font-mono">
-                {filteredMegas.length}
-              </Badge>
-            </h3>
-          </div>
-          <div className="relative shrink-0">
-            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground/60" />
-            <Input
-              value={megaSearch}
-              onChange={(e) => setMegaSearch(e.target.value)}
-              placeholder="Filtrer méga..."
-              className="h-8 pl-8 text-xs bg-background"
-            />
-          </div>
-          <div className="flex-1 overflow-y-auto mt-3 space-y-1 pr-1">
-            {filteredMegas.map((mega) => {
-              const isActive = selectedMega === mega.id;
-              return (
-                <button
-                  key={mega.id}
-                  type="button"
-                  onClick={() => handleSelectMega(mega.id)}
-                  className={cn(
-                    'w-full flex items-center justify-between px-2.5 py-2 text-xs rounded-lg border border-transparent text-left transition-all active:scale-[0.99]',
-                    isActive
-                      ? 'bg-primary/5 border-primary/20 text-primary font-semibold'
-                      : 'hover:bg-stone-50 text-stone-700'
-                  )}
-                >
-                  <span className="truncate">
-                    <span className="font-mono text-stone-400 mr-1.5 font-medium">{mega.id}</span>
-                    {mega.label}
-                  </span>
-                  <div className="flex items-center gap-1 shrink-0 pl-2">
-                    <Badge variant="secondary" className="px-1 py-0 text-[8px] font-mono text-stone-500">
-                      {mega.familyCount}
-                    </Badge>
-                    <ChevronRight className={cn('size-3.5', isActive ? 'text-primary' : 'text-stone-400')} />
-                  </div>
-                </button>
-              );
-            })}
-            {filteredMegas.length === 0 && (
-              <p className="text-center text-[10px] text-muted-foreground py-8">Aucun résultat</p>
-            )}
-          </div>
-        </section>
-
-        {/* Level 2: Familles */}
-        <section className={cn(
-          "flex flex-col min-h-0 bg-background border border-stone-200/60 rounded-lg p-3 shadow-[0_1px_2px_rgba(0,0,0,0.01)] transition-opacity duration-200",
-          !selectedMega && "opacity-50 pointer-events-none"
-        )}>
-          <div className="flex items-center justify-between border-b border-stone-100 pb-2 mb-2 select-none">
-            <h3 className="text-[10px] font-bold uppercase tracking-wider text-stone-800 flex items-center gap-1.5 font-sans">
-              <span>Familles</span>
-              {selectedMega && (
-                <Badge variant="secondary" className="px-1.5 py-0 text-[9px] font-semibold font-mono">
-                  {filteredFams.length}
-                </Badge>
-              )}
-            </h3>
-          </div>
-          <div className="relative shrink-0">
-            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground/60" />
-            <Input
-              value={famSearch}
-              onChange={(e) => setFamSearch(e.target.value)}
-              placeholder="Filtrer famille..."
-              disabled={!selectedMega}
-              className="h-8 pl-8 text-xs bg-background"
-            />
-          </div>
-          <div className="flex-1 overflow-y-auto mt-3 space-y-1 pr-1">
-            {selectedMega ? (
-              filteredFams.map((fam) => {
-                const isActive = selectedFam === fam.id;
-                return (
-                  <button
-                    key={fam.id}
-                    type="button"
-                    onClick={() => handleSelectFam(fam.id)}
-                    className={cn(
-                      'w-full flex items-center justify-between px-2.5 py-2 text-xs rounded-lg border border-transparent text-left transition-all active:scale-[0.99]',
-                      isActive
-                        ? 'bg-primary/5 border-primary/20 text-primary font-semibold'
-                        : 'hover:bg-stone-50 text-stone-700'
-                    )}
-                  >
-                    <span className="truncate">
-                      <span className="font-mono text-stone-400 mr-1.5 font-medium">{fam.id}</span>
-                      {fam.label}
-                    </span>
-                    <div className="flex items-center gap-1 shrink-0 pl-2">
-                      <Badge variant="secondary" className="px-1 py-0 text-[8px] font-mono text-stone-500">
-                        {fam.subfamilyCount}
-                      </Badge>
-                      <ChevronRight className={cn('size-3.5', isActive ? 'text-primary' : 'text-stone-400')} />
-                    </div>
-                  </button>
-                );
-              })
-            ) : (
-              <p className="text-center text-[10px] text-muted-foreground py-8">Sélectionnez une méga-famille</p>
-            )}
-            {selectedMega && filteredFams.length === 0 && (
-              <p className="text-center text-[10px] text-muted-foreground py-8">Aucun résultat</p>
-            )}
-          </div>
-        </section>
-
-        {/* Level 3: Sous-Familles */}
-        <section className={cn(
-          "flex flex-col min-h-0 bg-background border border-stone-200/60 rounded-lg p-3 shadow-[0_1px_2px_rgba(0,0,0,0.01)] transition-opacity duration-200",
-          !selectedFam && "opacity-50 pointer-events-none"
-        )}>
-          <div className="flex items-center justify-between border-b border-stone-100 pb-2 mb-2 select-none">
-            <h3 className="text-[10px] font-bold uppercase tracking-wider text-stone-800 flex items-center gap-1.5 font-sans">
-              <span>Sous-Familles</span>
-              {selectedFam && (
-                <Badge variant="secondary" className="px-1.5 py-0 text-[9px] font-semibold font-mono">
-                  {filteredSfas.length}
-                </Badge>
-              )}
-            </h3>
-          </div>
-          <div className="relative shrink-0">
-            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground/60" />
-            <Input
-              value={sfaSearch}
-              onChange={(e) => setSfaSearch(e.target.value)}
-              placeholder="Filtrer sous-famille..."
-              disabled={!selectedFam}
-              className="h-8 pl-8 text-xs bg-background"
-            />
-          </div>
-          <div className="flex-1 overflow-y-auto mt-3 space-y-1 pr-1">
-            {selectedFam ? (
-              filteredSfas.map((sfa) => {
-                const isActive = selectedSfa === sfa.id;
-                return (
-                  <button
-                    key={sfa.id}
-                    type="button"
-                    onClick={() => setSelectedSfa(sfa.id)}
-                    className={cn(
-                      'w-full flex items-center justify-between px-2.5 py-2 text-xs rounded-lg border border-transparent text-left transition-all active:scale-[0.99]',
-                      isActive
-                        ? 'bg-primary/5 border-primary/20 text-primary font-semibold'
-                        : 'hover:bg-stone-50 text-stone-700'
-                    )}
-                  >
-                    <span className="truncate">
-                      <span className="font-mono text-stone-400 mr-1.5 font-medium">{sfa.id}</span>
-                      {sfa.label}
-                    </span>
-                    <span className="font-mono text-[9px] text-stone-400 bg-stone-50 px-1 py-0.5 rounded border ml-2 shrink-0">
-                      {sfa.cir_key}
-                    </span>
-                  </button>
-                );
-              })
-            ) : (
-              <p className="text-center text-[10px] text-muted-foreground py-8">Sélectionnez une famille</p>
-            )}
-            {selectedFam && filteredSfas.length === 0 && (
-              <p className="text-center text-[10px] text-muted-foreground py-8">Aucun résultat</p>
-            )}
-          </div>
-        </section>
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-stone-200/60 bg-white">
+      <div className="flex min-h-11 shrink-0 flex-wrap items-center gap-2 border-b border-stone-200/60 px-4 py-1.5">
+        {toolbar}
+        <span className="ml-auto font-mono text-[11px] tabular-nums text-muted-foreground">
+          {formatCount(totalRows)} clés
+        </span>
       </div>
 
-      {/* Selected Leaf Detail Panel */}
-      {selectedSfaDetails && (
-        <div className="border border-stone-200/80 bg-background p-4 rounded-xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <div className="space-y-1">
-            <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/80 flex items-center gap-1 select-none">
-              <Sparkles className="size-3 text-stone-500" />
-              Détail de la sélection
-            </span>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="font-mono text-xs font-semibold bg-stone-100 border border-stone-200/60 px-2 py-0.5 rounded text-stone-800">
-                {selectedSfaDetails.cir_key}
-              </span>
-              <span className="text-xs text-stone-900 font-bold font-sans">
-                {selectedSfaDetails.label}
-              </span>
+      {isTruncated ? (
+        <p
+          role="status"
+          className="shrink-0 border-b border-stone-200/60 bg-amber-50/60 px-4 py-2 text-xs text-amber-900"
+        >
+          Vue hiérarchique limitée aux {formatCount(rows.length)} premières lignes sur{' '}
+          {formatCount(totalRows)}. Utilisez la vue tableau ou affinez la source si une clé CIR
+          manque.
+        </p>
+      ) : null}
+
+      {isLoading ? (
+        <div className="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-3" aria-hidden="true">
+          {Array.from({ length: 3 }).map((_, columnIdx) => (
+            <div key={columnIdx} className={columnClassName}>
+              <div className="flex h-9 items-center border-b border-stone-200/60 px-3">
+                <div className="h-3 w-24 animate-pulse rounded bg-stone-100" />
+              </div>
+              <div className="h-8 border-b border-stone-100" />
+              {Array.from({ length: 6 }).map((_, itemIdx) => (
+                <div key={itemIdx} className="flex h-8 items-center px-3">
+                  <div className="h-3.5 w-3/4 animate-pulse rounded bg-stone-50" />
+                </div>
+              ))}
             </div>
-            <p className="text-[10px] text-muted-foreground">
-              Méga-Famille : <span className="font-medium text-stone-600">{selectedMega} - {tree[selectedMega!].label}</span> &middot; Famille : <span className="font-medium text-stone-600">{selectedFam} - {tree[selectedMega!].families[selectedFam!].label}</span>
-            </p>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => handleCopyKey(selectedSfaDetails.cir_key)}
-              className="h-8 text-xs font-semibold bg-background border-stone-200 hover:bg-stone-50 active:scale-[0.98] transition-all flex items-center gap-1.5"
-            >
-              {copiedKey === selectedSfaDetails.cir_key ? (
-                <>
-                  <Check className="size-3.5 text-emerald-600" /> Copié
-                </>
+          ))}
+        </div>
+      ) : classificationQuery.isError ? (
+        <ClassificationQueryErrorState onRetry={() => void classificationQuery.refetch()} />
+      ) : (
+        <div className="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-3">
+          {/* Level 1: Méga-familles */}
+          <section className={columnClassName} aria-label="Méga-familles">
+            <ColumnHeader label="Méga-familles" count={filteredMegas.length} />
+            <GhostSearch
+              value={megaSearch}
+              onChange={setMegaSearch}
+              placeholder="Filtrer méga…"
+              ariaLabel="Filtrer les méga-familles"
+            />
+            <div className="min-h-0 flex-1 overflow-y-auto py-1">
+              {filteredMegas.map((mega) => {
+                const isActive = selectedMega === mega.id;
+                return (
+                  <button
+                    key={mega.id}
+                    type="button"
+                    onClick={() => handleSelectMega(mega.id)}
+                    aria-pressed={isActive}
+                    className={itemClassName(isActive)}
+                  >
+                    <span className="w-8 shrink-0 font-mono text-[11px] tabular-nums text-stone-400">
+                      {mega.id}
+                    </span>
+                    <span className={cn('min-w-0 flex-1 truncate', isActive && 'font-medium text-stone-950')}>
+                      {mega.label}
+                    </span>
+                    <span className="shrink-0 font-mono text-[11px] tabular-nums text-stone-400">
+                      {mega.familyCount}
+                    </span>
+                    <ChevronRight className="size-3.5 shrink-0 text-stone-300" aria-hidden="true" />
+                  </button>
+                );
+              })}
+              {filteredMegas.length === 0 ? <ColumnPlaceholder label="Aucun résultat" /> : null}
+            </div>
+          </section>
+
+          {/* Level 2: Familles */}
+          <section className={columnClassName} aria-label="Familles">
+            <ColumnHeader label="Familles" count={selectedMega ? filteredFams.length : null} />
+            <GhostSearch
+              value={famSearch}
+              onChange={setFamSearch}
+              placeholder="Filtrer famille…"
+              ariaLabel="Filtrer les familles"
+              disabled={!selectedMega}
+            />
+            <div className="min-h-0 flex-1 overflow-y-auto py-1">
+              {selectedMega ? (
+                filteredFams.map((fam) => {
+                  const isActive = selectedFam === fam.id;
+                  return (
+                    <button
+                      key={fam.id}
+                      type="button"
+                      onClick={() => handleSelectFam(fam.id)}
+                      aria-pressed={isActive}
+                      className={itemClassName(isActive)}
+                    >
+                      <span className="w-8 shrink-0 font-mono text-[11px] tabular-nums text-stone-400">
+                        {fam.id}
+                      </span>
+                      <span className={cn('min-w-0 flex-1 truncate', isActive && 'font-medium text-stone-950')}>
+                        {fam.label}
+                      </span>
+                      <span className="shrink-0 font-mono text-[11px] tabular-nums text-stone-400">
+                        {fam.subfamilyCount}
+                      </span>
+                      <ChevronRight className="size-3.5 shrink-0 text-stone-300" aria-hidden="true" />
+                    </button>
+                  );
+                })
               ) : (
-                <>
-                  <Copy className="size-3.5 text-stone-500" /> Copier la clé CIR
-                </>
+                <ColumnPlaceholder label="Sélectionnez une méga-famille" />
               )}
-            </Button>
-          </div>
+              {selectedMega && filteredFams.length === 0 ? (
+                <ColumnPlaceholder label="Aucun résultat" />
+              ) : null}
+            </div>
+          </section>
+
+          {/* Level 3: Sous-familles */}
+          <section className={columnClassName} aria-label="Sous-familles">
+            <ColumnHeader label="Sous-familles" count={selectedFam ? filteredSfas.length : null} />
+            <GhostSearch
+              value={sfaSearch}
+              onChange={setSfaSearch}
+              placeholder="Filtrer sous-famille…"
+              ariaLabel="Filtrer les sous-familles"
+              disabled={!selectedFam}
+            />
+            <div className="min-h-0 flex-1 overflow-y-auto py-1">
+              {selectedFam ? (
+                filteredSfas.map((sfa) => {
+                  const isActive = selectedSfa === sfa.id;
+                  return (
+                    <button
+                      key={sfa.id}
+                      type="button"
+                      onClick={() => setSelectedSfa(sfa.id)}
+                      aria-pressed={isActive}
+                      className={itemClassName(isActive)}
+                    >
+                      <span className="w-8 shrink-0 font-mono text-[11px] tabular-nums text-stone-400">
+                        {sfa.id}
+                      </span>
+                      <span className={cn('min-w-0 flex-1 truncate', isActive && 'font-medium text-stone-950')}>
+                        {sfa.label}
+                      </span>
+                      <span className="shrink-0 font-mono text-[11px] tabular-nums text-stone-400">
+                        {sfa.cir_key}
+                      </span>
+                    </button>
+                  );
+                })
+              ) : (
+                <ColumnPlaceholder label="Sélectionnez une famille" />
+              )}
+              {selectedFam && filteredSfas.length === 0 ? (
+                <ColumnPlaceholder label="Aucun résultat" />
+              ) : null}
+            </div>
+            {selectedSfaDetails ? (
+              <div className="flex shrink-0 items-center justify-between gap-3 border-t border-stone-200/60 px-3 py-2">
+                <div className="min-w-0">
+                  <p className="truncate text-[11px] text-stone-500">{selectedSfaDetails.label}</p>
+                  <p className="font-mono text-xs tabular-nums text-stone-950">
+                    {selectedSfaDetails.cir_key}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleCopyKey(selectedSfaDetails.cir_key)}
+                  className="h-7 shrink-0 gap-1.5 rounded-md px-2 text-xs font-medium text-stone-600 hover:bg-stone-100 hover:text-stone-950"
+                >
+                  {copiedKey === selectedSfaDetails.cir_key ? (
+                    <>
+                      <Check className="size-3.5 text-emerald-600" aria-hidden="true" />
+                      Copié
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="size-3.5 text-stone-400" aria-hidden="true" />
+                      Copier la clé CIR
+                    </>
+                  )}
+                </Button>
+              </div>
+            ) : null}
+          </section>
         </div>
       )}
     </div>

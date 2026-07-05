@@ -75,16 +75,14 @@ import {
 import {
   pricingReferenceAnomaliesListInputSchema,
   pricingReferenceAnomaliesListResponseSchema,
+  pricingReferenceAnomaliesExportInputSchema,
+  pricingReferenceAnomaliesExportResponseSchema,
   pricingReferenceAnomaliesSummaryGetInputSchema,
   pricingReferenceAnomaliesSummaryResponseSchema,
-  pricingReferenceBatchCorrectionProposalsGetInputSchema,
-  pricingReferenceBatchCorrectionProposalsResponseSchema,
   pricingReferenceClassificationListAllInputSchema,
   pricingReferenceClassificationListAllResponseSchema,
   pricingReferenceClassificationListInputSchema,
   pricingReferenceClassificationListResponseSchema,
-  pricingReferenceCorrectionPlanGetInputSchema,
-  pricingReferenceCorrectionPlanResponseSchema,
   pricingReferenceDiagnoseInputSchema,
   pricingReferenceDiagnoseResponseSchema,
   pricingReferenceHealthGetInputSchema,
@@ -273,14 +271,10 @@ const appRouterType = t.router({
           .input(pricingReferenceAnomaliesSummaryGetInputSchema)
           .output(pricingReferenceAnomaliesSummaryResponseSchema)
           .query(() => undefined as never),
-        correctionPlan: t.procedure
-          .input(pricingReferenceCorrectionPlanGetInputSchema)
-          .output(pricingReferenceCorrectionPlanResponseSchema)
-          .query(() => undefined as never),
-        batchProposals: t.procedure
-          .input(pricingReferenceBatchCorrectionProposalsGetInputSchema)
-          .output(pricingReferenceBatchCorrectionProposalsResponseSchema)
-          .query(() => undefined as never)
+        export: t.procedure
+          .input(pricingReferenceAnomaliesExportInputSchema)
+          .output(pricingReferenceAnomaliesExportResponseSchema)
+          .mutation(() => undefined as never)
       }),
       diagnose: t.procedure
         .input(pricingReferenceDiagnoseInputSchema)
