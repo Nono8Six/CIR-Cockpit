@@ -8,12 +8,14 @@ import { cn } from "@/lib/utils"
  * Use `density` for compact or comfortable field rhythm.
  */
 const inputVariants = cva(
-  "flex w-full rounded-md border border-input bg-background text-sm shadow-sm transition-[color,box-shadow,border-color] placeholder:text-muted-foreground file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive/60 aria-invalid:focus-visible:ring-destructive/30",
+  "flex w-full rounded-lg border border-input bg-background text-[13px] shadow-none transition-[color,box-shadow,border-color,background-color] duration-150 placeholder:text-muted-foreground file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground hover:border-border/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/45 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive/60 aria-invalid:focus-visible:ring-destructive/30",
   {
     variants: {
       density: {
         dense: "h-8 px-2.5 text-xs",
-        comfortable: "h-9 px-3 py-2 text-sm",
+        comfortable: "h-9 px-3 text-sm",
+        control: "h-8 px-2.5 text-xs",
+        toolbar: "h-8 px-2.5 text-xs",
       },
       tone: {
         default: "",

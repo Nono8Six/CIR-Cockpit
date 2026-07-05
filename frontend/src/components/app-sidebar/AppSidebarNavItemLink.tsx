@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { AnimatePresence, motion, type Transition } from 'motion/react';
 
 import { APP_SHELL_SECTION_LABELS } from '@/app/appConstants';
+import { APP_SHELL_CLASSES } from '@/components/app-shell/appShellTokens';
 import { getPathForShellNavItem } from '@/app/appRoutes';
 import type { AppShellNavItem } from '@/app/appConstants';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/feedback/Tooltip';
@@ -39,40 +40,23 @@ const AppSidebarNavItemLink = ({
 }: AppSidebarNavItemLinkProps) => {
   const sectionLabel = APP_SHELL_SECTION_LABELS[item.sectionId];
   const metaLabel = item.metaLabel;
-  const activeIndicatorTransition: Transition = reducedMotion
-    ? { duration: 0 }
-    : { type: 'spring', stiffness: 300, damping: 30 };
   const navContentTransition: Transition = reducedMotion
     ? { duration: 0 }
-    : { duration: 0.16, ease: 'easeOut' };
+    : { duration: 0.15, ease: 'easeOut' };
 
   const link = (
     <Link
       to={getPathForShellNavItem(item)}
       onClick={() => onMobileOpenChange?.(false)}
       className={cn(
-        'group relative flex h-8 w-full items-center rounded-md px-2 text-left text-[13px] transition-[background-color,border-color,color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98]',
-        isActive
-          ? 'border border-primary/25 bg-primary/[0.07] font-semibold text-foreground shadow-[0_1px_2px_hsl(var(--foreground)/0.06),0_0_0_1px_hsl(var(--primary)/0.06)]'
-          : 'border border-transparent text-muted-foreground hover:bg-card/75 hover:text-foreground',
+        APP_SHELL_CLASSES.navItem,
+        isActive ? APP_SHELL_CLASSES.navItemActive : APP_SHELL_CLASSES.navItemInactive,
         collapsed ? 'justify-center px-0' : 'gap-2.5',
       )}
       aria-current={isActive ? 'page' : undefined}
       aria-label={!collapsed ? undefined : buildCollapsedNavLabel(item)}
       data-testid={`app-shell-nav-${item.id}`}
     >
-      {isActive ? (
-        <motion.span
-          layoutId="active-nav-indicator"
-          className={cn(
-            'absolute left-0 top-1/2 -translate-y-1/2 rounded-r-full bg-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.18),0_0_10px_hsl(var(--primary)/0.16)]',
-            collapsed ? 'h-4 w-[2px]' : 'h-[18px] w-[3px]',
-          )}
-          initial={false}
-          transition={activeIndicatorTransition}
-        />
-      ) : null}
-
       <item.icon
         size={15}
         className={cn(
@@ -84,9 +68,9 @@ const AppSidebarNavItemLink = ({
       <AnimatePresence initial={false}>
         {!collapsed ? (
           <motion.span
-            initial={{ opacity: 0, width: 0 }}
-            animate={{ opacity: 1, width: 'auto' }}
-            exit={{ opacity: 0, width: 0 }}
+            initial={{ opacity: 0, x: -4 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -4 }}
             transition={navContentTransition}
             className="flex min-w-0 flex-1 items-center justify-between gap-2 overflow-hidden"
           >

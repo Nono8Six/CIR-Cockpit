@@ -51,6 +51,7 @@ const DirectorySearchInput = ({
           name="directory-search"
           autoComplete="off"
           spellCheck={false}
+          density="toolbar"
           className="pl-9"
         />
       </div>

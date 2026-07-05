@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { buildShellNavigation } from '@/app/appConstants';
 import { getPathForTab, getTabFromPathname, isInteractionTab, isShellNavItemActive } from '@/app/appRoutes';
+import { validatePricingReferentialsSearch } from '@/app/pricingReferentialsSearch';
 
 describe('appRoutes', () => {
   it('maps tabs to expected business URLs', () => {
@@ -47,5 +48,18 @@ describe('appRoutes', () => {
 
     expect(isShellNavItemActive(cockpitItem!, 'cockpit', '/')).toBe(true);
     expect(isShellNavItemActive(clientsItem!, 'cockpit', '/')).toBe(false);
+  });
+
+  it('validates the pricing referentials tab search param', () => {
+    expect(validatePricingReferentialsSearch({ tab: 'imports' })).toEqual({ tab: 'imports' });
+    expect(validatePricingReferentialsSearch({ tab: 'classification' })).toEqual({ tab: 'classification' });
+    expect(validatePricingReferentialsSearch({ tab: 'segments' })).toEqual({ tab: 'segments' });
+    expect(validatePricingReferentialsSearch({ tab: 'anomalies' })).toEqual({ tab: 'anomalies' });
+  });
+
+  it('falls back to an empty search state for removed pricing referentials tabs', () => {
+    expect(validatePricingReferentialsSearch({ tab: 'links' })).toEqual({});
+    expect(validatePricingReferentialsSearch({ tab: 'history' })).toEqual({});
+    expect(validatePricingReferentialsSearch({ tab: 'unknown' })).toEqual({});
   });
 });

@@ -24,8 +24,8 @@ export const SortButton = ({
   <Button
     type="button"
     variant="ghost"
-    size="sm"
-    className="h-7 w-full justify-start px-1.5 text-[11px] uppercase tracking-wide text-muted-foreground hover:text-foreground"
+    size="dataRow"
+    className="w-full justify-start px-1.5 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
     aria-label={`Trier par ${label}`}
     onClick={onClick}
   >

@@ -1,7 +1,10 @@
 import { Suspense, lazy, useCallback, useEffect, useRef } from 'react';
 import { Outlet, useNavigate, useSearch } from '@tanstack/react-router';
 
-import type { PricingReferentialsTab } from '@/app/pricingReferentialsSearch';
+import {
+  pricingReferentialsTabSchema,
+  type PricingReferentialsTab
+} from '@/app/pricingReferentialsSearch';
 import type { AgencyConfig } from '@/services/config';
 import type { AppTab, Entity, Interaction, InteractionDraft, UserRole } from '@/types';
 import type { ConvertClientEntity } from '@/components/ConvertClientDialog';
@@ -75,8 +78,10 @@ const AppMainTabContent = (props: AppMainTabContentProps) => {
     onOpenGlobalSearch
   } = props;
   const navigate = useNavigate();
-  const routeSearch = useSearch({ strict: false }) as { tab?: PricingReferentialsTab };
-  const referentialsRouteTab = activeTab === 'referentials' ? routeSearch.tab : undefined;
+  const routeSearch = useSearch({ strict: false }) as { tab?: unknown };
+  const parsedReferentialsTab = pricingReferentialsTabSchema.safeParse(routeSearch.tab);
+  const referentialsRouteTab =
+    activeTab === 'referentials' && parsedReferentialsTab.success ? parsedReferentialsTab.data : undefined;
 
   const handleReferentialsTabChange = useCallback(
     (tab: PricingReferentialsTab) => {

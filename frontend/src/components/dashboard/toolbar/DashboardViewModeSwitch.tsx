@@ -14,7 +14,7 @@ const DashboardViewModeSwitch = ({
 }: DashboardViewModeSwitchProps) => {
   return (
     <div
-      className="inline-flex h-8 w-fit items-center rounded-md border border-border bg-card p-0.5 shadow-soft"
+      className="inline-flex h-8 w-fit items-center rounded-lg border border-border bg-background p-0.5 shadow-none"
       data-testid="dashboard-view-mode-tabs"
       role="tablist"
       aria-label="Modes d'affichage"
@@ -24,7 +24,7 @@ const DashboardViewModeSwitch = ({
         role="tab"
         aria-selected={viewMode === 'kanban'}
         onClick={() => onViewModeChange('kanban')}
-        className={`relative flex h-[26px] items-center gap-1.5 rounded-[4px] px-2.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/40 ${
+        className={`relative flex h-7 items-center gap-1.5 rounded-md px-2.5 text-xs font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
           viewMode === 'kanban' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
         }`}
         aria-label="Mode Tableau"
@@ -32,7 +32,7 @@ const DashboardViewModeSwitch = ({
         {viewMode === 'kanban' && (
           <motion.span
             layoutId="activeViewTab"
-            className="absolute inset-0 rounded-[4px] bg-surface-2 shadow-sm"
+            className="absolute inset-0 rounded-md bg-surface-2 shadow-none"
             transition={{ type: 'spring', stiffness: 380, damping: 30 }}
           />
         )}
@@ -47,7 +47,7 @@ const DashboardViewModeSwitch = ({
         role="tab"
         aria-selected={viewMode === 'list'}
         onClick={() => onViewModeChange('list')}
-        className={`relative flex h-[26px] items-center gap-1.5 rounded-[4px] px-2.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/40 ${
+        className={`relative flex h-7 items-center gap-1.5 rounded-md px-2.5 text-xs font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
           viewMode === 'list' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
         }`}
         aria-label="Mode Historique"
@@ -55,7 +55,7 @@ const DashboardViewModeSwitch = ({
         {viewMode === 'list' && (
           <motion.span
             layoutId="activeViewTab"
-            className="absolute inset-0 rounded-[4px] bg-surface-2 shadow-sm"
+            className="absolute inset-0 rounded-md bg-surface-2 shadow-none"
             transition={{ type: 'spring', stiffness: 380, damping: 30 }}
           />
         )}

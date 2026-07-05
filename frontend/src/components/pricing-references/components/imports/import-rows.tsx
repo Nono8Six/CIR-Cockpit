@@ -13,7 +13,6 @@ interface ImportRowsProps {
   rows: PricingReferenceImportsListResponse['imports'];
   selectedImportId: string | null;
   onSelect: (importId: string) => void;
-  viewMode: 'classification' | 'segments';
 }
 
 const statusDotClasses: Record<PricingReferenceImportsListResponse['imports'][number]['status'], string> = {
@@ -28,11 +27,9 @@ const statusDotClasses: Record<PricingReferenceImportsListResponse['imports'][nu
 
 /**
  * Renders a list of reference imports as a dense, minimalist table.
- * Optimized for keyboard access, screen readers, and pixel-perfect layouts.
- *
- * @param props Component props
+ * Rows are identified by their import date; the technical id stays available as secondary text.
  */
-export const ImportRows = ({ rows, selectedImportId, onSelect, viewMode }: ImportRowsProps) => {
+export const ImportRows = ({ rows, selectedImportId, onSelect }: ImportRowsProps) => {
   if (rows.length === 0) {
     return (
       <div className="rounded-xl border border-stone-200/50 bg-surface-1 p-8 text-center text-xs text-stone-500/80">
@@ -46,22 +43,22 @@ export const ImportRows = ({ rows, selectedImportId, onSelect, viewMode }: Impor
       <Table className="min-w-[800px] border-collapse">
         <TableHeader className="bg-surface-3/60 border-b border-stone-200/50">
           <TableRow className="hover:bg-transparent border-none">
-            <TableHead className="h-8 px-4 text-[10px] font-bold uppercase tracking-wider text-stone-500">
+            <TableHead className="h-8 px-4 text-[11px] font-medium text-stone-500">
               Statut
             </TableHead>
-            <TableHead className="h-8 px-4 text-[10px] font-bold uppercase tracking-wider text-stone-500">
-              Identifiant d&apos;import
+            <TableHead className="h-8 px-4 text-[11px] font-medium text-stone-500">
+              Import
             </TableHead>
-            <TableHead className="h-8 px-4 text-[10px] font-bold uppercase tracking-wider text-stone-500">
-              Date d&apos;import
+            <TableHead className="h-8 px-4 text-right text-[11px] font-medium text-stone-500">
+              Classification
             </TableHead>
-            <TableHead className="h-8 px-4 text-right text-[10px] font-bold uppercase tracking-wider text-stone-500">
-              {viewMode === 'classification' ? 'Lignes (Classification)' : 'Lignes (Segments)'}
+            <TableHead className="h-8 px-4 text-right text-[11px] font-medium text-stone-500">
+              Segments
             </TableHead>
-            <TableHead className="h-8 px-4 text-right text-[10px] font-bold uppercase tracking-wider text-stone-500">
+            <TableHead className="h-8 px-4 text-right text-[11px] font-medium text-stone-500">
               Anomalies
             </TableHead>
-            <TableHead className="h-8 px-4 text-[10px] font-bold uppercase tracking-wider text-stone-500">
+            <TableHead className="h-8 px-4 text-[11px] font-medium text-stone-500">
               Détails
             </TableHead>
           </TableRow>
@@ -69,8 +66,6 @@ export const ImportRows = ({ rows, selectedImportId, onSelect, viewMode }: Impor
         <TableBody className="divide-y divide-stone-200/30">
           {rows.map((row) => {
             const isSelected = selectedImportId === row.id;
-            const lineCount = viewMode === 'classification' ? row.classification_rows_count : row.segments_rows_count;
-            const detailText = row.error_message || (row.status === 'analyse_ok' || row.status === 'pret_activation' ? 'Aucun signal' : '-');
 
             return (
               <TableRow
@@ -103,19 +98,29 @@ export const ImportRows = ({ rows, selectedImportId, onSelect, viewMode }: Impor
                     {importStatusLabels[row.status]}
                   </Badge>
                 </TableCell>
-                <TableCell className="px-4 py-2.5 font-mono text-[11px] text-stone-900 font-bold select-all">
-                  {row.id}
-                </TableCell>
-                <TableCell className="px-4 py-2.5 font-sans text-xs text-stone-600">
-                  {formatDateTime(row.created_at)}
+                <TableCell className="px-4 py-2.5">
+                  <p className="text-xs font-medium text-stone-900">
+                    Import du {formatDateTime(row.created_at)}
+                  </p>
+                  <p
+                    className="mt-0.5 max-w-56 truncate font-mono text-[10px] text-stone-400 select-all"
+                    title={row.id}
+                  >
+                    {row.id}
+                  </p>
                 </TableCell>
                 <TableCell className="px-4 py-2.5 text-right font-mono text-[11px] tabular-nums text-stone-900">
-                  {formatCount(lineCount)}
+                  {formatCount(row.classification_rows_count)}
+                </TableCell>
+                <TableCell className="px-4 py-2.5 text-right font-mono text-[11px] tabular-nums text-stone-900">
+                  {formatCount(row.segments_rows_count)}
                 </TableCell>
                 <TableCell
                   className={cn(
                     'px-4 py-2.5 text-right font-mono text-[11px] tabular-nums',
-                    row.anomalies_total && row.anomalies_total > 0 ? 'text-red-600 font-bold' : 'text-stone-500'
+                    row.anomalies_total && row.anomalies_total > 0
+                      ? 'text-amber-800'
+                      : 'text-stone-500'
                   )}
                 >
                   {formatCount(row.anomalies_total)}
@@ -123,11 +128,11 @@ export const ImportRows = ({ rows, selectedImportId, onSelect, viewMode }: Impor
                 <TableCell
                   className={cn(
                     'px-4 py-2.5 text-xs truncate max-w-xs',
-                    row.error_message ? 'text-red-600 font-medium' : 'text-stone-400 italic'
+                    row.error_message ? 'text-red-600 font-medium' : 'text-stone-300'
                   )}
                   title={row.error_message ?? undefined}
                 >
-                  {detailText}
+                  {row.error_message ?? '—'}
                 </TableCell>
               </TableRow>
             );

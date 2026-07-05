@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Search } from 'lucide-react';
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/data-display/Table';
+import { APP_SHELL_CLASSES } from '@/components/app-shell/appShellTokens';
 import { cn } from '@/lib/utils';
 import type { PricingReferenceSortDirection } from '../../../../../../shared/schemas/pricing/references.schema';
 import { SortButton } from './sort-button';
@@ -29,6 +30,8 @@ interface ReferenceTableProps<TRow> {
   onSort: (sortBy: string) => void;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
+  onRowClick?: (row: TRow) => void;
+  rowActionLabel?: string;
 }
 
 /**
@@ -48,18 +51,20 @@ export const ReferenceTable = <TRow,>({
   emptyLabel,
   onSort,
   onPageChange,
-  onPageSizeChange
+  onPageSizeChange,
+  onRowClick,
+  rowActionLabel
 }: ReferenceTableProps<TRow>) => (
-  <div className="flex min-h-0 flex-1 flex-col overflow-hidden border border-stone-200/80 bg-background rounded-xl shadow-sm">
+  <div className={cn('flex min-h-0 flex-1 flex-col overflow-hidden', APP_SHELL_CLASSES.pagePanel)}>
     <div className="min-h-0 flex-1 overflow-auto">
-      <Table className="min-w-[860px] border-collapse">
-        <TableHeader className="bg-stone-50/75 backdrop-blur-sm sticky top-0 z-10 border-b border-stone-200">
+      <Table scrollArea={false} className="min-w-[860px] border-collapse">
+        <TableHeader className="sticky top-0 z-10 border-b border-border bg-muted/35 backdrop-blur-sm">
           <TableRow className="hover:bg-transparent">
             {columns.map((column) => (
               <TableHead
                 key={column.id}
                 className={cn(
-                  'h-9 bg-stone-50/75 px-3 border-b border-stone-200 py-1.5',
+                  'border-b border-border bg-muted/35',
                   column.className
                 )}
               >
@@ -71,7 +76,7 @@ export const ReferenceTable = <TRow,>({
                     onClick={() => onSort(column.sortBy ?? column.id)}
                   />
                 ) : (
-                  <span className="block px-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">
+                  <span className="block px-1.5 text-[11px] font-semibold text-muted-foreground">
                     {column.label}
                   </span>
                 )}
@@ -79,15 +84,15 @@ export const ReferenceTable = <TRow,>({
             ))}
           </TableRow>
         </TableHeader>
-        <TableBody className="divide-y divide-stone-100">
+        <TableBody className="divide-y divide-border/55">
           {isLoading ? (
             Array.from({ length: Math.min(pageSize, 12) }).map((_, index) => (
               <TableRow key={`skeleton-${index}`} className="animate-pulse">
                 {columns.map((column, columnIndex) => (
-                  <TableCell key={`${column.id}-${index}`} className="px-3 py-3">
+                  <TableCell key={`${column.id}-${index}`} className="px-2 py-2">
                     <div
                       className={cn(
-                        'h-3.5 rounded bg-stone-100',
+                        'h-3.5 rounded bg-muted/65',
                         columnIndex % 3 === 0 ? 'w-2/3' : 'w-4/5'
                       )}
                     />
@@ -99,10 +104,10 @@ export const ReferenceTable = <TRow,>({
             <TableRow>
               <TableCell colSpan={columns.length} className="py-16 text-center">
                 <div className="mx-auto flex max-w-sm flex-col items-center gap-2.5 text-muted-foreground">
-                  <div className="p-3 rounded-full bg-stone-50 text-stone-400">
+                  <div className="rounded-full bg-muted/50 p-3 text-muted-foreground">
                     <Search className="size-6" aria-hidden="true" />
                   </div>
-                  <p className="text-xs font-bold text-foreground font-sans">{emptyLabel}</p>
+                  <p className="text-xs font-medium text-foreground font-sans">{emptyLabel}</p>
                   <p className="text-[11px] leading-relaxed max-w-[30ch]">
                     Ajustez la recherche ou les filtres pour élargir le résultat.
                   </p>
@@ -113,8 +118,23 @@ export const ReferenceTable = <TRow,>({
             rows.map((row, index) => (
               <TableRow
                 key={index}
+                tabIndex={onRowClick ? 0 : undefined}
+                aria-label={onRowClick ? rowActionLabel : undefined}
+                onClick={onRowClick ? () => onRowClick(row) : undefined}
+                onKeyDown={
+                  onRowClick
+                    ? (event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        onRowClick(row);
+                      }
+                    }
+                    : undefined
+                }
                 className={cn(
-                  'hover:bg-stone-50/50 transition-colors border-stone-100',
+                  'border-border/55 transition-colors hover:bg-muted/35',
+                  onRowClick
+                    && APP_SHELL_CLASSES.dataRowInteractive,
                   isFetching && 'opacity-70'
                 )}
               >
@@ -122,7 +142,7 @@ export const ReferenceTable = <TRow,>({
                   <TableCell
                     key={column.id}
                     className={cn(
-                      'px-3 py-2.5 text-xs text-foreground font-medium',
+                      'px-2 py-1.5 text-[12.5px] font-medium text-foreground',
                       column.className
                     )}
                   >

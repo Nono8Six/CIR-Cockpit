@@ -71,7 +71,7 @@ const ClientDirectoryWorkspace = ({
 
   if (!canLoadDirectory) {
     return (
-      <section className="flex min-h-0 flex-1 items-center justify-center rounded-xl border border-border/60 bg-card p-6 text-center text-sm text-muted-foreground">
+      <section className="flex min-h-0 flex-1 items-center justify-center rounded-lg border border-border/70 bg-card p-6 text-center text-sm text-muted-foreground">
         Agence active requise pour afficher l annuaire.
       </section>
     );
@@ -92,7 +92,7 @@ const ClientDirectoryWorkspace = ({
           </div>
 
           <div className="hidden items-center gap-2 sm:flex">
-            <Button type="button" size="sm" onClick={() => onCreateRecord(effectiveSearch)}>
+            <Button type="button" size="toolbar" onClick={() => onCreateRecord(effectiveSearch)}>
               <Plus className="size-4" />
               Nouvelle fiche
             </Button>
@@ -101,7 +101,7 @@ const ClientDirectoryWorkspace = ({
           <div className="sm:hidden">
             <Popover>
               <PopoverTrigger asChild>
-                <Button type="button" size="sm" aria-label="Ajouter un client ou un prospect">
+                <Button type="button" size="toolbar" aria-label="Ajouter un client ou un prospect">
                   <Plus className="size-4" />
                   Ajouter
                 </Button>
@@ -110,7 +110,7 @@ const ClientDirectoryWorkspace = ({
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
+                  size="toolbar"
                   className="w-full justify-start"
                   onClick={() => onCreateRecord(effectiveSearch)}
                 >
@@ -122,9 +122,9 @@ const ClientDirectoryWorkspace = ({
           </div>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border/70 bg-card shadow-none">
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <div className="border-b border-border/50 bg-muted/20 px-3 py-2.5 sm:px-4 sm:py-3">
+            <div className="border-b border-border/60 bg-muted/25 p-2 sm:p-2.5">
               <ClientDirectoryFilters
                 key={`directory-filters-${filtersSyncToken}`}
                 search={uiSearch}

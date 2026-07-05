@@ -151,7 +151,7 @@ export const buildShellNavigation = (
         {
           id: 'referentials',
           sectionId: 'pricing',
-          label: 'Referentiels CIR',
+          label: 'Référentiels CIR',
           icon: BookOpenCheck,
           shortcut: APP_TAB_SHORTCUTS.referentials
         }

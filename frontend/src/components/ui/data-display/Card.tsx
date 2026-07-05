@@ -7,16 +7,16 @@ import { cn } from "@/lib/utils"
  * CIR card primitive.
  * Use `variant` for surface style and `density` for spacing rhythm.
  */
-const cardVariants = cva("rounded-xl border text-card-foreground", {
+const cardVariants = cva("rounded-lg border text-card-foreground", {
   variants: {
     variant: {
-      default: "bg-card shadow",
-      section: "bg-surface-1 shadow-sm",
+      default: "bg-card shadow-none",
+      section: "bg-surface-1 shadow-none",
       ghost: "bg-transparent shadow-none",
     },
     density: {
       dense: "rounded-lg",
-      comfortable: "rounded-xl",
+      comfortable: "rounded-lg",
     },
   },
   defaultVariants: {

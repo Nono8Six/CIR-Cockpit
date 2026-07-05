@@ -241,7 +241,16 @@ describe('AppHeader', () => {
   it('derives the current section navigation from sections and active tab', async () => {
     renderHeader();
 
-    openDropdown(screen.getByRole('button', { name: /interactions/i }));
+    const mobileMenuButton = screen.getByRole('button', { name: 'Ouvrir le menu' });
+    const sectionButton = screen.getByRole('button', { name: /interactions/i });
+    const profileButton = screen.getByRole('button', { name: /ouvrir le menu profil/i });
+
+    expect(mobileMenuButton).toHaveClass('h-8', 'w-8', 'rounded-lg');
+    expect(sectionButton).toHaveClass('h-8', 'rounded-lg');
+    expect(sectionButton.className).not.toContain('-ml-1.5');
+    expect(profileButton).toHaveClass('h-8', 'w-8', 'rounded-full');
+
+    openDropdown(sectionButton);
 
     expect(await screen.findByText('Saisie')).toBeInTheDocument();
     expect(screen.getAllByText('Pilotage').length).toBeGreaterThan(0);

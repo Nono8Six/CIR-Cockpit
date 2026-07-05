@@ -107,7 +107,7 @@ const DirectorySavedViewsBar = ({
     <>
       <Popover>
         <PopoverTrigger asChild>
-          <Button type="button" variant="outline" size="dense" className="h-9 rounded-md px-3 text-sm shadow-none">
+          <Button type="button" variant="outline" size="toolbar" className="px-3 text-xs shadow-none">
             {triggerLabel}
           </Button>
         </PopoverTrigger>

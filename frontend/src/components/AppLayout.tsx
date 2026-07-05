@@ -6,6 +6,7 @@ import type { AppHeaderProps } from '@/components/app-header/AppHeader.types';
 import AppMainContent from '@/components/AppMainContent';
 import type { AppMainContentProps } from '@/components/app-main/AppMainContent.types';
 import AppSidebar from '@/components/AppSidebar';
+import { APP_SHELL_DIMENSIONS } from '@/components/app-shell/appShellTokens';
 import { Badge } from './ui/data-display/Badge';
 import { Button } from './ui/inputs/basic/Button';
 import {
@@ -110,7 +111,7 @@ const AppLayout = ({ headerProps, mainContentProps, children }: AppLayoutProps) 
           value={activeAgency?.agency_id ?? ''}
           onValueChange={headerProps.onAgencyChange}
         >
-          <SelectTrigger density="comfortable" className="h-9 rounded-xl text-xs font-semibold" aria-label="Agence active">
+          <SelectTrigger density="comfortable" className="h-9 rounded-lg text-xs font-semibold" aria-label="Agence active">
             <SelectValue placeholder="Agence active" />
           </SelectTrigger>
           <SelectContent>
@@ -122,7 +123,7 @@ const AppLayout = ({ headerProps, mainContentProps, children }: AppLayoutProps) 
           </SelectContent>
         </Select>
       ) : (
-        <p className="rounded-xl border border-border/80 bg-card px-2.5 py-2 text-xs font-semibold text-foreground">
+        <p className="rounded-lg border border-border/80 bg-card px-2.5 py-2 text-xs font-semibold text-foreground">
           {activeAgency?.agency_name ?? 'Agence indisponible'}
         </p>
       )}
@@ -132,7 +133,7 @@ const AppLayout = ({ headerProps, mainContentProps, children }: AppLayoutProps) 
           type="button"
           variant="outline"
           size="dense"
-          className="justify-start rounded-xl"
+          className="justify-start rounded-lg"
           onClick={() => {
             setIsAccountPanelOpen(true);
             setMobileOpen(false);
@@ -144,7 +145,7 @@ const AppLayout = ({ headerProps, mainContentProps, children }: AppLayoutProps) 
           type="button"
           variant="outline"
           size="dense"
-          className="justify-start rounded-xl"
+          className="justify-start rounded-lg"
           onClick={() => {
             headerProps.onOpenSettings();
             setMobileOpen(false);
@@ -157,7 +158,7 @@ const AppLayout = ({ headerProps, mainContentProps, children }: AppLayoutProps) 
           type="button"
           variant="outline"
           size="dense"
-          className="justify-start rounded-xl"
+          className="justify-start rounded-lg"
           onClick={() => {
             setMobileOpen(false);
             headerProps.onSignOut();
@@ -170,13 +171,17 @@ const AppLayout = ({ headerProps, mainContentProps, children }: AppLayoutProps) 
   );
 
   return (
-    <div className="h-[100dvh] w-screen overflow-hidden bg-background font-sans text-foreground">
+    <div className="relative h-[100dvh] w-screen overflow-hidden bg-background font-sans text-foreground">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:rounded-md focus:bg-card focus:px-3 focus:py-2 focus:text-xs focus:font-semibold focus:text-foreground focus:shadow-md"
       >
         Passer au contenu
       </a>
+      <div
+        aria-hidden="true"
+        className={`pointer-events-none absolute inset-x-0 ${APP_SHELL_DIMENSIONS.separatorTopClass} z-30 border-t border-border`}
+      />
 
       <Sheet open={isAccountPanelOpen} onOpenChange={setIsAccountPanelOpen}>
         <SheetContent side="right" className="w-[min(92vw,380px)] p-0">
@@ -185,7 +190,7 @@ const AppLayout = ({ headerProps, mainContentProps, children }: AppLayoutProps) 
               <SheetTitle>Mon compte</SheetTitle>
             </SheetHeader>
 
-            <div className="space-y-4 rounded-xl border border-border/80 bg-card p-4">
+            <div className="space-y-4 rounded-lg border border-border/80 bg-card p-4">
               <div className="flex items-center gap-3">
                 <span
                   aria-hidden="true"
@@ -215,7 +220,7 @@ const AppLayout = ({ headerProps, mainContentProps, children }: AppLayoutProps) 
                   >
                     <SelectTrigger
                       density="comfortable"
-                      className="h-9 rounded-xl text-xs font-semibold"
+                      className="h-9 rounded-lg text-xs font-semibold"
                       aria-label="Agence active"
                     >
                       <SelectValue placeholder="Agence active" />
@@ -229,7 +234,7 @@ const AppLayout = ({ headerProps, mainContentProps, children }: AppLayoutProps) 
                     </SelectContent>
                   </Select>
                 ) : (
-                  <p className="rounded-xl border border-border/80 bg-card px-2.5 py-2 text-xs font-semibold text-foreground">
+                  <p className="rounded-lg border border-border/80 bg-card px-2.5 py-2 text-xs font-semibold text-foreground">
                     {activeAgency?.agency_name ?? 'Agence indisponible'}
                   </p>
                 )}

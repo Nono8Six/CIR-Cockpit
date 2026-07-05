@@ -36,10 +36,13 @@ interface NativeSelectProps {
   value: string;
   options: Array<{ value: string; label: string }>;
   onChange: (value: string) => void;
+  hideLabel?: boolean;
+  triggerClassName?: string;
 }
 
 /**
  * Custom styled Radix select component replacing the browser native dropdown for a premium look.
+ * With hideLabel, the label is exposed to assistive tech only (compact toolbar usage).
  *
  * @param props Select properties including id, label, value, options list and change handler.
  */
@@ -48,14 +51,20 @@ export const NativeSelect = ({
   label,
   value,
   options,
-  onChange
-}: NativeSelectProps) => (
-  <FormField label={label} htmlFor={id}>
+  onChange,
+  hideLabel = false,
+  triggerClassName
+}: NativeSelectProps) => {
+  const select = (
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger
         id={id}
         density="dense"
-        className="w-full bg-background border-stone-200 text-xs shadow-sm hover:border-stone-300 transition-colors"
+        aria-label={hideLabel ? label : undefined}
+        className={
+          triggerClassName
+            ?? 'w-full border-border bg-background text-xs transition-colors hover:border-border/90'
+        }
       >
         <SelectValue />
       </SelectTrigger>
@@ -67,5 +76,15 @@ export const NativeSelect = ({
         ))}
       </SelectContent>
     </Select>
-  </FormField>
-);
+  );
+
+  if (hideLabel) {
+    return select;
+  }
+
+  return (
+    <FormField label={label} htmlFor={id}>
+      {select}
+    </FormField>
+  );
+};

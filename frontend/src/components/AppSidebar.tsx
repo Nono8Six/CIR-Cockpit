@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { motion, useReducedMotion, type Transition } from 'motion/react';
 
 import type { AppShellNavSection } from '@/app/appConstants';
+import { APP_SHELL_DIMENSIONS } from '@/components/app-shell/appShellTokens';
 import { Sheet, SheetContent } from './ui/feedback/Sheet';
 import type { AppTab } from '@/types';
 
@@ -47,7 +48,7 @@ const AppSidebar = ({
     <>
       <motion.aside
         initial={false}
-        animate={{ width: collapsed ? 52 : 240 }}
+        animate={{ width: collapsed ? APP_SHELL_DIMENSIONS.sidebarCollapsedWidth : APP_SHELL_DIMENSIONS.sidebarOpenWidth }}
         transition={sidebarTransition}
         className="relative hidden overflow-hidden border-r border-border/80 bg-surface-1 md:flex md:flex-col"
       >

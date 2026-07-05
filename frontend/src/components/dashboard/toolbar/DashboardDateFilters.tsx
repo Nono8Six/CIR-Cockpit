@@ -112,7 +112,7 @@ const DashboardDateFilters = forwardRef<HTMLButtonElement, DashboardDateFiltersP
 
   return (
     <div className="min-w-0 flex-1" data-testid="dashboard-date-filters">
-      <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(9.5rem,12rem)_minmax(14rem,18rem)] sm:items-center lg:max-w-[31rem]">
+      <div className="grid min-w-0 gap-1.5 sm:grid-cols-[minmax(9.5rem,12rem)_minmax(14rem,18rem)] sm:items-center lg:max-w-[31rem]">
         <Select
           value={period}
           onValueChange={(value) => {
@@ -125,7 +125,7 @@ const DashboardDateFilters = forwardRef<HTMLButtonElement, DashboardDateFiltersP
             ref={ref}
             data-testid="dashboard-period-select"
             density="dense"
-            className="h-8 w-full border-border bg-card px-2.5 text-xs shadow-soft hover:bg-surface-1 focus-visible:border-primary/40 focus-visible:ring-1 focus-visible:ring-primary/40"
+            className="w-full border-border bg-background text-xs hover:bg-surface-1 focus-visible:border-primary/40 focus-visible:ring-primary/25"
             aria-label="Période de filtrage"
           >
             <SelectValue placeholder="Période de filtrage" />
@@ -154,7 +154,8 @@ const DashboardDateFilters = forwardRef<HTMLButtonElement, DashboardDateFiltersP
             <Button
               type="button"
               variant="outline"
-              className="h-8 min-w-0 justify-start border-border bg-card px-3 text-left text-xs font-medium text-foreground/90 shadow-soft hover:bg-surface-1 focus-visible:border-primary/40 focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:ring-offset-0"
+              size="toolbar"
+              className="min-w-0 justify-start border-border bg-background text-left text-xs font-medium text-foreground/90 hover:bg-surface-1 focus-visible:border-primary/40 focus-visible:ring-primary/25"
               data-testid="dashboard-date-range-trigger"
               aria-label="Selectionner la plage de dates"
               title={`${formatRangeLabel(activeRange)}. Le filtre période s'applique sur la date de dernière action des dossiers.`}
@@ -193,9 +194,9 @@ const DashboardDateFilters = forwardRef<HTMLButtonElement, DashboardDateFiltersP
             <div className="mt-2 flex items-center justify-between gap-2 border-t border-border pt-2">
               <Button
                 type="button"
-                size="sm"
+                size="toolbar"
                 variant="ghost"
-                className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
+                className="px-2 text-xs text-muted-foreground hover:text-foreground"
                 onClick={() => {
                   setPendingRange(selectedRange);
                   setIsRangePopoverOpen(false);
@@ -206,8 +207,8 @@ const DashboardDateFilters = forwardRef<HTMLButtonElement, DashboardDateFiltersP
               </Button>
               <Button
                 type="button"
-                size="sm"
-                className="h-8 px-2 text-xs"
+                size="toolbar"
+                className="px-2 text-xs"
                 disabled={!canApplyRange(pendingRange)}
                 onClick={() => {
                   if (!canApplyRange(pendingRange)) {

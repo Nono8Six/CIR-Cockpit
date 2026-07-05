@@ -524,21 +524,29 @@ describe('PricingReferencesPage', () => {
       </QueryClientProvider>
     );
 
-    expect(await screen.findByRole('tabpanel', { name: /imports/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /imports/i })).toHaveAttribute('aria-selected', 'true');
+    expect(await screen.findByRole('tabpanel', { name: /segments/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /segments/i })).toHaveAttribute('aria-selected', 'true');
   });
 
   it('renders the CIR referentials workspace with import and consultation tabs', async () => {
+    const user = userEvent.setup();
     renderWithQueryClient(<PricingReferencesPage userRole="agency_admin" />);
 
     expect(await screen.findByRole('heading', { name: 'Référentiels CIR' })).toBeInTheDocument();
+    expect(screen.getAllByRole('tab')).toHaveLength(4);
     expect(screen.getByRole('tab', { name: /imports/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /classification cir/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /segments fabricant/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /liaisons/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /importer la classification/i })).toBeDisabled();
-    expect(screen.getByRole('button', { name: /importer les segments/i })).toBeDisabled();
-    expect(screen.getAllByText('Réservé super admin')).toHaveLength(2);
+    expect(screen.getByRole('tab', { name: /classification/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /segments/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /anomalies/i })).toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: /liaisons/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: /historique/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /importer/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /segments/i })).toHaveAttribute('aria-selected', 'true');
+    expect(await screen.findByTestId('pricing-references-status-line')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: /imports/i }));
+    expect(await screen.findByText('Réservé super admin')).toBeInTheDocument();
+    expect(await screen.findByText(/snapshot actif — import du/i)).toBeInTheDocument();
     expect(await screen.findByText(/analyse ok/i)).toBeInTheDocument();
   });
 
@@ -637,8 +645,8 @@ describe('PricingReferencesPage', () => {
     const user = userEvent.setup();
     renderWithQueryClient(<PricingReferencesPage userRole="super_admin" />);
 
-    const openDialogButton = await screen.findByRole('button', { name: /importer la classification/i });
-    await user.click(openDialogButton);
+    await user.click(await screen.findByRole('button', { name: /^importer$/i }));
+    await user.click(await screen.findByRole('menuitem', { name: /classification produit cir/i }));
 
     const previewButton = await screen.findByRole('button', { name: /previsualiser/i });
     const classificationInput = screen.getByLabelText('Classification produit CIR');
@@ -678,7 +686,8 @@ describe('PricingReferencesPage', () => {
     const user = userEvent.setup();
     renderWithQueryClient(<PricingReferencesPage userRole="super_admin" />);
 
-    await user.click(await screen.findByRole('button', { name: /segments et grilles/i }));
+    await user.click(await screen.findByRole('button', { name: /^importer$/i }));
+    await user.click(await screen.findByRole('menuitem', { name: /segments & grilles fabricant/i }));
     const previewButton = await screen.findByRole('button', { name: /previsualiser/i });
     const segmentsInput = screen.getByLabelText('Segments et grilles fabricant');
     await user.upload(
@@ -725,7 +734,8 @@ describe('PricingReferencesPage', () => {
 
     const user = userEvent.setup();
     renderWithQueryClient(<PricingReferencesPage userRole="super_admin" />);
-    await user.click(await screen.findByRole('button', { name: /importer la classification/i }));
+    await user.click(await screen.findByRole('button', { name: /^importer$/i }));
+    await user.click(await screen.findByRole('menuitem', { name: /classification produit cir/i }));
     await user.upload(
       screen.getByLabelText('Classification produit CIR'),
       new File(['classification'], 'classification.xlsx', {

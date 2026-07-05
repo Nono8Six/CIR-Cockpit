@@ -7,6 +7,7 @@ import {
   getSidebarToggleShortcutLabel,
   SIDEBAR_TOGGLE_SHORTCUT_ARIA,
 } from '@/app/appConstants';
+import { APP_SHELL_CLASSES, APP_SHELL_DIMENSIONS } from '@/components/app-shell/appShellTokens';
 import { getPathForTab, isShellNavItemActive } from '@/app/appRoutes';
 import type { AppShellNavSection } from '@/app/appConstants';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/feedback/Tooltip';
@@ -54,14 +55,14 @@ const AppSidebarContent = ({
   const shouldAnimateMobileOpen = !collapsed && Boolean(mobileOpen) && !reducedMotion;
   const fadeSlideTransition: Transition = reducedMotion
     ? { duration: 0 }
-    : { duration: 0.16, ease: 'easeOut' };
+    : { duration: 0.15, ease: 'easeOut' };
 
   return (
     <TooltipProvider>
       <div className="flex h-full flex-col bg-surface-1">
-        <div className={cn('flex h-12 items-center border-b border-border/70', collapsed ? 'justify-center px-2' : 'gap-2 px-3')}>
+        <div className={cn('flex items-center', APP_SHELL_DIMENSIONS.headerHeightClass, collapsed ? 'justify-center px-2' : 'gap-2 px-3')}>
           <div className={cn('flex items-center gap-2.5', collapsed && 'justify-center')}>
-            <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary text-[13px] font-black text-white shadow-soft">
+            <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary text-[13px] font-black text-primary-foreground">
               C
             </span>
             <AnimatePresence initial={false}>
@@ -86,13 +87,16 @@ const AppSidebarContent = ({
         </div>
 
         {!collapsed && mobileAccountSlot ? (
-          <div className="m-2 rounded-lg border border-border bg-card p-3 shadow-soft">{mobileAccountSlot}</div>
+          <div className="m-2 rounded-lg border border-border bg-card p-3">{mobileAccountSlot}</div>
         ) : null}
 
         {!collapsed && agencyName ? (
           <button
             type="button"
-            className="mx-2.5 mt-2 flex h-9 items-center gap-2 rounded-lg border border-border bg-card px-2.5 text-left text-xs shadow-soft transition-[background-color,border-color] hover:border-border/80 hover:bg-background"
+            className={cn(
+              'mx-2.5 mt-2 flex h-9 items-center gap-2 rounded-lg border border-border bg-card px-2.5 text-left text-xs transition-[background-color,border-color,box-shadow] duration-150 hover:border-border/80 hover:bg-background',
+              APP_SHELL_CLASSES.sidebarFocus
+            )}
           >
             <span className="h-1.5 w-1.5 rounded-full bg-success shadow-[0_0_0_2px_hsl(var(--success)/0.14)]" aria-hidden="true" />
             <span className="min-w-0 flex-1 leading-tight">
@@ -107,7 +111,7 @@ const AppSidebarContent = ({
           <div className="px-2.5 py-2">
             <Link
               to={getPathForTab('cockpit')}
-              className="flex h-8 w-full items-center justify-start gap-2 rounded-lg bg-primary px-2.5 text-xs font-semibold text-primary-foreground shadow-soft transition-[background-color,transform] hover:bg-primary/90 active:scale-[0.98]"
+              className={cn(APP_SHELL_CLASSES.sidebarCta, 'justify-start gap-2 px-2.5')}
             >
               <Plus size={14} aria-hidden="true" />
               Nouvelle interaction
@@ -119,7 +123,7 @@ const AppSidebarContent = ({
             <Link
               to={getPathForTab('cockpit')}
               aria-label="Nouvelle interaction"
-              className="flex h-8 w-full items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-soft transition-transform active:scale-[0.98]"
+              className={cn(APP_SHELL_CLASSES.sidebarCta, 'justify-center')}
             >
               <Plus size={15} aria-hidden="true" />
             </Link>
@@ -208,7 +212,8 @@ const AppSidebarContent = ({
                   aria-keyshortcuts={SIDEBAR_TOGGLE_SHORTCUT_ARIA}
                   onClick={onToggleCollapsed}
                   className={cn(
-                    'group flex h-8 w-full items-center rounded-lg text-xs transition-[background-color,color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98]',
+                    'group flex h-8 w-full items-center rounded-lg text-xs transition-[background-color,color,box-shadow,transform] duration-150 active:scale-[0.98]',
+                    APP_SHELL_CLASSES.sidebarFocus,
                     collapsed
                       ? 'justify-center px-0 text-muted-foreground hover:bg-card hover:text-foreground'
                       : 'justify-between px-2 text-muted-foreground hover:bg-card hover:text-foreground',

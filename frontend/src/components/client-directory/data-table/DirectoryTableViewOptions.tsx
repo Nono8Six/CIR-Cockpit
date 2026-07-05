@@ -27,7 +27,7 @@ const DirectoryTableViewOptions = ({
 }: DirectoryTableViewOptionsProps) => (
     <Popover>
       <PopoverTrigger asChild>
-        <Button type="button" variant="outline" size="dense" className="h-9 rounded-md px-3 text-sm shadow-none">
+        <Button type="button" variant="outline" size="toolbar" className="px-3 text-xs shadow-none">
           <Columns3 className="size-3.5" />
           Affichage
         </Button>
@@ -45,7 +45,7 @@ const DirectoryTableViewOptions = ({
             key={column.id}
             type="button"
             variant={column.isVisible ? 'secondary' : 'outline'}
-            size="sm"
+            size="toolbar"
             className="w-full justify-between"
             disabled={!column.canHide}
             onClick={() => onToggleColumn(column.id)}
@@ -61,7 +61,7 @@ const DirectoryTableViewOptions = ({
           <Button
             type="button"
             variant={density === 'comfortable' ? 'default' : 'outline'}
-            size="sm"
+            size="toolbar"
             onClick={() => onDensityChange('comfortable')}
           >
             <Rows3 className="size-4" />
@@ -70,7 +70,7 @@ const DirectoryTableViewOptions = ({
           <Button
             type="button"
             variant={density === 'compact' ? 'default' : 'outline'}
-            size="sm"
+            size="toolbar"
             onClick={() => onDensityChange('compact')}
           >
             <Rows3 className="size-4" />

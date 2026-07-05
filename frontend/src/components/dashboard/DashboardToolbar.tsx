@@ -3,6 +3,7 @@ import type { FilterPeriod } from '@/utils/date/getPresetDateRange';
 import DashboardDateFilters from './toolbar/DashboardDateFilters';
 import DashboardSearchInput from './toolbar/DashboardSearchInput';
 import DashboardViewModeSwitch from './toolbar/DashboardViewModeSwitch';
+import { PageToolbar, PageToolbarGroup } from '../app-shell/PageToolbar';
 
 type ViewMode = 'kanban' | 'list';
 
@@ -39,34 +40,32 @@ const DashboardToolbar = ({
   searchRef,
   dateFiltersRef
 }: DashboardToolbarProps) => (
-  <div
-    className="mb-3 shrink-0 border-b border-border/70 bg-background/75 pb-3 pt-2"
+  <PageToolbar
+    className="mb-3 shrink-0 bg-card/65"
     data-testid="dashboard-toolbar"
   >
-    <div className="flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
-      <div className="flex min-w-0 flex-1 flex-col gap-2 lg:flex-row lg:items-center">
-        <DashboardViewModeSwitch viewMode={viewMode} onViewModeChange={onViewModeChange} />
-        <DashboardDateFilters
-          ref={dateFiltersRef}
-          period={period}
-          onPeriodChange={onPeriodChange}
-          periodErrorMessage={periodErrorMessage}
-          effectiveStartDate={effectiveStartDate}
-          effectiveEndDate={effectiveEndDate}
-          onDateRangeChange={onDateRangeChange}
-          onStartDateChange={onStartDateChange}
-          onEndDateChange={onEndDateChange}
-        />
-      </div>
-      <div className="min-w-0 xl:w-[22rem]">
-        <DashboardSearchInput
-          ref={searchRef}
-          searchTerm={searchTerm}
-          onSearchTermChange={onSearchTermChange}
-        />
-      </div>
-    </div>
-  </div>
+    <PageToolbarGroup className="flex-1 flex-col items-stretch lg:flex-row lg:items-center">
+      <DashboardViewModeSwitch viewMode={viewMode} onViewModeChange={onViewModeChange} />
+      <DashboardDateFilters
+        ref={dateFiltersRef}
+        period={period}
+        onPeriodChange={onPeriodChange}
+        periodErrorMessage={periodErrorMessage}
+        effectiveStartDate={effectiveStartDate}
+        effectiveEndDate={effectiveEndDate}
+        onDateRangeChange={onDateRangeChange}
+        onStartDateChange={onStartDateChange}
+        onEndDateChange={onEndDateChange}
+      />
+    </PageToolbarGroup>
+    <PageToolbarGroup className="xl:w-[22rem]">
+      <DashboardSearchInput
+        ref={searchRef}
+        searchTerm={searchTerm}
+        onSearchTermChange={onSearchTermChange}
+      />
+    </PageToolbarGroup>
+  </PageToolbar>
 );
 
 export default DashboardToolbar;

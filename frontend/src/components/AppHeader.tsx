@@ -5,6 +5,7 @@ import { getPathForShellNavItem, isShellNavItemActive } from '@/app/appRoutes';
 import { Bell, ChevronDown, Menu, User } from 'lucide-react';
 
 import type { AppHeaderProps } from '@/components/app-header/AppHeader.types';
+import { APP_SHELL_CLASSES, APP_SHELL_DIMENSIONS } from '@/components/app-shell/appShellTokens';
 import AppHeaderSearchButton from '@/components/app-header/AppHeaderSearchButton';
 import AvatarInitials from './ui/data-display/AvatarInitials';
 import { Badge } from './ui/data-display/Badge';
@@ -65,13 +66,13 @@ const AppHeader = ({
   const currentSectionItems = safeSections.find((section) => section.items.some((item) => item.id === activeTab))?.items ?? [];
 
   return (
-    <header className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur">
-      <div className="flex h-11 items-center gap-2 px-3 sm:px-4">
+    <header className="sticky top-0 z-20 bg-background/95 backdrop-blur">
+      <div className={cn('flex items-center gap-2 px-3 sm:px-4', APP_SHELL_DIMENSIONS.headerHeightClass)}>
         <Button
           type="button"
           size="icon"
           variant="outline"
-          className="h-8 w-8 rounded-md border-border md:hidden"
+          className={cn(APP_SHELL_CLASSES.control, 'md:hidden')}
           onClick={onOpenMobileMenu}
           aria-label="Ouvrir le menu"
         >
@@ -85,7 +86,7 @@ const AppHeader = ({
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    className="-ml-1.5 inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[12.5px] font-medium text-muted-foreground outline-none transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                    className="inline-flex h-8 max-w-[12rem] items-center gap-1 rounded-lg px-2 text-[12.5px] font-medium text-muted-foreground transition-[background-color,color,box-shadow] duration-150 hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   >
                     <span className="truncate">{safeSectionLabel}</span>
                     <ChevronDown size={14} className="opacity-50 transition-transform group-data-[state=open]:rotate-180" />
@@ -137,7 +138,7 @@ const AppHeader = ({
             ) : null}
           </div>
 
-          <div className="w-px h-4 bg-border/60 hidden xl:block mx-1" />
+          <div className="mx-1 hidden h-4 w-px bg-border/60 xl:block" />
 
           <AppHeaderSearchButton
             onOpenSearch={onOpenSearch}
@@ -148,7 +149,7 @@ const AppHeader = ({
           <button
             type="button"
             aria-label="Notifications"
-            className="hidden h-8 w-8 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-[background-color,border-color,color,box-shadow] hover:bg-muted/80 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background md:inline-flex"
+            className={cn(APP_SHELL_CLASSES.control, 'hidden md:inline-flex')}
           >
             <Bell size={14} aria-hidden="true" />
           </button>
@@ -160,8 +161,8 @@ const AppHeader = ({
                   type="button"
                   data-testid="app-header-profile-button"
                   className={cn(
-                    'relative inline-flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-muted shadow-sm transition-[opacity,transform,border-color,box-shadow,background-color]',
-                    'hover:opacity-90 hover:scale-[0.98] active:scale-95 focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                    'relative inline-flex shrink-0 items-center justify-center overflow-hidden',
+                    APP_SHELL_CLASSES.controlRound,
                     isProfileMenuOpen && 'ring-2 ring-primary/20 ring-offset-1 ring-offset-background border-primary/20'
                   )}
                   aria-label="Ouvrir le menu profil"

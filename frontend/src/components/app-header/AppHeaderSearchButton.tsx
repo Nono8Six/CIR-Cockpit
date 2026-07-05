@@ -4,7 +4,9 @@ import {
   getSearchShortcutLabel,
   SEARCH_SHORTCUT_ARIA
 } from '@/app/appConstants';
+import { APP_SHELL_CLASSES } from '@/components/app-shell/appShellTokens';
 import { Kbd } from '../ui/data-display/Kbd';
+import { cn } from '@/lib/utils';
 
 type AppHeaderSearchButtonProps = {
   onOpenSearch: () => void;
@@ -30,9 +32,11 @@ const AppHeaderSearchButton = ({ onOpenSearch, onSearchIntent, isCompact = false
     <button
       type="button"
       data-testid="app-header-search-button"
-      className={`group inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-[background-color,border-color,color,box-shadow] hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
-        isCompact ? '' : 'lg:w-[17.5rem] lg:justify-start lg:gap-2 lg:px-2.5'
-      }`}
+      className={cn(
+        'group inline-flex min-w-0 shrink-0 items-center justify-center',
+        APP_SHELL_CLASSES.control,
+        !isCompact && 'lg:w-[17.5rem] lg:justify-start lg:gap-2 lg:px-2.5'
+      )}
       onClick={onOpenSearch}
       onMouseEnter={handleSearchIntent}
       onFocus={handleSearchIntent}
@@ -45,12 +49,12 @@ const AppHeaderSearchButton = ({ onOpenSearch, onSearchIntent, isCompact = false
         <>
           <span
             data-testid="app-header-search-label"
-            className="hidden text-xs font-medium transition-colors group-hover:text-foreground lg:inline"
+            className="hidden min-w-0 truncate text-xs font-medium transition-colors duration-150 group-hover:text-foreground lg:inline"
           >
             Clients, devis, interactions…
           </span>
           <span className="ml-auto hidden items-center lg:inline-flex">
-            <Kbd className="group-hover:bg-background/80 group-hover:text-foreground transition-colors">{shortcutLabel}</Kbd>
+            <Kbd className="transition-colors duration-150 group-hover:bg-background/80 group-hover:text-foreground">{shortcutLabel}</Kbd>
           </span>
         </>
       )}

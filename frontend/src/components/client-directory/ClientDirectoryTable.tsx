@@ -235,7 +235,9 @@ const ClientDirectoryTable = ({
   });
 
   const reducedMotion = useReducedMotion();
-  const rowPaddingClassName = density === 'compact' ? 'px-3 py-1.5 text-[13px]' : 'px-3 py-2.5 text-sm';
+  const rowPaddingClassName = density === 'compact'
+    ? 'h-8 whitespace-nowrap px-2 py-1 text-[12.5px]'
+    : 'h-9 whitespace-nowrap px-2 py-1.5 text-[13px]';
   const visibleColumnCount = table.getVisibleLeafColumns().length;
 
   const TableWrapper = reducedMotion ? 'div' : motion.div;
@@ -245,15 +247,15 @@ const ClientDirectoryTable = ({
 
   return (
     <>
-      <TableWrapper {...wrapperProps} className="min-h-0 flex-1 overflow-auto rounded-b-xl bg-transparent">
-        <Table className="min-w-[420px] sm:min-w-[720px]">
-          <TableHeader className="bg-card/98 backdrop-blur-sm [&_tr]:border-b-border/40">
+      <TableWrapper {...wrapperProps} className="min-h-0 flex-1 overflow-auto bg-transparent">
+        <Table scrollArea={false} className="min-w-[420px] sm:min-w-[720px]">
+          <TableHeader className="bg-muted/35 backdrop-blur-sm [&_tr]:border-b-border/55">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="hover:bg-transparent">
                 {headerGroup.headers.map((header) => (
                   <TableHead
                     key={header.id}
-                    className="sticky top-0 z-10 h-9 whitespace-nowrap border-b border-border/50 bg-card/98 px-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70 backdrop-blur-sm"
+                    className="sticky top-0 z-10 h-8 whitespace-nowrap border-b border-border/55 bg-muted/35 px-2 text-[11px] font-semibold uppercase tracking-normal text-muted-foreground backdrop-blur-sm"
                   >
                     {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
@@ -261,7 +263,7 @@ const ClientDirectoryTable = ({
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody className="[&_tr]:border-b-border/40">
+          <TableBody className="[&_tr]:border-b-border/55">
             {isInitialLoading ? (
               Array.from({ length: pageSize }).map((_, index) => (
                 <TableRow key={`skeleton-${index}`} className="animate-pulse">
@@ -291,7 +293,7 @@ const ClientDirectoryTable = ({
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  className="group/row transition-colors duration-75 hover:bg-primary/[0.03] focus-within:bg-primary/[0.04] border-b"
+                  className="group/row border-b transition-colors duration-150 hover:bg-muted/35 focus-within:bg-primary/[0.04]"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
@@ -314,7 +316,7 @@ const ClientDirectoryTable = ({
         </Table>
       </TableWrapper>
 
-      <div className="border-t border-border/40 px-3 py-2">
+      <div className="border-t border-border/60 bg-muted/20 px-3 py-2">
         <DirectoryTablePagination
           page={page}
           pageSize={pageSize}

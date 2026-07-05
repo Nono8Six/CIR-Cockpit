@@ -13,11 +13,24 @@ describe('AppHeaderSearchButton', () => {
 
     render(<AppHeaderSearchButton onOpenSearch={vi.fn()} />);
 
-    expect(screen.getByRole('button', { name: /ouvrir la recherche rapide/i })).toHaveAttribute(
+    const button = screen.getByRole('button', { name: /ouvrir la recherche rapide/i });
+
+    expect(button).toHaveAttribute(
       'aria-keyshortcuts',
       SEARCH_SHORTCUT_ARIA
     );
+    expect(button).toHaveClass('h-8', 'w-8', 'rounded-lg', 'lg:w-[17.5rem]');
     expect(screen.getByText(getSearchShortcutLabel())).toBeInTheDocument();
+  });
+
+  it('keeps compact mode icon-only at the shell control size', () => {
+    render(<AppHeaderSearchButton onOpenSearch={vi.fn()} isCompact />);
+
+    const button = screen.getByRole('button', { name: /ouvrir la recherche rapide/i });
+
+    expect(button).toHaveClass('h-8', 'w-8', 'rounded-lg');
+    expect(button.className).not.toContain('lg:w-[17.5rem]');
+    expect(screen.queryByTestId('app-header-search-label')).not.toBeInTheDocument();
   });
 
   it('keeps the search intent prefetch hooks wired', () => {

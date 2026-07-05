@@ -49,10 +49,10 @@ const DirectoryTablePagination = ({
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-        <span className="tabular-nums">{hasTotal ? `${pageStart}-${pageEnd} / ${total}` : `${pageStart}-${pageEnd}`}</span>
+      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+        <span className="font-mono tabular-nums">{hasTotal ? `${pageStart}-${pageEnd} / ${total}` : `${pageStart}-${pageEnd}`}</span>
         <div className="flex items-center gap-2">
-          <span>Lignes</span>
+          <span className="text-[11px]">Lignes</span>
           <Select value={String(pageSize)} onValueChange={(value) => onPageSizeChange(Number(value))}>
             <SelectTrigger
               density="dense"
@@ -76,7 +76,7 @@ const DirectoryTablePagination = ({
         <Button
           type="button"
           variant="outline"
-          size="sm"
+          size="control"
           aria-label="Première page"
           onClick={() => onPageChange(1)}
           disabled={page <= 1}
@@ -86,7 +86,7 @@ const DirectoryTablePagination = ({
         <Button
           type="button"
           variant="outline"
-          size="sm"
+          size="toolbar"
           aria-label="Page précédente"
           onClick={() => onPageChange(Math.max(1, page - 1))}
           disabled={page <= 1}
@@ -94,7 +94,7 @@ const DirectoryTablePagination = ({
           <span className="hidden sm:inline">Précédent</span>
           <span className="sm:hidden">‹</span>
         </Button>
-        <span className="px-2 text-sm text-muted-foreground tabular-nums sm:hidden">{`${page} / ${totalPages}`}</span>
+        <span className="px-2 font-mono text-xs text-muted-foreground tabular-nums sm:hidden">{`${page} / ${totalPages}`}</span>
         {pageItems.map((item, index) => item === 'ellipsis' ? (
           <span key={`ellipsis-${index}`} className="hidden px-2 text-sm text-muted-foreground sm:inline-flex">…</span>
         ) : (
@@ -102,7 +102,7 @@ const DirectoryTablePagination = ({
             key={item}
             type="button"
             variant={item === page ? 'default' : 'outline'}
-            size="sm"
+            size="control"
             className="hidden sm:inline-flex"
             aria-label={`Aller à la page ${item}`}
             onClick={() => onPageChange(item)}
@@ -113,7 +113,7 @@ const DirectoryTablePagination = ({
         <Button
           type="button"
           variant="outline"
-          size="sm"
+          size="toolbar"
           aria-label="Page suivante"
           onClick={() => onPageChange(Math.min(totalPages, page + 1))}
           disabled={page >= totalPages}
@@ -125,7 +125,7 @@ const DirectoryTablePagination = ({
           <Button
             type="button"
             variant="outline"
-            size="sm"
+            size="control"
             aria-label="Dernière page"
             onClick={() => onPageChange(totalPages)}
             disabled={page >= totalPages}

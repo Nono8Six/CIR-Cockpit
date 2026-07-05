@@ -127,8 +127,8 @@ const ClientDirectoryFilters = ({
     <Button
       type="button"
       variant={hasResettableState ? 'outline' : 'ghost'}
-      size="dense"
-      className="h-8 rounded-md px-3 text-xs shadow-none"
+      size="toolbar"
+      className="px-3 text-xs shadow-none"
       disabled={!hasResettableState}
       onClick={handleReset}
     >

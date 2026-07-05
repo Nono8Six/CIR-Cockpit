@@ -44,13 +44,16 @@ describe('AppSidebar', () => {
     expect(dashboardLink).toHaveTextContent('Pilotage');
     expect(dashboardLink).toHaveTextContent('1');
     expect(dashboardLink).toHaveTextContent('F4');
-    expect(screen.getByTestId('app-shell-nav-referentials')).toHaveTextContent('Referentiels CIR');
+    expect(dashboardLink).toHaveClass('h-8', 'rounded-lg', 'border-primary/25');
+    expect(dashboardLink.className.split(/\s+/).some((className) => className.startsWith('shadow'))).toBe(false);
+    expect(screen.getByTestId('app-shell-nav-referentials')).toHaveTextContent('Référentiels CIR');
     expect(screen.getByTestId('app-shell-nav-referentials')).toHaveTextContent('F5');
 
     expect(screen.getByRole('button', { name: /réduire le menu/i })).toHaveAttribute(
       'aria-keyshortcuts',
       SIDEBAR_TOGGLE_SHORTCUT_ARIA
     );
+    expect(screen.getByRole('button', { name: /réduire le menu/i })).toHaveClass('h-8', 'rounded-lg');
   });
 
   it('renders the supplier entry in expanded mode', () => {
