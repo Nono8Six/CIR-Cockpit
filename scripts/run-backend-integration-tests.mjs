@@ -6,7 +6,6 @@ const args = [
   "test",
   "--allow-env",
   "--allow-net",
-  "--no-check",
   "--config",
   "backend/deno.json",
   "backend/functions/api/integration",

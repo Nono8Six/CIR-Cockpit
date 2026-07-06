@@ -46,9 +46,9 @@ const columnClassName =
 
 const ColumnHeader = ({ label, count }: { label: string; count: number | null }) => (
   <div className="flex h-9 shrink-0 select-none items-center justify-between border-b border-stone-200/60 px-3">
-    <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-stone-400">{label}</span>
+    <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-stone-500">{label}</span>
     {count !== null ? (
-      <span className="font-mono text-[11px] tabular-nums text-stone-400">{formatCount(count)}</span>
+      <span className="font-mono text-[11px] tabular-nums text-stone-500">{formatCount(count)}</span>
     ) : null}
   </div>
 );
@@ -66,7 +66,7 @@ const GhostSearch = ({
   ariaLabel: string;
   disabled?: boolean;
 }) => (
-  <div className="relative shrink-0 border-b border-stone-100 transition-colors focus-within:border-stone-300">
+  <div className="relative shrink-0 border-b border-stone-100 transition-colors focus-within:border-stone-400">
     <Search
       className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-stone-300"
       aria-hidden="true"
@@ -325,13 +325,13 @@ export const ClassificationDrillDown = ({ importId, toolbar }: ClassificationDri
                     aria-pressed={isActive}
                     className={itemClassName(isActive)}
                   >
-                    <span className="w-8 shrink-0 font-mono text-[11px] tabular-nums text-stone-400">
+                    <span className="w-8 shrink-0 font-mono text-[11px] tabular-nums text-stone-500">
                       {mega.id}
                     </span>
                     <span className={cn('min-w-0 flex-1 truncate', isActive && 'font-medium text-stone-950')}>
                       {mega.label}
                     </span>
-                    <span className="shrink-0 font-mono text-[11px] tabular-nums text-stone-400">
+                    <span className="shrink-0 font-mono text-[11px] tabular-nums text-stone-500">
                       {mega.familyCount}
                     </span>
                     <ChevronRight className="size-3.5 shrink-0 text-stone-300" aria-hidden="true" />
@@ -364,13 +364,13 @@ export const ClassificationDrillDown = ({ importId, toolbar }: ClassificationDri
                       aria-pressed={isActive}
                       className={itemClassName(isActive)}
                     >
-                      <span className="w-8 shrink-0 font-mono text-[11px] tabular-nums text-stone-400">
+                      <span className="w-8 shrink-0 font-mono text-[11px] tabular-nums text-stone-500">
                         {fam.id}
                       </span>
                       <span className={cn('min-w-0 flex-1 truncate', isActive && 'font-medium text-stone-950')}>
                         {fam.label}
                       </span>
-                      <span className="shrink-0 font-mono text-[11px] tabular-nums text-stone-400">
+                      <span className="shrink-0 font-mono text-[11px] tabular-nums text-stone-500">
                         {fam.subfamilyCount}
                       </span>
                       <ChevronRight className="size-3.5 shrink-0 text-stone-300" aria-hidden="true" />
@@ -408,13 +408,13 @@ export const ClassificationDrillDown = ({ importId, toolbar }: ClassificationDri
                       aria-pressed={isActive}
                       className={itemClassName(isActive)}
                     >
-                      <span className="w-8 shrink-0 font-mono text-[11px] tabular-nums text-stone-400">
+                      <span className="w-8 shrink-0 font-mono text-[11px] tabular-nums text-stone-500">
                         {sfa.id}
                       </span>
                       <span className={cn('min-w-0 flex-1 truncate', isActive && 'font-medium text-stone-950')}>
                         {sfa.label}
                       </span>
-                      <span className="shrink-0 font-mono text-[11px] tabular-nums text-stone-400">
+                      <span className="shrink-0 font-mono text-[11px] tabular-nums text-stone-500">
                         {sfa.cir_key}
                       </span>
                     </button>

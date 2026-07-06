@@ -31,11 +31,15 @@ export const PaginationBar = ({
   return (
     <div className="flex shrink-0 select-none items-center justify-between gap-4 border-t border-border/60 bg-muted/25 px-3 py-2 text-xs">
       <div className="flex items-center gap-2.5 text-muted-foreground">
-        <span className="font-mono text-[11px] font-medium tabular-nums">
-          Affichage {pageStart}-{pageEnd} sur {numberFormatter.format(total)}
+        <span className="text-[11px] text-stone-500">
+          Affichage{' '}
+          <span className="font-mono tabular-nums">
+            {pageStart}-{pageEnd}
+          </span>{' '}
+          sur <span className="font-mono tabular-nums">{numberFormatter.format(total)}</span>
         </span>
         <div className="flex items-center gap-1.5 border-l border-border/70 pl-2.5">
-          <label htmlFor="pagination-page-size" className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60">
+          <label htmlFor="pagination-page-size" className="text-[11px] text-stone-500">
             Lignes :
           </label>
           <select
@@ -64,8 +68,11 @@ export const PaginationBar = ({
         >
           Précédent
         </Button>
-        <span className="font-mono text-[11px] text-muted-foreground/80 font-medium tabular-nums">
-          Page {page} / {totalPages}
+        <span className="text-[11px] text-stone-500">
+          Page{' '}
+          <span className="font-mono tabular-nums">
+            {page} / {totalPages}
+          </span>
         </span>
         <Button
           type="button"

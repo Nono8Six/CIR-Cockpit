@@ -22,7 +22,7 @@ export const FormField = ({ label, htmlFor, children }: FormFieldProps) => (
   <div className="min-w-0 space-y-1.5">
     <label
       htmlFor={htmlFor}
-      className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80"
+      className="block text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground/80"
     >
       {label}
     </label>

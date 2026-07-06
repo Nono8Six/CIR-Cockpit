@@ -215,7 +215,7 @@ export const AnomalyDetailDialog = ({
                   <DetailRowItem key={row.label} {...row} />
                 ))}
               </dl>
-              <p className="pb-1 pt-3 font-mono text-[10px] uppercase tracking-[0.08em] text-stone-400">
+              <p className="pb-1 pt-3 font-mono text-[10px] uppercase tracking-[0.08em] text-stone-500">
                 Valeurs Excel brutes
               </p>
               {rawValueEntries.length > 0 ? (
@@ -243,7 +243,7 @@ export const AnomalyDetailDialog = ({
               ) : null}
             </div>
 
-            <div className="flex items-center justify-between border-t border-stone-200/60 px-5 py-2.5 text-[11px] text-stone-400">
+            <div className="flex items-center justify-between border-t border-stone-200/60 px-5 py-2.5 text-[11px] text-stone-500">
               <span>Flèches ou j / k pour changer d’anomalie</span>
               {position ? (
                 <span className="font-mono tabular-nums">

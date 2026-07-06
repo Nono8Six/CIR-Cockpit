@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, "..");
+const skipRemote = process.argv.includes("--skip-remote");
 const failures = [];
 const PHASE3_GUARD_START_VERSION = 20260418153000n;
 const MODERN_MIGRATION_START_VERSION = 20260126120000n;
@@ -39,6 +40,8 @@ const REQUIRED_LEGACY_MIGRATIONS = [
   "202601231550_sync_status_label_on_update.sql",
   "202601231560_interactions_status_terminal_flag.sql",
 ];
+// Only migrations whose local filename version differs from the remote version need an entry here.
+// When a local file starts with the remote version (modern workflow), the mapping is derived automatically.
 const REMOTE_TO_LOCAL_MODERN_MIGRATION_COMPATIBILITY = {
   20260126164618n: "20260126120000_create_clients.sql",
   20260126164635n: "20260126120500_create_client_contacts.sql",
@@ -84,8 +87,6 @@ const REMOTE_TO_LOCAL_MODERN_MIGRATION_COMPATIBILITY = {
   20260417142109n: "20260309110000_add_entities_official_company_fields.sql",
   20260417142119n: "20260310120000_add_entities_client_kind.sql",
   20260418091644n: "20260418120000_unified_config_snapshot.sql",
-  20260418153000n: "20260418153000_phase3_private_schema_hardening.sql",
-  20260418154000n: "20260418154000_phase3_pg_trgm_and_fk_indexes.sql",
   20260504094202n: "20260504092200_migrate_directory_saved_view_scopes.sql",
   20260513151526n: "20260513144739_add_tier_v1_foundation.sql",
   20260518041315n: "20260518103000_directory_saved_views_view_type.sql",
@@ -97,8 +98,6 @@ const REMOTE_TO_LOCAL_MODERN_MIGRATION_COMPATIBILITY = {
   20260607154708n: "20260607120000_contact_service_and_family_requirements.sql",
   20260616072310n: "20260616103000_entity_contacts_primary_contact.sql",
   20260621072251n: "20260617120000_enrich_entity_audit_changes.sql",
-  20260622041229n: "20260622041229_pricing_reference_foundation.sql",
-  20260622041709n: "20260622041709_pricing_reference_fk_indexes.sql",
   20260627105918n: "20260627090000_pricing_reference_column_mappings.sql",
   20260627162828n: "20260627162550_ai_governance.sql",
   20260628083710n: "20260627191500_pricing_reference_diagnose_split.sql",
@@ -161,7 +160,17 @@ function getMigrationVersion(filename) {
 }
 
 function getMigrationVersionsFromSupabaseCli() {
-  const output = command("supabase", ["migration", "list", "--linked"]);
+  let output;
+  try {
+    output = command("supabase", ["migration", "list", "--linked"]);
+  } catch (error) {
+    fail(
+      `Supabase CLI indisponible ou projet non lie (${error.code ?? error.status ?? "erreur"}): `
+        + "impossible de verifier la parite des migrations distantes. "
+        + "Utiliser `node ./scripts/check-repo-state.mjs --skip-remote` pour les checks locaux uniquement.",
+    );
+    return [];
+  }
   const versions = Array.from(output.matchAll(/\|\s*(\d{14})\s+\|/g), (match) => BigInt(match[1]));
   if (versions.length === 0) {
     fail("Unable to parse remote migration inventory from `supabase migration list --linked`.");
@@ -323,33 +332,44 @@ for (const legacyMigration of REQUIRED_LEGACY_MIGRATIONS) {
   }
 }
 
-const remoteVersions = getMigrationVersionsFromSupabaseCli();
-const missingModernRemoteMigrations = remoteVersions
-  .filter((version) => version >= MODERN_MIGRATION_START_VERSION)
-  .flatMap((version) => {
-    const expectedFilename = REMOTE_TO_LOCAL_MODERN_MIGRATION_COMPATIBILITY[version];
-    if (!expectedFilename) {
-      return [`Missing compatibility mapping for remote migration ${version}.`];
+if (skipRemote) {
+  for (const expectedFilename of Object.values(REMOTE_TO_LOCAL_MODERN_MIGRATION_COMPATIBILITY)) {
+    if (!migrationFilenames.includes(expectedFilename)) {
+      fail(`Compatibility map expects local migration ${expectedFilename}, but it is missing.`);
     }
-    return migrationFilenames.includes(expectedFilename)
-      ? []
-      : [`Remote migration ${version} expects local file ${expectedFilename}, but it is missing.`];
-  });
+  }
+} else {
+  const remoteVersions = getMigrationVersionsFromSupabaseCli();
+  const missingModernRemoteMigrations = remoteVersions
+    .filter((version) => version >= MODERN_MIGRATION_START_VERSION)
+    .flatMap((version) => {
+      const expectedFilename = REMOTE_TO_LOCAL_MODERN_MIGRATION_COMPATIBILITY[version]
+        ?? migrationFilenames.find((filename) => filename.startsWith(`${version}_`));
+      if (!expectedFilename) {
+        return [
+          `Remote migration ${version} has no local file ${version}_*.sql and no compatibility mapping entry.`,
+        ];
+      }
+      return migrationFilenames.includes(expectedFilename)
+        ? []
+        : [`Remote migration ${version} expects local file ${expectedFilename}, but it is missing.`];
+    });
 
-for (const failure of missingModernRemoteMigrations) {
-  fail(failure);
-}
+  for (const failure of missingModernRemoteMigrations) {
+    fail(failure);
+  }
 
-const localLegacyCount = migrationFilenames.filter((filename) => {
-  const version = getMigrationVersion(filename);
-  return version !== null && version < MODERN_MIGRATION_START_VERSION;
-}).length;
-const remoteLegacyCount = remoteVersions.filter((version) => version < MODERN_MIGRATION_START_VERSION).length;
+  const localLegacyCount = migrationFilenames.filter((filename) => {
+    const version = getMigrationVersion(filename);
+    return version !== null && version < MODERN_MIGRATION_START_VERSION;
+  }).length;
+  const remoteLegacyCount = remoteVersions.filter((version) => version < MODERN_MIGRATION_START_VERSION).length;
 
-if (localLegacyCount < remoteLegacyCount) {
-  fail(
-    `Local legacy migration inventory is shorter than remote history (${localLegacyCount} local < ${remoteLegacyCount} remote).`,
-  );
+  if (localLegacyCount < remoteLegacyCount) {
+    fail(
+      `Local legacy migration inventory is shorter than remote history (${localLegacyCount} local < ${remoteLegacyCount} remote).`,
+    );
+  }
 }
 
 for (const migrationFilename of migrationFilenames) {

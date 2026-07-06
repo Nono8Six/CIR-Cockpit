@@ -1,75 +1,76 @@
-import { and, desc, eq, sql, type SQL } from 'drizzle-orm';
-import * as XLSX from 'xlsx';
+import { and, desc, eq, type SQL, sql } from "drizzle-orm";
+import { strToU8, zipSync } from "fflate";
 
 import {
   pricing_reference_anomalies,
   pricing_reference_column_mapping_profiles,
   pricing_reference_import_files,
   pricing_reference_imports,
-  pricing_reference_snapshots
-} from '../../../../../drizzle/schema.ts';
+  pricing_reference_snapshots,
+} from "../../../../../drizzle/schema.ts";
 import {
   PRICING_REFERENCE_ANOMALY_DEFAULT_MARQUE,
   PRICING_REFERENCE_CLASSIFICATION_COLUMNS,
   PRICING_REFERENCE_SEGMENTS_GRIDS_COLUMNS,
   PRICING_REFERENCE_STORAGE_BUCKET,
   PRICING_REFERENCE_XLSX_MIME,
-  pricingReferenceAnomalySeverityLabels,
-  pricingReferenceAnomalyTypeActionLabels,
-  pricingReferenceAnomalyTypeLabels,
-  pricingReferenceColumnAliasesSchema,
-  pricingReferenceColumnMappingProfileSchema,
-  pricingReferenceColumnMappingSchema,
-  pricingReferenceAnomaliesExportResponseSchema,
-  pricingReferenceHealthReportSchema,
-  pricingReferenceImportConfirmMappingResponseSchema,
-  pricingReferenceImportInspectResponseSchema,
-  pricingReferenceImportAssistMappingResponseSchema,
-  type PricingReferenceColumnAliases,
-  type PricingReferenceColumnMapping,
-  type PricingReferenceColumnMappingProfile,
-  type PricingReferenceFileKind,
-  type PricingReferenceImportAnalyzeResponse,
-  type PricingReferenceImportStatus,
-  type PricingReferenceImportAssistMappingInput,
-  type PricingReferenceImportAssistMappingResponse,
+  type PricingReferenceAnomaliesExportFile,
   type PricingReferenceAnomaliesExportInput,
   type PricingReferenceAnomaliesExportResponse,
+  pricingReferenceAnomaliesExportResponseSchema,
   type PricingReferenceAnomaliesListInput,
-  type PricingReferenceAnomaliesSortBy,
   type PricingReferenceAnomaliesListResponse,
+  type PricingReferenceAnomaliesSortBy,
   type PricingReferenceAnomaliesSummaryGetInput,
   type PricingReferenceAnomaliesSummaryResponse,
   type PricingReferenceAnomalySeverity,
+  pricingReferenceAnomalySeverityLabels,
   type PricingReferenceAnomalyType,
+  pricingReferenceAnomalyTypeActionLabels,
+  pricingReferenceAnomalyTypeLabels,
   type PricingReferenceClassificationListAllInput,
   type PricingReferenceClassificationListAllResponse,
   type PricingReferenceClassificationListInput,
-  type PricingReferenceClassificationSortBy,
   type PricingReferenceClassificationListResponse,
+  type PricingReferenceClassificationSortBy,
+  type PricingReferenceColumnAliases,
+  pricingReferenceColumnAliasesSchema,
+  type PricingReferenceColumnMapping,
+  type PricingReferenceColumnMappingProfile,
+  pricingReferenceColumnMappingProfileSchema,
+  pricingReferenceColumnMappingSchema,
+  type PricingReferenceFileKind,
   type PricingReferenceHealthGetResponse,
+  pricingReferenceHealthReportSchema,
   type PricingReferenceImportAnalyzeInput,
+  type PricingReferenceImportAnalyzeResponse,
+  type PricingReferenceImportAssistMappingInput,
+  type PricingReferenceImportAssistMappingResponse,
+  pricingReferenceImportAssistMappingResponseSchema,
   type PricingReferenceImportConfirmMappingInput,
   type PricingReferenceImportConfirmMappingResponse,
+  pricingReferenceImportConfirmMappingResponseSchema,
   type PricingReferenceImportGetInput,
   type PricingReferenceImportGetResponse,
   type PricingReferenceImportInspectInput,
   type PricingReferenceImportInspectResponse,
+  pricingReferenceImportInspectResponseSchema,
   type PricingReferenceImportsListInput,
   type PricingReferenceImportsListResponse,
   type PricingReferenceImportsPrepareInput,
   type PricingReferenceImportsPrepareResponse,
+  type PricingReferenceImportStatus,
   type PricingReferenceLinkStatus,
   type PricingReferenceRowsListInput,
   type PricingReferenceSegmentsListInput,
+  type PricingReferenceSegmentsListResponse,
   type PricingReferenceSegmentsSortBy,
   type PricingReferenceSortDirection,
-  type PricingReferenceSegmentsListResponse
-} from '../../../../../../shared/schemas/pricing/references.schema.ts';
-import { getSupabaseAdmin } from '../../../middleware/auth/auth.ts';
-import { httpError } from '../../../middleware/errorHandler.ts';
-import type { DbClient } from '../../../types.ts';
-import { checkRateLimit } from '../../rate-limiting/rateLimit.ts';
+} from "../../../../../../shared/schemas/pricing/references.schema.ts";
+import { getSupabaseAdmin } from "../../../middleware/auth/auth.ts";
+import { httpError } from "../../../middleware/errorHandler.ts";
+import type { DbClient } from "../../../types.ts";
+import { checkRateLimit } from "../../rate-limiting/rateLimit.ts";
 import {
   analyzePricingReferenceWorkbooks,
   computeSha256,
@@ -81,14 +82,15 @@ import {
   type ParsedSegmentClassificationLinkRow,
   type ParsedSegmentPurchaseGridRow,
   type ParsedSupplierSegmentRow,
-  type PricingReferenceAnalysisResult
-} from './referenceExcelParser.ts';
+  type PricingReferenceAnalysisResult,
+} from "./referenceExcelParser.ts";
 
 type ImportFileRow = typeof pricing_reference_import_files.$inferSelect;
 type ImportRow = typeof pricing_reference_imports.$inferSelect;
 type SnapshotRow = typeof pricing_reference_snapshots.$inferSelect;
-type ColumnMappingProfileRow = typeof pricing_reference_column_mapping_profiles.$inferSelect;
-type PricingReferenceAnomalyQueryRow = {
+type ColumnMappingProfileRow =
+  typeof pricing_reference_column_mapping_profiles.$inferSelect;
+export type PricingReferenceAnomalyQueryRow = {
   id: string;
   import_id: string;
   snapshot_id: string | null;
@@ -113,6 +115,11 @@ type PersistedAnalysisState = {
 };
 type JsonbRecordsetRow = Record<string, unknown>;
 type JsonbRecordsetQueryFactory = (payload: string) => SQL;
+export type PricingReferenceExportSourceRow = {
+  file_kind: PricingReferenceFileKind;
+  source_row_number: number;
+  raw_values: Record<string, string>;
+};
 
 const SIGNED_UPLOAD_EXPIRES_IN_SECONDS = 60 * 60 * 2;
 const EXPORT_SIGNED_URL_EXPIRES_IN_SECONDS = 60 * 60;
@@ -121,9 +128,10 @@ const ANOMALIES_EXPORT_MAX_ROWS = 50_000;
 const INSERT_CHUNK_SIZE = 250;
 const BULK_INSERT_CHUNK_SIZE = 1000;
 
-const toOffset = (page: number, pageSize: number): number => (page - 1) * pageSize;
+const toOffset = (page: number, pageSize: number): number =>
+  (page - 1) * pageSize;
 const sortDirectionSql = (direction: PricingReferenceSortDirection): SQL =>
-  direction === 'desc' ? sql`desc` : sql`asc`;
+  direction === "desc" ? sql`desc` : sql`asc`;
 
 const uniqueValues = <T>(values: T[]): T[] => Array.from(new Set(values));
 
@@ -131,40 +139,46 @@ const severityWeight: Record<PricingReferenceAnomalySeverity, number> = {
   bloquante: 4,
   haute: 3,
   moyenne: 2,
-  faible: 1
+  faible: 1,
 };
 
-const severityFromWeight = (weight: number): PricingReferenceAnomalySeverity => {
-  if (weight >= severityWeight.bloquante) return 'bloquante';
-  if (weight === severityWeight.haute) return 'haute';
-  if (weight === severityWeight.moyenne) return 'moyenne';
-  return 'faible';
+const severityFromWeight = (
+  weight: number,
+): PricingReferenceAnomalySeverity => {
+  if (weight >= severityWeight.bloquante) return "bloquante";
+  if (weight === severityWeight.haute) return "haute";
+  if (weight === severityWeight.moyenne) return "moyenne";
+  return "faible";
 };
 
-const anomalyMarqueSql = (): SQL => sql`coalesce(
+const anomalyMarqueSql = (): SQL =>
+  sql`coalesce(
   nullif(trim(${pricing_reference_anomalies.details}->'raw_values'->>'MARQUE'), ''),
   nullif(trim(split_part(coalesce(${pricing_reference_anomalies.details}->>'segment_key', ${pricing_reference_anomalies.object_id}, ''), '|', 3)), ''),
   ${PRICING_REFERENCE_ANOMALY_DEFAULT_MARQUE}
 )`;
 
-const anomalySeverityWeightSql = (): SQL => sql`case ${pricing_reference_anomalies.severity}
+const anomalySeverityWeightSql = (): SQL =>
+  sql`case ${pricing_reference_anomalies.severity}
   when 'bloquante' then 4
   when 'haute' then 3
   when 'moyenne' then 2
   else 1
 end`;
 
-const classificationSortSql = (sortBy: PricingReferenceClassificationSortBy): SQL => {
+const classificationSortSql = (
+  sortBy: PricingReferenceClassificationSortBy,
+): SQL => {
   switch (sortBy) {
-    case 'cir_key':
+    case "cir_key":
       return sql`cir_key`;
-    case 'fam':
+    case "fam":
       return sql`fam`;
-    case 'sfa':
+    case "sfa":
       return sql`sfa`;
-    case 'source_row_number':
+    case "source_row_number":
       return sql`source_row_number`;
-    case 'mega':
+    case "mega":
     default:
       return sql`mega`;
   }
@@ -172,19 +186,19 @@ const classificationSortSql = (sortBy: PricingReferenceClassificationSortBy): SQ
 
 const segmentSortSql = (sortBy: PricingReferenceSegmentsSortBy): SQL => {
   switch (sortBy) {
-    case 'cat_fab':
+    case "cat_fab":
       return sql`s.cat_fab`;
-    case 'segment':
+    case "segment":
       return sql`s.segment`;
-    case 'idnumerique':
+    case "idnumerique":
       return sql`s.idnumerique`;
-    case 'link_status':
+    case "link_status":
       return sql`l.link_status`;
-    case 'purchase_grid_rows_count':
+    case "purchase_grid_rows_count":
       return sql`purchase_grid_rows_count`;
-    case 'source_row_number':
+    case "source_row_number":
       return sql`s.source_row_number`;
-    case 'marque':
+    case "marque":
     default:
       return sql`s.marque`;
   }
@@ -192,21 +206,26 @@ const segmentSortSql = (sortBy: PricingReferenceSegmentsSortBy): SQL => {
 
 const anomalySortSql = (sortBy: PricingReferenceAnomaliesSortBy): SQL => {
   switch (sortBy) {
-    case 'severity':
+    case "severity":
       return sql`pricing_reference_anomalies.severity`;
-    case 'type':
+    case "type":
       return sql`pricing_reference_anomalies.type`;
-    case 'source_row_number':
+    case "source_row_number":
       return sql`pricing_reference_anomalies.source_row_number`;
-    case 'created_at':
+    case "created_at":
     default:
       return sql`pricing_reference_anomalies.created_at`;
   }
 };
 
-const optionalExactFilter = (column: SQL, value: string | undefined): SQL | null => {
+const optionalExactFilter = (
+  column: SQL,
+  value: string | undefined,
+): SQL | null => {
   const normalized = value?.trim();
-  return normalized ? sql<boolean>`lower(${column}) = ${normalized.toLowerCase()}` : null;
+  return normalized
+    ? sql<boolean>`lower(${column}) = ${normalized.toLowerCase()}`
+    : null;
 };
 
 const andSql = (conditions: SQL[]): SQL =>
@@ -218,7 +237,9 @@ const uniqueNonEmptyStrings = (values: string[] | undefined): string[] =>
 const inValuesSql = (column: SQL, values: string[] | undefined): SQL | null => {
   const normalized = uniqueNonEmptyStrings(values);
   return normalized.length > 0
-    ? sql<boolean>`${column} in (${sql.join(normalized.map((value) => sql`${value}`), sql`, `)})`
+    ? sql<boolean>`${column} in (${
+      sql.join(normalized.map((value) => sql`${value}`), sql`, `)
+    })`
     : null;
 };
 
@@ -238,23 +259,33 @@ const anomalySearchSql = (search: string | undefined): SQL | null => {
 const buildAnomalyFilterConditions = (
   input: Pick<
     PricingReferenceAnomaliesListInput,
-    'import_id' | 'snapshot_id' | 'search' | 'severities' | 'types' | 'marques'
+    "import_id" | "snapshot_id" | "search" | "severities" | "types" | "marques"
   >,
   snapshotId: string | null,
-  omittedFacet?: 'severities' | 'types' | 'marques'
+  omittedFacet?: "severities" | "types" | "marques",
 ): SQL[] => {
   const conditions: SQL[] = [];
-  if (input.import_id) conditions.push(eq(pricing_reference_anomalies.import_id, input.import_id));
-  if (snapshotId) conditions.push(eq(pricing_reference_anomalies.snapshot_id, snapshotId));
-  if (omittedFacet !== 'severities') {
-    const severityFilter = inValuesSql(sql`${pricing_reference_anomalies.severity}`, input.severities);
+  if (input.import_id) {
+    conditions.push(eq(pricing_reference_anomalies.import_id, input.import_id));
+  }
+  if (snapshotId) {
+    conditions.push(eq(pricing_reference_anomalies.snapshot_id, snapshotId));
+  }
+  if (omittedFacet !== "severities") {
+    const severityFilter = inValuesSql(
+      sql`${pricing_reference_anomalies.severity}`,
+      input.severities,
+    );
     if (severityFilter) conditions.push(severityFilter);
   }
-  if (omittedFacet !== 'types') {
-    const typeFilter = inValuesSql(sql`${pricing_reference_anomalies.type}`, input.types);
+  if (omittedFacet !== "types") {
+    const typeFilter = inValuesSql(
+      sql`${pricing_reference_anomalies.type}`,
+      input.types,
+    );
     if (typeFilter) conditions.push(typeFilter);
   }
-  if (omittedFacet !== 'marques') {
+  if (omittedFacet !== "marques") {
     const marqueFilter = inValuesSql(anomalyMarqueSql(), input.marques);
     if (marqueFilter) conditions.push(marqueFilter);
   }
@@ -266,14 +297,14 @@ const buildAnomalyFilterConditions = (
 const normalizeFilename = (filename: string): string =>
   filename
     .trim()
-    .replace(/[^a-zA-Z0-9._-]+/g, '_')
-    .replace(/_+/g, '_')
-    .replace(/^_+|_+$/g, '');
+    .replace(/[^a-zA-Z0-9._-]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
 
 const flushJsonbRecordsetInsert = async (
   tx: DbClient,
   chunk: JsonbRecordsetRow[],
-  buildQuery: JsonbRecordsetQueryFactory
+  buildQuery: JsonbRecordsetQueryFactory,
 ): Promise<void> => {
   if (chunk.length === 0) return;
   const payload = JSON.stringify(chunk);
@@ -285,7 +316,11 @@ const assertHealthReport = (value: unknown) => {
   if (value === null || value === undefined) return null;
   const parsed = pricingReferenceHealthReportSchema.safeParse(value);
   if (!parsed.success) {
-    throw httpError(500, 'DB_READ_FAILED', 'Rapport de sante referentiel invalide.');
+    throw httpError(
+      500,
+      "DB_READ_FAILED",
+      "Rapport de sante referentiel invalide.",
+    );
   }
   return parsed.data;
 };
@@ -295,9 +330,9 @@ const assertColumnMapping = (value: unknown): PricingReferenceColumnMapping => {
   if (!parsed.success) {
     throw httpError(
       500,
-      'DB_READ_FAILED',
-      'Mapping de colonnes referentiel invalide.',
-      parsed.error.issues.map((issue) => issue.message).join(' | ')
+      "DB_READ_FAILED",
+      "Mapping de colonnes referentiel invalide.",
+      parsed.error.issues.map((issue) => issue.message).join(" | "),
     );
   }
   return parsed.data;
@@ -308,15 +343,17 @@ const assertColumnAliases = (value: unknown): PricingReferenceColumnAliases => {
   if (!parsed.success) {
     throw httpError(
       500,
-      'DB_READ_FAILED',
-      'Alias de colonnes referentiel invalides.',
-      parsed.error.issues.map((issue) => issue.message).join(' | ')
+      "DB_READ_FAILED",
+      "Alias de colonnes referentiel invalides.",
+      parsed.error.issues.map((issue) => issue.message).join(" | "),
     );
   }
   return parsed.data;
 };
 
-const toColumnMappingProfile = (row: ColumnMappingProfileRow): PricingReferenceColumnMappingProfile => {
+const toColumnMappingProfile = (
+  row: ColumnMappingProfileRow,
+): PricingReferenceColumnMappingProfile => {
   const parsed = pricingReferenceColumnMappingProfileSchema.safeParse({
     id: row.id,
     file_kind: row.file_kind,
@@ -327,14 +364,14 @@ const toColumnMappingProfile = (row: ColumnMappingProfileRow): PricingReferenceC
     created_by: row.created_by,
     updated_by: row.updated_by,
     created_at: row.created_at,
-    updated_at: row.updated_at
+    updated_at: row.updated_at,
   });
   if (!parsed.success) {
     throw httpError(
       500,
-      'DB_READ_FAILED',
-      'Profil de mapping referentiel invalide.',
-      parsed.error.issues.map((issue) => issue.message).join(' | ')
+      "DB_READ_FAILED",
+      "Profil de mapping referentiel invalide.",
+      parsed.error.issues.map((issue) => issue.message).join(" | "),
     );
   }
   return parsed.data;
@@ -342,21 +379,24 @@ const toColumnMappingProfile = (row: ColumnMappingProfileRow): PricingReferenceC
 
 const getDefaultColumnMappingProfile = async (
   db: DbClient,
-  fileKind: PricingReferenceFileKind
+  fileKind: PricingReferenceFileKind,
 ): Promise<PricingReferenceColumnMappingProfile | null> => {
   const [row] = await db
     .select()
     .from(pricing_reference_column_mapping_profiles)
     .where(and(
       eq(pricing_reference_column_mapping_profiles.file_kind, fileKind),
-      eq(pricing_reference_column_mapping_profiles.is_default, true)
+      eq(pricing_reference_column_mapping_profiles.is_default, true),
     ))
     .limit(1);
 
   return row ? toColumnMappingProfile(row) : null;
 };
 
-const requireImport = async (db: DbClient, importId: string): Promise<ImportRow> => {
+const requireImport = async (
+  db: DbClient,
+  importId: string,
+): Promise<ImportRow> => {
   const [row] = await db
     .select()
     .from(pricing_reference_imports)
@@ -364,7 +404,11 @@ const requireImport = async (db: DbClient, importId: string): Promise<ImportRow>
     .limit(1);
 
   if (!row) {
-    throw httpError(404, 'PRICING_REFERENCE_IMPORT_NOT_FOUND', 'Import referentiel introuvable.');
+    throw httpError(
+      404,
+      "PRICING_REFERENCE_IMPORT_NOT_FOUND",
+      "Import referentiel introuvable.",
+    );
   }
 
   return row;
@@ -374,7 +418,7 @@ const requireImportFile = async (
   db: DbClient,
   importId: string,
   fileId: string,
-  fileKind: PricingReferenceFileKind
+  fileKind: PricingReferenceFileKind,
 ): Promise<ImportFileRow> => {
   const [row] = await db
     .select()
@@ -382,18 +426,25 @@ const requireImportFile = async (
     .where(and(
       eq(pricing_reference_import_files.id, fileId),
       eq(pricing_reference_import_files.import_id, importId),
-      eq(pricing_reference_import_files.file_kind, fileKind)
+      eq(pricing_reference_import_files.file_kind, fileKind),
     ))
     .limit(1);
 
   if (!row) {
-    throw httpError(404, 'PRICING_REFERENCE_IMPORT_FILE_NOT_FOUND', 'Fichier d import referentiel introuvable.');
+    throw httpError(
+      404,
+      "PRICING_REFERENCE_IMPORT_FILE_NOT_FOUND",
+      "Fichier d import referentiel introuvable.",
+    );
   }
 
   return row;
 };
 
-const getImportFiles = async (db: DbClient, importId: string): Promise<ImportFileRow[]> =>
+const getImportFiles = async (
+  db: DbClient,
+  importId: string,
+): Promise<ImportFileRow[]> =>
   await db
     .select()
     .from(pricing_reference_import_files)
@@ -401,22 +452,24 @@ const getImportFiles = async (db: DbClient, importId: string): Promise<ImportFil
 
 const getCurrentImportFiles = async (
   db: DbClient,
-  importId: string
+  importId: string,
 ): Promise<Partial<Record<PricingReferenceFileKind, ImportFileRow>>> => {
   const files = await getImportFiles(db, importId);
-  const classification = files.find((file) => file.file_kind === 'classification');
-  const segments = files.find((file) => file.file_kind === 'segments_grids');
+  const classification = files.find((file) =>
+    file.file_kind === "classification"
+  );
+  const segments = files.find((file) => file.file_kind === "segments_grids");
 
   return {
     ...(classification ? { classification } : {}),
-    ...(segments ? { segments_grids: segments } : {})
+    ...(segments ? { segments_grids: segments } : {}),
   };
 };
 
 const getLatestReusableImportFile = async (
   db: DbClient,
   importId: string,
-  fileKind: PricingReferenceFileKind
+  fileKind: PricingReferenceFileKind,
 ): Promise<ImportFileRow | null> => {
   const rows = await db.execute<ImportFileRow>(sql`
     select f.*
@@ -434,16 +487,26 @@ const getLatestReusableImportFile = async (
 
 const resolveAnalysisFiles = async (
   db: DbClient,
-  importId: string
-): Promise<{ classification: ImportFileRow; segments_grids: ImportFileRow }> => {
+  importId: string,
+): Promise<
+  { classification: ImportFileRow; segments_grids: ImportFileRow }
+> => {
   const currentFiles = await getCurrentImportFiles(db, importId);
   if (!currentFiles.classification && !currentFiles.segments_grids) {
-    throw httpError(400, 'PRICING_REFERENCE_IMPORT_INVALID_FILE', 'Aucun fichier referentiel CIR n a ete fourni.');
+    throw httpError(
+      400,
+      "PRICING_REFERENCE_IMPORT_INVALID_FILE",
+      "Aucun fichier referentiel CIR n a ete fourni.",
+    );
   }
 
   const [classificationFallback, segmentsFallback] = await Promise.all([
-    currentFiles.classification ? Promise.resolve(null) : getLatestReusableImportFile(db, importId, 'classification'),
-    currentFiles.segments_grids ? Promise.resolve(null) : getLatestReusableImportFile(db, importId, 'segments_grids')
+    currentFiles.classification
+      ? Promise.resolve(null)
+      : getLatestReusableImportFile(db, importId, "classification"),
+    currentFiles.segments_grids
+      ? Promise.resolve(null)
+      : getLatestReusableImportFile(db, importId, "segments_grids"),
   ]);
 
   const classification = currentFiles.classification ?? classificationFallback;
@@ -452,15 +515,15 @@ const resolveAnalysisFiles = async (
   if (!classification) {
     throw httpError(
       400,
-      'PRICING_REFERENCE_IMPORT_INVALID_FILE',
-      'Le fichier classification CIR est requis car aucun import precedent ne permet de le reutiliser.'
+      "PRICING_REFERENCE_IMPORT_INVALID_FILE",
+      "Le fichier classification CIR est requis car aucun import precedent ne permet de le reutiliser.",
     );
   }
   if (!segments) {
     throw httpError(
       400,
-      'PRICING_REFERENCE_IMPORT_INVALID_FILE',
-      'Le fichier segments/grilles fabricant est requis car aucun import precedent ne permet de le reutiliser.'
+      "PRICING_REFERENCE_IMPORT_INVALID_FILE",
+      "Le fichier segments/grilles fabricant est requis car aucun import precedent ne permet de le reutiliser.",
     );
   }
 
@@ -468,15 +531,15 @@ const resolveAnalysisFiles = async (
 };
 
 export const assertPricingReferenceCurrentMappingsConfirmed = (
-  currentFiles: Partial<Record<PricingReferenceFileKind, ImportFileRow>>
+  currentFiles: Partial<Record<PricingReferenceFileKind, ImportFileRow>>,
 ): void => {
   for (const file of Object.values(currentFiles)) {
     if (!file) continue;
-    if (file.mapping_status === 'confirme') continue;
+    if (file.mapping_status === "confirme") continue;
     throw httpError(
       400,
-      'PRICING_REFERENCE_MAPPING_REQUIRED',
-      `Confirmez le mapping des colonnes pour ${file.original_filename} avant analyse.`
+      "PRICING_REFERENCE_MAPPING_REQUIRED",
+      `Confirmez le mapping des colonnes pour ${file.original_filename} avant analyse.`,
     );
   }
 };
@@ -484,7 +547,7 @@ export const assertPricingReferenceCurrentMappingsConfirmed = (
 const toParserFileInput = (
   file: ImportFileRow,
   bytes: Uint8Array,
-  sha256: string
+  sha256: string,
 ) => ({
   file_kind: file.file_kind,
   original_filename: file.original_filename,
@@ -492,7 +555,9 @@ const toParserFileInput = (
   sha256,
   storage_path: file.storage_path,
   sheet_name: file.sheet_name,
-  column_mapping: file.mapping_status === 'confirme' ? assertColumnMapping(file.column_mapping) : null
+  column_mapping: file.mapping_status === "confirme"
+    ? assertColumnMapping(file.column_mapping)
+    : null,
 });
 
 const createSignedUpload = async (path: string) => {
@@ -504,19 +569,21 @@ const createSignedUpload = async (path: string) => {
   if (error || !data?.signedUrl) {
     throw httpError(
       500,
-      'PRICING_REFERENCE_IMPORT_STORAGE_FAILED',
-      'Impossible de preparer l upload du fichier referentiel.',
-      error?.message
+      "PRICING_REFERENCE_IMPORT_STORAGE_FAILED",
+      "Impossible de preparer l upload du fichier referentiel.",
+      error?.message,
     );
   }
 
   return {
     signed_upload_url: data.signedUrl,
-    signed_upload_token: data.token ?? null
+    signed_upload_token: data.token ?? null,
   };
 };
 
-const downloadStorageBytes = async (file: ImportFileRow): Promise<Uint8Array> => {
+const downloadStorageBytes = async (
+  file: ImportFileRow,
+): Promise<Uint8Array> => {
   const { data, error } = await getSupabaseAdmin()
     .storage
     .from(file.storage_bucket)
@@ -525,23 +592,30 @@ const downloadStorageBytes = async (file: ImportFileRow): Promise<Uint8Array> =>
   if (error || !data) {
     throw httpError(
       500,
-      'PRICING_REFERENCE_IMPORT_STORAGE_FAILED',
+      "PRICING_REFERENCE_IMPORT_STORAGE_FAILED",
       `Impossible de telecharger le fichier ${file.original_filename}.`,
-      error?.message
+      error?.message,
     );
   }
 
   return new Uint8Array(await data.arrayBuffer());
 };
 
-const assertDownloadedFileMatchesMetadata = async (file: ImportFileRow, bytes: Uint8Array): Promise<string> => {
-  ensurePricingReferenceFileAccepted(file.file_kind, file.original_filename, bytes.byteLength);
+const assertDownloadedFileMatchesMetadata = async (
+  file: ImportFileRow,
+  bytes: Uint8Array,
+): Promise<string> => {
+  ensurePricingReferenceFileAccepted(
+    file.file_kind,
+    file.original_filename,
+    bytes.byteLength,
+  );
 
   if (bytes.byteLength !== file.size_bytes) {
     throw httpError(
       409,
-      'PRICING_REFERENCE_IMPORT_INVALID_FILE',
-      `La taille du fichier ${file.original_filename} ne correspond pas aux metadata.`
+      "PRICING_REFERENCE_IMPORT_INVALID_FILE",
+      `La taille du fichier ${file.original_filename} ne correspond pas aux metadata.`,
     );
   }
 
@@ -549,8 +623,8 @@ const assertDownloadedFileMatchesMetadata = async (file: ImportFileRow, bytes: U
   if (hash.toLowerCase() !== file.sha256.toLowerCase()) {
     throw httpError(
       409,
-      'PRICING_REFERENCE_IMPORT_HASH_MISMATCH',
-      `Le hash du fichier ${file.original_filename} ne correspond pas aux metadata.`
+      "PRICING_REFERENCE_IMPORT_HASH_MISMATCH",
+      `Le hash du fichier ${file.original_filename} ne correspond pas aux metadata.`,
     );
   }
 
@@ -558,28 +632,30 @@ const assertDownloadedFileMatchesMetadata = async (file: ImportFileRow, bytes: U
 };
 
 const readErrorString = (error: unknown, key: string): string | null => {
-  if (!error || typeof error !== 'object') return null;
+  if (!error || typeof error !== "object") return null;
   const value = Reflect.get(error, key);
-  return typeof value === 'string' ? value : null;
+  return typeof value === "string" ? value : null;
 };
 
 const recordPricingReferenceAnalysisFailure = async (
   db: DbClient,
   importId: string,
   callerId: string,
-  error: unknown
+  error: unknown,
 ): Promise<void> => {
-  const message = error instanceof Error ? error.message : 'Analyse referentiel impossible.';
-  const details = readErrorString(error, 'details');
+  const message = error instanceof Error
+    ? error.message
+    : "Analyse referentiel impossible.";
+  const details = readErrorString(error, "details");
   try {
     await db.update(pricing_reference_imports)
       .set({
-        status: 'analyse_erreur',
+        status: "analyse_erreur",
         analyzed_by: callerId,
         analysis_completed_at: new Date().toISOString(),
-        error_code: readErrorString(error, 'code') ?? 'REQUEST_FAILED',
+        error_code: readErrorString(error, "code") ?? "REQUEST_FAILED",
         error_message: message,
-        error_details: details
+        error_details: details,
       })
       .where(eq(pricing_reference_imports.id, importId));
   } catch {
@@ -591,16 +667,16 @@ const markPricingReferenceAnalysisProgress = async (
   db: DbClient,
   importId: string,
   callerId: string,
-  details: string
+  details: string,
 ): Promise<void> => {
   await db.update(pricing_reference_imports)
     .set({
-      status: 'analyse_en_cours',
+      status: "analyse_en_cours",
       analyzed_by: callerId,
       analysis_started_at: new Date().toISOString(),
       error_code: null,
       error_message: null,
-      error_details: details
+      error_details: details,
     })
     .where(eq(pricing_reference_imports.id, importId));
 };
@@ -609,29 +685,51 @@ export const preparePricingReferenceImport = async (
   db: DbClient,
   callerId: string,
   requestId: string,
-  input: PricingReferenceImportsPrepareInput
+  input: PricingReferenceImportsPrepareInput,
 ): Promise<PricingReferenceImportsPrepareResponse> => {
-  const allowed = await checkRateLimit('pricing-reference-imports:prepare', callerId, {
-    max: 20,
-    windowSeconds: 300
-  });
+  const allowed = await checkRateLimit(
+    "pricing-reference-imports:prepare",
+    callerId,
+    {
+      max: 20,
+      windowSeconds: 300,
+    },
+  );
   if (!allowed) {
-    throw httpError(429, 'RATE_LIMITED', 'Trop de requetes. Reessayez plus tard.');
+    throw httpError(
+      429,
+      "RATE_LIMITED",
+      "Trop de requetes. Reessayez plus tard.",
+    );
   }
 
   const importId = crypto.randomUUID();
   const nowPrefix = new Date().toISOString().slice(0, 10);
-  const preparedFiles: Partial<Record<PricingReferenceFileKind, PricingReferenceImportsPrepareResponse['files'][PricingReferenceFileKind]>> = {};
-  const fileRows: Array<typeof pricing_reference_import_files.$inferInsert> = [];
+  const preparedFiles: Partial<
+    Record<
+      PricingReferenceFileKind,
+      PricingReferenceImportsPrepareResponse["files"][PricingReferenceFileKind]
+    >
+  > = {};
+  const fileRows: Array<typeof pricing_reference_import_files.$inferInsert> =
+    [];
 
-  for (const fileKind of ['classification', 'segments_grids'] as const) {
+  for (const fileKind of ["classification", "segments_grids"] as const) {
     const fileInput = input.files[fileKind];
     if (!fileInput) continue;
 
-    ensurePricingReferenceFileAccepted(fileKind, fileInput.original_filename, fileInput.size_bytes);
+    ensurePricingReferenceFileAccepted(
+      fileKind,
+      fileInput.original_filename,
+      fileInput.size_bytes,
+    );
     const fileId = crypto.randomUUID();
-    const pathPrefix = fileKind === 'classification' ? 'classification' : 'segments-grids';
-    const storagePath = `imports/${nowPrefix}/${importId}/${pathPrefix}-${normalizeFilename(fileInput.original_filename)}`;
+    const pathPrefix = fileKind === "classification"
+      ? "classification"
+      : "segments-grids";
+    const storagePath = `imports/${nowPrefix}/${importId}/${pathPrefix}-${
+      normalizeFilename(fileInput.original_filename)
+    }`;
     const upload = await createSignedUpload(storagePath);
     const originalFilename = fileInput.original_filename.trim();
     const contentType = fileInput.content_type ?? PRICING_REFERENCE_XLSX_MIME;
@@ -647,7 +745,7 @@ export const preparePricingReferenceImport = async (
       size_bytes: fileInput.size_bytes,
       sha256,
       content_type: contentType,
-      uploaded_by: callerId
+      uploaded_by: callerId,
     });
 
     preparedFiles[fileKind] = {
@@ -660,16 +758,16 @@ export const preparePricingReferenceImport = async (
       sha256,
       content_type: contentType,
       ...upload,
-      signed_upload_expires_in_seconds: SIGNED_UPLOAD_EXPIRES_IN_SECONDS
+      signed_upload_expires_in_seconds: SIGNED_UPLOAD_EXPIRES_IN_SECONDS,
     };
   }
 
   await db.transaction(async (tx) => {
     await tx.insert(pricing_reference_imports).values({
       id: importId,
-      status: 'brouillon',
+      status: "brouillon",
       created_by: callerId,
-      counters: {}
+      counters: {},
     });
 
     await tx.insert(pricing_reference_import_files).values(fileRows);
@@ -679,21 +777,21 @@ export const preparePricingReferenceImport = async (
     ok: true,
     request_id: requestId,
     import_id: importId,
-    status: 'brouillon',
-    files: preparedFiles
+    status: "brouillon",
+    files: preparedFiles,
   };
 };
 
 const buildSavedAliases = (
   currentAliases: PricingReferenceColumnAliases,
-  mapping: PricingReferenceColumnMapping
+  mapping: PricingReferenceColumnMapping,
 ): PricingReferenceColumnAliases => {
   const aliases: PricingReferenceColumnAliases = { ...currentAliases };
   Object.entries(mapping).forEach(([canonicalColumn, sourceColumn]) => {
     const values = aliases[canonicalColumn] ?? [];
     aliases[canonicalColumn] = uniqueValues([
       ...values,
-      sourceColumn
+      sourceColumn,
     ]);
   });
   return aliases;
@@ -702,23 +800,27 @@ const buildSavedAliases = (
 const validateConfirmedMapping = (
   file: ImportFileRow,
   sheetName: string,
-  mapping: PricingReferenceColumnMapping
+  mapping: PricingReferenceColumnMapping,
 ): void => {
   if (file.sheet_name !== sheetName || file.detected_columns.length === 0) {
     throw httpError(
       400,
-      'PRICING_REFERENCE_MAPPING_REQUIRED',
-      'Previsualisez l onglet Excel avant de confirmer le mapping.'
+      "PRICING_REFERENCE_MAPPING_REQUIRED",
+      "Previsualisez l onglet Excel avant de confirmer le mapping.",
     );
   }
 
   const expectedColumns = getPricingReferenceExpectedColumns(file.file_kind);
-  const missingCanonicalColumns = expectedColumns.filter((column) => !mapping[column]);
+  const missingCanonicalColumns = expectedColumns.filter((column) =>
+    !mapping[column]
+  );
   if (missingCanonicalColumns.length > 0) {
     throw httpError(
       400,
-      'PRICING_REFERENCE_MAPPING_REQUIRED',
-      `Colonnes obligatoires non mappees: ${missingCanonicalColumns.join(', ')}.`
+      "PRICING_REFERENCE_MAPPING_REQUIRED",
+      `Colonnes obligatoires non mappees: ${
+        missingCanonicalColumns.join(", ")
+      }.`,
     );
   }
 
@@ -730,96 +832,111 @@ const validateConfirmedMapping = (
   if (invalidSourceColumns.length > 0) {
     throw httpError(
       400,
-      'PRICING_REFERENCE_MAPPING_INVALID',
-      `Colonnes source introuvables dans l onglet: ${uniqueValues(invalidSourceColumns).join(', ')}.`
+      "PRICING_REFERENCE_MAPPING_INVALID",
+      `Colonnes source introuvables dans l onglet: ${
+        uniqueValues(invalidSourceColumns).join(", ")
+      }.`,
     );
   }
 };
 
-const assertInspectResponse = (value: unknown): PricingReferenceImportInspectResponse => {
+const assertInspectResponse = (
+  value: unknown,
+): PricingReferenceImportInspectResponse => {
   const parsed = pricingReferenceImportInspectResponseSchema.safeParse(value);
   if (!parsed.success) {
     throw httpError(
       500,
-      'REQUEST_FAILED',
-      'Reponse inspection mapping invalide.',
-      parsed.error.issues.map((issue) => issue.message).join(' | ')
+      "REQUEST_FAILED",
+      "Reponse inspection mapping invalide.",
+      parsed.error.issues.map((issue) => issue.message).join(" | "),
     );
   }
   return parsed.data;
 };
 
-const assertConfirmMappingResponse = (value: unknown): PricingReferenceImportConfirmMappingResponse => {
-  const parsed = pricingReferenceImportConfirmMappingResponseSchema.safeParse(value);
+const assertConfirmMappingResponse = (
+  value: unknown,
+): PricingReferenceImportConfirmMappingResponse => {
+  const parsed = pricingReferenceImportConfirmMappingResponseSchema.safeParse(
+    value,
+  );
   if (!parsed.success) {
     throw httpError(
       500,
-      'REQUEST_FAILED',
-      'Reponse confirmation mapping invalide.',
-      parsed.error.issues.map((issue) => issue.message).join(' | ')
+      "REQUEST_FAILED",
+      "Reponse confirmation mapping invalide.",
+      parsed.error.issues.map((issue) => issue.message).join(" | "),
     );
   }
   return parsed.data;
 };
 
-const assertAssistMappingResponse = (value: unknown): PricingReferenceImportAssistMappingResponse => {
-  const parsed = pricingReferenceImportAssistMappingResponseSchema.safeParse(value);
+const assertAssistMappingResponse = (
+  value: unknown,
+): PricingReferenceImportAssistMappingResponse => {
+  const parsed = pricingReferenceImportAssistMappingResponseSchema.safeParse(
+    value,
+  );
   if (!parsed.success) {
     throw httpError(
       500,
-      'REQUEST_FAILED',
-      'Reponse assistance mapping invalide.',
-      parsed.error.issues.map((issue) => issue.message).join(' | ')
+      "REQUEST_FAILED",
+      "Reponse assistance mapping invalide.",
+      parsed.error.issues.map((issue) => issue.message).join(" | "),
     );
   }
   return parsed.data;
 };
 
-const assertAnomaliesExportResponse = (value: unknown): PricingReferenceAnomaliesExportResponse => {
+const assertAnomaliesExportResponse = (
+  value: unknown,
+): PricingReferenceAnomaliesExportResponse => {
   const parsed = pricingReferenceAnomaliesExportResponseSchema.safeParse(value);
   if (!parsed.success) {
     throw httpError(
       500,
-      'REQUEST_FAILED',
-      'Reponse export anomalies invalide.',
-      parsed.error.issues.map((issue) => issue.message).join(' | ')
+      "REQUEST_FAILED",
+      "Reponse export anomalies invalide.",
+      parsed.error.issues.map((issue) => issue.message).join(" | "),
     );
   }
   return parsed.data;
 };
-
-const readRecord = (value: unknown): Record<string, unknown> | null =>
-  value && typeof value === 'object' && !Array.isArray(value)
-    ? value as Record<string, unknown>
-    : null;
-
-const readStringValue = (record: Record<string, unknown>, key: string): string | null => {
-  const value = record[key];
-  return typeof value === 'string' && value.trim() ? value.trim() : null;
-};
-
-const toColumnList = (columns: string[]): string[] =>
-  uniqueValues(columns.map((column) => column.trim()).filter(Boolean)).sort((left, right) =>
-    left.localeCompare(right)
-  );
 
 export const inspectPricingReferenceImport = async (
   db: DbClient,
   callerId: string,
   requestId: string,
-  input: PricingReferenceImportInspectInput
+  input: PricingReferenceImportInspectInput,
 ): Promise<PricingReferenceImportInspectResponse> => {
-  const allowed = await checkRateLimit('pricing-reference-imports:inspect', callerId, {
-    max: 30,
-    windowSeconds: 300
-  });
+  const allowed = await checkRateLimit(
+    "pricing-reference-imports:inspect",
+    callerId,
+    {
+      max: 30,
+      windowSeconds: 300,
+    },
+  );
   if (!allowed) {
-    throw httpError(429, 'RATE_LIMITED', 'Trop de requetes. Reessayez plus tard.');
+    throw httpError(
+      429,
+      "RATE_LIMITED",
+      "Trop de requetes. Reessayez plus tard.",
+    );
   }
 
   await requireImport(db, input.import_id);
-  const file = await requireImportFile(db, input.import_id, input.file_id, input.file_kind);
-  const defaultProfile = await getDefaultColumnMappingProfile(db, input.file_kind);
+  const file = await requireImportFile(
+    db,
+    input.import_id,
+    input.file_id,
+    input.file_kind,
+  );
+  const defaultProfile = await getDefaultColumnMappingProfile(
+    db,
+    input.file_kind,
+  );
   const bytes = await downloadStorageBytes(file);
   const sha256 = await assertDownloadedFileMatchesMetadata(file, bytes);
   const inspection = inspectPricingReferenceWorkbook(
@@ -829,10 +946,10 @@ export const inspectPricingReferenceImport = async (
       bytes,
       sha256,
       storage_path: file.storage_path,
-      sheet_name: input.sheet_name ?? file.sheet_name ?? null
+      sheet_name: input.sheet_name ?? file.sheet_name ?? null,
     },
     defaultProfile?.aliases ?? null,
-    defaultProfile?.column_mapping ?? null
+    defaultProfile?.column_mapping ?? null,
   );
 
   await db.update(pricing_reference_import_files)
@@ -841,7 +958,7 @@ export const inspectPricingReferenceImport = async (
       detected_columns: inspection.detected_columns,
       row_count: inspection.row_count,
       column_mapping: inspection.proposed_mapping,
-      mapping_status: inspection.mapping_status
+      mapping_status: inspection.mapping_status,
     })
     .where(eq(pricing_reference_import_files.id, file.id));
 
@@ -853,7 +970,7 @@ export const inspectPricingReferenceImport = async (
     file_kind: input.file_kind,
     original_filename: file.original_filename,
     ...inspection,
-    default_profile: defaultProfile
+    default_profile: defaultProfile,
   });
 };
 
@@ -861,18 +978,28 @@ export const assistPricingReferenceImportMapping = async (
   db: DbClient,
   callerId: string,
   requestId: string,
-  input: PricingReferenceImportAssistMappingInput
+  input: PricingReferenceImportAssistMappingInput,
 ): Promise<PricingReferenceImportAssistMappingResponse> => {
-  const inspection = await inspectPricingReferenceImport(db, callerId, requestId, input);
-  const mappedCandidates = inspection.candidates.filter((candidate) => candidate.source_column);
-  const confidentCandidates = inspection.candidates.filter((candidate) => candidate.confidence >= 0.9);
+  const inspection = await inspectPricingReferenceImport(
+    db,
+    callerId,
+    requestId,
+    input,
+  );
+  const mappedCandidates = inspection.candidates.filter((candidate) =>
+    candidate.source_column
+  );
+  const confidentCandidates = inspection.candidates.filter((candidate) =>
+    candidate.confidence >= 0.9
+  );
   const worksheetScore = inspection.expected_columns.length === 0
     ? 0
     : mappedCandidates.length / inspection.expected_columns.length;
   const headerQuality = inspection.expected_columns.length === 0
     ? 0
     : confidentCandidates.length / inspection.expected_columns.length;
-  const aiNeeded = inspection.mapping_status === 'a_confirmer' || inspection.mapping_status === 'invalide';
+  const aiNeeded = inspection.mapping_status === "a_confirmer" ||
+    inspection.mapping_status === "invalide";
   const missing = inspection.candidates
     .filter((candidate) => !candidate.source_column)
     .map((candidate) => candidate.canonical_column);
@@ -880,8 +1007,8 @@ export const assistPricingReferenceImportMapping = async (
     `${mappedCandidates.length}/${inspection.expected_columns.length} colonne(s) mappees par le moteur deterministe.`,
     `${confidentCandidates.length}/${inspection.expected_columns.length} correspondance(s) a confiance forte.`,
     missing.length > 0
-      ? `Colonnes a arbitrer: ${missing.join(', ')}.`
-      : 'Aucune colonne obligatoire manquante apres inspection.'
+      ? `Colonnes a arbitrer: ${missing.join(", ")}.`
+      : "Aucune colonne obligatoire manquante apres inspection.",
   ];
 
   return assertAssistMappingResponse({
@@ -902,10 +1029,10 @@ export const assistPricingReferenceImportMapping = async (
     proposed_mapping: inspection.proposed_mapping,
     evidence,
     ai_policy: {
-      trigger: aiNeeded ? 'ambiguous_or_invalid_only' : 'not_needed',
-      response_schema: 'strict_mapping_candidate',
-      can_confirm_mapping: false
-    }
+      trigger: aiNeeded ? "ambiguous_or_invalid_only" : "not_needed",
+      response_schema: "strict_mapping_candidate",
+      can_confirm_mapping: false,
+    },
   });
 };
 
@@ -913,18 +1040,31 @@ export const confirmPricingReferenceImportMapping = async (
   db: DbClient,
   callerId: string,
   requestId: string,
-  input: PricingReferenceImportConfirmMappingInput
+  input: PricingReferenceImportConfirmMappingInput,
 ): Promise<PricingReferenceImportConfirmMappingResponse> => {
-  const allowed = await checkRateLimit('pricing-reference-imports:confirm-mapping', callerId, {
-    max: 30,
-    windowSeconds: 300
-  });
+  const allowed = await checkRateLimit(
+    "pricing-reference-imports:confirm-mapping",
+    callerId,
+    {
+      max: 30,
+      windowSeconds: 300,
+    },
+  );
   if (!allowed) {
-    throw httpError(429, 'RATE_LIMITED', 'Trop de requetes. Reessayez plus tard.');
+    throw httpError(
+      429,
+      "RATE_LIMITED",
+      "Trop de requetes. Reessayez plus tard.",
+    );
   }
 
   await requireImport(db, input.import_id);
-  const file = await requireImportFile(db, input.import_id, input.file_id, input.file_kind);
+  const file = await requireImportFile(
+    db,
+    input.import_id,
+    input.file_id,
+    input.file_kind,
+  );
   validateConfirmedMapping(file, input.sheet_name, input.column_mapping);
 
   let savedProfile: PricingReferenceColumnMappingProfile | null = null;
@@ -934,19 +1074,22 @@ export const confirmPricingReferenceImportMapping = async (
         .select()
         .from(pricing_reference_column_mapping_profiles)
         .where(and(
-          eq(pricing_reference_column_mapping_profiles.file_kind, input.file_kind),
-          eq(pricing_reference_column_mapping_profiles.is_default, true)
+          eq(
+            pricing_reference_column_mapping_profiles.file_kind,
+            input.file_kind,
+          ),
+          eq(pricing_reference_column_mapping_profiles.is_default, true),
         ))
         .limit(1);
 
       const aliases = buildSavedAliases(
         currentProfile ? assertColumnAliases(currentProfile.aliases) : {},
-        input.column_mapping
+        input.column_mapping,
       );
 
-      const profileName = input.file_kind === 'classification'
-        ? 'Mapping par defaut classification produit CIR'
-        : 'Mapping par defaut segments et grilles fabricant';
+      const profileName = input.file_kind === "classification"
+        ? "Mapping par defaut classification produit CIR"
+        : "Mapping par defaut segments et grilles fabricant";
 
       const [profileRow] = currentProfile
         ? await tx.update(pricing_reference_column_mapping_profiles)
@@ -954,9 +1097,11 @@ export const confirmPricingReferenceImportMapping = async (
             name: profileName,
             column_mapping: input.column_mapping,
             aliases,
-            updated_by: callerId
+            updated_by: callerId,
           })
-          .where(eq(pricing_reference_column_mapping_profiles.id, currentProfile.id))
+          .where(
+            eq(pricing_reference_column_mapping_profiles.id, currentProfile.id),
+          )
           .returning()
         : await tx.insert(pricing_reference_column_mapping_profiles)
           .values({
@@ -966,7 +1111,7 @@ export const confirmPricingReferenceImportMapping = async (
             aliases,
             is_default: true,
             created_by: callerId,
-            updated_by: callerId
+            updated_by: callerId,
           })
           .returning();
 
@@ -978,9 +1123,9 @@ export const confirmPricingReferenceImportMapping = async (
         sheet_name: input.sheet_name,
         column_mapping: input.column_mapping,
         mapping_profile_id: savedProfile?.id ?? file.mapping_profile_id,
-        mapping_status: 'confirme',
+        mapping_status: "confirme",
         mapping_confirmed_by: callerId,
-        mapping_confirmed_at: new Date().toISOString()
+        mapping_confirmed_at: new Date().toISOString(),
       })
       .where(eq(pricing_reference_import_files.id, file.id));
   });
@@ -991,9 +1136,9 @@ export const confirmPricingReferenceImportMapping = async (
     import_id: input.import_id,
     file_id: file.id,
     file_kind: input.file_kind,
-    mapping_status: 'confirme',
+    mapping_status: "confirme",
     column_mapping: input.column_mapping,
-    saved_profile: savedProfile
+    saved_profile: savedProfile,
   });
 };
 
@@ -1002,11 +1147,13 @@ const insertClassificationRows = async (
   snapshotId: string,
   importId: string,
   fileId: string,
-  rows: ParsedClassificationRow[]
+  rows: ParsedClassificationRow[],
 ): Promise<Map<string, string>> => {
   const ids = new Map<string, string>();
   const chunk: JsonbRecordsetRow[] = [];
-  const flush = () => flushJsonbRecordsetInsert(tx, chunk, (payload) => sql`
+  const flush = () =>
+    flushJsonbRecordsetInsert(tx, chunk, (payload) =>
+      sql`
     insert into public.pricing_classification_cir (
       id,
       snapshot_id,
@@ -1073,7 +1220,7 @@ const insertClassificationRows = async (
       sfa_lib: row.sfa_lib,
       cir_key: row.cir_key,
       raw_values: row.raw_values,
-      normalized_values: row.normalized_values
+      normalized_values: row.normalized_values,
     });
     if (chunk.length >= BULK_INSERT_CHUNK_SIZE) await flush();
   }
@@ -1086,11 +1233,13 @@ const insertSegmentRows = async (
   snapshotId: string,
   importId: string,
   fileId: string,
-  rows: ParsedSupplierSegmentRow[]
+  rows: ParsedSupplierSegmentRow[],
 ): Promise<Map<string, string>> => {
   const ids = new Map<string, string>();
   const chunk: JsonbRecordsetRow[] = [];
-  const flush = () => flushJsonbRecordsetInsert(tx, chunk, (payload) => sql`
+  const flush = () =>
+    flushJsonbRecordsetInsert(tx, chunk, (payload) =>
+      sql`
     insert into public.pricing_supplier_segments (
       id,
       snapshot_id,
@@ -1165,7 +1314,7 @@ const insertSegmentRows = async (
       tarif_fab: row.tarif_fab,
       segment_key: row.segment_key,
       raw_values: row.raw_values,
-      normalized_values: row.normalized_values
+      normalized_values: row.normalized_values,
     });
     if (chunk.length >= BULK_INSERT_CHUNK_SIZE) await flush();
   }
@@ -1180,10 +1329,12 @@ const insertLinkRows = async (
   fileId: string,
   rows: ParsedSegmentClassificationLinkRow[],
   segmentIds: Map<string, string>,
-  classificationIds: Map<string, string>
+  classificationIds: Map<string, string>,
 ): Promise<void> => {
   const chunk: JsonbRecordsetRow[] = [];
-  const flush = () => flushJsonbRecordsetInsert(tx, chunk, (payload) => sql`
+  const flush = () =>
+    flushJsonbRecordsetInsert(tx, chunk, (payload) =>
+      sql`
     insert into public.pricing_segment_classification_links (
       snapshot_id,
       import_id,
@@ -1237,7 +1388,9 @@ const insertLinkRows = async (
       snapshot_id: snapshotId,
       import_id: importId,
       segment_id: segmentId,
-      classification_id: row.classification_cir_key ? classificationIds.get(row.classification_cir_key) ?? null : null,
+      classification_id: row.classification_cir_key
+        ? classificationIds.get(row.classification_cir_key) ?? null
+        : null,
       source_file_id: fileId,
       source_row_number: row.source_row_number,
       mega_famille: row.mega_famille,
@@ -1246,7 +1399,7 @@ const insertLinkRows = async (
       cir_key: row.cir_key,
       link_status: row.link_status,
       raw_values: row.raw_values,
-      normalized_values: row.normalized_values
+      normalized_values: row.normalized_values,
     });
     if (chunk.length >= BULK_INSERT_CHUNK_SIZE) await flush();
   }
@@ -1259,10 +1412,12 @@ const insertPurchaseGridRows = async (
   importId: string,
   fileId: string,
   rows: ParsedSegmentPurchaseGridRow[],
-  segmentIds: Map<string, string>
+  segmentIds: Map<string, string>,
 ): Promise<void> => {
   const chunk: JsonbRecordsetRow[] = [];
-  const flush = () => flushJsonbRecordsetInsert(tx, chunk, (payload) => sql`
+  const flush = () =>
+    flushJsonbRecordsetInsert(tx, chunk, (payload) =>
+      sql`
     insert into public.pricing_segment_purchase_grids (
       snapshot_id,
       import_id,
@@ -1353,7 +1508,7 @@ const insertPurchaseGridRows = async (
       coef_ha: row.coef_ha,
       coef_majvte: row.coef_majvte,
       raw_values: row.raw_values,
-      normalized_values: row.normalized_values
+      normalized_values: row.normalized_values,
     });
     if (chunk.length >= BULK_INSERT_CHUNK_SIZE) await flush();
   }
@@ -1365,7 +1520,7 @@ const insertAnomalyRows = async (
   snapshotId: string,
   importId: string,
   fileIds: { classification: string; segments_grids: string },
-  anomalies: ParsedReferenceAnomaly[]
+  anomalies: ParsedReferenceAnomaly[],
 ): Promise<void> => {
   const values = anomalies.map((anomaly) => ({
     import_id: importId,
@@ -1378,106 +1533,172 @@ const insertAnomalyRows = async (
     object_id: anomaly.object_id ?? null,
     columns: anomaly.columns,
     message: anomaly.message,
-    details: anomaly.details ?? {}
+    details: anomaly.details ?? {},
   }));
 
   for (let index = 0; index < values.length; index += INSERT_CHUNK_SIZE) {
-    await tx.insert(pricing_reference_anomalies).values(values.slice(index, index + INSERT_CHUNK_SIZE));
+    await tx.insert(pricing_reference_anomalies).values(
+      values.slice(index, index + INSERT_CHUNK_SIZE),
+    );
   }
 };
 
 export const resolvePricingReferenceAnalysisStatus = (
-  analysis: Pick<PricingReferenceAnalysisResult, 'health_report'>
+  analysis: Pick<PricingReferenceAnalysisResult, "health_report">,
 ): PricingReferenceImportStatus =>
-  analysis.health_report.anomalies.bloquante > 0 ? 'analyse_erreur' : 'analyse_ok';
+  analysis.health_report.anomalies.bloquante > 0
+    ? "analyse_erreur"
+    : "analyse_ok";
 
 const persistAnalysis = async (
   db: DbClient,
   importId: string,
   callerId: string,
   files: { classification: ImportFileRow; segments_grids: ImportFileRow },
-  analysis: PricingReferenceAnalysisResult
+  analysis: PricingReferenceAnalysisResult,
 ): Promise<PersistedAnalysisState> => {
   const snapshotId = crypto.randomUUID();
   const importStatus = resolvePricingReferenceAnalysisStatus(analysis);
 
-  await markPricingReferenceAnalysisProgress(db, importId, callerId, 'Analyse referentiel: nettoyage des donnees partielles precedentes.');
+  await markPricingReferenceAnalysisProgress(
+    db,
+    importId,
+    callerId,
+    "Analyse referentiel: nettoyage des donnees partielles precedentes.",
+  );
   await db.transaction(async (tx) => {
-    await tx.execute(sql`delete from public.pricing_reference_anomalies where import_id = ${importId}`);
-    await tx.execute(sql`delete from public.pricing_segment_purchase_grids where import_id = ${importId}`);
-    await tx.execute(sql`delete from public.pricing_segment_classification_links where import_id = ${importId}`);
-    await tx.execute(sql`delete from public.pricing_classification_cir where import_id = ${importId}`);
-    await tx.execute(sql`delete from public.pricing_supplier_segments where import_id = ${importId}`);
-    await tx.execute(sql`delete from public.pricing_reference_snapshots where import_id = ${importId}`);
+    await tx.execute(
+      sql`delete from public.pricing_reference_anomalies where import_id = ${importId}`,
+    );
+    await tx.execute(
+      sql`delete from public.pricing_segment_purchase_grids where import_id = ${importId}`,
+    );
+    await tx.execute(
+      sql`delete from public.pricing_segment_classification_links where import_id = ${importId}`,
+    );
+    await tx.execute(
+      sql`delete from public.pricing_classification_cir where import_id = ${importId}`,
+    );
+    await tx.execute(
+      sql`delete from public.pricing_supplier_segments where import_id = ${importId}`,
+    );
+    await tx.execute(
+      sql`delete from public.pricing_reference_snapshots where import_id = ${importId}`,
+    );
 
     await tx.update(pricing_reference_imports)
       .set({
-        status: 'analyse_en_cours',
+        status: "analyse_en_cours",
         analyzed_by: callerId,
         analysis_started_at: new Date().toISOString(),
         error_code: null,
         error_message: null,
-        error_details: null
+        error_details: null,
       })
       .where(eq(pricing_reference_imports.id, importId));
 
     await tx.update(pricing_reference_import_files)
       .set({
         sheet_name: analysis.health_report.files.classification.sheet_name,
-        detected_columns: analysis.health_report.files.classification.columns.detected,
-        row_count: analysis.health_report.files.classification.rows_count
+        detected_columns:
+          analysis.health_report.files.classification.columns.detected,
+        row_count: analysis.health_report.files.classification.rows_count,
       })
       .where(eq(pricing_reference_import_files.id, files.classification.id));
 
     await tx.update(pricing_reference_import_files)
       .set({
         sheet_name: analysis.health_report.files.segments_grids.sheet_name,
-        detected_columns: analysis.health_report.files.segments_grids.columns.detected,
-        row_count: analysis.health_report.files.segments_grids.rows_count
+        detected_columns:
+          analysis.health_report.files.segments_grids.columns.detected,
+        row_count: analysis.health_report.files.segments_grids.rows_count,
       })
       .where(eq(pricing_reference_import_files.id, files.segments_grids.id));
 
     await tx.insert(pricing_reference_snapshots).values({
       id: snapshotId,
       import_id: importId,
-      status: 'cree',
+      status: "cree",
       is_active: false,
       created_by: callerId,
       counters: {
         classification: analysis.health_report.classification,
         segments_grids: analysis.health_report.segments_grids,
-        anomalies: analysis.health_report.anomalies
-      }
+        anomalies: analysis.health_report.anomalies,
+      },
     });
   });
 
-  await markPricingReferenceAnalysisProgress(db, importId, callerId, `Analyse referentiel: insertion classifications (${analysis.classification_rows.length}).`);
+  await markPricingReferenceAnalysisProgress(
+    db,
+    importId,
+    callerId,
+    `Analyse referentiel: insertion classifications (${analysis.classification_rows.length}).`,
+  );
   const classificationIds = await insertClassificationRows(
     db,
     snapshotId,
     importId,
     files.classification.id,
-    analysis.classification_rows
+    analysis.classification_rows,
   );
-  await markPricingReferenceAnalysisProgress(db, importId, callerId, `Analyse referentiel: insertion segments (${analysis.segment_rows.length}).`);
+  await markPricingReferenceAnalysisProgress(
+    db,
+    importId,
+    callerId,
+    `Analyse referentiel: insertion segments (${analysis.segment_rows.length}).`,
+  );
   const segmentIds = await insertSegmentRows(
     db,
     snapshotId,
     importId,
     files.segments_grids.id,
-    analysis.segment_rows
+    analysis.segment_rows,
   );
-  await markPricingReferenceAnalysisProgress(db, importId, callerId, `Analyse referentiel: insertion liaisons classification (${analysis.link_rows.length}).`);
-  await insertLinkRows(db, snapshotId, importId, files.segments_grids.id, analysis.link_rows, segmentIds, classificationIds);
-  await markPricingReferenceAnalysisProgress(db, importId, callerId, `Analyse referentiel: insertion grilles achat (${analysis.purchase_grid_rows.length}).`);
-  await insertPurchaseGridRows(db, snapshotId, importId, files.segments_grids.id, analysis.purchase_grid_rows, segmentIds);
-  await markPricingReferenceAnalysisProgress(db, importId, callerId, `Analyse referentiel: insertion anomalies (${analysis.anomalies.length}).`);
+  await markPricingReferenceAnalysisProgress(
+    db,
+    importId,
+    callerId,
+    `Analyse referentiel: insertion liaisons classification (${analysis.link_rows.length}).`,
+  );
+  await insertLinkRows(
+    db,
+    snapshotId,
+    importId,
+    files.segments_grids.id,
+    analysis.link_rows,
+    segmentIds,
+    classificationIds,
+  );
+  await markPricingReferenceAnalysisProgress(
+    db,
+    importId,
+    callerId,
+    `Analyse referentiel: insertion grilles achat (${analysis.purchase_grid_rows.length}).`,
+  );
+  await insertPurchaseGridRows(
+    db,
+    snapshotId,
+    importId,
+    files.segments_grids.id,
+    analysis.purchase_grid_rows,
+    segmentIds,
+  );
+  await markPricingReferenceAnalysisProgress(
+    db,
+    importId,
+    callerId,
+    `Analyse referentiel: insertion anomalies (${analysis.anomalies.length}).`,
+  );
   await insertAnomalyRows(
     db,
     snapshotId,
     importId,
-    { classification: files.classification.id, segments_grids: files.segments_grids.id },
-    analysis.anomalies
+    {
+      classification: files.classification.id,
+      segments_grids: files.segments_grids.id,
+    },
+    analysis.anomalies,
   );
 
   await db.update(pricing_reference_imports)
@@ -1489,15 +1710,17 @@ const persistAnalysis = async (
       counters: {
         classification: analysis.health_report.classification,
         segments_grids: analysis.health_report.segments_grids,
-        anomalies: analysis.health_report.anomalies
+        anomalies: analysis.health_report.anomalies,
       },
-      error_code: importStatus === 'analyse_erreur' ? 'PRICING_REFERENCE_IMPORT_BLOCKING_ANOMALIES' : null,
-      error_message: importStatus === 'analyse_erreur'
-        ? 'Des anomalies bloquantes empechent l activation du snapshot referentiel.'
+      error_code: importStatus === "analyse_erreur"
+        ? "PRICING_REFERENCE_IMPORT_BLOCKING_ANOMALIES"
         : null,
-      error_details: importStatus === 'analyse_erreur'
+      error_message: importStatus === "analyse_erreur"
+        ? "Des anomalies bloquantes empechent l activation du snapshot referentiel."
+        : null,
+      error_details: importStatus === "analyse_erreur"
         ? `${analysis.health_report.anomalies.bloquante} anomalie(s) bloquante(s) detectee(s).`
-        : null
+        : null,
     })
     .where(eq(pricing_reference_imports.id, importId));
 
@@ -1508,48 +1731,89 @@ export const analyzePricingReferenceImport = async (
   db: DbClient,
   callerId: string,
   requestId: string,
-  input: PricingReferenceImportAnalyzeInput
+  input: PricingReferenceImportAnalyzeInput,
 ): Promise<PricingReferenceImportAnalyzeResponse> => {
-  const allowed = await checkRateLimit('pricing-reference-imports:analyze', callerId, {
-    max: 10,
-    windowSeconds: 300
-  });
+  const allowed = await checkRateLimit(
+    "pricing-reference-imports:analyze",
+    callerId,
+    {
+      max: 10,
+      windowSeconds: 300,
+    },
+  );
   if (!allowed) {
-    throw httpError(429, 'RATE_LIMITED', 'Trop de requetes. Reessayez plus tard.');
+    throw httpError(
+      429,
+      "RATE_LIMITED",
+      "Trop de requetes. Reessayez plus tard.",
+    );
   }
 
   await requireImport(db, input.import_id);
 
   try {
-    await markPricingReferenceAnalysisProgress(db, input.import_id, callerId, 'Analyse referentiel: resolution des fichiers source.');
+    await markPricingReferenceAnalysisProgress(
+      db,
+      input.import_id,
+      callerId,
+      "Analyse referentiel: resolution des fichiers source.",
+    );
     const currentFiles = await getCurrentImportFiles(db, input.import_id);
     assertPricingReferenceCurrentMappingsConfirmed(currentFiles);
     const files = await resolveAnalysisFiles(db, input.import_id);
-    await markPricingReferenceAnalysisProgress(db, input.import_id, callerId, 'Analyse referentiel: telechargement des fichiers XLSX.');
+    await markPricingReferenceAnalysisProgress(
+      db,
+      input.import_id,
+      callerId,
+      "Analyse referentiel: telechargement des fichiers XLSX.",
+    );
     const [classificationBytes, segmentsBytes] = await Promise.all([
       downloadStorageBytes(files.classification),
-      downloadStorageBytes(files.segments_grids)
+      downloadStorageBytes(files.segments_grids),
     ]);
 
-    await markPricingReferenceAnalysisProgress(db, input.import_id, callerId, 'Analyse referentiel: verification des empreintes fichiers.');
+    await markPricingReferenceAnalysisProgress(
+      db,
+      input.import_id,
+      callerId,
+      "Analyse referentiel: verification des empreintes fichiers.",
+    );
     const [classificationHash, segmentsHash] = await Promise.all([
-      assertDownloadedFileMatchesMetadata(files.classification, classificationBytes),
-      assertDownloadedFileMatchesMetadata(files.segments_grids, segmentsBytes)
+      assertDownloadedFileMatchesMetadata(
+        files.classification,
+        classificationBytes,
+      ),
+      assertDownloadedFileMatchesMetadata(files.segments_grids, segmentsBytes),
     ]);
 
-    await markPricingReferenceAnalysisProgress(db, input.import_id, callerId, 'Analyse referentiel: parsing des classeurs XLSX.');
+    await markPricingReferenceAnalysisProgress(
+      db,
+      input.import_id,
+      callerId,
+      "Analyse referentiel: parsing des classeurs XLSX.",
+    );
     const analysis = await analyzePricingReferenceWorkbooks(
-      toParserFileInput(files.classification, classificationBytes, classificationHash),
-      toParserFileInput(files.segments_grids, segmentsBytes, segmentsHash)
+      toParserFileInput(
+        files.classification,
+        classificationBytes,
+        classificationHash,
+      ),
+      toParserFileInput(files.segments_grids, segmentsBytes, segmentsHash),
     );
 
     await markPricingReferenceAnalysisProgress(
       db,
       input.import_id,
       callerId,
-      `Analyse referentiel: persistance snapshot (${analysis.classification_rows.length} classifications, ${analysis.segment_rows.length} segments, ${analysis.purchase_grid_rows.length} grilles).`
+      `Analyse referentiel: persistance snapshot (${analysis.classification_rows.length} classifications, ${analysis.segment_rows.length} segments, ${analysis.purchase_grid_rows.length} grilles).`,
     );
-    const { snapshotId, importStatus } = await persistAnalysis(db, input.import_id, callerId, files, analysis);
+    const { snapshotId, importStatus } = await persistAnalysis(
+      db,
+      input.import_id,
+      callerId,
+      files,
+      analysis,
+    );
 
     return {
       ok: true,
@@ -1557,10 +1821,15 @@ export const analyzePricingReferenceImport = async (
       import_id: input.import_id,
       snapshot_id: snapshotId,
       status: importStatus,
-      health_report: analysis.health_report
+      health_report: analysis.health_report,
     };
   } catch (error) {
-    await recordPricingReferenceAnalysisFailure(db, input.import_id, callerId, error);
+    await recordPricingReferenceAnalysisFailure(
+      db,
+      input.import_id,
+      callerId,
+      error,
+    );
     throw error;
   }
 };
@@ -1580,7 +1849,7 @@ const toImportSummary = (row: ImportRow) => {
     error_message: row.error_message,
     classification_rows_count: health?.classification.rows_count ?? null,
     segments_rows_count: health?.segments_grids.rows_count ?? null,
-    anomalies_total: health?.anomalies.total ?? null
+    anomalies_total: health?.anomalies.total ?? null,
   };
 };
 
@@ -1588,10 +1857,12 @@ export const listPricingReferenceImports = async (
   db: DbClient,
   _callerId: string,
   requestId: string,
-  input: PricingReferenceImportsListInput
+  input: PricingReferenceImportsListInput,
 ): Promise<PricingReferenceImportsListResponse> => {
   const conditions: SQL[] = [];
-  if (input.status) conditions.push(eq(pricing_reference_imports.status, input.status));
+  if (input.status) {
+    conditions.push(eq(pricing_reference_imports.status, input.status));
+  }
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
   const [rows, totalRows] = await Promise.all([
@@ -1605,7 +1876,7 @@ export const listPricingReferenceImports = async (
     db
       .select({ total: sql<number>`count(*)::int` })
       .from(pricing_reference_imports)
-      .where(whereClause)
+      .where(whereClause),
   ]);
 
   return {
@@ -1614,7 +1885,7 @@ export const listPricingReferenceImports = async (
     imports: rows.map(toImportSummary),
     page: input.page,
     page_size: input.page_size,
-    total: totalRows[0]?.total ?? 0
+    total: totalRows[0]?.total ?? 0,
   };
 };
 
@@ -1622,7 +1893,7 @@ export const getPricingReferenceImport = async (
   db: DbClient,
   _callerId: string,
   requestId: string,
-  input: PricingReferenceImportGetInput
+  input: PricingReferenceImportGetInput,
 ): Promise<PricingReferenceImportGetResponse> => {
   const row = await requireImport(db, input.import_id);
   const files = await getImportFiles(db, input.import_id);
@@ -1651,9 +1922,9 @@ export const getPricingReferenceImport = async (
         mapping_status: file.mapping_status,
         mapping_confirmed_by: file.mapping_confirmed_by,
         mapping_confirmed_at: file.mapping_confirmed_at,
-        created_at: file.created_at
-      }))
-    }
+        created_at: file.created_at,
+      })),
+    },
   };
 };
 
@@ -1661,7 +1932,7 @@ export const getPricingReferenceHealth = async (
   db: DbClient,
   _callerId: string,
   requestId: string,
-  input: { import_id?: string }
+  input: { import_id?: string },
 ): Promise<PricingReferenceHealthGetResponse> => {
   const rows = input.import_id
     ? await db
@@ -1672,20 +1943,20 @@ export const getPricingReferenceHealth = async (
     : await db
       .select()
       .from(pricing_reference_imports)
-      .where(eq(pricing_reference_imports.status, 'analyse_ok'))
+      .where(eq(pricing_reference_imports.status, "analyse_ok"))
       .orderBy(desc(pricing_reference_imports.analysis_completed_at))
       .limit(1);
 
   return {
     ok: true,
     request_id: requestId,
-    health_report: rows[0] ? assertHealthReport(rows[0].health_report) : null
+    health_report: rows[0] ? assertHealthReport(rows[0].health_report) : null,
   };
 };
 
 const resolveSnapshotId = async (
   db: DbClient,
-  input: Pick<PricingReferenceRowsListInput, 'import_id' | 'snapshot_id'>
+  input: Pick<PricingReferenceRowsListInput, "import_id" | "snapshot_id">,
 ): Promise<string | null> => {
   if (input.snapshot_id) return input.snapshot_id;
 
@@ -1718,11 +1989,18 @@ export const listPricingReferenceClassification = async (
   db: DbClient,
   _callerId: string,
   requestId: string,
-  input: PricingReferenceClassificationListInput
+  input: PricingReferenceClassificationListInput,
 ): Promise<PricingReferenceClassificationListResponse> => {
   const snapshotId = await resolveSnapshotId(db, input);
   if (!snapshotId) {
-    return { ok: true, request_id: requestId, rows: [], page: input.page, page_size: input.page_size, total: 0 };
+    return {
+      ok: true,
+      request_id: requestId,
+      rows: [],
+      page: input.page,
+      page_size: input.page_size,
+      total: 0,
+    };
   }
 
   const pattern = searchPattern(input.search);
@@ -1775,7 +2053,7 @@ export const listPricingReferenceClassification = async (
     rows,
     page: input.page,
     page_size: input.page_size,
-    total: totalRows[0]?.total ?? 0
+    total: totalRows[0]?.total ?? 0,
   };
 };
 
@@ -1783,11 +2061,18 @@ export const listPricingReferenceSegments = async (
   db: DbClient,
   _callerId: string,
   requestId: string,
-  input: PricingReferenceSegmentsListInput
+  input: PricingReferenceSegmentsListInput,
 ): Promise<PricingReferenceSegmentsListResponse> => {
   const snapshotId = await resolveSnapshotId(db, input);
   if (!snapshotId) {
-    return { ok: true, request_id: requestId, rows: [], page: input.page, page_size: input.page_size, total: 0 };
+    return {
+      ok: true,
+      request_id: requestId,
+      rows: [],
+      page: input.page,
+      page_size: input.page_size,
+      total: 0,
+    };
   }
 
   const pattern = searchPattern(input.search);
@@ -1800,8 +2085,14 @@ export const listPricingReferenceSegments = async (
         or lower(coalesce(s.cat_fab_l, '')) like ${pattern}
       )`);
   }
-  const marqueFilter = optionalExactFilter(sql`s.marque`, input.filters?.marque);
-  const catFabFilter = optionalExactFilter(sql`s.cat_fab`, input.filters?.cat_fab);
+  const marqueFilter = optionalExactFilter(
+    sql`s.marque`,
+    input.filters?.marque,
+  );
+  const catFabFilter = optionalExactFilter(
+    sql`s.cat_fab`,
+    input.filters?.cat_fab,
+  );
   if (marqueFilter) conditions.push(marqueFilter);
   if (catFabFilter) conditions.push(catFabFilter);
   if (input.filters?.link_status) {
@@ -1868,7 +2159,7 @@ export const listPricingReferenceSegments = async (
     rows,
     page: input.page,
     page_size: input.page_size,
-    total: totalRows[0]?.total ?? 0
+    total: totalRows[0]?.total ?? 0,
   };
 };
 
@@ -1876,11 +2167,18 @@ export const listPricingReferenceAnomalies = async (
   db: DbClient,
   _callerId: string,
   requestId: string,
-  input: PricingReferenceAnomaliesListInput
+  input: PricingReferenceAnomaliesListInput,
 ): Promise<PricingReferenceAnomaliesListResponse> => {
   const snapshotId = await resolveSnapshotId(db, input);
   if (!snapshotId && !input.import_id) {
-    return { ok: true, request_id: requestId, rows: [], page: input.page, page_size: input.page_size, total: 0 };
+    return {
+      ok: true,
+      request_id: requestId,
+      rows: [],
+      page: input.page,
+      page_size: input.page_size,
+      total: 0,
+    };
   }
   const whereClause = andSql(buildAnomalyFilterConditions(input, snapshotId));
   const sortBy = anomalySortSql(input.sort_by);
@@ -1938,7 +2236,7 @@ export const listPricingReferenceAnomalies = async (
       select count(*)::int as total
       from public.pricing_reference_anomalies
       where ${whereClause}
-    `)
+    `),
   ]);
 
   return {
@@ -1947,7 +2245,7 @@ export const listPricingReferenceAnomalies = async (
     rows,
     page: input.page,
     page_size: input.page_size,
-    total: totalRows[0]?.total ?? 0
+    total: totalRows[0]?.total ?? 0,
   };
 };
 
@@ -1955,7 +2253,7 @@ export const getPricingReferenceAnomaliesSummary = async (
   db: DbClient,
   _callerId: string,
   requestId: string,
-  input: PricingReferenceAnomaliesSummaryGetInput
+  input: PricingReferenceAnomaliesSummaryGetInput,
 ): Promise<PricingReferenceAnomaliesSummaryResponse> => {
   const snapshotId = await resolveSnapshotId(db, input);
   if (!snapshotId && !input.import_id) {
@@ -1964,22 +2262,23 @@ export const getPricingReferenceAnomaliesSummary = async (
       request_id: requestId,
       total: 0,
       groups_by_type: [],
-      facets: { severities: [], types: [], marques: [] }
+      facets: { severities: [], types: [], marques: [] },
     };
   }
   const whereClause = andSql(buildAnomalyFilterConditions(input, snapshotId));
   const severitySql = anomalySeverityWeightSql();
-  const [totalRows, groups, severityFacets, typeFacets, marqueFacets] = await Promise.all([
-    db.execute<{ total: number }>(sql`
+  const [totalRows, groups, severityFacets, typeFacets, marqueFacets] =
+    await Promise.all([
+      db.execute<{ total: number }>(sql`
       select count(*)::int as total
       from public.pricing_reference_anomalies
       where ${whereClause}
     `),
-    db.execute<{
-      type: PricingReferenceAnomalyType;
-      count: number;
-      max_severity_weight: number;
-    }>(sql`
+      db.execute<{
+        type: PricingReferenceAnomalyType;
+        count: number;
+        max_severity_weight: number;
+      }>(sql`
       select
         ${pricing_reference_anomalies.type} as type,
         count(*)::int as count,
@@ -1989,50 +2288,54 @@ export const getPricingReferenceAnomaliesSummary = async (
       group by 1
       order by max(${severitySql}) desc, count(*) desc, 1 asc
     `),
-    db.execute<{
-      value: PricingReferenceAnomalySeverity;
-      count: number;
-      max_severity_weight: number;
-    }>(sql`
+      db.execute<{
+        value: PricingReferenceAnomalySeverity;
+        count: number;
+        max_severity_weight: number;
+      }>(sql`
       select
         ${pricing_reference_anomalies.severity} as value,
         count(*)::int as count,
         max(${severitySql})::int as max_severity_weight
       from public.pricing_reference_anomalies
-      where ${andSql(buildAnomalyFilterConditions(input, snapshotId, 'severities'))}
+      where ${
+        andSql(buildAnomalyFilterConditions(input, snapshotId, "severities"))
+      }
       group by 1
       order by max(${severitySql}) desc, 1 asc
     `),
-    db.execute<{
-      value: PricingReferenceAnomalyType;
-      count: number;
-      max_severity_weight: number;
-    }>(sql`
+      db.execute<{
+        value: PricingReferenceAnomalyType;
+        count: number;
+        max_severity_weight: number;
+      }>(sql`
       select
         ${pricing_reference_anomalies.type} as value,
         count(*)::int as count,
         max(${severitySql})::int as max_severity_weight
       from public.pricing_reference_anomalies
-      where ${andSql(buildAnomalyFilterConditions(input, snapshotId, 'types'))}
+      where ${andSql(buildAnomalyFilterConditions(input, snapshotId, "types"))}
       group by 1
       order by max(${severitySql}) desc, count(*) desc, 1 asc
     `),
-    db.execute<{
-      value: string;
-      count: number;
-      max_severity_weight: number;
-    }>(sql`
+      db.execute<{
+        value: string;
+        count: number;
+        max_severity_weight: number;
+      }>(sql`
       select
         ${anomalyMarqueSql()} as value,
         count(*)::int as count,
         max(${severitySql})::int as max_severity_weight
       from public.pricing_reference_anomalies
-      where ${andSql(buildAnomalyFilterConditions(input, snapshotId, 'marques'))}
+      where ${
+        andSql(buildAnomalyFilterConditions(input, snapshotId, "marques"))
+      }
       group by 1
       order by count(*) desc, 1 asc
       limit 200
-    `)
-  ]);
+    `),
+    ]);
 
   return {
     ok: true,
@@ -2043,35 +2346,35 @@ export const getPricingReferenceAnomaliesSummary = async (
       label: pricingReferenceAnomalyTypeLabels[group.type],
       action_label: pricingReferenceAnomalyTypeActionLabels[group.type] ?? null,
       count: group.count,
-      max_severity: severityFromWeight(group.max_severity_weight)
+      max_severity: severityFromWeight(group.max_severity_weight),
     })),
     facets: {
       severities: severityFacets.map((facet) => ({
         value: facet.value,
         label: pricingReferenceAnomalySeverityLabels[facet.value],
         count: facet.count,
-        max_severity: severityFromWeight(facet.max_severity_weight)
+        max_severity: severityFromWeight(facet.max_severity_weight),
       })),
       types: typeFacets.map((facet) => ({
         value: facet.value,
         label: pricingReferenceAnomalyTypeLabels[facet.value],
         count: facet.count,
-        max_severity: severityFromWeight(facet.max_severity_weight)
+        max_severity: severityFromWeight(facet.max_severity_weight),
       })),
       marques: marqueFacets.map((facet) => ({
         value: facet.value,
         label: facet.value,
         count: facet.count,
-        max_severity: severityFromWeight(facet.max_severity_weight)
-      }))
-    }
+        max_severity: severityFromWeight(facet.max_severity_weight),
+      })),
+    },
   };
 };
 
 const listAllPricingReferenceAnomaliesForExport = async (
   db: DbClient,
   input: PricingReferenceAnomaliesExportInput,
-  snapshotId: string | null
+  snapshotId: string | null,
 ): Promise<PricingReferenceAnomalyQueryRow[]> => {
   if (!snapshotId && !input.import_id) return [];
   const whereClause = andSql(buildAnomalyFilterConditions(input, snapshotId));
@@ -2110,114 +2413,413 @@ const listAllPricingReferenceAnomaliesForExport = async (
   `);
 };
 
-const exportSourceColumnsForKind = (fileKind: PricingReferenceFileKind): readonly string[] =>
-  fileKind === 'classification'
+const listPricingReferenceExportSourceRows = async (
+  db: DbClient,
+  snapshotId: string | null,
+): Promise<PricingReferenceExportSourceRow[]> => {
+  if (!snapshotId) return [];
+
+  const classificationRows = await db.execute<{
+    source_row_number: number;
+    raw_values: Record<string, string>;
+  }>(sql`
+    select
+      source_row_number,
+      raw_values
+    from public.pricing_classification_cir
+    where snapshot_id = ${snapshotId}
+    order by source_row_number asc
+  `);
+
+  const segmentsRows = await db.execute<{
+    source_row_number: number;
+    raw_values: Record<string, string>;
+  }>(sql`
+    select
+      g.source_row_number,
+      coalesce(s.raw_values, '{}'::jsonb)
+        || coalesce(l.raw_values, '{}'::jsonb)
+        || coalesce(g.raw_values, '{}'::jsonb) as raw_values
+    from public.pricing_segment_purchase_grids g
+    join public.pricing_supplier_segments s on s.id = g.segment_id
+    left join lateral (
+      select raw_values
+      from public.pricing_segment_classification_links l
+      where l.segment_id = s.id
+        and l.source_row_number = s.source_row_number
+      order by l.created_at asc
+      limit 1
+    ) l on true
+    where g.snapshot_id = ${snapshotId}
+    order by g.source_row_number asc
+  `);
+
+  return [
+    ...classificationRows.map((row) => ({
+      file_kind: "classification" as const,
+      source_row_number: row.source_row_number,
+      raw_values: row.raw_values,
+    })),
+    ...segmentsRows.map((row) => ({
+      file_kind: "segments_grids" as const,
+      source_row_number: row.source_row_number,
+      raw_values: row.raw_values,
+    })),
+  ];
+};
+
+const exportSourceColumnsForKind = (
+  fileKind: PricingReferenceFileKind,
+): readonly string[] =>
+  fileKind === "classification"
     ? PRICING_REFERENCE_CLASSIFICATION_COLUMNS
     : PRICING_REFERENCE_SEGMENTS_GRIDS_COLUMNS;
 
-const exportSheetNameForKind = (fileKind: PricingReferenceFileKind | 'unknown'): string => {
-  if (fileKind === 'classification') return 'Classification';
-  if (fileKind === 'segments_grids') return 'Segments grilles';
-  return 'Anomalies sans fichier';
+const exportSheetNameForKind = (
+  fileKind: PricingReferenceFileKind | "unknown",
+): string => {
+  if (fileKind === "classification") return "Classification";
+  if (fileKind === "segments_grids") return "Segments grilles";
+  return "Anomalies sans fichier";
 };
 
-const exportFilename = (scopeId: string, requestId: string): string =>
-  `anomalies-referentiel-${scopeId}-${requestId}.xlsx`;
-
-const anomalyFallbackNote = (row: PricingReferenceAnomalyQueryRow): string => {
-  const details = row.details;
-  const context = [
-    readStringValue(details, 'marque') ? `marque=${readStringValue(details, 'marque')}` : null,
-    readStringValue(details, 'cat_fab') ? `cat_fab=${readStringValue(details, 'cat_fab')}` : null,
-    readStringValue(details, 'cir_key') ? `cir_key=${readStringValue(details, 'cir_key')}` : null,
-    readStringValue(details, 'classification_key') ? `classification_key=${readStringValue(details, 'classification_key')}` : null,
-    readStringValue(details, 'segment_key') ? `segment_key=${readStringValue(details, 'segment_key')}` : null,
-    row.object_id ? `object_id=${row.object_id}` : null
-  ].filter((value): value is string => Boolean(value));
-  return context.length > 0
-    ? `Valeurs source brutes absentes dans details.raw_values. Contexte disponible: ${context.join(' ; ')}.`
-    : 'Valeurs source brutes absentes dans details.raw_values. Aucun contexte source supplementaire disponible.';
+const exportFilenameForKind = (
+  fileKind: PricingReferenceFileKind,
+  scopeId: string,
+  requestId: string,
+): string => {
+  const label = fileKind === "classification"
+    ? "classification"
+    : "segments-grilles";
+  return `anomalies-referentiel-${label}-${scopeId}-${requestId}.xlsx`;
 };
 
-const rowToExportRecord = (
-  row: PricingReferenceAnomalyQueryRow,
-  sourceColumns: readonly string[]
+const anomalyRowKey = (
+  fileKind: PricingReferenceFileKind,
+  sourceRowNumber: number | null,
+): string | null => sourceRowNumber ? `${fileKind}:${sourceRowNumber}` : null;
+
+const joinUniqueValues = (values: string[]): string =>
+  uniqueValues(values.filter(Boolean)).join(" | ");
+
+const groupAnomaliesBySourceRow = (
+  rows: PricingReferenceAnomalyQueryRow[],
+): {
+  bySourceRow: Map<string, PricingReferenceAnomalyQueryRow[]>;
+  withoutSourceRow: PricingReferenceAnomalyQueryRow[];
+} => {
+  const bySourceRow = new Map<string, PricingReferenceAnomalyQueryRow[]>();
+  const withoutSourceRow: PricingReferenceAnomalyQueryRow[] = [];
+
+  for (const row of rows) {
+    const fileKind = row.source_file?.file_kind;
+    const key = fileKind
+      ? anomalyRowKey(fileKind, row.source_row_number)
+      : null;
+    if (!key) {
+      withoutSourceRow.push(row);
+      continue;
+    }
+    bySourceRow.set(key, [...(bySourceRow.get(key) ?? []), row]);
+  }
+
+  return { bySourceRow, withoutSourceRow };
+};
+
+const sourceRowToExportRecord = (
+  row: PricingReferenceExportSourceRow,
+  sourceColumns: readonly string[],
+  anomalies: PricingReferenceAnomalyQueryRow[],
 ): Record<string, string | number> => {
-  const rawValues = readRecord(row.details.raw_values);
   const record: Record<string, string | number> = {};
   for (const column of sourceColumns) {
-    const value = rawValues?.[column];
-    record[column] = typeof value === 'string' || typeof value === 'number' ? value : '';
+    const value = row.raw_values[column];
+    record[column] = typeof value === "string" || typeof value === "number"
+      ? value
+      : "";
   }
-  const columns = toColumnList(row.columns);
-  record.LIGNE_SOURCE = row.source_row_number ?? '';
-  record.ANOMALIE_TYPE = pricingReferenceAnomalyTypeLabels[row.type];
-  record.SEVERITE = pricingReferenceAnomalySeverityLabels[row.severity];
-  record.COLONNES_CONCERNEES = columns.join(', ');
-  record.MESSAGE = row.message;
-  record.ACTION_CORRECTION = pricingReferenceAnomalyTypeActionLabels[row.type];
-  record.NOTE_EXPORT = rawValues
-    ? 'Valeurs source reconstruites depuis details.raw_values.'
-    : anomalyFallbackNote(row);
+  record.TYPE_ANOMALIE = joinUniqueValues(
+    anomalies.map((anomaly) => pricingReferenceAnomalyTypeLabels[anomaly.type]),
+  );
+  record.ACTION_CORRECTION = joinUniqueValues(
+    anomalies.map((anomaly) =>
+      pricingReferenceAnomalyTypeActionLabels[anomaly.type]
+    ),
+  );
   return record;
 };
 
-const buildAnomaliesExportWorkbook = (rows: PricingReferenceAnomalyQueryRow[]): ArrayBuffer => {
-  const workbook = XLSX.utils.book_new();
-  const rowsByKind = new Map<PricingReferenceFileKind | 'unknown', PricingReferenceAnomalyQueryRow[]>();
-  for (const row of rows) {
-    const fileKind = row.source_file?.file_kind ?? 'unknown';
-    rowsByKind.set(fileKind, [...(rowsByKind.get(fileKind) ?? []), row]);
+const fileAnomalyToExportRecord = (
+  row: PricingReferenceAnomalyQueryRow,
+): Record<string, string | number> => ({
+  FICHIER: row.source_file?.original_filename ?? "",
+  TYPE_ANOMALIE: pricingReferenceAnomalyTypeLabels[row.type],
+  ACTION_CORRECTION: pricingReferenceAnomalyTypeActionLabels[row.type],
+});
+
+const sourceRowsForKind = (
+  rows: PricingReferenceExportSourceRow[],
+  fileKind: PricingReferenceFileKind,
+): PricingReferenceExportSourceRow[] =>
+  rows.filter((row) => row.file_kind === fileKind);
+
+const anomalyRowsForKind = (
+  rows: PricingReferenceAnomalyQueryRow[],
+  fileKind: PricingReferenceFileKind,
+): PricingReferenceAnomalyQueryRow[] =>
+  rows.filter((row) => row.source_file?.file_kind === fileKind);
+
+type ExportWorksheet = {
+  name: string;
+  headers: string[];
+  records: Array<Record<string, string | number>>;
+  minColumnWidth: number;
+};
+
+const escapeXml = (value: string): string =>
+  value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+
+const toColumnName = (columnIndex: number): string => {
+  let index = columnIndex;
+  let name = "";
+  while (index > 0) {
+    const remainder = (index - 1) % 26;
+    name = String.fromCharCode(65 + remainder) + name;
+    index = Math.floor((index - 1) / 26);
+  }
+  return name;
+};
+
+const toCellRef = (columnIndex: number, rowIndex: number): string =>
+  `${toColumnName(columnIndex)}${rowIndex}`;
+
+const toInlineStringCell = (
+  columnIndex: number,
+  rowIndex: number,
+  value: string | number,
+): string => {
+  const text = String(value);
+  return `<c r="${
+    toCellRef(columnIndex, rowIndex)
+  }" t="inlineStr"><is><t xml:space="preserve">${escapeXml(text)}</t></is></c>`;
+};
+
+const buildWorksheetXml = (sheet: ExportWorksheet): string => {
+  const rowXml: string[] = [];
+  const allRows = [
+    sheet.headers,
+    ...sheet.records.map((record) =>
+      sheet.headers.map((header) => record[header] ?? "")
+    ),
+  ];
+
+  allRows.forEach((row, rowIndex) => {
+    const excelRowIndex = rowIndex + 1;
+    const cells = row.map((value, columnIndex) =>
+      toInlineStringCell(columnIndex + 1, excelRowIndex, value)
+    );
+    rowXml.push(`<row r="${excelRowIndex}">${cells.join("")}</row>`);
+  });
+
+  const lastColumn = toColumnName(Math.max(sheet.headers.length, 1));
+  const lastRow = Math.max(allRows.length, 1);
+  const range = `A1:${lastColumn}${lastRow}`;
+  const cols = sheet.headers.map((header, index) => {
+    const width = Math.min(
+      Math.max(header.length + 2, sheet.minColumnWidth),
+      54,
+    );
+    return `<col min="${index + 1}" max="${
+      index + 1
+    }" width="${width}" customWidth="1"/>`;
+  }).join("");
+
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <dimension ref="${range}"/>
+  <sheetViews><sheetView workbookViewId="0"/></sheetViews>
+  <sheetFormatPr defaultRowHeight="15"/>
+  <cols>${cols}</cols>
+  <sheetData>${rowXml.join("")}</sheetData>
+  <autoFilter ref="${range}"/>
+  <pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/>
+</worksheet>`;
+};
+
+const workbookToArrayBuffer = (sheets: ExportWorksheet[]): ArrayBuffer => {
+  const sheetEntries = sheets.map((sheet, index) => ({
+    sheet,
+    sheetId: index + 1,
+    relationshipId: `rId${index + 1}`,
+    path: `xl/worksheets/sheet${index + 1}.xml`,
+  }));
+
+  const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+  <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+  <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
+  <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
+  ${
+    sheetEntries.map((entry) =>
+      `<Override PartName="/${entry.path}" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`
+    ).join("")
+  }
+</Types>`;
+  const workbookXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <sheets>${
+    sheetEntries.map((entry) =>
+      `<sheet name="${
+        escapeXml(entry.sheet.name)
+      }" sheetId="${entry.sheetId}" r:id="${entry.relationshipId}"/>`
+    ).join("")
+  }</sheets>
+</workbook>`;
+  const workbookRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  ${
+    sheetEntries.map((entry) =>
+      `<Relationship Id="${entry.relationshipId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${entry.sheetId}.xml"/>`
+    ).join("")
+  }
+  <Relationship Id="rId${
+    sheetEntries.length + 1
+  }" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+</Relationships>`;
+  const rootRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>
+  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>
+</Relationships>`;
+  const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <fonts count="1"><font><sz val="11"/><name val="Calibri"/></font></fonts>
+  <fills count="1"><fill><patternFill patternType="none"/></fill></fills>
+  <borders count="1"><border/></borders>
+  <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+  <cellXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/></cellXfs>
+</styleSheet>`;
+  const now = new Date().toISOString();
+  const coreXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <dc:title>Export anomalies referentiel CIR</dc:title>
+  <dcterms:created xsi:type="dcterms:W3CDTF">${now}</dcterms:created>
+  <dcterms:modified xsi:type="dcterms:W3CDTF">${now}</dcterms:modified>
+</cp:coreProperties>`;
+  const appXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">
+  <Application>CIR Cockpit</Application>
+</Properties>`;
+
+  const files: Record<string, Uint8Array> = {
+    "[Content_Types].xml": strToU8(contentTypes),
+    "_rels/.rels": strToU8(rootRels),
+    "docProps/app.xml": strToU8(appXml),
+    "docProps/core.xml": strToU8(coreXml),
+    "xl/workbook.xml": strToU8(workbookXml),
+    "xl/_rels/workbook.xml.rels": strToU8(workbookRels),
+    "xl/styles.xml": strToU8(stylesXml),
+  };
+
+  for (const entry of sheetEntries) {
+    files[entry.path] = strToU8(buildWorksheetXml(entry.sheet));
   }
 
+  const zipped = zipSync(files, { level: 0 });
+  return zipped.buffer.slice(
+    zipped.byteOffset,
+    zipped.byteOffset + zipped.byteLength,
+  ) as ArrayBuffer;
+};
+
+export const buildAnomaliesExportWorkbook = (
+  sourceRows: PricingReferenceExportSourceRow[],
+  anomalyRows: PricingReferenceAnomalyQueryRow[],
+): ArrayBuffer => {
+  const sheets: ExportWorksheet[] = [];
+  const rowsByKind = new Map<
+    PricingReferenceFileKind,
+    PricingReferenceExportSourceRow[]
+  >();
+  for (const row of sourceRows) {
+    const fileKind = row.file_kind;
+    rowsByKind.set(fileKind, [...(rowsByKind.get(fileKind) ?? []), row]);
+  }
+  const { bySourceRow, withoutSourceRow } = groupAnomaliesBySourceRow(
+    anomalyRows,
+  );
+
   for (const [fileKind, sheetRows] of rowsByKind) {
-    const sourceColumns = fileKind === 'unknown'
-      ? PRICING_REFERENCE_SEGMENTS_GRIDS_COLUMNS
-      : exportSourceColumnsForKind(fileKind);
+    const sourceColumns = exportSourceColumnsForKind(fileKind);
     const headers = [
       ...sourceColumns,
-      'LIGNE_SOURCE',
-      'ANOMALIE_TYPE',
-      'SEVERITE',
-      'COLONNES_CONCERNEES',
-      'MESSAGE',
-      'ACTION_CORRECTION',
-      'NOTE_EXPORT'
+      "TYPE_ANOMALIE",
+      "ACTION_CORRECTION",
     ];
-    const worksheet = XLSX.utils.json_to_sheet(
-      sheetRows.map((row) => rowToExportRecord(row, sourceColumns)),
-      { header: headers }
-    );
-    const range = XLSX.utils.decode_range(worksheet['!ref'] ?? 'A1:A1');
-    worksheet['!autofilter'] = { ref: XLSX.utils.encode_range(range) };
-    worksheet['!cols'] = headers.map((header) => ({ wch: Math.min(Math.max(header.length + 2, 14), 48) }));
-    XLSX.utils.book_append_sheet(workbook, worksheet, exportSheetNameForKind(fileKind));
+    sheets.push({
+      name: exportSheetNameForKind(fileKind),
+      headers,
+      records: [...sheetRows]
+        .sort((left, right) => left.source_row_number - right.source_row_number)
+        .map((row) =>
+          sourceRowToExportRecord(
+            row,
+            sourceColumns,
+            bySourceRow.get(`${fileKind}:${row.source_row_number}`) ?? [],
+          )
+        ),
+      minColumnWidth: 12,
+    });
+  }
+
+  if (withoutSourceRow.length > 0) {
+    const headers = ["FICHIER", "TYPE_ANOMALIE", "ACTION_CORRECTION"];
+    sheets.push({
+      name: "Anomalies fichier",
+      headers,
+      records: withoutSourceRow.map(fileAnomalyToExportRecord),
+      minColumnWidth: 14,
+    });
   }
 
   if (rowsByKind.size === 0) {
-    const worksheet = XLSX.utils.json_to_sheet([{ MESSAGE: 'Aucune anomalie exportee.' }], { header: ['MESSAGE'] });
-    worksheet['!autofilter'] = { ref: 'A1:A2' };
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Anomalies');
+    sheets.push({
+      name: "Anomalies",
+      headers: ["MESSAGE"],
+      records: [{ MESSAGE: "Aucune anomalie exportee." }],
+      minColumnWidth: 14,
+    });
   }
 
-  return XLSX.write(workbook, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer;
+  return workbookToArrayBuffer(sheets);
 };
 
 const cleanupExpiredAnomalyExports = async (): Promise<void> => {
-  const storage = getSupabaseAdmin().storage.from(PRICING_REFERENCE_STORAGE_BUCKET);
+  const storage = getSupabaseAdmin().storage.from(
+    PRICING_REFERENCE_STORAGE_BUCKET,
+  );
   const cutoff = Date.now() - EXPORT_RETENTION_DAYS * 24 * 60 * 60 * 1000;
-  const { data, error } = await storage.list('exports', {
+  const { data, error } = await storage.list("exports", {
     limit: 100,
-    sortBy: { column: 'created_at', order: 'asc' }
+    sortBy: { column: "created_at", order: "asc" },
   });
   if (error || !data) return;
   const expiredPaths = data
     .filter((item) => {
-      const timestamp = item.created_at ?? item.updated_at ?? item.last_accessed_at;
+      const timestamp = item.created_at ?? item.updated_at ??
+        item.last_accessed_at;
       return timestamp ? new Date(timestamp).getTime() < cutoff : false;
     })
     .map((item) => `exports/${item.name}`)
-    .filter((path) => path.startsWith('exports/'))
+    .filter((path) => path.startsWith("exports/"))
     .slice(0, 100);
   if (expiredPaths.length > 0) {
     await storage.remove(expiredPaths);
@@ -2228,65 +2830,92 @@ export const exportPricingReferenceAnomalies = async (
   db: DbClient,
   _callerId: string,
   requestId: string,
-  input: PricingReferenceAnomaliesExportInput
+  input: PricingReferenceAnomaliesExportInput,
 ): Promise<PricingReferenceAnomaliesExportResponse> => {
   const snapshotId = await resolveSnapshotId(db, input);
-  const rows = await listAllPricingReferenceAnomaliesForExport(db, input, snapshotId);
-  if (rows.length > ANOMALIES_EXPORT_MAX_ROWS) {
+  const anomalyRows = await listAllPricingReferenceAnomaliesForExport(
+    db,
+    input,
+    snapshotId,
+  );
+  if (anomalyRows.length > ANOMALIES_EXPORT_MAX_ROWS) {
     throw httpError(
       413,
-      'REQUEST_FAILED',
-      'Export refuse: plus de 50 000 anomalies correspondent aux filtres.'
+      "REQUEST_FAILED",
+      "Export refuse: plus de 50 000 anomalies correspondent aux filtres.",
     );
   }
+  const sourceRows = await listPricingReferenceExportSourceRows(db, snapshotId);
 
-  const scopeId = snapshotId ?? input.import_id ?? 'current';
-  const filename = exportFilename(scopeId, requestId);
-  const storagePath = `exports/${scopeId}/${requestId}.xlsx`;
-  const workbookBytes = buildAnomaliesExportWorkbook(rows);
-  const storage = getSupabaseAdmin().storage.from(PRICING_REFERENCE_STORAGE_BUCKET);
+  const scopeId = snapshotId ?? input.import_id ?? "current";
+  const storage = getSupabaseAdmin().storage.from(
+    PRICING_REFERENCE_STORAGE_BUCKET,
+  );
 
   await cleanupExpiredAnomalyExports();
 
-  const { error: uploadError } = await storage.upload(
-    storagePath,
-    new Blob([workbookBytes], { type: PRICING_REFERENCE_XLSX_MIME }),
-    {
-      contentType: PRICING_REFERENCE_XLSX_MIME,
-      cacheControl: '3600',
-      upsert: false
-    }
-  );
-  if (uploadError) {
-    throw httpError(
-      500,
-      'PRICING_REFERENCE_IMPORT_STORAGE_FAILED',
-      'Impossible de stocker l export des anomalies.',
-      uploadError.message
-    );
-  }
+  const expiresAt = new Date(
+    Date.now() + EXPORT_SIGNED_URL_EXPIRES_IN_SECONDS * 1000,
+  ).toISOString();
+  const files: PricingReferenceAnomaliesExportFile[] = [];
 
-  const { data: signedUrl, error: signedUrlError } = await storage.createSignedUrl(
-    storagePath,
-    EXPORT_SIGNED_URL_EXPIRES_IN_SECONDS,
-    { download: filename }
-  );
-  if (signedUrlError || !signedUrl?.signedUrl) {
-    throw httpError(
-      500,
-      'PRICING_REFERENCE_IMPORT_STORAGE_FAILED',
-      'Impossible de generer l URL signee de l export.',
-      signedUrlError?.message
+  for (const fileKind of ["classification", "segments_grids"] as const) {
+    const fileSourceRows = sourceRowsForKind(sourceRows, fileKind);
+    const fileAnomalyRows = anomalyRowsForKind(anomalyRows, fileKind);
+    const filename = exportFilenameForKind(fileKind, scopeId, requestId);
+    const storagePath = `exports/${scopeId}/${fileKind}/${requestId}.xlsx`;
+    const workbookBytes = buildAnomaliesExportWorkbook(
+      fileSourceRows,
+      fileAnomalyRows,
     );
+
+    const { error: uploadError } = await storage.upload(
+      storagePath,
+      new Blob([workbookBytes], { type: PRICING_REFERENCE_XLSX_MIME }),
+      {
+        contentType: PRICING_REFERENCE_XLSX_MIME,
+        cacheControl: "3600",
+        upsert: false,
+      },
+    );
+    if (uploadError) {
+      throw httpError(
+        500,
+        "PRICING_REFERENCE_IMPORT_STORAGE_FAILED",
+        `Impossible de stocker l export ${filename}.`,
+        uploadError.message,
+      );
+    }
+
+    const { data: signedUrl, error: signedUrlError } = await storage
+      .createSignedUrl(
+        storagePath,
+        EXPORT_SIGNED_URL_EXPIRES_IN_SECONDS,
+        { download: filename },
+      );
+    if (signedUrlError || !signedUrl?.signedUrl) {
+      throw httpError(
+        500,
+        "PRICING_REFERENCE_IMPORT_STORAGE_FAILED",
+        `Impossible de generer l URL signee de l export ${filename}.`,
+        signedUrlError?.message,
+      );
+    }
+
+    files.push({
+      file_kind: fileKind,
+      download_url: signedUrl.signedUrl,
+      expires_at: expiresAt,
+      filename,
+      row_count: fileSourceRows.length,
+    });
   }
 
   return assertAnomaliesExportResponse({
     ok: true,
     request_id: requestId,
-    download_url: signedUrl.signedUrl,
-    expires_at: new Date(Date.now() + EXPORT_SIGNED_URL_EXPIRES_IN_SECONDS * 1000).toISOString(),
-    filename,
-    row_count: rows.length
+    files,
+    row_count: sourceRows.length,
   });
 };
 
@@ -2296,11 +2925,17 @@ export const listAllPricingReferenceClassification = async (
   db: DbClient,
   _callerId: string,
   requestId: string,
-  input: PricingReferenceClassificationListAllInput
+  input: PricingReferenceClassificationListAllInput,
 ): Promise<PricingReferenceClassificationListAllResponse> => {
   const snapshotId = await resolveSnapshotId(db, input);
   if (!snapshotId) {
-    return { ok: true, request_id: requestId, rows: [], total: 0, truncated: false };
+    return {
+      ok: true,
+      request_id: requestId,
+      rows: [],
+      total: 0,
+      truncated: false,
+    };
   }
 
   const [rows, totalRows] = await Promise.all([
@@ -2327,7 +2962,7 @@ export const listAllPricingReferenceClassification = async (
       select count(*)::int as total
       from public.pricing_classification_cir
       where snapshot_id = ${snapshotId}
-    `)
+    `),
   ]);
   const total = totalRows[0]?.total ?? rows.length;
 
@@ -2336,6 +2971,6 @@ export const listAllPricingReferenceClassification = async (
     request_id: requestId,
     rows,
     total,
-    truncated: total > rows.length
+    truncated: total > rows.length,
   };
 };

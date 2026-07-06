@@ -85,7 +85,7 @@ export const FacetedFilter = ({ label, options, selectedValues, onChange }: Face
             aria-label={`Réinitialiser le filtre ${label}`}
             onClick={() => onChange([])}
             className={cn(
-              'inline-flex items-center border-r border-stone-200/60 px-1.5 text-stone-400 transition-colors hover:bg-stone-50 hover:text-stone-700',
+              'inline-flex items-center border-r border-stone-200/60 px-1.5 text-stone-500 transition-colors hover:bg-stone-50 hover:text-stone-700',
               triggerFocusClassName
             )}
           >
@@ -150,7 +150,7 @@ export const FacetedFilter = ({ label, options, selectedValues, onChange }: Face
                       />
                     ) : null}
                     <span className="min-w-0 flex-1 truncate">{option.label}</span>
-                    <span className="ml-auto font-mono text-[11px] tabular-nums text-stone-400">
+                    <span className="ml-auto font-mono text-[11px] tabular-nums text-stone-500">
                       {formatCount(option.count)}
                     </span>
                   </CommandItem>

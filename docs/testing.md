@@ -44,7 +44,7 @@ Checks backend:
 ```bash
 deno lint backend/functions/api
 deno check --config backend/deno.json backend/functions/api/index.ts
-deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api
+deno test --env-file=backend/.env --allow-env --config backend/deno.json backend/functions/api
 pnpm run backend:test:integration
 ```
 

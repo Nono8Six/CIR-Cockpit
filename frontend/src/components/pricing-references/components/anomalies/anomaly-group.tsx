@@ -183,7 +183,7 @@ export const AnomalyGroup = ({ group, filters, isOpen, onToggle }: AnomalyGroupP
               />
             ))}
             {total > rows.length ? (
-              <p className="border-b border-stone-100 px-4 py-2 text-[11px] text-stone-400">
+              <p className="border-b border-stone-100 px-4 py-2 text-[11px] text-stone-500">
                 Affichage des {formatCount(rows.length)} premières anomalies sur {formatCount(total)}.
                 Affinez la recherche ou les facettes pour cibler les autres.
               </p>

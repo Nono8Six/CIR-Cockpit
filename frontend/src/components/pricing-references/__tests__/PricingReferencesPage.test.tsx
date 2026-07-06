@@ -88,57 +88,6 @@ vi.mock('@/services/errors/notifySuccess', () => ({
   notifySuccess: vi.fn()
 }));
 
-vi.mock('@/services/ai', () => ({
-  getAiSettings: vi.fn(async () => ({
-    ok: true,
-    providers: [],
-    models: [],
-    quotas: []
-  })),
-  listAiPrompts: vi.fn(async () => ({
-    ok: true,
-    prompts: [{
-      id: '00000000-0000-4000-8000-000000000020',
-      feature: 'pricing.references.diagnose',
-      label: 'Diagnostic référentiels',
-      description: null,
-      variables: ['health_report'],
-      created_at: '2026-06-27T16:00:00.000Z',
-      updated_at: '2026-06-27T16:00:00.000Z',
-      versions: [{
-        id: '00000000-0000-4000-8000-000000000021',
-        template_id: '00000000-0000-4000-8000-000000000020',
-        version: 1,
-        status: 'published',
-        body: 'Prompt test',
-        change_note: 'Version initiale',
-        created_by: null,
-        published_by: null,
-        published_at: '2026-06-27T16:00:00.000Z',
-        created_at: '2026-06-27T16:00:00.000Z',
-        updated_at: '2026-06-27T16:00:00.000Z'
-      }],
-      published_version: {
-        id: '00000000-0000-4000-8000-000000000021',
-        template_id: '00000000-0000-4000-8000-000000000020',
-        version: 1,
-        status: 'published',
-        body: 'Prompt test',
-        change_note: 'Version initiale',
-        created_by: null,
-        published_by: null,
-        published_at: '2026-06-27T16:00:00.000Z',
-        created_at: '2026-06-27T16:00:00.000Z',
-        updated_at: '2026-06-27T16:00:00.000Z'
-      },
-      draft_version: null
-    }]
-  })),
-  saveAiPromptDraft: vi.fn(),
-  publishAiPrompt: vi.fn(),
-  restoreAiPrompt: vi.fn()
-}));
-
 vi.mock('@/services/pricingReferences', () => ({
   listPricingReferenceImports: vi.fn(async () => ({
     ok: true,
@@ -160,6 +109,56 @@ vi.mock('@/services/pricingReferences', () => ({
     page: 1,
     page_size: 50,
     total: 1
+  })),
+  getPricingReferenceImport: vi.fn(async () => ({
+    ok: true,
+    import: {
+      id: importId,
+      status: 'analyse_ok',
+      created_by: null,
+      analyzed_by: null,
+      created_at: '2026-06-22T10:00:00.000Z',
+      updated_at: '2026-06-22T10:05:00.000Z',
+      analysis_started_at: '2026-06-22T10:01:00.000Z',
+      analysis_completed_at: '2026-06-22T10:05:00.000Z',
+      error_code: null,
+      error_message: null,
+      classification_rows_count: 12,
+      segments_rows_count: 34,
+      anomalies_total: 1,
+      files: [{
+        id: fileId,
+        import_id: importId,
+        file_kind: 'classification',
+        original_filename: 'classification.xlsx',
+        storage_bucket: 'pricing-reference-sources',
+        storage_path: 'imports/classification.xlsx',
+        size_bytes: 2048,
+        sha256: 'a'.repeat(64),
+        content_type: null,
+        sheet_name: 'Feuil1',
+        detected_columns: [],
+        row_count: 12,
+        mapping_status: 'confirme',
+        created_at: '2026-06-22T10:00:00.000Z'
+      }, {
+        id: '00000000-0000-4000-8000-000000000008',
+        import_id: importId,
+        file_kind: 'segments_grids',
+        original_filename: 'segments.xlsx',
+        storage_bucket: 'pricing-reference-sources',
+        storage_path: 'imports/segments.xlsx',
+        size_bytes: 4096,
+        sha256: 'b'.repeat(64),
+        content_type: null,
+        sheet_name: 'Feuil1',
+        detected_columns: [],
+        row_count: 34,
+        mapping_status: 'auto',
+        created_at: '2026-06-22T10:00:00.000Z'
+      }],
+      health_report: null
+    }
   })),
   getPricingReferenceHealth: vi.fn(async () => ({
     ok: true,
@@ -300,10 +299,20 @@ vi.mock('@/services/pricingReferences', () => ({
   exportPricingReferenceAnomalies: vi.fn(async () => ({
     ok: true,
     request_id: 'test-request',
-    download_url: 'https://example.test/export.xlsx',
-    expires_at: '2026-06-22T11:06:00.000Z',
-    filename: 'anomalies-referentiel-test.xlsx',
-    row_count: 1
+    files: [{
+      file_kind: 'classification',
+      download_url: 'https://example.test/classification.xlsx',
+      expires_at: '2026-06-22T11:06:00.000Z',
+      filename: 'anomalies-referentiel-classification-test.xlsx',
+      row_count: 12
+    }, {
+      file_kind: 'segments_grids',
+      download_url: 'https://example.test/segments-grilles.xlsx',
+      expires_at: '2026-06-22T11:06:00.000Z',
+      filename: 'anomalies-referentiel-segments-grilles-test.xlsx',
+      row_count: 34
+    }],
+    row_count: 46
   })),
   listPricingReferenceSegments: vi.fn(async () => ({
     ok: true,
@@ -541,9 +550,12 @@ describe('PricingReferencesPage', () => {
     expect(await screen.findByTestId('pricing-references-status-line')).toBeInTheDocument();
 
     await user.click(screen.getByRole('tab', { name: /imports/i }));
-    expect(await screen.findByText('Réservé super admin')).toBeInTheDocument();
-    expect(await screen.findByText(/snapshot actif — import du/i)).toBeInTheDocument();
-    expect(await screen.findByText(/analyse ok/i)).toBeInTheDocument();
+    expect(await screen.findByText('Actif')).toBeInTheDocument();
+    expect(screen.getByText('Historique')).toBeInTheDocument();
+    expect(screen.queryByText('Réservé super admin')).not.toBeInTheDocument();
+    const activeRow = await screen.findByRole('button', { name: /voir le détail de l'import du/i });
+    expect(activeRow).toHaveTextContent(/analyse ok/i);
+    expect(activeRow).not.toHaveTextContent(importId);
   });
 
   it('renders grouped anomaly triage with lazy rows and a navigable detail dialog', async () => {
@@ -555,7 +567,7 @@ describe('PricingReferencesPage', () => {
 
     expect(within(anomalyPanel).queryByRole('button', { name: /plan de correction/i })).not.toBeInTheDocument();
     expect(within(anomalyPanel).queryByRole('button', { name: /synthèse ia/i })).not.toBeInTheDocument();
-    expect(within(anomalyPanel).getByRole('button', { name: /exporter \(xlsx\)/i })).toBeEnabled();
+    expect(within(anomalyPanel).getByRole('button', { name: /exporter complet annoté/i })).toBeEnabled();
 
     // Groups are visible without any click; the first group is open by default.
     const groupHeader = await within(anomalyPanel).findByRole('button', { name: /grille achat incomplète/i });
@@ -628,13 +640,15 @@ describe('PricingReferencesPage', () => {
 
     await user.click(await screen.findByRole('tab', { name: /anomalies/i }));
     const anomalyPanel = await screen.findByRole('tabpanel', { name: /anomalies/i });
-    await user.click(await within(anomalyPanel).findByRole('button', { name: /exporter \(xlsx\)/i }));
+    await user.click(await within(anomalyPanel).findByRole('button', { name: /exporter complet annoté/i }));
 
     await waitFor(() => {
       expect(exportPricingReferenceAnomalies).toHaveBeenCalledWith({});
       expect(notifySuccess).toHaveBeenCalled();
     });
-    expect(anchorClick).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(anchorClick).toHaveBeenCalledTimes(2);
+    });
     anchorClick.mockRestore();
   });
 
@@ -696,6 +710,36 @@ describe('PricingReferencesPage', () => {
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
+  });
+
+  it('opens the import detail dialog and scopes the workspace to the consulted import', async () => {
+    const user = userEvent.setup();
+    renderWithQueryClient(
+      <PricingReferencesPage userRole="agency_admin" routeTab="imports" onRouteTabChange={vi.fn()} />
+    );
+
+    expect(await screen.findByText('Snapshot actif')).toBeInTheDocument();
+    await user.click(await screen.findByRole('button', { name: /voir le détail de l'import du/i }));
+
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText('classification.xlsx')).toBeInTheDocument();
+    expect(within(dialog).getByText('segments.xlsx')).toBeInTheDocument();
+    expect(within(dialog).getByText(importId)).toBeInTheDocument();
+    expect(within(dialog).getByText(/mapping confirmé/i)).toBeInTheDocument();
+    expect(within(dialog).getByText(/mapping automatique/i)).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole('button', { name: /copier l'identifiant de l'import/i })
+    ).toBeInTheDocument();
+
+    await user.click(within(dialog).getByRole('button', { name: /consulter cet import/i }));
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+    expect(screen.getByText('Import sélectionné')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /revenir au snapshot actif/i }));
+    expect(screen.getByText('Snapshot actif')).toBeInTheDocument();
+    expect(screen.queryByText('Import sélectionné')).not.toBeInTheDocument();
   });
 
   it('warns when the classification drilldown is capped by the backend contract', async () => {

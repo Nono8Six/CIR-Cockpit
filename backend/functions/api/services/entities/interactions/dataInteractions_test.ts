@@ -16,6 +16,7 @@ import {
   deleteInteractionDraft,
   deleteInteraction
 } from './dataInteractions.ts';
+import type { Database } from '../../../../../../shared/supabase.types.ts';
 import type { AuthContext, DbClient } from '../../../types.ts';
 
 // --- Tests existants préservés (fonctions pures) ---
@@ -128,6 +129,40 @@ const createAuthContext = (overrides: Partial<AuthContext> = {}): AuthContext =>
   ...overrides
 });
 
+type InteractionRow = Database['public']['Tables']['interactions']['Row'];
+
+const TEST_NOW = '2026-02-16T10:00:00.000Z';
+
+const createInteractionRow = (overrides: Partial<InteractionRow> = {}): InteractionRow => ({
+  agency_id: 'agency-1',
+  channel: 'Email',
+  company_name: 'ACME',
+  contact_email: null,
+  contact_id: null,
+  contact_name: 'Alice Martin',
+  contact_phone: null,
+  contact_service: 'Atelier',
+  created_at: TEST_NOW,
+  created_by: 'user-1',
+  entity_id: null,
+  entity_type: 'Client',
+  id: 'int-1',
+  interaction_type: 'Note',
+  last_action_at: TEST_NOW,
+  mega_families: [],
+  notes: null,
+  order_ref: null,
+  reminder_at: null,
+  status: '',
+  status_id: null,
+  status_is_terminal: false,
+  subject: 'Sujet test',
+  timeline: [],
+  updated_at: TEST_NOW,
+  updated_by: null,
+  ...overrides
+});
+
 // Mock DB Thenable universel permettant de chaîner n'importe quelle requête Drizzle à l'infini
 type MockRow = Record<string, unknown>;
 type MockCall = Record<string, unknown>;
@@ -143,6 +178,9 @@ type MockConfig = {
   updateRows?: MockRow[];
   deleteRows?: MockRow[];
 };
+
+const readRecordField = (value: unknown, key: string): unknown =>
+  typeof value === 'object' && value !== null ? Reflect.get(value, key) : undefined;
 
 const createMockDb = (config: MockConfig = {}) => {
   const selectCalls: MockCall[] = [];
@@ -259,19 +297,26 @@ const createMockDb = (config: MockConfig = {}) => {
 // --- Tests sur saveInteraction ---
 
 Deno.test('saveInteraction allows member user to save in allowed agency', async () => {
-  const row = { id: 'int-1', agency_id: 'agency-1', subject: 'Sujet test' };
+  const row = createInteractionRow({ id: 'int-1', agency_id: 'agency-1', subject: 'Sujet test' });
   const { db, insertCalls } = createMockDb({ insertRows: [row] });
   const auth = createAuthContext();
 
   const result = await saveInteraction(db, auth, {
     action: 'save',
     agency_id: 'agency-1',
-    interaction: { id: 'int-1', channel: 'Email', entity_type: 'Client', subject: 'Sujet test', interaction_type: 'Note' }
+    interaction: {
+      id: 'int-1',
+      channel: 'Email',
+      entity_type: 'Client',
+      contact_service: 'Atelier',
+      subject: 'Sujet test',
+      interaction_type: 'Note'
+    }
   });
 
   assertEquals(result, row);
   assertEquals(insertCalls.length, 1);
-  assertEquals(insertCalls[0].values.agency_id, 'agency-1');
+  assertEquals(readRecordField(insertCalls[0].values, 'agency_id'), 'agency-1');
 });
 
 Deno.test('saveInteraction rejects missing product family when interaction type requires it', async () => {
@@ -302,8 +347,8 @@ Deno.test('saveInteraction rejects missing product family when interaction type 
     })
   );
 
-  assertEquals(Reflect.get(error, 'status'), 400);
-  assertEquals(Reflect.get(error, 'code'), 'VALIDATION_ERROR');
+  assertEquals(readRecordField(error, 'status'), 400);
+  assertEquals(readRecordField(error, 'code'), 'VALIDATION_ERROR');
 });
 
 Deno.test('saveInteraction rejects member user trying to save in non-member agency', async () => {
@@ -314,34 +359,48 @@ Deno.test('saveInteraction rejects member user trying to save in non-member agen
     () => saveInteraction(db, auth, {
       action: 'save',
       agency_id: 'agency-forbidden',
-      interaction: { id: 'int-1', channel: 'Email', entity_type: 'Client', subject: 'Sujet test', interaction_type: 'Note' }
+      interaction: {
+        id: 'int-1',
+        channel: 'Email',
+        entity_type: 'Client',
+        contact_service: 'Atelier',
+        subject: 'Sujet test',
+        interaction_type: 'Note'
+      }
     })
   );
 
-  assertEquals(Reflect.get(error, 'status'), 403);
-  assertEquals(Reflect.get(error, 'code'), 'AUTH_FORBIDDEN');
+  assertEquals(readRecordField(error, 'status'), 403);
+  assertEquals(readRecordField(error, 'code'), 'AUTH_FORBIDDEN');
 });
 
 Deno.test('saveInteraction allows super_admin to save in any agency', async () => {
-  const row = { id: 'int-1', agency_id: 'agency-any', subject: 'Sujet test' };
+  const row = createInteractionRow({ id: 'int-1', agency_id: 'agency-any', subject: 'Sujet test' });
   const { db, insertCalls } = createMockDb({ insertRows: [row] });
   const auth = createAuthContext({ role: 'super_admin', isSuperAdmin: true, agencyIds: [] });
 
   const result = await saveInteraction(db, auth, {
     action: 'save',
     agency_id: 'agency-any',
-    interaction: { id: 'int-1', channel: 'Email', entity_type: 'Client', subject: 'Sujet test', interaction_type: 'Note' }
+    interaction: {
+      id: 'int-1',
+      channel: 'Email',
+      entity_type: 'Client',
+      contact_service: 'Atelier',
+      subject: 'Sujet test',
+      interaction_type: 'Note'
+    }
   });
 
   assertEquals(result, row);
   assertEquals(insertCalls.length, 1);
-  assertEquals(insertCalls[0].values.agency_id, 'agency-any');
+  assertEquals(readRecordField(insertCalls[0].values, 'agency_id'), 'agency-any');
 });
 
 // --- Tests sur listInteractionsByAgency ---
 
 Deno.test('listInteractionsByAgency allows member to fetch allowed agency', async () => {
-  const rows = [{ id: 'int-1', agency_id: 'agency-1' }];
+  const rows = [createInteractionRow({ id: 'int-1', agency_id: 'agency-1' })];
   const { db, selectCalls } = createMockDb({ selectRows: rows });
   const auth = createAuthContext();
 
@@ -365,14 +424,19 @@ Deno.test('listInteractionsByAgency rejects member trying to fetch non-member ag
     })
   );
 
-  assertEquals(Reflect.get(error, 'status'), 403);
-  assertEquals(Reflect.get(error, 'code'), 'AUTH_FORBIDDEN');
+  assertEquals(readRecordField(error, 'status'), 403);
+  assertEquals(readRecordField(error, 'code'), 'AUTH_FORBIDDEN');
 });
 
 // --- Tests sur listInteractionsByEntity ---
 
 Deno.test('listInteractionsByEntity supports scoped open interactions', async () => {
-  const rows = [{ id: 'int-open', agency_id: 'agency-1', entity_id: 'entity-1', status_is_terminal: false }];
+  const rows = [createInteractionRow({
+    id: 'int-open',
+    agency_id: 'agency-1',
+    entity_id: 'entity-1',
+    status_is_terminal: false
+  })];
   const { db, selectCalls } = createMockDb({
     selectRowsQueue: [
       [{ agency_id: 'agency-1' }],
@@ -424,7 +488,7 @@ Deno.test('listKnownCompanies rejects non-member', async () => {
     })
   );
 
-  assertEquals(Reflect.get(error, 'status'), 403);
+  assertEquals(readRecordField(error, 'status'), 403);
 });
 
 // --- Tests sur getInteractionDraft / saveInteractionDraft / deleteInteractionDraft ---
@@ -441,7 +505,7 @@ Deno.test('draft operations verify matching user_id', async () => {
       agency_id: 'agency-1'
     })
   );
-  assertEquals(Reflect.get(errorGet, 'status'), 403);
+  assertEquals(readRecordField(errorGet, 'status'), 403);
 
   const errorSave = await assertRejects(
     () => saveInteractionDraft(db, auth, {
@@ -451,7 +515,7 @@ Deno.test('draft operations verify matching user_id', async () => {
       payload: {}
     })
   );
-  assertEquals(Reflect.get(errorSave, 'status'), 403);
+  assertEquals(readRecordField(errorSave, 'status'), 403);
 
   const errorDelete = await assertRejects(
     () => deleteInteractionDraft(db, auth, {
@@ -460,7 +524,7 @@ Deno.test('draft operations verify matching user_id', async () => {
       agency_id: 'agency-1'
     })
   );
-  assertEquals(Reflect.get(errorDelete, 'status'), 403);
+  assertEquals(readRecordField(errorDelete, 'status'), 403);
 });
 
 Deno.test('draft operations verify allowed agency_id', async () => {
@@ -475,15 +539,22 @@ Deno.test('draft operations verify allowed agency_id', async () => {
       agency_id: 'agency-forbidden'
     })
   );
-  assertEquals(Reflect.get(errorGet, 'status'), 403);
-  assertEquals(Reflect.get(errorGet, 'code'), 'AUTH_FORBIDDEN');
+  assertEquals(readRecordField(errorGet, 'status'), 403);
+  assertEquals(readRecordField(errorGet, 'code'), 'AUTH_FORBIDDEN');
 });
 
 // --- Tests sur addTimelineEvent ---
 
 Deno.test('addTimelineEvent allows action when interaction belongs to member agency', async () => {
   const existing = [{ timeline: [], agency_id: 'agency-1' }];
-  const updated = [{ id: 'int-1', agency_id: 'agency-1', timeline: [{}] }];
+  const event = {
+    id: 'evt-1',
+    date: TEST_NOW,
+    type: 'note' as const,
+    content: 'update',
+    author: 'user-1'
+  };
+  const updated = [createInteractionRow({ id: 'int-1', agency_id: 'agency-1', timeline: [event] })];
   const { db, selectCalls, updateCalls } = createMockDb({
     selectRows: existing,
     updateRows: updated
@@ -494,7 +565,7 @@ Deno.test('addTimelineEvent allows action when interaction belongs to member age
     action: 'add_timeline_event',
     interaction_id: 'int-1',
     expected_updated_at: '2026-02-16T10:00:00.000Z',
-    event: { id: 'evt-1', actor_id: 'user-1', action_type: 'update', timestamp: '2026' },
+    event,
     updates: { status: 'Terminé' }
   });
 
@@ -513,13 +584,19 @@ Deno.test('addTimelineEvent rejects action when interaction belongs to non-membe
       action: 'add_timeline_event',
       interaction_id: 'int-1',
       expected_updated_at: '2026-02-16T10:00:00.000Z',
-      event: { id: 'evt-1', actor_id: 'user-1', action_type: 'update', timestamp: '2026' },
+      event: {
+        id: 'evt-1',
+        date: TEST_NOW,
+        type: 'note',
+        content: 'update',
+        author: 'user-1'
+      },
       updates: { status: 'Terminé' }
     })
   );
 
-  assertEquals(Reflect.get(error, 'status'), 403);
-  assertEquals(Reflect.get(error, 'code'), 'AUTH_FORBIDDEN');
+  assertEquals(readRecordField(error, 'status'), 403);
+  assertEquals(readRecordField(error, 'code'), 'AUTH_FORBIDDEN');
 });
 
 // --- Tests sur deleteInteraction ---
@@ -555,6 +632,6 @@ Deno.test('deleteInteraction rejects delete for non-member of the agency', async
     })
   );
 
-  assertEquals(Reflect.get(error, 'status'), 403);
-  assertEquals(Reflect.get(error, 'code'), 'AUTH_FORBIDDEN');
+  assertEquals(readRecordField(error, 'status'), 403);
+  assertEquals(readRecordField(error, 'code'), 'AUTH_FORBIDDEN');
 });

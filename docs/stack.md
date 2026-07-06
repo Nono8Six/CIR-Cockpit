@@ -1,14 +1,14 @@
 # Stack Technique - CIR Cockpit
 
 > Reference documentaire de la stack du projet.
-> Derniere mise a jour: 2026-06-20
+> Derniere mise a jour: 2026-07-06
 > Etat verifie contre les manifests et configs du repo.
 
 ## Resume executif
 
 - Frontend: React 19, Vite 7, TypeScript 5.9, Tailwind CSS 4, shadcn/ui + Radix UI, TanStack Router, TanStack Query, React Hook Form + Zod, TanStack Table/Virtual, Motion, Sonner, Supabase JS.
 - Backend: Supabase (Postgres + Auth + Realtime), Edge Function Deno unique `api`, Hono + tRPC, Drizzle ORM + `postgres`, `jose` pour la verification JWT.
-- Qualite: `pnpm` workspace, ESLint 9, Vitest 4, Playwright, Husky, lint-staged, gates locales par impact (`qa:docs`, `qa:front`, `qa:back`, `qa:fast`, `qa`), workflow GitHub Actions `qa.yml`.
+- Qualite: `pnpm` workspace, ESLint 9, Vitest 4, Playwright, Husky, lint-staged, gates locales par impact (`qa:docs`, `qa:front`, `qa:back`, `qa:fast`, `qa`), gate CI dediee `qa:ci`, workflow GitHub Actions `qa.yml`.
 
 ## Sources de verite
 
@@ -36,6 +36,7 @@ Cette page doit suivre en priorite:
 | Gate backend | `pnpm run qa:back` | `package.json` |
 | Gate intermediaire large | `pnpm run qa:fast` | `package.json` |
 | Gate final complet | `pnpm run qa` | `package.json` |
+| Gate CI sans Supabase CLI lie | `pnpm run qa:ci` | `package.json`, `.github/workflows/qa.yml` |
 | Audit deps reseau | `pnpm run qa:audit` | `package.json` |
 | CLI Supabase locale | `2.98.1` | `supabase --version` |
 | Overrides securite pnpm | `flatted@3.4.2`, `picomatch@2.3.2/4.0.4`, `lodash-es@4.18.1` | `package.json` |
@@ -52,8 +53,6 @@ Cette page doit suivre en priorite:
 | TypeScript | `5.9.3` | typage strict |
 | Tailwind CSS | `4.1.18` | styling utilitaire |
 | `@tailwindcss/vite` | `4.1.18` | integration Vite |
-| PostCSS | `8.5.15` | pipeline CSS |
-| Autoprefixer | `10.4.23` | prefixing CSS |
 
 ### Navigation, state et data fetching
 
@@ -62,7 +61,7 @@ Cette page doit suivre en priorite:
 | TanStack Router | `1.162.9` | routing SPA |
 | TanStack Query | `5.90.21` | cache, queries, mutations |
 | Zustand | `5.0.11` | store d'erreurs |
-| Supabase JS | `2.97.0` | auth, realtime, acces donnees et API |
+| Supabase JS | `2.95.3` | auth, realtime, acces donnees et API |
 
 ### Formulaires et validation
 
@@ -84,7 +83,7 @@ Cette page doit suivre en priorite:
 | Sonner | `2.0.7` | notifications |
 | Lucide React | `0.564.0` | icones |
 | `react-error-boundary` | `6.1.0` | error boundary |
-| `react-day-picker` | `9.13.2` | calendrier |
+| `react-day-picker` | `9.13.1` | calendrier |
 | `cmdk` | `1.1.1` | command palette / recherche |
 | `class-variance-authority` | `0.7.1` | variants Tailwind |
 | `clsx` | `2.1.1` | composition de classes |
@@ -103,6 +102,7 @@ Cette page doit suivre en priorite:
 - Application SPA Vite servie en local sur le port `3000`.
 - Alias actifs: `@/*` vers `frontend/src/*`, `shared/*` vers `../shared/*`.
 - Le dev server proxy `/functions/v1` vers `VITE_SUPABASE_URL`.
+- Tailwind CSS 4 passe par le plugin Vite `@tailwindcss/vite` et l'import CSS `@import "tailwindcss";`; il n'y a plus de configuration PostCSS dediee.
 - Le build Vite segmente explicitement les chunks `react-core`, `tanstack-core`, `tanstack-query`, `supabase`, `forms`, `data-grid`, `calendar`, `ui-primitives`.
 
 ### Pattern d'acces donnees frontend
@@ -223,7 +223,7 @@ Cet alignement est verifie par `pnpm run repo:check`.
 - Backend: `pnpm run qa:back`
 - Intermediaire large: `pnpm run qa:fast`
 - Gate final local: `pnpm run qa`
-- Gate PR: workflow GitHub Actions `qa.yml`
+- Gate CI PR et push `main`: workflow GitHub Actions `qa.yml` via `pnpm run qa:ci`
 
 ## Ce que le repo n'utilise pas comme socle principal
 
@@ -234,7 +234,7 @@ Cet alignement est verifie par `pnpm run repo:check`.
 | Prisma / TypeORM | non utilises |
 | Axios comme client principal | non utilise |
 | `framer-motion` | non utilise; le repo utilise `motion` |
-| CI GitHub Actions obligatoire | utilise sur PR en miroir de la gate locale |
+| CI GitHub Actions obligatoire | utilise sur PR et push `main` avec gate `qa:ci` sans parite distante Supabase |
 
 ## Arborescence utile
 

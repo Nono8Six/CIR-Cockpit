@@ -2,6 +2,7 @@ import type {
   PricingReferenceAnomalyType,
   PricingReferenceFileKind,
   PricingReferenceAnomalySeverity,
+  PricingReferenceImportMappingStatus,
   PricingReferenceImportStatus,
   PricingReferenceLinkStatus
 } from '../../../../../shared/schemas/pricing/references.schema';
@@ -56,6 +57,14 @@ export const anomalyTypeActionLabels: Record<PricingReferenceAnomalyType, string
   parse_failed: 'Corriger la valeur brute dans la colonne indiquée.'
 };
 
+export const importMappingStatusLabels: Record<PricingReferenceImportMappingStatus, string> = {
+  non_configure: 'Mapping non configuré',
+  auto: 'Mapping automatique',
+  a_confirmer: 'Mapping à confirmer',
+  confirme: 'Mapping confirmé',
+  invalide: 'Mapping invalide'
+};
+
 export const linkStatusLabels: Record<PricingReferenceLinkStatus, string> = {
   complete_valid: 'Complète valide',
   missing: 'Absente',
@@ -89,29 +98,16 @@ export const formatDateTime = (value: string | null | undefined): string => {
   return Number.isNaN(date.getTime()) ? value : dateFormatter.format(date);
 };
 
-/**
- * Get the styling variant for pricing import status badges.
- *
- * @param status The import status.
- */
-export const getStatusVariant = (
-  status: PricingReferenceImportStatus
-): 'default' | 'secondary' | 'warning' | 'success' | 'destructive' | 'outline' => {
-  if (status === 'analyse_ok' || status === 'pret_activation') return 'success';
-  if (status === 'analyse_erreur' || status === 'rejete') return 'destructive';
-  if (status === 'analyse_en_cours') return 'warning';
-  return 'secondary';
-};
+const fileSizeFormatter = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 });
 
 /**
- * Get the styling variant for anomaly severity badges.
+ * Format a byte count to a compact French unit (o, Ko, Mo).
  *
- * @param severity The anomaly severity.
+ * @param bytes The size in bytes.
  */
-export const getSeverityVariant = (
-  severity: PricingReferenceAnomalySeverity
-): 'default' | 'secondary' | 'warning' | 'success' | 'destructive' | 'outline' => {
-  if (severity === 'bloquante' || severity === 'haute') return 'destructive';
-  if (severity === 'moyenne') return 'warning';
-  return 'secondary';
+export const formatFileSize = (bytes: number | null | undefined): string => {
+  if (typeof bytes !== 'number' || !Number.isFinite(bytes)) return '-';
+  if (bytes < 1024) return `${numberFormatter.format(bytes)} o`;
+  if (bytes < 1024 * 1024) return `${fileSizeFormatter.format(bytes / 1024)} Ko`;
+  return `${fileSizeFormatter.format(bytes / (1024 * 1024))} Mo`;
 };

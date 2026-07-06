@@ -4,7 +4,7 @@
 > conçu pour être collé dans une **nouvelle conversation sans contexte**. L'IA exécutante
 > doit cocher ses checkpoints et remplir le Journal de bord (section 8) à la fin de sa session.
 >
-> Statut global : `EN COURS` → `TERMINÉ` après l'étape 5.
+> Statut global : `TERMINÉ` (étapes 0 à 5 livrées, 2026-07-06).
 
 ---
 
@@ -408,24 +408,24 @@ statut `FAIT`, Journal de bord complété.
 
 ---
 
-### Étape 4 — Imports : liste chronologique + sheet détail — `À FAIRE`
+### Étape 4 — Imports : liste chronologique + dialog détail — `FAIT`
 
 **Domaine IA** : `(frontend, ui/ux, design)` + `(frontend, logique)`.
 
 **Objectif** : l'onglet Imports devient une liste d'événements type « payouts Stripe ».
 
 **Checkpoints** :
-- [ ] Une seule surface : section `ACTIF` (micro-label mono) avec la ligne du snapshot actif, puis `HISTORIQUE` — la carte snapshot ajoutée précédemment disparaît
-- [ ] Ligne d'import 40 px : dot statut 6 px · « Import du {date} » `font-medium` · fichiers importés en méta grise (noms réels via détail) · compteurs mono alignés à droite (classification / segments / anomalies) · erreur éventuelle en rouge tronquée
-- [ ] Filtre statut (Tous/OK/Erreurs) intégré à la toolbar de la surface
-- [ ] Clic ligne → Sheet : détail complet via `imports.get` (fichiers avec nom/taille/lignes, statut mapping, rapport santé, UUID copiable) — la sélection d'import pour filtrer les autres onglets reste possible depuis la sheet (« Voir cet import » qui pose `selectedImportId`)
-- [ ] Le badge « Import sélectionné » du header offre un moyen de revenir au snapshot actif (croix de reset)
-- [ ] `pnpm run qa:front` vert, vérification navigateur, Journal rempli
+- [x] Une seule surface : section `ACTIF` (micro-label mono) avec la ligne du snapshot actif, puis `HISTORIQUE` — la carte snapshot ajoutée précédemment disparaît
+- [x] Ligne d'import 40 px : dot statut 6 px · « Import du {date} » `font-medium` · fichiers importés en méta grise (noms réels via détail) · compteurs mono alignés à droite (classification / segments / anomalies) · erreur éventuelle en rouge tronquée
+- [x] Filtre statut (Tous/OK/Erreurs) intégré à la toolbar de la surface
+- [x] Clic ligne → Dialog centré style Ctrl+K : détail complet via `imports.get` (fichiers avec nom/taille/lignes, statut mapping, rapport santé, UUID copiable) — la sélection d'import pour filtrer les autres onglets reste possible depuis le dialog (« Voir cet import » qui pose `selectedImportId`)
+- [x] Le badge « Import sélectionné » du header offre un moyen de revenir au snapshot actif (croix de reset)
+- [x] `pnpm run qa:front` vert, vérification navigateur, Journal rempli
 
 **Prompt de session** :
 
 ```markdown
-# Étape 4 — Onglet Imports : liste chronologique + sheet de détail
+# Étape 4 — Onglet Imports : liste chronologique + dialog de détail
 
 Repo : `C:\GitHub\CIR_Cockpit\CIR-Cockpit`. Lis `AGENTS.md` puis
 `docs/refonte-referentiels-triage.md` sections 1-4 + étape 4. Fichiers :
@@ -447,8 +447,8 @@ images si besoin) et https://ui.shadcn.com/examples/tasks pour la densité. Gram
    `text-[11px] text-stone-500` · « Import du {formatDateTime} » `text-xs font-medium` ·
    compteurs alignés à droite en mono 11px (3 colonnes fixes : classification, segments,
    anomalies — anomalies en `text-amber-700` si > 0) · message d'erreur rouge tronqué si présent.
-   L'UUID ne s'affiche PLUS dans la ligne (il vit dans la sheet).
-3. Sheet détail (`ui/feedback/Sheet.tsx`, `sm:max-w-lg`) au clic : charge `imports.get` —
+   L'UUID ne s'affiche PLUS dans la ligne (il vit dans le dialog).
+3. Dialog centré de détail (même grammaire que `SegmentDetailDialog` / `AnomalyDetailDialog`, `sm:max-w-lg`) au clic : charge `imports.get` —
    en-tête (statut + date), fichiers (nom, taille, lignes, statut mapping) en liste hairline,
    compteurs, UUID en mono avec bouton copie, et action « Consulter cet import » qui pose
    `selectedImportId` (le badge du header passe à « Import sélectionné »).
@@ -458,26 +458,26 @@ images si besoin) et https://ui.shadcn.com/examples/tasks pour la densité. Gram
 ## Contraintes et clôture
 Skills `impeccable` + `vercel-react-best-practices` + `vitest`. Lint strict, erreurs via pipeline.
 Tests : adapte les assertions imports de `PricingReferencesPage.test.tsx` (sections ACTIF/HISTORIQUE,
-sheet). `pnpm run qa:front` vert. Navigateur : liste, filtre, sheet, sélection d'import,
+dialog). `pnpm run qa:front` vert. Navigateur : liste, filtre, dialog, sélection d'import,
 reset badge — screenshots. Coche l'étape 4 dans `docs/refonte-referentiels-triage.md`,
 statut `FAIT`, Journal complété.
 ```
 
 ---
 
-### Étape 5 — Polish final + audit — `À FAIRE`
+### Étape 5 — Polish final + audit — `FAIT`
 
 **Domaine IA** : `(frontend, ui/ux, design)` + `(qa, audit)`.
 
 **Objectif** : passe finale pixel-perfect et audit croisé de toute la page.
 
 **Checkpoints** :
-- [ ] Audit `web-design-guidelines` (a11y, focus, contrastes) passé sur la page entière et écarts corrigés
-- [ ] Cohérence inter-onglets vérifiée au pixel : hauteurs de toolbar/lignes, hairlines, paddings, dots, casse des labels
-- [ ] Debounce 300 ms sur toutes les recherches serveur (segments, classification, anomalies)
-- [ ] États de chargement : skeletons alignés sur les structures finales (pas de layout shift), navigations d'onglets fluides
-- [ ] `pnpm run qa:front` vert + parcours navigateur COMPLET des 4 onglets avec captures avant/après archivées dans le Journal
-- [ ] Statut global du document passé à `TERMINÉ`
+- [x] Audit `web-design-guidelines` (a11y, focus, contrastes) passé sur la page entière et écarts corrigés
+- [x] Cohérence inter-onglets vérifiée au pixel : hauteurs de toolbar/lignes, hairlines, paddings, dots, casse des labels
+- [x] Debounce 300 ms sur toutes les recherches serveur (segments, classification, anomalies)
+- [x] États de chargement : skeletons alignés sur les structures finales (pas de layout shift), navigations d'onglets fluides
+- [x] `pnpm run qa:front` vert + parcours navigateur COMPLET des 4 onglets avec captures avant/après archivées dans le Journal
+- [x] Statut global du document passé à `TERMINÉ`
 
 **Prompt de session** :
 
@@ -490,7 +490,7 @@ Repo : `C:\GitHub\CIR_Cockpit\CIR-Cockpit`. Lis `AGENTS.md` puis
 
 ## Travail
 1. Invoque le skill `web-design-guidelines` et audite `/remises/referentiels` (les 4 onglets,
-   les 3 sheets, les facettes) : focus visibles, navigation clavier complète (onglets, lignes,
+   les dialogs de détail, les facettes) : focus visibles, navigation clavier complète (onglets, lignes,
    groupes repliables, facettes), contrastes AA (attention aux text-stone-400/500 sur crème),
    aria (tablist, dialog, aria-expanded des groupes). Corrige tout écart.
 2. Passe pixel-perfect transversale, au navigateur avec mesures (inspecteur) :
@@ -501,7 +501,7 @@ Repo : `C:\GitHub\CIR_Cockpit\CIR-Cockpit`. Lis `AGENTS.md` puis
 3. Ajoute un debounce 300ms sur les recherches qui déclenchent des requêtes serveur
    (hook réutilisable, pas de setState-in-effect — attention aux règles React Compiler).
 4. Skeletons : mêmes hauteurs/structures que les états chargés (zéro layout shift mesurable).
-5. Parcours complet au navigateur avec screenshots de chaque onglet + une sheet ouverte +
+5. Parcours complet au navigateur avec screenshots de chaque onglet + un dialog ouvert +
    les facettes actives + l'export téléchargé.
 
 ## Clôture
@@ -544,6 +544,51 @@ Repo : `C:\GitHub\CIR_Cockpit\CIR-Cockpit`. Lis `AGENTS.md` puis
 > - Vérification navigateur : … (captures, parcours testés)
 > - Reste à faire / alertes pour la suite : …
 > ```
+
+### [2026-07-06] Étape 5 — Polish final + audit — `FAIT` (statut global `TERMINÉ`)
+- Synthèse de la refonte (étapes 0-5) : la page Référentiels CIR est passée de trois surfaces déconnectées et d'un langage « boîtes/badges/pills » à une grammaire unique — onglets underline, une surface hairline par onglet (`rounded-xl border-stone-200/60`, toolbars 44 px, lignes 32/36/40 px, dots 6 px, mono réservé aux identifiants/compteurs/micro-labels). Backend : filtres multiples + export XLSX annoté déployés (v102), plan de correction supprimé. Anomalies : triage groupé par type avec facettes multi-sélection, dialog navigable au clavier, export annoté. Classification : escalier 3 colonnes hairline avec bandeau clé CIR copiable. Imports : liste chronologique ACTIF/HISTORIQUE avec dialog de détail et sélection d'import réversible.
+- Réalisé (étape 5) :
+  - Audit `web-design-guidelines` (guidelines Vercel récupérées puis revue du dossier + parcours navigateur). Corrections appliquées :
+    - Contrastes AA : tous les textes informatifs en `text-stone-400` (≈2,9:1 sur blanc) passés à `text-stone-500` (≈4,6:1) — micro-labels et captions (imports, escalier, dialogs), compteurs (facettes, colonnes escalier), colonnes concernées et contexte des lignes anomalies, notes de troncature, footers de dialogs, boutons icône copie/reset. `text-stone-400/300` conservé uniquement pour les glyphes décoratifs `aria-hidden` (chevrons, ⊕, dots neutres) et placeholders.
+    - Focus : hairline des recherches ghost renforcée au focus (`focus-within:border-stone-400`).
+    - Typo : labels de pagination normalisés (« Affichage », « Page », « Lignes » en Inter normal-case `stone-500`, chiffres seuls en mono ; plus d'uppercase `tracking-wider` ni de mono sur des libellés) ; `FormField` `font-bold` → `font-medium` ; wizard d'import : `font-bold` → `font-semibold`, `tracking-wider` → `tracking-[0.08em]`, `transition-all` → `transition-colors` (normalisation légère, pas de refonte).
+    - aria vérifiés : tablist Radix, `aria-expanded` des groupes, dialogs titrés/décrits, `aria-label` des lignes et boutons icône, skip link, recherches labellisées.
+  - Code mort supprimé : `components/ai/ai-prompt-editor.tsx` et `components/health/health-status-banner.tsx` (aucun usage dans le repo) + mock `@/services/ai` retiré du test de la page.
+  - Debounce 300 ms : nouveau hook réutilisable `frontend/src/hooks/utils/useDebouncedValue.ts` (setState dans le callback du timer — conforme React Compiler) + test unitaire dédié. Appliqué aux 7 filtres texte serveur : Segments (recherche, marque, cat fab), Classification tableau (recherche, mega, fam), Anomalies (recherche → summary, groupes ouverts, export). Les recherches de l'escalier restent client-side (pas de debounce nécessaire). Vérifié en réel : 7 frappes rapides → 1 seule requête `anomalies.summary` (compteur resource timing).
+  - Skeletons : skeleton imports aligné sur la structure finale (bande de section + lignes 40 px) ; les autres (tables 36 px, triage bande 32 + ligne 36, escalier 36/32/32, dialogs) déjà calés.
+  - Passe pixel au navigateur (mesures `getBoundingClientRect`) : toolbars des 4 onglets = 44 px (+1 hairline), en-têtes de groupe 32 px, lignes anomalies 36 px, lignes imports 40 px, en-têtes de colonnes escalier 36 px, items 32 px, `px-4` (16 px) constants, hairlines `stone-200/60` partout ; zéro `font-bold`/`transition-all`/`tracking-wider` restant dans le dossier.
+  - Libellés export modifiés par le PO en cours de session (« Exporter complet annoté », toast « Export complet annoté généré (… ligne(s) source) ») : conservés, tests alignés.
+- Gates : `pnpm run qa:front` ✅ (repo check, typecheck, eslint `--max-warnings 0`, 144 fichiers / 631 tests, error-compliance) ; qa:back non applicable.
+- Vérification navigateur (screenshots pris en session) : les 4 onglets, facette Sévérité = Haute active (chips + croix + total recalculé), dialog anomalie ouvert (navigation clavier opérationnelle), export téléchargé et contrôlé (XLSX signature ZIP valide, lignes filtrées), debounce mesuré, bascule escalier/tableau, dialog import, badge « Import sélectionné » + reset.
+- Écarts résiduels (assumés, documentés) :
+  - Dérogation aux cotes `text-stone-400` de la section 3 pour les TEXTES informatifs (passés à `stone-500` pour l'AA) ; les éléments décoratifs gardent les tokens d'origine.
+  - Le wizard d'import n'est pas refondu dans la grammaire cible (jamais dans le périmètre des étapes) ; seule une normalisation typographique légère a été appliquée.
+  - Les facettes/recherche de l'onglet Anomalies vivent en état local, pas dans l'URL (choix de l'étape 2) ; seul l'onglet actif est synchronisé (`?tab=`).
+  - `@tanstack/react-virtual` reste en dépendance alors que plus aucun composant ne l'utilise.
+  - Contraste des tokens globaux (`muted-foreground` sur fonds teintés) non audité : hors périmètre page.
+- Suggestions hors périmètre (à ne PAS implémenter sans décision produit) :
+  - Refondre le wizard d'import dans la grammaire triage (surface unique, hairlines, micro-labels normalisés).
+  - Persister facettes et recherche anomalies dans l'URL (deep-linking/partage d'un état de triage).
+  - Pagination ou virtualisation des groupes d'anomalies au-delà du cap de 100 lignes si les volumes explosent.
+  - Retirer `@tanstack/react-virtual` lors d'un prochain nettoyage de dépendances.
+  - Parcours E2E Playwright du triage (non lancé ici : `RUN_E2E` non demandé).
+
+### [2026-07-06] Étape 4 — Onglet Imports : liste chronologique + dialog de détail — `FAIT`
+- Réalisé :
+  - Base toujours sale (étapes 0-3 non commitées) : conservée, aucun revert.
+  - La carte snapshot + la table d'historique sont remplacées par UNE surface `rounded-xl border-stone-200/60 bg-white` : toolbar hairline (compteur `X imports` mono à gauche, `SegmentedControl` Tous/OK/Erreurs à droite — titre implicite), sections `ACTIF` puis `HISTORIQUE` en micro-labels mono 10 px, pagination existante en pied.
+  - Nouveau `import-row.tsx` : ligne 40 px `px-4` — dot statut 6 px (mapping section 3 : émeraude ok/prêt, rouge erreur/rejeté, ambre en cours, stone brouillon/archive, exporté pour le dialog), libellé statut `text-[11px] text-stone-500`, « Import du {formatDateTime} » `text-xs font-medium`, message d'erreur rouge tronqué (flex-1), 3 colonnes fixes `w-20` mono 11 px à droite (classification / segments / anomalies en `text-amber-700` si > 0, colonnes 1-2 masquées < sm). L'UUID ne s'affiche plus dans la ligne.
+  - `import-rows.tsx` refondu en sections : bande `ACTIF` portant les captions de colonnes (`CLASSIF. / SEGMENTS / ANOMALIES` mono uppercase alignées sur les compteurs), ligne du snapshot actif en `bg-surface-1`, bande `HISTORIQUE` avec le reste ; états dédiés (skeleton 40 px, aucun snapshot actif, aucun import pour le filtre) ; l'ACTIF est masqué quand le filtre statut l'exclut (les captions basculent alors sur la bande HISTORIQUE).
+  - Nouveau `import-detail-dialog.tsx` : Dialog centré Ctrl+K `sm:max-w-lg` (overlay `bg-foreground/30 backdrop-blur-[2px]`), chargé par `imports.get` (React Query `enabled`), en-tête statut + date, liste clé-valeur hairline (créé le, analyse terminée, compteurs mono, erreur éventuelle, UUID mono avec bouton copie + feedback ✓ 2 s), micro-label `FICHIERS IMPORTÉS` (nom, taille via nouveau `formatFileSize`, lignes, statut mapping via nouveau `importMappingStatusLabels`), footer hairline avec l'action « Consulter cet import » qui pose `selectedImportId` et ferme le dialog ; états loading/erreur (retry + `handleUiError`) dans le dialog.
+  - Header : croix de reset sur le badge « Import sélectionné » (`aria-label` « Revenir au snapshot actif ») qui remet `selectedImportId = null` et réinitialise les pages.
+  - Nettoyage : `getStatusVariant`/`getSeverityVariant` (badges pleins, désormais morts) retirés des formatters ; le chip « Réservé super admin » disparaît avec la carte (la visibilité du CTA Importer porte déjà l'information de droits).
+  - Tests : mock `getPricingReferenceImport` ajouté (2 fichiers, mappings confirmé/auto) ; assertions imports réécrites (bandes Actif/Historique, ligne sans UUID, plus de « Réservé super admin ») ; nouveau test du parcours ligne → dialog (fichiers, UUID, statuts mapping, bouton copie) → « Consulter cet import » → badge « Import sélectionné » → croix de reset → « Snapshot actif ».
+- Écarts vs plan :
+  - Dialog centré conformément à la D2 révisée (déjà actée dans les checkpoints) ; l'action s'appelle « Consulter cet import » (libellé du prompt de session) et non « Voir cet import » (libellé du checkpoint). Le rapport santé n'est pas dupliqué dans le dialog : la ligne de statut du header le porte déjà, le dialog montre les compteurs et fichiers.
+  - Captions de colonnes ajoutées dans la bande de section (non prévues explicitement) : trois compteurs nus seraient illisibles sans en-têtes ; elles réutilisent le style micro-label mono et ne créent pas de rangée d'en-tête dédiée.
+- Gates : `pnpm run qa:front` ✅ (repo check, typecheck, eslint `--max-warnings 0`, 143 fichiers / 629 tests, error-compliance) ; qa:back non applicable.
+- Vérification navigateur (localhost:3000, screenshots pris en session) : liste chronologique (1 actif surligné + 2 historique, compteurs alignés sous les captions, anomalies ambre) ; dialog de détail complet (Classification_produit_….xlsx, 25,8 Ko · 497 lignes · Mapping confirmé, UUID + copie) ; « Consulter cet import » → badge « Import sélectionné » + croix ; reset → « Snapshot actif » ; filtre Erreurs → empty state dédié « Aucun import ne correspond au filtre sélectionné » ; retour filtre Tous.
+- Reste à faire / alertes pour la suite : étape 5 (audit a11y, debounce 300 ms des recherches serveur, passe pixel-perfect transversale) ; noms de fichiers réels visibles seulement dans le dialog (la ligne reste volontairement compacte).
 
 ### [2026-07-05] Étape 3 — Vue Escalier de la classification : colonnes hairline — `FAIT`
 - Réalisé :

@@ -11,6 +11,7 @@ Guide operationnel pour les agents autonomes dans CIR Cockpit.
   - `docs/testing.md`: quand la demande touche tests, couverture, E2E ou Playwright.
   - `docs/stack.md`: quand la demande touche versions, dependances, runtime, CI ou outillage.
   - `docs/plan.md`: seulement pour une etape majeure produit/architecture demandee.
+- Docs volumineux (`docs/plan.md`, `docs/refonte-referentiels-triage.md`): lire d'abord la structure (titres/sommaire) puis seulement les sections utiles, jamais le fichier entier par defaut.
 - `.mcp.json` est ignore par Git et local-only. Verifier les MCP reellement exposes par l'environnement actif avant de s'y fier.
 
 ## Regles de travail
@@ -26,7 +27,7 @@ Guide operationnel pour les agents autonomes dans CIR Cockpit.
 
 ## Inspiration UI/UX
 
-- Pour toute demande de revue, refonte, polish, audit ou decision UI/UX/design, consulter les inspirations actuelles avant de proposer ou modifier l'interface: Ramp (`https://ramp.com/`), Stripe (`https://stripe.com/fr`), Attio (`https://attio.com/`) et Linear (`https://linear.app/`).
+- Pour toute demande de revue, refonte, polish, audit ou decision UI/UX/design, consulter les inspirations actuelles avant de proposer ou modifier l'interface: Ramp (`https://ramp.com/`), Stripe (`https://stripe.com/fr`), Attio (`https://attio.com/`), Linear (`https://linear.app/`), Mistral (`https://mistral.ai/`) et SmoothUI (`https://smoothui.dev/`) pour les micro-interactions et composants animes.
 - Utiliser ces sites comme references de direction visuelle, densite, hierarchie, micro-interactions, clarte SaaS et qualite de finition, sans copier leur contenu, leur marque, leurs assets proprietaires ou leurs textes.
 - Si l'acces reseau ou navigateur est indisponible, le signaler explicitement et s'appuyer seulement sur les principes deja connus.
 
@@ -37,6 +38,7 @@ Invoquer le skill pertinent avant d'ecrire du code:
 - `cir-cockpit-agent-router`: orientation repo locale, choix des docs/MCP/skills utiles et reduction du contexte charge.
 - `cir-cockpit-qa-validation`: choix de validation CIR Cockpit par impact et rapport QA court.
 - `cir-cockpit-api-contracts`: contrats tRPC, schemas Zod partages, services RPC front et routes/actions backend.
+- `cir-cockpit-design`: tokens, densite et regles PO du design system local; a invoquer avant les skills design generiques pour toute UI visible.
 - `vercel-react-best-practices`: composants, hooks ou pages React.
 - `vercel-composition-patterns`: refactoring de composants React.
 - `web-design-guidelines`: audit UI, accessibilite, UX.
@@ -76,6 +78,7 @@ Choisir la validation par impact, pas par reflexe:
 
 Details:
 
+- `repo:check:local` = hygiene repo sans appel reseau Supabase; utilise par `qa:docs` et `qa:front`. La parite des migrations distantes reste verifiee par `repo:check` (qa:back, qa:fast, qa).
 - `qa:docs` = gate legere docs/config.
 - `qa:front` = gate frontend sans coverage/build.
 - `qa:back` = gate backend sans integration distante.

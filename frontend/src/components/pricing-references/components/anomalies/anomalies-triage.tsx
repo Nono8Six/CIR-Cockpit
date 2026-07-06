@@ -9,6 +9,7 @@ import type {
 } from '../../../../../../shared/schemas/pricing/references.schema';
 import { Button } from '@/components/ui/inputs/basic/Button';
 import { Input } from '@/components/ui/inputs/basic/Input';
+import { useDebouncedValue } from '@/hooks/utils/useDebouncedValue';
 import { handleUiError } from '@/services/errors/handleUiError';
 import { notifySuccess } from '@/services/errors/notifySuccess';
 import {
@@ -82,15 +83,17 @@ export const AnomaliesTriage = ({ importId, severityPreset }: AnomaliesTriagePro
     setSeverities(severityPreset.severities);
   }
 
+  const debouncedSearch = useDebouncedValue(search);
+
   const summaryInput = useMemo(
     (): PricingReferenceAnomaliesSummaryGetInput => ({
       ...(importId ? { import_id: importId } : {}),
-      ...(search ? { search } : {}),
+      ...(debouncedSearch ? { search: debouncedSearch } : {}),
       ...(severities.length > 0 ? { severities } : {}),
       ...(types.length > 0 ? { types } : {}),
       ...(marques.length > 0 ? { marques } : {})
     }),
-    [importId, marques, search, severities, types]
+    [importId, marques, debouncedSearch, severities, types]
   );
 
   const summaryQuery = useQuery({
@@ -107,8 +110,14 @@ export const AnomaliesTriage = ({ importId, severityPreset }: AnomaliesTriagePro
   const exportMutation = useMutation({
     mutationFn: () => exportPricingReferenceAnomalies(summaryInput),
     onSuccess: (response) => {
-      startSignedDownload(response.download_url, response.filename);
-      notifySuccess(`Export anomalies généré (${formatCount(response.row_count)} ligne(s)).`);
+      response.files.forEach((file, index) => {
+        window.setTimeout(() => {
+          startSignedDownload(file.download_url, file.filename);
+        }, index * 150);
+      });
+      notifySuccess(
+        `${formatCount(response.files.length)} exports Excel générés (${formatCount(response.row_count)} ligne(s) source).`,
+      );
     },
     onError: (error) => {
       handleUiError(error, 'Impossible de générer l export XLSX des anomalies.');
@@ -170,11 +179,11 @@ export const AnomaliesTriage = ({ importId, severityPreset }: AnomaliesTriagePro
   const groupFilters = useMemo(
     (): AnomalyGroupFilters => ({
       ...(importId ? { import_id: importId } : {}),
-      ...(search ? { search } : {}),
+      ...(debouncedSearch ? { search: debouncedSearch } : {}),
       ...(severities.length > 0 ? { severities } : {}),
       ...(marques.length > 0 ? { marques } : {})
     }),
-    [importId, marques, search, severities]
+    [importId, marques, debouncedSearch, severities]
   );
 
   const firstGroup = groups[0];
@@ -275,7 +284,7 @@ export const AnomaliesTriage = ({ importId, severityPreset }: AnomaliesTriagePro
           className="h-7 shrink-0 gap-1.5 rounded-md border-stone-200 bg-white px-2.5 text-xs font-medium text-stone-800 shadow-none hover:bg-stone-50"
         >
           <Download className="size-3.5" aria-hidden="true" />
-          {exportMutation.isPending ? 'Export…' : 'Exporter (XLSX)'}
+          {exportMutation.isPending ? 'Export…' : 'Exporter complet annoté'}
         </Button>
       </div>
 

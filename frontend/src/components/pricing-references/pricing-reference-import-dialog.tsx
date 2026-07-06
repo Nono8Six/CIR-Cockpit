@@ -149,7 +149,7 @@ const FileDropZone = ({
   return (
     <div
       className={cn(
-        'min-w-0 border-2 border-dashed rounded-lg p-6 transition-all duration-200 text-center',
+        'min-w-0 border-2 border-dashed rounded-lg p-6 transition-colors duration-200 text-center',
         isDragActive ? 'border-primary bg-primary/5' : 'border-muted bg-background hover:bg-muted/[0.15]'
       )}
       onDragOver={(event) => {
@@ -423,7 +423,7 @@ export const PricingReferenceImportDialog = ({
     }}>
       <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-6 overflow-hidden">
         <DialogHeader className="border-b border-border pb-3 shrink-0">
-          <DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
+          <DialogTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
             <FileSpreadsheet className="size-5 text-primary" />
             Importer : {config.label}
           </DialogTitle>
@@ -479,7 +479,7 @@ export const PricingReferenceImportDialog = ({
                 onFileChange={resetState}
               />
               <div className="border border-border/60 bg-surface-1 p-4 rounded-md">
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Contenu attendu</h4>
+                <h4 className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Contenu attendu</h4>
                 <p className="mt-1 text-sm font-semibold text-foreground">{config.description}</p>
                 <div className="mt-3">
                   <span className="text-[11px] text-muted-foreground block mb-1">Colonnes obligatoires :</span>
@@ -518,7 +518,7 @@ export const PricingReferenceImportDialog = ({
               <div className="min-w-0 flex flex-col gap-4">
                 <div className="flex flex-wrap items-center gap-3 border border-border bg-surface-1 p-3 rounded-md shrink-0">
                   <div className="min-w-0 space-y-1">
-                    <label htmlFor={`${config.inputId}-sheet-dialog`} className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <label htmlFor={`${config.inputId}-sheet-dialog`} className="block text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                       Onglet Excel sélectionné
                     </label>
                     <select
@@ -577,10 +577,10 @@ export const PricingReferenceImportDialog = ({
               <aside className="border border-border bg-surface-1 p-3 rounded-md flex flex-col h-full overflow-hidden">
                 <div className="mb-3 flex items-start justify-between gap-2 shrink-0">
                   <div>
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block">
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground block">
                       Association des colonnes
                     </span>
-                    <span className="text-sm font-bold text-foreground">{config.shortLabel}</span>
+                    <span className="text-sm font-medium text-foreground">{config.shortLabel}</span>
                   </div>
                   <Badge variant={mappingComplete ? 'success' : 'warning'}>
                     {mappingComplete ? 'Prêt' : 'Incomplet'}
@@ -681,14 +681,14 @@ export const PricingReferenceImportDialog = ({
                 <div className="flex size-14 items-center justify-center rounded-full bg-success/15 text-success">
                   <CheckCircle2 className="size-8" />
                 </div>
-                <h3 className="text-base font-bold text-foreground">Mapping validé avec succès !</h3>
+                <h3 className="text-base font-semibold text-foreground">Mapping validé avec succès !</h3>
                 <p className="text-xs text-muted-foreground max-w-sm">
                   Le fichier est prêt à être analysé par le backend pour générer le référentiel et calculer les anomalies.
                 </p>
               </div>
 
               <div className="border border-border bg-surface-1 p-4 rounded text-left space-y-2">
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Récapitulatif</h4>
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-[0.08em]">Récapitulatif</h4>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <span className="text-muted-foreground">Fichier :</span>
                   <span className="font-medium text-foreground truncate">{state.file?.name}</span>

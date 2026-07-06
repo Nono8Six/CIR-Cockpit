@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/navigation/DropdownMenu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/navigation/Tabs';
 import { cn } from '@/lib/utils';
+import { useDebouncedValue } from '@/hooks/utils/useDebouncedValue';
 import {
   getPricingReferenceHealth,
   listPricingReferenceClassification,
@@ -54,6 +55,7 @@ import { SegmentedControl } from './components/inputs/segmented-control';
 import { ReferenceTable, type DataColumn } from './components/table/reference-table';
 
 import { ImportRows } from './components/imports/import-rows';
+import { ImportDetailDialog } from './components/imports/import-detail-dialog';
 import { PaginationBar } from './components/table/pagination-bar';
 import { SegmentDetailDialog } from './components/segments/segment-detail-dialog';
 import { HealthStrip, type TabId } from './components/health/health-strip';
@@ -62,7 +64,7 @@ import { ClassificationDrillDown } from './components/classification/classificat
 import { AnomaliesTriage, type AnomalySeverityPreset } from './components/anomalies/anomalies-triage';
 
 // Formatters and label mappings
-import { formatCount, formatDateTime, linkStatusLabels } from './utils/pricing-references-formatters';
+import { formatCount, linkStatusLabels } from './utils/pricing-references-formatters';
 
 type ClassificationRow = PricingReferenceClassificationListResponse['rows'][number];
 type SegmentRow = PricingReferenceSegmentsListResponse['rows'][number];
@@ -111,6 +113,7 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
   const [isSegmentsImportOpen, setIsSegmentsImportOpen] = useState(false);
   const [localActiveTab, setLocalActiveTab] = useState<TabId>(DEFAULT_TAB);
   const [selectedImportId, setSelectedImportId] = useState<string | null>(null);
+  const [detailImportId, setDetailImportId] = useState<string | null>(null);
   const [selectedSegment, setSelectedSegment] = useState<SegmentRow | null>(null);
   const [anomalySeverityPreset, setAnomalySeverityPreset] = useState<AnomalySeverityPreset | null>(null);
 
@@ -150,6 +153,15 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
 
   const canImport = userRole === 'super_admin';
 
+  // Debounced copies of server-driven text filters: inputs stay responsive,
+  // queries only fire once typing settles (300ms).
+  const debouncedClassificationSearch = useDebouncedValue(classificationSearch);
+  const debouncedClassificationMega = useDebouncedValue(classificationMega);
+  const debouncedClassificationFam = useDebouncedValue(classificationFam);
+  const debouncedSegmentsSearch = useDebouncedValue(segmentsSearch);
+  const debouncedSegmentsMarque = useDebouncedValue(segmentsMarque);
+  const debouncedSegmentsCatFab = useDebouncedValue(segmentsCatFab);
+
   const hasSegmentFilters =
     Boolean(segmentsSearch || segmentsMarque || segmentsCatFab) || segmentsLinkStatus !== 'all';
   const resetSegmentFilters = useCallback(() => {
@@ -188,19 +200,19 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
       page: classificationPage,
       page_size: classificationPageSize,
       ...(selectedImportId ? { import_id: selectedImportId } : {}),
-      search: classificationSearch || undefined,
+      search: debouncedClassificationSearch || undefined,
       filters: {
-        ...(classificationMega ? { mega: classificationMega } : {}),
-        ...(classificationFam ? { fam: classificationFam } : {})
+        ...(debouncedClassificationMega ? { mega: debouncedClassificationMega } : {}),
+        ...(debouncedClassificationFam ? { fam: debouncedClassificationFam } : {})
       },
       ...classificationSort
     }),
     [
-      classificationFam,
-      classificationMega,
+      debouncedClassificationFam,
+      debouncedClassificationMega,
       classificationPage,
       classificationPageSize,
-      classificationSearch,
+      debouncedClassificationSearch,
       classificationSort,
       selectedImportId
     ]
@@ -211,21 +223,21 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
       page: segmentsPage,
       page_size: segmentsPageSize,
       ...(selectedImportId ? { import_id: selectedImportId } : {}),
-      search: segmentsSearch || undefined,
+      search: debouncedSegmentsSearch || undefined,
       filters: {
-        ...(segmentsMarque ? { marque: segmentsMarque } : {}),
-        ...(segmentsCatFab ? { cat_fab: segmentsCatFab } : {}),
+        ...(debouncedSegmentsMarque ? { marque: debouncedSegmentsMarque } : {}),
+        ...(debouncedSegmentsCatFab ? { cat_fab: debouncedSegmentsCatFab } : {}),
         ...(segmentsLinkStatus === 'all' ? {} : { link_status: segmentsLinkStatus })
       },
       ...segmentsSort
     }),
     [
-      segmentsCatFab,
+      debouncedSegmentsCatFab,
       segmentsLinkStatus,
-      segmentsMarque,
+      debouncedSegmentsMarque,
       segmentsPage,
       segmentsPageSize,
-      segmentsSearch,
+      debouncedSegmentsSearch,
       segmentsSort,
       selectedImportId
     ]
@@ -432,6 +444,19 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
                 aria-hidden="true"
               />
               {selectedImportId ? 'Import sélectionné' : 'Snapshot actif'}
+              {selectedImportId ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedImportId(null);
+                    resetPages();
+                  }}
+                  aria-label="Revenir au snapshot actif"
+                  className="rounded-sm p-0.5 text-stone-500 transition-colors hover:bg-stone-100 hover:text-stone-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/45"
+                >
+                  <X className="size-3" aria-hidden="true" />
+                </button>
+              ) : null}
             </span>
           </div>
 
@@ -516,87 +541,57 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
         {/* Tab 4: Imports */}
         <TabsContent
           value="imports"
-          className="mt-0 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pr-1 pt-1"
+          className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden pt-2"
         >
-          {/* Active snapshot summary */}
-          {(activeImport || importStatus === 'all') && (
-            <section className="flex shrink-0 flex-wrap items-center justify-between gap-4 rounded-lg border border-border/70 bg-surface-1 px-3 py-3">
-              <div className="flex min-w-0 items-center gap-3">
-                <div
-                  className={cn(
-                    'grid size-9 shrink-0 place-items-center rounded-lg',
-                    activeImport ? 'bg-emerald-50 text-emerald-700' : 'bg-muted text-muted-foreground'
-                  )}
-                >
-                  <Database className="size-4" aria-hidden="true" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold text-foreground">
-                    {activeImport
-                      ? `Snapshot actif — import du ${formatDateTime(activeImport.analysis_completed_at ?? activeImport.created_at)}`
-                      : 'Aucun snapshot actif'}
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-muted-foreground">
-                    {activeImport
-                      ? `${formatCount(activeImport.classification_rows_count)} lignes classification · ${formatCount(activeImport.segments_rows_count)} lignes segments · ${formatCount(activeImport.anomalies_total)} anomalies`
-                      : 'Importez la classification CIR puis les segments et grilles pour initialiser le référentiel.'}
-                  </p>
-                </div>
-              </div>
-              {!canImport && (
-                <span className="shrink-0 rounded-md border border-border bg-background px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-                  Réservé super admin
-                </span>
-              )}
-            </section>
-          )}
-
-          {/* Import History list */}
-          <div className="flex min-h-0 flex-1 flex-col gap-3.5">
-            <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
-              <h2 className="text-[11px] font-semibold uppercase tracking-normal text-muted-foreground">
-                Historique des imports
-              </h2>
-              <SegmentedControl
-                ariaLabel="Filtrer les imports par statut"
-                value={importStatus}
-                options={importStatusFilters.map((filter) => ({
-                  value: filter.value,
-                  label: filter.label,
-                  ariaLabel: `Filtrer les imports : ${filter.label}`,
-                  prefix:
-                    filter.value === 'all' ? (
-                      <span className="mr-1.5 font-mono text-[10px] tabular-nums">
-                        {formatCount(totalImports)}
-                      </span>
-                    ) : undefined
-                }))}
-                onChange={(value) => {
-                  setImportStatus(value);
-                  setImportPage(1);
-                }}
-              />
-            </div>
-            <div className="flex min-h-0 flex-1 flex-col justify-between">
-              <div className="flex-1 overflow-y-auto pb-2">
-                <ImportRows
-                  rows={visibleImports}
-                  selectedImportId={selectedImportId}
-                  onSelect={handleImportSelected}
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-stone-200/60 bg-white">
+            <div className="flex min-h-11 shrink-0 flex-wrap items-center gap-2 border-b border-stone-200/60 px-4 py-1.5">
+              <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
+                {formatCount(totalImports)} imports
+              </span>
+              <div className="ml-auto">
+                <SegmentedControl
+                  ariaLabel="Filtrer les imports par statut"
+                  value={importStatus}
+                  options={importStatusFilters.map((filter) => ({
+                    value: filter.value,
+                    label: filter.label,
+                    ariaLabel: `Filtrer les imports : ${filter.label}`
+                  }))}
+                  onChange={(value) => {
+                    setImportStatus(value);
+                    setImportPage(1);
+                  }}
                 />
               </div>
-              <PaginationBar
-                page={importPage}
-                pageSize={importPageSize}
-                total={totalImports}
-                onPageChange={setImportPage}
-                onPageSizeChange={(nextPageSize) => {
-                  setImportPageSize(nextPageSize);
-                  setImportPage(1);
-                }}
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <ImportRows
+                rows={visibleImports}
+                activeImport={activeImport}
+                statusFilter={importStatus}
+                isLoading={importsQuery.isLoading}
+                onOpenDetail={setDetailImportId}
               />
             </div>
+            <PaginationBar
+              page={importPage}
+              pageSize={importPageSize}
+              total={totalImports}
+              onPageChange={setImportPage}
+              onPageSizeChange={(nextPageSize) => {
+                setImportPageSize(nextPageSize);
+                setImportPage(1);
+              }}
+            />
           </div>
+          <ImportDetailDialog
+            importId={detailImportId}
+            onClose={() => setDetailImportId(null)}
+            onConsult={(importId) => {
+              handleImportSelected(importId);
+              setDetailImportId(null);
+            }}
+          />
         </TabsContent>
 
         {/* Tab 2: Classification */}

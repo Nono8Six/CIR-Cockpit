@@ -5,6 +5,7 @@
   "scripts": {
     "prepare": "husky",
     "repo:check": "node ./scripts/check-repo-state.mjs",
+    "repo:check:local": "node ./scripts/check-repo-state.mjs --skip-remote",
     "typecheck": "pnpm run frontend:typecheck && pnpm run backend:typecheck",
     "lint": "pnpm run frontend:lint && pnpm run backend:lint",
     "test": "pnpm run frontend:test && pnpm run backend:test",
@@ -16,14 +17,15 @@
     "frontend:build": "pnpm --dir frontend run build",
     "backend:lint": "deno lint backend/functions/api",
     "backend:typecheck": "deno check --config backend/deno.json backend/functions/api/index.ts",
-    "backend:test": "deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api",
+    "backend:test": "deno test --env-file=backend/.env --allow-env --config backend/deno.json backend/functions/api",
     "backend:test:integration": "node ./scripts/run-backend-integration-tests.mjs",
     "deploy:api": "pwsh -NoLogo -File scripts/deploy-api.ps1",
-    "qa:docs": "pnpm run repo:check && git diff --check -- AGENTS.md CLAUDE.md docs package.json pnpm-workspace.yaml deno.json backend/deno.json frontend/package.json shared/package.json .github scripts .husky supabase/config.toml frontend/vite.config.ts frontend/vitest.config.ts frontend/playwright.config.ts frontend/eslint.config.js frontend/tsconfig.json frontend/tailwind.config.cjs frontend/postcss.config.cjs",
-    "qa:front": "pnpm run repo:check && pnpm run frontend:typecheck && pnpm run frontend:lint && pnpm run frontend:test && pnpm run frontend:error-compliance",
+    "qa:docs": "pnpm run repo:check:local && git diff --check -- AGENTS.md CLAUDE.md docs package.json pnpm-workspace.yaml deno.json backend/deno.json frontend/package.json shared/package.json .github scripts .husky supabase/config.toml frontend/vite.config.ts frontend/vitest.config.ts frontend/playwright.config.ts frontend/eslint.config.js frontend/tsconfig.json frontend/tailwind.config.cjs",
+    "qa:front": "pnpm run repo:check:local && pnpm run frontend:typecheck && pnpm run frontend:lint && pnpm run frontend:test && pnpm run frontend:error-compliance",
     "qa:back": "pnpm run repo:check && pnpm run backend:lint && pnpm run backend:typecheck && pnpm run backend:test",
-    "qa:fast": "pnpm run repo:check && pnpm --dir frontend run typecheck && pnpm --dir frontend run lint && pnpm --dir frontend run test:run && pnpm --dir frontend run check:error-compliance && deno lint backend/functions/api && deno check --config backend/deno.json backend/functions/api/index.ts && deno test --env-file=backend/.env --allow-env --no-check --config backend/deno.json backend/functions/api",
+    "qa:fast": "pnpm run repo:check && pnpm --dir frontend run typecheck && pnpm --dir frontend run lint && pnpm --dir frontend run test:run && pnpm --dir frontend run check:error-compliance && deno lint backend/functions/api && deno check --config backend/deno.json backend/functions/api/index.ts && deno test --env-file=backend/.env --allow-env --config backend/deno.json backend/functions/api",
     "qa": "pwsh -NoLogo -File scripts/qa-gate.ps1",
+    "qa:ci": "pnpm run repo:check:local && pnpm --dir frontend run typecheck && pnpm --dir frontend run lint && pnpm --dir frontend run test:coverage && pnpm --dir frontend run check:error-compliance && pnpm --dir frontend run build && deno lint backend/functions/api && deno check --config backend/deno.json backend/functions/api/index.ts && pnpm run backend:test && pnpm run backend:test:integration",
     "qa:audit": "pnpm --dir frontend exec pnpm audit --audit-level=high"
   },
   "devDependencies": {
