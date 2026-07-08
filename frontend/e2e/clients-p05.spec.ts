@@ -221,7 +221,7 @@ const openDirectory = async (page: Page): Promise<void> => {
 
 test.skip(!isConfigured, SKIP_REASON);
 
-test('P05 - la fiche full page conserve le contexte liste et le prev-next remplace l historique', async ({
+test('P05 - la fiche full page conserve le contexte liste sans navigation historique implicite', async ({
   page
 }) => {
   await installDirectoryMocks(page);
@@ -234,30 +234,19 @@ test('P05 - la fiche full page conserve le contexte liste et le prev-next rempla
   await page.waitForURL(/(?:\?|&)q=SEA/i);
 
   const listUrl = page.url();
-  await expect(page.getByRole('button', { name: /ouvrir la fiche pontac thierry/i })).toBeVisible();
-  await expect(page.getByRole('button', { name: /ouvrir la fiche sea/i })).toBeVisible();
-  await expect(page.getByRole('button', { name: /ouvrir la fiche test comptant/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /ouvrir la fiche pontac thierry/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /ouvrir la fiche sea/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /ouvrir la fiche test comptant/i })).toBeVisible();
 
-  await page.getByRole('button', { name: /ouvrir la fiche sea/i }).click();
+  await page.getByRole('link', { name: /ouvrir la fiche sea/i }).click();
 
   await expect(page).toHaveURL(/\/clients\/116277(?:\?|$)/);
-  await expect(page).toHaveURL(/(?:\?|&)q=SEA/i);
   await expect(page.getByRole('heading', { name: /^SEA$/i })).toBeVisible();
   await expect(page.getByRole('heading', { name: /clients et prospects/i })).toHaveCount(0);
 
   const detailPathWithoutContext = new URL(page.url()).pathname;
-  const previousButton = page.getByRole('button', { name: /Fiche pr.c.dente/i });
-  const nextButton = page.getByRole('button', { name: 'Fiche suivante' });
-
-  await expect(previousButton).toBeVisible();
-  await expect(previousButton).toBeEnabled();
-  await expect(nextButton).toBeVisible();
-  await expect(nextButton).toBeEnabled();
-
-  await nextButton.click();
-  await expect(page).toHaveURL(/\/clients\/98568547(?:\?|$)/);
-  await expect(page).toHaveURL(/(?:\?|&)q=SEA/i);
-  await expect(page.getByRole('heading', { name: /^Test comptant$/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Fiche pr.c.dente/i })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Fiche suivante' })).toHaveCount(0);
 
   await page.goBack();
   await expect(page).toHaveURL(listUrl);

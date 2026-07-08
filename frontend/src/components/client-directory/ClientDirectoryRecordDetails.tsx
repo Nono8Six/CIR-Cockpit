@@ -36,7 +36,7 @@ import ClientDirectoryRecordInfoGrid from './ClientDirectoryRecordInfoGrid';
 import ClientDirectoryRecordHistoryPanel from './ClientDirectoryRecordHistoryPanel';
 import ClientDirectoryRecordInteractionsPanel from './ClientDirectoryRecordInteractionsPanel';
 import EntityEditPanel from './edit/EntityEditPanel';
-import { isProspectEntityType, toSelectedAgenciesScope } from './clientDirectorySearch';
+import { isProspectEntityType, toSelectedAgenciesScope, validateDirectorySearch } from './clientDirectorySearch';
 import { useClientDirectoryRecordInteractions } from './useClientDirectoryRecordInteractions';
 
 export interface ClientDirectoryRecordDetailsProps {
@@ -86,6 +86,7 @@ const ClientDirectoryRecordDetails = ({
 }: ClientDirectoryRecordDetailsProps) => {
   const sessionState = useAppSessionStateContext();
   const navigate = useNavigate();
+  const directorySearch = validateDirectorySearch(Object.fromEntries(new URLSearchParams(globalThis.location.search)));
   const reducedMotion = useReducedMotion();
   const userRole = sessionState.profile?.role ?? 'tcs';
   const activeAgencyId = sessionState.activeAgencyId;
@@ -202,6 +203,7 @@ const ClientDirectoryRecordDetails = ({
     void navigate({
       to: '/clients/prospects/$prospectId/convert',
       params: { prospectId: record.id },
+      search: () => directorySearch,
     });
   };
 

@@ -3,6 +3,8 @@ import type {
   PricingReferenceAnomaliesSummaryGetInput,
   PricingReferenceClassificationListAllInput,
   PricingReferenceClassificationListInput,
+  PricingReferenceDiffsListInput,
+  PricingReferenceDiffsSummaryGetInput,
   PricingReferenceImportGetInput,
   PricingReferenceImportsListInput,
   PricingReferenceSegmentsListInput,
@@ -258,6 +260,24 @@ export const pricingReferenceClassificationAllKey = (input: PricingReferenceClas
 export const pricingReferencePrepareKey = (input: PricingReferenceImportsPrepareInput) => [
   QUERY_ROOTS.pricingReferences,
   'prepare',
+  input
+] as const;
+export const pricingReferenceDiffSummaryRootKey = () => [
+  QUERY_ROOTS.pricingReferences,
+  'diff-summary'
+] as const;
+export const pricingReferenceDiffSummaryKey = (input: PricingReferenceDiffsSummaryGetInput) => [
+  QUERY_ROOTS.pricingReferences,
+  'diff-summary',
+  input
+] as const;
+export const pricingReferenceDiffListRootKey = () => [
+  QUERY_ROOTS.pricingReferences,
+  'diff-list'
+] as const;
+export const pricingReferenceDiffListKey = (input: PricingReferenceDiffsListInput) => [
+  QUERY_ROOTS.pricingReferences,
+  'diff-list',
   input
 ] as const;
 

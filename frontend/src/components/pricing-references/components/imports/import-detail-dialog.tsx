@@ -1,8 +1,11 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { AlertTriangle, Check, Copy } from 'lucide-react';
 
-import type { PricingReferenceImportGetResponse } from '../../../../../../shared/schemas/pricing/references.schema';
+import type {
+  PricingReferenceImportGetResponse,
+  PricingReferenceImportsListResponse
+} from '../../../../../../shared/schemas/pricing/references.schema';
 import {
   Dialog,
   DialogContent,
@@ -16,23 +19,54 @@ import { cn } from '@/lib/utils';
 import { handleUiError } from '@/services/errors/handleUiError';
 import { getPricingReferenceImport } from '@/services/pricingReferences';
 import { pricingReferenceImportKey } from '@/services/query/queryKeys';
+import type { UserRole } from '@/types';
 import {
   fileKindLabels,
+  findReplacedByVersion,
+  findReplacesVersion,
   formatCount,
   formatDateTime,
+  formatEffectiveFileProvenance,
   formatFileSize,
+  formatSha256Short,
   importMappingStatusLabels,
-  importStatusLabels
+  importStatusLabels,
+  snapshotVersionStatusLabels,
+  sortEffectiveImportFiles
 } from '../../utils/pricing-references-formatters';
+import { ActivationConfirm } from './activation-confirm';
 import { importStatusDotClassName } from './import-row';
+import { useActivatePricingReferenceVersion } from './use-activate-version';
 
 type ImportDetail = PricingReferenceImportGetResponse['import'];
+type ImportSummary = PricingReferenceImportsListResponse['imports'][number];
 
 interface ImportDetailDialogProps {
   importId: string | null;
+  userRole: UserRole;
+  /** Imports analysés chargés par la page, pour la version active et la chaîne remplacé/remplace. */
+  versionRows: readonly ImportSummary[];
   onClose: () => void;
   onConsult: (importId: string) => void;
+  /** Ouvre le détail d'un autre import (navigation dans la chaîne de versions). */
+  onNavigateToImport: (importId: string) => void;
 }
+
+const VersionChainLink = ({
+  label,
+  onNavigate
+}: {
+  label: string;
+  onNavigate: () => void;
+}) => (
+  <button
+    type="button"
+    onClick={onNavigate}
+    className="mt-0.5 block w-fit rounded-sm text-left font-normal text-stone-600 underline decoration-stone-300 underline-offset-2 transition-colors hover:text-stone-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/45"
+  >
+    {label}
+  </button>
+);
 
 const DetailRowItem = ({
   label,
@@ -56,6 +90,35 @@ const DetailRowItem = ({
   </div>
 );
 
+const CopyValueButton = ({
+  value,
+  copyKey,
+  copiedKey,
+  onCopy,
+  label
+}: {
+  value: string;
+  copyKey: string;
+  copiedKey: string | null;
+  onCopy: (value: string, key: string) => void;
+  label: string;
+}) => (
+  <Button
+    type="button"
+    variant="ghost"
+    size="icon"
+    onClick={() => onCopy(value, copyKey)}
+    aria-label={label}
+    className="size-6 shrink-0 rounded-md text-stone-500 hover:bg-stone-100 hover:text-stone-950"
+  >
+    {copiedKey === copyKey ? (
+      <Check className="!size-3 text-emerald-600" aria-hidden="true" />
+    ) : (
+      <Copy className="!size-3" aria-hidden="true" />
+    )}
+  </Button>
+);
+
 const DialogLoadingState = () => (
   <div className="px-5 py-2" aria-hidden="true">
     {Array.from({ length: 6 }).map((_, index) => (
@@ -68,11 +131,33 @@ const DialogLoadingState = () => (
 
 /**
  * Centered detail dialog (command-palette style) for one reference import:
- * status, dates, counters, source files with mapping status, copyable UUID and
- * the "Consulter cet import" action that scopes the other tabs to this import.
+ * status, dates, counters, version lifecycle (statut de snapshot, activée /
+ * désactivée le, chaîne remplacée par / remplace naviguable), effective files
+ * with provenance (fourni vs réutilisé d'un import antérieur), copyable
+ * SHA-256 and origin import id, mapping status, copyable UUID, the "Consulter
+ * cet import" action that scopes the other tabs to this import, and the
+ * super-admin activation/rollback action with its in-dialog confirmation.
  */
-export const ImportDetailDialog = ({ importId, onClose, onConsult }: ImportDetailDialogProps) => {
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+export const ImportDetailDialog = ({
+  importId,
+  userRole,
+  versionRows,
+  onClose,
+  onConsult,
+  onNavigateToImport
+}: ImportDetailDialogProps) => {
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  // Confirmation liée à l'import affiché : changer d'import (chaîne de
+  // versions) ou rouvrir le dialog ne laisse jamais une confirmation orpheline.
+  const [activationConfirmImportId, setActivationConfirmImportId] = useState<string | null>(null);
+  const isConfirmingActivation =
+    importId !== null && activationConfirmImportId === importId;
+  const copyResetTimerRef = useRef<number | null>(null);
+
+  const activateMutation = useActivatePricingReferenceVersion(() => {
+    setActivationConfirmImportId(null);
+    onClose();
+  });
 
   const detailInput = useMemo(() => ({ import_id: importId ?? '' }), [importId]);
   const detailQuery = useQuery({
@@ -87,13 +172,54 @@ export const ImportDetailDialog = ({ importId, onClose, onConsult }: ImportDetai
     }
   }, [detailQuery.error]);
 
-  const detail: ImportDetail | null = detailQuery.data?.import ?? null;
+  useEffect(
+    () => () => {
+      if (copyResetTimerRef.current !== null) {
+        window.clearTimeout(copyResetTimerRef.current);
+      }
+    },
+    []
+  );
 
-  const handleCopyId = (id: string) => {
-    void navigator.clipboard.writeText(id);
-    setCopiedId(id);
-    setTimeout(() => {
-      setCopiedId(null);
+  const detail: ImportDetail | null = detailQuery.data?.import ?? null;
+  const effectiveFiles = useMemo(
+    () => (detail ? sortEffectiveImportFiles(detail.effective_files) : []),
+    [detail]
+  );
+  const mappingStatusByFileKey = useMemo(
+    () =>
+      new Map(
+        (detail?.files ?? []).map((file) => [
+          `${file.file_kind}:${file.sha256}`,
+          file.mapping_status
+        ])
+      ),
+    [detail]
+  );
+
+  const activeVersion = useMemo(
+    () => versionRows.find((row) => row.is_active_version) ?? null,
+    [versionRows]
+  );
+  const replacedBy = detail ? findReplacedByVersion(versionRows, detail) : null;
+  const replaces = detail ? findReplacesVersion(versionRows, detail) : null;
+  const isRollback = detail?.snapshot_status === 'archive';
+  const canActivate =
+    detail !== null &&
+    userRole === 'super_admin' &&
+    detail.status === 'analyse_ok' &&
+    !detail.is_active_version &&
+    (detail.snapshot_status === 'cree' || detail.snapshot_status === 'archive');
+
+  const handleCopy = (value: string, key: string) => {
+    void navigator.clipboard.writeText(value);
+    if (copyResetTimerRef.current !== null) {
+      window.clearTimeout(copyResetTimerRef.current);
+    }
+    setCopiedKey(key);
+    copyResetTimerRef.current = window.setTimeout(() => {
+      setCopiedKey(null);
+      copyResetTimerRef.current = null;
     }, 2000);
   };
 
@@ -101,7 +227,10 @@ export const ImportDetailDialog = ({ importId, onClose, onConsult }: ImportDetai
     <Dialog
       open={importId !== null}
       onOpenChange={(open) => {
-        if (!open) onClose();
+        if (!open && !activateMutation.isPending) {
+          setActivationConfirmImportId(null);
+          onClose();
+        }
       }}
     >
       <DialogContent
@@ -170,6 +299,53 @@ export const ImportDetailDialog = ({ importId, onClose, onConsult }: ImportDetai
                   label="Analyse terminée le"
                   value={formatDateTime(detail.analysis_completed_at)}
                 />
+                {detail.snapshot_status ? (
+                  <DetailRowItem
+                    label="Version"
+                    value={
+                      <>
+                        <span className="flex items-center gap-1.5">
+                          <span
+                            className={cn(
+                              'size-1.5 rounded-full',
+                              detail.snapshot_status === 'actif' ? 'bg-emerald-500' : 'bg-stone-300'
+                            )}
+                            aria-hidden="true"
+                          />
+                          {snapshotVersionStatusLabels[detail.snapshot_status]}
+                        </span>
+                        {detail.activated_at ? (
+                          <span className="mt-0.5 block font-normal text-stone-500">
+                            Activée le {formatDateTime(detail.activated_at)}
+                          </span>
+                        ) : null}
+                        {detail.deactivated_at ? (
+                          <span className="mt-0.5 block font-normal text-stone-500">
+                            Désactivée le {formatDateTime(detail.deactivated_at)}
+                          </span>
+                        ) : null}
+                        {replacedBy ? (
+                          <VersionChainLink
+                            label={`Remplacée par l'import du ${formatDateTime(replacedBy.created_at)}`}
+                            onNavigate={() => {
+                              setActivationConfirmImportId(null);
+                              onNavigateToImport(replacedBy.id);
+                            }}
+                          />
+                        ) : null}
+                        {replaces ? (
+                          <VersionChainLink
+                            label={`Remplace l'import du ${formatDateTime(replaces.created_at)}`}
+                            onNavigate={() => {
+                              setActivationConfirmImportId(null);
+                              onNavigateToImport(replaces.id);
+                            }}
+                          />
+                        ) : null}
+                      </>
+                    }
+                  />
+                ) : null}
                 <DetailRowItem
                   label="Lignes classification"
                   value={formatCount(detail.classification_rows_count)}
@@ -204,20 +380,13 @@ export const ImportDetailDialog = ({ importId, onClose, onConsult }: ImportDetai
                   value={
                     <span className="flex items-start justify-between gap-2">
                       <span className="min-w-0 break-all">{detail.id}</span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleCopyId(detail.id)}
-                        aria-label="Copier l'identifiant de l'import"
-                        className="size-6 shrink-0 rounded-md text-stone-500 hover:bg-stone-100 hover:text-stone-950"
-                      >
-                        {copiedId === detail.id ? (
-                          <Check className="!size-3 text-emerald-600" aria-hidden="true" />
-                        ) : (
-                          <Copy className="!size-3" aria-hidden="true" />
-                        )}
-                      </Button>
+                      <CopyValueButton
+                        value={detail.id}
+                        copyKey="import-id"
+                        copiedKey={copiedKey}
+                        onCopy={handleCopy}
+                        label="Copier l'identifiant de l'import"
+                      />
                     </span>
                   }
                   mono
@@ -225,30 +394,63 @@ export const ImportDetailDialog = ({ importId, onClose, onConsult }: ImportDetai
               </dl>
 
               <p className="pb-1 pt-3 font-mono text-[10px] uppercase tracking-[0.08em] text-stone-500">
-                Fichiers importés
+                Fichiers
               </p>
-              {detail.files.length > 0 ? (
+              {effectiveFiles.length > 0 ? (
                 <dl>
-                  {detail.files.map((file) => (
-                    <DetailRowItem
-                      key={file.id}
-                      label={fileKindLabels[file.file_kind]}
-                      value={
-                        <>
-                          <span className="break-all">{file.original_filename}</span>
-                          <span className="mt-0.5 block font-normal text-stone-500">
-                            {formatFileSize(file.size_bytes)} ·{' '}
-                            {file.row_count !== null
-                              ? `${formatCount(file.row_count)} lignes`
-                              : 'lignes inconnues'}
-                            {file.mapping_status
-                              ? ` · ${importMappingStatusLabels[file.mapping_status]}`
-                              : ''}
-                          </span>
-                        </>
-                      }
-                    />
-                  ))}
+                  {effectiveFiles.map((file) => {
+                    const mappingStatus = mappingStatusByFileKey.get(
+                      `${file.file_kind}:${file.sha256}`
+                    );
+                    return (
+                      <DetailRowItem
+                        key={`${file.file_kind}-${file.sha256}`}
+                        label={fileKindLabels[file.file_kind]}
+                        value={
+                          <>
+                            <span className="break-all">{file.original_filename}</span>
+                            <span className="mt-0.5 flex items-center gap-1 font-normal text-stone-500">
+                              <span className="min-w-0">{formatEffectiveFileProvenance(file)}</span>
+                              {file.source === 'reutilise' && file.source_import_id ? (
+                                <CopyValueButton
+                                  value={file.source_import_id}
+                                  copyKey={`source-${file.file_kind}`}
+                                  copiedKey={copiedKey}
+                                  onCopy={handleCopy}
+                                  label={`Copier l'identifiant de l'import d'origine (${fileKindLabels[file.file_kind]})`}
+                                />
+                              ) : null}
+                            </span>
+                            <span className="mt-0.5 block font-normal text-stone-500">
+                              {formatFileSize(file.size_bytes)} ·{' '}
+                              {file.row_count !== null
+                                ? `${formatCount(file.row_count)} lignes`
+                                : 'lignes inconnues'}
+                              {mappingStatus
+                                ? ` · ${importMappingStatusLabels[mappingStatus]}`
+                                : ''}
+                            </span>
+                            <span className="mt-0.5 flex items-center gap-1.5 font-normal">
+                              <span className="text-[10px] text-stone-500">SHA-256</span>
+                              <span
+                                className="font-mono text-[10px] text-stone-500"
+                                title={file.sha256}
+                              >
+                                {formatSha256Short(file.sha256)}
+                              </span>
+                              <CopyValueButton
+                                value={file.sha256}
+                                copyKey={`sha-${file.file_kind}`}
+                                copiedKey={copiedKey}
+                                onCopy={handleCopy}
+                                label={`Copier le SHA-256 du fichier ${file.original_filename}`}
+                              />
+                            </span>
+                          </>
+                        }
+                      />
+                    );
+                  })}
                 </dl>
               ) : (
                 <p className="pb-2 text-xs text-muted-foreground">
@@ -258,18 +460,44 @@ export const ImportDetailDialog = ({ importId, onClose, onConsult }: ImportDetai
             </div>
 
             <DialogFooter className="border-t border-stone-200/60 px-5 py-2.5 sm:items-center sm:justify-between">
-              <span className="text-[11px] text-stone-500">
-                Filtre les onglets Segments, Classification et Anomalies.
-              </span>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => onConsult(detail.id)}
-                className="h-7 gap-1.5 rounded-md border-stone-200 bg-white px-2.5 text-xs font-medium text-stone-800 shadow-none hover:bg-stone-50"
-              >
-                Consulter cet import
-              </Button>
+              {isConfirmingActivation ? (
+                <ActivationConfirm
+                  className="w-full"
+                  targetCreatedAt={detail.created_at}
+                  activeVersionCreatedAt={activeVersion?.created_at ?? null}
+                  isRollback={isRollback}
+                  isPending={activateMutation.isPending}
+                  onConfirm={() => activateMutation.mutate(detail.id)}
+                  onCancel={() => setActivationConfirmImportId(null)}
+                />
+              ) : (
+                <>
+                  <span className="text-[11px] text-stone-500">
+                    Filtre les onglets Segments, Classification et Anomalies.
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onConsult(detail.id)}
+                      className="h-7 gap-1.5 rounded-md border-stone-200 bg-white px-2.5 text-xs font-medium text-stone-800 shadow-none hover:bg-stone-50"
+                    >
+                      Consulter cet import
+                    </Button>
+                    {canActivate ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => setActivationConfirmImportId(detail.id)}
+                        className="h-7 gap-1.5 rounded-md bg-primary px-2.5 text-xs font-medium text-primary-foreground hover:bg-primary/95 active:scale-[0.98]"
+                      >
+                        {isRollback ? 'Réactiver cette version' : 'Activer cette version'}
+                      </Button>
+                    ) : null}
+                  </span>
+                </>
+              )}
             </DialogFooter>
           </>
         ) : null}

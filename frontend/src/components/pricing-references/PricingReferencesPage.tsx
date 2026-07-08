@@ -62,9 +62,12 @@ import { HealthStrip, type TabId } from './components/health/health-strip';
 import { PricingReferenceImportDialog } from './pricing-reference-import-dialog';
 import { ClassificationDrillDown } from './components/classification/classification-drilldown';
 import { AnomaliesTriage, type AnomalySeverityPreset } from './components/anomalies/anomalies-triage';
+import { ChangesTriage } from './components/changes/changes-triage';
+import { useAnalyzedPricingReferenceImports } from './components/changes/use-analyzed-imports';
+import { usePricingReferenceChangesBadge } from './components/changes/use-changes-badge';
 
 // Formatters and label mappings
-import { formatCount, linkStatusLabels } from './utils/pricing-references-formatters';
+import { formatCount, formatDateTime, linkStatusLabels } from './utils/pricing-references-formatters';
 
 type ClassificationRow = PricingReferenceClassificationListResponse['rows'][number];
 type SegmentRow = PricingReferenceSegmentsListResponse['rows'][number];
@@ -74,6 +77,7 @@ const tabItems: Array<{ id: TabId; label: string }> = [
   { id: 'segments', label: 'Segments' },
   { id: 'classification', label: 'Classification' },
   { id: 'anomalies', label: 'Anomalies' },
+  { id: 'changements', label: 'Changements' },
   { id: 'imports', label: 'Imports' }
 ];
 
@@ -255,12 +259,19 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
     [importsQuery.data]
   );
   const totalImports = importsQuery.data?.total ?? 0;
+  // La section ACTIF est pilotée par la vraie version active (is_active_version,
+  // snapshot is_active côté API), plus par « premier import analyse_ok de la page ».
   const activeImport = useMemo(
-    () =>
-      visibleImports.find(
-        (row) => row.status === 'analyse_ok' || row.status === 'pret_activation'
-      ) ?? null,
+    () => visibleImports.find((row) => row.is_active_version) ?? null,
     [visibleImports]
+  );
+  // Version active pour la pastille header et les confirmations d'activation :
+  // lue sur la liste des imports analysés (requête partagée avec l'onglet
+  // Changements), insensible aux filtres/pagination de l'onglet Imports.
+  const { imports: analyzedImports } = useAnalyzedPricingReferenceImports();
+  const activeVersion = useMemo(
+    () => analyzedImports.find((row) => row.is_active_version) ?? null,
+    [analyzedImports]
   );
 
   const healthInput = useMemo(
@@ -273,6 +284,7 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
     queryFn: () => getPricingReferenceHealth(healthInput)
   });
   const anomaliesBadgeCount = healthQuery.data?.health_report?.anomalies.total ?? 0;
+  const changesBadgeCount = usePricingReferenceChangesBadge(selectedImportId);
 
   const classificationQuery = useQuery({
     queryKey: pricingReferenceClassificationKey(classificationInput),
@@ -295,6 +307,14 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
       resetPages();
     },
     [resetPages]
+  );
+
+  const handleViewChanges = useCallback(
+    (importId: string) => {
+      handleImportSelected(importId);
+      handleTabChange('changements');
+    },
+    [handleImportSelected, handleTabChange]
   );
 
   const handleQuickNavigate = useCallback(
@@ -435,7 +455,16 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
             <h1 className="text-xl font-semibold leading-none tracking-tight text-foreground text-pretty">
               Référentiels CIR
             </h1>
-            <span className="inline-flex items-center gap-1.5 text-[11px] text-stone-500">
+            <span
+              className="inline-flex items-center gap-1.5 text-[11px] text-stone-500"
+              title={
+                selectedImportId
+                  ? undefined
+                  : activeVersion?.activated_at
+                    ? `Version active depuis le ${formatDateTime(activeVersion.activated_at)}`
+                    : 'Aucune version activée : dernier import analysé utilisé par défaut'
+              }
+            >
               <span
                 className={cn(
                   'size-1.5 rounded-full',
@@ -533,6 +562,11 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
                     {formatCount(anomaliesBadgeCount)}
                   </span>
                 ) : null}
+                {tab.id === 'changements' && changesBadgeCount !== null && changesBadgeCount > 0 ? (
+                  <span className="font-mono text-[11px] tabular-nums text-stone-400">
+                    {formatCount(changesBadgeCount)}
+                  </span>
+                ) : null}
               </TabsTrigger>
             ))}
           </TabsList>
@@ -586,11 +620,14 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
           </div>
           <ImportDetailDialog
             importId={detailImportId}
+            userRole={userRole}
+            versionRows={analyzedImports}
             onClose={() => setDetailImportId(null)}
             onConsult={(importId) => {
               handleImportSelected(importId);
               setDetailImportId(null);
             }}
+            onNavigateToImport={setDetailImportId}
           />
         </TabsContent>
 
@@ -835,20 +872,32 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
         >
           <AnomaliesTriage importId={selectedImportId} severityPreset={anomalySeverityPreset} />
         </TabsContent>
+
+        {/* Tab 5: Changements */}
+        <TabsContent
+          value="changements"
+          className="min-h-0 flex-1 flex flex-col gap-3 overflow-hidden pt-2"
+        >
+          <ChangesTriage userRole={userRole} selectedImportId={selectedImportId} />
+        </TabsContent>
       </Tabs>
 
       {/* Import dialogs */}
       <PricingReferenceImportDialog
         fileKind="classification"
+        userRole={userRole}
         open={isClassificationImportOpen}
         onOpenChange={setIsClassificationImportOpen}
         onImported={handleImportSelected}
+        onViewChanges={handleViewChanges}
       />
       <PricingReferenceImportDialog
         fileKind="segments_grids"
+        userRole={userRole}
         open={isSegmentsImportOpen}
         onOpenChange={setIsSegmentsImportOpen}
         onImported={handleImportSelected}
+        onViewChanges={handleViewChanges}
       />
     </div>
   );

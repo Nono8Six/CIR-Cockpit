@@ -1,16 +1,20 @@
-import { initTRPC, type inferRouterInputs, type inferRouterOutputs } from '@trpc/server';
-
-import { adminAgenciesPayloadSchema } from '../schemas/admin/agency.schema.ts';
 import {
-  configGetResponseSchema,
-  configIntegrityInteractionUpdateResponseSchema,
-  configIntegrityInteractionsResponseSchema,
-  configUsageResponseSchema,
-  configReferenceActionResponseSchema,
+  type inferRouterInputs,
+  type inferRouterOutputs,
+  initTRPC,
+} from "@trpc/server";
+
+import { adminAgenciesPayloadSchema } from "../schemas/admin/agency.schema.ts";
+import {
   adminAgenciesResponseSchema,
   adminAuditLogsResponseSchema,
   adminUsersListResponseSchema,
   adminUsersResponseSchema,
+  configGetResponseSchema,
+  configIntegrityInteractionsResponseSchema,
+  configIntegrityInteractionUpdateResponseSchema,
+  configReferenceActionResponseSchema,
+  configUsageResponseSchema,
   dataConfigResponseSchema,
   dataEntitiesRouteResponseSchema,
   dataEntityContactsResponseSchema,
@@ -29,29 +33,29 @@ import {
   directorySavedViewDeleteResponseSchema,
   directorySavedViewResponseSchema,
   directorySavedViewsListResponseSchema,
-  tierV1SearchResponseSchema
-} from '../schemas/system/api-responses.ts';
+  tierV1SearchResponseSchema,
+} from "../schemas/system/api-responses.ts";
 import {
   cockpitAgencyMembersInputSchema,
   cockpitAgencyMembersResponseSchema,
   cockpitPhoneLookupInputSchema,
-  cockpitPhoneLookupResponseSchema
-} from '../schemas/interaction/cockpit.schema.ts';
+  cockpitPhoneLookupResponseSchema,
+} from "../schemas/interaction/cockpit.schema.ts";
 import {
   configGetInputSchema,
-  configIntegrityInteractionUpdateInputSchema,
   configIntegrityInteractionsInputSchema,
+  configIntegrityInteractionUpdateInputSchema,
+  configReferenceActionInputSchema,
   configUsageInputSchema,
-  configReferenceActionInputSchema
-} from '../schemas/system/config.schema.ts';
+} from "../schemas/system/config.schema.ts";
 import {
   dataConfigPayloadSchema,
   dataEntitiesPayloadSchema,
   dataEntityContactsPayloadSchema,
   dataInteractionsPayloadSchema,
-  dataProfilePayloadSchema
-} from '../schemas/system/data.schema.ts';
-import { tierV1SearchInputSchema } from '../schemas/interaction/tier-v1.schema.ts';
+  dataProfilePayloadSchema,
+} from "../schemas/system/data.schema.ts";
+import { tierV1SearchInputSchema } from "../schemas/interaction/tier-v1.schema.ts";
 import {
   directoryCitySuggestionsInputSchema,
   directoryCompanyDetailsInputSchema,
@@ -65,18 +69,18 @@ import {
   directorySavedViewDeleteInputSchema,
   directorySavedViewSaveInputSchema,
   directorySavedViewSetDefaultInputSchema,
-  directorySavedViewsListInputSchema
-} from '../schemas/system/directory.schema.ts';
+  directorySavedViewsListInputSchema,
+} from "../schemas/system/directory.schema.ts";
 import {
   adminAuditLogsInputSchema,
   adminUsersListInputSchema,
-  adminUsersPayloadSchema
-} from '../schemas/admin/user.schema.ts';
+  adminUsersPayloadSchema,
+} from "../schemas/admin/user.schema.ts";
 import {
-  pricingReferenceAnomaliesListInputSchema,
-  pricingReferenceAnomaliesListResponseSchema,
   pricingReferenceAnomaliesExportInputSchema,
   pricingReferenceAnomaliesExportResponseSchema,
+  pricingReferenceAnomaliesListInputSchema,
+  pricingReferenceAnomaliesListResponseSchema,
   pricingReferenceAnomaliesSummaryGetInputSchema,
   pricingReferenceAnomaliesSummaryResponseSchema,
   pricingReferenceClassificationListAllInputSchema,
@@ -85,16 +89,24 @@ import {
   pricingReferenceClassificationListResponseSchema,
   pricingReferenceDiagnoseInputSchema,
   pricingReferenceDiagnoseResponseSchema,
+  pricingReferenceDiffsComputeInputSchema,
+  pricingReferenceDiffsComputeResponseSchema,
+  pricingReferenceDiffsListInputSchema,
+  pricingReferenceDiffsListResponseSchema,
+  pricingReferenceDiffsSummaryGetInputSchema,
+  pricingReferenceDiffsSummaryResponseSchema,
   pricingReferenceHealthGetInputSchema,
   pricingReferenceHealthGetResponseSchema,
+  pricingReferenceImportActivateInputSchema,
+  pricingReferenceImportActivateResponseSchema,
   pricingReferenceImportAnalyzeInputSchema,
   pricingReferenceImportAnalyzeResponseSchema,
+  pricingReferenceImportAssistMappingInputSchema,
+  pricingReferenceImportAssistMappingResponseSchema,
   pricingReferenceImportConfirmMappingInputSchema,
   pricingReferenceImportConfirmMappingResponseSchema,
   pricingReferenceImportGetInputSchema,
   pricingReferenceImportGetResponseSchema,
-  pricingReferenceImportAssistMappingInputSchema,
-  pricingReferenceImportAssistMappingResponseSchema,
   pricingReferenceImportInspectInputSchema,
   pricingReferenceImportInspectResponseSchema,
   pricingReferenceImportsListInputSchema,
@@ -102,8 +114,8 @@ import {
   pricingReferenceImportsPrepareInputSchema,
   pricingReferenceImportsPrepareResponseSchema,
   pricingReferenceSegmentsListInputSchema,
-  pricingReferenceSegmentsListResponseSchema
-} from '../schemas/pricing/references.schema.ts';
+  pricingReferenceSegmentsListResponseSchema,
+} from "../schemas/pricing/references.schema.ts";
 import {
   aiPromptsListInputSchema,
   aiPromptsListResponseSchema,
@@ -126,8 +138,8 @@ import {
   aiUsageListInputSchema,
   aiUsageListResponseSchema,
   aiUsageSummaryInputSchema,
-  aiUsageSummaryResponseSchema
-} from '../schemas/ai.schema.ts';
+  aiUsageSummaryResponseSchema,
+} from "../schemas/ai.schema.ts";
 
 const t = initTRPC.create();
 
@@ -137,7 +149,7 @@ const appRouterType = t.router({
       .input(dataEntitiesPayloadSchema)
       .output(dataEntitiesRouteResponseSchema)
       .mutation(() => undefined as never),
-    'entity-contacts': t.procedure
+    "entity-contacts": t.procedure
       .input(dataEntityContactsPayloadSchema)
       .output(dataEntityContactsResponseSchema)
       .mutation(() => undefined as never),
@@ -156,24 +168,24 @@ const appRouterType = t.router({
     searchEntitiesUnified: t.procedure
       .input(tierV1SearchInputSchema)
       .output(tierV1SearchResponseSchema)
-      .query(() => undefined as never)
+      .query(() => undefined as never),
   }),
   cockpit: t.router({
-    'agency-members': t.procedure
+    "agency-members": t.procedure
       .input(cockpitAgencyMembersInputSchema)
       .output(cockpitAgencyMembersResponseSchema)
       .query(() => undefined as never),
-    'phone-lookup': t.procedure
+    "phone-lookup": t.procedure
       .input(cockpitPhoneLookupInputSchema)
       .output(cockpitPhoneLookupResponseSchema)
-      .query(() => undefined as never)
+      .query(() => undefined as never),
   }),
   admin: t.router({
-    'users-list': t.procedure
+    "users-list": t.procedure
       .input(adminUsersListInputSchema)
       .output(adminUsersListResponseSchema)
       .query(() => undefined as never),
-    'audit-logs': t.procedure
+    "audit-logs": t.procedure
       .input(adminAuditLogsInputSchema)
       .output(adminAuditLogsResponseSchema)
       .query(() => undefined as never),
@@ -184,7 +196,7 @@ const appRouterType = t.router({
     agencies: t.procedure
       .input(adminAgenciesPayloadSchema)
       .output(adminAgenciesResponseSchema)
-      .mutation(() => undefined as never)
+      .mutation(() => undefined as never),
   }),
   config: t.router({
     get: t.procedure
@@ -195,18 +207,18 @@ const appRouterType = t.router({
       .input(configUsageInputSchema)
       .output(configUsageResponseSchema)
       .query(() => undefined as never),
-    'integrity-interactions': t.procedure
+    "integrity-interactions": t.procedure
       .input(configIntegrityInteractionsInputSchema)
       .output(configIntegrityInteractionsResponseSchema)
       .query(() => undefined as never),
-    'integrity-interaction-update': t.procedure
+    "integrity-interaction-update": t.procedure
       .input(configIntegrityInteractionUpdateInputSchema)
       .output(configIntegrityInteractionUpdateResponseSchema)
       .mutation(() => undefined as never),
     reference: t.procedure
       .input(configReferenceActionInputSchema)
       .output(configReferenceActionResponseSchema)
-      .mutation(() => undefined as never)
+      .mutation(() => undefined as never),
   }),
   pricing: t.router({
     references: t.router({
@@ -218,6 +230,10 @@ const appRouterType = t.router({
         analyze: t.procedure
           .input(pricingReferenceImportAnalyzeInputSchema)
           .output(pricingReferenceImportAnalyzeResponseSchema)
+          .mutation(() => undefined as never),
+        activate: t.procedure
+          .input(pricingReferenceImportActivateInputSchema)
+          .output(pricingReferenceImportActivateResponseSchema)
           .mutation(() => undefined as never),
         inspect: t.procedure
           .input(pricingReferenceImportInspectInputSchema)
@@ -238,13 +254,13 @@ const appRouterType = t.router({
         get: t.procedure
           .input(pricingReferenceImportGetInputSchema)
           .output(pricingReferenceImportGetResponseSchema)
-          .query(() => undefined as never)
+          .query(() => undefined as never),
       }),
       health: t.router({
         get: t.procedure
           .input(pricingReferenceHealthGetInputSchema)
           .output(pricingReferenceHealthGetResponseSchema)
-          .query(() => undefined as never)
+          .query(() => undefined as never),
       }),
       classification: t.router({
         list: t.procedure
@@ -254,13 +270,13 @@ const appRouterType = t.router({
         listAll: t.procedure
           .input(pricingReferenceClassificationListAllInputSchema)
           .output(pricingReferenceClassificationListAllResponseSchema)
-          .query(() => undefined as never)
+          .query(() => undefined as never),
       }),
       segments: t.router({
         list: t.procedure
           .input(pricingReferenceSegmentsListInputSchema)
           .output(pricingReferenceSegmentsListResponseSchema)
-          .query(() => undefined as never)
+          .query(() => undefined as never),
       }),
       anomalies: t.router({
         list: t.procedure
@@ -274,13 +290,27 @@ const appRouterType = t.router({
         export: t.procedure
           .input(pricingReferenceAnomaliesExportInputSchema)
           .output(pricingReferenceAnomaliesExportResponseSchema)
-          .mutation(() => undefined as never)
+          .mutation(() => undefined as never),
+      }),
+      diffs: t.router({
+        summary: t.procedure
+          .input(pricingReferenceDiffsSummaryGetInputSchema)
+          .output(pricingReferenceDiffsSummaryResponseSchema)
+          .query(() => undefined as never),
+        list: t.procedure
+          .input(pricingReferenceDiffsListInputSchema)
+          .output(pricingReferenceDiffsListResponseSchema)
+          .query(() => undefined as never),
+        compute: t.procedure
+          .input(pricingReferenceDiffsComputeInputSchema)
+          .output(pricingReferenceDiffsComputeResponseSchema)
+          .mutation(() => undefined as never),
       }),
       diagnose: t.procedure
         .input(pricingReferenceDiagnoseInputSchema)
         .output(pricingReferenceDiagnoseResponseSchema)
-        .mutation(() => undefined as never)
-    })
+        .mutation(() => undefined as never),
+    }),
   }),
   ai: t.router({
     settings: t.router({
@@ -303,7 +333,7 @@ const appRouterType = t.router({
       testProvider: t.procedure
         .input(aiSettingsTestProviderInputSchema)
         .output(aiSettingsTestProviderResponseSchema)
-        .mutation(() => undefined as never)
+        .mutation(() => undefined as never),
     }),
     prompts: t.router({
       list: t.procedure
@@ -321,7 +351,7 @@ const appRouterType = t.router({
       restore: t.procedure
         .input(aiPromptsRestoreInputSchema)
         .output(aiPromptsRestoreResponseSchema)
-        .mutation(() => undefined as never)
+        .mutation(() => undefined as never),
     }),
     usage: t.router({
       summary: t.procedure
@@ -331,8 +361,8 @@ const appRouterType = t.router({
       list: t.procedure
         .input(aiUsageListInputSchema)
         .output(aiUsageListResponseSchema)
-        .query(() => undefined as never)
-    })
+        .query(() => undefined as never),
+    }),
   }),
   directory: t.router({
     list: t.procedure
@@ -355,17 +385,17 @@ const appRouterType = t.router({
       cities: t.procedure
         .input(directoryOptionsCitiesInputSchema)
         .output(directoryOptionsCitiesResponseSchema)
-        .query(() => undefined as never)
+        .query(() => undefined as never),
     }),
-    'city-suggestions': t.procedure
+    "city-suggestions": t.procedure
       .input(directoryCitySuggestionsInputSchema)
       .output(directoryCitySuggestionsResponseSchema)
       .query(() => undefined as never),
-    'company-search': t.procedure
+    "company-search": t.procedure
       .input(directoryCompanySearchInputSchema)
       .output(directoryCompanySearchResponseSchema)
       .query(() => undefined as never),
-    'company-details': t.procedure
+    "company-details": t.procedure
       .input(directoryCompanyDetailsInputSchema)
       .output(directoryCompanyDetailsResponseSchema)
       .query(() => undefined as never),
@@ -377,7 +407,7 @@ const appRouterType = t.router({
       .input(directoryRouteRefSchema)
       .output(directoryRecordResponseSchema)
       .query(() => undefined as never),
-    'saved-views': t.router({
+    "saved-views": t.router({
       list: t.procedure
         .input(directorySavedViewsListInputSchema)
         .output(directorySavedViewsListResponseSchema)
@@ -390,12 +420,12 @@ const appRouterType = t.router({
         .input(directorySavedViewDeleteInputSchema)
         .output(directorySavedViewDeleteResponseSchema)
         .mutation(() => undefined as never),
-      'set-default': t.procedure
+      "set-default": t.procedure
         .input(directorySavedViewSetDefaultInputSchema)
         .output(directorySavedViewResponseSchema)
-        .mutation(() => undefined as never)
-    })
-  })
+        .mutation(() => undefined as never),
+    }),
+  }),
 });
 
 export type AppRouter = typeof appRouterType;

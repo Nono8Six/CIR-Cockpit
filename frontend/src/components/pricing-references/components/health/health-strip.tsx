@@ -6,7 +6,7 @@ import type {
 } from '../../../../../../shared/schemas/pricing/references.schema';
 import { formatCount } from '../../utils/pricing-references-formatters';
 
-export type TabId = 'imports' | 'classification' | 'segments' | 'anomalies';
+export type TabId = 'imports' | 'classification' | 'segments' | 'anomalies' | 'changements';
 
 interface HealthStripProps {
   report: PricingReferenceHealthReport | null | undefined;

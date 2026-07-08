@@ -132,6 +132,25 @@ export const pricingReferenceAnomaliesSortBySchema = z.enum([
   "type",
   "source_row_number",
 ]);
+export const pricingReferenceDiffTypeSchema = z.enum([
+  "ajoute",
+  "supprime",
+  "modifie",
+  "anomalie_apparue",
+  "anomalie_disparue",
+]);
+export const pricingReferenceDiffObjectTypeSchema = z.enum([
+  "classification",
+  "segment",
+  "liaison",
+  "grille",
+  "anomalie",
+]);
+export const pricingReferenceDiffSortBySchema = z.enum([
+  "created_at",
+  "severity",
+  "object_type",
+]);
 export const pricingReferenceAnomalyTypeSchema = z.enum([
   "missing_column",
   "empty_file",
@@ -195,6 +214,28 @@ export const pricingReferenceAnomalySeverityLabels = {
   faible: "Faible",
 } as const satisfies Record<
   z.infer<typeof pricingReferenceAnomalySeveritySchema>,
+  string
+>;
+
+export const pricingReferenceDiffTypeLabels = {
+  ajoute: "Ajoute",
+  supprime: "Supprime",
+  modifie: "Modifie",
+  anomalie_apparue: "Anomalie apparue",
+  anomalie_disparue: "Anomalie disparue",
+} as const satisfies Record<
+  z.infer<typeof pricingReferenceDiffTypeSchema>,
+  string
+>;
+
+export const pricingReferenceDiffObjectTypeLabels = {
+  classification: "Classification",
+  segment: "Segment",
+  liaison: "Liaison",
+  grille: "Grille achat",
+  anomalie: "Anomalie",
+} as const satisfies Record<
+  z.infer<typeof pricingReferenceDiffObjectTypeSchema>,
   string
 >;
 
@@ -300,6 +341,10 @@ export const pricingReferenceImportsPrepareInputSchema = z.strictObject({
 });
 
 export const pricingReferenceImportAnalyzeInputSchema = z.strictObject({
+  import_id: uuidSchema,
+});
+
+export const pricingReferenceImportActivateInputSchema = z.strictObject({
   import_id: uuidSchema,
 });
 
@@ -452,6 +497,63 @@ export const pricingReferenceAnomaliesSummaryGetInputSchema =
 export const pricingReferenceAnomaliesExportInputSchema =
   pricingReferenceAnomaliesFiltersSchema;
 
+const pricingReferenceDiffRunSelectorBaseSchema = z.strictObject({
+  run_id: uuidSchema.optional(),
+  base_snapshot_id: uuidSchema.nullable().optional(),
+  target_snapshot_id: uuidSchema.optional(),
+});
+
+export const pricingReferenceDiffRunSelectorSchema =
+  pricingReferenceDiffRunSelectorBaseSchema.refine(
+    (value) => Boolean(value.run_id) || Boolean(value.target_snapshot_id),
+    { error: "Identifiant run ou snapshot cible requis." },
+  );
+
+const pricingReferenceDiffFiltersSchema =
+  pricingReferenceDiffRunSelectorBaseSchema
+    .extend({
+      search: z.string().trim().max(120).optional(),
+      severities: z.array(pricingReferenceAnomalySeveritySchema)
+        .max(20, { error: "Maximum 20 severites." })
+        .optional(),
+      diff_types: z.array(pricingReferenceDiffTypeSchema)
+        .max(20, { error: "Maximum 20 types de diff." })
+        .optional(),
+      object_types: z.array(pricingReferenceDiffObjectTypeSchema)
+        .max(20, { error: "Maximum 20 types d objet." })
+        .optional(),
+      changed_columns: z.array(
+        z.string().trim().min(1, { error: "Colonne requise." }).max(80),
+      )
+        .max(30, { error: "Maximum 30 colonnes." })
+        .optional(),
+      marques: z.array(
+        z.string().trim().min(1, { error: "Marque requise." }).max(120),
+      )
+        .max(20, { error: "Maximum 20 marques." })
+        .optional(),
+    });
+
+export const pricingReferenceDiffsSummaryGetInputSchema =
+  pricingReferenceDiffRunSelectorSchema;
+
+export const pricingReferenceDiffsListInputSchema =
+  pricingReferencePaginationSchema.merge(pricingReferenceDiffFiltersSchema)
+    .extend({
+      sort_by: pricingReferenceDiffSortBySchema.default("severity"),
+      sort_direction: pricingReferenceSortDirectionSchema.default("desc"),
+    })
+    .refine(
+      (value) => Boolean(value.run_id) || Boolean(value.target_snapshot_id),
+      { error: "Identifiant run ou snapshot cible requis." },
+    );
+
+export const pricingReferenceDiffsComputeInputSchema = z.strictObject({
+  base_snapshot_id: uuidSchema.nullable().optional(),
+  target_snapshot_id: uuidSchema,
+  force: z.boolean().default(false),
+});
+
 export const pricingReferenceClassificationListAllInputSchema = z.strictObject({
   import_id: uuidSchema.optional(),
   snapshot_id: uuidSchema.optional(),
@@ -471,6 +573,21 @@ export const pricingReferencePreparedFileSchema = z.strictObject({
   signed_upload_expires_in_seconds: z.number().int().positive(),
 });
 
+export const pricingReferenceEffectiveImportFileSchema = z.strictObject({
+  file_kind: pricingReferenceFileKindSchema,
+  original_filename: nonEmptyStringSchema("Nom de fichier requis."),
+  size_bytes: z.number().int().nonnegative({
+    error: "Taille fichier invalide.",
+  }),
+  sha256: nonEmptyStringSchema("Hash fichier requis."),
+  row_count: z.number().int().nonnegative().nullable(),
+  source: z.enum(["fourni", "reutilise"], {
+    error: "Provenance fichier invalide.",
+  }),
+  source_import_id: uuidSchema.nullable(),
+  source_import_created_at: nullableStringSchema,
+});
+
 export const pricingReferenceImportSummarySchema = z.strictObject({
   id: uuidSchema,
   status: pricingReferenceImportStatusSchema,
@@ -485,6 +602,11 @@ export const pricingReferenceImportSummarySchema = z.strictObject({
   classification_rows_count: z.number().int().nonnegative().nullable(),
   segments_rows_count: z.number().int().nonnegative().nullable(),
   anomalies_total: z.number().int().nonnegative().nullable(),
+  is_active_version: z.boolean(),
+  snapshot_status: pricingReferenceSnapshotStatusSchema.nullable(),
+  activated_at: nullableStringSchema,
+  deactivated_at: nullableStringSchema,
+  files: z.array(pricingReferenceEffectiveImportFileSchema),
 });
 
 export const pricingReferenceImportFileSchema = z.strictObject({
@@ -511,6 +633,7 @@ export const pricingReferenceImportFileSchema = z.strictObject({
 export const pricingReferenceImportDetailSchema =
   pricingReferenceImportSummarySchema.extend({
     files: z.array(pricingReferenceImportFileSchema),
+    effective_files: z.array(pricingReferenceEffectiveImportFileSchema),
     health_report: pricingReferenceHealthReportSchema.nullable(),
   });
 
@@ -567,6 +690,72 @@ export const pricingReferenceAnomalyRowSchema = z.strictObject({
   created_at: nonEmptyStringSchema("Date de creation requise."),
 });
 
+export const pricingReferenceDiffPayloadSchema = z.strictObject({
+  changed_columns: z.array(
+    z.string().trim().min(1, { error: "Colonne modifiee requise." }),
+  ),
+  before: z.record(z.string(), jsonValueSchema).nullable(),
+  after: z.record(z.string(), jsonValueSchema).nullable(),
+  labels: z.record(z.string(), jsonValueSchema),
+  source_row_numbers: z.strictObject({
+    before: z.array(z.number().int().positive()).optional(),
+    after: z.array(z.number().int().positive()).optional(),
+  }).optional(),
+  identity_note: z.string().trim().min(1).optional(),
+});
+
+export const pricingReferenceDiffRowSchema = z.strictObject({
+  id: uuidSchema,
+  base_snapshot_id: uuidSchema.nullable(),
+  target_snapshot_id: uuidSchema,
+  diff_type: pricingReferenceDiffTypeSchema,
+  object_type: pricingReferenceDiffObjectTypeSchema,
+  object_key: nonEmptyStringSchema("Cle objet requise."),
+  severity: pricingReferenceAnomalySeveritySchema,
+  changed_columns: z.array(z.string()),
+  payload: pricingReferenceDiffPayloadSchema,
+  created_at: nonEmptyStringSchema("Date de creation requise."),
+});
+
+const pricingReferenceDiffMatrixCellSchema = z.strictObject({
+  object_type: pricingReferenceDiffObjectTypeSchema,
+  diff_type: pricingReferenceDiffTypeSchema,
+  count: z.number().int().nonnegative(),
+});
+
+const pricingReferenceDiffSeverityCountSchema = z.strictObject({
+  severity: pricingReferenceAnomalySeveritySchema,
+  count: z.number().int().nonnegative(),
+});
+
+const pricingReferenceDiffObjectSummarySchema = z.strictObject({
+  object_type: pricingReferenceDiffObjectTypeSchema,
+  total: z.number().int().nonnegative(),
+  by_severity: z.array(pricingReferenceDiffSeverityCountSchema),
+});
+
+const pricingReferenceDiffChangedColumnSummarySchema = z.strictObject({
+  column: nonEmptyStringSchema("Colonne requise."),
+  count: z.number().int().nonnegative(),
+});
+
+const pricingReferenceDiffSnapshotCountersSchema = z.strictObject({
+  classifications: z.number().int().nonnegative(),
+  segments: z.number().int().nonnegative(),
+  liaisons: z.number().int().nonnegative(),
+  grilles: z.number().int().nonnegative(),
+  anomalies: z.number().int().nonnegative(),
+});
+
+const pricingReferenceDiffDeviationAlertSchema = z.strictObject({
+  object_type: pricingReferenceDiffObjectTypeSchema,
+  base_count: z.number().int().nonnegative(),
+  deleted_count: z.number().int().nonnegative(),
+  suppression_rate: z.number().min(0),
+  severity: z.literal("haute"),
+  message: nonEmptyStringSchema("Message alerte requis."),
+});
+
 const apiSuccessSchema = z.strictObject({
   ok: z.literal(true),
   request_id: z.string().trim().min(1).optional(),
@@ -593,6 +782,15 @@ export const pricingReferenceImportAnalyzeResponseSchema = apiSuccessSchema
     snapshot_id: uuidSchema,
     status: pricingReferenceImportStatusSchema,
     health_report: pricingReferenceHealthReportSchema,
+  });
+
+export const pricingReferenceImportActivateResponseSchema = apiSuccessSchema
+  .extend({
+    import_id: uuidSchema,
+    snapshot_id: uuidSchema,
+    activated_at: nonEmptyStringSchema("Date activation requise."),
+    previous_snapshot_id: uuidSchema.nullable(),
+    previous_deactivated_at: nullableStringSchema,
   });
 
 export const pricingReferenceImportInspectResponseSchema = apiSuccessSchema
@@ -716,6 +914,41 @@ export const pricingReferenceClassificationListAllResponseSchema =
     truncated: z.boolean(),
   });
 
+export const pricingReferenceDiffsSummaryResponseSchema = apiSuccessSchema
+  .extend({
+    run_id: uuidSchema,
+    base_snapshot_id: uuidSchema.nullable(),
+    target_snapshot_id: uuidSchema,
+    status: z.literal("computed"),
+    initial_import: z.boolean(),
+    skipped_file_kinds: z.array(pricingReferenceFileKindSchema),
+    computed_at: nonEmptyStringSchema("Date calcul diff requise."),
+    total: z.number().int().nonnegative(),
+    counts_by_type: z.array(pricingReferenceDiffMatrixCellSchema),
+    counts_by_object_type: z.array(pricingReferenceDiffObjectSummarySchema),
+    changed_columns: z.array(pricingReferenceDiffChangedColumnSummarySchema),
+    financial_changes_count: z.number().int().nonnegative(),
+    deviation_alerts: z.array(pricingReferenceDiffDeviationAlertSchema),
+    snapshot_counters: z.strictObject({
+      base: pricingReferenceDiffSnapshotCountersSchema.nullable(),
+      target: pricingReferenceDiffSnapshotCountersSchema,
+    }),
+  });
+
+export const pricingReferenceDiffsListResponseSchema = apiSuccessSchema
+  .extend({
+    run_id: uuidSchema,
+    base_snapshot_id: uuidSchema.nullable(),
+    target_snapshot_id: uuidSchema,
+    rows: z.array(pricingReferenceDiffRowSchema),
+    total: z.number().int().nonnegative(),
+  });
+
+export const pricingReferenceDiffsComputeResponseSchema =
+  pricingReferenceDiffsSummaryResponseSchema.extend({
+    cache_status: z.enum(["computed", "reused"]),
+  });
+
 export const pricingReferenceImportAssistMappingResponseSchema =
   apiSuccessSchema.extend({
     import_id: uuidSchema,
@@ -748,6 +981,9 @@ export type PricingReferenceFileKind = z.infer<
 export type PricingReferenceImportStatus = z.infer<
   typeof pricingReferenceImportStatusSchema
 >;
+export type PricingReferenceSnapshotStatus = z.infer<
+  typeof pricingReferenceSnapshotStatusSchema
+>;
 export type PricingReferenceImportMappingStatus = z.infer<
   typeof pricingReferenceImportMappingStatusSchema
 >;
@@ -775,6 +1011,15 @@ export type PricingReferenceSegmentsSortBy = z.infer<
 export type PricingReferenceAnomaliesSortBy = z.infer<
   typeof pricingReferenceAnomaliesSortBySchema
 >;
+export type PricingReferenceDiffType = z.infer<
+  typeof pricingReferenceDiffTypeSchema
+>;
+export type PricingReferenceDiffObjectType = z.infer<
+  typeof pricingReferenceDiffObjectTypeSchema
+>;
+export type PricingReferenceDiffSortBy = z.infer<
+  typeof pricingReferenceDiffSortBySchema
+>;
 export type PricingReferenceHealthReport = z.infer<
   typeof pricingReferenceHealthReportSchema
 >;
@@ -786,6 +1031,9 @@ export type PricingReferenceImportsPrepareInput = z.infer<
 >;
 export type PricingReferenceImportAnalyzeInput = z.infer<
   typeof pricingReferenceImportAnalyzeInputSchema
+>;
+export type PricingReferenceImportActivateInput = z.infer<
+  typeof pricingReferenceImportActivateInputSchema
 >;
 export type PricingReferenceImportInspectInput = z.infer<
   typeof pricingReferenceImportInspectInputSchema
@@ -820,17 +1068,32 @@ export type PricingReferenceAnomaliesSummaryGetInput = z.infer<
 export type PricingReferenceAnomaliesExportInput = z.infer<
   typeof pricingReferenceAnomaliesExportInputSchema
 >;
+export type PricingReferenceDiffsSummaryGetInput = z.infer<
+  typeof pricingReferenceDiffsSummaryGetInputSchema
+>;
+export type PricingReferenceDiffsListInput = z.infer<
+  typeof pricingReferenceDiffsListInputSchema
+>;
+export type PricingReferenceDiffsComputeInput = z.infer<
+  typeof pricingReferenceDiffsComputeInputSchema
+>;
 export type PricingReferenceClassificationListAllInput = z.infer<
   typeof pricingReferenceClassificationListAllInputSchema
 >;
 export type PricingReferencePreparedFile = z.infer<
   typeof pricingReferencePreparedFileSchema
 >;
+export type PricingReferenceEffectiveImportFile = z.infer<
+  typeof pricingReferenceEffectiveImportFileSchema
+>;
 export type PricingReferenceImportsPrepareResponse = z.infer<
   typeof pricingReferenceImportsPrepareResponseSchema
 >;
 export type PricingReferenceImportAnalyzeResponse = z.infer<
   typeof pricingReferenceImportAnalyzeResponseSchema
+>;
+export type PricingReferenceImportActivateResponse = z.infer<
+  typeof pricingReferenceImportActivateResponseSchema
 >;
 export type PricingReferenceImportInspectResponse = z.infer<
   typeof pricingReferenceImportInspectResponseSchema
@@ -870,6 +1133,21 @@ export type PricingReferenceAnomaliesExportFile = z.infer<
 >;
 export type PricingReferenceAnomaliesExportResponse = z.infer<
   typeof pricingReferenceAnomaliesExportResponseSchema
+>;
+export type PricingReferenceDiffPayload = z.infer<
+  typeof pricingReferenceDiffPayloadSchema
+>;
+export type PricingReferenceDiffRow = z.infer<
+  typeof pricingReferenceDiffRowSchema
+>;
+export type PricingReferenceDiffsSummaryResponse = z.infer<
+  typeof pricingReferenceDiffsSummaryResponseSchema
+>;
+export type PricingReferenceDiffsListResponse = z.infer<
+  typeof pricingReferenceDiffsListResponseSchema
+>;
+export type PricingReferenceDiffsComputeResponse = z.infer<
+  typeof pricingReferenceDiffsComputeResponseSchema
 >;
 export type PricingReferenceClassificationListAllResponse = z.infer<
   typeof pricingReferenceClassificationListAllResponseSchema

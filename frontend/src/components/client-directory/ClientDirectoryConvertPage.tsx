@@ -8,7 +8,7 @@ import { useDirectoryOptionCommercials } from '../../hooks/directory/options/use
 import { useDirectoryRecord } from '../../hooks/directory/core/useDirectoryRecord';
 import { useSaveClient } from '../../hooks/entities/clients/useSaveClient';
 import { notifySuccess } from '@/services/errors/notifySuccess';
-import { isProspectEntityType, toSelectedAgenciesScope } from './clientDirectorySearch';
+import { isProspectEntityType, toSelectedAgenciesScope, validateDirectorySearch } from './clientDirectorySearch';
 
 type ClientDirectoryConvertPageProps = {
   prospectId: string;
@@ -17,6 +17,7 @@ type ClientDirectoryConvertPageProps = {
 const ClientDirectoryConvertPage = ({ prospectId }: ClientDirectoryConvertPageProps) => {
   const sessionState = useAppSessionStateContext();
   const navigate = useNavigate({ from: '/clients/prospects/$prospectId/convert' });
+  const search = validateDirectorySearch(Object.fromEntries(new URLSearchParams(globalThis.location.search)));
   const userRole = sessionState.profile?.role ?? 'tcs';
   const activeAgencyId = sessionState.activeAgencyId;
   const canLoadDirectory = Boolean(sessionState.session) && (userRole === 'super_admin' || Boolean(activeAgencyId));
@@ -45,7 +46,8 @@ const ClientDirectoryConvertPage = ({ prospectId }: ClientDirectoryConvertPagePr
 
     void navigate({
       to: '/clients/prospects/$prospectId',
-      params: { prospectId: duplicate.id }
+      params: { prospectId: duplicate.id },
+      search: () => search
     });
   };
 
@@ -73,7 +75,8 @@ const ClientDirectoryConvertPage = ({ prospectId }: ClientDirectoryConvertPagePr
           if (!nextOpen) {
             void navigate({
               to: '/clients/prospects/$prospectId',
-              params: { prospectId }
+              params: { prospectId },
+              search: () => search
             });
           }
         }}

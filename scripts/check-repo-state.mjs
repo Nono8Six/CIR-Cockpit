@@ -306,9 +306,9 @@ for (const requiredTable of [
 
 const drizzleSchemaSource = readText("backend/drizzle/schema.ts");
 const interactionsSchemaMatch = drizzleSchemaSource.match(
-  /export const interactions = pgTable\('interactions', \{(?<body>[\s\S]*?)\n\}\);/,
+  /export const interactions = pgTable\((['"])interactions\1,\s*\{(?<body>[\s\S]*?)\n\}\);/,
 );
-if (!interactionsSchemaMatch?.groups?.body.includes("id: text('id').$type<string>().primaryKey()")) {
+if (!/id:\s*text\((['"])id\1\)\.\$type<string>\(\)\.primaryKey\(\)/.test(interactionsSchemaMatch?.groups?.body ?? "")) {
   fail("backend/drizzle/schema.ts must model interactions.id as text to match the live Supabase column.");
 }
 

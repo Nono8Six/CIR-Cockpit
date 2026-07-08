@@ -39,8 +39,10 @@ import {
   type PricingReferenceColumnMappingProfile,
   pricingReferenceColumnMappingProfileSchema,
   pricingReferenceColumnMappingSchema,
+  type PricingReferenceEffectiveImportFile,
   type PricingReferenceFileKind,
   type PricingReferenceHealthGetResponse,
+  type PricingReferenceHealthReport,
   pricingReferenceHealthReportSchema,
   type PricingReferenceImportAnalyzeInput,
   type PricingReferenceImportAnalyzeResponse,
@@ -65,12 +67,14 @@ import {
   type PricingReferenceSegmentsListInput,
   type PricingReferenceSegmentsListResponse,
   type PricingReferenceSegmentsSortBy,
+  type PricingReferenceSnapshotStatus,
   type PricingReferenceSortDirection,
 } from "../../../../../../shared/schemas/pricing/references.schema.ts";
 import { getSupabaseAdmin } from "../../../middleware/auth/auth.ts";
 import { httpError } from "../../../middleware/errorHandler.ts";
 import type { DbClient } from "../../../types.ts";
 import { checkRateLimit } from "../../rate-limiting/rateLimit.ts";
+import { computePricingReferenceDiffBestEffort } from "./referenceDiffs.ts";
 import {
   analyzePricingReferenceWorkbooks,
   computeSha256,
@@ -90,6 +94,20 @@ type ImportRow = typeof pricing_reference_imports.$inferSelect;
 type SnapshotRow = typeof pricing_reference_snapshots.$inferSelect;
 type ColumnMappingProfileRow =
   typeof pricing_reference_column_mapping_profiles.$inferSelect;
+type ReusableImportFileSourceRow = {
+  file_kind: PricingReferenceFileKind;
+  sha256: string;
+  import_id: string;
+  source_import_created_at: string;
+  snapshot_created_at: string;
+};
+type ImportActivationSummary = {
+  import_id: string;
+  is_active_version: boolean;
+  snapshot_status: PricingReferenceSnapshotStatus;
+  activated_at: string | null;
+  deactivated_at: string | null;
+};
 export type PricingReferenceAnomalyQueryRow = {
   id: string;
   import_id: string;
@@ -450,6 +468,262 @@ const getImportFiles = async (
     .from(pricing_reference_import_files)
     .where(eq(pricing_reference_import_files.import_id, importId));
 
+const sqlValues = (values: string[]) =>
+  sql.join(values.map((value) => sql`${value}`), sql`, `);
+
+const effectiveFileKey = (
+  fileKind: PricingReferenceFileKind,
+  sha256: string,
+): string => `${fileKind}:${sha256.toLowerCase()}`;
+
+const toTimestamp = (value: string | null | undefined): number | null => {
+  if (!value) return null;
+  const timestamp = Date.parse(value);
+  return Number.isFinite(timestamp) ? timestamp : null;
+};
+
+const getAnalysisCutoff = (row: ImportRow): number | null =>
+  toTimestamp(
+    row.analysis_started_at ?? row.analysis_completed_at ?? row.created_at,
+  );
+
+const groupImportFilesByImportId = (
+  files: ImportFileRow[],
+): Map<string, ImportFileRow[]> => {
+  const grouped = new Map<string, ImportFileRow[]>();
+  files.forEach((file) => {
+    const current = grouped.get(file.import_id) ?? [];
+    current.push(file);
+    grouped.set(file.import_id, current);
+  });
+  return grouped;
+};
+
+const getImportFilesByImportIds = async (
+  db: DbClient,
+  importIds: string[],
+): Promise<ImportFileRow[]> => {
+  const uniqueImportIds = Array.from(new Set(importIds));
+  if (uniqueImportIds.length === 0) return [];
+
+  return await db.execute<ImportFileRow>(sql`
+    select *
+    from public.pricing_reference_import_files
+    where import_id in (${sqlValues(uniqueImportIds)})
+    order by import_id asc, file_kind asc, created_at desc
+  `);
+};
+
+const getImportActivationSummaries = async (
+  db: DbClient,
+  importIds: string[],
+): Promise<Map<string, ImportActivationSummary>> => {
+  const uniqueImportIds = Array.from(new Set(importIds));
+  const summaries = new Map<string, ImportActivationSummary>();
+  if (uniqueImportIds.length === 0) return summaries;
+
+  const rows = await db.execute<ImportActivationSummary>(sql`
+    select
+      import_id,
+      is_active as is_active_version,
+      status as snapshot_status,
+      activated_at,
+      deactivated_at
+    from public.pricing_reference_snapshots
+    where import_id in (${sqlValues(uniqueImportIds)})
+  `);
+
+  rows.forEach((row) => summaries.set(row.import_id, row));
+  return summaries;
+};
+
+const getReusableImportFileSources = async (
+  db: DbClient,
+  files: Pick<PricingReferenceEffectiveImportFile, "file_kind" | "sha256">[],
+): Promise<ReusableImportFileSourceRow[]> => {
+  const uniquePairs = Array.from(
+    new Map(
+      files.map((file) => [
+        effectiveFileKey(file.file_kind, file.sha256),
+        file,
+      ]),
+    ).values(),
+  );
+  if (uniquePairs.length === 0) return [];
+
+  const pairValues = sql.join(
+    uniquePairs.map((file) => sql`(${file.file_kind}, ${file.sha256})`),
+    sql`, `,
+  );
+
+  return await db.execute<ReusableImportFileSourceRow>(sql`
+    select
+      f.file_kind,
+      f.sha256,
+      f.import_id,
+      i.created_at as source_import_created_at,
+      s.created_at as snapshot_created_at
+    from public.pricing_reference_import_files f
+    join public.pricing_reference_imports i on i.id = f.import_id
+    join public.pricing_reference_snapshots s on s.import_id = i.id
+    where (f.file_kind, f.sha256) in (${pairValues})
+    order by f.file_kind asc, f.sha256 asc, s.created_at desc
+  `);
+};
+
+const toEffectiveFileFromAttached = (
+  file: ImportFileRow,
+): PricingReferenceEffectiveImportFile => ({
+  file_kind: file.file_kind,
+  original_filename: file.original_filename,
+  size_bytes: file.size_bytes,
+  sha256: file.sha256,
+  row_count: file.row_count,
+  source: "fourni",
+  source_import_id: null,
+  source_import_created_at: null,
+});
+
+const toEffectiveFileFromHealth = (
+  file: PricingReferenceHealthReport["files"][PricingReferenceFileKind],
+  source: Pick<
+    PricingReferenceEffectiveImportFile,
+    "source" | "source_import_id" | "source_import_created_at"
+  >,
+): PricingReferenceEffectiveImportFile => ({
+  file_kind: file.file_kind,
+  original_filename: file.original_filename,
+  size_bytes: file.size_bytes,
+  sha256: file.sha256,
+  row_count: file.rows_count,
+  ...source,
+});
+
+const selectReusableImportFileSource = (
+  row: ImportRow,
+  file: Pick<PricingReferenceEffectiveImportFile, "file_kind" | "sha256">,
+  sourcesByFile: Map<string, ReusableImportFileSourceRow[]>,
+): ReusableImportFileSourceRow | null => {
+  const cutoff = getAnalysisCutoff(row);
+  const candidates =
+    sourcesByFile.get(effectiveFileKey(file.file_kind, file.sha256))
+      ?.filter((source) => source.import_id !== row.id) ?? [];
+
+  if (cutoff === null) return candidates[0] ?? null;
+  return candidates.find((source) => {
+    const sourceTimestamp = toTimestamp(source.snapshot_created_at);
+    return sourceTimestamp !== null && sourceTimestamp <= cutoff;
+  }) ?? null;
+};
+
+const resolveEffectiveImportFiles = async (
+  db: DbClient,
+  rows: ImportRow[],
+  filesByImportId: Map<string, ImportFileRow[]>,
+): Promise<Map<string, PricingReferenceEffectiveImportFile[]>> => {
+  const draftsByImportId = new Map<
+    string,
+    {
+      file: PricingReferenceEffectiveImportFile;
+      needsSourceResolution: boolean;
+    }[]
+  >();
+  const reusedFilesToResolve: Pick<
+    PricingReferenceEffectiveImportFile,
+    "file_kind" | "sha256"
+  >[] = [];
+
+  rows.forEach((row) => {
+    const health = assertHealthReport(row.health_report);
+    const attachedFiles = filesByImportId.get(row.id) ?? [];
+    const attachedKeys = new Set(
+      attachedFiles.map((file) =>
+        effectiveFileKey(file.file_kind, file.sha256)
+      ),
+    );
+
+    if (!health) {
+      draftsByImportId.set(
+        row.id,
+        attachedFiles.map((file) => ({
+          file: toEffectiveFileFromAttached(file),
+          needsSourceResolution: false,
+        })),
+      );
+      return;
+    }
+
+    const effectiveFiles = [
+      health.files.classification,
+      health.files.segments_grids,
+    ].map((file) => {
+      const isProvided = attachedKeys.has(
+        effectiveFileKey(file.file_kind, file.sha256),
+      );
+      if (isProvided) {
+        return {
+          file: toEffectiveFileFromHealth(file, {
+            source: "fourni",
+            source_import_id: null,
+            source_import_created_at: null,
+          }),
+          needsSourceResolution: false,
+        };
+      }
+
+      reusedFilesToResolve.push({
+        file_kind: file.file_kind,
+        sha256: file.sha256,
+      });
+      return {
+        file: toEffectiveFileFromHealth(file, {
+          source: "reutilise",
+          source_import_id: null,
+          source_import_created_at: null,
+        }),
+        needsSourceResolution: true,
+      };
+    });
+
+    draftsByImportId.set(row.id, effectiveFiles);
+  });
+
+  const sourceRows = await getReusableImportFileSources(
+    db,
+    reusedFilesToResolve,
+  );
+  const sourcesByFile = new Map<string, ReusableImportFileSourceRow[]>();
+  sourceRows.forEach((source) => {
+    const key = effectiveFileKey(source.file_kind, source.sha256);
+    const current = sourcesByFile.get(key) ?? [];
+    current.push(source);
+    sourcesByFile.set(key, current);
+  });
+
+  const resolved = new Map<string, PricingReferenceEffectiveImportFile[]>();
+  rows.forEach((row) => {
+    const drafts = draftsByImportId.get(row.id) ?? [];
+    resolved.set(
+      row.id,
+      drafts.map((draft) => {
+        if (!draft.needsSourceResolution) return draft.file;
+        const source = selectReusableImportFileSource(
+          row,
+          draft.file,
+          sourcesByFile,
+        );
+        return {
+          ...draft.file,
+          source_import_id: source?.import_id ?? null,
+          source_import_created_at: source?.source_import_created_at ?? null,
+        };
+      }),
+    );
+  });
+
+  return resolved;
+};
+
 const getCurrentImportFiles = async (
   db: DbClient,
   importId: string,
@@ -472,13 +746,33 @@ const getLatestReusableImportFile = async (
   fileKind: PricingReferenceFileKind,
 ): Promise<ImportFileRow | null> => {
   const rows = await db.execute<ImportFileRow>(sql`
-    select f.*
-    from public.pricing_reference_import_files f
-    join public.pricing_reference_imports i on i.id = f.import_id
-    join public.pricing_reference_snapshots s on s.import_id = i.id
-    where f.file_kind = ${fileKind}
-      and f.import_id <> ${importId}
-    order by s.created_at desc
+    with active_file as (
+      select f.*
+      from public.pricing_reference_import_files f
+      join public.pricing_reference_snapshots s on s.import_id = f.import_id
+      where f.file_kind = ${fileKind}
+        and f.import_id <> ${importId}
+        and s.is_active = true
+      order by s.activated_at desc nulls last, s.created_at desc
+      limit 1
+    ),
+    fallback_file as (
+      select f.*
+      from public.pricing_reference_import_files f
+      join public.pricing_reference_imports i on i.id = f.import_id
+      join public.pricing_reference_snapshots s on s.import_id = i.id
+      where f.file_kind = ${fileKind}
+        and f.import_id <> ${importId}
+        and i.status = 'analyse_ok'
+        and not exists (select 1 from active_file)
+      order by i.analysis_completed_at desc nulls last, s.created_at desc
+      limit 1
+    )
+    select *
+    from active_file
+    union all
+    select *
+    from fallback_file
     limit 1
   `);
 
@@ -1814,6 +2108,7 @@ export const analyzePricingReferenceImport = async (
       files,
       analysis,
     );
+    await computePricingReferenceDiffBestEffort(db, snapshotId);
 
     return {
       ok: true,
@@ -1834,7 +2129,11 @@ export const analyzePricingReferenceImport = async (
   }
 };
 
-const toImportSummary = (row: ImportRow) => {
+const toImportSummary = (
+  row: ImportRow,
+  files: PricingReferenceEffectiveImportFile[],
+  activation: ImportActivationSummary | null,
+) => {
   const health = assertHealthReport(row.health_report);
   return {
     id: row.id,
@@ -1850,8 +2149,36 @@ const toImportSummary = (row: ImportRow) => {
     classification_rows_count: health?.classification.rows_count ?? null,
     segments_rows_count: health?.segments_grids.rows_count ?? null,
     anomalies_total: health?.anomalies.total ?? null,
+    is_active_version: activation?.is_active_version ?? false,
+    snapshot_status: activation?.snapshot_status ?? null,
+    activated_at: activation?.activated_at ?? null,
+    deactivated_at: activation?.deactivated_at ?? null,
+    files,
   };
 };
+
+const toImportFileDetail = (
+  file: ImportFileRow,
+): PricingReferenceImportGetResponse["import"]["files"][number] => ({
+  id: file.id,
+  import_id: file.import_id,
+  file_kind: file.file_kind,
+  original_filename: file.original_filename,
+  storage_bucket: PRICING_REFERENCE_STORAGE_BUCKET,
+  storage_path: file.storage_path,
+  size_bytes: file.size_bytes,
+  sha256: file.sha256,
+  content_type: file.content_type,
+  sheet_name: file.sheet_name,
+  detected_columns: file.detected_columns,
+  row_count: file.row_count,
+  mapping_profile_id: file.mapping_profile_id,
+  column_mapping: assertColumnMapping(file.column_mapping),
+  mapping_status: file.mapping_status,
+  mapping_confirmed_by: file.mapping_confirmed_by,
+  mapping_confirmed_at: file.mapping_confirmed_at,
+  created_at: file.created_at,
+});
 
 export const listPricingReferenceImports = async (
   db: DbClient,
@@ -1878,11 +2205,28 @@ export const listPricingReferenceImports = async (
       .from(pricing_reference_imports)
       .where(whereClause),
   ]);
+  const files = await getImportFilesByImportIds(db, rows.map((row) => row.id));
+  const filesByImportId = groupImportFilesByImportId(files);
+  const effectiveFilesByImportId = await resolveEffectiveImportFiles(
+    db,
+    rows,
+    filesByImportId,
+  );
+  const activationByImportId = await getImportActivationSummaries(
+    db,
+    rows.map((row) => row.id),
+  );
 
   return {
     ok: true,
     request_id: requestId,
-    imports: rows.map(toImportSummary),
+    imports: rows.map((row) =>
+      toImportSummary(
+        row,
+        effectiveFilesByImportId.get(row.id) ?? [],
+        activationByImportId.get(row.id) ?? null,
+      )
+    ),
     page: input.page,
     page_size: input.page_size,
     total: totalRows[0]?.total ?? 0,
@@ -1896,34 +2240,31 @@ export const getPricingReferenceImport = async (
   input: PricingReferenceImportGetInput,
 ): Promise<PricingReferenceImportGetResponse> => {
   const row = await requireImport(db, input.import_id);
-  const files = await getImportFiles(db, input.import_id);
+  const files = await getImportFilesByImportIds(db, [input.import_id]);
+  const filesByImportId = groupImportFilesByImportId(files);
+  const effectiveFilesByImportId = await resolveEffectiveImportFiles(
+    db,
+    [row],
+    filesByImportId,
+  );
+  const effectiveFiles = effectiveFilesByImportId.get(input.import_id) ?? [];
+  const activationByImportId = await getImportActivationSummaries(
+    db,
+    [input.import_id],
+  );
 
   return {
     ok: true,
     request_id: requestId,
     import: {
-      ...toImportSummary(row),
+      ...toImportSummary(
+        row,
+        effectiveFiles,
+        activationByImportId.get(input.import_id) ?? null,
+      ),
       health_report: assertHealthReport(row.health_report),
-      files: files.map((file) => ({
-        id: file.id,
-        import_id: file.import_id,
-        file_kind: file.file_kind,
-        original_filename: file.original_filename,
-        storage_bucket: PRICING_REFERENCE_STORAGE_BUCKET,
-        storage_path: file.storage_path,
-        size_bytes: file.size_bytes,
-        sha256: file.sha256,
-        content_type: file.content_type,
-        sheet_name: file.sheet_name,
-        detected_columns: file.detected_columns,
-        row_count: file.row_count,
-        mapping_profile_id: file.mapping_profile_id,
-        column_mapping: assertColumnMapping(file.column_mapping),
-        mapping_status: file.mapping_status,
-        mapping_confirmed_by: file.mapping_confirmed_by,
-        mapping_confirmed_at: file.mapping_confirmed_at,
-        created_at: file.created_at,
-      })),
+      files: files.map(toImportFileDetail),
+      effective_files: effectiveFiles,
     },
   };
 };
@@ -1940,12 +2281,31 @@ export const getPricingReferenceHealth = async (
       .from(pricing_reference_imports)
       .where(eq(pricing_reference_imports.id, input.import_id))
       .limit(1)
-    : await db
-      .select()
-      .from(pricing_reference_imports)
-      .where(eq(pricing_reference_imports.status, "analyse_ok"))
-      .orderBy(desc(pricing_reference_imports.analysis_completed_at))
-      .limit(1);
+    : await db.execute<ImportRow>(sql`
+      with active_import as (
+        select i.*
+        from public.pricing_reference_snapshots s
+        join public.pricing_reference_imports i on i.id = s.import_id
+        where s.is_active = true
+        order by s.activated_at desc nulls last, s.created_at desc
+        limit 1
+      ),
+      fallback_import as (
+        select i.*
+        from public.pricing_reference_imports i
+        join public.pricing_reference_snapshots s on s.import_id = i.id
+        where i.status = 'analyse_ok'
+          and not exists (select 1 from active_import)
+        order by i.analysis_completed_at desc nulls last, s.created_at desc
+        limit 1
+      )
+      select *
+      from active_import
+      union all
+      select *
+      from fallback_import
+      limit 1
+    `);
 
   return {
     ok: true,
@@ -1954,7 +2314,7 @@ export const getPricingReferenceHealth = async (
   };
 };
 
-const resolveSnapshotId = async (
+export const resolveSnapshotId = async (
   db: DbClient,
   input: Pick<PricingReferenceRowsListInput, "import_id" | "snapshot_id">,
 ): Promise<string | null> => {
@@ -1968,6 +2328,15 @@ const resolveSnapshotId = async (
       .limit(1);
     return snapshot?.id ?? null;
   }
+
+  const activeRows = await db.execute<{ id: string }>(sql`
+    select id
+    from public.pricing_reference_snapshots
+    where is_active = true
+    order by activated_at desc nulls last, created_at desc
+    limit 1
+  `);
+  if (activeRows[0]?.id) return activeRows[0].id;
 
   const rows = await db.execute<{ id: string }>(sql`
     select s.id

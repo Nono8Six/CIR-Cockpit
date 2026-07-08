@@ -282,12 +282,15 @@ Resume:
 
 ### Tranche 4 - Historique, diff et activation
 
-- [ ] Comparer deux snapshots de classification CIR.
-- [ ] Comparer deux snapshots de segments fabricant CIR.
-- [ ] Afficher les ajouts, suppressions et modifications.
-- [ ] Ajouter l'activation controlee d'un snapshot valide.
-- [ ] Conserver l'historique complet des imports et activations.
-- [ ] Ajouter la possibilite de consulter un ancien snapshot sans le reactiver.
+- [x] Comparer deux snapshots de classification CIR.
+- [x] Comparer deux snapshots de segments fabricant CIR.
+- [x] Afficher les ajouts, suppressions et modifications.
+- [x] Ajouter l'activation controlee d'un snapshot valide.
+- [x] Conserver l'historique complet des imports et activations.
+- [x] Ajouter la possibilite de consulter un ancien snapshot sans le reactiver.
+
+Cloture tranche 4: implementation, audit de conformite et gate finale documentes dans
+`docs/PLAN/versioning-diff-activation-referentiels.md` (Phase 7, 2026-07-08).
 
 ### Tranche 5 - Preparation import tarifs fabricant
 

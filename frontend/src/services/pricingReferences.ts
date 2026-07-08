@@ -8,7 +8,11 @@ import {
   pricingReferenceClassificationListAllResponseSchema,
   pricingReferenceClassificationListResponseSchema,
   pricingReferenceDiagnoseResponseSchema,
+  pricingReferenceDiffsComputeResponseSchema,
+  pricingReferenceDiffsListResponseSchema,
+  pricingReferenceDiffsSummaryResponseSchema,
   pricingReferenceHealthGetResponseSchema,
+  pricingReferenceImportActivateResponseSchema,
   pricingReferenceImportAnalyzeResponseSchema,
   pricingReferenceImportAssistMappingResponseSchema,
   pricingReferenceImportConfirmMappingResponseSchema,
@@ -30,7 +34,15 @@ import {
   type PricingReferenceClassificationListResponse,
   type PricingReferenceDiagnoseInput,
   type PricingReferenceDiagnoseResponse,
+  type PricingReferenceDiffsComputeInput,
+  type PricingReferenceDiffsComputeResponse,
+  type PricingReferenceDiffsListInput,
+  type PricingReferenceDiffsListResponse,
+  type PricingReferenceDiffsSummaryGetInput,
+  type PricingReferenceDiffsSummaryResponse,
   type PricingReferenceHealthGetResponse,
+  type PricingReferenceImportActivateInput,
+  type PricingReferenceImportActivateResponse,
   type PricingReferenceImportAnalyzeResponse,
   type PricingReferenceImportAssistMappingInput,
   type PricingReferenceImportAssistMappingResponse,
@@ -259,6 +271,33 @@ export const exportPricingReferenceAnomalies = (
     'Impossible de generer l export des anomalies.'
   );
 
+export const getPricingReferenceDiffSummary = (
+  input: PricingReferenceDiffsSummaryGetInput
+): Promise<PricingReferenceDiffsSummaryResponse> =>
+  invokeTrpc(
+    (api, options) => api.pricing.references.diffs.summary.query(input, options),
+    (payload) => parseResponse(pricingReferenceDiffsSummaryResponseSchema, payload),
+    'Impossible de charger le résumé des changements référentiels.'
+  );
+
+export const listPricingReferenceDiffs = (
+  input: PricingReferenceDiffsListInput
+): Promise<PricingReferenceDiffsListResponse> =>
+  invokeTrpc(
+    (api, options) => api.pricing.references.diffs.list.query(input, options),
+    (payload) => parseResponse(pricingReferenceDiffsListResponseSchema, payload),
+    'Impossible de charger la liste des changements référentiels.'
+  );
+
+export const computePricingReferenceDiff = (
+  input: PricingReferenceDiffsComputeInput
+): Promise<PricingReferenceDiffsComputeResponse> =>
+  invokeTrpc(
+    (api, options) => api.pricing.references.diffs.compute.mutate(input, options),
+    (payload) => parseResponse(pricingReferenceDiffsComputeResponseSchema, payload),
+    'Impossible de calculer la comparaison des référentiels.'
+  );
+
 export const listAllPricingReferenceClassification = (
   input: PricingReferenceClassificationListAllInput
 ): Promise<PricingReferenceClassificationListAllResponse> =>
@@ -310,6 +349,15 @@ export const confirmPricingReferenceImportMapping = (
     (api, options) => api.pricing.references.imports.confirmMapping.mutate(input, options),
     (payload) => parseResponse(pricingReferenceImportConfirmMappingResponseSchema, payload),
     'Impossible de confirmer le mapping des colonnes.'
+  );
+
+export const activatePricingReferenceImport = (
+  input: PricingReferenceImportActivateInput
+): Promise<PricingReferenceImportActivateResponse> =>
+  invokeTrpc(
+    (api, options) => api.pricing.references.imports.activate.mutate(input, options),
+    (payload) => parseResponse(pricingReferenceImportActivateResponseSchema, payload),
+    "Impossible d'activer cette version du référentiel."
   );
 
 export const analyzePricingReferenceImport = (importId: string): Promise<PricingReferenceImportAnalyzeResponse> =>

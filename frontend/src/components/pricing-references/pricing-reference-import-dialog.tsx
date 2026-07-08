@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState, type DragEvent } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   AlertTriangle,
@@ -16,6 +16,7 @@ import {
   type PricingReferenceColumnMapping,
   type PricingReferenceColumnMappingCandidate,
   type PricingReferenceFileKind,
+  type PricingReferenceImportAnalyzeResponse,
   type PricingReferenceImportInspectResponse
 } from '../../../../shared/schemas/pricing/references.schema';
 
@@ -34,6 +35,17 @@ import {
   type PricingReferenceImportProgress
 } from '@/services/pricingReferences';
 import { invalidatePricingReferenceQueries } from '@/services/query/queryInvalidation';
+import type { UserRole } from '@/types';
+import {
+  aggregateDiffTypeCountsByFileGroup,
+  diffFileGroupLabels,
+  diffTypeDotClassName
+} from './components/changes/changes-utils';
+import { useAnalyzedPricingReferenceImports } from './components/changes/use-analyzed-imports';
+import { isMissingDiffRunError, usePricingReferenceDiffSummary } from './components/changes/use-diff-summary';
+import { ActivationConfirm } from './components/imports/activation-confirm';
+import { useActivatePricingReferenceVersion } from './components/imports/use-activate-version';
+import { diffTypeLabels } from './utils/pricing-references-formatters';
 
 const importAssistantConfigs: Record<PricingReferenceFileKind, {
   label: string;
@@ -202,6 +214,126 @@ const FileDropZone = ({
   );
 };
 
+/**
+ * Mini-résumé des changements de l'analyse qui vient d'aboutir : compteurs
+ * ventilés PAR FICHIER SOURCE (classification produit CIR vs segments & grilles
+ * fabricant, jamais mélangés) × type de changement (dots D7) issus du run de
+ * diff automatique, cas premier import et « aucun changement » traités, alertes
+ * de déviation non bloquantes.
+ *
+ * @param props - Component props
+ * @returns Analysis changes summary JSX
+ */
+const AnalysisChangesSummary = ({ snapshotId }: { snapshotId: string }) => {
+  const summaryQuery = usePricingReferenceDiffSummary({ target_snapshot_id: snapshotId });
+
+  useEffect(() => {
+    if (summaryQuery.error && !isMissingDiffRunError(summaryQuery.error)) {
+      handleUiError(summaryQuery.error, 'Impossible de charger le résumé des changements référentiels.', {
+        feature: 'pricing.references.import.diffSummary'
+      });
+    }
+  }, [summaryQuery.error]);
+
+  if (summaryQuery.isLoading) {
+    return (
+      <div className="space-y-2 py-1" aria-hidden="true">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <div key={index} className="h-3.5 w-2/3 animate-pulse rounded bg-stone-100" />
+        ))}
+      </div>
+    );
+  }
+
+  if (summaryQuery.isError) {
+    return (
+      <p className="text-xs leading-relaxed text-muted-foreground">
+        {isMissingDiffRunError(summaryQuery.error)
+          ? 'Comparaison non calculée pour cette analyse. L’onglet Changements permet de la calculer.'
+          : 'Le résumé des changements n’a pas pu être chargé. Le détail reste disponible dans l’onglet Changements.'}
+      </p>
+    );
+  }
+
+  const summary = summaryQuery.data;
+  if (!summary) return null;
+
+  if (summary.initial_import) {
+    return (
+      <div className="space-y-1">
+        <p className="text-xs font-medium text-foreground">Première version de référence</p>
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          Aucun historique de comparaison n&apos;existe encore :{' '}
+          {formatCount(summary.snapshot_counters.target.classifications)} classifications,{' '}
+          {formatCount(summary.snapshot_counters.target.segments)} segments et{' '}
+          {formatCount(summary.snapshot_counters.target.grilles)} grilles importés.
+        </p>
+      </div>
+    );
+  }
+
+  if (summary.total === 0) {
+    return (
+      <p className="text-xs leading-relaxed text-muted-foreground">
+        Aucun changement par rapport à la version de référence.
+      </p>
+    );
+  }
+
+  const fileGroups = aggregateDiffTypeCountsByFileGroup(summary);
+
+  return (
+    <div className="space-y-2.5">
+      <p className="text-xs font-medium text-foreground">
+        {formatCount(summary.total)} changement{summary.total > 1 ? 's' : ''} par rapport à la
+        version de référence
+      </p>
+      {fileGroups.map((group) => (
+        <div key={group.fileGroup} className="space-y-1">
+          <p className="text-[11px] font-medium text-stone-600">
+            {diffFileGroupLabels[group.fileGroup]}
+          </p>
+          <ul className="space-y-1">
+            {group.cells.map((cell) => (
+              <li key={cell.diff_type} className="flex items-center gap-1.5 text-xs text-stone-700">
+                <span
+                  className={cn(
+                    'size-1.5 shrink-0 rounded-full',
+                    diffTypeDotClassName[cell.diff_type]
+                  )}
+                  aria-hidden="true"
+                />
+                {diffTypeLabels[cell.diff_type]}
+                <span className="ml-auto font-mono text-[11px] tabular-nums text-stone-500">
+                  {formatCount(cell.count)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+      {summary.financial_changes_count > 0 ? (
+        <p className="text-[11px] leading-relaxed text-stone-500">
+          dont{' '}
+          <span className="font-mono tabular-nums">
+            {formatCount(summary.financial_changes_count)}
+          </span>{' '}
+          sur les colonnes financières (remise_ha, coef_retro, coef_ha, coef_majvte).
+        </p>
+      ) : null}
+      {summary.deviation_alerts.map((alert) => (
+        <p
+          key={alert.object_type}
+          className="flex items-start gap-1.5 text-[11px] leading-relaxed text-amber-800"
+        >
+          <span className="mt-1 size-1.5 shrink-0 rounded-full bg-amber-500" aria-hidden="true" />
+          {alert.message}
+        </p>
+      ))}
+    </div>
+  );
+};
+
 type ImportAssistantState = {
   file: File | null;
   importId: string | null;
@@ -224,30 +356,47 @@ const emptyImportAssistantState = (): ImportAssistantState => ({
 
 interface PricingReferenceImportDialogProps {
   fileKind: PricingReferenceFileKind;
+  userRole: UserRole;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onImported: (importId: string) => void;
+  /** Bascule la page sur l'onglet Changements scopé sur l'import analysé. */
+  onViewChanges: (importId: string) => void;
 }
+
+const wizardStepItems: Array<{ id: 'file' | 'mapping' | 'analyze' | 'done'; label: string }> = [
+  { id: 'file', label: 'Sélection fichier' },
+  { id: 'mapping', label: 'Mapping colonnes' },
+  { id: 'analyze', label: 'Lancement analyse' },
+  { id: 'done', label: 'Résumé & activation' }
+];
 
 /**
  * PricingReferenceImportDialog Component
  *
- * Renders a dialog wizard to import pricing reference files.
+ * Renders a dialog wizard to import pricing reference files, ending on a
+ * post-analysis summary screen (diff mini-summary, « Voir les changements »,
+ * « Activer cette version » réservée super_admin).
  *
  * @param props - Component props
  * @returns Pricing Reference Import Dialog JSX
  */
 export const PricingReferenceImportDialog = ({
   fileKind,
+  userRole,
   open,
   onOpenChange,
-  onImported
+  onImported,
+  onViewChanges
 }: PricingReferenceImportDialogProps) => {
   const queryClient = useQueryClient();
   const [state, setState] = useState<ImportAssistantState>(emptyImportAssistantState());
-  const [wizardStep, setWizardStep] = useState<'file' | 'mapping' | 'analyze'>('file');
+  const [wizardStep, setWizardStep] = useState<'file' | 'mapping' | 'analyze' | 'done'>('file');
+  const [analysisResult, setAnalysisResult] = useState<PricingReferenceImportAnalyzeResponse | null>(null);
+  const [isConfirmingActivation, setIsConfirmingActivation] = useState(false);
 
   const config = importAssistantConfigs[fileKind];
+  const { imports: analyzedImports } = useAnalyzedPricingReferenceImports();
 
   const candidateByColumn = useMemo(() => {
     const entries = state.inspection?.candidates.map((candidate) => [candidate.canonical_column, candidate] as const) ?? [];
@@ -264,7 +413,19 @@ export const PricingReferenceImportDialog = ({
       saveAsDefault: state.saveAsDefault
     });
     setWizardStep('file');
+    setAnalysisResult(null);
+    setIsConfirmingActivation(false);
   }, [state.saveAsDefault]);
+
+  const closeAndReset = useCallback(() => {
+    onOpenChange(false);
+    resetState(null);
+  }, [onOpenChange, resetState]);
+
+  const activateMutation = useActivatePricingReferenceVersion(() => {
+    setIsConfirmingActivation(false);
+    closeAndReset();
+  });
 
   const previewMutation = useMutation({
     mutationFn: async () => {
@@ -391,13 +552,10 @@ export const PricingReferenceImportDialog = ({
     onSuccess: async (response) => {
       notifySuccess('Import référentiel analysé.');
       onImported(response.import_id);
-      setState((current) => ({
-        ...current,
-        progress: { step: 'done', label: 'Rapport prêt' }
-      }));
+      setState((current) => ({ ...current, progress: null }));
+      setAnalysisResult(response);
+      setWizardStep('done');
       await invalidatePricingReferenceQueries(queryClient);
-      onOpenChange(false);
-      resetState(null);
     },
     onError: (error) => {
       handleUiError(error, 'Impossible d\'analyser l\'import référentiel.', {
@@ -408,7 +566,17 @@ export const PricingReferenceImportDialog = ({
     }
   });
 
-  const isBusy = previewMutation.isPending || reinspectMutation.isPending || confirmMutation.isPending || analyzeMutation.isPending;
+  const isBusy =
+    previewMutation.isPending
+    || reinspectMutation.isPending
+    || confirmMutation.isPending
+    || analyzeMutation.isPending
+    || activateMutation.isPending;
+
+  const analyzedTargetRow = analysisResult
+    ? analyzedImports.find((row) => row.id === analysisResult.import_id) ?? null
+    : null;
+  const activeVersionRow = analyzedImports.find((row) => row.is_active_version) ?? null;
 
   const previewColumns = state.inspection?.detected_columns.slice(0, 6) ?? [];
 
@@ -433,30 +601,21 @@ export const PricingReferenceImportDialog = ({
         </DialogHeader>
 
         {/* Stepper progress indicator */}
-        <div className="flex items-center justify-center gap-2 py-3 border-b border-border bg-surface-1 shrink-0">
-          <div className="flex items-center gap-2">
-            <span className={cn(
-              "flex size-6 items-center justify-center rounded-full text-xs font-semibold border",
-              wizardStep === 'file' ? "bg-primary border-primary text-primary-foreground" : "bg-background border-muted text-muted-foreground"
-            )}>1</span>
-            <span className={cn("text-xs font-medium", wizardStep === 'file' ? "text-foreground font-semibold" : "text-muted-foreground")}>Sélection fichier</span>
-          </div>
-          <ArrowRight className="size-3.5 text-muted-foreground" />
-          <div className="flex items-center gap-2">
-            <span className={cn(
-              "flex size-6 items-center justify-center rounded-full text-xs font-semibold border",
-              wizardStep === 'mapping' ? "bg-primary border-primary text-primary-foreground" : "bg-background border-muted text-muted-foreground"
-            )}>2</span>
-            <span className={cn("text-xs font-medium", wizardStep === 'mapping' ? "text-foreground font-semibold" : "text-muted-foreground")}>Mapping colonnes</span>
-          </div>
-          <ArrowRight className="size-3.5 text-muted-foreground" />
-          <div className="flex items-center gap-2">
-            <span className={cn(
-              "flex size-6 items-center justify-center rounded-full text-xs font-semibold border",
-              wizardStep === 'analyze' ? "bg-primary border-primary text-primary-foreground" : "bg-background border-muted text-muted-foreground"
-            )}>3</span>
-            <span className={cn("text-xs font-medium", wizardStep === 'analyze' ? "text-foreground font-semibold" : "text-muted-foreground")}>Lancement analyse</span>
-          </div>
+        <div className="flex flex-wrap items-center justify-center gap-2 py-3 border-b border-border bg-surface-1 shrink-0">
+          {wizardStepItems.map((step, position) => (
+            <Fragment key={step.id}>
+              {position > 0 ? (
+                <ArrowRight className="size-3.5 text-muted-foreground" aria-hidden="true" />
+              ) : null}
+              <div className="flex items-center gap-2">
+                <span className={cn(
+                  "flex size-6 items-center justify-center rounded-full text-xs font-semibold border",
+                  wizardStep === step.id ? "bg-primary border-primary text-primary-foreground" : "bg-background border-muted text-muted-foreground"
+                )}>{position + 1}</span>
+                <span className={cn("text-xs font-medium", wizardStep === step.id ? "text-foreground font-semibold" : "text-muted-foreground")}>{step.label}</span>
+              </div>
+            </Fragment>
+          ))}
         </div>
 
         {/* Progress Alert */}
@@ -719,6 +878,74 @@ export const PricingReferenceImportDialog = ({
                   Analyser l import
                 </Button>
               </div>
+            </div>
+          )}
+
+          {wizardStep === 'done' && analysisResult && (
+            <div className="max-w-md mx-auto py-8 space-y-6">
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="flex size-14 items-center justify-center rounded-full bg-success/15 text-success">
+                  <CheckCircle2 className="size-8" aria-hidden="true" />
+                </div>
+                <h3 className="text-base font-semibold text-foreground">Analyse terminée</h3>
+                <p className="text-xs text-muted-foreground max-w-sm">
+                  Vérifiez les changements par rapport à la version de référence avant
+                  d&apos;activer cette version.
+                </p>
+              </div>
+
+              <div className="border border-border bg-surface-1 p-4 rounded text-left space-y-2">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-[0.08em]">
+                  Changements détectés
+                </h4>
+                <AnalysisChangesSummary snapshotId={analysisResult.snapshot_id} />
+              </div>
+
+              {isConfirmingActivation ? (
+                <ActivationConfirm
+                  className="border-t border-border pt-4 text-left"
+                  targetCreatedAt={analyzedTargetRow?.created_at ?? null}
+                  activeVersionCreatedAt={activeVersionRow?.created_at ?? null}
+                  isRollback={false}
+                  isPending={activateMutation.isPending}
+                  onConfirm={() => activateMutation.mutate(analysisResult.import_id)}
+                  onCancel={() => setIsConfirmingActivation(false)}
+                />
+              ) : (
+                <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={closeAndReset}
+                    disabled={isBusy}
+                  >
+                    Fermer
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={isBusy}
+                    onClick={() => {
+                      onViewChanges(analysisResult.import_id);
+                      closeAndReset();
+                    }}
+                  >
+                    Voir les changements
+                  </Button>
+                  {userRole === 'super_admin' ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={isBusy}
+                      onClick={() => setIsConfirmingActivation(true)}
+                    >
+                      Activer cette version
+                    </Button>
+                  ) : null}
+                </div>
+              )}
             </div>
           )}
         </div>

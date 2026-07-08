@@ -40,9 +40,10 @@ const SectionEmpty = ({ label }: { label: string }) => (
 );
 
 /**
- * Chronological import list split into ACTIF (the current snapshot import, softly
- * highlighted) and HISTORIQUE sections, each introduced by a mono micro-label.
- * Column captions for the three counter columns sit in the first visible band.
+ * Chronological import list split into ACTIF (the import whose snapshot is the
+ * real active version, `is_active_version` from the API, softly highlighted)
+ * and HISTORIQUE sections, each introduced by a mono micro-label. Column
+ * captions for the three counter columns sit in the first visible band.
  */
 export const ImportRows = ({
   rows,
@@ -58,8 +59,12 @@ export const ImportRows = ({
           <div className="h-2.5 w-12 animate-pulse rounded bg-stone-100" />
         </div>
         {Array.from({ length: 4 }).map((_, index) => (
-          <div key={index} className="flex h-10 items-center border-b border-stone-100 px-4">
-            <div className="h-3.5 w-2/3 animate-pulse rounded bg-stone-50" />
+          <div
+            key={index}
+            className="flex h-[52px] flex-col justify-center gap-1.5 border-b border-stone-100 px-4"
+          >
+            <div className="h-3 w-1/3 animate-pulse rounded bg-stone-100" />
+            <div className="h-3 w-2/3 animate-pulse rounded bg-stone-50" />
           </div>
         ))}
       </div>
@@ -87,7 +92,7 @@ export const ImportRows = ({
           {activeMatchesFilter && activeImport ? (
             <ImportRow row={activeImport} isActive onOpenDetail={onOpenDetail} />
           ) : (
-            <SectionEmpty label="Aucun snapshot actif. Importez la classification CIR puis les segments et grilles pour initialiser le référentiel." />
+            <SectionEmpty label="Aucune version active. Importez la classification CIR puis les segments et grilles, analysez, puis activez la première version." />
           )}
         </section>
       ) : null}

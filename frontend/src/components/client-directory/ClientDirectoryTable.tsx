@@ -23,7 +23,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { cn } from '@/lib/utils';
 import { formatClientNumber } from '@/utils/clients/formatClientNumber';
 import { formatRelativeTime } from '@/utils/date/formatRelativeTime';
-import { isProspectEntityType } from './clientDirectorySearch';
+import { isProspectEntityType, validateDirectorySearch } from './clientDirectorySearch';
 import DataTableColumnHeader from './data-table/DataTableColumnHeader';
 import DirectoryTablePagination from './data-table/DirectoryTablePagination';
 import { DIRECTORY_COLUMN_LABELS, DIRECTORY_COLUMN_ORDER } from './directoryGridConfig';
@@ -58,12 +58,14 @@ interface DirectoryRecordNameLinkProps {
 const DirectoryRecordNameLink = ({ row }: DirectoryRecordNameLinkProps) => {
   const routeRef = getDirectoryRouteRefFromRow(row);
   const label = `Ouvrir la fiche ${row.name}`;
+  const search = validateDirectorySearch(Object.fromEntries(new URLSearchParams(globalThis.location.search)));
 
   if (routeRef.kind === 'client') {
     return (
       <Link
         to="/clients/$clientNumber"
         params={{ clientNumber: routeRef.clientNumber }}
+        search={() => search}
         aria-label={label}
         className={recordLinkClassName}
       >
@@ -86,12 +88,13 @@ const DirectoryRecordNameLink = ({ row }: DirectoryRecordNameLinkProps) => {
   }
 
   return (
-    <Link
-      to="/clients/prospects/$prospectId"
-      params={{ prospectId: routeRef.id }}
-      aria-label={label}
-      className={recordLinkClassName}
-    >
+      <Link
+        to="/clients/prospects/$prospectId"
+        params={{ prospectId: routeRef.id }}
+        search={() => search}
+        aria-label={label}
+        className={recordLinkClassName}
+      >
       <span className="truncate">{row.name}</span>
     </Link>
   );

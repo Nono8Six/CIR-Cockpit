@@ -16,7 +16,8 @@ import { formatCount } from '../../utils/pricing-references-formatters';
 export interface FacetedFilterOption {
   value: string;
   label: string;
-  count: number;
+  /** Occurrences affichées à droite de l'option ; omis quand aucun agrégat fiable n'existe. */
+  count?: number;
   dotClassName?: string;
 }
 
@@ -150,9 +151,11 @@ export const FacetedFilter = ({ label, options, selectedValues, onChange }: Face
                       />
                     ) : null}
                     <span className="min-w-0 flex-1 truncate">{option.label}</span>
-                    <span className="ml-auto font-mono text-[11px] tabular-nums text-stone-500">
-                      {formatCount(option.count)}
-                    </span>
+                    {option.count !== undefined ? (
+                      <span className="ml-auto font-mono text-[11px] tabular-nums text-stone-500">
+                        {formatCount(option.count)}
+                      </span>
+                    ) : null}
                   </CommandItem>
                 );
               })}

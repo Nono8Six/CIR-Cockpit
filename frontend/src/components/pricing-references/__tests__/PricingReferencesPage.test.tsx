@@ -6,19 +6,131 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import PricingReferencesPage from '@/components/pricing-references/PricingReferencesPage';
 import {
+  activatePricingReferenceImport,
   analyzePricingReferenceImport,
   confirmPricingReferenceImportMapping,
   exportPricingReferenceAnomalies,
   getPricingReferenceAnomaliesSummary,
+  getPricingReferenceDiffSummary,
+  getPricingReferenceImport,
   listAllPricingReferenceClassification,
   listPricingReferenceAnomalies,
+  listPricingReferenceImports,
   prepareUploadAndInspectPricingReferenceFile
 } from '@/services/pricingReferences';
 import { notifySuccess } from '@/services/errors/notifySuccess';
+import type {
+  PricingReferenceImportGetResponse,
+  PricingReferenceImportsListResponse
+} from '../../../../../shared/schemas/pricing/references.schema';
 
 const importId = '00000000-0000-4000-8000-000000000001';
 const snapshotId = '00000000-0000-4000-8000-000000000002';
 const fileId = '00000000-0000-4000-8000-000000000006';
+const sourceImportId = '00000000-0000-4000-8000-000000000009';
+const archivedImportId = '00000000-0000-4000-8000-000000000010';
+
+type ImportSummaryFixture = PricingReferenceImportsListResponse['imports'][number];
+
+// Scenario "segments seul" : la classification est réutilisée d'un import antérieur.
+const effectiveFilesFixture = [{
+  file_kind: 'classification' as const,
+  original_filename: 'classification.xlsx',
+  size_bytes: 2048,
+  sha256: 'a'.repeat(64),
+  row_count: 12,
+  source: 'reutilise' as const,
+  source_import_id: sourceImportId,
+  source_import_created_at: '2026-06-15T09:12:00.000Z'
+}, {
+  file_kind: 'segments_grids' as const,
+  original_filename: 'segments.xlsx',
+  size_bytes: 4096,
+  sha256: 'b'.repeat(64),
+  row_count: 34,
+  source: 'fourni' as const,
+  source_import_id: null,
+  source_import_created_at: null
+}];
+const buildImportSummary = (
+  overrides: Partial<ImportSummaryFixture> = {}
+): ImportSummaryFixture => ({
+  id: importId,
+  status: 'analyse_ok',
+  created_by: null,
+  analyzed_by: null,
+  created_at: '2026-06-22T10:00:00.000Z',
+  updated_at: '2026-06-22T10:05:00.000Z',
+  analysis_started_at: '2026-06-22T10:01:00.000Z',
+  analysis_completed_at: '2026-06-22T10:05:00.000Z',
+  error_code: null,
+  error_message: null,
+  classification_rows_count: 12,
+  segments_rows_count: 34,
+  anomalies_total: 1,
+  is_active_version: true,
+  snapshot_status: 'actif',
+  activated_at: '2026-06-22T10:06:00.000Z',
+  deactivated_at: null,
+  files: effectiveFilesFixture,
+  ...overrides
+});
+
+// Scénario rollback : l'import le plus récent a été remplacé par la
+// réactivation de l'import initial (deactivated_at récent === activated_at actif).
+const rollbackImportFixtures = (): ImportSummaryFixture[] => [
+  buildImportSummary({
+    id: archivedImportId,
+    created_at: '2026-07-01T08:30:00.000Z',
+    updated_at: '2026-07-01T08:35:00.000Z',
+    analysis_started_at: '2026-07-01T08:31:00.000Z',
+    analysis_completed_at: '2026-07-01T08:35:00.000Z',
+    is_active_version: false,
+    snapshot_status: 'archive',
+    activated_at: '2026-07-01T09:00:00.000Z',
+    deactivated_at: '2026-07-02T09:00:00.000Z'
+  }),
+  buildImportSummary({ activated_at: '2026-07-02T09:00:00.000Z' })
+];
+
+const defaultImportsList = async (): Promise<PricingReferenceImportsListResponse> => ({
+  ok: true,
+  imports: [buildImportSummary()],
+  page: 1,
+  page_size: 50,
+  total: 1
+});
+
+const buildImportDetailResponse = (
+  summary: ImportSummaryFixture
+): PricingReferenceImportGetResponse => ({
+  ok: true,
+  import: {
+    ...summary,
+    files: [{
+      id: '00000000-0000-4000-8000-000000000008',
+      import_id: summary.id,
+      file_kind: 'segments_grids',
+      original_filename: 'segments.xlsx',
+      storage_bucket: 'pricing-reference-sources',
+      storage_path: 'imports/segments.xlsx',
+      size_bytes: 4096,
+      sha256: 'b'.repeat(64),
+      content_type: null,
+      sheet_name: 'Feuil1',
+      detected_columns: [],
+      row_count: 34,
+      mapping_status: 'auto',
+      created_at: summary.created_at
+    }],
+    effective_files: effectiveFilesFixture,
+    health_report: null
+  }
+});
+
+const defaultGetImport = async (): Promise<PricingReferenceImportGetResponse> =>
+  buildImportDetailResponse(buildImportSummary());
+
 const classificationColumns = ['MEGA', 'FAM', 'SFA', 'MEGA_LIB', 'FAM_LIB', 'SFA_LIB'] as const;
 const segmentsColumns = [
   'SEGMENT',
@@ -89,76 +201,16 @@ vi.mock('@/services/errors/notifySuccess', () => ({
 }));
 
 vi.mock('@/services/pricingReferences', () => ({
-  listPricingReferenceImports: vi.fn(async () => ({
+  // Références paresseuses : la factory est hoistée avant les consts du module.
+  listPricingReferenceImports: vi.fn(async () => defaultImportsList()),
+  getPricingReferenceImport: vi.fn(async () => defaultGetImport()),
+  activatePricingReferenceImport: vi.fn(async (input: { import_id: string }) => ({
     ok: true,
-    imports: [{
-      id: importId,
-      status: 'analyse_ok',
-      created_by: null,
-      analyzed_by: null,
-      created_at: '2026-06-22T10:00:00.000Z',
-      updated_at: '2026-06-22T10:05:00.000Z',
-      analysis_started_at: '2026-06-22T10:01:00.000Z',
-      analysis_completed_at: '2026-06-22T10:05:00.000Z',
-      error_code: null,
-      error_message: null,
-      classification_rows_count: 12,
-      segments_rows_count: 34,
-      anomalies_total: 1
-    }],
-    page: 1,
-    page_size: 50,
-    total: 1
-  })),
-  getPricingReferenceImport: vi.fn(async () => ({
-    ok: true,
-    import: {
-      id: importId,
-      status: 'analyse_ok',
-      created_by: null,
-      analyzed_by: null,
-      created_at: '2026-06-22T10:00:00.000Z',
-      updated_at: '2026-06-22T10:05:00.000Z',
-      analysis_started_at: '2026-06-22T10:01:00.000Z',
-      analysis_completed_at: '2026-06-22T10:05:00.000Z',
-      error_code: null,
-      error_message: null,
-      classification_rows_count: 12,
-      segments_rows_count: 34,
-      anomalies_total: 1,
-      files: [{
-        id: fileId,
-        import_id: importId,
-        file_kind: 'classification',
-        original_filename: 'classification.xlsx',
-        storage_bucket: 'pricing-reference-sources',
-        storage_path: 'imports/classification.xlsx',
-        size_bytes: 2048,
-        sha256: 'a'.repeat(64),
-        content_type: null,
-        sheet_name: 'Feuil1',
-        detected_columns: [],
-        row_count: 12,
-        mapping_status: 'confirme',
-        created_at: '2026-06-22T10:00:00.000Z'
-      }, {
-        id: '00000000-0000-4000-8000-000000000008',
-        import_id: importId,
-        file_kind: 'segments_grids',
-        original_filename: 'segments.xlsx',
-        storage_bucket: 'pricing-reference-sources',
-        storage_path: 'imports/segments.xlsx',
-        size_bytes: 4096,
-        sha256: 'b'.repeat(64),
-        content_type: null,
-        sheet_name: 'Feuil1',
-        detected_columns: [],
-        row_count: 34,
-        mapping_status: 'auto',
-        created_at: '2026-06-22T10:00:00.000Z'
-      }],
-      health_report: null
-    }
+    import_id: input.import_id,
+    snapshot_id: snapshotId,
+    activated_at: '2026-07-03T10:00:00.000Z',
+    previous_snapshot_id: null,
+    previous_deactivated_at: null
   })),
   getPricingReferenceHealth: vi.fn(async () => ({
     ok: true,
@@ -395,6 +447,80 @@ vi.mock('@/services/pricingReferences', () => ({
     page_size: 50,
     total: 2
   })),
+  getPricingReferenceDiffSummary: vi.fn(async () => ({
+    ok: true,
+    run_id: '00000000-0000-4000-8000-00000000000c',
+    base_snapshot_id: '00000000-0000-4000-8000-00000000000b',
+    target_snapshot_id: snapshotId,
+    status: 'computed',
+    initial_import: false,
+    skipped_file_kinds: [],
+    computed_at: '2026-06-22T10:08:00.000Z',
+    total: 3,
+    counts_by_type: [{ object_type: 'grille', diff_type: 'modifie', count: 3 }],
+    counts_by_object_type: [{
+      object_type: 'grille',
+      total: 3,
+      by_severity: [{ severity: 'moyenne', count: 3 }]
+    }],
+    changed_columns: [{ column: 'remise_ha', count: 3 }],
+    financial_changes_count: 3,
+    deviation_alerts: [],
+    snapshot_counters: {
+      base: { classifications: 12, segments: 34, liaisons: 34, grilles: 56, anomalies: 2 },
+      target: { classifications: 12, segments: 34, liaisons: 34, grilles: 56, anomalies: 1 }
+    }
+  })),
+  listPricingReferenceDiffs: vi.fn(async () => ({
+    ok: true,
+    run_id: '00000000-0000-4000-8000-00000000000c',
+    base_snapshot_id: '00000000-0000-4000-8000-00000000000b',
+    target_snapshot_id: snapshotId,
+    rows: [{
+      id: '00000000-0000-4000-8000-00000000000d',
+      base_snapshot_id: '00000000-0000-4000-8000-00000000000b',
+      target_snapshot_id: snapshotId,
+      diff_type: 'modifie',
+      object_type: 'grille',
+      object_key: '001|42|BOSCH|CAT|10|1|A|∅|∅',
+      severity: 'moyenne',
+      changed_columns: ['remise_ha'],
+      payload: {
+        changed_columns: ['remise_ha'],
+        before: { remise_ha: '12' },
+        after: { remise_ha: '15' },
+        labels: { segment_key: '001|42|BOSCH|CAT', segment: '001', marque: 'BOSCH', cat_fab: 'CAT' },
+        source_row_numbers: { before: [20], after: [22] }
+      },
+      created_at: '2026-06-22T10:08:00.000Z'
+    }],
+    total: 3
+  })),
+  computePricingReferenceDiff: vi.fn(async () => ({
+    ok: true,
+    run_id: '00000000-0000-4000-8000-00000000000c',
+    base_snapshot_id: '00000000-0000-4000-8000-00000000000b',
+    target_snapshot_id: snapshotId,
+    status: 'computed',
+    initial_import: false,
+    skipped_file_kinds: [],
+    computed_at: '2026-06-22T10:08:00.000Z',
+    total: 3,
+    counts_by_type: [{ object_type: 'grille', diff_type: 'modifie', count: 3 }],
+    counts_by_object_type: [{
+      object_type: 'grille',
+      total: 3,
+      by_severity: [{ severity: 'moyenne', count: 3 }]
+    }],
+    changed_columns: [{ column: 'remise_ha', count: 3 }],
+    financial_changes_count: 3,
+    deviation_alerts: [],
+    snapshot_counters: {
+      base: { classifications: 12, segments: 34, liaisons: 34, grilles: 56, anomalies: 2 },
+      target: { classifications: 12, segments: 34, liaisons: 34, grilles: 56, anomalies: 1 }
+    },
+    cache_status: 'computed'
+  })),
   prepareUploadAndInspectPricingReferenceFile: vi.fn(async (fileKind: 'classification' | 'segments_grids') => ({
     import_id: importId,
     prepared_file: {
@@ -504,6 +630,9 @@ const renderWithQueryClient = (children: ReactNode) => {
 describe('PricingReferencesPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Certains tests remplacent l'implémentation entière : rétablir la base.
+    vi.mocked(listPricingReferenceImports).mockImplementation(defaultImportsList);
+    vi.mocked(getPricingReferenceImport).mockImplementation(defaultGetImport);
   });
 
   it('uses the route tab as the controlled source of truth', async () => {
@@ -538,11 +667,12 @@ describe('PricingReferencesPage', () => {
     renderWithQueryClient(<PricingReferencesPage userRole="agency_admin" />);
 
     expect(await screen.findByRole('heading', { name: 'Référentiels CIR' })).toBeInTheDocument();
-    expect(screen.getAllByRole('tab')).toHaveLength(4);
+    expect(screen.getAllByRole('tab')).toHaveLength(5);
     expect(screen.getByRole('tab', { name: /imports/i })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /classification/i })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /segments/i })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /anomalies/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /changements/i })).toBeInTheDocument();
     expect(screen.queryByRole('tab', { name: /liaisons/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('tab', { name: /historique/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /importer/i })).not.toBeInTheDocument();
@@ -556,6 +686,13 @@ describe('PricingReferencesPage', () => {
     const activeRow = await screen.findByRole('button', { name: /voir le détail de l'import du/i });
     expect(activeRow).toHaveTextContent(/analyse ok/i);
     expect(activeRow).not.toHaveTextContent(importId);
+
+    // Identité des fichiers au premier regard : type, nom exact, provenance réutilisée.
+    expect(within(activeRow).getByText('Classification')).toBeInTheDocument();
+    expect(within(activeRow).getByText('Segments & grilles')).toBeInTheDocument();
+    expect(within(activeRow).getByText('classification.xlsx')).toBeInTheDocument();
+    expect(within(activeRow).getByText('segments.xlsx')).toBeInTheDocument();
+    expect(within(activeRow).getByText('réutilisé')).toBeInTheDocument();
   });
 
   it('renders grouped anomaly triage with lazy rows and a navigable detail dialog', async () => {
@@ -629,6 +766,30 @@ describe('PricingReferencesPage', () => {
     expect(
       within(anomalyPanel).getByRole('button', { name: /réinitialiser le filtre sévérité/i })
     ).toBeInTheDocument();
+  });
+
+  it('expose l onglet Changements avec compteur et surface de comparaison', async () => {
+    const user = userEvent.setup();
+    renderWithQueryClient(<PricingReferencesPage userRole="agency_admin" />);
+
+    const changesTab = await screen.findByRole('tab', { name: /changements/i });
+    // Compteur de l'onglet : total du run automatique de la cible par défaut.
+    await waitFor(() => {
+      expect(changesTab).toHaveTextContent('3');
+    });
+
+    await user.click(changesTab);
+    const panel = await screen.findByRole('tabpanel', { name: /changements/i });
+    expect(await within(panel).findByText('Impacts')).toBeInTheDocument();
+    expect(
+      within(panel).getByRole('combobox', { name: /version cible de la comparaison/i })
+    ).toBeInTheDocument();
+    expect(
+      within(panel).getByRole('combobox', { name: /version de base de la comparaison/i })
+    ).toBeInTheDocument();
+    expect(getPricingReferenceDiffSummary).toHaveBeenCalledWith({
+      target_snapshot_id: snapshotId
+    });
   });
 
   it('exports anomalies through the toolbar button with the signed download URL', async () => {
@@ -725,11 +886,19 @@ describe('PricingReferencesPage', () => {
     expect(within(dialog).getByText('classification.xlsx')).toBeInTheDocument();
     expect(within(dialog).getByText('segments.xlsx')).toBeInTheDocument();
     expect(within(dialog).getByText(importId)).toBeInTheDocument();
-    expect(within(dialog).getByText(/mapping confirmé/i)).toBeInTheDocument();
+    // Fichiers effectifs : provenance fourni/réutilisé, mapping et SHA-256 copiables.
+    expect(within(dialog).getByText(/réutilisé de l'import du/i)).toBeInTheDocument();
+    expect(within(dialog).getByText(/fourni dans cet import/i)).toBeInTheDocument();
     expect(within(dialog).getByText(/mapping automatique/i)).toBeInTheDocument();
     expect(
-      within(dialog).getByRole('button', { name: /copier l'identifiant de l'import/i })
+      within(dialog).getByRole('button', { name: "Copier l'identifiant de l'import" })
     ).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole('button', { name: /copier l'identifiant de l'import d'origine/i })
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getAllByRole('button', { name: /copier le sha-256 du fichier/i })
+    ).toHaveLength(2);
 
     await user.click(within(dialog).getByRole('button', { name: /consulter cet import/i }));
     await waitFor(() => {
@@ -886,5 +1055,214 @@ describe('PricingReferencesPage', () => {
         column_mapping: expect.objectContaining({ MEGA_LIB: 'LIB MEGA' })
       }));
     });
+  });
+
+  it("pilote la section ACTIF par is_active_version, pas par le premier import analysé", async () => {
+    vi.mocked(listPricingReferenceImports).mockImplementation(async () => ({
+      ok: true,
+      imports: rollbackImportFixtures(),
+      page: 1,
+      page_size: 50,
+      total: 2
+    }));
+
+    renderWithQueryClient(
+      <PricingReferencesPage userRole="agency_admin" routeTab="imports" onRouteTabChange={vi.fn()} />
+    );
+
+    // L'import le plus récent (01/07) est analyse_ok mais archivé : il reste
+    // dans l'historique. La vraie version active (22/06) porte la section ACTIF.
+    const activeSection = await screen.findByRole('region', { name: /snapshot actif/i });
+    expect(activeSection).toHaveTextContent(/import du 22\/06\/2026/i);
+    expect(within(activeSection).getByTitle(/version activée le/i)).toBeInTheDocument();
+
+    const historySection = screen.getByRole('region', { name: /historique des imports/i });
+    expect(historySection).toHaveTextContent(/import du 01\/07\/2026/i);
+    expect(historySection).not.toHaveTextContent(/import du 22\/06\/2026/i);
+    expect(within(historySection).getByTitle(/version archivée le/i)).toBeInTheDocument();
+  });
+
+  it('affiche le cycle de vie et navigue dans la chaîne remplacée par / remplace', async () => {
+    const user = userEvent.setup();
+    vi.mocked(listPricingReferenceImports).mockImplementation(async () => ({
+      ok: true,
+      imports: rollbackImportFixtures(),
+      page: 1,
+      page_size: 50,
+      total: 2
+    }));
+    vi.mocked(getPricingReferenceImport).mockImplementation(async ({ import_id }) => {
+      const summary = rollbackImportFixtures().find((row) => row.id === import_id);
+      return buildImportDetailResponse(summary ?? buildImportSummary());
+    });
+
+    renderWithQueryClient(
+      <PricingReferencesPage userRole="super_admin" routeTab="imports" onRouteTabChange={vi.fn()} />
+    );
+
+    const historySection = await screen.findByRole('region', { name: /historique des imports/i });
+    await user.click(
+      within(historySection).getByRole('button', { name: /voir le détail de l'import du/i })
+    );
+
+    const dialog = await screen.findByRole('dialog');
+    expect(await within(dialog).findByText('Archivée')).toBeInTheDocument();
+    expect(dialog).toHaveTextContent(/activée le/i);
+    expect(dialog).toHaveTextContent(/désactivée le/i);
+
+    // deactivated_at (archivée) === activated_at (active) : chaîne sûre, cliquable.
+    await user.click(within(dialog).getByRole('button', { name: /remplacée par l'import du/i }));
+    expect(await within(dialog).findByText('Active')).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole('button', { name: /remplace l'import du/i })
+    ).toBeInTheDocument();
+  });
+
+  it('réactive une version archivée après confirmation explicite (rollback)', async () => {
+    const user = userEvent.setup();
+    vi.mocked(listPricingReferenceImports).mockImplementation(async () => ({
+      ok: true,
+      imports: rollbackImportFixtures(),
+      page: 1,
+      page_size: 50,
+      total: 2
+    }));
+    vi.mocked(getPricingReferenceImport).mockImplementation(async ({ import_id }) => {
+      const summary = rollbackImportFixtures().find((row) => row.id === import_id);
+      return buildImportDetailResponse(summary ?? buildImportSummary());
+    });
+
+    renderWithQueryClient(
+      <PricingReferencesPage userRole="super_admin" routeTab="imports" onRouteTabChange={vi.fn()} />
+    );
+
+    const historySection = await screen.findByRole('region', { name: /historique des imports/i });
+    await user.click(
+      within(historySection).getByRole('button', { name: /voir le détail de l'import du/i })
+    );
+
+    const dialog = await screen.findByRole('dialog');
+    await user.click(await within(dialog).findByRole('button', { name: 'Réactiver cette version' }));
+
+    // Confirmation intégrée au dialog : wording explicite de réactivation.
+    expect(dialog).toHaveTextContent(/vous réactivez une version antérieure/i);
+    expect(dialog).toHaveTextContent(/sera archivée mais restera consultable pour audit/i);
+
+    await user.click(
+      within(dialog).getByRole('button', { name: 'Confirmer la réactivation de cette version' })
+    );
+    await waitFor(() => {
+      expect(activatePricingReferenceImport).toHaveBeenCalledWith({ import_id: archivedImportId });
+    });
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+  });
+
+  it("masque les actions d'activation pour un admin d'agence", async () => {
+    const user = userEvent.setup();
+    vi.mocked(listPricingReferenceImports).mockImplementation(async () => ({
+      ok: true,
+      imports: rollbackImportFixtures(),
+      page: 1,
+      page_size: 50,
+      total: 2
+    }));
+    vi.mocked(getPricingReferenceImport).mockImplementation(async ({ import_id }) => {
+      const summary = rollbackImportFixtures().find((row) => row.id === import_id);
+      return buildImportDetailResponse(summary ?? buildImportSummary());
+    });
+
+    renderWithQueryClient(
+      <PricingReferencesPage userRole="agency_admin" routeTab="imports" onRouteTabChange={vi.fn()} />
+    );
+
+    const historySection = await screen.findByRole('region', { name: /historique des imports/i });
+    await user.click(
+      within(historySection).getByRole('button', { name: /voir le détail de l'import du/i })
+    );
+
+    const dialog = await screen.findByRole('dialog');
+    // Le cycle de vie reste consultable, l'action d'activation est réservée super_admin.
+    expect(await within(dialog).findByText('Archivée')).toBeInTheDocument();
+    expect(
+      within(dialog).queryByRole('button', { name: /réactiver cette version/i })
+    ).not.toBeInTheDocument();
+    expect(
+      within(dialog).queryByRole('button', { name: /activer cette version/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("termine le flux d'import sur le résumé des changements et active la version", async () => {
+    const user = userEvent.setup();
+    renderWithQueryClient(<PricingReferencesPage userRole="super_admin" />);
+
+    await user.click(await screen.findByRole('button', { name: /^importer$/i }));
+    await user.click(await screen.findByRole('menuitem', { name: /classification produit cir/i }));
+    await user.upload(
+      screen.getByLabelText('Classification produit CIR'),
+      new File(['classification'], 'classification.xlsx', {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      })
+    );
+    await user.click(await screen.findByRole('button', { name: /previsualiser/i }));
+    await screen.findByText('Mapping complet');
+    await user.click(screen.getByRole('button', { name: /confirmer le mapping/i }));
+    await user.click(await screen.findByRole('button', { name: /analyser l import/i }));
+
+    // Écran final : mini-résumé du run de diff automatique de l'analyse.
+    expect(await screen.findByText('Analyse terminée')).toBeInTheDocument();
+    expect(screen.getByText('Changements détectés')).toBeInTheDocument();
+    expect(
+      await screen.findByText('3 changements par rapport à la version de référence')
+    ).toBeInTheDocument();
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveTextContent('Modifié');
+    expect(dialog).toHaveTextContent(/colonnes financières/i);
+
+    await user.click(screen.getByRole('button', { name: 'Activer cette version' }));
+    expect(dialog).toHaveTextContent(/deviendra la référence pour toute l'application/i);
+    expect(dialog).toHaveTextContent(/sera archivée mais restera consultable pour audit/i);
+
+    await user.click(
+      screen.getByRole('button', { name: "Confirmer l'activation de cette version" })
+    );
+    await waitFor(() => {
+      expect(activatePricingReferenceImport).toHaveBeenCalledWith({ import_id: importId });
+    });
+    await waitFor(() => {
+      expect(screen.queryByText('Analyse terminée')).not.toBeInTheDocument();
+    });
+  });
+
+  it("bascule sur l'onglet Changements scopé depuis la fin du flux d'import", async () => {
+    const user = userEvent.setup();
+    renderWithQueryClient(<PricingReferencesPage userRole="super_admin" />);
+
+    await user.click(await screen.findByRole('button', { name: /^importer$/i }));
+    await user.click(await screen.findByRole('menuitem', { name: /classification produit cir/i }));
+    await user.upload(
+      screen.getByLabelText('Classification produit CIR'),
+      new File(['classification'], 'classification.xlsx', {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      })
+    );
+    await user.click(await screen.findByRole('button', { name: /previsualiser/i }));
+    await screen.findByText('Mapping complet');
+    await user.click(screen.getByRole('button', { name: /confirmer le mapping/i }));
+    await user.click(await screen.findByRole('button', { name: /analyser l import/i }));
+    await screen.findByText('Analyse terminée');
+
+    await user.click(screen.getByRole('button', { name: 'Voir les changements' }));
+    await waitFor(() => {
+      expect(screen.queryByText('Analyse terminée')).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole('tab', { name: /changements/i })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+    expect(await screen.findByRole('tabpanel', { name: /changements/i })).toBeInTheDocument();
+    // L'import analysé scope la page (pastille « Import sélectionné »).
+    expect(screen.getByText('Import sélectionné')).toBeInTheDocument();
   });
 });

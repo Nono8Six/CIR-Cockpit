@@ -14,12 +14,22 @@ import {
   pricingReferenceClassificationListInputSchema,
   pricingReferenceDiagnoseInputSchema,
   pricingReferenceDiagnoseResponseSchema,
+  pricingReferenceDiffsComputeInputSchema,
+  pricingReferenceDiffsComputeResponseSchema,
+  pricingReferenceDiffsListInputSchema,
+  pricingReferenceDiffsListResponseSchema,
+  pricingReferenceDiffsSummaryGetInputSchema,
+  pricingReferenceDiffsSummaryResponseSchema,
+  pricingReferenceImportActivateInputSchema,
+  pricingReferenceImportActivateResponseSchema,
   pricingReferenceImportAnalyzeInputSchema,
   pricingReferenceImportAssistMappingInputSchema,
   pricingReferenceImportAssistMappingResponseSchema,
   pricingReferenceImportConfirmMappingInputSchema,
+  pricingReferenceImportGetResponseSchema,
   pricingReferenceImportInspectInputSchema,
   pricingReferenceImportsListInputSchema,
+  pricingReferenceImportsListResponseSchema,
   pricingReferenceImportsPrepareInputSchema,
   pricingReferenceRowsListInputSchema,
   pricingReferenceSegmentsListInputSchema,
@@ -355,6 +365,145 @@ Deno.test("pricing reference list and analyze contracts reject unsupported field
     }).success,
     false,
   );
+  assertEquals(
+    pricingReferenceImportActivateInputSchema.safeParse({
+      import_id: "11111111-1111-4111-8111-111111111111",
+    }).success,
+    true,
+  );
+  assertEquals(
+    pricingReferenceImportActivateInputSchema.safeParse({
+      import_id: "11111111-1111-4111-8111-111111111111",
+      force: true,
+    }).success,
+    false,
+  );
+  assertEquals(
+    pricingReferenceImportActivateResponseSchema.safeParse({
+      ok: true,
+      request_id: "request-1",
+      import_id: "11111111-1111-4111-8111-111111111111",
+      snapshot_id: "22222222-2222-4222-8222-222222222222",
+      activated_at: "2026-07-07T06:40:00.000Z",
+      previous_snapshot_id: null,
+      previous_deactivated_at: null,
+    }).success,
+    true,
+  );
+  assertEquals(
+    pricingReferenceImportActivateResponseSchema.safeParse({
+      ok: true,
+      request_id: "request-1",
+      import_id: "11111111-1111-4111-8111-111111111111",
+      snapshot_id: "22222222-2222-4222-8222-222222222222",
+      activated_at: "2026-07-07T06:40:00.000Z",
+      previous_snapshot_id: null,
+      previous_deactivated_at: null,
+      import_status: "archive",
+    }).success,
+    false,
+  );
+});
+
+Deno.test("pricing reference import responses expose effective files distinctly", () => {
+  const importId = crypto.randomUUID();
+  const fileId = crypto.randomUUID();
+  const sourceImportId = crypto.randomUUID();
+  const effectiveFile = {
+    file_kind: "classification",
+    original_filename: "classification.xlsx",
+    size_bytes: 1024,
+    sha256: "a".repeat(64),
+    row_count: 497,
+    source: "reutilise",
+    source_import_id: sourceImportId,
+    source_import_created_at: "2026-07-05T08:00:00.000Z",
+  };
+  const summary = {
+    id: importId,
+    status: "analyse_ok",
+    created_by: null,
+    analyzed_by: crypto.randomUUID(),
+    created_at: "2026-07-06T08:00:00.000Z",
+    updated_at: "2026-07-06T08:01:00.000Z",
+    analysis_started_at: "2026-07-06T08:00:10.000Z",
+    analysis_completed_at: "2026-07-06T08:01:00.000Z",
+    error_code: null,
+    error_message: null,
+    classification_rows_count: 497,
+    segments_rows_count: 12_635,
+    anomalies_total: 0,
+    is_active_version: true,
+    snapshot_status: "actif",
+    activated_at: "2026-07-06T08:02:00.000Z",
+    deactivated_at: null,
+    files: [effectiveFile],
+  };
+  const attachedFile = {
+    id: fileId,
+    import_id: importId,
+    file_kind: "segments_grids",
+    original_filename: "segments.xlsx",
+    storage_bucket: "pricing-reference-sources",
+    storage_path: "imports/2026-07-06/segments.xlsx",
+    size_bytes: 2048,
+    sha256: "b".repeat(64),
+    content_type: null,
+    sheet_name: null,
+    detected_columns: [],
+    row_count: 12_635,
+    mapping_profile_id: null,
+    column_mapping: {},
+    mapping_status: "confirme",
+    mapping_confirmed_by: null,
+    mapping_confirmed_at: null,
+    created_at: "2026-07-06T08:00:20.000Z",
+  };
+
+  assertEquals(
+    pricingReferenceImportsListResponseSchema.safeParse({
+      ok: true,
+      imports: [summary],
+      page: 1,
+      page_size: 50,
+      total: 1,
+    }).success,
+    true,
+  );
+  assertEquals(
+    pricingReferenceImportsListResponseSchema.safeParse({
+      ok: true,
+      imports: [{ ...summary, files: undefined }],
+      page: 1,
+      page_size: 50,
+      total: 1,
+    }).success,
+    false,
+  );
+  assertEquals(
+    pricingReferenceImportGetResponseSchema.safeParse({
+      ok: true,
+      import: {
+        ...summary,
+        files: [attachedFile],
+        effective_files: [effectiveFile],
+        health_report: null,
+      },
+    }).success,
+    true,
+  );
+  assertEquals(
+    pricingReferenceImportGetResponseSchema.safeParse({
+      ok: true,
+      import: {
+        ...summary,
+        files: [attachedFile],
+        effective_files: [{ ...effectiveFile, source: "ancien" }],
+        health_report: null,
+      },
+    }).success,
+    false,
+  );
 });
 
 Deno.test("pricing reference summary and listAll contracts are strict", () => {
@@ -548,6 +697,162 @@ Deno.test("pricing reference summary and listAll contracts are strict", () => {
       ok: true,
       total: 0,
       rows: [],
+    }).success,
+    false,
+  );
+});
+
+Deno.test("pricing reference diff contracts are strict and cache-aware", () => {
+  const baseId = "11111111-1111-4111-8111-111111111111";
+  const targetId = "22222222-2222-4222-8222-222222222222";
+  const runId = "33333333-3333-4333-8333-333333333333";
+  const summaryResponse = {
+    ok: true,
+    request_id: "request-1",
+    run_id: runId,
+    base_snapshot_id: baseId,
+    target_snapshot_id: targetId,
+    status: "computed",
+    initial_import: false,
+    skipped_file_kinds: ["classification"],
+    computed_at: "2026-07-06T18:45:00.000Z",
+    total: 2,
+    counts_by_type: [{
+      object_type: "grille",
+      diff_type: "modifie",
+      count: 1,
+    }],
+    counts_by_object_type: [{
+      object_type: "grille",
+      total: 1,
+      by_severity: [{ severity: "moyenne", count: 1 }],
+    }],
+    changed_columns: [{ column: "remise_ha", count: 1 }],
+    financial_changes_count: 1,
+    deviation_alerts: [{
+      object_type: "segment",
+      base_count: 10,
+      deleted_count: 3,
+      suppression_rate: 0.3,
+      severity: "haute",
+      message: "Suppressions importantes sur Segment: 3/10.",
+    }],
+    snapshot_counters: {
+      base: {
+        classifications: 1,
+        segments: 10,
+        liaisons: 10,
+        grilles: 12,
+        anomalies: 0,
+      },
+      target: {
+        classifications: 1,
+        segments: 7,
+        liaisons: 7,
+        grilles: 11,
+        anomalies: 1,
+      },
+    },
+  };
+  const diffRow = {
+    id: "44444444-4444-4444-8444-444444444444",
+    base_snapshot_id: baseId,
+    target_snapshot_id: targetId,
+    diff_type: "modifie",
+    object_type: "grille",
+    object_key: "SEG|FOUR|1|A|2026-01-01|2026-12-31",
+    severity: "moyenne",
+    changed_columns: ["remise_ha"],
+    payload: {
+      changed_columns: ["remise_ha"],
+      before: { remise_ha: "12" },
+      after: { remise_ha: "14" },
+      labels: { segment_key: "SEG", marque: "BOSCH" },
+      source_row_numbers: { before: [10], after: [12] },
+      identity_note: "Identite grille.",
+    },
+    created_at: "2026-07-06T18:45:01.000Z",
+  };
+
+  assertEquals(
+    pricingReferenceDiffsSummaryGetInputSchema.safeParse({
+      target_snapshot_id: targetId,
+    }).success,
+    true,
+  );
+  assertEquals(
+    pricingReferenceDiffsSummaryGetInputSchema.safeParse({}).success,
+    false,
+  );
+  assertEquals(
+    pricingReferenceDiffsListInputSchema.safeParse({
+      run_id: runId,
+      page: 1,
+      page_size: 50,
+      object_types: ["grille"],
+      diff_types: ["modifie"],
+      changed_columns: ["remise_ha"],
+      marques: ["BOSCH"],
+      sort_by: "severity",
+      sort_direction: "desc",
+    }).success,
+    true,
+  );
+  assertEquals(
+    pricingReferenceDiffsListInputSchema.safeParse({
+      page: 1,
+      page_size: 50,
+    }).success,
+    false,
+  );
+  assertEquals(
+    pricingReferenceDiffsComputeInputSchema.safeParse({
+      target_snapshot_id: targetId,
+      base_snapshot_id: null,
+      force: true,
+    }).success,
+    true,
+  );
+  assertEquals(
+    pricingReferenceDiffsComputeInputSchema.safeParse({
+      target_snapshot_id: targetId,
+      activate_snapshot: true,
+    }).success,
+    false,
+  );
+  assertEquals(
+    pricingReferenceDiffsSummaryResponseSchema.safeParse(summaryResponse)
+      .success,
+    true,
+  );
+  assertEquals(
+    pricingReferenceDiffsComputeResponseSchema.safeParse({
+      ...summaryResponse,
+      cache_status: "computed",
+    }).success,
+    true,
+  );
+  assertEquals(
+    pricingReferenceDiffsListResponseSchema.safeParse({
+      ok: true,
+      request_id: "request-1",
+      run_id: runId,
+      base_snapshot_id: baseId,
+      target_snapshot_id: targetId,
+      rows: [diffRow],
+      total: 1,
+    }).success,
+    true,
+  );
+  assertEquals(
+    pricingReferenceDiffsListResponseSchema.safeParse({
+      ok: true,
+      request_id: "request-1",
+      run_id: runId,
+      base_snapshot_id: baseId,
+      target_snapshot_id: targetId,
+      rows: [{ ...diffRow, payload: { changed_columns: ["remise_ha"] } }],
+      total: 1,
     }).success,
     false,
   );
@@ -827,7 +1132,7 @@ Deno.test("pricing reference column mapping contracts are strict", () => {
   );
 });
 
-Deno.test("pricing reference tRPC namespace is protected and activate is absent", async () => {
+Deno.test("pricing reference tRPC namespace is protected and activate requires super admin auth", async () => {
   const appModule = await import("../app.ts");
   const prepareResponse = await appModule.default.request(
     "/trpc/pricing.references.imports.prepare",
@@ -860,12 +1165,42 @@ Deno.test("pricing reference tRPC namespace is protected and activate is absent"
     {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: "{}",
+      body: JSON.stringify({
+        import_id: "11111111-1111-4111-8111-111111111111",
+      }),
     },
   );
   const healthError = await readErrorData(healthResponse);
   assertEquals(healthResponse.status, 401);
   assertEquals(readString(healthError, "appCode"), "AUTH_REQUIRED");
+
+  const diffSummaryResponse = await appModule.default.request(
+    "/trpc/pricing.references.diffs.summary",
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        target_snapshot_id: "22222222-2222-4222-8222-222222222222",
+      }),
+    },
+  );
+  const diffSummaryError = await readErrorData(diffSummaryResponse);
+  assertEquals(diffSummaryResponse.status, 401);
+  assertEquals(readString(diffSummaryError, "appCode"), "AUTH_REQUIRED");
+
+  const diffComputeResponse = await appModule.default.request(
+    "/trpc/pricing.references.diffs.compute",
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        target_snapshot_id: "22222222-2222-4222-8222-222222222222",
+      }),
+    },
+  );
+  const diffComputeError = await readErrorData(diffComputeResponse);
+  assertEquals(diffComputeResponse.status, 401);
+  assertEquals(readString(diffComputeError, "appCode"), "AUTH_REQUIRED");
 
   const activateResponse = await appModule.default.request(
     "/trpc/pricing.references.imports.activate",
@@ -876,9 +1211,9 @@ Deno.test("pricing reference tRPC namespace is protected and activate is absent"
     },
   );
   const activateError = await readErrorData(activateResponse);
-  assertEquals(activateResponse.status, 404);
-  assertEquals(readString(activateError, "appCode"), "NOT_FOUND");
-  assertEquals(readNumber(activateError, "httpStatus"), 404);
+  assertEquals(activateResponse.status, 401);
+  assertEquals(readString(activateError, "appCode"), "AUTH_REQUIRED");
+  assertEquals(readNumber(activateError, "httpStatus"), 401);
 });
 
 Deno.test("pricing reference diagnose contract validates correct structure", () => {

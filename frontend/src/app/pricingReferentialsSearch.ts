@@ -4,7 +4,8 @@ export const pricingReferentialsTabSchema = z.enum([
   'imports',
   'classification',
   'segments',
-  'anomalies'
+  'anomalies',
+  'changements'
 ]);
 
 export const pricingReferentialsSearchStateSchema = z.strictObject({

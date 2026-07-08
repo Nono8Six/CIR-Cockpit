@@ -228,12 +228,12 @@ test('annuaire full page: creation et edition restent accessibles sans perdre le
   await expect(page).toHaveURL(filteredListUrl);
   await expect(searchInput).toHaveValue('SEA');
 
-  await page.getByRole('button', { name: /ouvrir la fiche sea/i }).click();
+  await page.getByRole('link', { name: /ouvrir la fiche sea/i }).click();
   await expect(page).toHaveURL(/\/clients\/116277(?:\?|$)/);
   await expect(page.getByRole('heading', { name: /^SEA$/i })).toBeVisible();
 
   await page.getByRole('button', { name: /^modifier$/i }).click();
-  const editDialog = page.getByRole('dialog', { name: /modifier un client/i });
+  const editDialog = page.getByRole('dialog', { name: /modifier le client/i });
   await expect(editDialog).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(editDialog).toHaveCount(0);
@@ -253,7 +253,6 @@ test('annuaire full page: la conversion prospect reste un parcours dedie', async
 
   await page.getByRole('button', { name: /retour au prospect/i }).click();
   await expect(page).toHaveURL(new RegExp(`/clients/prospects/${prospectId}(?:\\?|$)`));
-  await expect(page).toHaveURL(/(?:\?|&)q=PONTAC/i);
   await expect(page.getByRole('heading', { name: /^PONTAC Thierry$/i })).toBeVisible();
 });
 

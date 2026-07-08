@@ -1,10 +1,14 @@
 import type {
   PricingReferenceAnomalyType,
+  PricingReferenceDiffObjectType,
+  PricingReferenceDiffType,
+  PricingReferenceEffectiveImportFile,
   PricingReferenceFileKind,
   PricingReferenceAnomalySeverity,
   PricingReferenceImportMappingStatus,
   PricingReferenceImportStatus,
-  PricingReferenceLinkStatus
+  PricingReferenceLinkStatus,
+  PricingReferenceSnapshotStatus
 } from '../../../../../shared/schemas/pricing/references.schema';
 
 export const importStatusLabels: Record<PricingReferenceImportStatus, string> = {
@@ -27,6 +31,11 @@ export const severityLabels: Record<PricingReferenceAnomalySeverity, string> = {
 export const fileKindLabels: Record<PricingReferenceFileKind, string> = {
   classification: 'Classification CIR',
   segments_grids: 'Segments / grilles fabricant'
+};
+
+export const fileKindShortLabels: Record<PricingReferenceFileKind, string> = {
+  classification: 'Classification',
+  segments_grids: 'Segments & grilles'
 };
 
 export const anomalyTypeLabels: Record<PricingReferenceAnomalyType, string> = {
@@ -63,6 +72,34 @@ export const importMappingStatusLabels: Record<PricingReferenceImportMappingStat
   a_confirmer: 'Mapping à confirmer',
   confirme: 'Mapping confirmé',
   invalide: 'Mapping invalide'
+};
+
+export const diffTypeLabels: Record<PricingReferenceDiffType, string> = {
+  ajoute: 'Ajouté',
+  supprime: 'Supprimé',
+  modifie: 'Modifié',
+  anomalie_apparue: 'Anomalie apparue',
+  anomalie_disparue: 'Anomalie disparue'
+};
+
+export const diffObjectTypeLabels: Record<PricingReferenceDiffObjectType, string> = {
+  classification: 'Classification',
+  segment: 'Segments',
+  liaison: 'Liaisons',
+  grille: 'Grilles achat',
+  anomalie: 'Anomalies'
+};
+
+/**
+ * Statut du snapshot de version, distinct du statut métier de l'import
+ * (`importStatusLabels`) : un import reste « Analyse OK » quand sa version est
+ * archivée par remplacement.
+ */
+export const snapshotVersionStatusLabels: Record<PricingReferenceSnapshotStatus, string> = {
+  cree: 'Jamais activée',
+  pret_activation: 'Prête à activer',
+  actif: 'Active',
+  archive: 'Archivée'
 };
 
 export const linkStatusLabels: Record<PricingReferenceLinkStatus, string> = {
@@ -110,4 +147,77 @@ export const formatFileSize = (bytes: number | null | undefined): string => {
   if (bytes < 1024) return `${numberFormatter.format(bytes)} o`;
   if (bytes < 1024 * 1024) return `${fileSizeFormatter.format(bytes / 1024)} Ko`;
   return `${fileSizeFormatter.format(bytes / (1024 * 1024))} Mo`;
+};
+
+const fileKindDisplayOrder: Record<PricingReferenceFileKind, number> = {
+  classification: 0,
+  segments_grids: 1
+};
+
+/**
+ * Sort effective import files in canonical display order (classification first).
+ *
+ * @param files The effective files of an import.
+ */
+export const sortEffectiveImportFiles = <T extends { file_kind: PricingReferenceFileKind }>(
+  files: readonly T[]
+): T[] =>
+  [...files].sort((a, b) => fileKindDisplayOrder[a.file_kind] - fileKindDisplayOrder[b.file_kind]);
+
+/**
+ * Human-readable provenance of an effective import file (fourni vs réutilisé).
+ *
+ * @param file The effective file with its source metadata.
+ */
+export const formatEffectiveFileProvenance = (
+  file: Pick<PricingReferenceEffectiveImportFile, 'source' | 'source_import_created_at'>
+): string => {
+  if (file.source === 'fourni') return 'Fourni dans cet import';
+  return file.source_import_created_at
+    ? `Réutilisé de l'import du ${formatDateTime(file.source_import_created_at)}`
+    : "Réutilisé d'un import antérieur";
+};
+
+/**
+ * Shorten a SHA-256 hash to its first 12 hex chars for inline display.
+ *
+ * @param value The full hash.
+ */
+export const formatSha256Short = (value: string): string =>
+  value.length > 12 ? `${value.slice(0, 12)}…` : value;
+
+type VersionChainRow = {
+  id: string;
+  activated_at: string | null;
+  deactivated_at: string | null;
+};
+
+/**
+ * Version qui a remplacé `current` : la bascule d'activation étant
+ * transactionnelle, `deactivated_at` de l'ancienne version est strictement égal
+ * à `activated_at` de la nouvelle. Sans égalité exacte dans les lignes
+ * chargées, on ne devine pas : null.
+ */
+export const findReplacedByVersion = <T extends VersionChainRow>(
+  rows: readonly T[],
+  current: Pick<VersionChainRow, 'id' | 'deactivated_at'>
+): T | null => {
+  if (!current.deactivated_at) return null;
+  return (
+    rows.find((row) => row.id !== current.id && row.activated_at === current.deactivated_at) ?? null
+  );
+};
+
+/**
+ * Version que `current` a remplacée lors de son activation (même règle
+ * d'égalité transactionnelle stricte que `findReplacedByVersion`).
+ */
+export const findReplacesVersion = <T extends VersionChainRow>(
+  rows: readonly T[],
+  current: Pick<VersionChainRow, 'id' | 'activated_at'>
+): T | null => {
+  if (!current.activated_at) return null;
+  return (
+    rows.find((row) => row.id !== current.id && row.deactivated_at === current.activated_at) ?? null
+  );
 };

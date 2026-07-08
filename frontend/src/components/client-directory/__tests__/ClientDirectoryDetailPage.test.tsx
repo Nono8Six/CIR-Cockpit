@@ -508,7 +508,8 @@ describe('ClientDirectoryDetailPage', () => {
 
     expect(mockNavigate).toHaveBeenCalledWith({
       to: '/clients/prospects/$prospectId/convert',
-      params: { prospectId: 'prospect-1' }
+      params: { prospectId: 'prospect-1' },
+      search: expect.any(Function)
     });
   });
 

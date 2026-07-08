@@ -29,17 +29,25 @@ const seaEntity = {
   city: 'GRADIGNAN',
   country: 'France',
   siret: null,
-  notes: null,
-  agency_id: agencyId,
-  cir_commercial_id: null,
-  archived_at: null,
-  created_at: '2026-02-03T10:00:00.000Z',
-  updated_at: '2026-02-03T10:00:00.000Z',
   siren: null,
   naf_code: null,
   official_name: null,
   official_data_source: null,
-  official_data_synced_at: null
+  official_data_synced_at: null,
+  first_name: null,
+  last_name: null,
+  primary_email: null,
+  primary_phone: null,
+  created_by: null,
+  supplier_code: null,
+  supplier_number: null,
+  notes: null,
+  agency_id: agencyId,
+  cir_agency_id: agencyId,
+  cir_commercial_id: null,
+  archived_at: null,
+  created_at: '2026-02-03T10:00:00.000Z',
+  updated_at: '2026-02-03T10:00:00.000Z'
 };
 
 const seaRecord = {
@@ -68,6 +76,24 @@ const seaRecord = {
   archived_at: null,
   created_at: '2026-02-03T10:00:00.000Z',
   updated_at: '2026-02-03T10:00:00.000Z'
+};
+
+const seaSearchResult = {
+  id: seaId,
+  entity_id: seaId,
+  source: 'entity',
+  type: 'client_term',
+  label: 'SEA',
+  identifier: '116277',
+  phone: null,
+  email: null,
+  city: 'GRADIGNAN',
+  agency_name: 'CIR Bordeaux',
+  referent_name: null,
+  match_kind: 'entity',
+  match_label: 'Client',
+  updated_at: '2026-02-03T10:00:00.000Z',
+  archived_at: null
 };
 
 const buildTrpcEnvelope = (data: unknown) => ({ result: { data } });
@@ -123,6 +149,12 @@ const installQuickSearchMocks = async (page: Page): Promise<void> => {
             page: 1,
             page_size: 200,
             total: 0
+          });
+        case 'data.searchEntitiesUnified':
+          return buildTrpcEnvelope({
+            request_id: 'req-unified-search',
+            ok: true,
+            results: input.includes('SEA') ? [seaSearchResult] : []
           });
         case 'data.entities':
           return buildTrpcEnvelope({

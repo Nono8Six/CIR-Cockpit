@@ -65,6 +65,12 @@ Pre-requis:
 
 Ne pas lancer E2E automatiquement pour chaque modification. Les lancer si un parcours UI est impacte et que l'utilisateur le demande ou le confirme.
 
+Patterns ajoutes pour les referentiels CIR:
+
+- Parcours versioning: couvrir Imports avec identite exacte des fichiers, onglet Changements, filtres de diff, dialog avant/apres et activation/rollback. Scenario de reference: `frontend/e2e/pricing-references-versioning.spec.ts`.
+- Les E2E referentiels peuvent intercepter `pricing.references.*` avec `page.route` et des payloads tRPC conformes aux schemas Zod pour eviter d'ecrire en base pendant la navigation; la session et le shell restent reels.
+- Les tests de diff SQL restent cote backend Deno: verifier au minimum premier import `initial_import`, skip SHA-256, cache/run, filtres `changed_columns`, contrats stricts et routes protegees.
+
 ## Coverage
 
 Source de verite: `frontend/vitest.config.ts`.
