@@ -41,8 +41,9 @@ cohérent avec la structure existante) :
 
 - état : `messages: AiAssistantMessage[]` (rôles user/assistant), `pending`, `error`.
 - `send(question)` : ajoute le message user, appelle `askAiAssistant` avec `history` **borné à
-  12 derniers messages** (D6) et le `page_context` courant, ajoute la réponse assistant + ses
-  citations/tool_trace.
+  12 derniers messages** (D6), le `page_context` courant et un `client_request_id` UUID créé une
+  seule fois pour cet envoi ; un retry réseau réutilise impérativement le même identifiant.
+  Ajouter ensuite la réponse assistant + ses citations/tool_trace.
 - Gestion des erreurs via `handleUiError` (quota dépassé, indispo, timeout) — messages FR clairs.
 - Conserver `tool_trace`/`citations` par message assistant pour l'affichage des sources.
 - Pas de persistance : l'historique vit dans le state du Dialog, réinitialisé à la fermeture
@@ -50,10 +51,21 @@ cohérent avec la structure existante) :
 
 ### 2.4 Contexte de page
 
-La `PricingReferencesPage` connaît l'import/run/snapshot/onglet actifs. Construire le
-`page_context` (`aiAssistantPageContextSchema` de la phase 1) à partir de cet état et le passer
-au hook. Vérifier les noms réels des états dans la page avant de câbler. `surface` =
-`'pricing.references'`, `active_tab` = onglet courant, `file_kind` si l'onglet le précise.
+Ne pas supposer que `PricingReferencesPage` possède déjà tous les identifiants au niveau haut.
+Vérifier le code réel : la page connaît au minimum l'import sélectionné et l'onglet actif, mais
+le `run_id`/les snapshots peuvent être résolus plus bas dans les composants de changements ou via
+des hooks dédiés. Construire le `page_context` (`aiAssistantPageContextSchema` de la phase 1) à
+partir de l'état réellement disponible et choisir explicitement l'une des deux stratégies :
+
+- **stratégie front** : lever/centraliser dans `PricingReferencesPage` la résolution `run_id`,
+  `target_snapshot_id`, `base_snapshot_id` avant d'ouvrir le Dialog ;
+- **stratégie backend** : envoyer `import_id`, `active_tab`, `surface`, `file_kind` et laisser le
+  broker/outils résoudre le run/snapshot via la règle de phase 2.
+
+Dans les deux cas, documenter dans le changelog quelle stratégie est retenue. `surface` =
+`'pricing.references'`, `active_tab` = onglet courant, `file_kind` si l'onglet le précise. Ne pas
+envoyer un `run_id` vide ou supposé : mieux vaut omettre le champ et laisser la résolution backend
+agir.
 
 ### 2.5 Composant Dialog de chat
 
@@ -61,7 +73,8 @@ au hook. Vérifier les noms réels des états dans la page avant de câbler. `su
 
 - liste de messages (user à droite / assistant à gauche, ou style aligné au design system) ;
 - rendu Markdown léger de la réponse (réutiliser un renderer existant si le repo en a un,
-  sinon rendu texte + listes simples — ne pas ajouter de grosse dépendance sans nécessité) ;
+  sinon rendu texte + listes simples — ne pas ajouter de grosse dépendance sans nécessité).
+  Désactiver le HTML brut et les URLs/protocoles dangereux : le contenu LLM reste non fiable ;
 - bloc « Sources » repliable par message assistant listant les outils utilisés (`tool_trace`) ;
 - zone de saisie (textarea + bouton envoyer, Entrée pour envoyer, Maj+Entrée = nouvelle ligne) ;
 - indicateur de chargement pendant la boucle (peut être longue : jusqu'à ~60 s) — état
@@ -84,16 +97,17 @@ Tests Vitest (dans `__tests__/`) :
 - rendu du Dialog, envoi d'une question (service mocké), affichage de la réponse et des sources ;
 - état quota/indispo (status.enabled=false) ;
 - bornage de l'historique à 12 messages passé au service.
+- stabilité de `client_request_id` lors d'un retry et nouvelle valeur pour un nouvel envoi.
 
 ## 3. Checkpoints à valider
 
 - [ ] `askAiAssistant` / `getAiAssistantStatus` ajoutés à `services/ai.ts` (pattern invokeTrpc/parseResponse) + query keys.
-- [ ] Hook `useAssistantChat` : envoi, historique borné à 12, erreurs via handleUiError, citations conservées.
-- [ ] `page_context` construit depuis l'état réel de la page et transmis à chaque question.
+- [ ] Hook `useAssistantChat` : envoi, historique borné à 12, `client_request_id` stable par envoi/retry, erreurs via handleUiError, citations conservées.
+- [ ] `page_context` construit depuis l'état réel de la page ; stratégie front ou backend de résolution `run_id`/snapshots documentée.
 - [ ] `AssistantChatDialog` : Dialog centré (pas de Sheet), messages, sources repliables, saisie, chargement, suggestions initiales, état désactivé.
 - [ ] Bouton d'entrée sur `PricingReferencesPage`, visibilité pilotée par `status`.
 - [ ] Design conforme au design system local (tokens, densité, composants ui/*).
-- [ ] Tests Vitest : envoi/réponse/sources, état désactivé, bornage historique.
+- [ ] Tests Vitest : envoi/réponse/sources, état désactivé, bornage historique, idempotency key stable au retry.
 - [ ] `pnpm run qa:front` vert.
 
 ## 4. Prompt d'exécution (à coller dans une conversation neuve)
@@ -115,8 +129,9 @@ Avant tout code :
 Lis le code réel avant d'éditer :
 - frontend/src/services/ai.ts (pattern invokeTrpc/parseResponse à suivre)
 - frontend/src/services/query/queryKeys.ts
-- frontend/src/components/pricing-references/PricingReferencesPage.tsx (états import/run/onglet
-  à réutiliser pour le page_context ; barre d'actions pour le bouton d'entrée)
+- frontend/src/components/pricing-references/PricingReferencesPage.tsx (états import/onglet
+  réellement disponibles pour le page_context ; vérifier si run/snapshots doivent être levés
+  depuis les composants enfants ou résolus backend ; barre d'actions pour le bouton d'entrée)
 - shared/schemas/aiAssistant.schema.ts (schémas livrés en phase 1)
 - composants Dialog et ui/* existants ; un éventuel renderer Markdown déjà présent
 - Rappel décision PO : détails en Dialog CENTRÉ, jamais en Sheet latérale.
@@ -141,7 +156,7 @@ tableau de suivi (§8) de 00-plan-general.md. Ne commit/déploie pas sans demand
   réévaluation SSE de la phase 6 — ne pas improviser du streaming ici.
 - Ne pas réintroduire de Sheet latérale (violation décision PO).
 - Le `page_context` doit refléter l'état réellement affiché, sinon « le fichier Segment… »
-  se résout au mauvais import.
+  se résout au mauvais import. Ne pas fabriquer un `run_id`/snapshot que la page ne détient pas.
 
 ## 6. Changelog
 

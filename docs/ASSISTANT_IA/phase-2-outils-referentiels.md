@@ -1,4 +1,4 @@
-# Phase 2 — Outils référentiels complets + agrégat par famille
+# Phase 2 — Outils référentiels complets + agrégats métier
 
 > Prérequis : Phase 1 terminée (lire son changelog). Lire `00-plan-general.md`.
 > Périmètre : backend + shared. Gate QA : `pnpm run qa:back`.
@@ -9,13 +9,16 @@
 ## 1. Le manque à combler
 
 Le résumé de diff existant (`getPricingReferenceDiffSummary`) agrège par **type de diff**,
-**type d'objet** et **colonne modifiée**, mais **pas par dimension métier (famille/segment/
-marque) avec la direction du changement** (hausse vs baisse d'un prix ou d'une remise).
+**type d'objet** et **colonne modifiée**, mais **pas par dimension métier explicite
+(famille CIR, catégorie fabricant, segment, marque) avec la direction du changement**
+(hausse vs baisse d'un prix ou d'une remise).
 
 Or les questions cibles sont précisément dimensionnelles et directionnelles :
 
-- « familles chez ROCKWELL qui ont **augmenté** » → GROUP BY famille, filtre marque=ROCKWELL, direction=hausse ;
-- « familles dont les **remises ont baissé** » → GROUP BY famille, mesure=remise, direction=baisse.
+- « familles chez ROCKWELL qui ont **augmenté** » → GROUP BY dimension famille choisie,
+  filtre marque/alias ROCKWELL, direction=hausse ;
+- « familles dont les **remises ont baissé** » → GROUP BY dimension famille choisie,
+  mesure=remise, direction=baisse.
 
 Sans cet agrégat, le LLM devrait paginer `list_diffs` sur potentiellement des milliers de
 lignes et agréger lui-même : coûteux en tokens, lent, et non fiable. Phase 2 crée l'agrégat
@@ -32,6 +35,12 @@ via Supabase MCP (`execute_sql` en lecture, projet lié) et le code qui l'écrit
 - où vivent la marque, la famille/segment, le code produit dans `object_key` / `payload` ;
 - comment est encodée une valeur avant/après (prix, taux de remise) pour déterminer la direction ;
 - quels `diff_type` / `object_type` correspondent à une évolution tarifaire (vs ajout/suppression).
+- quelles colonnes financières contiennent du bruit d'arrondi (`1.1000000000000001` vs `1.1`,
+  deltas quasi nuls, précision décimale variable) ;
+- quelle différence métier existe entre `FAM/FAM_LIB` (famille CIR), `CAT_FAB` (catégorie/famille
+  fabricant), `SEGMENT` et `MARQUE` ;
+- quels alias de marque sont nécessaires pour les questions PO (`ROCKWELL` peut être stocké sous
+  un code court comme `ROCK`).
 
 Consigner ces faits dans le changelog : ils conditionnent la justesse de l'agrégat. Ne pas
 supposer la structure d'après ce document — la vérifier.
@@ -51,10 +60,14 @@ autres schémas diff) :
 
 - sélecteur de run : `run_id?` OU `target_snapshot_id?` (+ `base_snapshot_id?`), même règle
   que `pricingReferenceDiffRunSelectorSchema` existant (réutiliser/composer, ne pas dupliquer) ;
-- `group_by` : `z.enum(['famille','segment','marque','object_type','changed_column'])` ;
+- `group_by` : `z.enum(['famille_cir','categorie_fabricant','segment','marque','object_type','changed_column'])`.
+  Ne pas utiliser le nom vague `famille` dans le contrat public sans le mapper explicitement :
+  `famille_cir` = `FAM/FAM_LIB` via classification/liaison si disponible ;
+  `categorie_fabricant` = `CAT_FAB` issu des grilles/segments fabricant.
 - `measure` : `z.enum(['prix','remise','any'])` (défaut `any`) ;
 - `direction` : `z.enum(['hausse','baisse','any'])` (défaut `any`) ;
 - filtres optionnels : `marques[]`, `severities[]`, `diff_types[]` (réutiliser les enums existants) ;
+- `include_neutral` : boolean défaut `false` pour exclure les deltas neutralisés par tolérance ;
 - `limit` : int 1..100 (défaut 50).
 
 `response` (étend `apiSuccessSchema`) :
@@ -66,9 +79,19 @@ autres schémas diff) :
 - `run_id`, `base_snapshot_id`, `target_snapshot_id`.
 
 L'implémentation agrège en SQL (Drizzle) sur `pricing_reference_diffs` filtrées par le run
-résolu. La direction se déduit du signe du delta extrait du `payload` (selon 2.1). Respecter
-l'isolation `agency_id` comme les autres services diff. Si la donnée métier (famille) n'est pas
-présente dans le payload, remonter proprement le fait (groupe « inconnu » plutôt que crash).
+résolu. La direction se déduit du delta extrait du `payload` (selon 2.1), **après normalisation
+numérique**. Interdiction de classer une hausse/baisse sur un simple signe flottant non normalisé.
+Définir une tolérance par type de mesure/colonne (par exemple via `numeric(18,6)` ou une fonction
+de normalisation testée) et exclure les deltas neutres par défaut. Respecter l'isolation
+`agency_id` comme les autres services diff. Si la donnée métier demandée (`famille_cir`, par
+exemple) n'est pas présente dans le payload, faire le join métier nécessaire ou remonter
+proprement le fait (groupe « inconnu » plutôt que crash) ; ne pas remplacer silencieusement par
+`CAT_FAB`.
+
+Ajouter une résolution d'alias de marque contrôlée : le filtre utilisateur `ROCKWELL` doit pouvoir
+matcher le code réel si la donnée l'encode comme `ROCK`. Cette résolution doit être déterministe
+(table/config/code contrôlé), testée, et visible dans le changelog. Ne pas laisser le LLM décider
+seul qu'un alias est équivalent.
 
 ### 2.3 Procédure tRPC
 
@@ -82,7 +105,9 @@ Compléter `assistantTools.ts` (créé en phase 1) avec les outils manquants :
 
 4. `aggregate_diffs` → wrappe `aggregatePricingReferenceDiffs`. **Outil central** pour les
    questions « quelles familles ont augmenté/baissé ». Description FR très explicite pour que
-   le LLM le préfère à `list_diffs` sur les questions dimensionnelles.
+   le LLM le préfère à `list_diffs` sur les questions dimensionnelles. La description doit citer
+   les dimensions exactes (`famille_cir`, `categorie_fabricant`, `segment`, `marque`) pour éviter
+   la confusion métier.
 5. `get_import_details` → détail d'un import (health report, compteurs par fichier, statut mapping).
 6. `get_health_report` → rapport de santé (classification + segments + anomalies) d'un import.
 7. `get_anomalies_summary` → wrappe le summary anomalies (facettes sévérité/type/marque +
@@ -90,8 +115,10 @@ Compléter `assistantTools.ts` (créé en phase 1) avec les outils manquants :
 8. `list_anomalies` → wrappe la liste paginée d'anomalies filtrable (sévérité/type/marque),
    résultats plafonnés à 50, avec le total réel.
 
-Tous : validation Zod des args, plafond 50 lignes, erreur structurée (jamais d'exception nue)
-si identifiant manquant.
+Tous : validation Zod stricte des arguments **et des sorties**, version de contrat, plafonds
+50 lignes + taille sérialisée définis en phase 1, erreur structurée (jamais d'exception nue) si
+identifiant manquant. Les résultats métier sont du contenu non fiable pour le prompt, pas des
+instructions.
 
 ### 2.5 Résolution du contexte de page
 
@@ -105,22 +132,28 @@ règle de résolution appliquée.
 
 - Enrichir le prompt système `assistant.referentiels` (nouvelle version publiée via le
   mécanisme de versioning des prompts, **sans supprimer** l'ancienne) avec des directives :
-  privilégier `aggregate_diffs` pour les questions par famille/segment ; toujours donner les
-  chiffres exacts (nombre de familles, delta moyen) ; formater les listes de familles de façon
-  lisible ; proposer une action concrète pour les anomalies.
-- Définir un petit jeu de questions de référence (les 4 questions PO + variantes) et vérifier
-  manuellement les réponses (clé de dev). Consigner les résultats dans le changelog.
+  privilégier `aggregate_diffs` pour les questions par dimension métier ; demander une précision
+  si l'utilisateur dit « famille » mais que le contexte ne permet pas de choisir entre famille CIR
+  et catégorie fabricant ; toujours donner les chiffres exacts (nombre de groupes, delta moyen) ;
+  formater les listes de groupes de façon lisible ; proposer une action concrète pour les anomalies.
+- Définir un jeu de questions de référence versionné (les 4 questions PO + variantes) avec les
+  agrégats/chiffres attendus calculés par les services, les outils attendus et les cas ambigus.
+  Ce jeu alimente la suite d'évaluations de la phase 6. Vérifier aussi les réponses en réel avec
+  la clé de développement et consigner les résultats dans le changelog.
 
 ## 3. Checkpoints à valider
 
-- [ ] Structure réelle du `payload` de `pricing_reference_diffs` inspectée et documentée (source de la direction hausse/baisse).
-- [ ] `aggregatePricingReferenceDiffs` implémenté (GROUP BY dimension + direction, isolation agency_id, groupe « inconnu » géré).
+- [ ] Structure réelle du `payload` de `pricing_reference_diffs` inspectée et documentée (source de la direction hausse/baisse, champs marque/famille/segment, bruit numérique).
+- [ ] Contrat de dimensions explicite (`famille_cir`, `categorie_fabricant`, `segment`, `marque`) validé ; aucun `group_by='famille'` ambigu exposé sans mapping.
+- [ ] Normalisation numérique/tolérance par mesure implémentée et testée ; les deltas neutres ne sortent pas en hausse/baisse par défaut.
+- [ ] Alias marque déterministes implémentés/testés pour les questions PO (ex. ROCKWELL ↔ code réel si confirmé).
+- [ ] `aggregatePricingReferenceDiffs` implémenté (GROUP BY dimension + direction normalisée, isolation agency_id, groupe « inconnu » géré).
 - [ ] Schémas `PricingReferenceDiffAggregate*` `.strict()` FR + procédure `data.pricing.references.diffs.aggregate` (authed) + miroir `shared/api/trpc.ts`.
-- [ ] Outils 4 à 8 branchés (`aggregate_diffs`, `get_import_details`, `get_health_report`, `get_anomalies_summary`, `list_anomalies`), plafonnés à 50 lignes.
+- [ ] Outils 4 à 8 branchés, contrats entrée/sortie stricts et versionnés, plafonnés en lignes/octets.
 - [ ] Règle de résolution du run/import cible depuis `page_context` (ou dernier `analyse_ok`) implémentée et documentée.
 - [ ] Prompt système v2 publié (ancienne version conservée).
 - [ ] Test de contrat pour `aggregate` dans `pricingReferenceContracts_test.ts`.
-- [ ] Vérification manuelle des 4 questions PO : réponses exactes et exhaustives (résultats au changelog).
+- [ ] Jeu d'évaluation versionné avec attentes machine-checkables + vérification live des 4 questions PO (résultats au changelog).
 - [ ] `pnpm run qa:back` vert.
 
 ## 4. Prompt d'exécution (à coller dans une conversation neuve)
@@ -140,9 +173,10 @@ Avant tout code :
 
 PREMIÈRE ÉTAPE OBLIGATOIRE (section 2.1) : via le MCP Supabase (execute_sql en lecture sur le
 projet lié) et le code de referenceDiffs.ts, inspecte la structure réelle du payload jsonb de
-pricing_reference_diffs pour savoir où se trouvent marque/famille/segment et comment est encodée
-la direction hausse/baisse d'un prix ou d'une remise. Ne code l'agrégat qu'après. Documente ces
-faits dans le changelog.
+pricing_reference_diffs pour savoir où se trouvent marque/famille/segment, comment est encodée
+la direction hausse/baisse d'un prix ou d'une remise, quels deltas sont du bruit d'arrondi, et
+quels alias de marque sont nécessaires aux questions PO. Ne code l'agrégat qu'après. Documente
+ces faits dans le changelog.
 
 Lis le code réel avant d'éditer :
 - backend/functions/api/services/pricing/references/referenceDiffs.ts (résumé, list, résolution snapshot)
@@ -152,7 +186,8 @@ Lis le code réel avant d'éditer :
 - backend/functions/api/trpc/router.ts + shared/api/trpc.ts (miroir manuel)
 
 Implémente les sections 2.2 à 2.6. Contraintes : Zod .strict() messages FR, isolation agency_id
-respectée, erreurs via httpError/createAppError, résultats d'outils plafonnés à 50 lignes,
+respectée, dimensions métier non ambiguës, normalisation numérique avant direction, alias marques
+déterministes, erreurs via httpError/createAppError, résultats d'outils plafonnés à 50 lignes,
 zéro mock/TODO dans le code livré.
 
 Écris le test de contrat de l'agrégat. Lance `pnpm run qa:back` jusqu'au vert. Si une clé
@@ -166,8 +201,13 @@ tableau de suivi (§8) de 00-plan-general.md. Ne commit/déploie pas sans demand
 ## 5. Notes de risque
 
 - Le point dur est la sémantique du `payload` : si la direction hausse/baisse est mal
-  extraite, toutes les réponses seront fausses de façon crédible. D'où l'inspection préalable
-  obligatoire et la vérification manuelle sur les 4 questions.
+  extraite, toutes les réponses seront fausses de façon crédible. Les deltas quasi nuls dus
+  aux arrondis doivent être neutralisés, sinon l'assistant annoncera des hausses/baisses
+  inexistantes.
+- Le mot « famille » est métierlement ambigu : ne jamais confondre famille CIR et catégorie
+  fabricant sans l'avoir explicitement résolu.
+- Les marques peuvent être codées : `ROCKWELL` dans une question utilisateur peut devoir matcher
+  un code court réel. La règle d'alias doit être contrôlée, pas inventée par le LLM.
 - `aggregate_diffs` doit être clairement décrit pour que le LLM le choisisse au lieu de
   paginer `list_diffs`. Tester ce routage.
 - L'agrégat est réutilisable par l'UI « Changements » : garder l'API générique, pas

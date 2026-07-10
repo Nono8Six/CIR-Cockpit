@@ -1,5 +1,6 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import type { ColumnPinningState, ColumnSizingState, VisibilityState } from '@tanstack/react-table';
 import {
   ChevronDown,
   Database,
@@ -11,6 +12,7 @@ import {
 
 import {
   pricingReferenceLinkStatusSchema,
+  pricingReferenceSegmentsSortBySchema,
   type PricingReferenceAnomalySeverity,
   type PricingReferenceClassificationListInput,
   type PricingReferenceClassificationListResponse,
@@ -19,10 +21,14 @@ import {
   type PricingReferenceImportsListInput,
   type PricingReferenceLinkStatus,
   type PricingReferenceSegmentsListInput,
-  type PricingReferenceSegmentsListResponse,
   type PricingReferenceSegmentsSortBy,
   type PricingReferenceSortDirection
 } from '../../../../shared/schemas/pricing/references.schema';
+import type {
+  DirectorySavedView,
+  DirectorySavedViewSaveInput,
+  DirectorySavedViewState
+} from '../../../../shared/schemas/system/directory.schema';
 
 import { Button } from '@/components/ui/inputs/basic/Button';
 import { Input } from '@/components/ui/inputs/basic/Input';
@@ -58,6 +64,17 @@ import { ImportRows } from './components/imports/import-rows';
 import { ImportDetailDialog } from './components/imports/import-detail-dialog';
 import { PaginationBar } from './components/table/pagination-bar';
 import { SegmentDetailDialog } from './components/segments/segment-detail-dialog';
+import { SegmentsDataGrid } from './components/segments/segments-data-grid';
+import { SegmentsViewOptions } from './components/segments/segments-view-options';
+import {
+  DEFAULT_SEGMENT_COLUMN_PINNING,
+  DEFAULT_SEGMENT_COLUMN_SIZING,
+  DEFAULT_SEGMENT_COLUMN_VISIBILITY,
+  normalizeSegmentColumnOrder,
+  normalizeSegmentColumnVisibility,
+  type SegmentGridDensity,
+  type SegmentRow
+} from './components/segments/segment-grid-config';
 import { HealthStrip, type TabId } from './components/health/health-strip';
 import { PricingReferenceImportDialog } from './pricing-reference-import-dialog';
 import { ClassificationDrillDown } from './components/classification/classification-drilldown';
@@ -65,12 +82,18 @@ import { AnomaliesTriage, type AnomalySeverityPreset } from './components/anomal
 import { ChangesTriage } from './components/changes/changes-triage';
 import { useAnalyzedPricingReferenceImports } from './components/changes/use-analyzed-imports';
 import { usePricingReferenceChangesBadge } from './components/changes/use-changes-badge';
+import DirectorySavedViewsBar from '../client-directory/DirectorySavedViewsBar';
+import { useDirectorySavedViews } from '@/hooks/directory/views/useDirectorySavedViews';
+import { useSaveDirectorySavedView } from '@/hooks/directory/views/useSaveDirectorySavedView';
+import { useDeleteDirectorySavedView } from '@/hooks/directory/views/useDeleteDirectorySavedView';
+import { useSetDefaultDirectorySavedView } from '@/hooks/directory/views/useSetDefaultDirectorySavedView';
+import { handleUiError } from '@/services/errors/handleUiError';
+import { notifySuccess } from '@/services/errors/notifySuccess';
 
 // Formatters and label mappings
 import { formatCount, formatDateTime, linkStatusLabels } from './utils/pricing-references-formatters';
 
 type ClassificationRow = PricingReferenceClassificationListResponse['rows'][number];
-type SegmentRow = PricingReferenceSegmentsListResponse['rows'][number];
 const DEFAULT_PAGE_SIZE = 50;
 
 const tabItems: Array<{ id: TabId; label: string }> = [
@@ -154,6 +177,20 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
     sort_by: 'marque',
     sort_direction: 'asc'
   });
+  const [segmentsDensity, setSegmentsDensity] = useState<SegmentGridDensity>('compact');
+  const [segmentsColumnVisibility, setSegmentsColumnVisibility] = useState<VisibilityState>(
+    DEFAULT_SEGMENT_COLUMN_VISIBILITY
+  );
+  const [segmentsColumnOrder, setSegmentsColumnOrder] = useState<string[]>(
+    normalizeSegmentColumnOrder([])
+  );
+  const [segmentsColumnSizing, setSegmentsColumnSizing] = useState<ColumnSizingState>(
+    DEFAULT_SEGMENT_COLUMN_SIZING
+  );
+  const [segmentsColumnPinning, setSegmentsColumnPinning] = useState<ColumnPinningState>(
+    DEFAULT_SEGMENT_COLUMN_PINNING
+  );
+  const hasAppliedDefaultSegmentsView = useRef(false);
 
   const canImport = userRole === 'super_admin';
 
@@ -295,6 +332,142 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
     queryKey: pricingReferenceSegmentsKey(segmentsInput),
     queryFn: () => listPricingReferenceSegments(segmentsInput)
   });
+  const segmentsSavedViewsQuery = useDirectorySavedViews('referential_segments', true);
+  const saveSegmentsViewMutation = useSaveDirectorySavedView();
+  const deleteSegmentsViewMutation = useDeleteDirectorySavedView();
+  const setDefaultSegmentsViewMutation = useSetDefaultDirectorySavedView();
+  const isSegmentsViewMutating =
+    saveSegmentsViewMutation.isPending
+    || deleteSegmentsViewMutation.isPending
+    || setDefaultSegmentsViewMutation.isPending;
+
+  const currentSegmentsViewState = useMemo<DirectorySavedViewState>(
+    () => ({
+      viewType: 'referential_segments',
+      q: segmentsSearch || undefined,
+      type: 'all',
+      scope: { mode: 'active_agency' },
+      departments: [],
+      city: undefined,
+      cirCommercialIds: [],
+      includeArchived: false,
+      pageSize: segmentsPageSize,
+      sorting: [{ id: 'name', desc: false }],
+      columnVisibility: normalizeSegmentColumnVisibility(segmentsColumnVisibility),
+      columnOrder: normalizeSegmentColumnOrder(segmentsColumnOrder),
+      columnSizing: segmentsColumnSizing,
+      columnPinning: {
+        left: segmentsColumnPinning.left ?? [],
+        right: segmentsColumnPinning.right ?? []
+      },
+      pricingReferenceSegments: {
+        filters: {
+          search: segmentsSearch || undefined,
+          marque: segmentsMarque || undefined,
+          cat_fab: segmentsCatFab || undefined,
+          link_status: segmentsLinkStatus === 'all' ? undefined : segmentsLinkStatus
+        },
+        sorting: segmentsSort
+      },
+      density: segmentsDensity
+    }),
+    [
+      segmentsCatFab,
+      segmentsColumnOrder,
+      segmentsColumnPinning.left,
+      segmentsColumnPinning.right,
+      segmentsColumnSizing,
+      segmentsColumnVisibility,
+      segmentsDensity,
+      segmentsLinkStatus,
+      segmentsMarque,
+      segmentsPageSize,
+      segmentsSearch,
+      segmentsSort
+    ]
+  );
+
+  const applySegmentsView = useCallback((view: DirectorySavedView) => {
+    const state = view.state;
+    const segmentFilters = state.pricingReferenceSegments.filters;
+    const segmentSorting = state.pricingReferenceSegments.sorting;
+    const parsedSortBy = pricingReferenceSegmentsSortBySchema.safeParse(segmentSorting.sort_by);
+    const parsedLinkStatus = pricingReferenceLinkStatusSchema.safeParse(segmentFilters.link_status);
+
+    setSegmentsSearch(segmentFilters.search ?? state.q ?? '');
+    setSegmentsMarque(segmentFilters.marque ?? '');
+    setSegmentsCatFab(segmentFilters.cat_fab ?? '');
+    setSegmentsLinkStatus(parsedLinkStatus.success ? parsedLinkStatus.data : 'all');
+    setSegmentsSort({
+      sort_by: parsedSortBy.success ? parsedSortBy.data : 'marque',
+      sort_direction: segmentSorting.sort_direction
+    });
+    setSegmentsPageSize(state.pageSize);
+    setSegmentsDensity(state.density === 'compact' ? 'compact' : 'comfortable');
+    setSegmentsColumnVisibility(normalizeSegmentColumnVisibility(state.columnVisibility));
+    setSegmentsColumnOrder(normalizeSegmentColumnOrder(state.columnOrder));
+    setSegmentsColumnSizing({ ...DEFAULT_SEGMENT_COLUMN_SIZING, ...state.columnSizing });
+    setSegmentsColumnPinning({
+      left: state.columnPinning.left ?? [],
+      right: state.columnPinning.right ?? []
+    });
+    setSegmentsPage(1);
+  }, []);
+
+  useEffect(() => {
+    if (hasAppliedDefaultSegmentsView.current) return;
+    const defaultView = segmentsSavedViewsQuery.data?.views.find((view) => view.is_default);
+    if (!defaultView) return;
+    hasAppliedDefaultSegmentsView.current = true;
+    let isCancelled = false;
+    queueMicrotask(() => {
+      if (!isCancelled) {
+        applySegmentsView(defaultView);
+      }
+    });
+    return () => {
+      isCancelled = true;
+    };
+  }, [applySegmentsView, segmentsSavedViewsQuery.data?.views]);
+
+  const saveSegmentsView = useCallback(
+    async (input: DirectorySavedViewSaveInput) => {
+      try {
+        await saveSegmentsViewMutation.mutateAsync(input);
+        notifySuccess(input.id ? 'Vue Segments mise à jour.' : 'Vue Segments sauvegardée.');
+      } catch (error) {
+        handleUiError(error, 'Impossible de sauvegarder la vue Segments.');
+      }
+    },
+    [saveSegmentsViewMutation]
+  );
+
+  const deleteSegmentsView = useCallback(
+    async (viewId: string) => {
+      try {
+        await deleteSegmentsViewMutation.mutateAsync({ id: viewId });
+        notifySuccess('Vue Segments supprimée.');
+      } catch (error) {
+        handleUiError(error, 'Impossible de supprimer la vue Segments.');
+      }
+    },
+    [deleteSegmentsViewMutation]
+  );
+
+  const setDefaultSegmentsView = useCallback(
+    async (viewId: string) => {
+      try {
+        await setDefaultSegmentsViewMutation.mutateAsync({
+          id: viewId,
+          viewType: 'referential_segments'
+        });
+        notifySuccess('Vue Segments par défaut enregistrée.');
+      } catch (error) {
+        handleUiError(error, 'Impossible de définir la vue Segments par défaut.');
+      }
+    },
+    [setDefaultSegmentsViewMutation]
+  );
 
   const resetPages = useCallback(() => {
     setClassificationPage(1);
@@ -376,69 +549,6 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
         render: (row) => row.sfa
       },
       { id: 'sfa_lib', label: 'Libellé SFA', render: (row) => row.sfa_lib }
-    ],
-    []
-  );
-
-  const segmentColumns = useMemo<Array<DataColumn<SegmentRow>>>(
-    () => [
-      {
-        id: 'marque',
-        label: 'Marque',
-        sortBy: 'marque',
-        className: 'font-medium text-foreground',
-        render: (row) => row.marque
-      },
-      {
-        id: 'cat_fab',
-        label: 'Cat fab',
-        sortBy: 'cat_fab',
-        className: 'text-muted-foreground',
-        render: (row) => row.cat_fab
-      },
-      {
-        id: 'segment',
-        label: 'Segment',
-        sortBy: 'segment',
-        className: 'text-muted-foreground tabular-nums',
-        render: (row) => row.segment
-      },
-      {
-        id: 'idnumerique',
-        label: 'ID',
-        sortBy: 'idnumerique',
-        className: 'font-mono text-muted-foreground tabular-nums',
-        render: (row) => row.idnumerique
-      },
-      { id: 'cat_fab_l', label: 'Libellé', render: (row) => row.cat_fab_l ?? '-' },
-      { id: 'cir_key', label: 'Clé CIR', className: 'font-mono tabular-nums text-foreground', render: (row) => row.cir_key ?? '-' },
-      {
-        id: 'link_status',
-        label: 'Liaison',
-        sortBy: 'link_status',
-        render: (row) => {
-          if (!row.link_status || row.link_status === 'complete_valid') {
-            return (
-              <span className="text-muted-foreground/45" aria-label={row.link_status ? 'Liaison complète valide' : 'Liaison inconnue'}>
-                —
-              </span>
-            );
-          }
-          return (
-            <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-[11px] font-medium text-amber-800">
-              <span className="size-1.5 rounded-full bg-amber-500" aria-hidden="true" />
-              {linkStatusLabels[row.link_status]}
-            </span>
-          );
-        }
-      },
-      {
-        id: 'grids',
-        label: 'Grilles',
-        sortBy: 'purchase_grid_rows_count',
-        className: 'text-right font-mono text-muted-foreground tabular-nums',
-        render: (row) => formatCount(row.purchase_grid_rows_count)
-      }
     ],
     []
   );
@@ -749,10 +859,8 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
           value="segments"
           className="min-h-0 flex-1 flex flex-col gap-3 overflow-hidden pt-2"
         >
-          <ReferenceTable
+          <SegmentsDataGrid
             rows={segmentsQuery.data?.rows ?? []}
-            columns={segmentColumns}
-            rowKey={(row) => row.id}
             isLoading={segmentsQuery.isLoading}
             isFetching={segmentsQuery.isFetching}
             page={segmentsPage}
@@ -760,7 +868,11 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
             total={segmentsQuery.data?.total ?? 0}
             sortBy={segmentsSort.sort_by}
             sortDirection={segmentsSort.sort_direction}
-            emptyLabel="Aucun segment trouvé"
+            density={segmentsDensity}
+            columnVisibility={segmentsColumnVisibility}
+            columnOrder={segmentsColumnOrder}
+            columnSizing={segmentsColumnSizing}
+            columnPinning={segmentsColumnPinning}
             toolbar={
               <>
                 <div className="relative w-full max-w-64">
@@ -839,13 +951,43 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
                     Réinitialiser
                   </button>
                 ) : null}
+                <DirectorySavedViewsBar
+                  views={segmentsSavedViewsQuery.data?.views ?? []}
+                  currentState={currentSegmentsViewState}
+                  isLoading={segmentsSavedViewsQuery.isLoading}
+                  isMutating={isSegmentsViewMutating}
+                  triggerLabel="Vues"
+                  title="Vues Segments"
+                  description="Sauvegardez vos colonnes, filtres, tri et densité."
+                  saveButtonLabel="Sauvegarder la vue actuelle"
+                  emptyLabel="Aucune vue Segments sauvegardée."
+                  createDialogTitle="Sauvegarder une vue Segments"
+                  updateDialogTitle="Mettre à jour la vue Segments"
+                  dialogDescription="Les filtres, le tri, la pagination, la densité, l'ordre, les largeurs et le pinning des colonnes seront conservés."
+                  onApplyView={applySegmentsView}
+                  onSaveView={saveSegmentsView}
+                  onDeleteView={deleteSegmentsView}
+                  onSetDefaultView={setDefaultSegmentsView}
+                />
+                <SegmentsViewOptions
+                  density={segmentsDensity}
+                  columnVisibility={segmentsColumnVisibility}
+                  columnOrder={segmentsColumnOrder}
+                  columnPinning={segmentsColumnPinning}
+                  onDensityChange={setSegmentsDensity}
+                  onColumnVisibilityChange={(visibility) =>
+                    setSegmentsColumnVisibility(normalizeSegmentColumnVisibility(visibility))
+                  }
+                  onColumnOrderChange={(order) => setSegmentsColumnOrder(normalizeSegmentColumnOrder(order))}
+                  onColumnPinningChange={setSegmentsColumnPinning}
+                  onColumnSizingChange={setSegmentsColumnSizing}
+                />
                 <span className="ml-auto font-mono text-[11px] tabular-nums text-muted-foreground">
-                  {formatCount(segmentsQuery.data?.total)} segments
+                  {formatCount(segmentsQuery.data?.total)} segments · {formatCount(Object.values(segmentsColumnVisibility).filter(Boolean).length)} colonnes · {segmentsDensity === 'compact' ? 'compacte' : 'confort'}
                 </span>
               </>
             }
             onRowClick={(row) => setSelectedSegment(row)}
-            rowActionLabel="Voir le détail du segment"
             onSort={(sortBy) => {
               setSegmentsSort((current) =>
                 toggleSort(
@@ -861,6 +1003,12 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
               setSegmentsPageSize(nextPageSize);
               setSegmentsPage(1);
             }}
+            onColumnVisibilityChange={(visibility) =>
+              setSegmentsColumnVisibility(normalizeSegmentColumnVisibility(visibility))
+            }
+            onColumnOrderChange={(order) => setSegmentsColumnOrder(normalizeSegmentColumnOrder(order))}
+            onColumnSizingChange={setSegmentsColumnSizing}
+            onColumnPinningChange={setSegmentsColumnPinning}
           />
           <SegmentDetailDialog segment={selectedSegment} onClose={() => setSelectedSegment(null)} />
         </TabsContent>

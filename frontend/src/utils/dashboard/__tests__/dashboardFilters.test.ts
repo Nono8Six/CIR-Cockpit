@@ -40,9 +40,9 @@ const buildInteraction = (overrides: Partial<Interaction> = {}): Interaction => 
 
 describe('dashboardFilters', () => {
   it('validates custom date range', () => {
-    expect(validateCustomDateRange('', '')).toBe('Renseignez une date de debut et de fin.');
+    expect(validateCustomDateRange('', '')).toBe('Renseignez une date de début et de fin.');
     expect(validateCustomDateRange('2026-02-10', '2026-02-01')).toBe(
-      'La date de debut doit preceder la date de fin.'
+      'La date de début doit précéder la date de fin.'
     );
     expect(validateCustomDateRange('2026-02-01', '2026-02-10')).toBeNull();
   });
@@ -115,5 +115,51 @@ describe('dashboardFilters', () => {
     });
 
     expect(filtered.map((row) => row.id)).toEqual(['todo']);
+  });
+
+  it('keeps work-queue items visible in kanban mode even outside the period', () => {
+    const overdueOutOfRange = buildInteraction({
+      id: 'overdue-out',
+      last_action_at: '2026-01-05T08:00:00.000Z',
+      reminder_at: '2026-01-10T09:00:00.000Z'
+    });
+    const inRange = buildInteraction({
+      id: 'in-range',
+      last_action_at: '2026-02-10T10:00:00.000Z'
+    });
+    const outOfRange = buildInteraction({
+      id: 'out',
+      last_action_at: '2026-01-05T08:00:00.000Z'
+    });
+
+    const dateBounds = buildDateBounds('2026-02-10', '2026-02-10');
+    const filtered = filterInteractionsByViewMode({
+      interactions: [overdueOutOfRange, inRange, outOfRange],
+      viewMode: 'kanban',
+      dateBounds,
+      isStatusDone: () => false,
+      isInWorkQueue: (interaction) => Boolean(interaction.reminder_at)
+    });
+
+    expect(filtered.map((row) => row.id)).toEqual(['overdue-out', 'in-range']);
+  });
+
+  it('does not bypass the period filter in list mode', () => {
+    const overdueOutOfRange = buildInteraction({
+      id: 'overdue-out',
+      last_action_at: '2026-01-05T08:00:00.000Z',
+      reminder_at: '2026-01-10T09:00:00.000Z'
+    });
+
+    const dateBounds = buildDateBounds('2026-02-10', '2026-02-10');
+    const filtered = filterInteractionsByViewMode({
+      interactions: [overdueOutOfRange],
+      viewMode: 'list',
+      dateBounds,
+      isStatusDone: () => false,
+      isInWorkQueue: () => true
+    });
+
+    expect(filtered).toEqual([]);
   });
 });

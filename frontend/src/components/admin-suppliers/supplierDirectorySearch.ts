@@ -18,6 +18,13 @@ export const DEFAULT_SUPPLIER_SEARCH: DirectorySearchState = directorySearchStat
   pageSize: SUPPLIER_PAGE_SIZE,
   sorting: DEFAULT_SUPPLIER_SORTING
 });
+export const DEFAULT_SUPPLIER_COLUMN_ORDER: DirectorySavedViewState['columnOrder'] = [];
+export const DEFAULT_SUPPLIER_COLUMN_SIZING: DirectorySavedViewState['columnSizing'] = {};
+export const DEFAULT_SUPPLIER_COLUMN_PINNING: DirectorySavedViewState['columnPinning'] = { left: [], right: [] };
+export const DEFAULT_SUPPLIER_PRICING_REFERENCE_SEGMENTS_VIEW: DirectorySavedViewState['pricingReferenceSegments'] = {
+  filters: {},
+  sorting: { sort_by: 'marque', sort_direction: 'asc' }
+};
 export const DEFAULT_SUPPLIER_DENSITY: DirectoryDensity = 'compact';
 
 const parseSortString = (value: unknown): DirectorySortingRule[] => {
@@ -103,6 +110,10 @@ export const toSupplierSavedViewState = (
   pageSize: search.pageSize,
   sorting: search.sorting,
   columnVisibility,
+  columnOrder: DEFAULT_SUPPLIER_COLUMN_ORDER,
+  columnSizing: DEFAULT_SUPPLIER_COLUMN_SIZING,
+  columnPinning: DEFAULT_SUPPLIER_COLUMN_PINNING,
+  pricingReferenceSegments: DEFAULT_SUPPLIER_PRICING_REFERENCE_SEGMENTS_VIEW,
   density
 });
 

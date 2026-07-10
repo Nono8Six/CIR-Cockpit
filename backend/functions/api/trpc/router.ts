@@ -107,6 +107,8 @@ import {
   pricingReferenceImportsListResponseSchema,
   pricingReferenceImportsPrepareInputSchema,
   pricingReferenceImportsPrepareResponseSchema,
+  pricingReferenceSegmentDetailInputSchema,
+  pricingReferenceSegmentDetailResponseSchema,
   pricingReferenceSegmentsListInputSchema,
   pricingReferenceSegmentsListResponseSchema,
 } from "../../../../shared/schemas/pricing/references.schema.ts";
@@ -192,6 +194,7 @@ import {
   listPricingReferenceClassification,
   listPricingReferenceImports,
   listPricingReferenceSegments,
+  getPricingReferenceSegmentDetail,
   preparePricingReferenceImport,
 } from "../services/pricing/references/referenceImports.ts";
 import {
@@ -436,6 +439,19 @@ export const appRouter = router({
           .query(
             withAuthedHandler((db, authContext, requestId, input) =>
               listPricingReferenceSegments(
+                db,
+                authContext.userId,
+                requestId,
+                input,
+              )
+            ),
+          ),
+        get: authedProcedure
+          .input(pricingReferenceSegmentDetailInputSchema)
+          .output(pricingReferenceSegmentDetailResponseSchema)
+          .query(
+            withAuthedHandler((db, authContext, requestId, input) =>
+              getPricingReferenceSegmentDetail(
                 db,
                 authContext.userId,
                 requestId,

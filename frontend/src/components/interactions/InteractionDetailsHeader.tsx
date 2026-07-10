@@ -3,6 +3,7 @@ import { Trash2, UserRound, X } from 'lucide-react';
 import { Badge } from '../ui/data-display/Badge';
 import { Button } from '../ui/inputs/basic/Button';
 import type { Interaction } from '@/types';
+import { getInteractionDisplayName } from '@/utils/interactions/getInteractionDisplayName';
 
 type InteractionDetailsHeaderProps = {
   interaction: Interaction;
@@ -23,7 +24,7 @@ const InteractionDetailsHeader = ({
     <div className="flex items-start justify-between gap-3">
       <div className="min-w-0 space-y-1">
         <h2 className="truncate text-base font-semibold text-foreground sm:text-lg">
-          {interaction.company_name}
+          {getInteractionDisplayName(interaction)}
         </h2>
         <p className="flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground">
           <UserRound size={14} className="shrink-0 text-muted-foreground/80" aria-hidden="true" />
@@ -41,7 +42,7 @@ const InteractionDetailsHeader = ({
         size="icon"
         className="size-8 text-muted-foreground hover:text-foreground"
         onClick={onClose}
-        aria-label="Fermer le panneau"
+        aria-label="Fermer le détail"
       >
         <X size={16} />
       </Button>

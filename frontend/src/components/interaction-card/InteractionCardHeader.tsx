@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import type { Interaction, StatusCategory } from '@/types';
 import { formatDate } from '@/utils/date/formatDate';
 import { formatTime } from '@/utils/date/formatTime';
+import { getInteractionDisplayName } from '@/utils/interactions/getInteractionDisplayName';
 import { getInteractionChannelIcon } from './InteractionChannelIcon';
 import {
   DropdownMenu,
@@ -34,7 +35,7 @@ const InteractionCardHeader = ({ data, statusTone, onDeleteInteraction, onSelect
         ? 'bg-destructive'
         : 'bg-warning';
 
-  const companyName = data.company_name?.trim() || "Sans entreprise";
+  const companyName = getInteractionDisplayName(data);
   const isPlaceholder = !data.company_name?.trim();
   const lastActionDate = formatDate(data.last_action_at);
   const lastActionTime = formatTime(data.last_action_at);
@@ -86,7 +87,7 @@ const InteractionCardHeader = ({ data, statusTone, onDeleteInteraction, onSelect
                 onClick={(event) => {
                   event.stopPropagation();
                 }}
-                aria-label={`Actions pour ${data.company_name}`}
+                aria-label={`Actions pour ${companyName}`}
               >
                 <MoreVertical size={15} aria-hidden="true" />
               </button>

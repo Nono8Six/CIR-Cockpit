@@ -4,6 +4,7 @@ import { Button } from '../../ui/inputs/basic/Button';
 import { TableCell, TableRow } from '../../ui/data-display/Table';
 import { formatDate } from '@/utils/date/formatDate';
 import { formatTime } from '@/utils/date/formatTime';
+import { getInteractionDisplayName } from '@/utils/interactions/getInteractionDisplayName';
 import DashboardFamilyBadges from './DashboardFamilyBadges';
 import type { DashboardListRowProps } from './DashboardListRow.types';
 
@@ -36,14 +37,17 @@ const DashboardListRow = ({
       </TableCell>
       <TableCell className="px-3 py-2">
         <span
-          className={`inline-flex max-w-full items-center truncate rounded border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider ${getStatusBadgeClass(item)}`}
+          title={item.status}
+          className={`inline-flex max-w-full items-center rounded border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider ${getStatusBadgeClass(item)}`}
         >
-          {item.status}
+          <span className="truncate">{item.status}</span>
         </span>
       </TableCell>
       <TableCell className="px-3 py-2">
         <div className="min-w-0">
-          <p className="truncate text-xs font-semibold text-foreground/90">{item.company_name}</p>
+          <p className="truncate text-xs font-semibold text-foreground/90">
+            {getInteractionDisplayName(item)}
+          </p>
           <p className="truncate text-[9.5px] text-muted-foreground/80 font-mono tabular-nums leading-normal">
             {item.contact_name}
             {(item.contact_phone || item.contact_email) && ` · ${item.contact_phone ?? item.contact_email}`}
@@ -71,7 +75,7 @@ const DashboardListRow = ({
             size="icon"
             className="size-7 text-destructive/80 hover:text-destructive opacity-0 group-hover/row:opacity-100 transition-opacity duration-200"
             onClick={() => onDeleteInteraction(item)}
-            aria-label={`Supprimer ${item.company_name}`}
+            aria-label={`Supprimer ${getInteractionDisplayName(item)}`}
           >
             <Trash2 size={12} aria-hidden="true" />
           </Button>
@@ -81,7 +85,7 @@ const DashboardListRow = ({
             size="dense"
             className="h-7 text-xs text-primary hover:text-primary"
             onClick={() => onSelectInteraction(item)}
-            aria-label={`Ouvrir ${item.company_name}`}
+            aria-label={`Ouvrir ${getInteractionDisplayName(item)}`}
           >
             Ouvrir
             <ChevronRight size={12} aria-hidden="true" />

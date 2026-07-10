@@ -1,4 +1,4 @@
-import { Paperclip, SendHorizontal } from 'lucide-react';
+import { SendHorizontal } from 'lucide-react';
 
 import { Button } from '../../ui/inputs/basic/Button';
 import { Textarea } from '../../ui/inputs/basic/Textarea';
@@ -34,21 +34,11 @@ const InteractionFooterNoteComposer = ({
     <div className="absolute bottom-2.5 right-2.5 flex gap-1.5">
       <Button
         type="button"
-        variant="ghost"
-        size="icon"
-        className="size-8 text-muted-foreground hover:text-foreground"
-        title="Joindre un fichier (Simulation)"
-        aria-label="Joindre un fichier"
-      >
-        <Paperclip size={16} />
-      </Button>
-      <Button
-        type="button"
         size="icon"
         className="size-8 bg-primary text-white hover:bg-primary/90"
         onClick={onSubmit}
         disabled={isSubmitDisabled}
-        aria-label="Envoyer la mise a jour"
+        aria-label="Envoyer la mise à jour"
       >
         <SendHorizontal size={14} />
       </Button>

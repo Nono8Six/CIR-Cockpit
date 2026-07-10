@@ -93,7 +93,7 @@ describe('useDashboardState', () => {
 
     expect(result.current.period).toBe('custom');
     expect(result.current.periodErrorMessage).toBe(
-      'La date de debut doit preceder la date de fin.'
+      'La date de début doit précéder la date de fin.'
     );
     expect(mockHandleUiError).toHaveBeenCalledTimes(1);
   });
@@ -172,7 +172,7 @@ describe('useDashboardState', () => {
 
     expect(mockHandleUiError).toHaveBeenCalledWith(
       appError,
-      'Impossible de mettre a jour le dossier.',
+      'Impossible de mettre à jour le dossier.',
       { source: 'dashboard.details.update' }
     );
   });

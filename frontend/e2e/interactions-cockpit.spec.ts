@@ -209,8 +209,8 @@ test.skip('interaction soumise visible dans la timeline', async ({ page }) => {
   await expect(row).toBeVisible();
   await row.getByRole('button', { name: /ouvrir/i }).click();
 
-  await expect(page.getByTestId('dashboard-details-sheet')).toBeVisible();
+  await expect(page.getByTestId('dashboard-details-dialog')).toBeVisible();
   await expect(page.getByText(/dossier cree|dossier créé/i)).toBeVisible();
-  await page.getByRole('button', { name: /fermer le panneau/i }).click();
-  await expect(page.getByTestId('dashboard-details-sheet')).toHaveCount(0);
+  await page.getByRole('button', { name: /fermer le détail/i }).click();
+  await expect(page.getByTestId('dashboard-details-dialog')).toHaveCount(0);
 });

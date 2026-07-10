@@ -158,7 +158,7 @@ const DashboardDateFilters = forwardRef<HTMLButtonElement, DashboardDateFiltersP
               className="min-w-0 justify-start border-border bg-background text-left text-xs font-medium text-foreground/90 hover:bg-surface-1 focus-visible:border-primary/40 focus-visible:ring-primary/25"
               data-testid="dashboard-date-range-trigger"
               aria-label="Selectionner la plage de dates"
-              title={`${formatRangeLabel(activeRange)}. Le filtre période s'applique sur la date de dernière action des dossiers.`}
+              title={`${formatRangeLabel(activeRange)}. Le filtre période s'applique sur la date de dernière action des dossiers. Les dossiers à traiter et les relances en retard restent toujours affichés.`}
             >
               <CalendarIcon size={14} className="shrink-0 text-muted-foreground" />
               <span className="truncate">{formatRangeLabel(activeRange)}</span>

@@ -67,6 +67,7 @@ type AppShellNavItemBase = {
   icon: LucideIcon;
   shortcut?: string;
   metaLabel?: string;
+  metaTitle?: string;
 };
 
 type AppShellTabNavItem = AppShellNavItemBase & {
@@ -94,6 +95,16 @@ const formatPendingNavLabel = (pendingCount: number): string | undefined => {
   }
 
   return String(pendingCount);
+};
+
+const formatPendingNavTitle = (pendingCount: number): string | undefined => {
+  if (pendingCount <= 0) {
+    return undefined;
+  }
+
+  return pendingCount === 1
+    ? '1 dossier à traiter ou en retard de relance'
+    : `${pendingCount} dossiers à traiter ou en retard de relance`;
 };
 
 export const buildShellNavigation = (
@@ -140,7 +151,8 @@ export const buildShellNavigation = (
           label: 'Pilotage',
           icon: Gauge,
           shortcut: APP_TAB_SHORTCUTS.dashboard,
-          metaLabel: formatPendingNavLabel(pendingCount)
+          metaLabel: formatPendingNavLabel(pendingCount),
+          metaTitle: formatPendingNavTitle(pendingCount)
         }
       ]
     },

@@ -113,6 +113,8 @@ import {
   pricingReferenceImportsListResponseSchema,
   pricingReferenceImportsPrepareInputSchema,
   pricingReferenceImportsPrepareResponseSchema,
+  pricingReferenceSegmentDetailInputSchema,
+  pricingReferenceSegmentDetailResponseSchema,
   pricingReferenceSegmentsListInputSchema,
   pricingReferenceSegmentsListResponseSchema,
 } from "../schemas/pricing/references.schema.ts";
@@ -276,6 +278,10 @@ const appRouterType = t.router({
         list: t.procedure
           .input(pricingReferenceSegmentsListInputSchema)
           .output(pricingReferenceSegmentsListResponseSchema)
+          .query(() => undefined as never),
+        get: t.procedure
+          .input(pricingReferenceSegmentDetailInputSchema)
+          .output(pricingReferenceSegmentDetailResponseSchema)
           .query(() => undefined as never),
       }),
       anomalies: t.router({

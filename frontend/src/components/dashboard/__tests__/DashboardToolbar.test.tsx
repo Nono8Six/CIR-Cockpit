@@ -81,12 +81,12 @@ describe('DashboardToolbar', () => {
     render(
       <DashboardToolbar
         {...baseProps}
-        periodErrorMessage="La date de debut doit preceder la date de fin."
+        periodErrorMessage="La date de début doit précéder la date de fin."
       />
     );
 
     expect(screen.getByTestId('dashboard-period-error')).toHaveTextContent(
-      /date de debut doit preceder/i
+      /date de début doit précéder/i
     );
   });
 });

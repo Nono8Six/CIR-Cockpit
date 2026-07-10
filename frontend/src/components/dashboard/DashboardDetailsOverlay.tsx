@@ -5,13 +5,13 @@ import type {
   TimelineEvent
 } from '@/types';
 import InteractionDetails from '@/components/InteractionDetails';
+import { getInteractionDisplayName } from '@/utils/interactions/getInteractionDisplayName';
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle
-} from '../ui/feedback/Sheet';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle
+} from '../ui/feedback/Dialog';
 
 type DashboardDetailsOverlayProps = {
   interaction: Interaction;
@@ -36,7 +36,7 @@ const DashboardDetailsOverlay = ({
   onRequestConvert,
   onDeleteInteraction
 }: DashboardDetailsOverlayProps) => (
-  <Sheet
+  <Dialog
     open
     onOpenChange={(open) => {
       if (!open) {
@@ -44,18 +44,18 @@ const DashboardDetailsOverlay = ({
       }
     }}
   >
-    <SheetContent
-      side="right"
+    <DialogContent
       showCloseButton={false}
-      className="w-full border-l border-border p-0 sm:max-w-2xl"
-      data-testid="dashboard-details-sheet"
+      overlayClassName="bg-neutral-950/20 backdrop-blur-sm"
+      className="flex h-[min(85vh,780px)] w-[min(95vw,720px)] max-w-3xl flex-col gap-0 overflow-hidden rounded-xl border border-border p-0 shadow-2xl shadow-neutral-900/8"
+      data-testid="dashboard-details-dialog"
     >
-      <SheetHeader className="sr-only">
-        <SheetTitle>Details interaction {interaction.company_name}</SheetTitle>
-        <SheetDescription>
-          Consulter le dossier, mettre a jour le statut et ajouter des notes.
-        </SheetDescription>
-      </SheetHeader>
+      <DialogTitle className="sr-only">
+        {`Détails de l'interaction ${getInteractionDisplayName(interaction)}`}
+      </DialogTitle>
+      <DialogDescription className="sr-only">
+        Consulter le dossier, mettre à jour le statut et ajouter des notes.
+      </DialogDescription>
       <InteractionDetails
         interaction={interaction}
         onClose={onClose}
@@ -65,8 +65,8 @@ const DashboardDetailsOverlay = ({
         onRequestConvert={onRequestConvert}
         onDeleteInteraction={onDeleteInteraction}
       />
-    </SheetContent>
-  </Sheet>
+    </DialogContent>
+  </Dialog>
 );
 
 export default DashboardDetailsOverlay;

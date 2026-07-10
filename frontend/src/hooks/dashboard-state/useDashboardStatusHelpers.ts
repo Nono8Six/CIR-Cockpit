@@ -2,8 +2,10 @@ import { useCallback, useMemo } from 'react';
 
 import type { AgencyStatus, Interaction } from '@/types';
 import type { AgencyConfig } from '@/services/config';
-import { inferStatusCategoryFromLabel } from '@/utils/dashboard/dashboardAggregates';
-import { isBeforeNow } from '@/utils/date/isBeforeNow';
+import {
+  createInteractionStatusPredicates,
+  inferStatusCategoryFromLabel
+} from '@/utils/dashboard/dashboardAggregates';
 import { resolveReferenceLabel } from '@/utils/references/resolveReferenceLabel';
 
 export const useDashboardStatusHelpers = (
@@ -20,51 +22,15 @@ export const useDashboardStatusHelpers = (
     return map;
   }, [statuses]);
 
-  const statusByLabel = useMemo(
-    () => new Map(statuses.map((status) => [status.label.toLowerCase(), status])),
-    [statuses],
+  const predicates = useMemo(
+    () =>
+      createInteractionStatusPredicates(statuses, (rawLabel) =>
+        resolveReferenceLabel('statuses', rawLabel, resolutions)
+      ),
+    [resolutions, statuses],
   );
 
-  const getStatusMeta = useCallback(
-    (interaction: Interaction) => {
-      if (interaction.status_id) {
-        const byId = statusById.get(interaction.status_id);
-        if (byId) return byId;
-      }
-
-      const resolvedLabel = resolveReferenceLabel('statuses', interaction.status, resolutions);
-      return statusByLabel.get(resolvedLabel.toLowerCase());
-    },
-    [resolutions, statusById, statusByLabel],
-  );
-
-  const isStatusDone = useCallback(
-    (interaction: Interaction) => {
-      const statusMeta = getStatusMeta(interaction);
-      if (statusMeta) {
-        return Boolean(statusMeta.is_terminal || statusMeta.category === 'done');
-      }
-
-      if (typeof interaction.status_is_terminal === 'boolean') {
-        return interaction.status_is_terminal;
-      }
-
-      return inferStatusCategoryFromLabel(resolveReferenceLabel('statuses', interaction.status, resolutions)) === 'done';
-    },
-    [getStatusMeta, resolutions],
-  );
-
-  const isStatusTodo = useCallback(
-    (interaction: Interaction) => {
-      const statusMeta = getStatusMeta(interaction);
-      if (statusMeta) {
-        return Boolean(statusMeta.category === 'todo' || statusMeta.is_default);
-      }
-
-      return inferStatusCategoryFromLabel(resolveReferenceLabel('statuses', interaction.status, resolutions)) === 'todo';
-    },
-    [getStatusMeta, resolutions],
-  );
+  const { getStatusMeta, isStatusDone, isStatusTodo, isReminderOverdue } = predicates;
 
   const getStatusBadgeClass = useCallback(
     (interaction: Interaction) => {
@@ -88,14 +54,6 @@ export const useDashboardStatusHelpers = (
       return 'border-warning/45 bg-warning/20 text-warning-foreground';
     },
     [getStatusMeta, resolutions],
-  );
-
-  const isReminderOverdue = useCallback(
-    (interaction: Interaction) =>
-      Boolean(
-        interaction.reminder_at && isBeforeNow(interaction.reminder_at) && !isStatusDone(interaction),
-      ),
-    [isStatusDone],
   );
 
   return {

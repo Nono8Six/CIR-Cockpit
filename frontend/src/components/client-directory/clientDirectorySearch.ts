@@ -19,6 +19,13 @@ export const DEFAULT_DIRECTORY_SEARCH: DirectorySearchState = directorySearchSta
   sorting: DEFAULT_DIRECTORY_SORTING
 });
 export const DEFAULT_DIRECTORY_COLUMN_VISIBILITY: DirectorySavedViewState['columnVisibility'] = {};
+export const DEFAULT_DIRECTORY_COLUMN_ORDER: DirectorySavedViewState['columnOrder'] = [];
+export const DEFAULT_DIRECTORY_COLUMN_SIZING: DirectorySavedViewState['columnSizing'] = {};
+export const DEFAULT_DIRECTORY_COLUMN_PINNING: DirectorySavedViewState['columnPinning'] = { left: [], right: [] };
+export const DEFAULT_PRICING_REFERENCE_SEGMENTS_VIEW: DirectorySavedViewState['pricingReferenceSegments'] = {
+  filters: {},
+  sorting: { sort_by: 'marque', sort_direction: 'asc' }
+};
 export const DEFAULT_DIRECTORY_DENSITY: DirectoryDensity = 'compact';
 
 const parseLegacySorting = (search: Record<string, unknown>): DirectorySortingRule[] => {
@@ -124,6 +131,10 @@ export const toDirectorySavedViewState = (
   pageSize: search.pageSize,
   sorting: search.sorting,
   columnVisibility,
+  columnOrder: DEFAULT_DIRECTORY_COLUMN_ORDER,
+  columnSizing: DEFAULT_DIRECTORY_COLUMN_SIZING,
+  columnPinning: DEFAULT_DIRECTORY_COLUMN_PINNING,
+  pricingReferenceSegments: DEFAULT_PRICING_REFERENCE_SEGMENTS_VIEW,
   density
 });
 

@@ -66,7 +66,7 @@ export const directorySortBySchema = z.enum([
 ]);
 export const directorySortDirectionSchema = z.enum(['asc', 'desc']);
 export const directoryDensitySchema = z.enum(['comfortable', 'compact']);
-export const directorySavedViewTypeSchema = z.enum(['clients', 'suppliers']);
+export const directorySavedViewTypeSchema = z.enum(['clients', 'suppliers', 'referential_segments']);
 
 export const directoryActiveAgencyScopeSchema = z.strictObject({
   mode: z.literal('active_agency')
@@ -234,6 +234,27 @@ export const directorySuggestionOptionSchema = z.strictObject({
 });
 
 export const directoryColumnVisibilitySchema = z.record(z.string(), z.boolean()).default({});
+export const directoryColumnOrderSchema = z.array(z.string().trim().min(1, 'Colonne requise')).default([]);
+export const directoryColumnSizingSchema = z.record(
+  z.string(),
+  z.number().int().min(48, 'Largeur de colonne invalide').max(640, 'Largeur de colonne invalide')
+).default({});
+export const directoryColumnPinningSchema = z.strictObject({
+  left: z.array(z.string().trim().min(1, 'Colonne requise')).default([]),
+  right: z.array(z.string().trim().min(1, 'Colonne requise')).default([])
+}).default({ left: [], right: [] });
+
+const pricingReferenceSegmentsFiltersViewSchema = z.strictObject({
+  search: optionalTextFilterSchema.optional(),
+  marque: optionalTextFilterSchema.optional(),
+  cat_fab: optionalTextFilterSchema.optional(),
+  link_status: optionalTextFilterSchema.optional()
+}).default({});
+
+const pricingReferenceSegmentsSortingViewSchema = z.strictObject({
+  sort_by: z.string().trim().min(1, 'Colonne de tri requise').default('marque'),
+  sort_direction: directorySortDirectionSchema.default('asc')
+}).default({ sort_by: 'marque', sort_direction: 'asc' });
 
 export const directorySavedViewStateSchema = z.strictObject({
   viewType: directorySavedViewTypeSchema.default('clients'),
@@ -247,6 +268,16 @@ export const directorySavedViewStateSchema = z.strictObject({
   pageSize: directoryPageSizeSchema.default(50),
   sorting: directorySortingStateSchema.default([{ id: 'name', desc: false }]),
   columnVisibility: directoryColumnVisibilitySchema,
+  columnOrder: directoryColumnOrderSchema,
+  columnSizing: directoryColumnSizingSchema,
+  columnPinning: directoryColumnPinningSchema,
+  pricingReferenceSegments: z.strictObject({
+    filters: pricingReferenceSegmentsFiltersViewSchema,
+    sorting: pricingReferenceSegmentsSortingViewSchema
+  }).default({
+    filters: {},
+    sorting: { sort_by: 'marque', sort_direction: 'asc' }
+  }),
   density: directoryDensitySchema.default('comfortable')
 });
 

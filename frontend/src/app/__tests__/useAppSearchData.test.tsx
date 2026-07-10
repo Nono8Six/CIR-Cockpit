@@ -113,7 +113,7 @@ describe('useAppSearchData', () => {
         searchQuery: '@Alice',
         interactions: [interaction],
         entitySearchIndex,
-        defaultStatusId: 'status-new'
+        statuses: []
       })
     );
 
@@ -129,7 +129,7 @@ describe('useAppSearchData', () => {
         searchQuery: '#rappel',
         interactions: [interaction],
         entitySearchIndex,
-        defaultStatusId: 'status-new'
+        statuses: []
       })
     );
 
@@ -145,7 +145,7 @@ describe('useAppSearchData', () => {
         searchQuery: '!Alpha',
         interactions: [interaction],
         entitySearchIndex,
-        defaultStatusId: 'status-new'
+        statuses: []
       })
     );
 

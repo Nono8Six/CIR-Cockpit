@@ -44,7 +44,7 @@ const buildInteraction = (overrides: Partial<Interaction> = {}): Interaction => 
 });
 
 describe('DashboardDetailsOverlay', () => {
-  it('ouvre le sheet detail et permet de fermer via le bouton de panneau', async () => {
+  it('ouvre le detail en dialog centre et permet de le fermer', async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
 
@@ -59,12 +59,33 @@ describe('DashboardDetailsOverlay', () => {
       />
     );
 
-    expect(screen.getByTestId('dashboard-details-sheet')).toBeInTheDocument();
-    expect(screen.getByText(/details interaction/i)).toBeInTheDocument();
+    const dialog = screen.getByTestId('dashboard-details-dialog');
+    expect(dialog).toBeInTheDocument();
+    expect(dialog).toHaveAttribute('role', 'dialog');
+    expect(screen.getByText(/détails de l'interaction/i)).toBeInTheDocument();
     expect(screen.getByTestId('interaction-details-status-select')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^close$/i })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /fermer le panneau/i }));
+    await user.click(screen.getByRole('button', { name: /fermer le détail/i }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('ferme le dialog avec Escape', async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+
+    render(
+      <DashboardDetailsOverlay
+        interaction={buildInteraction()}
+        statuses={[]}
+        onClose={onClose}
+        onUpdate={vi.fn(async () => undefined)}
+        onRequestConvert={vi.fn()}
+        onDeleteInteraction={vi.fn()}
+      />
+    );
+
+    await user.keyboard('{Escape}');
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

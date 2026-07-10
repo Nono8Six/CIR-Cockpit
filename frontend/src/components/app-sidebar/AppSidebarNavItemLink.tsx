@@ -77,7 +77,11 @@ const AppSidebarNavItemLink = ({
             <span className="truncate">{item.label}</span>
             <span className="inline-flex shrink-0 items-center gap-1.5">
               {metaLabel ? (
-                <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full border border-warning/25 bg-warning/15 px-1.5 font-mono text-[10px] font-semibold leading-none text-warning-foreground">
+                <span
+                  title={item.metaTitle}
+                  aria-label={item.metaTitle}
+                  className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full border border-warning/25 bg-warning/15 px-1.5 font-mono text-[10px] font-semibold leading-none text-warning-foreground"
+                >
                   {metaLabel}
                 </span>
               ) : null}

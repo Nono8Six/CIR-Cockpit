@@ -31,6 +31,8 @@ import {
   pricingReferenceImportsListInputSchema,
   pricingReferenceImportsListResponseSchema,
   pricingReferenceImportsPrepareInputSchema,
+  pricingReferenceSegmentDetailInputSchema,
+  pricingReferenceSegmentDetailResponseSchema,
   pricingReferenceRowsListInputSchema,
   pricingReferenceSegmentsListInputSchema,
 } from "../../../../shared/schemas/pricing/references.schema.ts";
@@ -237,6 +239,73 @@ Deno.test("pricing reference list and analyze contracts reject unsupported field
       filters: { link_status: "active" },
     }).success,
     false,
+  );
+  assertEquals(
+    pricingReferenceSegmentDetailInputSchema.safeParse({
+      segment_id: "00000000-0000-4000-8000-000000000004",
+    }).success,
+    true,
+  );
+  assertEquals(
+    pricingReferenceSegmentDetailInputSchema.safeParse({
+      segment_id: "00000000-0000-4000-8000-000000000004",
+      extra: true,
+    }).success,
+    false,
+  );
+  assertEquals(
+    pricingReferenceSegmentDetailResponseSchema.safeParse({
+      ok: true,
+      request_id: "test-request",
+      segment: {
+        id: "00000000-0000-4000-8000-000000000004",
+        snapshot_id: "00000000-0000-4000-8000-000000000002",
+        import_id: "00000000-0000-4000-8000-000000000001",
+        source_file_id: "00000000-0000-4000-8000-000000000006",
+        source_row_number: 1,
+        segment_key: "BOSCH|CAT|001|42",
+        segment: "001",
+        idnumerique: "42",
+        marque: "BOSCH",
+        cat_fab: "CAT",
+        cat_fab_l: "Perceuses",
+        strategiq: null,
+        codif_fair: null,
+        tarif_fab: null,
+        cir_key: "010203",
+        link_status: "complete_valid",
+        purchase_grid_rows_count: 1,
+        link_source_row_number: 2,
+        mega_famille: "01",
+        famille: "02",
+        sous_famille: "03",
+        mega_libelle: "Outillage",
+        famille_libelle: "Electroportatif",
+        sfam_libelle: "Perceuses",
+      },
+      purchase_grid_rows: [{
+        id: "00000000-0000-4000-8000-000000000011",
+        snapshot_id: "00000000-0000-4000-8000-000000000002",
+        import_id: "00000000-0000-4000-8000-000000000001",
+        segment_id: "00000000-0000-4000-8000-000000000004",
+        source_file_id: "00000000-0000-4000-8000-000000000006",
+        source_row_number: 12,
+        num_four: "F001",
+        remise_ha: "12",
+        col_ha: "A",
+        priorite: "1",
+        type_grill: "standard",
+        date_debut_raw: "2026-01-01",
+        date_fin_raw: "2026-12-31",
+        date_debut_normalized: "2026-01-01",
+        date_fin_normalized: "2026-12-31",
+        borne_acha: "100",
+        coef_retro: "0.95",
+        coef_ha: "1.10",
+        coef_majvte: "1.20",
+      }],
+    }).success,
+    true,
   );
   assertEquals(
     pricingReferenceAnomaliesListInputSchema.safeParse({

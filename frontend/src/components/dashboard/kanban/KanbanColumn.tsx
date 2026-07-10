@@ -2,6 +2,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { Clock, Check, Folder, Inbox } from 'lucide-react';
 import type { AgencyStatus, Interaction } from '@/types';
 import InteractionCard from '@/components/InteractionCard';
+import { getInteractionDisplayName } from '@/utils/interactions/getInteractionDisplayName';
 
 type KanbanColumnProps = {
   columnId: string;
@@ -138,7 +139,7 @@ const KanbanColumn = ({
                     ? 'ring-2 ring-primary/40 shadow-md' 
                     : ''
                 }`}
-                aria-label={`Ouvrir ${interaction.company_name}`}
+                aria-label={`Ouvrir ${getInteractionDisplayName(interaction)}`}
                 data-testid={`dashboard-kanban-card-${interaction.id}`}
               >
                 <InteractionCard

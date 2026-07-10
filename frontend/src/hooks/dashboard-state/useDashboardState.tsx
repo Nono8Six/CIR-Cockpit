@@ -11,7 +11,7 @@ import { notifySuccess } from '@/services/errors/notifySuccess';
 import { invalidateInteractionsQuery } from '@/services/query/queryInvalidation';
 import type { AgencyStatus, Interaction, InteractionUpdate, TimelineEvent } from '@/types';
 import type { AgencyConfig } from '@/services/config';
-import { buildKanbanColumns } from '@/utils/dashboard/dashboardAggregates';
+import { buildKanbanColumns, isInteractionInWorkQueue } from '@/utils/dashboard/dashboardAggregates';
 
 import { useAddTimelineEvent } from '../interactions/timeline/useAddTimelineEvent';
 import { useDeleteInteraction } from '../interactions/core/actions/useDeleteInteraction';
@@ -34,22 +34,22 @@ const buildTimelineSuccessMessage = (
   statusById: Map<string, AgencyStatus>,
 ): string => {
   if (updates?.status_id) {
-    return `Statut change : ${statusById.get(updates.status_id)?.label ?? updates.status ?? 'Statut mis a jour'}`;
+    return `Statut changé : ${statusById.get(updates.status_id)?.label ?? updates.status ?? 'Statut mis à jour'}`;
   }
 
   if (updates?.status) {
-    return `Statut change : ${updates.status}`;
+    return `Statut changé : ${updates.status}`;
   }
 
   if (updates?.order_ref) {
-    return 'N° de dossier enregistre';
+    return 'N° de dossier enregistré';
   }
 
   if (event.type === 'note') {
-    return 'Note ajoutee';
+    return 'Note ajoutée';
   }
 
-  return 'Dossier mis a jour';
+  return 'Dossier mis à jour';
 };
 
 export const useDashboardState = ({
@@ -71,6 +71,12 @@ export const useDashboardState = ({
   const { statusById, getStatusMeta, isStatusDone, isStatusTodo, getStatusBadgeClass, isReminderOverdue } =
     useDashboardStatusHelpers(statuses, resolutions);
 
+  const isInWorkQueue = useCallback(
+    (interaction: Interaction) =>
+      isInteractionInWorkQueue(interaction, { isStatusDone, isStatusTodo, isReminderOverdue }),
+    [isReminderOverdue, isStatusDone, isStatusTodo],
+  );
+
   const {
     searchTerm,
     setSearchTerm,
@@ -87,6 +93,7 @@ export const useDashboardState = ({
     interactions,
     viewMode,
     isStatusDone,
+    isInWorkQueue,
     resolutions,
   });
 
@@ -157,13 +164,13 @@ export const useDashboardState = ({
           void invalidateInteractionsQuery(queryClient, agencyId);
           handleUiError(
             error,
-            'Ce dossier a ete modifie par un autre utilisateur. Rechargez les donnees.',
+            'Ce dossier a été modifié par un autre utilisateur. Rechargez les données.',
             { source: 'dashboard.details.conflict' },
           );
           return;
         }
 
-        handleUiError(error, 'Impossible de mettre a jour le dossier.', {
+        handleUiError(error, 'Impossible de mettre à jour le dossier.', {
           source: 'dashboard.details.update',
         });
       }
@@ -186,7 +193,7 @@ export const useDashboardState = ({
         setSelectedInteraction(null);
       }
       setInteractionToDelete(null);
-      notifySuccess('Interaction supprimee.');
+      notifySuccess('Interaction supprimée.');
     } catch {
       return;
     }

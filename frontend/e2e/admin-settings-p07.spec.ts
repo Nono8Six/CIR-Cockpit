@@ -142,7 +142,7 @@ test('P07 - Admin/Settings mobile-first, actions, tabs, erreurs et anti-overflow
     if ((await openDashboard.count()) > 0) {
       await openDashboard.first().click();
       await expect(page).toHaveURL(/\/dashboard\?interactionId=/);
-      await expect(page.getByRole('dialog', { name: /details interaction/i })).toBeVisible();
+      await expect(page.getByRole('dialog', { name: /détails de l'interaction/i })).toBeVisible();
       await page.keyboard.press('Escape');
       await expect(page).toHaveURL(/\/dashboard$/);
       await page.goto('/settings');

@@ -59,6 +59,13 @@ describe('clientDirectorySearch helpers', () => {
         department: false,
         city: true
       },
+      columnOrder: [],
+      columnSizing: {},
+      columnPinning: { left: [], right: [] },
+      pricingReferenceSegments: {
+        filters: {},
+        sorting: { sort_by: 'marque', sort_direction: 'asc' }
+      },
       density: 'compact'
     };
 

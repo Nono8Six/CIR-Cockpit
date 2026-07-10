@@ -64,6 +64,9 @@ import {
   type PricingReferenceImportStatus,
   type PricingReferenceLinkStatus,
   type PricingReferenceRowsListInput,
+  type PricingReferenceSegmentDetailInput,
+  type PricingReferenceSegmentDetailResponse,
+  pricingReferenceSegmentDetailResponseSchema,
   type PricingReferenceSegmentsListInput,
   type PricingReferenceSegmentsListResponse,
   type PricingReferenceSegmentsSortBy,
@@ -2487,6 +2490,12 @@ export const listPricingReferenceSegments = async (
     tarif_fab: string | null;
     cir_key: string | null;
     link_status: PricingReferenceLinkStatus | null;
+    mega_famille: string | null;
+    famille: string | null;
+    sous_famille: string | null;
+    mega_libelle: string | null;
+    famille_libelle: string | null;
+    sfam_libelle: string | null;
     purchase_grid_rows_count: number;
   }>(sql`
     select
@@ -2505,12 +2514,29 @@ export const listPricingReferenceSegments = async (
       s.tarif_fab,
       l.cir_key,
       l.link_status,
+      l.mega_famille,
+      l.famille,
+      l.sous_famille,
+      coalesce(c.mega_lib, nullif(l.raw_values ->> 'MEGA_LIBELLE', '')) as mega_libelle,
+      coalesce(c.fam_lib, nullif(l.raw_values ->> 'FAMILLE_LIBELLE', '')) as famille_libelle,
+      coalesce(c.sfa_lib, nullif(l.raw_values ->> 'SFAM_LIBELLE', '')) as sfam_libelle,
       count(g.id)::int as purchase_grid_rows_count
     from public.pricing_supplier_segments s
     left join public.pricing_segment_classification_links l on l.segment_id = s.id
+    left join public.pricing_classification_cir c on c.id = l.classification_id
     left join public.pricing_segment_purchase_grids g on g.segment_id = s.id
     where ${whereClause}
-    group by s.id, l.cir_key, l.link_status
+    group by
+      s.id,
+      l.cir_key,
+      l.link_status,
+      l.mega_famille,
+      l.famille,
+      l.sous_famille,
+      l.raw_values,
+      c.mega_lib,
+      c.fam_lib,
+      c.sfa_lib
     order by ${sortBy} ${sortDirection}, s.marque asc, s.cat_fab asc, s.segment asc
     limit ${input.page_size}
     offset ${toOffset(input.page, input.page_size)}
@@ -2530,6 +2556,145 @@ export const listPricingReferenceSegments = async (
     page_size: input.page_size,
     total: totalRows[0]?.total ?? 0,
   };
+};
+
+export const getPricingReferenceSegmentDetail = async (
+  db: DbClient,
+  _callerId: string,
+  requestId: string,
+  input: PricingReferenceSegmentDetailInput,
+): Promise<PricingReferenceSegmentDetailResponse> => {
+  const segmentRows = await db.execute<{
+    id: string;
+    snapshot_id: string;
+    import_id: string;
+    source_file_id: string;
+    source_row_number: number;
+    segment_key: string;
+    segment: string;
+    idnumerique: string;
+    marque: string;
+    cat_fab: string;
+    cat_fab_l: string | null;
+    strategiq: string | null;
+    codif_fair: string | null;
+    tarif_fab: string | null;
+    cir_key: string | null;
+    link_status: PricingReferenceLinkStatus | null;
+    purchase_grid_rows_count: number;
+    link_source_row_number: number | null;
+    mega_famille: string | null;
+    famille: string | null;
+    sous_famille: string | null;
+    mega_libelle: string | null;
+    famille_libelle: string | null;
+    sfam_libelle: string | null;
+  }>(sql`
+    select
+      s.id,
+      s.snapshot_id,
+      s.import_id,
+      s.source_file_id,
+      s.source_row_number,
+      s.segment_key,
+      s.segment,
+      s.idnumerique,
+      s.marque,
+      s.cat_fab,
+      s.cat_fab_l,
+      s.strategiq,
+      s.codif_fair,
+      s.tarif_fab,
+      l.cir_key,
+      l.link_status,
+      count(g.id)::int as purchase_grid_rows_count,
+      l.source_row_number as link_source_row_number,
+      l.mega_famille,
+      l.famille,
+      l.sous_famille,
+      coalesce(c.mega_lib, nullif(l.raw_values ->> 'MEGA_LIBELLE', '')) as mega_libelle,
+      coalesce(c.fam_lib, nullif(l.raw_values ->> 'FAMILLE_LIBELLE', '')) as famille_libelle,
+      coalesce(c.sfa_lib, nullif(l.raw_values ->> 'SFAM_LIBELLE', '')) as sfam_libelle
+    from public.pricing_supplier_segments s
+    left join public.pricing_segment_classification_links l on l.segment_id = s.id
+    left join public.pricing_classification_cir c on c.id = l.classification_id
+    left join public.pricing_segment_purchase_grids g on g.segment_id = s.id
+    where s.id = ${input.segment_id}
+    group by
+      s.id,
+      l.cir_key,
+      l.link_status,
+      l.source_row_number,
+      l.mega_famille,
+      l.famille,
+      l.sous_famille,
+      l.raw_values,
+      c.mega_lib,
+      c.fam_lib,
+      c.sfa_lib
+    limit 1
+  `);
+  const segment = segmentRows[0];
+  if (!segment) {
+    throw httpError(
+      404,
+      "NOT_FOUND",
+      "Segment referentiel introuvable.",
+    );
+  }
+
+  const purchaseGridRows = await db.execute<{
+    id: string;
+    snapshot_id: string;
+    import_id: string;
+    segment_id: string;
+    source_file_id: string;
+    source_row_number: number;
+    num_four: string | null;
+    remise_ha: string | null;
+    col_ha: string | null;
+    priorite: string | null;
+    type_grill: string | null;
+    date_debut_raw: string | null;
+    date_fin_raw: string | null;
+    date_debut_normalized: string | null;
+    date_fin_normalized: string | null;
+    borne_acha: string | null;
+    coef_retro: string | null;
+    coef_ha: string | null;
+    coef_majvte: string | null;
+  }>(sql`
+    select
+      id,
+      snapshot_id,
+      import_id,
+      segment_id,
+      source_file_id,
+      source_row_number,
+      num_four,
+      remise_ha,
+      col_ha,
+      priorite,
+      type_grill,
+      date_debut_raw,
+      date_fin_raw,
+      date_debut_normalized,
+      date_fin_normalized,
+      borne_acha,
+      coef_retro,
+      coef_ha,
+      coef_majvte
+    from public.pricing_segment_purchase_grids
+    where segment_id = ${input.segment_id}
+    order by source_row_number asc, num_four asc nulls last, priorite asc nulls last
+  `);
+
+  return pricingReferenceSegmentDetailResponseSchema.parse({
+    ok: true,
+    request_id: requestId,
+    segment,
+    purchase_grid_rows: purchaseGridRows,
+  });
 };
 
 export const listPricingReferenceAnomalies = async (

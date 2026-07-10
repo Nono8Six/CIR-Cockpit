@@ -126,9 +126,9 @@ test('P06 - toolbar pilotage, vue kanban/liste, overlay detail, erreur utilisate
   await expect(kanbanTab).toHaveAttribute('aria-selected', 'true');
 
   await page.locator('[data-testid^="dashboard-kanban-card-"]').first().click();
-  await expect(page.getByTestId('dashboard-details-sheet')).toBeVisible();
-  await page.getByRole('button', { name: /fermer le panneau/i }).click();
-  await expect(page.getByTestId('dashboard-details-sheet')).toHaveCount(0);
+  await expect(page.getByTestId('dashboard-details-dialog')).toBeVisible();
+  await page.getByRole('button', { name: /fermer le détail/i }).click();
+  await expect(page.getByTestId('dashboard-details-dialog')).toHaveCount(0);
 
   await page.getByTestId('dashboard-period-select').click();
   await page.getByRole('option', { name: /p.riode personnalis.e/i }).click();

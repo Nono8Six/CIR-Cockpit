@@ -1,6 +1,6 @@
 # Plan général — Assistant IA CIR Cockpit
 
-> Rédigé le 2026-07-08. Ce document est la source de vérité du chantier "Assistant IA".
+> Rédigé le 2026-07-08, revérifié le 2026-07-10. Ce document est la source de vérité du chantier "Assistant IA".
 > Chaque phase possède son propre fichier `phase-N-*.md` avec spécification, checkpoints,
 > prompt d'exécution autonome et changelog. Les phases se font strictement dans l'ordre.
 
@@ -44,10 +44,10 @@ Le repo possède déjà un socle de gouvernance IA complet, construit pour la fe
 | Table | Rôle | Réutilisée |
 | --- | --- | --- |
 | `ai_provider_configs` | Fournisseur (OpenRouter), clé API chiffrée, statut test | Oui, telle quelle |
-| `ai_model_configs` | Modèles autorisés, prix/M tokens, max_output_tokens, température, défaut | Oui, telle quelle |
-| `ai_prompt_templates` + `ai_prompt_versions` | Prompts système versionnés (draft/publish/restore) par feature | Oui, telle quelle |
-| `ai_quota_policies` | Quotas scope global/agency/user, par feature, limites appels/tokens/coût jour+mois | Oui, telle quelle |
-| `ai_usage_events` | Journal d'audit : tokens, coût, statut, latence, user, feature | Oui, telle quelle |
+| `ai_model_configs` | Modèles autorisés, prix/M tokens, max_output_tokens, température, défaut | Oui, mais le défaut actuel est global par provider, pas par feature |
+| `ai_prompt_templates` + `ai_prompt_versions` | Prompts système versionnés (draft/publish/restore) par feature | Oui, avec extension explicite des types `feature` côté code |
+| `ai_quota_policies` | Quotas scope global/agency/user, par feature, limites appels/tokens/coût jour+mois | Oui, avec extension explicite des types `feature` côté code |
+| `ai_usage_events` | Journal d'audit : tokens, coût, statut, latence, user, feature | Oui, avec extension explicite des types `feature` côté code |
 | `ai_response_cache` | Cache de réponses avec TTL | Non utilisée par l'assistant v1 (réponses conversationnelles non déterministes) |
 
 ### 3.2 Backend (`backend/functions/api/services/ai/aiGovernance.ts`, ~1200 lignes)
@@ -95,8 +95,13 @@ onglet prompts absent. La refonte est la phase 5 ; rien n'est jeté côté donn�
 - `referenceImports.ts` : liste/détail des imports, health report.
 - Anomalies : summary avec facettes (sévérité/type/marque) et `action_label` par type —
   base directe du cas « aide-moi à corriger les anomalies ».
-- Manque identifié : **aucun agrégat par famille/segment avec direction du changement**
+- Manque identifié : **aucun agrégat par dimension métier explicite avec direction du changement**
   (hausse/baisse). C'est le seul vrai chantier data du plan → phase 2.
+- Points de vérité métier à verrouiller en phase 2 avant codage : le payload réel contient des
+  libellés/codes différents selon l'objet (`fam/fam_lib`, `cat_fab`, `segment`, `marque`), des
+  arrondis numériques pouvant créer de fausses hausses/baisses, et des marques codées
+  (`ROCK` peut représenter ROCKWELL). L'agrégat doit donc définir ses dimensions, tolérances
+  numériques et règles d'alias avant d'être utilisé par l'assistant.
 
 ## 4. Décisions d'architecture verrouillées
 
@@ -106,12 +111,17 @@ onglet prompts absent. La refonte est la phase 5 ; rien n'est jeté côté donn�
 | D2 | Nouvelle feature `assistant.referentiels` dans `aiFeatureSchema` | S'insère dans quotas/usage/prompts existants ; extensible plus tard (`assistant.cockpit`) |
 | D3 | Boucle tool calling bornée : max 6 tours d'outils, max 50 lignes par résultat d'outil, timeout global 60 s, outils lecture seule uniquement | Coût et sécurité maîtrisés |
 | D4 | v1 en mutation tRPC non-streaming (`ai.assistant.ask`) | Contrats Zod stricts conservés, pas de nouveau transport ; SSE seulement si latence jugée insupportable (réévalué phase 6) |
-| D5 | Modèle par défaut assistant : à trancher en phase 1 par test réel entre `mistralai/mistral-small-*` et `anthropic/claude-haiku-4.5` (IDs OpenRouter à vérifier au moment de l'implémentation) ; le tool calling multi-tours fiable est le critère n°1 | Le DeepSeek configuré n'a pas été validé pour le tool calling multi-tours |
+| D5 | Modèle assistant : à trancher en phase 1 par test réel entre les IDs OpenRouter confirmés au moment du test (au 2026-07-10 : `mistralai/mistral-small-3.2-24b-instruct`, `anthropic/claude-haiku-4.5`, ou meilleur candidat filtré par support `tools`) ; le tool calling multi-tours fiable est le critère n°1 | Le DeepSeek configuré n'a pas été validé pour le tool calling multi-tours ; le modèle par défaut est aujourd'hui global par provider, donc tout défaut par feature exige un mapping explicite |
 | D6 | Conversations stateless côté serveur : le client renvoie l'historique borné (12 derniers messages) ; pas de persistance DB v1 | Simplicité, pas de rétention à gérer d'emblée |
 | D7 | Accès par membre : table `ai_feature_grants` (+ ligne défaut) appliquée dans le broker ; UI d'administration dédiée | Demande PO explicite : autorisations par membre |
-| D8 | Le front injecte le contexte de page (import_id, run_id, onglet actif) avec chaque question | Résout « le fichier Segment… » sans ambiguïté ni tour de LLM |
-| D9 | Nouvel agrégat `diffs.aggregate` (GROUP BY dimension + direction) exposé en tRPC, utilisé par l'assistant et réutilisable par l'UI Changements | Réponses exhaustives et exactes aux questions « quelles familles ont baissé » |
+| D8 | Le front injecte le contexte de page disponible (import_id, onglet actif, snapshots/run si déjà résolus) et le backend complète la résolution si nécessaire | La page ne possède pas toujours `run_id`/snapshot au niveau haut ; la résolution ne doit pas dépendre d'une hypothèse UI fausse |
+| D9 | Nouvel agrégat `diffs.aggregate` (GROUP BY dimension explicite + direction normalisée) exposé en tRPC, utilisé par l'assistant et réutilisable par l'UI Changements | Réponses exhaustives et exactes aux questions « quelles familles ont baissé », sans bruit d'arrondi ni confusion famille CIR / catégorie fabricant |
 | D10 | UI chat en Dialog centré (décision PO : pas de Sheet latérale), bouton d'entrée sur la page Référentiels | Cohérence avec le pattern Ctrl+K existant |
+| D11 | Admission quota atomique et requêtes idempotentes avant tout appel provider | Le contrôle actuel lit les compteurs puis écrit l'usage après l'appel : deux requêtes concurrentes peuvent franchir ensemble une limite et un retry peut doubler le coût |
+| D12 | Conserver l'API OpenRouter Chat Completions pour la v1 ; ne pas migrer vers Responses tant qu'elle reste en bêta | Chat Completions couvre le tool calling multi-tours et minimise le risque de rupture ; l'abstraction provider doit toutefois isoler le format pour permettre une migration ultérieure |
+| D13 | Chaque outil possède un schéma Zod strict d'entrée **et de sortie**, une version de contrat et un plafond de taille sérialisée | Le LLM ne doit jamais recevoir un résultat backend non validé, non borné ou dont la forme change silencieusement |
+| D14 | Une suite d'évaluations métier versionnée bloque les changements de modèle, prompt ou outil qui dégradent exactitude, isolation, citations, coût ou latence | Les tests unitaires seuls ne détectent pas les régressions probabilistes d'un assistant |
+| D15 | Phase finale : skill repo `cir-cockpit-ai-development`, implicitement invocable et obligatoire pour toute nouvelle feature IA | Toute conversation de développement IA récupère l'architecture, les contrats, les garde-fous et la procédure d'extension réellement livrés, sans dépendre de ce plan historique |
 
 ## 5. Architecture cible
 
@@ -129,7 +139,7 @@ Edge Function api (Hono + tRPC) — ai.assistant.ask (authedProcedure)
             outils lecture seule → services existants :
             list_imports · get_import_details · get_diff_summary · aggregate_diffs (phase 2)
             list_diffs · get_anomalies_summary · list_anomalies · get_health_report
-       5. recordUsage (tokens, coût, latence, tool_trace)     [existant]
+       5. recordUsage (tokens, coût, latence, tool_trace)     [existant à étendre metadata]
        ▼
 OpenRouter (modèle configuré dans ai_model_configs, tool calling)
 ```
@@ -138,15 +148,17 @@ OpenRouter (modèle configuré dans ai_model_configs, tool calling)
 
 | Phase | Fichier | Contenu | Périmètre | Gate QA |
 | --- | --- | --- | --- | --- |
-| 1 | [phase-1-socle-assistant-backend.md](phase-1-socle-assistant-backend.md) | Broker + boucle tool calling + 3 premiers outils + procédures `ai.assistant.ask/status` + prompt seedé + choix du modèle | Backend + shared | `pnpm run qa:back` |
-| 2 | [phase-2-outils-referentiels.md](phase-2-outils-referentiels.md) | Agrégat `diffs.aggregate` (familles/segments/direction) + registre d'outils complet + qualité des réponses | Backend + shared | `pnpm run qa:back` |
+| 1 | [phase-1-socle-assistant-backend.md](phase-1-socle-assistant-backend.md) | Broker + boucle tool calling + 3 premiers outils + procédures `ai.assistant.ask/status` + prompt seedé + choix du modèle + contrats erreurs/OpenRouter | Backend + shared | `pnpm run qa:back` |
+| 2 | [phase-2-outils-referentiels.md](phase-2-outils-referentiels.md) | Agrégat `diffs.aggregate` (dimensions métier explicites, direction normalisée, alias marques) + registre d'outils complet + qualité des réponses | Backend + shared | `pnpm run qa:back` |
 | 3 | [phase-3-chat-referentiels-ui.md](phase-3-chat-referentiels-ui.md) | Dialog chat sur `/remises/referentiels`, contexte de page, états d'erreur/quota | Frontend | `pnpm run qa:front` |
 | 4 | [phase-4-acces-membres.md](phase-4-acces-membres.md) | Table `ai_feature_grants`, enforcement broker, procédures admin accès + conso par membre | Backend + shared + migration | `pnpm run qa:back` |
-| 5 | [phase-5-refonte-admin-ia.md](phase-5-refonte-admin-ia.md) | Refonte complète Admin > IA : vue d'ensemble, modèles, accès membres, prompts, usage | Frontend | `pnpm run qa:front` |
-| 6 | [phase-6-durcissement-livraison.md](phase-6-durcissement-livraison.md) | Rate limit, rétention/purge, alertes budget, docs QA, `pnpm run qa` complet, déploiement | Transverse | `pnpm run qa` + runbook |
+| 5 | [phase-5-refonte-admin-ia.md](phase-5-refonte-admin-ia.md) | Refonte complète Admin > IA : vue d'ensemble, modèles, accès membres, prompts, usage | Frontend + backend minimal si contrat manquant | `pnpm run qa:front` ; checks back ciblés/`qa:fast` si backend |
+| 6 | [phase-6-durcissement-livraison.md](phase-6-durcissement-livraison.md) | Rate limit, concurrence quotas, évaluations métier/charge, rétention/purge, alertes budget, docs QA, `pnpm run qa` complet, déploiement | Transverse | `pnpm run qa` + runbook |
+| 7 | [phase-7-skill-developpement-ia.md](phase-7-skill-developpement-ia.md) | Skill repo durable expliquant l'architecture IA et la procédure sûre pour ajouter une feature, inscription dans `AGENTS.md` et validation par scénarios | Agents + docs | `pnpm run qa:docs` |
 
-Dépendances : 1 → 2 → 3 ; 4 dépend de 1 ; 5 dépend de 4 ; 6 dépend de tout.
-(3 et 4 peuvent techniquement être menées en parallèle, mais l'ordre nominal reste 1→6.)
+Dépendances : 1 → 2 → 3 ; 4 dépend de 1 ; 5 dépend de 4 ; 6 dépend des phases 1 à 5 ;
+7 dépend de l'implémentation et du changelog final de la phase 6.
+(3 et 4 peuvent techniquement être menées en parallèle, mais l'ordre nominal reste 1→7.)
 
 ## 7. Protocole d'exécution d'une phase
 
@@ -187,6 +199,7 @@ dans une **nouvelle conversation sans contexte**. Le prompt impose à l'agent de
 | 4 — Accès membres | À FAIRE | — | — |
 | 5 — Refonte Admin > IA | À FAIRE | — | — |
 | 6 — Durcissement & livraison | À FAIRE | — | — |
+| 7 — Skill développement IA | À FAIRE | — | — |
 
 ## 9. Hors périmètre de ce plan (v2+)
 
@@ -198,6 +211,8 @@ dans une **nouvelle conversation sans contexte**. Le prompt impose à l'agent de
   avec confirmation utilisateur obligatoire dans l'UI avant toute mutation.
 - Persistance des conversations en DB, partage de conversations.
 - Streaming SSE (réévalué en phase 6 selon la latence réelle).
+- Migration vers l'API OpenRouter Responses : à réévaluer lorsqu'elle ne sera plus en bêta et
+  seulement si elle apporte un gain mesuré par rapport à Chat Completions.
 
 ## 10. Références
 
@@ -207,3 +222,8 @@ dans une **nouvelle conversation sans contexte**. Le prompt impose à l'agent de
 - Plan socle référentiels : `docs/LOGIQUE_REMISE_CIR/plan-socle-referentiels-cir.md`.
 - Diff/versioning : `docs/PLAN/versioning-diff-activation-referentiels.md`.
 - QA : `docs/qa-runbook.md`, `docs/testing.md`.
+- OpenRouter (à revérifier au moment d'implémenter) :
+  [tool calling](https://openrouter.ai/docs/guides/features/tool-calling),
+  [usage accounting](https://openrouter.ai/docs/cookbook/administration/usage-accounting),
+  [provider routing](https://openrouter.ai/docs/guides/routing/provider-selection),
+  [Responses API bêta](https://openrouter.ai/docs/api/reference/responses/tool-calling).

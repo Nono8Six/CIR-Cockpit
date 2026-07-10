@@ -21,6 +21,7 @@ import {
   pricingReferenceImportsListResponseSchema,
   pricingReferenceImportsPrepareResponseSchema,
   pricingReferencePrepareFileSchema,
+  pricingReferenceSegmentDetailResponseSchema,
   pricingReferenceSegmentsListResponseSchema,
   type PricingReferenceAnomaliesListInput,
   type PricingReferenceAnomaliesListResponse,
@@ -58,6 +59,8 @@ import {
   type PricingReferenceImportsPrepareInput,
   type PricingReferenceImportsPrepareResponse,
   type PricingReferencePreparedFile,
+  type PricingReferenceSegmentDetailInput,
+  type PricingReferenceSegmentDetailResponse,
   type PricingReferenceSegmentsListInput,
   type PricingReferenceSegmentsListResponse
 } from '../../../shared/schemas/pricing/references.schema';
@@ -242,6 +245,15 @@ export const listPricingReferenceSegments = (
     (api, options) => api.pricing.references.segments.list.query(input, options),
     (payload) => parseResponse(pricingReferenceSegmentsListResponseSchema, payload),
     'Impossible de charger les segments fabricant.'
+  );
+
+export const getPricingReferenceSegmentDetail = (
+  input: PricingReferenceSegmentDetailInput
+): Promise<PricingReferenceSegmentDetailResponse> =>
+  invokeTrpc(
+    (api, options) => api.pricing.references.segments.get.query(input, options),
+    (payload) => parseResponse(pricingReferenceSegmentDetailResponseSchema, payload),
+    'Impossible de charger le detail du segment fabricant.'
   );
 
 export const listPricingReferenceAnomalies = (

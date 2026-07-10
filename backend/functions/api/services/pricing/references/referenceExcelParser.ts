@@ -166,6 +166,11 @@ export const SEGMENT_CLASSIFICATION_COLUMNS = [
   "FAMILLE",
   "SOUS_FAMILLE",
 ] as const;
+export const SEGMENT_CLASSIFICATION_LABEL_COLUMNS = [
+  "MEGA_LIBELLE",
+  "FAMILLE_LIBELLE",
+  "SFAM_LIBELLE",
+] as const;
 export const SEGMENT_STORAGE_COLUMNS = [
   ...SEGMENT_IDENTITY_COLUMNS,
   "CAT_FAB_L",
@@ -1408,11 +1413,17 @@ const parseSegments = (
         sous_famille: nullableValue(sfa),
         cir_key: classificationKey,
         link_status: linkStatus,
-        raw_values: toRawValues(row, SEGMENT_CLASSIFICATION_COLUMNS),
+        raw_values: toRawValues(row, [
+          ...SEGMENT_CLASSIFICATION_COLUMNS,
+          ...SEGMENT_CLASSIFICATION_LABEL_COLUMNS,
+        ]),
         normalized_values: {
           MEGA_FAMILLE: mega,
           FAMILLE: fam,
           SOUS_FAMILLE: sfa,
+          MEGA_LIBELLE: row.values.MEGA_LIBELLE ?? "",
+          FAMILLE_LIBELLE: row.values.FAMILLE_LIBELLE ?? "",
+          SFAM_LIBELLE: row.values.SFAM_LIBELLE ?? "",
         },
       });
     }

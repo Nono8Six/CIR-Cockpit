@@ -465,6 +465,10 @@ export const pricingReferenceSegmentsListInputSchema =
     sort_direction: pricingReferenceSortDirectionSchema.default("asc"),
   });
 
+export const pricingReferenceSegmentDetailInputSchema = z.strictObject({
+  segment_id: uuidSchema,
+});
+
 const pricingReferenceAnomaliesFiltersSchema = z.strictObject({
   import_id: uuidSchema.optional(),
   snapshot_id: uuidSchema.optional(),
@@ -667,7 +671,40 @@ export const pricingReferenceSegmentRowSchema = z.strictObject({
   tarif_fab: nullableStringSchema,
   cir_key: nullableStringSchema,
   link_status: pricingReferenceLinkStatusSchema.nullable(),
+  mega_famille: nullableStringSchema,
+  famille: nullableStringSchema,
+  sous_famille: nullableStringSchema,
+  mega_libelle: nullableStringSchema,
+  famille_libelle: nullableStringSchema,
+  sfam_libelle: nullableStringSchema,
   purchase_grid_rows_count: z.number().int().nonnegative(),
+});
+
+export const pricingReferenceSegmentPurchaseGridRowSchema = z.strictObject({
+  id: uuidSchema,
+  snapshot_id: uuidSchema,
+  import_id: uuidSchema,
+  segment_id: uuidSchema,
+  source_file_id: uuidSchema,
+  source_row_number: z.number().int().positive(),
+  num_four: nullableStringSchema,
+  remise_ha: nullableStringSchema,
+  col_ha: nullableStringSchema,
+  priorite: nullableStringSchema,
+  type_grill: nullableStringSchema,
+  date_debut_raw: nullableStringSchema,
+  date_fin_raw: nullableStringSchema,
+  date_debut_normalized: nullableStringSchema,
+  date_fin_normalized: nullableStringSchema,
+  borne_acha: nullableStringSchema,
+  coef_retro: nullableStringSchema,
+  coef_ha: nullableStringSchema,
+  coef_majvte: nullableStringSchema,
+});
+
+export const pricingReferenceSegmentDetailSchema = pricingReferenceSegmentRowSchema.extend({
+  source_file_id: uuidSchema,
+  link_source_row_number: z.number().int().positive().nullable(),
 });
 
 export const pricingReferenceAnomalyRowSchema = z.strictObject({
@@ -854,6 +891,12 @@ export const pricingReferenceSegmentsListResponseSchema = apiSuccessSchema
     page: z.number().int().positive(),
     page_size: z.number().int().positive(),
     total: z.number().int().nonnegative(),
+  });
+
+export const pricingReferenceSegmentDetailResponseSchema = apiSuccessSchema
+  .extend({
+    segment: pricingReferenceSegmentDetailSchema,
+    purchase_grid_rows: z.array(pricingReferenceSegmentPurchaseGridRowSchema),
   });
 
 export const pricingReferenceAnomaliesListResponseSchema = apiSuccessSchema
@@ -1059,6 +1102,9 @@ export type PricingReferenceClassificationListInput = z.infer<
 export type PricingReferenceSegmentsListInput = z.infer<
   typeof pricingReferenceSegmentsListInputSchema
 >;
+export type PricingReferenceSegmentDetailInput = z.infer<
+  typeof pricingReferenceSegmentDetailInputSchema
+>;
 export type PricingReferenceAnomaliesListInput = z.infer<
   typeof pricingReferenceAnomaliesListInputSchema
 >;
@@ -1115,6 +1161,9 @@ export type PricingReferenceClassificationListResponse = z.infer<
 >;
 export type PricingReferenceSegmentsListResponse = z.infer<
   typeof pricingReferenceSegmentsListResponseSchema
+>;
+export type PricingReferenceSegmentDetailResponse = z.infer<
+  typeof pricingReferenceSegmentDetailResponseSchema
 >;
 export type PricingReferenceAnomaliesListResponse = z.infer<
   typeof pricingReferenceAnomaliesListResponseSchema

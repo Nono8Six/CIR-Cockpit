@@ -479,7 +479,7 @@ describe('ClientDirectoryDetailPage', () => {
   });
 
   it('keeps compact empty and loading contact states on the record detail', async () => {
-    mockedEntityContacts.mockReturnValueOnce({ data: [], isLoading: false } as never);
+    mockedEntityContacts.mockReturnValue({ data: [], isLoading: false } as never);
 
     const { rerender } = renderWithProviders(
       <ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} />
@@ -488,7 +488,7 @@ describe('ClientDirectoryDetailPage', () => {
     await userEvent.click(screen.getByRole('tab', { name: 'Contacts' }));
     expect(screen.getByText('Aucun contact pour ce client.')).toBeInTheDocument();
 
-    mockedEntityContacts.mockReturnValueOnce({ data: [], isLoading: true } as never);
+    mockedEntityContacts.mockReturnValue({ data: [], isLoading: true } as never);
     rerender(<ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} />);
 
     await userEvent.click(screen.getByRole('tab', { name: 'Contacts' }));

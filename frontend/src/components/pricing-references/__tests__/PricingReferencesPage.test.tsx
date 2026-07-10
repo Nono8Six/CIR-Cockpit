@@ -13,6 +13,7 @@ import {
   getPricingReferenceAnomaliesSummary,
   getPricingReferenceDiffSummary,
   getPricingReferenceImport,
+  getPricingReferenceSegmentDetail,
   listAllPricingReferenceClassification,
   listPricingReferenceAnomalies,
   listPricingReferenceImports,
@@ -21,7 +22,8 @@ import {
 import { notifySuccess } from '@/services/errors/notifySuccess';
 import type {
   PricingReferenceImportGetResponse,
-  PricingReferenceImportsListResponse
+  PricingReferenceImportsListResponse,
+  PricingReferenceSegmentDetailResponse
 } from '../../../../../shared/schemas/pricing/references.schema';
 
 const importId = '00000000-0000-4000-8000-000000000001';
@@ -131,6 +133,57 @@ const buildImportDetailResponse = (
 const defaultGetImport = async (): Promise<PricingReferenceImportGetResponse> =>
   buildImportDetailResponse(buildImportSummary());
 
+const defaultGetSegmentDetail = async (): Promise<PricingReferenceSegmentDetailResponse> => ({
+  ok: true,
+  segment: {
+    id: '00000000-0000-4000-8000-000000000004',
+    snapshot_id: snapshotId,
+    import_id: importId,
+    source_file_id: fileId,
+    source_row_number: 1,
+    segment_key: 'BOSCH|CAT|001|42',
+    segment: '001',
+    idnumerique: '42',
+    marque: 'BOSCH',
+    cat_fab: 'CAT',
+    cat_fab_l: 'Perceuses filaires',
+    strategiq: 'S',
+    codif_fair: 'FAIR-01',
+    tarif_fab: 'T1',
+    cir_key: '010203',
+    link_status: 'complete_valid',
+    purchase_grid_rows_count: 1,
+    link_source_row_number: 2,
+    mega_famille: '01',
+    famille: '02',
+    sous_famille: '03',
+    mega_libelle: 'Outillage',
+    famille_libelle: 'Electroportatif',
+    sfam_libelle: 'Perceuses'
+  },
+  purchase_grid_rows: [{
+    id: '00000000-0000-4000-8000-000000000011',
+    snapshot_id: snapshotId,
+    import_id: importId,
+    segment_id: '00000000-0000-4000-8000-000000000004',
+    source_file_id: fileId,
+    source_row_number: 12,
+    num_four: 'F001',
+    remise_ha: '12',
+    col_ha: 'A',
+    priorite: '1',
+    type_grill: 'standard',
+    date_debut_raw: '2026-01-01',
+    date_fin_raw: '2026-12-31',
+    date_debut_normalized: '2026-01-01',
+    date_fin_normalized: '2026-12-31',
+    borne_acha: '100',
+    coef_retro: '0.95',
+    coef_ha: '1.10',
+    coef_majvte: '1.20'
+  }]
+});
+
 const classificationColumns = ['MEGA', 'FAM', 'SFA', 'MEGA_LIB', 'FAM_LIB', 'SFA_LIB'] as const;
 const segmentsColumns = [
   'SEGMENT',
@@ -200,10 +253,30 @@ vi.mock('@/services/errors/notifySuccess', () => ({
   notifySuccess: vi.fn()
 }));
 
+vi.mock('@/hooks/directory/views/useDirectorySavedViews', () => ({
+  useDirectorySavedViews: vi.fn(() => ({
+    data: { views: [] },
+    isLoading: false
+  }))
+}));
+
+vi.mock('@/hooks/directory/views/useSaveDirectorySavedView', () => ({
+  useSaveDirectorySavedView: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false }))
+}));
+
+vi.mock('@/hooks/directory/views/useDeleteDirectorySavedView', () => ({
+  useDeleteDirectorySavedView: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false }))
+}));
+
+vi.mock('@/hooks/directory/views/useSetDefaultDirectorySavedView', () => ({
+  useSetDefaultDirectorySavedView: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false }))
+}));
+
 vi.mock('@/services/pricingReferences', () => ({
   // Références paresseuses : la factory est hoistée avant les consts du module.
   listPricingReferenceImports: vi.fn(async () => defaultImportsList()),
   getPricingReferenceImport: vi.fn(async () => defaultGetImport()),
+  getPricingReferenceSegmentDetail: vi.fn(async () => defaultGetSegmentDetail()),
   activatePricingReferenceImport: vi.fn(async (input: { import_id: string }) => ({
     ok: true,
     import_id: input.import_id,
@@ -384,6 +457,12 @@ vi.mock('@/services/pricingReferences', () => ({
       tarif_fab: null,
       cir_key: '010203',
       link_status: 'complete_valid',
+      mega_famille: '01',
+      famille: '02',
+      sous_famille: '03',
+      mega_libelle: 'Outillage',
+      famille_libelle: 'Electroportatif',
+      sfam_libelle: 'Perceuses',
       purchase_grid_rows_count: 3
     }],
     page: 1,
@@ -633,6 +712,7 @@ describe('PricingReferencesPage', () => {
     // Certains tests remplacent l'implémentation entière : rétablir la base.
     vi.mocked(listPricingReferenceImports).mockImplementation(defaultImportsList);
     vi.mocked(getPricingReferenceImport).mockImplementation(defaultGetImport);
+    vi.mocked(getPricingReferenceSegmentDetail).mockImplementation(defaultGetSegmentDetail);
   });
 
   it('uses the route tab as the controlled source of truth', async () => {
@@ -862,10 +942,26 @@ describe('PricingReferencesPage', () => {
     await user.click(segmentRow);
 
     const detailDialog = await screen.findByRole('dialog');
-    expect(within(detailDialog).getByText(/BOSCH · CAT/)).toBeInTheDocument();
-    expect(within(detailDialog).getByText('BOSCH|CAT|001|42')).toBeInTheDocument();
+    expect(within(detailDialog).getByText(/BOSCH · Perceuses filaires/)).toBeInTheDocument();
+    expect(within(detailDialog).getAllByText('BOSCH|CAT|001|42').length).toBeGreaterThan(0);
+    expect(await within(detailDialog).findByText('Identité fabricant')).toBeInTheDocument();
+    expect(within(detailDialog).getByText('Classification CIR')).toBeInTheDocument();
     expect(within(detailDialog).getByText('Statut liaison')).toBeInTheDocument();
-    expect(within(detailDialog).getByText('Lignes grille achat')).toBeInTheDocument();
+    expect(within(detailDialog).getByText('Traçabilité source')).toBeInTheDocument();
+    expect(within(detailDialog).getByText('Conditions d’achat & rétrocession')).toBeInTheDocument();
+    expect(within(detailDialog).getByText('FAIR-01')).toBeInTheDocument();
+    expect(within(detailDialog).getByText('Méga-famille')).toBeInTheDocument();
+    expect(within(detailDialog).getByText('01 · Outillage')).toBeInTheDocument();
+    expect(within(detailDialog).getByText('02 · Electroportatif')).toBeInTheDocument();
+    expect(within(detailDialog).getByText('03 · Perceuses')).toBeInTheDocument();
+    expect(within(detailDialog).getByText('N° fournisseur')).toBeInTheDocument();
+    expect(within(detailDialog).getByText('F001')).toBeInTheDocument();
+    expect(within(detailDialog).getByText('Remise HA')).toBeInTheDocument();
+    expect(within(detailDialog).getAllByText('× 0,95').length).toBeGreaterThan(0);
+    expect(within(detailDialog).getAllByText('-5 %').length).toBeGreaterThan(0);
+    expect(getPricingReferenceSegmentDetail).toHaveBeenCalledWith({
+      segment_id: '00000000-0000-4000-8000-000000000004'
+    });
 
     await user.click(within(detailDialog).getByRole('button', { name: /fermer/i }));
     await waitFor(() => {

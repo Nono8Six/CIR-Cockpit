@@ -11,6 +11,7 @@ import {
   directoryListInputSchema,
   directoryOptionsFacetInputSchema,
   directoryRouteRefSchema,
+  directorySavedViewsListInputSchema,
   directorySavedViewStateSchema
 } from '../../../../shared/schemas/system/directory.schema.ts';
 import {
@@ -519,6 +520,18 @@ Deno.test('directory saved view state accepts migrated scope and rejects legacy 
   assertEquals(directorySavedViewStateSchema.safeParse({
     ...migratedState,
     agencyId: '11111111-1111-4111-8111-111111111111'
+  }).success, false);
+});
+
+Deno.test('directory saved views list accepts referential segment views', () => {
+  assertEquals(directorySavedViewsListInputSchema.safeParse({
+    viewType: 'referential_segments'
+  }).success, true);
+  assertEquals(directorySavedViewsListInputSchema.safeParse({
+    viewType: 'clients'
+  }).success, true);
+  assertEquals(directorySavedViewsListInputSchema.safeParse({
+    viewType: 'unknown'
   }).success, false);
 });
 

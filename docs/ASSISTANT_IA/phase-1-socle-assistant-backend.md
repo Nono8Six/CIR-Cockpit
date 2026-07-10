@@ -23,13 +23,14 @@ Vérifier tous les usages de `aiFeatureSchema` (labels front, quotas seed, promp
 `featureLabel()` de `AdminAiPanel.tsx` pour éviter un enum non exhaustif — ne pas casser
 l'existant, seulement ajouter.
 
-**Important (typage Drizzle)** : dans `backend/drizzle/schema.ts`, les colonnes `feature` de
-`ai_quota_policies` (~L570) et `ai_usage_events` (~L595) sont des colonnes `text` mais typées en
-TS par une **union littérale figée** qui n'inclut pas la nouvelle valeur. Étendre ces deux
-`$type<...>()` avec `'assistant.referentiels'` (sinon TypeScript refusera d'insérer un usage ou
-un quota sur la nouvelle feature). Aucune migration SQL n'est nécessaire (colonnes `text`), mais
-vérifier via Supabase MCP qu'aucune contrainte CHECK n'y restreint les valeurs ; si c'est le
-cas, prévoir une micro-migration d'ajout de valeur au CHECK.
+**Important (typage Drizzle)** : dans `backend/drizzle/schema.ts`, plusieurs colonnes `feature`
+sont des colonnes `text` mais typées en TS par une **union littérale figée** qui n'inclut pas la
+nouvelle valeur. Étendre au minimum les `$type<...>()` de `ai_prompt_templates.feature`,
+`ai_quota_policies.feature`, `ai_usage_events.feature` et, si le cache est réutilisé ou typé par
+feature dans le flux, `ai_response_cache.feature`. Sinon TypeScript refusera de créer le prompt,
+le quota ou l'usage `assistant.referentiels`. Aucune migration SQL n'est nécessaire si les
+colonnes restent libres (`text`), mais vérifier via Supabase MCP qu'aucune contrainte CHECK ne
+restreint ces valeurs ; si c'est le cas, prévoir une micro-migration d'ajout de valeur au CHECK.
 
 ### 2.2 Schémas de contrat (dans un nouveau fichier `shared/schemas/aiAssistant.schema.ts`)
 
@@ -40,7 +41,9 @@ Créer les schémas Zod (`.strict()`, messages FR) :
   `target_snapshot_id` (uuid), `base_snapshot_id` (uuid nullable), `active_tab` (string court),
   `file_kind` (`'classification' | 'segments_grids'`, optionnel).
 - `aiAssistantMessageSchema` : `{ role: z.enum(['user','assistant']), content: string(1..4000) }`.
-- `aiAssistantAskInputSchema` : `{ question: string(1..2000), history: array(message).max(12).default([]), page_context: aiAssistantPageContextSchema }`.
+- `aiAssistantAskInputSchema` : `{ client_request_id: uuid, question: string(1..2000), history: array(message).max(12).default([]), page_context: aiAssistantPageContextSchema }`.
+  Le front génère `client_request_id` une fois par envoi et le conserve lors d'un retry réseau :
+  ce n'est pas le `request_id` HTTP généré par le middleware.
 - `aiAssistantCitationSchema` : `{ tool: string, label: string, ref: jsonb }` — trace des outils
   effectivement utilisés, pour l'affichage « sources » côté UI.
 - `aiAssistantToolCallTraceSchema` : `{ name: string, arguments: jsonb, ok: boolean, row_count: z.number().int().nullable(), duration_ms: number }`.
@@ -54,6 +57,35 @@ Créer les schémas Zod (`.strict()`, messages FR) :
 Attention : suivre exactement les conventions de `shared/schemas/ai.schema.ts` (imports de
 `uuidSchema`, `nonEmptyStringSchema`, `apiSuccessSchema`, `nullableTextSchema`).
 
+Les contrats internes provider et outils sont eux aussi validés à la frontière : schéma strict
+pour la réponse OpenRouter utile (`id`, `model`, `choices`, `finish_reason`, `tool_calls`, `usage`)
+et, pour chaque outil, schémas Zod stricts d'arguments **et de résultat**. Une sortie outil qui
+échoue au `safeParse` n'est jamais envoyée telle quelle au modèle.
+
+### 2.2.1 Admission quota atomique et idempotence
+
+Le `enforceAiQuota` actuel effectue une lecture des compteurs, puis l'usage n'est écrit qu'après
+l'appel provider. Ce check n'est pas atomique sous concurrence. Avant de brancher l'assistant :
+
+- créer une migration pour une réservation de requête dédiée (table
+  `ai_request_reservations`, ou mécanisme transactionnel équivalent validé avec le schéma réel) ;
+- unicité sur `(feature, user_id, client_request_id)` pour qu'un retry du même utilisateur ne
+  déclenche jamais un second appel, sans risque de collision ou de restitution inter-utilisateur ;
+- fonction SQL/RPC transactionnelle d'admission qui sérialise le contrôle par périmètre de quota,
+  additionne usages finalisés et réservations actives, puis réserve **avant** l'appel une requête
+  et une estimation conservative des tokens/coûts ;
+- réconcilier la réservation avec l'usage réel sur succès/erreur ; conserver brièvement l'enveloppe
+  de réponse finale minimale afin qu'un retry après perte réseau rende la même réponse, puis la
+  purger. Ce cache d'idempotence à TTL court n'est pas un historique de conversation ;
+- donner une expiration aux réservations abandonnées ; leur purge et le test de charge final sont
+  couverts en phase 6.
+
+Ne pas tenter de rendre atomique une séquence de requêtes SQL depuis TypeScript : la décision et
+la réservation doivent appartenir à une même transaction Postgres. Si une fonction
+`SECURITY DEFINER` est nécessaire, fixer son `search_path`, révoquer l'exécution publique et
+n'accorder que le rôle serveur attendu. Vérifier RLS, indexes et contraintes via Supabase MCP,
+puis refléter les objets dans Drizzle si nécessaire.
+
 ### 2.3 Broker et boucle tool calling (nouveau fichier `backend/functions/api/services/ai/assistantBroker.ts`)
 
 Ne pas alourdir `aiGovernance.ts` : créer un module dédié qui **importe et réutilise** les
@@ -62,7 +94,9 @@ changer leur comportement) ce qui est nécessaire : `resolveModelAndPrompt` (ou 
 paramétrée par feature), `enforceAiQuota`, `recordUsage`/`recordBlockedUsage`/`recordErrorUsage`,
 `computeCost`, `decryptSecret`, `getProviderRow`, types `ProviderRow`/`ModelRow`/`ProviderUsage`.
 Si `resolveModelAndPrompt` est couplé au diagnose, généraliser proprement (paramètre `feature`)
-plutôt que dupliquer.
+plutôt que dupliquer. Étendre aussi `recordUsage` / `recordErrorUsage` si nécessaire pour accepter
+une `metadata` contrôlée (`tool_trace`, modèle, nombre de tours) au lieu de journaliser toujours
+`{}`.
 
 Fonction principale :
 
@@ -80,8 +114,9 @@ export const runAssistantAsk = async (
 1. Résoudre provider actif + clé + modèle par défaut + prompt système publié pour la feature
    `assistant.referentiels`. Si indisponible → retour `ai_available:false` avec `fallback_reason`
    (même pattern que `unavailable()` du diagnose). **Ne pas throw** pour l'indispo de config.
-2. `enforceAiQuota(db, authContext, 'assistant.referentiels')`. Si bloqué → `recordBlockedUsage`
-   puis throw (le front gère l'erreur quota).
+2. Appeler l'admission atomique avec `client_request_id`. Si bloqué → journaliser une seule fois
+   puis throw (le front gère l'erreur quota). Si la clé est déjà en cours/finalisée, appliquer le
+   contrat idempotent sans rappeler OpenRouter.
 3. Construire les messages : `system` (prompt versionné + contexte de page sérialisé + règles :
    répondre en français, n'utiliser que les outils, dire « je ne sais pas » si les outils ne
    permettent pas de répondre, citer les outils utilisés) + `history` borné + `question`.
@@ -94,13 +129,17 @@ export const runAssistantAsk = async (
    - Si `MAX_TOOL_ROUNDS` atteint sans réponse finale : forcer un dernier tour avec
      `tool_choice: 'none'` pour obtenir une réponse en clair ; marquer `truncated: true`.
 5. Accumuler tokens/coût sur **tous** les tours (somme des `usage` de chaque appel provider) ;
-   `recordUsage` une seule fois avec les totaux + `tool_trace` en métadonnée.
+   réconcilier la réservation et `recordUsage` une seule fois avec les totaux + `tool_trace`
+   minimisée. Conserver dans la métadonnée d'audit les `generation_id`, modèle réellement servi,
+   provider/routage retourné si disponible et `finish_reason` de chaque tour.
 6. Construire `citations` à partir des outils réellement exécutés avec succès.
 7. Retour validé par `aiAssistantAskResponseSchema`.
 
 Constantes : `MAX_TOOL_ROUNDS = 6`, `MAX_TOOL_RESULT_ROWS = 50`, `OVERALL_TIMEOUT_MS = 60_000`
 (annuler via `AbortController` propagé aux fetch provider ; sur timeout → `recordErrorUsage` +
-throw `httpError(504, 'AI_TIMEOUT', …)`).
+throw `httpError(504, 'AI_TIMEOUT', …)`). Avant d'utiliser `AI_TIMEOUT`, ajouter ce code dans
+les types et le catalogue d'erreurs partagés (`shared/errors/types.ts`, `shared/errors/catalog.ts`)
+avec un message FR et une sémantique retryable/non-retryable cohérente.
 
 ### 2.4 Extension de `callProvider` pour le tool calling
 
@@ -110,8 +149,25 @@ throw `httpError(504, 'AI_TIMEOUT', …)`).
 - envoie `messages` complets (pas seulement system+user), `tools`, `tool_choice`,
   et **retire** `response_format: json_object` (incompatible avec une réponse conversationnelle
   libre / tool calling) ;
+- renvoie `tools` à **chaque** tour provider tant que le modèle peut appeler des outils
+  (format OpenAI-compatible attendu par OpenRouter) ;
+- force `parallel_tool_calls:false` pour la v1, sauf si l'implémentation gère explicitement
+  plusieurs tool calls parallèles avec ordre, traces et erreurs déterministes ;
 - lit `choices[0].message.tool_calls` (format OpenAI) et `choices[0].message.content` ;
-- lit `usage` (prompt_tokens, completion_tokens, cached, reasoning) et `usage.cost` OpenRouter ;
+- valide la réponse utile avec Zod avant accès ; gère explicitement `finish_reason` normalisé
+  (`tool_calls`, `stop`, `length`, `content_filter`, `error`) et refuse tout nom d'outil inconnu,
+  `tool_call_id` manquant/dupliqué, arguments JSON invalides ou trop volumineux ;
+- lit `usage` (prompt_tokens, completion_tokens, cached, reasoning) et `usage.cost` OpenRouter.
+  Au 2026-07-10, l'usage complet est renvoyé automatiquement et `usage: { include: true }` est
+  déprécié : ne pas envoyer ce paramètre sauf changement ultérieur de la documentation officielle ;
+- configure explicitement la politique de routage/confidentialité provider si OpenRouter le
+  permet : `require_parameters:true` pour ne router que vers un endpoint qui respecte `tools` et
+  les paramètres requis, décision explicite sur `allow_fallbacks`, `data_collection:'deny'` et/ou
+  `zdr:true` selon disponibilité du modèle. Ne jamais accepter silencieusement qu'un provider
+  ignore un paramètre de sécurité ou de tool calling ;
+- conserve l'`id` de génération et les métadonnées de routage disponibles. Aucun retry aveugle
+  d'un tour ayant pu être facturé : les retries autorisés doivent être bornés, classés par erreur
+  et couverts par l'idempotence globale ;
 - réutilise `openAiCompatibleHeaders`, `providerBaseUrl`, `readProviderJson`, la gestion
   d'erreur `providerHttpError`/`readProviderError` existantes.
 
@@ -119,9 +175,13 @@ Ne pas casser `callProvider` existant (toujours utilisé par le diagnose).
 
 ### 2.5 Registre d'outils (nouveau fichier `backend/functions/api/services/ai/assistantTools.ts`)
 
-Définir un registre typé : chaque outil = `{ name, description (FR, précise), parameters (JSON Schema), run(db, authContext, args) }`.
-Le broker sérialise `parameters` au format OpenAI `tools`. `run` valide `args` avec un schéma
-Zod avant exécution et **plafonne** tout résultat à `MAX_TOOL_RESULT_ROWS`.
+Définir un registre typé et versionné : chaque outil =
+`{ name, version, description, inputSchema, outputSchema, parameters, run(...) }`.
+Le JSON Schema envoyé à OpenRouter est dérivé ou testé contre `inputSchema` pour éviter deux
+contrats divergents. `run` valide les arguments et la sortie avec Zod, puis plafonne à la fois le
+nombre de lignes (`MAX_TOOL_RESULT_ROWS`) et la taille sérialisée (`MAX_TOOL_RESULT_BYTES`, valeur
+mesurée et documentée). Toute donnée provenant des référentiels est traitée comme **contenu non
+fiable**, jamais comme instruction système.
 
 Phase 1 — 3 outils seulement (les autres en phase 2) :
 
@@ -163,19 +223,36 @@ outils, et exiger un « je ne sais pas » explicite si les outils ne couvrent pa
 ### 2.8 Choix du modèle (livrable de décision)
 
 Tester en réel (clé OpenRouter de dev) la boucle tool calling avec au moins deux modèles
-candidats (Mistral Small et Claude Haiku 4.5, IDs OpenRouter à vérifier). Documenter dans le
-changelog : lequel enchaîne correctement 2-3 outils, coût observé par question, latence.
-Configurer le gagnant comme modèle par défaut de la feature. Si aucun n'est concluant, le
-consigner et proposer une alternative.
+candidats (IDs confirmés au 2026-07-10, à revérifier au moment de coder :
+`mistralai/mistral-small-3.2-24b-instruct`, `anthropic/claude-haiku-4.5`, ou meilleur candidat
+disponible filtré par support `tools`). Consulter le taux d'erreur de tool calling par provider
+affiché par OpenRouter, pas seulement le benchmark général du modèle.
+Documenter dans le changelog : lequel enchaîne correctement 2-3 outils, coût observé par
+question, latence, et comportement sur français + JSON/tool calls.
+
+Attention : le schéma actuel `ai_model_configs.is_default` exprime un défaut **global par
+provider**, pas un défaut par feature. En phase 1, ne pas prétendre avoir configuré un défaut
+par feature si aucun mapping persistant n'existe. Deux options acceptables :
+
+- utiliser le défaut provider existant et documenter que l'assistant partage ce modèle ;
+- créer un mapping explicite feature → modèle (schéma + migration + contrats) si un modèle
+  distinct est indispensable dès la v1.
+
+Dans tous les cas, la phase 5 ne devra afficher un sélecteur « modèle par feature » que si ce
+mapping existe réellement.
 
 ## 3. Checkpoints à valider
 
 - [ ] `assistant.referentiels` ajouté à `aiFeatureSchema` sans casser les enums exhaustifs existants.
+- [ ] Typage Drizzle `feature` aligné pour prompts, quotas, usage et cache si concerné ; contraintes CHECK Supabase vérifiées.
 - [ ] `shared/schemas/aiAssistant.schema.ts` créé, tous schémas `.strict()`, messages FR, types exportés.
+- [ ] `client_request_id` stable défini ; admission quota atomique + réservation avant provider + unicité idempotente implémentées en transaction Postgres.
 - [ ] `callProviderWithTools` implémenté ; `callProvider` d'origine intact (diagnose non régressé).
+- [ ] Tool calling OpenRouter conforme à la doc actuelle : réponse provider validée, finish reasons gérés, `tools` renvoyés à chaque tour, `parallel_tool_calls` décidé, `require_parameters`, usage/cost, génération et confidentialité vérifiés.
 - [ ] Boucle tool calling bornée (6 tours, plafonds, AbortController/timeout) opérationnelle.
-- [ ] 3 outils (`list_imports`, `get_diff_summary`, `list_diffs`) branchés sur les services réels, résultats plafonnés à 50 lignes.
-- [ ] Quotas + journalisation `ai_usage_events` sous `assistant.referentiels` (succès, bloqué, erreur, cumul multi-tours).
+- [ ] `AI_TIMEOUT` ajouté au catalogue d'erreurs avant usage.
+- [ ] 3 outils (`list_imports`, `get_diff_summary`, `list_diffs`) branchés sur les services réels, entrées/sorties strictes et versionnées, résultats plafonnés en lignes **et en octets**.
+- [ ] Quotas + journalisation `ai_usage_events` sous `assistant.referentiels` (succès, bloqué, erreur, cumul multi-tours, metadata `tool_trace` minimisée).
 - [ ] Procédures `ai.assistant.ask` (mutation, authed) et `ai.assistant.status` (query, authed) exposées et miroir `shared/api/trpc.ts` à jour.
 - [ ] Prompt système `assistant.referentiels` seedé de façon idempotente.
 - [ ] Test Deno de contrat (`aiAssistantContracts_test.ts`) : provider mocké, vérifie un tour d'outil + réponse finale + parse strict de la sortie.
@@ -190,10 +267,11 @@ la Phase 1 du chantier Assistant IA.
 
 Avant tout code :
 1. Lis AGENTS.md puis invoque le skill cir-cockpit-agent-router.
-2. Lis docs/ASSISTANT_IA/00-plan-general.md en entier (architecture, décisions D1-D10, état de l'existant).
+2. Lis docs/ASSISTANT_IA/00-plan-general.md en entier (architecture, décisions D1-D15, état de l'existant).
 3. Lis docs/ASSISTANT_IA/phase-1-socle-assistant-backend.md en entier : c'est ta spécification.
-4. Invoque les skills cir-cockpit-api-contracts (contrats tRPC/Zod) et cir-error-handling
-   (erreurs via createAppError/httpError, jamais throw new Error direct).
+4. Invoque les skills cir-cockpit-api-contracts (contrats tRPC/Zod), cir-error-handling,
+   drizzle-orm et supabase-postgres-best-practices. Utilise le MCP Supabase pour la réservation
+   atomique, RLS, contraintes et indexes.
 5. Lance `git status --short` et ne touche jamais aux modifications qui ne sont pas les tiennes.
 
 Lis le code réel avant d'éditer — le plan décrit l'état au 2026-07-08, le code fait foi :
@@ -205,13 +283,17 @@ Lis le code réel avant d'éditer — le plan décrit l'état au 2026-07-08, le 
 - shared/schemas/ai.schema.ts (conventions Zod à suivre)
 - backend/functions/api/trpc/router.ts (bloc `ai: router(...)`) et shared/api/trpc.ts (miroir manuel)
 
-Implémente exactement la spécification (sections 2.1 à 2.8). Respecte : Zod .strict() avec
+Implémente exactement la spécification (sections 2.1 à 2.8, dont 2.2.1). Respecte : Zod .strict() avec
 messages FR, alias @/* côté front (non concerné ici), erreurs via httpError/createAppError,
 zéro donnée mockée dans le code livré, zéro TODO non résolu. Ne crée pas de fichiers non
 demandés. Préfère étendre les fichiers existants quand la spec le dit.
 
 Pour le tool calling OpenRouter (format tools/tool_calls OpenAI-compatible) et le choix du
-modèle, utilise Context7 (doc à jour OpenRouter/Mistral/Anthropic) plutôt que ta mémoire.
+modèle, utilise Context7 / documentation officielle à jour OpenRouter/Mistral/Anthropic plutôt
+que ta mémoire. Vérifie explicitement : `tools` à renvoyer à chaque tour, `parallel_tool_calls`,
+usage/cost automatique, `require_parameters`, routage/confidentialité provider, identifiants de
+génération, finish reasons et IDs modèles actuels. Chat Completions reste le contrat v1 ; ne
+migre pas vers Responses tant que cette API OpenRouter est en bêta.
 
 Écris le test Deno de contrat avec provider mocké. Lance la gate `pnpm run qa:back` et corrige
 jusqu'au vert (ou justifie tout écart). Pour le choix du modèle, si une clé OpenRouter de dev
@@ -231,8 +313,14 @@ Ne commit pas et ne déploie pas sans que l'utilisateur le demande explicitement
   sortie forcée `tool_choice:'none'`, et cumuler les coûts sur tous les tours (sinon usage
   sous-estimé).
 - Vérifier le format exact des `tool_calls` renvoyés par OpenRouter selon le modèle (certains
-  modèles diffèrent légèrement) — Context7 + test réel.
+  modèles diffèrent légèrement) — documentation officielle + test réel.
+- Ne pas créer une illusion de configuration « par feature » si la persistance est encore globale
+  par provider.
 - Ne pas persister d'historique en DB (D6). Le client renvoie l'historique borné.
+- Sans admission transactionnelle, les quotas actuels sont vulnérables aux requêtes concurrentes.
+  Ne pas présenter un simple check puis insert TypeScript comme une garantie stricte.
+- Le `request_id` HTTP ne suffit pas à l'idempotence d'un retry client : utiliser la clé stable
+  définie dans le contrat et ne jamais doubler un appel facturable.
 
 ## 6. Changelog
 

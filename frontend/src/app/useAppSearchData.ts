@@ -3,6 +3,7 @@ import { useDeferredValue, useMemo } from 'react';
 import { isProspectRelationValue } from '@/constants/relations';
 import type { AgencyConfig } from '@/services/config';
 import type { Entity, EntityContact, Interaction } from '@/types';
+import { countWorkQueueInteractions } from '@/utils/dashboard/dashboardAggregates';
 
 type SearchIndex = {
   entities: Entity[];
@@ -13,7 +14,7 @@ type UseAppSearchDataParams = {
   searchQuery: string;
   interactions: Interaction[];
   entitySearchIndex: SearchIndex;
-  defaultStatusId: string;
+  statuses: AgencyConfig['statuses'];
 };
 
 export type AppSearchScope = 'all' | 'clients' | 'contacts' | 'interactions';
@@ -67,7 +68,7 @@ export const applyAppSearchScope = (scope: AppSearchScope, query: string): strin
   return `${APP_SEARCH_SCOPE_PREFIXES[scope]}${normalizedQuery}`;
 };
 
-export const useAppSearchData = ({ searchQuery, interactions, entitySearchIndex, defaultStatusId }: UseAppSearchDataParams) => {
+export const useAppSearchData = ({ searchQuery, interactions, entitySearchIndex, statuses }: UseAppSearchDataParams) => {
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const { normalizedQuery, scope } = useMemo(
     () => parseAppSearchQuery(deferredSearchQuery),
@@ -147,10 +148,12 @@ export const useAppSearchData = ({ searchQuery, interactions, entitySearchIndex,
   }, [entitySearchIndex.entities, interactions]);
 
   const hasSearchResults = filteredInteractions.length + filteredClients.length + filteredProspects.length + filteredContacts.length > 0;
-  const pendingCount = useMemo(() => {
-    if (!defaultStatusId) return 0;
-    return interactions.filter(interaction => interaction.status_id === defaultStatusId).length;
-  }, [defaultStatusId, interactions]);
+  // File de travail : dossiers a traiter ou avec relance depassee, hors dossiers termines.
+  // Meme definition que la colonne urgences du dashboard pour garder un signal unique.
+  const pendingCount = useMemo(
+    () => countWorkQueueInteractions(interactions, statuses),
+    [interactions, statuses]
+  );
 
   return {
     filteredInteractions,
@@ -163,6 +166,3 @@ export const useAppSearchData = ({ searchQuery, interactions, entitySearchIndex,
     pendingCount
   };
 };
-
-export const getDefaultStatusId = (statuses: AgencyConfig['statuses']) =>
-  statuses.find(status => status.is_default)?.id ?? statuses[0]?.id ?? '';

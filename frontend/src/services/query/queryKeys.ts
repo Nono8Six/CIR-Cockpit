@@ -8,6 +8,7 @@ import type {
   PricingReferenceImportGetInput,
   PricingReferenceImportsListInput,
   PricingReferenceSegmentsListInput,
+  PricingReferenceSegmentDetailInput,
   PricingReferenceImportsPrepareInput
 } from '../../../../shared/schemas/pricing/references.schema';
 import type {
@@ -241,6 +242,11 @@ export const pricingReferenceSegmentsKey = (input: PricingReferenceSegmentsListI
   QUERY_ROOTS.pricingReferences,
   'segments',
   input
+] as const;
+export const pricingReferenceSegmentDetailKey = (input: PricingReferenceSegmentDetailInput | { segment_id?: string | null }) => [
+  QUERY_ROOTS.pricingReferences,
+  'segment-detail',
+  input.segment_id ?? null
 ] as const;
 export const pricingReferenceAnomaliesKey = (input: PricingReferenceAnomaliesListInput) => [
   QUERY_ROOTS.pricingReferences,

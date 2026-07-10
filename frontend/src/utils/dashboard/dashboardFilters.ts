@@ -21,15 +21,16 @@ type FilterInteractionsByViewModeParams = {
   viewMode: DashboardViewMode;
   dateBounds: DateBounds | null;
   isStatusDone: (interaction: Interaction) => boolean;
+  isInWorkQueue?: (interaction: Interaction) => boolean;
 };
 
 export const validateCustomDateRange = (startDate: string, endDate: string): string | null => {
   if (!startDate || !endDate) {
-    return 'Renseignez une date de debut et de fin.';
+    return 'Renseignez une date de début et de fin.';
   }
 
   if (startDate > endDate) {
-    return 'La date de debut doit preceder la date de fin.';
+    return 'La date de début doit précéder la date de fin.';
   }
 
   return null;
@@ -83,7 +84,8 @@ export const filterInteractionsByViewMode = ({
   interactions,
   viewMode,
   dateBounds,
-  isStatusDone
+  isStatusDone,
+  isInWorkQueue
 }: FilterInteractionsByViewModeParams): Interaction[] => {
   if (!dateBounds) {
     if (viewMode === 'list') {
@@ -102,7 +104,13 @@ export const filterInteractionsByViewMode = ({
     );
   }
 
+  // La file de travail (a traiter ou relance depassee) reste visible quelle que soit
+  // la periode : le filtre temporel ne s'applique qu'aux dossiers deja pris en charge.
   return interactions.filter((interaction) => {
+    if (isInWorkQueue?.(interaction)) {
+      return true;
+    }
+
     const lastActivityAt = resolveActivityTimestamp(interaction);
     return isTimestampWithinBounds(lastActivityAt, dateBounds);
   });

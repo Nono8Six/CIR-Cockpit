@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { getDefaultStatusId, useAppSearchData } from '@/app/useAppSearchData';
+import { useAppSearchData } from '@/app/useAppSearchData';
 import { EMPTY_CONFIG } from '@/app/appConstants';
 import { useAgencyConfig } from '../admin/agencies/core/useAgencyConfig';
 import { useEntitySearchIndex } from '../directory/core/useEntitySearchIndex';
@@ -54,7 +54,7 @@ export const useAppQueries = ({
     searchQuery,
     interactions,
     entitySearchIndex,
-    defaultStatusId: getDefaultStatusId(config.statuses)
+    statuses: config.statuses
   });
 
   return {
