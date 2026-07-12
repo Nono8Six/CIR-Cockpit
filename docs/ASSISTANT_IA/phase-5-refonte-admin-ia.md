@@ -80,16 +80,16 @@ panel s'ils cassent avec le découpage.
 
 ## 3. Checkpoints à valider
 
-- [ ] `AdminAiPanel` découpé en sous-composants par onglet (fin du monolithe 955 lignes).
-- [ ] Onglet Vue d'ensemble : synthèse provider/coût/usage, sans édition.
-- [ ] Onglet Fournisseur & modèles : CRUD multi-modèles + défaut provider ou défaut par feature réellement persistant + clé (test, jamais en clair).
-- [ ] Onglet Accès membres : overview effectif (noms résolus), override membre/agence, défaut global, conso par membre.
-- [ ] Onglet Quotas : création + édition + suppression de politiques, périmètres/features résolus en noms.
-- [ ] Onglet Prompts : branché sur ai.prompts.* (édition brouillon, publication, restauration, historique).
-- [ ] Onglet Usage & audit : filtres + noms résolus + graphes conservés.
-- [ ] Plus aucun uuid brut affiché ; plus aucune valeur provider/modèle hardcodée en dur bloquante ; aucune UI de modèle par feature sans persistance backend réelle.
-- [ ] Services front complétés (pattern invokeTrpc/parseResponse) ; procédures backend manquantes ajoutées proprement si besoin.
-- [ ] Tests Vitest à jour (dont résolution des noms) ; `pnpm run qa:front` vert et, si backend/shared touché, checks back ciblés ou `pnpm run qa:fast` verts.
+- [x] `AdminAiPanel` découpé en sous-composants par onglet (fin du monolithe 955 lignes).
+- [x] Onglet Vue d'ensemble : synthèse provider/coût/usage, sans édition.
+- [x] Onglet Fournisseur & modèles : CRUD multi-modèles + défaut provider ou défaut par feature réellement persistant + clé (test, jamais en clair).
+- [x] Onglet Accès membres : overview effectif (noms résolus), override membre/agence, défaut global, conso par membre.
+- [x] Onglet Quotas : création + édition + suppression de politiques, périmètres/features résolus en noms.
+- [x] Onglet Prompts : branché sur ai.prompts.* (édition brouillon, publication, restauration, historique).
+- [x] Onglet Usage & audit : filtres + noms résolus + graphes conservés.
+- [x] Plus aucun uuid brut affiché ; plus aucune valeur provider/modèle hardcodée en dur bloquante ; aucune UI de modèle par feature sans persistance backend réelle.
+- [x] Services front complétés (pattern invokeTrpc/parseResponse) ; procédures backend manquantes ajoutées proprement si besoin.
+- [x] Tests Vitest à jour (dont résolution des noms) ; `pnpm run qa:front` vert et, si backend/shared touché, checks back ciblés ou `pnpm run qa:fast` verts.
 
 ## 4. Prompt d'exécution (à coller dans une conversation neuve)
 
@@ -149,4 +149,16 @@ tableau de suivi (§8) de 00-plan-general.md. Ne commit/déploie pas sans demand
 
 <!-- À remplir en fin de phase. -->
 
-_(vide — phase non encore exécutée)_
+### 2026-07-11 — Phase exécutée localement
+- **Fait** : console Admin > IA restructurée en 6 onglets autonomes ; synthèse provider/usage, CRUD multi-modèles, accès et consommation Phase 4, CRUD quotas, prompts versionnés et journal filtrable avec évolution quotidienne. Tous les identifiants de membres et d'agences visibles sont résolus en noms ; le défaut modèle reste explicitement global au provider car aucun mapping persistant par feature n'existe.
+- **Fichiers créés** : composants `AiOverviewTab`, `AiModelsTab`, `AiAccessTab`, `AiQuotasTab`, `AiPromptsTab`, `AiUsageTab`, utilitaires UI et tests Vitest associés sous `frontend/src/components/admin-ai/`.
+- **Fichiers modifiés** : `AdminAiPanel.tsx`, `frontend/src/services/ai.ts`, `queryKeys.ts`, contrats `shared/schemas/ai.schema.ts`, miroir `shared/api/trpc.ts`, service de gouvernance, routeur tRPC, test de contrats, ce document et `00-plan-general.md`.
+- **Contrats ajoutés** : `ai.settings.deleteModel`, `ai.settings.createQuota`, `ai.settings.deleteQuota`. La suppression du modèle par défaut est refusée tant qu'un autre défaut provider n'est pas défini.
+- **Preview locale** : connexion superadmin, rendu réel des 6 onglets, édition modèle, ouverture/remplissage création quota, édition/restauration locale du texte prompt, noms résolus et journal sans UUID brut vérifiés. Le test live d'un toggle membre a retourné l'erreur UI attendue sans changement d'état sur l'Edge Function distante v117, qui ne contient pas les nouveaux changements locaux ; aucun déploiement n'a été effectué.
+- **QA** : `pnpm run qa:front` vert ; test contrats backend 20/20 vert ; `deno check` vert ; `pnpm run qa:fast` vert ; `git diff --check` vert (avertissements de normalisation LF/CRLF uniquement).
+
+### 2026-07-12 — Backend Phase 5 déployé
+- **Déploiement** : Edge Function `api` version 118 `ACTIVE` sur le projet lié `rbjtrcorlezvocayluok`, avec `verify_jwt=false`, entrypoint `source/supabase/functions/api/index.ts` et import map `source/deno.json`. Aucun commit et aucune migration supplémentaire.
+- **Périmètre effectivement embarqué** : tout l'état local de `backend/functions/api/` et ses dépendances partagées, incluant les phases Assistant IA précédentes et les modifications interactions/référentiels déjà présentes dans le worktree.
+- **Probes** : routes `ai.settings.deleteModel`, `ai.settings.createQuota`, `ai.settings.deleteQuota`, `ai.access.save` et `ai.usage.byMember` présentes (401 `AUTH_REQUIRED` sans token, aucun 404 de routage) ; probes superadmin authentifiés `deleteModel`/`deleteQuota` en 404 métier attendu sur identifiant inexistant et `createQuota` en 400 de validation attendu ; CORS `OPTIONS` 200 pour `http://localhost:3000`.
+- **QA de livraison** : `pnpm run qa` a exécuté 680/680 tests frontend mais reste bloquée par le seuil de couverture concurrent de `useDashboardStatusHelpers.ts` (13,33 % de branches pour 30 % requis). Déploiement poursuivi sur autorisation explicite avec `qa:front`, `qa:fast`, Deno check/tests et contrats Phase 5 verts.

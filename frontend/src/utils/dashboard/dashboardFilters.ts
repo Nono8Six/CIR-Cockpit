@@ -14,14 +14,13 @@ export type DateBounds = {
   end: number;
 };
 
-export type DashboardViewMode = 'kanban' | 'list';
+export type DashboardViewMode = 'myday' | 'pipeline' | 'list';
 
 type FilterInteractionsByViewModeParams = {
   interactions: Interaction[];
   viewMode: DashboardViewMode;
   dateBounds: DateBounds | null;
   isStatusDone: (interaction: Interaction) => boolean;
-  isInWorkQueue?: (interaction: Interaction) => boolean;
 };
 
 export const validateCustomDateRange = (startDate: string, endDate: string): string | null => {
@@ -84,34 +83,28 @@ export const filterInteractionsByViewMode = ({
   interactions,
   viewMode,
   dateBounds,
-  isStatusDone,
-  isInWorkQueue
+  isStatusDone
 }: FilterInteractionsByViewModeParams): Interaction[] => {
-  if (!dateBounds) {
-    if (viewMode === 'list') {
-      return sortInteractionsByLatestActivity(interactions);
-    }
-
+  // Ma journee est une file de travail : jamais de filtre temporel, seulement les dossiers ouverts.
+  if (viewMode === 'myday') {
     return interactions.filter((interaction) => !isStatusDone(interaction));
   }
 
-  if (viewMode === 'list') {
-    return sortInteractionsByLatestActivity(
-      interactions.filter((interaction) => {
-        const lastActivityAt = resolveActivityTimestamp(interaction);
-        return isTimestampWithinBounds(lastActivityAt, dateBounds);
-      })
-    );
+  // Le pipeline est un stock complet : le regroupement et la fenetre "clotures 30 j"
+  // sont geres par buildPipelineBoard, pas par le filtre de periode.
+  if (viewMode === 'pipeline') {
+    return interactions;
   }
 
-  // La file de travail (a traiter ou relance depassee) reste visible quelle que soit
-  // la periode : le filtre temporel ne s'applique qu'aux dossiers deja pris en charge.
-  return interactions.filter((interaction) => {
-    if (isInWorkQueue?.(interaction)) {
-      return true;
-    }
+  // Historique : journal filtre par periode sur la date de derniere action.
+  if (!dateBounds) {
+    return sortInteractionsByLatestActivity(interactions);
+  }
 
-    const lastActivityAt = resolveActivityTimestamp(interaction);
-    return isTimestampWithinBounds(lastActivityAt, dateBounds);
-  });
+  return sortInteractionsByLatestActivity(
+    interactions.filter((interaction) => {
+      const lastActivityAt = resolveActivityTimestamp(interaction);
+      return isTimestampWithinBounds(lastActivityAt, dateBounds);
+    })
+  );
 };

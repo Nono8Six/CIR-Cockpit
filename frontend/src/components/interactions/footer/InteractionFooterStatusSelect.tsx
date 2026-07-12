@@ -20,7 +20,7 @@ const InteractionFooterStatusSelect = ({
   const selectedOption = statusOptions.find((option) => option.id === statusId);
 
   return (
-    <div className="sm:col-span-2 lg:col-span-4">
+    <div className="sm:col-span-2 lg:col-span-3">
       <label
         htmlFor="interaction-status-select"
         className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground"

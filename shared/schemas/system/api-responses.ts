@@ -94,6 +94,9 @@ const entityContactRowSchema: z.ZodType<EntityContactRow> = z.strictObject({
 
 const interactionRowSchema: z.ZodType<InteractionRow> = z.strictObject({
   agency_id: nullableStringSchema,
+  // Le driver Postgres renvoie les numeric en chaine : coercition vers number.
+  // Defaults null : tolere les lignes anterieures a la migration opportunite.
+  amount: z.union([z.null(), z.coerce.number().min(0, 'Montant invalide')]).default(null),
   channel: nonEmptyStringSchema('Canal requis'),
   company_name: z.string(),
   contact_email: nullableStringSchema,
@@ -108,10 +111,14 @@ const interactionRowSchema: z.ZodType<InteractionRow> = z.strictObject({
   id: nonEmptyStringSchema('Identifiant interaction requis'),
   interaction_type: nonEmptyStringSchema("Type d'interaction requis"),
   last_action_at: nonEmptyStringSchema('Date de derniere action requise'),
+  lost_reason: nullableStringSchema.default(null),
   mega_families: z.array(z.string()),
   notes: nullableStringSchema,
   order_ref: nullableStringSchema,
+  quote_sent_at: nullableStringSchema.default(null),
   reminder_at: nullableStringSchema,
+  stage: nullableStringSchema.default(null),
+  stage_changed_at: nullableStringSchema.default(null),
   status: z.string(),
   status_id: nullableStringSchema,
   status_is_terminal: z.boolean(),

@@ -16,7 +16,6 @@ type UseDashboardFiltersParams = {
   interactions: Interaction[];
   viewMode: DashboardViewMode;
   isStatusDone: (interaction: Interaction) => boolean;
-  isInWorkQueue?: (interaction: Interaction) => boolean;
   resolutions?: NonNullable<AgencyConfig['resolutions']>;
 };
 
@@ -24,7 +23,6 @@ export const useDashboardFilters = ({
   interactions,
   viewMode,
   isStatusDone,
-  isInWorkQueue,
   resolutions = []
 }: UseDashboardFiltersParams) => {
   const today = getTodayIsoDate();
@@ -62,8 +60,8 @@ export const useDashboardFilters = ({
   const effectiveStartDate =
     period === 'custom'
       ? customRangeError
-        ? lastValidCustomRange.startDate
-        : startDate
+         ? lastValidCustomRange.startDate
+         : startDate
       : presetDates.startDate;
   const effectiveEndDate =
     period === 'custom'
@@ -89,10 +87,9 @@ export const useDashboardFilters = ({
       interactions: searchFiltered,
       viewMode,
       dateBounds,
-      isStatusDone,
-      isInWorkQueue
+      isStatusDone
     });
-  }, [compactSearchTerm, dateBounds, interactions, isInWorkQueue, isStatusDone, normalizedSearchTerm, resolutions, viewMode]);
+  }, [compactSearchTerm, dateBounds, interactions, isStatusDone, normalizedSearchTerm, resolutions, viewMode]);
 
   const setCustomDateRange = useCallback((nextStartDate: string, nextEndDate: string) => {
     startDateRef.current = nextStartDate;

@@ -25,10 +25,12 @@ import type {
 } from "../../shared/schemas/pricing/references.schema.ts";
 import type {
   AiDiagnosisResult,
+  AiFeature,
   AiPromptStatus,
   AiProvider,
   AiUsageStatus,
 } from "../../shared/schemas/ai.schema.ts";
+import type { AiAssistantAskResponse } from "../../shared/schemas/aiAssistant.schema.ts";
 
 type AccountType = Database["public"]["Enums"]["account_type"];
 type UserRole = Database["public"]["Enums"]["user_role"];
@@ -535,6 +537,7 @@ export const ai_prompt_templates = pgTable("ai_prompt_templates", {
     | "pricing.references.diagnose"
     | "pricing.references.diagnose.classification"
     | "pricing.references.diagnose.segments"
+    | "assistant.referentiels"
   >().notNull(),
   label: text("label").$type<string>().notNull(),
   description: text("description").$type<string | null>(),
@@ -571,6 +574,7 @@ export const ai_quota_policies = pgTable("ai_quota_policies", {
     | "pricing.references.diagnose"
     | "pricing.references.diagnose.classification"
     | "pricing.references.diagnose.segments"
+    | "assistant.referentiels"
     | null
   >(),
   enabled: boolean("enabled").$type<boolean>().default(true).notNull(),
@@ -596,6 +600,7 @@ export const ai_usage_events = pgTable("ai_usage_events", {
     | "pricing.references.diagnose"
     | "pricing.references.diagnose.classification"
     | "pricing.references.diagnose.segments"
+    | "assistant.referentiels"
   >().notNull(),
   provider: text("provider").$type<AiProvider>().notNull(),
   model_id: text("model_id").$type<string>().notNull(),
@@ -622,12 +627,28 @@ export const ai_usage_events = pgTable("ai_usage_events", {
     .notNull(),
 });
 
+export const ai_feature_grants = pgTable("ai_feature_grants", {
+  id: uuid("id").$type<string>().defaultRandom().primaryKey(),
+  feature: text("feature").$type<AiFeature>().notNull(),
+  scope: text("scope").$type<"global" | "agency" | "user">().notNull(),
+  agency_id: uuid("agency_id").$type<string | null>(),
+  user_id: uuid("user_id").$type<string | null>(),
+  allowed: boolean("allowed").$type<boolean>().default(true).notNull(),
+  created_by: uuid("created_by").$type<string | null>(),
+  updated_by: uuid("updated_by").$type<string | null>(),
+  created_at: timestamp("created_at", timestamptz).$type<string>().defaultNow()
+    .notNull(),
+  updated_at: timestamp("updated_at", timestamptz).$type<string>().defaultNow()
+    .notNull(),
+});
+
 export const ai_response_cache = pgTable("ai_response_cache", {
   id: uuid("id").$type<string>().defaultRandom().primaryKey(),
   feature: text("feature").$type<
     | "pricing.references.diagnose"
     | "pricing.references.diagnose.classification"
     | "pricing.references.diagnose.segments"
+    | "assistant.referentiels"
   >().notNull(),
   cache_key: text("cache_key").$type<string>().notNull(),
   provider: text("provider").$type<AiProvider>().notNull(),
@@ -638,6 +659,29 @@ export const ai_response_cache = pgTable("ai_response_cache", {
   usage: jsonb("usage").$type<Record<string, unknown>>().default({}).notNull(),
   expires_at: timestamp("expires_at", timestamptz).$type<string>().notNull(),
   created_at: timestamp("created_at", timestamptz).$type<string>().defaultNow()
+    .notNull(),
+});
+
+export const ai_request_reservations = pgTable("ai_request_reservations", {
+  id: uuid("id").$type<string>().defaultRandom().primaryKey(),
+  feature: text("feature").$type<"assistant.referentiels">().notNull(),
+  user_id: uuid("user_id").$type<string>().notNull(),
+  agency_id: uuid("agency_id").$type<string | null>(),
+  client_request_id: uuid("client_request_id").$type<string>().notNull(),
+  status: text("status").$type<"reserved" | "success" | "error" | "blocked">()
+    .notNull(),
+  estimated_tokens: integer("estimated_tokens").$type<number>().notNull(),
+  estimated_cost_amount: numeric("estimated_cost_amount").$type<string>()
+    .notNull(),
+  actual_tokens: integer("actual_tokens").$type<number | null>(),
+  actual_cost_amount: numeric("actual_cost_amount").$type<string | null>(),
+  response: jsonb("response").$type<AiAssistantAskResponse | null>(),
+  error_code: text("error_code").$type<string | null>(),
+  error_message: text("error_message").$type<string | null>(),
+  expires_at: timestamp("expires_at", timestamptz).$type<string>().notNull(),
+  created_at: timestamp("created_at", timestamptz).$type<string>().defaultNow()
+    .notNull(),
+  updated_at: timestamp("updated_at", timestamptz).$type<string>().defaultNow()
     .notNull(),
 });
 
@@ -660,6 +704,15 @@ export const interactions = pgTable("interactions", {
   ).notNull(),
   interaction_type: text("interaction_type").$type<string>().notNull(),
   order_ref: text("order_ref").$type<string | null>(),
+  // Le driver renvoie les numeric en string ; la coercition vers number se fait
+  // dans interactionRowSchema (api-responses.ts) cote consommateur.
+  amount: numeric("amount", { precision: 12, scale: 2 }).$type<number | null>(),
+  stage: text("stage").$type<string | null>(),
+  stage_changed_at: timestamp("stage_changed_at", timestamptz).$type<
+    string | null
+  >(),
+  quote_sent_at: timestamp("quote_sent_at", timestamptz).$type<string | null>(),
+  lost_reason: text("lost_reason").$type<string | null>(),
   reminder_at: timestamp("reminder_at", timestamptz).$type<string | null>(),
   last_action_at: timestamp("last_action_at", timestamptz).$type<string>()
     .defaultNow().notNull(),
@@ -805,7 +858,9 @@ export const drizzleSchema = {
   ai_prompt_versions,
   ai_quota_policies,
   ai_usage_events,
+  ai_feature_grants,
   ai_response_cache,
+  ai_request_reservations,
   entities,
   entity_contacts,
   interactions,

@@ -24,7 +24,7 @@ import { checkRateLimit } from "../../rate-limiting/rateLimit.ts";
 
 type DbExecutable = Pick<DbClient, "execute">;
 
-type DiffRunRow = {
+export type PricingReferenceDiffRunRow = {
   id: string;
   base_snapshot_id: string | null;
   target_snapshot_id: string;
@@ -92,6 +92,51 @@ const GRID_CHANGED_COLUMNS = [
   "coef_ha",
   "coef_majvte",
 ] as const;
+
+const NUMERIC_CHANGE_SCALE = 6;
+
+const BRAND_ALIASES: Readonly<Record<string, readonly string[]>> = {
+  ROCK: ["ROCK"],
+  ROCKWELL: ["ROCK"],
+};
+
+const normalizeBrandToken = (value: string): string =>
+  value.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+
+export const resolvePricingReferenceBrandAliases = (
+  marques: readonly string[] | undefined,
+): string[] | undefined => {
+  if (!marques?.length) return undefined;
+  return [
+    ...new Set(marques.flatMap((marque) => {
+      const normalized = normalizeBrandToken(marque);
+      return BRAND_ALIASES[normalized] ?? [normalized];
+    })),
+  ];
+};
+
+export const normalizePricingReferenceNumericValue = (
+  value: unknown,
+): number | null => {
+  if (typeof value !== "string" && typeof value !== "number") return null;
+  const normalized = String(value).trim().replace(",", ".");
+  if (!/^[+-]?\d+(?:\.\d+)?$/.test(normalized)) return null;
+  const parsed = Number(normalized);
+  if (!Number.isFinite(parsed)) return null;
+  return Number(parsed.toFixed(NUMERIC_CHANGE_SCALE));
+};
+
+export const classifyPricingReferenceNumericChange = (
+  before: unknown,
+  after: unknown,
+): "hausse" | "baisse" | "neutre" | null => {
+  const normalizedBefore = normalizePricingReferenceNumericValue(before);
+  const normalizedAfter = normalizePricingReferenceNumericValue(after);
+  if (normalizedBefore === null || normalizedAfter === null) return null;
+  if (normalizedAfter > normalizedBefore) return "hausse";
+  if (normalizedAfter < normalizedBefore) return "baisse";
+  return "neutre";
+};
 
 const hasOwn = (value: object, key: string): boolean =>
   Object.prototype.hasOwnProperty.call(value, key);
@@ -1276,12 +1321,16 @@ export const computePricingReferenceDiffBestEffort = async (
   }
 };
 
-const loadDiffRun = async (
+export const resolvePricingReferenceDiffRun = async (
   db: DbExecutable,
-  input: PricingReferenceDiffsSummaryGetInput | PricingReferenceDiffsListInput,
-): Promise<DiffRunRow> => {
+  input: {
+    run_id?: string;
+    base_snapshot_id?: string | null;
+    target_snapshot_id?: string;
+  },
+): Promise<PricingReferenceDiffRunRow> => {
   if (input.run_id) {
-    const rows = await db.execute<DiffRunRow>(sql`
+    const rows = await db.execute<PricingReferenceDiffRunRow>(sql`
       select
         id,
         base_snapshot_id,
@@ -1298,7 +1347,7 @@ const loadDiffRun = async (
     const row = rows[0];
     if (row) return row;
   } else if (input.target_snapshot_id && hasOwn(input, "base_snapshot_id")) {
-    const rows = await db.execute<DiffRunRow>(sql`
+    const rows = await db.execute<PricingReferenceDiffRunRow>(sql`
       select
         id,
         base_snapshot_id,
@@ -1319,7 +1368,7 @@ const loadDiffRun = async (
     const row = rows[0];
     if (row) return row;
   } else if (input.target_snapshot_id) {
-    const rows = await db.execute<DiffRunRow>(sql`
+    const rows = await db.execute<PricingReferenceDiffRunRow>(sql`
       select
         id,
         base_snapshot_id,
@@ -1347,7 +1396,7 @@ const loadDiffRun = async (
 
 const toSummaryResponse = (
   requestId: string,
-  run: DiffRunRow | DiffSummaryPayload,
+  run: PricingReferenceDiffRunRow | DiffSummaryPayload,
 ): PricingReferenceDiffsSummaryResponse => {
   const payload = "summary" in run ? run.summary : run;
   return pricingReferenceDiffsSummaryResponseSchema.parse({
@@ -1359,7 +1408,7 @@ const toSummaryResponse = (
 
 const toComputeResponse = (
   requestId: string,
-  summary: DiffRunRow | DiffSummaryPayload,
+  summary: PricingReferenceDiffRunRow | DiffSummaryPayload,
   cacheStatus: "computed" | "reused",
 ): PricingReferenceDiffsComputeResponse =>
   pricingReferenceDiffsComputeResponseSchema.parse({
@@ -1371,8 +1420,8 @@ const loadCachedRunByPair = async (
   db: DbExecutable,
   baseSnapshotId: string | null,
   targetSnapshotId: string,
-): Promise<DiffRunRow | null> => {
-  const rows = await db.execute<DiffRunRow>(sql`
+): Promise<PricingReferenceDiffRunRow | null> => {
+  const rows = await db.execute<PricingReferenceDiffRunRow>(sql`
     select
       id,
       base_snapshot_id,
@@ -1397,12 +1446,12 @@ export const getPricingReferenceDiffSummary = async (
   requestId: string,
   input: PricingReferenceDiffsSummaryGetInput,
 ): Promise<PricingReferenceDiffsSummaryResponse> => {
-  const run = await loadDiffRun(db, input);
+  const run = await resolvePricingReferenceDiffRun(db, input);
   return toSummaryResponse(requestId, run);
 };
 
 const buildDiffListWhere = (
-  run: DiffRunRow,
+  run: PricingReferenceDiffRunRow,
   input: PricingReferenceDiffsListInput,
 ): SQL => {
   const conditions: SQL[] = [
@@ -1479,7 +1528,7 @@ export const listPricingReferenceDiffs = async (
   requestId: string,
   input: PricingReferenceDiffsListInput,
 ): Promise<PricingReferenceDiffsListResponse> => {
-  const run = await loadDiffRun(db, input);
+  const run = await resolvePricingReferenceDiffRun(db, input);
   const whereSql = buildDiffListWhere(run, input);
   const offset = (input.page - 1) * input.page_size;
 

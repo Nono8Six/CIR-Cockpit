@@ -128,15 +128,15 @@ Toute écriture de grant → `audit_logs` (action, actor, cible), cohérent avec
 
 ## 3. Checkpoints à valider
 
-- [ ] Migration `ai_feature_grants` appliquée (RLS, `force_rls`, CHECK scope/IDs, FK, indexes uniques partiels) ; parité `repo:check` OK ; table dans `schema.ts`.
-- [ ] Seed du grant défaut global `assistant.referentiels` (défaut ouvert/fermé retenu explicitement et documenté).
-- [ ] Règle `activeAgencyId`/`agencyIds` documentée et testée.
-- [ ] `resolveAssistantAccess` (superadmin bypass, priorité user>agency>global>défaut) branché dans `runAssistantAsk` ET `getAssistantStatus`.
-- [ ] Schémas grants/overview `.strict()` FR, uuid résolus en noms (pas d'uuid brut exposé).
-- [ ] Procédures `ai.access.list/save/delete/membersOverview` (superAdmin) + `ai.usage.byMember` + miroir `shared/api/trpc.ts`.
-- [ ] Écriture de grant journalisée dans `audit_logs`.
-- [ ] Tests de contrat : résolution d'accès + bypass superadmin + conso par membre.
-- [ ] `pnpm run qa:back` vert (inclut la parité migrations distante).
+- [x] Migration `ai_feature_grants` appliquée (RLS, `force_rls`, CHECK scope/IDs, FK, indexes uniques partiels) ; parité `repo:check` OK ; table dans `schema.ts`.
+- [x] Seed du grant défaut global `assistant.referentiels` (défaut ouvert/fermé retenu explicitement et documenté).
+- [x] Règle `activeAgencyId`/`agencyIds` documentée et testée.
+- [x] `resolveAssistantAccess` (superadmin bypass, priorité user>agency>global>défaut) branché dans `runAssistantAsk` ET `getAssistantStatus`.
+- [x] Schémas grants/overview `.strict()` FR, uuid résolus en noms (pas d'uuid brut exposé).
+- [x] Procédures `ai.access.list/save/delete/membersOverview` (superAdmin) + `ai.usage.byMember` + miroir `shared/api/trpc.ts`.
+- [x] Écriture de grant journalisée dans `audit_logs`.
+- [x] Tests de contrat : résolution d'accès + bypass superadmin + conso par membre.
+- [x] `pnpm run qa:back` vert (inclut la parité migrations distante), confirmé par le gate complet `pnpm run qa` du 2026-07-12.
 
 ## 4. Prompt d'exécution (à coller dans une conversation neuve)
 
@@ -193,4 +193,15 @@ pour toute action DB de migration, confirme la logique avant application si un d
 
 <!-- À remplir en fin de phase. -->
 
-_(vide — phase non encore exécutée)_
+### 2026-07-10 — Phase exécutée, gate finale bloquée hors périmètre
+- **Fait** : table `ai_feature_grants`, résolution effective user > agence active > global > défaut, bypass superadmin, enforcement avant quota dans `runAssistantAsk` et dans `getAssistantStatus`, contrats Zod stricts, procédures superadmin d'administration, vue d'accès par membre, agrégation de consommation par membre et audit transactionnel des mutations. Les UUID de cible sont accompagnés des noms/emails/agences résolus dans les réponses d'administration.
+- **Fichiers créés** : `backend/functions/api/services/ai/aiAccess.ts`, `backend/functions/api/services/ai/aiAccess_test.ts`, `backend/migrations/20260710220413_ai_feature_grants.sql`, `backend/migrations/20260710221105_fix_ai_feature_access_validation.sql`.
+- **Fichiers modifiés** : `backend/drizzle/schema.ts`, `backend/functions/api/services/ai/assistantBroker.ts`, `backend/functions/api/trpc/router.ts`, `shared/schemas/ai.schema.ts`, `shared/api/trpc.ts`, `scripts/check-repo-state.mjs`, ce fichier et `docs/ASSISTANT_IA/00-plan-general.md`.
+- **Décisions prises en cours de route** : défaut global fermé (`allowed=false`) ; sans `activeAgencyId`, les simples appartenances de `agencyIds` ne déclenchent aucun grant agence ; `FORCE ROW LEVEL SECURITY` activé volontairement ; aucune lecture directe pour `anon`/`authenticated`, résolution minimale via fonction privée `SECURITY DEFINER` liée à `auth.uid()` ; suppression d'une agence ou d'un membre en cascade sur son grant, auteurs d'audit en `SET NULL` ; unicités partielles distinctes global/agence/utilisateur.
+- **Écarts vs spécification (et pourquoi)** : la fonction de résolution a nécessité une migration corrective additive après qu'un probe transactionnel a détecté l'appel PostgreSQL invalide `pg_catalog.trim(text)` ; l'historique appliqué n'a pas été réécrit. La gate `pnpm run qa:back` n'est pas verte à ce stade à cause d'une erreur TypeScript préexistante et concurrente hors Phase 4 dans `dataInteractions_test.ts` (`amount` optionnel dans la factory pour un champ requis). Ce fichier, déjà modifié avant la phase, n'a pas été touché.
+- **Points ouverts / à surveiller pour les phases suivantes** : laisser la Phase 4 en cours et relancer `pnpm run qa:back` après correction du chantier interactions concurrent. L'Edge Function `api` a été déployée explicitement à la demande du PO le 2026-07-11 en version 117 (`verify_jwt=false`, auth applicative conservée).
+- **QA** : tests ciblés accès/broker 6/6 verts ; `repo:check`, lint backend et typecheck de l'API verts ; suite backend d'exécution avec `--no-check` 275 réussis, 0 échec, 8 intégrations conditionnelles ignorées ; probes Supabase verts pour RLS/`FORCE`, ACL, seed fermé, priorité utilisateur et absence de fallback vers `agencyIds` sans agence active. Après déploiement, Edge Function `api` version 117 `ACTIVE`, entrypoint/import map conformes, CORS `OPTIONS` 200 et routes `ai.access.list`, `ai.usage.byMember`, `ai.assistant.status` présentes (401 `AUTH_REQUIRED` sans token, aucun 404). `pnpm run qa:back` reste bloquée par le pré-check TypeScript concurrent décrit ci-dessus ; `pnpm run qa` a par ailleurs 677/677 tests frontend verts mais bloque sur le seuil de couverture concurrent de `useDashboardStatusHelpers.ts` (13,33 % de branches pour 30 % requis).
+
+### 2026-07-12 — Statut réconcilié et gate finale verte
+- **Réconciliation** : le fixture interactions et la couverture Dashboard qui bloquaient les gates ont été remis en cohérence. La Phase 4 est désormais terminée et déployée ; ses procédures d'accès et de consommation sont incluses dans l'Edge Function `api` version 118, qui supersède la version 117 mentionnée dans l'historique ci-dessus.
+- **QA actuelle** : `pnpm run qa` vert — 689 tests frontend, 276 tests backend et 9 tests d'intégration réussis ; couverture, build, lint, typechecks, conformité erreurs, hygiène repo et parité migrations verts.

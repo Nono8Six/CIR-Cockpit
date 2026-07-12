@@ -21,8 +21,23 @@ import {
   tierV1SearchInputSchema
 } from '../../../../shared/schemas/interaction/tier-v1.schema.ts';
 import { configIntegrityInteractionUpdateInputSchema } from '../../../../shared/schemas/system/config.schema.ts';
+import {
+  aiSettingsCreateQuotaInputSchema,
+  aiSettingsDeleteModelInputSchema,
+  aiSettingsDeleteQuotaInputSchema
+} from '../../../../shared/schemas/ai.schema.ts';
 
 const OFFICIAL_RESYNC_SOURCE = 'api-recherche-entreprises';
+
+Deno.test('AI admin destructive and quota creation contracts are strict', () => {
+  const id = '11111111-1111-4111-8111-111111111111';
+  assertEquals(aiSettingsDeleteModelInputSchema.safeParse({ id }).success, true);
+  assertEquals(aiSettingsDeleteModelInputSchema.safeParse({ id, provider: 'openrouter' }).success, false);
+  assertEquals(aiSettingsDeleteQuotaInputSchema.safeParse({ id }).success, true);
+  const quota = { scope: 'user', user_id: id, feature: 'assistant.referentiels', enabled: true, daily_call_limit: 5, monthly_call_limit: null, daily_token_limit: null, monthly_token_limit: null, daily_cost_limit: null, monthly_cost_limit: 2, currency: 'USD' };
+  assertEquals(aiSettingsCreateQuotaInputSchema.safeParse(quota).success, true);
+  assertEquals(aiSettingsCreateQuotaInputSchema.safeParse({ ...quota, user_id: undefined }).success, false);
+});
 
 Deno.test('config integrity targeted correction contract is strict', () => {
   const payload = {
@@ -366,6 +381,27 @@ Deno.test('dataInteractionsPayloadSchema supports save, add_timeline_event, agen
     }
   };
 
+  const stageTimelinePayload = {
+    action: 'add_timeline_event',
+    interaction_id: '22222222-2222-4222-8222-222222222222',
+    expected_updated_at: '2026-03-01T00:00:00.000Z',
+    event: {
+      id: 'evt-2',
+      date: '2026-03-01T00:00:00.000Z',
+      type: 'stage_change',
+      content: 'Étape : À qualifier ➔ Devis envoyé'
+    },
+    updates: {
+      stage: 'quote_sent',
+      stage_changed_at: '2026-03-01T00:00:00.000Z',
+      amount: 12400.5,
+      quote_sent_at: '2026-03-01T00:00:00.000Z',
+      lost_reason: null,
+      reminder_at: '2026-03-08T09:00',
+      last_action_at: '2026-03-01T00:00:00.000Z'
+    }
+  };
+
   const listPayload = {
     action: 'list_by_entity',
     entity_id: '44444444-4444-4444-8444-444444444444',
@@ -417,6 +453,21 @@ Deno.test('dataInteractionsPayloadSchema supports save, add_timeline_event, agen
 
   assertEquals(dataInteractionsPayloadSchema.safeParse(savePayload).success, true);
   assertEquals(dataInteractionsPayloadSchema.safeParse(addTimelinePayload).success, true);
+  assertEquals(dataInteractionsPayloadSchema.safeParse(stageTimelinePayload).success, true);
+  assertEquals(
+    dataInteractionsPayloadSchema.safeParse({
+      ...stageTimelinePayload,
+      updates: { ...stageTimelinePayload.updates, stage: 'inconnu' }
+    }).success,
+    false
+  );
+  assertEquals(
+    dataInteractionsPayloadSchema.safeParse({
+      ...stageTimelinePayload,
+      updates: { ...stageTimelinePayload.updates, amount: -1 }
+    }).success,
+    false
+  );
   assertEquals(dataInteractionsPayloadSchema.safeParse(listByAgencyPayload).success, true);
   assertEquals(dataInteractionsPayloadSchema.safeParse(knownCompaniesPayload).success, true);
   assertEquals(dataInteractionsPayloadSchema.safeParse(draftGetPayload).success, true);

@@ -15,21 +15,24 @@ tarifaires (`/remises/referentiels`). Questions cibles validées par le PO :
 - « Tu peux me dire les changements par rapport au dernier fichier tarif ? »
 - « Aide-moi à corriger les anomalies sur le fichier Segment… »
 
-Un second horizon (hors périmètre de ce plan, voir §9) : un assistant généraliste sur le CRM
-(« Quels clients font le plus de CA en automatisme ? », ciblage clients via rapports de visite).
+Depuis la décision PO du 2026-07-10, l'assistant doit aussi pouvoir traiter une question
+imprévue sur toute donnée métier autorisée, y compris le CRM, en concevant une requête SQL
+de lecture soumise aux permissions et RLS de l'utilisateur.
 
 ## 2. Principe d'architecture retenu
 
-**Tool calling borné, pas de RAG.** Les questions cibles sont des questions d'agrégation sur
+**Tool calling borné avec SQL read-only, pas de RAG.** Les questions cibles sont des questions d'agrégation sur
 données structurées (50 000 lignes par fichier tarif). Un RAG (embeddings + top-k retrieval)
 ne peut pas garantir une réponse exhaustive sur ce type de question et coûterait cher à
 maintenir. À l'inverse, le moteur de diff du repo calcule déjà des agrégats exacts.
 
-Le LLM ne voit jamais les données brutes ni la base : il appelle un petit registre d'outils
-en lecture seule, wrappers directs des services backend existants, qui retournent des
-agrégats/pages plafonnés. Anti-patterns explicitement interdits :
+Le LLM n'obtient jamais de connexion PostgreSQL privilégiée. Il appelle des outils métier
+bornés ou conçoit une requête SQL exécutée par le backend dans une transaction `READ ONLY`,
+après bascule vers le rôle `authenticated` et injection de l'identité JWT. Les permissions et
+RLS de l'utilisateur s'appliquent, avec timeout et résultats plafonnés. Anti-patterns interdits :
 
-- pas de SQL généré par le LLM ;
+- pas de SQL exécuté avec le rôle `postgres`/`service_role`, sans RLS ou hors transaction read-only ;
+- pas d'accès aux schémas système/sensibles ni à `ai_provider_configs` ;
 - pas de clé API côté navigateur (les clés restent chiffrées en DB, déchiffrées serveur) ;
 - pas d'indexation vectorielle des lignes tarifaires.
 
@@ -122,6 +125,7 @@ onglet prompts absent. La refonte est la phase 5 ; rien n'est jeté côté donn�
 | D13 | Chaque outil possède un schéma Zod strict d'entrée **et de sortie**, une version de contrat et un plafond de taille sérialisée | Le LLM ne doit jamais recevoir un résultat backend non validé, non borné ou dont la forme change silencieusement |
 | D14 | Une suite d'évaluations métier versionnée bloque les changements de modèle, prompt ou outil qui dégradent exactitude, isolation, citations, coût ou latence | Les tests unitaires seuls ne détectent pas les régressions probabilistes d'un assistant |
 | D15 | Phase finale : skill repo `cir-cockpit-ai-development`, implicitement invocable et obligatoire pour toute nouvelle feature IA | Toute conversation de développement IA récupère l'architecture, les contrats, les garde-fous et la procédure d'extension réellement livrés, sans dépendre de ce plan historique |
+| D16 | Questions générales : le LLM inspecte le catalogue autorisé, décrit les tables utiles, conçoit puis exécute une requête SQL unique sous `authenticated`, RLS et transaction `READ ONLY` | Répondre aux questions imprévues sans multiplier les outils ad hoc, sans exposer les privilèges backend ; timeout 5 s, 50 lignes, 32 768 octets, schémas sensibles bloqués et SQL audité |
 
 ## 5. Architecture cible
 
@@ -139,6 +143,7 @@ Edge Function api (Hono + tRPC) — ai.assistant.ask (authedProcedure)
             outils lecture seule → services existants :
             list_imports · get_import_details · get_diff_summary · aggregate_diffs (phase 2)
             list_diffs · get_anomalies_summary · list_anomalies · get_health_report
+            get_database_catalog · describe_database_tables · execute_readonly_sql
        5. recordUsage (tokens, coût, latence, tool_trace)     [existant à étendre metadata]
        ▼
 OpenRouter (modèle configuré dans ai_model_configs, tool calling)
@@ -150,7 +155,7 @@ OpenRouter (modèle configuré dans ai_model_configs, tool calling)
 | --- | --- | --- | --- | --- |
 | 1 | [phase-1-socle-assistant-backend.md](phase-1-socle-assistant-backend.md) | Broker + boucle tool calling + 3 premiers outils + procédures `ai.assistant.ask/status` + prompt seedé + choix du modèle + contrats erreurs/OpenRouter | Backend + shared | `pnpm run qa:back` |
 | 2 | [phase-2-outils-referentiels.md](phase-2-outils-referentiels.md) | Agrégat `diffs.aggregate` (dimensions métier explicites, direction normalisée, alias marques) + registre d'outils complet + qualité des réponses | Backend + shared | `pnpm run qa:back` |
-| 3 | [phase-3-chat-referentiels-ui.md](phase-3-chat-referentiels-ui.md) | Dialog chat sur `/remises/referentiels`, contexte de page, états d'erreur/quota | Frontend | `pnpm run qa:front` |
+| 3 | [phase-3-chat-referentiels-ui.md](phase-3-chat-referentiels-ui.md) | Dialog chat sur `/remises/referentiels`, contexte de page, états d'erreur/quota ; extension corrective SQL généraliste après validation PO | Frontend + backend SQL read-only | `pnpm run qa:fast` |
 | 4 | [phase-4-acces-membres.md](phase-4-acces-membres.md) | Table `ai_feature_grants`, enforcement broker, procédures admin accès + conso par membre | Backend + shared + migration | `pnpm run qa:back` |
 | 5 | [phase-5-refonte-admin-ia.md](phase-5-refonte-admin-ia.md) | Refonte complète Admin > IA : vue d'ensemble, modèles, accès membres, prompts, usage | Frontend + backend minimal si contrat manquant | `pnpm run qa:front` ; checks back ciblés/`qa:fast` si backend |
 | 6 | [phase-6-durcissement-livraison.md](phase-6-durcissement-livraison.md) | Rate limit, concurrence quotas, évaluations métier/charge, rétention/purge, alertes budget, docs QA, `pnpm run qa` complet, déploiement | Transverse | `pnpm run qa` + runbook |
@@ -193,20 +198,18 @@ dans une **nouvelle conversation sans contexte**. Le prompt impose à l'agent de
 
 | Phase | Statut | Date | Note |
 | --- | --- | --- | --- |
-| 1 — Socle assistant backend | À FAIRE | — | — |
-| 2 — Outils référentiels complets | À FAIRE | — | — |
-| 3 — Chat UI référentiels | À FAIRE | — | — |
-| 4 — Accès membres | À FAIRE | — | — |
-| 5 — Refonte Admin > IA | À FAIRE | — | — |
+| 1 — Socle assistant backend | TERMINÉE | 2026-07-10 | Migration appliquée et Edge Function `api` déployée ; QA backend verte, comparatif réel à deux modèles encore à faire. |
+| 2 — Outils référentiels complets | TERMINÉE ET DÉPLOYÉE | 2026-07-12 | Implémentation et vérification OpenRouter terminées ; gate complet `pnpm run qa` vert. Contrats inclus dans l'Edge Function `api` v118. |
+| 3 — Chat UI référentiels | TERMINÉE ET DÉPLOYÉE | 2026-07-10 | Dialog centré et `qa:front` verte ; prompt SQL v4 publié et Edge Function `api` version 116 active. Probes `status`/`ask`, auth et CORS vertes. |
+| 4 — Accès membres | TERMINÉE ET DÉPLOYÉE | 2026-07-12 | Migration et procédures actives dans l'Edge Function `api` v118 ; probes runtime et gate complet `pnpm run qa` verts. |
+| 5 — Refonte Admin > IA | TERMINÉE, BACKEND DÉPLOYÉ | 2026-07-12 | 6 onglets livrés ; contrats CRUD actifs dans l'Edge Function `api` v118. Frontend local, aucun commit. |
 | 6 — Durcissement & livraison | À FAIRE | — | — |
 | 7 — Skill développement IA | À FAIRE | — | — |
 
 ## 9. Hors périmètre de ce plan (v2+)
 
-- Assistant généraliste CRM (CA par client, ciblage commercial via rapports de visite) :
-  nécessitera des outils analytiques dédiés + éventuellement du retrieval (pgvector + FTS)
-  sur les notes d'interaction **uniquement** — jamais sur les données tarifaires. À planifier
-  quand le module CRM/CA sera assez riche (voir cahier des charges IA-8).
+- Retrieval sémantique sur les notes d'interaction : à évaluer uniquement si les requêtes SQL
+  structurées et la recherche textuelle PostgreSQL ne couvrent pas le besoin.
 - Outils d'écriture (corriger une anomalie via l'assistant) : envisageable après la v1,
   avec confirmation utilisateur obligatoire dans l'UI avant toute mutation.
 - Persistance des conversations en DB, partage de conversations.

@@ -249,6 +249,11 @@ vi.mock('@/services/errors/handleUiError', () => ({
   handleUiError: vi.fn()
 }));
 
+vi.mock('@/services/ai', () => ({
+  askAiAssistant: vi.fn(),
+  getAiAssistantStatus: vi.fn(async () => ({ enabled: true, model_id: 'mistralai/mistral-small', reason: null }))
+}));
+
 vi.mock('@/services/errors/notifySuccess', () => ({
   notifySuccess: vi.fn()
 }));

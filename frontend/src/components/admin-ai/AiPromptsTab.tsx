@@ -1,0 +1,21 @@
+import { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Button } from '@/components/ui/inputs/basic/Button';
+import { Textarea } from '@/components/ui/inputs/basic/Textarea';
+import { listAiPrompts, publishAiPrompt, restoreAiPrompt, saveAiPromptDraft } from '@/services/ai';
+import { handleUiError } from '@/services/errors/handleUiError';
+import { aiPromptsKey } from '@/services/query/queryKeys';
+import { featureLabels, formatDate, SectionState } from './aiAdminUi';
+
+export const AiPromptsTab = () => {
+  const client = useQueryClient(); const query = useQuery({ queryKey: aiPromptsKey(), queryFn: () => listAiPrompts() });
+  const [selectedId, setSelectedId] = useState(''); const selected = query.data?.prompts.find((p) => p.id === selectedId) ?? query.data?.prompts[0];
+  const [draftBodies, setDraftBodies] = useState<Record<string, string>>({}); const [note, setNote] = useState('');
+  const body = selected ? (draftBodies[selected.id] ?? selected.draft_version?.body ?? selected.published_version?.body ?? '') : '';
+  const refresh = () => client.invalidateQueries({ queryKey: aiPromptsKey() });
+  const draft = useMutation({ mutationFn: () => saveAiPromptDraft({ template_id: selected!.id, body, change_note: note.trim() || null }), onSuccess: refresh, onError: (e) => handleUiError(e, 'Impossible d’enregistrer le brouillon.') });
+  const publish = useMutation({ mutationFn: () => publishAiPrompt({ version_id: selected!.draft_version!.id }), onSuccess: refresh, onError: (e) => handleUiError(e, 'Impossible de publier le prompt.') });
+  const restore = useMutation({ mutationFn: (versionId: string) => restoreAiPrompt({ version_id: versionId }), onSuccess: refresh, onError: (e) => handleUiError(e, 'Impossible de restaurer cette version.') });
+  if (query.isPending) return <SectionState>Chargement des prompts…</SectionState>; if (query.isError) return <SectionState>Les prompts n’ont pas pu être chargés.</SectionState>; if (!selected) return <SectionState>Aucun template de prompt n’est configuré.</SectionState>;
+  return <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_20rem]"><section className="space-y-4"><label className="grid gap-1 text-xs font-medium">Template<select className="h-9 rounded-md border border-input bg-background px-3 text-xs" value={selected.id} onChange={(e) => { setSelectedId(e.target.value); setNote(''); }}>{query.data.prompts.map((p) => <option key={p.id} value={p.id}>{featureLabels[p.feature]} · {p.label}</option>)}</select></label><div><h3 className="text-sm font-semibold">{selected.label}</h3><p className="text-xs text-muted-foreground">{selected.description ?? 'Prompt système versionné.'}</p></div><label className="grid gap-1 text-xs font-medium">Corps du brouillon<Textarea name="prompt_body" className="min-h-72 font-mono text-xs" value={body} onChange={(e) => setDraftBodies((current) => ({ ...current, [selected.id]: e.target.value }))} /></label><label className="grid gap-1 text-xs font-medium">Note de changement<input className="h-9 rounded-md border border-input bg-background px-3 text-xs" name="change_note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Décrire la modification…" /></label><div className="flex gap-2"><Button size="sm" disabled={!body.trim() || draft.isPending} onClick={() => draft.mutate()}>Enregistrer le brouillon</Button><Button size="sm" variant="outline" disabled={!selected.draft_version || publish.isPending} onClick={() => publish.mutate()}>Publier la version</Button></div></section><aside><h3 className="mb-2 text-xs font-semibold">Historique</h3><div className="divide-y divide-border rounded-md border border-border">{selected.versions.map((version) => <div key={version.id} className="p-3"><div className="flex items-center justify-between gap-2"><p className="text-xs font-semibold">Version {version.version} · {version.status}</p>{version.status !== 'published' ? <Button size="sm" variant="ghost" onClick={() => restore.mutate(version.id)}>Restaurer</Button> : null}</div><p className="mt-1 text-[11px] text-muted-foreground">{formatDate(version.created_at)}</p><p className="mt-1 line-clamp-2 text-[11px] text-muted-foreground">{version.change_note ?? 'Sans note de changement'}</p></div>)}</div></aside></div>;
+};

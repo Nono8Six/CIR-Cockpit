@@ -104,6 +104,11 @@ const REMOTE_TO_LOCAL_MODERN_MIGRATION_COMPATIBILITY = {
   20260628085901n: "20260628093000_ai_openrouter_provider.sql",
   20260628092400n: "20260628102000_ai_openrouter_only.sql",
   20260628131636n: "20260628133000_ai_deepseek_only_model.sql",
+  20260710143338n: "20260710143000_ai_assistant_references_prompt_v2.sql",
+  20260710144603n: "20260710150000_ai_assistant_references_prompt_v3.sql",
+  20260710194916n: "20260710170000_ai_assistant_sql_prompt_v4.sql",
+  20260710200922n: "20260710220413_ai_feature_grants.sql",
+  20260710201144n: "20260710221105_fix_ai_feature_access_validation.sql",
 };
 
 function readJson(relativePath) {

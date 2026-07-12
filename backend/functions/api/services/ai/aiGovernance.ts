@@ -1,4 +1,5 @@
-import { sql, and, eq, desc } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
+import { z } from 'zod/v4';
 
 import {
   ai_model_configs,
@@ -11,52 +12,58 @@ import {
   pricing_reference_imports
 } from '../../../../drizzle/schema.ts';
 import {
+  type AiDiagnosisResult,
   aiDiagnosisResultSchema,
+  type AiFeature,
   aiModelConfigSchema,
+  type AiPromptsListInput,
+  type AiPromptsPublishInput,
+  type AiPromptsRestoreInput,
+  type AiPromptsSaveDraftInput,
   aiPromptVersionSchema,
   aiPromptWithVersionsSchema,
+  type AiProvider,
+  type AiProviderConfig,
   aiProviderConfigSchema,
   aiQuotaPolicySchema,
   aiSettingsGetResponseSchema,
+  type AiSettingsCreateQuotaInput,
+  aiSettingsCreateQuotaResponseSchema,
+  type AiSettingsDeleteModelInput,
+  aiSettingsDeleteModelResponseSchema,
+  type AiSettingsDeleteQuotaInput,
+  aiSettingsDeleteQuotaResponseSchema,
+  type AiSettingsSaveModelInput,
   aiSettingsSaveModelResponseSchema,
+  type AiSettingsSaveProviderInput,
   aiSettingsSaveProviderResponseSchema,
+  type AiSettingsSaveQuotaInput,
   aiSettingsSaveQuotaResponseSchema,
+  type AiSettingsTestProviderInput,
   aiSettingsTestProviderResponseSchema,
   aiUsageEventSchema,
+  type AiUsageListInput,
   aiUsageListResponseSchema,
-  aiUsageSummaryResponseSchema,
-  type AiDiagnosisResult,
-  type AiFeature,
-  type AiProvider,
-  type AiProviderConfig,
-  type AiSettingsSaveModelInput,
-  type AiSettingsSaveProviderInput,
-  type AiSettingsSaveQuotaInput,
-  type AiSettingsTestProviderInput,
-  type AiPromptsListInput,
-  type AiPromptsSaveDraftInput,
-  type AiPromptsPublishInput,
-  type AiPromptsRestoreInput,
   type AiUsageSummaryInput,
-  type AiUsageListInput
+  aiUsageSummaryResponseSchema
 } from '../../../../../shared/schemas/ai.schema.ts';
 import {
-  pricingReferenceDiagnoseResponseSchema,
-  pricingReferenceHealthReportSchema,
   type PricingReferenceDiagnoseInput,
   type PricingReferenceDiagnoseResponse,
+  pricingReferenceDiagnoseResponseSchema,
   type PricingReferenceFileKind,
-  type PricingReferenceHealthReport
+  type PricingReferenceHealthReport,
+  pricingReferenceHealthReportSchema
 } from '../../../../../shared/schemas/pricing/references.schema.ts';
 import { httpError } from '../../middleware/errorHandler.ts';
 import type { AuthContext, DbClient } from '../../types.ts';
 
 const CACHE_TTL_MS = 1000 * 60 * 60 * 24;
 
-type ProviderRow = typeof ai_provider_configs.$inferSelect;
-type ModelRow = typeof ai_model_configs.$inferSelect;
+export type ProviderRow = typeof ai_provider_configs.$inferSelect;
+export type ModelRow = typeof ai_model_configs.$inferSelect;
 type PromptTemplateRow = typeof ai_prompt_templates.$inferSelect;
-type PromptVersionRow = typeof ai_prompt_versions.$inferSelect;
+export type PromptVersionRow = typeof ai_prompt_versions.$inferSelect;
 type QuotaUsage = {
   daily_calls: number;
   monthly_calls: number;
@@ -66,7 +73,7 @@ type QuotaUsage = {
   monthly_cost: number;
 };
 
-type ProviderUsage = {
+export type ProviderUsage = {
   text: string;
   inputTokens: number;
   outputTokens: number;
@@ -74,6 +81,71 @@ type ProviderUsage = {
   reasoningTokens: number;
   providerCostAmount?: number | null;
 };
+
+export type OpenRouterToolCall = {
+  id: string;
+  type: 'function';
+  function: { name: string; arguments: string };
+};
+export type OpenRouterMessage = {
+  role: 'system' | 'user' | 'assistant' | 'tool';
+  content: string | null;
+  tool_calls?: OpenRouterToolCall[];
+  tool_call_id?: string;
+  name?: string;
+};
+export type OpenRouterToolDefinition = {
+  type: 'function';
+  function: {
+    name: string;
+    description: string;
+    parameters: Record<string, unknown>;
+  };
+};
+export type OpenRouterToolResponse = ProviderUsage & {
+  generationId: string;
+  modelId: string;
+  provider: string | null;
+  finishReason: 'tool_calls' | 'stop' | 'length' | 'content_filter' | 'error';
+  nativeFinishReason: string | null;
+  content: string | null;
+  toolCalls: OpenRouterToolCall[];
+};
+
+const openRouterFinishReasonSchema = z.enum(['tool_calls', 'stop', 'length', 'content_filter', 'error']);
+const openRouterToolCallSchema = z.strictObject({
+  id: z.string().trim().min(1),
+  type: z.literal('function'),
+  function: z.strictObject({
+    name: z.string().trim().min(1),
+    arguments: z.string()
+  })
+});
+const openRouterUsefulResponseSchema = z.strictObject({
+  id: z.string().trim().min(1),
+  model: z.string().trim().min(1),
+  provider: z.string().nullable(),
+  choices: z
+    .array(
+      z.strictObject({
+        finish_reason: openRouterFinishReasonSchema,
+        native_finish_reason: z.string().nullable(),
+        message: z.strictObject({
+          role: z.literal('assistant'),
+          content: z.string().nullable(),
+          tool_calls: z.array(openRouterToolCallSchema)
+        })
+      })
+    )
+    .length(1),
+  usage: z.strictObject({
+    prompt_tokens: z.number().int().nonnegative(),
+    completion_tokens: z.number().int().nonnegative(),
+    cached_tokens: z.number().int().nonnegative(),
+    reasoning_tokens: z.number().int().nonnegative(),
+    cost: z.number().nonnegative().nullable()
+  })
+});
 
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
@@ -86,14 +158,12 @@ const base64FromBytes = (bytes: Uint8Array): string => {
   return btoa(binary);
 };
 
-const bytesFromBase64 = (value: string): Uint8Array =>
-  Uint8Array.from(atob(value), (char) => char.charCodeAt(0));
+const bytesFromBase64 = (value: string): Uint8Array => Uint8Array.from(atob(value), (char) => char.charCodeAt(0));
 
 const toArrayBuffer = (bytes: Uint8Array): ArrayBuffer =>
   bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
 
-const toHex = (bytes: Uint8Array): string =>
-  [...bytes].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+const toHex = (bytes: Uint8Array): string => [...bytes].map((byte) => byte.toString(16).padStart(2, '0')).join('');
 
 const hashText = async (value: string): Promise<string> =>
   toHex(new Uint8Array(await crypto.subtle.digest('SHA-256', textEncoder.encode(value))));
@@ -115,11 +185,13 @@ const getEncryptionKey = async (): Promise<CryptoKey> => {
 const encryptSecret = async (value: string): Promise<string> => {
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const key = await getEncryptionKey();
-  const ciphertext = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, textEncoder.encode(value)));
+  const ciphertext = new Uint8Array(
+    await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, textEncoder.encode(value))
+  );
   return `${base64FromBytes(iv)}.${base64FromBytes(ciphertext)}`;
 };
 
-const decryptSecret = async (encrypted: string): Promise<string> => {
+export const decryptSecret = async (encrypted: string): Promise<string> => {
   const [ivText, ciphertextText] = encrypted.split('.');
   if (!ivText || !ciphertextText) {
     throw httpError(500, 'AI_CONFIG_MISSING', 'Cle IA chiffree invalide.');
@@ -142,7 +214,14 @@ const toNumberOrNull = (value: string | number | null | undefined): number | nul
 };
 
 const parseOrThrow = <T>(
-  schema: { safeParse: (value: unknown) => { success: true; data: T } | { success: false; error: { issues: Array<{ message: string }> } } },
+  schema: {
+    safeParse: (value: unknown) =>
+      | { success: true; data: T }
+      | {
+          success: false;
+          error: { issues: Array<{ message: string }> };
+        };
+  },
   value: unknown,
   message: string
 ): T => {
@@ -227,9 +306,7 @@ const toPromptVersion = (row: PromptVersionRow) =>
   parseOrThrow(aiPromptVersionSchema, row, 'Version de prompt IA invalide.');
 
 const diagnoseFeatureForFileType = (fileType: PricingReferenceFileKind): AiFeature =>
-  fileType === 'classification'
-    ? 'pricing.references.diagnose.classification'
-    : 'pricing.references.diagnose.segments';
+  fileType === 'classification' ? 'pricing.references.diagnose.classification' : 'pricing.references.diagnose.segments';
 
 const getPromptRows = async (db: DbClient, feature?: AiFeature) => {
   const templates = await db
@@ -237,12 +314,13 @@ const getPromptRows = async (db: DbClient, feature?: AiFeature) => {
     .from(ai_prompt_templates)
     .where(feature ? eq(ai_prompt_templates.feature, feature) : undefined)
     .orderBy(ai_prompt_templates.feature);
-  const versions = templates.length === 0
-    ? []
-    : await db
-      .select()
-      .from(ai_prompt_versions)
-      .orderBy(ai_prompt_versions.template_id, desc(ai_prompt_versions.version));
+  const versions =
+    templates.length === 0
+      ? []
+      : await db
+          .select()
+          .from(ai_prompt_versions)
+          .orderBy(ai_prompt_versions.template_id, desc(ai_prompt_versions.version));
 
   return templates.map((template) => {
     const templateVersions = versions.filter((version) => version.template_id === template.id).map(toPromptVersion);
@@ -272,8 +350,16 @@ export const getAiSettings = async (
   _input: Record<string, never>
 ) => {
   const [providers, models, quotas] = await Promise.all([
-    db.select().from(ai_provider_configs).where(eq(ai_provider_configs.provider, 'openrouter')).orderBy(ai_provider_configs.provider),
-    db.select().from(ai_model_configs).where(eq(ai_model_configs.provider, 'openrouter')).orderBy(ai_model_configs.provider, ai_model_configs.label),
+    db
+      .select()
+      .from(ai_provider_configs)
+      .where(eq(ai_provider_configs.provider, 'openrouter'))
+      .orderBy(ai_provider_configs.provider),
+    db
+      .select()
+      .from(ai_model_configs)
+      .where(eq(ai_model_configs.provider, 'openrouter'))
+      .orderBy(ai_model_configs.provider, ai_model_configs.label),
     db.select().from(ai_quota_policies).orderBy(ai_quota_policies.scope, ai_quota_policies.feature)
   ]);
 
@@ -298,9 +384,9 @@ export const saveAiProvider = async (
 ) => {
   const existing = await getProviderRow(db, input.provider);
   const key = input.api_key?.trim();
-  const encrypted_api_key = key ? await encryptSecret(key) : existing?.encrypted_api_key ?? null;
-  const api_key_hash = key ? await hashText(key) : existing?.api_key_hash ?? null;
-  const api_key_last4 = key ? key.slice(-4) : existing?.api_key_last4 ?? null;
+  const encrypted_api_key = key ? await encryptSecret(key) : (existing?.encrypted_api_key ?? null);
+  const api_key_hash = key ? await hashText(key) : (existing?.api_key_hash ?? null);
+  const api_key_last4 = key ? key.slice(-4) : (existing?.api_key_last4 ?? null);
   const [row] = await db
     .insert(ai_provider_configs)
     .values({
@@ -353,7 +439,8 @@ export const saveAiModel = async (
   let saved: ModelRow | undefined;
   await db.transaction(async (tx) => {
     if (input.is_default) {
-      await tx.update(ai_model_configs)
+      await tx
+        .update(ai_model_configs)
         .set({
           is_default: false,
           updated_by: callerId,
@@ -362,7 +449,8 @@ export const saveAiModel = async (
         .where(eq(ai_model_configs.provider, input.provider));
     }
 
-    const [existing] = await tx.select()
+    const [existing] = await tx
+      .select()
       .from(ai_model_configs)
       .where(and(eq(ai_model_configs.provider, input.provider), eq(ai_model_configs.model_id, input.model_id)))
       .limit(1);
@@ -377,8 +465,10 @@ export const saveAiModel = async (
       currency: input.currency,
       input_price_per_million: input.input_price_per_million === null ? null : String(input.input_price_per_million),
       output_price_per_million: input.output_price_per_million === null ? null : String(input.output_price_per_million),
-      cached_input_price_per_million: input.cached_input_price_per_million === null ? null : String(input.cached_input_price_per_million),
-      reasoning_price_per_million: input.reasoning_price_per_million === null ? null : String(input.reasoning_price_per_million),
+      cached_input_price_per_million:
+        input.cached_input_price_per_million === null ? null : String(input.cached_input_price_per_million),
+      reasoning_price_per_million:
+        input.reasoning_price_per_million === null ? null : String(input.reasoning_price_per_million),
       price_effective_at: input.price_effective_at ?? null,
       max_output_tokens: input.max_output_tokens,
       temperature: String(input.temperature),
@@ -387,7 +477,8 @@ export const saveAiModel = async (
     };
 
     if (existing) {
-      const [row] = await tx.update(ai_model_configs)
+      const [row] = await tx
+        .update(ai_model_configs)
         .set(values)
         .where(eq(ai_model_configs.id, existing.id))
         .returning();
@@ -395,7 +486,8 @@ export const saveAiModel = async (
       return;
     }
 
-    const [row] = await tx.insert(ai_model_configs)
+    const [row] = await tx
+      .insert(ai_model_configs)
       .values({
         id: crypto.randomUUID(),
         ...values,
@@ -407,9 +499,34 @@ export const saveAiModel = async (
 
   return parseOrThrow(
     aiSettingsSaveModelResponseSchema,
-    { ok: true, request_id: requestId, model: toModelConfig(saved as ModelRow) },
+    {
+      ok: true,
+      request_id: requestId,
+      model: toModelConfig(saved as ModelRow)
+    },
     'Reponse sauvegarde modele IA invalide.'
   );
+};
+
+export const deleteAiModel = async (db: DbClient, _callerId: string, requestId: string, input: AiSettingsDeleteModelInput) => {
+  const [existing] = await db.select().from(ai_model_configs).where(eq(ai_model_configs.id, input.id)).limit(1);
+  if (!existing) throw httpError(404, 'AI_CONFIG_MISSING', 'Modele IA introuvable.');
+  if (existing.is_default) throw httpError(409, 'AI_CONFIG_MISSING', 'Definissez un autre modele par defaut avant la suppression.');
+  const [deleted] = await db.delete(ai_model_configs).where(eq(ai_model_configs.id, input.id)).returning({ id: ai_model_configs.id });
+  return parseOrThrow(aiSettingsDeleteModelResponseSchema, { ok: true, request_id: requestId, deleted_id: deleted.id }, 'Reponse suppression modele IA invalide.');
+};
+
+export const createAiQuota = async (db: DbClient, callerId: string, requestId: string, input: AiSettingsCreateQuotaInput) => {
+  const [row] = await db.insert(ai_quota_policies).values({
+    id: crypto.randomUUID(), scope: input.scope, agency_id: input.agency_id ?? null,
+    user_id: input.user_id ?? null, feature: input.feature, enabled: input.enabled,
+    daily_call_limit: input.daily_call_limit, monthly_call_limit: input.monthly_call_limit,
+    daily_token_limit: input.daily_token_limit, monthly_token_limit: input.monthly_token_limit,
+    daily_cost_limit: input.daily_cost_limit === null ? null : String(input.daily_cost_limit),
+    monthly_cost_limit: input.monthly_cost_limit === null ? null : String(input.monthly_cost_limit),
+    currency: input.currency, created_by: callerId, updated_by: callerId
+  }).returning();
+  return parseOrThrow(aiSettingsCreateQuotaResponseSchema, { ok: true, request_id: requestId, quota: toQuotaPolicy(row) }, 'Reponse creation quota IA invalide.');
 };
 
 export const saveAiQuota = async (
@@ -446,6 +563,12 @@ export const saveAiQuota = async (
   );
 };
 
+export const deleteAiQuota = async (db: DbClient, _callerId: string, requestId: string, input: AiSettingsDeleteQuotaInput) => {
+  const [deleted] = await db.delete(ai_quota_policies).where(eq(ai_quota_policies.id, input.id)).returning({ id: ai_quota_policies.id });
+  if (!deleted) throw httpError(404, 'AI_CONFIG_MISSING', 'Politique de quota IA introuvable.');
+  return parseOrThrow(aiSettingsDeleteQuotaResponseSchema, { ok: true, request_id: requestId, deleted_id: deleted.id }, 'Reponse suppression quota IA invalide.');
+};
+
 export const testAiProvider = async (
   db: DbClient,
   callerId: string,
@@ -457,7 +580,8 @@ export const testAiProvider = async (
     throw httpError(404, 'AI_CONFIG_MISSING', 'Fournisseur IA introuvable.');
   }
 
-  const key = input.api_key?.trim() || (provider.encrypted_api_key ? await decryptSecret(provider.encrypted_api_key) : '');
+  const key =
+    input.api_key?.trim() || (provider.encrypted_api_key ? await decryptSecret(provider.encrypted_api_key) : '');
   if (!key) {
     throw httpError(400, 'AI_CONFIG_MISSING', 'Enregistrez une cle API avant le test.');
   }
@@ -471,7 +595,8 @@ export const testAiProvider = async (
     message = error instanceof Error ? error.message : 'Test fournisseur impossible.';
   }
 
-  await db.update(ai_provider_configs)
+  await db
+    .update(ai_provider_configs)
     .set({
       last_test_status: status,
       last_test_at: new Date().toISOString(),
@@ -484,17 +609,18 @@ export const testAiProvider = async (
 
   return parseOrThrow(
     aiSettingsTestProviderResponseSchema,
-    { ok: true, request_id: requestId, provider: input.provider, status, message },
+    {
+      ok: true,
+      request_id: requestId,
+      provider: input.provider,
+      status,
+      message
+    },
     'Reponse de test fournisseur IA invalide.'
   );
 };
 
-export const listAiPrompts = async (
-  db: DbClient,
-  _callerId: string,
-  requestId: string,
-  input: AiPromptsListInput
-) => ({
+export const listAiPrompts = async (db: DbClient, _callerId: string, requestId: string, input: AiPromptsListInput) => ({
   ok: true as const,
   request_id: requestId,
   prompts: await getPromptRows(db, input.feature)
@@ -506,8 +632,14 @@ export const saveAiPromptDraft = async (
   requestId: string,
   input: AiPromptsSaveDraftInput
 ) => {
-  const [template] = await db.select().from(ai_prompt_templates).where(eq(ai_prompt_templates.id, input.template_id)).limit(1);
-  if (!template) throw httpError(404, 'AI_CONFIG_MISSING', 'Template de prompt IA introuvable.');
+  const [template] = await db
+    .select()
+    .from(ai_prompt_templates)
+    .where(eq(ai_prompt_templates.id, input.template_id))
+    .limit(1);
+  if (!template) {
+    throw httpError(404, 'AI_CONFIG_MISSING', 'Template de prompt IA introuvable.');
+  }
 
   const [existingDraft] = await db
     .select()
@@ -516,11 +648,16 @@ export const saveAiPromptDraft = async (
     .limit(1);
 
   if (existingDraft) {
-    const [row] = await db.update(ai_prompt_versions)
+    const [row] = await db
+      .update(ai_prompt_versions)
       .set({ body: input.body, change_note: input.change_note ?? null })
       .where(eq(ai_prompt_versions.id, existingDraft.id))
       .returning();
-    return { ok: true as const, request_id: requestId, version: toPromptVersion(row) };
+    return {
+      ok: true as const,
+      request_id: requestId,
+      version: toPromptVersion(row)
+    };
   }
 
   const [{ next_version }] = await db.execute<{ next_version: number }>(sql`
@@ -528,7 +665,8 @@ export const saveAiPromptDraft = async (
     from public.ai_prompt_versions
     where template_id = ${input.template_id}
   `);
-  const [row] = await db.insert(ai_prompt_versions)
+  const [row] = await db
+    .insert(ai_prompt_versions)
     .values({
       template_id: input.template_id,
       version: next_version,
@@ -539,7 +677,11 @@ export const saveAiPromptDraft = async (
     })
     .returning();
 
-  return { ok: true as const, request_id: requestId, version: toPromptVersion(row) };
+  return {
+    ok: true as const,
+    request_id: requestId,
+    version: toPromptVersion(row)
+  };
 };
 
 export const publishAiPrompt = async (
@@ -548,22 +690,38 @@ export const publishAiPrompt = async (
   requestId: string,
   input: AiPromptsPublishInput
 ) => {
-  const [target] = await db.select().from(ai_prompt_versions).where(eq(ai_prompt_versions.id, input.version_id)).limit(1);
-  if (!target) throw httpError(404, 'AI_CONFIG_MISSING', 'Version de prompt IA introuvable.');
+  const [target] = await db
+    .select()
+    .from(ai_prompt_versions)
+    .where(eq(ai_prompt_versions.id, input.version_id))
+    .limit(1);
+  if (!target) {
+    throw httpError(404, 'AI_CONFIG_MISSING', 'Version de prompt IA introuvable.');
+  }
 
   let published: PromptVersionRow | undefined;
   await db.transaction(async (tx) => {
-    await tx.update(ai_prompt_versions)
+    await tx
+      .update(ai_prompt_versions)
       .set({ status: 'archived' })
       .where(and(eq(ai_prompt_versions.template_id, target.template_id), eq(ai_prompt_versions.status, 'published')));
-    const [row] = await tx.update(ai_prompt_versions)
-      .set({ status: 'published', published_by: callerId, published_at: new Date().toISOString() })
+    const [row] = await tx
+      .update(ai_prompt_versions)
+      .set({
+        status: 'published',
+        published_by: callerId,
+        published_at: new Date().toISOString()
+      })
       .where(eq(ai_prompt_versions.id, target.id))
       .returning();
     published = row;
   });
 
-  return { ok: true as const, request_id: requestId, version: toPromptVersion(published as PromptVersionRow) };
+  return {
+    ok: true as const,
+    request_id: requestId,
+    version: toPromptVersion(published as PromptVersionRow)
+  };
 };
 
 export const restoreAiPrompt = async (
@@ -572,14 +730,21 @@ export const restoreAiPrompt = async (
   requestId: string,
   input: AiPromptsRestoreInput
 ) => {
-  const [source] = await db.select().from(ai_prompt_versions).where(eq(ai_prompt_versions.id, input.version_id)).limit(1);
-  if (!source) throw httpError(404, 'AI_CONFIG_MISSING', 'Version de prompt IA introuvable.');
+  const [source] = await db
+    .select()
+    .from(ai_prompt_versions)
+    .where(eq(ai_prompt_versions.id, input.version_id))
+    .limit(1);
+  if (!source) {
+    throw httpError(404, 'AI_CONFIG_MISSING', 'Version de prompt IA introuvable.');
+  }
   const [{ next_version }] = await db.execute<{ next_version: number }>(sql`
     select coalesce(max(version), 0)::int + 1 as next_version
     from public.ai_prompt_versions
     where template_id = ${source.template_id}
   `);
-  const [row] = await db.insert(ai_prompt_versions)
+  const [row] = await db
+    .insert(ai_prompt_versions)
     .values({
       template_id: source.template_id,
       version: next_version,
@@ -590,7 +755,11 @@ export const restoreAiPrompt = async (
     })
     .returning();
 
-  return { ok: true as const, request_id: requestId, version: toPromptVersion(row) };
+  return {
+    ok: true as const,
+    request_id: requestId,
+    version: toPromptVersion(row)
+  };
 };
 
 export const getAiUsageSummary = async (
@@ -713,27 +882,42 @@ export const runPricingReferenceDiagnosis = async (
 ): Promise<PricingReferenceDiagnoseResponse> => {
   const started = performance.now();
   const report = await getHealthReport(db, input.import_id);
-  if (!report) return unavailable('Aucun rapport referentiel analyse n est disponible.');
+  if (!report) {
+    return unavailable('Aucun rapport referentiel analyse n est disponible.');
+  }
 
   const resolved = await resolveModelAndPrompt(db, input);
-  if (!resolved) return unavailable('Aucun fournisseur IA actif avec cle API serveur.');
+  if (!resolved) {
+    return unavailable('Aucun fournisseur IA actif avec cle API serveur.');
+  }
 
   const featureKey = diagnoseFeatureForFileType(input.file_type);
 
   try {
     await enforceAiQuota(db, authContext, featureKey);
   } catch (error) {
-    await recordBlockedUsage(db, requestId, authContext, featureKey, resolved.model, resolved.prompt, error, Math.round(performance.now() - started));
+    await recordBlockedUsage(
+      db,
+      requestId,
+      authContext,
+      featureKey,
+      resolved.model,
+      resolved.prompt,
+      error,
+      Math.round(performance.now() - started)
+    );
     throw error;
   }
   const userPrompt = buildPricingReferenceUserPrompt(input.file_type, report);
-  const inputHash = await hashText(JSON.stringify({
-    file_type: input.file_type,
-    generated_at: report.generated_at,
-    prompt_version_id: resolved.prompt.id,
-    model_config_id: resolved.model.id,
-    userPrompt
-  }));
+  const inputHash = await hashText(
+    JSON.stringify({
+      file_type: input.file_type,
+      generated_at: report.generated_at,
+      prompt_version_id: resolved.prompt.id,
+      model_config_id: resolved.model.id,
+      userPrompt
+    })
+  );
   const cacheKey = await hashText(`${featureKey}:${inputHash}`);
   const cached = await getCachedDiagnosis(db, cacheKey);
   if (cached) {
@@ -754,7 +938,13 @@ export const runPricingReferenceDiagnosis = async (
 
   const apiKey = await decryptSecret(resolved.provider.encrypted_api_key ?? '');
   try {
-    const providerResponse = await callProvider(resolved.provider, resolved.model, resolved.prompt.body, userPrompt, apiKey);
+    const providerResponse = await callProvider(
+      resolved.provider,
+      resolved.model,
+      resolved.prompt.body,
+      userPrompt,
+      apiKey
+    );
     const result = parseProviderResult(providerResponse.text);
     const cost = computeCost(resolved.model, providerResponse);
     await db.insert(ai_response_cache).values({
@@ -785,9 +975,27 @@ export const runPricingReferenceDiagnosis = async (
       status: 'success',
       latencyMs: Math.round(performance.now() - started)
     });
-    return buildDiagnosisResponse(result, providerResponse, resolved.model, { hit: false, key: cacheKey }, cost);
+    return buildDiagnosisResponse(
+      result,
+      providerResponse,
+      resolved.model,
+      {
+        hit: false,
+        key: cacheKey
+      },
+      cost
+    );
   } catch (error) {
-    await recordErrorUsage(db, requestId, authContext, featureKey, resolved.model, resolved.prompt, error, Math.round(performance.now() - started));
+    await recordErrorUsage(
+      db,
+      requestId,
+      authContext,
+      featureKey,
+      resolved.model,
+      resolved.prompt,
+      error,
+      Math.round(performance.now() - started)
+    );
     throw error;
   }
 };
@@ -809,11 +1017,12 @@ const unavailable = (fallbackReason: string): PricingReferenceDiagnoseResponse =
 
 const providerLabel = (provider: AiProvider): string => {
   switch (provider) {
-    case 'openrouter': return 'OpenRouter';
+    case 'openrouter':
+      return 'OpenRouter';
   }
 };
 
-const getProviderRow = async (db: DbClient, provider: AiProvider): Promise<ProviderRow | null> => {
+export const getProviderRow = async (db: DbClient, provider: AiProvider): Promise<ProviderRow | null> => {
   const [row] = await db.select().from(ai_provider_configs).where(eq(ai_provider_configs.provider, provider)).limit(1);
   return row ?? null;
 };
@@ -823,25 +1032,27 @@ const getHealthReport = async (
   importId: string | undefined
 ): Promise<PricingReferenceHealthReport | null> => {
   const rows = importId
-    ? await db
-      .select()
-      .from(pricing_reference_imports)
-      .where(eq(pricing_reference_imports.id, importId))
-      .limit(1)
+    ? await db.select().from(pricing_reference_imports).where(eq(pricing_reference_imports.id, importId)).limit(1)
     : await db
-      .select()
-      .from(pricing_reference_imports)
-      .where(eq(pricing_reference_imports.status, 'analyse_ok'))
-      .orderBy(desc(pricing_reference_imports.analysis_completed_at))
-      .limit(1);
+        .select()
+        .from(pricing_reference_imports)
+        .where(eq(pricing_reference_imports.status, 'analyse_ok'))
+        .orderBy(desc(pricing_reference_imports.analysis_completed_at))
+        .limit(1);
   const report = rows[0]?.health_report ?? null;
   if (!report) return null;
   return parseOrThrow(pricingReferenceHealthReportSchema, report, 'Rapport referentiel invalide.');
 };
 
-const resolveModelAndPrompt = async (db: DbClient, input: PricingReferenceDiagnoseInput) => {
-  const models = input.model_config_id
-    ? await db.select().from(ai_model_configs).where(eq(ai_model_configs.id, input.model_config_id)).limit(1)
+export const resolveModelAndPromptForFeature = async (
+  db: DbClient,
+  featureKey: AiFeature,
+  modelConfigId?: string,
+  promptVersionId?: string,
+  requirePrompt = false
+) => {
+  const models = modelConfigId
+    ? await db.select().from(ai_model_configs).where(eq(ai_model_configs.id, modelConfigId)).limit(1)
     : await db.execute<ModelRow>(sql`
       select m.*
       from public.ai_model_configs m
@@ -863,10 +1074,8 @@ const resolveModelAndPrompt = async (db: DbClient, input: PricingReferenceDiagno
   const provider = await getProviderRow(db, model.provider);
   if (!provider?.enabled || !provider.encrypted_api_key) return null;
 
-  const featureKey = diagnoseFeatureForFileType(input.file_type);
-
-  const promptRows = input.prompt_version_id
-    ? await db.select().from(ai_prompt_versions).where(eq(ai_prompt_versions.id, input.prompt_version_id)).limit(1)
+  const promptRows = promptVersionId
+    ? await db.select().from(ai_prompt_versions).where(eq(ai_prompt_versions.id, promptVersionId)).limit(1)
     : await db.execute<PromptVersionRow>(sql`
       select v.*
       from public.ai_prompt_versions v
@@ -876,36 +1085,56 @@ const resolveModelAndPrompt = async (db: DbClient, input: PricingReferenceDiagno
       limit 1
     `);
   const prompt = promptRows[0] ?? null;
-  if (!prompt) throw httpError(404, 'AI_CONFIG_MISSING', 'Prompt IA publie introuvable.');
+  if (!prompt) {
+    if (requirePrompt) {
+      throw httpError(404, 'AI_CONFIG_MISSING', 'Prompt IA publie introuvable.');
+    }
+    return null;
+  }
 
   return { provider, model, prompt };
+};
+
+const resolveModelAndPrompt = async (db: DbClient, input: PricingReferenceDiagnoseInput) => {
+  const resolved = await resolveModelAndPromptForFeature(
+    db,
+    diagnoseFeatureForFileType(input.file_type),
+    input.model_config_id,
+    input.prompt_version_id,
+    true
+  );
+  return resolved;
 };
 
 const buildPricingReferenceUserPrompt = (
   fileType: PricingReferenceFileKind,
   report: PricingReferenceHealthReport
-): string => JSON.stringify({
-  generated_at: report.generated_at,
-  file_type: fileType,
-  classification: {
-    rows: report.classification.rows_count,
-    unique_keys: report.classification.unique_cir_keys,
-    duplicate_keys: report.classification.duplicate_cir_keys,
-    mandatory_empty_rows: report.classification.mandatory_empty_rows
-  },
-  segments_grids: {
-    rows: report.segments_grids.rows_count,
-    unique_identities: report.segments_grids.unique_segment_identities,
-    identity_incomplete_rows: report.segments_grids.identity_incomplete_rows,
-    missing_links: report.segments_grids.classification_incomplete_rows,
-    unknown_keys: report.segments_grids.cir_keys_not_validated_rows,
-    purchase_grid_missing_rows: report.segments_grids.purchase_grid_missing_rows
-  },
-  anomalies: report.anomalies,
-  anomaly_samples: report.anomaly_samples.slice(0, 30)
-});
+): string =>
+  JSON.stringify({
+    generated_at: report.generated_at,
+    file_type: fileType,
+    classification: {
+      rows: report.classification.rows_count,
+      unique_keys: report.classification.unique_cir_keys,
+      duplicate_keys: report.classification.duplicate_cir_keys,
+      mandatory_empty_rows: report.classification.mandatory_empty_rows
+    },
+    segments_grids: {
+      rows: report.segments_grids.rows_count,
+      unique_identities: report.segments_grids.unique_segment_identities,
+      identity_incomplete_rows: report.segments_grids.identity_incomplete_rows,
+      missing_links: report.segments_grids.classification_incomplete_rows,
+      unknown_keys: report.segments_grids.cir_keys_not_validated_rows,
+      purchase_grid_missing_rows: report.segments_grids.purchase_grid_missing_rows
+    },
+    anomalies: report.anomalies,
+    anomaly_samples: report.anomaly_samples.slice(0, 30)
+  });
 
-const getCachedDiagnosis = async (db: DbClient, cacheKey: string): Promise<{
+const getCachedDiagnosis = async (
+  db: DbClient,
+  cacheKey: string
+): Promise<{
   response: AiDiagnosisResult;
   usage: ProviderUsage;
 } | null> => {
@@ -924,7 +1153,7 @@ const getCachedDiagnosis = async (db: DbClient, cacheKey: string): Promise<{
   };
 };
 
-const enforceAiQuota = async (db: DbClient, authContext: AuthContext, featureKey: AiFeature): Promise<void> => {
+export const enforceAiQuota = async (db: DbClient, authContext: AuthContext, featureKey: AiFeature): Promise<void> => {
   const dayStart = new Date();
   dayStart.setHours(0, 0, 0, 0);
   const monthStart = new Date(dayStart);
@@ -1028,7 +1257,7 @@ const providerConnectionHeaders = (key: string): HeadersInit => {
   return { Authorization: `Bearer ${key}` };
 };
 
-const openAiCompatibleHeaders = (provider: AiProvider, key: string): HeadersInit => {
+export const openAiCompatibleHeaders = (provider: AiProvider, key: string): HeadersInit => {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${key}`
@@ -1040,9 +1269,10 @@ const openAiCompatibleHeaders = (provider: AiProvider, key: string): HeadersInit
   return headers;
 };
 
-const providerBaseUrl = (provider: AiProvider): string => {
+export const providerBaseUrl = (provider: AiProvider): string => {
   switch (provider) {
-    case 'openrouter': return 'https://openrouter.ai/api/v1';
+    case 'openrouter':
+      return 'https://openrouter.ai/api/v1';
   }
 };
 
@@ -1098,6 +1328,136 @@ const callProvider = async (
   };
 };
 
+export const callProviderWithTools = async (
+  provider: ProviderRow,
+  model: ModelRow,
+  messages: OpenRouterMessage[],
+  tools: OpenRouterToolDefinition[],
+  toolChoice: 'auto' | 'none',
+  apiKey: string,
+  signal: AbortSignal,
+  fetchImpl: typeof fetch = fetch
+): Promise<OpenRouterToolResponse> => {
+  const urlBase = provider.base_url ?? providerBaseUrl(provider.provider);
+  const response = await fetchImpl(`${urlBase}/chat/completions`, {
+    method: 'POST',
+    headers: openAiCompatibleHeaders(provider.provider, apiKey),
+    signal,
+    body: JSON.stringify({
+      model: model.model_id,
+      messages,
+      tools,
+      tool_choice: toolChoice,
+      temperature: Number(model.temperature),
+      max_tokens: model.max_output_tokens,
+      provider: {
+        require_parameters: true,
+        allow_fallbacks: false,
+        data_collection: 'deny',
+        zdr: true
+      }
+    })
+  });
+  if (!response.ok) {
+    throw providerHttpError(provider.provider, response.status, await readProviderErrorBody(response));
+  }
+  const raw = await readProviderJson(response);
+  const providerError = readProviderError(raw);
+  if (providerError) {
+    throw httpError(502, 'AI_PROVIDER_UNAVAILABLE', `Fournisseur IA ${provider.provider}: ${providerError}`);
+  }
+  const choice = firstChoice(raw);
+  const message = readRecord(choice, 'message');
+  const rawToolCalls = message && Array.isArray(message.tool_calls) ? message.tool_calls : [];
+  const useful = {
+    id: readString(raw, 'id'),
+    model: readString(raw, 'model'),
+    provider: readString(raw, 'provider'),
+    choices: [
+      {
+        finish_reason: readString(choice, 'finish_reason'),
+        native_finish_reason: readString(choice, 'native_finish_reason'),
+        message: {
+          role: readString(message, 'role'),
+          content: message ? readMessageContent(message.content) : null,
+          tool_calls: rawToolCalls.map((call) => {
+            const fn = readRecord(call, 'function');
+            return {
+              id: readString(call, 'id'),
+              type: readString(call, 'type'),
+              function: {
+                name: readString(fn, 'name'),
+                arguments: readString(fn, 'arguments')
+              }
+            };
+          })
+        }
+      }
+    ],
+    usage: {
+      prompt_tokens: readNumberPath(raw, ['usage', 'prompt_tokens']),
+      completion_tokens: readNumberPath(raw, ['usage', 'completion_tokens']),
+      cached_tokens: readNumberPath(raw, ['usage', 'prompt_tokens_details', 'cached_tokens']) ?? 0,
+      reasoning_tokens: readNumberPath(raw, ['usage', 'completion_tokens_details', 'reasoning_tokens']) ?? 0,
+      cost: readNumberPath(raw, ['usage', 'cost'])
+    }
+  };
+  const parsed = openRouterUsefulResponseSchema.safeParse(useful);
+  if (!parsed.success) {
+    throw httpError(
+      502,
+      'AI_RESPONSE_INVALID',
+      'La reponse tool calling ne respecte pas le contrat OpenRouter.',
+      parsed.error.issues.map((issue) => issue.message).join(' | ')
+    );
+  }
+  const result = parsed.data;
+  const resultChoice = result.choices[0];
+  const ids = new Set<string>();
+  const knownNames = new Set(tools.map((tool) => tool.function.name));
+  for (const toolCall of resultChoice.message.tool_calls) {
+    if (ids.has(toolCall.id)) {
+      throw httpError(502, 'AI_RESPONSE_INVALID', 'Identifiant appel outil duplique.');
+    }
+    ids.add(toolCall.id);
+    if (!knownNames.has(toolCall.function.name)) {
+      throw httpError(502, 'AI_RESPONSE_INVALID', 'Nom outil fournisseur inconnu.');
+    }
+    if (new TextEncoder().encode(toolCall.function.arguments).length > 16_384) {
+      throw httpError(502, 'AI_RESPONSE_INVALID', 'Arguments outil fournisseur trop volumineux.');
+    }
+    try {
+      JSON.parse(toolCall.function.arguments);
+    } catch {
+      throw httpError(502, 'AI_RESPONSE_INVALID', 'Arguments outil fournisseur invalides.');
+    }
+  }
+  if (resultChoice.finish_reason === 'tool_calls' && resultChoice.message.tool_calls.length === 0) {
+    throw httpError(502, 'AI_RESPONSE_INVALID', 'Fin tool_calls sans appel outil.');
+  }
+  if (resultChoice.finish_reason !== 'tool_calls' && resultChoice.message.tool_calls.length > 0) {
+    throw httpError(502, 'AI_RESPONSE_INVALID', 'Appel outil avec une fin fournisseur incoherente.');
+  }
+  if (resultChoice.finish_reason === 'error' || resultChoice.finish_reason === 'content_filter') {
+    throw httpError(502, 'AI_RESPONSE_INVALID', 'Le fournisseur IA n a pas produit de reponse exploitable.');
+  }
+  return {
+    text: resultChoice.message.content ?? '',
+    content: resultChoice.message.content,
+    toolCalls: resultChoice.message.tool_calls,
+    generationId: result.id,
+    modelId: result.model,
+    provider: result.provider,
+    finishReason: resultChoice.finish_reason,
+    nativeFinishReason: resultChoice.native_finish_reason,
+    inputTokens: result.usage.prompt_tokens,
+    outputTokens: result.usage.completion_tokens,
+    cachedInputTokens: result.usage.cached_tokens,
+    reasoningTokens: result.usage.reasoning_tokens,
+    providerCostAmount: result.usage.cost
+  };
+};
+
 const estimateTokens = (text: string): number => Math.max(1, Math.round(text.length / 4));
 
 const readProviderJson = async (response: Response): Promise<unknown> => {
@@ -1140,7 +1500,8 @@ const readNumberPath = (value: unknown, path: string[]): number | null => {
     if (!isRecord(current)) return null;
     current = current[key];
   }
-  if (typeof current !== 'string' && typeof current !== 'number' && current !== null && current !== undefined) return null;
+  if (typeof current !== 'string' && typeof current !== 'number' && current !== null && current !== undefined)
+    return null;
   return toNumberOrNull(current);
 };
 
@@ -1194,7 +1555,9 @@ const describeProviderPayload = (value: unknown): string => {
     `choices=${isRecord(value) && Array.isArray(value.choices) ? value.choices.length : 'absent'}`,
     `finish_reason=${readString(choice, 'finish_reason') ?? 'absent'}`,
     `message_keys=${message ? Object.keys(message).sort().join(',') : 'absent'}`,
-    `content_type=${message && 'content' in message ? Array.isArray(message.content) ? 'array' : typeof message.content : 'absent'}`,
+    `content_type=${
+      message && 'content' in message ? (Array.isArray(message.content) ? 'array' : typeof message.content) : 'absent'
+    }`,
     `error=${readProviderError(value) ?? 'absent'}`
   ];
   return details.join(' | ');
@@ -1213,7 +1576,9 @@ const providerHttpError = (provider: AiProvider, status: number, details?: strin
 const parseProviderResult = (text: string): AiDiagnosisResult => {
   const trimmed = text.trim();
   const jsonText = trimmed.startsWith('{') ? trimmed : trimmed.match(/\{[\s\S]*\}/)?.[0];
-  if (!jsonText) throw httpError(502, 'AI_RESPONSE_INVALID', 'La reponse IA ne contient pas de JSON.');
+  if (!jsonText) {
+    throw httpError(502, 'AI_RESPONSE_INVALID', 'La reponse IA ne contient pas de JSON.');
+  }
   let payload: unknown;
   try {
     payload = JSON.parse(jsonText);
@@ -1232,7 +1597,7 @@ const parseProviderResult = (text: string): AiDiagnosisResult => {
   return parsed.data;
 };
 
-const computeCost = (model: ModelRow, usage: ProviderUsage): number | null => {
+export const computeCost = (model: ModelRow, usage: ProviderUsage): number | null => {
   if (usage.providerCostAmount !== undefined && usage.providerCostAmount !== null) {
     return Number(usage.providerCostAmount.toFixed(8));
   }
@@ -1241,14 +1606,16 @@ const computeCost = (model: ModelRow, usage: ProviderUsage): number | null => {
   const cachedPrice = toNumberOrNull(model.cached_input_price_per_million) ?? inputPrice;
   const reasoningPrice = toNumberOrNull(model.reasoning_price_per_million) ?? outputPrice;
   if (inputPrice === null || outputPrice === null) return null;
-  const amount = ((usage.inputTokens * inputPrice)
-    + (usage.outputTokens * outputPrice)
-    + (usage.cachedInputTokens * (cachedPrice ?? 0))
-    + (usage.reasoningTokens * (reasoningPrice ?? 0))) / 1_000_000;
+  const amount =
+    (usage.inputTokens * inputPrice +
+      usage.outputTokens * outputPrice +
+      usage.cachedInputTokens * (cachedPrice ?? 0) +
+      usage.reasoningTokens * (reasoningPrice ?? 0)) /
+    1_000_000;
   return Number(amount.toFixed(8));
 };
 
-const recordUsage = async (
+export const recordUsage = async (
   db: DbClient,
   input: {
     requestId: string;
@@ -1261,6 +1628,7 @@ const recordUsage = async (
     cacheHit: boolean;
     status: 'success' | 'cache_hit';
     latencyMs: number;
+    metadata?: Record<string, unknown>;
   }
 ) => {
   await db.insert(ai_usage_events).values({
@@ -1281,11 +1649,11 @@ const recordUsage = async (
     cache_hit: input.cacheHit,
     status: input.status,
     latency_ms: input.latencyMs,
-    metadata: {}
+    metadata: input.metadata ?? {}
   });
 };
 
-const recordErrorUsage = async (
+export const recordErrorUsage = async (
   db: DbClient,
   requestId: string,
   authContext: AuthContext,
@@ -1293,7 +1661,10 @@ const recordErrorUsage = async (
   model: ModelRow,
   prompt: PromptVersionRow,
   error: unknown,
-  latencyMs: number
+  latencyMs: number,
+  metadata: Record<string, unknown> = {},
+  usage?: ProviderUsage,
+  costAmount?: number | null
 ) => {
   await db.insert(ai_usage_events).values({
     request_id: requestId,
@@ -1304,17 +1675,23 @@ const recordErrorUsage = async (
     prompt_version_id: prompt.id,
     user_id: authContext.userId,
     agency_id: authContext.activeAgencyId,
+    input_tokens: usage?.inputTokens ?? 0,
+    output_tokens: usage?.outputTokens ?? 0,
+    cached_input_tokens: usage?.cachedInputTokens ?? 0,
+    reasoning_tokens: usage?.reasoningTokens ?? 0,
+    cost_amount: costAmount === undefined || costAmount === null ? null : String(costAmount),
     currency: model.currency,
     cache_hit: false,
     status: 'error',
-    error_code: typeof error === 'object' && error !== null && 'code' in error ? String(error.code) : 'AI_DIAGNOSTIC_ERROR',
+    error_code:
+      typeof error === 'object' && error !== null && 'code' in error ? String(error.code) : 'AI_DIAGNOSTIC_ERROR',
     error_message: error instanceof Error ? error.message : 'Diagnostic IA impossible.',
     latency_ms: latencyMs,
-    metadata: {}
+    metadata
   });
 };
 
-const recordBlockedUsage = async (
+export const recordBlockedUsage = async (
   db: DbClient,
   requestId: string,
   authContext: AuthContext,
@@ -1322,7 +1699,8 @@ const recordBlockedUsage = async (
   model: ModelRow,
   prompt: PromptVersionRow,
   error: unknown,
-  latencyMs: number
+  latencyMs: number,
+  metadata: Record<string, unknown> = {}
 ) => {
   await db.insert(ai_usage_events).values({
     request_id: requestId,
@@ -1336,10 +1714,11 @@ const recordBlockedUsage = async (
     currency: model.currency,
     cache_hit: false,
     status: 'blocked',
-    error_code: typeof error === 'object' && error !== null && 'code' in error ? String(error.code) : 'AI_QUOTA_EXCEEDED',
+    error_code:
+      typeof error === 'object' && error !== null && 'code' in error ? String(error.code) : 'AI_QUOTA_EXCEEDED',
     error_message: error instanceof Error ? error.message : 'Quota IA atteint.',
     latency_ms: latencyMs,
-    metadata: {}
+    metadata
   });
 };
 

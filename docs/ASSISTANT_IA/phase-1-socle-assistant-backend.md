@@ -243,21 +243,21 @@ mapping existe réellement.
 
 ## 3. Checkpoints à valider
 
-- [ ] `assistant.referentiels` ajouté à `aiFeatureSchema` sans casser les enums exhaustifs existants.
-- [ ] Typage Drizzle `feature` aligné pour prompts, quotas, usage et cache si concerné ; contraintes CHECK Supabase vérifiées.
-- [ ] `shared/schemas/aiAssistant.schema.ts` créé, tous schémas `.strict()`, messages FR, types exportés.
-- [ ] `client_request_id` stable défini ; admission quota atomique + réservation avant provider + unicité idempotente implémentées en transaction Postgres.
-- [ ] `callProviderWithTools` implémenté ; `callProvider` d'origine intact (diagnose non régressé).
-- [ ] Tool calling OpenRouter conforme à la doc actuelle : réponse provider validée, finish reasons gérés, `tools` renvoyés à chaque tour, `parallel_tool_calls` décidé, `require_parameters`, usage/cost, génération et confidentialité vérifiés.
-- [ ] Boucle tool calling bornée (6 tours, plafonds, AbortController/timeout) opérationnelle.
-- [ ] `AI_TIMEOUT` ajouté au catalogue d'erreurs avant usage.
-- [ ] 3 outils (`list_imports`, `get_diff_summary`, `list_diffs`) branchés sur les services réels, entrées/sorties strictes et versionnées, résultats plafonnés en lignes **et en octets**.
-- [ ] Quotas + journalisation `ai_usage_events` sous `assistant.referentiels` (succès, bloqué, erreur, cumul multi-tours, metadata `tool_trace` minimisée).
-- [ ] Procédures `ai.assistant.ask` (mutation, authed) et `ai.assistant.status` (query, authed) exposées et miroir `shared/api/trpc.ts` à jour.
-- [ ] Prompt système `assistant.referentiels` seedé de façon idempotente.
-- [ ] Test Deno de contrat (`aiAssistantContracts_test.ts`) : provider mocké, vérifie un tour d'outil + réponse finale + parse strict de la sortie.
-- [ ] Modèle par défaut choisi et documenté (comparatif dans le changelog).
-- [ ] `pnpm run qa:back` vert (ou écarts justifiés).
+- [x] `assistant.referentiels` ajouté à `aiFeatureSchema` sans casser les enums exhaustifs existants.
+- [x] Typage Drizzle `feature` aligné pour prompts, quotas, usage et cache si concerné ; contraintes CHECK Supabase vérifiées.
+- [x] `shared/schemas/aiAssistant.schema.ts` créé, tous schémas `.strict()`, messages FR, types exportés.
+- [x] `client_request_id` stable défini ; admission quota atomique + réservation avant provider + unicité idempotente implémentées en transaction Postgres.
+- [x] `callProviderWithTools` implémenté ; `callProvider` d'origine intact (diagnose non régressé).
+- [x] Tool calling OpenRouter conforme à la doc actuelle : réponse provider validée, finish reasons gérés, `tools` renvoyés à chaque tour, `parallel_tool_calls` décidé, `require_parameters`, usage/cost, génération et confidentialité vérifiés.
+- [x] Boucle tool calling bornée (6 tours, plafonds, AbortController/timeout) opérationnelle.
+- [x] `AI_TIMEOUT` ajouté au catalogue d'erreurs avant usage.
+- [x] 3 outils (`list_imports`, `get_diff_summary`, `list_diffs`) branchés sur les services réels, entrées/sorties strictes et versionnées, résultats plafonnés en lignes **et en octets**.
+- [x] Quotas + journalisation `ai_usage_events` sous `assistant.referentiels` (succès, bloqué, erreur, cumul multi-tours, metadata `tool_trace` minimisée).
+- [x] Procédures `ai.assistant.ask` (mutation, authed) et `ai.assistant.status` (query, authed) exposées et miroir `shared/api/trpc.ts` à jour.
+- [x] Prompt système `assistant.referentiels` seedé de façon idempotente.
+- [x] Test Deno de contrat (`aiAssistantContracts_test.ts`) : provider mocké, vérifie un tour d'outil + réponse finale + parse strict de la sortie.
+- [x] Modèle par défaut choisi et documenté (comparatif dans le changelog).
+- [x] `pnpm run qa:back` vert (ou écarts justifiés).
 
 ## 4. Prompt d'exécution (à coller dans une conversation neuve)
 
@@ -326,4 +326,11 @@ Ne commit pas et ne déploie pas sans que l'utilisateur le demande explicitement
 
 <!-- À remplir en fin de phase. Modèle dans 00-plan-general.md §7. -->
 
-_(vide — phase non encore exécutée)_
+### 2026-07-10 — Phase exécutée
+- **Fait** : feature `assistant.referentiels`, contrats Zod stricts, admission quota atomique et idempotente, boucle Chat Completions/OpenRouter bornée, trois outils référentiels en lecture seule, cumul usage/coût multi-tours, timeout, audit, routes tRPC `ask/status`, prompt et quota seedés. Migration `20260710091605_ai_assistant_foundation` appliquée au Supabase lié et Edge Function `api` version 114 déployée avec `verify_jwt=false` (auth applicative conservée).
+- **Fichiers créés** : `shared/schemas/aiAssistant.schema.ts`, `backend/functions/api/services/ai/assistantBroker.ts`, `backend/functions/api/services/ai/assistantTools.ts`, `backend/functions/api/services/ai/aiAssistantContracts_test.ts`, `backend/migrations/20260710091605_ai_assistant_foundation.sql`.
+- **Fichiers modifiés** : `shared/schemas/ai.schema.ts`, `shared/api/trpc.ts`, `shared/errors/types.ts`, `shared/errors/catalog.ts`, `backend/drizzle/schema.ts`, `backend/functions/api/services/ai/aiGovernance.ts`, `backend/functions/api/trpc/router.ts`, `frontend/src/components/admin-ai/AdminAiPanel.tsx`, ce fichier et `docs/ASSISTANT_IA/00-plan-general.md`.
+- **Décisions prises en cours de route** : fonction d'admission placée dans `private` avec `SECURITY DEFINER`, `search_path` vide et exécution réservée à `service_role` ; appels outils multiples traités séquentiellement dans l'ordre retourné (le paramètre `parallel_tool_calls:false` est omis, car combiné à `require_parameters:true` il exclut tous les endpoints Mistral déclarés par OpenRouter) ; routage OpenRouter `require_parameters:true`, `allow_fallbacks:false`, `data_collection:'deny'`, `zdr:true` ; résultat outil plafonné à 50 lignes et 32 768 octets ; réservation conservative sur sept appels provider au maximum avec enveloppe de 10 USD si le modèle n'est pas tarifé. Le défaut OpenRouter provisoire seedé est `mistralai/mistral-small-3.2-24b-instruct` (0,075 USD/M tokens d'entrée, 0,20 USD/M en sortie au catalogue OpenRouter consulté le 2026-07-10). Ce défaut reste global au provider et sera donc partagé avec le diagnose tant qu'un mapping feature → modèle n'existe pas.
+- **Écarts vs spécification (et pourquoi)** : aucun comparatif réel à deux modèles n'a été exécuté, car ni `OPENROUTER_API_KEY` ni `AI_SECRET_ENCRYPTION_KEY` n'est disponible dans l'environnement local. Le catalogue public confirme `tools`/`tool_choice` pour `mistralai/mistral-small-3.2-24b-instruct`, `anthropic/claude-haiku-4.5` et `deepseek/deepseek-v4-pro`, mais n'expose pas de taux d'erreur spécifique au tool calling ; seuls les endpoints et leur disponibilité ont pu être consultés.
+- **Points ouverts / à surveiller pour les phases suivantes** : rétablir du crédit/quota sur la clé OpenRouter configurée (`ai.assistant.ask` atteint le provider mais reçoit actuellement `429 AI_PROVIDER_RATE_LIMITED`) ; exécuter ensuite le comparatif réel Mistral/Claude sur 2-3 outils (exactitude FR, arguments JSON, coût et latence) ; ne présenter un sélecteur par feature en phase 5 qu'après ajout d'un mapping persistant.
+- **QA** : `deno check --config backend/deno.json backend/functions/api/index.ts` vert ; test ciblé `aiAssistantContracts_test.ts` vert, y compris ordre déterministe de deux appels outils ; `pnpm --dir frontend run typecheck` vert ; `pnpm run qa:back` vert (`repo:check`, lint, typecheck, 262 tests réussis, 0 échec, 8 intégrations conditionnelles ignorées) ; `pnpm run qa:docs` vert ; `git diff --check` vert. Gate finale `pnpm run qa` lancée avant déploiement mais bloquée par 3 tests dashboard préexistants hors Phase 1 (`useDashboardState.test.tsx`, 662 réussis / 3 échecs). Probes distants : migration/contraintes/indexes/ACL vérifiés, admission `is_new=true` puis retry `is_new=false`, CORS `OPTIONS` 200, routes anonymes 401, `status` authentifié actif sur Mistral, appel provider bloqué uniquement par le quota OpenRouter 429.

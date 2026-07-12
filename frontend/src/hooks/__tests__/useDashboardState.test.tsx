@@ -25,7 +25,7 @@ vi.mock('@/services/errors/notifySuccess', () => ({
 const mockHandleUiError = vi.mocked(handleUiError);
 const mockAddTimelineEvent = vi.mocked(addTimelineEvent);
 
-const buildInteraction = (): Interaction => ({
+const buildInteraction = (overrides: Partial<Interaction> = {}): Interaction => ({
   id: 'interaction-1',
   agency_id: 'agency-1',
   channel: Channel.PHONE,
@@ -51,8 +51,14 @@ const buildInteraction = (): Interaction => ({
   subject: 'Demande de devis',
   timeline: [],
   updated_at: '2026-02-01T09:00:00.000Z',
-  updated_by: null
-});
+  updated_by: null,
+  stage: null,
+  stage_changed_at: null,
+  amount: null,
+  quote_sent_at: null,
+  lost_reason: null,
+  ...overrides
+} as Interaction);
 
 const buildWrapper = () => {
   const queryClient = createTestQueryClient();
@@ -200,21 +206,16 @@ describe('useDashboardState', () => {
     );
 
     act(() => {
+      result.current.setViewMode('list');
       result.current.setPeriod('custom');
       result.current.handleStartDateChange('2026-02-10');
       result.current.handleEndDateChange('2026-02-10');
     });
 
-    expect(result.current.kanbanColumns?.completed).toHaveLength(1);
-
-    act(() => {
-      result.current.setViewMode('list');
-    });
-
     expect(result.current.filteredData).toHaveLength(1);
   });
 
-  it('filtre aussi les dossiers non termines sur la periode en vue kanban', () => {
+  it('filtre aussi les dossiers non termines sur la periode en vue historique', () => {
     const interactionInRange: Interaction = {
       ...buildInteraction(),
       id: 'interaction-in-range',
@@ -247,13 +248,12 @@ describe('useDashboardState', () => {
     );
 
     act(() => {
+      result.current.setViewMode('list');
       result.current.handleDateRangeChange('2026-02-10', '2026-02-10');
     });
 
-    expect(result.current.kanbanColumns?.urgencies).toHaveLength(1);
-    expect(result.current.kanbanColumns?.urgencies[0]?.id).toBe('interaction-in-range');
-    expect(result.current.kanbanColumns?.inProgress).toHaveLength(0);
-    expect(result.current.kanbanColumns?.completed).toHaveLength(0);
+    expect(result.current.filteredData).toHaveLength(1);
+    expect(result.current.filteredData[0]?.id).toBe('interaction-in-range');
   });
 
   it('classe un ancien statut selon son rattachement historique', () => {
@@ -282,6 +282,10 @@ describe('useDashboardState', () => {
       { wrapper: buildWrapper() },
     );
 
-    expect(result.current.kanbanColumns?.completed).toHaveLength(1);
+    act(() => {
+      result.current.setViewMode('pipeline');
+    });
+
+    expect(result.current.pipelineBoard?.unqualified).toHaveLength(0);
   });
 });

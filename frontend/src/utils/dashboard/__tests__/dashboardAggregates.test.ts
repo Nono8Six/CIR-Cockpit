@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Channel, type AgencyStatus, type Interaction } from '@/types';
 import {
-  buildKanbanColumns,
   countWorkQueueInteractions,
   createInteractionStatusPredicates,
   inferStatusCategoryFromLabel,
@@ -37,7 +36,7 @@ const buildInteraction = (overrides: Partial<Interaction> = {}): Interaction => 
   updated_at: '2026-02-01T09:00:00.000Z',
   updated_by: null,
   ...overrides
-});
+} as Interaction);
 
 describe('dashboardAggregates', () => {
   it('infers status category from normalized labels', () => {
@@ -46,22 +45,6 @@ describe('dashboardAggregates', () => {
     expect(inferStatusCategoryFromLabel('En cours')).toBe('in_progress');
   });
 
-  it('builds kanban columns with urgency, in progress and completed groups', () => {
-    const urgent = buildInteraction({ id: 'urgent', status: 'A traiter' });
-    const inProgress = buildInteraction({ id: 'in-progress', status: 'En cours' });
-    const done = buildInteraction({ id: 'done', status: 'Termine', status_is_terminal: true });
-
-    const columns = buildKanbanColumns({
-      interactions: [urgent, inProgress, done],
-      isStatusTodo: (interaction) => interaction.id === 'urgent',
-      isStatusDone: (interaction) => interaction.id === 'done',
-      isReminderOverdue: () => false
-    });
-
-    expect(columns.urgencies.map((row) => row.id)).toEqual(['urgent']);
-    expect(columns.inProgress.map((row) => row.id)).toEqual(['in-progress']);
-    expect(columns.completed.map((row) => row.id)).toEqual(['done']);
-  });
 });
 
 describe('createInteractionStatusPredicates', () => {

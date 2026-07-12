@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import DashboardToolbar from '@/components/dashboard/DashboardToolbar';
 
 const baseProps = {
-  viewMode: 'kanban' as const,
+  viewMode: 'list' as const,
   onViewModeChange: vi.fn(),
   period: 'today' as const,
   onPeriodChange: vi.fn(),

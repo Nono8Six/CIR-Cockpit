@@ -1,6 +1,8 @@
-import type { KanbanColumns } from '@/components/dashboard/DashboardKanban';
+import { endOfDay } from 'date-fns';
+
 import type { AgencyStatus, Interaction, StatusCategory } from '@/types';
 import { isBeforeNow } from '@/utils/date/isBeforeNow';
+import { toDate } from '@/utils/date/toDate';
 
 const DONE_STATUS_TOKENS = ['termine', 'cloture', 'clos', 'finalise', 'resolu', 'archive'];
 const TODO_STATUS_TOKENS = ['a traiter', 'urgent', 'a faire', 'nouveau', 'nouvelle', 'ouverte'];
@@ -9,13 +11,6 @@ export type InteractionStatusPredicates = {
   getStatusMeta: (interaction: Interaction) => AgencyStatus | undefined;
   isStatusDone: (interaction: Interaction) => boolean;
   isStatusTodo: (interaction: Interaction) => boolean;
-  isReminderOverdue: (interaction: Interaction) => boolean;
-};
-
-type BuildKanbanColumnsParams = {
-  interactions: Interaction[];
-  isStatusTodo: (interaction: Interaction) => boolean;
-  isStatusDone: (interaction: Interaction) => boolean;
   isReminderOverdue: (interaction: Interaction) => boolean;
 };
 
@@ -106,18 +101,110 @@ export const countWorkQueueInteractions = (
   return interactions.filter((interaction) => isInteractionInWorkQueue(interaction, predicates)).length;
 };
 
-export const buildKanbanColumns = ({
-  interactions,
-  isStatusTodo,
-  isStatusDone,
-  isReminderOverdue
-}: BuildKanbanColumnsParams): KanbanColumns => ({
-  urgencies: interactions.filter(
-    (interaction) => isStatusTodo(interaction) || isReminderOverdue(interaction)
-  ),
-  inProgress: interactions.filter(
-    (interaction) =>
-      !isStatusTodo(interaction) && !isStatusDone(interaction) && !isReminderOverdue(interaction)
-  ),
-  completed: interactions.filter((interaction) => isStatusDone(interaction))
-});
+export type MyDayGroups = {
+  overdue: Interaction[];
+  dueToday: Interaction[];
+  upcoming: Interaction[];
+  toPlan: Interaction[];
+  later: Interaction[];
+};
+
+export type MyDayKpis = {
+  overdueCount: number;
+  dueTodayCount: number;
+  openCount: number;
+  averageOpenAgeDays: number | null;
+};
+
+export type MyDayView = {
+  groups: MyDayGroups;
+  kpis: MyDayKpis;
+};
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+const byReminderAsc = (a: Interaction, b: Interaction): number =>
+  toDate(a.reminder_at ?? '').getTime() - toDate(b.reminder_at ?? '').getTime();
+
+const byLastActionAsc = (a: Interaction, b: Interaction): number =>
+  toDate(a.last_action_at).getTime() - toDate(b.last_action_at).getTime();
+
+// Groupes au vocabulaire simple : relances en retard, a faire aujourd'hui,
+// prochaines 72 h, dossiers "a traiter" sans rappel et relances plus lointaines.
+export const buildMyDayView = (
+  interactions: Interaction[],
+  predicates: Pick<InteractionStatusPredicates, 'isStatusDone' | 'isStatusTodo'>,
+  now: Date = new Date()
+): MyDayView => {
+  const groups: MyDayGroups = { overdue: [], dueToday: [], upcoming: [], toPlan: [], later: [] };
+  const nowTime = now.getTime();
+  const endOfTodayTime = endOfDay(now).getTime();
+  const threeDaysLaterTime = endOfTodayTime + 3 * DAY_MS;
+
+  let openCount = 0;
+  let openAgeTotalMs = 0;
+
+  interactions.forEach((interaction) => {
+    if (predicates.isStatusDone(interaction)) {
+      return;
+    }
+
+    openCount += 1;
+    const createdTime = toDate(interaction.created_at).getTime();
+    if (!Number.isNaN(createdTime)) {
+      openAgeTotalMs += Math.max(0, nowTime - createdTime);
+    }
+
+    const reminderTime = interaction.reminder_at ? toDate(interaction.reminder_at).getTime() : Number.NaN;
+
+    if (Number.isNaN(reminderTime)) {
+      if (predicates.isStatusTodo(interaction)) {
+        groups.toPlan.push(interaction);
+      }
+      return;
+    }
+
+    if (reminderTime < nowTime) {
+      groups.overdue.push(interaction);
+      return;
+    }
+
+    if (reminderTime <= endOfTodayTime) {
+      groups.dueToday.push(interaction);
+      return;
+    }
+
+    if (reminderTime <= threeDaysLaterTime) {
+      groups.upcoming.push(interaction);
+      return;
+    }
+
+    if (predicates.isStatusTodo(interaction)) {
+      groups.later.push(interaction);
+    }
+  });
+
+  groups.overdue.sort(byReminderAsc);
+  groups.dueToday.sort(byReminderAsc);
+  groups.upcoming.sort(byReminderAsc);
+  groups.toPlan.sort(byLastActionAsc);
+  groups.later.sort(byReminderAsc);
+
+  return {
+    groups,
+    kpis: {
+      overdueCount: groups.overdue.length,
+      dueTodayCount: groups.dueToday.length,
+      openCount,
+      averageOpenAgeDays: openCount > 0 ? Math.round(openAgeTotalMs / openCount / DAY_MS) : null
+    }
+  };
+};
+
+export const flattenMyDayGroups = (groups: MyDayGroups): Interaction[] => [
+  ...groups.overdue,
+  ...groups.dueToday,
+  ...groups.upcoming,
+  ...groups.toPlan,
+  ...groups.later
+];

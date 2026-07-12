@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
 import type { ConvertClientEntity } from '@/components/ConvertClientDialog';
-import type { KanbanColumns } from '@/components/dashboard/DashboardKanban';
 import { isProspectRelationValue } from '@/constants/relations';
 import { useDashboardFilters } from './useDashboardFilters';
 import { createAppError, isAppError } from '@/services/errors/AppError';
@@ -11,14 +10,26 @@ import { notifySuccess } from '@/services/errors/notifySuccess';
 import { invalidateInteractionsQuery } from '@/services/query/queryInvalidation';
 import type { AgencyStatus, Interaction, InteractionUpdate, TimelineEvent } from '@/types';
 import type { AgencyConfig } from '@/services/config';
-import { buildKanbanColumns, isInteractionInWorkQueue } from '@/utils/dashboard/dashboardAggregates';
+import {
+  buildMyDayView,
+  type MyDayView
+} from '@/utils/dashboard/dashboardAggregates';
+import type { DashboardViewMode } from '@/utils/dashboard/dashboardFilters';
+import {
+  buildPipelineBoard,
+  getPipelineStageLabel,
+  type PipelineBoard,
+  type PipelineMoveTarget
+} from '@/utils/dashboard/dashboardPipeline';
+import { buildReminderPresetValue } from '@/utils/date/buildReminderPresetValue';
+import { formatDateTime } from '@/utils/date/formatDateTime';
+import { getNowIsoString } from '@/utils/date/getNowIsoString';
+import { isBeforeNow } from '@/utils/date/isBeforeNow';
 
 import { useAddTimelineEvent } from '../interactions/timeline/useAddTimelineEvent';
 import { useDeleteInteraction } from '../interactions/core/actions/useDeleteInteraction';
 import { getDashboardChannelIcon } from './getDashboardChannelIcon';
 import { useDashboardStatusHelpers } from './useDashboardStatusHelpers';
-
-type ViewMode = 'kanban' | 'list';
 
 type UseDashboardStateParams = {
   interactions: Interaction[];
@@ -45,6 +56,10 @@ const buildTimelineSuccessMessage = (
     return 'N° de dossier enregistré';
   }
 
+  if (event.type === 'reminder_change' || event.type === 'stage_change') {
+    return event.content;
+  }
+
   if (event.type === 'note') {
     return 'Note ajoutée';
   }
@@ -59,7 +74,7 @@ export const useDashboardState = ({
   onRequestConvert,
   resolutions,
 }: UseDashboardStateParams) => {
-  const [viewMode, setViewMode] = useState<ViewMode>('kanban');
+  const [viewMode, setViewMode] = useState<DashboardViewMode>('myday');
   const [selectedInteraction, setSelectedInteraction] = useState<Interaction | null>(null);
   const [interactionToDelete, setInteractionToDelete] = useState<Interaction | null>(null);
 
@@ -68,14 +83,9 @@ export const useDashboardState = ({
   const deleteInteractionMutation = useDeleteInteraction({ agencyId });
   const lastPeriodErrorMessageRef = useRef<string | null>(null);
 
-  const { statusById, getStatusMeta, isStatusDone, isStatusTodo, getStatusBadgeClass, isReminderOverdue } =
+  const { statusById, getStatusMeta, isStatusDone, isStatusTodo, getStatusBadgeClass } =
     useDashboardStatusHelpers(statuses, resolutions);
 
-  const isInWorkQueue = useCallback(
-    (interaction: Interaction) =>
-      isInteractionInWorkQueue(interaction, { isStatusDone, isStatusTodo, isReminderOverdue }),
-    [isReminderOverdue, isStatusDone, isStatusTodo],
-  );
 
   const {
     searchTerm,
@@ -93,7 +103,6 @@ export const useDashboardState = ({
     interactions,
     viewMode,
     isStatusDone,
-    isInWorkQueue,
     resolutions,
   });
 
@@ -119,18 +128,21 @@ export const useDashboardState = ({
     );
   }, [periodErrorMessage]);
 
-  const kanbanColumns = useMemo<KanbanColumns | null>(() => {
-    if (viewMode === 'list') {
+  const myDayView = useMemo<MyDayView | null>(() => {
+    if (viewMode !== 'myday') {
       return null;
     }
 
-    return buildKanbanColumns({
-      interactions: filteredData,
-      isStatusTodo,
-      isStatusDone,
-      isReminderOverdue,
-    });
-  }, [filteredData, isReminderOverdue, isStatusDone, isStatusTodo, viewMode]);
+    return buildMyDayView(filteredData, { isStatusDone, isStatusTodo });
+  }, [filteredData, isStatusDone, isStatusTodo, viewMode]);
+
+  const pipelineBoard = useMemo<PipelineBoard | null>(() => {
+    if (viewMode !== 'pipeline') {
+      return null;
+    }
+
+    return buildPipelineBoard({ interactions: filteredData, isStatusDone });
+  }, [filteredData, isStatusDone, viewMode]);
 
   const handleConvertRequest = useCallback(
     (interaction: Interaction) => {
@@ -178,6 +190,100 @@ export const useDashboardState = ({
     [addTimelineMutation, agencyId, queryClient, selectedInteraction, statusById],
   );
 
+  const handleCompleteReminder = useCallback(
+    async (interaction: Interaction) => {
+      const now = getNowIsoString();
+      await handleInteractionUpdate(
+        interaction,
+        {
+          id: `${Date.now()}rm`,
+          date: now,
+          type: 'reminder_change',
+          content: 'Relance effectuée'
+        },
+        { reminder_at: null, last_action_at: now }
+      );
+    },
+    [handleInteractionUpdate],
+  );
+
+  const handlePostponeReminder = useCallback(
+    async (interaction: Interaction, daysAhead: number) => {
+      const now = getNowIsoString();
+      const reminderValue = buildReminderPresetValue(daysAhead);
+      await handleInteractionUpdate(
+        interaction,
+        {
+          id: `${Date.now()}rm`,
+          date: now,
+          type: 'reminder_change',
+          content: `Rappel planifié : ${formatDateTime(reminderValue)}`
+        },
+        { reminder_at: reminderValue, last_action_at: now }
+      );
+    },
+    [handleInteractionUpdate],
+  );
+
+  // Deplacement d'etape pipeline. quote_sent pose la date d'envoi du devis et planifie
+  // une relance J+7 a 09:00 si aucun rappel futur n'existe ; won/lost effacent le rappel.
+  const handleStageChange = useCallback(
+    async (
+      interaction: Interaction,
+      nextStage: PipelineMoveTarget,
+      options?: { lostReason?: string }
+    ) => {
+      if ((interaction.stage ?? null) === nextStage) {
+        return;
+      }
+
+      const now = getNowIsoString();
+      const updates: InteractionUpdate = {
+        stage: nextStage,
+        stage_changed_at: now,
+        last_action_at: now
+      };
+      let content = `Étape : ${getPipelineStageLabel(interaction.stage)} ➔ ${getPipelineStageLabel(nextStage)}`;
+
+      if (nextStage === 'quote_sent') {
+        if (!interaction.quote_sent_at) {
+          updates.quote_sent_at = now;
+        }
+        const hasUpcomingReminder = Boolean(
+          interaction.reminder_at && !isBeforeNow(interaction.reminder_at)
+        );
+        if (!hasUpcomingReminder) {
+          const reminderValue = buildReminderPresetValue(7);
+          updates.reminder_at = reminderValue;
+          content += ` · Relance planifiée : ${formatDateTime(reminderValue)}`;
+        }
+      }
+
+      if (nextStage === 'won' || nextStage === 'lost') {
+        updates.reminder_at = null;
+      }
+
+      if (nextStage === 'lost') {
+        updates.lost_reason = options?.lostReason?.trim() || null;
+        if (updates.lost_reason) {
+          content += ` · Motif : ${updates.lost_reason}`;
+        }
+      }
+
+      await handleInteractionUpdate(
+        interaction,
+        {
+          id: `${Date.now()}sg`,
+          date: now,
+          type: 'stage_change',
+          content
+        },
+        updates
+      );
+    },
+    [handleInteractionUpdate],
+  );
+
   const handleRequestDeleteInteraction = useCallback((interaction: Interaction) => {
     setInteractionToDelete(interaction);
   }, []);
@@ -208,7 +314,8 @@ export const useDashboardState = ({
     effectiveStartDate,
     effectiveEndDate,
     filteredData,
-    kanbanColumns,
+    myDayView,
+    pipelineBoard,
     getStatusMeta,
     getStatusBadgeClass,
     getChannelIcon: getDashboardChannelIcon,
@@ -222,6 +329,10 @@ export const useDashboardState = ({
     handleEndDateChange,
     handleConvertRequest,
     handleInteractionUpdate,
+    handleCompleteReminder,
+    handlePostponeReminder,
+    handleStageChange,
+    isInteractionUpdatePending: addTimelineMutation.isPending,
     interactionToDelete,
     isDeleteInteractionPending: deleteInteractionMutation.isPending,
     handleRequestDeleteInteraction,

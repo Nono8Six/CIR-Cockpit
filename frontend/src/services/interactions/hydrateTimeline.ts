@@ -7,7 +7,18 @@ import { readString } from '@/utils/recordNarrowing/readString';
 import { toJsonValue } from '@/utils/toJsonValue';
 
 const CHANNEL_VALUES = Object.values(Channel);
-const TIMELINE_TYPES: TimelineEvent['type'][] = ['note', 'status_change', 'reminder_change', 'creation', 'file', 'order_ref_change'];
+// Doit rester aligne avec l'union TimelineEvent['type'] (types.ts) et le
+// timelineEventSchema partage (shared/schemas/system/data.schema.ts).
+const TIMELINE_TYPES: TimelineEvent['type'][] = [
+  'note',
+  'status_change',
+  'reminder_change',
+  'creation',
+  'file',
+  'order_ref_change',
+  'stage_change',
+  'amount_change'
+];
 
 const isChannel = (value: string): value is Channel => CHANNEL_VALUES.some(channel => channel === value);
 const isTimelineType = (value: string): value is TimelineEvent['type'] => TIMELINE_TYPES.some(type => type === value);

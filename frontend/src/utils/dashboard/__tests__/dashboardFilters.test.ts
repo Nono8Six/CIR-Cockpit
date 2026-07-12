@@ -35,8 +35,13 @@ const buildInteraction = (overrides: Partial<Interaction> = {}): Interaction => 
   timeline: [],
   updated_at: '2026-02-01T09:00:00.000Z',
   updated_by: null,
+  stage: null,
+  stage_changed_at: null,
+  amount: null,
+  quote_sent_at: null,
+  lost_reason: null,
   ...overrides
-});
+} as Interaction);
 
 describe('dashboardFilters', () => {
   it('validates custom date range', () => {
@@ -103,45 +108,18 @@ describe('dashboardFilters', () => {
     expect(filtered.map((row) => row.id)).toEqual(['newest', 'oldest']);
   });
 
-  it('excludes done items in kanban mode when date bounds are absent', () => {
+  it('excludes done items in myday mode when date bounds are absent', () => {
     const todoInteraction = buildInteraction({ id: 'todo', status_is_terminal: false });
     const doneInteraction = buildInteraction({ id: 'done', status_is_terminal: true });
 
     const filtered = filterInteractionsByViewMode({
       interactions: [todoInteraction, doneInteraction],
-      viewMode: 'kanban',
+      viewMode: 'myday',
       dateBounds: null,
       isStatusDone: (interaction) => Boolean(interaction.status_is_terminal)
     });
 
     expect(filtered.map((row) => row.id)).toEqual(['todo']);
-  });
-
-  it('keeps work-queue items visible in kanban mode even outside the period', () => {
-    const overdueOutOfRange = buildInteraction({
-      id: 'overdue-out',
-      last_action_at: '2026-01-05T08:00:00.000Z',
-      reminder_at: '2026-01-10T09:00:00.000Z'
-    });
-    const inRange = buildInteraction({
-      id: 'in-range',
-      last_action_at: '2026-02-10T10:00:00.000Z'
-    });
-    const outOfRange = buildInteraction({
-      id: 'out',
-      last_action_at: '2026-01-05T08:00:00.000Z'
-    });
-
-    const dateBounds = buildDateBounds('2026-02-10', '2026-02-10');
-    const filtered = filterInteractionsByViewMode({
-      interactions: [overdueOutOfRange, inRange, outOfRange],
-      viewMode: 'kanban',
-      dateBounds,
-      isStatusDone: () => false,
-      isInWorkQueue: (interaction) => Boolean(interaction.reminder_at)
-    });
-
-    expect(filtered.map((row) => row.id)).toEqual(['overdue-out', 'in-range']);
   });
 
   it('does not bypass the period filter in list mode', () => {
@@ -156,8 +134,7 @@ describe('dashboardFilters', () => {
       interactions: [overdueOutOfRange],
       viewMode: 'list',
       dateBounds,
-      isStatusDone: () => false,
-      isInWorkQueue: () => true
+      isStatusDone: () => false
     });
 
     expect(filtered).toEqual([]);

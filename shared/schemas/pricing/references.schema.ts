@@ -151,6 +151,24 @@ export const pricingReferenceDiffSortBySchema = z.enum([
   "severity",
   "object_type",
 ]);
+export const pricingReferenceDiffAggregateGroupBySchema = z.enum([
+  "famille_cir",
+  "categorie_fabricant",
+  "segment",
+  "marque",
+  "object_type",
+  "changed_column",
+]);
+export const pricingReferenceDiffAggregateMeasureSchema = z.enum([
+  "prix",
+  "remise",
+  "any",
+]);
+export const pricingReferenceDiffAggregateDirectionSchema = z.enum([
+  "hausse",
+  "baisse",
+  "any",
+]);
 export const pricingReferenceAnomalyTypeSchema = z.enum([
   "missing_column",
   "empty_file",
@@ -501,17 +519,43 @@ export const pricingReferenceAnomaliesSummaryGetInputSchema =
 export const pricingReferenceAnomaliesExportInputSchema =
   pricingReferenceAnomaliesFiltersSchema;
 
-const pricingReferenceDiffRunSelectorBaseSchema = z.strictObject({
+export const pricingReferenceDiffRunSelectorBaseSchema = z.strictObject({
   run_id: uuidSchema.optional(),
   base_snapshot_id: uuidSchema.nullable().optional(),
   target_snapshot_id: uuidSchema.optional(),
 });
 
+const hasPricingReferenceDiffSelector = (
+  value: z.infer<typeof pricingReferenceDiffRunSelectorBaseSchema>,
+) => Boolean(value.run_id) || Boolean(value.target_snapshot_id);
+
 export const pricingReferenceDiffRunSelectorSchema =
   pricingReferenceDiffRunSelectorBaseSchema.refine(
-    (value) => Boolean(value.run_id) || Boolean(value.target_snapshot_id),
+    hasPricingReferenceDiffSelector,
     { error: "Identifiant run ou snapshot cible requis." },
   );
+
+export const pricingReferenceDiffAggregateInputSchema =
+  pricingReferenceDiffRunSelectorBaseSchema.extend({
+    group_by: pricingReferenceDiffAggregateGroupBySchema,
+    measure: pricingReferenceDiffAggregateMeasureSchema.default("any"),
+    direction: pricingReferenceDiffAggregateDirectionSchema.default("any"),
+    marques: z.array(
+      z.string().trim().min(1, { error: "Marque requise." }).max(120),
+    ).max(20, { error: "Maximum 20 marques." }).optional(),
+    severities: z.array(pricingReferenceAnomalySeveritySchema)
+      .max(20, { error: "Maximum 20 severites." })
+      .optional(),
+    diff_types: z.array(pricingReferenceDiffTypeSchema)
+      .max(20, { error: "Maximum 20 types de diff." })
+      .optional(),
+    include_neutral: z.boolean().default(false),
+    limit: z.number().int({ error: "Limite entiere requise." }).min(1, {
+      error: "Limite minimale : 1.",
+    }).max(100, { error: "Limite maximale : 100." }).default(50),
+  }).refine(hasPricingReferenceDiffSelector, {
+    error: "Identifiant run ou snapshot cible requis.",
+  });
 
 const pricingReferenceDiffFiltersSchema =
   pricingReferenceDiffRunSelectorBaseSchema
@@ -702,10 +746,11 @@ export const pricingReferenceSegmentPurchaseGridRowSchema = z.strictObject({
   coef_majvte: nullableStringSchema,
 });
 
-export const pricingReferenceSegmentDetailSchema = pricingReferenceSegmentRowSchema.extend({
-  source_file_id: uuidSchema,
-  link_source_row_number: z.number().int().positive().nullable(),
-});
+export const pricingReferenceSegmentDetailSchema =
+  pricingReferenceSegmentRowSchema.extend({
+    source_file_id: uuidSchema,
+    link_source_row_number: z.number().int().positive().nullable(),
+  });
 
 export const pricingReferenceAnomalyRowSchema = z.strictObject({
   id: uuidSchema,
@@ -987,6 +1032,33 @@ export const pricingReferenceDiffsListResponseSchema = apiSuccessSchema
     total: z.number().int().nonnegative(),
   });
 
+export const pricingReferenceDiffAggregateGroupSchema = z.strictObject({
+  key: nonEmptyStringSchema("Cle groupe requise."),
+  label: nonEmptyStringSchema("Libelle groupe requis."),
+  total: z.number().int().nonnegative(),
+  hausse_count: z.number().int().nonnegative(),
+  baisse_count: z.number().int().nonnegative(),
+  added_count: z.number().int().nonnegative(),
+  removed_count: z.number().int().nonnegative(),
+  avg_delta_pct: z.number().finite().nullable(),
+  max_delta_pct: z.number().finite().nullable(),
+  sample_object_keys: z.array(
+    nonEmptyStringSchema("Cle objet exemple requise."),
+  ).max(5, { error: "Maximum 5 exemples par groupe." }),
+});
+
+export const pricingReferenceDiffAggregateResponseSchema = apiSuccessSchema
+  .extend({
+    run_id: uuidSchema,
+    base_snapshot_id: uuidSchema.nullable(),
+    target_snapshot_id: uuidSchema,
+    group_by: pricingReferenceDiffAggregateGroupBySchema,
+    measure: pricingReferenceDiffAggregateMeasureSchema,
+    direction: pricingReferenceDiffAggregateDirectionSchema,
+    groups: z.array(pricingReferenceDiffAggregateGroupSchema).max(100),
+    truncated: z.boolean(),
+  });
+
 export const pricingReferenceDiffsComputeResponseSchema =
   pricingReferenceDiffsSummaryResponseSchema.extend({
     cache_status: z.enum(["computed", "reused"]),
@@ -1123,6 +1195,9 @@ export type PricingReferenceDiffsListInput = z.infer<
 export type PricingReferenceDiffsComputeInput = z.infer<
   typeof pricingReferenceDiffsComputeInputSchema
 >;
+export type PricingReferenceDiffAggregateInput = z.infer<
+  typeof pricingReferenceDiffAggregateInputSchema
+>;
 export type PricingReferenceClassificationListAllInput = z.infer<
   typeof pricingReferenceClassificationListAllInputSchema
 >;
@@ -1197,6 +1272,9 @@ export type PricingReferenceDiffsListResponse = z.infer<
 >;
 export type PricingReferenceDiffsComputeResponse = z.infer<
   typeof pricingReferenceDiffsComputeResponseSchema
+>;
+export type PricingReferenceDiffAggregateResponse = z.infer<
+  typeof pricingReferenceDiffAggregateResponseSchema
 >;
 export type PricingReferenceClassificationListAllResponse = z.infer<
   typeof pricingReferenceClassificationListAllResponseSchema

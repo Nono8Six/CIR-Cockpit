@@ -1,4 +1,5 @@
 import { Input } from '../../ui/inputs/basic/Input';
+import { buildReminderPresetValue } from '@/utils/date/buildReminderPresetValue';
 
 type InteractionFooterReminderInputProps = {
   reminder: string;
@@ -10,21 +11,11 @@ const REMINDER_PRESETS: Array<{ label: string; title: string; daysAhead: number 
   { label: '+1 sem', title: 'Relance dans 1 semaine à 09:00', daysAhead: 7 }
 ];
 
-// Valeur locale au format datetime-local (YYYY-MM-DDTHH:mm), relance à 09:00.
-const buildReminderPresetValue = (daysAhead: number): string => {
-  const target = new Date();
-  target.setDate(target.getDate() + daysAhead);
-  target.setHours(9, 0, 0, 0);
-
-  const pad = (value: number) => String(value).padStart(2, '0');
-  return `${target.getFullYear()}-${pad(target.getMonth() + 1)}-${pad(target.getDate())}T${pad(target.getHours())}:${pad(target.getMinutes())}`;
-};
-
 const InteractionFooterReminderInput = ({
   reminder,
   onReminderChange
 }: InteractionFooterReminderInputProps) => (
-  <div className="sm:col-span-1 lg:col-span-5">
+  <div className="sm:col-span-1 lg:col-span-4">
     <div className="mb-1 flex items-center justify-between gap-2">
       <label
         htmlFor="interaction-reminder"

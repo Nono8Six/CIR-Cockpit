@@ -1,12 +1,18 @@
 import { motion } from 'motion/react';
-import { Columns3, LayoutList } from 'lucide-react';
+import { CalendarCheck, LayoutList, TrendingUp, type LucideIcon } from 'lucide-react';
 
-type ViewMode = 'kanban' | 'list';
+import type { DashboardViewMode } from '@/utils/dashboard/dashboardFilters';
 
 type DashboardViewModeSwitchProps = {
-  viewMode: ViewMode;
-  onViewModeChange: (mode: ViewMode) => void;
+  viewMode: DashboardViewMode;
+  onViewModeChange: (mode: DashboardViewMode) => void;
 };
+
+const VIEW_TABS: Array<{ mode: DashboardViewMode; label: string; ariaLabel: string; icon: LucideIcon }> = [
+  { mode: 'myday', label: 'Ma journée', ariaLabel: 'Mode Ma journée', icon: CalendarCheck },
+  { mode: 'pipeline', label: 'Pipeline', ariaLabel: 'Mode Pipeline', icon: TrendingUp },
+  { mode: 'list', label: 'Historique', ariaLabel: 'Mode Historique', icon: LayoutList }
+];
 
 const DashboardViewModeSwitch = ({
   viewMode,
@@ -19,52 +25,32 @@ const DashboardViewModeSwitch = ({
       role="tablist"
       aria-label="Modes d'affichage"
     >
-      <button
-        type="button"
-        role="tab"
-        aria-selected={viewMode === 'kanban'}
-        onClick={() => onViewModeChange('kanban')}
-        className={`relative flex h-7 items-center gap-1.5 rounded-md px-2.5 text-xs font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
-          viewMode === 'kanban' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
-        }`}
-        aria-label="Mode Tableau"
-      >
-        {viewMode === 'kanban' && (
-          <motion.span
-            layoutId="activeViewTab"
-            className="absolute inset-0 rounded-md bg-surface-2 shadow-none"
-            transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-          />
-        )}
-        <span className="relative z-10 flex items-center gap-1.5">
-          <Columns3 size={13} aria-hidden="true" />
-          Tableau
-        </span>
-      </button>
+      {VIEW_TABS.map(({ mode, label, ariaLabel, icon: Icon }) => (
+        <button
+          key={mode}
+          type="button"
+          role="tab"
+          aria-selected={viewMode === mode}
+          onClick={() => onViewModeChange(mode)}
+          className={`relative flex h-7 items-center gap-1.5 rounded-md px-2.5 text-xs font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
+            viewMode === mode ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+          }`}
+          aria-label={ariaLabel}
+        >
+          {viewMode === mode && (
+            <motion.span
+              layoutId="activeViewTab"
+              className="absolute inset-0 rounded-md bg-surface-2 shadow-none"
+              transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+            />
+          )}
+          <span className="relative z-10 flex items-center gap-1.5">
+            <Icon size={13} aria-hidden="true" />
+            {label}
+          </span>
+        </button>
+      ))}
 
-      <button
-        type="button"
-        role="tab"
-        aria-selected={viewMode === 'list'}
-        onClick={() => onViewModeChange('list')}
-        className={`relative flex h-7 items-center gap-1.5 rounded-md px-2.5 text-xs font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
-          viewMode === 'list' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
-        }`}
-        aria-label="Mode Historique"
-      >
-        {viewMode === 'list' && (
-          <motion.span
-            layoutId="activeViewTab"
-            className="absolute inset-0 rounded-md bg-surface-2 shadow-none"
-            transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-          />
-        )}
-        <span className="relative z-10 flex items-center gap-1.5">
-          <LayoutList size={13} aria-hidden="true" />
-          Historique
-        </span>
-      </button>
-      
       <span className="hidden items-center pl-1 pr-0.5 sm:inline-flex">
         <kbd className="pointer-events-none select-none rounded border border-border bg-surface-1 px-1 py-0.5 font-mono text-[9px] font-medium text-muted-foreground">
           V

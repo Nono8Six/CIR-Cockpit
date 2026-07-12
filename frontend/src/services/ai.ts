@@ -4,6 +4,9 @@ import {
   aiPromptsRestoreResponseSchema,
   aiPromptsSaveDraftResponseSchema,
   aiSettingsGetResponseSchema,
+  aiSettingsCreateQuotaResponseSchema,
+  aiSettingsDeleteModelResponseSchema,
+  aiSettingsDeleteQuotaResponseSchema,
   aiSettingsSaveModelResponseSchema,
   aiSettingsSaveProviderResponseSchema,
   aiSettingsSaveQuotaResponseSchema,
@@ -15,12 +18,29 @@ import {
   type AiPromptsRestoreInput,
   type AiPromptsSaveDraftInput,
   type AiSettingsSaveProviderInput,
+  type AiSettingsCreateQuotaInput,
+  type AiSettingsDeleteModelInput,
+  type AiSettingsDeleteQuotaInput,
   type AiSettingsSaveModelInput,
   type AiSettingsSaveQuotaInput,
   type AiSettingsTestProviderInput,
   type AiUsageListInput,
   type AiUsageSummaryInput
+  , aiFeatureGrantsListResponseSchema
+  , aiFeatureGrantMutationResponseSchema
+  , aiMembersAccessOverviewResponseSchema
+  , aiUsageByMemberResponseSchema
+  , type AiFeatureGrantsListInput
+  , type AiFeatureGrantSaveInput
+  , type AiFeatureGrantDeleteInput
+  , type AiMembersAccessOverviewInput
+  , type AiUsageByMemberInput
 } from '../../../shared/schemas/ai.schema';
+import {
+  aiAssistantAskResponseSchema,
+  aiAssistantStatusResponseSchema,
+  type AiAssistantAskInput
+} from '../../../shared/schemas/aiAssistant.schema';
 
 import { invokeTrpc } from '@/services/api/invokeTrpc';
 import { createAppError } from '@/services/errors/AppError';
@@ -63,12 +83,40 @@ export const saveAiModel = (input: AiSettingsSaveModelInput) =>
     'Impossible de sauvegarder le modele IA.'
   );
 
+export const deleteAiModel = (input: AiSettingsDeleteModelInput) =>
+  invokeTrpc((api, options) => api.ai.settings.deleteModel.mutate(input, options),
+    (payload) => parseResponse(aiSettingsDeleteModelResponseSchema, payload), 'Impossible de supprimer le modele IA.');
+
+export const createAiQuota = (input: AiSettingsCreateQuotaInput) =>
+  invokeTrpc((api, options) => api.ai.settings.createQuota.mutate(input, options),
+    (payload) => parseResponse(aiSettingsCreateQuotaResponseSchema, payload), 'Impossible de creer le quota IA.');
+
 export const saveAiQuota = (input: AiSettingsSaveQuotaInput) =>
   invokeTrpc(
     (api, options) => api.ai.settings.saveQuota.mutate(input, options),
     (payload) => parseResponse(aiSettingsSaveQuotaResponseSchema, payload),
     'Impossible de sauvegarder le quota IA.'
   );
+
+export const deleteAiQuota = (input: AiSettingsDeleteQuotaInput) =>
+  invokeTrpc((api, options) => api.ai.settings.deleteQuota.mutate(input, options),
+    (payload) => parseResponse(aiSettingsDeleteQuotaResponseSchema, payload), 'Impossible de supprimer le quota IA.');
+
+export const listAiAccess = (input: AiFeatureGrantsListInput = {}) =>
+  invokeTrpc((api, options) => api.ai.access.list.query(input, options),
+    (payload) => parseResponse(aiFeatureGrantsListResponseSchema, payload), 'Impossible de charger les acces IA.');
+export const saveAiAccess = (input: AiFeatureGrantSaveInput) =>
+  invokeTrpc((api, options) => api.ai.access.save.mutate(input, options),
+    (payload) => parseResponse(aiFeatureGrantMutationResponseSchema, payload), 'Impossible de sauvegarder l acces IA.');
+export const deleteAiAccess = (input: AiFeatureGrantDeleteInput) =>
+  invokeTrpc((api, options) => api.ai.access.delete.mutate(input, options),
+    (payload) => parseResponse(aiFeatureGrantMutationResponseSchema, payload), 'Impossible de supprimer l acces IA.');
+export const getAiMembersAccessOverview = (input: AiMembersAccessOverviewInput) =>
+  invokeTrpc((api, options) => api.ai.access.membersOverview.query(input, options),
+    (payload) => parseResponse(aiMembersAccessOverviewResponseSchema, payload), 'Impossible de charger les acces membres IA.');
+export const getAiUsageByMember = (input: AiUsageByMemberInput = { days: 30 }) =>
+  invokeTrpc((api, options) => api.ai.usage.byMember.query(input, options),
+    (payload) => parseResponse(aiUsageByMemberResponseSchema, payload), 'Impossible de charger la consommation par membre.');
 
 export const testAiProvider = (input: AiSettingsTestProviderInput) =>
   invokeTrpc(
@@ -117,4 +165,18 @@ export const listAiUsageEvents = (input: AiUsageListInput = { page: 1, page_size
     (api, options) => api.ai.usage.list.query(input, options),
     (payload) => parseResponse(aiUsageListResponseSchema, payload),
     'Impossible de charger les evenements IA.'
+  );
+
+export const askAiAssistant = (input: AiAssistantAskInput) =>
+  invokeTrpc(
+    (api, options) => api.ai.assistant.ask.mutate(input, options),
+    (payload) => parseResponse(aiAssistantAskResponseSchema, payload),
+    "Impossible d'interroger l'assistant IA."
+  );
+
+export const getAiAssistantStatus = () =>
+  invokeTrpc(
+    (api, options) => api.ai.assistant.status.query({}, options),
+    (payload) => parseResponse(aiAssistantStatusResponseSchema, payload),
+    "Impossible de verifier la disponibilite de l'assistant IA."
   );

@@ -3,13 +3,18 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 import { AgencyStatus, Interaction } from '@/types';
 import { ConvertClientEntity } from './ConvertClientDialog';
 import DashboardToolbar from './dashboard/DashboardToolbar';
-import DashboardKanban from './dashboard/DashboardKanban';
 import DashboardList from './dashboard/DashboardList';
+import DashboardMyDay from './dashboard/DashboardMyDay';
+import DashboardPipeline from './dashboard/DashboardPipeline';
 import DashboardDetailsOverlay from './dashboard/DashboardDetailsOverlay';
 import ConfirmDialog from './ConfirmDialog';
 import { useDashboardState } from '@/hooks/dashboard-state/useDashboardState';
 import { dashboardSearchStateSchema } from '@/app/dashboardSearch';
+import { flattenMyDayGroups } from '@/utils/dashboard/dashboardAggregates';
+import type { DashboardViewMode } from '@/utils/dashboard/dashboardFilters';
 import type { AgencyConfig } from '@/services/config';
+
+const VIEW_MODE_CYCLE: DashboardViewMode[] = ['myday', 'pipeline', 'list'];
 
 interface DashboardProps {
   interactions: Interaction[];
@@ -45,8 +50,8 @@ const Dashboard = ({
     effectiveStartDate,
     effectiveEndDate,
     filteredData,
-    kanbanColumns,
-    getStatusMeta,
+    myDayView,
+    pipelineBoard,
     getStatusBadgeClass,
     getChannelIcon,
     setViewMode,
@@ -58,12 +63,21 @@ const Dashboard = ({
     handleEndDateChange,
     handleConvertRequest,
     handleInteractionUpdate,
+    handleCompleteReminder,
+    handlePostponeReminder,
+    handleStageChange,
+    isInteractionUpdatePending,
     interactionToDelete,
     isDeleteInteractionPending,
     setInteractionToDelete,
     handleRequestDeleteInteraction,
     handleConfirmDeleteInteraction
   } = useDashboardState({ interactions, statuses: displayStatuses, agencyId, onRequestConvert, resolutions });
+
+  const myDayFlattened = useMemo(
+    () => (myDayView ? flattenMyDayGroups(myDayView.groups) : []),
+    [myDayView]
+  );
 
   const [activeInteractionId, setActiveInteractionId] = useState<string | null>(null);
   
@@ -120,92 +134,34 @@ const Dashboard = ({
       // 3. Toggle View Mode: "v" or "V"
       if (event.key.toLowerCase() === 'v') {
         event.preventDefault();
-        setViewMode(viewMode === 'kanban' ? 'list' : 'kanban');
+        const nextIndex = (VIEW_MODE_CYCLE.indexOf(viewMode) + 1) % VIEW_MODE_CYCLE.length;
+        setViewMode(VIEW_MODE_CYCLE[nextIndex]);
         return;
       }
 
       // 4. Arrow Key Navigation
-      if (viewMode === 'list') {
-        const rowsCount = filteredData.length;
+      if (viewMode === 'list' || viewMode === 'myday') {
+        const rows = viewMode === 'myday' ? myDayFlattened : filteredData;
+        const rowsCount = rows.length;
         if (rowsCount === 0) return;
 
-        const currentIndex = filteredData.findIndex((item) => item.id === activeInteractionId);
+        const currentIndex = rows.findIndex((item) => item.id === activeInteractionId);
 
         if (event.key === 'ArrowDown') {
           event.preventDefault();
           const nextIndex = currentIndex === -1 ? 0 : Math.min(currentIndex + 1, rowsCount - 1);
-          setActiveInteractionId(filteredData[nextIndex]?.id ?? null);
+          setActiveInteractionId(rows[nextIndex]?.id ?? null);
         } else if (event.key === 'ArrowUp') {
           event.preventDefault();
           const nextIndex = currentIndex === -1 ? 0 : Math.max(currentIndex - 1, 0);
-          setActiveInteractionId(filteredData[nextIndex]?.id ?? null);
-        }
-      } else {
-        if (!kanbanColumns) return;
-        const columnsList = [
-          { key: 'urgencies' as const, items: kanbanColumns.urgencies },
-          { key: 'inProgress' as const, items: kanbanColumns.inProgress },
-          { key: 'completed' as const, items: kanbanColumns.completed }
-        ];
-
-        let currentColIdx = -1;
-        let currentItemIdx = -1;
-
-        for (let c = 0; c < 3; c++) {
-          const idx = columnsList[c].items.findIndex((item) => item.id === activeInteractionId);
-          if (idx !== -1) {
-            currentColIdx = c;
-            currentItemIdx = idx;
-            break;
-          }
-        }
-
-        if (event.key === 'ArrowDown') {
-          event.preventDefault();
-          if (currentColIdx === -1) {
-            const firstNonEmptyCol = columnsList.find((col) => col.items.length > 0);
-            if (firstNonEmptyCol) {
-              setActiveInteractionId(firstNonEmptyCol.items[0].id);
-            }
-          } else {
-            const colItems = columnsList[currentColIdx].items;
-            const nextIdx = Math.min(currentItemIdx + 1, colItems.length - 1);
-            setActiveInteractionId(colItems[nextIdx].id);
-          }
-        } else if (event.key === 'ArrowUp') {
-          event.preventDefault();
-          if (currentColIdx !== -1) {
-            const colItems = columnsList[currentColIdx].items;
-            const nextIdx = Math.max(currentItemIdx - 1, 0);
-            setActiveInteractionId(colItems[nextIdx].id);
-          }
-        } else if (event.key === 'ArrowRight') {
-          event.preventDefault();
-          if (currentColIdx !== -1 && currentColIdx < 2) {
-            const nextColIdx = currentColIdx + 1;
-            const nextColItems = columnsList[nextColIdx].items;
-            if (nextColItems.length > 0) {
-              const targetIdx = Math.min(currentItemIdx, nextColItems.length - 1);
-              setActiveInteractionId(nextColItems[targetIdx].id);
-            }
-          }
-        } else if (event.key === 'ArrowLeft') {
-          event.preventDefault();
-          if (currentColIdx > 0) {
-            const nextColIdx = currentColIdx - 1;
-            const nextColItems = columnsList[nextColIdx].items;
-            if (nextColItems.length > 0) {
-              const targetIdx = Math.min(currentItemIdx, nextColItems.length - 1);
-              setActiveInteractionId(nextColItems[targetIdx].id);
-            }
-          }
+          setActiveInteractionId(rows[nextIndex]?.id ?? null);
         }
       }
 
       // 5. Open selected item: "Enter" or "o"
       if (activeInteractionId && (event.key === 'Enter' || event.key.toLowerCase() === 'o')) {
         event.preventDefault();
-        const activeItem = filteredData.find((item) => item.id === activeInteractionId);
+        const activeItem = (viewMode === 'myday' ? myDayFlattened : filteredData).find((item) => item.id === activeInteractionId);
         if (activeItem) {
           setSelectedInteraction(activeItem);
         }
@@ -215,7 +171,7 @@ const Dashboard = ({
       // 6. Delete selected item: "Backspace" or "Delete"
       if (activeInteractionId && (event.key === 'Backspace' || event.key === 'Delete')) {
         event.preventDefault();
-        const activeItem = filteredData.find((item) => item.id === activeInteractionId);
+        const activeItem = (viewMode === 'myday' ? myDayFlattened : filteredData).find((item) => item.id === activeInteractionId);
         if (activeItem) {
           handleRequestDeleteInteraction(activeItem);
         }
@@ -228,8 +184,8 @@ const Dashboard = ({
   }, [
     viewMode,
     filteredData,
+    myDayFlattened,
     activeInteractionId,
-    kanbanColumns,
     setSelectedInteraction,
     setViewMode,
     handleRequestDeleteInteraction
@@ -258,15 +214,33 @@ const Dashboard = ({
       />
 
       <div className="relative flex-1 min-h-0 bg-surface-1">
-        {viewMode === 'kanban' && kanbanColumns ? (
-          <DashboardKanban
-            columns={kanbanColumns}
-            onSelectInteraction={handleSelectInteraction}
-            getStatusMeta={getStatusMeta}
-            onDeleteInteraction={handleRequestDeleteInteraction}
+        {viewMode === 'myday' && myDayView ? (
+          <DashboardMyDay
+            view={myDayView}
             activeInteractionId={displayedActiveInteractionId}
+            isUpdatePending={isInteractionUpdatePending}
+            onSelectInteraction={handleSelectInteraction}
+            onCompleteReminder={(interaction) => {
+              void handleCompleteReminder(interaction);
+            }}
+            onPostponeReminder={(interaction, daysAhead) => {
+              void handlePostponeReminder(interaction, daysAhead);
+            }}
           />
         ) : null}
+
+        {viewMode === 'pipeline' && pipelineBoard ? (
+          <DashboardPipeline
+            board={pipelineBoard}
+            isUpdatePending={isInteractionUpdatePending}
+            onSelectInteraction={handleSelectInteraction}
+            onStageChange={(interaction, target, options) => {
+              void handleStageChange(interaction, target, options);
+            }}
+          />
+        ) : null}
+
+
 
         {viewMode === 'list' ? (
           <DashboardList

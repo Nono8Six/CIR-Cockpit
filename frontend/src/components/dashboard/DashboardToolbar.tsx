@@ -1,15 +1,14 @@
 import type { RefObject } from 'react';
+import type { DashboardViewMode } from '@/utils/dashboard/dashboardFilters';
 import type { FilterPeriod } from '@/utils/date/getPresetDateRange';
 import DashboardDateFilters from './toolbar/DashboardDateFilters';
 import DashboardSearchInput from './toolbar/DashboardSearchInput';
 import DashboardViewModeSwitch from './toolbar/DashboardViewModeSwitch';
 import { PageToolbar, PageToolbarGroup } from '../app-shell/PageToolbar';
 
-type ViewMode = 'kanban' | 'list';
-
 type DashboardToolbarProps = {
-  viewMode: ViewMode;
-  onViewModeChange: (mode: ViewMode) => void;
+  viewMode: DashboardViewMode;
+  onViewModeChange: (mode: DashboardViewMode) => void;
   period: FilterPeriod;
   onPeriodChange: (period: FilterPeriod) => void;
   periodErrorMessage: string | null;
@@ -46,17 +45,25 @@ const DashboardToolbar = ({
   >
     <PageToolbarGroup className="flex-1 flex-col items-stretch lg:flex-row lg:items-center">
       <DashboardViewModeSwitch viewMode={viewMode} onViewModeChange={onViewModeChange} />
-      <DashboardDateFilters
-        ref={dateFiltersRef}
-        period={period}
-        onPeriodChange={onPeriodChange}
-        periodErrorMessage={periodErrorMessage}
-        effectiveStartDate={effectiveStartDate}
-        effectiveEndDate={effectiveEndDate}
-        onDateRangeChange={onDateRangeChange}
-        onStartDateChange={onStartDateChange}
-        onEndDateChange={onEndDateChange}
-      />
+      {viewMode === 'myday' || viewMode === 'pipeline' ? (
+        <p className="text-xs text-muted-foreground" data-testid="dashboard-myday-hint">
+          {viewMode === 'myday'
+            ? "File de travail complète — le filtre de période ne s'applique pas ici."
+            : 'Stock complet des dossiers — la colonne Clôturé couvre les 30 derniers jours.'}
+        </p>
+      ) : (
+        <DashboardDateFilters
+          ref={dateFiltersRef}
+          period={period}
+          onPeriodChange={onPeriodChange}
+          periodErrorMessage={periodErrorMessage}
+          effectiveStartDate={effectiveStartDate}
+          effectiveEndDate={effectiveEndDate}
+          onDateRangeChange={onDateRangeChange}
+          onStartDateChange={onStartDateChange}
+          onEndDateChange={onEndDateChange}
+        />
+      )}
     </PageToolbarGroup>
     <PageToolbarGroup className="xl:w-[22rem]">
       <DashboardSearchInput

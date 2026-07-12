@@ -1,3 +1,4 @@
+import InteractionFooterAmountInput from './InteractionFooterAmountInput';
 import InteractionFooterOrderRefInput from './InteractionFooterOrderRefInput';
 import InteractionFooterReminderInput from './InteractionFooterReminderInput';
 import InteractionFooterStatusSelect from './InteractionFooterStatusSelect';
@@ -8,6 +9,8 @@ type InteractionFooterTopFieldsProps = {
   onStatusChange: (value: string) => void;
   reminder: string;
   onReminderChange: (value: string) => void;
+  amount: string;
+  onAmountChange: (value: string) => void;
   orderRef: string;
   onOrderRefChange: (value: string) => void;
 };
@@ -18,6 +21,8 @@ const InteractionFooterTopFields = ({
   onStatusChange,
   reminder,
   onReminderChange,
+  amount,
+  onAmountChange,
   orderRef,
   onOrderRefChange
 }: InteractionFooterTopFieldsProps) => (
@@ -30,6 +35,10 @@ const InteractionFooterTopFields = ({
     <InteractionFooterReminderInput
       reminder={reminder}
       onReminderChange={onReminderChange}
+    />
+    <InteractionFooterAmountInput
+      amount={amount}
+      onAmountChange={onAmountChange}
     />
     <InteractionFooterOrderRefInput
       orderRef={orderRef}

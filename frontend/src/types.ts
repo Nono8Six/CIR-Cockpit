@@ -1,4 +1,5 @@
 import { Enums, Json, Tables, TablesInsert, TablesUpdate } from './types/supabase';
+import type { InteractionStage } from '../../shared/schemas/interaction/stages.schema';
 
 export const Channel = {
   PHONE: 'Téléphone',
@@ -34,7 +35,15 @@ export interface TimelineEvent {
   [key: string]: Json | undefined;
   id: string;
   date: string; // ISO String
-  type: 'note' | 'status_change' | 'reminder_change' | 'creation' | 'file' | 'order_ref_change';
+  type:
+    | 'note'
+    | 'status_change'
+    | 'reminder_change'
+    | 'creation'
+    | 'file'
+    | 'order_ref_change'
+    | 'stage_change'
+    | 'amount_change';
   content: string; // The message or description
   author?: string; // Display label or identifier
   meta?: Record<string, Json>; // For storing old/new status values etc
@@ -118,10 +127,11 @@ export type InteractionInsert = Omit<
 
 export type InteractionUpdate = Omit<
   InteractionUpdateRow,
-  'timeline' | 'channel'
+  'timeline' | 'channel' | 'stage'
 > & {
   timeline?: TimelineEvent[];
   channel?: Channel;
+  stage?: InteractionStage | null;
 };
 
 export type InteractionDraft = Omit<

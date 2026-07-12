@@ -108,6 +108,28 @@ export const normalizeInteractionUpdates = (
     const reminderAt = toNullableString(updates.reminder_at);
     if (reminderAt !== undefined) normalized.reminder_at = reminderAt;
   }
+  if (Object.hasOwn(updates, 'stage')) {
+    const stage = toNullableString(updates.stage);
+    if (stage !== undefined) normalized.stage = stage;
+  }
+  if (Object.hasOwn(updates, 'stage_changed_at')) {
+    const stageChangedAt = toNullableString(updates.stage_changed_at);
+    if (typeof stageChangedAt === 'string') normalized.stage_changed_at = stageChangedAt;
+  }
+  if (Object.hasOwn(updates, 'amount')) {
+    const amount = updates.amount;
+    if (amount === null || (typeof amount === 'number' && Number.isFinite(amount) && amount >= 0)) {
+      normalized.amount = amount;
+    }
+  }
+  if (Object.hasOwn(updates, 'quote_sent_at')) {
+    const quoteSentAt = toNullableString(updates.quote_sent_at);
+    if (quoteSentAt !== undefined) normalized.quote_sent_at = quoteSentAt;
+  }
+  if (Object.hasOwn(updates, 'lost_reason')) {
+    const lostReason = toNullableString(updates.lost_reason);
+    if (lostReason !== undefined) normalized.lost_reason = lostReason;
+  }
   if (Object.hasOwn(updates, 'notes')) {
     const notes = toNullableString(updates.notes);
     if (notes !== undefined) normalized.notes = notes;

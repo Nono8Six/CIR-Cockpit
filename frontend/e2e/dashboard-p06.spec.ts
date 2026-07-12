@@ -111,14 +111,21 @@ test('P06 - toolbar pilotage, vue kanban/liste, overlay detail, erreur utilisate
   await openDashboardTab(page);
 
   await expect(page.getByTestId('dashboard-toolbar')).toBeVisible();
+  await expect(page.getByTestId('dashboard-myday')).toBeVisible();
+  await expect(page.getByTestId('dashboard-myday-kpis')).toBeVisible();
+
+  const viewTabs = page.getByTestId('dashboard-view-mode-tabs');
+  const myDayTab = viewTabs.getByRole('tab', { name: /ma journée/i });
+  const kanbanTab = viewTabs.getByRole('tab', { name: /tableau/i });
+  const listTab = viewTabs.getByRole('tab', { name: /historique/i });
+
+  await expect(myDayTab).toHaveAttribute('aria-selected', 'true');
+  await kanbanTab.click();
+  await expect(kanbanTab).toHaveAttribute('aria-selected', 'true');
   await expect(page.getByTestId('dashboard-kanban')).toBeVisible();
   await expect(page.locator('[data-testid^="dashboard-kanban-card-"]').first()).toContainText(
     expectedTodayLabel
   );
-
-  const viewTabs = page.getByTestId('dashboard-view-mode-tabs');
-  const kanbanTab = viewTabs.getByRole('tab', { name: /tableau/i });
-  const listTab = viewTabs.getByRole('tab', { name: /historique/i });
 
   await listTab.click();
   await expect(listTab).toHaveAttribute('aria-selected', 'true');
@@ -182,7 +189,8 @@ test('P06 - toolbar pilotage, vue kanban/liste, overlay detail, erreur utilisate
       const root = document.querySelector<HTMLElement>('[data-testid="dashboard-root"]');
       const kanban = document.querySelector<HTMLElement>('[data-testid="dashboard-kanban"]');
       const list = document.querySelector<HTMLElement>('[data-testid="dashboard-list"]');
-      const visiblePane = list ?? kanban;
+      const myDay = document.querySelector<HTMLElement>('[data-testid="dashboard-myday"]');
+      const visiblePane = list ?? kanban ?? myDay;
 
       return {
         documentHasHorizontalOverflow: document.documentElement.scrollWidth > window.innerWidth,

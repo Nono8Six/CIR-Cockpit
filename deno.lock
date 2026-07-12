@@ -56,6 +56,7 @@
   },
   "workspace": {
     "dependencies": [
+      "jsr:@std/assert@1.0.19",
       "jsr:@supabase/functions-js@2.92.0",
       "npm:@hono/trpc-server@0.4.0",
       "npm:@supabase/supabase-js@2.95.3",

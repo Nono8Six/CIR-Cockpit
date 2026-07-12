@@ -6,6 +6,7 @@ import {
   Database,
   ListTree,
   Search,
+  Sparkles,
   UploadCloud,
   X
 } from 'lucide-react';
@@ -29,6 +30,7 @@ import type {
   DirectorySavedViewSaveInput,
   DirectorySavedViewState
 } from '../../../../shared/schemas/system/directory.schema';
+import type { AiAssistantPageContext } from '../../../../shared/schemas/aiAssistant.schema';
 
 import { Button } from '@/components/ui/inputs/basic/Button';
 import { Input } from '@/components/ui/inputs/basic/Input';
@@ -48,11 +50,13 @@ import {
   listPricingReferenceSegments
 } from '@/services/pricingReferences';
 import {
+  aiAssistantStatusKey,
   pricingReferenceClassificationKey,
   pricingReferenceHealthKey,
   pricingReferenceImportsKey,
   pricingReferenceSegmentsKey
 } from '@/services/query/queryKeys';
+import { getAiAssistantStatus } from '@/services/ai';
 import type { UserRole } from '@/types';
 
 // UI components extracted for one-fn-per-file compliance
@@ -80,6 +84,7 @@ import { PricingReferenceImportDialog } from './pricing-reference-import-dialog'
 import { ClassificationDrillDown } from './components/classification/classification-drilldown';
 import { AnomaliesTriage, type AnomalySeverityPreset } from './components/anomalies/anomalies-triage';
 import { ChangesTriage } from './components/changes/changes-triage';
+import { AssistantChatDialog } from './components/assistant/AssistantChatDialog';
 import { useAnalyzedPricingReferenceImports } from './components/changes/use-analyzed-imports';
 import { usePricingReferenceChangesBadge } from './components/changes/use-changes-badge';
 import DirectorySavedViewsBar from '../client-directory/DirectorySavedViewsBar';
@@ -138,6 +143,7 @@ interface PricingReferencesPageProps {
 const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: PricingReferencesPageProps) => {
   const [isClassificationImportOpen, setIsClassificationImportOpen] = useState(false);
   const [isSegmentsImportOpen, setIsSegmentsImportOpen] = useState(false);
+  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [localActiveTab, setLocalActiveTab] = useState<TabId>(DEFAULT_TAB);
   const [selectedImportId, setSelectedImportId] = useState<string | null>(null);
   const [detailImportId, setDetailImportId] = useState<string | null>(null);
@@ -191,6 +197,7 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
     DEFAULT_SEGMENT_COLUMN_PINNING
   );
   const hasAppliedDefaultSegmentsView = useRef(false);
+  const reportedAssistantStatusError = useRef<unknown>(null);
 
   const canImport = userRole === 'super_admin';
 
@@ -215,6 +222,13 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
 
   const isRouteControlled = onRouteTabChange !== undefined;
   const activeTab = isRouteControlled ? routeTab ?? DEFAULT_TAB : localActiveTab;
+  const assistantPageContext = useMemo<AiAssistantPageContext>(() => ({
+    surface: 'pricing.references',
+    active_tab: activeTab,
+    ...(selectedImportId ? { import_id: selectedImportId } : {}),
+    ...(activeTab === 'segments' ? { file_kind: 'segments_grids' as const } : {}),
+    ...(activeTab === 'classification' ? { file_kind: 'classification' as const } : {})
+  }), [activeTab, selectedImportId]);
 
   const handleTabChange = useCallback(
     (tab: TabId) => {
@@ -291,6 +305,24 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
     queryKey: pricingReferenceImportsKey(importsInput),
     queryFn: () => listPricingReferenceImports(importsInput)
   });
+  const assistantStatusQuery = useQuery({
+    queryKey: aiAssistantStatusKey(),
+    queryFn: getAiAssistantStatus,
+    retry: 1
+  });
+
+  useEffect(() => {
+    if (
+      assistantStatusQuery.error
+      && reportedAssistantStatusError.current !== assistantStatusQuery.error
+    ) {
+      reportedAssistantStatusError.current = assistantStatusQuery.error;
+      handleUiError(
+        assistantStatusQuery.error,
+        "Impossible de vérifier la disponibilité de l'assistant IA."
+      );
+    }
+  }, [assistantStatusQuery.error]);
   const visibleImports = useMemo(
     () => importsQuery.data?.imports ?? [],
     [importsQuery.data]
@@ -599,8 +631,24 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
             </span>
           </div>
 
-          {canImport ? (
-            <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+          <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className={cn(
+                'h-8 gap-1.5 rounded-md px-3 text-xs shadow-none',
+                assistantStatusQuery.data?.enabled === false && 'text-muted-foreground'
+              )}
+              onClick={() => setIsAssistantOpen(true)}
+              title={assistantStatusQuery.data?.enabled === false
+                ? assistantStatusQuery.data.reason ?? 'Assistant IA indisponible'
+                : undefined}
+            >
+              <Sparkles className="size-3.5 text-primary" aria-hidden="true" />
+              Assistant IA
+            </Button>
+            {canImport ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -640,8 +688,8 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </div>
-          ) : null}
+            ) : null}
+          </div>
         </div>
 
         {/* Compact snapshot status line */}
@@ -1029,6 +1077,15 @@ const PricingReferencesPage = ({ userRole, routeTab, onRouteTabChange }: Pricing
           <ChangesTriage userRole={userRole} selectedImportId={selectedImportId} />
         </TabsContent>
       </Tabs>
+
+      <AssistantChatDialog
+        open={isAssistantOpen}
+        onOpenChange={setIsAssistantOpen}
+        pageContext={assistantPageContext}
+        status={assistantStatusQuery.data}
+        statusLoading={assistantStatusQuery.isLoading}
+        statusError={assistantStatusQuery.isError}
+      />
 
       {/* Import dialogs */}
       <PricingReferenceImportDialog

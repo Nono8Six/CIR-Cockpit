@@ -27,6 +27,11 @@ const buildInteraction = (): Interaction => ({
   notes: null,
   order_ref: null,
   reminder_at: null,
+  stage: null,
+  stage_changed_at: null,
+  amount: null,
+  quote_sent_at: null,
+  lost_reason: null,
   status: 'En attente',
   status_id: 'status-waiting',
   status_is_terminal: false,
@@ -65,6 +70,7 @@ describe('buildInteractionEvents', () => {
       interaction,
       statusId: 'status-done',
       reminder: interaction.reminder_at || '',
+      amount: interaction.amount === null ? '' : String(interaction.amount),
       orderRef: interaction.order_ref || '',
       note: '',
       statusById
@@ -87,6 +93,7 @@ describe('buildInteractionEvents', () => {
       interaction,
       statusId: interaction.status_id ?? '',
       reminder: interaction.reminder_at || '',
+      amount: interaction.amount === null ? '' : String(interaction.amount),
       orderRef: interaction.order_ref || '',
       note: 'Client rappele',
       statusById
@@ -104,8 +111,49 @@ describe('buildInteractionEvents', () => {
       interaction,
       statusId: interaction.status_id ?? '',
       reminder: interaction.reminder_at || '',
+      amount: interaction.amount === null ? '' : String(interaction.amount),
       orderRef: interaction.order_ref || '',
       note: '   ',
+      statusById
+    });
+
+    expect(events).toHaveLength(0);
+    expect(updates).toBeNull();
+  });
+
+  it('journalise un changement de montant et met a jour amount', () => {
+    const interaction = buildInteraction();
+    const statusById = new Map();
+
+    const { events, updates } = buildInteractionEvents({
+      interaction,
+      statusId: interaction.status_id ?? '',
+      reminder: interaction.reminder_at || '',
+      amount: '12400.5',
+      orderRef: interaction.order_ref || '',
+      note: '',
+      statusById
+    });
+
+    expect(events).toHaveLength(1);
+    expect(events[0]?.type).toBe('amount_change');
+    expect(updates).toMatchObject({
+      amount: 12400.5,
+      last_action_at: '2026-02-10T14:25:00.000Z'
+    });
+  });
+
+  it('ignore un montant invalide sans creer d evenement', () => {
+    const interaction = buildInteraction();
+    const statusById = new Map();
+
+    const { events, updates } = buildInteractionEvents({
+      interaction,
+      statusId: interaction.status_id ?? '',
+      reminder: interaction.reminder_at || '',
+      amount: '-3',
+      orderRef: interaction.order_ref || '',
+      note: '',
       statusById
     });
 

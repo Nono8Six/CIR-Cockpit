@@ -1,4 +1,4 @@
-import { ArrowRight, CheckCircle2, Clock, Hash, MessageSquare } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Clock, Euro, Hash, MessageSquare, TrendingUp } from 'lucide-react';
 
 import type { TimelineEvent } from '@/types';
 import { formatDate } from '@/utils/date/formatDate';
@@ -18,6 +18,10 @@ const getEventIcon = (type: string) => {
       return <Clock size={14} className="text-warning" />;
     case 'order_ref_change':
       return <Hash size={14} className="text-warning-foreground" />;
+    case 'stage_change':
+      return <TrendingUp size={14} className="text-primary" />;
+    case 'amount_change':
+      return <Euro size={14} className="text-success/90" />;
     case 'note':
       return <MessageSquare size={14} className="text-muted-foreground" />;
     default:

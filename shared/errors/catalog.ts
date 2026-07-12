@@ -308,6 +308,14 @@ export const ERROR_CATALOG: Record<string, ErrorCatalogEntry> = {
     "retry",
     true,
   ),
+  AI_TIMEOUT: makeEntry(
+    "AI_TIMEOUT",
+    "L'assistant IA a depasse le delai autorise.",
+    "edge",
+    "warning",
+    "retry",
+    true,
+  ),
   AI_SECRET_NOT_CONFIGURED: makeEntry(
     "AI_SECRET_NOT_CONFIGURED",
     "Chiffrement des cles IA non configure.",

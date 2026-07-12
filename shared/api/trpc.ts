@@ -89,6 +89,8 @@ import {
   pricingReferenceClassificationListResponseSchema,
   pricingReferenceDiagnoseInputSchema,
   pricingReferenceDiagnoseResponseSchema,
+  pricingReferenceDiffAggregateInputSchema,
+  pricingReferenceDiffAggregateResponseSchema,
   pricingReferenceDiffsComputeInputSchema,
   pricingReferenceDiffsComputeResponseSchema,
   pricingReferenceDiffsListInputSchema,
@@ -119,6 +121,13 @@ import {
   pricingReferenceSegmentsListResponseSchema,
 } from "../schemas/pricing/references.schema.ts";
 import {
+  aiFeatureGrantDeleteInputSchema,
+  aiFeatureGrantMutationResponseSchema,
+  aiFeatureGrantSaveInputSchema,
+  aiFeatureGrantsListInputSchema,
+  aiFeatureGrantsListResponseSchema,
+  aiMembersAccessOverviewInputSchema,
+  aiMembersAccessOverviewResponseSchema,
   aiPromptsListInputSchema,
   aiPromptsListResponseSchema,
   aiPromptsPublishInputSchema,
@@ -129,6 +138,12 @@ import {
   aiPromptsSaveDraftResponseSchema,
   aiSettingsGetInputSchema,
   aiSettingsGetResponseSchema,
+  aiSettingsCreateQuotaInputSchema,
+  aiSettingsCreateQuotaResponseSchema,
+  aiSettingsDeleteModelInputSchema,
+  aiSettingsDeleteModelResponseSchema,
+  aiSettingsDeleteQuotaInputSchema,
+  aiSettingsDeleteQuotaResponseSchema,
   aiSettingsSaveModelInputSchema,
   aiSettingsSaveModelResponseSchema,
   aiSettingsSaveProviderInputSchema,
@@ -137,11 +152,19 @@ import {
   aiSettingsSaveQuotaResponseSchema,
   aiSettingsTestProviderInputSchema,
   aiSettingsTestProviderResponseSchema,
+  aiUsageByMemberInputSchema,
+  aiUsageByMemberResponseSchema,
   aiUsageListInputSchema,
   aiUsageListResponseSchema,
   aiUsageSummaryInputSchema,
   aiUsageSummaryResponseSchema,
 } from "../schemas/ai.schema.ts";
+import {
+  aiAssistantAskInputSchema,
+  aiAssistantAskResponseSchema,
+  aiAssistantStatusResponseSchema,
+} from "../schemas/aiAssistant.schema.ts";
+import { z } from "zod/v4";
 
 const t = initTRPC.create();
 
@@ -299,6 +322,10 @@ const appRouterType = t.router({
           .mutation(() => undefined as never),
       }),
       diffs: t.router({
+        aggregate: t.procedure
+          .input(pricingReferenceDiffAggregateInputSchema)
+          .output(pricingReferenceDiffAggregateResponseSchema)
+          .query(() => undefined as never),
         summary: t.procedure
           .input(pricingReferenceDiffsSummaryGetInputSchema)
           .output(pricingReferenceDiffsSummaryResponseSchema)
@@ -319,6 +346,34 @@ const appRouterType = t.router({
     }),
   }),
   ai: t.router({
+    assistant: t.router({
+      ask: t.procedure
+        .input(aiAssistantAskInputSchema)
+        .output(aiAssistantAskResponseSchema)
+        .mutation(() => undefined as never),
+      status: t.procedure
+        .input(z.strictObject({}))
+        .output(aiAssistantStatusResponseSchema)
+        .query(() => undefined as never),
+    }),
+    access: t.router({
+      list: t.procedure
+        .input(aiFeatureGrantsListInputSchema)
+        .output(aiFeatureGrantsListResponseSchema)
+        .query(() => undefined as never),
+      save: t.procedure
+        .input(aiFeatureGrantSaveInputSchema)
+        .output(aiFeatureGrantMutationResponseSchema)
+        .mutation(() => undefined as never),
+      delete: t.procedure
+        .input(aiFeatureGrantDeleteInputSchema)
+        .output(aiFeatureGrantMutationResponseSchema)
+        .mutation(() => undefined as never),
+      membersOverview: t.procedure
+        .input(aiMembersAccessOverviewInputSchema)
+        .output(aiMembersAccessOverviewResponseSchema)
+        .query(() => undefined as never),
+    }),
     settings: t.router({
       get: t.procedure
         .input(aiSettingsGetInputSchema)
@@ -332,9 +387,21 @@ const appRouterType = t.router({
         .input(aiSettingsSaveModelInputSchema)
         .output(aiSettingsSaveModelResponseSchema)
         .mutation(() => undefined as never),
+      deleteModel: t.procedure
+        .input(aiSettingsDeleteModelInputSchema)
+        .output(aiSettingsDeleteModelResponseSchema)
+        .mutation(() => undefined as never),
+      createQuota: t.procedure
+        .input(aiSettingsCreateQuotaInputSchema)
+        .output(aiSettingsCreateQuotaResponseSchema)
+        .mutation(() => undefined as never),
       saveQuota: t.procedure
         .input(aiSettingsSaveQuotaInputSchema)
         .output(aiSettingsSaveQuotaResponseSchema)
+        .mutation(() => undefined as never),
+      deleteQuota: t.procedure
+        .input(aiSettingsDeleteQuotaInputSchema)
+        .output(aiSettingsDeleteQuotaResponseSchema)
         .mutation(() => undefined as never),
       testProvider: t.procedure
         .input(aiSettingsTestProviderInputSchema)
@@ -360,6 +427,10 @@ const appRouterType = t.router({
         .mutation(() => undefined as never),
     }),
     usage: t.router({
+      byMember: t.procedure
+        .input(aiUsageByMemberInputSchema)
+        .output(aiUsageByMemberResponseSchema)
+        .query(() => undefined as never),
       summary: t.procedure
         .input(aiUsageSummaryInputSchema)
         .output(aiUsageSummaryResponseSchema)

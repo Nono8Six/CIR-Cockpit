@@ -35,6 +35,8 @@ const InteractionDetails = ({
     setStatusId,
     reminder,
     setReminder,
+    amount,
+    setAmount,
     orderRef,
     setOrderRef,
     statusOptions,
@@ -64,6 +66,8 @@ const InteractionDetails = ({
         onStatusChange={setStatusId}
         reminder={reminder}
         onReminderChange={setReminder}
+        amount={amount}
+        onAmountChange={setAmount}
         orderRef={orderRef}
         onOrderRefChange={setOrderRef}
         note={note}

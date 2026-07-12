@@ -50,6 +50,48 @@ Deno.test('normalizeInteractionUpdates keeps only whitelisted keys', () => {
   });
 });
 
+Deno.test('normalizeInteractionUpdates passe les champs opportunite', () => {
+  const normalized = normalizeInteractionUpdates({
+    stage: 'quote_sent',
+    stage_changed_at: '2026-07-10T09:00:00.000Z',
+    amount: 12400.5,
+    quote_sent_at: '2026-07-10T09:00:00.000Z',
+    lost_reason: '  Prix  '
+  } as Parameters<typeof normalizeInteractionUpdates>[0]);
+
+  assertEquals(normalized, {
+    stage: 'quote_sent',
+    stage_changed_at: '2026-07-10T09:00:00.000Z',
+    amount: 12400.5,
+    quote_sent_at: '2026-07-10T09:00:00.000Z',
+    lost_reason: 'Prix'
+  });
+});
+
+Deno.test('normalizeInteractionUpdates accepte les remises a null des champs opportunite', () => {
+  const normalized = normalizeInteractionUpdates({
+    stage: null,
+    amount: null,
+    quote_sent_at: null,
+    lost_reason: null
+  } as Parameters<typeof normalizeInteractionUpdates>[0]);
+
+  assertEquals(normalized, {
+    stage: null,
+    amount: null,
+    quote_sent_at: null,
+    lost_reason: null
+  });
+});
+
+Deno.test('normalizeInteractionUpdates rejette un montant invalide', () => {
+  const normalized = normalizeInteractionUpdates({
+    amount: -5
+  } as Parameters<typeof normalizeInteractionUpdates>[0]);
+
+  assertEquals(normalized, {});
+});
+
 Deno.test('normalizeInteractionUpdates drops invalid or empty values', () => {
   const normalized = normalizeInteractionUpdates({
     status: '   ',
@@ -160,7 +202,12 @@ const createInteractionRow = (overrides: Partial<InteractionRow> = {}): Interact
   timeline: [],
   updated_at: TEST_NOW,
   updated_by: null,
-  ...overrides
+  ...overrides,
+  amount: overrides.amount ?? null,
+  lost_reason: overrides.lost_reason ?? null,
+  quote_sent_at: overrides.quote_sent_at ?? null,
+  stage: overrides.stage ?? null,
+  stage_changed_at: overrides.stage_changed_at ?? null
 });
 
 // Mock DB Thenable universel permettant de chaîner n'importe quelle requête Drizzle à l'infini

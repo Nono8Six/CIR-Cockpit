@@ -851,6 +851,7 @@ export type Database = {
       interactions: {
         Row: {
           agency_id: string | null
+          amount: number | null
           channel: string
           company_name: string
           contact_email: string | null
@@ -865,10 +866,14 @@ export type Database = {
           id: string
           interaction_type: string
           last_action_at: string
+          lost_reason: string | null
           mega_families: string[]
           notes: string | null
           order_ref: string | null
+          quote_sent_at: string | null
           reminder_at: string | null
+          stage: string | null
+          stage_changed_at: string | null
           status: string
           status_id: string | null
           status_is_terminal: boolean
@@ -879,6 +884,7 @@ export type Database = {
         }
         Insert: {
           agency_id?: string | null
+          amount?: number | null
           channel: string
           company_name: string
           contact_email?: string | null
@@ -893,10 +899,14 @@ export type Database = {
           id: string
           interaction_type?: string
           last_action_at?: string
+          lost_reason?: string | null
           mega_families?: string[]
           notes?: string | null
           order_ref?: string | null
+          quote_sent_at?: string | null
           reminder_at?: string | null
+          stage?: string | null
+          stage_changed_at?: string | null
           status: string
           status_id?: string | null
           status_is_terminal?: boolean
@@ -907,6 +917,7 @@ export type Database = {
         }
         Update: {
           agency_id?: string | null
+          amount?: number | null
           channel?: string
           company_name?: string
           contact_email?: string | null
@@ -921,10 +932,14 @@ export type Database = {
           id?: string
           interaction_type?: string
           last_action_at?: string
+          lost_reason?: string | null
           mega_families?: string[]
           notes?: string | null
           order_ref?: string | null
+          quote_sent_at?: string | null
           reminder_at?: string | null
+          stage?: string | null
+          stage_changed_at?: string | null
           status?: string
           status_id?: string | null
           status_is_terminal?: boolean

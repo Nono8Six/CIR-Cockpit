@@ -6,6 +6,7 @@ import { clientFormSchema } from '../entity/client.schema.ts';
 import { clientContactFormSchema } from '../entity/client-contact.schema.ts';
 import { convertClientSchema } from '../entity/convert-client.schema.ts';
 import { addSharedInteractionRules, interactionBaseSchema } from '../interaction/interaction.schema.ts';
+import { interactionStageSchema } from '../interaction/stages.schema.ts';
 import { prospectFormSchema } from '../entity/prospect.schema.ts';
 import { supplierFormSchema } from '../entity/supplier.schema.ts';
 import { agencyInteractionTypeInputSchema } from './config.schema.ts';
@@ -190,7 +191,16 @@ export type DataEntityContactsPayload = z.infer<typeof dataEntityContactsPayload
 const timelineEventSchema = z.strictObject({
   id: z.string().trim().min(1, 'Identifiant evenement requis'),
   date: z.string().trim().min(1, 'Date evenement requise'),
-  type: z.enum(['note', 'status_change', 'reminder_change', 'creation', 'file', 'order_ref_change']),
+  type: z.enum([
+    'note',
+    'status_change',
+    'reminder_change',
+    'creation',
+    'file',
+    'order_ref_change',
+    'stage_change',
+    'amount_change'
+  ]),
   content: z.string().trim().min(1, 'Contenu evenement requis').max(MAX_TIMELINE_CONTENT_LENGTH, 'Contenu trop long'),
   author: z.string().trim().max(MAX_TIMELINE_AUTHOR_LENGTH, 'Auteur trop long').optional(),
   meta: z.record(z.string(), jsonValueSchema).optional()
@@ -212,6 +222,11 @@ const timelineUpdatesSchema = z.strictObject({
   status_id: z.union([uuidSchema, z.null()]).optional(),
   order_ref: z.union([z.string().trim(), z.null()]).optional(),
   reminder_at: z.union([z.string().trim(), z.null()]).optional(),
+  stage: z.union([interactionStageSchema, z.null()]).optional(),
+  stage_changed_at: z.union([z.string().trim(), z.null()]).optional(),
+  amount: z.union([z.number().min(0, 'Montant invalide'), z.null()]).optional(),
+  quote_sent_at: z.union([z.string().trim(), z.null()]).optional(),
+  lost_reason: z.union([z.string().trim().max(255, 'Motif de perte trop long'), z.null()]).optional(),
   notes: z.union([z.string(), z.null()]).optional(),
   entity_id: z.union([uuidSchema, z.null()]).optional(),
   contact_id: z.union([uuidSchema, z.null()]).optional(),

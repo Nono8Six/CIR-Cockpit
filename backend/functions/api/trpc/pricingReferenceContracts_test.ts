@@ -14,6 +14,8 @@ import {
   pricingReferenceClassificationListInputSchema,
   pricingReferenceDiagnoseInputSchema,
   pricingReferenceDiagnoseResponseSchema,
+  pricingReferenceDiffAggregateInputSchema,
+  pricingReferenceDiffAggregateResponseSchema,
   pricingReferenceDiffsComputeInputSchema,
   pricingReferenceDiffsComputeResponseSchema,
   pricingReferenceDiffsListInputSchema,
@@ -31,9 +33,9 @@ import {
   pricingReferenceImportsListInputSchema,
   pricingReferenceImportsListResponseSchema,
   pricingReferenceImportsPrepareInputSchema,
+  pricingReferenceRowsListInputSchema,
   pricingReferenceSegmentDetailInputSchema,
   pricingReferenceSegmentDetailResponseSchema,
-  pricingReferenceRowsListInputSchema,
   pricingReferenceSegmentsListInputSchema,
 } from "../../../../shared/schemas/pricing/references.schema.ts";
 import type { DbClient } from "../types.ts";
@@ -44,6 +46,10 @@ import {
   type PricingReferenceAnomalyQueryRow,
   type PricingReferenceExportSourceRow,
 } from "../services/pricing/references/referenceImports.ts";
+import {
+  classifyPricingReferenceNumericChange,
+  resolvePricingReferenceBrandAliases,
+} from "../services/pricing/references/referenceDiffs.ts";
 
 const readObject = (
   record: Record<string, unknown>,
@@ -927,6 +933,82 @@ Deno.test("pricing reference diff contracts are strict and cache-aware", () => {
   );
 });
 
+Deno.test("pricing reference aggregate contract normalizes directions and aliases", () => {
+  const runId = "11111111-1111-4111-8111-111111111111";
+  const baseId = "22222222-2222-4222-8222-222222222222";
+  const targetId = "33333333-3333-4333-8333-333333333333";
+  const validInput = {
+    run_id: runId,
+    group_by: "famille_cir",
+    measure: "remise",
+    direction: "baisse",
+    marques: ["ROCKWELL"],
+    severities: ["moyenne"],
+    diff_types: ["modifie"],
+    include_neutral: false,
+    limit: 50,
+  };
+
+  assertEquals(
+    pricingReferenceDiffAggregateInputSchema.safeParse(validInput).success,
+    true,
+  );
+  assertEquals(
+    pricingReferenceDiffAggregateInputSchema.safeParse({
+      ...validInput,
+      group_by: "famille",
+    }).success,
+    false,
+  );
+  assertEquals(
+    pricingReferenceDiffAggregateInputSchema.safeParse({
+      ...validInput,
+      champ_inattendu: true,
+    }).success,
+    false,
+  );
+  assertEquals(
+    pricingReferenceDiffAggregateResponseSchema.safeParse({
+      ok: true,
+      request_id: "request-aggregate",
+      run_id: runId,
+      base_snapshot_id: baseId,
+      target_snapshot_id: targetId,
+      group_by: "famille_cir",
+      measure: "remise",
+      direction: "baisse",
+      groups: [{
+        key: "99",
+        label: "DIVERS",
+        total: 2,
+        hausse_count: 0,
+        baisse_count: 2,
+        added_count: 0,
+        removed_count: 0,
+        avg_delta_pct: -3.472223,
+        max_delta_pct: -4.166667,
+        sample_object_keys: ["007|8|SKF|Z16", "008|9|SKF|Z25"],
+      }],
+      truncated: false,
+    }).success,
+    true,
+  );
+
+  assertEquals(resolvePricingReferenceBrandAliases(["rockwell", "ROCK"]), [
+    "ROCK",
+  ]);
+  assertEquals(
+    classifyPricingReferenceNumericChange("1.1200000000000001", "1.12"),
+    "neutre",
+  );
+  assertEquals(
+    classifyPricingReferenceNumericChange("67.099999999999994", "67.1"),
+    "neutre",
+  );
+  assertEquals(classifyPricingReferenceNumericChange("72", "69"), "baisse");
+  assertEquals(classifyPricingReferenceNumericChange("1.05", "1.07"), "hausse");
+});
+
 Deno.test("pricing reference classification listAll returns a real total when capped", async () => {
   const rows = [{
     id: "11111111-1111-4111-8111-111111111111",
@@ -1256,6 +1338,21 @@ Deno.test("pricing reference tRPC namespace is protected and activate requires s
   const diffSummaryError = await readErrorData(diffSummaryResponse);
   assertEquals(diffSummaryResponse.status, 401);
   assertEquals(readString(diffSummaryError, "appCode"), "AUTH_REQUIRED");
+
+  const diffAggregateResponse = await appModule.default.request(
+    "/trpc/pricing.references.diffs.aggregate",
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        target_snapshot_id: "22222222-2222-4222-8222-222222222222",
+        group_by: "famille_cir",
+      }),
+    },
+  );
+  const diffAggregateError = await readErrorData(diffAggregateResponse);
+  assertEquals(diffAggregateResponse.status, 401);
+  assertEquals(readString(diffAggregateError, "appCode"), "AUTH_REQUIRED");
 
   const diffComputeResponse = await appModule.default.request(
     "/trpc/pricing.references.diffs.compute",

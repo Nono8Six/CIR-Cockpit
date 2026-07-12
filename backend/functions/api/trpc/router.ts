@@ -83,6 +83,8 @@ import {
   pricingReferenceClassificationListResponseSchema,
   pricingReferenceDiagnoseInputSchema,
   pricingReferenceDiagnoseResponseSchema,
+  pricingReferenceDiffAggregateInputSchema,
+  pricingReferenceDiffAggregateResponseSchema,
   pricingReferenceDiffsComputeInputSchema,
   pricingReferenceDiffsComputeResponseSchema,
   pricingReferenceDiffsListInputSchema,
@@ -113,6 +115,13 @@ import {
   pricingReferenceSegmentsListResponseSchema,
 } from "../../../../shared/schemas/pricing/references.schema.ts";
 import {
+  aiFeatureGrantDeleteInputSchema,
+  aiFeatureGrantMutationResponseSchema,
+  aiFeatureGrantSaveInputSchema,
+  aiFeatureGrantsListInputSchema,
+  aiFeatureGrantsListResponseSchema,
+  aiMembersAccessOverviewInputSchema,
+  aiMembersAccessOverviewResponseSchema,
   aiPromptsListInputSchema,
   aiPromptsListResponseSchema,
   aiPromptsPublishInputSchema,
@@ -123,6 +132,12 @@ import {
   aiPromptsSaveDraftResponseSchema,
   aiSettingsGetInputSchema,
   aiSettingsGetResponseSchema,
+  aiSettingsCreateQuotaInputSchema,
+  aiSettingsCreateQuotaResponseSchema,
+  aiSettingsDeleteModelInputSchema,
+  aiSettingsDeleteModelResponseSchema,
+  aiSettingsDeleteQuotaInputSchema,
+  aiSettingsDeleteQuotaResponseSchema,
   aiSettingsSaveModelInputSchema,
   aiSettingsSaveModelResponseSchema,
   aiSettingsSaveProviderInputSchema,
@@ -131,11 +146,18 @@ import {
   aiSettingsSaveQuotaResponseSchema,
   aiSettingsTestProviderInputSchema,
   aiSettingsTestProviderResponseSchema,
+  aiUsageByMemberInputSchema,
+  aiUsageByMemberResponseSchema,
   aiUsageListInputSchema,
   aiUsageListResponseSchema,
   aiUsageSummaryInputSchema,
   aiUsageSummaryResponseSchema,
 } from "../../../../shared/schemas/ai.schema.ts";
+import {
+  aiAssistantAskInputSchema,
+  aiAssistantAskResponseSchema,
+  aiAssistantStatusResponseSchema,
+} from "../../../../shared/schemas/aiAssistant.schema.ts";
 import {
   adminAuditLogsInputSchema,
   adminUsersListInputSchema,
@@ -188,13 +210,13 @@ import {
   getPricingReferenceAnomaliesSummary,
   getPricingReferenceHealth,
   getPricingReferenceImport,
+  getPricingReferenceSegmentDetail,
   inspectPricingReferenceImport,
   listAllPricingReferenceClassification,
   listPricingReferenceAnomalies,
   listPricingReferenceClassification,
   listPricingReferenceImports,
   listPricingReferenceSegments,
-  getPricingReferenceSegmentDetail,
   preparePricingReferenceImport,
 } from "../services/pricing/references/referenceImports.ts";
 import {
@@ -202,8 +224,12 @@ import {
   getPricingReferenceDiffSummary,
   listPricingReferenceDiffs,
 } from "../services/pricing/references/referenceDiffs.ts";
+import { aggregatePricingReferenceDiffs } from "../services/pricing/references/referenceDiffAggregates.ts";
 import { activatePricingReferenceSnapshot } from "../services/pricing/references/referenceActivation.ts";
 import {
+  createAiQuota,
+  deleteAiModel,
+  deleteAiQuota,
   getAiSettings,
   getAiUsageSummary,
   listAiPrompts,
@@ -217,6 +243,17 @@ import {
   saveAiQuota,
   testAiProvider,
 } from "../services/ai/aiGovernance.ts";
+import {
+  getAssistantStatus,
+  runAssistantAsk,
+} from "../services/ai/assistantBroker.ts";
+import {
+  deleteAiFeatureGrant,
+  getAiMembersAccessOverview,
+  getAiUsageByMember,
+  listAiFeatureGrants,
+  saveAiFeatureGrant,
+} from "../services/ai/aiAccess.ts";
 import type { DbClient } from "../types.ts";
 import { httpError } from "../middleware/errorHandler.ts";
 import { authedProcedure, router, superAdminProcedure } from "./procedures.ts";
@@ -502,6 +539,14 @@ export const appRouter = router({
           ),
       }),
       diffs: router({
+        aggregate: authedProcedure
+          .input(pricingReferenceDiffAggregateInputSchema)
+          .output(pricingReferenceDiffAggregateResponseSchema)
+          .query(
+            withAuthedHandler((db, authContext, _requestId, input) =>
+              aggregatePricingReferenceDiffs(db, authContext, input)
+            ),
+          ),
         summary: authedProcedure
           .input(pricingReferenceDiffsSummaryGetInputSchema)
           .output(pricingReferenceDiffsSummaryResponseSchema)
@@ -540,6 +585,34 @@ export const appRouter = router({
     }),
   }),
   ai: router({
+    assistant: router({
+      ask: authedProcedure
+        .input(aiAssistantAskInputSchema)
+        .output(aiAssistantAskResponseSchema)
+        .mutation(withAuthedHandler(runAssistantAsk)),
+      status: authedProcedure
+        .input(z.strictObject({}))
+        .output(aiAssistantStatusResponseSchema)
+        .query(withAuthedHandler(getAssistantStatus)),
+    }),
+    access: router({
+      list: superAdminProcedure
+        .input(aiFeatureGrantsListInputSchema)
+        .output(aiFeatureGrantsListResponseSchema)
+        .query(withSuperAdminHandler(listAiFeatureGrants)),
+      save: superAdminProcedure
+        .input(aiFeatureGrantSaveInputSchema)
+        .output(aiFeatureGrantMutationResponseSchema)
+        .mutation(withSuperAdminHandler(saveAiFeatureGrant)),
+      delete: superAdminProcedure
+        .input(aiFeatureGrantDeleteInputSchema)
+        .output(aiFeatureGrantMutationResponseSchema)
+        .mutation(withSuperAdminHandler(deleteAiFeatureGrant)),
+      membersOverview: superAdminProcedure
+        .input(aiMembersAccessOverviewInputSchema)
+        .output(aiMembersAccessOverviewResponseSchema)
+        .query(withSuperAdminHandler(getAiMembersAccessOverview)),
+    }),
     settings: router({
       get: superAdminProcedure
         .input(aiSettingsGetInputSchema)
@@ -553,10 +626,22 @@ export const appRouter = router({
         .input(aiSettingsSaveModelInputSchema)
         .output(aiSettingsSaveModelResponseSchema)
         .mutation(withSuperAdminHandler(saveAiModel)),
+      deleteModel: superAdminProcedure
+        .input(aiSettingsDeleteModelInputSchema)
+        .output(aiSettingsDeleteModelResponseSchema)
+        .mutation(withSuperAdminHandler(deleteAiModel)),
+      createQuota: superAdminProcedure
+        .input(aiSettingsCreateQuotaInputSchema)
+        .output(aiSettingsCreateQuotaResponseSchema)
+        .mutation(withSuperAdminHandler(createAiQuota)),
       saveQuota: superAdminProcedure
         .input(aiSettingsSaveQuotaInputSchema)
         .output(aiSettingsSaveQuotaResponseSchema)
         .mutation(withSuperAdminHandler(saveAiQuota)),
+      deleteQuota: superAdminProcedure
+        .input(aiSettingsDeleteQuotaInputSchema)
+        .output(aiSettingsDeleteQuotaResponseSchema)
+        .mutation(withSuperAdminHandler(deleteAiQuota)),
       testProvider: superAdminProcedure
         .input(aiSettingsTestProviderInputSchema)
         .output(aiSettingsTestProviderResponseSchema)
@@ -581,6 +666,10 @@ export const appRouter = router({
         .mutation(withSuperAdminHandler(restoreAiPrompt)),
     }),
     usage: router({
+      byMember: superAdminProcedure
+        .input(aiUsageByMemberInputSchema)
+        .output(aiUsageByMemberResponseSchema)
+        .query(withSuperAdminHandler(getAiUsageByMember)),
       summary: superAdminProcedure
         .input(aiUsageSummaryInputSchema)
         .output(aiUsageSummaryResponseSchema)
@@ -660,3 +749,4 @@ export const appRouter = router({
 });
 
 export type AppRouter = typeof appRouter;
+import { z } from "zod/v4";

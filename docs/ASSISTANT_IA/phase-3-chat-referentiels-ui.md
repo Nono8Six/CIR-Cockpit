@@ -101,14 +101,14 @@ Tests Vitest (dans `__tests__/`) :
 
 ## 3. Checkpoints à valider
 
-- [ ] `askAiAssistant` / `getAiAssistantStatus` ajoutés à `services/ai.ts` (pattern invokeTrpc/parseResponse) + query keys.
-- [ ] Hook `useAssistantChat` : envoi, historique borné à 12, `client_request_id` stable par envoi/retry, erreurs via handleUiError, citations conservées.
-- [ ] `page_context` construit depuis l'état réel de la page ; stratégie front ou backend de résolution `run_id`/snapshots documentée.
-- [ ] `AssistantChatDialog` : Dialog centré (pas de Sheet), messages, sources repliables, saisie, chargement, suggestions initiales, état désactivé.
-- [ ] Bouton d'entrée sur `PricingReferencesPage`, visibilité pilotée par `status`.
-- [ ] Design conforme au design system local (tokens, densité, composants ui/*).
-- [ ] Tests Vitest : envoi/réponse/sources, état désactivé, bornage historique, idempotency key stable au retry.
-- [ ] `pnpm run qa:front` vert.
+- [x] `askAiAssistant` / `getAiAssistantStatus` ajoutés à `services/ai.ts` (pattern invokeTrpc/parseResponse) + query keys.
+- [x] Hook `useAssistantChat` : envoi, historique borné à 12, `client_request_id` stable par envoi/retry, erreurs via handleUiError, citations conservées.
+- [x] `page_context` construit depuis l'état réel de la page ; stratégie front ou backend de résolution `run_id`/snapshots documentée.
+- [x] `AssistantChatDialog` : Dialog centré (pas de Sheet), messages, sources repliables, saisie, chargement, suggestions initiales, état désactivé.
+- [x] Bouton d'entrée sur `PricingReferencesPage`, visibilité pilotée par `status`.
+- [x] Design conforme au design system local (tokens, densité, composants ui/*).
+- [x] Tests Vitest : envoi/réponse/sources, état désactivé, bornage historique, idempotency key stable au retry.
+- [x] `pnpm run qa:front` vert.
 
 ## 4. Prompt d'exécution (à coller dans une conversation neuve)
 
@@ -162,4 +162,21 @@ tableau de suivi (§8) de 00-plan-general.md. Ne commit/déploie pas sans demand
 
 <!-- À remplir en fin de phase. -->
 
-_(vide — phase non encore exécutée)_
+### 2026-07-10 — Phase exécutée localement
+- **Fait** : services RPC `ask/status` avec validation Zod, query key de statut, hook de conversation stateless, Dialog centré complet, bouton d'entrée dans l'en-tête Référentiels, rendu texte/listes sans HTML ni liens actifs, sources repliables, suggestions PO, états chargement/désactivé/erreur et retry idempotent.
+- **Fichiers créés** : `frontend/src/components/pricing-references/hooks/useAssistantChat.ts`, `frontend/src/components/pricing-references/components/assistant/AssistantChatDialog.tsx`, `AssistantMessageContent.tsx`, `AssistantSources.tsx`, `frontend/src/components/pricing-references/__tests__/AssistantChatDialog.test.tsx`, `useAssistantChat.test.ts`.
+- **Fichiers modifiés** : `frontend/src/services/ai.ts`, `frontend/src/services/query/queryKeys.ts`, `frontend/src/components/pricing-references/PricingReferencesPage.tsx`, son test existant, ce fichier et `docs/ASSISTANT_IA/00-plan-general.md`.
+- **Décisions prises en cours de route** : stratégie backend retenue pour la résolution du run et des snapshots. La page envoie uniquement les faits qu'elle détient réellement : `surface`, `active_tab`, `selectedImportId` lorsqu'il existe, et `file_kind` pour les onglets `segments`/`classification`. Aucun identifiant de run ou snapshot n'est supposé. Le bouton reste ouvrable quand le statut est désactivé afin que le Dialog explique la raison au lieu de présenter une action inerte.
+- **Écarts vs spécification (et pourquoi)** : les outils `preview_*` n'étaient pas exposés dans la session. Le navigateur intégré a ouvert `http://127.0.0.1:3000/remises/referentiels`, mais sa session non authentifiée s'est arrêtée sur l'écran de connexion ; aucun identifiant n'a été saisi. Le rendu et les interactions du Dialog ont donc été vérifiés par tests DOM/Vitest, sans appel provider réel depuis le navigateur.
+- **Points ouverts / à surveiller pour les phases suivantes** : refaire un passage visuel authentifié et un appel réel depuis le Dialog dès qu'une session de preview est disponible. La boucle reste non-streaming et peut durer jusqu'à 60 secondes ; l'état `L'assistant analyse…` couvre cette attente, la décision SSE reste en phase 6.
+- **QA** : tests ciblés Phase 3, 4/4 verts ; test existant `PricingReferencesPage`, 20/20 vert ; typecheck et lint ciblé verts ; `pnpm run qa:front` vert (`repo:check:local`, typecheck, lint, 150 fichiers/676 tests, error-compliance) ; `git diff --check` sans erreur.
+
+### 2026-07-10 — Extension corrective SQL généraliste
+- **Fait** : ajout de `get_database_catalog`, `describe_database_tables` et `execute_readonly_sql`. Le modèle peut inspecter le schéma autorisé, concevoir une requête PostgreSQL puis l'exécuter avec les permissions réelles de l'utilisateur. Le Dialog est renommé `Assistant IA CIR`.
+- **Sécurité prouvée** : transaction PostgreSQL `READ ONLY`, rôle local `authenticated`, `auth.uid()` injecté depuis l'identité vérifiée, RLS actives, timeout requête 5 s, timeout verrou 500 ms, 50 lignes/32 768 octets maximum, une seule instruction `SELECT/WITH`, schémas système/sensibles et `ai_provider_configs` bloqués. Le test Supabase réel rejette un `UPDATE` avec le code PostgreSQL `25006`.
+- **Accès réel** : l'utilisateur du test voit 31 tables public autorisées. Sous cette identité et ses RLS, la requête exhaustive sur le snapshot actif retourne 853 `CAT_FAB` distinctes pour `ROCK`.
+- **Robustesse** : la requête SQL est conservée dans l'audit `tool_trace`, y compris si un tour fournisseur ultérieur échoue. Un retry réseau conserve le `client_request_id`; une relance après erreur fournisseur en génère un nouveau pour ne pas rejouer l'erreur idempotente mémorisée.
+- **Fichiers créés** : `backend/functions/api/services/ai/assistantSqlTools.ts`, `assistantSqlTools_test.ts`, `backend/migrations/20260710170000_ai_assistant_sql_prompt_v4.sql`.
+- **Fichiers modifiés** : `assistantTools.ts`, `assistantBroker.ts`, `AssistantChatDialog.tsx`, `useAssistantChat.ts`, son test, ce fichier et `00-plan-general.md`.
+- **QA** : tests Deno ciblés SQL/broker 6/6 verts, tests Vitest du hook 3/3 verts, `deno check` de l'API vert, lint backend ciblé vert, suite backend d'exécution 271 tests verts et 8 ignorés, suite frontend complète 150 fichiers/677 tests verts, `pnpm run qa:docs` vert. `pnpm run qa:fast` franchit le contrôle repo, le frontend complet, l'error-compliance et le lint backend, puis s'arrête sur une erreur TypeScript préexistante/concurrente hors Assistant IA dans `dataInteractions_test.ts` (`amount` optionnel dans une factory alors que `InteractionRow.amount` est requis). Aucun échec d'exécution n'est lié à cette extension.
+- **Déploiement** : autorisé puis exécuté le 2026-07-10. Migration distante `20260710194916_ai_assistant_sql_prompt_v4` appliquée ; prompt v4 publié et versions 1 à 3 archivées. Edge Function `api` version 116 active, `verify_jwt=false` conservé car l'auth est gérée dans le code. Les preflights `ai.assistant.status` et `ai.assistant.ask` répondent `200` pour `http://localhost:3000`; un appel sans session répond `401 AUTH_REQUIRED` et non `404`/`500`.

@@ -5,7 +5,7 @@ import { z } from 'zod/v4';
 
 import type { AgencyStatus, Interaction, InteractionUpdate, TimelineEvent } from '@/types';
 import { isProspectRelationValue } from '@/constants/relations';
-import { buildInteractionEvents } from '@/utils/interactions/buildInteractionEvents';
+import { buildInteractionEvents, parseAmountInput } from '@/utils/interactions/buildInteractionEvents';
 
 type InteractionDetailsStateInput = {
   interaction: Interaction;
@@ -22,6 +22,9 @@ const interactionDetailsFormSchema = z.strictObject({
   note: z.string().max(5000, 'Note trop longue'),
   statusId: z.string().trim().min(1, 'Statut requis'),
   reminder: z.string(),
+  amount: z
+    .string()
+    .refine((value) => parseAmountInput(value) !== undefined, 'Montant invalide'),
   orderRef: z.string().trim().max(255, 'Reference trop longue')
 });
 
@@ -41,6 +44,7 @@ export const useInteractionDetailsState = ({
       note: '',
       statusId: interaction.status_id ?? '',
       reminder: interaction.reminder_at || '',
+      amount: interaction.amount === null || interaction.amount === undefined ? '' : String(interaction.amount),
       orderRef: interaction.order_ref || ''
     },
     mode: 'onChange'
@@ -50,6 +54,7 @@ export const useInteractionDetailsState = ({
   const note = useWatch({ control, name: 'note' }) ?? '';
   const statusId = useWatch({ control, name: 'statusId' }) ?? '';
   const reminder = useWatch({ control, name: 'reminder' }) ?? '';
+  const amount = useWatch({ control, name: 'amount' }) ?? '';
   const orderRef = useWatch({ control, name: 'orderRef' }) ?? '';
 
   const allStatuses = useMemo(
@@ -86,17 +91,26 @@ export const useInteractionDetailsState = ({
   }, [historicalStatuses, interaction.status, interaction.status_id, statusById, statuses]);
 
   const canConvert = useMemo(() => Boolean(interaction.entity_id && isProspectRelationValue(interaction.entity_type)), [interaction.entity_id, interaction.entity_type]);
-  const isSubmitDisabled = useMemo(() => !note.trim() && statusId === (interaction.status_id ?? '') && reminder === (interaction.reminder_at || '') && orderRef === (interaction.order_ref || ''), [interaction.order_ref, interaction.reminder_at, interaction.status_id, note, orderRef, reminder, statusId]);
+  const isSubmitDisabled = useMemo(() => {
+    const parsedAmount = parseAmountInput(amount);
+    const amountUnchanged = parsedAmount === undefined || parsedAmount === (interaction.amount ?? null);
+    return !note.trim()
+      && statusId === (interaction.status_id ?? '')
+      && reminder === (interaction.reminder_at || '')
+      && amountUnchanged
+      && orderRef === (interaction.order_ref || '');
+  }, [amount, interaction.amount, interaction.order_ref, interaction.reminder_at, interaction.status_id, note, orderRef, reminder, statusId]);
 
   useEffect(() => {
     reset({
       note: '',
       statusId: resolvedStatusId,
       reminder: interaction.reminder_at || '',
+      amount: interaction.amount === null || interaction.amount === undefined ? '' : String(interaction.amount),
       orderRef: interaction.order_ref || ''
     });
     setErrorMessage(null);
-  }, [interaction.id, interaction.order_ref, interaction.reminder_at, reset, resolvedStatusId]);
+  }, [interaction.amount, interaction.id, interaction.order_ref, interaction.reminder_at, reset, resolvedStatusId]);
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [interaction.timeline]);
 
   const submitUpdates = handleSubmit((values) => {
@@ -105,6 +119,7 @@ export const useInteractionDetailsState = ({
       interaction,
       statusId: values.statusId,
       reminder: values.reminder,
+      amount: values.amount,
       orderRef: values.orderRef,
       note: values.note,
       statusById
@@ -117,6 +132,7 @@ export const useInteractionDetailsState = ({
       ?? form.formState.errors.note?.message
       ?? form.formState.errors.orderRef?.message
       ?? form.formState.errors.reminder?.message
+      ?? form.formState.errors.amount?.message
       ?? 'Verification du formulaire impossible.';
     setErrorMessage(firstError);
   });
@@ -130,6 +146,9 @@ export const useInteractionDetailsState = ({
   const setReminder = useCallback((value: string) => {
     setValue('reminder', value, { shouldDirty: true, shouldValidate: true });
   }, [setValue]);
+  const setAmount = useCallback((value: string) => {
+    setValue('amount', value, { shouldDirty: true, shouldValidate: true });
+  }, [setValue]);
   const setOrderRef = useCallback((value: string) => {
     setValue('orderRef', value, { shouldDirty: true, shouldValidate: true });
   }, [setValue]);
@@ -137,5 +156,5 @@ export const useInteractionDetailsState = ({
     void submitUpdates();
   }, [submitUpdates]);
 
-  return { note, setNote, statusId, setStatusId, reminder, setReminder, orderRef, setOrderRef, statusOptions, canConvert, scrollRef, isSubmitDisabled, handleSubmit: handleInteractionSubmit, errorMessage };
+  return { note, setNote, statusId, setStatusId, reminder, setReminder, amount, setAmount, orderRef, setOrderRef, statusOptions, canConvert, scrollRef, isSubmitDisabled, handleSubmit: handleInteractionSubmit, errorMessage };
 };
