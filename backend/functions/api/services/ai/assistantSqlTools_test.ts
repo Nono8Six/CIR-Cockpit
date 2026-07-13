@@ -2,8 +2,10 @@ import { assertEquals, assertRejects, assertThrows } from "std/assert";
 
 import type { AuthContext, DbClient } from "../../types.ts";
 import {
+  canonicalizeAssistantSql,
   executeDatabaseSql,
   normalizeAssistantSql,
+  validateAssistantSqlAgainstCatalog,
 } from "./assistantSqlTools.ts";
 import { runAssistantToolLoop } from "./assistantBroker.ts";
 import type { OpenRouterToolResponse } from "./aiGovernance.ts";
@@ -74,9 +76,10 @@ Deno.test("assistant SQL execution configures a read-only authenticated transact
   const transaction = {
     execute: (statement: unknown) => {
       executions.push(statement);
-      return Promise.resolve(
-        executions.length === 7 ? [{ distinct_cat_fab_rock: 853 }] : [],
-      );
+      if (executions.length === 7) {
+        return Promise.resolve([{ name: "pricing_supplier_segments", description: null, column_names: ["snapshot_id", "cat_fab"] }]);
+      }
+      return Promise.resolve(executions.length === 8 ? [{ distinct_cat_fab_rock: 853 }] : []);
     },
   };
   const db = {
@@ -87,10 +90,10 @@ Deno.test("assistant SQL execution configures a read-only authenticated transact
   const result = await executeDatabaseSql(
     db,
     authContext,
-    "select count(distinct cat_fab) as distinct_cat_fab_rock from public.pricing_supplier_segments",
+    "select count(distinct cat_fab) as distinct_cat_fab_rock from public.pricing_supplier_segments where snapshot_id = '00000000-0000-4000-8000-000000000003'::uuid",
   );
 
-  assertEquals(executions.length, 7);
+  assertEquals(executions.length, 8);
   assertEquals(result.rows, [{ distinct_cat_fab_rock: 853 }]);
   assertEquals(result.columns, ["distinct_cat_fab_rock"]);
   assertEquals(result.truncated, false);
@@ -102,7 +105,9 @@ Deno.test("assistant SQL injecte deux identites distinctes pour laisser les RLS 
     const transaction = {
       execute: (statement: unknown) => {
         observed.push(JSON.stringify(statement));
-        return Promise.resolve([]);
+        return Promise.resolve(observed.length % 8 === 7
+          ? [{ name: "clients", description: null, column_names: ["id"] }]
+          : []);
       },
     };
     const db = {
@@ -282,4 +287,143 @@ Deno.test("P0 refuse une reparation qui retire le snapshot de reference", async 
     "Le perimetre snapshot de la reparation SQL a change.",
   );
   assertEquals(executions, 1);
+});
+
+Deno.test("P4 valide tables et colonnes contre le catalogue avant PostgreSQL", () => {
+  const catalog = [{ name: "clients", description: null, column_names: ["id", "name", "agency_id"] }];
+  assertThrows(
+    () => validateAssistantSqlAgainstCatalog("select absent from public.clients", catalog),
+    Error,
+    "Colonne SQL inconnue: absent",
+  );
+  assertThrows(
+    () => validateAssistantSqlAgainstCatalog("select id from public.inconnue", catalog),
+    Error,
+    "Table SQL inconnue ou non autorisee: inconnue",
+  );
+});
+
+Deno.test("P4 accepte une CTE read-only legitime et conserve une variation metier", () => {
+  const catalog = [{ name: "clients", description: null, column_names: ["id", "name", "agency_id"] }];
+  validateAssistantSqlAgainstCatalog(
+    "with scoped as (select id, name from public.clients where agency_id is not null) select count(*) from scoped",
+    catalog,
+  );
+  assertEquals(
+    canonicalizeAssistantSql("select count(*) from public.clients where name = 'A'") ===
+      canonicalizeAssistantSql("select count(*) from public.clients where name = 'B'"),
+    false,
+  );
+});
+
+Deno.test("P4 refuse schema quote, fonction, commentaire et verrouillage", () => {
+  for (const request of [
+    'select * from "AuTh"."users"',
+    "select pg_read_file('/tmp/x')",
+    "select 1 -- commentaire",
+    "select * from public.clients for key share",
+  ]) assertThrows(() => normalizeAssistantSql(request), Error);
+});
+
+Deno.test("P4 impose le snapshot et ILIKE aux recherches exhaustives", () => {
+  const catalog = [{ name: "pricing_supplier_segments", description: null, column_names: ["snapshot_id", "marque", "cat_fab"] }];
+  assertThrows(
+    () => validateAssistantSqlAgainstCatalog("select count(*) from public.pricing_supplier_segments", catalog),
+    Error,
+    "Un filtre snapshot_id est obligatoire",
+  );
+  assertThrows(
+    () => validateAssistantSqlAgainstCatalog(
+      "select marque from public.pricing_supplier_segments where snapshot_id = '00000000-0000-4000-8000-000000000003'::uuid and cat_fab like '%rock%'",
+      catalog,
+    ),
+    Error,
+    "doit utiliser ILIKE",
+  );
+  validateAssistantSqlAgainstCatalog(
+    "select marque from public.pricing_supplier_segments where snapshot_id = '00000000-0000-4000-8000-000000000003'::uuid and cat_fab ilike '%rock%'",
+    catalog,
+  );
+});
+
+Deno.test("P4 canonicalise casse espaces retours ligne JSON et point virgule", async () => {
+  const sqlA = " SELECT count(*)\nFROM public.clients ;";
+  const sqlB = "select COUNT ( * ) from PUBLIC.clients";
+  assertEquals(canonicalizeAssistantSql(sqlA), canonicalizeAssistantSql(sqlB));
+
+  let round = 0;
+  let executions = 0;
+  await assertRejects(
+    () => runAssistantToolLoop(
+      [{ role: "user", content: "Compte" }],
+      openRouterToolDefinitions,
+      () => Promise.resolve({
+        text: "", inputTokens: 1, outputTokens: 1, cachedInputTokens: 0, reasoningTokens: 0,
+        providerCostAmount: 0, generationId: crypto.randomUUID(), modelId: "offline", provider: "offline",
+        finishReason: "tool_calls", nativeFinishReason: "tool_calls", content: null,
+        toolCalls: [{ id: crypto.randomUUID(), type: "function", function: {
+          name: "execute_readonly_sql",
+          arguments: round++ === 0
+            ? JSON.stringify({ purpose: "Compte", sql: sqlA, options: { b: 2, a: 1 } })
+            : JSON.stringify({ options: { a: 1, b: 2 }, sql: sqlB, purpose: "Compte" }),
+        } }],
+      }),
+      () => { executions += 1; return Promise.resolve({ output: { ok: true }, rowCount: 1 }); },
+    ), Error, "Boucle d appels outil identiques detectee.",
+  );
+  assertEquals(executions, 1);
+});
+
+Deno.test("P4 refuse une reparation qui change table dimension ou filtre metier", async () => {
+  const initial = "select marque, count(*) from public.pricing_supplier_segments where snapshot_id = '4e216bc4-7d82-4eb7-aa20-2cc8316667cc'::uuid and cat_fab ilike '%rock%' group by marque";
+  const repairs = [
+    "select name, count(*) from public.clients where snapshot_id = '4e216bc4-7d82-4eb7-aa20-2cc8316667cc'::uuid and cat_fab ilike '%rock%' group by name",
+    "select cat_fab, count(*) from public.pricing_supplier_segments where snapshot_id = '4e216bc4-7d82-4eb7-aa20-2cc8316667cc'::uuid and cat_fab ilike '%rock%' group by cat_fab",
+    "select marque, count(*) from public.pricing_supplier_segments where snapshot_id = '4e216bc4-7d82-4eb7-aa20-2cc8316667cc'::uuid and cat_fab ilike '%drive%' group by marque",
+  ];
+  for (const repair of repairs) {
+    let round = 0;
+    let executions = 0;
+    await assertRejects(
+      () => runAssistantToolLoop(
+        [{ role: "user", content: "Compte" }], openRouterToolDefinitions,
+        () => Promise.resolve({
+          text: "", inputTokens: 1, outputTokens: 1, cachedInputTokens: 0, reasoningTokens: 0,
+          providerCostAmount: 0, generationId: crypto.randomUUID(), modelId: "offline", provider: "offline",
+          finishReason: "tool_calls", nativeFinishReason: "tool_calls", content: null,
+          toolCalls: [{ id: crypto.randomUUID(), type: "function", function: {
+            name: "execute_readonly_sql",
+            arguments: JSON.stringify({ sql: round++ === 0 ? initial : repair, purpose: "Compte" }),
+          } }],
+        }),
+        () => { executions += 1; return Promise.resolve({ output: { ok: false }, rowCount: null }); },
+      ), Error,
+    );
+    assertEquals(executions, 1);
+  }
+});
+
+Deno.test("P4 autorise au maximum une reparation SQL", async () => {
+  const sqlByRound = [
+    "select count(marque) from public.pricing_supplier_segments where snapshot_id = '4e216bc4-7d82-4eb7-aa20-2cc8316667cc'::uuid",
+    "select count(marque) as total from public.pricing_supplier_segments where snapshot_id = '4e216bc4-7d82-4eb7-aa20-2cc8316667cc'::uuid",
+    "select count(marque) as total_corrige from public.pricing_supplier_segments where snapshot_id = '4e216bc4-7d82-4eb7-aa20-2cc8316667cc'::uuid",
+  ];
+  let round = 0;
+  let executions = 0;
+  await assertRejects(
+    () => runAssistantToolLoop(
+      [{ role: "user", content: "Compte" }], openRouterToolDefinitions,
+      () => Promise.resolve({
+        text: "", inputTokens: 1, outputTokens: 1, cachedInputTokens: 0, reasoningTokens: 0,
+        providerCostAmount: 0, generationId: crypto.randomUUID(), modelId: "offline", provider: "offline",
+        finishReason: "tool_calls", nativeFinishReason: "tool_calls", content: null,
+        toolCalls: [{ id: crypto.randomUUID(), type: "function", function: {
+          name: "execute_readonly_sql", arguments: JSON.stringify({ sql: sqlByRound[Math.min(round++, 2)], purpose: "Compte" }),
+        } }],
+      }),
+      () => { executions += 1; return Promise.resolve({ output: { ok: false }, rowCount: null }); },
+    ), Error, "Une seule reparation SQL est autorisee.",
+  );
+  assertEquals(executions, 2);
 });

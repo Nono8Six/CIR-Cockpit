@@ -67,7 +67,7 @@ Statuts autorisés : `À FAIRE`, `EN COURS`, `BLOQUÉE`, `VALIDÉE`.
 | 1 | Couche sémantique déterministe | `aggregate_segments` et FESTO → FEST présents localement | VALIDÉE | FESTO, ROCK et comptages passent sans SQL généré | 7 tests P1 dédiés + 7 contrats/broker verts ; vérités DB P0 confirmées par MCP ; provider/tokens/coût à zéro |
 | 2 | Routage d'intentions | Routage déterministe limité au comptage CAT_FAB | VALIDÉE | Chaque intention critique ne reçoit que ses outils autorisés | Matrice P2 : 20 cas, allowlists exactes, fallback SQL borné et 4 chemins sans provider |
 | 3 | Contexte conversationnel | Historique limité à `{role, content}` | VALIDÉE | « et ROCK ? » hérite correctement du contexte précédent | Contrat strict borné, TTL/snapshot contrôlés, 5 tests P3 backend + transport frontend vert |
-| 4 | Fallback SQL durci | Lecture seule/RLS bornées, validation sémantique incomplète | À FAIRE | Colonnes inventées, changements de scope et boucles équivalentes sont bloqués | — |
+| 4 | Fallback SQL durci | Lecture seule/RLS bornées, validation sémantique incomplète | VALIDÉE | Colonnes inventées, changements de scope et boucles équivalentes sont bloqués | Validation structurelle + catalogue réel avant SQL métier ; 17 tests P4 verts ; P5 reste isolée |
 | 5 | Preuves, erreurs et diagnostic UI | Sources et SQL partiellement visibles localement | À FAIRE | Aucun fait sans provenance ; aucun détail interne ou sensible exposé | — |
 | 6 | Évaluations et choix du modèle | Runner live présent mais campagne comparative non terminée | À FAIRE | Tous les seuils bloquants passent sur le modèle retenu | — |
 | 7 | Performance, Realtime et UX | Correctifs Realtime/React locaux, non livrés | À FAIRE | p50/p95 mesurés, absence de boucle Realtime, parcours UI vérifié | — |
@@ -397,19 +397,19 @@ mais sémantiquement faux ou hors périmètre.
 
 ### Travaux
 
-- [ ] Vérifier avant exécution qu'une seule instruction read-only est présente.
-- [ ] Vérifier les tables et colonnes contre le catalogue autorisé.
-- [ ] Refuser les schémas, fonctions et constructions interdites.
-- [ ] Imposer ou injecter côté backend le snapshot pour les tables versionnées.
-- [ ] Ne jamais demander au modèle d'inventer un filtre `agency_id` ; s'appuyer sur l'identité
+- [x] Vérifier avant exécution qu'une seule instruction read-only est présente.
+- [x] Vérifier les tables et colonnes contre le catalogue autorisé.
+- [x] Refuser les schémas, fonctions et constructions interdites.
+- [x] Imposer ou injecter côté backend le snapshot pour les tables versionnées.
+- [x] Ne jamais demander au modèle d'inventer un filtre `agency_id` ; s'appuyer sur l'identité
   backend, le rôle `authenticated` et RLS.
-- [ ] Refuser les recherches exhaustives textuelles sensibles à la casse lorsqu'elles changent
+- [x] Refuser les recherches exhaustives textuelles sensibles à la casse lorsqu'elles changent
   la sémantique attendue.
-- [ ] Canonicaliser casse, espaces, retours à la ligne, arguments JSON et point-virgule final dans
+- [x] Canonicaliser casse, espaces, retours à la ligne, arguments JSON et point-virgule final dans
   le fingerprint anti-boucle.
-- [ ] Autoriser une seule réparation SQL après échec.
-- [ ] Vérifier que la réparation conserve tables, snapshot, dimensions et filtres métier.
-- [ ] Refuser toute réponse factuelle si aucun résultat équivalent n'a réussi.
+- [x] Autoriser une seule réparation SQL après échec.
+- [x] Vérifier que la réparation conserve tables, snapshot, dimensions et filtres métier.
+- [x] Refuser toute réponse factuelle si aucun résultat équivalent n'a réussi.
 
 ### Checkpoint vérifiable P4
 
@@ -425,7 +425,42 @@ Le checkpoint est validé si les tests prouvent que :
 
 | Date | Statut | Exécuté par | Preuve/commande | Résultat | Écart ou blocage |
 | --- | --- | --- | --- | --- | --- |
-| — | À FAIRE | — | — | — | — |
+| 2026-07-13 | VALIDÉE | Codex | `assistantSqlTools_test.ts`, suites assistant P1/P2/P3/P4, lint/check Deno, `pnpm run qa:back`, `pnpm run qa` | 17/17 tests SQL P4 ; suites assistant 43 verts et 1 rouge P5 réservé ; `qa:back` 319 verts/1 rouge P5/11 ignorés ; frontend global 687/687 vert avant seuil coverage | `qa` reste arrêté par `useDashboardStatusHelpers.ts` à 13,33 % de branches pour 30 %, écart frontend préexistant et hors P4 ; déploiement distant à consigner après checkpoint Git |
+
+#### Checkpoint P4 — 2026-07-13
+
+- Architecture : tokenizer SQL structurel côté backend, analyse des relations, projections,
+  dimensions, filtres et snapshots, puis validation contre le catalogue `information_schema`
+  réellement lisible sous le rôle PostgreSQL `authenticated` avant la requête métier.
+- Protections SQL : une instruction `SELECT`/`WITH` uniquement, sans commentaire, écriture,
+  verrouillage de ligne, schéma non public, relation secrète, fonction hors allowlist ou
+  construction non reconnue. Les tables et colonnes inconnues sont refusées avant PostgreSQL.
+- Snapshot et RLS : `snapshot_id` est obligatoire sur les tables de données référentielles
+  versionnées. Aucun `agency_id` n'est injecté ; l'outil interdit au modèle d'ajouter ce filtre et
+  conserve l'identité JWT backend, `set local role authenticated`, la transaction read-only et les
+  RLS. Les référentiels globaux sans `agency_id` restent interrogeables avec leur vrai catalogue.
+- Recherche textuelle : `LIKE` est refusé pour le fallback exhaustif ; `ILIKE` est requis afin de
+  ne pas perdre les variations de casse présentes dans les référentiels.
+- Fingerprint : canonicalisation du SQL hors casse non significative, espaces, retours à la ligne
+  et point-virgule final, plus tri récursif stable des objets JSON. Les valeurs métier distinctes
+  restent distinctes.
+- Réparation : une seule réparation après échec ; tables, snapshots, dimensions et filtres doivent
+  rester strictement identiques. La seconde exécution est bloquée avant l'accès métier si un
+  invariant change. Une réponse factuelle est refusée si aucune exécution SQL valide n'aboutit.
+- Tests : `assistantSqlTools_test.ts` 17/17 ; suites assistant P1/P2/P3/P4 43 vertes, avec la seule
+  régression P5 volontaire encore rouge. `pnpm run qa:back` : 319 verts, 1 rouge P5, 11 tests
+  conditionnels ignorés. Lint Deno ciblé et complet, `deno check` Edge Function : verts.
+- Gate finale : `pnpm run qa` atteint 687/687 tests frontend verts et échoue uniquement sur le
+  seuil préexistant de branches de `useDashboardStatusHelpers.ts` (13,33 % < 30 %). Aucun E2E
+  exécuté : aucun parcours UI n'est modifié.
+- Migration : aucune ; P4 ne modifie ni schéma, ni RLS, ni index, ni donnée.
+- Déploiement distant au checkpoint local : `api` v120 `ACTIVE`, `verify_jwt=false`, wrapper
+  `supabase/functions/api/index.ts` et import map `deno.json` confirmés par Supabase MCP. La version
+  P4 et les probes API/CORS sont consignées après déploiement.
+- Réserve P5 : la preuve métier structurée d'un succès technique reste volontairement hors P4 et
+  sa régression dédiée demeure rouge.
+
+Décision : P4 `VALIDÉE`. La prochaine phase fonctionnelle reste P5, non implémentée ici.
 
 ---
 

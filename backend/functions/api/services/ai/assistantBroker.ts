@@ -40,6 +40,11 @@ import {
   parseAssistantReferenceIntent,
   selectToolsForAssistantIntent,
 } from "./assistantIntentRouting.ts";
+import {
+  analyzeAssistantSql,
+  canonicalizeAssistantSql,
+  type AssistantSqlSemantics,
+} from "./assistantSqlTools.ts";
 
 const FEATURE = "assistant.referentiels" as const;
 export const MAX_TOOL_ROUNDS = 6;
@@ -408,10 +413,42 @@ const assertInputTokenBudget = (messages: OpenRouterMessage[]): void => {
   }
 };
 
+const canonicalizeToolArgument = (value: unknown, key?: string): unknown => {
+  if (key === "sql" && typeof value === "string") return canonicalizeAssistantSql(value);
+  if (Array.isArray(value)) return value.map((item) => canonicalizeToolArgument(item));
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value as Record<string, unknown>)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([childKey, childValue]) => [childKey, canonicalizeToolArgument(childValue, childKey)]));
+  }
+  return value;
+};
+
 const toolCallFingerprint = (
   name: string,
   args: Record<string, unknown>,
-): string => `${name}:${JSON.stringify(args, Object.keys(args).sort())}`;
+): string => `${name}:${JSON.stringify(canonicalizeToolArgument(args))}`;
+
+const sameStringSet = (left: string[], right: string[]): boolean =>
+  left.length === right.length && left.every((value, index) => value === right[index]);
+
+const assertSqlRepairScope = (
+  previous: AssistantSqlSemantics,
+  repaired: AssistantSqlSemantics,
+): void => {
+  if (!sameStringSet(previous.snapshotIds, repaired.snapshotIds)) {
+    throw httpError(400, "INVALID_PAYLOAD", "Le perimetre snapshot de la reparation SQL a change.");
+  }
+  if (!sameStringSet(previous.tables, repaired.tables)) {
+    throw httpError(400, "INVALID_PAYLOAD", "Les tables de la reparation SQL ont change.");
+  }
+  if (!sameStringSet(previous.dimensions, repaired.dimensions)) {
+    throw httpError(400, "INVALID_PAYLOAD", "Les dimensions de la reparation SQL ont change.");
+  }
+  if (!sameStringSet(previous.filters, repaired.filters)) {
+    throw httpError(400, "INVALID_PAYLOAD", "Les filtres metier de la reparation SQL ont change.");
+  }
+};
 
 export const runAssistantToolLoop = async (
   initialMessages: OpenRouterMessage[],
@@ -433,6 +470,10 @@ export const runAssistantToolLoop = async (
   };
   const rounds: LoopResult["rounds"] = [];
   const toolCallCounts = new Map<string, number>();
+  let failedSqlSemantics: AssistantSqlSemantics | null = null;
+  let sqlRepairCount = 0;
+  let sqlAttempted = false;
+  let sqlSucceeded = false;
   let servedModelId = "";
 
   for (let round = 0; round < MAX_TOOL_ROUNDS; round += 1) {
@@ -455,6 +496,9 @@ export const runAssistantToolLoop = async (
           "Reponse finale assistant vide.",
         );
       }
+      if (sqlAttempted && !sqlSucceeded) {
+        throw httpError(502, "AI_RESPONSE_INVALID", "Aucune execution SQL semantiquement valide n a abouti.");
+      }
       return {
         answer: response.content.trim(),
         citations,
@@ -472,6 +516,21 @@ export const runAssistantToolLoop = async (
     });
     for (const call of response.toolCalls) {
       const args = parseToolArguments(call.function.arguments);
+      let currentSqlSemantics: AssistantSqlSemantics | null = null;
+      if (call.function.name === "execute_readonly_sql") {
+        sqlAttempted = true;
+        if (typeof args.sql !== "string") {
+          throw httpError(400, "INVALID_PAYLOAD", "Requete SQL requise.");
+        }
+        currentSqlSemantics = analyzeAssistantSql(args.sql);
+        if (failedSqlSemantics) {
+          sqlRepairCount += 1;
+          if (sqlRepairCount > 1) {
+            throw httpError(502, "AI_TOOL_LOOP_DETECTED", "Une seule reparation SQL est autorisee.");
+          }
+          assertSqlRepairScope(failedSqlSemantics, currentSqlSemantics);
+        }
+      }
       const fingerprint = toolCallFingerprint(call.function.name, args);
       const repeated = (toolCallCounts.get(fingerprint) ?? 0) + 1;
       toolCallCounts.set(fingerprint, repeated);
@@ -485,6 +544,14 @@ export const runAssistantToolLoop = async (
       const started = performance.now();
       const executed = await toolExecutor(call.function.name, args);
       const ok = executed.output.ok === true;
+      if (currentSqlSemantics) {
+        if (ok) {
+          sqlSucceeded = true;
+          failedSqlSemantics = null;
+        } else {
+          failedSqlSemantics = currentSqlSemantics;
+        }
+      }
       const trace = aiAssistantToolCallTraceSchema.parse({
         name: call.function.name,
         arguments: args,
@@ -517,6 +584,9 @@ export const runAssistantToolLoop = async (
   });
   if (!forced.content?.trim()) {
     throw httpError(502, "AI_RESPONSE_INVALID", "Reponse finale forcee vide.");
+  }
+  if (sqlAttempted && !sqlSucceeded) {
+    throw httpError(502, "AI_RESPONSE_INVALID", "Aucune execution SQL semantiquement valide n a abouti.");
   }
   return {
     answer: forced.content.trim(),
