@@ -90,11 +90,20 @@ export const resolveAssistantAccess = async (
   authContext: AuthContext,
   feature: AiFeature,
 ): Promise<AssistantAccessResolution> => {
-  const rows = await db.execute<AssistantAccessResolution>(sql`
-    select * from private.resolve_ai_feature_access(
-      ${feature}, ${authContext.userId}::uuid, ${authContext.activeAgencyId}::uuid
-    )
-  `);
+  let rows: AssistantAccessResolution[];
+  try {
+    rows = await db.execute<AssistantAccessResolution>(sql`
+      select * from private.resolve_ai_feature_access(
+        ${feature}, ${authContext.userId}::uuid, ${authContext.activeAgencyId}::uuid
+      )
+    `);
+  } catch {
+    throw httpError(
+      500,
+      "DB_READ_FAILED",
+      "Impossible de verifier l acces a l assistant IA.",
+    );
+  }
   const resolution = rows[0];
   if (!resolution) {
     throw httpError(

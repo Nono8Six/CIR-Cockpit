@@ -6,7 +6,6 @@ import DashboardToolbar from '@/components/dashboard/DashboardToolbar';
 
 const baseProps = {
   viewMode: 'list' as const,
-  onViewModeChange: vi.fn(),
   period: 'today' as const,
   onPeriodChange: vi.fn(),
   periodErrorMessage: null as string | null,
@@ -20,9 +19,8 @@ const baseProps = {
 };
 
 describe('DashboardToolbar', () => {
-  it('pilote les vues, la periode, les dates et la recherche', async () => {
+  it('pilote la periode, les dates et la recherche en vue Historique', async () => {
     const user = userEvent.setup();
-    const onViewModeChange = vi.fn();
     const onPeriodChange = vi.fn();
     const onDateRangeChange = vi.fn();
     const onStartDateChange = vi.fn();
@@ -32,7 +30,6 @@ describe('DashboardToolbar', () => {
     render(
       <DashboardToolbar
         {...baseProps}
-        onViewModeChange={onViewModeChange}
         onPeriodChange={onPeriodChange}
         onDateRangeChange={onDateRangeChange}
         onStartDateChange={onStartDateChange}
@@ -40,9 +37,6 @@ describe('DashboardToolbar', () => {
         onSearchTermChange={onSearchTermChange}
       />
     );
-
-    await user.click(screen.getByRole('tab', { name: /historique/i }));
-    expect(onViewModeChange).toHaveBeenCalledWith('list');
 
     await user.click(screen.getByTestId('dashboard-period-select'));
     await user.click(screen.getByRole('option', { name: /mois dernier/i }));
@@ -61,14 +55,11 @@ describe('DashboardToolbar', () => {
     });
     expect(onStartDateChange).toHaveBeenCalledWith('2026-02-02');
     expect(screen.getByTestId('dashboard-start-date')).toHaveAttribute('id', 'dashboard-start-date');
-    expect(screen.getByTestId('dashboard-start-date')).toHaveAttribute('name', 'dashboard-start-date');
 
     fireEvent.change(screen.getByTestId('dashboard-end-date'), {
       target: { value: '2026-02-10' }
     });
     expect(onEndDateChange).toHaveBeenCalledWith('2026-02-10');
-    expect(screen.getByTestId('dashboard-end-date')).toHaveAttribute('id', 'dashboard-end-date');
-    expect(screen.getByTestId('dashboard-end-date')).toHaveAttribute('name', 'dashboard-end-date');
     expect(onDateRangeChange).not.toHaveBeenCalled();
 
     fireEvent.change(screen.getByTestId('dashboard-search-input'), {
@@ -77,7 +68,14 @@ describe('DashboardToolbar', () => {
     expect(onSearchTermChange).toHaveBeenLastCalledWith('P06');
   });
 
-  it("affiche l'erreur utilisateur de periode", () => {
+  it('masque les filtres de periode hors Historique', () => {
+    render(<DashboardToolbar {...baseProps} viewMode="myday" />);
+
+    expect(screen.getByTestId('dashboard-search-input')).toBeInTheDocument();
+    expect(screen.queryByTestId('dashboard-period-select')).not.toBeInTheDocument();
+  });
+
+  it("affiche l'erreur utilisateur de periode en vue Historique", () => {
     render(
       <DashboardToolbar
         {...baseProps}

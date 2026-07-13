@@ -2,7 +2,6 @@ import { Check } from 'lucide-react';
 
 import { getInteractionChannelIcon } from '@/components/interaction-card/InteractionChannelIcon';
 import type { Interaction } from '@/types';
-import { formatDate } from '@/utils/date/formatDate';
 import { formatTime } from '@/utils/date/formatTime';
 import { toDate } from '@/utils/date/toDate';
 import { getInteractionDisplayName } from '@/utils/interactions/getInteractionDisplayName';
@@ -20,18 +19,25 @@ type MyDayRowProps = {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+// Ex : "mar. 15 juil." — echeance courte et lisible pour les rappels futurs.
+const shortDateFormatter = new Intl.DateTimeFormat('fr-FR', {
+  weekday: 'short',
+  day: 'numeric',
+  month: 'short'
+});
+
 const buildDueBadge = (interaction: Interaction, groupKey: MyDayGroupKey) => {
   if (groupKey === 'toPlan' || !interaction.reminder_at) {
     return (
-      <span className="text-[11px] font-medium text-muted-foreground/70">Aucun rappel</span>
+      <span className="text-[11px] font-medium text-muted-foreground/60">Aucun rappel</span>
     );
   }
 
   if (groupKey === 'overdue') {
     const lateDays = Math.floor((Date.now() - toDate(interaction.reminder_at).getTime()) / DAY_MS);
     return (
-      <span className="inline-flex items-center rounded-full bg-destructive/10 px-2 py-0.5 font-mono text-[11px] font-bold tabular-nums text-destructive">
-        {lateDays >= 1 ? `J+${lateDays}` : "Aujourd'hui"}
+      <span className="inline-flex items-center rounded-full bg-destructive/10 px-2 py-0.5 text-[11px] font-semibold text-destructive">
+        {lateDays >= 1 ? `${lateDays} j de retard` : 'En retard'}
       </span>
     );
   }
@@ -45,8 +51,8 @@ const buildDueBadge = (interaction: Interaction, groupKey: MyDayGroupKey) => {
   }
 
   return (
-    <span className="font-mono text-[11px] font-medium tabular-nums text-muted-foreground">
-      {formatDate(interaction.reminder_at)}
+    <span className="text-[11px] font-medium tabular-nums text-muted-foreground">
+      {shortDateFormatter.format(toDate(interaction.reminder_at))}
     </span>
   );
 };

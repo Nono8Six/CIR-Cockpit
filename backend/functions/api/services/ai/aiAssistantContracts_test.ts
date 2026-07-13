@@ -1,4 +1,4 @@
-import { assertEquals } from "std/assert";
+import { assertEquals, assertRejects } from "std/assert";
 
 import { aiAssistantAskResponseSchema } from "../../../../../shared/schemas/aiAssistant.schema.ts";
 import {
@@ -9,7 +9,9 @@ import {
 } from "./aiGovernance.ts";
 import {
   getAmbiguousFamilyClarification,
+  getSegmentCountIntent,
   runAssistantToolLoop,
+  selectAssistantTools,
 } from "./assistantBroker.ts";
 
 const provider: ProviderRow = {
@@ -82,6 +84,90 @@ Deno.test("assistant referentiels clarifies ambiguous family dimensions determin
     ),
     null,
   );
+});
+
+Deno.test("assistant routes known PO intents away from general SQL tools", () => {
+  const allTools: OpenRouterToolDefinition[] = [
+    ...tools,
+    {
+      type: "function",
+      function: {
+        name: "aggregate_segments",
+        description: "Compte les categories fabricant.",
+        parameters: { type: "object", properties: {} },
+      },
+    },
+    {
+      type: "function",
+      function: {
+        name: "get_diff_summary",
+        description: "Resume les changements.",
+        parameters: { type: "object", properties: {} },
+      },
+    },
+    {
+      type: "function",
+      function: {
+        name: "execute_readonly_sql",
+        description: "Execute du SQL.",
+        parameters: { type: "object", properties: {} },
+      },
+    },
+  ];
+  const selected = selectAssistantTools(
+    "Tu peux me dire les changements par rapport au dernier fichier tarif ?",
+    allTools,
+  );
+  assertEquals(selected.map((tool) => tool.function.name), [
+    "list_imports",
+    "get_diff_summary",
+  ]);
+  assertEquals(
+    selectAssistantTools("Combien de clients actifs ?", allTools).length,
+    allTools.length,
+  );
+  assertEquals(
+    getSegmentCountIntent(
+      "Combien il y a des familles produit chez FEST (FESTO) ? dans cat_fab",
+    ),
+    { metric: "distinct_cat_fab", marques: ["FEST", "FESTO"] },
+  );
+  assertEquals(
+    selectAssistantTools(
+      "Combien il y a des familles produit chez FEST (FESTO) ? dans cat_fab",
+      allTools,
+    ).map((tool) => tool.function.name),
+    ["aggregate_segments"],
+  );
+});
+
+Deno.test("assistant maps an OpenRouter empty response to a dedicated safe error", async () => {
+  const controller = new AbortController();
+  const error = await assertRejects(
+    () =>
+      callProviderWithTools(
+        provider,
+        model,
+        [{ role: "user", content: "Resume les changements." }],
+        tools,
+        "auto",
+        "test-key",
+        controller.signal,
+        () =>
+          Promise.resolve(
+            new Response(
+              JSON.stringify({
+                error: { message: "Provider returned an empty response" },
+              }),
+              { status: 200, headers: { "content-type": "application/json" } },
+            ),
+          ),
+      ),
+    Error,
+    "Le fournisseur IA n a pas termine la reponse.",
+  );
+  assertEquals(Reflect.get(error, "code"), "AI_PROVIDER_EMPTY_RESPONSE");
+  assertEquals(error.message.includes("Provider returned"), false);
 });
 
 const tools: OpenRouterToolDefinition[] = [{

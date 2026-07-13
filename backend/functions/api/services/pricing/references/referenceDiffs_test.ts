@@ -1,7 +1,16 @@
 import { assertEquals } from "std/assert";
 
 import type { DbClient } from "../../../types.ts";
-import { computePricingReferenceDiff } from "./referenceDiffs.ts";
+import {
+  computePricingReferenceDiff,
+  resolvePricingReferenceBrandAliases,
+} from "./referenceDiffs.ts";
+
+Deno.test("reference brand aliases map FESTO business name to FEST stored code", () => {
+  assertEquals(resolvePricingReferenceBrandAliases(["FEST", "FESTO"]), [
+    "FEST",
+  ]);
+});
 
 type FakeDb = DbClient & {
   calls: unknown[];

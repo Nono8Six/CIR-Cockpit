@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 
 import { useAppSearchData } from '@/app/useAppSearchData';
 import { EMPTY_CONFIG } from '@/app/appConstants';
+import { isRealtimeInteractionTab } from '@/app/appRoutes';
 import { useAgencyConfig } from '../admin/agencies/core/useAgencyConfig';
 import { useEntitySearchIndex } from '../directory/core/useEntitySearchIndex';
 import { useInteractions } from '../interactions/core/queries/useInteractions';
@@ -36,7 +37,7 @@ export const useAppQueries = ({
 }: UseAppQueriesParams) => {
   const configQuery = useAgencyConfig(activeAgencyId, canLoadData);
   const interactionsQuery = useInteractions(activeAgencyId, canLoadData);
-  useRealtimeInteractions(activeAgencyId, canLoadData);
+  useRealtimeInteractions(activeAgencyId, canLoadData && isRealtimeInteractionTab(activeTab));
 
   const shouldLoadEntityIndex = isSearchOpen || activeTab === 'clients' || activeTab === 'cockpit';
   const entitySearchQuery = useEntitySearchIndex(activeAgencyId, false, shouldLoadEntityIndex);

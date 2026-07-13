@@ -21,6 +21,7 @@ import {
 import { httpError } from "../../../middleware/errorHandler.ts";
 import type { DbClient } from "../../../types.ts";
 import { checkRateLimit } from "../../rate-limiting/rateLimit.ts";
+import { normalizePricingReferenceBrands } from "./referenceSemantics.ts";
 
 type DbExecutable = Pick<DbClient, "execute">;
 
@@ -95,24 +96,11 @@ const GRID_CHANGED_COLUMNS = [
 
 const NUMERIC_CHANGE_SCALE = 6;
 
-const BRAND_ALIASES: Readonly<Record<string, readonly string[]>> = {
-  ROCK: ["ROCK"],
-  ROCKWELL: ["ROCK"],
-};
-
-const normalizeBrandToken = (value: string): string =>
-  value.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
-
 export const resolvePricingReferenceBrandAliases = (
   marques: readonly string[] | undefined,
 ): string[] | undefined => {
   if (!marques?.length) return undefined;
-  return [
-    ...new Set(marques.flatMap((marque) => {
-      const normalized = normalizeBrandToken(marque);
-      return BRAND_ALIASES[normalized] ?? [normalized];
-    })),
-  ];
+  return normalizePricingReferenceBrands(marques);
 };
 
 export const normalizePricingReferenceNumericValue = (

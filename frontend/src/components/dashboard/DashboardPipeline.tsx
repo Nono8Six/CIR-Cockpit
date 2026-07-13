@@ -1,11 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
+import { Info } from 'lucide-react';
 
 import type { Interaction } from '@/types';
-import {
-  formatPipelineAmount,
-  type PipelineBoard,
-  type PipelineMoveTarget
-} from '@/utils/dashboard/dashboardPipeline';
+import type { PipelineBoard, PipelineMoveTarget } from '@/utils/dashboard/dashboardPipeline';
 import PipelineColumn from './pipeline/PipelineColumn';
 import PipelineLostDialog from './pipeline/PipelineLostDialog';
 import { PIPELINE_COLUMNS } from './pipeline/pipelineColumnsConfig';
@@ -22,10 +19,10 @@ type DashboardPipelineProps = {
 };
 
 const COLUMN_EMPTY_LABELS: Record<string, string> = {
-  unqualified: 'Aucun dossier à qualifier.',
-  qualification: 'Aucun dossier qualifié.',
+  unqualified: 'Aucune nouvelle demande.',
+  qualification: 'Aucun dossier en chiffrage.',
   quote_sent: 'Aucun devis envoyé.',
-  negotiation: 'Aucune négociation en cours.',
+  negotiation: 'Aucune relance en cours.',
   closed: 'Rien de clôturé sur 30 jours.'
 };
 
@@ -57,26 +54,20 @@ const DashboardPipeline = ({
 
   return (
     <div
-      className="flex h-full min-h-0 flex-col gap-3 overflow-y-auto pt-3 pb-4 px-0.5"
+      className="flex h-full min-h-0 flex-col gap-3 overflow-y-auto pt-4 pb-4 px-0.5"
       data-testid="dashboard-pipeline"
     >
-      <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1 px-1">
-        <div>
-          <p className="text-[11px] font-medium text-muted-foreground">Pipeline ouvert</p>
-          <p
-            className="font-mono text-[22px] font-bold leading-tight tabular-nums text-foreground"
-            data-testid="dashboard-pipeline-total"
-          >
-            {formatPipelineAmount(board.openAmountTotal)}
-          </p>
-        </div>
-        <p className="pb-1 text-xs text-muted-foreground" data-testid="dashboard-pipeline-closed-summary">
-          <span className="font-semibold text-success">{board.wonCount30d} gagné{board.wonCount30d > 1 ? 's' : ''}</span>
-          {' · '}
-          <span className="font-semibold text-destructive">{board.lostCount30d} perdu{board.lostCount30d > 1 ? 's' : ''}</span>
-          {' sur 30 jours'}
+      {board.excludedOpenCount > 0 ? (
+        <p
+          className="flex items-center gap-1.5 px-1 text-[11.5px] text-muted-foreground"
+          data-testid="dashboard-pipeline-excluded"
+        >
+          <Info size={12} className="shrink-0 text-muted-foreground/70" aria-hidden="true" />
+          {board.excludedOpenCount} dossier{board.excludedOpenCount > 1 ? 's' : ''} ouvert
+          {board.excludedOpenCount > 1 ? 's' : ''} hors vente (sollicitation, interne, technique) —
+          visible{board.excludedOpenCount > 1 ? 's' : ''} dans Ma journée et l&apos;Historique.
         </p>
-      </div>
+      ) : null}
 
       <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
         {PIPELINE_COLUMNS.map((column) => (

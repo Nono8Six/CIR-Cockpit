@@ -2,8 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Channel, type AgencyStatus, type Interaction } from '@/types';
 import {
+  buildMyDayView,
   countWorkQueueInteractions,
   createInteractionStatusPredicates,
+  flattenMyDayGroups,
   inferStatusCategoryFromLabel,
   isInteractionInWorkQueue
 } from '@/utils/dashboard/dashboardAggregates';
@@ -123,5 +125,54 @@ describe('createInteractionStatusPredicates', () => {
     expect(isInteractionInWorkQueue(done, predicates)).toBe(false);
 
     expect(countWorkQueueInteractions([todo, overdueInProgress, quietInProgress, done], statuses)).toBe(2);
+  });
+});
+
+describe('buildMyDayView', () => {
+  const isStatusDone = (interaction: Interaction) => Boolean(interaction.status_is_terminal);
+  const isStatusTodo = (interaction: Interaction) => interaction.status === 'A traiter';
+  const now = new Date('2026-02-15T12:00:00.000Z');
+
+  it('classe les dossiers ouverts en quatre groupes par echeance', () => {
+    const overdue = buildInteraction({ id: 'overdue', reminder_at: '2026-02-10T09:00:00.000Z' });
+    const dueToday = buildInteraction({ id: 'due-today', reminder_at: '2026-02-15T18:00:00.000Z' });
+    const upcoming = buildInteraction({ id: 'upcoming', reminder_at: '2026-02-25T09:00:00.000Z' });
+    const toPlan = buildInteraction({ id: 'to-plan', status: 'A traiter', reminder_at: null });
+    const quietNoReminder = buildInteraction({ id: 'quiet', status: 'En cours', reminder_at: null });
+    const done = buildInteraction({ id: 'done', status_is_terminal: true });
+
+    const view = buildMyDayView(
+      [dueToday, overdue, toPlan, done, upcoming, quietNoReminder],
+      { isStatusDone, isStatusTodo },
+      now
+    );
+
+    expect(view.groups.overdue.map((row) => row.id)).toEqual(['overdue']);
+    expect(view.groups.dueToday.map((row) => row.id)).toEqual(['due-today']);
+    expect(view.groups.upcoming.map((row) => row.id)).toEqual(['upcoming']);
+    expect(view.groups.toPlan.map((row) => row.id)).toEqual(['to-plan']);
+
+    // Un dossier en cours sans rappel n'est ni a planifier ni ailleurs (pas d'action requise).
+    expect(flattenMyDayGroups(view.groups).map((row) => row.id)).toEqual([
+      'overdue',
+      'due-today',
+      'upcoming',
+      'to-plan'
+    ]);
+  });
+
+  it('calcule les indicateurs sur les dossiers ouverts', () => {
+    const overdue = buildInteraction({ id: 'overdue', reminder_at: '2026-02-10T09:00:00.000Z' });
+    const dueToday = buildInteraction({ id: 'due-today', reminder_at: '2026-02-15T18:00:00.000Z' });
+    const quiet = buildInteraction({ id: 'quiet', status: 'En cours' });
+    const done = buildInteraction({ id: 'done', status_is_terminal: true });
+
+    const view = buildMyDayView([overdue, dueToday, quiet, done], { isStatusDone, isStatusTodo }, now);
+
+    expect(view.kpis.overdueCount).toBe(1);
+    expect(view.kpis.dueTodayCount).toBe(1);
+    expect(view.kpis.openCount).toBe(3);
+    // created_at fixe au 2026-02-01T09:00Z pour toutes les fixtures -> ~14 jours.
+    expect(view.kpis.averageOpenAgeDays).toBe(14);
   });
 });

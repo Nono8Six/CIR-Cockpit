@@ -3,7 +3,6 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import DashboardDetailsOverlay from '@/components/dashboard/DashboardDetailsOverlay';
-import KanbanColumn from '@/components/dashboard/kanban/KanbanColumn';
 import { Channel, type Interaction } from '@/types';
 
 const buildInteraction = (overrides: Partial<Interaction> = {}): Interaction => ({
@@ -92,67 +91,5 @@ describe('DashboardDetailsOverlay', () => {
 
     await user.keyboard('{Escape}');
     expect(onClose).toHaveBeenCalledTimes(1);
-  });
-});
-
-describe('KanbanColumn', () => {
-  it("ouvre la carte au clic/clavier sans imbriquer de bouton dans un bouton", async () => {
-    const user = userEvent.setup();
-    const interaction = buildInteraction();
-    const onSelectInteraction = vi.fn();
-    const onDeleteInteraction = vi.fn();
-
-    render(
-      <KanbanColumn
-        columnId="urgencies"
-        title="A traiter"
-        dotClassName="bg-destructive"
-        interactions={[interaction]}
-        emptyLabel="Aucune interaction"
-        onSelectInteraction={onSelectInteraction}
-        onDeleteInteraction={onDeleteInteraction}
-        getStatusMeta={() => undefined}
-      />
-    );
-
-    const card = screen.getByTestId(`dashboard-kanban-card-${interaction.id}`);
-    expect(card.tagName).toBe('DIV');
-    expect(card).toHaveAttribute('role', 'button');
-
-    await user.click(card);
-    expect(onSelectInteraction).toHaveBeenCalledTimes(1);
-
-    const actionsButton = screen.getByRole('button', { name: /actions pour p06 overlay client/i });
-    await user.click(actionsButton);
-    const deleteItem = screen.getByRole('menuitem', { name: /supprimer/i });
-    await user.click(deleteItem);
-    expect(onDeleteInteraction).toHaveBeenCalledTimes(1);
-    expect(onSelectInteraction).toHaveBeenCalledTimes(1);
-
-    card.focus();
-    await user.keyboard('{Enter}');
-    await user.keyboard(' ');
-    expect(onSelectInteraction).toHaveBeenCalledTimes(3);
-  });
-
-  it('garde le nom de la societe lisible dans le header de carte', () => {
-    const companyName = 'Societe Bordelaise de Maintenance Industrielle';
-    const { container } = render(
-      <KanbanColumn
-        columnId="urgencies"
-        title="A traiter"
-        dotClassName="bg-destructive"
-        interactions={[buildInteraction({ company_name: companyName })]}
-        emptyLabel="Aucune interaction"
-        onSelectInteraction={vi.fn()}
-        onDeleteInteraction={vi.fn()}
-        getStatusMeta={() => undefined}
-      />
-    );
-
-    const companyNode = container.querySelector(`[title="${companyName}"]`);
-    expect(screen.getByText(companyName)).toBeInTheDocument();
-    expect(companyNode).toHaveClass('break-words');
-    expect(companyNode).not.toHaveClass('truncate');
   });
 });

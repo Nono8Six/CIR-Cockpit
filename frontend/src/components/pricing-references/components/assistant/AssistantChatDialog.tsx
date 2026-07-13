@@ -30,6 +30,15 @@ const STARTER_QUESTIONS = [
   'Aide-moi à corriger les anomalies sur le fichier Segment.'
 ] as const;
 
+const formatModelLabel = (modelId: string): string => {
+  const modelName = modelId.split('/').at(-1) ?? modelId;
+  return modelName
+    .split('-')
+    .filter(Boolean)
+    .map((part) => part.length <= 3 && /^\d/.test(part) ? part.toUpperCase() : `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+    .join(' ');
+};
+
 interface AssistantChatDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -89,8 +98,12 @@ export const AssistantChatDialog = ({
             </span>
             <DialogTitle className="text-sm font-semibold">Assistant IA CIR</DialogTitle>
             {status?.model_id ? (
-              <Badge variant="ghost" className="max-w-52 truncate px-1.5 font-mono text-[10px] font-normal">
-                {status.model_id}
+              <Badge
+                variant="ghost"
+                className="max-w-52 truncate px-1.5 text-[10px] font-normal"
+                title={status.model_id}
+              >
+                {formatModelLabel(status.model_id)}
               </Badge>
             ) : null}
           </div>
@@ -142,12 +155,12 @@ export const AssistantChatDialog = ({
             ) : null}
 
             {messages.length > 0 ? (
-              <div className="space-y-4">
+              <div className="min-w-0 space-y-4">
                 {messages.map((message) => (
                   <div key={message.id} className={cn('flex', message.role === 'user' ? 'justify-end' : 'justify-start')}>
                     <div
                       className={cn(
-                        'max-w-[88%] rounded-lg border px-3 py-2.5',
+                        'min-w-0 max-w-[88%] break-words rounded-lg border px-3 py-2.5',
                         message.role === 'user'
                           ? 'border-primary bg-primary text-xs leading-relaxed text-primary-foreground'
                           : 'border-border bg-card'

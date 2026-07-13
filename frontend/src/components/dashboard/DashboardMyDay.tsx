@@ -3,7 +3,6 @@ import { Inbox } from 'lucide-react';
 import type { Interaction } from '@/types';
 import type { MyDayView } from '@/utils/dashboard/dashboardAggregates';
 import MyDayGroup from './myday/MyDayGroup';
-import MyDayKpiStrip from './myday/MyDayKpiStrip';
 import { MY_DAY_GROUPS } from './myday/myDayGroupsConfig';
 
 type DashboardMyDayProps = {
@@ -27,11 +26,9 @@ const DashboardMyDay = ({
 
   return (
     <div
-      className="mx-auto flex h-full min-h-0 w-full max-w-4xl flex-col gap-5 overflow-y-auto px-0.5 pt-3 pb-6"
+      className="mx-auto flex h-full min-h-0 w-full max-w-4xl flex-col gap-5 overflow-y-auto px-0.5 pt-4 pb-6"
       data-testid="dashboard-myday"
     >
-      <MyDayKpiStrip view={view} />
-
       {isQueueEmpty ? (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card py-16 px-4 text-center shadow-soft">
           <span className="mb-3 inline-flex size-10 items-center justify-center rounded-full bg-success/10">

@@ -109,6 +109,12 @@ const REMOTE_TO_LOCAL_MODERN_MIGRATION_COMPATIBILITY = {
   20260710194916n: "20260710170000_ai_assistant_sql_prompt_v4.sql",
   20260710200922n: "20260710220413_ai_feature_grants.sql",
   20260710201144n: "20260710221105_fix_ai_feature_access_validation.sql",
+  20260712175345n: "20260712120000_ai_assistant_hardening.sql",
+  20260712175455n: "20260712123000_ai_assistant_hot_path_indexes.sql",
+  20260712175833n: "20260712130000_ai_usage_aggregates_primary_key.sql",
+  20260712194736n: "20260712190000_fix_ai_access_backend_identity.sql",
+  20260712195611n: "20260712201500_harden_ai_access_caller_identity.sql",
+  20260712195737n: "20260712203000_fix_ai_access_caller_coalesce.sql",
 };
 
 function readJson(relativePath) {

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
 import type { ConvertClientEntity } from '@/components/ConvertClientDialog';
+import type { DashboardHeaderStats } from '@/components/dashboard/DashboardPageHeader';
 import { isProspectRelationValue } from '@/constants/relations';
 import { useDashboardFilters } from './useDashboardFilters';
 import { createAppError, isAppError } from '@/services/errors/AppError';
@@ -127,6 +128,27 @@ export const useDashboardState = ({
       { source: 'dashboard.filters' },
     );
   }, [periodErrorMessage]);
+
+  // Statistiques d'en-tete calculees sur l'ensemble des dossiers (hors recherche/periode)
+  // pour que le titre et les onglets racontent toujours le meme etat global.
+  const headerStats = useMemo<DashboardHeaderStats>(() => {
+    const globalMyDay = buildMyDayView(interactions, { isStatusDone, isStatusTodo });
+    const globalPipeline = buildPipelineBoard({ interactions, isStatusDone });
+
+    return {
+      overdueCount: globalMyDay.kpis.overdueCount,
+      dueTodayCount: globalMyDay.kpis.dueTodayCount,
+      openCount: globalMyDay.kpis.openCount,
+      pipelineOpenCount:
+        globalPipeline.unqualified.length
+        + globalPipeline.qualification.length
+        + globalPipeline.quote_sent.length
+        + globalPipeline.negotiation.length,
+      pipelineOpenAmount: globalPipeline.openAmountTotal,
+      wonCount30d: globalPipeline.wonCount30d,
+      lostCount30d: globalPipeline.lostCount30d
+    };
+  }, [interactions, isStatusDone, isStatusTodo]);
 
   const myDayView = useMemo<MyDayView | null>(() => {
     if (viewMode !== 'myday') {
@@ -314,6 +336,7 @@ export const useDashboardState = ({
     effectiveStartDate,
     effectiveEndDate,
     filteredData,
+    headerStats,
     myDayView,
     pipelineBoard,
     getStatusMeta,

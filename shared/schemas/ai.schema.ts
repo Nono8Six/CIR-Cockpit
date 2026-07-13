@@ -130,6 +130,18 @@ export const aiUsageDailyPointSchema = z.strictObject({
   cost_amount: z.number().nonnegative(),
 });
 
+export const aiBudgetAlertSchema = z.strictObject({
+  quota_id: uuidSchema,
+  scope: z.enum(["global", "agency", "user"]),
+  feature: aiFeatureSchema.nullable(),
+  period: z.enum(["day", "month"]),
+  cost_amount: z.number().nonnegative(),
+  cost_limit: z.number().positive(),
+  ratio: z.number().nonnegative(),
+  level: z.enum(["approaching", "reached"]),
+  currency: nonEmptyStringSchema("Devise requise."),
+});
+
 export const aiUsageEventSchema = z.strictObject({
   id: uuidSchema,
   request_id: nonEmptyStringSchema("Identifiant requete requis."),
@@ -167,6 +179,7 @@ export const aiUsageSummarySchema = z.strictObject({
   currency: nonEmptyStringSchema("Devise requise."),
   period_start: nonEmptyStringSchema("Debut de periode requis."),
   period_end: nonEmptyStringSchema("Fin de periode requise."),
+  budget_alerts: z.array(aiBudgetAlertSchema),
   daily: z.array(aiUsageDailyPointSchema),
 });
 

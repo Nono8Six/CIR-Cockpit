@@ -5,6 +5,7 @@ import { RouterProvider } from '@tanstack/react-router';
 import { Toaster } from 'sonner';
 
 import { appRouter } from '@/app/router';
+import { getOrCreateReactRoot } from '@/app/getOrCreateReactRoot';
 import AppProviders from '@/components/AppProviders';
 import { createAppError } from '@/services/errors/AppError';
 import { reportError } from '@/services/errors/reportError';
@@ -77,7 +78,7 @@ if (import.meta.env.DEV) {
 
 initErrorReporter();
 
-const root = ReactDOMClient.createRoot(rootElement);
+const root = getOrCreateReactRoot(rootElement, ReactDOMClient.createRoot);
 root.render(
   <React.StrictMode>
     <AppProviders>

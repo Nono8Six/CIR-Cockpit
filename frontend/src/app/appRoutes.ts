@@ -81,3 +81,6 @@ export const getTabFromPathname = (pathname: string): AppTab => {
 
 export const isInteractionTab = (tab: AppTab): boolean =>
   tab === 'cockpit' || tab === 'dashboard' || tab === 'settings';
+
+export const isRealtimeInteractionTab = (tab: AppTab): boolean =>
+  tab === 'cockpit' || tab === 'dashboard';

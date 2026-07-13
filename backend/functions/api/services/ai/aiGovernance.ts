@@ -820,6 +820,52 @@ export const getAiUsageSummary = async (
     group by day
     order by day
   `);
+  const budgetAlerts = await db.execute<{
+    quota_id: string;
+    scope: "global" | "agency" | "user";
+    feature: AiFeature | null;
+    period: "day" | "month";
+    cost_amount: number;
+    cost_limit: number;
+    ratio: number;
+    level: "approaching" | "reached";
+    currency: string;
+  }>(sql`
+    with quota_usage as (
+      select q.id as quota_id, q.scope, q.feature, q.currency,
+        q.daily_cost_limit::float8 as daily_limit,
+        q.monthly_cost_limit::float8 as monthly_limit,
+        coalesce(sum(e.cost_amount) filter (
+          where e.created_at >= date_trunc('day', now())
+        ), 0)::float8 as daily_cost,
+        coalesce(sum(e.cost_amount) filter (
+          where e.created_at >= date_trunc('month', now())
+        ), 0)::float8 as monthly_cost
+      from public.ai_quota_policies q
+      left join public.ai_usage_events e on e.status <> 'blocked'
+        and (q.feature is null or e.feature = q.feature)
+        and (q.scope = 'global'
+          or (q.scope = 'agency' and e.agency_id = q.agency_id)
+          or (q.scope = 'user' and e.user_id = q.user_id))
+        and e.created_at >= date_trunc('month', now())
+      where q.enabled = true
+      group by q.id
+    ), alerts as (
+      select quota_id, scope, feature, currency, 'day'::text as period,
+        daily_cost as cost_amount, daily_limit as cost_limit
+      from quota_usage where daily_limit > 0 and daily_cost / daily_limit >= 0.8
+      union all
+      select quota_id, scope, feature, currency, 'month'::text as period,
+        monthly_cost as cost_amount, monthly_limit as cost_limit
+      from quota_usage where monthly_limit > 0 and monthly_cost / monthly_limit >= 0.8
+    )
+    select quota_id, scope, feature, period, cost_amount, cost_limit,
+      (cost_amount / cost_limit)::float8 as ratio,
+      case when cost_amount >= cost_limit then 'reached' else 'approaching' end as level,
+      currency
+    from alerts
+    order by ratio desc, quota_id
+  `);
 
   return parseOrThrow(
     aiUsageSummaryResponseSchema,
@@ -831,6 +877,7 @@ export const getAiUsageSummary = async (
         currency: 'USD',
         period_start: periodStart.toISOString(),
         period_end: periodEnd.toISOString(),
+        budget_alerts: budgetAlerts,
         daily: dailyRows
       }
     },
@@ -1364,7 +1411,14 @@ export const callProviderWithTools = async (
   const raw = await readProviderJson(response);
   const providerError = readProviderError(raw);
   if (providerError) {
-    throw httpError(502, 'AI_PROVIDER_UNAVAILABLE', `Fournisseur IA ${provider.provider}: ${providerError}`);
+    if (providerError.toLowerCase().includes('empty response')) {
+      throw httpError(
+        502,
+        'AI_PROVIDER_EMPTY_RESPONSE',
+        'Le fournisseur IA n a pas termine la reponse.'
+      );
+    }
+    throw httpError(502, 'AI_PROVIDER_UNAVAILABLE', `Fournisseur IA ${provider.provider} indisponible.`);
   }
   const choice = firstChoice(raw);
   const message = readRecord(choice, 'message');

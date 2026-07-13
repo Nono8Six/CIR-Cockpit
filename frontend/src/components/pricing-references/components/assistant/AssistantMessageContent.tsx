@@ -9,7 +9,7 @@ const NUMBERED_PATTERN = /^\s*(\d+)[.)]\s+(.+)$/;
 const HEADING_PATTERN = /^\s*#{1,3}\s+(.+)$/;
 
 export const AssistantMessageContent = ({ content }: AssistantMessageContentProps) => (
-  <div className="space-y-1.5 text-[13px] leading-relaxed text-foreground">
+  <div className="min-w-0 space-y-1.5 break-words text-[13px] leading-relaxed text-foreground">
     {content.split('\n').map((line, index) => {
       const bullet = line.match(BULLET_PATTERN);
       const numbered = line.match(NUMBERED_PATTERN);

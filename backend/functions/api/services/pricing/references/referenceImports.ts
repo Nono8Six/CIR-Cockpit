@@ -1,5 +1,10 @@
 import { and, desc, eq, type SQL, sql } from "drizzle-orm";
 import { strToU8, zipSync } from "fflate";
+import {
+  escapePricingReferenceLikeTerm,
+  normalizePricingReferenceBrands,
+  normalizePricingReferenceSearchTerms,
+} from "./referenceSemantics.ts";
 
 import {
   pricing_reference_anomalies,
@@ -2555,6 +2560,216 @@ export const listPricingReferenceSegments = async (
     page: input.page,
     page_size: input.page_size,
     total: totalRows[0]?.total ?? 0,
+  };
+};
+
+export type PricingReferenceSegmentsAggregateInput = {
+  import_id?: string;
+  snapshot_id?: string;
+  marques?: string[];
+};
+
+export type PricingReferenceSegmentsAggregate = {
+  snapshot_id: string | null;
+  marques: string[];
+  segment_rows: number;
+  distinct_cat_fab: number;
+  distinct_segments: number;
+};
+
+export type PricingReferenceCategorySearchInput = {
+  import_id?: string;
+  snapshot_id?: string;
+  terms: string[];
+  marques?: string[];
+  mode: "any" | "all";
+  examples_limit?: number;
+};
+
+export type PricingReferenceCategorySearch = {
+  snapshot_id: string | null;
+  terms: string[];
+  marques: string[];
+  matching_brands: string[];
+  distinct_brand_count: number;
+  segment_rows: number;
+  counts_by_brand: Array<{ marque: string; segment_rows: number }>;
+  examples: Array<
+    { marque: string; cat_fab: string; cat_fab_l: string | null }
+  >;
+};
+
+export const aggregatePricingReferenceSegments = async (
+  db: DbClient,
+  input: PricingReferenceSegmentsAggregateInput,
+): Promise<PricingReferenceSegmentsAggregate> => {
+  const snapshotId = await resolveSnapshotId(db, input);
+  const marques = uniqueNonEmptyStrings(input.marques).map((value) =>
+    value.toLowerCase()
+  );
+  if (!snapshotId) {
+    return {
+      snapshot_id: null,
+      marques,
+      segment_rows: 0,
+      distinct_cat_fab: 0,
+      distinct_segments: 0,
+    };
+  }
+
+  const conditions: SQL[] = [sql<boolean>`s.snapshot_id = ${snapshotId}`];
+  if (marques.length > 0) {
+    conditions.push(
+      sql<boolean>`lower(trim(s.marque)) in (${
+        sql.join(marques.map((value) => sql`${value}`), sql`, `)
+      })`,
+    );
+  }
+  const rows = await db.execute<{
+    segment_rows: number;
+    distinct_cat_fab: number;
+    distinct_segments: number;
+  }>(sql`
+    select
+      count(distinct s.id)::int as segment_rows,
+      count(distinct nullif(trim(s.cat_fab), ''))::int as distinct_cat_fab,
+      count(distinct nullif(trim(s.segment), ''))::int as distinct_segments
+    from public.pricing_supplier_segments s
+    where ${andSql(conditions)}
+  `);
+
+  return {
+    snapshot_id: snapshotId,
+    marques: marques.map((value) => value.toUpperCase()),
+    segment_rows: rows[0]?.segment_rows ?? 0,
+    distinct_cat_fab: rows[0]?.distinct_cat_fab ?? 0,
+    distinct_segments: rows[0]?.distinct_segments ?? 0,
+  };
+};
+
+const categoryTermCondition = (term: string): SQL => {
+  const pattern = `%${escapePricingReferenceLikeTerm(term)}%`;
+  return sql<
+    boolean
+  >`lower(coalesce(s.cat_fab_l, '')) like ${pattern} escape '\\'`;
+};
+
+const categorySearchConditions = (
+  snapshotId: string,
+  terms: string[],
+  marques: string[],
+  mode: "any" | "all",
+): SQL => {
+  const conditions: SQL[] = [sql<boolean>`s.snapshot_id = ${snapshotId}`];
+  if (marques.length > 0) {
+    conditions.push(
+      sql<boolean>`upper(trim(s.marque)) in (${
+        sql.join(marques.map((value) => sql`${value}`), sql`, `)
+      })`,
+    );
+  }
+  const termConditions = terms.map(categoryTermCondition);
+  if (termConditions.length > 0) {
+    conditions.push(
+      mode === "all"
+        ? sql<boolean>`(${sql.join(termConditions, sql` and `)})`
+        : sql<boolean>`(${sql.join(termConditions, sql` or `)})`,
+    );
+  }
+  return andSql(conditions);
+};
+
+export const searchPricingReferenceSupplierCategories = async (
+  db: DbClient,
+  input: PricingReferenceCategorySearchInput,
+): Promise<PricingReferenceCategorySearch> => {
+  const snapshotId = await resolveSnapshotId(db, input);
+  const terms = normalizePricingReferenceSearchTerms(input.terms);
+  const marques = normalizePricingReferenceBrands(input.marques);
+  if (!snapshotId) {
+    return {
+      snapshot_id: null,
+      terms,
+      marques,
+      matching_brands: [],
+      distinct_brand_count: 0,
+      segment_rows: 0,
+      counts_by_brand: [],
+      examples: [],
+    };
+  }
+  const whereClause = categorySearchConditions(
+    snapshotId,
+    terms,
+    marques,
+    input.mode,
+  );
+  const counts = await db.execute<{ marque: string; segment_rows: number }>(sql`
+    select upper(trim(s.marque)) as marque, count(distinct s.id)::int as segment_rows
+    from public.pricing_supplier_segments s
+    where ${whereClause}
+    group by upper(trim(s.marque))
+    order by upper(trim(s.marque)) asc
+  `);
+  const examplesLimit = Math.max(0, Math.min(input.examples_limit ?? 0, 10));
+  const examples = examplesLimit === 0 ? [] : await db.execute<{
+    marque: string;
+    cat_fab: string;
+    cat_fab_l: string | null;
+  }>(sql`
+    select upper(trim(s.marque)) as marque, s.cat_fab, s.cat_fab_l
+    from public.pricing_supplier_segments s
+    where ${whereClause}
+    order by upper(trim(s.marque)) asc, s.cat_fab asc, s.id asc
+    limit ${examplesLimit}
+  `);
+  return {
+    snapshot_id: snapshotId,
+    terms,
+    marques,
+    matching_brands: counts.map((row) => row.marque),
+    distinct_brand_count: counts.length,
+    segment_rows: counts.reduce((sum, row) => sum + row.segment_rows, 0),
+    counts_by_brand: counts,
+    examples,
+  };
+};
+
+export const countPricingReferenceSupplierBrands = async (
+  db: DbClient,
+  input: Pick<
+    PricingReferenceCategorySearchInput,
+    "import_id" | "snapshot_id" | "marques"
+  >,
+): Promise<
+  {
+    snapshot_id: string | null;
+    marques: string[];
+    distinct_brand_count: number;
+  }
+> => {
+  const snapshotId = await resolveSnapshotId(db, input);
+  const marques = normalizePricingReferenceBrands(input.marques);
+  if (!snapshotId) {
+    return { snapshot_id: null, marques, distinct_brand_count: 0 };
+  }
+  const conditions: SQL[] = [sql<boolean>`s.snapshot_id = ${snapshotId}`];
+  if (marques.length > 0) {
+    conditions.push(
+      sql<boolean>`upper(trim(s.marque)) in (${
+        sql.join(marques.map((value) => sql`${value}`), sql`, `)
+      })`,
+    );
+  }
+  const rows = await db.execute<{ distinct_brand_count: number }>(sql`
+    select count(distinct nullif(upper(trim(s.marque)), ''))::int as distinct_brand_count
+    from public.pricing_supplier_segments s
+    where ${andSql(conditions)}
+  `);
+  return {
+    snapshot_id: snapshotId,
+    marques,
+    distinct_brand_count: rows[0]?.distinct_brand_count ?? 0,
   };
 };
 

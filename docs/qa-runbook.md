@@ -165,13 +165,65 @@ Avec Supabase MCP:
 4. Prober `OPTIONS` sur routes impactees: `200` + headers CORS attendus.
 5. Si DB/RLS impacte: verifier policies, grants, indexes, advisors et types generes selon les tables touchees.
 
-## 8. CI
+## 8. Assistant IA
+
+Pour toute livraison modifiant le broker, un outil, un prompt, un modèle, le routage provider,
+les quotas ou les accès :
+
+```bash
+deno test --env-file=backend/.env --allow-env --config backend/deno.json \
+  backend/functions/api/services/ai/assistantPhase6Evaluations_test.ts \
+  backend/functions/api/services/ai/assistantSqlTools_test.ts \
+  backend/functions/api/services/ai/aiAssistantContracts_test.ts \
+  backend/functions/api/services/ai/aiAccess_test.ts
+```
+
+Seuils bloquants offline : zéro outil non autorisé, zéro fuite inter-agence, zéro chiffre
+inventé dans une attente déterministe, agrégats critiques exacts, citations limitées aux outils
+exécutés, plafonds tokens/lignes/octets respectés. Le provider simulé reste limité aux tests.
+Le cas de régression `FEST (FESTO)` doit router exclusivement vers `aggregate_segments`,
+normaliser la marque stockée en `FEST` et compter les `CAT_FAB` distincts du snapshot actif sans
+laisser le modèle construire le filtre SQL. Dans l'UI, vérifier que le diagnostic affiche la
+métrique et le filtre canoniques; une requête SQL générale doit rester consultable dans la trace
+temporaire, sans être persistée dans `ai_usage_events`.
+
+Probes DB conditionnelles :
+
+```powershell
+$env:RUN_AI_DB_EVALS='1'
+deno test --env-file=backend/.env --allow-env --allow-net --config backend/deno.json backend/functions/api/integration/assistantQuotaConcurrency_integration_test.ts
+```
+
+Cette probe crée un quota utilisateur éphémère, lance 20 admissions concurrentes et 20 retries
+idempotents, vérifie les bornes puis nettoie ses lignes. Vérifier aussi la migration
+`ai_feature_grants`, les RLS/ACL, le job `ai_data_retention_daily`, les index issus d'`EXPLAIN`
+et l'absence de clé en clair.
+
+Campagne OpenRouter live, hors CI et uniquement avec les secrets d'intégration valides :
+
+```powershell
+$env:RUN_API_INTEGRATION='1'
+$env:RUN_AI_LIVE_EVALS='1'
+deno test --env-file=backend/.env --allow-env --allow-net --config backend/deno.json backend/functions/api/integration/assistantLiveEvaluations_integration_test.ts
+```
+
+Elle exécute trois répétitions des quatre cas PO explicites et rapporte modèle, provider, coût,
+latence et outils. Une campagne est bloquée si un agrégat critique est faux, si une citation ne
+correspond pas à un outil exécuté, si un outil non attendu apparaît ou si une donnée inter-agence
+est visible. Consigner p50/p95, tokens, coût, modèle et provider réellement servis dans le
+changelog de la phase. Ne jamais l'exécuter avec une clé OpenRouter fournie en ligne de commande.
+
+Avant livraison, confirmer dans le payload provider : Chat Completions, `require_parameters:true`,
+fallback désactivé, `data_collection:'deny'`, ZDR demandé, génération/provider/finish reasons
+journalisés et aucun retry aveugle après une réponse potentiellement facturée.
+
+## 9. CI
 
 Le workflow `.github/workflows/qa.yml` execute `pnpm run qa` sur PR et `workflow_dispatch`.
 
 CI verte ne remplace pas le rapport local quand une livraison est demandee. Pour une PR ouverte, les checks GitHub Actions requis doivent etre verts avant merge.
 
-## 9. Rapport final minimal
+## 10. Rapport final minimal
 
 Inclure dans la reponse de livraison:
 

@@ -262,6 +262,22 @@ export const ERROR_CATALOG: Record<string, ErrorCatalogEntry> = {
     "warning",
     "contact_support",
   ),
+  AI_INPUT_TOO_LARGE: makeEntry(
+    "AI_INPUT_TOO_LARGE",
+    "Conversation trop volumineuse pour l assistant IA.",
+    "validation",
+    "warning",
+    "retry",
+    false,
+  ),
+  AI_TOOL_LOOP_DETECTED: makeEntry(
+    "AI_TOOL_LOOP_DETECTED",
+    "Boucle d appels outil identiques detectee.",
+    "edge",
+    "error",
+    "retry",
+    false,
+  ),
   AI_DIAGNOSTIC_ERROR: makeEntry(
     "AI_DIAGNOSTIC_ERROR",
     "L'analyse par l'IA a échoué. Veuillez vérifier les paramètres du modèle ou la clé API.",
@@ -276,6 +292,14 @@ export const ERROR_CATALOG: Record<string, ErrorCatalogEntry> = {
     "edge",
     "warning",
     "retry",
+  ),
+  AI_PROVIDER_EMPTY_RESPONSE: makeEntry(
+    "AI_PROVIDER_EMPTY_RESPONSE",
+    "Le fournisseur IA n a pas termine la reponse.",
+    "edge",
+    "warning",
+    "retry",
+    true,
   ),
   AI_PROVIDER_RATE_LIMITED: makeEntry(
     "AI_PROVIDER_RATE_LIMITED",

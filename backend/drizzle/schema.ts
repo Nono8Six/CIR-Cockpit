@@ -1,5 +1,7 @@
 import {
+  bigint,
   boolean,
+  date,
   integer,
   jsonb,
   numeric,
@@ -627,6 +629,35 @@ export const ai_usage_events = pgTable("ai_usage_events", {
     .notNull(),
 });
 
+export const ai_usage_daily_aggregates = pgTable("ai_usage_daily_aggregates", {
+  id: uuid("id").$type<string>().defaultRandom().primaryKey(),
+  usage_date: date("usage_date").$type<string>().notNull(),
+  feature: text("feature").$type<AiFeature>().notNull(),
+  provider: text("provider").$type<AiProvider>().notNull(),
+  model_id: text("model_id").$type<string>().notNull(),
+  agency_id: uuid("agency_id").$type<string | null>(),
+  user_id: uuid("user_id").$type<string | null>(),
+  status: text("status").$type<AiUsageStatus>().notNull(),
+  calls: bigint("calls", { mode: "number" }).$type<number>().default(0)
+    .notNull(),
+  input_tokens: bigint("input_tokens", { mode: "number" }).$type<number>()
+    .default(0).notNull(),
+  output_tokens: bigint("output_tokens", { mode: "number" }).$type<number>()
+    .default(0).notNull(),
+  cached_input_tokens: bigint("cached_input_tokens", { mode: "number" }).$type<
+    number
+  >().default(0).notNull(),
+  reasoning_tokens: bigint("reasoning_tokens", { mode: "number" }).$type<
+    number
+  >().default(0).notNull(),
+  cost_amount: numeric("cost_amount").$type<string>().default("0").notNull(),
+  currency: text("currency").$type<string>().default("USD").notNull(),
+  created_at: timestamp("created_at", timestamptz).$type<string>().defaultNow()
+    .notNull(),
+  updated_at: timestamp("updated_at", timestamptz).$type<string>().defaultNow()
+    .notNull(),
+});
+
 export const ai_feature_grants = pgTable("ai_feature_grants", {
   id: uuid("id").$type<string>().defaultRandom().primaryKey(),
   feature: text("feature").$type<AiFeature>().notNull(),
@@ -858,6 +889,7 @@ export const drizzleSchema = {
   ai_prompt_versions,
   ai_quota_policies,
   ai_usage_events,
+  ai_usage_daily_aggregates,
   ai_feature_grants,
   ai_response_cache,
   ai_request_reservations,

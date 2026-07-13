@@ -203,7 +203,7 @@ dans une **nouvelle conversation sans contexte**. Le prompt impose à l'agent de
 | 3 — Chat UI référentiels | TERMINÉE ET DÉPLOYÉE | 2026-07-10 | Dialog centré et `qa:front` verte ; prompt SQL v4 publié et Edge Function `api` version 116 active. Probes `status`/`ask`, auth et CORS vertes. |
 | 4 — Accès membres | TERMINÉE ET DÉPLOYÉE | 2026-07-12 | Migration et procédures actives dans l'Edge Function `api` v118 ; probes runtime et gate complet `pnpm run qa` verts. |
 | 5 — Refonte Admin > IA | TERMINÉE, BACKEND DÉPLOYÉ | 2026-07-12 | 6 onglets livrés ; contrats CRUD actifs dans l'Edge Function `api` v118. Frontend local, aucun commit. |
-| 6 — Durcissement & livraison | À FAIRE | — | — |
+| 6 — Durcissement & livraison | EN COURS — BLOQUÉE | 2026-07-12 | Code, migrations, purge, sécurité et QA backend/docs livrés localement. Gate complète bloquée par le refactor dashboard concurrent ; campagne live bloquée par les identifiants d'intégration Supabase refusés. Non déployée. |
 | 7 — Skill développement IA | À FAIRE | — | — |
 
 ## 9. Hors périmètre de ce plan (v2+)

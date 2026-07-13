@@ -32,12 +32,15 @@ import {
 } from "../pricing/references/referenceDiffs.ts";
 import { aggregatePricingReferenceDiffs } from "../pricing/references/referenceDiffAggregates.ts";
 import {
+  aggregatePricingReferenceSegments,
+  countPricingReferenceSupplierBrands,
   getPricingReferenceAnomaliesSummary,
   getPricingReferenceHealth,
   getPricingReferenceImport,
   listPricingReferenceAnomalies,
   listPricingReferenceImports,
   resolveSnapshotId,
+  searchPricingReferenceSupplierCategories,
 } from "../pricing/references/referenceImports.ts";
 import { assistantSqlTools } from "./assistantSqlTools.ts";
 
@@ -192,6 +195,105 @@ const listAnomaliesOutputSchema = z.union([
   toolErrorSchema,
 ]);
 
+const aggregateSegmentsInputSchema = z.strictObject({
+  marques: z.array(
+    z.string().trim().min(1, { error: "Marque requise." })
+      .max(120, { error: "Marque trop longue." }),
+  ).max(20, {
+    error: "Maximum 20 marques.",
+  }).optional(),
+});
+const boundedTermsSchema = z.array(
+  z.string().trim().min(1, { error: "Terme de recherche requis." })
+    .max(80, { error: "Terme de recherche trop long." }),
+).min(1, { error: "Au moins un terme de recherche est requis." })
+  .max(8, { error: "Maximum 8 termes de recherche." });
+const boundedBrandsSchema = z.array(
+  z.string().trim().min(1, { error: "Marque requise." })
+    .max(120, { error: "Marque trop longue." }),
+).max(20, { error: "Maximum 20 marques." });
+const brandCountSchema = z.strictObject({
+  marque: z.string().trim().min(1),
+  segment_rows: z.number().int().nonnegative(),
+});
+const categoryExampleSchema = z.strictObject({
+  marque: z.string().trim().min(1),
+  cat_fab: z.string(),
+  cat_fab_l: z.string().nullable(),
+});
+const searchSupplierCategoriesInputSchema = z.strictObject({
+  terms: boundedTermsSchema,
+  marques: boundedBrandsSchema.optional(),
+  mode: z.enum(["any", "all"], { error: "Mode de recherche invalide." })
+    .default("any"),
+  examples_limit: z.number().int().min(0).max(10).default(0),
+});
+const searchSupplierCategoriesOutputSchema = z.union([
+  z.strictObject({
+    ok: z.literal(true),
+    data: z.strictObject({
+      snapshot_id: z.uuid().nullable(),
+      terms: z.array(z.string()),
+      marques: z.array(z.string()),
+      matching_brands: z.array(z.string()).max(MAX_TOOL_RESULT_ROWS),
+      distinct_brand_count: z.number().int().nonnegative(),
+      segment_rows: z.number().int().nonnegative(),
+      counts_by_brand: z.array(brandCountSchema).max(MAX_TOOL_RESULT_ROWS),
+      examples: z.array(categoryExampleSchema).max(10),
+    }),
+  }),
+  toolErrorSchema,
+]);
+const countSupplierBrandsInputSchema = z.strictObject({
+  marques: boundedBrandsSchema.optional(),
+});
+const countSupplierBrandsOutputSchema = z.union([
+  z.strictObject({
+    ok: z.literal(true),
+    data: z.strictObject({
+      snapshot_id: z.uuid().nullable(),
+      marques: z.array(z.string()),
+      distinct_brand_count: z.number().int().nonnegative(),
+    }),
+  }),
+  toolErrorSchema,
+]);
+const checkBrandMatchesInputSchema = z.strictObject({
+  marque: z.string().trim().min(1, { error: "Marque requise." }).max(120),
+  terms: boundedTermsSchema,
+  dimension: z.literal("cat_fab", { error: "Dimension CAT_FAB requise." }),
+  mode: z.enum(["any", "all"]).default("any"),
+  examples_limit: z.number().int().min(0).max(5).default(3),
+});
+const checkBrandMatchesOutputSchema = z.union([
+  z.strictObject({
+    ok: z.literal(true),
+    data: z.strictObject({
+      snapshot_id: z.uuid().nullable(),
+      marque: z.string(),
+      terms: z.array(z.string()),
+      dimension: z.literal("cat_fab"),
+      matches: z.boolean(),
+      segment_rows: z.number().int().nonnegative(),
+      examples: z.array(categoryExampleSchema).max(5),
+    }),
+  }),
+  toolErrorSchema,
+]);
+const aggregateSegmentsOutputSchema = z.union([
+  z.strictObject({
+    ok: z.literal(true),
+    data: z.strictObject({
+      snapshot_id: z.uuid().nullable(),
+      marques: z.array(z.string()),
+      segment_rows: z.number().int().nonnegative(),
+      distinct_cat_fab: z.number().int().nonnegative(),
+      distinct_segments: z.number().int().nonnegative(),
+    }),
+  }),
+  toolErrorSchema,
+]);
+
 type ToolSchema = z.ZodType<Record<string, unknown>>;
 export type AssistantTool = {
   name: string;
@@ -293,6 +395,18 @@ const resolveReferenceContext = async (
       }
       : null,
   };
+};
+
+const resolveSemanticSnapshotId = async (
+  db: DbClient,
+  pageContext: AiAssistantPageContext,
+): Promise<string | null> => {
+  const contextualSnapshot = pageContext.target_snapshot_id;
+  if (contextualSnapshot) return contextualSnapshot;
+  if (pageContext.import_id) {
+    return await resolveSnapshotId(db, { import_id: pageContext.import_id });
+  }
+  return await resolveSnapshotId(db, {});
 };
 
 const listImportsTool: AssistantTool = {
@@ -604,7 +718,105 @@ const listAnomaliesTool: AssistantTool = {
   },
 };
 
+const aggregateSegmentsTool: AssistantTool = {
+  name: "aggregate_segments",
+  version: "1.0",
+  description:
+    "Compte de facon deterministe les lignes segment, les CAT_FAB distincts et les segments distincts du snapshot, avec normalisation des alias de marque (par exemple FESTO vers FEST).",
+  inputSchema: aggregateSegmentsInputSchema,
+  outputSchema: aggregateSegmentsOutputSchema,
+  parameters: parametersFor(aggregateSegmentsInputSchema),
+  async run(db, _authContext, _requestId, args, pageContext) {
+    const snapshotId = await resolveSemanticSnapshotId(db, pageContext);
+    const marques = resolvePricingReferenceBrandAliases(
+      args.marques as string[] | undefined,
+    );
+    const data = await aggregatePricingReferenceSegments(db, {
+      snapshot_id: snapshotId ?? undefined,
+      marques,
+    });
+    return { ok: true, data };
+  },
+};
+
+const searchSupplierCategoriesTool: AssistantTool = {
+  name: "search_supplier_categories",
+  version: "1.0",
+  description:
+    "Recherche de facon deterministe et insensible a la casse des termes controles dans CAT_FAB, puis retourne exhaustivement les marques agregees du snapshot resolu.",
+  inputSchema: searchSupplierCategoriesInputSchema,
+  outputSchema: searchSupplierCategoriesOutputSchema,
+  parameters: parametersFor(searchSupplierCategoriesInputSchema),
+  async run(db, _authContext, _requestId, args, pageContext) {
+    const snapshotId = await resolveSemanticSnapshotId(db, pageContext);
+    const data = await searchPricingReferenceSupplierCategories(db, {
+      snapshot_id: snapshotId ?? undefined,
+      terms: args.terms as string[],
+      marques: args.marques as string[] | undefined,
+      mode: args.mode as "any" | "all",
+      examples_limit: args.examples_limit as number,
+    });
+    return { ok: true, data };
+  },
+};
+
+const countSupplierBrandsTool: AssistantTool = {
+  name: "count_supplier_brands",
+  version: "1.0",
+  description:
+    "Compte de facon deterministe les marques distinctes du snapshot actif resolu cote backend.",
+  inputSchema: countSupplierBrandsInputSchema,
+  outputSchema: countSupplierBrandsOutputSchema,
+  parameters: parametersFor(countSupplierBrandsInputSchema),
+  async run(db, _authContext, _requestId, args, pageContext) {
+    const snapshotId = await resolveSemanticSnapshotId(db, pageContext);
+    return {
+      ok: true,
+      data: await countPricingReferenceSupplierBrands(db, {
+        snapshot_id: snapshotId ?? undefined,
+        marques: args.marques as string[] | undefined,
+      }),
+    };
+  },
+};
+
+const checkBrandMatchesTool: AssistantTool = {
+  name: "check_brand_matches",
+  version: "1.0",
+  description:
+    "Verifie directement si une marque canonique correspond a des termes controles dans CAT_FAB sur le snapshot resolu.",
+  inputSchema: checkBrandMatchesInputSchema,
+  outputSchema: checkBrandMatchesOutputSchema,
+  parameters: parametersFor(checkBrandMatchesInputSchema),
+  async run(db, _authContext, _requestId, args, pageContext) {
+    const snapshotId = await resolveSemanticSnapshotId(db, pageContext);
+    const result = await searchPricingReferenceSupplierCategories(db, {
+      snapshot_id: snapshotId ?? undefined,
+      terms: args.terms as string[],
+      marques: [args.marque as string],
+      mode: args.mode as "any" | "all",
+      examples_limit: args.examples_limit as number,
+    });
+    return {
+      ok: true,
+      data: {
+        snapshot_id: result.snapshot_id,
+        marque: result.marques[0] ?? "",
+        terms: result.terms,
+        dimension: "cat_fab",
+        matches: result.segment_rows > 0,
+        segment_rows: result.segment_rows,
+        examples: result.examples,
+      },
+    };
+  },
+};
+
 export const assistantTools = [
+  aggregateSegmentsTool,
+  searchSupplierCategoriesTool,
+  countSupplierBrandsTool,
+  checkBrandMatchesTool,
   listImportsTool,
   getDiffSummaryTool,
   listDiffsTool,
@@ -715,12 +927,25 @@ export const executeAssistantTool = async (
     }
     const data = output.data as Record<string, unknown> | undefined;
     const rows = output.rows ?? data?.rows ?? data?.groups;
-    return { output, rowCount: Array.isArray(rows) ? rows.length : null };
+    return {
+      output,
+      rowCount: Array.isArray(rows) ? rows.length : [
+          "aggregate_segments",
+          "search_supplier_categories",
+          "count_supplier_brands",
+          "check_brand_matches",
+        ].includes(name) && output.ok === true
+        ? 1
+        : null,
+    };
   } catch (error) {
+    const isControlledError = error instanceof Error &&
+      typeof Reflect.get(error, "status") === "number" &&
+      typeof Reflect.get(error, "code") === "string";
     return {
       output: {
         ok: false,
-        reason: error instanceof Error
+        reason: isControlledError && error instanceof Error
           ? error.message.slice(0, 500)
           : "Execution outil impossible.",
       },

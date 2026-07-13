@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildShellNavigation } from '@/app/appConstants';
-import { getPathForTab, getTabFromPathname, isInteractionTab, isShellNavItemActive } from '@/app/appRoutes';
+import {
+  getPathForTab,
+  getTabFromPathname,
+  isInteractionTab,
+  isRealtimeInteractionTab,
+  isShellNavItemActive
+} from '@/app/appRoutes';
 import { validatePricingReferentialsSearch } from '@/app/pricingReferentialsSearch';
 
 describe('appRoutes', () => {
@@ -36,6 +42,16 @@ describe('appRoutes', () => {
     expect(isInteractionTab('suppliers')).toBe(false);
     expect(isInteractionTab('referentials')).toBe(false);
     expect(isInteractionTab('admin')).toBe(false);
+  });
+
+  it('limite les abonnements temps réel aux écrans qui affichent les interactions', () => {
+    expect(isRealtimeInteractionTab('cockpit')).toBe(true);
+    expect(isRealtimeInteractionTab('dashboard')).toBe(true);
+    expect(isRealtimeInteractionTab('settings')).toBe(false);
+    expect(isRealtimeInteractionTab('clients')).toBe(false);
+    expect(isRealtimeInteractionTab('suppliers')).toBe(false);
+    expect(isRealtimeInteractionTab('referentials')).toBe(false);
+    expect(isRealtimeInteractionTab('admin')).toBe(false);
   });
 
   it('treats the root URL as the cockpit shell item', () => {

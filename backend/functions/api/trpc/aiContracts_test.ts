@@ -199,6 +199,7 @@ Deno.test('AI prompt and usage contracts are strict', () => {
       currency: 'USD',
       period_start: '2026-06-01T00:00:00Z',
       period_end: '2026-06-27T16:00:00Z',
+      budget_alerts: [],
       daily: [{
         date: '2026-06-27',
         calls: 1,

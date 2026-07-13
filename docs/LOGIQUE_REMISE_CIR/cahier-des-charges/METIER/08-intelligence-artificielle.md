@@ -157,6 +157,14 @@ Proposition #235 - PARKER/HYD_FLEX MECAPLUS : -35% → -52%
 
 ### IA-7 : Analyse delta import tarif (Couche 1+2)
 
+**Statut au 2026-07-12 : livré en version conversationnelle.** Le Dialog Assistant IA CIR
+interroge les référentiels réels via des outils backend stricts et bornés, avec accès membres,
+quotas atomiques/idempotents, coûts auditables et SQL read-only soumis à l'identité/RLS. Le plan
+et les décisions de livraison sont dans `docs/ASSISTANT_IA/00-plan-general.md` et la Phase 6.
+Les comptages explicites de catégories fabricant (`CAT_FAB`) utilisent un agrégat déterministe
+sur le snapshot actif et des alias de marque canoniques (`FESTO → FEST`) : le modèle ne construit
+pas le filtre SQL et la trace UI affiche la métrique ainsi que la marque réellement appliquée.
+
 **Ou** : Import tarif fabricant (apres import)
 **Quand** : Apres chaque import de tarif
 

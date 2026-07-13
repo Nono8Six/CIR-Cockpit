@@ -1,9 +1,10 @@
-import { assertEquals } from "std/assert";
+import { assertEquals, assertRejects } from "std/assert";
 
 import type { AuthContext, DbClient } from "../../types.ts";
 import {
   type AssistantAccessGrant,
   getAiUsageByMember,
+  resolveAssistantAccess,
   resolveAssistantAccessFromGrants,
 } from "./aiAccess.ts";
 
@@ -14,6 +15,20 @@ const auth = (overrides: Partial<AuthContext> = {}): AuthContext => ({
   activeAgencyId: "00000000-0000-4000-8000-000000000002",
   isSuperAdmin: false,
   ...overrides,
+});
+
+Deno.test("assistant access maps database failures without leaking SQL details", async () => {
+  const db = {
+    execute: () => Promise.reject(new Error("Identite d acces IA invalide.")),
+  } as unknown as DbClient;
+  const error = await assertRejects(
+    () => resolveAssistantAccess(db, auth(), "assistant.referentiels"),
+    Error,
+    "Impossible de verifier l acces a l assistant IA.",
+  );
+  assertEquals(Reflect.get(error, "code"), "DB_READ_FAILED");
+  assertEquals(Reflect.get(error, "status"), 500);
+  assertEquals(error.message.includes("Identite d acces IA invalide"), false);
 });
 
 const grants: AssistantAccessGrant[] = [{

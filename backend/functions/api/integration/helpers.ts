@@ -14,7 +14,8 @@ export type ProcedurePath =
   | 'data.entity-contacts'
   | 'data.interactions'
   | 'data.config'
-  | 'data.profile';
+  | 'data.profile'
+  | 'ai.assistant.ask';
 
 type ApiPayload = Record<string, unknown>;
 

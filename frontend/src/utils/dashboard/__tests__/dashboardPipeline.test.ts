@@ -4,7 +4,8 @@ import { Channel, type Interaction } from '@/types';
 import {
   buildPipelineBoard,
   formatPipelineAmount,
-  getStageAgeDays
+  getStageAgeDays,
+  isCommercialInteraction
 } from '@/utils/dashboard/dashboardPipeline';
 
 const buildInteraction = (overrides: Partial<Interaction> = {}): Interaction => ({
@@ -100,6 +101,32 @@ describe('buildPipelineBoard', () => {
     expect(board.lostCount30d).toBe(1);
   });
 
+  it('exclut les dossiers non commerciaux et les compte a part', () => {
+    const devis = buildInteraction({ id: 'devis', interaction_type: 'Demande de devis' });
+    const solicitation = buildInteraction({
+      id: 'solicitation',
+      interaction_type: 'Démarchage téléphonique',
+      entity_type: 'Sollicitation'
+    });
+    const interneDone = buildInteraction({
+      id: 'interne',
+      interaction_type: 'Interne (CIR)',
+      status_is_terminal: true
+    });
+
+    const board = buildPipelineBoard({
+      interactions: [devis, solicitation, interneDone],
+      isStatusDone: (interaction) => Boolean(interaction.status_is_terminal),
+      now
+    });
+
+    // Le devis est commercial (type) -> colonne "nouvelles demandes".
+    expect(board.unqualified.map((row) => row.id)).toEqual(['devis']);
+    // La sollicitation ouverte non commerciale est comptee a part.
+    expect(board.excludedOpenCount).toBe(1);
+    // L'interne clos n'est ni dans le pipeline ni compte comme ouvert exclu.
+  });
+
   it('trie les colonnes actives par anciennete dans l etape', () => {
     const fresh = buildInteraction({
       id: 'fresh',
@@ -129,6 +156,21 @@ describe('getStageAgeDays', () => {
 
     expect(getStageAgeDays(withStageDate, now)).toBe(5);
     expect(getStageAgeDays(withoutStageDate, now)).toBe(14);
+  });
+});
+
+describe('isCommercialInteraction', () => {
+  it('reconnait etape, montant ou type de vente', () => {
+    expect(isCommercialInteraction(buildInteraction({ stage: 'qualification' }))).toBe(true);
+    expect(isCommercialInteraction(buildInteraction({ amount: 500 }))).toBe(true);
+    expect(
+      isCommercialInteraction(buildInteraction({ interaction_type: 'Demande de prix' }))
+    ).toBe(true);
+    expect(
+      isCommercialInteraction(
+        buildInteraction({ interaction_type: 'Démarchage téléphonique' })
+      )
+    ).toBe(false);
   });
 });
 

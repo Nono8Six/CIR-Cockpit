@@ -45,8 +45,7 @@ const emptyGroups: MyDayView['groups'] = {
   overdue: [],
   dueToday: [],
   upcoming: [],
-  toPlan: [],
-  later: []
+  toPlan: []
 };
 
 const buildView = (overrides: Partial<MyDayView['groups']> = {}, kpis?: Partial<MyDayView['kpis']>): MyDayView => ({
@@ -61,7 +60,7 @@ const buildView = (overrides: Partial<MyDayView['groups']> = {}, kpis?: Partial<
 });
 
 describe('DashboardMyDay', () => {
-  it('affiche les indicateurs, les groupes et les actions rapides', async () => {
+  it('affiche les groupes et les actions rapides', async () => {
     const user = userEvent.setup();
     const overdue = buildInteraction({
       id: 'overdue-1',
@@ -83,10 +82,8 @@ describe('DashboardMyDay', () => {
       />
     );
 
-    expect(screen.getByTestId('dashboard-myday-kpis')).toBeInTheDocument();
-    expect(screen.getByTestId('dashboard-myday-kpi-overdue')).toHaveTextContent('1');
-    expect(screen.getByText('En retard')).toBeInTheDocument();
-    expect(screen.getByText('À planifier')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /relances en retard/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /sans rappel planifié/i })).toBeInTheDocument();
 
     // "Fait" n'existe que pour les dossiers avec rappel.
     expect(

@@ -118,15 +118,15 @@ requalification complète de cette suite.
 
 ## 2. Checkpoints à valider
 
-- [ ] Rate limit `ai.assistant.ask` branché + plafond tokens + garde anti-fan-out ; test concurrent prouve quota atomique et idempotence ; réservations expirées gérées.
-- [ ] Alertes budget (seuils jour/mois) exposées à l'admin ; source = `ai_usage_events`.
-- [ ] Politique de rétention + purge des usages/traces définie et en place ; minimisation des traces vérifiée.
-- [ ] Politique OpenRouter/provider vérifiée (`require_parameters`, fallback, data_collection/ZDR, modèle compatible tools, génération/provider/finish reasons auditables).
-- [ ] Aucune clé en clair ; isolation `agency_id` testée bout-en-bout (2 agences) ; refus accès/quota propres.
-- [ ] Test prompt injection documentaire : le modèle reste dans son cadre, pas d'outil non autorisé.
+- [x] Rate limit `ai.assistant.ask` branché + plafond tokens + garde anti-fan-out ; test concurrent prouve quota atomique et idempotence ; réservations expirées gérées.
+- [x] Alertes budget (seuils jour/mois) exposées à l'admin ; source = `ai_usage_events`.
+- [x] Politique de rétention + purge des usages/traces définie et en place ; minimisation des traces vérifiée.
+- [x] Politique OpenRouter/provider vérifiée (`require_parameters`, fallback, data_collection/ZDR, modèle compatible tools, génération/provider/finish reasons auditables).
+- [x] Aucune clé en clair ; isolation `agency_id` testée bout-en-bout (2 agences) ; refus accès/quota propres.
+- [x] Test prompt injection documentaire : le modèle reste dans son cadre, pas d'outil non autorisé.
 - [ ] Suite d'évaluations versionnée : offline déterministe verte + campagne live comparée ; seuils exactitude/sécurité/coût/latence respectés.
-- [ ] Latence mesurée (p50/p95) ; décision streaming SSE tranchée et documentée (implémentée seulement si justifiée).
-- [ ] `docs/qa-runbook.md` section Assistant IA ajoutée ; cahier des charges IA-7 et faits d'architecture durables à jour pour la phase 7.
+- [x] Latence mesurée (p50/p95) ; décision streaming SSE tranchée et documentée (implémentée seulement si justifiée).
+- [x] `docs/qa-runbook.md` section Assistant IA ajoutée ; cahier des charges IA-7 et faits d'architecture durables à jour pour la phase 7.
 - [ ] `pnpm run qa` complet vert.
 - [ ] (Si demandé) Déploiement Edge Function `api` effectué et vérifié (list_edge_functions, ask, CORS).
 
@@ -184,8 +184,104 @@ comme livré dans le tableau de suivi (§8) de 00-plan-general.md.
 - Le déploiement est une action sortante et irréversible côté projet lié : uniquement sur
   demande explicite, avec vérification post-déploiement.
 
+### Faits d'architecture transmis à la phase 7
+
+- `assistantBroker.ts` applique accès, rate limit utilisateur, réservation atomique/idempotente,
+  plafond cumulé de 32 000 tokens d'entrée, six tours maximum, timeout 60 s et garde anti-boucle.
+- Les traces persistées ne conservent ni arguments d'outil, ni SQL, ni résultat métier : nom,
+  succès, nombre de lignes et durée suffisent à l'audit. Les générations conservent modèle,
+  provider et finish reasons.
+- Les événements détaillés sont conservés 90 jours, les traces d'outils 30 jours et les agrégats
+  quotidiens sans limite automatique. Les réservations/enveloppes expirées sont réconciliées puis
+  purgées par `private.run_ai_data_retention`, planifié avec `pg_cron`.
+- `getAiUsageSummary` expose les seuils coût jour/mois atteignant 80 % à la Vue d'ensemble admin.
+- Les évaluations offline vivent dans `assistantPhase6Evaluations_test.ts`; les probes concurrence
+  et OpenRouter live sont séparées sous `backend/functions/api/integration/` et documentées dans
+  le runbook.
+- Les attentes métier exactes qui disposent d'un agrégat critique doivent emprunter un chemin
+  déterministe avant le provider. `aggregate_segments` compte notamment les `CAT_FAB` du snapshot
+  actif après canonicalisation des alias de marque; le SQL généré reste un recours généraliste.
+- Chat Completions reste le transport provider et la mutation tRPC reste non-streaming. La base
+  liée ne contient aucun succès assistant exploitable pour un percentile; les quatre mesures live
+  Phase 2 donnent 4 210, 5 294, 5 364 et 6 238 ms (p50 5 329 ms, p95 6 107 ms), sous le seuil
+  10–15 s. SSE n'est donc pas justifié.
+
 ## 5. Changelog
 
 <!-- À remplir en fin de phase. -->
 
-_(vide — phase non encore exécutée)_
+### 2026-07-12 — Phase exécutée localement, campagne live à rejouer
+
+- **Fait** : rate limit dédié, plafond tokens, garde anti-fan-out, traces minimisées, alertes budget,
+  agrégats de coût, rétention/purge `pg_cron`, réconciliation des réservations, index hot paths,
+  tests sécurité offline, test concurrence réel et runner OpenRouter conditionnel.
+- **Migrations appliquées** : `ai_assistant_hardening` et `ai_assistant_hot_path_indexes` sur le
+  projet lié. Job `ai_data_retention_daily` créé. Aucun déploiement Edge Function demandé ou fait.
+- **Sécurité** : injection documentaire refusée, outils autorisés/citations contrôlés, deux identités
+  distinctes injectées dans les transactions read-only/RLS, refus d'accès testé avant quota,
+  admission 20 appels proche limite et idempotence 20 retries vertes.
+- **Provider** : `require_parameters:true`, `allow_fallbacks:false`, `data_collection:'deny'`, ZDR,
+  génération/modèle/provider/finish reasons auditables; aucune clé en clair ajoutée.
+- **Latence/SSE** : zéro succès assistant dans `ai_usage_events`; p50/p95 DB non calculables.
+  Mesures live Phase 2 : p50 5 329 ms, p95 6 107 ms sur 4 cas. Mutation non-streaming conservée.
+- **Écart** : la campagne live Phase 6 s'est arrêtée à l'authentification Supabase (`400` sur le
+  compte d'intégration configuré), avant tout appel provider. Le runner est livré; rejouer après
+  renouvellement des identifiants d'intégration.
+- **QA intermédiaire** : 17 tests IA ciblés verts, `deno check` API vert, `qa:back` vert
+  (280 tests, 0 échec, 10 conditionnels ignorés), `qa:docs` et probe concurrence DB 1/1 verts.
+  `pnpm run qa` franchit l'hygiène repo puis bloque au typecheck d'un refactor dashboard concurrent :
+  `DashboardToolbar.test.tsx` passe encore `onViewModeChange`, absent du nouveau contrat.
+
+### 2026-07-12 — Correctif profond accès et routage Assistant IA
+
+- **Incident reproduit** : `ai.assistant.status` retournait `500 REQUEST_FAILED`; PostgreSQL
+  journalisait `Identite d acces IA invalide.`. La fonction SQL utilisait `auth.uid()` alors que
+  l'Edge Function passe l'identité vérifiée via sa connexion backend PostgreSQL.
+- **Correction DB active** : `resolve_ai_feature_access` valide désormais l'appelant backend,
+  charge le profil par `p_user_id`, détecte le super-admin et vérifie l'adhésion agence sans
+  dépendre du contexte PostgREST. Le parcours Chrome réel retourne `status=200` et ouvre le Dialog.
+- **Second incident** : une question PO a utilisé inutilement catalogue/SQL, consommé 50 523
+  tokens d'entrée et fini sur `Provider returned an empty response` (coût 0,00398562 USD).
+- **Correction broker locale** : les intentions diff/anomalies PO reçoivent uniquement les outils
+  métier pertinents; le SQL généraliste reste disponible pour les questions imprévues. Le plafond
+  32 000 tokens coupe toute dérive restante. Les réponses provider vides ont un code
+  `AI_PROVIDER_EMPTY_RESPONSE` sûr, sans fuite du message externe.
+- **Gestion d'erreur** : une panne de résolution d'accès devient `DB_READ_FAILED`, sans exposer le
+  texte SQL. Tests dédiés accès backend, masquage, sélection d'outils et réponse vide ajoutés.
+
+### 2026-07-13 — Reproduction navigateur, Realtime et lisibilité des preuves
+
+- **Preuve runtime** : l'Edge Function liée reste en version 118. La question PO « changements par
+  rapport au dernier fichier tarif » y termine en `200` après 30 564 ms, mais le broker déployé
+  appelle encore le catalogue puis le SQL généraliste. Le correctif de routage métier est donc
+  présent dans la source locale, pas dans l'Edge Function active ; aucun déploiement n'a été fait.
+- **Realtime** : les canaux `interactions` étaient ouverts sur toutes les routes, y compris les
+  référentiels qui n'en dépendent pas. Ils sont désormais limités aux écrans d'interactions. Sur
+  `CHANNEL_ERROR` ou `TIMED_OUT`, le canal fautif est retiré, l'erreur est dédupliquée via le pipeline
+  applicatif et un rafraîchissement périodique prend le relais au lieu d'une reconnexion infinie.
+- **UI/UX** : les bulles longues restent dans le Dialog, l'identifiant modèle est présenté sous une
+  forme lisible, et le panneau distingue les données réellement consultées des outils en échec.
+  Les descriptions internes des outils ne sont plus affichées comme des sources métier.
+- **Runtime frontend** : le root React est conservé sur son conteneur afin qu'une réévaluation HMR
+  appelle `root.render` au lieu de recréer un second root et de polluer la console de développement.
+- **Tests** : scénario exact de la question PO, distinction preuve/échec, absence de fuite des
+  descriptions internes, désactivation des canaux hors périmètre, repli Realtime dédupliqué et
+  initialisation React idempotente.
+
+### 2026-07-13 — Comptage CAT_FAB déterministe et diagnostic auditable
+
+- **Cause prouvée** : pour « FEST (FESTO) », le SQL généré filtrait `marque = 'FESTO'` alors que le
+  snapshot actif stocke `FEST`. La base retourne 673 segments et 673 `CAT_FAB` distincts.
+- **Correction** : alias métier `FESTO → FEST`, outil strict `aggregate_segments` et chemin broker
+  déterministe pour les demandes explicites de comptage `CAT_FAB`. Aucun appel provider ni SQL
+  généré n'est nécessaire pour ce cas; coût et tokens sont nuls tout en restant audités.
+- **Diagnostic UI** : la trace temporaire expose la métrique et le filtre canoniques. Pour les
+  questions générales restant sur le SQL read-only, la requête exécutée est consultable afin de
+  diagnostiquer un filtre incorrect. Les arguments/SQL ne sont toujours pas persistés dans les
+  événements d'usage.
+- **Régressions** : phrase exacte, routage exclusif, alias, agrégat 673, schéma Zod strict et rendu
+  du diagnostic couverts par les suites offline/backend/frontend.
+- **QA** : 17 tests IA ciblés, `qa:back` (287 réussis, 11 conditionnels ignorés), `qa:docs`, lint,
+  typecheck et build frontend verts. La gate complète valide 686 tests frontend puis reste bloquée
+  par la couverture d'un fichier Dashboard modifié en parallèle (`useDashboardStatusHelpers.ts`,
+  branches 13,33 % pour un seuil à 30 %), sans lien avec l'Assistant IA.

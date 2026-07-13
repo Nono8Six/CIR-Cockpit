@@ -106,7 +106,6 @@ export type MyDayGroups = {
   dueToday: Interaction[];
   upcoming: Interaction[];
   toPlan: Interaction[];
-  later: Interaction[];
 };
 
 export type MyDayKpis = {
@@ -129,17 +128,16 @@ const byReminderAsc = (a: Interaction, b: Interaction): number =>
 const byLastActionAsc = (a: Interaction, b: Interaction): number =>
   toDate(a.last_action_at).getTime() - toDate(b.last_action_at).getTime();
 
-// Groupes au vocabulaire simple : relances en retard, a faire aujourd'hui,
-// prochaines 72 h, dossiers "a traiter" sans rappel et relances plus lointaines.
+// Quatre groupes au vocabulaire simple : relances en retard, a faire aujourd'hui,
+// prochaines relances (tout rappel futur), et dossiers "a traiter" sans rappel planifie.
 export const buildMyDayView = (
   interactions: Interaction[],
   predicates: Pick<InteractionStatusPredicates, 'isStatusDone' | 'isStatusTodo'>,
   now: Date = new Date()
 ): MyDayView => {
-  const groups: MyDayGroups = { overdue: [], dueToday: [], upcoming: [], toPlan: [], later: [] };
+  const groups: MyDayGroups = { overdue: [], dueToday: [], upcoming: [], toPlan: [] };
   const nowTime = now.getTime();
   const endOfTodayTime = endOfDay(now).getTime();
-  const threeDaysLaterTime = endOfTodayTime + 3 * DAY_MS;
 
   let openCount = 0;
   let openAgeTotalMs = 0;
@@ -174,21 +172,13 @@ export const buildMyDayView = (
       return;
     }
 
-    if (reminderTime <= threeDaysLaterTime) {
-      groups.upcoming.push(interaction);
-      return;
-    }
-
-    if (predicates.isStatusTodo(interaction)) {
-      groups.later.push(interaction);
-    }
+    groups.upcoming.push(interaction);
   });
 
   groups.overdue.sort(byReminderAsc);
   groups.dueToday.sort(byReminderAsc);
   groups.upcoming.sort(byReminderAsc);
   groups.toPlan.sort(byLastActionAsc);
-  groups.later.sort(byReminderAsc);
 
   return {
     groups,
@@ -205,6 +195,5 @@ export const flattenMyDayGroups = (groups: MyDayGroups): Interaction[] => [
   ...groups.overdue,
   ...groups.dueToday,
   ...groups.upcoming,
-  ...groups.toPlan,
-  ...groups.later
+  ...groups.toPlan
 ];

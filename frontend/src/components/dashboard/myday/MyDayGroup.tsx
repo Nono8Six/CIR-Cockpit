@@ -27,15 +27,18 @@ const MyDayGroup = ({
 
   return (
     <section aria-label={config.label} data-testid={`dashboard-myday-group-${config.key}`}>
-      <h3
-        className={`mb-1.5 flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-wider ${config.labelClassName}`}
-      >
-        <span className={`size-1.5 rounded-full ${config.dotClassName}`} aria-hidden="true" />
-        {config.label}
-        <span className="font-mono text-[10px] font-medium tabular-nums text-muted-foreground/60">
-          {interactions.length}
-        </span>
-      </h3>
+      <div className="mb-2 flex items-baseline gap-2 px-1">
+        <h3
+          className={`flex items-center gap-2 text-[12px] font-semibold ${config.labelClassName}`}
+        >
+          <span className={`size-1.5 rounded-full ${config.dotClassName}`} aria-hidden="true" />
+          {config.label}
+          <span className="font-mono text-[11px] font-medium tabular-nums text-muted-foreground/60">
+            {interactions.length}
+          </span>
+        </h3>
+        <span className="hidden text-[11px] text-muted-foreground/70 sm:inline">{config.hint}</span>
+      </div>
       <div className="divide-y divide-border-subtle overflow-hidden rounded-xl border border-border bg-card shadow-soft">
         {interactions.map((interaction) => (
           <MyDayRow

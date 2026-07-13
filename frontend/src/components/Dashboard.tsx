@@ -2,6 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import { AgencyStatus, Interaction } from '@/types';
 import { ConvertClientEntity } from './ConvertClientDialog';
+import DashboardPageHeader from './dashboard/DashboardPageHeader';
 import DashboardToolbar from './dashboard/DashboardToolbar';
 import DashboardList from './dashboard/DashboardList';
 import DashboardMyDay from './dashboard/DashboardMyDay';
@@ -50,6 +51,7 @@ const Dashboard = ({
     effectiveStartDate,
     effectiveEndDate,
     filteredData,
+    headerStats,
     myDayView,
     pipelineBoard,
     getStatusBadgeClass,
@@ -196,11 +198,16 @@ const Dashboard = ({
       className="relative flex h-full min-h-0 flex-col overflow-hidden bg-transparent"
       data-testid="dashboard-root"
     >
+      <DashboardPageHeader
+        stats={headerStats}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+      />
+
       <DashboardToolbar
         searchRef={searchInputRef}
         dateFiltersRef={dateFiltersRef}
         viewMode={viewMode}
-        onViewModeChange={setViewMode}
         period={period}
         onPeriodChange={setPeriod}
         periodErrorMessage={periodErrorMessage}
@@ -213,7 +220,7 @@ const Dashboard = ({
         onSearchTermChange={setSearchTerm}
       />
 
-      <div className="relative flex-1 min-h-0 bg-surface-1">
+      <div className="relative flex-1 min-h-0">
         {viewMode === 'myday' && myDayView ? (
           <DashboardMyDay
             view={myDayView}
