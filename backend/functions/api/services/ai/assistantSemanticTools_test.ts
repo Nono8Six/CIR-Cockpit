@@ -13,6 +13,7 @@ import {
 } from "./assistantTools.ts";
 import {
   escapePricingReferenceLikeTerm,
+  expandPricingReferenceSearchTerms,
   normalizePricingReferenceBrand,
   normalizePricingReferenceSearchTerms,
 } from "../pricing/references/referenceSemantics.ts";
@@ -45,10 +46,24 @@ Deno.test("P1 centralise les alias de marque et les synonymes CAT_FAB", () => {
     normalizePricingReferenceSearchTerms(["Drive", "Drives", "VFD"]),
     [
       "drive",
-      "variateur",
+      "drives",
+      "vfd",
     ],
   );
   assertEquals(escapePricingReferenceLikeTerm("50%_\\"), "50\\%\\_\\\\");
+});
+
+Deno.test("P1 correctif preserve VFD, le terme demande et les accents", () => {
+  assertEquals(expandPricingReferenceSearchTerms(["VFD"]), {
+    requested_terms: ["vfd"],
+    canonical_terms: ["vfd"],
+    query_terms: ["vfd", "drive", "drives", "variateur"],
+  });
+  assertEquals(expandPricingReferenceSearchTerms(["électrique"]), {
+    requested_terms: ["électrique"],
+    canonical_terms: ["electrique"],
+    query_terms: ["électrique"],
+  });
 });
 
 Deno.test("P1 route les trois intentions connues vers un seul outil metier", () => {
@@ -213,7 +228,10 @@ Deno.test("P1 retourne les verites FEST, ROCK, huit marques et 140 sur le snapsh
   assertEquals(check.output.data, {
     snapshot_id: snapshotId,
     marque: "ROCK",
-    terms: ["drive"],
+    terms: ["drive", "drives", "variateur", "vfd"],
+    requested_terms: ["drive"],
+    canonical_terms: ["drive"],
+    query_terms: ["drive", "drives", "variateur", "vfd"],
     dimension: "cat_fab",
     matches: true,
     segment_rows: 234,
@@ -250,6 +268,30 @@ Deno.test("P1 parametre et echappe les caracteres LIKE utilisateur", async () =>
   );
   assertStringIncludes(queries[0].sql, "escape '\\'");
   assertEquals(queries[0].params.includes("%50\\%\\_\\\\%"), true);
+});
+
+Deno.test("P1 correctif requete VFD et accent sans perte du litteral", async () => {
+  const { db, queries } = fakeDb([[], []]);
+  await executeAssistantTool(
+    db,
+    authContext,
+    "p1-vfd-literal",
+    "search_supplier_categories",
+    { terms: ["VFD"], mode: "any", examples_limit: 0 },
+    { surface: "pricing.references", target_snapshot_id: snapshotId },
+  );
+  await executeAssistantTool(
+    db,
+    authContext,
+    "p1-accent-literal",
+    "search_supplier_categories",
+    { terms: ["électrique"], mode: "any", examples_limit: 0 },
+    { surface: "pricing.references", target_snapshot_id: snapshotId },
+  );
+  assertEquals(queries[0].params.includes("%vfd%"), true);
+  assertEquals(queries[0].params.includes("%variateur%"), true);
+  assertEquals(queries[1].params.includes("%électrique%"), true);
+  assertEquals(queries[1].params.includes("%electrique%"), false);
 });
 
 Deno.test("P1 refuse une sortie agregee au-dela du plafond contractuel", async () => {

@@ -26,16 +26,16 @@ Le déploiement de l'Edge Function `api` reste interdit sans demande explicite d
 
 ## 2. Incidents de référence à éliminer
 
-| ID | Incident | Cause prouvée | Comportement attendu |
-| --- | --- | --- | --- |
-| I-01 | FESTO retourne 0 CAT_FAB au lieu de 673 | Le modèle filtre `FESTO` alors que le snapshot stocke `FEST` | Alias canonique et comptage déterministe sans provider |
-| I-02 | ROCK absent de la recherche `drive` | `LIKE` PostgreSQL sensible à la casse ne trouve pas `Drives` | Recherche textuelle insensible à la casse et exhaustive |
-| I-03 | « et ROCK ? » retourne « Je ne sais pas » | L'historique ne transporte que le texte, sans contexte ni preuve des outils | Héritage contrôlé de la dimension, des termes et du snapshot |
-| I-04 | Le modèle invente `agency_id` sur une table qui ne possède pas cette colonne | Le SQL généré n'est pas validé contre le catalogue avant exécution | Identifiants invalides refusés avant PostgreSQL |
-| I-05 | Après deux échecs, une requête globale sans snapshot produit 140 | La réparation change le périmètre sémantique pour obtenir un succès | Une réparation maximum et invariants de périmètre obligatoires |
-| I-06 | Ajouter un point-virgule contourne l'anti-boucle | Fingerprint fondé sur les arguments bruts | Fingerprint canonique des requêtes équivalentes |
-| I-07 | Une trace d'outil réussie est prise pour une preuve métier suffisante | Le succès technique ne valide pas la sémantique de la requête | Provenance structurée de chaque fait et validation du périmètre |
-| I-08 | Le runtime continue d'utiliser l'ancien comportement | Correctifs présents localement mais Edge Function distante encore en version 118 | Distinguer systématiquement code local, QA et runtime déployé |
+| ID   | Incident                                                                     | Cause prouvée                                                                    | Comportement attendu                                            |
+| ------| ------------------------------------------------------------------------------| ----------------------------------------------------------------------------------| -----------------------------------------------------------------|
+| I-01 | FESTO retourne 0 CAT_FAB au lieu de 673                                      | Le modèle filtre `FESTO` alors que le snapshot stocke `FEST`                     | Alias canonique et comptage déterministe sans provider          |
+| I-02 | ROCK absent de la recherche `drive`                                          | `LIKE` PostgreSQL sensible à la casse ne trouve pas `Drives`                     | Recherche textuelle insensible à la casse et exhaustive         |
+| I-03 | « et ROCK ? » retourne « Je ne sais pas »                                    | L'historique ne transporte que le texte, sans contexte ni preuve des outils      | Héritage contrôlé de la dimension, des termes et du snapshot    |
+| I-04 | Le modèle invente `agency_id` sur une table qui ne possède pas cette colonne | Le SQL généré n'est pas validé contre le catalogue avant exécution               | Identifiants invalides refusés avant PostgreSQL                 |
+| I-05 | Après deux échecs, une requête globale sans snapshot produit 140             | La réparation change le périmètre sémantique pour obtenir un succès              | Une réparation maximum et invariants de périmètre obligatoires  |
+| I-06 | Ajouter un point-virgule contourne l'anti-boucle                             | Fingerprint fondé sur les arguments bruts                                        | Fingerprint canonique des requêtes équivalentes                 |
+| I-07 | Une trace d'outil réussie est prise pour une preuve métier suffisante        | Le succès technique ne valide pas la sémantique de la requête                    | Provenance structurée de chaque fait et validation du périmètre |
+| I-08 | Le runtime continue d'utiliser l'ancien comportement                         | Correctifs présents localement mais Edge Function distante encore en version 118 | Distinguer systématiquement code local, QA et runtime déployé   |
 
 ## 3. Architecture cible
 
@@ -65,7 +65,7 @@ Statuts autorisés : `À FAIRE`, `EN COURS`, `BLOQUÉE`, `VALIDÉE`.
 | --- | --- | --- | --- | --- | --- |
 | 0 | État de référence et régressions | Incidents reproduits manuellement, couverture incomplète | VALIDÉE | Les cinq conversations réelles échouent avant correction pour la cause attendue | Snapshot/vérités DB figés ; 7 régressions rouges ; baseline live complète sur `api` v118 |
 | 1 | Couche sémantique déterministe | `aggregate_segments` et FESTO → FEST présents localement | VALIDÉE | FESTO, ROCK et comptages passent sans SQL généré | 7 tests P1 dédiés + 7 contrats/broker verts ; vérités DB P0 confirmées par MCP ; provider/tokens/coût à zéro |
-| 2 | Routage d'intentions | Routage déterministe limité au comptage CAT_FAB | À FAIRE | Chaque intention critique ne reçoit que ses outils autorisés | — |
+| 2 | Routage d'intentions | Routage déterministe limité au comptage CAT_FAB | VALIDÉE | Chaque intention critique ne reçoit que ses outils autorisés | Matrice P2 : 20 cas, allowlists exactes, fallback SQL borné et 4 chemins sans provider |
 | 3 | Contexte conversationnel | Historique limité à `{role, content}` | À FAIRE | « et ROCK ? » hérite correctement du contexte précédent | — |
 | 4 | Fallback SQL durci | Lecture seule/RLS bornées, validation sémantique incomplète | À FAIRE | Colonnes inventées, changements de scope et boucles équivalentes sont bloqués | — |
 | 5 | Preuves, erreurs et diagnostic UI | Sources et SQL partiellement visibles localement | À FAIRE | Aucun fait sans provenance ; aucun détail interne ou sensible exposé | — |
@@ -231,6 +231,7 @@ snapshot figé.
 | Date | Statut | Exécuté par | Preuve/commande | Résultat | Écart ou blocage |
 | --- | --- | --- | --- | --- | --- |
 | 2026-07-13 | VALIDÉE | Codex | Tests Deno P1/contrats/broker, lint ciblé, `deno check`, Supabase MCP, déploiement `api` | FEST/FESTO 673 CAT_FAB et 673 segments ; ROCK+drive 234 ; 8 marques exactes ; 140 marques ; provider/tokens/coût = 0 ; `api` v119 ACTIVE | `qa:back` volontairement rouge : 298 verts, 5 rouges P3/P4/P5, 11 conditionnels ignorés ; aucune migration P1 nécessaire |
+| 2026-07-13 | VALIDÉE | Codex | Correctifs ciblés VFD/accents, tests Deno P1, Supabase MCP read-only sur le snapshot P0 | Le terme demandé, le terme canonique et les variantes de requête sont séparés ; `vfd` et `électrique` restent littéralement recherchés ; DB : VFD 3, variateur 11, drive 348, électrique 9, electrique 2 | Recherche accent-insensitive complète reportée : aucune extension, migration ou translittération asymétrique ajoutée |
 
 #### Checkpoint P1 — 2026-07-13
 
@@ -246,8 +247,11 @@ snapshot figé.
   ROCK + `drive` = 234 segments; `variateur OR drive` = `BONF`, `FEST`, `LERO`, `OPTI`, `PARK`,
   `REXR`, `ROCK`, `SIEM`; 140 marques distinctes. Les requêtes métier filtrent `snapshot_id` et
   ne contiennent pas `agency_id`.
-- Normalisation : `FESTO → FEST`, `ROCKWELL → ROCK`; `drive`/`drives → drive`, `VFD → variateur`;
-  espaces et casse normalisés; `%`, `_` et `\` échappés sans wildcard utilisateur implicite.
+- Normalisation corrigée : `FESTO → FEST`, `ROCKWELL → ROCK`; les termes demandés, canoniques et
+  variantes SQL sont distincts. `VFD` conserve `vfd` et s'étend de façon bornée à `drive`,
+  `drives`, `variateur`; `électrique` conserve sa variante accentuée. Les espaces/casse sont
+  normalisés et `%`, `_`, `\` restent échappés sans wildcard utilisateur implicite. Une recherche
+  accent-insensitive symétrique complète reste explicitement hors P1 faute d'`unaccent`.
 - Broker : les trois intentions P1 reconnues exécutent directement l'outil métier. Le test avec
   provider factice qui lève immédiatement reste vert; `input_tokens=0`, `output_tokens=0`, coût
   `0`, trace et citation avec outil, métrique, filtres canoniques et snapshot.
@@ -282,14 +286,14 @@ un outil déterministe couvre la question.
 
 ### Travaux
 
-- [ ] Reconnaître les comptages CAT_FAB par marque.
-- [ ] Reconnaître le comptage de marques distinctes.
-- [ ] Reconnaître la recherche textuelle dans CAT_FAB.
-- [ ] Reconnaître la vérification d'une marque dans le dernier résultat.
-- [ ] Conserver les routes déterministes existantes pour changements, anomalies et santé.
-- [ ] Définir une allowlist d'outils par intention.
-- [ ] Poser une clarification lorsque « famille » peut désigner CAT_FAB ou FAM/FAM_LIB.
-- [ ] Laisser le SQL généraliste disponible seulement si aucune intention connue n'est retenue.
+- [x] Reconnaître les comptages CAT_FAB par marque.
+- [x] Reconnaître le comptage de marques distinctes.
+- [x] Reconnaître la recherche textuelle dans CAT_FAB.
+- [x] Reconnaître la vérification autonome d'une marque avec termes et dimension explicites.
+- [x] Conserver les routes bornées pour changements, anomalies et santé.
+- [x] Définir une allowlist d'outils par intention dans une source unique.
+- [x] Poser une clarification lorsque « famille » peut désigner CAT_FAB ou FAM/FAM_LIB.
+- [x] Laisser les seuls outils SQL généralistes disponibles si aucune intention connue n'est retenue.
 
 ### Checkpoint vérifiable P2
 
@@ -301,7 +305,28 @@ exacte des outils exposés et l'absence de `get_database_catalog`,
 
 | Date | Statut | Exécuté par | Preuve/commande | Résultat | Écart ou blocage |
 | --- | --- | --- | --- | --- | --- |
-| — | À FAIRE | — | — | — | — |
+| 2026-07-13 | VALIDÉE | Codex | `assistantIntentRouting_test.ts`, suites P1/contrats/consolidée, lint/check, `qa:docs`, Supabase MCP read-only | 20 cas de matrice et 3 tests P2 verts ; allowlists exactes ; quatre fast paths à zéro provider ; fallback CRM limité aux 3 outils SQL ; 31 verts/5 rouges futurs dans la suite consolidée ; `qa:back` 303 verts/5 rouges/11 ignorés | Les cinq rouges restent exactement P3 (continuité), P4 (colonne/fingerprint/snapshot) et P5 (preuve métier) |
+
+#### Matrice d'intentions P2 — 2026-07-13
+
+| Intention | Dimension | Mode | Outils autorisés exacts |
+| --- | --- | --- | --- |
+| `segment_count` | `cat_fab` | déterministe direct | `aggregate_segments` |
+| `supplier_category_search` | `cat_fab` | déterministe direct | `search_supplier_categories` |
+| `supplier_brand_count` | `brand` | déterministe direct | `count_supplier_brands` |
+| `supplier_brand_check` | `cat_fab` | déterministe direct | `check_brand_matches` |
+| `diff_analysis` | diff / CAT_FAB / famille CIR | provider borné | `get_diff_summary`, `aggregate_diffs`, `list_diffs` |
+| `anomaly_analysis` | anomalie | provider borné | `get_anomalies_summary`, `list_anomalies` |
+| `health_analysis` | import | provider borné | `list_imports`, `get_import_details`, `get_health_report` |
+| `clarification` | ambiguë | sans provider | aucun |
+| `general_sql` | imprévue | fallback SQL | `get_database_catalog`, `describe_database_tables`, `execute_readonly_sql` |
+
+Priorité stable : changements, anomalies, santé/imports, intentions référentiels, clarification,
+puis fallback SQL. Les citations, négations et noms propres testés ne déclenchent pas une intention
+CAT_FAB. Une instruction injectée demandant le SQL ne peut pas élargir l'allowlist. `ROCK` et
+`et ROCK ?` seuls restent volontairement hors routage P2 afin de préserver la régression P3.
+
+Décision : P2 `VALIDÉE`. La prochaine phase autorisée est P3 uniquement.
 
 ---
 
@@ -598,6 +623,8 @@ peuvent être menés en parallèle, mais les checkpoints restent séquentiels.
 | 2026-07-13 | P0 | Snapshot/vérités DB figés ; sept régressions rouges ; cinq conversations reproduites sur `api` v118 | Supabase MCP, tests Deno ciblés, runner live conditionnel | P0 validée ; P1 uniquement est autorisée |
 | 2026-07-13 | P1 | Couche sémantique déterministe livrée localement pour CAT_FAB, recherche de marques, comptage de marques et vérification directe de marque | 14 tests P1/contrats verts, MCP snapshot P0, lint/check verts; `qa:back` 298 verts/5 rouges futurs | P1 validée sans provider ni SQL généré; P2 uniquement est autorisée |
 | 2026-07-13 | P1 | Déploiement explicitement autorisé; aucune migration P1 absente du distant | Supabase CLI + MCP : `api` v119 ACTIVE; routes 401 sans session; CORS OPTIONS 200 | Correctif P1 actif sur le backend lié; P2 reste la seule phase suivante autorisée |
+| 2026-07-13 | P1 corrective | VFD littéral et accents préservés avant P2 ; aucune migration ni extension | 9 tests sémantiques verts ; MCP snapshot P0 : 3/11/348 et 9/2 | Précondition fermée ; P2 autorisée |
+| 2026-07-13 | P2 | Parseur typé et politique centrale intention → outils ; clarifications et fallback bornés | Matrice 20 cas, 3 tests P2, suite consolidée 31 verts/5 rouges futurs ; `qa:back` 303 verts/5 rouges/11 ignorés | P2 validée ; P3 uniquement est autorisée |
 
 ## 7. État de livraison
 

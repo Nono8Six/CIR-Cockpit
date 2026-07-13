@@ -2,8 +2,8 @@ import { and, desc, eq, type SQL, sql } from "drizzle-orm";
 import { strToU8, zipSync } from "fflate";
 import {
   escapePricingReferenceLikeTerm,
+  expandPricingReferenceSearchTerms,
   normalizePricingReferenceBrands,
-  normalizePricingReferenceSearchTerms,
 } from "./referenceSemantics.ts";
 
 import {
@@ -2589,6 +2589,9 @@ export type PricingReferenceCategorySearchInput = {
 export type PricingReferenceCategorySearch = {
   snapshot_id: string | null;
   terms: string[];
+  requested_terms: string[];
+  canonical_terms: string[];
+  query_terms: string[];
   marques: string[];
   matching_brands: string[];
   distinct_brand_count: number;
@@ -2656,7 +2659,7 @@ const categoryTermCondition = (term: string): SQL => {
 
 const categorySearchConditions = (
   snapshotId: string,
-  terms: string[],
+  termGroups: string[][],
   marques: string[],
   mode: "any" | "all",
 ): SQL => {
@@ -2668,12 +2671,14 @@ const categorySearchConditions = (
       })`,
     );
   }
-  const termConditions = terms.map(categoryTermCondition);
-  if (termConditions.length > 0) {
+  const groupedConditions = termGroups.map((terms) =>
+    sql<boolean>`(${sql.join(terms.map(categoryTermCondition), sql` or `)})`
+  );
+  if (groupedConditions.length > 0) {
     conditions.push(
       mode === "all"
-        ? sql<boolean>`(${sql.join(termConditions, sql` and `)})`
-        : sql<boolean>`(${sql.join(termConditions, sql` or `)})`,
+        ? sql<boolean>`(${sql.join(groupedConditions, sql` and `)})`
+        : sql<boolean>`(${sql.join(groupedConditions, sql` or `)})`,
     );
   }
   return andSql(conditions);
@@ -2684,12 +2689,17 @@ export const searchPricingReferenceSupplierCategories = async (
   input: PricingReferenceCategorySearchInput,
 ): Promise<PricingReferenceCategorySearch> => {
   const snapshotId = await resolveSnapshotId(db, input);
-  const terms = normalizePricingReferenceSearchTerms(input.terms);
+  const expandedTerms = expandPricingReferenceSearchTerms(input.terms);
+  const terms = expandedTerms.query_terms;
+  const termGroups = expandedTerms.requested_terms.map((term) =>
+    expandPricingReferenceSearchTerms([term]).query_terms
+  );
   const marques = normalizePricingReferenceBrands(input.marques);
   if (!snapshotId) {
     return {
       snapshot_id: null,
       terms,
+      ...expandedTerms,
       marques,
       matching_brands: [],
       distinct_brand_count: 0,
@@ -2700,7 +2710,7 @@ export const searchPricingReferenceSupplierCategories = async (
   }
   const whereClause = categorySearchConditions(
     snapshotId,
-    terms,
+    termGroups,
     marques,
     input.mode,
   );
@@ -2726,6 +2736,7 @@ export const searchPricingReferenceSupplierCategories = async (
   return {
     snapshot_id: snapshotId,
     terms,
+    ...expandedTerms,
     marques,
     matching_brands: counts.map((row) => row.marque),
     distinct_brand_count: counts.length,

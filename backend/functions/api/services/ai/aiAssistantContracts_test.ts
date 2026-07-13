@@ -119,12 +119,13 @@ Deno.test("assistant routes known PO intents away from general SQL tools", () =>
     allTools,
   );
   assertEquals(selected.map((tool) => tool.function.name), [
-    "list_imports",
     "get_diff_summary",
   ]);
   assertEquals(
-    selectAssistantTools("Combien de clients actifs ?", allTools).length,
-    allTools.length,
+    selectAssistantTools("Combien de clients actifs ?", allTools).map((tool) =>
+      tool.function.name
+    ),
+    ["execute_readonly_sql"],
   );
   assertEquals(
     getSegmentCountIntent(

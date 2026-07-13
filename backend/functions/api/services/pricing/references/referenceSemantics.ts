@@ -5,11 +5,11 @@ const BRAND_ALIASES: Readonly<Record<string, string>> = {
   ROCKWELL: "ROCK",
 };
 
-const TERM_ALIASES: Readonly<Record<string, string>> = {
-  drive: "drive",
-  drives: "drive",
-  variateur: "variateur",
-  vfd: "variateur",
+const TERM_EXPANSIONS: Readonly<Record<string, readonly string[]>> = {
+  drive: ["drive", "drives", "variateur", "vfd"],
+  drives: ["drives", "drive", "variateur", "vfd"],
+  variateur: ["variateur", "drive", "drives", "vfd"],
+  vfd: ["vfd", "drive", "drives", "variateur"],
 };
 
 const normalizeToken = (value: string): string =>
@@ -30,8 +30,7 @@ export const normalizePricingReferenceBrands = (
 ];
 
 export const normalizePricingReferenceSearchTerm = (value: string): string => {
-  const normalized = normalizeToken(value).toLowerCase();
-  return TERM_ALIASES[normalized] ?? normalized;
+  return value.trim().replace(/\s+/g, " ").normalize("NFC").toLowerCase();
 };
 
 export const normalizePricingReferenceSearchTerms = (
@@ -39,6 +38,31 @@ export const normalizePricingReferenceSearchTerms = (
 ): string[] => [
   ...new Set(values.map(normalizePricingReferenceSearchTerm).filter(Boolean)),
 ];
+
+export type PricingReferenceSearchTerms = {
+  requested_terms: string[];
+  canonical_terms: string[];
+  query_terms: string[];
+};
+
+export const expandPricingReferenceSearchTerms = (
+  values: readonly string[],
+): PricingReferenceSearchTerms => {
+  const requestedTerms = normalizePricingReferenceSearchTerms(values);
+  const canonicalTerms = requestedTerms.map((value) => {
+    const lookup = normalizeToken(value).toLowerCase();
+    return lookup === "drives" ? "drive" : lookup;
+  });
+  const queryTerms = requestedTerms.flatMap((value) => {
+    const lookup = normalizeToken(value).toLowerCase();
+    return TERM_EXPANSIONS[lookup] ?? [value];
+  });
+  return {
+    requested_terms: [...new Set(requestedTerms)],
+    canonical_terms: [...new Set(canonicalTerms)],
+    query_terms: [...new Set(queryTerms)],
+  };
+};
 
 export const escapePricingReferenceLikeTerm = (value: string): string =>
   value.replace(/[\\%_]/g, "\\$&");

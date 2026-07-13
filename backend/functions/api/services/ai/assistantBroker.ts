@@ -35,6 +35,10 @@ import {
 } from "./assistantTools.ts";
 import { resolveAssistantAccess } from "./aiAccess.ts";
 import { checkRateLimit } from "../rate-limiting/rateLimit.ts";
+import {
+  parseAssistantReferenceIntent,
+  selectToolsForAssistantIntent,
+} from "./assistantIntentRouting.ts";
 
 const FEATURE = "assistant.referentiels" as const;
 export const MAX_TOOL_ROUNDS = 6;
@@ -87,26 +91,6 @@ type LoopResult = {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
-const normalizeQuestion = (value: string): string =>
-  value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-
-const DIFF_TOOL_NAMES = new Set([
-  "list_imports",
-  "get_diff_summary",
-  "list_diffs",
-  "aggregate_diffs",
-]);
-const ANOMALY_TOOL_NAMES = new Set([
-  "list_imports",
-  "get_import_details",
-  "get_health_report",
-  "get_anomalies_summary",
-  "list_anomalies",
-]);
-const SEGMENT_COUNT_TOOL_NAMES = new Set(["aggregate_segments"]);
-const CATEGORY_SEARCH_TOOL_NAMES = new Set(["search_supplier_categories"]);
-const BRAND_COUNT_TOOL_NAMES = new Set(["count_supplier_brands"]);
-
 export type SegmentCountIntent = {
   metric: "distinct_cat_fab";
   marques: string[];
@@ -115,60 +99,41 @@ export type SegmentCountIntent = {
 export const getSegmentCountIntent = (
   question: string,
 ): SegmentCountIntent | null => {
-  const normalized = normalizeQuestion(question);
-  const asksForCount = /\b(?:combien|nombre)\b/.test(normalized);
-  const asksForManufacturerCategory =
-    /\bcat_fab\b|\bcat fab\b|\bcategories?\s+(?:fabricant|fabriquant)\b|\bfamilles?\s+(?:de\s+)?produits?\b/
-      .test(normalized);
-  if (!asksForCount || !asksForManufacturerCategory) return null;
-
-  const brandClause = normalized.match(
-    /\bchez\s+(.+?)(?=\s+(?:dans|sur|pour)\b|[?.!,;:]|$)/,
-  )?.[1];
-  if (!brandClause) return null;
-  const ignored = new Set(["la", "le", "les", "marque", "groupe"]);
-  const marques = [
-    ...new Set(
-      (brandClause.match(/[a-z0-9][a-z0-9_-]*/g) ?? [])
-        .filter((value) => !ignored.has(value))
-        .map((value) => value.toUpperCase()),
-    ),
-  ];
-  return marques.length > 0 ? { metric: "distinct_cat_fab", marques } : null;
+  const intent = parseAssistantReferenceIntent(question);
+  if (intent.kind !== "segment_count") return null;
+  return intent.filters as SegmentCountIntent;
 };
 
 export type DeterministicReferenceIntent = {
   tool:
     | "aggregate_segments"
     | "search_supplier_categories"
-    | "count_supplier_brands";
+    | "count_supplier_brands"
+    | "check_brand_matches";
   args: Record<string, unknown>;
 };
 
 export const getDeterministicReferenceIntent = (
   question: string,
 ): DeterministicReferenceIntent | null => {
-  const segmentCount = getSegmentCountIntent(question);
-  if (segmentCount) {
-    return {
-      tool: "aggregate_segments",
-      args: { marques: segmentCount.marques },
-    };
-  }
-  const normalized = normalizeQuestion(question);
-  const asksBrandCount = /\b(?:combien|nombre)\b/.test(normalized) &&
-    /\bmarques?\b/.test(normalized) &&
-    /\b(?:differentes?|distinctes?)\b/.test(normalized);
-  if (asksBrandCount) return { tool: "count_supplier_brands", args: {} };
-  const terms = ["variateur", "drive", "drives", "vfd"].filter((term) =>
-    new RegExp(`\\b${term}\\b`).test(normalized)
-  );
-  const searchesCategories = terms.length > 0 &&
-    (/\bcat_fab\b|\bcat fab\b|\bcategories?\b|\bmarques?\b/.test(normalized));
-  if (searchesCategories) {
-    return { tool: "search_supplier_categories", args: { terms, mode: "any" } };
-  }
-  return null;
+  const intent = parseAssistantReferenceIntent(question);
+  const tool = intent.kind === "segment_count"
+    ? "aggregate_segments"
+    : intent.kind === "supplier_category_search"
+    ? "search_supplier_categories"
+    : intent.kind === "supplier_brand_count"
+    ? "count_supplier_brands"
+    : intent.kind === "supplier_brand_check"
+    ? "check_brand_matches"
+    : null;
+  return tool
+    ? {
+      tool,
+      args: intent.kind === "segment_count"
+        ? { marques: intent.filters.marques }
+        : intent.filters,
+    }
+    : null;
 };
 
 export const executeDeterministicReferenceTool = async <T>(
@@ -187,39 +152,16 @@ export const selectAssistantTools = (
   question: string,
   tools: OpenRouterToolDefinition[],
 ): OpenRouterToolDefinition[] => {
-  const normalized = normalizeQuestion(question);
-  const deterministic = getDeterministicReferenceIntent(question);
-  const allowed = /\banomal(?:ie|ies|y)\b|\bcorriger\b/.test(normalized)
-    ? ANOMALY_TOOL_NAMES
-    : deterministic?.tool === "aggregate_segments"
-    ? SEGMENT_COUNT_TOOL_NAMES
-    : deterministic?.tool === "search_supplier_categories"
-    ? CATEGORY_SEARCH_TOOL_NAMES
-    : deterministic?.tool === "count_supplier_brands"
-    ? BRAND_COUNT_TOOL_NAMES
-    : /\b(?:changement|changements|difference|differences|diff|hausse|baiss(?:e|es)|remise|prix|tarif|famille|familles|categorie|categories|rockwell)\b/
-        .test(
-          normalized,
-        )
-    ? DIFF_TOOL_NAMES
-    : null;
-  return allowed
-    ? tools.filter((tool) => allowed.has(tool.function.name))
-    : tools;
+  return selectToolsForAssistantIntent(
+    parseAssistantReferenceIntent(question),
+    tools,
+  );
 };
 
 export const getAmbiguousFamilyClarification = (
   question: string,
 ): string | null => {
-  const normalized = normalizeQuestion(question);
-  if (!/\bfamilles?\b/.test(normalized)) return null;
-  const explicitCir = /\bfamilles?\s+cir\b/.test(normalized);
-  const explicitManufacturer =
-    /\b(?:categories?|familles?)\s+(?:fabricant|fabriquant)\b/.test(
-      normalized,
-    ) || normalized.includes("cat_fab");
-  if (explicitCir || explicitManufacturer) return null;
-  return "Souhaitez-vous analyser la famille CIR (FAM/FAM_LIB) ou la catégorie fabricant (CAT_FAB) ?";
+  return parseAssistantReferenceIntent(question).clarification;
 };
 
 const addUsage = (total: ProviderUsage, next: OpenRouterToolResponse): void => {
@@ -700,6 +642,10 @@ export const runAssistantAsk = async (
           ...deterministicIntent.args,
           snapshot_id: data.snapshot_id,
           canonical_terms: Array.isArray(data.terms) ? data.terms : [],
+          requested_terms: Array.isArray(data.requested_terms)
+            ? data.requested_terms
+            : [],
+          query_terms: Array.isArray(data.query_terms) ? data.query_terms : [],
           canonical_brands: Array.isArray(data.marques) ? data.marques : [],
         },
         ok: true,
@@ -718,8 +664,14 @@ export const runAssistantAsk = async (
       const cost = 0;
       const answer = deterministicIntent.tool === "count_supplier_brands"
         ? `Le snapshot actif ${data.snapshot_id} contient ${data.distinct_brand_count} marques distinctes.`
+        : deterministicIntent.tool === "check_brand_matches"
+        ? `Dans le snapshot actif ${data.snapshot_id}, la marque ${data.marque} ${
+          data.matches === true ? "a" : "n'a pas"
+        } des CAT_FAB correspondant aux termes demandés (${data.segment_rows} segments).`
         : `Dans le snapshot actif ${data.snapshot_id}, les termes ${
-          Array.isArray(data.terms) ? data.terms.join(", ") : "demandés"
+          Array.isArray(data.requested_terms)
+            ? data.requested_terms.join(", ")
+            : "demandés"
         } correspondent à ${data.distinct_brand_count} marques et ${data.segment_rows} segments : ${
           Array.isArray(data.matching_brands)
             ? data.matching_brands.join(", ")
