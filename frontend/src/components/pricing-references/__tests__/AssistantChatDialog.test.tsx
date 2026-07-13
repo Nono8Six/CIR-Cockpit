@@ -36,7 +36,8 @@ describe('AssistantChatDialog', () => {
       cost: null,
       fallback_reason: null,
       model_id: 'mistralai/mistral-small',
-      truncated: false
+      truncated: false,
+      conversation_context: null
     });
   });
 
@@ -109,7 +110,8 @@ describe('AssistantChatDialog', () => {
       cost: null,
       fallback_reason: null,
       model_id: 'mistralai/mistral-small',
-      truncated: false
+      truncated: false,
+      conversation_context: null
     });
     const user = userEvent.setup();
 
@@ -151,7 +153,8 @@ describe('AssistantChatDialog', () => {
       cost: null,
       fallback_reason: null,
       model_id: 'mistralai/mistral-small',
-      truncated: false
+      truncated: false,
+      conversation_context: null
     });
     const user = userEvent.setup();
     render(

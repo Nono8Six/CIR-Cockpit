@@ -66,7 +66,7 @@ Statuts autorisés : `À FAIRE`, `EN COURS`, `BLOQUÉE`, `VALIDÉE`.
 | 0 | État de référence et régressions | Incidents reproduits manuellement, couverture incomplète | VALIDÉE | Les cinq conversations réelles échouent avant correction pour la cause attendue | Snapshot/vérités DB figés ; 7 régressions rouges ; baseline live complète sur `api` v118 |
 | 1 | Couche sémantique déterministe | `aggregate_segments` et FESTO → FEST présents localement | VALIDÉE | FESTO, ROCK et comptages passent sans SQL généré | 7 tests P1 dédiés + 7 contrats/broker verts ; vérités DB P0 confirmées par MCP ; provider/tokens/coût à zéro |
 | 2 | Routage d'intentions | Routage déterministe limité au comptage CAT_FAB | VALIDÉE | Chaque intention critique ne reçoit que ses outils autorisés | Matrice P2 : 20 cas, allowlists exactes, fallback SQL borné et 4 chemins sans provider |
-| 3 | Contexte conversationnel | Historique limité à `{role, content}` | À FAIRE | « et ROCK ? » hérite correctement du contexte précédent | — |
+| 3 | Contexte conversationnel | Historique limité à `{role, content}` | VALIDÉE | « et ROCK ? » hérite correctement du contexte précédent | Contrat strict borné, TTL/snapshot contrôlés, 5 tests P3 backend + transport frontend vert |
 | 4 | Fallback SQL durci | Lecture seule/RLS bornées, validation sémantique incomplète | À FAIRE | Colonnes inventées, changements de scope et boucles équivalentes sont bloqués | — |
 | 5 | Preuves, erreurs et diagnostic UI | Sources et SQL partiellement visibles localement | À FAIRE | Aucun fait sans provenance ; aucun détail interne ou sensible exposé | — |
 | 6 | Évaluations et choix du modèle | Runner live présent mais campagne comparative non terminée | À FAIRE | Tous les seuils bloquants passent sur le modèle retenu | — |
@@ -339,14 +339,14 @@ métier excessives au provider.
 
 ### Travaux
 
-- [ ] Étendre le contrat de réponse avec un contexte conversationnel compact et strict.
-- [ ] Transporter domaine, intention, dimension, snapshot et filtres canoniques utiles.
-- [ ] Transporter uniquement un résumé borné du dernier résultat nécessaire au suivi.
-- [ ] Définir les règles d'héritage pour « et ROCK ? », « et SIEMENS ? » et « combien parmi
+- [x] Étendre le contrat de réponse avec un contexte conversationnel compact et strict.
+- [x] Transporter domaine, intention, dimension, snapshot et filtres canoniques utiles.
+- [x] Transporter uniquement un résumé borné du dernier résultat nécessaire au suivi.
+- [x] Définir les règles d'héritage pour « et ROCK ? », « et SIEMENS ? » et « combien parmi
   celles-là ? ».
-- [ ] Réinitialiser le contexte lors d'un changement explicite de sujet ou de snapshot.
-- [ ] Refuser un contexte expiré, incohérent ou provenant d'une surface non autorisée.
-- [ ] Ne pas réinjecter les traces brutes, le prompt système, les résultats SQL complets ou une
+- [x] Réinitialiser le contexte lors d'un changement explicite de sujet ou de snapshot.
+- [x] Refuser un contexte expiré, incohérent ou provenant d'une surface non autorisée.
+- [x] Ne pas réinjecter les traces brutes, le prompt système, les résultats SQL complets ou une
   chaîne de pensée.
 
 ### Checkpoint vérifiable P3
@@ -363,7 +363,28 @@ Le checkpoint est validé si le scénario suivant passe de bout en bout :
 
 | Date | Statut | Exécuté par | Preuve/commande | Résultat | Écart ou blocage |
 | --- | --- | --- | --- | --- | --- |
-| — | À FAIRE | — | — | — | — |
+| 2026-07-13 | VALIDÉE | Codex | 5 tests `assistantConversationContext_test.ts`, baseline Phase 6, tests hook/dialog, typechecks, lint, `qa:back` | `et ROCK ?`, `et SIEMENS ?` et « combien parmi celles-là ? » héritent termes/dimension/snapshot sans provider généraliste ; contexte strict limité à 8 termes/50 marques et TTL 15 min ; frontend conserve uniquement le dernier contexte en mémoire | `qa:back` : 309 verts, 4 rouges futurs P4/P5, 11 conditionnels ignorés ; aucune migration nécessaire |
+
+#### Checkpoint P3 — 2026-07-13
+
+- Contrat partagé : `conversation_context` versionné et strict dans la requête/réponse, avec
+  domaine, intention, dimension, snapshot, termes demandés/canoniques/requête, marques et résumé
+  agrégé. Aucun résultat SQL, trace brute, prompt ou chaîne de pensée n'est transporté.
+- Durée et cohérence : TTL maximal de 15 minutes, dates valides, surface
+  `pricing.references` et snapshot de page cohérent. Un contexte expiré ou incohérent est ignoré.
+- Héritage : seules les relances courtes reconnues héritent du contexte. Une intention autonome ou
+  une question CRM remplace/réinitialise le chemin; `ROCK` seul sans contexte reste non inventé.
+- Exécution : `et ROCK ?` et `et SIEMENS ?` appellent directement `check_brand_matches` avec les
+  termes et le mode hérités. « combien parmi celles-là ? » utilise `count_supplier_brands` borné
+  aux marques du dernier résumé. Aucun catalogue SQL ni provider n'est requis.
+- Frontend : `useAssistantChat` conserve le dernier contexte dans une ref transitoire, l'attache à
+  la requête suivante et l'efface au reset ou lorsqu'une réponse renvoie `null`. Aucune persistance
+  locale ou DB.
+- Tests : 5/5 contexte backend, 9/10 baseline Phase 6 avec la seule réserve P5 attendue, 8/8
+  hook/dialog frontend, typechecks front/back et lint verts. Suite ciblée : 37 verts, 4 rouges
+  futurs P4/P5. `qa:back` : 309 verts, 4 rouges P4/P5, 11 ignorés.
+
+Décision : P3 `VALIDÉE`. La prochaine phase autorisée est P4 uniquement.
 
 ---
 
@@ -625,6 +646,7 @@ peuvent être menés en parallèle, mais les checkpoints restent séquentiels.
 | 2026-07-13 | P1 | Déploiement explicitement autorisé; aucune migration P1 absente du distant | Supabase CLI + MCP : `api` v119 ACTIVE; routes 401 sans session; CORS OPTIONS 200 | Correctif P1 actif sur le backend lié; P2 reste la seule phase suivante autorisée |
 | 2026-07-13 | P1 corrective | VFD littéral et accents préservés avant P2 ; aucune migration ni extension | 9 tests sémantiques verts ; MCP snapshot P0 : 3/11/348 et 9/2 | Précondition fermée ; P2 autorisée |
 | 2026-07-13 | P2 | Parseur typé et politique centrale intention → outils ; clarifications et fallback bornés | Matrice 20 cas, 3 tests P2, suite consolidée 31 verts/5 rouges futurs ; `qa:back` 303 verts/5 rouges/11 ignorés | P2 validée ; P3 uniquement est autorisée |
+| 2026-07-13 | P3 | Contexte conversationnel compact, strict et transitoire ; héritage déterministe des relances courtes | 5 tests contexte, tests frontend, suite ciblée 37 verts/4 rouges futurs ; `qa:back` 309 verts/4 rouges/11 ignorés | P3 validée sans migration ni persistance ; P4 uniquement est autorisée |
 
 ## 7. État de livraison
 

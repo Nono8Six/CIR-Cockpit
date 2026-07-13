@@ -35,6 +35,48 @@ export const aiAssistantMessageSchema = z.strictObject({
   }),
 });
 
+const assistantBoundedTermsSchema = z.array(
+  z.string().trim().min(1, { error: "Terme de contexte requis." }).max(80, {
+    error: "Terme de contexte trop long.",
+  }),
+).max(8, { error: "Maximum 8 termes de contexte." });
+
+const assistantBoundedBrandsSchema = z.array(
+  z.string().trim().min(1, { error: "Marque de contexte requise." }).max(
+    120,
+    { error: "Marque de contexte trop longue." },
+  ),
+).max(50, { error: "Maximum 50 marques de contexte." });
+
+export const aiAssistantConversationContextSchema = z.strictObject({
+  version: z.literal(1),
+  surface: z.literal("pricing.references"),
+  domain: z.literal("pricing_references"),
+  intent: z.enum([
+    "segment_count",
+    "supplier_category_search",
+    "supplier_brand_count",
+    "supplier_brand_check",
+  ]),
+  dimension: z.enum(["cat_fab", "brand"]),
+  snapshot_id: uuidSchema,
+  import_id: uuidSchema.nullable(),
+  filters: z.strictObject({
+    requested_terms: assistantBoundedTermsSchema,
+    canonical_terms: assistantBoundedTermsSchema,
+    query_terms: assistantBoundedTermsSchema,
+    marques: assistantBoundedBrandsSchema,
+    mode: z.enum(["any", "all"]),
+  }),
+  result_summary: z.strictObject({
+    matching_brands: assistantBoundedBrandsSchema,
+    distinct_brand_count: z.number().int().nonnegative(),
+    segment_rows: z.number().int().nonnegative(),
+  }),
+  created_at: z.iso.datetime({ error: "Date de contexte invalide." }),
+  expires_at: z.iso.datetime({ error: "Expiration de contexte invalide." }),
+});
+
 export const aiAssistantAskInputSchema = z.strictObject({
   client_request_id: uuidSchema,
   question: z.string().trim().min(1, { error: "Question requise." }).max(2000, {
@@ -44,6 +86,8 @@ export const aiAssistantAskInputSchema = z.strictObject({
     error: "Historique limite a 12 messages.",
   }).default([]),
   page_context: aiAssistantPageContextSchema,
+  conversation_context: aiAssistantConversationContextSchema.nullable()
+    .default(null),
 });
 
 export const aiAssistantCitationSchema = z.strictObject({
@@ -70,6 +114,8 @@ export const aiAssistantAskResponseSchema = apiSuccessSchema.extend({
   fallback_reason: nullableTextSchema,
   model_id: nullableTextSchema,
   truncated: z.boolean(),
+  conversation_context: aiAssistantConversationContextSchema.nullable()
+    .default(null),
 });
 
 export const aiAssistantStatusResponseSchema = z.strictObject({
@@ -82,6 +128,9 @@ export type AiAssistantPageContext = z.infer<
   typeof aiAssistantPageContextSchema
 >;
 export type AiAssistantMessage = z.infer<typeof aiAssistantMessageSchema>;
+export type AiAssistantConversationContext = z.infer<
+  typeof aiAssistantConversationContextSchema
+>;
 export type AiAssistantAskInput = z.infer<typeof aiAssistantAskInputSchema>;
 export type AiAssistantCitation = z.infer<typeof aiAssistantCitationSchema>;
 export type AiAssistantToolCallTrace = z.infer<

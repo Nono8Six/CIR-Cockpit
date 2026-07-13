@@ -7,7 +7,31 @@ import { handleUiError } from '@/services/errors/handleUiError';
 
 const pageContext = { surface: 'pricing.references' as const, active_tab: 'changements' };
 
-const successfulResponse = (answer: string) => ({
+const conversationContext = {
+  version: 1 as const,
+  surface: 'pricing.references' as const,
+  domain: 'pricing_references' as const,
+  intent: 'supplier_category_search' as const,
+  dimension: 'cat_fab' as const,
+  snapshot_id: '4e216bc4-7d82-4eb7-aa20-2cc8316667cc',
+  import_id: null,
+  filters: {
+    requested_terms: ['drive'],
+    canonical_terms: ['drive'],
+    query_terms: ['drive', 'drives', 'variateur', 'vfd'],
+    marques: [],
+    mode: 'any' as const
+  },
+  result_summary: {
+    matching_brands: ['ROCK'],
+    distinct_brand_count: 1,
+    segment_rows: 234
+  },
+  created_at: '2026-07-13T12:00:00.000Z',
+  expires_at: '2026-07-13T12:15:00.000Z'
+};
+
+const successfulResponse = (answer: string, context = null as typeof conversationContext | null) => ({
   ok: true as const,
   request_id: crypto.randomUUID(),
   ai_available: true,
@@ -18,7 +42,8 @@ const successfulResponse = (answer: string) => ({
   cost: null,
   fallback_reason: null,
   model_id: 'mistralai/mistral-small',
-  truncated: false
+  truncated: false,
+  conversation_context: context
 });
 
 vi.mock('@/services/ai', () => ({
@@ -111,5 +136,29 @@ describe('useAssistantChat', () => {
     });
 
     expect(vi.mocked(askAiAssistant).mock.calls[1]?.[0].client_request_id).not.toBe(failedRequestId);
+  });
+
+  it('transporte uniquement le dernier contexte structuré et le réinitialise', async () => {
+    vi.mocked(askAiAssistant)
+      .mockResolvedValueOnce(successfulResponse('Recherche trouvée', conversationContext))
+      .mockResolvedValueOnce(successfulResponse('ROCK correspond', conversationContext))
+      .mockResolvedValueOnce(successfulResponse('Nouvelle recherche'));
+    const { result } = renderHook(() => useAssistantChat(pageContext));
+
+    await act(async () => {
+      await result.current.send('CAT_FAB avec drive');
+    });
+    expect(vi.mocked(askAiAssistant).mock.calls[0]?.[0].conversation_context).toBeNull();
+
+    await act(async () => {
+      await result.current.send('et ROCK ?');
+    });
+    expect(vi.mocked(askAiAssistant).mock.calls[1]?.[0].conversation_context).toEqual(conversationContext);
+
+    act(() => result.current.reset());
+    await act(async () => {
+      await result.current.send('Nouvelle question');
+    });
+    expect(vi.mocked(askAiAssistant).mock.calls[2]?.[0].conversation_context).toBeNull();
   });
 });

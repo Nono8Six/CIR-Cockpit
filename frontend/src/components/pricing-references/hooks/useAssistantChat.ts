@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 
 import type {
   AiAssistantCitation,
+  AiAssistantConversationContext,
   AiAssistantMessage,
   AiAssistantPageContext,
   AiAssistantToolCallTrace
@@ -21,6 +22,7 @@ export type AssistantChatMessage = AiAssistantMessage & {
 
 type PendingAssistantRequest = {
   clientRequestId: string;
+  conversationContext: AiAssistantConversationContext | null;
   history: AiAssistantMessage[];
   question: string;
 };
@@ -38,6 +40,7 @@ export const useAssistantChat = (pageContext: AiAssistantPageContext) => {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<AppError | null>(null);
   const failedRequestRef = useRef<PendingAssistantRequest | null>(null);
+  const conversationContextRef = useRef<AiAssistantConversationContext | null>(null);
 
   const execute = useCallback(async (
     request: PendingAssistantRequest,
@@ -54,7 +57,8 @@ export const useAssistantChat = (pageContext: AiAssistantPageContext) => {
         client_request_id: request.clientRequestId,
         question: request.question,
         history: request.history,
-        page_context: pageContext
+        page_context: pageContext,
+        conversation_context: request.conversationContext
       });
 
       if (!response.ai_available || !response.answer) {
@@ -67,6 +71,7 @@ export const useAssistantChat = (pageContext: AiAssistantPageContext) => {
       }
 
       failedRequestRef.current = null;
+      conversationContextRef.current = response.conversation_context;
       setMessages((current) => [...current, {
         id: crypto.randomUUID(),
         role: 'assistant',
@@ -96,6 +101,7 @@ export const useAssistantChat = (pageContext: AiAssistantPageContext) => {
       .map(({ role, content }) => ({ role, content }));
     await execute({
       clientRequestId: crypto.randomUUID(),
+      conversationContext: conversationContextRef.current,
       history,
       question
     }, true);
@@ -114,6 +120,7 @@ export const useAssistantChat = (pageContext: AiAssistantPageContext) => {
 
   const reset = useCallback(() => {
     failedRequestRef.current = null;
+    conversationContextRef.current = null;
     setMessages([]);
     setError(null);
     setPending(false);

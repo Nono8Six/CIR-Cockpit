@@ -6,6 +6,7 @@ import {
   type AiAssistantAskResponse,
   aiAssistantAskResponseSchema,
   type AiAssistantCitation,
+  type AiAssistantConversationContext,
   type AiAssistantStatusResponse,
   aiAssistantStatusResponseSchema,
   type AiAssistantToolCallTrace,
@@ -47,6 +48,7 @@ export const MAX_TOTAL_INPUT_TOKENS = 32_000;
 export const MAX_IDENTICAL_TOOL_CALLS = 1;
 const IDEMPOTENCY_TTL_MS = 15 * 60 * 1000;
 const UNPRICED_REQUEST_RESERVATION_USD = 10;
+export const ASSISTANT_CONTEXT_TTL_MS = 15 * 60 * 1000;
 
 const positiveIntegerEnv = (name: string, fallback: number): number => {
   const value = Number.parseInt(Deno.env.get(name) ?? "", 10);
@@ -146,6 +148,156 @@ export const executeDeterministicReferenceTool = async <T>(
   const intent = getDeterministicReferenceIntent(question);
   if (!intent) return null;
   return { intent, result: await executor(intent.tool, intent.args) };
+};
+
+const extractShortFollowupBrand = (question: string): string | null => {
+  const normalized = question.normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+  const match = normalized.match(
+    /^(?:(?:tu|t'es|tes)\s+sur\s*\?\s*)?et\s+(?:pour\s+)?([a-z0-9][a-z0-9_-]*)\s*\?*$/,
+  );
+  return match?.[1]?.toUpperCase() ?? null;
+};
+
+export const isAssistantConversationContextUsable = (
+  context: AiAssistantConversationContext | null,
+  pageContext: AiAssistantAskInput["page_context"],
+  now = Date.now(),
+): context is AiAssistantConversationContext => {
+  if (!context || context.surface !== "pricing.references") return false;
+  const createdAt = Date.parse(context.created_at);
+  const expiresAt = Date.parse(context.expires_at);
+  if (!Number.isFinite(createdAt) || !Number.isFinite(expiresAt)) return false;
+  if (
+    createdAt > now || expiresAt <= now ||
+    expiresAt - createdAt > ASSISTANT_CONTEXT_TTL_MS
+  ) {
+    return false;
+  }
+  if (pageContext.surface && pageContext.surface !== context.surface) {
+    return false;
+  }
+  if ((pageContext.import_id ?? null) !== context.import_id) return false;
+  if (
+    pageContext.target_snapshot_id &&
+    pageContext.target_snapshot_id !== context.snapshot_id
+  ) return false;
+  return true;
+};
+
+export const getConversationAwareDeterministicIntent = (
+  question: string,
+  context: AiAssistantConversationContext | null,
+  pageContext: AiAssistantAskInput["page_context"],
+  now = Date.now(),
+): DeterministicReferenceIntent | null => {
+  const standalone = getDeterministicReferenceIntent(question);
+  if (standalone) return standalone;
+  if (!isAssistantConversationContextUsable(context, pageContext, now)) {
+    return null;
+  }
+  const brand = extractShortFollowupBrand(question);
+  if (
+    brand && context.dimension === "cat_fab" &&
+    context.filters.requested_terms.length > 0
+  ) {
+    return {
+      tool: "check_brand_matches",
+      args: {
+        marque: brand,
+        terms: context.filters.requested_terms,
+        dimension: "cat_fab",
+        mode: context.filters.mode,
+      },
+    };
+  }
+  const normalized = question.normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+  if (
+    /^(?:et\s+)?combien\s+(?:parmi|dans)\s+(?:celles|ceux)(?:-la)?\s*\?*$/.test(
+      normalized,
+    ) && context.result_summary.matching_brands.length > 0
+  ) {
+    return {
+      tool: "count_supplier_brands",
+      args: { marques: context.result_summary.matching_brands },
+    };
+  }
+  return null;
+};
+
+export const buildAssistantConversationContext = (
+  intent: DeterministicReferenceIntent,
+  data: Record<string, unknown>,
+  previous: AiAssistantConversationContext | null,
+  pageContext: AiAssistantAskInput["page_context"] = {},
+  now = Date.now(),
+): AiAssistantConversationContext | null => {
+  if (typeof data.snapshot_id !== "string") return null;
+  const strings = (value: unknown): string[] =>
+    Array.isArray(value)
+      ? value.filter((item): item is string => typeof item === "string")
+      : [];
+  const requestedTerms = strings(data.requested_terms).slice(0, 8);
+  const canonicalTerms = strings(data.canonical_terms).slice(0, 8);
+  const queryTerms = strings(data.query_terms).slice(0, 8);
+  const inheritedTerms = previous?.dimension === "cat_fab"
+    ? previous.filters
+    : null;
+  const createdAt = new Date(now);
+  return {
+    version: 1,
+    surface: "pricing.references",
+    domain: "pricing_references",
+    intent: intent.tool === "aggregate_segments"
+      ? "segment_count"
+      : intent.tool === "search_supplier_categories"
+      ? "supplier_category_search"
+      : intent.tool === "count_supplier_brands"
+      ? "supplier_brand_count"
+      : "supplier_brand_check",
+    dimension: intent.tool === "count_supplier_brands" ? "brand" : "cat_fab",
+    snapshot_id: data.snapshot_id,
+    import_id: pageContext.import_id ?? null,
+    filters: {
+      requested_terms: requestedTerms.length > 0
+        ? requestedTerms
+        : inheritedTerms?.requested_terms ?? [],
+      canonical_terms: canonicalTerms.length > 0
+        ? canonicalTerms
+        : inheritedTerms?.canonical_terms ?? [],
+      query_terms: queryTerms.length > 0
+        ? queryTerms
+        : inheritedTerms?.query_terms ?? [],
+      marques: strings(data.marques).length > 0
+        ? strings(data.marques).slice(0, 50)
+        : typeof data.marque === "string"
+        ? [data.marque]
+        : [],
+      mode: intent.args.mode === "all" ? "all" : "any",
+    },
+    result_summary: {
+      matching_brands: strings(data.matching_brands).length > 0
+        ? strings(data.matching_brands).slice(0, 50)
+        : typeof data.marque === "string" && data.matches === true
+        ? [data.marque]
+        : [],
+      distinct_brand_count: typeof data.distinct_brand_count === "number"
+        ? data.distinct_brand_count
+        : typeof data.matches === "boolean"
+        ? Number(data.matches)
+        : 0,
+      segment_rows: typeof data.segment_rows === "number"
+        ? data.segment_rows
+        : 0,
+    },
+    created_at: createdAt.toISOString(),
+    expires_at: new Date(now + ASSISTANT_CONTEXT_TTL_MS).toISOString(),
+  };
 };
 
 export const selectAssistantTools = (
@@ -604,18 +756,24 @@ export const runAssistantAsk = async (
   };
   const partialToolTrace: AiAssistantToolCallTrace[] = [];
   try {
-    const deterministicExecution = await executeDeterministicReferenceTool(
+    const conversationAwareIntent = getConversationAwareDeterministicIntent(
       input.question,
-      (tool, args) =>
-        executeAssistantTool(
+      input.conversation_context,
+      input.page_context,
+    );
+    const deterministicExecution = conversationAwareIntent
+      ? {
+        intent: conversationAwareIntent,
+        result: await executeAssistantTool(
           db,
           authContext,
           requestId,
-          tool,
-          args,
+          conversationAwareIntent.tool,
+          conversationAwareIntent.args,
           input.page_context,
         ),
-    );
+      }
+      : null;
     const deterministicIntent = deterministicExecution?.intent ?? null;
     if (
       deterministicExecution &&
@@ -641,7 +799,9 @@ export const runAssistantAsk = async (
         arguments: {
           ...deterministicIntent.args,
           snapshot_id: data.snapshot_id,
-          canonical_terms: Array.isArray(data.terms) ? data.terms : [],
+          canonical_terms: Array.isArray(data.canonical_terms)
+            ? data.canonical_terms
+            : [],
           requested_terms: Array.isArray(data.requested_terms)
             ? data.requested_terms
             : [],
@@ -662,6 +822,12 @@ export const runAssistantAsk = async (
         providerCostAmount: 0,
       };
       const cost = 0;
+      const conversationContext = buildAssistantConversationContext(
+        deterministicIntent,
+        data,
+        input.conversation_context,
+        input.page_context,
+      );
       const answer = deterministicIntent.tool === "count_supplier_brands"
         ? `Le snapshot actif ${data.snapshot_id} contient ${data.distinct_brand_count} marques distinctes.`
         : deterministicIntent.tool === "check_brand_matches"
@@ -696,6 +862,7 @@ export const runAssistantAsk = async (
         fallback_reason: null,
         model_id: resolved.model.model_id,
         truncated: false,
+        conversation_context: conversationContext,
       });
       await db.transaction(async (tx) => {
         await recordUsage(tx as DbClient, {
@@ -730,7 +897,7 @@ export const runAssistantAsk = async (
     if (segmentCountIntent) {
       const toolStarted = performance.now();
       const toolResult = deterministicExecution?.result;
-      if (!toolResult) {
+      if (!toolResult || !deterministicIntent) {
         throw httpError(
           502,
           "AI_RESPONSE_INVALID",
@@ -801,6 +968,12 @@ export const runAssistantAsk = async (
         fallback_reason: null,
         model_id: resolved.model.model_id,
         truncated: false,
+        conversation_context: buildAssistantConversationContext(
+          deterministicIntent,
+          data ?? {},
+          input.conversation_context,
+          input.page_context,
+        ),
       });
       await db.transaction(async (tx) => {
         await recordUsage(tx as DbClient, {
@@ -894,6 +1067,7 @@ export const runAssistantAsk = async (
       fallback_reason: null,
       model_id: loop.servedModelId,
       truncated: loop.truncated,
+      conversation_context: null,
     });
     await db.transaction(async (tx) => {
       await recordUsage(tx as DbClient, {
