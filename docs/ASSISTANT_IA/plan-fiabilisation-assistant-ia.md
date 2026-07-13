@@ -425,7 +425,7 @@ Le checkpoint est validé si les tests prouvent que :
 
 | Date | Statut | Exécuté par | Preuve/commande | Résultat | Écart ou blocage |
 | --- | --- | --- | --- | --- | --- |
-| 2026-07-13 | VALIDÉE | Codex | `assistantSqlTools_test.ts`, suites assistant P1/P2/P3/P4, lint/check Deno, `pnpm run qa:back`, `pnpm run qa` | 17/17 tests SQL P4 ; suites assistant 43 verts et 1 rouge P5 réservé ; `qa:back` 319 verts/1 rouge P5/11 ignorés ; frontend global 687/687 vert avant seuil coverage | `qa` reste arrêté par `useDashboardStatusHelpers.ts` à 13,33 % de branches pour 30 %, écart frontend préexistant et hors P4 ; déploiement distant à consigner après checkpoint Git |
+| 2026-07-13 | VALIDÉE | Codex | `assistantSqlTools_test.ts`, suites assistant P1/P2/P3/P4, lint/check Deno, `pnpm run qa:back`, `pnpm run qa`, Supabase MCP et probes HTTP/CORS | 17/17 tests SQL P4 ; suites assistant 43 verts et 1 rouge P5 réservé ; `qa:back` 319 verts/1 rouge P5/11 ignorés ; frontend global 687/687 vert avant seuil coverage ; `api` v121 active et probes vertes | `qa` reste arrêté par `useDashboardStatusHelpers.ts` à 13,33 % de branches pour 30 %, écart frontend préexistant et hors P4 |
 
 #### Checkpoint P4 — 2026-07-13
 
@@ -454,9 +454,11 @@ Le checkpoint est validé si les tests prouvent que :
   seuil préexistant de branches de `useDashboardStatusHelpers.ts` (13,33 % < 30 %). Aucun E2E
   exécuté : aucun parcours UI n'est modifié.
 - Migration : aucune ; P4 ne modifie ni schéma, ni RLS, ni index, ni donnée.
-- Déploiement distant au checkpoint local : `api` v120 `ACTIVE`, `verify_jwt=false`, wrapper
-  `supabase/functions/api/index.ts` et import map `deno.json` confirmés par Supabase MCP. La version
-  P4 et les probes API/CORS sont consignées après déploiement.
+- Déploiement distant : `api` v121 `ACTIVE`, `verify_jwt=false`, wrapper
+  `supabase/functions/api/index.ts` et import map `deno.json` confirmés par Supabase MCP.
+  `ai.assistant.status` et `ai.assistant.ask` répondent `401 AUTH_REQUIRED` sans authentification,
+  jamais `404`. Leurs preflights `OPTIONS` depuis `http://localhost:3000` répondent `200` avec
+  `Access-Control-Allow-Origin` et `GET, POST, OPTIONS`.
 - Réserve P5 : la preuve métier structurée d'un succès technique reste volontairement hors P4 et
   sa régression dédiée demeure rouge.
 
@@ -673,15 +675,15 @@ peuvent être menés en parallèle, mais les checkpoints restent séquentiels.
 
 ## 6. Journal transversal
 
-| Date | Phase | Décision ou événement | Preuve | Impact sur la suite |
-| --- | --- | --- | --- | --- |
-| 2026-07-13 | Initialisation | Plan correctif créé ; aucun code ni déploiement effectué | Ce document | Commencer par P0 |
-| 2026-07-13 | P0 | Snapshot/vérités DB figés ; sept régressions rouges ; cinq conversations reproduites sur `api` v118 | Supabase MCP, tests Deno ciblés, runner live conditionnel | P0 validée ; P1 uniquement est autorisée |
-| 2026-07-13 | P1 | Couche sémantique déterministe livrée localement pour CAT_FAB, recherche de marques, comptage de marques et vérification directe de marque | 14 tests P1/contrats verts, MCP snapshot P0, lint/check verts; `qa:back` 298 verts/5 rouges futurs | P1 validée sans provider ni SQL généré; P2 uniquement est autorisée |
-| 2026-07-13 | P1 | Déploiement explicitement autorisé; aucune migration P1 absente du distant | Supabase CLI + MCP : `api` v119 ACTIVE; routes 401 sans session; CORS OPTIONS 200 | Correctif P1 actif sur le backend lié; P2 reste la seule phase suivante autorisée |
-| 2026-07-13 | P1 corrective | VFD littéral et accents préservés avant P2 ; aucune migration ni extension | 9 tests sémantiques verts ; MCP snapshot P0 : 3/11/348 et 9/2 | Précondition fermée ; P2 autorisée |
-| 2026-07-13 | P2 | Parseur typé et politique centrale intention → outils ; clarifications et fallback bornés | Matrice 20 cas, 3 tests P2, suite consolidée 31 verts/5 rouges futurs ; `qa:back` 303 verts/5 rouges/11 ignorés | P2 validée ; P3 uniquement est autorisée |
-| 2026-07-13 | P3 | Contexte conversationnel compact, strict et transitoire ; héritage déterministe des relances courtes | 5 tests contexte, tests frontend, suite ciblée 37 verts/4 rouges futurs ; `qa:back` 309 verts/4 rouges/11 ignorés | P3 validée sans migration ni persistance ; P4 uniquement est autorisée |
+| Date       | Phase          | Décision ou événement                                                                                                                      | Preuve                                                                                                            | Impact sur la suite                                                               |
+| ------------| ----------------| --------------------------------------------------------------------------------------------------------------------------------------------| -------------------------------------------------------------------------------------------------------------------| -----------------------------------------------------------------------------------|
+| 2026-07-13 | Initialisation | Plan correctif créé ; aucun code ni déploiement effectué                                                                                   | Ce document                                                                                                       | Commencer par P0                                                                  |
+| 2026-07-13 | P0             | Snapshot/vérités DB figés ; sept régressions rouges ; cinq conversations reproduites sur `api` v118                                        | Supabase MCP, tests Deno ciblés, runner live conditionnel                                                         | P0 validée ; P1 uniquement est autorisée                                          |
+| 2026-07-13 | P1             | Couche sémantique déterministe livrée localement pour CAT_FAB, recherche de marques, comptage de marques et vérification directe de marque | 14 tests P1/contrats verts, MCP snapshot P0, lint/check verts; `qa:back` 298 verts/5 rouges futurs                | P1 validée sans provider ni SQL généré; P2 uniquement est autorisée               |
+| 2026-07-13 | P1             | Déploiement explicitement autorisé; aucune migration P1 absente du distant                                                                 | Supabase CLI + MCP : `api` v119 ACTIVE; routes 401 sans session; CORS OPTIONS 200                                 | Correctif P1 actif sur le backend lié; P2 reste la seule phase suivante autorisée |
+| 2026-07-13 | P1 corrective  | VFD littéral et accents préservés avant P2 ; aucune migration ni extension                                                                 | 9 tests sémantiques verts ; MCP snapshot P0 : 3/11/348 et 9/2                                                     | Précondition fermée ; P2 autorisée                                                |
+| 2026-07-13 | P2             | Parseur typé et politique centrale intention → outils ; clarifications et fallback bornés                                                  | Matrice 20 cas, 3 tests P2, suite consolidée 31 verts/5 rouges futurs ; `qa:back` 303 verts/5 rouges/11 ignorés   | P2 validée ; P3 uniquement est autorisée                                          |
+| 2026-07-13 | P3             | Contexte conversationnel compact, strict et transitoire ; héritage déterministe des relances courtes                                       | 5 tests contexte, tests frontend, suite ciblée 37 verts/4 rouges futurs ; `qa:back` 309 verts/4 rouges/11 ignorés | P3 validée sans migration ni persistance ; P4 uniquement est autorisée            |
 
 ## 7. État de livraison
 
