@@ -58,7 +58,17 @@ export const AssistantChatDialog = ({
 }: AssistantChatDialogProps) => {
   const [draft, setDraft] = useState('');
   const endMarkerRef = useRef<HTMLDivElement>(null);
-  const { messages, pending, error, canRetry, send, retry, reset } = useAssistantChat(pageContext);
+  const {
+    messages,
+    pending,
+    error,
+    errorMessage,
+    canRetry,
+    retryCooldownSeconds,
+    send,
+    retry,
+    reset
+  } = useAssistantChat(pageContext);
   const disabledReason = useMemo(() => {
     if (statusError) return "Impossible de vérifier la disponibilité de l'assistant.";
     if (status?.enabled === false) return status.reason ?? "L'assistant IA n'est pas activé.";
@@ -190,11 +200,20 @@ export const AssistantChatDialog = ({
                     <div className="flex items-start gap-2">
                       <AlertCircle className="mt-0.5 size-3.5 shrink-0 text-destructive" aria-hidden="true" />
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-medium text-foreground">{error.message}</p>
-                        {canRetry ? (
-                          <Button type="button" variant="ghost" size="dataRow" className="mt-1 -ml-2" onClick={() => void retry()}>
+                        <p className="text-xs font-medium leading-relaxed text-foreground">{errorMessage}</p>
+                        {error.retryable !== false ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="dataRow"
+                            className="mt-1 -ml-2"
+                            disabled={!canRetry}
+                            onClick={() => void retry()}
+                          >
                             <RefreshCw className="size-3" aria-hidden="true" />
-                            Réessayer
+                            {retryCooldownSeconds > 0
+                              ? `Réessayer dans ${retryCooldownSeconds} s`
+                              : 'Réessayer'}
                           </Button>
                         ) : null}
                       </div>

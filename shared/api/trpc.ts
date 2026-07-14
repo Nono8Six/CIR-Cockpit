@@ -130,12 +130,16 @@ import {
   aiMembersAccessOverviewResponseSchema,
   aiPromptsListInputSchema,
   aiPromptsListResponseSchema,
+  aiPromptsDeleteInputSchema,
+  aiPromptsDeleteResponseSchema,
   aiPromptsPublishInputSchema,
   aiPromptsPublishResponseSchema,
   aiPromptsRestoreInputSchema,
   aiPromptsRestoreResponseSchema,
   aiPromptsSaveDraftInputSchema,
   aiPromptsSaveDraftResponseSchema,
+  aiPromptsSetArchivedInputSchema,
+  aiPromptsSetArchivedResponseSchema,
   aiSettingsGetInputSchema,
   aiSettingsGetResponseSchema,
   aiSettingsCreateQuotaInputSchema,
@@ -424,6 +428,14 @@ const appRouterType = t.router({
       restore: t.procedure
         .input(aiPromptsRestoreInputSchema)
         .output(aiPromptsRestoreResponseSchema)
+        .mutation(() => undefined as never),
+      setArchived: t.procedure
+        .input(aiPromptsSetArchivedInputSchema)
+        .output(aiPromptsSetArchivedResponseSchema)
+        .mutation(() => undefined as never),
+      delete: t.procedure
+        .input(aiPromptsDeleteInputSchema)
+        .output(aiPromptsDeleteResponseSchema)
         .mutation(() => undefined as never),
     }),
     usage: t.router({

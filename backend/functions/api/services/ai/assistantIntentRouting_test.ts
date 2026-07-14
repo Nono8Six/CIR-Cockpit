@@ -106,6 +106,7 @@ const matrix: MatrixCase[] = [
     dimension: null,
     mode: "general_sql_fallback",
     tools: [
+      "search_schema",
       "get_database_catalog",
       "describe_database_tables",
       "execute_readonly_sql",
@@ -118,6 +119,7 @@ const matrix: MatrixCase[] = [
     dimension: null,
     mode: "general_sql_fallback",
     tools: [
+      "search_schema",
       "get_database_catalog",
       "describe_database_tables",
       "execute_readonly_sql",
@@ -130,6 +132,7 @@ const matrix: MatrixCase[] = [
     dimension: null,
     mode: "general_sql_fallback",
     tools: [
+      "search_schema",
       "get_database_catalog",
       "describe_database_tables",
       "execute_readonly_sql",
@@ -151,6 +154,7 @@ const matrix: MatrixCase[] = [
     dimension: null,
     mode: "general_sql_fallback",
     tools: [
+      "search_schema",
       "get_database_catalog",
       "describe_database_tables",
       "execute_readonly_sql",
@@ -163,6 +167,7 @@ const matrix: MatrixCase[] = [
     dimension: null,
     mode: "general_sql_fallback",
     tools: [
+      "search_schema",
       "get_database_catalog",
       "describe_database_tables",
       "execute_readonly_sql",
@@ -183,6 +188,7 @@ const matrix: MatrixCase[] = [
     dimension: null,
     mode: "general_sql_fallback",
     tools: [
+      "search_schema",
       "get_database_catalog",
       "describe_database_tables",
       "execute_readonly_sql",
@@ -195,6 +201,7 @@ const matrix: MatrixCase[] = [
     dimension: null,
     mode: "general_sql_fallback",
     tools: [
+      "search_schema",
       "get_database_catalog",
       "describe_database_tables",
       "execute_readonly_sql",
@@ -207,6 +214,7 @@ const matrix: MatrixCase[] = [
     dimension: null,
     mode: "general_sql_fallback",
     tools: [
+      "search_schema",
       "get_database_catalog",
       "describe_database_tables",
       "execute_readonly_sql",
@@ -250,6 +258,53 @@ Deno.test("P2 priorites empechent recherche CAT_FAB de capturer diff et anomalie
     parseAssistantReferenceIntent("Anomalies CAT_FAB avec drive").kind,
     "anomaly_analysis",
   );
+});
+
+Deno.test("P3-bis conserve les termes d une recherche ambigue dans la clarification", () => {
+  const intent = parseAssistantReferenceIntent(
+    "Quelles marques ont des familles de produits avec des variateurs ou drives ?",
+  );
+  assertEquals(intent.kind, "clarification");
+  assertEquals(intent.filters, {
+    terms: ["variateurs", "drives"],
+    mode: "any",
+  });
+});
+
+Deno.test("P3-bis extrait des termes metier generiques sans dictionnaire ferme", () => {
+  const raccord = parseAssistantReferenceIntent(
+    "Quelles marques ont des familles de produits avec des raccords ?",
+  );
+  assertEquals(raccord.kind, "clarification");
+  assertEquals(raccord.filters, { terms: ["raccords"], mode: "any" });
+
+  const raccordExplicite = parseAssistantReferenceIntent(
+    "Quelles marques ont des raccords dans CAT_FAB ?",
+  );
+  assertEquals(raccordExplicite.kind, "supplier_category_search");
+  assertEquals(raccordExplicite.filters, {
+    terms: ["raccords"],
+    mode: "any",
+  });
+
+  const expressions = parseAssistantReferenceIntent(
+    "CAT_FAB comprenant des pompes hydrauliques ou moteurs brushless",
+  );
+  assertEquals(expressions.kind, "supplier_category_search");
+  assertEquals(expressions.filters, {
+    terms: ["pompes hydrauliques", "moteurs brushless"],
+    mode: "any",
+  });
+
+  const propositionProduit = parseAssistantReferenceIntent(
+    "Tu peux me dire le nombre de marque qui propose des raccord pneumatique ?",
+  );
+  assertEquals(propositionProduit.kind, "supplier_category_search");
+  assertEquals(propositionProduit.dimension, "cat_fab");
+  assertEquals(propositionProduit.filters, {
+    terms: ["raccord pneumatique"],
+    mode: "any",
+  });
 });
 
 Deno.test("P2 les quatre chemins directs ne sollicitent jamais le provider", async () => {

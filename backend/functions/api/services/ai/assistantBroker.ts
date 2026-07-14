@@ -187,9 +187,13 @@ export const isAssistantConversationContextUsable = (
     return false;
   }
   if ((pageContext.import_id ?? null) !== context.import_id) return false;
-  if (
-    pageContext.target_snapshot_id &&
-    pageContext.target_snapshot_id !== context.snapshot_id
+  if (context.kind === "result") {
+    if (
+      pageContext.target_snapshot_id &&
+      pageContext.target_snapshot_id !== context.snapshot_id
+    ) return false;
+  } else if (
+    (pageContext.target_snapshot_id ?? null) !== context.target_snapshot_id
   ) return false;
   return true;
 };
@@ -203,6 +207,23 @@ export const getConversationAwareDeterministicIntent = (
   const standalone = getDeterministicReferenceIntent(question);
   if (standalone) return standalone;
   if (!isAssistantConversationContextUsable(context, pageContext, now)) {
+    return null;
+  }
+  const normalized = question.normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+  if (context.kind === "pending_clarification") {
+    if (
+      /^(?:cat[_ ]?fab|categories?\s+(?:de\s+)?fabricant)\s*\?*$/.test(
+        normalized,
+      )
+    ) {
+      return {
+        tool: "search_supplier_categories",
+        args: { terms: context.requested_terms, mode: "any" },
+      };
+    }
     return null;
   }
   const brand = extractShortFollowupBrand(question);
@@ -220,10 +241,6 @@ export const getConversationAwareDeterministicIntent = (
       },
     };
   }
-  const normalized = question.normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim()
-    .toLowerCase();
   if (
     /^(?:et\s+)?combien\s+(?:parmi|dans)\s+(?:celles|ceux)(?:-la)?\s*\?*$/.test(
       normalized,
@@ -252,12 +269,14 @@ export const buildAssistantConversationContext = (
   const requestedTerms = strings(data.requested_terms).slice(0, 8);
   const canonicalTerms = strings(data.canonical_terms).slice(0, 8);
   const queryTerms = strings(data.query_terms).slice(0, 8);
-  const inheritedTerms = previous?.dimension === "cat_fab"
+  const inheritedTerms = previous?.kind === "result" &&
+      previous.dimension === "cat_fab"
     ? previous.filters
     : null;
   const createdAt = new Date(now);
   return {
     version: 1,
+    kind: "result",
     surface: "pricing.references",
     domain: "pricing_references",
     intent: intent.tool === "aggregate_segments"
@@ -305,6 +324,51 @@ export const buildAssistantConversationContext = (
     created_at: createdAt.toISOString(),
     expires_at: new Date(now + ASSISTANT_CONTEXT_TTL_MS).toISOString(),
   };
+};
+
+export const buildPendingClarificationContext = (
+  intent: ReturnType<typeof parseAssistantReferenceIntent>,
+  pageContext: AiAssistantAskInput["page_context"],
+  now = Date.now(),
+): AiAssistantConversationContext | null => {
+  const terms = Array.isArray(intent.filters.terms)
+    ? intent.filters.terms.filter((term): term is string =>
+      typeof term === "string"
+    ).slice(0, 8)
+    : [];
+  if (intent.kind !== "clarification" || terms.length === 0) return null;
+  return {
+    version: 1,
+    kind: "pending_clarification",
+    surface: "pricing.references",
+    domain: "pricing_references",
+    intent: "supplier_category_search",
+    requested_terms: terms,
+    options: ["cat_fab", "fam_cir"],
+    import_id: pageContext.import_id ?? null,
+    target_snapshot_id: pageContext.target_snapshot_id ?? null,
+    created_at: new Date(now).toISOString(),
+    expires_at: new Date(now + ASSISTANT_CONTEXT_TTL_MS).toISOString(),
+  };
+};
+
+export const getUnsupportedPendingClarificationAnswer = (
+  question: string,
+  context: AiAssistantConversationContext | null,
+  pageContext: AiAssistantAskInput["page_context"],
+  now = Date.now(),
+): string | null => {
+  if (
+    !isAssistantConversationContextUsable(context, pageContext, now) ||
+    context.kind !== "pending_clarification"
+  ) return null;
+  const normalized = question.normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+  return /^(?:familles?\s+cir|fam(?:_lib)?)\s*\?*$/.test(normalized)
+    ? "La recherche déterministe par famille CIR n'est pas encore disponible. Reformulez avec CAT_FAB pour une réponse vérifiable."
+    : null;
 };
 
 export const selectAssistantTools = (
@@ -990,7 +1054,8 @@ export const runAssistantAsk = async (
     );
   }
 
-  const familyClarification = getAmbiguousFamilyClarification(input.question);
+  const parsedIntent = parseAssistantReferenceIntent(input.question);
+  const familyClarification = parsedIntent.clarification;
   if (familyClarification) {
     return aiAssistantAskResponseSchema.parse({
       ok: true,
@@ -1004,6 +1069,32 @@ export const runAssistantAsk = async (
       fallback_reason: null,
       model_id: resolved.model.model_id,
       truncated: false,
+      conversation_context: buildPendingClarificationContext(
+        parsedIntent,
+        input.page_context,
+      ),
+    });
+  }
+
+  const unsupportedPendingAnswer = getUnsupportedPendingClarificationAnswer(
+    input.question,
+    input.conversation_context,
+    input.page_context,
+  );
+  if (unsupportedPendingAnswer) {
+    return aiAssistantAskResponseSchema.parse({
+      ok: true,
+      request_id: requestId,
+      ai_available: true,
+      answer: unsupportedPendingAnswer,
+      citations: [],
+      tool_trace: [],
+      usage: null,
+      cost: null,
+      fallback_reason: null,
+      model_id: resolved.model.model_id,
+      truncated: false,
+      conversation_context: null,
     });
   }
 
@@ -1080,6 +1171,7 @@ export const runAssistantAsk = async (
     providerCostAmount: 0,
   };
   const partialToolTrace: AiAssistantToolCallTrace[] = [];
+  const partialProviderRounds: LoopResult["rounds"] = [];
   try {
     const conversationAwareIntent = getConversationAwareDeterministicIntent(
       input.question,
@@ -1367,6 +1459,13 @@ export const runAssistantAsk = async (
         controller.signal,
       );
       addUsage(partialUsage, response);
+      partialProviderRounds.push({
+        generation_id: response.generationId,
+        model_id: response.modelId,
+        provider: response.provider,
+        finish_reason: response.finishReason,
+        native_finish_reason: response.nativeFinishReason,
+      });
       return response;
     };
     const loop = await runAssistantToolLoop(
@@ -1454,6 +1553,7 @@ export const runAssistantAsk = async (
         {
           client_request_id: input.client_request_id,
           tool_trace: auditToolTrace(partialToolTrace),
+          provider_rounds: partialProviderRounds,
         },
         partialUsage,
         cost,

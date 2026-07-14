@@ -50,6 +50,37 @@ export const databaseDescribeOutputSchema = z.strictObject({
   })).max(8),
 });
 
+const schemaSearchTermSchema = z.string().trim().min(2, {
+  error: "Chaque terme de recherche doit contenir au moins 2 caracteres.",
+}).max(80, { error: "Terme de recherche trop long." });
+export const schemaSearchInputSchema = z.strictObject({
+  terms: z.array(schemaSearchTermSchema).min(1, {
+    error: "Au moins un terme metier est requis.",
+  }).max(5, { error: "Maximum 5 termes par recherche de schema." }),
+});
+export const schemaSearchOutputSchema = z.strictObject({
+  ok: z.literal(true),
+  terms: z.array(schemaSearchTermSchema).max(5),
+  total_columns: z.number().int().nonnegative().max(20),
+  tables: z.array(z.strictObject({
+    name: tableNameSchema,
+    description: z.string().nullable(),
+    score: z.number().nonnegative(),
+    columns: z.array(z.strictObject({
+      name: z.string(),
+      data_type: z.string(),
+      nullable: z.boolean(),
+      description: z.string().nullable(),
+      score: z.number().nonnegative(),
+    })).max(20),
+    foreign_keys: z.array(z.strictObject({
+      column: z.string(),
+      referenced_table: z.string(),
+      referenced_column: z.string(),
+    })),
+  })).max(20),
+});
+
 export const databaseSqlInputSchema = z.strictObject({
   sql: z.string().trim().min(1, { error: "Requete SQL requise." }).max(
     MAX_SQL_LENGTH,
@@ -192,7 +223,13 @@ const VERSIONED_TABLES = new Set([
   "pricing_segment_classification_links",
   "pricing_segment_purchase_grids",
   "pricing_reference_anomalies",
+  "ai_v_segments",
+  "ai_v_purchase_terms",
 ]);
+
+const RAW_FINANCIAL_COLUMNS = [
+  "remise_ha", "borne_acha", "coef_retro", "coef_ha", "coef_majvte",
+] as const;
 
 export type AssistantSqlSemantics = {
   tables: string[];
@@ -351,6 +388,17 @@ export const validateAssistantSqlAgainstCatalog = (
   if (tokens.some((token) => identifierValue(token) === "like")) {
     throw httpError(400, "INVALID_PAYLOAD", "Une recherche textuelle exhaustive doit utiliser ILIKE pour etre insensible a la casse.");
   }
+  if (semantics.tables.includes("pricing_segment_purchase_grids")) {
+    const orderIndex = tokens.findIndex((token, index) =>
+      identifierValue(token) === "order" && identifierValue(tokens[index + 1]) === "by"
+    );
+    if (orderIndex >= 0 && tokens.slice(orderIndex + 2).some((token) => {
+      const value = identifierValue(token);
+      return value !== null && RAW_FINANCIAL_COLUMNS.includes(value as typeof RAW_FINANCIAL_COLUMNS[number]);
+    })) {
+      throw httpError(400, "INVALID_PAYLOAD", "Le tri d une valeur financiere text brute est interdit. Utiliser la colonne numeric de ai_v_purchase_terms ou ai_v_purchase_terms_active.");
+    }
+  }
   for (const table of semantics.tables) {
     if (VERSIONED_TABLES.has(table) && semantics.snapshotIds.length === 0) {
       throw httpError(400, "INVALID_PAYLOAD", "Un filtre snapshot_id est obligatoire pour cette table versionnee.");
@@ -370,7 +418,7 @@ const loadDatabaseCatalog = async (tx: DbTransaction): Promise<CatalogRow[]> =>
       on tables.table_schema = columns.table_schema
      and tables.table_name = columns.table_name
     where columns.table_schema = 'public'
-      and tables.table_type = 'BASE TABLE'
+      and (tables.table_type = 'BASE TABLE' or (tables.table_type = 'VIEW' and columns.table_name like 'ai_v_%'))
       and columns.table_name <> 'ai_provider_configs'
       and has_table_privilege(current_user, quote_ident(columns.table_schema) || '.' || quote_ident(columns.table_name), 'SELECT')
     group by columns.table_schema, columns.table_name
@@ -405,6 +453,71 @@ type ForeignKeyRow = {
   referenced_column: string;
 };
 
+type SchemaSearchColumnRow = ColumnRow & { score: number };
+
+const searchDatabaseSchema = async (
+  db: DbClient,
+  authContext: AuthContext,
+  terms: string[],
+) => await runAuthenticatedReadOnly(db, authContext, async (tx) => {
+  const query = terms.map((term) => term.trim().toLowerCase()).join(" ");
+  const columns = await tx.execute<SchemaSearchColumnRow>(sql`
+    with candidates as (
+      select
+        columns.table_name::text,
+        obj_description((quote_ident(columns.table_schema) || '.' || quote_ident(columns.table_name))::regclass, 'pg_class') as table_description,
+        columns.column_name::text as name,
+        columns.data_type::text,
+        (columns.is_nullable = 'YES') as nullable,
+        col_description((quote_ident(columns.table_schema) || '.' || quote_ident(columns.table_name))::regclass, columns.ordinal_position) as description,
+        greatest(
+          extensions.similarity(lower(columns.table_name), ${query}),
+          extensions.similarity(lower(columns.column_name), ${query}),
+          extensions.similarity(lower(coalesce(obj_description((quote_ident(columns.table_schema) || '.' || quote_ident(columns.table_name))::regclass, 'pg_class'), '')), ${query}),
+          extensions.similarity(lower(coalesce(col_description((quote_ident(columns.table_schema) || '.' || quote_ident(columns.table_name))::regclass, columns.ordinal_position), '')), ${query}),
+          case when lower(columns.table_name) like ('%' || ${query} || '%') then 1 else 0 end,
+          case when lower(columns.column_name) like ('%' || ${query} || '%') then 1 else 0 end
+        )::float8 as score
+      from information_schema.columns columns
+      join information_schema.tables tables
+        on tables.table_schema = columns.table_schema and tables.table_name = columns.table_name
+      where columns.table_schema = 'public'
+        and (tables.table_type = 'BASE TABLE' or (tables.table_type = 'VIEW' and columns.table_name like 'ai_v_%'))
+        and columns.table_name <> 'ai_provider_configs'
+        and has_table_privilege(current_user, quote_ident(columns.table_schema) || '.' || quote_ident(columns.table_name), 'SELECT')
+    )
+    select * from candidates where score > 0
+    order by score desc, table_name, name
+    limit 20
+  `);
+  const tableNames = [...new Set(columns.map((column) => column.table_name))];
+  const foreignKeys = tableNames.length === 0 ? [] : await tx.execute<ForeignKeyRow>(sql`
+    select key_usage.table_name::text, key_usage.column_name::text as column,
+      constraint_usage.table_name::text as referenced_table,
+      constraint_usage.column_name::text as referenced_column
+    from information_schema.table_constraints constraints
+    join information_schema.key_column_usage key_usage
+      on key_usage.constraint_schema = constraints.constraint_schema and key_usage.constraint_name = constraints.constraint_name
+    join information_schema.constraint_column_usage constraint_usage
+      on constraint_usage.constraint_schema = constraints.constraint_schema and constraint_usage.constraint_name = constraints.constraint_name
+    where constraints.constraint_type = 'FOREIGN KEY' and constraints.table_schema = 'public'
+      and key_usage.table_name in (${sql.join(tableNames.map((name) => sql`${name}`), sql`, `)})
+    order by key_usage.table_name, key_usage.ordinal_position
+  `);
+  const tables = tableNames.map((name) => {
+    const tableColumns = columns.filter((column) => column.table_name === name);
+    return {
+      name,
+      description: tableColumns[0]?.table_description ?? null,
+      score: Math.max(...tableColumns.map((column) => column.score)),
+      columns: tableColumns.map(({ table_name: _table, table_description: _description, ...column }) => column),
+      foreign_keys: foreignKeys.filter((foreignKey) => foreignKey.table_name === name)
+        .map(({ table_name: _table, ...foreignKey }) => foreignKey),
+    };
+  }).sort((left, right) => right.score - left.score || left.name.localeCompare(right.name));
+  return schemaSearchOutputSchema.parse({ ok: true, terms, total_columns: columns.length, tables });
+});
+
 const describeDatabaseTables = async (
   db: DbClient,
   authContext: AuthContext,
@@ -427,7 +540,7 @@ const describeDatabaseTables = async (
       on tables.table_schema = columns.table_schema
      and tables.table_name = columns.table_name
     where columns.table_schema = 'public'
-      and tables.table_type = 'BASE TABLE'
+      and (tables.table_type = 'BASE TABLE' or (tables.table_type = 'VIEW' and columns.table_name like 'ai_v_%'))
       and columns.table_name in (${tableList})
       and columns.table_name <> 'ai_provider_configs'
       and has_table_privilege(
@@ -500,10 +613,22 @@ export const executeDatabaseSql = async (
 
 export const assistantSqlTools = [
   {
+    name: "search_schema",
+    version: "1.0" as const,
+    description: "Recherche en priorite les tables et colonnes pertinentes a partir de 1 a 5 termes metier. Retourne au plus 20 colonnes classees avec types, nullabilite, descriptions et cles etrangeres. Appeler cet outil avant le catalogue complet.",
+    inputSchema: schemaSearchInputSchema,
+    outputSchema: schemaSearchOutputSchema,
+    parameters: parametersFor(schemaSearchInputSchema),
+    async run(db: DbClient, authContext: AuthContext, _requestId: string, args: Record<string, unknown>) {
+      const input = schemaSearchInputSchema.parse(args);
+      return await searchDatabaseSchema(db, authContext, input.terms);
+    },
+  },
+  {
     name: "get_database_catalog",
     version: "1.0" as const,
     description:
-      "Liste toutes les tables public lisibles par l utilisateur et leurs noms de colonnes. Appeler cet outil avant de concevoir une requete SQL sur un domaine inconnu.",
+      "Liste toutes les tables public lisibles par l utilisateur et leurs noms de colonnes. Outil de secours a utiliser seulement si search_schema ne retourne aucune piste exploitable.",
     inputSchema: databaseCatalogInputSchema,
     outputSchema: databaseCatalogOutputSchema,
     parameters: parametersFor(databaseCatalogInputSchema),

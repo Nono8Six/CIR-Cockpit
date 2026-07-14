@@ -124,12 +124,16 @@ import {
   aiMembersAccessOverviewResponseSchema,
   aiPromptsListInputSchema,
   aiPromptsListResponseSchema,
+  aiPromptsDeleteInputSchema,
+  aiPromptsDeleteResponseSchema,
   aiPromptsPublishInputSchema,
   aiPromptsPublishResponseSchema,
   aiPromptsRestoreInputSchema,
   aiPromptsRestoreResponseSchema,
   aiPromptsSaveDraftInputSchema,
   aiPromptsSaveDraftResponseSchema,
+  aiPromptsSetArchivedInputSchema,
+  aiPromptsSetArchivedResponseSchema,
   aiSettingsGetInputSchema,
   aiSettingsGetResponseSchema,
   aiSettingsCreateQuotaInputSchema,
@@ -228,6 +232,7 @@ import { aggregatePricingReferenceDiffs } from "../services/pricing/references/r
 import { activatePricingReferenceSnapshot } from "../services/pricing/references/referenceActivation.ts";
 import {
   createAiQuota,
+  deleteAiPromptTemplate,
   deleteAiModel,
   deleteAiQuota,
   getAiSettings,
@@ -239,6 +244,7 @@ import {
   runPricingReferenceDiagnosis,
   saveAiModel,
   saveAiPromptDraft,
+  setAiPromptTemplateArchived,
   saveAiProvider,
   saveAiQuota,
   testAiProvider,
@@ -664,6 +670,14 @@ export const appRouter = router({
         .input(aiPromptsRestoreInputSchema)
         .output(aiPromptsRestoreResponseSchema)
         .mutation(withSuperAdminHandler(restoreAiPrompt)),
+      setArchived: superAdminProcedure
+        .input(aiPromptsSetArchivedInputSchema)
+        .output(aiPromptsSetArchivedResponseSchema)
+        .mutation(withSuperAdminHandler(setAiPromptTemplateArchived)),
+      delete: superAdminProcedure
+        .input(aiPromptsDeleteInputSchema)
+        .output(aiPromptsDeleteResponseSchema)
+        .mutation(withSuperAdminHandler(deleteAiPromptTemplate)),
     }),
     usage: router({
       byMember: superAdminProcedure

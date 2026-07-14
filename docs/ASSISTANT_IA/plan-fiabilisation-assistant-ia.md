@@ -69,7 +69,8 @@ Statuts autorisés : `À FAIRE`, `EN COURS`, `BLOQUÉE`, `VALIDÉE`.
 | 3 | Contexte conversationnel | Historique limité à `{role, content}` | VALIDÉE | « et ROCK ? » hérite correctement du contexte précédent | Contrat strict borné, TTL/snapshot contrôlés, 5 tests P3 backend + transport frontend vert |
 | 4 | Fallback SQL durci | Lecture seule/RLS bornées, validation sémantique incomplète | VALIDÉE | Colonnes inventées, changements de scope et boucles équivalentes sont bloqués | Validation structurelle + catalogue réel avant SQL métier ; 17 tests P4 verts ; P5 reste isolée |
 | 5 | Preuves, erreurs et diagnostic UI | Sources et SQL partiellement visibles localement | VALIDÉE | Aucun fait sans provenance ; aucun détail interne ou sensible exposé | Contrat public Zod strict, statuts et dérivations validés ; `api` v122 ACTIVE |
-| 6 | Évaluations et choix du modèle | Runner live présent mais campagne comparative non terminée | À FAIRE | Tous les seuils bloquants passent sur le modèle retenu | — |
+| 5B | Contexte universel : schéma auto-descriptif, vues typées, catalogue cherchable | Dump catalogue 27–49K tokens ; 5 commentaires `pg_description` ; colonnes financières `text` | VALIDÉE | Fallback documenté et cherchable ; estimation conservatrice p95 2 080 tokens ; RLS des vues prouvée | Migration `20260714102852`, 36 tests offline + 3 intégration DB, Supabase MCP |
+| 6 | Évaluations et choix du modèle | Routage P3-bis corrigé ; campagne comparative à rejouer après le checkpoint P5B | EN COURS | Tous les seuils bloquants passent sur le modèle retenu | `rapport-evaluation-modeles-p6.md` |
 | 7 | Performance, Realtime et UX | Correctifs Realtime/React locaux, non livrés | À FAIRE | p50/p95 mesurés, absence de boucle Realtime, parcours UI vérifié | — |
 | 8 | QA finale, documentation et livraison | `pnpm run qa` bloqué par un chantier dashboard concurrent | À FAIRE | Gate complète verte et probes conditionnelles vertes | — |
 
@@ -538,6 +539,108 @@ erreurs.
 
 ---
 
+## Phase 5B — Contexte universel : préalables de la campagne P6
+
+### Objectif
+
+Rendre le fallback SQL auto-descriptif, cherchable et typé avant de mesurer les modèles.
+Conception détaillée, audit DB/code et justifications : `architecture-contexte-universel.md`.
+La campagne P6 mesure coût, tours et exactitude par modèle : elle doit s'exécuter sur
+l'économie cible (catalogue cherchable, vues typées), pas sur le dump actuel de 27–49K tokens,
+sinon la sélection du modèle est invalidée par les phases suivantes.
+
+### Constats d'audit fondateurs (2026-07-14, Supabase MCP + code)
+
+- 5 commentaires `pg_description` dans tout le schéma `public` : `describe_database_tables`
+  lit déjà `obj_description`/`col_description` mais ne trouve rien à remonter.
+- Les conditions d'achat (`remise_ha`, `coef_retro`, `coef_ha`, `coef_majvte`, `borne_acha`)
+  vivent dans `pricing_segment_purchase_grids` (89 278 lignes), jointes aux segments par
+  `(segment_id, snapshot_id)` ; toutes les colonnes financières sont `text` (échantillon de
+  2 000 valeurs : 100 % numériques à point décimal, artefacts float Excel type
+  `69.400000000000006`). Un `ORDER BY` généré sur la valeur brute trie alphabétiquement.
+- `pg_trgm` est installé ; `unaccent`, `vector` et `pgroonga` sont disponibles mais non
+  installés et ne doivent pas l'être sans besoin mesuré.
+- `get_database_catalog` renvoie l'intégralité des 44 tables `public` à chaque question
+  imprévue (27–49K tokens d'entrée mesurés en baseline P0).
+
+### Travaux
+
+E1 — Schéma auto-descriptif :
+
+- [x] Migration `COMMENT ON` couvrant les tables utiles à l'assistant (~12 tables, colonnes
+  clés en priorité) : type réel, format, pièges (casse, jointures, snapshot), rédigés en
+  français, sans secret ni donnée métier, relus comme du code.
+- [x] Fonction `private.ai_to_numeric(text)` (immutable, strict) pour les casts financiers.
+
+E2 — Projections typées :
+
+- [x] Vues `ai_v_purchase_terms_active` et `ai_v_segments_active` (snapshot actif
+  pré-filtré, casts numériques faits, jointures pré-écrites), plus variantes non filtrées
+  exposant `snapshot_id` pour les questions historiques (règle `VERSIONED_TABLES` conservée).
+- [x] `security_invoker = on` sur chaque vue, prouvé par un test d'intégration RLS à deux
+  identités.
+- [x] Étendre `loadDatabaseCatalog` aux vues `ai_v_%` (le filtre actuel `BASE TABLE` les
+  exclut) et documenter la préférence vue > table brute dans les commentaires.
+
+E3 — Catalogue cherchable :
+
+- [x] Outil `search_schema(terms)` : classement `pg_trgm` (`similarity()`) sur noms de
+  tables/colonnes et texte des commentaires, retour des N meilleures colonnes groupées par
+  table avec types, descriptions et clés étrangères, sortie Zod stricte et plafond d'octets.
+- [x] Rétrograder `get_database_catalog` : le prompt oriente vers `search_schema` d'abord ;
+  `describe_database_tables` inchangé pour le zoom.
+- [x] Mesurer les tokens d'entrée p95 du fallback avant/après sur les cas P0 rejoués.
+
+#### Mesure contexte fallback P5B — 2026-07-14
+
+La baseline provider P0 reste celle réellement observée avant P5B : **27–49K tokens**
+d'entrée lorsque `get_database_catalog` dumpait le schéma complet. L'Edge Function P5B
+n'étant volontairement pas déployée, la mesure après est une mesure locale reproductible du
+payload `search_schema` sur les cinq formulations P0 : top 20 colonnes, mêmes commentaires et
+même classement `pg_trgm` que le code livré. Les tailles UTF-8 sont converties avec une borne
+conservatrice de 3 octets par token ; ce n'est pas une mesure facturée du provider.
+
+| Cas P0 rejoué | Octets UTF-8 | Estimation conservatrice tokens |
+| --- | ---: | ---: |
+| P0-1 familles produit FEST/CAT_FAB | 6 239 | 2 080 |
+| P0-2 marques/variateurs/drives | 6 205 | 2 069 |
+| P0-3 ROCK/CAT_FAB | 6 171 | 2 057 |
+| P0-4 marques distinctes | 5 652 | 1 884 |
+| P0-5 changements/dernier tarif | 5 698 | 1 900 |
+| **p95 (5 cas)** | **6 239** | **2 080** |
+
+Le seuil de checkpoint `< 8 000` est respecté avec une marge de 74 %. Une mesure provider
+facturée pourra confirmer ce chiffre après autorisation explicite de déployer l'API, mais
+n'est pas requise pour exposer l'écart structurel avec la baseline 27–49K.
+
+Hors périmètre P5B (décisions actées dans `architecture-contexte-universel.md` §4) : aucune
+installation d'extension (`vector`, `unaccent`, `pgroonga`), aucune modification de la couche
+déterministe P1/P2, pas de SSE. E4 (régime double modèle) est arbitré par la campagne P6 ;
+E5 (intention annoncée, provenance) est couvert par P5 ; E6 (boucle de promotion) est
+documenté en P8.
+
+### Checkpoint vérifiable P5B
+
+Le checkpoint est validé si :
+
+- les nouveaux cas offline passent : « top 3 CAT_FAB de FEST par remise d'achat » (jointure
+  grilles + cast + tri numérique correct) et « où sont stockées les remises ? »
+  (`search_schema` retourne la bonne table dans le top 3) ;
+- un test d'intégration prouve qu'aucune vue `ai_v_*` ne contourne les RLS ;
+- les tokens d'entrée p95 du fallback sont inférieurs à 8 000 sur les cas P0 rejoués
+  (baseline 27–49K) ;
+- un tri généré sur une colonne financière `text` brute est refusé ou réorienté vers la vue ;
+- les validations P4 (catalogue, snapshot, fingerprint, réparation unique) restent vertes
+  avec les vues incluses au catalogue.
+
+### Suivi P5B
+
+| Date | Statut | Exécuté par | Preuve/commande | Résultat | Écart ou blocage |
+| --- | --- | --- | --- | --- | --- |
+| 2026-07-14 | VALIDÉE ET DÉPLOYÉE | Codex | Migration `20260714102852`; tests Deno ciblés (36/36); intégration DB (3/3); `pnpm run qa:back`; Supabase MCP; probes HTTP | 110 commentaires; 4 vues `security_invoker`; recherche remises top 3 correcte; top FEST trié en `numeric`; p95 conservateur 2 080 tokens; Edge Function `api` v127 `ACTIVE`; CORS 200 et route authentifiée 401 sans jeton | Aucun blocage P5B; déploiement autorisé explicitement le 2026-07-14 |
+
+---
+
 ## Phase 6 — Évaluations et sélection du modèle
 
 ### Objectif
@@ -547,16 +650,27 @@ sur le prix par token ou le seul taux de tool calling.
 
 ### Travaux
 
+- [ ] Vérifier le checkpoint P5B avant la campagne 10/20 : l'économie de tokens et la
+  surface SQL changent toutes les mesures de coût, tours et exactitude.
 - [ ] Étendre la suite offline avec les incidents I-01 à I-07.
 - [ ] Ajouter casse, accents, `%`, `_`, résultat vide, colonne inexistante, prompt injection,
   question hors périmètre et changement de snapshot.
+- [ ] Ajouter les cas P5B : « top 3 CAT_FAB de FEST par remise d'achat », « écarts de remise
+  supérieurs à 20 % par rapport au snapshot précédent » (`aggregate_diffs`,
+  `measure=remise`, `direction=baisse`), « où sont stockées les remises ? »
+  (`search_schema`) et tri généré sur colonne financière `text` brute (refus attendu).
 - [ ] Tester l'isolation sur deux agences et deux identités distinctes.
-- [ ] Exécuter la campagne live sur Mistral Small 3.2, GPT-OSS 120B et DeepSeek V4 Flash.
+- [ ] Exécuter la campagne live sur Mistral Small 3.2, GPT-OSS 120B et DeepSeek V4 Flash,
+  plus un modèle frontier comme référence haute de qualité et de coût.
 - [ ] Exécuter au moins dix répétitions par cas et vingt pour les agrégats critiques.
 - [ ] Comparer le routage standard et Exacto seulement si la politique ZDR reste satisfaite.
 - [ ] Enregistrer modèle demandé, modèle servi, provider, tours, finish reasons, tokens, coût,
   latence p50/p95 et exactitude.
-- [ ] Sélectionner le modèle le moins cher qui passe tous les seuils bloquants.
+- [ ] Sélectionner le modèle le moins cher qui passe tous les seuils bloquants, **par
+  régime** : décider le routage intention → modèle (léger ou aucun sur les chemins
+  déterministes/bornés, candidat renforcé sur le fallback SQL si la campagne le justifie),
+  en conservant `require_parameters`, fallback désactivé, `data_collection: deny`, ZDR et
+  un plafond `max_price`.
 
 ### Seuils bloquants
 
@@ -591,7 +705,23 @@ deno test --env-file=backend/.env --allow-env --allow-net --config backend/deno.
 
 | Date | Statut | Exécuté par | Modèles/providers | Répétitions | Résultat | Rapport |
 | --- | --- | --- | --- | ---: | --- | --- |
-| — | À FAIRE | — | — | — | — | — |
+| 2026-07-14 | EN COURS | Codex | Mistral/DeepInfra ; GPT-OSS/SambaNova ; DeepSeek Flash/Novita | 1 smoke provider/candidat + 1 smoke déterministe corrigé | Le défaut amont P3-bis est corrigé et vérifié live ; les anciens échecs ne classent pas les modèles ; campagne 10/20 et sélection encore à faire | `rapport-evaluation-modeles-p6.md` |
+
+#### Reprise P6 après correctif P3-bis — 2026-07-14
+
+- Les trois identifiants OpenRouter ont été vérifiés et testés sans substitution silencieuse.
+- La politique effective impose paramètres supportés, aucun fallback, refus de collecte et ZDR.
+- `api` v125 persiste modèle servi, provider et finish reasons jusque sur les erreurs et porte le
+  correctif de clarification conversationnelle.
+- Le scénario « question ambiguë → `cat_fab` » reprend désormais les termes initiaux et exécute
+  `search_supplier_categories` sans provider : 8 marques exactes, 359 segments, coût nul.
+- L'extraction n'utilise aucun dictionnaire métier fermé : le smoke live `raccords` retourne 6
+  marques et 33 segments avec le même chemin déterministe et un coût nul.
+- Les contrôles Mistral, GPT-OSS, DeepSeek et Qwen antérieurs sur ce cas ne sont plus considérés
+  comme une comparaison valide des modèles : ils exposaient tous le même défaut de routage amont.
+- P6 repasse en cours ; les smoke tests provider doivent être rejoués sur des cas appropriés avant
+  la campagne 10/20. P7 reste non autorisée jusqu'au checkpoint P6 validé.
+- Le modèle initial Mistral Small 3.2 a été restauré ; aucune migration n'a été créée.
 
 ---
 
@@ -649,6 +779,9 @@ sans déployer avant autorisation.
 - [ ] Documenter séparément tout blocage provenant du chantier dashboard ; ne pas modifier ce
   chantier uniquement pour contourner la gate.
 - [ ] Vérifier rate limit, admission atomique, idempotence, purge, rétention, clés et alertes budget.
+- [ ] Documenter dans le runbook la boucle de promotion continue (E6) : requête d'analyse sur
+  `ai_usage_events` listant les questions servies par `general_sql`, et rituel périodique de
+  promotion des motifs récurrents en outils métier stricts.
 - [ ] Mettre à jour le runbook, IA-7, la Phase 6 et les faits d'architecture destinés à la Phase 7.
 - [ ] Mettre à jour le tableau global de ce document et tous les suivis de phase.
 - [ ] Préparer la procédure de déploiement sans l'exécuter.
@@ -695,6 +828,7 @@ P0 baseline et régressions
   → P3 contexte conversationnel
   → P4 fallback SQL
   → P5 preuves et erreurs
+  → P5B contexte universel (préalables campagne)
   → P6 campagne modèles
   → P7 performance et UX
   → P8 QA et livraison
@@ -714,16 +848,18 @@ peuvent être menés en parallèle, mais les checkpoints restent séquentiels.
 | 2026-07-13 | P1 corrective  | VFD littéral et accents préservés avant P2 ; aucune migration ni extension                                                                 | 9 tests sémantiques verts ; MCP snapshot P0 : 3/11/348 et 9/2                                                     | Précondition fermée ; P2 autorisée                                                |
 | 2026-07-13 | P2             | Parseur typé et politique centrale intention → outils ; clarifications et fallback bornés                                                  | Matrice 20 cas, 3 tests P2, suite consolidée 31 verts/5 rouges futurs ; `qa:back` 303 verts/5 rouges/11 ignorés   | P2 validée ; P3 uniquement est autorisée                                          |
 | 2026-07-13 | P3             | Contexte conversationnel compact, strict et transitoire ; héritage déterministe des relances courtes                                       | 5 tests contexte, tests frontend, suite ciblée 37 verts/4 rouges futurs ; `qa:back` 309 verts/4 rouges/11 ignorés | P3 validée sans migration ni persistance ; P4 uniquement est autorisée            |
+| 2026-07-14 | P5B            | Insertion du chantier contexte universel (E1 commentaires `COMMENT ON`, E2 vues typées `ai_v_*`, E3 catalogue cherchable `search_schema`) comme préalable de la campagne P6 ; E4 arbitré en P6, E5 couvert par P5, E6 documenté en P8 | `architecture-contexte-universel.md` (audit DB/code du 2026-07-14 : 5 commentaires `pg_description`, grilles d'achat `text`, `pg_trgm` installé) | La campagne 10/20 de P6 attend le checkpoint P5B ; P6 reste EN COURS ; aucun code ni migration livré à ce stade |
+| 2026-07-14 | P5B            | E1/E2/E3 exécutés : dictionnaire DB, casts et vues typées, recherche de schéma prioritaire, garde-fou de tri brut | Migration distante `20260714102852`; MCP : 4 vues invoker, 110 commentaires, top 3 remises; 36 tests offline + 3 DB; `qa:back`; Edge Function `api` v127 `ACTIVE`; probes CORS/auth 200/401 | Checkpoint P5B validé et déployé après autorisation explicite; P6 peut reprendre |
 
 ## 7. État de livraison
 
-| Élément | État |
-| --- | --- |
-| Plan correctif documenté | OUI |
-| Corrections entièrement validées | NON |
-| Campagne comparative terminée | NON |
-| `pnpm run qa` complet vert pour le worktree | NON |
-| Documentation finale synchronisée | NON |
-| Prêt à déployer | NON |
-| Déploiement demandé | NON |
-| Edge Function corrective déployée | NON |
+| Élément                                     | État                                                 |
+| ---------------------------------------------| ------------------------------------------------------|
+| Plan correctif documenté                    | OUI                                                  |
+| Corrections entièrement validées            | NON                                                  |
+| Campagne comparative terminée               | NON                                                  |
+| `pnpm run qa` complet vert pour le worktree | NON                                                  |
+| Documentation finale synchronisée           | NON                                                  |
+| Prêt à déployer                             | DÉPLOYÉ — P5B inclus dans l'Edge Function `api` v127 |
+| Déploiement demandé                         | OUI — autorisé explicitement le 2026-07-14           |
+| Edge Function corrective déployée           | OUI — `api` v127 `ACTIVE`                            |

@@ -17,9 +17,11 @@ import {
   type AiFeature,
   aiModelConfigSchema,
   type AiPromptsListInput,
+  type AiPromptsDeleteInput,
   type AiPromptsPublishInput,
   type AiPromptsRestoreInput,
   type AiPromptsSaveDraftInput,
+  type AiPromptsSetArchivedInput,
   aiPromptVersionSchema,
   aiPromptWithVersionsSchema,
   type AiProvider,
@@ -71,6 +73,37 @@ type QuotaUsage = {
   monthly_tokens: number;
   daily_cost: number;
   monthly_cost: number;
+};
+
+type PromptUsageRow = {
+  template_id: string;
+  calls: number;
+  successful_calls: number;
+  failed_calls: number;
+  calls_last_30_days: number;
+  total_tokens: number;
+  cost_amount: number;
+  last_used_at: string | null;
+};
+
+const PROTECTED_PROMPT_FEATURES = new Set<AiFeature>([
+  'assistant.referentiels'
+]);
+
+export const getPromptTemplateDeletionConflict = (
+  template: Pick<PromptTemplateRow, 'feature' | 'archived_at'>,
+  usageCalls: number
+): string | null => {
+  if (PROTECTED_PROMPT_FEATURES.has(template.feature)) {
+    return 'Le template de l assistant actif ne peut pas etre supprime.';
+  }
+  if (!template.archived_at) {
+    return 'Archivez le template avant de le supprimer.';
+  }
+  if (usageCalls > 0) {
+    return 'Ce template possede un historique d utilisation et ne peut pas etre supprime definitivement.';
+  }
+  return null;
 };
 
 export type ProviderUsage = {
@@ -309,21 +342,41 @@ const diagnoseFeatureForFileType = (fileType: PricingReferenceFileKind): AiFeatu
   fileType === 'classification' ? 'pricing.references.diagnose.classification' : 'pricing.references.diagnose.segments';
 
 const getPromptRows = async (db: DbClient, feature?: AiFeature) => {
-  const templates = await db
-    .select()
-    .from(ai_prompt_templates)
-    .where(feature ? eq(ai_prompt_templates.feature, feature) : undefined)
-    .orderBy(ai_prompt_templates.feature);
-  const versions =
-    templates.length === 0
-      ? []
-      : await db
-          .select()
-          .from(ai_prompt_versions)
-          .orderBy(ai_prompt_versions.template_id, desc(ai_prompt_versions.version));
+  const [templates, versions, usageRows] = await Promise.all([
+    db
+      .select()
+      .from(ai_prompt_templates)
+      .where(feature ? eq(ai_prompt_templates.feature, feature) : undefined)
+      .orderBy(ai_prompt_templates.archived_at, ai_prompt_templates.feature),
+    db
+      .select()
+      .from(ai_prompt_versions)
+      .orderBy(ai_prompt_versions.template_id, desc(ai_prompt_versions.version)),
+    db.execute<PromptUsageRow>(sql`
+      select
+        t.id as template_id,
+        count(e.id)::int as calls,
+        count(e.id) filter (where e.status in ('success', 'cache_hit'))::int as successful_calls,
+        count(e.id) filter (where e.status in ('error', 'blocked'))::int as failed_calls,
+        count(e.id) filter (where e.created_at >= now() - interval '30 days')::int as calls_last_30_days,
+        coalesce(sum(
+          e.input_tokens + e.output_tokens + e.cached_input_tokens + e.reasoning_tokens
+        ), 0)::float8 as total_tokens,
+        coalesce(sum(e.cost_amount), 0)::float8 as cost_amount,
+        max(e.created_at)::text as last_used_at
+      from public.ai_prompt_templates t
+      left join public.ai_prompt_versions v on v.template_id = t.id
+      left join public.ai_usage_events e on e.prompt_version_id = v.id
+      group by t.id
+    `)
+  ]);
+  const usageByTemplate = new Map(
+    usageRows.map((row) => [row.template_id, row])
+  );
 
   return templates.map((template) => {
     const templateVersions = versions.filter((version) => version.template_id === template.id).map(toPromptVersion);
+    const usage = usageByTemplate.get(template.id);
     return parseOrThrow(
       aiPromptWithVersionsSchema,
       {
@@ -332,11 +385,23 @@ const getPromptRows = async (db: DbClient, feature?: AiFeature) => {
         label: template.label,
         description: template.description,
         allowed_variables: template.allowed_variables,
+        archived_at: template.archived_at,
+        archived_by: template.archived_by,
         created_at: template.created_at,
         updated_at: template.updated_at,
         versions: templateVersions,
         published_version: templateVersions.find((version) => version.status === 'published') ?? null,
-        draft_version: templateVersions.find((version) => version.status === 'draft') ?? null
+        draft_version: templateVersions.find((version) => version.status === 'draft') ?? null,
+        usage: {
+          calls: Number(usage?.calls ?? 0),
+          successful_calls: Number(usage?.successful_calls ?? 0),
+          failed_calls: Number(usage?.failed_calls ?? 0),
+          calls_last_30_days: Number(usage?.calls_last_30_days ?? 0),
+          total_tokens: Number(usage?.total_tokens ?? 0),
+          cost_amount: Number(usage?.cost_amount ?? 0),
+          currency: 'USD',
+          last_used_at: usage?.last_used_at ?? null
+        }
       },
       'Prompt IA invalide.'
     );
@@ -626,20 +691,84 @@ export const listAiPrompts = async (db: DbClient, _callerId: string, requestId: 
   prompts: await getPromptRows(db, input.feature)
 });
 
+const requirePromptTemplate = async (db: DbClient, templateId: string) => {
+  const [template] = await db
+    .select()
+    .from(ai_prompt_templates)
+    .where(eq(ai_prompt_templates.id, templateId))
+    .limit(1);
+  if (!template) {
+    throw httpError(404, 'AI_CONFIG_MISSING', 'Template de prompt IA introuvable.');
+  }
+  return template;
+};
+
+const requireEditablePromptTemplate = async (db: DbClient, templateId: string) => {
+  const template = await requirePromptTemplate(db, templateId);
+  if (template.archived_at) {
+    throw httpError(409, 'CONFLICT', 'Restaurez ce template avant de le modifier.');
+  }
+  return template;
+};
+
+export const setAiPromptTemplateArchived = async (
+  db: DbClient,
+  callerId: string,
+  requestId: string,
+  input: AiPromptsSetArchivedInput
+) => {
+  const template = await requirePromptTemplate(db, input.template_id);
+  if (input.archived && PROTECTED_PROMPT_FEATURES.has(template.feature)) {
+    throw httpError(
+      409,
+      'CONFLICT',
+      'Le template de l assistant actif ne peut pas etre archive.'
+    );
+  }
+  const archivedAt = input.archived ? new Date().toISOString() : null;
+  await db
+    .update(ai_prompt_templates)
+    .set({
+      archived_at: archivedAt,
+      archived_by: input.archived ? callerId : null,
+      updated_by: callerId,
+      updated_at: new Date().toISOString()
+    })
+    .where(eq(ai_prompt_templates.id, input.template_id));
+  return {
+    ok: true as const,
+    request_id: requestId,
+    template_id: input.template_id,
+    archived_at: archivedAt
+  };
+};
+
+export const deleteAiPromptTemplate = async (
+  db: DbClient,
+  _callerId: string,
+  requestId: string,
+  input: AiPromptsDeleteInput
+) => {
+  const template = await requirePromptTemplate(db, input.template_id);
+  const [{ calls }] = await db.execute<{ calls: number }>(sql`
+    select count(e.id)::int as calls
+    from public.ai_prompt_versions v
+    join public.ai_usage_events e on e.prompt_version_id = v.id
+    where v.template_id = ${input.template_id}
+  `);
+  const conflict = getPromptTemplateDeletionConflict(template, Number(calls));
+  if (conflict) throw httpError(409, 'CONFLICT', conflict);
+  await db.delete(ai_prompt_templates).where(eq(ai_prompt_templates.id, input.template_id));
+  return { ok: true as const, request_id: requestId, deleted_id: input.template_id };
+};
+
 export const saveAiPromptDraft = async (
   db: DbClient,
   callerId: string,
   requestId: string,
   input: AiPromptsSaveDraftInput
 ) => {
-  const [template] = await db
-    .select()
-    .from(ai_prompt_templates)
-    .where(eq(ai_prompt_templates.id, input.template_id))
-    .limit(1);
-  if (!template) {
-    throw httpError(404, 'AI_CONFIG_MISSING', 'Template de prompt IA introuvable.');
-  }
+  await requireEditablePromptTemplate(db, input.template_id);
 
   const [existingDraft] = await db
     .select()
@@ -698,6 +827,7 @@ export const publishAiPrompt = async (
   if (!target) {
     throw httpError(404, 'AI_CONFIG_MISSING', 'Version de prompt IA introuvable.');
   }
+  await requireEditablePromptTemplate(db, target.template_id);
 
   let published: PromptVersionRow | undefined;
   await db.transaction(async (tx) => {
@@ -738,6 +868,7 @@ export const restoreAiPrompt = async (
   if (!source) {
     throw httpError(404, 'AI_CONFIG_MISSING', 'Version de prompt IA introuvable.');
   }
+  await requireEditablePromptTemplate(db, source.template_id);
   const [{ next_version }] = await db.execute<{ next_version: number }>(sql`
     select coalesce(max(version), 0)::int + 1 as next_version
     from public.ai_prompt_versions
@@ -1128,6 +1259,7 @@ export const resolveModelAndPromptForFeature = async (
       from public.ai_prompt_versions v
       join public.ai_prompt_templates t on t.id = v.template_id
       where t.feature = ${featureKey}
+        and t.archived_at is null
         and v.status = 'published'
       limit 1
     `);

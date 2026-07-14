@@ -191,8 +191,9 @@ Deno.test("assistant aggregate_segments refuse les champs inconnus avant acces D
   assertEquals(executed, false);
 });
 
-Deno.test("assistant exposes catalog, table description and SQL execution tools to OpenRouter", () => {
+Deno.test("assistant exposes schema search, catalog, description and SQL tools to OpenRouter", () => {
   const names = openRouterToolDefinitions.map((tool) => tool.function.name);
+  assertEquals(names.includes("search_schema"), true);
   assertEquals(names.includes("get_database_catalog"), true);
   assertEquals(names.includes("describe_database_tables"), true);
   assertEquals(names.includes("execute_readonly_sql"), true);
@@ -342,6 +343,26 @@ Deno.test("P4 impose le snapshot et ILIKE aux recherches exhaustives", () => {
   );
   validateAssistantSqlAgainstCatalog(
     "select marque from public.pricing_supplier_segments where snapshot_id = '00000000-0000-4000-8000-000000000003'::uuid and cat_fab ilike '%rock%'",
+    catalog,
+  );
+});
+
+Deno.test("P5B refuse le tri des colonnes financieres text brutes", () => {
+  const catalog = [{ name: "pricing_segment_purchase_grids", description: null, column_names: ["snapshot_id", "segment_id", "remise_ha"] }];
+  assertThrows(
+    () => validateAssistantSqlAgainstCatalog(
+      "select segment_id, remise_ha from public.pricing_segment_purchase_grids where snapshot_id = '4e216bc4-7d82-4eb7-aa20-2cc8316667cc'::uuid order by remise_ha desc",
+      catalog,
+    ),
+    Error,
+    "tri d une valeur financiere text brute",
+  );
+});
+
+Deno.test("P5B accepte le tri numeric de la vue active", () => {
+  const catalog = [{ name: "ai_v_purchase_terms_active", description: null, column_names: ["marque", "cat_fab", "remise_ha_pct"] }];
+  validateAssistantSqlAgainstCatalog(
+    "select cat_fab, max(remise_ha_pct) as remise_max from public.ai_v_purchase_terms_active where marque = 'FEST' group by cat_fab order by 2 desc limit 3",
     catalog,
   );
 });

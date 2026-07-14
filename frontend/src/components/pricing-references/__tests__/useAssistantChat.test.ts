@@ -1,9 +1,13 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useAssistantChat } from "@/components/pricing-references/hooks/useAssistantChat";
+import {
+  getAssistantErrorMessage,
+  useAssistantChat,
+} from "@/components/pricing-references/hooks/useAssistantChat";
 import { askAiAssistant } from "@/services/ai";
 import { handleUiError } from "@/services/errors/handleUiError";
+import type { AiAssistantConversationContext } from "../../../../../shared/schemas/aiAssistant.schema";
 
 const pageContext = {
   surface: "pricing.references" as const,
@@ -12,6 +16,7 @@ const pageContext = {
 
 const conversationContext = {
   version: 1 as const,
+  kind: "result" as const,
   surface: "pricing.references" as const,
   domain: "pricing_references" as const,
   intent: "supplier_category_search" as const,
@@ -36,7 +41,7 @@ const conversationContext = {
 
 const successfulResponse = (
   answer: string,
-  context = null as typeof conversationContext | null,
+  context = null as AiAssistantConversationContext | null,
 ) => ({
   ok: true as const,
   request_id: crypto.randomUUID(),
@@ -73,6 +78,66 @@ describe("useAssistantChat", () => {
     vi.mocked(askAiAssistant).mockImplementation(async ({ question }) =>
       successfulResponse(`Réponse : ${question}`)
     );
+  });
+
+  it("rend les erreurs fournisseur et SQL actionnables", () => {
+    expect(getAssistantErrorMessage({
+      _tag: "AppError",
+      code: "AI_PROVIDER_RATE_LIMITED",
+      message: "Quota fournisseur openrouter atteint.",
+    })).toContain("limite temporairement");
+    expect(getAssistantErrorMessage({
+      _tag: "AppError",
+      code: "AI_RESPONSE_INVALID",
+      message: "Aucune execution SQL semantiquement valide n a abouti.",
+    })).toContain("CAT_FAB");
+  });
+
+  it("bloque temporairement le retry après un 429 fournisseur", async () => {
+    vi.useFakeTimers();
+    vi.mocked(askAiAssistant).mockRejectedValueOnce(new Error("rate limited"));
+    vi.mocked(handleUiError).mockReturnValue({
+      _tag: "AppError",
+      code: "AI_PROVIDER_RATE_LIMITED",
+      message: "Quota fournisseur openrouter atteint.",
+      domain: "edge",
+      retryable: true,
+    });
+    const { result } = renderHook(() => useAssistantChat(pageContext));
+
+    await act(async () => {
+      await result.current.send("Question limitée");
+    });
+    expect(result.current.canRetry).toBe(false);
+    expect(result.current.retryCooldownSeconds).toBe(30);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(30_000);
+    });
+    expect(result.current.retryCooldownSeconds).toBe(0);
+    expect(result.current.canRetry).toBe(true);
+    vi.useRealTimers();
+  });
+
+  it("n encourage pas un retry identique après un rejet SQL sémantique", async () => {
+    vi.mocked(askAiAssistant).mockRejectedValueOnce(new Error("invalid SQL"));
+    vi.mocked(handleUiError).mockReturnValue({
+      _tag: "AppError",
+      code: "AI_RESPONSE_INVALID",
+      message: "Aucune execution SQL semantiquement valide n a abouti.",
+      domain: "edge",
+      retryable: true,
+      recoveryAction: "retry",
+    });
+    const { result } = renderHook(() => useAssistantChat(pageContext));
+
+    await act(async () => {
+      await result.current.send("Question SQL invalide");
+    });
+
+    expect(result.current.canRetry).toBe(false);
+    expect(result.current.error?.retryable).toBe(false);
+    expect(result.current.errorMessage).toContain("Reformulez");
   });
 
   it("borne à 12 messages l’historique envoyé au service", async () => {
@@ -194,5 +259,39 @@ describe("useAssistantChat", () => {
     });
     expect(vi.mocked(askAiAssistant).mock.calls[2]?.[0].conversation_context)
       .toBeNull();
+  });
+
+  it("transporte une clarification en attente jusqu au choix CAT_FAB", async () => {
+    const pendingContext: AiAssistantConversationContext = {
+      version: 1,
+      kind: "pending_clarification",
+      surface: "pricing.references",
+      domain: "pricing_references",
+      intent: "supplier_category_search",
+      requested_terms: ["variateurs", "drives"],
+      options: ["cat_fab", "fam_cir"],
+      import_id: null,
+      target_snapshot_id: null,
+      created_at: "2026-07-14T09:00:00.000Z",
+      expires_at: "2026-07-14T09:15:00.000Z",
+    };
+    vi.mocked(askAiAssistant)
+      .mockResolvedValueOnce(
+        successfulResponse("Quelle dimension ?", pendingContext),
+      )
+      .mockResolvedValueOnce(successfulResponse("Huit marques"));
+    const { result } = renderHook(() => useAssistantChat(pageContext));
+
+    await act(async () => {
+      await result.current.send(
+        "Quelles marques ont des familles avec des variateurs ou drives ?",
+      );
+    });
+    await act(async () => {
+      await result.current.send("cat_fab");
+    });
+
+    expect(vi.mocked(askAiAssistant).mock.calls[1]?.[0].conversation_context)
+      .toEqual(pendingContext);
   });
 });

@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type {
   AiAssistantCitation,
@@ -14,6 +14,21 @@ import { type AppError, createAppError } from "@/services/errors/AppError";
 import { handleUiError } from "@/services/errors/handleUiError";
 
 const MAX_HISTORY_MESSAGES = 12;
+const PROVIDER_RATE_LIMIT_COOLDOWN_SECONDS = 30;
+
+const isSqlSemanticFailure = (error: AppError): boolean =>
+  error.code === "AI_RESPONSE_INVALID" &&
+  error.message.toLowerCase().includes("execution sql semantiquement valide");
+
+export const getAssistantErrorMessage = (error: AppError): string => {
+  if (error.code === "AI_PROVIDER_RATE_LIMITED") {
+    return "OpenRouter limite temporairement les requêtes. Patientez avant de réessayer.";
+  }
+  if (isSqlSemanticFailure(error)) {
+    return "L’assistant n’a pas trouvé de requête de données valide. Reformulez en précisant la dimension attendue, par exemple CAT_FAB ou famille CIR.";
+  }
+  return error.message;
+};
 
 export type AssistantChatMessage = AiAssistantMessage & {
   id: string;
@@ -48,10 +63,20 @@ export const useAssistantChat = (pageContext: AiAssistantPageContext) => {
   const [messages, setMessages] = useState<AssistantChatMessage[]>([]);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<AppError | null>(null);
+  const [retryCooldownSeconds, setRetryCooldownSeconds] = useState(0);
   const failedRequestRef = useRef<PendingAssistantRequest | null>(null);
   const conversationContextRef = useRef<AiAssistantConversationContext | null>(
     null,
   );
+  const retryCooldownActive = retryCooldownSeconds > 0;
+
+  useEffect(() => {
+    if (!retryCooldownActive) return;
+    const intervalId = window.setInterval(() => {
+      setRetryCooldownSeconds((current) => Math.max(0, current - 1));
+    }, 1000);
+    return () => window.clearInterval(intervalId);
+  }, [retryCooldownActive]);
 
   const execute = useCallback(async (
     request: PendingAssistantRequest,
@@ -101,7 +126,15 @@ export const useAssistantChat = (pageContext: AiAssistantPageContext) => {
         "Impossible d'obtenir une reponse de l'assistant IA.",
         { feature: "assistant.referentiels" },
       );
-      setError(appError);
+      const uiError = isSqlSemanticFailure(appError)
+        ? { ...appError, retryable: false, recoveryAction: "none" as const }
+        : appError;
+      setError(uiError);
+      setRetryCooldownSeconds(
+        uiError.code === "AI_PROVIDER_RATE_LIMITED"
+          ? PROVIDER_RATE_LIMIT_COOLDOWN_SECONDS
+          : 0,
+      );
     } finally {
       setPending(false);
     }
@@ -123,7 +156,10 @@ export const useAssistantChat = (pageContext: AiAssistantPageContext) => {
   }, [execute, messages, pending]);
 
   const retry = useCallback(async () => {
-    if (pending || error?.retryable === false || !failedRequestRef.current) return;
+    if (
+      pending || retryCooldownSeconds > 0 || error?.retryable === false ||
+      !failedRequestRef.current
+    ) return;
     const failedRequest = failedRequestRef.current;
     await execute({
       ...failedRequest,
@@ -131,7 +167,7 @@ export const useAssistantChat = (pageContext: AiAssistantPageContext) => {
         ? failedRequest.clientRequestId
         : crypto.randomUUID(),
     }, false);
-  }, [error?.domain, execute, pending]);
+  }, [error?.domain, error?.retryable, execute, pending, retryCooldownSeconds]);
 
   const reset = useCallback(() => {
     failedRequestRef.current = null;
@@ -139,13 +175,17 @@ export const useAssistantChat = (pageContext: AiAssistantPageContext) => {
     setMessages([]);
     setError(null);
     setPending(false);
+    setRetryCooldownSeconds(0);
   }, []);
 
   return {
     messages,
     pending,
     error,
-    canRetry: failedRequestRef.current !== null && error?.retryable !== false,
+    errorMessage: error ? getAssistantErrorMessage(error) : null,
+    canRetry: failedRequestRef.current !== null && error?.retryable !== false &&
+      retryCooldownSeconds === 0,
+    retryCooldownSeconds,
     send,
     retry,
     reset,

@@ -1,8 +1,10 @@
 import {
   aiPromptsListResponseSchema,
+  aiPromptsDeleteResponseSchema,
   aiPromptsPublishResponseSchema,
   aiPromptsRestoreResponseSchema,
   aiPromptsSaveDraftResponseSchema,
+  aiPromptsSetArchivedResponseSchema,
   aiSettingsGetResponseSchema,
   aiSettingsCreateQuotaResponseSchema,
   aiSettingsDeleteModelResponseSchema,
@@ -14,9 +16,11 @@ import {
   aiUsageListResponseSchema,
   aiUsageSummaryResponseSchema,
   type AiPromptsListInput,
+  type AiPromptsDeleteInput,
   type AiPromptsPublishInput,
   type AiPromptsRestoreInput,
   type AiPromptsSaveDraftInput,
+  type AiPromptsSetArchivedInput,
   type AiSettingsSaveProviderInput,
   type AiSettingsCreateQuotaInput,
   type AiSettingsDeleteModelInput,
@@ -151,6 +155,22 @@ export const restoreAiPrompt = (input: AiPromptsRestoreInput) =>
     (api, options) => api.ai.prompts.restore.mutate(input, options),
     (payload) => parseResponse(aiPromptsRestoreResponseSchema, payload),
     'Impossible de restaurer le prompt IA.'
+  );
+
+export const setAiPromptTemplateArchived = (
+  input: AiPromptsSetArchivedInput,
+) =>
+  invokeTrpc(
+    (api, options) => api.ai.prompts.setArchived.mutate(input, options),
+    (payload) => parseResponse(aiPromptsSetArchivedResponseSchema, payload),
+    'Impossible de modifier l’état du template de prompt IA.',
+  );
+
+export const deleteAiPromptTemplate = (input: AiPromptsDeleteInput) =>
+  invokeTrpc(
+    (api, options) => api.ai.prompts.delete.mutate(input, options),
+    (payload) => parseResponse(aiPromptsDeleteResponseSchema, payload),
+    'Impossible de supprimer le template de prompt IA.',
   );
 
 export const getAiUsageSummary = (input: AiUsageSummaryInput = { days: 30 }) =>

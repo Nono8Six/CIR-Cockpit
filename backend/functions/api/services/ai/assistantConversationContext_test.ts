@@ -2,19 +2,24 @@ import { assertEquals } from "std/assert";
 
 import {
   aiAssistantAskInputSchema,
+  type AiAssistantConversationContext,
   aiAssistantConversationContextSchema,
 } from "../../../../../shared/schemas/aiAssistant.schema.ts";
 import {
   ASSISTANT_CONTEXT_TTL_MS,
   buildAssistantConversationContext,
+  buildPendingClarificationContext,
   getConversationAwareDeterministicIntent,
+  getUnsupportedPendingClarificationAnswer,
   isAssistantConversationContextUsable,
 } from "./assistantBroker.ts";
+import { parseAssistantReferenceIntent } from "./assistantIntentRouting.ts";
 
 const snapshotId = "4e216bc4-7d82-4eb7-aa20-2cc8316667cc";
 const now = Date.parse("2026-07-13T12:00:00.000Z");
 const context = {
   version: 1 as const,
+  kind: "result" as const,
   surface: "pricing.references" as const,
   domain: "pricing_references" as const,
   intent: "supplier_category_search" as const,
@@ -200,4 +205,107 @@ Deno.test("P3 construit un resume borne sans trace brute ni SQL", () => {
   });
   assertEquals(JSON.stringify(built).includes("select secret"), false);
   assertEquals(JSON.stringify(built).includes("execute_readonly_sql"), false);
+});
+
+Deno.test("P3-bis represente une clarification en attente sans resultat invente", () => {
+  const pending = {
+    version: 1 as const,
+    kind: "pending_clarification" as const,
+    surface: "pricing.references" as const,
+    domain: "pricing_references" as const,
+    intent: "supplier_category_search" as const,
+    requested_terms: ["variateurs", "drives"],
+    options: ["cat_fab", "fam_cir"] as const,
+    import_id: null,
+    target_snapshot_id: snapshotId,
+    created_at: new Date(now).toISOString(),
+    expires_at: new Date(now + ASSISTANT_CONTEXT_TTL_MS).toISOString(),
+  };
+  assertEquals(
+    aiAssistantConversationContextSchema.safeParse(pending).success,
+    true,
+  );
+  assertEquals(
+    getConversationAwareDeterministicIntent(
+      "cat_fab",
+      pending as unknown as AiAssistantConversationContext,
+      { surface: "pricing.references", target_snapshot_id: snapshotId },
+      now + 1,
+    ),
+    {
+      tool: "search_supplier_categories",
+      args: { terms: ["variateurs", "drives"], mode: "any" },
+    },
+  );
+  assertEquals(
+    getConversationAwareDeterministicIntent(
+      "Combien de clients actifs ?",
+      pending as unknown as AiAssistantConversationContext,
+      { surface: "pricing.references", target_snapshot_id: snapshotId },
+      now + 1,
+    ),
+    null,
+  );
+});
+
+Deno.test("P3-bis reprend le dialogue ambigu en deterministe sans provider", async () => {
+  const pageContext = {
+    surface: "pricing.references" as const,
+    target_snapshot_id: snapshotId,
+  };
+  const parsed = parseAssistantReferenceIntent(
+    "Quelles marques ont des familles de produits avec des variateurs ou drives ?",
+  );
+  const pending = buildPendingClarificationContext(parsed, pageContext, now);
+  const resumed = getConversationAwareDeterministicIntent(
+    "cat_fab",
+    pending,
+    pageContext,
+    now + 1,
+  );
+  let providerCalls = 0;
+  const provider = (): never => {
+    providerCalls += 1;
+    throw new TypeError("Le provider ne doit pas être appelé.");
+  };
+  const result = resumed
+    ? await Promise.resolve({ tool: resumed.tool, args: resumed.args })
+    : provider();
+  assertEquals(result, {
+    tool: "search_supplier_categories",
+    args: { terms: ["variateurs", "drives"], mode: "any" },
+  });
+  assertEquals(providerCalls, 0);
+});
+
+Deno.test("P3-bis refuse famille CIR sans tomber en SQL libre", () => {
+  const pageContext = {
+    surface: "pricing.references" as const,
+    target_snapshot_id: snapshotId,
+  };
+  const pending = buildPendingClarificationContext(
+    parseAssistantReferenceIntent(
+      "Quelles marques ont des familles avec des variateurs ?",
+    ),
+    pageContext,
+    now,
+  );
+  assertEquals(
+    getUnsupportedPendingClarificationAnswer(
+      "famille CIR",
+      pending,
+      pageContext,
+      now + 1,
+    ),
+    "La recherche déterministe par famille CIR n'est pas encore disponible. Reformulez avec CAT_FAB pour une réponse vérifiable.",
+  );
+  assertEquals(
+    getUnsupportedPendingClarificationAnswer(
+      "Combien de clients actifs ?",
+      pending,
+      pageContext,
+      now + 1,
+    ),
+    null,
+  );
 });

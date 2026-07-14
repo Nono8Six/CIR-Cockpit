@@ -547,6 +547,8 @@ export const ai_prompt_templates = pgTable("ai_prompt_templates", {
     .default([]).notNull(),
   created_by: uuid("created_by").$type<string | null>(),
   updated_by: uuid("updated_by").$type<string | null>(),
+  archived_at: timestamp("archived_at", timestamptz).$type<string | null>(),
+  archived_by: uuid("archived_by").$type<string | null>(),
   created_at: timestamp("created_at", timestamptz).$type<string>().defaultNow()
     .notNull(),
   updated_at: timestamp("updated_at", timestamptz).$type<string>().defaultNow()

@@ -8,6 +8,13 @@ export const featureLabels: Record<AiFeature, string> = {
   'pricing.references.diagnose.classification': 'Diagnostic classification',
   'pricing.references.diagnose.segments': 'Diagnostic segments'
 };
+export const featureSurfaces: Record<AiFeature, string> = {
+  'assistant.referentiels': 'Chat des référentiels tarifaires',
+  'pricing.references.diagnose': 'Aucun appel direct, clé globale historique',
+  'pricing.references.diagnose.classification': 'Diagnostic backend des classifications',
+  'pricing.references.diagnose.segments': 'Diagnostic backend des segments et grilles'
+};
+export const protectedPromptFeatures = new Set<AiFeature>(['assistant.referentiels']);
 export const features = Object.entries(featureLabels) as [AiFeature, string][];
 export const formatNumber = new Intl.NumberFormat('fr-FR');
 export const formatCost = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'USD', maximumFractionDigits: 4 });

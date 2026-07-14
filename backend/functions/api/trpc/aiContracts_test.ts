@@ -2,7 +2,9 @@ import { assertEquals } from 'std/assert';
 
 import {
   aiPromptsListResponseSchema,
+  aiPromptsDeleteInputSchema,
   aiPromptsSaveDraftInputSchema,
+  aiPromptsSetArchivedInputSchema,
   aiSettingsGetResponseSchema,
   aiSettingsSaveModelInputSchema,
   aiSettingsSaveQuotaInputSchema,
@@ -168,6 +170,18 @@ Deno.test('AI prompt and usage contracts are strict', () => {
     body: 'Nouveau prompt',
     change_note: null
   }).success, true);
+  assertEquals(aiPromptsSetArchivedInputSchema.safeParse({
+    template_id: templateId,
+    archived: true
+  }).success, true);
+  assertEquals(aiPromptsSetArchivedInputSchema.safeParse({
+    template_id: templateId,
+    archived: true,
+    force: true
+  }).success, false);
+  assertEquals(aiPromptsDeleteInputSchema.safeParse({
+    template_id: templateId
+  }).success, true);
   assertEquals(aiPromptsListResponseSchema.safeParse({
     ok: true,
     prompts: [{
@@ -176,11 +190,23 @@ Deno.test('AI prompt and usage contracts are strict', () => {
       label: 'Diagnostic referentiels CIR',
       description: null,
       allowed_variables: ['generated_at'],
+      archived_at: null,
+      archived_by: null,
       created_at: '2026-06-27T16:00:00Z',
       updated_at: '2026-06-27T16:00:00Z',
       versions: [version],
       published_version: version,
-      draft_version: null
+      draft_version: null,
+      usage: {
+        calls: 4,
+        successful_calls: 3,
+        failed_calls: 1,
+        calls_last_30_days: 2,
+        total_tokens: 1200,
+        cost_amount: 0.04,
+        currency: 'USD',
+        last_used_at: '2026-06-27T16:00:00Z'
+      }
     }]
   }).success, true);
 

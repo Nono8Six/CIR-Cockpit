@@ -79,8 +79,21 @@ export const aiPromptTemplateSchema = z.strictObject({
   allowed_variables: z.array(
     nonEmptyStringSchema("Variable de prompt requise."),
   ),
+  archived_at: nullableTextSchema,
+  archived_by: nullableTextSchema,
   created_at: nonEmptyStringSchema("Date de creation requise."),
   updated_at: nonEmptyStringSchema("Date de mise a jour requise."),
+});
+
+export const aiPromptUsageSchema = z.strictObject({
+  calls: z.number().int().nonnegative(),
+  successful_calls: z.number().int().nonnegative(),
+  failed_calls: z.number().int().nonnegative(),
+  calls_last_30_days: z.number().int().nonnegative(),
+  total_tokens: z.number().int().nonnegative(),
+  cost_amount: z.number().nonnegative(),
+  currency: z.literal("USD"),
+  last_used_at: nullableTextSchema,
 });
 
 export const aiPromptVersionSchema = z.strictObject({
@@ -100,6 +113,7 @@ export const aiPromptWithVersionsSchema = aiPromptTemplateSchema.extend({
   versions: z.array(aiPromptVersionSchema),
   published_version: aiPromptVersionSchema.nullable(),
   draft_version: aiPromptVersionSchema.nullable(),
+  usage: aiPromptUsageSchema,
 });
 
 export const aiQuotaPolicySchema = z.strictObject({
@@ -339,6 +353,26 @@ export const aiPromptsRestoreResponseSchema = z.strictObject({
   version: aiPromptVersionSchema,
 });
 
+export const aiPromptsSetArchivedInputSchema = z.strictObject({
+  template_id: uuidSchema,
+  archived: z.boolean(),
+});
+export const aiPromptsSetArchivedResponseSchema = z.strictObject({
+  ok: z.literal(true),
+  request_id: z.string().trim().min(1).optional(),
+  template_id: uuidSchema,
+  archived_at: nullableTextSchema,
+});
+
+export const aiPromptsDeleteInputSchema = z.strictObject({
+  template_id: uuidSchema,
+});
+export const aiPromptsDeleteResponseSchema = z.strictObject({
+  ok: z.literal(true),
+  request_id: z.string().trim().min(1).optional(),
+  deleted_id: uuidSchema,
+});
+
 export const aiUsageSummaryInputSchema = z.strictObject({
   feature: aiFeatureSchema.optional(),
   days: z.number().int().positive().max(366).default(30),
@@ -525,6 +559,7 @@ export type AiQuotaPolicy = z.infer<typeof aiQuotaPolicySchema>;
 export type AiUsageDailyPoint = z.infer<typeof aiUsageDailyPointSchema>;
 export type AiPromptWithVersions = z.infer<typeof aiPromptWithVersionsSchema>;
 export type AiPromptVersion = z.infer<typeof aiPromptVersionSchema>;
+export type AiPromptUsage = z.infer<typeof aiPromptUsageSchema>;
 export type AiDiagnosisResult = z.infer<typeof aiDiagnosisResultSchema>;
 export type AiDiagnosisUsage = z.infer<typeof aiDiagnosisUsageSchema>;
 export type AiDiagnosisCost = z.infer<typeof aiDiagnosisCostSchema>;
@@ -550,6 +585,10 @@ export type AiPromptsSaveDraftInput = z.infer<
 >;
 export type AiPromptsPublishInput = z.infer<typeof aiPromptsPublishInputSchema>;
 export type AiPromptsRestoreInput = z.infer<typeof aiPromptsRestoreInputSchema>;
+export type AiPromptsSetArchivedInput = z.infer<
+  typeof aiPromptsSetArchivedInputSchema
+>;
+export type AiPromptsDeleteInput = z.infer<typeof aiPromptsDeleteInputSchema>;
 export type AiUsageSummaryInput = z.infer<typeof aiUsageSummaryInputSchema>;
 export type AiUsageListInput = z.infer<typeof aiUsageListInputSchema>;
 export type AiFeatureGrantScope = z.infer<typeof aiFeatureGrantScopeSchema>;

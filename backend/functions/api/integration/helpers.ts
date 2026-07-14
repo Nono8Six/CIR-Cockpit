@@ -24,6 +24,10 @@ type AuthSession = {
   userId: string;
 };
 
+export type IntegrationIdentity = AuthSession & {
+  agencyId: string;
+};
+
 type StatusRow = {
   id: string;
   label: string;
@@ -47,7 +51,8 @@ export type IntegrationContext = {
 
 export const missingEnv = missingIntegrationEnv;
 const ENV_CONFIGURED = missingEnv.length === 0;
-export const CAN_RUN_NETWORK_INTEGRATION = RUN_FLAG && ENV_CONFIGURED && HAS_NET_PERMISSION;
+export const CAN_RUN_NETWORK_INTEGRATION = RUN_FLAG && ENV_CONFIGURED &&
+  HAS_NET_PERMISSION;
 
 const baseUrl = integrationEnv.supabaseUrl;
 const anonKey = integrationEnv.anonKey;
@@ -66,12 +71,16 @@ export const DATA_ROUTES: ProcedurePath[] = [
   'data.entity-contacts',
   'data.interactions',
   'data.config',
-  'data.profile'
+  'data.profile',
 ];
 
 export const QUERY_ROUTES: ProcedurePath[] = ['data.searchEntitiesUnified'];
 export const ADMIN_ROUTES: ProcedurePath[] = ['admin.users', 'admin.agencies'];
-export const ALL_ROUTES: ProcedurePath[] = [...ADMIN_ROUTES, ...DATA_ROUTES, ...QUERY_ROUTES];
+export const ALL_ROUTES: ProcedurePath[] = [
+  ...ADMIN_ROUTES,
+  ...DATA_ROUTES,
+  ...QUERY_ROUTES,
+];
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -89,7 +98,10 @@ export const readBoolean = (value: unknown, key: string): boolean | null => {
   return typeof candidate === 'boolean' ? candidate : null;
 };
 
-const readObject = (value: unknown, key: string): Record<string, unknown> | null => {
+const readObject = (
+  value: unknown,
+  key: string,
+): Record<string, unknown> | null => {
   const candidate = readRecordField(value, key);
   return isRecord(candidate) ? candidate : null;
 };
@@ -130,7 +142,7 @@ const parseTrpcPayload = (payload: unknown): unknown | null => {
     code: readString(errorData, 'appCode') || readString(errorData, 'code'),
     error: readString(error, 'message'),
     details: readString(errorData, 'details'),
-    request_id: readString(errorData, 'requestId')
+    request_id: readString(errorData, 'requestId'),
   };
 };
 
@@ -138,11 +150,11 @@ export const postApi = async (
   path: ProcedurePath,
   token: string,
   body: unknown,
-  extraHeaders?: Record<string, string>
+  extraHeaders?: Record<string, string>,
 ): Promise<{ status: number; payload: unknown | null }> => {
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
-    apikey: anonKey
+    apikey: anonKey,
   };
 
   if (token.trim()) {
@@ -157,13 +169,13 @@ export const postApi = async (
   const response = await fetch(`${apiBaseUrl}/trpc/${path}`, {
     method: 'POST',
     headers,
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
   });
 
   const payload = parseTrpcPayload(await parseJsonOrNull(response));
   return {
     status: response.status,
-    payload
+    payload,
   };
 };
 
@@ -171,7 +183,7 @@ export const getApi = async (
   path: ProcedurePath,
   token: string,
   input: unknown,
-  extraHeaders?: Record<string, string>
+  extraHeaders?: Record<string, string>,
 ): Promise<{ status: number; payload: unknown | null }> => {
   const headers: HeadersInit = { apikey: anonKey };
 
@@ -185,35 +197,48 @@ export const getApi = async (
   }
 
   const encodedInput = encodeURIComponent(JSON.stringify(input));
-  const response = await fetch(`${apiBaseUrl}/trpc/${path}?input=${encodedInput}`, {
-    method: 'GET',
-    headers
-  });
+  const response = await fetch(
+    `${apiBaseUrl}/trpc/${path}?input=${encodedInput}`,
+    {
+      method: 'GET',
+      headers,
+    },
+  );
 
   const payload = parseTrpcPayload(await parseJsonOrNull(response));
   return {
     status: response.status,
-    payload
+    payload,
   };
 };
 
-const fetchRows = async (pathAndQuery: string, token: string): Promise<unknown[]> => {
+const fetchRows = async (
+  pathAndQuery: string,
+  token: string,
+): Promise<unknown[]> => {
   const response = await fetch(`${restBaseUrl}${pathAndQuery}`, {
     method: 'GET',
     headers: {
       apikey: anonKey,
-      Authorization: `Bearer ${token}`
-    }
+      Authorization: `Bearer ${token}`,
+    },
   });
 
   const payload = await parseJsonOrNull(response);
-  assert(response.ok, `REST request failed on ${pathAndQuery} (status ${response.status}).`);
+  assert(
+    response.ok,
+    `REST request failed on ${pathAndQuery} (status ${response.status}).`,
+  );
   assert(Array.isArray(payload), `REST payload invalide sur ${pathAndQuery}.`);
 
   return payload;
 };
 
-const requireString = (value: unknown, key: string, resource: string): string => {
+const requireString = (
+  value: unknown,
+  key: string,
+  resource: string,
+): string => {
   const candidate = readString(value, key).trim();
   assert(candidate.length > 0, `${resource}: ${key} manquant.`);
   return candidate;
@@ -222,29 +247,39 @@ const requireString = (value: unknown, key: string, resource: string): string =>
 const toStatusRow = (value: unknown, index: number): StatusRow => ({
   id: requireString(value, 'id', `agency_statuses[${index}]`),
   label: requireString(value, 'label', `agency_statuses[${index}]`),
-  category: requireString(value, 'category', `agency_statuses[${index}]`)
+  category: requireString(value, 'category', `agency_statuses[${index}]`),
 });
 
 const toLabel = (value: unknown, resource: string, index: number): string =>
   requireString(value, 'label', `${resource}[${index}]`);
 
-const toInteractionTypeConfig = (value: unknown, index: number): IntegrationContext['configInteractionTypes'][number] => ({
+const toInteractionTypeConfig = (
+  value: unknown,
+  index: number,
+): IntegrationContext['configInteractionTypes'][number] => ({
   label: requireString(value, 'label', `agency_interaction_types[${index}]`),
-  requires_product_families: readBoolean(value, 'requires_product_families') ?? false
+  requires_product_families: readBoolean(value, 'requires_product_families') ??
+    false,
 });
 
-const signIn = async (email: string, password: string): Promise<AuthSession> => {
+const signIn = async (
+  email: string,
+  password: string,
+): Promise<AuthSession> => {
   const response = await fetch(`${authBaseUrl}/token?grant_type=password`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      apikey: anonKey
+      apikey: anonKey,
     },
-    body: JSON.stringify({ email, password })
+    body: JSON.stringify({ email, password }),
   });
 
   const payload = await parseJsonOrNull(response);
-  assert(response.ok, `Unable to sign in ${email} (status ${response.status}).`);
+  assert(
+    response.ok,
+    `Unable to sign in ${email} (status ${response.status}).`,
+  );
 
   const accessToken = readString(payload, 'access_token');
   const user = readObject(payload, 'user');
@@ -262,35 +297,41 @@ const buildContext = async (): Promise<IntegrationContext> => {
 
   const memberships = await fetchRows(
     `/agency_members?select=agency_id&user_id=eq.${userSession.userId}&limit=1`,
-    userSession.accessToken
+    userSession.accessToken,
   );
   const agencyId = memberships
     .map((value) => readString(value, 'agency_id').trim())
     .find((value) => value.length > 0) ?? '';
-  assert(agencyId.length > 0, 'No agency membership found for API_INT_USER_EMAIL.');
+  assert(
+    agencyId.length > 0,
+    'No agency membership found for API_INT_USER_EMAIL.',
+  );
 
   const statuses = (await fetchRows(
     `/agency_statuses?select=id,label,category&agency_id=eq.${agencyId}&order=sort_order.asc`,
-    userSession.accessToken
+    userSession.accessToken,
   )).map(toStatusRow);
   assert(statuses.length > 0, `No status found for agency ${agencyId}.`);
 
   const interactionTypeRows = await fetchRows(
     `/agency_interaction_types?select=label,requires_product_families&agency_id=eq.${agencyId}&order=sort_order.asc`,
-    userSession.accessToken
+    userSession.accessToken,
   );
   const interactionType = interactionTypeRows
     .map((row, index) => toLabel(row, 'agency_interaction_types', index))
     .find((value) => value.length > 0) ?? '';
-  assert(interactionType.length > 0, `No interaction type found for agency ${agencyId}.`);
+  assert(
+    interactionType.length > 0,
+    `No interaction type found for agency ${agencyId}.`,
+  );
 
   const serviceRows = await fetchRows(
     `/agency_services?select=label&agency_id=eq.${agencyId}&order=sort_order.asc`,
-    userSession.accessToken
+    userSession.accessToken,
   );
   const familyRows = await fetchRows(
     `/agency_families?select=label&agency_id=eq.${agencyId}&order=sort_order.asc`,
-    userSession.accessToken
+    userSession.accessToken,
   );
 
   return {
@@ -302,12 +343,49 @@ const buildContext = async (): Promise<IntegrationContext> => {
     configStatuses: statuses.map((status) => ({
       id: status.id,
       label: status.label,
-      category: status.category
+      category: status.category,
     })),
-    configServices: serviceRows.map((row, index) => toLabel(row, 'agency_services', index)),
-    configFamilies: familyRows.map((row, index) => toLabel(row, 'agency_families', index)),
-    configInteractionTypes: interactionTypeRows.map(toInteractionTypeConfig)
+    configServices: serviceRows.map((row, index) =>
+      toLabel(row, 'agency_services', index)
+    ),
+    configFamilies: familyRows.map((row, index) =>
+      toLabel(row, 'agency_families', index)
+    ),
+    configInteractionTypes: interactionTypeRows.map(toInteractionTypeConfig),
   };
+};
+
+const identityFor = async (
+  email: string,
+  password: string,
+): Promise<IntegrationIdentity> => {
+  const session = await signIn(email, password);
+  const memberships = await fetchRows(
+    `/agency_members?select=agency_id&user_id=eq.${session.userId}&limit=1`,
+    session.accessToken,
+  );
+  const agencyId = memberships
+    .map((value) => readString(value, 'agency_id').trim())
+    .find((value) => value.length > 0) ?? '';
+  assert(agencyId.length > 0, 'Agence du compte d integration introuvable.');
+  return { ...session, agencyId };
+};
+
+let identitiesPromise:
+  | Promise<{
+    admin: IntegrationIdentity;
+    user: IntegrationIdentity;
+  }>
+  | null = null;
+
+export const getIntegrationIdentities = () => {
+  if (!identitiesPromise) {
+    identitiesPromise = Promise.all([
+      identityFor(adminEmail, adminPassword),
+      identityFor(userEmail, userPassword),
+    ]).then(([admin, user]) => ({ admin, user }));
+  }
+  return identitiesPromise;
 };
 
 let contextPromise: Promise<IntegrationContext> | null = null;

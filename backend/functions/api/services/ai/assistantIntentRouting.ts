@@ -44,6 +44,7 @@ export const ASSISTANT_INTENT_TOOL_POLICY: Readonly<
   health_analysis: ["list_imports", "get_import_details", "get_health_report"],
   clarification: [],
   general_sql: [
+    "search_schema",
     "get_database_catalog",
     "describe_database_tables",
     "execute_readonly_sql",
@@ -59,9 +60,36 @@ const hasCatFabDimension = (value: string): boolean =>
 const hasFamCirDimension = (value: string): boolean =>
   /\bfamilles?\s+cir\b|\bfam_lib\b|\bfam\b/.test(value);
 
-const extractKnownTerms = (value: string): string[] => [
-  ...new Set(value.match(/\b(?:vfd|drives?|variateurs?)\b/g) ?? []),
-];
+const TERM_CLAUSE_PATTERNS = [
+  /\b(?:avec|contenant|contient|contiennent|comprenant|comprend|comprennent|incluant|inclut|incluent)\s+(.+?)(?=\s+(?:dans|sur)\b|[?.!;]|$)/g,
+  /\b(?:ont|a|ayant)\s+(.+?)\s+dans\s+(?:le\s+|la\s+|les\s+)?(?:cat[_ ]?fab|categories?\s+(?:de\s+)?fabricant)\b/g,
+  /\b(?:propose|proposent|vend|vends|vendent|fabrique|fabriquent|distribue|distribuent)\s+(.+?)(?=\s+(?:dans|sur)\b|[?.!;]|$)/g,
+] as const;
+
+const hasSupplierProductRelation = (value: string): boolean =>
+  /\bmarques?\b/.test(value) &&
+  /\b(?:propose|proposent|vend|vends|vendent|fabrique|fabriquent|distribue|distribuent)\b/
+    .test(value);
+
+const extractSearchTerms = (value: string): string[] => {
+  const terms: string[] = [];
+  for (const pattern of TERM_CLAUSE_PATTERNS) {
+    for (const match of value.matchAll(pattern)) {
+      for (const part of match[1].split(/\s+(?:ou|et)\s+|[,/]/)) {
+        const term = part
+          .replace(
+            /^(?:(?:des?|du|de\s+la|d['’]|les?|la|un|une)\s*)+/g,
+            "",
+          )
+          .trim()
+          .slice(0, 80);
+        if (term.length > 0 && !terms.includes(term)) terms.push(term);
+        if (terms.length === 8) return terms;
+      }
+    }
+  }
+  return terms;
+};
 
 const extractBrand = (value: string): string | null => {
   const patterns = [
@@ -78,10 +106,10 @@ const extractBrand = (value: string): string | null => {
   return null;
 };
 
-const clarification = (): AssistantReferenceIntent => ({
+const clarification = (terms: string[] = []): AssistantReferenceIntent => ({
   kind: "clarification",
   dimension: null,
-  filters: {},
+  filters: terms.length > 0 ? { terms, mode: "any" } : {},
   executionMode: "clarification",
   clarification:
     "Souhaitez-vous analyser la famille CIR (FAM/FAM_LIB) ou la catégorie fabricant (CAT_FAB) ?",
@@ -91,9 +119,15 @@ export const parseAssistantReferenceIntent = (
   question: string,
 ): AssistantReferenceIntent => {
   const value = normalize(question);
-  const terms = extractKnownTerms(value);
+  const terms = extractSearchTerms(value);
   const catFab = hasCatFabDimension(value);
   const famCir = hasFamCirDimension(value);
+  const asksFinancialRanking =
+    /\b(?:top\s+\d+|les?\s+\d+\b.*\bavec\s+le\s+plus)\b/.test(value) &&
+    /\bremises?\b/.test(value);
+  const asksSchemaLocation =
+    /\b(?:ou|dans\s+quelle\s+table)\b.*\b(?:stocke|stockee|stockees|trouve|trouvent)\b/
+      .test(value);
 
   if (
     /\b(?:a\s+cite|citation|dans\s+(?:son|un)\s+(?:email|message))\b/.test(
@@ -101,6 +135,16 @@ export const parseAssistantReferenceIntent = (
     ) ||
     /\b(?:ne|pas)\s+(?:cherche|recherche|analyser).*\bcat[_ ]?fab\b/.test(value)
   ) {
+    return {
+      kind: "general_sql",
+      dimension: null,
+      filters: {},
+      executionMode: "general_sql_fallback",
+      clarification: null,
+    };
+  }
+
+  if (asksFinancialRanking || asksSchemaLocation) {
     return {
       kind: "general_sql",
       dimension: null,
@@ -198,6 +242,15 @@ export const parseAssistantReferenceIntent = (
       clarification: null,
     };
   }
+  if (terms.length > 0 && hasSupplierProductRelation(value)) {
+    return {
+      kind: "supplier_category_search",
+      dimension: "cat_fab",
+      filters: { terms, mode: "any" },
+      executionMode: "deterministic_direct",
+      clarification: null,
+    };
+  }
   if (catFab && terms.length > 0) {
     return {
       kind: "supplier_category_search",
@@ -207,7 +260,9 @@ export const parseAssistantReferenceIntent = (
       clarification: null,
     };
   }
-  if (/\bfamilles?\b/.test(value) && !catFab && !famCir) return clarification();
+  if (/\bfamilles?\b/.test(value) && !catFab && !famCir) {
+    return clarification(terms);
+  }
   return {
     kind: "general_sql",
     dimension: null,

@@ -12,6 +12,11 @@ import {
   selectAssistantTools,
 } from "./assistantBroker.ts";
 import { resolvePricingReferenceBrandAliases } from "../pricing/references/referenceDiffs.ts";
+import {
+  ASSISTANT_INTENT_TOOL_POLICY,
+  parseAssistantReferenceIntent,
+} from "./assistantIntentRouting.ts";
+import { validateAssistantSqlAgainstCatalog } from "./assistantSqlTools.ts";
 
 const tools: OpenRouterToolDefinition[] = [{
   type: "function",
@@ -68,6 +73,10 @@ const P0_EXACT_CONVERSATIONS = [
   ["tes sur ? et rock ?"],
   ["Il y a combien de marque différentes ?"],
   ["Tu peux me dire les changements par rapport au dernier fichier tarif ?"],
+] as const;
+const P5B_OFFLINE_CASES = [
+  "Quelles sont les 3 CAT_FAB de FEST avec le plus de remise en achat ?",
+  "Où sont stockées les remises ?",
 ] as const;
 
 Deno.test("evaluation IA offline bloque un fan-out identique", async () => {
@@ -231,6 +240,29 @@ Deno.test("P0 versionne les cinq conversations exactes de regression", () => {
   ]);
 });
 
+Deno.test("P5B versionne les cas offline de contexte universel", () => {
+  assertEquals(P5B_OFFLINE_CASES, [
+    "Quelles sont les 3 CAT_FAB de FEST avec le plus de remise en achat ?",
+    "Où sont stockées les remises ?",
+  ]);
+  for (const question of P5B_OFFLINE_CASES) {
+    const intent = parseAssistantReferenceIntent(question);
+    assertEquals(intent.kind, "general_sql");
+    assertEquals(ASSISTANT_INTENT_TOOL_POLICY[intent.kind][0], "search_schema");
+  }
+});
+
+Deno.test("P5B le top FEST utilise la projection numeric active", () => {
+  validateAssistantSqlAgainstCatalog(
+    "select cat_fab, max(remise_ha_pct) as remise_max from public.ai_v_purchase_terms_active where marque = 'FEST' group by cat_fab order by 2 desc limit 3",
+    [{
+      name: "ai_v_purchase_terms_active",
+      description: "Conditions d achat actives et typees.",
+      column_names: ["cat_fab", "marque", "remise_ha_pct"],
+    }],
+  );
+});
+
 Deno.test("P0 route la recherche CAT_FAB drive sans casse vers un outil exhaustif", () => {
   const candidates = [
     "drive",
@@ -273,6 +305,7 @@ Deno.test("P0 la relance et ROCK conserve la recherche precedente", () => {
   const now = Date.parse("2026-07-13T12:00:00.000Z");
   const context = {
     version: 1 as const,
+    kind: "result" as const,
     surface: "pricing.references" as const,
     domain: "pricing_references" as const,
     intent: "supplier_category_search" as const,

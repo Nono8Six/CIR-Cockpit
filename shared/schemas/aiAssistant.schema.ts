@@ -48,10 +48,18 @@ const assistantBoundedBrandsSchema = z.array(
   ),
 ).max(50, { error: "Maximum 50 marques de contexte." });
 
-export const aiAssistantConversationContextSchema = z.strictObject({
+const aiAssistantConversationContextBaseShape = {
   version: z.literal(1),
   surface: z.literal("pricing.references"),
   domain: z.literal("pricing_references"),
+  import_id: uuidSchema.nullable(),
+  created_at: z.iso.datetime({ error: "Date de contexte invalide." }),
+  expires_at: z.iso.datetime({ error: "Expiration de contexte invalide." }),
+};
+
+const aiAssistantResultConversationContextSchema = z.strictObject({
+  ...aiAssistantConversationContextBaseShape,
+  kind: z.literal("result"),
   intent: z.enum([
     "segment_count",
     "supplier_category_search",
@@ -60,7 +68,6 @@ export const aiAssistantConversationContextSchema = z.strictObject({
   ]),
   dimension: z.enum(["cat_fab", "brand"]),
   snapshot_id: uuidSchema,
-  import_id: uuidSchema.nullable(),
   filters: z.strictObject({
     requested_terms: assistantBoundedTermsSchema,
     canonical_terms: assistantBoundedTermsSchema,
@@ -73,9 +80,26 @@ export const aiAssistantConversationContextSchema = z.strictObject({
     distinct_brand_count: z.number().int().nonnegative(),
     segment_rows: z.number().int().nonnegative(),
   }),
-  created_at: z.iso.datetime({ error: "Date de contexte invalide." }),
-  expires_at: z.iso.datetime({ error: "Expiration de contexte invalide." }),
 });
+
+const aiAssistantPendingClarificationContextSchema = z.strictObject({
+  ...aiAssistantConversationContextBaseShape,
+  kind: z.literal("pending_clarification"),
+  intent: z.literal("supplier_category_search"),
+  requested_terms: assistantBoundedTermsSchema.min(1, {
+    error: "Une clarification requiert au moins un terme.",
+  }),
+  options: z.tuple([z.literal("cat_fab"), z.literal("fam_cir")]),
+  target_snapshot_id: uuidSchema.nullable(),
+});
+
+export const aiAssistantConversationContextSchema = z.discriminatedUnion(
+  "kind",
+  [
+    aiAssistantResultConversationContextSchema,
+    aiAssistantPendingClarificationContextSchema,
+  ],
+);
 
 export const aiAssistantAskInputSchema = z.strictObject({
   client_request_id: uuidSchema,
