@@ -14,6 +14,8 @@ interface AssistantSourcesProps {
 
 const TOOL_LABELS: Record<string, string> = {
   aggregate_segments: "Comptage des catégories fabricant",
+  check_brand_matches: "Vérification de la marque",
+  count_supplier_brands: "Comptage des marques",
   aggregate_diffs: "Synthèse des évolutions",
   describe_database_tables: "Structure des données",
   execute_readonly_sql: "Lecture des données",
@@ -25,6 +27,7 @@ const TOOL_LABELS: Record<string, string> = {
   list_anomalies: "Liste des anomalies",
   list_diffs: "Détail des changements",
   list_imports: "Historique des imports",
+  search_supplier_categories: "Recherche dans les catégories fabricant",
 };
 
 const getToolLabel = (name: string): string =>
@@ -121,7 +124,7 @@ export const AssistantSources = ({ message }: AssistantSourcesProps) => {
               <span className="font-mono tabular-nums">
                 {execution.row_count === null
                   ? "synthèse"
-                  : `${execution.row_count} lignes`} · {execution.duration_ms}
+                  : `${execution.row_count} ${execution.row_count > 1 ? "lignes" : "ligne"}`} · {execution.duration_ms}
                 {" "}
                 ms
               </span>

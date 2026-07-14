@@ -68,7 +68,7 @@ Statuts autorisés : `À FAIRE`, `EN COURS`, `BLOQUÉE`, `VALIDÉE`.
 | 2 | Routage d'intentions | Routage déterministe limité au comptage CAT_FAB | VALIDÉE | Chaque intention critique ne reçoit que ses outils autorisés | Matrice P2 : 20 cas, allowlists exactes, fallback SQL borné et 4 chemins sans provider |
 | 3 | Contexte conversationnel | Historique limité à `{role, content}` | VALIDÉE | « et ROCK ? » hérite correctement du contexte précédent | Contrat strict borné, TTL/snapshot contrôlés, 5 tests P3 backend + transport frontend vert |
 | 4 | Fallback SQL durci | Lecture seule/RLS bornées, validation sémantique incomplète | VALIDÉE | Colonnes inventées, changements de scope et boucles équivalentes sont bloqués | Validation structurelle + catalogue réel avant SQL métier ; 17 tests P4 verts ; P5 reste isolée |
-| 5 | Preuves, erreurs et diagnostic UI | Sources et SQL partiellement visibles localement | À FAIRE | Aucun fait sans provenance ; aucun détail interne ou sensible exposé | — |
+| 5 | Preuves, erreurs et diagnostic UI | Sources et SQL partiellement visibles localement | VALIDÉE | Aucun fait sans provenance ; aucun détail interne ou sensible exposé | Contrat public Zod strict, statuts et dérivations validés ; `api` v122 ACTIVE |
 | 6 | Évaluations et choix du modèle | Runner live présent mais campagne comparative non terminée | À FAIRE | Tous les seuils bloquants passent sur le modèle retenu | — |
 | 7 | Performance, Realtime et UX | Correctifs Realtime/React locaux, non livrés | À FAIRE | p50/p95 mesurés, absence de boucle Realtime, parcours UI vérifié | — |
 | 8 | QA finale, documentation et livraison | `pnpm run qa` bloqué par un chantier dashboard concurrent | À FAIRE | Gate complète verte et probes conditionnelles vertes | — |
@@ -475,15 +475,15 @@ internes des outils ou les détails sensibles d'une erreur backend.
 
 ### Travaux
 
-- [ ] Attacher chaque fait à un outil, un snapshot, un champ de résultat et une valeur.
-- [ ] Représenter explicitement les comptes dérivés d'une liste.
-- [ ] Distinguer résultat vérifié, analyse partielle et échec.
-- [ ] Afficher intention, dimension, filtres, snapshot, outil, durée et nombre de lignes.
-- [ ] Afficher le SQL réellement exécuté uniquement pour le fallback SQL généraliste.
-- [ ] Afficher les filtres serveur ajoutés et le numéro de tentative sans exposer de secret.
-- [ ] Masquer prompts système, descriptions internes et messages PostgreSQL bruts.
-- [ ] Ajouter ou compléter les codes d'erreur partagés nécessaires.
-- [ ] Vérifier `httpError`, `createAppError`, `handleUiError`, `reportError` et `notifyError` sur
+- [x] Attacher chaque fait à un outil, un snapshot, un champ de résultat et une valeur.
+- [x] Représenter explicitement les comptes dérivés d'une liste.
+- [x] Distinguer résultat vérifié, analyse partielle et échec.
+- [x] Afficher intention, dimension, filtres, snapshot, outil, durée et nombre de lignes.
+- [x] Afficher le SQL réellement exécuté uniquement pour le fallback SQL généraliste.
+- [x] Afficher les filtres serveur ajoutés et le numéro de tentative sans exposer de secret.
+- [x] Masquer prompts système, descriptions internes et messages PostgreSQL bruts.
+- [x] Ajouter ou compléter les codes d'erreur partagés nécessaires.
+- [x] Vérifier `httpError`, `createAppError`, `handleUiError`, `reportError` et `notifyError` sur
   tous les chemins impactés.
 
 ### Checkpoint vérifiable P5
@@ -504,7 +504,37 @@ erreurs.
 
 | Date | Statut | Exécuté par | Preuve/commande | Résultat | Écart ou blocage |
 | --- | --- | --- | --- | --- | --- |
-| — | À FAIRE | — | — | — | — |
+| 2026-07-14 | VALIDÉE | Codex | Régression P5, suites assistant, `qa:back`, `qa:front`, `qa`, navigateur local, Supabase MCP et probes HTTP/CORS | 51/51 assistant ; backend 323 verts/11 ignorés ; frontend 687/687 ; `api` v122 ACTIVE ; auth 401 et CORS 200 | `qa` reste arrêté uniquement par `useDashboardStatusHelpers.ts` à 13,33 % de branches pour 30 %, écart préexistant hors P5 |
+
+### Checkpoint P5 — 2026-07-14
+
+- Contrat : `evidence` public strict et borné sépare les faits, exécutions assainies et traces
+  internes. Chaque fait expose outil, snapshot, champ, valeur source, valeur affichée et dérivation.
+- Vérification : `verified` exige au moins un fait prouvé ; `partial` conserve les faits vérifiés
+  avec les échecs complémentaires ; `failed` remplace toute formulation factuelle fournisseur par
+  un message de récupération sûr.
+- Dérivations : un compte `count` est refusé si la valeur affichée diffère de la longueur de la
+  liste source ; le cas des huit marques est couvert explicitement.
+- Diagnostic public : intention, dimension, filtres demandés/canoniques/serveur, snapshot, outil,
+  durée, lignes et tentative SQL sont transportés sans arguments bruts. Le SQL n'est public que
+  pour `execute_readonly_sql` après exécution réussie et validation P4.
+- Protection : prompts système, descriptions d'outils, secrets, stacks, erreurs PostgreSQL brutes
+  et SQL refusé ne figurent pas dans le contrat public. Les codes existants d'accès, quota,
+  provider vide/indisponible et boucle SQL restent utilisés ; aucune migration n'est nécessaire.
+- Frontend : panneau accessible et repliable avec statuts textuels, valeurs tabulaires, provenance,
+  filtres et diagnostic ; retry masqué pour les erreurs non retryables. Contrôle local authentifié :
+  140 marques, snapshot `4e216bc4-7d82-4eb7-aa20-2cc8316667cc`, champ
+  `distinct_brand_count`, outil `count_supplier_brands`.
+- QA : suites assistant P1–P5 51/51 ; `qa:back` 323 verts et 11 intégrations conditionnelles
+  ignorées ; `qa:front` 156 fichiers et 687/687 tests ; conformité erreurs verte. `pnpm run qa`
+  franchit les 687 tests puis reste bloqué uniquement par la couverture dashboard préexistante
+  (13,33 % de branches pour un seuil de 30 %).
+- Livraison : commit fonctionnel `3e0c899` poussé sur `main`. Edge Function `api` v122 `ACTIVE`,
+  `verify_jwt=false`, entrypoint `supabase/functions/api/index.ts`, import map `deno.json`.
+  `ai.assistant.status` et `ai.assistant.ask` répondent 401 sans session, jamais 404 ; leurs
+  preflights depuis `http://localhost:3000` répondent 200. Aucune migration P5.
+- Réserves : campagnes modèles P6, performance/Realtime P7, clôture globale P8 et couverture
+  dashboard restent hors P5.
 
 ---
 
