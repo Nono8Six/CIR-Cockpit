@@ -96,6 +96,102 @@ export const aiAssistantCitationSchema = z.strictObject({
   ref: jsonObjectSchema,
 });
 
+const aiAssistantPublicValueSchema = z.union([
+  z.string().max(4000),
+  z.number().finite(),
+  z.boolean(),
+  z.null(),
+  z.array(z.union([z.string().max(160), z.number().finite(), z.boolean()])).max(
+    50,
+  ),
+]);
+
+export const aiAssistantEvidenceFactSchema = z.strictObject({
+  label: z.string().trim().min(1).max(160),
+  tool: z.string().trim().min(1).max(80),
+  snapshot_id: uuidSchema,
+  result_field: z.string().trim().min(1).max(120),
+  source_value: aiAssistantPublicValueSchema,
+  displayed_value: aiAssistantPublicValueSchema,
+  derivation: z.enum(["direct", "count"]),
+}).superRefine((fact, context) => {
+  if (fact.derivation === "count") {
+    if (
+      !Array.isArray(fact.source_value) ||
+      fact.displayed_value !== fact.source_value.length
+    ) {
+      context.addIssue({
+        code: "custom",
+        message:
+          "Le compte derive doit correspondre a la taille de la liste source.",
+        path: ["displayed_value"],
+      });
+    }
+  } else if (
+    JSON.stringify(fact.source_value) !== JSON.stringify(fact.displayed_value)
+  ) {
+    context.addIssue({
+      code: "custom",
+      message: "Une valeur directe doit correspondre a sa valeur source.",
+      path: ["displayed_value"],
+    });
+  }
+});
+
+export const aiAssistantPublicExecutionSchema = z.strictObject({
+  tool: z.string().trim().min(1).max(80),
+  ok: z.boolean(),
+  duration_ms: z.number().int().nonnegative(),
+  row_count: z.number().int().nonnegative().nullable(),
+  snapshot_id: uuidSchema.nullable(),
+  requested_filters: z.record(z.string(), aiAssistantPublicValueSchema),
+  canonical_filters: z.record(z.string(), aiAssistantPublicValueSchema),
+  server_filters: z.record(z.string(), aiAssistantPublicValueSchema),
+  sql_attempt: z.number().int().positive().max(2).nullable(),
+  executed_sql: z.string().trim().min(1).max(12000).nullable(),
+  error_code: z.string().trim().min(1).max(80).nullable(),
+}).superRefine((execution, context) => {
+  if (
+    execution.tool !== "execute_readonly_sql" && execution.executed_sql !== null
+  ) {
+    context.addIssue({
+      code: "custom",
+      message: "Le SQL public est reserve au fallback SQL.",
+      path: ["executed_sql"],
+    });
+  }
+  if (!execution.ok && execution.executed_sql !== null) {
+    context.addIssue({
+      code: "custom",
+      message: "Une requete refusee ne peut pas etre affichee comme executee.",
+      path: ["executed_sql"],
+    });
+  }
+});
+
+export const aiAssistantEvidenceSchema = z.strictObject({
+  status: z.enum(["verified", "partial", "failed"]),
+  intent: z.string().trim().min(1).max(120),
+  dimension: z.string().trim().min(1).max(120).nullable(),
+  facts: z.array(aiAssistantEvidenceFactSchema).max(50),
+  executions: z.array(aiAssistantPublicExecutionSchema).max(12),
+}).superRefine((evidence, context) => {
+  if (evidence.status === "verified" && evidence.facts.length === 0) {
+    context.addIssue({
+      code: "custom",
+      message: "Un resultat verifie requiert au moins un fait prouve.",
+      path: ["facts"],
+    });
+  }
+  if (evidence.status === "failed" && evidence.facts.length > 0) {
+    context.addIssue({
+      code: "custom",
+      message: "Un echec complet ne peut pas contenir de fait verifie.",
+      path: ["facts"],
+    });
+  }
+});
+
 export const aiAssistantToolCallTraceSchema = z.strictObject({
   name: nonEmptyStringSchema("Nom outil requis."),
   arguments: jsonObjectSchema,
@@ -109,6 +205,13 @@ export const aiAssistantAskResponseSchema = apiSuccessSchema.extend({
   answer: nullableTextSchema,
   citations: z.array(aiAssistantCitationSchema),
   tool_trace: z.array(aiAssistantToolCallTraceSchema),
+  evidence: aiAssistantEvidenceSchema.default({
+    status: "failed",
+    intent: "unknown",
+    dimension: null,
+    facts: [],
+    executions: [],
+  }),
   usage: aiDiagnosisUsageSchema.nullable(),
   cost: aiDiagnosisCostSchema.nullable(),
   fallback_reason: nullableTextSchema,
@@ -136,6 +239,7 @@ export type AiAssistantCitation = z.infer<typeof aiAssistantCitationSchema>;
 export type AiAssistantToolCallTrace = z.infer<
   typeof aiAssistantToolCallTraceSchema
 >;
+export type AiAssistantEvidence = z.infer<typeof aiAssistantEvidenceSchema>;
 export type AiAssistantAskResponse = z.infer<
   typeof aiAssistantAskResponseSchema
 >;

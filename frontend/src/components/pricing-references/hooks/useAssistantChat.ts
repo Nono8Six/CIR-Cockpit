@@ -1,16 +1,17 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from "react";
 
 import type {
   AiAssistantCitation,
   AiAssistantConversationContext,
+  AiAssistantEvidence,
   AiAssistantMessage,
   AiAssistantPageContext,
-  AiAssistantToolCallTrace
-} from '../../../../../shared/schemas/aiAssistant.schema';
+  AiAssistantToolCallTrace,
+} from "../../../../../shared/schemas/aiAssistant.schema";
 
-import { askAiAssistant } from '@/services/ai';
-import { createAppError, type AppError } from '@/services/errors/AppError';
-import { handleUiError } from '@/services/errors/handleUiError';
+import { askAiAssistant } from "@/services/ai";
+import { type AppError, createAppError } from "@/services/errors/AppError";
+import { handleUiError } from "@/services/errors/handleUiError";
 
 const MAX_HISTORY_MESSAGES = 12;
 
@@ -18,6 +19,7 @@ export type AssistantChatMessage = AiAssistantMessage & {
   id: string;
   citations: AiAssistantCitation[];
   toolTrace: AiAssistantToolCallTrace[];
+  evidence: AiAssistantEvidence;
 };
 
 type PendingAssistantRequest = {
@@ -29,10 +31,17 @@ type PendingAssistantRequest = {
 
 const createUserMessage = (question: string): AssistantChatMessage => ({
   id: crypto.randomUUID(),
-  role: 'user',
+  role: "user",
   content: question,
   citations: [],
-  toolTrace: []
+  toolTrace: [],
+  evidence: {
+    status: "failed",
+    intent: "user_message",
+    dimension: null,
+    facts: [],
+    executions: [],
+  },
 });
 
 export const useAssistantChat = (pageContext: AiAssistantPageContext) => {
@@ -40,16 +49,20 @@ export const useAssistantChat = (pageContext: AiAssistantPageContext) => {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<AppError | null>(null);
   const failedRequestRef = useRef<PendingAssistantRequest | null>(null);
-  const conversationContextRef = useRef<AiAssistantConversationContext | null>(null);
+  const conversationContextRef = useRef<AiAssistantConversationContext | null>(
+    null,
+  );
 
   const execute = useCallback(async (
     request: PendingAssistantRequest,
-    appendUserMessage: boolean
+    appendUserMessage: boolean,
   ) => {
     setPending(true);
     setError(null);
     if (appendUserMessage) {
-      setMessages((current) => [...current, createUserMessage(request.question)]);
+      setMessages((
+        current,
+      ) => [...current, createUserMessage(request.question)]);
     }
 
     try {
@@ -58,15 +71,16 @@ export const useAssistantChat = (pageContext: AiAssistantPageContext) => {
         question: request.question,
         history: request.history,
         page_context: pageContext,
-        conversation_context: request.conversationContext
+        conversation_context: request.conversationContext,
       });
 
       if (!response.ai_available || !response.answer) {
         throw createAppError({
-          code: 'AI_PROVIDER_UNAVAILABLE',
-          message: response.fallback_reason ?? "L'assistant IA est indisponible.",
-          source: 'edge',
-          retryable: true
+          code: "AI_PROVIDER_UNAVAILABLE",
+          message: response.fallback_reason ??
+            "L'assistant IA est indisponible.",
+          source: "edge",
+          retryable: true,
         });
       }
 
@@ -74,17 +88,18 @@ export const useAssistantChat = (pageContext: AiAssistantPageContext) => {
       conversationContextRef.current = response.conversation_context;
       setMessages((current) => [...current, {
         id: crypto.randomUUID(),
-        role: 'assistant',
-        content: response.answer ?? '',
+        role: "assistant",
+        content: response.answer ?? "",
         citations: response.citations,
-        toolTrace: response.tool_trace
+        toolTrace: response.tool_trace,
+        evidence: response.evidence,
       }]);
     } catch (caughtError) {
       failedRequestRef.current = request;
       const appError = handleUiError(
         caughtError,
         "Impossible d'obtenir une reponse de l'assistant IA.",
-        { feature: 'assistant.referentiels' }
+        { feature: "assistant.referentiels" },
       );
       setError(appError);
     } finally {
@@ -103,18 +118,18 @@ export const useAssistantChat = (pageContext: AiAssistantPageContext) => {
       clientRequestId: crypto.randomUUID(),
       conversationContext: conversationContextRef.current,
       history,
-      question
+      question,
     }, true);
   }, [execute, messages, pending]);
 
   const retry = useCallback(async () => {
-    if (pending || !failedRequestRef.current) return;
+    if (pending || error?.retryable === false || !failedRequestRef.current) return;
     const failedRequest = failedRequestRef.current;
     await execute({
       ...failedRequest,
-      clientRequestId: error?.domain === 'network'
+      clientRequestId: error?.domain === "network"
         ? failedRequest.clientRequestId
-        : crypto.randomUUID()
+        : crypto.randomUUID(),
     }, false);
   }, [error?.domain, execute, pending]);
 
@@ -130,9 +145,9 @@ export const useAssistantChat = (pageContext: AiAssistantPageContext) => {
     messages,
     pending,
     error,
-    canRetry: failedRequestRef.current !== null,
+    canRetry: failedRequestRef.current !== null && error?.retryable !== false,
     send,
     retry,
-    reset
+    reset,
   };
 };

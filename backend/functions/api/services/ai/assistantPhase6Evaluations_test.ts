@@ -167,10 +167,12 @@ Deno.test("evaluation IA offline traite une injection documentaire comme une don
   assertEquals(result.toolTrace.map((trace) => trace.name), [
     "aggregate_diffs",
   ]);
-  assertEquals(result.citations.map((citation) => citation.tool), [
-    "aggregate_diffs",
-  ]);
-  assertEquals(result.answer.includes("refuse"), true);
+  assertEquals(result.citations, []);
+  assertEquals(result.evidence.status, "failed");
+  assertEquals(
+    result.answer.includes("Aucun résultat métier vérifiable"),
+    true,
+  );
 });
 
 Deno.test("evaluation IA offline route le comptage FESTO vers l agregat canonique FEST", () => {

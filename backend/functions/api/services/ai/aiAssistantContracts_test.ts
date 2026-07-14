@@ -1,6 +1,11 @@
 import { assertEquals, assertRejects } from "std/assert";
 
-import { aiAssistantAskResponseSchema } from "../../../../../shared/schemas/aiAssistant.schema.ts";
+import {
+  aiAssistantAskResponseSchema,
+  aiAssistantEvidenceFactSchema,
+  aiAssistantEvidenceSchema,
+  aiAssistantPublicExecutionSchema,
+} from "../../../../../shared/schemas/aiAssistant.schema.ts";
 import {
   callProviderWithTools,
   type ModelRow,
@@ -277,10 +282,14 @@ Deno.test("assistant contract runs one mocked provider tool round then returns a
       }),
   );
 
-  assertEquals(result.answer, "Un import est disponible.");
+  assertEquals(
+    result.answer.includes("Aucun résultat métier vérifiable"),
+    true,
+  );
   assertEquals(result.toolTrace.length, 2);
   assertEquals(result.toolTrace.map((trace) => trace.arguments.page), [1, 2]);
-  assertEquals(result.citations.length, 2);
+  assertEquals(result.citations.length, 0);
+  assertEquals(result.evidence.status, "failed");
   assertEquals(result.usage.inputTokens, 75);
   assertEquals(requestBodies.length, 2);
   assertEquals(Array.isArray(requestBodies[0].tools), true);
@@ -315,4 +324,156 @@ Deno.test("assistant contract runs one mocked provider tool round then returns a
     truncated: result.truncated,
   });
   assertEquals(response.success, true);
+});
+
+Deno.test("P5 valide le compte derive d une liste de huit marques", () => {
+  const fact = {
+    label: "Nombre de marques correspondantes",
+    tool: "search_supplier_categories",
+    snapshot_id: "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+    result_field: "matching_brands",
+    source_value: [
+      "BONF",
+      "FEST",
+      "LERO",
+      "OPTI",
+      "PARK",
+      "REXR",
+      "ROCK",
+      "SIEM",
+    ],
+    displayed_value: 8,
+    derivation: "count" as const,
+  };
+  assertEquals(aiAssistantEvidenceFactSchema.safeParse(fact).success, true);
+  assertEquals(
+    aiAssistantEvidenceFactSchema.safeParse({ ...fact, displayed_value: 7 })
+      .success,
+    false,
+  );
+  assertEquals(
+    aiAssistantEvidenceFactSchema.safeParse({ ...fact, snapshot_id: null })
+      .success,
+    false,
+  );
+});
+
+Deno.test("P5 distingue verified partial et failed", () => {
+  const execution = {
+    tool: "count_supplier_brands",
+    ok: true,
+    duration_ms: 12,
+    row_count: 1,
+    snapshot_id: "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+    requested_filters: {},
+    canonical_filters: {},
+    server_filters: {},
+    sql_attempt: null,
+    executed_sql: null,
+    error_code: null,
+  };
+  const fact = {
+    label: "Marques",
+    tool: "count_supplier_brands",
+    snapshot_id: execution.snapshot_id,
+    result_field: "distinct_brand_count",
+    source_value: 140,
+    displayed_value: 140,
+    derivation: "direct" as const,
+  };
+  assertEquals(
+    aiAssistantEvidenceSchema.safeParse({
+      status: "verified",
+      intent: "brand_count",
+      dimension: "brand",
+      facts: [fact],
+      executions: [execution],
+    }).success,
+    true,
+  );
+  assertEquals(
+    aiAssistantEvidenceSchema.safeParse({
+      status: "partial",
+      intent: "brand_count",
+      dimension: "brand",
+      facts: [fact],
+      executions: [execution, {
+        ...execution,
+        ok: false,
+        error_code: "AI_TOOL_EXECUTION_FAILED",
+      }],
+    }).success,
+    true,
+  );
+  assertEquals(
+    aiAssistantEvidenceSchema.safeParse({
+      status: "failed",
+      intent: "brand_count",
+      dimension: "brand",
+      facts: [],
+      executions: [{
+        ...execution,
+        ok: false,
+        error_code: "AI_TOOL_EXECUTION_FAILED",
+      }],
+    }).success,
+    true,
+  );
+  assertEquals(
+    aiAssistantEvidenceSchema.safeParse({
+      status: "verified",
+      intent: "brand_count",
+      dimension: "brand",
+      facts: [],
+      executions: [execution],
+    }).success,
+    false,
+  );
+});
+
+Deno.test("P5 ne publie que le SQL fallback execute", () => {
+  const base = {
+    tool: "execute_readonly_sql",
+    ok: true,
+    duration_ms: 20,
+    row_count: 1,
+    snapshot_id: "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+    requested_filters: {},
+    canonical_filters: {},
+    server_filters: { snapshot_id: "4e216bc4-7d82-4eb7-aa20-2cc8316667cc" },
+    sql_attempt: 1,
+    executed_sql:
+      "select count(*) from pricing_supplier_segments where snapshot_id = '4e216bc4-7d82-4eb7-aa20-2cc8316667cc'",
+    error_code: null,
+  };
+  assertEquals(aiAssistantPublicExecutionSchema.safeParse(base).success, true);
+  assertEquals(
+    aiAssistantPublicExecutionSchema.safeParse({
+      ...base,
+      ok: false,
+      error_code: "AI_SQL_REJECTED",
+    }).success,
+    false,
+  );
+  assertEquals(
+    aiAssistantPublicExecutionSchema.safeParse({
+      ...base,
+      tool: "aggregate_segments",
+    }).success,
+    false,
+  );
+  assertEquals(
+    aiAssistantPublicExecutionSchema.safeParse({
+      ...base,
+      system_prompt: "secret",
+    }).success,
+    false,
+  );
+  assertEquals(
+    aiAssistantPublicExecutionSchema.safeParse({
+      ...base,
+      executed_sql: "x".repeat(12001),
+    }).success,
+    false,
+  );
 });

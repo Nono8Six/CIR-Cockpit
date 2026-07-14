@@ -7,6 +7,7 @@ import {
   aiAssistantAskResponseSchema,
   type AiAssistantCitation,
   type AiAssistantConversationContext,
+  type AiAssistantEvidence,
   type AiAssistantStatusResponse,
   aiAssistantStatusResponseSchema,
   type AiAssistantToolCallTrace,
@@ -42,8 +43,8 @@ import {
 } from "./assistantIntentRouting.ts";
 import {
   analyzeAssistantSql,
-  canonicalizeAssistantSql,
   type AssistantSqlSemantics,
+  canonicalizeAssistantSql,
 } from "./assistantSqlTools.ts";
 
 const FEATURE = "assistant.referentiels" as const;
@@ -82,6 +83,7 @@ type ToolExecutor = (
 type LoopResult = {
   answer: string;
   citations: AiAssistantCitation[];
+  evidence: AiAssistantEvidence;
   toolTrace: AiAssistantToolCallTrace[];
   usage: ProviderUsage;
   truncated: boolean;
@@ -338,8 +340,10 @@ const addUsage = (total: ProviderUsage, next: OpenRouterToolResponse): void => {
 const citationFor = (
   name: string,
   output: Record<string, unknown>,
-): AiAssistantCitation => {
+): AiAssistantCitation | null => {
   const data = isRecord(output.data) ? output.data : output;
+  const snapshotId = data.snapshot_id ?? data.target_snapshot_id;
+  if (typeof snapshotId !== "string") return null;
   const ref: Record<string, string | number | boolean | null> = {};
   for (
     const key of [
@@ -383,6 +387,186 @@ const citationFor = (
   };
 };
 
+const publicFilterValue = (
+  value: unknown,
+):
+  | string
+  | number
+  | boolean
+  | null
+  | Array<string | number | boolean>
+  | undefined => {
+  if (
+    typeof value === "string" || typeof value === "number" ||
+    typeof value === "boolean" || value === null
+  ) return value;
+  if (
+    Array.isArray(value) && value.length <= 50 &&
+    value.every((item) => ["string", "number", "boolean"].includes(typeof item))
+  ) {
+    return value as Array<string | number | boolean>;
+  }
+  return undefined;
+};
+
+const safeFilters = (args: Record<string, unknown>, keys: string[]) =>
+  Object.fromEntries(
+    keys.flatMap((key) => {
+      const value = publicFilterValue(args[key]);
+      return value === undefined ? [] : [[key, value]];
+    }),
+  );
+
+const publicTraceArguments = (
+  name: string,
+  args: Record<string, unknown>,
+  output: Record<string, unknown>,
+  ok: boolean,
+): Record<string, unknown> => {
+  const data = isRecord(output.data) ? output.data : output;
+  const safe = {
+    ...safeFilters(args, [
+      "page",
+      "metric",
+      "terms",
+      "marques",
+      "mode",
+      "direction",
+      "severities",
+      "types",
+      "search",
+    ]),
+    ...safeFilters(data, [
+      "snapshot_id",
+      "target_snapshot_id",
+      "base_snapshot_id",
+      "import_id",
+      "run_id",
+    ]),
+  };
+  if (name === "execute_readonly_sql" && ok && typeof args.sql === "string") {
+    return { ...safe, sql: canonicalizeAssistantSql(args.sql) };
+  }
+  return safe;
+};
+
+const evidenceFor = (
+  name: string,
+  args: Record<string, unknown>,
+  output: Record<string, unknown>,
+  trace: AiAssistantToolCallTrace,
+  sqlAttempt: number | null = null,
+): AiAssistantEvidence => {
+  const data = isRecord(output.data) ? output.data : output;
+  const snapshotId = typeof data.snapshot_id === "string"
+    ? data.snapshot_id
+    : typeof data.target_snapshot_id === "string"
+    ? data.target_snapshot_id
+    : null;
+  const facts: AiAssistantEvidence["facts"] = [];
+  const addDirect = (field: string, label: string) => {
+    const value = publicFilterValue(data[field]);
+    if (snapshotId && value !== undefined) {
+      facts.push({
+        label,
+        tool: name,
+        snapshot_id: snapshotId,
+        result_field: field,
+        source_value: value,
+        displayed_value: value,
+        derivation: "direct",
+      });
+    }
+  };
+  addDirect("distinct_brand_count", "Nombre de marques distinctes");
+  addDirect("distinct_cat_fab", "Nombre de catégories fabricant distinctes");
+  addDirect("segment_rows", "Nombre de segments");
+  addDirect("matches", "Correspondance de la marque");
+  if (snapshotId && Array.isArray(data.matching_brands)) {
+    const brands = data.matching_brands.filter((value): value is string =>
+      typeof value === "string"
+    ).slice(0, 50);
+    facts.push({
+      label: "Marques correspondantes",
+      tool: name,
+      snapshot_id: snapshotId,
+      result_field: "matching_brands",
+      source_value: brands,
+      displayed_value: brands,
+      derivation: "direct",
+    });
+    facts.push({
+      label: "Nombre de marques correspondantes",
+      tool: name,
+      snapshot_id: snapshotId,
+      result_field: "matching_brands",
+      source_value: brands,
+      displayed_value: brands.length,
+      derivation: "count",
+    });
+  }
+  const requested = safeFilters(args, [
+    "terms",
+    "marques",
+    "mode",
+    "direction",
+    "severities",
+    "types",
+    "search",
+  ]);
+  const canonical = safeFilters(data, ["canonical_terms", "marques"]);
+  const server = safeFilters(data, [
+    "snapshot_id",
+    "target_snapshot_id",
+    "base_snapshot_id",
+    "import_id",
+    "run_id",
+  ]);
+  return {
+    status: facts.length > 0 ? "verified" : "failed",
+    intent: name,
+    dimension:
+      name === "aggregate_segments" || name === "search_supplier_categories" ||
+        name === "check_brand_matches"
+        ? "cat_fab"
+        : name === "count_supplier_brands"
+        ? "brand"
+        : null,
+    facts,
+    executions: [{
+      tool: name,
+      ok: trace.ok,
+      duration_ms: trace.duration_ms,
+      row_count: trace.row_count,
+      snapshot_id: snapshotId,
+      requested_filters: requested,
+      canonical_filters: canonical,
+      server_filters: server,
+      sql_attempt: sqlAttempt,
+      executed_sql: name === "execute_readonly_sql" && trace.ok &&
+          typeof args.sql === "string"
+        ? canonicalizeAssistantSql(args.sql)
+        : null,
+      error_code: trace.ok ? null : "AI_TOOL_EXECUTION_FAILED",
+    }],
+  };
+};
+
+const mergeEvidence = (items: AiAssistantEvidence[]): AiAssistantEvidence => {
+  const facts = items.flatMap((item) => item.facts);
+  const executions = items.flatMap((item) => item.executions);
+  const hasFailure = executions.some((execution) => !execution.ok) ||
+    items.some((item) => item.status === "failed");
+  return {
+    status: facts.length === 0 ? "failed" : hasFailure ? "partial" : "verified",
+    intent: items.at(-1)?.intent ?? "unknown",
+    dimension: items.findLast((item) => item.dimension !== null)?.dimension ??
+      null,
+    facts,
+    executions,
+  };
+};
+
 const parseToolArguments = (value: string): Record<string, unknown> => {
   let parsed: unknown;
   try {
@@ -414,12 +598,20 @@ const assertInputTokenBudget = (messages: OpenRouterMessage[]): void => {
 };
 
 const canonicalizeToolArgument = (value: unknown, key?: string): unknown => {
-  if (key === "sql" && typeof value === "string") return canonicalizeAssistantSql(value);
-  if (Array.isArray(value)) return value.map((item) => canonicalizeToolArgument(item));
+  if (key === "sql" && typeof value === "string") {
+    return canonicalizeAssistantSql(value);
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => canonicalizeToolArgument(item));
+  }
   if (value && typeof value === "object") {
-    return Object.fromEntries(Object.entries(value as Record<string, unknown>)
-      .sort(([left], [right]) => left.localeCompare(right))
-      .map(([childKey, childValue]) => [childKey, canonicalizeToolArgument(childValue, childKey)]));
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map((
+          [childKey, childValue],
+        ) => [childKey, canonicalizeToolArgument(childValue, childKey)]),
+    );
   }
   return value;
 };
@@ -430,23 +622,40 @@ const toolCallFingerprint = (
 ): string => `${name}:${JSON.stringify(canonicalizeToolArgument(args))}`;
 
 const sameStringSet = (left: string[], right: string[]): boolean =>
-  left.length === right.length && left.every((value, index) => value === right[index]);
+  left.length === right.length &&
+  left.every((value, index) => value === right[index]);
 
 const assertSqlRepairScope = (
   previous: AssistantSqlSemantics,
   repaired: AssistantSqlSemantics,
 ): void => {
   if (!sameStringSet(previous.snapshotIds, repaired.snapshotIds)) {
-    throw httpError(400, "INVALID_PAYLOAD", "Le perimetre snapshot de la reparation SQL a change.");
+    throw httpError(
+      400,
+      "INVALID_PAYLOAD",
+      "Le perimetre snapshot de la reparation SQL a change.",
+    );
   }
   if (!sameStringSet(previous.tables, repaired.tables)) {
-    throw httpError(400, "INVALID_PAYLOAD", "Les tables de la reparation SQL ont change.");
+    throw httpError(
+      400,
+      "INVALID_PAYLOAD",
+      "Les tables de la reparation SQL ont change.",
+    );
   }
   if (!sameStringSet(previous.dimensions, repaired.dimensions)) {
-    throw httpError(400, "INVALID_PAYLOAD", "Les dimensions de la reparation SQL ont change.");
+    throw httpError(
+      400,
+      "INVALID_PAYLOAD",
+      "Les dimensions de la reparation SQL ont change.",
+    );
   }
   if (!sameStringSet(previous.filters, repaired.filters)) {
-    throw httpError(400, "INVALID_PAYLOAD", "Les filtres metier de la reparation SQL ont change.");
+    throw httpError(
+      400,
+      "INVALID_PAYLOAD",
+      "Les filtres metier de la reparation SQL ont change.",
+    );
   }
 };
 
@@ -459,6 +668,7 @@ export const runAssistantToolLoop = async (
 ): Promise<LoopResult> => {
   const messages = [...initialMessages];
   const citations: AiAssistantCitation[] = [];
+  const evidenceItems: AiAssistantEvidence[] = [];
   const toolTrace: AiAssistantToolCallTrace[] = [];
   const usage: ProviderUsage = {
     text: "",
@@ -497,11 +707,19 @@ export const runAssistantToolLoop = async (
         );
       }
       if (sqlAttempted && !sqlSucceeded) {
-        throw httpError(502, "AI_RESPONSE_INVALID", "Aucune execution SQL semantiquement valide n a abouti.");
+        throw httpError(
+          502,
+          "AI_RESPONSE_INVALID",
+          "Aucune execution SQL semantiquement valide n a abouti.",
+        );
       }
+      const evidence = mergeEvidence(evidenceItems);
       return {
-        answer: response.content.trim(),
+        answer: evidence.status === "failed"
+          ? "Aucun résultat métier vérifiable ne permet de répondre à cette question. Précisez le snapshot ou les filtres attendus."
+          : response.content.trim(),
         citations,
+        evidence,
         toolTrace,
         usage,
         truncated: response.finishReason === "length",
@@ -526,7 +744,11 @@ export const runAssistantToolLoop = async (
         if (failedSqlSemantics) {
           sqlRepairCount += 1;
           if (sqlRepairCount > 1) {
-            throw httpError(502, "AI_TOOL_LOOP_DETECTED", "Une seule reparation SQL est autorisee.");
+            throw httpError(
+              502,
+              "AI_TOOL_LOOP_DETECTED",
+              "Une seule reparation SQL est autorisee.",
+            );
           }
           assertSqlRepairScope(failedSqlSemantics, currentSqlSemantics);
         }
@@ -554,14 +776,32 @@ export const runAssistantToolLoop = async (
       }
       const trace = aiAssistantToolCallTraceSchema.parse({
         name: call.function.name,
-        arguments: args,
+        arguments: publicTraceArguments(
+          call.function.name,
+          args,
+          executed.output,
+          ok,
+        ),
         ok,
         row_count: executed.rowCount,
         duration_ms: Math.max(0, Math.round(performance.now() - started)),
       });
       toolTrace.push(trace);
       onToolExecuted?.(trace);
-      if (ok) citations.push(citationFor(call.function.name, executed.output));
+      const evidence = evidenceFor(
+        call.function.name,
+        args,
+        executed.output,
+        trace,
+        call.function.name === "execute_readonly_sql"
+          ? sqlRepairCount + 1
+          : null,
+      );
+      evidenceItems.push(evidence);
+      if (ok) {
+        const citation = citationFor(call.function.name, executed.output);
+        if (citation && evidence.facts.length > 0) citations.push(citation);
+      }
       messages.push({
         role: "tool",
         name: call.function.name,
@@ -586,11 +826,19 @@ export const runAssistantToolLoop = async (
     throw httpError(502, "AI_RESPONSE_INVALID", "Reponse finale forcee vide.");
   }
   if (sqlAttempted && !sqlSucceeded) {
-    throw httpError(502, "AI_RESPONSE_INVALID", "Aucune execution SQL semantiquement valide n a abouti.");
+    throw httpError(
+      502,
+      "AI_RESPONSE_INVALID",
+      "Aucune execution SQL semantiquement valide n a abouti.",
+    );
   }
+  const evidence = mergeEvidence(evidenceItems);
   return {
-    answer: forced.content.trim(),
+    answer: evidence.status === "failed"
+      ? "Aucun résultat métier vérifiable ne permet de répondre à cette question. Précisez le snapshot ou les filtres attendus."
+      : forced.content.trim(),
     citations,
+    evidence,
     toolTrace,
     usage,
     truncated: true,
@@ -610,6 +858,13 @@ const unavailable = (
     answer: null,
     citations: [],
     tool_trace: [],
+    evidence: {
+      status: "failed",
+      intent: "unavailable",
+      dimension: null,
+      facts: [],
+      executions: [],
+    },
     usage: null,
     cost: null,
     fallback_reason: reason,
@@ -883,6 +1138,13 @@ export const runAssistantAsk = async (
         duration_ms: Math.round(performance.now() - toolStarted),
       });
       partialToolTrace.push(trace);
+      const evidence = evidenceFor(
+        deterministicIntent.tool,
+        deterministicIntent.args,
+        toolResult.output,
+        trace,
+      );
+      const citation = citationFor(deterministicIntent.tool, toolResult.output);
       const zeroUsage: ProviderUsage = {
         text: "",
         inputTokens: 0,
@@ -918,8 +1180,9 @@ export const runAssistantAsk = async (
         request_id: requestId,
         ai_available: true,
         answer,
-        citations: [citationFor(deterministicIntent.tool, toolResult.output)],
+        citations: citation ? [citation] : [],
         tool_trace: [trace],
+        evidence,
         usage: {
           provider: resolved.model.provider,
           model_id: resolved.model.model_id,
@@ -1006,6 +1269,13 @@ export const runAssistantAsk = async (
         duration_ms: Math.round(performance.now() - toolStarted),
       });
       partialToolTrace.push(trace);
+      const evidence = evidenceFor(
+        "aggregate_segments",
+        trace.arguments,
+        toolResult.output,
+        trace,
+      );
+      const citation = citationFor("aggregate_segments", toolResult.output);
       const zeroUsage: ProviderUsage = {
         text: "",
         inputTokens: 0,
@@ -1024,8 +1294,9 @@ export const runAssistantAsk = async (
         ai_available: true,
         answer:
           `Le snapshot actif contient ${distinctCatFab} catégories fabricant (CAT_FAB) distinctes pour la marque ${brandLabel}, sur ${segmentRows} segments.`,
-        citations: [citationFor("aggregate_segments", toolResult.output)],
+        citations: citation ? [citation] : [],
         tool_trace: [trace],
+        evidence,
         usage: {
           provider: resolved.model.provider,
           model_id: resolved.model.model_id,
@@ -1121,6 +1392,7 @@ export const runAssistantAsk = async (
       answer: loop.answer,
       citations: loop.citations,
       tool_trace: loop.toolTrace,
+      evidence: loop.evidence,
       usage: {
         provider: resolved.model.provider,
         model_id: loop.servedModelId,
