@@ -233,18 +233,27 @@ Points d'implémentation impératifs :
   `SELECT cat_fab, max(remise_ha_pct) ... GROUP BY ... ORDER BY 2 DESC LIMIT 3` trivial
   et **sémantiquement sûr**.
 
-### Pilier D — Régime double modèle
+### Pilier D — Régime de modèles par intention
 
-- Chemins déterministes et bornés : modèle léger actuel (ou aucun provider) — inchangé.
-- Chemin `general_sql` + synthèse des questions imprévues : **modèle frontier** (la
-  campagne P6 doit en inclure un comme référence haute), avec la même politique
-  (`data_collection: deny`, `zdr: true`, `require_parameters: true`, `max_price` borné).
+- Chemins déterministes : aucun provider.
+- Chemins bornés : DeepSeek V4 Flash uniquement lorsqu'une synthèse provider est réellement
+  nécessaire ; réponse directe depuis l'outil sinon.
+- Chemin `general_sql` + synthèse des questions imprévues : DeepSeek V4 Pro. La campagne Pro a
+  été interrompue à 13/70 pour latence élevée et conserve une réserve runtime explicite ; ce choix
+  est néanmoins validé par décision utilisateur pour clore P6.
+- Politique : pré-vol des endpoints avec tools, `require_parameters: true`, `max_price` borné,
+  fallbacks autorisés en usage normal et endpoint épinglé durant la comparaison. P6 n'applique
+  aucun filtre ZDR ou de collecte.
 - Justification économique mesurée en P0 : ~0,003 USD/question aujourd'hui pour des
   réponses fausses ; 0,05–0,10 USD sur les ~20 % de questions difficiles est indolore si
   l'exactitude passe les seuils. Le critère P6 reste « le modèle le moins cher qui passe
   tous les seuils bloquants » — appliqué **par régime**, pas globalement.
-- `ai_model_configs` supporte déjà plusieurs modèles ; il manque uniquement le routage
-  intention→modèle dans le broker (une table de correspondance, pas une refonte).
+- `ai_model_configs` supporte déjà plusieurs modèles. Le routage Flash → Pro est déployé dans
+  `api` v138 : résolution exacte du modèle par régime, échec fermé si une configuration manque,
+  statut principal Flash seulement si Flash et Pro sont configurés, et traçage du régime demandé.
+  Le smoke Flash est vert. Le smoke Pro reste bloqué par la combinaison entre la politique de
+  données du compte OpenRouter et le plafond de prix configuré ; aucune configuration distante
+  n'a été modifiée pour contourner ce garde-fou.
 
 ### Pilier E — Intention annoncée + provenance (raccord P5)
 
@@ -268,7 +277,7 @@ domaine » : le domaine se cartographie question par question, il ne se devine p
 | E1 | Dictionnaire : migration `COMMENT ON` (~12 tables, ~80 colonnes) + `private.ai_to_numeric` | 1 migration SQL, 0 code | 0,5–1 j (rédaction soignée) | Nul (aucun comportement modifié) |
 | E2 | Vues `ai_v_*` (`purchase_terms[_active]`, `segments[_active]`, `diffs_enriched`) avec `security_invoker` | 1 migration + extension `loadDatabaseCatalog` aux vues `ai_v_%` + tests RLS | 1–2 j | Faible (RLS à prouver par test) |
 | E3 | Outil `search_schema` + rétrogradation du dump dans le prompt | `assistantSqlTools.ts` (+ ~150 lignes), contrats Zod, tests, mesure tokens avant/après | 1–2 j | Faible |
-| E4 | Routage intention→modèle (frontier sur fallback) | broker + `ai_model_configs`, politique OpenRouter inchangée | 0,5–1 j | Moyen (coût à borner par `max_price`) |
+| E4 | Routage intention→modèle (candidat renforcé sur fallback si justifié) | broker + `ai_model_configs`, pré-vol et politique OpenRouter par régime | 0,5–1 j | Moyen (coût à borner par `max_price`) |
 | E5 | Annonce d'intention + raccord provenance | broker + UI diagnostic (périmètre P5 existant) | inclus dans P5 | Faible |
 | E6 | Requête de promotion + rituel de revue | 1 requête documentée dans le runbook | 0,25 j | Nul |
 
@@ -288,7 +297,8 @@ Nouveaux cas d'évaluation à ajouter à la suite P6 (tous doivent passer après
 ## 7. Mesures de succès (avant/après, sur la suite P6 rejouée)
 
 - Tokens d'entrée p95 du fallback : 27–49K → **< 8K**.
-- Tours provider p95 pour une question imprévue : 4–6 → **≤ 2–3**.
+- Tours provider p50/p95 pour une question imprévue : mesure diagnostique par endpoint, sans seuil
+  bloquant arbitraire ; le coût et l'exactitude déterminent le verdict.
 - Zéro colonne inventée exécutée (déjà un seuil P6) — attendu structurellement par E3.
 - Les 4 nouveaux cas d'évaluation passent à 100 %.
 - Coût par réponse **correcte** : à mesurer par régime ; le fallback frontier doit rester
@@ -307,7 +317,10 @@ P5 preuves → P6 campagne → P7 perf → P8 QA) reste la colonne vertébrale. 
   changer ; les coûts, tours et taux d'erreur seraient tous invalidés par E3.
 - **E2 s'insère naturellement dans P4** (fallback durci) : les vues sont la version
   « prévention » des validations P4 déjà livrées (détection).
-- **E4 est une décision de P6**, éclairée par un candidat frontier dans la campagne.
+- **E4 est décidée en P6 et déployée dans `api` v138** : aucun provider sur le déterministe,
+  DeepSeek V4 Flash sur le courant/borné et DeepSeek V4 Pro sur le fallback SQL complexe, en mode
+  standard et via OpenRouter avec fallbacks normaux. Flash est opérationnel ; l'acceptation
+  runtime Pro reste bloquée par la politique de données OpenRouter et son plafond `max_price`.
 - Le correctif « clarification en attente » (contexte conversationnel `pending_clarification`,
   diagnostiqué le 2026-07-14) reste un préalable P3-bis indépendant de ce chantier.
 
@@ -331,3 +344,6 @@ P5 preuves → P6 campagne → P7 perf → P8 QA) reste la colonne vertébrale. 
 | Date | Événement |
 | --- | --- |
 | 2026-07-14 | Création. Audit DB (44 tables, volumes, 5 commentaires, extensions) et code (`assistantSqlTools.ts`, `assistantIntentRouting.ts`, `referenceSemantics.ts`) vérifiés. Analyse Attio (Universal Context, Ask Attio) intégrée. Aucun code ni migration livré. |
+| 2026-07-14 | Décision E4 clôturée : aucun provider sur le déterministe, DeepSeek V4 Flash sur le courant/borné, DeepSeek V4 Pro sur le fallback SQL complexe ; OpenRouter, mode standard, fallbacks normaux, sans critère ZDR. Sélection en attente d'activation ; réserve Pro 13/70 conservée. |
+| 2026-07-15 | E4 implémenté localement : politique typée mode → modèle, résolution Flash/Pro indépendante du modèle par défaut, statut conditionné aux deux configurations et métadonnées d'usage enrichies. Test unitaire et intégration DB read-only verts ; aucun déploiement ni changement de configuration distante. |
+| 2026-07-15 | E4 déployé dans `api` v138 après autorisation explicite. Auth/CORS et statut Flash verts ; smoke Flash 200 via DeepInfra. Deux smokes Pro 502 : l'endpoint DeepSeek au tarif configuré est exclu par la politique de données OpenRouter, tandis que StreamLake répond 200 sans plafond mais dépasse `max_price`. Quotas, grants et modèle par défaut inchangés. |

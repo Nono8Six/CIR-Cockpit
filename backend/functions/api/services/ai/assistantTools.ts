@@ -129,6 +129,11 @@ const aggregateDiffsInputSchema = z.strictObject({
   group_by: pricingReferenceDiffAggregateGroupBySchema,
   measure: pricingReferenceDiffAggregateMeasureSchema.default("any"),
   direction: pricingReferenceDiffAggregateDirectionSchema.default("any"),
+  threshold_pct: z.number({ error: "Seuil de pourcentage invalide." })
+    .finite({ error: "Seuil de pourcentage invalide." })
+    .nonnegative({ error: "Le seuil de pourcentage doit etre positif." })
+    .max(100000, { error: "Seuil de pourcentage trop eleve." })
+    .optional(),
   marques: z.array(z.string().trim().min(1).max(120)).max(20).optional(),
   severities: z.array(pricingReferenceAnomalySeveritySchema).max(20).optional(),
   diff_types: z.array(pricingReferenceDiffTypeSchema).max(20).optional(),
@@ -174,7 +179,10 @@ const anomalyFiltersShape = {
 const getAnomaliesSummaryInputSchema = z.strictObject(anomalyFiltersShape);
 const anomaliesSummaryDataSchema =
   pricingReferenceAnomaliesSummaryResponseSchema
-    .omit({ ok: true, request_id: true });
+    .omit({ ok: true, request_id: true })
+    .extend({
+      snapshot_id: z.uuid({ error: "Identifiant snapshot invalide." }),
+    });
 const getAnomaliesSummaryOutputSchema = z.union([
   z.strictObject({ ok: z.literal(true), data: anomaliesSummaryDataSchema }),
   toolErrorSchema,
@@ -530,7 +538,7 @@ const aggregateDiffsTool: AssistantTool = {
   name: "aggregate_diffs",
   version: "1.0",
   description:
-    "Agrege exhaustivement les changements avec direction normalisee. A privilegier pour toute question par famille CIR (famille_cir), categorie fabricant (categorie_fabricant), segment ou marque, notamment les hausses de prix et baisses de remise.",
+    "Agrege exhaustivement les changements avec direction normalisee et seuil absolu optionnel threshold_pct. A privilegier pour toute question par famille CIR (famille_cir), categorie fabricant (categorie_fabricant), segment ou marque, notamment les hausses de prix et baisses de remise.",
   inputSchema: aggregateDiffsInputSchema,
   outputSchema: aggregateDiffsOutputSchema,
   parameters: parametersFor(aggregateDiffsInputSchema),
@@ -666,11 +674,15 @@ const getAnomaliesSummaryTool: AssistantTool = {
       requestId,
       input,
     );
+    if (!context.snapshotId) {
+      return { ok: false, reason: "Identifiant snapshot requis." };
+    }
     const { ok: _ok, request_id: _requestId, ...data } = response;
     return {
       ok: true,
       data: {
         ...data,
+        snapshot_id: context.snapshotId,
         groups_by_type: data.groups_by_type.slice(0, MAX_TOOL_RESULT_ROWS),
         facets: {
           severities: data.facets.severities.slice(0, MAX_TOOL_RESULT_ROWS),
@@ -883,10 +895,20 @@ export const executeAssistantTool = async (
   name: string,
   args: unknown,
   pageContext: AiAssistantPageContext,
-): Promise<{ output: Record<string, unknown>; rowCount: number | null }> => {
+): Promise<{
+  output: Record<string, unknown>;
+  rowCount: number | null;
+  executed: boolean;
+  blockedReason: string | null;
+}> => {
   const tool = assistantTools.find((candidate) => candidate.name === name);
   if (!tool) {
-    return { output: { ok: false, reason: "Outil inconnu." }, rowCount: null };
+    return {
+      output: { ok: false, reason: "Outil non autorise." },
+      rowCount: null,
+      executed: false,
+      blockedReason: "tool_not_allowed",
+    };
   }
   if (
     new TextEncoder().encode(JSON.stringify(args)).length >
@@ -895,6 +917,8 @@ export const executeAssistantTool = async (
     return {
       output: { ok: false, reason: "Arguments outil trop volumineux." },
       rowCount: null,
+      executed: false,
+      blockedReason: "arguments_too_large",
     };
   }
   const input = tool.inputSchema.safeParse(args);
@@ -907,6 +931,8 @@ export const executeAssistantTool = async (
         }`,
       },
       rowCount: null,
+      executed: false,
+      blockedReason: "invalid_arguments",
     };
   }
   try {
@@ -922,6 +948,8 @@ export const executeAssistantTool = async (
       return {
         output: { ok: false, reason: "Sortie outil invalide." },
         rowCount: null,
+        executed: true,
+        blockedReason: null,
       };
     }
     const output = fitOutputBytes(parsed.data as Record<string, unknown>);
@@ -932,6 +960,8 @@ export const executeAssistantTool = async (
           reason: `Resultat outil superieur a ${MAX_TOOL_RESULT_BYTES} octets.`,
         },
         rowCount: null,
+        executed: true,
+        blockedReason: null,
       };
     }
     const data = output.data as Record<string, unknown> | undefined;
@@ -946,6 +976,8 @@ export const executeAssistantTool = async (
         ].includes(name) && output.ok === true
         ? 1
         : null,
+      executed: true,
+      blockedReason: null,
     };
   } catch (error) {
     const isControlledError = error instanceof Error &&
@@ -959,6 +991,8 @@ export const executeAssistantTool = async (
           : "Execution outil impossible.",
       },
       rowCount: null,
+      executed: true,
+      blockedReason: null,
     };
   }
 };

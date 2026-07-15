@@ -7,9 +7,11 @@ import {
   aiAssistantPublicExecutionSchema,
 } from "../../../../../shared/schemas/aiAssistant.schema.ts";
 import {
+  buildOpenRouterProviderPreferences,
   callProviderWithTools,
   type ModelRow,
   type OpenRouterToolDefinition,
+  preflightOpenRouterModelEndpoints,
   type ProviderRow,
 } from "./aiGovernance.ts";
 import {
@@ -18,6 +20,7 @@ import {
   runAssistantToolLoop,
   selectAssistantTools,
 } from "./assistantBroker.ts";
+import { openRouterToolDefinitions } from "./assistantTools.ts";
 
 const provider: ProviderRow = {
   id: "00000000-0000-4000-8000-000000000001",
@@ -176,6 +179,54 @@ Deno.test("assistant maps an OpenRouter empty response to a dedicated safe error
   assertEquals(error.message.includes("Provider returned"), false);
 });
 
+Deno.test("assistant normalise un appel outil OpenRouter marque stop", async () => {
+  const controller = new AbortController();
+  const response = await callProviderWithTools(
+    provider,
+    model,
+    [{ role: "user", content: "Liste les imports." }],
+    tools,
+    "auto",
+    "test-key",
+    controller.signal,
+    () =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify({
+            id: "gen-glm-tool-stop",
+            model: model.model_id,
+            provider: "Novita",
+            choices: [{
+              finish_reason: "stop",
+              native_finish_reason: "stop",
+              message: {
+                role: "assistant",
+                content: null,
+                tool_calls: [{
+                  id: "call-glm-1",
+                  type: "function",
+                  function: { name: "list_imports", arguments: '{"page":1}' },
+                }],
+              },
+            }],
+            usage: {
+              prompt_tokens: 30,
+              completion_tokens: 8,
+              prompt_tokens_details: { cached_tokens: 0 },
+              completion_tokens_details: { reasoning_tokens: 0 },
+              cost: 0.00001,
+            },
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
+      ),
+  );
+
+  assertEquals(response.finishReason, "tool_calls");
+  assertEquals(response.nativeFinishReason, "stop");
+  assertEquals(response.toolCalls.length, 1);
+});
+
 const tools: OpenRouterToolDefinition[] = [{
   type: "function",
   function: {
@@ -298,9 +349,11 @@ Deno.test("assistant contract runs one mocked provider tool round then returns a
   assertEquals(requestBodies[1].parallel_tool_calls, undefined);
   assertEquals(requestBodies[0].provider, {
     require_parameters: true,
-    allow_fallbacks: false,
-    data_collection: "deny",
     zdr: true,
+    data_collection: "deny",
+    allow_fallbacks: true,
+    sort: "price",
+    max_price: { prompt: 0.075, completion: 0.2 },
   });
 
   const response = aiAssistantAskResponseSchema.safeParse({
@@ -324,6 +377,125 @@ Deno.test("assistant contract runs one mocked provider tool round then returns a
     truncated: result.truncated,
   });
   assertEquals(response.success, true);
+});
+
+Deno.test("OpenRouter impose ZDR sans collecte et permet de pinner un endpoint", () => {
+  assertEquals(
+    buildOpenRouterProviderPreferences(model, {
+      AI_OPENROUTER_PROVIDER_ORDER: "deepinfra/fp8",
+      AI_OPENROUTER_ALLOW_FALLBACKS: "false",
+    }),
+    {
+      require_parameters: true,
+      zdr: true,
+      data_collection: "deny",
+      allow_fallbacks: false,
+      order: ["deepinfra/fp8"],
+      max_price: { prompt: 0.075, completion: 0.2 },
+    },
+  );
+  assertEquals(
+    buildOpenRouterProviderPreferences({
+      input_price_per_million: 0.075,
+      output_price_per_million: 0.2,
+    }, {}),
+    {
+      require_parameters: true,
+      zdr: true,
+      data_collection: "deny",
+      allow_fallbacks: true,
+      sort: "price",
+      max_price: { prompt: 0.075, completion: 0.2 },
+    },
+  );
+});
+
+Deno.test("P6 preflight distingue endpoint compatible et endpoint filtre par le cout", async () => {
+  const result = await preflightOpenRouterModelEndpoints(
+    provider,
+    model,
+    "test-key",
+    () =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify({
+            data: {
+              endpoints: [{
+                name: "DeepInfra | Mistral",
+                provider_name: "DeepInfra",
+                tag: "deepinfra/fp8",
+                supported_parameters: ["tools", "temperature"],
+                pricing: { prompt: "0.000000075", completion: "0.0000002" },
+              }, {
+                name: "Mistral | Mistral",
+                provider_name: "Mistral",
+                tag: "mistral",
+                supported_parameters: ["tools"],
+                pricing: { prompt: "0.0000001", completion: "0.0000003" },
+              }],
+            },
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
+      ),
+  );
+  assertEquals(result.eligibleProviderTags, ["deepinfra/fp8"]);
+  assertEquals(result.endpoints[1].rejectionReasons, [
+    "prix_prompt_superieur_au_plafond",
+    "prix_completion_superieur_au_plafond",
+  ]);
+});
+
+Deno.test("P6 recupere apres outil inconnu et arguments invalides sans les executer", async () => {
+  let round = 0;
+  const result = await runAssistantToolLoop(
+    [{ role: "user", content: "Liste les imports." }],
+    tools,
+    () => {
+      round += 1;
+      const call = round === 1
+        ? { name: "search_imports", arguments: "{}" }
+        : round === 2
+        ? { name: "list_imports", arguments: "pas-du-json" }
+        : { name: "list_imports", arguments: '{"page":1}' };
+      return Promise.resolve({
+        text: "",
+        inputTokens: 10,
+        outputTokens: 3,
+        cachedInputTokens: 0,
+        reasoningTokens: 0,
+        providerCostAmount: 0.00001,
+        generationId: crypto.randomUUID(),
+        modelId: "evaluation/offline",
+        provider: "offline",
+        finishReason: round <= 3 ? "tool_calls" : "stop",
+        nativeFinishReason: round <= 3 ? "tool_calls" : "stop",
+        content: round <= 3 ? null : "Un import est disponible.",
+        toolCalls: round <= 3
+          ? [{
+            id: crypto.randomUUID(),
+            type: "function" as const,
+            function: call,
+          }]
+          : [],
+      });
+    },
+    () =>
+      Promise.resolve({
+        output: { ok: true, page: 1, total: 1, rows: [] },
+        rowCount: 0,
+      }),
+  );
+  assertEquals(result.toolTrace.map((trace) => trace.executed), [
+    false,
+    false,
+    true,
+  ]);
+  assertEquals(result.toolTrace.map((trace) => trace.blocked_reason), [
+    "tool_not_allowed",
+    "invalid_json",
+    null,
+  ]);
 });
 
 Deno.test("P5 valide le compte derive d une liste de huit marques", () => {
@@ -475,5 +647,237 @@ Deno.test("P5 ne publie que le SQL fallback execute", () => {
       executed_sql: "x".repeat(12001),
     }).success,
     false,
+  );
+});
+
+Deno.test("P6 prouve une localisation de schema et conclut sans second appel fragile", async () => {
+  let round = 0;
+  const result = await runAssistantToolLoop(
+    [{ role: "user", content: "Où sont stockées les remises ?" }],
+    openRouterToolDefinitions.filter((tool) =>
+      tool.function.name === "search_schema"
+    ),
+    (_messages, _tools, toolChoice) => {
+      round += 1;
+      return Promise.resolve({
+        text: "",
+        inputTokens: 10,
+        outputTokens: 5,
+        cachedInputTokens: 0,
+        reasoningTokens: 0,
+        providerCostAmount: 0.001,
+        generationId: crypto.randomUUID(),
+        modelId: "evaluation/offline",
+        provider: "offline",
+        finishReason: toolChoice === "none" ? "stop" : "tool_calls",
+        nativeFinishReason: toolChoice === "none" ? "stop" : "tool_calls",
+        content: toolChoice === "none"
+          ? "Les remises sont exposées dans ai_v_purchase_terms_active.remise_ha_pct."
+          : null,
+        toolCalls: toolChoice === "none" ? [] : [{
+          id: crypto.randomUUID(),
+          type: "function" as const,
+          function: {
+            name: "search_schema",
+            arguments: JSON.stringify({ terms: ["remise"] }),
+          },
+        }],
+      });
+    },
+    () =>
+      Promise.resolve({
+        output: {
+          ok: true,
+          snapshot_id: "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+          terms: ["remise"],
+          total_columns: 1,
+          table_names: ["ai_v_purchase_terms_active"],
+          column_names: ["ai_v_purchase_terms_active.remise_ha_pct"],
+          tables: [],
+        },
+        rowCount: 1,
+      }),
+  );
+
+  assertEquals(round, 1);
+  assertEquals(result.evidence.status, "verified");
+  assertEquals(result.citations.length, 1);
+  assertEquals(
+    result.answer,
+    "Tables pertinentes : ai_v_purchase_terms_active. Colonnes pertinentes : ai_v_purchase_terms_active.remise_ha_pct.",
+  );
+});
+
+Deno.test("P6 prouve les cellules primitives d un resultat SQL borne", async () => {
+  let round = 0;
+  const result = await runAssistantToolLoop(
+    [{ role: "user", content: "Top remises FEST" }],
+    openRouterToolDefinitions.filter((tool) =>
+      tool.function.name === "execute_readonly_sql"
+    ),
+    (_messages, _tools, _toolChoice) => {
+      round += 1;
+      return Promise.resolve({
+        text: "",
+        inputTokens: 10,
+        outputTokens: 5,
+        cachedInputTokens: 0,
+        reasoningTokens: 0,
+        providerCostAmount: 0.001,
+        generationId: crypto.randomUUID(),
+        modelId: "evaluation/offline",
+        provider: "offline",
+        finishReason: round === 2 ? "stop" : "tool_calls",
+        nativeFinishReason: round === 2 ? "stop" : "tool_calls",
+        content: round === 2 ? "Le top est A à 42 %." : null,
+        toolCalls: round === 2 ? [] : [{
+          id: crypto.randomUUID(),
+          type: "function" as const,
+          function: {
+            name: "execute_readonly_sql",
+            arguments: JSON.stringify({
+              sql:
+                "select cat_fab, remise_ha_pct from public.ai_v_purchase_terms_active where marque = 'FEST' limit 1",
+              purpose: "Classer les remises FEST",
+            }),
+          },
+        }],
+      });
+    },
+    () =>
+      Promise.resolve({
+        output: {
+          ok: true,
+          snapshot_id: "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+          columns: ["cat_fab", "remise_ha_pct"],
+          rows: [{ cat_fab: "A", remise_ha_pct: 42 }],
+          truncated: false,
+          execution_ms: 1,
+        },
+        rowCount: 1,
+      }),
+  );
+
+  assertEquals(round, 2);
+  assertEquals(result.evidence.status, "verified");
+  assertEquals(result.evidence.facts.length, 2);
+  assertEquals(result.answer, "Le top est A à 42 %.");
+});
+
+Deno.test("P6 remplace une conclusion provider non prouvee par les faits structures", async () => {
+  let round = 0;
+  const result = await runAssistantToolLoop(
+    [{ role: "user", content: "Trie par une colonne financière brute." }],
+    openRouterToolDefinitions.filter((tool) =>
+      ["search_schema", "execute_readonly_sql"].includes(tool.function.name)
+    ),
+    () => {
+      round += 1;
+      return Promise.resolve({
+        text: "",
+        inputTokens: 10,
+        outputTokens: 5,
+        cachedInputTokens: 0,
+        reasoningTokens: 0,
+        providerCostAmount: 0.001,
+        generationId: crypto.randomUUID(),
+        modelId: "evaluation/offline",
+        provider: "offline",
+        finishReason: round === 2 ? "stop" : "tool_calls",
+        nativeFinishReason: round === 2 ? "stop" : "tool_calls",
+        content: round === 2
+          ? "Requête SQL exécutée : le résultat financier est 999."
+          : null,
+        toolCalls: round === 2 ? [] : [{
+          id: crypto.randomUUID(),
+          type: "function" as const,
+          function: {
+            name: "search_schema",
+            arguments: JSON.stringify({ terms: ["remise_ha"] }),
+          },
+        }],
+      });
+    },
+    () =>
+      Promise.resolve({
+        output: {
+          ok: true,
+          snapshot_id: "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+          terms: ["remise_ha"],
+          total_columns: 1,
+          table_names: ["ai_v_purchase_terms_active"],
+          column_names: ["ai_v_purchase_terms_active.remise_ha_pct"],
+          tables: [],
+        },
+        rowCount: 1,
+      }),
+  );
+
+  assertEquals(result.evidence.status, "verified");
+  assertEquals(result.answer.includes("999"), false);
+  assertEquals(result.answer.includes("SQL exécutée"), false);
+  assertEquals(result.answer.includes("Résultat vérifié"), true);
+});
+
+Deno.test("P6 rend le classement de remise borne depuis la sortie validee", async () => {
+  let calls = 0;
+  const result = await runAssistantToolLoop(
+    [{ role: "user", content: "Top 3 CAT_FAB de FEST par remise d'achat" }],
+    openRouterToolDefinitions.filter((tool) =>
+      tool.function.name === "rank_purchase_terms"
+    ),
+    () => {
+      calls += 1;
+      return Promise.resolve({
+        text: "",
+        inputTokens: 10,
+        outputTokens: 5,
+        cachedInputTokens: 0,
+        reasoningTokens: 0,
+        providerCostAmount: 0.001,
+        generationId: crypto.randomUUID(),
+        modelId: "evaluation/offline",
+        provider: "offline",
+        finishReason: "tool_calls",
+        nativeFinishReason: "tool_calls",
+        content: null,
+        toolCalls: [{
+          id: crypto.randomUUID(),
+          type: "function" as const,
+          function: {
+            name: "rank_purchase_terms",
+            arguments: JSON.stringify({ marque: "FEST", limit: 3 }),
+          },
+        }],
+      });
+    },
+    () =>
+      Promise.resolve({
+        output: {
+          ok: true,
+          data: {
+            snapshot_id: "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+            marque: "FEST",
+            metric: "remise_ha_pct",
+            direction: "desc",
+            top_cat_fab: ["A", "B", "C"],
+            top_remise_pct: [83.333, 80, 75.5],
+            rows: [
+              { cat_fab: "A", cat_fab_l: "Alpha", remise_ha_pct: 83.333 },
+              { cat_fab: "B", cat_fab_l: null, remise_ha_pct: 80 },
+              { cat_fab: "C", cat_fab_l: "Charlie", remise_ha_pct: 75.5 },
+            ],
+          },
+        },
+        rowCount: 3,
+      }),
+  );
+
+  assertEquals(calls, 1);
+  assertEquals(result.evidence.status, "verified");
+  assertEquals(result.citations.length, 1);
+  assertEquals(
+    result.answer,
+    "Top 3 CAT_FAB de FEST par remise d'achat : 1. A — Alpha : 83,333 % ; 2. B : 80 % ; 3. C — Charlie : 75,5 %.",
   );
 });

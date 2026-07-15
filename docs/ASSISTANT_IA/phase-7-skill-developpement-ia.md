@@ -1,6 +1,9 @@
 # Phase 7 — Skill durable pour développer l'IA de CIR Cockpit
 
-> Prérequis : phases 1 à 6 terminées et leurs changelogs remplis. Lire `00-plan-general.md`.
+> Prérequis : phases 1 à 6 terminées et leurs changelogs remplis, ET chantier
+> `plan-fiabilisation-assistant-ia.md` clôturé (P0→P8) — c'est lui qui fixe l'architecture
+> finale (routage d'intentions, SQL fallback durci, provenance, contexte universel).
+> Lire `00-plan-general.md`.
 > Périmètre : `.agents/skills`, `AGENTS.md` et documentation IA. Gate QA : `pnpm run qa:docs`.
 > Objectif : rendre l'architecture IA réellement livrée disponible à tout agent qui ajoute,
 > corrige ou audite une feature IA, sans devoir relire l'intégralité de ce chantier historique.
@@ -24,15 +27,23 @@ qu'injecter toute l'architecture dans chaque conversation sans rapport.
 
 ### 2.1 Sources de vérité à inventorier
 
-Lire les changelogs des phases 1 à 6 puis vérifier le code réel. Le skill ne doit documenter que
-des chemins, contrats et décisions réellement présents. Inventaire minimal à confirmer :
+Lire les changelogs des phases 1 à 6, ceux du chantier `plan-fiabilisation-assistant-ia.md`
+(P0→P8), puis vérifier le code réel. Le skill ne doit documenter que des chemins, contrats et
+décisions réellement présents. Inventaire minimal à confirmer :
 
-- `shared/schemas/ai.schema.ts` et `shared/schemas/aiAssistant.schema.ts` ;
-- `backend/drizzle/schema.ts` et migrations IA ;
-- `backend/functions/api/services/ai/aiGovernance.ts`, broker, accès et registre d'outils ;
+- `shared/schemas/ai.schema.ts` et `shared/schemas/aiAssistant.schema.ts` (dont les surfaces
+  `page_context` réellement livrées) ;
+- `backend/drizzle/schema.ts`, migrations IA, et le dictionnaire sémantique livré en 5B :
+  `COMMENT ON`, vues `ai_v_*` en `security_invoker`, fonction `search_schema` ;
+- `backend/functions/api/services/ai/` : `aiGovernance.ts`, broker, accès, registre d'outils,
+  `assistantIntentRouting.ts` (matrice intentions/allowlists), `assistantSqlTools.ts`
+  (fallback SQL durci), `assistantModelEvaluations.ts` et la suite d'évaluations offline ;
 - `backend/functions/api/trpc/router.ts` et miroir `shared/api/trpc.ts` ;
 - services/hooks/composants assistant et Admin > IA côté frontend ;
-- tests de contrat, évaluations offline/live et section Assistant IA du runbook QA.
+- tests de contrat, évaluations offline/live et section Assistant IA du runbook QA ;
+- `architecture-contexte-universel.md` et `rapport-evaluation-modeles-p6.md` (décisions) ;
+- si les Phases 7-8 de `docs/refonte-pilotage-v3.md` sont livrées à ce moment-là : les outils
+  CRM (`assistantCrmTools.ts`), leurs intentions et les surfaces `page_context` CRM.
 
 Supprimer du futur skill toute hypothèse devenue fausse pendant l'implémentation. Les fichiers de
 phase restent l'historique de décision ; le skill décrit l'état opérationnel final.
@@ -83,9 +94,13 @@ Le corps du skill doit imposer ce parcours concis :
 2. Charger `references/architecture.md` pour toute décision transverse ou tout diagnostic.
 3. Charger `references/feature-workflow.md` pour ajouter/modifier une feature, un outil, un prompt,
    un modèle, une règle d'accès/quota ou une surface UI IA.
-4. Préserver les invariants : données structurées via outils backend, aucun SQL produit par le LLM,
-   outils lecture seule par défaut, Zod strict entrée/sortie, isolation agence côté service,
-   admission quota atomique/idempotente, résultats bornés, traces minimisées, clés serveur seules.
+4. Préserver les invariants : outils backend déterministes d'abord pour les questions connues ;
+   SQL produit par le LLM uniquement via le fallback durci de P4 (rôle lecture seule, validation
+   lexicale, RLS, vues `ai_v_*`, plafonds lignes/octets), jamais d'accès direct aux tables ;
+   routage d'intentions avec allowlist d'outils par intention ; intention annoncée et provenance
+   dans chaque réponse (contrat P5) ; Zod strict entrée/sortie ; isolation agence par RLS au
+   niveau DB, jamais par filtres applicatifs ; admission quota atomique/idempotente ; résultats
+   bornés ; traces minimisées ; clés serveur seules.
 5. Recouper les évolutions OpenRouter avec la documentation officielle actuelle ; ne jamais figer
    dans le skill un « dernier modèle » voué à devenir obsolète.
 6. Choisir la gate QA par impact et exécuter les évaluations IA pour tout changement de modèle,
@@ -101,21 +116,30 @@ Le skill route vers les autres skills du repo au lieu de recopier leurs règles 
 Documenter avec des chemins vérifiés et un petit flux lisible :
 
 ```text
-UI -> tRPC strict -> broker -> accès -> réservation quota -> OpenRouter
-                     |                              ^
-                     +-> registre d'outils -> services métier/RLS
-                     +-> usage, coût, générations, traces minimisées
+UI (page_context) -> tRPC strict -> broker -> accès -> réservation quota -> OpenRouter
+                          |                                   ^
+                          +-> routeur d'intentions -> allowlist d'outils par intention
+                          |     +-> outils déterministes -> services métier/RLS
+                          |     +-> fallback SQL durci -> rôle lecture seule + vues ai_v_*
+                          |           +-> search_schema (COMMENT ON, pg_trgm)
+                          +-> contexte conversationnel + provenance
+                          +-> usage, coût, générations, traces minimisées
 ```
 
 Inclure :
 
 - source de vérité de `AiFeature` et propagation Drizzle/Zod/front ;
 - résolution provider/modèle/prompt et portée réelle du défaut modèle ;
+- matrice intentions/allowlists et critère de choix outil déterministe vs fallback SQL ;
+- dictionnaire sémantique : rôle des `COMMENT ON`, des vues `ai_v_*` (`security_invoker`) et de
+  `search_schema` ; protocole d'extension à une nouvelle brique métier (voir workflow) ;
 - boucle tool calling, formats provider, limites, finish reasons et idempotence ;
 - registre versionné, schémas entrée/sortie, plafonds lignes/octets et citations ;
+- contrat de provenance/intention annoncée (P5) et contexte conversationnel (P3) ;
 - ordre accès/quota/appel/journalisation ;
-- frontières agence/superadmin et données autorisées vers le modèle ;
-- observabilité, rétention, évaluations et chemins des tests ;
+- frontières agence/superadmin (RLS au niveau DB) et données autorisées vers le modèle ;
+- observabilité, rétention, évaluations, méthode de mesure du budget tokens (p95) et chemins
+  des tests ;
 - API OpenRouter retenue et raison, sans dupliquer une liste de modèles datée.
 
 ### 2.6 Référence `feature-workflow.md`
@@ -132,9 +156,25 @@ Fournir une checklist actionnable pour une nouvelle feature IA :
 7. Vérifier politique OpenRouter actuelle, modèle/provider réellement servis, coût et latence.
 8. Lancer la gate QA adaptée, mettre à jour docs et changelog concernés.
 
-Inclure aussi les anti-patterns : appel provider depuis le navigateur, accès DB/SQL par le LLM,
-agrégation de milliers de lignes par le modèle, sortie outil non validée, UUID métier brut dans
-l'UI, quota check-then-insert, retry facturable non idempotent, sélecteur modèle non persistant.
+Documenter aussi le protocole d'extension pour toute nouvelle brique métier interrogeable par
+l'assistant (le chemin qui rend l'architecture extensible sans réécrire l'assistant) :
+
+1. Sémantisation : `COMMENT ON` en français, relus comme du code, sur les tables et colonnes
+   clés — y compris les pièges (formats hétérogènes, numeric en texte, JSONB).
+2. Sécurisation : RLS vérifiées et prouvées par test à deux identités.
+3. Vue typée `ai_v_[brique]` en `security_invoker` si les tables sont piégeuses ou exigent des
+   jointures récurrentes ; `search_schema` découvre le reste automatiquement.
+4. Outil déterministe strict seulement si des questions récurrentes à justesse critique le
+   justifient ; sinon le fallback SQL durci suffit.
+5. Extension additive : nouveaux fichiers d'outils + points d'enregistrement, jamais de
+   réécriture du socle.
+
+Inclure aussi les anti-patterns : appel provider depuis le navigateur, accès DB/SQL hors du
+fallback durci, agrégation de milliers de lignes par le modèle, sortie outil non validée, UUID
+métier brut dans l'UI, quota check-then-insert, retry facturable non idempotent, sélecteur modèle
+non persistant, cache de réponses partagé entre agences ou entre utilisateurs, routage
+multi-modèles sans couverture d'évaluations par intention, cloisonnement par filtres applicatifs
+au lieu des RLS, nouvelle brique branchée sans `COMMENT ON` ni vérification RLS.
 
 ## 3. Inscription durable dans le dépôt
 
@@ -185,8 +225,11 @@ Tu travailles sur C:\GitHub\CIR_Cockpit\CIR-Cockpit. Implémente la phase 7 du c
 Assistant IA : le skill durable de développement IA CIR Cockpit.
 
 Avant toute édition : lis AGENTS.md, invoque cir-cockpit-agent-router puis skill-creator. Lis
-docs/ASSISTANT_IA/00-plan-general.md, cette phase 7 et les changelogs des phases 1 à 6. Vérifie
-git status --short et préserve toutes les modifications qui ne sont pas les tiennes.
+docs/ASSISTANT_IA/00-plan-general.md, cette phase 7, les changelogs des phases 1 à 6 ET
+docs/ASSISTANT_IA/plan-fiabilisation-assistant-ia.md en entier (P0→P8 : c'est lui qui fixe
+l'architecture finale — routage d'intentions, fallback SQL durci, provenance, contexte
+universel). Si docs/refonte-pilotage-v3.md Phases 7-8 sont livrées, inventorie aussi les outils
+CRM. Vérifie git status --short et préserve toutes les modifications qui ne sont pas les tiennes.
 
 Le code final fait foi. Inspecte les schémas, migrations, broker, gouvernance, accès, outils,
 routes tRPC, miroir shared, frontend Admin/chat, tests, évaluations et qa-runbook réellement

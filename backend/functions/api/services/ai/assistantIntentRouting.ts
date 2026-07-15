@@ -8,6 +8,10 @@ export type AssistantReferenceIntentKind =
   | "diff_analysis"
   | "anomaly_analysis"
   | "health_analysis"
+  | "schema_location"
+  | "purchase_terms_ranking"
+  | "security_refusal"
+  | "out_of_scope"
   | "clarification"
   | "general_sql";
 
@@ -16,6 +20,11 @@ export type AssistantExecutionMode =
   | "bounded_provider"
   | "general_sql_fallback"
   | "clarification";
+
+export const ASSISTANT_MODEL_POLICY = {
+  bounded_provider: "deepseek/deepseek-v4-flash",
+  general_sql_fallback: "deepseek/deepseek-v4-pro",
+} as const satisfies Partial<Record<AssistantExecutionMode, string>>;
 
 export type AssistantReferenceIntent = {
   kind: AssistantReferenceIntentKind;
@@ -32,6 +41,14 @@ export type AssistantReferenceIntent = {
   clarification: string | null;
 };
 
+export const selectAssistantModelId = (
+  executionMode: AssistantExecutionMode,
+): string | null =>
+  executionMode === "bounded_provider" ||
+    executionMode === "general_sql_fallback"
+    ? ASSISTANT_MODEL_POLICY[executionMode]
+    : null;
+
 export const ASSISTANT_INTENT_TOOL_POLICY: Readonly<
   Record<AssistantReferenceIntentKind, readonly string[]>
 > = {
@@ -42,6 +59,10 @@ export const ASSISTANT_INTENT_TOOL_POLICY: Readonly<
   diff_analysis: ["get_diff_summary", "aggregate_diffs", "list_diffs"],
   anomaly_analysis: ["get_anomalies_summary", "list_anomalies"],
   health_analysis: ["list_imports", "get_import_details", "get_health_report"],
+  schema_location: ["search_schema"],
+  purchase_terms_ranking: ["rank_purchase_terms"],
+  security_refusal: [],
+  out_of_scope: [],
   clarification: [],
   general_sql: [
     "search_schema",
@@ -106,6 +127,34 @@ const extractBrand = (value: string): string | null => {
   return null;
 };
 
+const extractSchemaTerms = (value: string): string[] => {
+  const candidates = [
+    value.match(/\bcolonne\s+([a-z0-9_]+)/)?.[1],
+    value.match(
+      /\b(?:stocke|stockee|stockees|trouve|trouvent)\s+(?:dans\s+)?(?:les?|la|des?)?\s*([a-z0-9_]+)/,
+    )?.[1],
+  ].filter((candidate): candidate is string => Boolean(candidate));
+  if (/\bremises?\b/.test(value)) candidates.push("remise");
+  return [
+    ...new Set(
+      candidates.map((candidate) =>
+        candidate.endsWith("s") && candidate.length > 4
+          ? candidate.slice(0, -1)
+          : candidate
+      ),
+    ),
+  ].slice(0, 8);
+};
+
+const extractPercentageThreshold = (value: string): number | null => {
+  const match = value.match(
+    /(?:superieur(?:e|es|s)?\s+a|plus\s+de|>)\s*(\d+(?:[.,]\d+)?)\s*%/,
+  );
+  if (!match) return null;
+  const parsed = Number(match[1].replace(",", "."));
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+};
+
 const clarification = (terms: string[] = []): AssistantReferenceIntent => ({
   kind: "clarification",
   dimension: null,
@@ -125,9 +174,52 @@ export const parseAssistantReferenceIntent = (
   const asksFinancialRanking =
     /\b(?:top\s+\d+|les?\s+\d+\b.*\bavec\s+le\s+plus)\b/.test(value) &&
     /\bremises?\b/.test(value);
+  const asksDiffSummary =
+    /\b(?:resume|resumer|synthese|changements?)\b/.test(value) &&
+    /\b(?:dernier\s+fichier\s+tarif|snapshot\s+precedent|par\s+rapport\s+au\s+dernier)\b/
+      .test(value);
+  const asksAnomalies = /\banomal(?:ie|ies|y)\b|\bcorriger\s+(?:les?\s+)?anomal/
+    .test(value);
+  const asksAnomalySummary = asksAnomalies &&
+    /\b(?:nombre|combien|lignes?|sans|resume|resumer|synthese|fichiers?\s+import)/
+      .test(value);
   const asksSchemaLocation =
     /\b(?:ou|dans\s+quelle\s+table)\b.*\b(?:stocke|stockee|stockees|trouve|trouvent)\b/
-      .test(value);
+      .test(value) ||
+    /\bcolonne\s+[a-z0-9_]+\b.*\b(?:inexistant|inexistante|existe|trie|tri)\b/
+      .test(value) ||
+    /\b(?:trie|tri)\b.*\bcolonne\s+[a-z0-9_]+\b/.test(value);
+
+  if (
+    /\b(?:ignore|oublie|contourne)\b.{0,80}\b(?:regles?|instructions?)\b/.test(
+      value,
+    ) ||
+    /\b(?:revele|affiche|donne)\b.{0,50}\b(?:cles?|secrets?|tokens?|mots?\s+de\s+passe)\b/
+      .test(value) ||
+    /\b(?:supprime|suppression|delete|drop|truncate|insert|update)\b.{0,50}\bsql\b/
+      .test(value)
+  ) {
+    return {
+      kind: "security_refusal",
+      dimension: null,
+      filters: {},
+      executionMode: "deterministic_direct",
+      clarification: null,
+    };
+  }
+
+  if (
+    /\b(?:meteo|previsions?\s+meteo|temperature)\b/.test(value) ||
+    /\bquel\s+temps\s+(?:fera|fait)\b/.test(value)
+  ) {
+    return {
+      kind: "out_of_scope",
+      dimension: null,
+      filters: {},
+      executionMode: "deterministic_direct",
+      clarification: null,
+    };
+  }
 
   if (
     /\b(?:a\s+cite|citation|dans\s+(?:son|un)\s+(?:email|message))\b/.test(
@@ -145,11 +237,58 @@ export const parseAssistantReferenceIntent = (
   }
 
   if (asksFinancialRanking || asksSchemaLocation) {
+    if (asksSchemaLocation) {
+      return {
+        kind: "schema_location",
+        dimension: null,
+        filters: { terms: extractSchemaTerms(value) },
+        executionMode: "deterministic_direct",
+        clarification: null,
+      };
+    }
+    const rankingMatch = value.match(
+      /\btop\s+(\d+)\s+cat[_ ]?fab\s+de\s+([a-z0-9][a-z0-9_-]*)\s+par\s+remise/,
+    ) ?? value.match(
+      /\btop\s+(\d+)\s+(?:des?\s+)?familles?\s+(?:de\s+)?produits?\s+(?:de|chez)\s+([a-z0-9][a-z0-9_-]*)\s+par\s+remise/,
+    ) ?? value.match(
+      /\b(?:les\s+)?(\d+)\s+cat[_ ]?fab\s+de\s+([a-z0-9][a-z0-9_-]*).*\bplus\s+de\s+remise/,
+    );
+    if (rankingMatch) {
+      return {
+        kind: "purchase_terms_ranking",
+        dimension: "cat_fab",
+        filters: {
+          marque: rankingMatch[2].toUpperCase(),
+          limit: Math.min(10, Math.max(1, Number(rankingMatch[1]))),
+          metric: "remise_ha_pct",
+          direction: "desc",
+        },
+        executionMode: "deterministic_direct",
+        clarification: null,
+      };
+    }
     return {
       kind: "general_sql",
       dimension: null,
       filters: {},
       executionMode: "general_sql_fallback",
+      clarification: null,
+    };
+  }
+
+  // Une demande explicitement centrée sur les anomalies ne doit pas être
+  // capturée par le seul mot « remise » présent dans sa description métier.
+  if (
+    asksAnomalies &&
+    !/\b(?:changements?|differences?|diff)\b/.test(value)
+  ) {
+    return {
+      kind: "anomaly_analysis",
+      dimension: "anomaly",
+      filters: asksAnomalySummary ? { summary: true } : {},
+      executionMode: asksAnomalySummary
+        ? "deterministic_direct"
+        : "bounded_provider",
       clarification: null,
     };
   }
@@ -162,15 +301,40 @@ export const parseAssistantReferenceIntent = (
     if (/\bfamilles?\b/.test(value) && !catFab && !famCir) {
       return clarification();
     }
+    const thresholdPct = extractPercentageThreshold(value);
+    const direction = /\bbaiss(?:e|es)\b/.test(value)
+      ? "baisse"
+      : /\b(?:hausses?|augment(?:e|es|ation))\b/.test(value)
+      ? "hausse"
+      : "any";
+    const measure = /\bremises?\b/.test(value)
+      ? "remise"
+      : /\b(?:prix|tarifs?)\b/.test(value)
+      ? "prix"
+      : "any";
+    const groupBy = catFab
+      ? "categorie_fabricant"
+      : famCir
+      ? "famille_cir"
+      : "changed_column";
     return {
       kind: "diff_analysis",
       dimension: catFab ? "cat_fab" : famCir ? "fam_cir" : "diff",
-      filters: {},
-      executionMode: "bounded_provider",
+      filters: {
+        ...(asksDiffSummary ? { summary: true } : {}),
+        group_by: groupBy,
+        measure,
+        direction,
+        ...(thresholdPct === null ? {} : { threshold_pct: thresholdPct }),
+        limit: 20,
+      },
+      executionMode: thresholdPct !== null || asksDiffSummary
+        ? "deterministic_direct"
+        : "bounded_provider",
       clarification: null,
     };
   }
-  if (/\banomal(?:ie|ies|y)\b|\bcorriger\s+(?:les?\s+)?anomal/.test(value)) {
+  if (asksAnomalies) {
     return {
       kind: "anomaly_analysis",
       dimension: "anomaly",

@@ -70,9 +70,9 @@ Statuts autorisés : `À FAIRE`, `EN COURS`, `BLOQUÉE`, `VALIDÉE`.
 | 4 | Fallback SQL durci | Lecture seule/RLS bornées, validation sémantique incomplète | VALIDÉE | Colonnes inventées, changements de scope et boucles équivalentes sont bloqués | Validation structurelle + catalogue réel avant SQL métier ; 17 tests P4 verts ; P5 reste isolée |
 | 5 | Preuves, erreurs et diagnostic UI | Sources et SQL partiellement visibles localement | VALIDÉE | Aucun fait sans provenance ; aucun détail interne ou sensible exposé | Contrat public Zod strict, statuts et dérivations validés ; `api` v122 ACTIVE |
 | 5B | Contexte universel : schéma auto-descriptif, vues typées, catalogue cherchable | Dump catalogue 27–49K tokens ; 5 commentaires `pg_description` ; colonnes financières `text` | VALIDÉE | Fallback documenté et cherchable ; estimation conservatrice p95 2 080 tokens ; RLS des vues prouvée | Migration `20260714102852`, 36 tests offline + 3 intégration DB, Supabase MCP |
-| 6 | Évaluations et choix du modèle | Routage P3-bis corrigé ; campagne comparative à rejouer après le checkpoint P5B | EN COURS | Tous les seuils bloquants passent sur le modèle retenu | `rapport-evaluation-modeles-p6.md` |
+| 6 | Évaluations et choix du modèle | Harnais corrigé et pré-vol réel concluant sur six candidats ; campagne recentrée sur DeepSeek Flash/Pro | VALIDÉE | Flash retenu pour le courant/borné, Pro pour le fallback SQL complexe, avec réserve explicite sur le lot Pro interrompu | `rapport-evaluation-modeles-p6.md` |
 | 7 | Performance, Realtime et UX | Correctifs Realtime/React locaux, non livrés | À FAIRE | p50/p95 mesurés, absence de boucle Realtime, parcours UI vérifié | — |
-| 8 | QA finale, documentation et livraison | `pnpm run qa` bloqué par un chantier dashboard concurrent | À FAIRE | Gate complète verte et probes conditionnelles vertes | — |
+| 8 | QA finale, documentation et livraison | `pnpm run qa` bloqué par un chantier dashboard concurrent | BLOQUÉE | Gate complète verte et probes conditionnelles vertes | E4 déployé sur `api` v138 ; auth/CORS/Flash verts ; Pro bloqué par politique de données OpenRouter + `max_price` ; couverture dashboard préexistante 13,33 % < 30 % |
 
 ---
 
@@ -650,47 +650,56 @@ sur le prix par token ou le seul taux de tool calling.
 
 ### Travaux
 
-- [ ] Vérifier le checkpoint P5B avant la campagne 10/20 : l'économie de tokens et la
+- [x] Vérifier le checkpoint P5B avant la campagne 10/20 : l'économie de tokens et la
   surface SQL changent toutes les mesures de coût, tours et exactitude.
-- [ ] Étendre la suite offline avec les incidents I-01 à I-07.
-- [ ] Ajouter casse, accents, `%`, `_`, résultat vide, colonne inexistante, prompt injection,
+- [x] Étendre la suite offline avec les incidents I-01 à I-07.
+- [x] Ajouter casse, accents, `%`, `_`, résultat vide, colonne inexistante, prompt injection,
   question hors périmètre et changement de snapshot.
-- [ ] Ajouter les cas P5B : « top 3 CAT_FAB de FEST par remise d'achat », « écarts de remise
+- [x] Ajouter les cas P5B : « top 3 CAT_FAB de FEST par remise d'achat », « écarts de remise
   supérieurs à 20 % par rapport au snapshot précédent » (`aggregate_diffs`,
   `measure=remise`, `direction=baisse`), « où sont stockées les remises ? »
   (`search_schema`) et tri généré sur colonne financière `text` brute (refus attendu).
-- [ ] Tester l'isolation sur deux agences et deux identités distinctes.
-- [ ] Exécuter la campagne live sur Mistral Small 3.2, GPT-OSS 120B et DeepSeek V4 Flash,
-  plus un modèle frontier comme référence haute de qualité et de coût.
-- [ ] Exécuter au moins dix répétitions par cas et vingt pour les agrégats critiques.
-- [ ] Comparer le routage standard et Exacto seulement si la politique ZDR reste satisfaite.
-- [ ] Enregistrer modèle demandé, modèle servi, provider, tours, finish reasons, tokens, coût,
-  latence p50/p95 et exactitude.
-- [ ] Sélectionner le modèle le moins cher qui passe tous les seuils bloquants, **par
-  régime** : décider le routage intention → modèle (léger ou aucun sur les chemins
+- [x] Tester l'isolation sur deux agences et deux identités distinctes.
+- [x] Clore la campagne sur les seuls candidats retenus par décision utilisateur : DeepSeek V4
+  Flash et DeepSeek V4 Pro. Claude est exclu pour coût excessif ; GPT-OSS est refusé ; Mistral et
+  GLM restent uniquement dans l'historique comparatif.
+- [x] Exécuter vingt répétitions de l'agrégat critique Flash. Le lot Pro a été arrêté à 13/70 en
+  raison de latences très élevées ; cette dérogation est acceptée explicitement pour clôturer P6
+  et reste visible dans le rapport.
+- [x] Conserver uniquement le mode standard ; Exacto est exclu de la sélection finale.
+- [x] Enregistrer modèle demandé, modèle servi, provider, tours, finish reasons, tokens, coût,
+  latence p50/p95, exactitude, tentatives d'outils et exécutions effectives.
+- [x] Sélectionner le modèle **par régime** : décider le routage intention → modèle (léger ou
+  aucun sur les chemins
   déterministes/bornés, candidat renforcé sur le fallback SQL si la campagne le justifie),
-  en conservant `require_parameters`, fallback désactivé, `data_collection: deny`, ZDR et
-  un plafond `max_price`.
+  avec pré-vol des endpoints, `require_parameters`, un plafond `max_price`, fallback normal
+  autorisé et endpoint épinglé pendant les mesures comparatives. Aucun filtre ZDR ou de collecte
+  n'est appliqué par le runtime P6.
 
 ### Seuils bloquants
 
 - 100 % des agrégats critiques exacts ;
 - 100 % des réponses sur le snapshot attendu ;
 - zéro fuite inter-agence ;
-- zéro outil non autorisé ;
+- zéro outil non autorisé **exécuté** ; une tentative bloquée puis récupérée est tracée mais ne
+  disqualifie pas le modèle ;
 - zéro colonne inventée exécutée ;
 - zéro chiffre non prouvé ;
 - zéro recherche exhaustive faussée par la casse ;
 - 100 % de réussite du suivi « et ROCK ? » ;
 - zéro contournement de boucle par requête équivalente ;
 - zéro appel provider sur les chemins déterministes ;
-- deux tours provider maximum pour le SQL généraliste, sauf exception mesurée et documentée.
+- coût cumulé projeté de campagne inférieur ou égal à 20 USD ; au-delà, suspension et demande
+  d'autorisation. Les tours, tokens, latences et réparations restent des métriques de sélection,
+  pas des plafonds arbitraires bloquants ; les limites techniques anti-boucle ne remplacent pas
+  l'évaluation du modèle.
 
 ### Checkpoint vérifiable P6
 
-Le checkpoint est validé lorsque le rapport versionné contient toutes les métriques par modèle et
-provider, qu'un candidat passe tous les seuils et que la politique provider effective confirme
-`require_parameters`, fallback désactivé, `data_collection: deny` et ZDR.
+Le checkpoint est validé lorsque le rapport versionné contient toutes les métriques par modèle,
+provider épinglé et régime, qu'un candidat passe tous les seuils de sécurité et d'exactitude par
+régime, et que la politique provider effective confirme le pré-vol d'au moins un endpoint avec
+tools, `require_parameters`, le plafond `max_price` et l'identité modèle/provider réellement servis.
 
 Commande live conditionnelle :
 
@@ -706,11 +715,18 @@ deno test --env-file=backend/.env --allow-env --allow-net --config backend/deno.
 | Date | Statut | Exécuté par | Modèles/providers | Répétitions | Résultat | Rapport |
 | --- | --- | --- | --- | ---: | --- | --- |
 | 2026-07-14 | EN COURS | Codex | Mistral/DeepInfra ; GPT-OSS/SambaNova ; DeepSeek Flash/Novita | 1 smoke provider/candidat + 1 smoke déterministe corrigé | Le défaut amont P3-bis est corrigé et vérifié live ; les anciens échecs ne classent pas les modèles ; campagne 10/20 et sélection encore à faire | `rapport-evaluation-modeles-p6.md` |
+| 2026-07-14 | EN COURS | Codex | Mistral, GPT-OSS, DeepSeek Flash/Pro, GLM 5.2, Claude Sonnet 4.6 | 1 smoke P5B par candidat + 1 second smoke Mistral | Aucun candidat ne franchit les smoke tests provider appropriés : exactitude, boucle, tours ou disponibilité bloquants ; matrice 10/20 suspendue avant dépense inutile ; Mistral restauré | `rapport-evaluation-modeles-p6.md` |
+| 2026-07-14 | EN COURS | Codex | Runtime commun, aucun appel provider supplémentaire | 84 tests IA + 3 intégrations DB réelles | Correctif local de preuve, routage borné FEST et terminaison en deux tours ; deux identités/deux agences validées ; `qa:back` 351/351 ; déploiement et reprise live en attente d'autorisation | `rapport-evaluation-modeles-p6.md` |
+| 2026-07-14 | HISTORIQUE INVALIDÉ | Codex | Mistral/DeepInfra ; GPT-OSS/WandB+Groq ; DeepSeek Pro+GLM/Novita ; Flash et Claude refusés | Smokes P5B + balayages transversaux de l'ancien harnais | Coût 0,05662744 USD conservé au cumul ; verdict modèle annulé car providers mélangés, pool artificiellement filtré et tentatives bloquées comptées comme exécutions | `rapport-evaluation-modeles-p6.md` |
+| 2026-07-14 | EN COURS | Codex | Six candidats ; pré-vol OpenRouter par endpoint | 93 tests IA/contrats ciblés, 3 intégrations DB, gate backend 356/356 | Ancien verdict invalidé : fallbacks et filtres arbitraires retirés, tentatives bloquées distinguées des exécutions, récupération guidée, seuil de remise borné, prompts enrichis ; chaque candidat possède au moins un endpoint tools sous `max_price` | `rapport-evaluation-modeles-p6.md` |
+| 2026-07-14 | VALIDÉE AVEC RÉSERVE | Codex + décision utilisateur | DeepSeek V4 Flash : DeepInfra/GMICloud ; DeepSeek V4 Pro : StreamLake/Baidu | Flash 20/20 ; Pro 13/70 avant arrêt accepté | Flash : 20 réponses exactes, `rank_purchase_terms` seul, 0,00216521 USD, p50 3 856 ms, p95 5 886 ms. Pro : 13 réponses HTTP 200, 0,11942355 USD, p50 22 695 ms, p95 131 807 ms ; balisage d'outil brut observé sur I-04, réserve acceptée. Coût P6 total : 3,99044667 USD | `rapport-evaluation-modeles-p6.md` |
 
 #### Reprise P6 après correctif P3-bis — 2026-07-14
 
 - Les trois identifiants OpenRouter ont été vérifiés et testés sans substitution silencieuse.
-- La politique effective impose paramètres supportés, aucun fallback, refus de collecte et ZDR.
+- Cette politique provider historique est retirée : elle vidait artificiellement certains pools
+  et confondait faisabilité de routage et qualité du modèle. Le pré-vol et l'épinglage par endpoint
+  deviennent la preuve de campagne ; le runtime normal autorise les fallbacks sous `max_price`.
 - `api` v125 persiste modèle servi, provider et finish reasons jusque sur les erreurs et porte le
   correctif de clarification conversationnelle.
 - Le scénario « question ambiguë → `cat_fab` » reprend désormais les termes initiaux et exécute
@@ -839,27 +855,34 @@ peuvent être menés en parallèle, mais les checkpoints restent séquentiels.
 
 ## 6. Journal transversal
 
-| Date       | Phase          | Décision ou événement                                                                                                                      | Preuve                                                                                                            | Impact sur la suite                                                               |
-| ------------| ----------------| --------------------------------------------------------------------------------------------------------------------------------------------| -------------------------------------------------------------------------------------------------------------------| -----------------------------------------------------------------------------------|
-| 2026-07-13 | Initialisation | Plan correctif créé ; aucun code ni déploiement effectué                                                                                   | Ce document                                                                                                       | Commencer par P0                                                                  |
-| 2026-07-13 | P0             | Snapshot/vérités DB figés ; sept régressions rouges ; cinq conversations reproduites sur `api` v118                                        | Supabase MCP, tests Deno ciblés, runner live conditionnel                                                         | P0 validée ; P1 uniquement est autorisée                                          |
-| 2026-07-13 | P1             | Couche sémantique déterministe livrée localement pour CAT_FAB, recherche de marques, comptage de marques et vérification directe de marque | 14 tests P1/contrats verts, MCP snapshot P0, lint/check verts; `qa:back` 298 verts/5 rouges futurs                | P1 validée sans provider ni SQL généré; P2 uniquement est autorisée               |
-| 2026-07-13 | P1             | Déploiement explicitement autorisé; aucune migration P1 absente du distant                                                                 | Supabase CLI + MCP : `api` v119 ACTIVE; routes 401 sans session; CORS OPTIONS 200                                 | Correctif P1 actif sur le backend lié; P2 reste la seule phase suivante autorisée |
-| 2026-07-13 | P1 corrective  | VFD littéral et accents préservés avant P2 ; aucune migration ni extension                                                                 | 9 tests sémantiques verts ; MCP snapshot P0 : 3/11/348 et 9/2                                                     | Précondition fermée ; P2 autorisée                                                |
-| 2026-07-13 | P2             | Parseur typé et politique centrale intention → outils ; clarifications et fallback bornés                                                  | Matrice 20 cas, 3 tests P2, suite consolidée 31 verts/5 rouges futurs ; `qa:back` 303 verts/5 rouges/11 ignorés   | P2 validée ; P3 uniquement est autorisée                                          |
-| 2026-07-13 | P3             | Contexte conversationnel compact, strict et transitoire ; héritage déterministe des relances courtes                                       | 5 tests contexte, tests frontend, suite ciblée 37 verts/4 rouges futurs ; `qa:back` 309 verts/4 rouges/11 ignorés | P3 validée sans migration ni persistance ; P4 uniquement est autorisée            |
-| 2026-07-14 | P5B            | Insertion du chantier contexte universel (E1 commentaires `COMMENT ON`, E2 vues typées `ai_v_*`, E3 catalogue cherchable `search_schema`) comme préalable de la campagne P6 ; E4 arbitré en P6, E5 couvert par P5, E6 documenté en P8 | `architecture-contexte-universel.md` (audit DB/code du 2026-07-14 : 5 commentaires `pg_description`, grilles d'achat `text`, `pg_trgm` installé) | La campagne 10/20 de P6 attend le checkpoint P5B ; P6 reste EN COURS ; aucun code ni migration livré à ce stade |
-| 2026-07-14 | P5B            | E1/E2/E3 exécutés : dictionnaire DB, casts et vues typées, recherche de schéma prioritaire, garde-fou de tri brut | Migration distante `20260714102852`; MCP : 4 vues invoker, 110 commentaires, top 3 remises; 36 tests offline + 3 DB; `qa:back`; Edge Function `api` v127 `ACTIVE`; probes CORS/auth 200/401 | Checkpoint P5B validé et déployé après autorisation explicite; P6 peut reprendre |
+| Date       | Phase              | Décision ou événement                                                                                                                                                                                                                 | Preuve                                                                                                                                                                                      | Impact sur la suite                                                                                                                   |
+| ------------| --------------------| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------| ---------------------------------------------------------------------------------------------------------------------------------------|
+| 2026-07-13 | Initialisation     | Plan correctif créé ; aucun code ni déploiement effectué                                                                                                                                                                              | Ce document                                                                                                                                                                                 | Commencer par P0                                                                                                                      |
+| 2026-07-13 | P0                 | Snapshot/vérités DB figés ; sept régressions rouges ; cinq conversations reproduites sur `api` v118                                                                                                                                   | Supabase MCP, tests Deno ciblés, runner live conditionnel                                                                                                                                   | P0 validée ; P1 uniquement est autorisée                                                                                              |
+| 2026-07-13 | P1                 | Couche sémantique déterministe livrée localement pour CAT_FAB, recherche de marques, comptage de marques et vérification directe de marque                                                                                            | 14 tests P1/contrats verts, MCP snapshot P0, lint/check verts; `qa:back` 298 verts/5 rouges futurs                                                                                          | P1 validée sans provider ni SQL généré; P2 uniquement est autorisée                                                                   |
+| 2026-07-13 | P1                 | Déploiement explicitement autorisé; aucune migration P1 absente du distant                                                                                                                                                            | Supabase CLI + MCP : `api` v119 ACTIVE; routes 401 sans session; CORS OPTIONS 200                                                                                                           | Correctif P1 actif sur le backend lié; P2 reste la seule phase suivante autorisée                                                     |
+| 2026-07-13 | P1 corrective      | VFD littéral et accents préservés avant P2 ; aucune migration ni extension                                                                                                                                                            | 9 tests sémantiques verts ; MCP snapshot P0 : 3/11/348 et 9/2                                                                                                                               | Précondition fermée ; P2 autorisée                                                                                                    |
+| 2026-07-13 | P2                 | Parseur typé et politique centrale intention → outils ; clarifications et fallback bornés                                                                                                                                             | Matrice 20 cas, 3 tests P2, suite consolidée 31 verts/5 rouges futurs ; `qa:back` 303 verts/5 rouges/11 ignorés                                                                             | P2 validée ; P3 uniquement est autorisée                                                                                              |
+| 2026-07-13 | P3                 | Contexte conversationnel compact, strict et transitoire ; héritage déterministe des relances courtes                                                                                                                                  | 5 tests contexte, tests frontend, suite ciblée 37 verts/4 rouges futurs ; `qa:back` 309 verts/4 rouges/11 ignorés                                                                           | P3 validée sans migration ni persistance ; P4 uniquement est autorisée                                                                |
+| 2026-07-14 | P5B                | Insertion du chantier contexte universel (E1 commentaires `COMMENT ON`, E2 vues typées `ai_v_*`, E3 catalogue cherchable `search_schema`) comme préalable de la campagne P6 ; E4 arbitré en P6, E5 couvert par P5, E6 documenté en P8 | `architecture-contexte-universel.md` (audit DB/code du 2026-07-14 : 5 commentaires `pg_description`, grilles d'achat `text`, `pg_trgm` installé)                                            | La campagne 10/20 de P6 attend le checkpoint P5B ; P6 reste EN COURS ; aucun code ni migration livré à ce stade                       |
+| 2026-07-14 | P5B                | E1/E2/E3 exécutés : dictionnaire DB, casts et vues typées, recherche de schéma prioritaire, garde-fou de tri brut                                                                                                                     | Migration distante `20260714102852`; MCP : 4 vues invoker, 110 commentaires, top 3 remises; 36 tests offline + 3 DB; `qa:back`; Edge Function `api` v127 `ACTIVE`; probes CORS/auth 200/401 | Checkpoint P5B validé et déployé après autorisation explicite; P6 peut reprendre                                                      |
+| 2026-07-14 | P6                 | Six candidats configurés et smoke tests P5B rejoués après remplacement autorisé de la clé OpenRouter                                                                                                                                  | MCP `api` v127; Mistral/DeepSeek Pro/GLM exécutent `search_schema` mais ne produisent pas de réponse exacte; GPT-OSS boucle; DeepSeek Flash et Claude retournent 429                        | Aucun candidat admissible; campagne 10/20 suspendue; aucune sélection; P7 reste interdite                                             |
+| 2026-07-14 | P6 corrective      | Preuve universelle sourcée, routage borné `rank_purchase_terms` et conclusion après outil unique réussi                                                                                                                               | 84/84 tests IA; 3/3 intégrations DB sur deux identités/deux agences; `qa:back` 351 verts; MCP 673 CAT_FAB FEST                                                                              | Correctif prêt localement mais absent de `api` v127; nouveau déploiement requis avant smoke et campagne 10/20                         |
+| 2026-07-14 | P6 historique      | Correctif v129, smokes de six modèles et restauration de la configuration                                                                                                                                                             | `api` code v129 / révision v131 ACTIVE; providers mélangés; coût 0,05662744 USD; `qa:back` 352 verts; auth/CORS 401/200                                                                     | Verdict modèle invalidé par la correction v6.1; coût conservé; aucune sélection ni activation                                         |
+| 2026-07-14 | P6 corrective v6.1 | Pré-vol endpoint, politique sans filtres arbitraires, récupération guidée et distinction tentative/exécution ; seuil de remise promu                                                                                                  | Six modèles avec endpoint tools sous `max_price`; 93 tests IA/contrats ciblés; 3/3 intégrations DB; `qa:back` 356/356                                                                       | Correctif prêt à déployer; smokes puis campagne 10/20 à exécuter; P7 reste interdite                                                  |
+| 2026-07-14 | P6 clôture         | Sélection finale OpenRouter en mode standard : aucun provider sur les chemins déterministes, DeepSeek V4 Flash sur le courant/borné et DeepSeek V4 Pro sur le fallback SQL complexe                                                   | Flash 20/20 exact via DeepInfra/GMICloud ; Pro 13/70 via StreamLake/Baidu avant arrêt accepté ; coût P6 3,99044667 USD ; configuration et quotas restaurés                                  | P6 validée avec réserve par décision utilisateur ; sélection en attente d'activation ; P7 reste interdite sans autorisation explicite |
+| 2026-07-15 | E4 local           | Routage mode → modèle implémenté dans le broker, résolution exacte Flash/Pro, statut conditionné aux deux modèles et traçage du régime                                                                                                 | 37 tests ciblés, 4 intégrations DB, `qa:back` 360/360, `qa:docs` et diff-check verts ; gate complet arrêté après 692 tests frontend verts sur le seuil dashboard préexistant 13,33/30 %      | Implémentation locale validée ; aucun déploiement/configuration distante ; P7 reste interdite sans autorisation explicite               |
+| 2026-07-15 | E4 runtime         | Routage E4 déployé dans `api` v138 ; aucune migration ni mutation de modèle/quota                                                                                                                                                      | MCP v138 ACTIVE ; auth 401, CORS 200, statut Flash 200 ; Flash 200 via DeepInfra ; deux smokes Pro 502 ; probe sans plafond 200 via StreamLake                                               | Flash opérationnel ; Pro bloqué par politique de données OpenRouter + plafond 0,435/0,87 ; décision de configuration requise ; P7 reste interdite |
 
 ## 7. État de livraison
 
-| Élément                                     | État                                                 |
-| ---------------------------------------------| ------------------------------------------------------|
-| Plan correctif documenté                    | OUI                                                  |
-| Corrections entièrement validées            | NON                                                  |
-| Campagne comparative terminée               | NON                                                  |
-| `pnpm run qa` complet vert pour le worktree | NON                                                  |
-| Documentation finale synchronisée           | NON                                                  |
-| Prêt à déployer                             | DÉPLOYÉ — P5B inclus dans l'Edge Function `api` v127 |
-| Déploiement demandé                         | OUI — autorisé explicitement le 2026-07-14           |
-| Edge Function corrective déployée           | OUI — `api` v127 `ACTIVE`                            |
+| Élément                                     | État                                          |
+| ---------------------------------------------| -----------------------------------------------|
+| Plan correctif documenté                    | OUI                                           |
+| Corrections entièrement validées            | OUI pour P0–P6, avec réserve Pro documentée   |
+| Campagne comparative terminée               | OUI par décision utilisateur                  |
+| `pnpm run qa` complet vert pour le worktree | NON — seuil dashboard préexistant 13,33/30 % |
+| Documentation finale synchronisée           | OUI pour P6                                   |
+| Prêt à déployer                             | DÉPLOYÉ — `api` v138 ACTIVE                   |
+| Déploiement demandé                         | OUI — autorisé explicitement le 2026-07-15    |
+| Edge Function corrective déployée           | OUI — v138 ; acceptation Pro encore bloquée   |

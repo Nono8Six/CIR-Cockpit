@@ -1,5 +1,5 @@
-import { assertEquals } from "std/assert";
-import * as XLSX from "xlsx";
+import { assertEquals } from 'std/assert';
+import * as XLSX from 'xlsx';
 
 import {
   PRICING_REFERENCE_MAX_FILE_SIZE_BYTES,
@@ -37,26 +37,26 @@ import {
   pricingReferenceSegmentDetailInputSchema,
   pricingReferenceSegmentDetailResponseSchema,
   pricingReferenceSegmentsListInputSchema,
-} from "../../../../shared/schemas/pricing/references.schema.ts";
-import type { DbClient } from "../types.ts";
+} from '../../../../shared/schemas/pricing/references.schema.ts';
+import type { DbClient } from '../types.ts';
 import {
   buildAnomaliesExportWorkbook,
   getPricingReferenceAnomaliesSummary,
   listAllPricingReferenceClassification,
   type PricingReferenceAnomalyQueryRow,
   type PricingReferenceExportSourceRow,
-} from "../services/pricing/references/referenceImports.ts";
+} from '../services/pricing/references/referenceImports.ts';
 import {
   classifyPricingReferenceNumericChange,
   resolvePricingReferenceBrandAliases,
-} from "../services/pricing/references/referenceDiffs.ts";
+} from '../services/pricing/references/referenceDiffs.ts';
 
 const readObject = (
   record: Record<string, unknown>,
   key: string,
 ): Record<string, unknown> | null => {
   const value = record[key];
-  return value && typeof value === "object" && !Array.isArray(value)
+  return value && typeof value === 'object' && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : null;
 };
@@ -66,7 +66,7 @@ const readString = (
   key: string,
 ): string | null => {
   const value = record[key];
-  return typeof value === "string" ? value : null;
+  return typeof value === 'string' ? value : null;
 };
 
 const readNumber = (
@@ -74,7 +74,7 @@ const readNumber = (
   key: string,
 ): number | null => {
   const value = record[key];
-  return typeof value === "number" ? value : null;
+  return typeof value === 'number' ? value : null;
 };
 
 const createExecuteOnlyDb = (
@@ -95,26 +95,26 @@ const readErrorData = async (
   response: Response,
 ): Promise<Record<string, unknown>> => {
   const payload = (await response.json()) as Record<string, unknown>;
-  const error = readObject(payload, "error");
-  const data = error ? readObject(error, "data") : null;
+  const error = readObject(payload, 'error');
+  const data = error ? readObject(error, 'data') : null;
   assertEquals(Boolean(data), true);
   return data as Record<string, unknown>;
 };
 
-Deno.test("pricing reference payload contracts are strict and bounded", () => {
+Deno.test('pricing reference payload contracts are strict and bounded', () => {
   const preparePayload = {
     files: {
       classification: {
-        original_filename: "classification.xlsx",
+        original_filename: 'classification.xlsx',
         size_bytes: 1024,
-        sha256: "a".repeat(64),
+        sha256: 'a'.repeat(64),
         content_type:
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       },
       segments_grids: {
-        original_filename: "segments.xlsx",
+        original_filename: 'segments.xlsx',
         size_bytes: PRICING_REFERENCE_MAX_FILE_SIZE_BYTES,
-        sha256: "b".repeat(64),
+        sha256: 'b'.repeat(64),
       },
     },
   };
@@ -156,7 +156,7 @@ Deno.test("pricing reference payload contracts are strict and bounded", () => {
         ...preparePayload.files,
         classification: {
           ...preparePayload.files.classification,
-          original_filename: "classification.xls",
+          original_filename: 'classification.xls',
         },
       },
     }).success,
@@ -176,7 +176,7 @@ Deno.test("pricing reference payload contracts are strict and bounded", () => {
   );
 });
 
-Deno.test("pricing reference list and analyze contracts reject unsupported fields", () => {
+Deno.test('pricing reference list and analyze contracts reject unsupported fields', () => {
   assertEquals(
     pricingReferenceImportsListInputSchema.safeParse({ page: 1, page_size: 50 })
       .success,
@@ -201,7 +201,7 @@ Deno.test("pricing reference list and analyze contracts reject unsupported field
     pricingReferenceRowsListInputSchema.safeParse({
       page: 1,
       page_size: 50,
-      search: "marque",
+      search: 'marque',
     }).success,
     true,
   );
@@ -209,10 +209,10 @@ Deno.test("pricing reference list and analyze contracts reject unsupported field
     pricingReferenceClassificationListInputSchema.safeParse({
       page: 1,
       page_size: 50,
-      search: "MEGA",
-      filters: { mega: "10", fam: "20" },
-      sort_by: "cir_key",
-      sort_direction: "desc",
+      search: 'MEGA',
+      filters: { mega: '10', fam: '20' },
+      sort_by: 'cir_key',
+      sort_direction: 'desc',
     }).success,
     true,
   );
@@ -220,7 +220,7 @@ Deno.test("pricing reference list and analyze contracts reject unsupported field
     pricingReferenceClassificationListInputSchema.safeParse({
       page: 1,
       page_size: 50,
-      filters: { mega: "10", unknown: "x" },
+      filters: { mega: '10', unknown: 'x' },
     }).success,
     false,
   );
@@ -229,12 +229,12 @@ Deno.test("pricing reference list and analyze contracts reject unsupported field
       page: 1,
       page_size: 50,
       filters: {
-        marque: "SKF",
-        cat_fab: "ROULEMENT",
-        link_status: "complete_valid",
+        marque: 'SKF',
+        cat_fab: 'ROULEMENT',
+        link_status: 'complete_valid',
       },
-      sort_by: "purchase_grid_rows_count",
-      sort_direction: "desc",
+      sort_by: 'purchase_grid_rows_count',
+      sort_direction: 'desc',
     }).success,
     true,
   );
@@ -242,19 +242,19 @@ Deno.test("pricing reference list and analyze contracts reject unsupported field
     pricingReferenceSegmentsListInputSchema.safeParse({
       page: 1,
       page_size: 50,
-      filters: { link_status: "active" },
+      filters: { link_status: 'active' },
     }).success,
     false,
   );
   assertEquals(
     pricingReferenceSegmentDetailInputSchema.safeParse({
-      segment_id: "00000000-0000-4000-8000-000000000004",
+      segment_id: '00000000-0000-4000-8000-000000000004',
     }).success,
     true,
   );
   assertEquals(
     pricingReferenceSegmentDetailInputSchema.safeParse({
-      segment_id: "00000000-0000-4000-8000-000000000004",
+      segment_id: '00000000-0000-4000-8000-000000000004',
       extra: true,
     }).success,
     false,
@@ -262,53 +262,53 @@ Deno.test("pricing reference list and analyze contracts reject unsupported field
   assertEquals(
     pricingReferenceSegmentDetailResponseSchema.safeParse({
       ok: true,
-      request_id: "test-request",
+      request_id: 'test-request',
       segment: {
-        id: "00000000-0000-4000-8000-000000000004",
-        snapshot_id: "00000000-0000-4000-8000-000000000002",
-        import_id: "00000000-0000-4000-8000-000000000001",
-        source_file_id: "00000000-0000-4000-8000-000000000006",
+        id: '00000000-0000-4000-8000-000000000004',
+        snapshot_id: '00000000-0000-4000-8000-000000000002',
+        import_id: '00000000-0000-4000-8000-000000000001',
+        source_file_id: '00000000-0000-4000-8000-000000000006',
         source_row_number: 1,
-        segment_key: "BOSCH|CAT|001|42",
-        segment: "001",
-        idnumerique: "42",
-        marque: "BOSCH",
-        cat_fab: "CAT",
-        cat_fab_l: "Perceuses",
+        segment_key: 'BOSCH|CAT|001|42',
+        segment: '001',
+        idnumerique: '42',
+        marque: 'BOSCH',
+        cat_fab: 'CAT',
+        cat_fab_l: 'Perceuses',
         strategiq: null,
         codif_fair: null,
         tarif_fab: null,
-        cir_key: "010203",
-        link_status: "complete_valid",
+        cir_key: '010203',
+        link_status: 'complete_valid',
         purchase_grid_rows_count: 1,
         link_source_row_number: 2,
-        mega_famille: "01",
-        famille: "02",
-        sous_famille: "03",
-        mega_libelle: "Outillage",
-        famille_libelle: "Electroportatif",
-        sfam_libelle: "Perceuses",
+        mega_famille: '01',
+        famille: '02',
+        sous_famille: '03',
+        mega_libelle: 'Outillage',
+        famille_libelle: 'Electroportatif',
+        sfam_libelle: 'Perceuses',
       },
       purchase_grid_rows: [{
-        id: "00000000-0000-4000-8000-000000000011",
-        snapshot_id: "00000000-0000-4000-8000-000000000002",
-        import_id: "00000000-0000-4000-8000-000000000001",
-        segment_id: "00000000-0000-4000-8000-000000000004",
-        source_file_id: "00000000-0000-4000-8000-000000000006",
+        id: '00000000-0000-4000-8000-000000000011',
+        snapshot_id: '00000000-0000-4000-8000-000000000002',
+        import_id: '00000000-0000-4000-8000-000000000001',
+        segment_id: '00000000-0000-4000-8000-000000000004',
+        source_file_id: '00000000-0000-4000-8000-000000000006',
         source_row_number: 12,
-        num_four: "F001",
-        remise_ha: "12",
-        col_ha: "A",
-        priorite: "1",
-        type_grill: "standard",
-        date_debut_raw: "2026-01-01",
-        date_fin_raw: "2026-12-31",
-        date_debut_normalized: "2026-01-01",
-        date_fin_normalized: "2026-12-31",
-        borne_acha: "100",
-        coef_retro: "0.95",
-        coef_ha: "1.10",
-        coef_majvte: "1.20",
+        num_four: 'F001',
+        remise_ha: '12',
+        col_ha: 'A',
+        priorite: '1',
+        type_grill: 'standard',
+        date_debut_raw: '2026-01-01',
+        date_fin_raw: '2026-12-31',
+        date_debut_normalized: '2026-01-01',
+        date_fin_normalized: '2026-12-31',
+        borne_acha: '100',
+        coef_retro: '0.95',
+        coef_ha: '1.10',
+        coef_majvte: '1.20',
       }],
     }).success,
     true,
@@ -317,11 +317,11 @@ Deno.test("pricing reference list and analyze contracts reject unsupported field
     pricingReferenceAnomaliesListInputSchema.safeParse({
       page: 1,
       page_size: 50,
-      severities: ["haute"],
-      types: ["purchase_grid_missing"],
-      marques: ["BOSCH"],
-      sort_by: "severity",
-      sort_direction: "asc",
+      severities: ['haute'],
+      types: ['purchase_grid_missing'],
+      marques: ['BOSCH'],
+      sort_by: 'severity',
+      sort_direction: 'asc',
     }).success,
     true,
   );
@@ -329,7 +329,7 @@ Deno.test("pricing reference list and analyze contracts reject unsupported field
     pricingReferenceAnomaliesListInputSchema.safeParse({
       page: 1,
       page_size: 50,
-      severities: Array(21).fill("haute"),
+      severities: Array(21).fill('haute'),
     }).success,
     false,
   );
@@ -337,7 +337,7 @@ Deno.test("pricing reference list and analyze contracts reject unsupported field
     pricingReferenceAnomaliesListInputSchema.safeParse({
       page: 1,
       page_size: 50,
-      types: Array(21).fill("purchase_grid_missing"),
+      types: Array(21).fill('purchase_grid_missing'),
     }).success,
     false,
   );
@@ -345,7 +345,7 @@ Deno.test("pricing reference list and analyze contracts reject unsupported field
     pricingReferenceAnomaliesListInputSchema.safeParse({
       page: 1,
       page_size: 50,
-      marques: Array(21).fill("BOSCH"),
+      marques: Array(21).fill('BOSCH'),
     }).success,
     false,
   );
@@ -353,7 +353,7 @@ Deno.test("pricing reference list and analyze contracts reject unsupported field
     pricingReferenceAnomaliesListInputSchema.safeParse({
       page: 1,
       page_size: 50,
-      severity: "haute",
+      severity: 'haute',
     }).success,
     false,
   );
@@ -361,7 +361,7 @@ Deno.test("pricing reference list and analyze contracts reject unsupported field
     pricingReferenceAnomaliesListInputSchema.safeParse({
       page: 1,
       page_size: 50,
-      sort_by: "activation",
+      sort_by: 'activation',
     }).success,
     false,
   );
@@ -369,7 +369,7 @@ Deno.test("pricing reference list and analyze contracts reject unsupported field
     pricingReferenceRowsListInputSchema.safeParse({
       page: 1,
       page_size: 50,
-      search: "x".repeat(121),
+      search: 'x'.repeat(121),
     }).success,
     false,
   );
@@ -377,23 +377,23 @@ Deno.test("pricing reference list and analyze contracts reject unsupported field
     pricingReferenceAnomaliesListResponseSchema.safeParse({
       ok: true,
       rows: [{
-        id: "11111111-1111-4111-8111-111111111111",
-        import_id: "22222222-2222-4222-8222-222222222222",
-        snapshot_id: "33333333-3333-4333-8333-333333333333",
-        source_file_id: "44444444-4444-4444-8444-444444444444",
+        id: '11111111-1111-4111-8111-111111111111',
+        import_id: '22222222-2222-4222-8222-222222222222',
+        snapshot_id: '33333333-3333-4333-8333-333333333333',
+        source_file_id: '44444444-4444-4444-8444-444444444444',
         source_file: {
-          file_kind: "segments_grids",
-          original_filename: "segments.xlsx",
+          file_kind: 'segments_grids',
+          original_filename: 'segments.xlsx',
         },
         source_row_number: 8,
-        type: "purchase_grid_missing",
-        severity: "moyenne",
+        type: 'purchase_grid_missing',
+        severity: 'moyenne',
         object_type: null,
         object_id: null,
-        columns: ["NUM_FOUR"],
-        message: "Champ grille achat structurel manquant.",
-        details: { raw_values: { MARQUE: "BOSCH" } },
-        created_at: "2026-06-22T10:06:00.000Z",
+        columns: ['NUM_FOUR'],
+        message: 'Champ grille achat structurel manquant.',
+        details: { raw_values: { MARQUE: 'BOSCH' } },
+        created_at: '2026-06-22T10:06:00.000Z',
       }],
       page: 1,
       page_size: 50,
@@ -405,21 +405,21 @@ Deno.test("pricing reference list and analyze contracts reject unsupported field
     pricingReferenceAnomaliesListResponseSchema.safeParse({
       ok: true,
       rows: [{
-        id: "11111111-1111-4111-8111-111111111111",
-        import_id: "22222222-2222-4222-8222-222222222222",
+        id: '11111111-1111-4111-8111-111111111111',
+        import_id: '22222222-2222-4222-8222-222222222222',
         snapshot_id: null,
         source_file_id: null,
         source_file: null,
         source_row_number: null,
-        type: "purchase_grid_missing",
-        severity: "moyenne",
+        type: 'purchase_grid_missing',
+        severity: 'moyenne',
         object_type: null,
         object_id: null,
         columns: [],
-        message: "Champ grille achat structurel manquant.",
+        message: 'Champ grille achat structurel manquant.',
         details: {},
-        created_at: "2026-06-22T10:06:00.000Z",
-        status: "nouvelle",
+        created_at: '2026-06-22T10:06:00.000Z',
+        status: 'nouvelle',
       }],
       page: 1,
       page_size: 50,
@@ -429,26 +429,26 @@ Deno.test("pricing reference list and analyze contracts reject unsupported field
   );
   assertEquals(
     pricingReferenceImportAnalyzeInputSchema.safeParse({
-      import_id: "11111111-1111-4111-8111-111111111111",
+      import_id: '11111111-1111-4111-8111-111111111111',
     }).success,
     true,
   );
   assertEquals(
     pricingReferenceImportAnalyzeInputSchema.safeParse({
-      import_id: "11111111-1111-4111-8111-111111111111",
+      import_id: '11111111-1111-4111-8111-111111111111',
       activate: true,
     }).success,
     false,
   );
   assertEquals(
     pricingReferenceImportActivateInputSchema.safeParse({
-      import_id: "11111111-1111-4111-8111-111111111111",
+      import_id: '11111111-1111-4111-8111-111111111111',
     }).success,
     true,
   );
   assertEquals(
     pricingReferenceImportActivateInputSchema.safeParse({
-      import_id: "11111111-1111-4111-8111-111111111111",
+      import_id: '11111111-1111-4111-8111-111111111111',
       force: true,
     }).success,
     false,
@@ -456,10 +456,10 @@ Deno.test("pricing reference list and analyze contracts reject unsupported field
   assertEquals(
     pricingReferenceImportActivateResponseSchema.safeParse({
       ok: true,
-      request_id: "request-1",
-      import_id: "11111111-1111-4111-8111-111111111111",
-      snapshot_id: "22222222-2222-4222-8222-222222222222",
-      activated_at: "2026-07-07T06:40:00.000Z",
+      request_id: 'request-1',
+      import_id: '11111111-1111-4111-8111-111111111111',
+      snapshot_id: '22222222-2222-4222-8222-222222222222',
+      activated_at: '2026-07-07T06:40:00.000Z',
       previous_snapshot_id: null,
       previous_deactivated_at: null,
     }).success,
@@ -468,71 +468,71 @@ Deno.test("pricing reference list and analyze contracts reject unsupported field
   assertEquals(
     pricingReferenceImportActivateResponseSchema.safeParse({
       ok: true,
-      request_id: "request-1",
-      import_id: "11111111-1111-4111-8111-111111111111",
-      snapshot_id: "22222222-2222-4222-8222-222222222222",
-      activated_at: "2026-07-07T06:40:00.000Z",
+      request_id: 'request-1',
+      import_id: '11111111-1111-4111-8111-111111111111',
+      snapshot_id: '22222222-2222-4222-8222-222222222222',
+      activated_at: '2026-07-07T06:40:00.000Z',
       previous_snapshot_id: null,
       previous_deactivated_at: null,
-      import_status: "archive",
+      import_status: 'archive',
     }).success,
     false,
   );
 });
 
-Deno.test("pricing reference import responses expose effective files distinctly", () => {
+Deno.test('pricing reference import responses expose effective files distinctly', () => {
   const importId = crypto.randomUUID();
   const fileId = crypto.randomUUID();
   const sourceImportId = crypto.randomUUID();
   const effectiveFile = {
-    file_kind: "classification",
-    original_filename: "classification.xlsx",
+    file_kind: 'classification',
+    original_filename: 'classification.xlsx',
     size_bytes: 1024,
-    sha256: "a".repeat(64),
+    sha256: 'a'.repeat(64),
     row_count: 497,
-    source: "reutilise",
+    source: 'reutilise',
     source_import_id: sourceImportId,
-    source_import_created_at: "2026-07-05T08:00:00.000Z",
+    source_import_created_at: '2026-07-05T08:00:00.000Z',
   };
   const summary = {
     id: importId,
-    status: "analyse_ok",
+    status: 'analyse_ok',
     created_by: null,
     analyzed_by: crypto.randomUUID(),
-    created_at: "2026-07-06T08:00:00.000Z",
-    updated_at: "2026-07-06T08:01:00.000Z",
-    analysis_started_at: "2026-07-06T08:00:10.000Z",
-    analysis_completed_at: "2026-07-06T08:01:00.000Z",
+    created_at: '2026-07-06T08:00:00.000Z',
+    updated_at: '2026-07-06T08:01:00.000Z',
+    analysis_started_at: '2026-07-06T08:00:10.000Z',
+    analysis_completed_at: '2026-07-06T08:01:00.000Z',
     error_code: null,
     error_message: null,
     classification_rows_count: 497,
     segments_rows_count: 12_635,
     anomalies_total: 0,
     is_active_version: true,
-    snapshot_status: "actif",
-    activated_at: "2026-07-06T08:02:00.000Z",
+    snapshot_status: 'actif',
+    activated_at: '2026-07-06T08:02:00.000Z',
     deactivated_at: null,
     files: [effectiveFile],
   };
   const attachedFile = {
     id: fileId,
     import_id: importId,
-    file_kind: "segments_grids",
-    original_filename: "segments.xlsx",
-    storage_bucket: "pricing-reference-sources",
-    storage_path: "imports/2026-07-06/segments.xlsx",
+    file_kind: 'segments_grids',
+    original_filename: 'segments.xlsx',
+    storage_bucket: 'pricing-reference-sources',
+    storage_path: 'imports/2026-07-06/segments.xlsx',
     size_bytes: 2048,
-    sha256: "b".repeat(64),
+    sha256: 'b'.repeat(64),
     content_type: null,
     sheet_name: null,
     detected_columns: [],
     row_count: 12_635,
     mapping_profile_id: null,
     column_mapping: {},
-    mapping_status: "confirme",
+    mapping_status: 'confirme',
     mapping_confirmed_by: null,
     mapping_confirmed_at: null,
-    created_at: "2026-07-06T08:00:20.000Z",
+    created_at: '2026-07-06T08:00:20.000Z',
   };
 
   assertEquals(
@@ -573,7 +573,7 @@ Deno.test("pricing reference import responses expose effective files distinctly"
       import: {
         ...summary,
         files: [attachedFile],
-        effective_files: [{ ...effectiveFile, source: "ancien" }],
+        effective_files: [{ ...effectiveFile, source: 'ancien' }],
         health_report: null,
       },
     }).success,
@@ -581,23 +581,23 @@ Deno.test("pricing reference import responses expose effective files distinctly"
   );
 });
 
-Deno.test("pricing reference summary and listAll contracts are strict", () => {
+Deno.test('pricing reference summary and listAll contracts are strict', () => {
   assertEquals(
     pricingReferenceAnomaliesSummaryGetInputSchema.safeParse({}).success,
     true,
   );
   assertEquals(
     pricingReferenceAnomaliesSummaryGetInputSchema.safeParse({
-      import_id: "11111111-1111-4111-8111-111111111111",
+      import_id: '11111111-1111-4111-8111-111111111111',
     }).success,
     true,
   );
   assertEquals(
     pricingReferenceAnomaliesSummaryGetInputSchema.safeParse({
-      search: "segment",
-      severities: ["haute"],
-      types: ["purchase_grid_missing"],
-      marques: ["BOSCH"],
+      search: 'segment',
+      severities: ['haute'],
+      types: ['purchase_grid_missing'],
+      marques: ['BOSCH'],
     }).success,
     true,
   );
@@ -611,8 +611,8 @@ Deno.test("pricing reference summary and listAll contracts are strict", () => {
     pricingReferenceAnomaliesListInputSchema.safeParse({
       page: 1,
       page_size: 50,
-      marques: ["BOSCH"],
-      types: ["purchase_grid_missing"],
+      marques: ['BOSCH'],
+      types: ['purchase_grid_missing'],
     }).success,
     true,
   );
@@ -620,16 +620,16 @@ Deno.test("pricing reference summary and listAll contracts are strict", () => {
     pricingReferenceAnomaliesListInputSchema.safeParse({
       page: 1,
       page_size: 50,
-      marques: [""],
+      marques: [''],
     }).success,
     false,
   );
   assertEquals(
     pricingReferenceAnomaliesExportInputSchema.safeParse({
-      search: "segment",
-      severities: ["moyenne"],
-      types: ["purchase_grid_missing"],
-      marques: ["BOSCH"],
+      search: 'segment',
+      severities: ['moyenne'],
+      types: ['purchase_grid_missing'],
+      marques: ['BOSCH'],
     }).success,
     true,
   );
@@ -644,31 +644,31 @@ Deno.test("pricing reference summary and listAll contracts are strict", () => {
       ok: true,
       total: 3,
       groups_by_type: [{
-        type: "purchase_grid_missing",
-        label: "Grille achat incomplete",
+        type: 'purchase_grid_missing',
+        label: 'Grille achat incomplete',
         action_label:
-          "Completer les champs de grille achat structurels dans le fichier source.",
+          'Completer les champs de grille achat structurels dans le fichier source.',
         count: 3,
-        max_severity: "haute",
+        max_severity: 'haute',
       }],
       facets: {
         severities: [{
-          value: "haute",
-          label: "Haute",
+          value: 'haute',
+          label: 'Haute',
           count: 3,
-          max_severity: "haute",
+          max_severity: 'haute',
         }],
         types: [{
-          value: "purchase_grid_missing",
-          label: "Grille achat incomplete",
+          value: 'purchase_grid_missing',
+          label: 'Grille achat incomplete',
           count: 3,
-          max_severity: "haute",
+          max_severity: 'haute',
         }],
         marques: [{
-          value: "BOSCH",
-          label: "BOSCH",
+          value: 'BOSCH',
+          label: 'BOSCH',
           count: 3,
-          max_severity: "haute",
+          max_severity: 'haute',
         }],
       },
     }).success,
@@ -679,11 +679,11 @@ Deno.test("pricing reference summary and listAll contracts are strict", () => {
       ok: true,
       total: 3,
       marques: [{
-        marque: "BOSCH",
-        max_severity: "haute",
+        marque: 'BOSCH',
+        max_severity: 'haute',
         types: [{
-          type: "purchase_grid_missing",
-          max_severity: "haute",
+          type: 'purchase_grid_missing',
+          max_severity: 'haute',
         }],
       }],
     }).success,
@@ -692,18 +692,18 @@ Deno.test("pricing reference summary and listAll contracts are strict", () => {
   assertEquals(
     pricingReferenceAnomaliesExportResponseSchema.safeParse({
       ok: true,
-      request_id: "request-1",
+      request_id: 'request-1',
       files: [{
-        file_kind: "classification",
-        download_url: "https://example.test/classification.xlsx",
-        expires_at: "2026-06-22T11:08:00.000Z",
-        filename: "anomalies-classification.xlsx",
+        file_kind: 'classification',
+        download_url: 'https://example.test/classification.xlsx',
+        expires_at: '2026-06-22T11:08:00.000Z',
+        filename: 'anomalies-classification.xlsx',
         row_count: 1,
       }, {
-        file_kind: "segments_grids",
-        download_url: "https://example.test/segments.xlsx",
-        expires_at: "2026-06-22T11:08:00.000Z",
-        filename: "anomalies-segments-grilles.xlsx",
+        file_kind: 'segments_grids',
+        download_url: 'https://example.test/segments.xlsx',
+        expires_at: '2026-06-22T11:08:00.000Z',
+        filename: 'anomalies-segments-grilles.xlsx',
         row_count: 2,
       }],
       row_count: 3,
@@ -713,10 +713,10 @@ Deno.test("pricing reference summary and listAll contracts are strict", () => {
   assertEquals(
     pricingReferenceAnomaliesExportResponseSchema.safeParse({
       ok: true,
-      request_id: "request-1",
-      download_url: "https://example.test/legacy.xlsx",
-      expires_at: "2026-06-22T11:08:00.000Z",
-      filename: "anomalies.xlsx",
+      request_id: 'request-1',
+      download_url: 'https://example.test/legacy.xlsx',
+      expires_at: '2026-06-22T11:08:00.000Z',
+      filename: 'anomalies.xlsx',
       row_count: 1,
     }).success,
     false,
@@ -724,12 +724,12 @@ Deno.test("pricing reference summary and listAll contracts are strict", () => {
   assertEquals(
     pricingReferenceAnomaliesExportResponseSchema.safeParse({
       ok: true,
-      request_id: "request-1",
+      request_id: 'request-1',
       files: [{
-        file_kind: "classification",
-        download_url: "https://example.test/export.xlsx",
-        expires_at: "2026-06-22T11:08:00.000Z",
-        filename: "anomalies.xlsx",
+        file_kind: 'classification',
+        download_url: 'https://example.test/export.xlsx',
+        expires_at: '2026-06-22T11:08:00.000Z',
+        filename: 'anomalies.xlsx',
         row_count: -1,
       }],
       row_count: -1,
@@ -742,7 +742,7 @@ Deno.test("pricing reference summary and listAll contracts are strict", () => {
   );
   assertEquals(
     pricingReferenceClassificationListAllInputSchema.safeParse({
-      search: "abc",
+      search: 'abc',
     }).success,
     false,
   );
@@ -752,17 +752,17 @@ Deno.test("pricing reference summary and listAll contracts are strict", () => {
       total: 1,
       truncated: false,
       rows: [{
-        id: "11111111-1111-4111-8111-111111111111",
-        snapshot_id: "33333333-3333-4333-8333-333333333333",
-        import_id: "22222222-2222-4222-8222-222222222222",
+        id: '11111111-1111-4111-8111-111111111111',
+        snapshot_id: '33333333-3333-4333-8333-333333333333',
+        import_id: '22222222-2222-4222-8222-222222222222',
         source_row_number: 2,
-        cir_key: "9_20_99",
-        mega: "9",
-        fam: "20",
-        sfa: "99",
-        mega_lib: "Outillage",
-        fam_lib: "Outillage a main",
-        sfa_lib: "Divers",
+        cir_key: '9_20_99',
+        mega: '9',
+        fam: '20',
+        sfa: '99',
+        mega_lib: 'Outillage',
+        fam_lib: 'Outillage a main',
+        sfa_lib: 'Divers',
       }],
     }).success,
     true,
@@ -777,40 +777,40 @@ Deno.test("pricing reference summary and listAll contracts are strict", () => {
   );
 });
 
-Deno.test("pricing reference diff contracts are strict and cache-aware", () => {
-  const baseId = "11111111-1111-4111-8111-111111111111";
-  const targetId = "22222222-2222-4222-8222-222222222222";
-  const runId = "33333333-3333-4333-8333-333333333333";
+Deno.test('pricing reference diff contracts are strict and cache-aware', () => {
+  const baseId = '11111111-1111-4111-8111-111111111111';
+  const targetId = '22222222-2222-4222-8222-222222222222';
+  const runId = '33333333-3333-4333-8333-333333333333';
   const summaryResponse = {
     ok: true,
-    request_id: "request-1",
+    request_id: 'request-1',
     run_id: runId,
     base_snapshot_id: baseId,
     target_snapshot_id: targetId,
-    status: "computed",
+    status: 'computed',
     initial_import: false,
-    skipped_file_kinds: ["classification"],
-    computed_at: "2026-07-06T18:45:00.000Z",
+    skipped_file_kinds: ['classification'],
+    computed_at: '2026-07-06T18:45:00.000Z',
     total: 2,
     counts_by_type: [{
-      object_type: "grille",
-      diff_type: "modifie",
+      object_type: 'grille',
+      diff_type: 'modifie',
       count: 1,
     }],
     counts_by_object_type: [{
-      object_type: "grille",
+      object_type: 'grille',
       total: 1,
-      by_severity: [{ severity: "moyenne", count: 1 }],
+      by_severity: [{ severity: 'moyenne', count: 1 }],
     }],
-    changed_columns: [{ column: "remise_ha", count: 1 }],
+    changed_columns: [{ column: 'remise_ha', count: 1 }],
     financial_changes_count: 1,
     deviation_alerts: [{
-      object_type: "segment",
+      object_type: 'segment',
       base_count: 10,
       deleted_count: 3,
       suppression_rate: 0.3,
-      severity: "haute",
-      message: "Suppressions importantes sur Segment: 3/10.",
+      severity: 'haute',
+      message: 'Suppressions importantes sur Segment: 3/10.',
     }],
     snapshot_counters: {
       base: {
@@ -830,23 +830,23 @@ Deno.test("pricing reference diff contracts are strict and cache-aware", () => {
     },
   };
   const diffRow = {
-    id: "44444444-4444-4444-8444-444444444444",
+    id: '44444444-4444-4444-8444-444444444444',
     base_snapshot_id: baseId,
     target_snapshot_id: targetId,
-    diff_type: "modifie",
-    object_type: "grille",
-    object_key: "SEG|FOUR|1|A|2026-01-01|2026-12-31",
-    severity: "moyenne",
-    changed_columns: ["remise_ha"],
+    diff_type: 'modifie',
+    object_type: 'grille',
+    object_key: 'SEG|FOUR|1|A|2026-01-01|2026-12-31',
+    severity: 'moyenne',
+    changed_columns: ['remise_ha'],
     payload: {
-      changed_columns: ["remise_ha"],
-      before: { remise_ha: "12" },
-      after: { remise_ha: "14" },
-      labels: { segment_key: "SEG", marque: "BOSCH" },
+      changed_columns: ['remise_ha'],
+      before: { remise_ha: '12' },
+      after: { remise_ha: '14' },
+      labels: { segment_key: 'SEG', marque: 'BOSCH' },
       source_row_numbers: { before: [10], after: [12] },
-      identity_note: "Identite grille.",
+      identity_note: 'Identite grille.',
     },
-    created_at: "2026-07-06T18:45:01.000Z",
+    created_at: '2026-07-06T18:45:01.000Z',
   };
 
   assertEquals(
@@ -864,12 +864,12 @@ Deno.test("pricing reference diff contracts are strict and cache-aware", () => {
       run_id: runId,
       page: 1,
       page_size: 50,
-      object_types: ["grille"],
-      diff_types: ["modifie"],
-      changed_columns: ["remise_ha"],
-      marques: ["BOSCH"],
-      sort_by: "severity",
-      sort_direction: "desc",
+      object_types: ['grille'],
+      diff_types: ['modifie'],
+      changed_columns: ['remise_ha'],
+      marques: ['BOSCH'],
+      sort_by: 'severity',
+      sort_direction: 'desc',
     }).success,
     true,
   );
@@ -903,14 +903,14 @@ Deno.test("pricing reference diff contracts are strict and cache-aware", () => {
   assertEquals(
     pricingReferenceDiffsComputeResponseSchema.safeParse({
       ...summaryResponse,
-      cache_status: "computed",
+      cache_status: 'computed',
     }).success,
     true,
   );
   assertEquals(
     pricingReferenceDiffsListResponseSchema.safeParse({
       ok: true,
-      request_id: "request-1",
+      request_id: 'request-1',
       run_id: runId,
       base_snapshot_id: baseId,
       target_snapshot_id: targetId,
@@ -922,29 +922,30 @@ Deno.test("pricing reference diff contracts are strict and cache-aware", () => {
   assertEquals(
     pricingReferenceDiffsListResponseSchema.safeParse({
       ok: true,
-      request_id: "request-1",
+      request_id: 'request-1',
       run_id: runId,
       base_snapshot_id: baseId,
       target_snapshot_id: targetId,
-      rows: [{ ...diffRow, payload: { changed_columns: ["remise_ha"] } }],
+      rows: [{ ...diffRow, payload: { changed_columns: ['remise_ha'] } }],
       total: 1,
     }).success,
     false,
   );
 });
 
-Deno.test("pricing reference aggregate contract normalizes directions and aliases", () => {
-  const runId = "11111111-1111-4111-8111-111111111111";
-  const baseId = "22222222-2222-4222-8222-222222222222";
-  const targetId = "33333333-3333-4333-8333-333333333333";
+Deno.test('pricing reference aggregate contract normalizes directions and aliases', () => {
+  const runId = '11111111-1111-4111-8111-111111111111';
+  const baseId = '22222222-2222-4222-8222-222222222222';
+  const targetId = '33333333-3333-4333-8333-333333333333';
   const validInput = {
     run_id: runId,
-    group_by: "famille_cir",
-    measure: "remise",
-    direction: "baisse",
-    marques: ["ROCKWELL"],
-    severities: ["moyenne"],
-    diff_types: ["modifie"],
+    group_by: 'famille_cir',
+    measure: 'remise',
+    direction: 'baisse',
+    threshold_pct: 20,
+    marques: ['ROCKWELL'],
+    severities: ['moyenne'],
+    diff_types: ['modifie'],
     include_neutral: false,
     limit: 50,
   };
@@ -956,7 +957,7 @@ Deno.test("pricing reference aggregate contract normalizes directions and aliase
   assertEquals(
     pricingReferenceDiffAggregateInputSchema.safeParse({
       ...validInput,
-      group_by: "famille",
+      group_by: 'famille',
     }).success,
     false,
   );
@@ -970,16 +971,17 @@ Deno.test("pricing reference aggregate contract normalizes directions and aliase
   assertEquals(
     pricingReferenceDiffAggregateResponseSchema.safeParse({
       ok: true,
-      request_id: "request-aggregate",
+      request_id: 'request-aggregate',
       run_id: runId,
       base_snapshot_id: baseId,
       target_snapshot_id: targetId,
-      group_by: "famille_cir",
-      measure: "remise",
-      direction: "baisse",
+      group_by: 'famille_cir',
+      measure: 'remise',
+      direction: 'baisse',
+      threshold_pct: 20,
       groups: [{
-        key: "99",
-        label: "DIVERS",
+        key: '99',
+        label: 'DIVERS',
         total: 2,
         hausse_count: 0,
         baisse_count: 2,
@@ -987,41 +989,41 @@ Deno.test("pricing reference aggregate contract normalizes directions and aliase
         removed_count: 0,
         avg_delta_pct: -3.472223,
         max_delta_pct: -4.166667,
-        sample_object_keys: ["007|8|SKF|Z16", "008|9|SKF|Z25"],
+        sample_object_keys: ['007|8|SKF|Z16', '008|9|SKF|Z25'],
       }],
       truncated: false,
     }).success,
     true,
   );
 
-  assertEquals(resolvePricingReferenceBrandAliases(["rockwell", "ROCK"]), [
-    "ROCK",
+  assertEquals(resolvePricingReferenceBrandAliases(['rockwell', 'ROCK']), [
+    'ROCK',
   ]);
   assertEquals(
-    classifyPricingReferenceNumericChange("1.1200000000000001", "1.12"),
-    "neutre",
+    classifyPricingReferenceNumericChange('1.1200000000000001', '1.12'),
+    'neutre',
   );
   assertEquals(
-    classifyPricingReferenceNumericChange("67.099999999999994", "67.1"),
-    "neutre",
+    classifyPricingReferenceNumericChange('67.099999999999994', '67.1'),
+    'neutre',
   );
-  assertEquals(classifyPricingReferenceNumericChange("72", "69"), "baisse");
-  assertEquals(classifyPricingReferenceNumericChange("1.05", "1.07"), "hausse");
+  assertEquals(classifyPricingReferenceNumericChange('72', '69'), 'baisse');
+  assertEquals(classifyPricingReferenceNumericChange('1.05', '1.07'), 'hausse');
 });
 
-Deno.test("pricing reference classification listAll returns a real total when capped", async () => {
+Deno.test('pricing reference classification listAll returns a real total when capped', async () => {
   const rows = [{
-    id: "11111111-1111-4111-8111-111111111111",
-    snapshot_id: "33333333-3333-4333-8333-333333333333",
-    import_id: "22222222-2222-4222-8222-222222222222",
+    id: '11111111-1111-4111-8111-111111111111',
+    snapshot_id: '33333333-3333-4333-8333-333333333333',
+    import_id: '22222222-2222-4222-8222-222222222222',
     source_row_number: 2,
-    cir_key: "9_20_99",
-    mega: "9",
-    fam: "20",
-    sfa: "99",
-    mega_lib: "Outillage",
-    fam_lib: "Outillage a main",
-    sfa_lib: "Divers",
+    cir_key: '9_20_99',
+    mega: '9',
+    fam: '20',
+    sfa: '99',
+    mega_lib: 'Outillage',
+    fam_lib: 'Outillage a main',
+    sfa_lib: 'Divers',
   }];
   const { db, calls } = createExecuteOnlyDb([
     rows,
@@ -1030,10 +1032,10 @@ Deno.test("pricing reference classification listAll returns a real total when ca
 
   const response = await listAllPricingReferenceClassification(
     db,
-    "user-1",
-    "request-1",
+    'user-1',
+    'request-1',
     {
-      snapshot_id: "33333333-3333-4333-8333-333333333333",
+      snapshot_id: '33333333-3333-4333-8333-333333333333',
     },
   );
 
@@ -1043,56 +1045,56 @@ Deno.test("pricing reference classification listAll returns a real total when ca
   assertEquals(response.truncated, true);
 });
 
-Deno.test("pricing reference anomaly export keeps complete source rows and annotates matching anomalies", () => {
+Deno.test('pricing reference anomaly export keeps complete source rows and annotates matching anomalies', () => {
   const sourceRows: PricingReferenceExportSourceRow[] = [
     {
-      file_kind: "classification",
+      file_kind: 'classification',
       source_row_number: 2,
       raw_values: {
-        MEGA: "9",
-        FAM: "20",
-        SFA: "99",
-        MEGA_LIB: "Outillage",
-        FAM_LIB: "Outillage a main",
-        SFA_LIB: "Divers",
+        MEGA: '9',
+        FAM: '20',
+        SFA: '99',
+        MEGA_LIB: 'Outillage',
+        FAM_LIB: 'Outillage a main',
+        SFA_LIB: 'Divers',
       },
     },
     {
-      file_kind: "classification",
+      file_kind: 'classification',
       source_row_number: 3,
       raw_values: {
-        MEGA: "10",
-        FAM: "30",
-        SFA: "01",
-        MEGA_LIB: "Quincaillerie",
-        FAM_LIB: "Fixation",
-        SFA_LIB: "Visserie",
+        MEGA: '10',
+        FAM: '30',
+        SFA: '01',
+        MEGA_LIB: 'Quincaillerie',
+        FAM_LIB: 'Fixation',
+        SFA_LIB: 'Visserie',
       },
     },
   ];
   const anomalyRows: PricingReferenceAnomalyQueryRow[] = [{
-    id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
-    import_id: "22222222-2222-4222-8222-222222222222",
-    snapshot_id: "33333333-3333-4333-8333-333333333333",
-    source_file_id: "44444444-4444-4444-8444-444444444444",
+    id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+    import_id: '22222222-2222-4222-8222-222222222222',
+    snapshot_id: '33333333-3333-4333-8333-333333333333',
+    source_file_id: '44444444-4444-4444-8444-444444444444',
     source_file: {
-      file_kind: "classification",
-      original_filename: "classification.xlsx",
+      file_kind: 'classification',
+      original_filename: 'classification.xlsx',
     },
     source_row_number: 2,
-    type: "classification_required_empty",
-    severity: "bloquante",
+    type: 'classification_required_empty',
+    severity: 'bloquante',
     object_type: null,
     object_id: null,
-    columns: ["FAM_LIB"],
-    message: "Champ obligatoire vide dans la classification CIR.",
+    columns: ['FAM_LIB'],
+    message: 'Champ obligatoire vide dans la classification CIR.',
     details: {},
-    created_at: "2026-06-22T11:08:00.000Z",
+    created_at: '2026-06-22T11:08:00.000Z',
   }];
 
   const workbook = XLSX.read(
     buildAnomaliesExportWorkbook(sourceRows, anomalyRows),
-    { type: "array" },
+    { type: 'array' },
   );
   const worksheet = workbook.Sheets.Classification;
   assertEquals(Boolean(worksheet), true);
@@ -1101,117 +1103,117 @@ Deno.test("pricing reference anomaly export keeps complete source rows and annot
   );
 
   assertEquals(rows.length, 2);
-  assertEquals(rows[0]?.MEGA, "9");
-  assertEquals(rows[0]?.TYPE_ANOMALIE, "Champ classification vide");
+  assertEquals(rows[0]?.MEGA, '9');
+  assertEquals(rows[0]?.TYPE_ANOMALIE, 'Champ classification vide');
   assertEquals(
     rows[0]?.ACTION_CORRECTION,
-    "Completer les champs classification obligatoires dans Excel.",
+    'Completer les champs classification obligatoires dans Excel.',
   );
-  assertEquals(rows[1]?.MEGA, "10");
+  assertEquals(rows[1]?.MEGA, '10');
   const headerRow =
     XLSX.utils.sheet_to_json<string[]>(worksheet, { header: 1 })[0] ?? [];
   assertEquals(headerRow, [
-    "MEGA",
-    "FAM",
-    "SFA",
-    "MEGA_LIB",
-    "FAM_LIB",
-    "SFA_LIB",
-    "TYPE_ANOMALIE",
-    "ACTION_CORRECTION",
+    'MEGA',
+    'FAM',
+    'SFA',
+    'MEGA_LIB',
+    'FAM_LIB',
+    'SFA_LIB',
+    'TYPE_ANOMALIE',
+    'ACTION_CORRECTION',
   ]);
-  assertEquals(worksheet?.["!autofilter"]?.ref, "A1:H3");
+  assertEquals(worksheet?.['!autofilter']?.ref, 'A1:H3');
 });
 
-Deno.test("pricing reference anomalies summary aggregates faceted counts", async () => {
+Deno.test('pricing reference anomalies summary aggregates faceted counts', async () => {
   const { db } = createExecuteOnlyDb([
     [{ total: 4 }],
     [
       {
-        type: "segment_classification_unknown",
+        type: 'segment_classification_unknown',
         count: 1,
         max_severity_weight: 4,
       },
-      { type: "invalid_file", count: 1, max_severity_weight: 3 },
-      { type: "purchase_grid_missing", count: 2, max_severity_weight: 2 },
+      { type: 'invalid_file', count: 1, max_severity_weight: 3 },
+      { type: 'purchase_grid_missing', count: 2, max_severity_weight: 2 },
     ],
     [
-      { value: "bloquante", count: 1, max_severity_weight: 4 },
-      { value: "haute", count: 1, max_severity_weight: 3 },
-      { value: "moyenne", count: 2, max_severity_weight: 2 },
+      { value: 'bloquante', count: 1, max_severity_weight: 4 },
+      { value: 'haute', count: 1, max_severity_weight: 3 },
+      { value: 'moyenne', count: 2, max_severity_weight: 2 },
     ],
     [
       {
-        value: "segment_classification_unknown",
+        value: 'segment_classification_unknown',
         count: 1,
         max_severity_weight: 4,
       },
-      { value: "invalid_file", count: 1, max_severity_weight: 3 },
-      { value: "purchase_grid_missing", count: 2, max_severity_weight: 2 },
+      { value: 'invalid_file', count: 1, max_severity_weight: 3 },
+      { value: 'purchase_grid_missing', count: 2, max_severity_weight: 2 },
     ],
     [
-      { value: "BOSCH", count: 3, max_severity_weight: 4 },
-      { value: "Général", count: 1, max_severity_weight: 3 },
+      { value: 'BOSCH', count: 3, max_severity_weight: 4 },
+      { value: 'Général', count: 1, max_severity_weight: 3 },
     ],
   ]);
 
   const response = await getPricingReferenceAnomaliesSummary(
     db,
-    "user-1",
-    "request-1",
+    'user-1',
+    'request-1',
     {
-      snapshot_id: "33333333-3333-4333-8333-333333333333",
+      snapshot_id: '33333333-3333-4333-8333-333333333333',
     },
   );
 
   assertEquals(response.total, 4);
   assertEquals(response.groups_by_type, [
     {
-      type: "segment_classification_unknown",
-      label: "Cle CIR inconnue",
+      type: 'segment_classification_unknown',
+      label: 'Cle CIR inconnue',
       action_label:
-        "Corriger la cle CIR ou importer la classification correspondante.",
+        'Corriger la cle CIR ou importer la classification correspondante.',
       count: 1,
-      max_severity: "bloquante",
+      max_severity: 'bloquante',
     },
     {
-      type: "invalid_file",
-      label: "Fichier invalide",
-      action_label: "Remplacer le fichier par un export Excel valide.",
+      type: 'invalid_file',
+      label: 'Fichier invalide',
+      action_label: 'Remplacer le fichier par un export Excel valide.',
       count: 1,
-      max_severity: "haute",
+      max_severity: 'haute',
     },
     {
-      type: "purchase_grid_missing",
-      label: "Grille achat incomplete",
+      type: 'purchase_grid_missing',
+      label: 'Grille achat incomplete',
       action_label:
-        "Completer les champs de grille achat structurels dans le fichier source.",
+        'Completer les champs de grille achat structurels dans le fichier source.',
       count: 2,
-      max_severity: "moyenne",
+      max_severity: 'moyenne',
     },
   ]);
   assertEquals(response.facets.severities, [
     {
-      value: "bloquante",
-      label: "Bloquante",
+      value: 'bloquante',
+      label: 'Bloquante',
       count: 1,
-      max_severity: "bloquante",
+      max_severity: 'bloquante',
     },
-    { value: "haute", label: "Haute", count: 1, max_severity: "haute" },
-    { value: "moyenne", label: "Moyenne", count: 2, max_severity: "moyenne" },
+    { value: 'haute', label: 'Haute', count: 1, max_severity: 'haute' },
+    { value: 'moyenne', label: 'Moyenne', count: 2, max_severity: 'moyenne' },
   ]);
   assertEquals(response.facets.marques, [
-    { value: "BOSCH", label: "BOSCH", count: 3, max_severity: "bloquante" },
-    { value: "Général", label: "Général", count: 1, max_severity: "haute" },
+    { value: 'BOSCH', label: 'BOSCH', count: 3, max_severity: 'bloquante' },
+    { value: 'Général', label: 'Général', count: 1, max_severity: 'haute' },
   ]);
 });
 
-Deno.test("pricing reference column mapping contracts are strict", () => {
+Deno.test('pricing reference column mapping contracts are strict', () => {
   const inspectPayload = {
-    import_id: "11111111-1111-4111-8111-111111111111",
-    file_id: "22222222-2222-4222-8222-222222222222",
-    file_kind: "classification",
-    sheet_name: "Feuil1",
+    import_id: '11111111-1111-4111-8111-111111111111',
+    file_id: '22222222-2222-4222-8222-222222222222',
+    file_kind: 'classification',
+    sheet_name: 'Feuil1',
   };
 
   assertEquals(
@@ -1228,23 +1230,23 @@ Deno.test("pricing reference column mapping contracts are strict", () => {
   assertEquals(
     pricingReferenceImportInspectInputSchema.safeParse({
       ...inspectPayload,
-      file_kind: "supplier_prices",
+      file_kind: 'supplier_prices',
     }).success,
     false,
   );
 
   const confirmPayload = {
-    import_id: "11111111-1111-4111-8111-111111111111",
-    file_id: "22222222-2222-4222-8222-222222222222",
-    file_kind: "classification",
-    sheet_name: "Feuil1",
+    import_id: '11111111-1111-4111-8111-111111111111',
+    file_id: '22222222-2222-4222-8222-222222222222',
+    file_kind: 'classification',
+    sheet_name: 'Feuil1',
     column_mapping: {
-      MEGA: "Mega",
-      FAM: "Famille",
-      SFA: "Sous famille",
-      MEGA_LIB: "Libelle mega",
-      FAM_LIB: "Libelle famille",
-      SFA_LIB: "Libelle sous famille",
+      MEGA: 'Mega',
+      FAM: 'Famille',
+      SFA: 'Sous famille',
+      MEGA_LIB: 'Libelle mega',
+      FAM_LIB: 'Libelle famille',
+      SFA_LIB: 'Libelle sous famille',
     },
     save_as_default: true,
   };
@@ -1266,7 +1268,7 @@ Deno.test("pricing reference column mapping contracts are strict", () => {
       ...confirmPayload,
       column_mapping: {
         ...confirmPayload.column_mapping,
-        UNKNOWN: "Colonne inconnue",
+        UNKNOWN: 'Colonne inconnue',
       },
     }).success,
     false,
@@ -1276,31 +1278,31 @@ Deno.test("pricing reference column mapping contracts are strict", () => {
       ...confirmPayload,
       column_mapping: {
         ...confirmPayload.column_mapping,
-        MEGA: "",
+        MEGA: '',
       },
     }).success,
     false,
   );
 });
 
-Deno.test("pricing reference tRPC namespace is protected and activate requires super admin auth", async () => {
-  const appModule = await import("../app.ts");
+Deno.test('pricing reference tRPC namespace is protected and activate requires super admin auth', async () => {
+  const appModule = await import('../app.ts');
   const prepareResponse = await appModule.default.request(
-    "/trpc/pricing.references.imports.prepare",
+    '/trpc/pricing.references.imports.prepare',
     {
-      method: "POST",
-      headers: { "content-type": "application/json" },
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         files: {
           classification: {
-            original_filename: "classification.xlsx",
+            original_filename: 'classification.xlsx',
             size_bytes: 1024,
-            sha256: "a".repeat(64),
+            sha256: 'a'.repeat(64),
           },
           segments_grids: {
-            original_filename: "segments.xlsx",
+            original_filename: 'segments.xlsx',
             size_bytes: 1024,
-            sha256: "b".repeat(64),
+            sha256: 'b'.repeat(64),
           },
         },
       }),
@@ -1309,83 +1311,83 @@ Deno.test("pricing reference tRPC namespace is protected and activate requires s
 
   const prepareError = await readErrorData(prepareResponse);
   assertEquals(prepareResponse.status, 401);
-  assertEquals(readString(prepareError, "appCode"), "AUTH_REQUIRED");
+  assertEquals(readString(prepareError, 'appCode'), 'AUTH_REQUIRED');
 
   const healthResponse = await appModule.default.request(
-    "/trpc/pricing.references.health.get",
+    '/trpc/pricing.references.health.get',
     {
-      method: "POST",
-      headers: { "content-type": "application/json" },
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        import_id: "11111111-1111-4111-8111-111111111111",
+        import_id: '11111111-1111-4111-8111-111111111111',
       }),
     },
   );
   const healthError = await readErrorData(healthResponse);
   assertEquals(healthResponse.status, 401);
-  assertEquals(readString(healthError, "appCode"), "AUTH_REQUIRED");
+  assertEquals(readString(healthError, 'appCode'), 'AUTH_REQUIRED');
 
   const diffSummaryResponse = await appModule.default.request(
-    "/trpc/pricing.references.diffs.summary",
+    '/trpc/pricing.references.diffs.summary',
     {
-      method: "POST",
-      headers: { "content-type": "application/json" },
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        target_snapshot_id: "22222222-2222-4222-8222-222222222222",
+        target_snapshot_id: '22222222-2222-4222-8222-222222222222',
       }),
     },
   );
   const diffSummaryError = await readErrorData(diffSummaryResponse);
   assertEquals(diffSummaryResponse.status, 401);
-  assertEquals(readString(diffSummaryError, "appCode"), "AUTH_REQUIRED");
+  assertEquals(readString(diffSummaryError, 'appCode'), 'AUTH_REQUIRED');
 
   const diffAggregateResponse = await appModule.default.request(
-    "/trpc/pricing.references.diffs.aggregate",
+    '/trpc/pricing.references.diffs.aggregate',
     {
-      method: "POST",
-      headers: { "content-type": "application/json" },
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        target_snapshot_id: "22222222-2222-4222-8222-222222222222",
-        group_by: "famille_cir",
+        target_snapshot_id: '22222222-2222-4222-8222-222222222222',
+        group_by: 'famille_cir',
       }),
     },
   );
   const diffAggregateError = await readErrorData(diffAggregateResponse);
   assertEquals(diffAggregateResponse.status, 401);
-  assertEquals(readString(diffAggregateError, "appCode"), "AUTH_REQUIRED");
+  assertEquals(readString(diffAggregateError, 'appCode'), 'AUTH_REQUIRED');
 
   const diffComputeResponse = await appModule.default.request(
-    "/trpc/pricing.references.diffs.compute",
+    '/trpc/pricing.references.diffs.compute',
     {
-      method: "POST",
-      headers: { "content-type": "application/json" },
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        target_snapshot_id: "22222222-2222-4222-8222-222222222222",
+        target_snapshot_id: '22222222-2222-4222-8222-222222222222',
       }),
     },
   );
   const diffComputeError = await readErrorData(diffComputeResponse);
   assertEquals(diffComputeResponse.status, 401);
-  assertEquals(readString(diffComputeError, "appCode"), "AUTH_REQUIRED");
+  assertEquals(readString(diffComputeError, 'appCode'), 'AUTH_REQUIRED');
 
   const activateResponse = await appModule.default.request(
-    "/trpc/pricing.references.imports.activate",
+    '/trpc/pricing.references.imports.activate',
     {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: "{}",
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: '{}',
     },
   );
   const activateError = await readErrorData(activateResponse);
   assertEquals(activateResponse.status, 401);
-  assertEquals(readString(activateError, "appCode"), "AUTH_REQUIRED");
-  assertEquals(readNumber(activateError, "httpStatus"), 401);
+  assertEquals(readString(activateError, 'appCode'), 'AUTH_REQUIRED');
+  assertEquals(readNumber(activateError, 'httpStatus'), 401);
 });
 
-Deno.test("pricing reference diagnose contract validates correct structure", () => {
+Deno.test('pricing reference diagnose contract validates correct structure', () => {
   const validPayload = {
     import_id: crypto.randomUUID(),
-    file_type: "classification",
+    file_type: 'classification',
     prompt_version_id: crypto.randomUUID(),
     model_config_id: crypto.randomUUID(),
   };
@@ -1396,14 +1398,14 @@ Deno.test("pricing reference diagnose contract validates correct structure", () 
   );
   assertEquals(
     pricingReferenceDiagnoseInputSchema.safeParse({
-      file_type: "segments_grids",
+      file_type: 'segments_grids',
     }).success,
     true,
   );
   assertEquals(
     pricingReferenceDiagnoseInputSchema.safeParse({
       ...validPayload,
-      apiKey: "sk-test-key",
+      apiKey: 'sk-test-key',
     }).success,
     false,
   );
@@ -1419,26 +1421,26 @@ Deno.test("pricing reference diagnose contract validates correct structure", () 
     ok: true,
     ai_available: true,
     result: {
-      summary: "Anomalies a prioriser.",
+      summary: 'Anomalies a prioriser.',
       priority_anomalies: [{
-        title: "Cle inconnue",
-        severity: "haute",
-        evidence: "Une cle CIR absente de la classification.",
-        recommendation: "Verifier la cle dans le fichier source.",
+        title: 'Cle inconnue',
+        severity: 'haute',
+        evidence: 'Une cle CIR absente de la classification.',
+        recommendation: 'Verifier la cle dans le fichier source.',
       }],
-      recommendations: ["Traiter les cles inconnues avant activation."],
-      limits: ["Analyse limitee au rapport de sante fourni."],
+      recommendations: ['Traiter les cles inconnues avant activation.'],
+      limits: ['Analyse limitee au rapport de sante fourni.'],
       confidence: 0.82,
     },
     usage: {
-      provider: "openrouter",
-      model_id: "deepseek/deepseek-v4-pro",
+      provider: 'openrouter',
+      model_id: 'deepseek/deepseek-v4-pro',
       input_tokens: 100,
       output_tokens: 40,
       cached_input_tokens: 0,
       reasoning_tokens: 0,
     },
-    cost: { amount: null, currency: "USD", priced: false },
+    cost: { amount: null, currency: 'USD', priced: false },
     cache: { hit: false },
   };
 
@@ -1455,15 +1457,15 @@ Deno.test("pricing reference diagnose contract validates correct structure", () 
   );
 });
 
-Deno.test("pricing reference assist mapping contracts are strict", () => {
+Deno.test('pricing reference assist mapping contracts are strict', () => {
   const scope = {
-    import_id: "11111111-1111-4111-8111-111111111111",
+    import_id: '11111111-1111-4111-8111-111111111111',
   };
   const assistInput = {
     import_id: scope.import_id,
-    file_id: "33333333-3333-4333-8333-333333333333",
-    file_kind: "segments_grids",
-    sheet_name: "Segments",
+    file_id: '33333333-3333-4333-8333-333333333333',
+    file_kind: 'segments_grids',
+    sheet_name: 'Segments',
   };
   assertEquals(
     pricingReferenceImportAssistMappingInputSchema.safeParse(assistInput)
@@ -1482,27 +1484,27 @@ Deno.test("pricing reference assist mapping contracts are strict", () => {
       ok: true,
       import_id: scope.import_id,
       file_id: assistInput.file_id,
-      file_kind: "segments_grids",
-      sheet_name: "Segments",
-      mapping_status: "a_confirmer",
+      file_kind: 'segments_grids',
+      sheet_name: 'Segments',
+      mapping_status: 'a_confirmer',
       ai_needed: true,
       human_validation_required: true,
       worksheet_score: 0.8,
       header_quality: 0.72,
-      expected_columns: ["SEGMENT"],
-      detected_columns: ["Segment"],
+      expected_columns: ['SEGMENT'],
+      detected_columns: ['Segment'],
       candidates: [{
-        canonical_column: "SEGMENT",
-        source_column: "Segment",
-        status: "a_confirmer",
+        canonical_column: 'SEGMENT',
+        source_column: 'Segment',
+        status: 'a_confirmer',
         confidence: 0.82,
-        reason: "Similarite forte.",
+        reason: 'Similarite forte.',
       }],
-      proposed_mapping: { SEGMENT: "Segment" },
-      evidence: ["1/1 colonne(s) mappees par le moteur deterministe."],
+      proposed_mapping: { SEGMENT: 'Segment' },
+      evidence: ['1/1 colonne(s) mappees par le moteur deterministe.'],
       ai_policy: {
-        trigger: "ambiguous_or_invalid_only",
-        response_schema: "strict_mapping_candidate",
+        trigger: 'ambiguous_or_invalid_only',
+        response_schema: 'strict_mapping_candidate',
         can_confirm_mapping: false,
       },
     }).success,

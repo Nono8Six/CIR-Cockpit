@@ -189,6 +189,8 @@ Pas de « J+n » à l'écran. Pas de spinner bloquant.
 | 4 — Ma journée V3 | Frontend (UI) | **Élevée** | Non | 2 (3 conseillé) |
 | 5 — Paramètres : tags & seuils | Frontend + backend léger | Standard | Deploy api si actions ajoutées | 0, 1 |
 | 6 — Historique, nettoyage, E2E, QA final | Transverse | Standard | Non | 3, 4, 5 |
+| 7 — Contexte universel CRM (assistant) | Backend (DB + Edge Function) | **Élevée** | Migration + deploy api oui | 0, 1 **+ chantier ASSISTANT_IA ≥ P6 validée** |
+| 8 — Assistant dans le Pilotage & l'annuaire | Frontend (UI) | Standard+ | Non | 3, 4, 7 |
 
 **Règles d'exécution communes** (valables pour tous les prompts) :
 
@@ -698,10 +700,181 @@ commit & push final.
 
 ---
 
+## Phase 7 — Contexte universel CRM : l'assistant connaît les clients et les affaires
+
+> **Périmètre : BACKEND (DB + Edge Function — extension du socle assistant)**
+> **Difficulté : ÉLEVÉE — modèle high-end, raisonnement au maximum**
+> **Déploiement Supabase : migration OUI + deploy api OUI (+ probes)**
+> **Prérequis : Phases 0-1 de CE plan livrées, ET chantier `docs/ASSISTANT_IA/plan-fiabilisation-assistant-ia.md` au moins jusqu'à P6 VALIDÉE (modèle retenu). Coordination stricte : on ÉTEND le socle par ajout, on ne modifie pas les fichiers du chantier fiabilisation.**
+
+### Principe (issu de l'analyse « Universal Context » d'Attio, voir plan fiabilisation §5B)
+
+Le socle existe déjà pour les référentiels : catalogue cherchable `search_schema` (pg_trgm sur
+`pg_description`), vues typées `ai_v_*` en `security_invoker`, routage d'intentions avec
+allowlists (P2), contexte conversationnel (P3), SQL fallback durci (P4), provenance (P5).
+« Brancher le CRM » = **étendre le même mécanisme au domaine affaires/clients**, en trois couches :
+le schéma CRM devient auto-descriptif, des vues typées le rendent requêtable sans pièges, et
+des outils déterministes servent les questions client à 100 % de justesse. Jamais « tout dans
+le prompt » : récupération à la demande.
+
+### Spécification
+
+**1. Migration `pilotage_v3_ai_context` (additive)** :
+
+- `COMMENT ON` (français, relus comme du code, aucun secret/donnée) sur les tables CRM :
+  `interactions` (sémantique de `stage` — 5 valeurs et leurs sens, `amount`, `tracked_at`,
+  **piège `reminder_at` formats mixtes**, structure du JSONB `timeline`, `id` de type TEXT),
+  `entities`, `entity_contacts`, `affaire_tags`, `interaction_tag_links`,
+  `interaction_followers`, `pilotage_settings`, `agency_statuses`.
+- **Vues typées `security_invoker = on`** (les RLS d'agence s'appliquent, à prouver par test
+  d'intégration à deux identités comme en 5B) :
+  - `ai_v_affaires` : le portefeuille pré-joint — affaire, client (nom + numéro), étape,
+    `amount` casté, seuil effectif, retard de relance en jours (calculé), tags agrégés
+    (`array_agg`), suiveurs agrégés, `agency_id`. Une question « affaires Cobots > 5 000 €
+    en retard » devient un SELECT à un seul FROM.
+  - `ai_v_activites` : la timeline dénormalisée (`jsonb_array_elements`) — interaction_id,
+    entity_id, agency_id, date, type, contenu tronqué à 500 caractères. Commentaire de vue :
+    « toujours filtrer par entity_id ou interaction_id » (performance).
+- Les vues et commentaires sont automatiquement ramassés par `search_schema` /
+  `loadDatabaseCatalog` (déjà étendus aux `ai_v_%` en 5B) — vérifier, ne pas dupliquer.
+
+**2. Outils déterministes CRM** — nouveau fichier additif
+`backend/functions/api/services/ai/assistantCrmTools.ts` (ne pas modifier
+`assistantTools.ts`/`assistantSqlTools.ts` au-delà de l'enregistrement) :
+
+| Outil | Entrée | Sortie (Zod stricte, plafond d'octets comme `search_schema`) |
+| --- | --- | --- |
+| `get_client_context` | `entity_id` \| `client_number` \| `query` (résolution) | Fiche 360 bornée : identité + données officielles, contacts (≤10), affaires ouvertes (≤20 : étape, montant, prochaine relance, retard, tags), agrégats 12 mois (devis envoyés/gagnés/perdus + sommes), 15 dernières activités, suiveurs |
+| `search_clients` | `query` | Top 10 (pg_trgm sur nom/nom officiel/numéro client), RLS |
+| `list_affaires` | filtres (mêmes que `affaires_list` Phase 1) | Réutilise le service Phase 1 (DRY) — jamais de logique dupliquée |
+
+**3. Intentions et routage (extension de la matrice P2)** : nouvelles intentions
+`client_360`, `recherche_client`, `portefeuille_affaires`, chacune avec son allowlist
+stricte (ex. `client_360` → `get_client_context` uniquement). Le fallback SQL reste le
+filet pour l'imprévu — il est sûr grâce aux vues. Suivre la convention du chantier
+fiabilisation pour l'extension des types `feature` si nécessaire.
+
+**4. Interests (page_context hydraté)** : étendre `aiAssistantPageContextSchema` —
+`surface` +`'pilotage.affaires' | 'pilotage.myday' | 'client.detail' | 'affaire.detail'`,
+champs `entity_id?` et `interaction_id?` (uuid/texte selon le type réel). Quand
+`interaction_id`/`entity_id` est présent, le backend hydrate un résumé compact (réutilise
+`get_client_context` en version bornée) injecté dans le contexte conversationnel P3 —
+l'utilisateur ouvre l'assistant depuis une affaire, l'assistant sait déjà de quoi on parle.
+
+**5. Évaluations** : étendre la suite offline avec ≥ 6 cas CRM : « Que sait-on du client
+{X} ? », « Quelles affaires Cobots > 5 000 € sans activité depuis 14 jours ? », « Qui suit
+l'affaire {Y} ? », client inexistant, ambiguïté de nom (deux clients proches), tentative
+d'injection via nom de client. Chaque réponse doit porter l'intention annoncée et la
+provenance (contrat P5).
+
+### Checkpoints
+
+1. `search_schema("où sont les montants des affaires")` : `ai_v_affaires` dans le top 3 (preuve JSON).
+2. Test d'intégration RLS à deux identités : `ai_v_affaires` et `ai_v_activites` ne renvoient que l'agence de l'appelant.
+3. `get_client_context` sur un client réel : chaque chiffre (nb affaires, sommes, gagnées/perdues) croisé avec un `execute_sql` de contrôle.
+4. Conversation réelle de bout en bout : « Parle-moi du client {X} » → intention annoncée, outil `get_client_context`, réponse juste et sourcée ; « et ses affaires en retard ? » → héritage de contexte (P3) correct.
+5. Tokens d'entrée p95 des cas CRM < 8 000 (même méthode de mesure que 5B).
+6. `pnpm run qa:back` vert ; deploy + probes ; `git diff` prouvant qu'AUCUN fichier du chantier fiabilisation n'est modifié (uniquement des ajouts + points d'enregistrement).
+
+### Prompt d'exécution (conversation vierge)
+
+```
+Repo CIR Cockpit. Lis dans cet ordre : AGENTS.md, docs/ASSISTANT_IA/plan-fiabilisation-assistant-ia.md
+(comprends l'architecture P0→P5B : intentions/allowlists P2, contexte P3, SQL durci P4,
+provenance P5, catalogue cherchable + vues ai_v_* de P5B), puis docs/refonte-pilotage-v3.md
+(Phase 7 = ta mission ; §3.3 pièges). Invoque cir-cockpit-agent-router,
+cir-cockpit-api-contracts et supabase-postgres-best-practices. Vérifie que le chantier
+fiabilisation est ≥ P6 VALIDÉE (tableau §4 de son plan) — sinon STOP et signale-le.
+
+Mission : étendre le contexte universel de l'assistant au domaine CRM, par AJOUT uniquement
+(interdiction de modifier les fichiers du chantier fiabilisation au-delà des points
+d'enregistrement d'outils/intentions) :
+1. Migration pilotage_v3_ai_context : COMMENT ON des tables CRM (spec Phase 7 — inclure les
+   pièges reminder_at/timeline/id TEXT) + vues ai_v_affaires et ai_v_activites en
+   security_invoker (spec exacte dans le plan). Apply via Supabase MCP puis renommage du
+   fichier local à la version distante.
+2. Outils déterministes dans un NOUVEAU fichier assistantCrmTools.ts : get_client_context
+   (fiche 360 bornée, sortie Zod stricte plafonnée), search_clients (pg_trgm), list_affaires
+   (réutilise le service data.affaires de la Phase 1, pas de duplication).
+3. Intentions client_360 / recherche_client / portefeuille_affaires avec allowlists strictes
+   dans la matrice P2, selon les conventions du chantier fiabilisation.
+4. Étendre aiAssistantPageContextSchema (surfaces pilotage.affaires, pilotage.myday,
+   client.detail, affaire.detail + entity_id/interaction_id) et hydrater un résumé compact
+   quand un id est fourni (pattern interests, injecté via le contexte P3).
+5. Étendre la suite d'évaluations offline avec les 6 cas CRM du plan.
+
+Gates : tests Deno ciblés + pnpm run qa:back ; deno check du graphe complet ; git status
+propre hors périmètre AVANT deploy ; deploy api (--use-api --import-map deno.json
+--no-verify-jwt) + probes. Rends les 6 checkpoints de la Phase 7 avec preuves, puis STOP —
+pas de commit, validation Arnaud d'abord.
+```
+
+---
+
+## Phase 8 — L'assistant dans le Pilotage et l'annuaire : « Your whole stack, connected »
+
+> **Périmètre : FRONTEND (UI)**
+> **Difficulté : STANDARD+ (réutilisation du composant assistant existant, craft sur les entrées contextuelles)**
+> **Déploiement Supabase : NON**
+
+### Spécification
+
+1. **Bouton « Assistant IA »** (icône Sparkles, pattern exact de la page Référentiels) dans
+   `DashboardPageHeader`, ouvrant l'`AssistantChatDialog` existant avec le `page_context`
+   de la surface active : `pilotage.affaires` (+ filtres actifs sérialisés) ou `pilotage.myday`.
+2. **« Demander à l'assistant »** dans le Dialog détail d'affaire (bouton discret dans
+   l'en-tête, à côté de Convertir/Supprimer) → `page_context = { surface: 'affaire.detail',
+   interaction_id, entity_id }`. L'assistant s'ouvre déjà au courant (interests Phase 7).
+3. **Fiche client de l'annuaire** : même bouton → `{ surface: 'client.detail', entity_id }`.
+4. **Suggestions d'amorce contextuelles** (chips cliquables au-dessus du champ de saisie,
+   3 max, spécifiques à la surface) :
+   - affaire : « Résume cette affaire », « Historique avec ce client », « Ses autres affaires en cours » ;
+   - client : « Que sait-on de ce client ? », « Ses devis des 12 derniers mois » ;
+   - Affaires : « Quelles affaires stagnent depuis 14 jours ? », « Total du portefeuille Cobots ».
+5. Les réponses réutilisent le rendu P5 tel quel (intention annoncée, provenance pliable,
+   SQL dépliable) — aucun rendu custom.
+6. Design : le dialog assistant reste un Dialog centré (règle PO), les chips suivent §2
+   (11px, `bg-wire`, hover `text-foreground`).
+
+### Checkpoints
+
+1. Parcours réel sur les 3 surfaces (Affaires, détail d'affaire, fiche client annuaire) : captures + réponse juste avec provenance visible.
+2. Réseau : le `page_context` envoyé contient bien surface + ids (preuve requête).
+3. Ouvrir l'assistant depuis une affaire puis demander « résume » sans nommer le client : la réponse porte sur LA bonne affaire (interests prouvés).
+4. Suggestions d'amorce : cliquables, spécifiques à la surface, françaises.
+5. `pnpm run qa:front` vert ; console vide ; aucun fichier du chantier fiabilisation modifié.
+
+### Prompt d'exécution (conversation vierge)
+
+```
+Repo CIR Cockpit. Lis AGENTS.md, puis docs/refonte-pilotage-v3.md (§2 normatif, Phase 8 =
+ta mission ; Phases 0-7 livrées : l'assistant connaît le CRM, le page_context accepte les
+surfaces pilotage/client). Regarde comment la page Référentiels intègre l'assistant
+(bouton Sparkles + AssistantChatDialog dans PricingReferencesPage.tsx) : c'est le pattern
+à répliquer, pas à réinventer. Invoque cir-cockpit-agent-router, cir-cockpit-design et
+vercel-react-best-practices.
+
+Mission : brancher l'assistant sur 3 surfaces : (1) bouton « Assistant IA » dans
+DashboardPageHeader avec page_context de la vue active (pilotage.affaires + filtres actifs,
+ou pilotage.myday) ; (2) « Demander à l'assistant » dans l'en-tête du Dialog détail
+d'affaire (surface affaire.detail + interaction_id + entity_id) ; (3) même bouton sur la
+fiche client de l'annuaire (client.detail + entity_id). Ajouter les chips de suggestions
+d'amorce contextuelles (3 max par surface, libellés EXACTS du plan). Le rendu des réponses
+réutilise le composant P5 existant tel quel.
+
+Interdits : tout rendu custom des réponses, toute modification du chantier fiabilisation,
+Sheet latérale. Gate : pnpm run qa:front + parcours navigateur réel sur les 3 surfaces.
+Rends les 5 checkpoints de la Phase 8 avec captures, puis STOP — validation Arnaud avant commit.
+```
+
+---
+
 ## 5. Suites possibles (hors plan, à décider plus tard)
 
 - Vue « board » optionnelle sur une vue Affaires déjà filtrée (< 30 cartes), façon Attio.
-- Briefing IA en tête de Ma journée (le chantier ASSISTANT_IA fournira le socle).
+- Briefing IA en tête de Ma journée (« 3 affaires chaudes, 2 devis expirent ») — devient
+  trivial après la Phase 7 (un appel `get_client_context`-like agrégé) ; à activer quand
+  le coût par briefing sera mesuré acceptable.
 - Fusion de tags, tags par famille produit, group_by Suiveur.
 - Notifications (relance en retard depuis n jours → cloche du header).
 
@@ -716,3 +889,5 @@ commit & push final.
 | 4 | — | — | — | — |
 | 5 | — | — | — | — |
 | 6 | — | — | — | — |
+| 7 | — | — | — | — |
+| 8 | — | — | — | — |

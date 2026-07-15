@@ -1,24 +1,24 @@
-import { type SQL, sql } from "drizzle-orm";
+import { type SQL, sql } from 'drizzle-orm';
 
 import {
   type PricingReferenceDiffAggregateInput,
   type PricingReferenceDiffAggregateResponse,
   pricingReferenceDiffAggregateResponseSchema,
-} from "../../../../../../shared/schemas/pricing/references.schema.ts";
-import { httpError } from "../../../middleware/errorHandler.ts";
-import type { AuthContext, DbClient } from "../../../types.ts";
+} from '../../../../../../shared/schemas/pricing/references.schema.ts';
+import { httpError } from '../../../middleware/errorHandler.ts';
+import type { AuthContext, DbClient } from '../../../types.ts';
 import {
   resolvePricingReferenceBrandAliases,
   resolvePricingReferenceDiffRun,
-} from "./referenceDiffs.ts";
+} from './referenceDiffs.ts';
 
 const PRICE_CHANGE_COLUMNS = [
-  "borne_acha",
-  "coef_retro",
-  "coef_ha",
-  "coef_majvte",
+  'borne_acha',
+  'coef_retro',
+  'coef_ha',
+  'coef_majvte',
 ] as const;
-const DISCOUNT_CHANGE_COLUMNS = ["remise_ha"] as const;
+const DISCOUNT_CHANGE_COLUMNS = ['remise_ha'] as const;
 const NUMERIC_CHANGE_SCALE = 6;
 
 type AggregateGroupRow = {
@@ -35,11 +35,11 @@ type AggregateGroupRow = {
 };
 
 const toCount = (value: number | string): number =>
-  typeof value === "number" ? value : Number.parseInt(value, 10);
+  typeof value === 'number' ? value : Number.parseInt(value, 10);
 
 const toNullableNumber = (value: number | string | null): number | null => {
   if (value === null) return null;
-  const parsed = typeof value === "number" ? value : Number(value);
+  const parsed = typeof value === 'number' ? value : Number(value);
   return Number.isFinite(parsed) ? parsed : null;
 };
 
@@ -59,23 +59,23 @@ const toInCondition = (
 };
 
 const groupExpressions = (
-  groupBy: PricingReferenceDiffAggregateInput["group_by"],
+  groupBy: PricingReferenceDiffAggregateInput['group_by'],
 ): { key: SQL; label: SQL } => {
   switch (groupBy) {
-    case "famille_cir":
+    case 'famille_cir':
       return { key: sql`famille_cir_key`, label: sql`famille_cir_label` };
-    case "categorie_fabricant":
+    case 'categorie_fabricant':
       return {
         key: sql`categorie_fabricant_key`,
         label: sql`categorie_fabricant_label`,
       };
-    case "segment":
+    case 'segment':
       return { key: sql`segment_key`, label: sql`segment_label` };
-    case "marque":
+    case 'marque':
       return { key: sql`marque_key`, label: sql`marque_label` };
-    case "object_type":
+    case 'object_type':
       return { key: sql`object_type`, label: sql`object_type_label` };
-    case "changed_column":
+    case 'changed_column':
       return { key: sql`changed_column`, label: sql`changed_column` };
   }
 };
@@ -89,7 +89,7 @@ export const aggregatePricingReferenceDiffs = async (
     !authContext.isSuperAdmin && authContext.activeAgencyId &&
     !authContext.agencyIds.includes(authContext.activeAgencyId)
   ) {
-    throw httpError(403, "AUTH_FORBIDDEN", "Agence active non autorisee.");
+    throw httpError(403, 'AUTH_FORBIDDEN', 'Agence active non autorisee.');
   }
 
   const run = await resolvePricingReferenceDiffRun(db, input);
@@ -113,13 +113,13 @@ export const aggregatePricingReferenceDiffs = async (
     })`);
   }
 
-  if (input.measure === "prix") {
+  if (input.measure === 'prix') {
     conditions.push(
       sql`changed.column_name in (${
         sql.join(PRICE_CHANGE_COLUMNS.map((column) => sql`${column}`), sql`, `)
       })`,
     );
-  } else if (input.measure === "remise") {
+  } else if (input.measure === 'remise') {
     conditions.push(sql`changed.column_name in (${
       sql.join(
         DISCOUNT_CHANGE_COLUMNS.map((column) => sql`${column}`),
@@ -132,11 +132,14 @@ export const aggregatePricingReferenceDiffs = async (
   if (!input.include_neutral) {
     directionConditions.push(sql`change_direction is distinct from 'neutre'`);
   }
-  if (input.direction !== "any") {
+  if (input.direction !== 'any') {
     directionConditions.push(sql`change_direction = ${input.direction}`);
   }
 
   const directionWhere = toWhereSql(directionConditions);
+  const thresholdWhere = input.threshold_pct === undefined
+    ? sql`true`
+    : sql`delta_pct is not null and abs(delta_pct) > ${input.threshold_pct}`;
   const group = groupExpressions(input.group_by);
   const financialColumns = [
     ...PRICE_CHANGE_COLUMNS,
@@ -322,7 +325,8 @@ export const aggregatePricingReferenceDiffs = async (
     grouped_source as (
       select *, ${group.key} as group_key, ${group.label} as group_label
       from classified
-      where ${directionWhere}
+       where ${directionWhere}
+         and (${thresholdWhere})
     )
     select
       group_key as key,
@@ -373,6 +377,7 @@ export const aggregatePricingReferenceDiffs = async (
     group_by: input.group_by,
     measure: input.measure,
     direction: input.direction,
+    threshold_pct: input.threshold_pct ?? null,
     groups,
     truncated,
   });
