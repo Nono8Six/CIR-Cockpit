@@ -1,6 +1,7 @@
 # Guide de tests
 
 Reference QA: `docs/qa-runbook.md`.
+Etat verifie contre les scripts et la CI le 2026-07-17.
 
 ## Pyramide
 
@@ -91,10 +92,10 @@ La coverage est une gate finale ou de risque eleve, pas une boucle systematique 
 
 ## CI
 
-`.github/workflows/qa.yml` installe pnpm, Node et Deno, prepare `backend/.env` depuis l'exemple si necessaire, puis lance:
+`.github/workflows/qa.yml` installe pnpm 10.33.0, Node 24.14.0 et Deno 2.5.6, prépare `backend/.env` depuis l'exemple si nécessaire, puis lance :
 
 ```bash
-pnpm run qa
+pnpm run qa:ci
 ```
 
 La CI ne remplace pas la validation locale demandee par le runbook quand une livraison est attendue.

@@ -665,12 +665,10 @@ export const getAiSettings = async (
     db
       .select()
       .from(ai_provider_configs)
-      .where(eq(ai_provider_configs.provider, "openrouter"))
       .orderBy(ai_provider_configs.provider),
     db
       .select()
       .from(ai_model_configs)
-      .where(eq(ai_model_configs.provider, "openrouter"))
       .orderBy(ai_model_configs.provider, ai_model_configs.label),
     db.select().from(ai_quota_policies).orderBy(
       ai_quota_policies.scope,
@@ -1598,6 +1596,8 @@ const providerLabel = (provider: AiProvider): string => {
   switch (provider) {
     case "openrouter":
       return "OpenRouter";
+    case "mistral":
+      return "Mistral";
   }
 };
 
@@ -1958,6 +1958,12 @@ export const providerBaseUrl = (provider: AiProvider): string => {
   switch (provider) {
     case "openrouter":
       return "https://openrouter.ai/api/v1";
+    case "mistral":
+      throw httpError(
+        500,
+        "AI_CONFIG_MISSING",
+        "Adaptateur Mistral non configure.",
+      );
   }
 };
 
@@ -1997,7 +2003,7 @@ const callProvider = async (
   const providerError = readProviderError(data);
   if (providerError) {
     throw httpError(
-      502,
+      503,
       "AI_PROVIDER_UNAVAILABLE",
       `Fournisseur IA ${provider.provider}: ${providerError}`,
     );
@@ -2075,7 +2081,7 @@ export const callProviderWithTools = async (
       );
     }
     throw httpError(
-      502,
+      503,
       "AI_PROVIDER_UNAVAILABLE",
       `Fournisseur IA ${provider.provider} indisponible.`,
     );
@@ -2338,7 +2344,7 @@ const providerHttpError = (
 ): never => {
   if (status === 401 || status === 403) {
     throw httpError(
-      401,
+      502,
       "AI_PROVIDER_AUTH_FAILED",
       `Cle API ${provider} refusee.`,
       details ?? undefined,
@@ -2353,7 +2359,7 @@ const providerHttpError = (
     );
   }
   throw httpError(
-    502,
+    503,
     "AI_PROVIDER_UNAVAILABLE",
     `Fournisseur IA ${provider} indisponible.`,
     details ?? undefined,

@@ -51,6 +51,7 @@ export type ErrorCode =
   | "AI_CONFIG_MISSING"
   | "AI_INPUT_TOO_LARGE"
   | "AI_TOOL_LOOP_DETECTED"
+  | "AI_TOOL_EXECUTION_FAILED"
   | "AI_DIAGNOSTIC_ERROR"
   | "AI_PROVIDER_AUTH_FAILED"
   | "AI_PROVIDER_EMPTY_RESPONSE"
@@ -123,6 +124,7 @@ export type AppError = {
   message: string;
   status?: number;
   retryable?: boolean;
+  retryAfterMs?: number;
   /** Catalog-derived domain (auth, db, edge, etc.). Set by createAppError from catalog or explicit. */
   domain?: ErrorDomain;
   severity?: ErrorSeverity;

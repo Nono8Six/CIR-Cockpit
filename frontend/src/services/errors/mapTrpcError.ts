@@ -27,6 +27,11 @@ const readNumber = (record: Record<string, unknown>, key: string): number | null
   return typeof value === 'number' ? value : null;
 };
 
+const readBoolean = (record: Record<string, unknown>, key: string): boolean | null => {
+  const value = record[key];
+  return typeof value === 'boolean' ? value : null;
+};
+
 export const mapTrpcError = (error: unknown, fallbackMessage: string): AppError => {
   if (!isTRPCClientError(error)) {
     if (error instanceof Error) {
@@ -62,6 +67,18 @@ export const mapTrpcError = (error: unknown, fallbackMessage: string): AppError 
   const requestId = detailsData ? readString(detailsData, 'requestId') : null;
   const details = detailsData ? readString(detailsData, 'details') : null;
   const status = detailsData ? readNumber(detailsData, 'httpStatus') : null;
+  const retryable = detailsData ? readBoolean(detailsData, 'retryable') : null;
+  const retryAfterCandidate = detailsData ? readNumber(detailsData, 'retryAfterMs') : null;
+  const retryAfterMs = retryAfterCandidate !== null && Number.isInteger(retryAfterCandidate) &&
+      retryAfterCandidate >= 0 && retryAfterCandidate <= 300_000
+    ? retryAfterCandidate
+    : null;
+  const recoveryActionRaw = detailsData ? readString(detailsData, 'recoveryAction') : null;
+  const recoveryAction = recoveryActionRaw === 'retry' || recoveryActionRaw === 'reload' ||
+      recoveryActionRaw === 'relogin' || recoveryActionRaw === 'contact_support' ||
+      recoveryActionRaw === 'none'
+    ? recoveryActionRaw
+    : undefined;
 
   const shapeError = isRecord(error.shape) ? error.shape : null;
   const shapeData = shapeError ? readObject(shapeError, 'data') : null;
@@ -80,6 +97,9 @@ export const mapTrpcError = (error: unknown, fallbackMessage: string): AppError 
     message: resolvedMessage,
     source: 'edge',
     status: resolvedStatus,
+    retryable: retryable ?? undefined,
+    retryAfterMs: retryAfterMs ?? undefined,
+    recoveryAction,
     requestId: requestId ?? undefined,
     details: details ?? undefined,
     cause: error

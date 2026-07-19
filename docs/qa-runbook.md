@@ -1,6 +1,6 @@
 # QA Runbook Local + CI
 
-Date de reference: 2026-06-20
+Date de reference: 2026-07-17
 Portee: CIR Cockpit local + backend Supabase lie.
 
 ## 1. Principe
@@ -70,7 +70,7 @@ E2E seulement si un parcours UI est impacte et que l'utilisateur le demande ou l
 
 Gate legere pour docs/config:
 
-1. `repo:check`
+1. `repo:check:local`
 2. `git diff --check` sur AGENTS, CLAUDE, docs, scripts, hooks et configs principales.
 
 Ne valide pas le runtime applicatif.
@@ -79,7 +79,7 @@ Ne valide pas le runtime applicatif.
 
 Gate frontend intermediaire:
 
-1. `repo:check`
+1. `repo:check:local`
 2. TypeScript frontend.
 3. ESLint frontend.
 4. Vitest sans coverage.
@@ -103,7 +103,7 @@ Ne lance pas tests d'integration backend ni probes Supabase runtime.
 Gate intermediaire large:
 
 1. `repo:check`
-2. Frontend typecheck/lint/tests sans coverage/error compliance.
+2. Frontend typecheck/lint/tests sans coverage, avec error compliance.
 3. Backend lint/check/tests.
 
 Utiliser quand le changement traverse plusieurs couches ou quand les checks cibles ne suffisent plus.
@@ -167,6 +167,8 @@ Avec Supabase MCP:
 
 ## 8. Assistant IA
 
+Source de vérité du chantier : `docs/ASSISTANT_IA/plan-mistral-assistant-transversal.md`. Aucun ancien plan IA ne doit être utilisé pour décider du provider, du modèle ou de l’ordre d’exécution.
+
 Pour toute livraison modifiant le broker, un outil, un prompt, un modèle, le routage provider,
 les quotas ou les accès :
 
@@ -199,7 +201,39 @@ idempotents, vérifie les bornes puis nettoie ses lignes. Vérifier aussi la mig
 `ai_feature_grants`, les RLS/ACL, le job `ai_data_retention_daily`, les index issus d'`EXPLAIN`
 et l'absence de clé en clair.
 
-Campagne OpenRouter live, hors CI et uniquement avec les secrets d'intégration valides :
+Le runner live historique est OpenRouter-spécifique tant que la phase 1 ne l’a pas migré. Il ne constitue plus une preuve de livraison et ne doit pas être lancé contre Mistral avant adaptation de ses contrats, variables et assertions.
+
+### Checkpoints runtime Mistral de la phase 1
+
+Avant tout appel payant :
+
+1. vérifier que la clé Mistral est enregistrée par le flux admin chiffré, jamais dans la ligne de commande ;
+2. vérifier `/v1/models` et l’accès à `mistral-large-2512` ;
+3. vérifier en test le payload Mistral : température `0.2`, `parallel_tool_calls=false`, aucun champ OpenRouter ;
+4. conserver un snapshot et les questions de référence validées dans le journal P0/P1 ;
+5. borner tours, timeout, tokens, lignes, octets et coût avant le smoke UI.
+
+P1-C exige une preuve depuis l’interface réelle :
+
+- réponse Référentiels correcte et sourcée ;
+- provider `mistral` et modèle réellement servi consignés ;
+- outils et preuves enregistrés, sans donnée hors permissions ;
+- latence, tokens et coût enregistrés ;
+- aucun appel OpenRouter nécessaire au scénario.
+
+P1-B exige ensuite une question déterministe provider désactivé, avec provider/modèle nuls, zéro token et coût nul, puis le rejeu de P1-C sans régression.
+
+P1-D exige aussi la matrice de résilience du §4.8 du plan actif :
+
+- injection contrôlée de 401, 429 avec `Retry-After`, 502/503, timeout, JSON malformé, réponse vide, arguments outil invalides, outil refusé et boucle ;
+- code, statut, `request_id`, `recovery_action`, retry et éventuel délai conformes pour chaque cas ;
+- aucun secret, corps provider, stack ou diagnostic interne dans le payload client ;
+- aucun retry sur auth, permission, configuration ou contrat invalide ; au plus un retry provider transitoire dans le budget de phase 1 ;
+- aucune exécution concurrente ni double coût pour un même `client_request_id` ;
+- aucun nouvel appel provider si la finalisation d’usage doit être réconciliée ;
+- comportement UI vérifié : question préservée, action adaptée, `request_id` copiable et absence de double notification.
+
+Après migration du runner live, son déclenchement reste hors CI et utilise uniquement les secrets d’intégration valides :
 
 ```powershell
 $env:RUN_API_INTEGRATION='1'
@@ -207,19 +241,13 @@ $env:RUN_AI_LIVE_EVALS='1'
 deno test --env-file=backend/.env --allow-env --allow-net --config backend/deno.json backend/functions/api/integration/assistantLiveEvaluations_integration_test.ts
 ```
 
-Elle exécute trois répétitions des quatre cas PO explicites et rapporte modèle, provider, coût,
-latence et outils. Une campagne est bloquée si un agrégat critique est faux, si une citation ne
-correspond pas à un outil exécuté, si un outil non attendu apparaît ou si une donnée inter-agence
-est visible. Consigner p50/p95, tokens, coût, modèle et provider réellement servis dans le
-changelog de la phase. Ne jamais l'exécuter avec une clé OpenRouter fournie en ligne de commande.
+Une campagne rapporte modèle, provider, coût, latence et outils. Elle est bloquée si un agrégat critique est faux, si une citation ne correspond pas à un outil exécuté, si un outil non attendu apparaît ou si une donnée inter-agence est visible. Consigner p50/p95, tokens, coût, modèle et provider réellement servis dans le journal du checkpoint. Ne jamais fournir une clé provider en ligne de commande.
 
-Avant livraison, confirmer dans le payload provider : Chat Completions, `require_parameters:true`,
-fallback désactivé, `data_collection:'deny'`, ZDR demandé, génération/provider/finish reasons
-journalisés et aucun retry aveugle après une réponse potentiellement facturée.
+Avant livraison, confirmer le payload de l’adaptateur actif, le modèle demandé et servi, les finish reasons, la journalisation normalisée et l’absence de retry aveugle après une réponse potentiellement facturée. Après la phase 2, la suite de conformité provider doit passer pour tout adaptateur activable.
 
 ## 9. CI
 
-Le workflow `.github/workflows/qa.yml` execute `pnpm run qa` sur PR et `workflow_dispatch`.
+Le workflow `.github/workflows/qa.yml` exécute `pnpm run qa:ci` sur push `main`, pull request et `workflow_dispatch`.
 
 CI verte ne remplace pas le rapport local quand une livraison est demandee. Pour une PR ouverte, les checks GitHub Actions requis doivent etre verts avant merge.
 

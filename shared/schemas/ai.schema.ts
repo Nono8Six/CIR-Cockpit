@@ -19,7 +19,7 @@ const optionalNullableTextSchema = z
   .nullable()
   .optional();
 
-export const aiProviderSchema = z.enum(["openrouter"]);
+export const aiProviderSchema = z.enum(["openrouter", "mistral"]);
 export const aiPromptStatusSchema = z.enum(["draft", "published", "archived"]);
 export const aiUsageStatusSchema = z.enum([
   "success",
@@ -33,6 +33,15 @@ export const aiFeatureSchema = z.enum([
   "pricing.references.diagnose.segments",
   "assistant.referentiels",
 ]);
+
+export const aiFeatureModelAssignmentSchema = z.strictObject({
+  feature: aiFeatureSchema,
+  model_config_id: uuidSchema,
+  created_by: nullableTextSchema,
+  updated_by: nullableTextSchema,
+  created_at: nonEmptyStringSchema("Date de creation requise."),
+  updated_at: nonEmptyStringSchema("Date de mise a jour requise."),
+});
 
 export const aiProviderConfigSchema = z.strictObject({
   id: uuidSchema,
@@ -550,6 +559,9 @@ export const aiDiagnosisCacheSchema = z.strictObject({
 });
 
 export type AiProvider = z.infer<typeof aiProviderSchema>;
+export type AiFeatureModelAssignment = z.infer<
+  typeof aiFeatureModelAssignmentSchema
+>;
 export type AiFeature = z.infer<typeof aiFeatureSchema>;
 export type AiPromptStatus = z.infer<typeof aiPromptStatusSchema>;
 export type AiUsageStatus = z.infer<typeof aiUsageStatusSchema>;

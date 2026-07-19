@@ -1,7 +1,7 @@
 # Stack Technique - CIR Cockpit
 
 > Reference documentaire de la stack du projet.
-> Derniere mise a jour: 2026-07-06
+> Derniere mise a jour: 2026-07-17
 > Etat verifie contre les manifests et configs du repo.
 
 ## Resume executif
@@ -16,17 +16,21 @@ Cette page doit suivre en priorite:
 
 1. `package.json`
 2. `frontend/package.json`
-3. `backend/deno.json`
-4. `deno.json`
-5. `supabase/config.toml`
-6. `frontend/vite.config.ts`
-7. `frontend/vitest.config.ts`
-8. `frontend/playwright.config.ts`
+3. `pnpm-lock.yaml`
+4. `backend/deno.json`
+5. `deno.json`
+6. `supabase/config.toml`
+7. `frontend/vite.config.ts`
+8. `frontend/vitest.config.ts`
+9. `frontend/playwright.config.ts`
+10. `.github/workflows/qa.yml`
 
 ## Workspace et outillage racine
 
 | Element | Version / etat | Source |
 |---------|-----------------|--------|
+| Node.js local + CI | `24.14.0` | runtime local, `.github/workflows/qa.yml` |
+| Deno local + CI | `2.5.6` | runtime local, `.github/workflows/qa.yml` |
 | Package manager | `pnpm@10.33.0` | `package.json` |
 | Workspace | `frontend`, `shared` | `pnpm-workspace.yaml` |
 | Git hooks | Husky `9.1.7` | `package.json` |
@@ -39,7 +43,7 @@ Cette page doit suivre en priorite:
 | Gate CI sans Supabase CLI lie | `pnpm run qa:ci` | `package.json`, `.github/workflows/qa.yml` |
 | Audit deps reseau | `pnpm run qa:audit` | `package.json` |
 | CLI Supabase locale | `2.98.1` | `supabase --version` |
-| Overrides securite pnpm | `flatted@3.4.2`, `picomatch@2.3.2/4.0.4`, `lodash-es@4.18.1` | `package.json` |
+| Overrides securite pnpm | `ajv@6.14.0`, `rollup@4.59.0`, `flatted@3.4.2`, `picomatch@2.3.2/4.0.4`, `brace-expansion@1.1.13/5.0.6`, `yaml@2.9.0`, `ws@8.21.0`, `minimatch@3.1.4/9.0.7`, `lodash-es@4.18.1` | `package.json` |
 
 ## Frontend
 
@@ -61,7 +65,7 @@ Cette page doit suivre en priorite:
 | TanStack Router | `1.162.9` | routing SPA |
 | TanStack Query | `5.90.21` | cache, queries, mutations |
 | Zustand | `5.0.11` | store d'erreurs |
-| Supabase JS | `2.95.3` | auth, realtime, acces donnees et API |
+| Supabase JS frontend | `2.97.0` résolu (`^2.95.3` déclaré) | auth, realtime, acces donnees et API |
 
 ### Formulaires et validation
 
@@ -82,8 +86,8 @@ Cette page doit suivre en priorite:
 | Motion | `12.35.2` | animations UI |
 | Sonner | `2.0.7` | notifications |
 | Lucide React | `0.564.0` | icones |
-| `react-error-boundary` | `6.1.0` | error boundary |
-| `react-day-picker` | `9.13.1` | calendrier |
+| `react-error-boundary` | `6.1.1` résolu | error boundary |
+| `react-day-picker` | `9.13.2` résolu | calendrier |
 | `cmdk` | `1.1.1` | command palette / recherche |
 | `class-variance-authority` | `0.7.1` | variants Tailwind |
 | `clsx` | `2.1.1` | composition de classes |
@@ -153,7 +157,7 @@ Autrement dit: le frontend ne repose pas sur une couche API unique. Le repo comb
 |-------------|---------|------|
 | Drizzle ORM | `0.45.1` | queries SQL typees |
 | `postgres` | `3.4.8` | driver SQL |
-| Supabase JS | `2.95.3` | auth/admin clients et contexte utilisateur via import map Deno |
+| Supabase JS backend | `2.95.3` épinglé | auth/admin clients et contexte utilisateur via import map Deno |
 | Zod | `4.3.6` | validation input/output |
 | `jose` | `5.9.6` | verification JWT via JWKS |
 
@@ -196,9 +200,9 @@ Cet alignement est verifie par `pnpm run repo:check`.
 | Vitest | `4.1.8` | unit/integration tests |
 | `@vitest/coverage-v8` | `4.1.8` | couverture |
 | `@vitest/ui` | `4.1.8` | UI locale Vitest |
-| Testing Library React | `16.3.0` | tests composants |
+| Testing Library React | `16.3.2` résolu | tests composants |
 | Testing Library user-event | `14.6.1` | interactions utilisateur |
-| `@testing-library/jest-dom` | `6.6.3` | matchers DOM |
+| `@testing-library/jest-dom` | `6.9.1` résolu | matchers DOM |
 | `vitest-axe` | `0.1.0` | assertions accessibilite |
 | jsdom | `25.0.1` | environnement DOM de test |
 | Playwright | `1.58.2` | E2E navigateur |

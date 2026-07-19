@@ -2,6 +2,8 @@
 
 [← Contexte](./01-contexte-enjeux.md) | [Sommaire](../00-sommaire.md) | [Logique de tarification →](./03-logique-tarification.md)
 
+> **Statut :** besoin métier de travail. Les identités Produit, Famille fabricant, Classification CIR et Segment tarifaire doivent être réconciliées avec l’architecture directrice avant implémentation.
+
 ---
 
 ## 2.1 - Classification CIR (3 niveaux)
@@ -161,7 +163,7 @@ SKF globale      │ -33% standard         │ (non appliquee)  │ Ecrasee par 
 
 ## 2.5 - Catalogue produit (references fabricant)
 
-Chaque fabricant fournit un **fichier tarif** (Excel) contenant ses references produit. Ce fichier est la source de verite pour les prix publics et les conditions d'achat CIR.
+Chaque fabricant fournit un **fichier tarif** (Excel) contenant ses références produit. Ce fichier est une source fournisseur à conserver, versionner et valider ; il ne devient jamais automatiquement la vérité active en base. L'activation suit le processus d'import, de contrôle et de publication défini par la brique Catalogue et tarification.
 
 **Donnees par reference produit** :
 

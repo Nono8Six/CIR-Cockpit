@@ -2,28 +2,39 @@
 
 [Sommaire](../00-sommaire.md)
 
+> **Statut :** registre historique de décisions et questions. Une entrée n’est active que si elle ne contredit pas `docs/architecture-cible-cir-cockpit.md`. Les schémas, cascades et choix IA de ce fichier sont des hypothèses à revalider.
+
 ---
 
-Ce document centralise **toutes les decisions actees** et les **questions** (resolues ou ouvertes) du module de tarification CIR, de la v1.0 a la v3.0.
+Ce document centralise les décisions enregistrées et les questions du module de tarification CIR, de la v1.0 à la v3.2. Il conserve le raisonnement métier ; il n’est plus la source d’autorité d’implémentation.
 
-Il constitue la **reference unique** pour arbitrer les choix d'implementation. Tout participant au projet (Direction, ROI, equipe technique) peut s'y referer pour comprendre le raisonnement derriere chaque choix.
+Tout participant au projet peut s’y référer pour comprendre l’origine d’une hypothèse, puis doit vérifier son statut dans l’architecture directrice avant de l’utiliser.
 
 **Convention de numerotation :**
 
-- `Dxx` = Decision actee (irreversible sauf nouvelle decision explicite)
+- `Dxx` = décision enregistrée, susceptible d’être remplacée par une décision directrice plus récente
 - `Qxx` = Question (ouverte ou resolue)
 
-**Statistiques :**
+**État du registre :**
 
-- 51 decisions actees (D1-D51)
-- 10 questions resolues (Q1, Q4, Q6, Q9-Q15)
-- 9 questions ouvertes (Q2, Q3, Q5, Q7, Q8, Q16-Q19)
+- 51 décisions historiques sont conservées pour assurer la traçabilité ; elles ne sont pas toutes encore applicables.
+- Les entrées rouvertes ou remplacées sont identifiées ci-dessous. Aucun total historique ne doit être interprété comme un nombre de décisions actuellement verrouillées.
 
 **Convention cascade (v3.2)** :
 
 - **19 niveaux metier** = convention de pilotage/gouvernance
 - **21 positions techniques effectives** = detail d'implementation du moteur (insertion des 4 forces de marque globale x 2 portees)
 - Les deux formulations sont valides selon le contexte de discussion
+
+### Décisions historiques explicitement remplacées ou rouvertes
+
+| Entrées | Statut actuel |
+| --- | --- |
+| D2, D12, D15, D29, D30, D32, D40 | Cascade et granularité à revalider avec les paliers, prix nets, familles fabricant, références, accords et groupes décrits dans l’architecture directrice. |
+| D4 | Portée client/agence ouverte ; ne pas imposer « un client = une agence ». |
+| D11 | Autorité AS400/ERP et rôle opérationnel de CIR Cockpit ouverts. |
+| D37 | Choix Small 3/Medium 3 et budget annuel remplacés par le plan Mistral transversal et ses mesures runtime. |
+| Calendriers et phases v1-v3 | Supprimés ; l’ordre des briques est celui de l’architecture directrice. |
 
 ---
 
@@ -52,7 +63,7 @@ Decisions fondatrices posees lors de la specification initiale. Elles definissen
 - D2 : Les colonnes tarifaires de l'ancien systeme (T1, T2, T3...) ajoutaient de la complexite sans valeur. Supprimees au profit d'un prix unique par reference.
 - D3 : Choix delibere de transparence. Le TCS a besoin du PA pour negocier efficacement au telephone.
 - D6 : Certains fabricants donnent des remises par famille (ex: toute la robinetterie a -35%), d'autres par reference unitaire. Le systeme doit gerer les deux.
-- D9 : L'AS400 sera connecte en Phase 6. En v1, les donnees sont importees manuellement via les fichiers tarif fabricant.
+- D9 : décision historique. Le système d’autorité et le mode de synchronisation AS400/ERP restent ouverts dans l’architecture directrice.
 - D10 : Initialement prevue avec un POC fictif, cette decision a ete corrigee en v3.0 (voir D36).
 
 ---
@@ -95,26 +106,26 @@ Refonte complete du modele. Cette version introduit la cascade a 19 niveaux, les
 
 | # | Decision | Choix | Date | Source |
 |---|----------|-------|------|--------|
-| D24 | Prix marche GROUPEMENT | Ajoute dans la cascade en priorite 2 (apres prix marche client). Un prix marche groupement s'applique a tous les clients du groupement sauf si le client a son propre prix marche. | v3.0 | Retour revu.md |
-| D25 | Auto-validation ROI / Direction | Le ROI et le directeur d'agence peuvent appliquer des conditions directement sans workflow de validation. Tracabilite complete via proposal auto-validee (statut='validee', valide_par=propose_par). Seul le TCS passe obligatoirement par la validation ROI. | v3.0 | Retour revu.md |
-| D26 | Probleme reel identifie | Le probleme n'est pas l'AS400 (qui reste fonctionnel pour le pricing temps reel) mais l'interface web existante de gestion des conditions commerciales, trop complexe et inutilisee. 7 anti-patterns identifies. | v3.0 | Retour revu.md |
+| D24 | Prix marche GROUPEMENT | Ajoute dans la cascade en priorite 2 (apres prix marche client). Un prix marche groupement s'applique a tous les clients du groupement sauf si le client a son propre prix marche. | v3.0 | Atelier métier historique |
+| D25 | Auto-validation ROI / Direction | Le ROI et le directeur d'agence peuvent appliquer des conditions directement sans workflow de validation. Tracabilite complete via proposal auto-validee (statut='validee', valide_par=propose_par). Seul le TCS passe obligatoirement par la validation ROI. | v3.0 | Atelier métier historique |
+| D26 | Probleme reel identifie | Le probleme n'est pas l'AS400 (qui reste fonctionnel pour le pricing temps reel) mais l'interface web existante de gestion des conditions commerciales, trop complexe et inutilisee. 7 anti-patterns identifies. | v3.0 | Atelier métier historique |
 | D27 | Derogations fournisseur | Nouvelle entite `supplier_derogations` avec 3 portees (agence/nationale/globale), 3 cibles (client/groupement/tous), 3 types de valeur (prix_net/remise_pct/remise_supp_pct). Date de fin obligatoire. Impact le PA effectif utilise dans tous les calculs de marge. | v3.0 | Brainstorm |
 | D28 | BFA flexible | Nouvelle entite `bfa_rates` avec taux par marque/CAT_FAB. 3 niveaux de fiabilite (confirme/estime/incertain). Double affichage marge (facture + BFA) partout. Direction gere les taux, ROI voit en lecture seule. Le coef_mini utilise PA apres BFA uniquement si fiabilite='confirme'. | v3.0 | Brainstorm |
 | D29 | Marque globale a 4 forces | La marque globale peut etre posee avec 4 niveaux de force : prioritaire (surcharge sfam/fam/mega), forte (surcharge fam/mega), standard (surcharge mega), securite (filet de securite). TCS limite a standard/securite. Apercu cascade en temps reel montre l'impact de chaque force. | v3.0 | Brainstorm |
-| D30 | Segment tarifaire 2D | Confirme : le segment reste un croisement 2D (marque x CAT_FAB) avec mapping 1:1 vers la sous-famille CIR. La cle unique est UNIQUE(marque, cat_fab). | v3.0 | Question resolue |
-| D31 | Prix promo multi-niveau | Le prix promo n'est plus limite au segment. Il peut etre pose sur une reference, un segment, une sous-famille, une famille, ou une mega-famille. La regle "promo uniquement si plus favorable" reste la meme. | v3.0 | Retour revu.md |
-| D32 | Remise mini / coef mini en cascade | Les filets de securite (remise mini, coef mini) suivent leur propre heritage : segment -> sous-famille -> famille -> mega-famille. Pas besoin de poser un coef mini sur chaque segment. | v3.0 | Retour revu.md |
-| D33 | Copie de conditions | 3 directions possibles : client->client, groupement->groupement, client->groupement. Apercu avant/apres avec detection conflits. 3 strategies de resolution (garder existant, ecraser, prendre le meilleur). Les conditions copiees passent par le workflow normal. | v3.0 | Retour revu.md |
-| D34 | Dates de validite renforcees | Date de fin avec presets (3m, 6m, 1an, permanent). Alertes d'expiration (badge nav + email). Derogations : date de fin obligatoire (pas de permanent). Conditions expirees tombent automatiquement au niveau parent. | v3.0 | Retour revu.md |
-| D35 | Separation METIER / TECHNIQUE | Les documents du cahier des charges sont separes en METIER/ (Direction, ROI, commerciaux) et TECHNIQUE/ (equipe dev). Plus un dossier DECISIONS/ pour tous. | v3.0 | Retour revu.md |
-| D36 | Donnees reelles uniquement | Pas de POC fictif. L'outil sera alimente avec les vraies hierarchies CIR, segments, clients, tarifs fabricant. | v3.0 | Retour revu.md |
-| D37 | Intelligence artificielle | 8 cas d'usage IA integres des la v1, en 3 couches de cout (SQL gratuit, Mistral Small 3 faible cout, Mistral Medium 3 a la demande). Budget estime ~48 EUR/an. | v3.0 | Brainstorm |
-| D38 | Filtres enrichis | Recherche par departement, ville, commercial, groupement, code client, SIRET. Selecteur agence visible pour Direction et Super Admin uniquement. | v3.0 | Retour revu.md |
-| D39 | Consommation multi-annee | Selecteur de periode (annee en cours, N-1, personnalise). Comparaison N-1. Filtre segments avec/sans CA. Historique des marges par segment. | v3.0 | Retour revu.md |
-| D40 | Cascade v3.0 a 19 niveaux | La cascade complete integre : ref clt/grp -> segment clt/grp -> marque/sfam clt/grp -> marque globale PRIO clt/grp -> sfam clt/grp -> marque globale SECU clt/grp -> fam clt/grp -> mega clt/grp -> promo -> mini -> coef -> tarif | v3.0 | Brainstorm |
+| D30 | Segment tarifaire 2D | **Rouverte le 2026-07-17** : le croisement 2D historique ne suffit pas à couvrir sans validation les familles fabricant, références, accords, groupes et paliers de quantité de la cible. | v3.0 → rouverte | Architecture directrice |
+| D31 | Prix promo multi-niveau | Le prix promo n'est plus limite au segment. Il peut etre pose sur une reference, un segment, une sous-famille, une famille, ou une mega-famille. La regle "promo uniquement si plus favorable" reste la meme. | v3.0 | Atelier métier historique |
+| D32 | Remise mini / coef mini en cascade | Les filets de securite (remise mini, coef mini) suivent leur propre heritage : segment -> sous-famille -> famille -> mega-famille. Pas besoin de poser un coef mini sur chaque segment. | v3.0 | Atelier métier historique |
+| D33 | Copie de conditions | 3 directions possibles : client->client, groupement->groupement, client->groupement. Apercu avant/apres avec detection conflits. 3 strategies de resolution (garder existant, ecraser, prendre le meilleur). Les conditions copiees passent par le workflow normal. | v3.0 | Atelier métier historique |
+| D34 | Dates de validite renforcees | Date de fin avec presets (3m, 6m, 1an, permanent). Alertes d'expiration (badge nav + email). Derogations : date de fin obligatoire (pas de permanent). Conditions expirees tombent automatiquement au niveau parent. | v3.0 | Atelier métier historique |
+| D35 | Séparation documentaire | **Remplacée le 2026-07-17** : besoins métier conservés dans ce cahier ; architecture et stack centralisées dans les documents racine actifs. | v3.0 → remplacée | Architecture directrice |
+| D36 | Donnees reelles uniquement | Pas de POC fictif. L'outil sera alimente avec les vraies hierarchies CIR, segments, clients, tarifs fabricant. | v3.0 | Atelier métier historique |
+| D37 | Intelligence artificielle | **Remplacée le 2026-07-17** : usages par brique, provider configurable, preuves runtime et budgets mesurés selon le plan IA transversal. | v3.0 → remplacée | Architecture directrice |
+| D38 | Filtres enrichis | Recherche par departement, ville, commercial, groupement, code client, SIRET. Selecteur agence visible pour Direction et Super Admin uniquement. | v3.0 | Atelier métier historique |
+| D39 | Consommation multi-annee | Selecteur de periode (annee en cours, N-1, personnalise). Comparaison N-1. Filtre segments avec/sans CA. Historique des marges par segment. | v3.0 | Atelier métier historique |
+| D40 | Cascade v3.0 a 19 niveaux | **Rouverte le 2026-07-17** : cette cascade reste une hypothèse historique. Le moteur cible devra être versionné, explicable et validé à partir des accords, priorités et cas métier réellement retenus. | v3.0 → rouverte | Architecture directrice |
 | D41 | Apercu cascade temps reel | Toutes les interfaces d'edition montrent l'apercu cascade en temps reel. L'utilisateur voit le resultat concret de sa modification avant de proposer. | v3.0 | Brainstorm |
-| D42 | Import tarif 4 modes | Tarif complet, tarif seul, remises seules, PA direct. Chaque fabricant ayant un format different, l'import s'adapte. | v3.0 | Retour revu.md |
-| D43 | Historisation stricte des prix | Chaque import cree des entrees dans supplier_products_history avec prix avant/apres, delta, et pricelist source. | v3.0 | Retour revu.md |
+| D42 | Import tarif 4 modes | Tarif complet, tarif seul, remises seules, PA direct. Chaque fabricant ayant un format different, l'import s'adapte. | v3.0 | Atelier métier historique |
+| D43 | Historisation stricte des prix | Chaque import cree des entrees dans supplier_products_history avec prix avant/apres, delta, et pricelist source. | v3.0 | Atelier métier historique |
 | D44 | Derogations : qui gere | Portee agence = ROI + Direction. Portee nationale = Direction + cellule marche. Portee globale = Direction + service achats. | v3.0 | Question resolue |
 | D45 | BFA : qui gere | Direction gere les taux. ROI voit en lecture seule et peut signaler des incoherences. TCS ne voit pas les taux bruts mais voit la marge BFA calculee. | v3.0 | Question resolue |
 | D46 | Alertes | In-app (badge + filtre "expire bientot") + email recapitulatif hebdomadaire (conditions expirant dans 15 jours). | v3.0 | Question resolue |
@@ -134,8 +145,8 @@ Refonte complete du modele. Cette version introduit la cascade a 19 niveaux, les
 - D31 : L'extension du prix promo a tous les niveaux de la hierarchie permet des operations promotionnelles plus larges (ex: -5% sur toute la famille chauffage pendant un mois).
 - D33 : La copie de conditions est un gain de temps majeur pour le ROI lors de l'ouverture d'un nouveau client similaire a un client existant.
 - D34 : Les dates de validite renforcees evitent les conditions "oubliees" qui restent actives indefiniment. Le mecanisme de tombee automatique au niveau parent garantit la coherence.
-- D37 : L'IA est un differenciateur. Les 8 cas d'usage ont ete choisis pour leur ROI immediat, pas pour l'effet vitrine.
-- D40 : La cascade 19 niveaux est le coeur du moteur de calcul. Toute modification de la cascade doit etre documentee ici et validee par la Direction.
+- D37 : l’IA reste un différenciateur central, mais aucun modèle, quota ou budget historique de ce cahier n’est repris sans évaluation du plan actif.
+- D40 : la cascade historique à 19 niveaux n'est plus un contrat actif. La future stratégie de résolution sera décidée et versionnée dans la brique Tarification.
 - D42-D43 : L'import tarif est le point d'entree des donnees fournisseur. L'historisation stricte permet de tracer l'evolution des prix d'achat dans le temps.
 - D47-D49 : Le Centre Logistique introduit un mecanisme de surcout interne qui n'affecte PAS la cascade des conditions. C'est un calcul de marge supplementaire (indicatif) pour que le commercial visualise l'impact si le produit est approvisionne via le CL. Les creations simplifiees (stock agence, achat direct) ne rentrent pas dans le processus de conditions. Le triple affichage marge (facture/CL/BFA) remplace le double affichage precedent.
 - D50 : Le mapping des droits et policies RLS doit s'appuyer sur les roles techniques existants dans le codebase. Les libelles metier "ROI/Direction" sont conserves pour l'UX et la gouvernance.
@@ -145,9 +156,7 @@ Refonte complete du modele. Cette version introduit la cascade a 19 niveaux, les
 
 ## 2. Questions resolues (v3.0)
 
-Questions posees lors des versions precedentes et resolues dans le cadre de la v3.0. Chaque resolution renvoie vers la decision correspondante.
-
-La resolution de ces 10 questions a permis de debloquer la specification complete de la v3.0, notamment la cascade 19 niveaux (Q9, Q10), les droits d'acces (Q4, Q11, Q13), et le perimetre fonctionnel (Q6, Q12, Q14, Q15).
+Questions considérées comme résolues dans la v3.0 historique. Certaines ont été rouvertes depuis par l'architecture directrice ; ce tableau conserve leur réponse d'époque pour la traçabilité.
 
 | # | Question originale | Resolution | Source |
 |---|-------------------|------------|--------|
@@ -155,9 +164,9 @@ La resolution de ces 10 questions a permis de debloquer la specification complet
 | Q4 | Le ROI peut-il valider ses propres propositions ? | OUI - auto-validation. Le ROI applique directement (D25). | v3.0 |
 | Q6 | Condition par marque : dans une sous-famille ou globale ? | LES DEUX. Marque dans sous-famille (condition fine) + marque globale avec 4 forces (D29). | v3.0 |
 | Q9 | Position marque dans la cascade | 4 niveaux de force (prioritaire/forte/standard/securite). Choix a la pose avec apercu cascade temps reel. | v3.0 |
-| Q10 | Segment 2D ou 5D ? | 2D confirme (marque x cat_fab, mapping 1:1 vers sous-famille CIR). | v3.0 |
+| Q10 | Segment 2D ou 5D ? | Réponse v3.0 historique : 2D. **Question rouverte** pour intégrer les granularités et accords de la cible. | v3.0 → rouverte |
 | Q11 | Derogations : qui gere quoi ? | 3 portees, 3 niveaux de permission (D44). | v3.0 |
-| Q12 | BFA : detail mecanique | Modele flexible avec fiabilite, pas de modelisation des paliers complexes (D28). | v3.0 |
+| Q12 | BFA : detail mecanique | Réponse v3.0 historique sans paliers complexes. **Question rouverte** : assiettes, seuils, périodes, régularisations et règles d'éligibilité restent à modéliser. | v3.0 → rouverte |
 | Q13 | BFA : qui gere les taux ? | Direction uniquement, ROI en lecture seule (D45). | v3.0 |
 | Q14 | Interface existante : quel probleme exact ? | 7 problemes identifies : 2 modes isoles, ordre selection = priorite, conditions invisibles, zero contexte, pas de derogations, BFA invisible, prix marche via Excel (D26). | v3.0 |
 | Q15 | Derogations globales : beneficiaires ? | Toutes les agences (D27). | v3.0 |
@@ -172,26 +181,26 @@ Les questions ouvertes sont revues en reunion de pilotage. Lorsqu'une question e
 
 ### 3.1 Priorite moyenne
 
-Ces questions doivent etre tranchees avant la fin de la Phase 3 (UI conditions). Elles impactent directement l'experience utilisateur et le dimensionnement technique.
+Ces questions doivent être tranchées avant la Filière Prix ou l’interface concernée. Elles impactent directement l’expérience utilisateur et le dimensionnement technique.
 
 | # | Question | Impact | Priorite |
 |---|----------|--------|----------|
 | Q3 | Volume reel de references produit par client pour les prix marche ? | Dimensionnement pagination, UX de l'onglet Prix marche. Si plus de 500 refs par client, la virtualisation est necessaire. | Moyenne |
 | Q7 | Nombre de niveaux de l'arbre (profondeur) | 7+ niveaux peuvent rendre l'arbre profond. Collapsing automatique des niveaux vides recommande. Test UX a prevoir avec un ROI. | Moyenne |
 | Q8 | Conditions groupement sur fiche client : detail cascade visible ? | Si cascade groupement visible, le TCS comprend mieux la provenance d'une condition. Recommande : afficher la source (badge "Grp") + tooltip detail. | Moyenne |
-| Q19 | Categorie tarifaire complete : mecanisme detaille ? | Cat_fab est deja dans le segment, mais le mecanisme de mapping AS400 doit etre clarifie pour l'import initial des donnees. | Moyenne (Phase 6) |
+| Q19 | Categorie tarifaire complete : mecanisme detaille ? | Le mécanisme Famille fabricant / CAT_FAB / Segment / Classification CIR doit être clarifié avant import catalogue. | Moyenne (Filière Produit/Prix) |
 
 ### 3.2 Priorite basse
 
-Ces questions peuvent attendre les phases ulterieures (Phase 5+). Elles n'impactent pas les phases de developpement initiales mais doivent etre anticipees dans l'architecture.
+Ces questions peuvent attendre la brique concernée. Elles ne bloquent pas les socles indépendants mais doivent être anticipées dans l’architecture.
 
 | # | Question | Impact | Priorite |
 |---|----------|--------|----------|
-| Q2 | Politique de revision periodique formalisee ? | Pourrait generer des "revisions a faire" automatiquement. Mode revision propose dans les idees IA. Non bloquant pour les phases 1-4. | Basse (Phase 5) |
-| Q5 | Notifications : quel canal exact ? | In-app (badge) + email hebdomadaire decides (D46). Notifications push Supabase Realtime a evaluer pour les alertes urgentes. | Basse (Phase 5) |
-| Q16 | Connexion AS400 : API ou fichier plat ? | Impact architecture Phase 6. A definir avec l'equipe IT/AS400. Determinera si l'export est temps reel ou batch. | Basse (Phase 6) |
-| Q17 | Export AS400 : quelles conditions synchroniser ? | Toutes les validees ? Seulement les nouvelles ? Delta depuis dernier export ? La reponse impacte la volumetrie et la frequence. | Basse (Phase 6) |
-| Q18 | Dashboard direction : quels KPIs ? | Marge par agence, par famille, tendances, top/flop clients, anomalies. A brainstormer avec la Direction avant la Phase 5. | Basse (Phase 5+) |
+| Q2 | Politique de revision periodique formalisee ? | Pourrait générer des révisions à faire automatiquement. Non bloquant avant la Filière Prix. | Basse (Filière Prix) |
+| Q5 | Notifications : quel canal exact ? | In-app et email sont des hypothèses ; Realtime reste à évaluer selon l’urgence. | Basse (brique Notifications) |
+| Q16 | Connexion AS400 : API ou fichier plat ? | À définir avec l’équipe IT/AS400 ; détermine temps réel ou batch. | Basse (intégration ERP) |
+| Q17 | Export AS400 : quelles conditions synchroniser ? | Toutes les validées, les nouvelles ou un delta ? La réponse impacte volumétrie et fréquence. | Basse (intégration ERP) |
+| Q18 | Dashboard direction : quels KPIs ? | Marge par agence/famille, tendances, top/flop clients, anomalies. À valider avec la Direction avant la brique Pilotage concernée. | Basse (Pilotage) |
 
 ---
 
@@ -230,25 +239,16 @@ Ces regles s'appliquent a la gestion de ce document :
 
 ---
 
-## 6. Matrice de tracabilite
+## 6. Matrice de traçabilité actuelle
 
-Liens entre les decisions et les documents de specification :
-
-| Decision | Document METIER | Document TECHNIQUE |
-|----------|----------------|--------------------|
-| D1, D15, D40 | Cascade et calcul de prix | Schema de donnees, moteur de calcul |
-| D5, D25, D33 | Workflow de validation | Tables proposals, triggers |
-| D11, D26 | Positionnement du produit | -- |
-| D12, D13, D14, D29 | Hierarchie des conditions | Fonction `resolve_cascade()` |
-| D17, D22, D24 | Prix marche | Import Excel, onglet prix marche |
-| D27, D44 | Derogations fournisseur | Table `supplier_derogations`, RLS |
-| D28, D45 | BFA | Table `bfa_rates`, calcul marge BFA |
-| D34, D46 | Dates et alertes | Cron alertes, email hebdomadaire |
-| D37 | Intelligence artificielle | Couches IA, budget, prompts |
-| D38, D39 | Filtres et consommation | Requetes, indexes, pagination |
-| D42, D43 | Import tarifs fabricant | Pipeline d'import, historisation |
-| D47, D48, D49 | Centre Logistique | Tables `cl_coefficients`, `cl_config`, fonction `resolve_cl_coefficient()`, RLS, triple marge |
-| D50, D51 | Roles et workflow | Mapping roles techniques canonique, suppression auto-validation TCS |
+| Sujet | Document métier | Autorité avant implémentation |
+| --- | --- | --- |
+| Cascade et calcul de prix | `METIER/03-logique-tarification.md` | Architecture §9 + décisions ouvertes Filière Prix |
+| Hiérarchie produit | `METIER/02-hierarchie-produit.md` | Architecture §9.1 |
+| Rôles et validation | `METIER/04-roles-workflows.md` | Architecture Tiers/RLS + code réel |
+| Écrans et opérations | `METIER/05-ecrans-utilisateur.md`, `METIER/06-ecrans-prix-derogations.md` | Brique Produit/Prix concernée |
+| Règles détaillées | `METIER/07-regles-metier.md` | Validation métier avant codage |
+| Assistant IA | Aucun document métier historique actif | Plan IA transversal |
 
 ---
 
@@ -262,8 +262,8 @@ Liens entre les decisions et les documents de specification :
 | **CAT_FAB** | Categorie tarifaire fabricant. Classification propre au fournisseur. |
 | **TCS** | Technico-Commercial Sedentaire. Operateur principal de l'outil. |
 | **ROI** | Responsable des Operations Interieures. Valide les conditions proposees par les TCS. |
-| **Cascade** | Algorithme de resolution des conditions. Parcourt 19 niveaux du plus specifique (reference) au plus general (tarif fabricant). |
-| **Segment** | Croisement 2D (marque x cat_fab) avec mapping vers la sous-famille CIR. |
+| **Cascade** | Algorithme futur de résolution des conditions ; priorité et cumul exacts encore à valider. |
+| **Segment** | Concept tarifaire fabricant/CIR existant ; identité et relation exactes à réconcilier avec Famille fabricant et Classification CIR. |
 | **Derogation** | Condition speciale accordee par un fournisseur, limitee dans le temps. |
 | **Proposal** | Proposition de condition par un TCS, soumise a validation ROI. |
 | **Centre Logistique (CL)** | Plateforme logistique centrale CIR. Applique un surcout interne (coef CL + frais de ligne) sur les produits qu'il distribue aux agences. |

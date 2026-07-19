@@ -7,11 +7,13 @@ Guide operationnel pour les agents autonomes dans CIR Cockpit.
 - Ce fichier est l'entree courte pour Codex et les subagents.
 - Ne pas lire `CLAUDE.md` par defaut. `CLAUDE.md` est l'adaptateur Claude Code et importe ces regles.
 - Lire les documents lourds seulement quand ils sont utiles:
+  - `docs/architecture-cible-cir-cockpit.md`: lecture obligatoire avant toute decision non triviale de produit, modele metier, architecture, donnees, IA, tiers, interaction/activite, pilotage, catalogue, import ou tarification. Identifier la brique concernee, respecter les decisions verrouillees et ne jamais trancher silencieusement une decision marquee `A VALIDER`.
+  - `docs/ASSISTANT_IA/plan-mistral-assistant-transversal.md`: lecture obligatoire avant toute modification de l’assistant, du provider, du broker, des outils IA, de la couche semantique ou des evaluations. Respecter l’ordre des phases et ne cocher un checkpoint qu’avec sa preuve runtime.
   - `docs/qa-runbook.md`: avant une livraison finale, une PR/merge/deploiement, une modification de QA, ou une demande explicite de verification complete.
   - `docs/testing.md`: quand la demande touche tests, couverture, E2E ou Playwright.
   - `docs/stack.md`: quand la demande touche versions, dependances, runtime, CI ou outillage.
-  - `docs/plan.md`: seulement pour une etape majeure produit/architecture demandee.
-- Docs volumineux (`docs/plan.md`, `docs/refonte-referentiels-triage.md`): lire d'abord la structure (titres/sommaire) puis seulement les sections utiles, jamais le fichier entier par defaut.
+  - `docs/LOGIQUE_REMISE_CIR/cahier-des-charges/00-sommaire.md`: pour les besoins metier de tarification, en gardant `docs/architecture-cible-cir-cockpit.md` prioritaire sur les hypotheses anciennes.
+- Docs volumineux (`docs/architecture-cible-cir-cockpit.md`, `docs/ASSISTANT_IA/plan-mistral-assistant-transversal.md`): lire d'abord la structure (titres/sommaire) puis seulement les sections utiles. Pour une decision transverse ou une nouvelle brique, lire aussi les principes non negociables, le contexte metier concerne, le contrat IA et les decisions ouvertes associees.
 - `.mcp.json` est ignore par Git et local-only. Verifier les MCP reellement exposes par l'environnement actif avant de s'y fier.
 
 ## Regles de travail

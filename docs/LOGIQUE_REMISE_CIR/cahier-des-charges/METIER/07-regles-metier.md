@@ -1,6 +1,8 @@
 # 7. Regles metier
 
-[← Prix, derogations et BFA](./06-ecrans-prix-derogations.md) | [Sommaire](../00-sommaire.md) | [Intelligence artificielle →](./08-intelligence-artificielle.md)
+[← Prix, derogations et BFA](./06-ecrans-prix-derogations.md) | [Sommaire](../00-sommaire.md)
+
+> **Statut :** règles et hypothèses métier de travail. Les décisions ouvertes de l’architecture directrice prévalent ; aucune règle de ce fichier ne doit être codée sans validation de la Filière Prix concernée.
 
 ---
 
@@ -151,12 +153,12 @@
 
 ## 7.14 - Decisions structurantes documentees
 
-### Remises quantitatives (Decision : hors perimetre v3.0)
+### Remises quantitatives et paliers
 
 | # | Regle | Impact |
 |---|-------|--------|
-| D1 | **Pas de champ `quantite_minimum`** dans cette version. Les conditions CIR sont des remises negociees par segment/marque, pas par volume de commande. | Simplifie la cascade (19 niveaux x N paliers = explosion combinatoire evitee) |
-| D2 | **Les remises quantitatives sont gerees cote AS400** (commandes/facturation). Si le besoin emerge, il sera traite en Phase 6 lors de la sync AS400, ou via un champ `commentaire` sur la condition. | Separation des responsabilites CIR Cockpit (negociation) vs AS400 (execution) |
+| D1 | **Décision historique remplacée** : les quantités minimales, multiples de commande, unités et paliers font partie du modèle cible. | Ne pas les encoder dans une cascade figée avant conception de la Filière Prix 1. |
+| D2 | Le système d’autorité pour l’application à la commande reste à valider avec l’ERP/AS400. | CIR Cockpit doit néanmoins pouvoir stocker, expliquer et simuler ces conditions fournisseur. |
 
 ### BFA et derogation prix_net : cumul
 

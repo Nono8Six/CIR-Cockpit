@@ -30,9 +30,43 @@ Deno.test('handleError uses catalog message when code is known', async () => {
   assertEquals(result.code, 'INVALID_JSON');
   assertEquals(result.error, catalog?.message);
   assertEquals(result.details, 'bad_json');
+  assertEquals(result.retryable, catalog?.retryable ?? false);
+  assertEquals(result.recovery_action, catalog?.recoveryAction ?? 'none');
   assertEquals(result.request_id, 'req-1');
   const parsed = edgeErrorPayloadSchema.safeParse(result);
   assertEquals(parsed.success, true);
+});
+
+Deno.test('handleError redacts internal diagnostics and exposes bounded retry metadata', async () => {
+  const ctx = makeContext('req-redacted');
+  const err = httpError(
+    429,
+    'AI_PROVIDER_RATE_LIMITED',
+    'Provider body',
+    'provider_body_with_secret',
+    { retryAfterMs: 2_000 }
+  );
+  const response = handleError(err, ctx) as Response;
+  const result = (await response.json()) as Record<string, unknown>;
+  assertEquals(result.code, 'AI_PROVIDER_RATE_LIMITED');
+  assertEquals(result.details, undefined);
+  assertEquals(result.retryable, true);
+  assertEquals(result.recovery_action, 'retry');
+  assertEquals(result.retry_after_ms, 2_000);
+});
+
+Deno.test('provider authentication failures are public support errors, not CIR auth errors', async () => {
+  const ctx = makeContext('req-provider-auth');
+  const response = handleError(
+    httpError(502, 'AI_PROVIDER_AUTH_FAILED', 'External 401', 'provider response'),
+    ctx
+  ) as Response;
+  const result = (await response.json()) as Record<string, unknown>;
+  assertEquals(response.status, 502);
+  assertEquals(result.code, 'AI_PROVIDER_AUTH_FAILED');
+  assertEquals(result.details, undefined);
+  assertEquals(result.retryable, false);
+  assertEquals(result.recovery_action, 'contact_support');
 });
 
 Deno.test('handleError falls back to catalog REQUEST_FAILED for unknown errors', async () => {

@@ -2,26 +2,23 @@ import { TRPCError, initTRPC } from '@trpc/server';
 import { ZodError } from 'zod/v4';
 
 import type { ErrorCode } from '../../../../shared/errors/types.ts';
+import { getErrorCatalogEntry } from '../../../../shared/errors/catalog.ts';
+import {
+  publicErrorDetails,
+  publicTrpcErrorDataSchema,
+  type PublicTrpcErrorData
+} from '../../../../shared/schemas/system/edge-error.schema.ts';
 import { authenticateAccessToken, authenticateSuperAdminAccessToken, getAccessTokenFromHeaders } from '../middleware/auth/auth.ts';
 import { httpError, type HttpError } from '../middleware/errorHandler.ts';
 import type { TrpcContext } from './context.ts';
-
-type FormattedErrorData = {
-  appCode?: ErrorCode;
-  details?: string;
-  httpStatus: number;
-  requestId?: string;
-};
 
 type PublicTrpcShapeData = Record<string, unknown>;
 
 const toPublicShapeData = (data: PublicTrpcShapeData): PublicTrpcShapeData => {
   const publicData: PublicTrpcShapeData = {};
 
-  for (const [key, value] of Object.entries(data)) {
-    if (key !== 'stack') {
-      publicData[key] = value;
-    }
+  for (const key of ['code', 'path'] as const) {
+    if (data[key] !== undefined) publicData[key] = data[key];
   }
 
   return publicData;
@@ -99,7 +96,7 @@ const toAppCodeFromTrpcCode = (code: TRPCError['code']): ErrorCode => {
 const toFormattedErrorData = (
   error: TRPCError,
   requestId: string | undefined
-): FormattedErrorData => {
+): PublicTrpcErrorData => {
   const cause = error.cause as HttpError | undefined;
   const status = typeof cause?.status === 'number'
     ? cause.status
@@ -108,11 +105,25 @@ const toFormattedErrorData = (
     ? cause.code
     : toAppCodeFromTrpcCode(error.code);
 
-  return {
+  const catalogEntry = getErrorCatalogEntry(appCode);
+  const candidate = {
     appCode,
-    details: cause?.details,
+    details: publicErrorDetails(appCode, cause?.details),
     httpStatus: status,
-    requestId
+    requestId: requestId ?? crypto.randomUUID(),
+    retryable: catalogEntry?.retryable ?? false,
+    recoveryAction: catalogEntry?.recoveryAction ?? 'none',
+    retryAfterMs: cause?.retryAfterMs
+  };
+  const parsed = publicTrpcErrorDataSchema.safeParse(candidate);
+  if (parsed.success) return parsed.data;
+
+  return {
+    appCode: 'REQUEST_FAILED',
+    httpStatus: 500,
+    requestId: requestId ?? crypto.randomUUID(),
+    retryable: false,
+    recoveryAction: 'none'
   };
 };
 

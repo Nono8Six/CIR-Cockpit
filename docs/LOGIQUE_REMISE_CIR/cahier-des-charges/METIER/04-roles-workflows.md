@@ -2,6 +2,8 @@
 
 [← Logique de tarification](./03-logique-tarification.md) | [Sommaire](../00-sommaire.md) | [Ecrans utilisateur →](./05-ecrans-utilisateur.md)
 
+> **Statut :** besoin métier de travail. Les rôles techniques, comptes d’agence et permissions RLS réelles prévalent sur les libellés historiques.
+
 ---
 
 ## 4.1 - Matrice des droits

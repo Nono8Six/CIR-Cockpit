@@ -34,7 +34,9 @@ describe('mapTrpcError', () => {
         appCode: 'AUTH_FORBIDDEN',
         httpStatus: 403,
         requestId: 'req-1',
-        details: 'forbidden'
+        details: 'forbidden',
+        retryable: false,
+        recoveryAction: 'contact_support'
       }),
       'Fallback'
     );
@@ -43,6 +45,26 @@ describe('mapTrpcError', () => {
     expect(mapped.status).toBe(403);
     expect(mapped.requestId).toBe('req-1');
     expect(mapped.details).toBe('forbidden');
+    expect(mapped.retryable).toBe(false);
+    expect(mapped.recoveryAction).toBe('contact_support');
+  });
+
+  it('maps bounded retry metadata from provider-neutral tRPC data', () => {
+    const mapped = mapTrpcError(
+      createTrpcError('Quota fournisseur', {
+        appCode: 'AI_PROVIDER_RATE_LIMITED',
+        httpStatus: 429,
+        requestId: 'req-retry',
+        retryable: true,
+        recoveryAction: 'retry',
+        retryAfterMs: 2_000
+      }),
+      'Fallback'
+    );
+
+    expect(mapped.retryable).toBe(true);
+    expect(mapped.recoveryAction).toBe('retry');
+    expect(mapped.retryAfterMs).toBe(2_000);
   });
 
   it('falls back to status mapping when appCode is missing', () => {

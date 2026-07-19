@@ -42,6 +42,8 @@ Deno.test('tRPC unknown procedure returns NOT_FOUND with aligned appCode/httpSta
   assertEquals(readNumber(data, 'httpStatus'), 404);
   assertEquals(data.stack, undefined);
   assertMatch(readString(data, 'requestId') ?? '', /^[0-9a-fA-F-]{36}$/);
+  assertEquals(data.retryable, false);
+  assertEquals(readString(data, 'recoveryAction'), 'reload');
 });
 
 Deno.test('removed config settings procedures return NOT_FOUND', async () => {

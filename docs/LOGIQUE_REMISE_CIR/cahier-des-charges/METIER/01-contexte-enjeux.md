@@ -2,6 +2,8 @@
 
 [← Sommaire](../00-sommaire.md) | [Hierarchie produit →](./02-hierarchie-produit.md)
 
+> **Statut :** besoin métier de travail. L’architecture directrice et ses décisions ouvertes prévalent sur toute hypothèse de système source ou de périmètre.
+
 ---
 
 ## 1.1 - La societe CIR

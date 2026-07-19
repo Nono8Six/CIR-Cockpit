@@ -2,6 +2,8 @@
 
 [← Hierarchie produit](./02-hierarchie-produit.md) | [Sommaire](../00-sommaire.md) | [Roles et workflows →](./04-roles-workflows.md)
 
+> **Statut :** hypothèses métier de travail. La priorité exacte des conditions, leur cumul et les paliers restent à valider dans la Filière Prix.
+
 ---
 
 ## 3.1 - Vue d'ensemble du calcul de prix

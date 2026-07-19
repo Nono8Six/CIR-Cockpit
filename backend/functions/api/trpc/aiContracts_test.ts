@@ -2,6 +2,7 @@ import { assertEquals } from 'std/assert';
 
 import {
   aiPromptsListResponseSchema,
+  aiFeatureModelAssignmentSchema,
   aiPromptsDeleteInputSchema,
   aiPromptsSaveDraftInputSchema,
   aiPromptsSetArchivedInputSchema,
@@ -86,9 +87,8 @@ Deno.test('AI mutation inputs keep secrets server-bound and strict', () => {
   }).success, true);
   assertEquals(aiSettingsSaveProviderInputSchema.safeParse({
     provider: 'mistral',
-    enabled: true,
-    api_key: 'sk-test'
-  }).success, false);
+    enabled: false
+  }).success, true);
   assertEquals(aiSettingsSaveProviderInputSchema.safeParse({
     provider: 'openrouter',
     enabled: true,
@@ -98,6 +98,10 @@ Deno.test('AI mutation inputs keep secrets server-bound and strict', () => {
     provider: 'gemini',
     api_key: 'AIza-test'
   }).success, false);
+  assertEquals(aiSettingsSaveProviderInputSchema.safeParse({
+    provider: 'unknown',
+    enabled: false
+  }).success, false);
   assertEquals(aiSettingsTestProviderInputSchema.safeParse({
     provider: 'openrouter',
     api_key: 'sk-or-test'
@@ -105,6 +109,23 @@ Deno.test('AI mutation inputs keep secrets server-bound and strict', () => {
   assertEquals(aiSettingsTestProviderInputSchema.safeParse({
     provider: 'unknown',
     api_key: 'test'
+  }).success, false);
+  assertEquals(aiFeatureModelAssignmentSchema.safeParse({
+    feature: 'assistant.referentiels',
+    model_config_id: crypto.randomUUID(),
+    created_by: null,
+    updated_by: null,
+    created_at: '2026-07-19T00:00:00Z',
+    updated_at: '2026-07-19T00:00:00Z'
+  }).success, true);
+  assertEquals(aiFeatureModelAssignmentSchema.safeParse({
+    feature: 'assistant.referentiels',
+    model_config_id: crypto.randomUUID(),
+    created_by: null,
+    updated_by: null,
+    created_at: '2026-07-19T00:00:00Z',
+    updated_at: '2026-07-19T00:00:00Z',
+    provider: 'mistral'
   }).success, false);
   assertEquals(aiSettingsSaveModelInputSchema.safeParse({
     provider: 'openrouter',

@@ -297,3 +297,11 @@ export type AiAssistantAskResponse = z.infer<
 export type AiAssistantStatusResponse = z.infer<
   typeof aiAssistantStatusResponseSchema
 >;
+
+/** Correlation interne uniquement; ne fait partie d'aucun payload public. */
+export type AiAssistantExecutionCorrelation = {
+  requestId: string;
+  clientRequestId: string;
+  assistantRunId: string;
+  attemptId?: string;
+};

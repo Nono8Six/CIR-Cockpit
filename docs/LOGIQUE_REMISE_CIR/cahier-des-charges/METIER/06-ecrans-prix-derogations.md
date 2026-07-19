@@ -2,6 +2,8 @@
 
 [← Ecrans utilisateur](./05-ecrans-utilisateur.md) | [Sommaire](../00-sommaire.md) | [Regles metier →](./07-regles-metier.md)
 
+> **Statut :** besoins métier et pistes UX. Les règles de priorité, confidentialité, validité et calcul économique restent à confirmer dans les Filières Prix.
+
 ---
 
 ## 6.1 - Onglet Prix marche (fiche client / groupement)

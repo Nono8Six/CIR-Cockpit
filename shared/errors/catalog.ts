@@ -278,6 +278,14 @@ export const ERROR_CATALOG: Record<string, ErrorCatalogEntry> = {
     "retry",
     false,
   ),
+  AI_TOOL_EXECUTION_FAILED: makeEntry(
+    "AI_TOOL_EXECUTION_FAILED",
+    "L execution de l outil IA a echoue.",
+    "edge",
+    "error",
+    "none",
+    false,
+  ),
   AI_DIAGNOSTIC_ERROR: makeEntry(
     "AI_DIAGNOSTIC_ERROR",
     "L'analyse par l'IA a échoué. Veuillez vérifier les paramètres du modèle ou la clé API.",
@@ -290,8 +298,9 @@ export const ERROR_CATALOG: Record<string, ErrorCatalogEntry> = {
     "AI_PROVIDER_AUTH_FAILED",
     "Authentification du fournisseur IA refusee.",
     "edge",
-    "warning",
-    "retry",
+    "error",
+    "contact_support",
+    false,
   ),
   AI_PROVIDER_EMPTY_RESPONSE: makeEntry(
     "AI_PROVIDER_EMPTY_RESPONSE",

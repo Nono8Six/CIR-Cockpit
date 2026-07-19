@@ -3,6 +3,7 @@ import {
   boolean,
   date,
   integer,
+  index,
   jsonb,
   numeric,
   pgTable,
@@ -533,6 +534,26 @@ export const ai_model_configs = pgTable("ai_model_configs", {
     .notNull(),
 });
 
+export const ai_feature_model_assignments = pgTable(
+  "ai_feature_model_assignments",
+  {
+    feature: text("feature").$type<AiFeature>().primaryKey(),
+    model_config_id: uuid("model_config_id").$type<string>().notNull()
+      .references(() => ai_model_configs.id, { onDelete: "restrict" }),
+    created_by: uuid("created_by").$type<string | null>(),
+    updated_by: uuid("updated_by").$type<string | null>(),
+    created_at: timestamp("created_at", timestamptz).$type<string>()
+      .defaultNow().notNull(),
+    updated_at: timestamp("updated_at", timestamptz).$type<string>()
+      .defaultNow().notNull(),
+  },
+  (table) => [
+    index("ai_feature_model_assignments_model_config_id_idx").on(
+      table.model_config_id,
+    ),
+  ],
+);
+
 export const ai_prompt_templates = pgTable("ai_prompt_templates", {
   id: uuid("id").$type<string>().defaultRandom().primaryKey(),
   feature: text("feature").$type<
@@ -887,6 +908,7 @@ export const drizzleSchema = {
   pricing_reference_diff_runs,
   ai_provider_configs,
   ai_model_configs,
+  ai_feature_model_assignments,
   ai_prompt_templates,
   ai_prompt_versions,
   ai_quota_policies,

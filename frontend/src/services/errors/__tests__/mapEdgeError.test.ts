@@ -5,13 +5,24 @@ import { mapEdgeError } from '@/services/errors/mapEdgeError';
 describe('mapEdgeError', () => {
   it('uses payload.code when available', () => {
     const result = mapEdgeError(
-      { ok: false, code: 'RATE_LIMITED', error: 'Too many requests', request_id: 'req-1' },
+      {
+        ok: false,
+        code: 'RATE_LIMITED',
+        error: 'Too many requests',
+        request_id: 'req-1',
+        retryable: true,
+        recovery_action: 'retry',
+        retry_after_ms: 2_000
+      },
       'Fallback message',
       429
     );
     expect(result.code).toBe('RATE_LIMITED');
     expect(result.message).toBe('Too many requests');
     expect(result.requestId).toBe('req-1');
+    expect(result.retryable).toBe(true);
+    expect(result.recoveryAction).toBe('retry');
+    expect(result.retryAfterMs).toBe(2_000);
   });
 
   it('falls back to statusMap when payload has no code', () => {
@@ -84,7 +95,14 @@ describe('mapEdgeError', () => {
 
   it('propagates request_id from payload', () => {
     const result = mapEdgeError(
-      { ok: false, request_id: 'abc-123', error: 'fail', code: 'EDGE_FUNCTION_ERROR' },
+      {
+        ok: false,
+        request_id: 'abc-123',
+        error: 'fail',
+        code: 'EDGE_FUNCTION_ERROR',
+        retryable: false,
+        recovery_action: 'none'
+      },
       'Fallback',
       500
     );
@@ -93,7 +111,15 @@ describe('mapEdgeError', () => {
 
   it('propagates details from payload', () => {
     const result = mapEdgeError(
-      { ok: false, error: 'fail', details: 'some detail', code: 'EDGE_FUNCTION_ERROR', request_id: 'req-3' },
+      {
+        ok: false,
+        error: 'fail',
+        details: 'some detail',
+        code: 'EDGE_FUNCTION_ERROR',
+        request_id: 'req-3',
+        retryable: false,
+        recovery_action: 'none'
+      },
       'Fallback',
       500
     );

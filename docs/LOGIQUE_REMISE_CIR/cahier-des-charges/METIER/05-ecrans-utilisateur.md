@@ -2,6 +2,8 @@
 
 [← Roles et workflows](./04-roles-workflows.md) | [Sommaire](../00-sommaire.md) | [Prix, derogations et BFA →](./06-ecrans-prix-derogations.md)
 
+> **Statut :** besoins et pistes UX, non maquettes validées. Toute implémentation suit le design system actuel et la brique métier concernée.
+
 ---
 
 ## 5.1 - Navigation et structure
