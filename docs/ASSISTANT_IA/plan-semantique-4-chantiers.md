@@ -107,16 +107,17 @@ Deux écarts assumés, à inscrire dans le plan directeur au démarrage du chant
 
 ### 5.3 Budget
 
-- Entrée passe 1 : +3 à 4K tokens (taxonomie) ; entrée passe 2 réduite quand les branches remplacent des dizaines de groupes lexicaux bruités. Cible : ≤ 10K tokens entrée par question, coût médian ≤ 0,01 USD, latence ≤ 20 s.
+- Entrée passe 1 : +3 à 4K tokens (taxonomie) ; entrée passe 2 réduite quand les branches remplacent des dizaines de groupes lexicaux bruités. Cible initiale : ≤ 10K tokens entrée par question, coût médian ≤ 0,01 USD, latence ≤ 20 s.
+- Budget réel mesuré au CP-C1 et entériné par le PO le 2026-07-20 : ~22-24K tokens d'entrée par question (la taxonomie reste dans l'historique des deux passes), coût 0,0115-0,0143 USD, latence 14-28 s. Quota journalier `assistant.referentiels` relevé durablement de 300K à 1 000 000 tokens sur la même décision (garde-fou coût journalier 15 USD et plafond mensuel 20M inchangés).
 - Toujours 2 appels provider maximum.
 
 ### 5.4 Checkpoint CP-C1
 
-- [ ] « Quelles marques proposent des débitmètres ? » retourne les 5 marques de la branche DEBIT plus PARK (label direct), sans clarification bloquante, avec recomptage SQL témoin identique.
-- [ ] Les cas d'ancrage vérins pneumatiques et variateur de vitesse restent verts (mêmes totaux que CP-P5 : 75 couples / 5 marques et 305 couples / 6 marques, ou nouvel accord PO si le snapshot actif a bougé).
-- [ ] Aucun chemin hors liste accepté par la validation serveur (test unitaire).
-- [ ] Budget tokens/coût/latence consigné.
-- [ ] Décision PO : GO / NO-GO.
+- [x] « Quelles marques proposent des débitmètres ? » retourne les 5 marques de la branche DEBIT plus PARK (label direct), sans clarification bloquante, avec recomptage SQL témoin identique.
+- [x] Le cas d'ancrage vérins pneumatiques reste vert (75 couples / 5 marques, identique CP-P5). Variateur : 6 marques sans PHOE, 308 couples au lieu de 305 (+4 labels « servo drives » réels de la branche DIVERS qualifiés individuellement, −1 label armorstart) — 308/6 sans PHOE validé par le PO le 2026-07-20 comme nouveau total d'ancrage, snapshot inchangé.
+- [x] Aucun chemin hors liste accepté par la validation serveur (test unitaire), chemins résiduels (DIVERS/AUTRES) rétrogradés structurellement (test unitaire).
+- [x] Budget tokens/coût/latence consigné et entériné par le PO le 2026-07-20 (~22-24K entrée par question, §5.3 amendé, quota journalier porté à 1M tokens).
+- [x] Décision PO : GO le 2026-07-20.
 
 ### 5.5 Prompt de lancement (conversation vierge)
 
@@ -249,15 +250,25 @@ Le NO-GO P5 global du plan directeur reste en vigueur tant que ce tableau n'est 
 
 ### CP-C1 — Taxonomie visible
 
-- Date :
-- Commit :
-- Migration/deploy :
-- Preuve runtime débitmètres :
-- Régression vérins/variateur :
-- Tokens/coût/latence :
+- Date : 2026-07-20
+- Commit : `0652f35160c07a048e71c3141d977224f99e20db` (branche `codex/mistral-phase-1b-total`), suivi du commit docs consignant le GO
+- Migration/deploy : migrations `20260720115957_ai_product_semantic_taxonomy_pass.sql` (prompt v11) et `20260720153737_ai_product_semantic_terminal_scope_guard.sql` (prompt v12, durcissement après rejeu) appliquées et enregistrées sur le projet lié `rbjtrcorlezvocayluok` ; prompt publié `assistant.referentiels` v12, marqueur unique conservé ; Edge Function `api` v189 → v193 `ACTIVE` ; probes `OPTIONS 200` (origine localhost:3000) et `POST ai.assistant.ask` sans Bearer `401 AUTH_REQUIRED` vertes
+- Snapshot actif : `4e216bc4-7d82-4eb7-aa20-2cc8316667cc` (inchangé depuis CP-P5) ; taxonomie mesurée : 326 chemins, 18 033 octets (bornes 400 / 24 Ko respectées)
+- Preuve runtime débitmètres : demande `a877753a-f9ab-4c29-952d-eb514be6b699`, `selected_paths = [FLUIDES PROCESS > CONTROLE ET MESURE > DEBIT]`, 3 groupes inspectés / 3 acceptés / 0 exclu, réponse UI `qualified` sans clarification : 25 couples marque + CAT_FAB, 25 libellés, 6 marques (SPIR 9, SIEM 7, SICK 6, BALL 1, CITE 1, PARK 1) = branche DEBIT (23) + label direct PARK « Capteurs/débitmètres » + label direct SIEM « beltscale and solid flowmeter » ; recomptage SQL témoin indépendant identique (25/25/6, mêmes détails par marque) ; captures et réponses brutes dans `frontend/e2e-proof-cp-c1/`
+- Régression vérins : demande `9a830cb0-3262-4984-894f-9aabd227b75b`, `selected_paths` = les 3 familles VERINS, 75 couples / 5 marques (FEST 37, PARK 16, AVEN 12, AIGN 7, ASCO 3), identique CP-P5, témoin SQL identique
+- Régression variateur : demande `09df3cd3-eeef-49b8-bad4-9c603e4d794e`, 15 inspectés / 13 acceptés / 2 exclus, 308 couples / 6 marques (ROCK 259, FEST 20, SIEM 20, PARK 6, LERO 2, BONF 1), sans PHOE, scope DIVERS jamais accepté ; écart vs CP-P5 (305) : +4 labels « motion products - servo drives » (branche DIVERS, qualifiés individuellement conformément à la règle de portée), −1 label armorstart ; témoin SQL identique (308/308/6)
+- Tokens/coût/latence (run final v193) : débitmètres 22 234 entrée / 276 sortie / 0 cache, 0,011531 USD, 14,8 s ; vérins 22 404 entrée (1 472 cache) / 293 sortie, 0,0123775 USD, 13,9 s ; variateur 24 281 entrée (1 920 cache) / 796 sortie, 0,0142945 USD, 28,2 s ; toujours 2 appels provider maximum, aucun `execute_readonly_sql`
 - Écarts au plan :
-- Décision PO : GO / NO-GO
-- [ ] Checkpoint validé
+  - Cible budget §5.3 non tenue : ~22-24K tokens d'entrée par question (taxonomie ≈ 4,5-6K tokens présente dans l'historique des deux passes) contre ≤ 10K visés ; coût 0,0115-0,0143 USD (médiane légèrement au-dessus de 0,01) ; latence ≤ 20 s tenue sauf variateur (28 s) — budget réel entériné par le PO le 2026-07-20, §5.3 amendé
+  - Deux migrations prompt au lieu d'une : le rejeu a montré le modèle sélectionnant la feuille générique `DIVERS` (retour de PHOE) puis traitant `selected_paths` comme liste d'exclusion (perte FEST) ; v12 ajoute la portée terminale stricte et la règle « wrong_energy seulement si la question impose une énergie »
+  - Garde structurelle serveur ajoutée : les chemins sélectionnés à libellé terminal résiduel (`DIVERS`, `AUTRES` — vocabulaire de structure de classification, pas un dictionnaire produit) sont rétrogradés et ne deviennent jamais des scopes ; leurs CAT_FAB restent qualifiables individuellement (test unitaire dédié)
+  - Contrat runtime code enrichi d'une règle « selected_paths n'est pas une liste d'exclusion »
+  - Variateur 308/6 au lieu de 305/6 : différence intégralement expliquée par des labels servo-drives réels de DIVERS, PHOE toujours absent — validé par le PO le 2026-07-20 comme nouveau total d'ancrage du jeu d'or
+  - Quota journalier tokens `assistant.referentiels` relevé temporairement 300K → 500K pendant la preuve (les rejeux du jour dépassaient 300K), restauré à 300K, puis porté durablement à 1 000 000 tokens sur décision PO du 2026-07-20 (~43 questions/jour au coût unitaire mesuré) ; garde-fou coût journalier (15 USD) jamais approché (~0,20 USD consommés sur la journée) et plafond mensuel 20M inchangés
+  - MCP Supabase indisponible dans la session : migrations appliquées par script transactionnel direct (SQL + enregistrement `supabase_migrations.schema_migrations`), parité confirmée par `supabase migration list --linked` et `repo:check`
+- QA : planificateur 22/22, les cinq suites ciblées (planificateur, routage, contexte conversationnel, outils sémantiques, adaptateur Mistral) 97/97 au total, `qa:back` final vert (438 réussites, 0 échec, 14 intégrations conditionnelles ignorées)
+- Décision PO : **GO le 2026-07-20** — variateur 308/6 sans PHOE validé comme nouveau total d'ancrage, budget réel entériné, quota journalier porté à 1M tokens
+- [x] Checkpoint validé
 
 ### CP-C2 — Routage model-first
 
