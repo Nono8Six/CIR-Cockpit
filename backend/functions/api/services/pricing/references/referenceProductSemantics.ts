@@ -1,16 +1,31 @@
 import { sql } from "drizzle-orm";
 
+import { httpError } from "../../../middleware/errorHandler.ts";
 import type { DbClient } from "../../../types.ts";
 import { escapePricingReferenceLikeTerm } from "./referenceSemantics.ts";
 
 export const MAX_PRODUCT_CANDIDATE_GROUPS = 80;
+export const MAX_PRODUCT_TAXONOMY_PATHS = 400;
+export const MAX_PRODUCT_TAXONOMY_BYTES = 24_576;
 
 export type ProductSearchPlan = {
   concept: string;
   positive_terms: string[];
   required_context: string[];
   excluded_context: string[];
-  classification_hints: string[];
+  selected_paths: string[];
+};
+
+export type ProductTaxonomyPath = {
+  cir_path: string;
+  distinct_cat_fab: number;
+  distinct_brands: number;
+};
+
+export type ProductTaxonomyIndex = {
+  snapshot_id: string;
+  paths: ProductTaxonomyPath[];
+  compact_text: string;
 };
 
 export type ProductCandidateGroup = {
@@ -101,6 +116,47 @@ const matchingTerms = (text: string, terms: readonly string[]): string[] => {
   return terms.filter((term) => haystack.includes(normalizedText(term)));
 };
 
+export const listProductSemanticTaxonomy = async (
+  db: DbClient,
+  snapshotId: string,
+): Promise<ProductTaxonomyIndex> => {
+  const rows = await db.execute<ProductTaxonomyPath>(sql`
+    select
+      v.cir_path,
+      count(distinct v.normalized_cat_fab)::int as distinct_cat_fab,
+      count(distinct v.marque)::int as distinct_brands
+    from public.ai_v_product_semantics v
+    where v.snapshot_id = ${snapshotId}
+      and v.link_status = 'complete_valid'
+      and coalesce(v.cir_path, '') <> ''
+    group by v.cir_path
+    order by v.cir_path asc
+    limit ${MAX_PRODUCT_TAXONOMY_PATHS + 1}
+  `);
+  if (rows.length > MAX_PRODUCT_TAXONOMY_PATHS) {
+    throw httpError(
+      500,
+      "AI_TOOL_EXECUTION_FAILED",
+      `La taxonomie CIR du snapshot depasse ${MAX_PRODUCT_TAXONOMY_PATHS} chemins : compression requise avant la passe semantique.`,
+    );
+  }
+  const compactText = rows.map((row) =>
+    `${row.cir_path} | ${row.distinct_cat_fab} | ${row.distinct_brands}`
+  ).join("\n");
+  if (new TextEncoder().encode(compactText).length > MAX_PRODUCT_TAXONOMY_BYTES) {
+    throw httpError(
+      500,
+      "AI_TOOL_EXECUTION_FAILED",
+      `La taxonomie CIR du snapshot depasse ${MAX_PRODUCT_TAXONOMY_BYTES} octets : compression requise avant la passe semantique.`,
+    );
+  }
+  return {
+    snapshot_id: snapshotId,
+    paths: rows,
+    compact_text: compactText,
+  };
+};
+
 export const searchProductSemanticCandidates = async (
   db: DbClient,
   snapshotId: string,
@@ -110,6 +166,11 @@ export const searchProductSemanticCandidates = async (
   const searchPatterns = scopeTerms.map((term) =>
     `%${lexicalTokens(term).map(escapePricingReferenceLikeTerm).join("%")}%`
   );
+  const selectedPaths = [...new Set(plan.selected_paths)];
+  // Une liste vide est representee par une valeur vide inerte : cir_path est
+  // toujours non vide sur les lignes complete_valid, donc elle ne matche rien.
+  const selectedPathValues = selectedPaths.length > 0 ? selectedPaths : [""];
+  const lexicalBudget = MAX_PRODUCT_CANDIDATE_GROUPS - selectedPaths.length;
   const rows = await db.execute<{
     selection_kind: "classification_scope" | "direct_label";
     normalized_cat_fab: string | null;
@@ -123,6 +184,10 @@ export const searchProductSemanticCandidates = async (
     with search_patterns(pattern) as (
       values ${
     sql.join(searchPatterns.map((pattern) => sql`(${pattern})`), sql`, `)
+  }
+    ), selected_paths(cir_path) as (
+      values ${
+    sql.join(selectedPathValues.map((path) => sql`(${path})`), sql`, `)
   }
     ), term_matches as (
       select distinct
@@ -158,7 +223,7 @@ export const searchProductSemanticCandidates = async (
           order by candidate_count asc, length(pattern) desc, pattern asc
         ) as pattern_rank
       from pattern_stats
-      where candidate_count between 1 and ${MAX_PRODUCT_CANDIDATE_GROUPS}
+      where candidate_count between 1 and ${lexicalBudget}
     ), eligible_patterns as (
       select ranked.pattern
       from ranked_patterns ranked
@@ -167,7 +232,28 @@ export const searchProductSemanticCandidates = async (
         from term_matches matches
         join ranked_patterns included on included.pattern = matches.pattern
         where included.pattern_rank <= ranked.pattern_rank
-      ) <= ${MAX_PRODUCT_CANDIDATE_GROUPS}
+      ) <= ${lexicalBudget}
+    ), selected_scopes as (
+      select
+        'classification_scope'::text as selection_kind,
+        null::text as normalized_cat_fab,
+        v.cir_path as label,
+        v.cir_path,
+        count(distinct v.segment_id)::int as segment_rows,
+        count(distinct nullif(btrim(v.cat_fab), ''))::int as distinct_cat_fab,
+        (array_agg(distinct v.marque order by v.marque))[1:5] as example_brands,
+        (array_agg(distinct coalesce(nullif(v.cat_fab_l, ''), v.cat_fab)
+          order by coalesce(nullif(v.cat_fab_l, ''), v.cat_fab)))[1:5] as example_labels
+      from public.ai_v_product_semantics v
+      where v.snapshot_id = ${snapshotId}
+        and v.link_status = 'complete_valid'
+        and coalesce(v.cir_path, '') <> ''
+        and exists (
+          select 1
+          from selected_paths selected
+          where selected.cir_path = v.cir_path
+        )
+      group by v.cir_path
     ), classification_scopes as (
       select
         'classification_scope'::text as selection_kind,
@@ -183,6 +269,11 @@ export const searchProductSemanticCandidates = async (
       where v.snapshot_id = ${snapshotId}
         and v.link_status = 'complete_valid'
         and coalesce(v.cir_path, '') <> ''
+        and not exists (
+          select 1
+          from selected_paths selected
+          where selected.cir_path = v.cir_path
+        )
         and exists (
           select 1
           from eligible_patterns terms
@@ -211,14 +302,21 @@ export const searchProductSemanticCandidates = async (
         )
         and not exists (
           select 1
+          from selected_paths selected
+          where selected.cir_path = coalesce(v.cir_path, '')
+        )
+        and not exists (
+          select 1
           from classification_scopes scope
           where scope.cir_path = coalesce(v.cir_path, '')
         )
       group by v.normalized_cat_fab, coalesce(v.cir_path, '')
     ), candidates as (
-      select *, 0 as selection_priority from classification_scopes
+      select *, 0 as selection_priority from selected_scopes
       union all
-      select *, 1 as selection_priority from direct_labels
+      select *, 1 as selection_priority from classification_scopes
+      union all
+      select *, 2 as selection_priority from direct_labels
     )
     select selection_kind, normalized_cat_fab, label, cir_path,
       segment_rows, distinct_cat_fab, example_brands, example_labels

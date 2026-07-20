@@ -5,6 +5,8 @@ import type { DbClient } from "../../types.ts";
 import {
   expandProductLookupTerms,
   getQualifiedProductBrandDetails,
+  listProductSemanticTaxonomy,
+  MAX_PRODUCT_TAXONOMY_PATHS,
   searchProductSemanticCandidates,
 } from "../pricing/references/referenceProductSemantics.ts";
 import type {
@@ -62,7 +64,7 @@ const plan = {
   positive_terms: ["verin", "vérin", "pneumatic cylinder", "air cylinder"],
   required_context: ["pneumatique", "pneumatic", "air"],
   excluded_context: ["hydraulique", "electrique", "gaz"],
-  classification_hints: ["pneumatique", "actionneurs"],
+  selected_paths: ["Pneumatique > Actionneurs > Vérins"],
 };
 
 const candidateRow = {
@@ -73,15 +75,37 @@ const candidateRow = {
   example_brands: ["FEST", "PARK"],
 };
 
-const makeDb = (candidateRows: unknown[], aggregateRows: unknown[] = []) => {
+const taxonomyRow = {
+  cir_path: "Pneumatique > Actionneurs > Vérins",
+  distinct_cat_fab: 12,
+  distinct_brands: 2,
+};
+
+const makeDb = (
+  candidateRows: unknown[],
+  aggregateRows: unknown[] = [],
+  taxonomyRows: unknown[] = [taxonomyRow],
+) => {
   let calls = 0;
   const db = {
     execute: () => {
       calls += 1;
-      return Promise.resolve(calls === 1 ? candidateRows : aggregateRows);
+      if (calls === 1) return Promise.resolve(taxonomyRows);
+      return Promise.resolve(calls === 2 ? candidateRows : aggregateRows);
     },
   } as unknown as DbClient;
   return { db, calls: () => calls };
+};
+
+const renderChunks = (value: unknown): string => {
+  if (typeof value === "string") return value;
+  if (Array.isArray(value)) return value.map(renderChunks).join("");
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    if ("value" in record) return renderChunks(record.value);
+    if ("queryChunks" in record) return renderChunks(record.queryChunks);
+  }
+  return "";
 };
 
 Deno.test("semantique refuse ponctuation, champs inconnus et depassements", () => {
@@ -105,6 +129,23 @@ Deno.test("semantique refuse ponctuation, champs inconnus et depassements", () =
       positive_terms: Array.from(
         { length: 13 },
         (_, index) => `terme ${index}`,
+      ),
+    }).success,
+    false,
+  );
+  assertEquals(
+    productSearchPlanSchema.safeParse({
+      ...plan,
+      classification_hints: ["actionneurs"],
+    }).success,
+    false,
+  );
+  assertEquals(
+    productSearchPlanSchema.safeParse({
+      ...plan,
+      selected_paths: Array.from(
+        { length: 13 },
+        (_, index) => `FAMILLE > BRANCHE ${index}`,
       ),
     }).success,
     false,
@@ -144,16 +185,6 @@ Deno.test("la recherche conserve les expressions produit sans elargir leurs adje
 
 Deno.test("une branche parente ne transforme pas DIVERS en scope produit", async () => {
   let renderedSql = "";
-  const renderChunks = (value: unknown): string => {
-    if (typeof value === "string") return value;
-    if (Array.isArray(value)) return value.map(renderChunks).join("");
-    if (value && typeof value === "object") {
-      const record = value as Record<string, unknown>;
-      if ("value" in record) return renderChunks(record.value);
-      if ("queryChunks" in record) return renderChunks(record.queryChunks);
-    }
-    return "";
-  };
   const db = {
     execute: (query: unknown) => {
       renderedSql = renderChunks(query);
@@ -165,6 +196,7 @@ Deno.test("une branche parente ne transforme pas DIVERS en scope produit", async
     ...plan,
     concept: "variateur de vitesse",
     positive_terms: ["variateur"],
+    selected_paths: [],
   });
 
   const leafExpression =
@@ -176,22 +208,56 @@ Deno.test("une branche parente ne transforme pas DIVERS en scope produit", async
   );
 });
 
+Deno.test("les chemins selectionnes deviennent des scopes exacts prioritaires", async () => {
+  let renderedSql = "";
+  const db = {
+    execute: (query: unknown) => {
+      renderedSql = renderChunks(query);
+      return Promise.resolve([]);
+    },
+  } as unknown as DbClient;
+
+  await searchProductSemanticCandidates(db, snapshotId, {
+    ...plan,
+    concept: "debitmetres",
+    positive_terms: ["debitmetre", "flowmeter"],
+    selected_paths: ["FLUIDES PROCESS > CONTROLE ET MESURE > DEBIT"],
+  });
+
+  assertStringIncludes(
+    renderedSql,
+    "FLUIDES PROCESS > CONTROLE ET MESURE > DEBIT",
+  );
+  assertStringIncludes(renderedSql, "selected_scopes");
+  assertStringIncludes(
+    renderedSql,
+    "select *, 0 as selection_priority from selected_scopes",
+  );
+  assertStringIncludes(
+    renderedSql,
+    "select *, 1 as selection_priority from classification_scopes",
+  );
+});
+
 Deno.test("une relance de marque relit le perimetre qualifie sans lexique produit", async () => {
-  const state = makeDb([{
-    marque: "MARQ",
-    cat_fab: "A1",
-    label: "Gamme industrielle A1",
-    cir_path: "MEGA > FAMILLE > PRODUIT",
-    total_count: 2,
-  }, {
-    marque: "MARQ",
-    cat_fab: "A2",
-    label: "Gamme industrielle A2",
-    cir_path: "MEGA > FAMILLE > PRODUIT",
-    total_count: 2,
-  }]);
+  const detailDb = {
+    execute: () =>
+      Promise.resolve([{
+        marque: "MARQ",
+        cat_fab: "A1",
+        label: "Gamme industrielle A1",
+        cir_path: "MEGA > FAMILLE > PRODUIT",
+        total_count: 2,
+      }, {
+        marque: "MARQ",
+        cat_fab: "A2",
+        label: "Gamme industrielle A2",
+        cir_path: "MEGA > FAMILLE > PRODUIT",
+        total_count: 2,
+      }]),
+  } as unknown as DbClient;
   const details = await getQualifiedProductBrandDetails(
-    state.db,
+    detailDb,
     snapshotId,
     [{
       kind: "classification_scope",
@@ -259,7 +325,8 @@ Deno.test("le parcours semantique isole le protocole publie des anciens outils",
           systemContent.includes("execute_readonly_sql"),
           false,
         );
-        assertStringIncludes(systemContent, "jamais un hyperonyme");
+        assertStringIncludes(systemContent, "selected_paths");
+        assertStringIncludes(systemContent, "libelle terminal");
         return Promise.resolve(response("search_product_candidates", plan));
       }
       return Promise.resolve(response("request_product_clarification", {
@@ -267,6 +334,160 @@ Deno.test("le parcours semantique isole le protocole publie des anciens outils",
         options: ["Standard", "Guidé"],
       }));
     },
+  );
+});
+
+Deno.test("la passe 1 embarque l arbre CIR compact du snapshot", async () => {
+  const state = makeDb([candidateRow]);
+  let round = 0;
+  await runProductSemanticPlanner(
+    state.db,
+    input,
+    prompt,
+    snapshotId,
+    (messages) => {
+      round += 1;
+      if (round === 1) {
+        const userContent = messages[1]?.content ?? "";
+        assertStringIncludes(userContent, input.question);
+        assertStringIncludes(
+          userContent,
+          "TAXONOMIE CIR DU SNAPSHOT (chemin | nb CAT_FAB | nb marques)",
+        );
+        assertStringIncludes(
+          userContent,
+          "Pneumatique > Actionneurs > Vérins | 12 | 2",
+        );
+        return Promise.resolve(response("search_product_candidates", plan));
+      }
+      return Promise.resolve(response("request_product_clarification", {
+        question: "Quel type de vérin pneumatique recherchez-vous ?",
+        options: ["Standard", "Guidé"],
+      }));
+    },
+  );
+});
+
+Deno.test("un chemin hors taxonomie invalide la passe de planification", async () => {
+  const state = makeDb([candidateRow]);
+  await assertRejects(
+    () =>
+      runProductSemanticPlanner(
+        state.db,
+        input,
+        prompt,
+        snapshotId,
+        () =>
+          Promise.resolve(response("search_product_candidates", {
+            ...plan,
+            selected_paths: ["Chemin > Invente > Par Le Modele"],
+          })),
+      ),
+    Error,
+    "hors de la taxonomie",
+  );
+  assertEquals(state.calls(), 1);
+});
+
+Deno.test("un chemin residuel selectionne est retire sans devenir un scope", async () => {
+  const state = makeDb([candidateRow], [], [taxonomyRow, {
+    cir_path: "AUTOMATISME > VARIATEURS > DIVERS",
+    distinct_cat_fab: 30,
+    distinct_brands: 4,
+  }]);
+  let round = 0;
+  const result = await runProductSemanticPlanner(
+    state.db,
+    input,
+    prompt,
+    snapshotId,
+    () => {
+      round += 1;
+      return Promise.resolve(
+        round === 1
+          ? response("search_product_candidates", {
+            ...plan,
+            selected_paths: [
+              "Pneumatique > Actionneurs > Vérins",
+              "AUTOMATISME > VARIATEURS > DIVERS",
+            ],
+          })
+          : response("request_product_clarification", {
+            question: "Quel type de vérin pneumatique recherchez-vous ?",
+            options: ["Standard", "Guidé"],
+          }),
+      );
+    },
+  );
+  const searchTrace = result.toolTrace.find((trace) =>
+    trace.name === "search_product_candidates"
+  );
+  assertEquals(
+    searchTrace?.arguments.selected_paths,
+    ["Pneumatique > Actionneurs > Vérins"],
+  );
+});
+
+Deno.test("un chemin selectionne tolere les ecarts d espaces sans quitter la liste", async () => {
+  const state = makeDb([candidateRow]);
+  let round = 0;
+  const result = await runProductSemanticPlanner(
+    state.db,
+    input,
+    prompt,
+    snapshotId,
+    () => {
+      round += 1;
+      return Promise.resolve(
+        round === 1
+          ? response("search_product_candidates", {
+            ...plan,
+            selected_paths: ["  Pneumatique  >  Actionneurs   > Vérins "],
+          })
+          : response("request_product_clarification", {
+            question: "Quel type de vérin pneumatique recherchez-vous ?",
+            options: ["Standard", "Guidé"],
+          }),
+      );
+    },
+  );
+  assertEquals(
+    result.conversationContext?.kind,
+    "product_semantic_clarification",
+  );
+  assertEquals(state.calls(), 2);
+});
+
+Deno.test("la taxonomie refuse un snapshot au-dela des bornes de chemins et d octets", async () => {
+  const overflowRows = Array.from(
+    { length: MAX_PRODUCT_TAXONOMY_PATHS + 1 },
+    (_, index) => ({
+      cir_path: `FAMILLE > BRANCHE ${index}`,
+      distinct_cat_fab: 1,
+      distinct_brands: 1,
+    }),
+  );
+  const overflowDb = {
+    execute: () => Promise.resolve(overflowRows),
+  } as unknown as DbClient;
+  await assertRejects(
+    () => listProductSemanticTaxonomy(overflowDb, snapshotId),
+    Error,
+    "chemins",
+  );
+
+  const heavyRows = Array.from({ length: 400 }, (_, index) => ({
+    cir_path: `FAMILLE > ${"X".repeat(80)} > BRANCHE ${index}`,
+    distinct_cat_fab: 1,
+    distinct_brands: 1,
+  }));
+  const heavyDb = {
+    execute: () => Promise.resolve(heavyRows),
+  } as unknown as DbClient;
+  await assertRejects(
+    () => listProductSemanticTaxonomy(heavyDb, snapshotId),
+    Error,
+    "octets",
   );
 });
 
@@ -299,7 +520,7 @@ Deno.test("ambiguite demande une precision sans lancer de recomptage", async () 
     result.conversationContext?.kind,
     "product_semantic_clarification",
   );
-  assertEquals(state.calls(), 1);
+  assertEquals(state.calls(), 2);
 });
 
 Deno.test("toutes les series force la qualification des variantes candidates", async () => {
@@ -339,7 +560,7 @@ Deno.test("toutes les series force la qualification des variantes candidates", a
     },
   );
   assertEquals(result.evidence.status, "qualified");
-  assertEquals(state.calls(), 2);
+  assertEquals(state.calls(), 3);
 });
 
 Deno.test("une clarification ne revele jamais les identifiants opaques", async () => {
@@ -451,7 +672,7 @@ Deno.test("un groupe injecte est refuse avant le recomptage", async () => {
         },
       ),
   );
-  assertEquals(state.calls(), 1);
+  assertEquals(state.calls(), 2);
 });
 
 Deno.test("le total affiche provient exclusivement du recomptage base", async () => {
@@ -500,7 +721,7 @@ Deno.test("le total affiche provient exclusivement du recomptage base", async ()
       input.client_request_id,
     );
   }
-  assertEquals(state.calls(), 2);
+  assertEquals(state.calls(), 3);
 });
 
 Deno.test("une recherche tronquee interdit la qualification et impose la clarification", async () => {
@@ -532,7 +753,7 @@ Deno.test("une recherche tronquee interdit la qualification et impose la clarifi
     },
   );
   assertEquals(result.evidence.facts.length, 0);
-  assertEquals(state.calls(), 1);
+  assertEquals(state.calls(), 2);
 });
 
 Deno.test("une recherche sans candidat interdit un faux total a zero", async () => {
@@ -563,7 +784,7 @@ Deno.test("une recherche sans candidat interdit un faux total a zero", async () 
     result.conversationContext?.kind,
     "product_semantic_clarification",
   );
-  assertEquals(state.calls(), 1);
+  assertEquals(state.calls(), 2);
 });
 
 Deno.test("une famille CIR acceptee est etendue sans qualifier chaque CAT_FAB", async () => {
@@ -607,5 +828,5 @@ Deno.test("une famille CIR acceptee est etendue sans qualifier chaque CAT_FAB", 
   );
 
   assertStringIncludes(result.answer, "75 couples marque + CAT_FAB");
-  assertEquals(state.calls(), 2);
+  assertEquals(state.calls(), 3);
 });
