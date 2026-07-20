@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 import { ai_request_reservations } from "../../../../drizzle/schema.ts";
 import {
@@ -48,8 +48,16 @@ import {
   type AssistantSqlSemantics,
   canonicalizeAssistantSql,
 } from "./assistantSqlTools.ts";
+import { getMistralDiagnostic } from "./mistralAdapter.ts";
+import { runProductSemanticPlanner } from "./assistantSemanticPlanner.ts";
+import { resolveSnapshotId } from "../pricing/references/referenceImports.ts";
+import {
+  getQualifiedProductBrandDetails,
+  type ProductQualifiedSelection,
+} from "../pricing/references/referenceProductSemantics.ts";
 
 const FEATURE = "assistant.referentiels" as const;
+const SEMANTIC_MAX_OUTPUT_TOKENS = 6_000;
 export const MAX_TOOL_ROUNDS = 12;
 export const OVERALL_TIMEOUT_MS = 180_000;
 export const MAX_IDENTICAL_TOOL_CALLS = 3;
@@ -57,7 +65,13 @@ export const MAX_SQL_REPAIRS = 3;
 const IDEMPOTENCY_TTL_MS = 15 * 60 * 1000;
 const UNPRICED_REQUEST_RESERVATION_USD = 10;
 const DEFAULT_MAX_REQUEST_COST_USD = 2;
+const PRODUCT_SEMANTIC_MODEL_ID = "mistral-large-2512";
 export const ASSISTANT_CONTEXT_TTL_MS = 15 * 60 * 1000;
+
+export const isProductSemanticPlannerEnabled = (): boolean =>
+  Deno.env.get("AI_ASSISTANT_SEMANTIC_PLANNER_ENABLED")?.trim()
+    .toLowerCase() ===
+    "true";
 
 const positiveIntegerEnv = (name: string, fallback: number): number => {
   const value = Number.parseInt(Deno.env.get(name) ?? "", 10);
@@ -81,7 +95,7 @@ type ReservationRow = {
 type ProviderCaller = (
   messages: OpenRouterMessage[],
   tools: OpenRouterToolDefinition[],
-  toolChoice: "auto" | "none",
+  toolChoice: "auto" | "none" | "any",
 ) => Promise<OpenRouterToolResponse>;
 type ToolExecutor = (
   name: string,
@@ -107,6 +121,10 @@ type LoopResult = {
     provider: string | null;
     finish_reason: string;
     native_finish_reason: string | null;
+    attempt_id?: string;
+    retry_count?: number;
+    usage_estimated?: boolean;
+    attempt_latency_ms?: number;
   }>;
 };
 
@@ -213,6 +231,35 @@ const extractShortFollowupBrand = (question: string): string | null => {
   return match?.[1]?.toUpperCase() ?? null;
 };
 
+export type ProductSemanticResultFollowup = {
+  brand: string;
+  mode: "count" | "detail" | "summary";
+};
+
+export const parseProductSemanticResultFollowup = (
+  question: string,
+): ProductSemanticResultFollowup | null => {
+  const normalized = question.normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+  const scopedBrand = normalized.match(
+    /\b(?:chez|pour|dans|de|du|marque)\s+(?:(?:la|le)\s+marque\s+)?([a-z0-9][a-z0-9_-]{1,39})\s*\?*$/,
+  )?.[1];
+  const shortBrand = normalized.match(
+    /^(?:et\s+)?([a-z0-9][a-z0-9_-]{1,39})\s*\?*$/,
+  )?.[1];
+  const brand = scopedBrand ?? shortBrand;
+  if (!brand) return null;
+  const mode = /\b(?:combien|nombre|compte|comptage)\b/.test(normalized)
+    ? "count"
+    : /\b(?:laquelle|lesquelles|quel|quels|quelle|quelles|detail|details|liste)\b/
+        .test(normalized)
+    ? "detail"
+    : "summary";
+  return { brand: brand.toUpperCase(), mode };
+};
+
 export const isAssistantConversationContextUsable = (
   context: AiAssistantConversationContext | null,
   pageContext: AiAssistantAskInput["page_context"],
@@ -238,9 +285,54 @@ export const isAssistantConversationContextUsable = (
       pageContext.target_snapshot_id !== context.snapshot_id
     ) return false;
   } else if (
-    (pageContext.target_snapshot_id ?? null) !== context.target_snapshot_id
+    context.kind === "pending_clarification" && (
+      (pageContext.target_snapshot_id ?? null) !== context.target_snapshot_id
+    )
+  ) return false;
+  else if (
+    (context.kind === "product_semantic_clarification" ||
+      context.kind === "product_semantic_result") &&
+    pageContext.target_snapshot_id &&
+    pageContext.target_snapshot_id !== context.snapshot_id
   ) return false;
   return true;
+};
+
+const resolveStoredProductSemanticResultContext = async (
+  db: DbClient,
+  authContext: AuthContext,
+  context: AiAssistantConversationContext | null,
+  pageContext: AiAssistantAskInput["page_context"],
+): Promise<AiAssistantConversationContext | null> => {
+  if (context?.kind !== "product_semantic_result") return context;
+  const [stored] = await db.select({
+    agency_id: ai_request_reservations.agency_id,
+    response: ai_request_reservations.response,
+    status: ai_request_reservations.status,
+    expires_at: ai_request_reservations.expires_at,
+  }).from(ai_request_reservations).where(and(
+    eq(ai_request_reservations.feature, FEATURE),
+    eq(ai_request_reservations.user_id, authContext.userId),
+    eq(
+      ai_request_reservations.client_request_id,
+      context.source_client_request_id,
+    ),
+    eq(ai_request_reservations.status, "success"),
+  )).limit(1);
+  if (
+    !stored || stored.agency_id !== authContext.activeAgencyId ||
+    Date.parse(stored.expires_at) <= Date.now()
+  ) return null;
+  const parsed = aiAssistantAskResponseSchema.safeParse(stored.response);
+  if (!parsed.success) return null;
+  const storedContext = parsed.data.conversation_context;
+  if (
+    storedContext?.kind !== "product_semantic_result" ||
+    storedContext.source_client_request_id !== context.source_client_request_id
+  ) return null;
+  return isAssistantConversationContextUsable(storedContext, pageContext)
+    ? storedContext
+    : null;
 };
 
 export const getConversationAwareDeterministicIntent = (
@@ -271,6 +363,10 @@ export const getConversationAwareDeterministicIntent = (
     }
     return null;
   }
+  if (
+    context.kind === "product_semantic_clarification" ||
+    context.kind === "product_semantic_result"
+  ) return null;
   const brand = extractShortFollowupBrand(question);
   if (
     brand && context.dimension === "cat_fab" &&
@@ -1223,6 +1319,16 @@ export const runAssistantToolLoop = async (
       provider: response.provider,
       finish_reason: response.finishReason,
       native_finish_reason: response.nativeFinishReason,
+      ...(response.attemptId ? { attempt_id: response.attemptId } : {}),
+      ...(response.retryCount === undefined
+        ? {}
+        : { retry_count: response.retryCount }),
+      ...(response.usageEstimated === undefined
+        ? {}
+        : { usage_estimated: response.usageEstimated }),
+      ...(response.attemptLatencyMs === undefined
+        ? {}
+        : { attempt_latency_ms: response.attemptLatencyMs }),
     });
     if (response.toolCalls.length === 0) {
       if (!response.content?.trim()) {
@@ -1424,6 +1530,16 @@ export const runAssistantToolLoop = async (
     provider: forced.provider,
     finish_reason: forced.finishReason,
     native_finish_reason: forced.nativeFinishReason,
+    ...(forced.attemptId ? { attempt_id: forced.attemptId } : {}),
+    ...(forced.retryCount === undefined
+      ? {}
+      : { retry_count: forced.retryCount }),
+    ...(forced.usageEstimated === undefined
+      ? {}
+      : { usage_estimated: forced.usageEstimated }),
+    ...(forced.attemptLatencyMs === undefined
+      ? {}
+      : { attempt_latency_ms: forced.attemptLatencyMs }),
   });
   if (!forced.content?.trim()) {
     throw httpError(502, "AI_RESPONSE_INVALID", "Reponse finale forcee vide.");
@@ -1603,7 +1719,36 @@ export const runAssistantAsk = async (
       "Trop de requetes assistant. Reessayez plus tard.",
     );
   }
+  const conversationContext = await resolveStoredProductSemanticResultContext(
+    db,
+    authContext,
+    input.conversation_context,
+    input.page_context,
+  );
   const parsedIntent = parseAssistantReferenceIntent(input.question);
+  const productResultFollowup = parsedIntent.kind !==
+        "product_semantic_search" &&
+      conversationContext?.kind === "product_semantic_result"
+    ? parseProductSemanticResultFollowup(input.question)
+    : null;
+  const activeConversationContext = parsedIntent.kind ===
+        "product_semantic_search" &&
+      conversationContext?.kind === "product_semantic_result"
+    ? null
+    : conversationContext;
+  const effectiveInput: AiAssistantAskInput = activeConversationContext ===
+      input.conversation_context
+    ? input
+    : { ...input, conversation_context: activeConversationContext };
+  const semanticFollowup = isAssistantConversationContextUsable(
+    activeConversationContext,
+    input.page_context,
+  ) && (
+    activeConversationContext.kind === "product_semantic_clarification" ||
+    activeConversationContext.kind === "product_semantic_result"
+  );
+  const isProductSemanticSearch =
+    parsedIntent.kind === "product_semantic_search" || semanticFollowup;
   const staticAnswer = getDeterministicStaticAnswer(parsedIntent);
   if (staticAnswer) {
     return aiAssistantAskResponseSchema.parse({
@@ -1623,11 +1768,14 @@ export const runAssistantAsk = async (
   }
   const conversationAwareIntent = getConversationAwareDeterministicIntent(
     input.question,
-    input.conversation_context,
+    activeConversationContext,
     input.page_context,
   );
-  const preferredModelId = evaluation?.modelConfigId || conversationAwareIntent
+  const preferredModelId = evaluation?.modelConfigId ||
+      conversationAwareIntent || productResultFollowup
     ? undefined
+    : isProductSemanticSearch
+    ? PRODUCT_SEMANTIC_MODEL_ID
     : selectAssistantModelId(parsedIntent.executionMode) ?? undefined;
   const resolved = await resolveModelAndPromptForFeature(
     db,
@@ -1667,7 +1815,7 @@ export const runAssistantAsk = async (
 
   const unsupportedPendingAnswer = getUnsupportedPendingClarificationAnswer(
     input.question,
-    input.conversation_context,
+    activeConversationContext,
     input.page_context,
   );
   if (unsupportedPendingAnswer) {
@@ -1749,10 +1897,16 @@ export const runAssistantAsk = async (
     throw error;
   }
 
+  const assistantRunId = crypto.randomUUID();
+  const timeoutMs = positiveIntegerEnv(
+    "AI_ASSISTANT_TIMEOUT_MS",
+    OVERALL_TIMEOUT_MS,
+  );
+  const deadlineMs = Date.now() + timeoutMs;
   const controller = new AbortController();
   const timeoutId = setTimeout(
     () => controller.abort(),
-    positiveIntegerEnv("AI_ASSISTANT_TIMEOUT_MS", OVERALL_TIMEOUT_MS),
+    timeoutMs,
   );
   const partialUsage: ProviderUsage = {
     text: "",
@@ -1765,6 +1919,144 @@ export const runAssistantAsk = async (
   const partialToolTrace: AiAssistantToolCallTrace[] = [];
   const partialProviderRounds: LoopResult["rounds"] = [];
   try {
+    if (
+      productResultFollowup &&
+      activeConversationContext?.kind === "product_semantic_result"
+    ) {
+      const toolStarted = performance.now();
+      const details = await getQualifiedProductBrandDetails(
+        db,
+        activeConversationContext.snapshot_id,
+        activeConversationContext
+          .accepted_selections as ProductQualifiedSelection[],
+        productResultFollowup.brand,
+      );
+      const displayedRows = details.rows.slice(0, 20);
+      const answerTruncated = details.truncated || details.rows.length > 20;
+      const brand = details.matched_brand ?? productResultFollowup.brand;
+      const detailText = displayedRows.map((row) =>
+        row.label === row.cat_fab
+          ? row.cat_fab
+          : `${row.cat_fab} — ${row.label}`
+      ).join(" ; ");
+      const answer = details.distinct_cat_fab === 0
+        ? `Le résultat qualifié précédent ne contient aucune CAT_FAB pour la marque ${brand} dans le snapshot ${details.snapshot_id}.`
+        : productResultFollowup.mode === "detail"
+        ? `Dans le même périmètre qualifié « ${activeConversationContext.concept} », la marque ${brand} compte ${details.distinct_cat_fab} CAT_FAB : ${detailText}${
+          answerTruncated ? " ; liste affichée partiellement" : ""
+        }.`
+        : `Dans le même périmètre qualifié « ${activeConversationContext.concept} », la marque ${brand} compte ${details.distinct_cat_fab} CAT_FAB dans le snapshot ${details.snapshot_id}.`;
+      const trace = aiAssistantToolCallTraceSchema.parse({
+        name: "query_product_qualified_result",
+        arguments: {
+          brand: productResultFollowup.brand,
+          mode: productResultFollowup.mode,
+          snapshot_id: details.snapshot_id,
+        },
+        ok: true,
+        executed: true,
+        blocked_reason: null,
+        row_count: details.distinct_cat_fab,
+        duration_ms: Math.max(0, Math.round(performance.now() - toolStarted)),
+      });
+      const evidence: AiAssistantEvidence = {
+        status: "qualified",
+        intent: "product_semantic_followup",
+        dimension: "cat_fab",
+        facts: [{
+          label: `CAT_FAB qualifiées pour ${brand}`,
+          tool: trace.name,
+          snapshot_id: details.snapshot_id,
+          result_field: "distinct_cat_fab",
+          source_value: details.distinct_cat_fab,
+          displayed_value: details.distinct_cat_fab,
+          derivation: "direct",
+        }],
+        executions: [{
+          tool: trace.name,
+          ok: true,
+          duration_ms: trace.duration_ms,
+          row_count: details.distinct_cat_fab,
+          snapshot_id: details.snapshot_id,
+          requested_filters: { brand: productResultFollowup.brand },
+          canonical_filters: {
+            concept: activeConversationContext.concept,
+            brand,
+          },
+          server_filters: { snapshot_id: details.snapshot_id },
+          sql_attempt: null,
+          executed_sql: null,
+          error_code: null,
+        }],
+      };
+      const zeroUsage: ProviderUsage = {
+        text: "",
+        inputTokens: 0,
+        outputTokens: 0,
+        cachedInputTokens: 0,
+        reasoningTokens: 0,
+        providerCostAmount: 0,
+      };
+      const response = aiAssistantAskResponseSchema.parse({
+        ok: true,
+        request_id: requestId,
+        ai_available: true,
+        answer,
+        citations: [{
+          tool: trace.name,
+          label:
+            `Périmètre produit qualifié sur le snapshot ${details.snapshot_id}`,
+          ref: {
+            snapshot_id: details.snapshot_id,
+            concept: activeConversationContext.concept,
+            brand,
+            distinct_cat_fab: details.distinct_cat_fab,
+          },
+        }],
+        tool_trace: [trace],
+        evidence,
+        usage: {
+          provider: resolved.model.provider,
+          model_id: resolved.model.model_id,
+          input_tokens: 0,
+          output_tokens: 0,
+          cached_input_tokens: 0,
+          reasoning_tokens: 0,
+        },
+        cost: { amount: 0, currency: resolved.model.currency, priced: true },
+        fallback_reason: null,
+        model_id: resolved.model.model_id,
+        truncated: answerTruncated,
+        conversation_context: activeConversationContext,
+      });
+      await db.transaction(async (tx) => {
+        await recordUsage(tx as DbClient, {
+          requestId,
+          authContext,
+          feature: FEATURE,
+          model: resolved.model,
+          prompt: resolved.prompt,
+          usage: zeroUsage,
+          costAmount: 0,
+          cacheHit: false,
+          status: "success",
+          latencyMs: Math.round(performance.now() - started),
+          metadata: {
+            execution_mode: "product_semantic_followup",
+            tool_trace: auditToolTrace([trace]),
+          },
+        });
+        await tx.update(ai_request_reservations).set({
+          status: "success",
+          actual_tokens: 0,
+          actual_cost_amount: "0",
+          response,
+          expires_at: new Date(Date.now() + IDEMPOTENCY_TTL_MS).toISOString(),
+          updated_at: new Date().toISOString(),
+        }).where(eq(ai_request_reservations.id, reservation.reservation_id));
+      });
+      return response;
+    }
     const deterministicExecution = conversationAwareIntent
       ? {
         intent: conversationAwareIntent,
@@ -1840,7 +2132,7 @@ export const runAssistantAsk = async (
       const conversationContext = buildAssistantConversationContext(
         deterministicIntent,
         data,
-        input.conversation_context,
+        effectiveInput.conversation_context,
         input.page_context,
       );
       const boundedAnswer = buildDeterministicToolAnswer(
@@ -1854,6 +2146,21 @@ export const runAssistantAsk = async (
           ? `Dans le snapshot actif ${data.snapshot_id}, la marque ${data.marque} ${
             data.matches === true ? "a" : "n'a pas"
           } des CAT_FAB correspondant aux termes demandés (${data.segment_rows} segments).`
+          : deterministicIntent.tool === "search_supplier_categories" &&
+              typeof data.distinct_cat_fab === "number"
+          ? `Dans le snapshot actif ${data.snapshot_id}, ${data.distinct_cat_fab} CAT_FAB distinctes correspondent aux termes ${
+            Array.isArray(data.requested_terms)
+              ? data.requested_terms.join(", ")
+              : "demandés"
+          }. Elles sont réparties entre ${data.distinct_brand_count} marques : ${
+            Array.isArray(data.counts_by_brand)
+              ? data.counts_by_brand.filter(isRecord).map((item) =>
+                `${item.marque} (${item.distinct_cat_fab ?? item.segment_rows})`
+              ).join(", ")
+              : Array.isArray(data.matching_brands)
+              ? data.matching_brands.join(", ")
+              : "aucune"
+          }.`
           : `Dans le snapshot actif ${data.snapshot_id}, les termes ${
             Array.isArray(data.requested_terms)
               ? data.requested_terms.join(", ")
@@ -2000,7 +2307,7 @@ export const runAssistantAsk = async (
         conversation_context: buildAssistantConversationContext(
           deterministicIntent,
           data ?? {},
-          input.conversation_context,
+          effectiveInput.conversation_context,
           input.page_context,
         ),
       });
@@ -2045,14 +2352,36 @@ export const runAssistantAsk = async (
       if (controller.signal.aborted) {
         throw httpError(504, "AI_TIMEOUT", "Delai assistant IA depasse.");
       }
+      const modelForCall = tools.some((tool) =>
+          [
+            "search_product_candidates",
+            "submit_product_qualification",
+            "request_product_clarification",
+          ].includes(tool.function.name)
+        )
+        ? {
+          ...resolved.model,
+          max_output_tokens: Math.max(
+            resolved.model.max_output_tokens,
+            SEMANTIC_MAX_OUTPUT_TOKENS,
+          ),
+        }
+        : resolved.model;
       const response = await callProviderWithTools(
         resolved.provider,
-        resolved.model,
+        modelForCall,
         messages,
         tools,
         toolChoice,
         apiKey,
         controller.signal,
+        fetch,
+        {
+          requestId,
+          clientRequestId: input.client_request_id,
+          assistantRunId,
+          deadlineMs,
+        },
       );
       addUsage(partialUsage, response);
       partialProviderRounds.push({
@@ -2061,9 +2390,105 @@ export const runAssistantAsk = async (
         provider: response.provider,
         finish_reason: response.finishReason,
         native_finish_reason: response.nativeFinishReason,
+        ...(response.attemptId ? { attempt_id: response.attemptId } : {}),
+        ...(response.retryCount === undefined
+          ? {}
+          : { retry_count: response.retryCount }),
+        ...(response.usageEstimated === undefined
+          ? {}
+          : { usage_estimated: response.usageEstimated }),
+        ...(response.attemptLatencyMs === undefined
+          ? {}
+          : { attempt_latency_ms: response.attemptLatencyMs }),
       });
       return response;
     };
+    if (isProductSemanticSearch) {
+      if (!isProductSemanticPlannerEnabled()) {
+        throw httpError(
+          503,
+          "AI_PROVIDER_UNAVAILABLE",
+          "La recherche semantique produit est temporairement desactivee.",
+        );
+      }
+      const snapshotId = input.page_context.target_snapshot_id ??
+        (input.page_context.import_id
+          ? await resolveSnapshotId(db, {
+            import_id: input.page_context.import_id,
+          })
+          : await resolveSnapshotId(db, {}));
+      if (!snapshotId) {
+        throw httpError(
+          404,
+          "NOT_FOUND",
+          "Aucun snapshot de referentiels actif n est disponible.",
+        );
+      }
+      const semantic = await runProductSemanticPlanner(
+        db,
+        effectiveInput,
+        resolved.prompt,
+        snapshotId,
+        providerCall,
+      );
+      partialToolTrace.push(...semantic.toolTrace);
+      const cost = computeCost(resolved.model, partialUsage);
+      const response = aiAssistantAskResponseSchema.parse({
+        ok: true,
+        request_id: requestId,
+        ai_available: true,
+        answer: semantic.answer,
+        citations: semantic.citations,
+        tool_trace: semantic.toolTrace,
+        evidence: semantic.evidence,
+        usage: {
+          provider: resolved.model.provider,
+          model_id: semantic.servedModelId,
+          input_tokens: partialUsage.inputTokens,
+          output_tokens: partialUsage.outputTokens,
+          cached_input_tokens: partialUsage.cachedInputTokens,
+          reasoning_tokens: partialUsage.reasoningTokens,
+        },
+        cost: {
+          amount: cost,
+          currency: resolved.model.currency,
+          priced: cost !== null,
+        },
+        fallback_reason: null,
+        model_id: semantic.servedModelId,
+        truncated: false,
+        conversation_context: semantic.conversationContext,
+      });
+      await db.transaction(async (tx) => {
+        await recordUsage(tx as DbClient, {
+          requestId,
+          authContext,
+          feature: FEATURE,
+          model: resolved.model,
+          prompt: resolved.prompt,
+          usage: partialUsage,
+          costAmount: cost,
+          cacheHit: false,
+          status: "success",
+          latencyMs: Math.round(performance.now() - started),
+          metadata: {
+            execution_mode: "product_semantic_search",
+            tool_trace: auditToolTrace(semantic.toolTrace),
+            provider_rounds: partialProviderRounds,
+          },
+        });
+        await tx.update(ai_request_reservations).set({
+          status: "success",
+          actual_tokens: partialUsage.inputTokens + partialUsage.outputTokens +
+            partialUsage.cachedInputTokens + partialUsage.reasoningTokens,
+          actual_cost_amount: cost === null ? null : String(cost),
+          response,
+          expires_at: new Date(Date.now() + IDEMPOTENCY_TTL_MS).toISOString(),
+          updated_at: new Date().toISOString(),
+        }).where(eq(ai_request_reservations.id, reservation.reservation_id));
+      });
+      return response;
+    }
     const selectedTools = selectAssistantTools(
       input.question,
       openRouterToolDefinitions,
@@ -2130,6 +2555,7 @@ export const runAssistantAsk = async (
           ...auditMetadata(loop),
           execution_mode: parsedIntent.executionMode,
           requested_model_id: preferredModelId ?? resolved.model.model_id,
+          assistant_run_id: assistantRunId,
         },
       });
       await tx.update(ai_request_reservations).set({
@@ -2148,6 +2574,7 @@ export const runAssistantAsk = async (
       ? httpError(504, "AI_TIMEOUT", "Delai assistant IA depasse.")
       : caught;
     const cost = computeCost(resolved.model, partialUsage);
+    const providerDiagnostic = getMistralDiagnostic(error);
     await db.transaction(async (tx) => {
       await recordErrorUsage(
         tx as DbClient,
@@ -2160,10 +2587,14 @@ export const runAssistantAsk = async (
         Math.round(performance.now() - started),
         {
           client_request_id: input.client_request_id,
+          assistant_run_id: assistantRunId,
           execution_mode: parsedIntent.executionMode,
           requested_model_id: preferredModelId ?? resolved.model.model_id,
           tool_trace: auditToolTrace(partialToolTrace),
           provider_rounds: partialProviderRounds,
+          ...(providerDiagnostic
+            ? { provider_diagnostic: providerDiagnostic }
+            : {}),
         },
         partialUsage,
         cost,

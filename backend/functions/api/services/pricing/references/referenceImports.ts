@@ -2595,8 +2595,13 @@ export type PricingReferenceCategorySearch = {
   marques: string[];
   matching_brands: string[];
   distinct_brand_count: number;
+  distinct_cat_fab: number;
   segment_rows: number;
-  counts_by_brand: Array<{ marque: string; segment_rows: number }>;
+  counts_by_brand: Array<{
+    marque: string;
+    segment_rows: number;
+    distinct_cat_fab: number;
+  }>;
   examples: Array<
     { marque: string; cat_fab: string; cat_fab_l: string | null }
   >;
@@ -2703,6 +2708,7 @@ export const searchPricingReferenceSupplierCategories = async (
       marques,
       matching_brands: [],
       distinct_brand_count: 0,
+      distinct_cat_fab: 0,
       segment_rows: 0,
       counts_by_brand: [],
       examples: [],
@@ -2714,8 +2720,15 @@ export const searchPricingReferenceSupplierCategories = async (
     marques,
     input.mode,
   );
-  const counts = await db.execute<{ marque: string; segment_rows: number }>(sql`
-    select upper(trim(s.marque)) as marque, count(distinct s.id)::int as segment_rows
+  const counts = await db.execute<{
+    marque: string;
+    segment_rows: number;
+    distinct_cat_fab: number;
+  }>(sql`
+    select
+      upper(trim(s.marque)) as marque,
+      count(distinct s.id)::int as segment_rows,
+      count(distinct nullif(trim(s.cat_fab), ''))::int as distinct_cat_fab
     from public.pricing_supplier_segments s
     where ${whereClause}
     group by upper(trim(s.marque))
@@ -2740,6 +2753,10 @@ export const searchPricingReferenceSupplierCategories = async (
     marques,
     matching_brands: counts.map((row) => row.marque),
     distinct_brand_count: counts.length,
+    distinct_cat_fab: counts.reduce(
+      (sum, row) => sum + (row.distinct_cat_fab ?? row.segment_rows),
+      0,
+    ),
     segment_rows: counts.reduce((sum, row) => sum + row.segment_rows, 0),
     counts_by_brand: counts,
     examples,

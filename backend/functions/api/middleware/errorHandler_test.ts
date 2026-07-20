@@ -69,6 +69,38 @@ Deno.test('provider authentication failures are public support errors, not CIR a
   assertEquals(result.recovery_action, 'contact_support');
 });
 
+Deno.test('new provider-neutral errors are catalogued and redact every diagnostic canary', async () => {
+  const canaries = [
+    'Bearer secret-token',
+    'sk-mistral-fake',
+    'raw-provider-body',
+    'private-stack',
+    '<html>private</html>',
+    'external-request-secret',
+    'sensitive-param'
+  ];
+  for (const [code, status, recoveryAction] of [
+    ['AI_PROVIDER_BILLING_REQUIRED', 502, 'contact_support'],
+    ['AI_PROVIDER_CONTRACT_INVALID', 502, 'contact_support'],
+    ['AI_TOOL_ARGUMENTS_INVALID', 400, 'none'],
+    ['AI_TIMEOUT', 504, 'none'],
+    ['AI_RESPONSE_INVALID', 502, 'none']
+  ] as const) {
+    const response = handleError(
+      httpError(status, code, canaries.join(' | '), canaries.join(' | ')),
+      makeContext('req-redaction-matrix')
+    ) as Response;
+    const payload = (await response.json()) as Record<string, unknown>;
+    const serialized = JSON.stringify(payload);
+    assertEquals(payload.code, code);
+    assertEquals(payload.details, undefined);
+    assertEquals(payload.request_id, 'req-redaction-matrix');
+    assertEquals(payload.retryable, false);
+    assertEquals(payload.recovery_action, recoveryAction);
+    for (const canary of canaries) assertEquals(serialized.includes(canary), false);
+  }
+});
+
 Deno.test('handleError falls back to catalog REQUEST_FAILED for unknown errors', async () => {
   const ctx = makeContext('req-2');
   const err = new Error('boom');

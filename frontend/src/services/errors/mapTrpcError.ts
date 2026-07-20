@@ -4,6 +4,7 @@ import { createAppError, type AppError, type ErrorCode } from './AppError';
 import { isRecord } from '@/utils/recordNarrowing/isRecord';
 import { readObject } from '@/utils/recordNarrowing/readObject';
 import { readString } from '@/utils/recordNarrowing/readString';
+import { getErrorCatalogEntry } from 'shared/errors';
 
 const STATUS_TO_CODE: Record<number, ErrorCode> = {
   400: 'INVALID_PAYLOAD',
@@ -65,7 +66,7 @@ export const mapTrpcError = (error: unknown, fallbackMessage: string): AppError 
   const detailsData = isRecord(error.data) ? error.data : null;
   const appCodeRaw = detailsData ? readString(detailsData, 'appCode') : null;
   const requestId = detailsData ? readString(detailsData, 'requestId') : null;
-  const details = detailsData ? readString(detailsData, 'details') : null;
+  const rawDetails = detailsData ? readString(detailsData, 'details') : null;
   const status = detailsData ? readNumber(detailsData, 'httpStatus') : null;
   const retryable = detailsData ? readBoolean(detailsData, 'retryable') : null;
   const retryAfterCandidate = detailsData ? readNumber(detailsData, 'retryAfterMs') : null;
@@ -88,9 +89,16 @@ export const mapTrpcError = (error: unknown, fallbackMessage: string): AppError 
   const resolvedCode = appCodeRaw && isErrorCode(appCodeRaw)
     ? appCodeRaw
     : (resolvedStatus ? STATUS_TO_CODE[resolvedStatus] : undefined) ?? 'EDGE_FUNCTION_ERROR';
-  const resolvedMessage = resolvedCode === 'REQUEST_FAILED' && resolvedStatus && resolvedStatus >= 500
-    ? fallbackMessage
-    : error.message || fallbackMessage;
+  const catalogMessage = resolvedCode.startsWith('AI_')
+    ? getErrorCatalogEntry(resolvedCode)?.message
+    : undefined;
+  const resolvedMessage = catalogMessage ??
+    (resolvedCode === 'REQUEST_FAILED' && resolvedStatus && resolvedStatus >= 500
+      ? fallbackMessage
+      : error.message || fallbackMessage);
+  const details = resolvedCode === 'INVALID_JSON' || resolvedCode === 'INVALID_PAYLOAD'
+    ? rawDetails
+    : null;
 
   return createAppError({
     code: resolvedCode,

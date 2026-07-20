@@ -12,6 +12,7 @@ import {
   getConversationAwareDeterministicIntent,
   getUnsupportedPendingClarificationAnswer,
   isAssistantConversationContextUsable,
+  parseProductSemanticResultFollowup,
 } from "./assistantBroker.ts";
 import { parseAssistantReferenceIntent } from "./assistantIntentRouting.ts";
 
@@ -66,6 +67,86 @@ Deno.test("P3 contrat conversationnel strict et borne", () => {
       conversation_context: context,
     }).success,
     true,
+  );
+});
+
+Deno.test("une relance produit qualifiee est comprise sans dictionnaire metier", () => {
+  assertEquals(
+    parseProductSemanticResultFollowup("c'est laquelle dans PHOE ?"),
+    { brand: "PHOE", mode: "detail" },
+  );
+  assertEquals(
+    parseProductSemanticResultFollowup("combien pour SKF ?"),
+    { brand: "SKF", mode: "count" },
+  );
+  assertEquals(
+    parseProductSemanticResultFollowup("et ROCK ?"),
+    { brand: "ROCK", mode: "summary" },
+  );
+  assertEquals(
+    parseProductSemanticResultFollowup("et les moteurs electriques ?"),
+    null,
+  );
+});
+
+Deno.test("le contexte produit qualifie est strict, borne et lie au snapshot", () => {
+  const productContext = {
+    version: 1 as const,
+    kind: "product_semantic_result" as const,
+    surface: "pricing.references" as const,
+    domain: "pricing_references" as const,
+    intent: "product_semantic_search" as const,
+    concept: "produit industriel quelconque",
+    snapshot_id: snapshotId,
+    source_client_request_id: "11111111-1111-4111-8111-111111111111",
+    accepted_selections: [{
+      kind: "classification_scope" as const,
+      cir_path: "MEGA > FAMILLE > SOUS-FAMILLE",
+    }],
+    result_summary: {
+      matching_brands: ["MARQ"],
+      distinct_brand_count: 1,
+      distinct_brand_cat_fab: 12,
+    },
+    import_id: null,
+    created_at: new Date(now).toISOString(),
+    expires_at: new Date(now + ASSISTANT_CONTEXT_TTL_MS).toISOString(),
+  };
+  assertEquals(
+    aiAssistantConversationContextSchema.safeParse(productContext).success,
+    true,
+  );
+  assertEquals(
+    aiAssistantConversationContextSchema.safeParse({
+      ...productContext,
+      accepted_selections: Array.from(
+        { length: 81 },
+        (_, index) => ({
+          kind: "classification_scope",
+          cir_path: `MEGA > FAMILLE > GROUPE ${index}`,
+        }),
+      ),
+    }).success,
+    false,
+  );
+  assertEquals(
+    isAssistantConversationContextUsable(
+      productContext,
+      { surface: "pricing.references", target_snapshot_id: snapshotId },
+      now + 1,
+    ),
+    true,
+  );
+  assertEquals(
+    isAssistantConversationContextUsable(
+      productContext,
+      {
+        surface: "pricing.references",
+        target_snapshot_id: crypto.randomUUID(),
+      },
+      now + 1,
+    ),
+    false,
   );
 });
 
@@ -248,7 +329,7 @@ Deno.test("P3-bis represente une clarification en attente sans resultat invente"
   );
 });
 
-Deno.test("P3-bis reprend le dialogue ambigu en deterministe sans provider", async () => {
+Deno.test("P3-bis une recherche produit ouverte ne cree plus une clarification legacy", () => {
   const pageContext = {
     surface: "pricing.references" as const,
     target_snapshot_id: snapshotId,
@@ -257,47 +338,23 @@ Deno.test("P3-bis reprend le dialogue ambigu en deterministe sans provider", asy
     "Quelles marques ont des familles de produits avec des variateurs ou drives ?",
   );
   const pending = buildPendingClarificationContext(parsed, pageContext, now);
-  const resumed = getConversationAwareDeterministicIntent(
-    "cat_fab",
-    pending,
-    pageContext,
-    now + 1,
-  );
-  let providerCalls = 0;
-  const provider = (): never => {
-    providerCalls += 1;
-    throw new TypeError("Le provider ne doit pas être appelé.");
-  };
-  const result = resumed
-    ? await Promise.resolve({ tool: resumed.tool, args: resumed.args })
-    : provider();
-  assertEquals(result, {
-    tool: "search_supplier_categories",
-    args: { terms: ["variateurs", "drives"], mode: "any" },
-  });
-  assertEquals(providerCalls, 0);
+  assertEquals(parsed.kind, "product_semantic_search");
+  assertEquals(pending, null);
 });
 
-Deno.test("P3-bis refuse famille CIR sans tomber en SQL libre", () => {
+Deno.test("P3-bis conserve la clarification de dimension sans concept produit", () => {
   const pageContext = {
     surface: "pricing.references" as const,
     target_snapshot_id: snapshotId,
   };
   const pending = buildPendingClarificationContext(
-    parseAssistantReferenceIntent(
-      "Quelles marques ont des familles avec des variateurs ?",
-    ),
+    parseAssistantReferenceIntent("Familles"),
     pageContext,
     now,
   );
   assertEquals(
-    getUnsupportedPendingClarificationAnswer(
-      "famille CIR",
-      pending,
-      pageContext,
-      now + 1,
-    ),
-    "La recherche déterministe par famille CIR n'est pas encore disponible. Reformulez avec CAT_FAB pour une réponse vérifiable.",
+    pending,
+    null,
   );
   assertEquals(
     getUnsupportedPendingClarificationAnswer(

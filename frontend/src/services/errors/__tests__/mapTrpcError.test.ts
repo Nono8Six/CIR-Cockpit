@@ -44,7 +44,7 @@ describe('mapTrpcError', () => {
     expect(mapped.code).toBe('AUTH_FORBIDDEN');
     expect(mapped.status).toBe(403);
     expect(mapped.requestId).toBe('req-1');
-    expect(mapped.details).toBe('forbidden');
+    expect(mapped.details).toBeUndefined();
     expect(mapped.retryable).toBe(false);
     expect(mapped.recoveryAction).toBe('contact_support');
   });
@@ -65,6 +65,41 @@ describe('mapTrpcError', () => {
     expect(mapped.retryable).toBe(true);
     expect(mapped.recoveryAction).toBe('retry');
     expect(mapped.retryAfterMs).toBe(2_000);
+  });
+
+  it('redacts provider diagnostics before they can reach a toast or assistant response', () => {
+    const canaries = [
+      'Bearer secret-token',
+      'sk-mistral-fake',
+      'raw-provider-body',
+      'private-stack',
+      '<html>private</html>',
+      'external-request-secret',
+      'sensitive-param'
+    ];
+    const mapped = mapTrpcError(
+      createTrpcError(canaries.join(' | '), {
+        appCode: 'AI_PROVIDER_CONTRACT_INVALID',
+        httpStatus: 502,
+        requestId: 'req-safe',
+        retryable: false,
+        recoveryAction: 'contact_support',
+        details: canaries.join(' | ')
+      }),
+      'Fallback'
+    );
+
+    const publicProjection = JSON.stringify({
+      message: mapped.message,
+      details: mapped.details,
+      requestId: mapped.requestId,
+      retryable: mapped.retryable,
+      recoveryAction: mapped.recoveryAction
+    });
+    for (const canary of canaries) expect(publicProjection).not.toContain(canary);
+    expect(mapped.requestId).toBe('req-safe');
+    expect(mapped.retryable).toBe(false);
+    expect(mapped.recoveryAction).toBe('contact_support');
   });
 
   it('falls back to status mapping when appCode is missing', () => {

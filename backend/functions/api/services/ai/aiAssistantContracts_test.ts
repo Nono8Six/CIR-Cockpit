@@ -9,11 +9,16 @@ import {
 import {
   buildOpenRouterProviderPreferences,
   callProviderWithTools,
+  computeCost,
+  decryptSecret,
   type ModelRow,
   type OpenRouterToolDefinition,
   preflightOpenRouterModelEndpoints,
+  providerBaseUrl,
   type ProviderRow,
+  resolveModelAndPromptForFeature,
 } from "./aiGovernance.ts";
+import type { DbClient } from "../../types.ts";
 import {
   getAmbiguousFamilyClarification,
   getSegmentCountIntent,
@@ -63,6 +68,140 @@ const model: ModelRow = {
   created_at: "2026-07-10T00:00:00.000Z",
   updated_at: "2026-07-10T00:00:00.000Z",
 };
+
+Deno.test("Mistral usage cost is computed exclusively from persisted model tariffs", () => {
+  const mistralModel: ModelRow = {
+    ...model,
+    provider: "mistral",
+    model_id: "mistral-large-2512",
+    input_price_per_million: "0.5",
+    output_price_per_million: "1.5",
+  };
+  assertEquals(
+    computeCost(mistralModel, {
+      text: "",
+      inputTokens: 1_000_000,
+      outputTokens: 2_000_000,
+      cachedInputTokens: 0,
+      reasoningTokens: 0,
+      providerCostAmount: 999_999,
+    }),
+    3.5,
+  );
+});
+
+Deno.test("provider dispatch selects the isolated Mistral adapter and ignores administrable base_url", async () => {
+  const mistralProvider: ProviderRow = {
+    ...provider,
+    provider: "mistral",
+    label: "Mistral",
+    base_url: "https://must-not-be-used.invalid",
+  };
+  const mistralModel: ModelRow = {
+    ...model,
+    provider: "mistral",
+    provider_config_id: mistralProvider.id,
+    model_id: "mistral-large-2512",
+  };
+  let calledUrl = "";
+  let calledBody: Record<string, unknown> = {};
+  const result = await callProviderWithTools(
+    mistralProvider,
+    mistralModel,
+    [{ role: "user", content: "Question" }],
+    tools,
+    "auto",
+    "test-key",
+    new AbortController().signal,
+    (url, init) => {
+      calledUrl = String(url);
+      calledBody = JSON.parse(String(init?.body));
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            id: "mistral-generation",
+            model: mistralModel.model_id,
+            choices: [{
+              finish_reason: "stop",
+              message: { role: "assistant", content: "Reponse finale." },
+            }],
+            usage: { prompt_tokens: 2, completion_tokens: 3 },
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
+      );
+    },
+    {
+      requestId: "request-id",
+      clientRequestId: crypto.randomUUID(),
+      assistantRunId: crypto.randomUUID(),
+      deadlineMs: Date.now() + 10_000,
+    },
+  );
+  assertEquals(providerBaseUrl("mistral"), "https://api.mistral.ai/v1");
+  assertEquals(calledUrl, "https://api.mistral.ai/v1/chat/completions");
+  assertEquals(calledBody.provider, undefined);
+  assertEquals(calledBody.parallel_tool_calls, false);
+  assertEquals(result.provider, "mistral");
+});
+
+Deno.test("feature assignment selects Mistral before legacy OpenRouter routing preferences", async () => {
+  const mistralModel: ModelRow = {
+    ...model,
+    provider: "mistral",
+    model_id: "mistral-large-2512",
+  };
+  const mistralProvider: ProviderRow = {
+    ...provider,
+    provider: "mistral",
+    enabled: true,
+    encrypted_api_key: "cipher.text",
+  };
+  const prompt = {
+    id: crypto.randomUUID(),
+    template_id: crypto.randomUUID(),
+    version: 1,
+    status: "published",
+    body: "Prompt assistant",
+    change_note: null,
+    created_by: null,
+    published_by: null,
+    published_at: "2026-07-19T00:00:00.000Z",
+    created_at: "2026-07-19T00:00:00.000Z",
+  };
+  let executeCall = 0;
+  const db = {
+    execute: () => {
+      executeCall += 1;
+      return Promise.resolve(executeCall === 1 ? [mistralModel] : [prompt]);
+    },
+    select: () => ({
+      from: () => ({
+        where: () => ({ limit: () => Promise.resolve([mistralProvider]) }),
+      }),
+    }),
+  } as unknown as DbClient;
+
+  const resolved = await resolveModelAndPromptForFeature(
+    db,
+    "assistant.referentiels",
+    undefined,
+    undefined,
+    false,
+    { preferredModelId: "deepseek/deepseek-v4-pro" },
+  );
+  assertEquals(resolved?.model.model_id, "mistral-large-2512");
+  assertEquals(resolved?.provider.provider, "mistral");
+  assertEquals(executeCall, 2);
+});
+
+Deno.test("invalid encrypted provider material maps to AI_SECRET_NOT_CONFIGURED", async () => {
+  const error = await assertRejects(() => decryptSecret("invalid"));
+  assertEquals(
+    error instanceof Error ? Reflect.get(error, "code") : undefined,
+    "AI_SECRET_NOT_CONFIGURED",
+  );
+});
 
 Deno.test("assistant referentiels clarifies ambiguous family dimensions deterministically", () => {
   const clarification =

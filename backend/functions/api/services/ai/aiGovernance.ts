@@ -59,6 +59,12 @@ import {
 } from "../../../../../shared/schemas/pricing/references.schema.ts";
 import { httpError } from "../../middleware/errorHandler.ts";
 import type { AuthContext, DbClient } from "../../types.ts";
+import {
+  callMistralWithTools,
+  MISTRAL_API_BASE_URL,
+  type MistralAdapterDependencies,
+  prepareMistralModelsPreflight,
+} from "./mistralAdapter.ts";
 
 const CACHE_TTL_MS = 1000 * 60 * 60 * 24;
 
@@ -133,6 +139,7 @@ export type OpenRouterToolDefinition = {
     name: string;
     description: string;
     parameters: Record<string, unknown>;
+    strict?: boolean;
   };
 };
 
@@ -341,6 +348,10 @@ export type OpenRouterToolResponse = ProviderUsage & {
   nativeFinishReason: string | null;
   content: string | null;
   toolCalls: OpenRouterToolCall[];
+  attemptId?: string;
+  retryCount?: number;
+  usageEstimated?: boolean;
+  attemptLatencyMs?: number;
 };
 
 const openRouterFinishReasonSchema = z.enum([
@@ -450,17 +461,33 @@ const encryptSecret = async (value: string): Promise<string> => {
 export const decryptSecret = async (encrypted: string): Promise<string> => {
   const [ivText, ciphertextText] = encrypted.split(".");
   if (!ivText || !ciphertextText) {
-    throw httpError(500, "AI_CONFIG_MISSING", "Cle IA chiffree invalide.");
+    throw httpError(
+      500,
+      "AI_SECRET_NOT_CONFIGURED",
+      "Secret fournisseur IA indisponible.",
+    );
   }
-  const key = await getEncryptionKey();
-  const iv = bytesFromBase64(ivText);
-  const ciphertext = bytesFromBase64(ciphertextText);
-  const plaintext = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv: toArrayBuffer(iv) },
-    key,
-    toArrayBuffer(ciphertext),
-  );
-  return textDecoder.decode(plaintext);
+  try {
+    const key = await getEncryptionKey();
+    const iv = bytesFromBase64(ivText);
+    const ciphertext = bytesFromBase64(ciphertextText);
+    const plaintext = await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv: toArrayBuffer(iv) },
+      key,
+      toArrayBuffer(ciphertext),
+    );
+    return textDecoder.decode(plaintext);
+  } catch (error) {
+    if (
+      error instanceof Error && Reflect.get(error, "code") ===
+        "AI_SECRET_NOT_CONFIGURED"
+    ) throw error;
+    throw httpError(
+      500,
+      "AI_SECRET_NOT_CONFIGURED",
+      "Secret fournisseur IA indisponible.",
+    );
+  }
 };
 
 const toNumberOrNull = (
@@ -1643,10 +1670,19 @@ export const resolveModelAndPromptForFeature = async (
   routing?: { preferredModelId?: string },
 ) => {
   const preferredModelId = routing?.preferredModelId;
+  const assignedModels = modelConfigId ? [] : await db.execute<ModelRow>(sql`
+      select m.*
+      from public.ai_feature_model_assignments a
+      join public.ai_model_configs m on m.id = a.model_config_id
+      where a.feature = ${featureKey}
+      limit 1
+    `);
   const models = modelConfigId
     ? await db.select().from(ai_model_configs).where(
       eq(ai_model_configs.id, modelConfigId),
     ).limit(1)
+    : assignedModels.length > 0
+    ? assignedModels
     : preferredModelId
     ? await db.execute<ModelRow>(sql`
       select m.*
@@ -1675,10 +1711,35 @@ export const resolveModelAndPromptForFeature = async (
     `);
 
   const model = models.find((candidate) => candidate.enabled);
-  if (!model) return null;
+  if (!model) {
+    if (assignedModels.length > 0) {
+      throw httpError(
+        500,
+        "AI_CONFIG_MISSING",
+        "Modele IA affecte indisponible.",
+      );
+    }
+    return null;
+  }
 
   const provider = await getProviderRow(db, model.provider);
-  if (!provider?.enabled || !provider.encrypted_api_key) return null;
+  if (!provider || !provider.enabled) {
+    if (assignedModels.length > 0) {
+      throw httpError(
+        500,
+        "AI_CONFIG_MISSING",
+        "Fournisseur IA affecte indisponible.",
+      );
+    }
+    return null;
+  }
+  if (!provider.encrypted_api_key) {
+    throw httpError(
+      500,
+      "AI_SECRET_NOT_CONFIGURED",
+      "Secret fournisseur IA indisponible.",
+    );
+  }
 
   const promptRows = promptVersionId
     ? await db.select().from(ai_prompt_versions).where(
@@ -1925,6 +1986,10 @@ const testProviderConnection = async (
   key: string,
   baseUrl: string | null,
 ): Promise<void> => {
+  if (provider === "mistral") {
+    await prepareMistralModelsPreflight(key, new AbortController().signal);
+    return;
+  }
   const url = `${baseUrl ?? providerBaseUrl(provider)}/models`;
   const response = await fetch(url, {
     method: "GET",
@@ -1959,11 +2024,7 @@ export const providerBaseUrl = (provider: AiProvider): string => {
     case "openrouter":
       return "https://openrouter.ai/api/v1";
     case "mistral":
-      throw httpError(
-        500,
-        "AI_CONFIG_MISSING",
-        "Adaptateur Mistral non configure.",
-      );
+      return MISTRAL_API_BASE_URL;
   }
 };
 
@@ -2044,11 +2105,36 @@ export const callProviderWithTools = async (
   model: ModelRow,
   messages: OpenRouterMessage[],
   tools: OpenRouterToolDefinition[],
-  toolChoice: "auto" | "none",
+  toolChoice: "auto" | "none" | "any",
   apiKey: string,
   signal: AbortSignal,
   fetchImpl: typeof fetch = fetch,
+  correlation?: {
+    requestId: string;
+    clientRequestId: string;
+    assistantRunId: string;
+    deadlineMs: number;
+  },
+  mistralDependencies: Partial<MistralAdapterDependencies> = {},
 ): Promise<OpenRouterToolResponse> => {
+  if (provider.provider === "mistral") {
+    const fallbackId = crypto.randomUUID();
+    return await callMistralWithTools(
+      model,
+      messages,
+      tools,
+      toolChoice,
+      apiKey,
+      signal,
+      {
+        requestId: correlation?.requestId ?? fallbackId,
+        clientRequestId: correlation?.clientRequestId ?? fallbackId,
+        assistantRunId: correlation?.assistantRunId ?? fallbackId,
+      },
+      correlation?.deadlineMs ?? Date.now() + 180_000,
+      { fetch: fetchImpl, ...mistralDependencies },
+    );
+  }
   const urlBase = provider.base_url ?? providerBaseUrl(provider.provider);
   const response = await fetchImpl(`${urlBase}/chat/completions`, {
     method: "POST",
@@ -2405,6 +2491,7 @@ export const computeCost = (
   usage: ProviderUsage,
 ): number | null => {
   if (
+    model.provider === "openrouter" &&
     usage.providerCostAmount !== undefined && usage.providerCostAmount !== null
   ) {
     return Number(usage.providerCostAmount.toFixed(8));

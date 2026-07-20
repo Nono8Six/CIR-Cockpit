@@ -28,6 +28,9 @@ const TOOL_LABELS: Record<string, string> = {
   list_diffs: "Détail des changements",
   list_imports: "Historique des imports",
   search_supplier_categories: "Recherche dans les catégories fabricant",
+  search_product_candidates: "Recherche des groupes produit candidats",
+  submit_product_qualification: "Qualification sémantique du produit",
+  request_product_clarification: "Clarification du produit recherché",
 };
 
 const getToolLabel = (name: string): string =>
@@ -43,6 +46,11 @@ const formatValue = (value: unknown): string =>
 const STATUS = {
   verified: {
     label: "Résultat vérifié",
+    icon: Check,
+    className: "text-success",
+  },
+  qualified: {
+    label: "Résultat qualifié",
     icon: Check,
     className: "text-success",
   },
@@ -124,9 +132,9 @@ export const AssistantSources = ({ message }: AssistantSourcesProps) => {
               <span className="font-mono tabular-nums">
                 {execution.row_count === null
                   ? "synthèse"
-                  : `${execution.row_count} ${execution.row_count > 1 ? "lignes" : "ligne"}`} · {execution.duration_ms}
-                {" "}
-                ms
+                  : `${execution.row_count} ${
+                    execution.row_count > 1 ? "lignes" : "ligne"
+                  }`} · {execution.duration_ms} ms
               </span>
               {execution.sql_attempt
                 ? <span>Tentative SQL {execution.sql_attempt}</span>

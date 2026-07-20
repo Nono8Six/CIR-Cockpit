@@ -1015,6 +1015,43 @@ Le passage à **Phase 1C** est autorisé uniquement si P1B-0 à P1B-5 sont prouv
 - capturer l’identifiant de requête Mistral uniquement dans le diagnostic interne ;
 - ne jamais retenter automatiquement auth, configuration, contrat invalide ou timeout potentiellement facturé.
 
+##### Exécution locale Phase 1C — 2026-07-19
+
+La tranche locale 1C est implémentée sans activation, secret, migration, déploiement ni appel provider. L’adaptateur dédié `mistralAdapter.ts` conserve l’URL officielle dans le code, prépare `GET /v1/models`, émet `POST /v1/chat/completions` avec Bearer token, convertit les messages/outils existants et impose `parallel_tool_calls: false`. Le broker conserve sa séquence ; seul son point d’appel provider sélectionne l’adaptateur depuis l’affectation persistée `feature → modèle → provider`.
+
+Contrats locaux prouvés :
+
+- texte sous forme de chaîne ou de segments `text`, appels d’outils successifs, `tool_call_id` exact et réponse finale après résultat d’outil ;
+- modèle servi identique au modèle épinglé, finish reason connu, usage complet/partiel/absent et estimation signalée ;
+- coût Mistral calculé exclusivement depuis les tarifs `ai_model_configs`, sans accepter de coût monétaire provider ;
+- réponse vide, JSON/HTML malformé, shape invalide, finish reason inconnu, modèle incohérent et appels d’outils invalides refusés sans fallback plausible ;
+- `assistantRunId` créé une fois après admission, `attemptId` distinct par tentative, verrou en mémoire interdisant deux appels provider concurrents pour le même `client_request_id` ;
+- diagnostic interne borné : étape, modèle demandé/servi, statut externe, type/code/param provider, identifiant externe, tentative, latence et décision de retry ; aucun corps brut, prompt, résultat d’outil, secret ou stack n’y est conservé.
+
+Matrice HTTP/transport effectivement produite :
+
+| Cause | Code CIR | HTTP CIR | Retry provider automatique |
+| --- | --- | ---: | --- |
+| affectation/modèle/provider absent ou désactivé | `AI_CONFIG_MISSING` | 500 | jamais |
+| secret absent ou indéchiffrable | `AI_SECRET_NOT_CONFIGURED` | 500 | jamais |
+| 401/403 | `AI_PROVIDER_AUTH_FAILED` | 502 | jamais |
+| 402 | `AI_PROVIDER_BILLING_REQUIRED` | 502 | jamais |
+| 400/404/409/422 et autre 4xx de contrat | `AI_PROVIDER_CONTRACT_INVALID` | 502 | jamais |
+| 429 | `AI_PROVIDER_RATE_LIMITED` | 429 | une fois au maximum si le délai tient dans le budget |
+| 500/502/503 avec réponse HTTP | `AI_PROVIDER_UNAVAILABLE` | 503 | une fois au maximum |
+| 504 ou abort après envoi possible | `AI_TIMEOUT` | 504 | jamais |
+| rejet transport sans preuve d’un envoi sûr | `AI_PROVIDER_UNAVAILABLE` | 503 | jamais par prudence |
+| JSON/shape/modèle/finish reason invalide | `AI_PROVIDER_CONTRACT_INVALID` | 502 | jamais |
+| corps ou `choices` réellement vide | `AI_PROVIDER_EMPTY_RESPONSE` | 502 | jamais dans 1C |
+| arguments d’outil JSON invalides | `AI_TOOL_ARGUMENTS_INVALID` | 400 | jamais |
+| contenu final inutilisable | `AI_RESPONSE_INVALID` | 502 | jamais |
+
+Politique de retry : fonction pure recevant catégorie, statut, présence de réponse, tentative, budget restant, usage connu, `Retry-After` et état d’annulation ; une seule nouvelle tentative ; backoff 500 ms pour 5xx et 1 000 ms pour 429 avec jitter injecté borné à 249 ms ; priorité au `Retry-After` valide ; delta-seconds et HTTP-date supportés ; valeurs invalides, négatives, non finies ou supérieures à 300 000 ms rejetées ; attente annulable ; aucune attente si elle consomme le budget interactif. La documentation Mistral consultée ne garantit pas 402, 409, `Retry-After` ni un en-tête de corrélation : ces cas sont conservés comme décisions défensives prouvées par fixtures, à confirmer lors du préflight réel sans élargir le contrat public.
+
+Preuves locales : `mistralAdapter_test.ts` 40/40 ; contrats assistant/broker, middleware, tRPC et non-régression OpenRouter ciblés verts ; `qa:fast` vert avec 156 fichiers / 694 tests frontend et 410 tests backend, 14 intégrations réseau ignorées. Les canaries Bearer, clé API, corps provider, stack, HTML, identifiant externe et paramètre sensible sont absentes des payloads Edge/tRPC et du mapper frontend ; `requestId`, `retryable`, `recoveryAction` et `retryAfterMs` borné restent transmis.
+
+Décision locale : **GO vers le préflight réel/P1-C**, sous autorisation séparée pour enregistrer le secret, activer le provider, appeler Mistral et déployer. **P1-C reste non obtenu** : aucune réponse Mistral réelle n’a été affichée dans l’UI.
+
 #### Preuve intermédiaire P1-C. Première réponse UI avant refactor
 
 - utiliser la séquence actuelle du broker afin de ne changer qu’une variable : le provider ;
@@ -1029,6 +1066,10 @@ Le passage à **Phase 1C** est autorisé uniquement si P1B-0 à P1B-5 sont prouv
 - garantir zéro token et zéro coût ;
 - conserver permissions, preuves et réservations ;
 - rejouer P1-C après ce changement pour détecter toute régression.
+
+**Correctif sémantique ciblé du 2026-07-19 — vérins pneumatiques :** la question exacte « Il y a combien de CAT_FAB qui ont des vérin pneumatique ? quelles sont les marques qui en propose ? » était routée en déterministe avec le terme invalide `?`. L’événement distant `4396e789-b0e2-4e8c-808f-d5eb56b10154` confirme `search_supplier_categories`, `0` token et `0` coût : aucun prompt n’a été envoyé à Mistral. La cause était l’extracteur lexical, qui capturait la ponctuation après « propose » et ne reconnaissait pas la forme « CAT_FAB qui ont … ».
+
+Le correctif refuse les termes uniquement ponctuels, extrait `verin pneumatique`, étend le vocabulaire français/anglais et qualifie le concept par le mapping CIR `complete_valid` vers `PNEUMATIQUE > COMPOSANTS > VERINS CNOMO / NORMALISES / NON NORMALISES`. Les classifications hydrauliques, électriques et gaz sont donc exclues par le référentiel, pas par une supposition du modèle. Baseline distante du snapshot `4e216bc4-7d82-4eb7-aa20-2cc8316667cc` : `75` couples marque + CAT_FAB chez `5` marques — `AIGN 7`, `ASCO 3`, `AVEN 12`, `FEST 37`, `PARK 16`. Preuves locales : reproduction avant/après, `82/82` tests IA ciblés, puis `qa:back` vert avec `414` tests réussis et `14` intégrations conditionnelles ignorées. La gate finale `qa` atteint `694/694` tests frontend mais reste bloquée par la couverture branches préexistante de `useDashboardStatusHelpers.ts` (`13,33 %` pour un seuil de `30 %`), fichier non modifié par ce correctif. Aucun prompt modifié, aucune migration, aucun appel provider et aucun déploiement pour ce correctif.
 
 #### 1D. Rendre le minimum UI/admin provider-neutre
 
@@ -1055,22 +1096,24 @@ Le passage à **Phase 1C** est autorisé uniquement si P1B-0 à P1B-5 sont prouv
 
 **Checkpoint P1-A — Compatibilité provider :**
 
-- [ ] `/v1/models` confirme le modèle épinglé et le test provider est vert.
-- [ ] La configuration modèle contient `mistral-large-2512` et une température `0.2`.
-- [ ] La migration accepte `mistral` sans altérer l’historique OpenRouter.
-- [ ] Aucun champ OpenRouter n’est présent dans un payload Mistral capturé par test.
-- [ ] La clé Mistral n’apparaît dans aucun log, retour API ou événement d’erreur.
-- [ ] 401, 429, 5xx, timeout et réponse malformée produisent chacun le code, le statut et la récupération attendus.
-- [ ] Les diagnostics provider restent internes ; le client ne reçoit que le contrat public allowlisté.
+- [x] `/v1/models` confirme le modèle épinglé et le test provider est vert.
+- [x] La configuration modèle contient `mistral-large-2512` et une température `0.2`.
+- [x] La migration accepte `mistral` sans altérer l’historique OpenRouter.
+- [x] Aucun champ OpenRouter n’est présent dans un payload Mistral capturé par test.
+- [x] La clé Mistral n’apparaît dans aucun log, retour API ou événement d’erreur.
+- [x] 401, 429, 5xx, timeout et réponse malformée produisent chacun le code, le statut et la récupération attendus.
+- [x] Les diagnostics provider restent internes ; le client ne reçoit que le contrat public allowlisté.
+
+**Consigné le 2026-07-20 (resynchronisation documentaire sur instruction PO) :** les sept preuves étaient déjà réparties dans le journal — CP-P1B pour la migration, les contraintes `openrouter`/`mistral` et le contrat public strict ; CP-P1C-LOCAL pour le payload minimal (test « Mistral sends its minimal REST payload without OpenRouter preferences »), la matrice d’erreurs et la redaction ; CP-P1C-RUNTIME pour le préflight `/v1/models` vert, la clé chiffrée par le flux admin et le modèle actif à `0.20`.
 
 **Checkpoint P1-C — Première réponse sourcée :**
 
-- [ ] Une question Référentiels non déterministe appelle `mistral`.
-- [ ] Le modèle servi correspond au modèle validé.
-- [ ] L’UI affiche une réponse correcte et au moins une preuve exploitable.
-- [ ] La trace montre les outils réellement appelés, sans donnée non autorisée.
-- [ ] Aucun appel réseau vers OpenRouter n’est nécessaire à ce scénario.
-- [ ] La latence, les tokens et le coût sont enregistrés.
+- [x] Une question Référentiels non déterministe appelle `mistral`.
+- [x] Le modèle servi correspond au modèle validé.
+- [x] L’UI affiche une réponse correcte et au moins une preuve exploitable.
+- [x] La trace montre les outils réellement appelés, sans donnée non autorisée.
+- [x] Aucun appel réseau vers OpenRouter n’est nécessaire à ce scénario.
+- [x] La latence, les tokens et le coût sont enregistrés.
 
 **Checkpoint P1-B — Zéro-token réel :**
 
@@ -1448,6 +1491,18 @@ Ces décisions ne bloquent pas la phase 1, qui reste limitée aux données Réf�
 
 La prochaine implémentation ne doit donc pas être une refonte globale. Elle doit être la plus petite tranche qui prouve simultanément : Mistral direct, zéro-token déterministe, outils autorisés, preuves visibles et coût mesuré.
 
+### Mise à jour du 2026-07-20 — ordre courant
+
+L’exécution réelle a divergé de l’ordre ci-dessus : après P0, les travaux 1B, 1C et la preuve P1-C ont été livrés, puis le planificateur sémantique produit (phase 5) a été construit et activé sous flag avant 1A, 1D, 1E et les phases 2 à 4. Cet écart est assumé et tracé dans la table d’état ; les dettes restent ouvertes.
+
+L’ordre courant est porté par le plan d’exécution enfant `docs/ASSISTANT_IA/plan-semantique-4-chantiers.md`, issu du diagnostic sémantique du 2026-07-20 (cas débitmètres et servomoteurs, routage regex bloquant) :
+
+1. Chantier 1 — taxonomie CIR visible par le planificateur (continuation P5).
+2. Chantier 2 — routage model-first (P4 minimal ; amendement §4.2 à consigner à son démarrage).
+3. Chantier 3 — tolérance lexicale pluriels/typos (P5).
+4. Chantier 4 — clarifications ancrées, tour de réparation, présentation (P5 ; amendement du budget d’appels à consigner à son démarrage).
+5. Reprise des dettes : P1-B zéro-token, P1-D livraison formelle, puis phases 2 et 3.
+
 ---
 
 ## 13. Journal des checkpoints
@@ -1492,19 +1547,94 @@ Copier ce bloc pour chaque checkpoint. Ne jamais cocher sans preuve.
 - Décision PO : GO pour 1B ; aucun GO implicite pour 1C
 - [x] Checkpoint validé
 
+### CP-P1C-LOCAL — Adaptateur REST Mistral prêt pour préflight
+
+- Date : 2026-07-19
+- Responsable : Codex
+- Commit : non créé
+- Fichiers modifiés : `mistralAdapter.ts` et son test ; intégration minimale dans `aiGovernance.ts`/`assistantBroker.ts` ; catalogue/types d’erreurs ; redaction mapper frontend et tests ; présent plan
+- Migration/deploy : aucun ; aucune écriture Supabase ; Edge Function distante inchangée en version 139
+- Snapshot de données : lecture MCP — migrations `20260719094530` et `20260719094641` présentes ; provider `mistral` désactivé sans secret ; modèle `mistral-large-2512` actif à `0.20`, tarifs 0,5/1,5 USD/M tokens et affectation `assistant.referentiels` présentes
+- Commandes et tests : test adaptateur 40/40 ; contrats assistant/broker/middleware/tRPC ciblés verts ; non-régression assistant/OpenRouter 69/69 ; `pnpm run qa:fast` vert, 694 tests frontend et 410 backend réussis, 14 intégrations réseau ignorées
+- Preuve UI/runtime : aucune, volontairement hors 1C locale ; P1-C non obtenu
+- Appels réseau provider / tokens / coût : 0 appel Mistral ou OpenRouter ; 0/0/0 token ; 0 USD
+- Erreurs/retries/circuit : matrice §1C implémentée ; un retry maximum sur 429 et HTTP 500/502/503 dans le budget ; aucun circuit breaker ajouté
+- Corrélation et redaction vérifiées : `requestId`, `client_request_id`, `assistantRunId`, `attemptId` distincts ; canaries provider absentes des sorties publiques ; diagnostics structurés uniquement dans les metadata serveur
+- Preuve de non-régression OpenRouter : suites assistant imposées par le runbook vertes ; payload/préflight OpenRouter existants conservés
+- Écarts au plan : 402, 409, `Retry-After` et headers de corrélation non documentés officiellement ; comportements défensifs fixtures-only à confirmer au préflight
+- Risques résiduels : contrat réel non observé, provider désactivé et sans secret, aucune preuve UI, verrou anti-concurrence local au processus en complément de la réservation DB existante, circuit breaker/réconciliation complète reportés en phase 2
+- Décision PO : GO technique local vers préflight réel/P1-C ; aucune autorisation implicite d’activation, secret, déploiement ou appel payant
+- [x] Checkpoint local validé
+
+### CP-P1C-RUNTIME — Première réponse Mistral sourcée obtenue
+
+- Date : 2026-07-19
+- Responsable : Codex
+- Commit : non créé
+- Migrations : aucune nouvelle migration nécessaire ; les migrations `20260719094530` et `20260719094641` sont déjà présentes dans l’historique Supabase distant
+- Déploiement : Edge Function `api` déployée en version 141, statut `ACTIVE`, wrapper `source/supabase/functions/api/index.ts`, import map `source/deno.json`, `verify_jwt = false`
+- Probes runtime : `OPTIONS 200` avec origine autorisée ; `POST` sans Bearer applicatif `401 AUTH_REQUIRED` avec `requestId`, `retryable = false` et `recoveryAction = relogin`
+- État Mistral après déploiement : affectation `assistant.referentiels → mistral-large-2512` conservée ; modèle actif à `0.20` ; clé enregistrée par le flux admin chiffré ; préflight `/v1/models` vert ; provider activé
+- Correctif runtime : Mistral renseignait l’UUID nul dans des identifiants outil optionnels ; `resolveReferenceContext` le traite désormais comme absent et résout le run de diff serveur. Test de régression ajouté avant redéploiement
+- Preuve P1-C : question « Quelles CAT_FAB ont eu des baisses de remise entre les deux derniers fichiers tarifaires ? » ; réponse UI « Analyse partielle vérifiée » sur le snapshot `4e216bc4-7d82-4eb7-aa20-2cc8316667cc`, avec CARB à `-4,166667 %` et Rolling Elements à `-2,777778 %`
+- Trace P1-C : `request_id=0493dfc9-ff24-40c6-96fb-51bf0ab3fb23`, `provider=mistral`, modèle servi `mistral-large-2512`, mode `bounded_provider`, quatre rounds sans retry provider ; deux tentatives outil refusées puis `aggregate_diffs` réussi avec 2 lignes en 2 826 ms ; aucun round OpenRouter
+- Usage P1-C : 16 197 tokens d’entrée, 1 069 tokens de sortie, latence totale 22 151 ms, coût calculé depuis les tarifs DB `0,00970200 USD`
+- Session de mise au point : 4 demandes assistant avec provider, 13 rounds Mistral, 46 741 tokens d’entrée, 3 435 tokens de sortie, coût total `0,02852300 USD` ; le scénario déterministe intermédiaire reste à zéro token et zéro coût
+- Capture UI : `.tmp/p1c/mistral-p1c-ui-success-20260719.png`
+- QA : test de régression P1-C + adaptateur 50/50 ; `qa:back` vert avec 411 tests réussis, 0 échec et 14 intégrations ignorées ; `qa:fast` vert avant le premier déploiement ; build frontend vert ; `qa` reste interrompu par le seuil de couverture préexistant de `useDashboardStatusHelpers.ts` (13,33 % pour 30 %, fichier et configuration sans diff P1-C) ; intégrations distantes générales bloquées par le compte fixture `AUDIT_20260604_api_int_user@cir.invalid` refusé en authentification 400
+- Décision runtime : **GO P1-C obtenu** ; première réponse Mistral directe, correcte, sourcée et visible dans l’UI
+- [x] Checkpoint P1-C validé
+
+### CP-P5-SEMANTIC-PLANNER — Planificateur produit générique en deux passes
+
+- Date : 2026-07-19
+- Responsable : Codex
+- Commit : non créé
+- Migrations : `20260719130936_ai_product_semantic_search.sql`, `20260719141705_ai_product_semantic_scope_expansion.sql`, `20260719142655_ai_product_semantic_exact_terms.sql` et `20260719165000_ai_product_semantic_complete_coverage.sql` appliquées sur le projet lié ; vue `security_invoker` `ai_v_product_semantics` et prompt `assistant.referentiels` v10 publiés ; aucune donnée importée modifiée
+- Déploiement initial : Edge Function `api` version 182, statut `ACTIVE`, `verify_jwt = false` conformément au contrat d’authentification applicatif ; flag distant d’abord conservé à `false` après la preuve bornée
+- Activation contrôlée du 2026-07-20 : Edge Function `api` version 188, statut `ACTIVE`, wrapper `supabase/functions/api/index.ts`, import map racine et `verify_jwt = false` confirmés par le MCP Supabase ; `AI_ASSISTANT_SEMANTIC_PLANNER_ENABLED=true` sur décision explicite du PO après correction et rejeu UI du cas variateur
+- Snapshot de données : `4e216bc4-7d82-4eb7-aa20-2cc8316667cc`
+- Parcours livré : intention `product_semantic_search`, planification Mistral forcée, recherche CAT_FAB/CIR bornée, qualification ou clarification forcée, recomptage base, réponse locale `qualified` ; un scope CIR accepté étend toutes ses CAT_FAB sans qualifier chaque série ; deux appels provider maximum et aucun `execute_readonly_sql`
+- Contrats : schémas Zod stricts, 12 termes maximum par liste et 80 caractères par terme ; 80 groupes/64 Ko maximum ; identifiants opaques contrôlés ; aucun total sur jeu tronqué, vide ou ambigu ; contexte de clarification borné au concept, à la question, aux options et au snapshot
+- Recherche et index : `pg_trgm` déjà présent ; `EXPLAIN` observé autour de 94 ms sur la recherche témoin avant index ; aucun index trigram ajouté faute de preuve qu’il soit nécessaire sur ce volume
+- Recherche finale : les expressions positives sont recherchées comme conjonctions lexicales dans les deux ordres, jamais comme mots adjectifs isolés ; les variantes sont classées par sélectivité et leur union reste sous 80 groupes ; une demande explicite « toutes les séries/types/variantes » force la qualification de toutes les familles qui nomment directement le produit et exclut les familles parentes
+- Tests ciblés finaux : format Deno vert ; routage 15/15, planificateur 16/16 et contexte conversationnel 10/10, soit 41/41 ; `deno check backend/functions/api/index.ts` vert
+- QA élargie : `qa:back` final du 2026-07-20 vert avec 432 réussites, 0 échec et 14 intégrations conditionnelles ignorées ; `qa:fast` vert avec 694 tests frontend et 433 tests backend avant retrait du test spécialisé désormais supprimé ; `qa` atteint tous les tests frontend mais reste bloqué uniquement par le seuil branches préexistant de `useDashboardStatusHelpers.ts` (13,33 % pour 30 %, fichier non modifié)
+- Probes déployées : `OPTIONS 200` avec origine `http://localhost:3000` et méthodes `GET, POST, OPTIONS` ; `POST ai.assistant.ask` sans Bearer applicatif `401 AUTH_REQUIRED`, `retryable=false`, `recoveryAction=relogin`
+- Preuve runtime initiale : la question ouverte sur les vérins pneumatiques déclenche une clarification sans présenter de total ; demande `49e643bc-1ee4-4a7d-8248-cc7b972f0858`, 51 groupes, 14 260 ms, 7 987 tokens entrée, 530 sortie, coût `0,0047885 USD`
+- Preuve runtime après clarification : demande `ea2a5d7f-5b23-4df0-ad2a-ea3b4cc7e30a`, 57 groupes inspectés, 6 acceptés et 51 exclus, 59 195 ms, 9 006 tokens entrée, 3 952 sortie, 512 cache, coût `0,010687 USD` ; réponse qualifiée de 6 CAT_FAB sur 2 marques (`AIGN 5`, `AVEN 1`)
+- Contrôle SQL témoin : un contrôle lexical/CIR conservateur retrouve 51 lignes sur 5 marques (`AIGN`, `ASCO`, `AVEN`, `FEST`, `PARK`) ; la qualification Mistral présente donc des faux négatifs bloquants malgré un comptage backend exact des groupes acceptés
+- Cause racine finale : l éclatement des expressions en mots isolés injectait notamment `pneumatic` et l hyperonyme erroné `pneumatic actuator`, saturait les 80 groupes et poussait Mistral à demander de choisir entre les familles ; avec le même plan fautif, le contrôle DB final retourne 4 groupes non tronqués : trois familles de vérins et une famille de détecteurs/capteurs
+- Preuve runtime finale du cas d ancrage : demande `ce4479b8-3c43-4008-8f55-3bdf459ef553`, 4 groupes inspectés, 3 acceptés et 1 exclu, 6 147 ms de recherche + 3 169 ms de qualification, 3 508 tokens entrée, 346 sortie, coût `0,002273 USD` ; réponse UI directe `qualified` : 75 couples marque + CAT_FAB sur 5 marques (`FEST 37`, `PARK 16`, `AVEN 12`, `AIGN 7`, `ASCO 3`), conforme au recomptage SQL des familles `VERINS NORMALISES`, `VERINS NON NORMALISES` et `VERINS CNOMO`
+- Anomalie de routage corrigée : la formulation « CAT_FAB correspondent aux ... » quittait le parcours sémantique et pouvait atteindre l’ancien parcours provider ; expression de structure et test de régression ajoutés
+- Régression variateur initiale du 2026-07-20 : la première activation retournait 339 couples sur 7 marques et incluait `PHOE`, car un terme positif présent dans le chemin CIR parent `VARIATEURS, SERVO-VAR ET DEMARREURS` transformait à tort la feuille générique `DIVERS` en scope produit complet
+- Règle générique de portée : la création d’un scope CIR repose uniquement sur le libellé terminal du chemin ; une CAT_FAB qui nomme directement le produit reste qualifiable individuellement sous une branche non correspondante. Aucun dictionnaire de produits ou de marques n’est introduit ; le cas variateur est uniquement un test de régression empêchant qu’une branche parente transforme une feuille générique en scope produit
+- Preuve runtime variateur finale : question UI exacte « Combien j'ai de CAT_FAB avec des variateur de vitesse ? », demande `6dc8d904-1f45-401a-9a44-58453467fee2`, 12 groupes inspectés, 10 acceptés, deux rounds Mistral, 4 775 tokens entrée, 662 sortie, 13 701 ms, coût `0,00338050 USD` ; réponse locale `qualified` de 305 couples marque + CAT_FAB et 6 marques (`ROCK 256`, `FEST 20`, `SIEM 20`, `PARK 6`, `LERO 2`, `BONF 1`), sans `PHOE`
+- Contexte conversationnel générique : toute réponse sémantique qualifiée émet un contexte strict `product_semantic_result`, lié au snapshot et à la réponse serveur d’origine, contenant uniquement les sélecteurs acceptés bornés. Les relances courtes de structure marque/détail/comptage relisent ce périmètre puis recomptent en base ; aucun nom de produit, synonyme ou marque n’est codé dans le parseur
+- Nettoyage générique final : le reliquat de production `pneumatic_cylinder`, sa classification CIR codée et l’expansion spécialisée `VFD/drive/variateur` ont été supprimés. Les noms de produits et marques ne subsistent que dans les jeux de régression ; la production reçoit les variantes du plan Mistral strict puis applique uniquement des règles structurelles bornées
+- Preuve runtime conversationnelle après déploiement v187 : nouvelle recherche `6ad79d76-80bb-4ce9-bfb8-98b1ec54657f`, 12 groupes inspectés et 10 acceptés, 4 787 tokens entrée, 665 sortie, 12 555 ms, coût `0,00382300 USD`, réponse de 305 CAT_FAB sur 6 marques. Relance générique PARK `66399f68-51b8-4b39-9efa-c01c959751d3` : 6 CAT_FAB exactes, `execution_mode=product_semantic_followup`, outil `query_product_qualified_result`, 0 token, coût nul, 450 ms. Relance générique PHOE `56b477d1-4e61-480c-a129-75f354bdab88` : 0 CAT_FAB dans le même périmètre, même mode et même outil, 0 token, coût nul, 343 ms ; aucun retour vers le SQL libre
+- Probes après activation : `OPTIONS 200`, `POST ai.assistant.ask` sans Bearer `401`, appel UI authentifié `POST 200`
+- Jeu d’or : cas d’ancrage « vérins pneumatiques » et cas « variateur de vitesse » désormais verts ; pompes, moteurs, raccords, roulements, capteurs, courroies et les autres cas contradictoires ne sont pas encore déclarés validés
+- Tokens/coût/latence : métriques ci-dessus enregistrées par demande ; aucun total approximatif n’est produit en cas d’indisponibilité provider
+- Risques résiduels : la généralisation aux autres familles produit et aux cas contradictoires reste à prouver par le jeu d’or complet ; l’activation actuelle est observable et réversible, mais ne vaut pas validation du checkpoint P5 global
+- Rollback : remettre `AI_ASSISTANT_SEMANTIC_PLANNER_ENABLED=false` ; les chemins déterministes existants restent disponibles
+- Décision : **GO contrôlé des cas vérins pneumatiques et variateur de vitesse, NO-GO P5 global** ; activation runtime autorisée explicitement par le PO, checkpoint maintenu ouvert jusqu’au reste du jeu d’or
+- Suite d’exécution : le diagnostic du 2026-07-20 (échec débitmètres par recherche aveugle à la taxonomie, échec servomoteurs par routage regex, `classification_hints` jamais exploité en SQL) et sa correction en quatre chantiers sont consignés dans `docs/ASSISTANT_IA/plan-semantique-4-chantiers.md` ; le jeu d’or étendu de ce plan enfant conditionne la fermeture du présent checkpoint
+- [ ] Checkpoint P5 validé
+
 ### État initial
 
 | Checkpoint | Statut | Preuve attendue |
 | --- | --- | --- |
 | P0 | GO le 2026-07-17 | Formulations et réponses attendues figées sur le snapshot actif ; `drive` conservé, FEST inclus et REXR exclu par qualification du contexte |
-| P1-A | Non commencé | Provider et migration compatibles |
-| P1-B | Non commencé | Réponse déterministe réelle à zéro token |
-| P1-C | Non commencé | Première réponse Mistral sourcée dans l’UI |
-| P1-D | Non commencé | QA, migration, deploy et rollback vérifiés |
-| P2 | Non commencé | Gouvernance provider-neutre |
+| P1-A | GO le 2026-07-19, consigné le 2026-07-20 | Preuves réparties : CP-P1B (migration, contraintes provider, contrat public), CP-P1C-LOCAL (payload minimal sans préférences OpenRouter testé, matrice d’erreurs, redaction), CP-P1C-RUNTIME (préflight `/v1/models` vert, clé chiffrée, modèle actif à `0.20`) |
+| P1-B | Non commencé | Réponse déterministe réelle à zéro token ; constat code du 2026-07-20 : le broker résout encore provider/modèle avant clarifications et outils déterministes |
+| P1-C | GO le 2026-07-19 | Première réponse Mistral sourcée dans l’UI ; modèle, outils, latence, tokens et coût consignés |
+| P1-D | Partiel, non consigné | QA, migration, deploy et rollback vérifiés ; réalité au 2026-07-20 : déploiements v141 à v188 avec probes et `qa:back` verts consignés dans CP-P5, mais matrice de fautes complète et rollback formel non prouvés |
+| P2 | Non commencé | Gouvernance provider-neutre ; reliquats mesurés le 2026-07-20 : `ASSISTANT_MODEL_POLICY` référence encore des modèles DeepSeek et le statut assistant exige les deux modèles Flash et Pro |
 | P3 | Non commencé | Backend décomposé sans régression |
-| P4 | Non commencé | Registre de capacités opérationnel |
-| P5 | Non commencé | Recherche sémantique sûre et mesurée |
+| P4 | Non commencé | Registre de capacités opérationnel ; le chantier 2 de `plan-semantique-4-chantiers.md` en livre la version minimale (routage model-first) |
+| P5 | GO contrôlé le 2026-07-20, NO-GO global maintenu | Vérins (75 couples, 5 marques) et variateur (305 couples, 6 marques) prouvés ; `AI_ASSISTANT_SEMANTIC_PLANNER_ENABLED=true` activé en v188 sur décision PO ; jeu d’or restant et correctifs débitmètres/servomoteurs portés par `plan-semantique-4-chantiers.md` |
 | P6-N | Non commencé | Un checkpoint par brique métier |
 | P7 | Non commencé | Ingestion catalogue à l’échelle |
 | P8 | Non commencé | Pilotage qualité/coût complet |
@@ -1518,6 +1648,7 @@ Copier ce bloc pour chaque checkpoint. Ne jamais cocher sans preuve.
 | --- | --- |
 | `docs/architecture-cible-cir-cockpit.md` | Autorité globale, inchangée |
 | Le présent document | Autorité pour la correction Mistral et l’évolution de l’assistant |
+| `docs/ASSISTANT_IA/plan-semantique-4-chantiers.md` | Plan d’exécution enfant du 2026-07-20 : continuation P5 et P4 minimal en quatre chantiers (checkpoints CP-C1 à CP-C4) |
 | `docs/qa-runbook.md` | Autorité QA générale et contrôles runtime de l’assistant |
 
 Les anciens plans, phases et rapports Assistant IA ont été supprimés du corpus actif le 2026-07-17. Les preuves utiles à la nouvelle trajectoire sont consolidées dans l’audit des sections 2 et 3.

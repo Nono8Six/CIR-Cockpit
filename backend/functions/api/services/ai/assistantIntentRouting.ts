@@ -5,6 +5,7 @@ export type AssistantReferenceIntentKind =
   | "supplier_category_search"
   | "supplier_brand_count"
   | "supplier_brand_check"
+  | "product_semantic_search"
   | "diff_analysis"
   | "anomaly_analysis"
   | "health_analysis"
@@ -56,6 +57,11 @@ export const ASSISTANT_INTENT_TOOL_POLICY: Readonly<
   supplier_category_search: ["search_supplier_categories"],
   supplier_brand_count: ["count_supplier_brands"],
   supplier_brand_check: ["check_brand_matches"],
+  product_semantic_search: [
+    "search_product_candidates",
+    "submit_product_qualification",
+    "request_product_clarification",
+  ],
   diff_analysis: ["get_diff_summary", "aggregate_diffs", "list_diffs"],
   anomaly_analysis: ["get_anomalies_summary", "list_anomalies"],
   health_analysis: ["list_imports", "get_import_details", "get_health_report"],
@@ -82,6 +88,8 @@ const hasFamCirDimension = (value: string): boolean =>
   /\bfamilles?\s+cir\b|\bfam_lib\b|\bfam\b/.test(value);
 
 const TERM_CLAUSE_PATTERNS = [
+  /\bcat[_ ]?fab\b.{0,40}?\b(?:qui\s+)?(?:ont|ayant|avec|contenant|comprenant|incluant)\s+(.+?)(?=[?.!;]|$)/g,
+  /\bcat[_ ]?fab\b.{0,40}?\b(?:qui\s+)?correspond(?:ent)?\s+(?:a|au|aux)\s+(.+?)(?=[?.!;]|$)/g,
   /\b(?:avec|contenant|contient|contiennent|comprenant|comprend|comprennent|incluant|inclut|incluent)\s+(.+?)(?=\s+(?:dans|sur)\b|[?.!;]|$)/g,
   /\b(?:ont|a|ayant)\s+(.+?)\s+dans\s+(?:le\s+|la\s+|les\s+)?(?:cat[_ ]?fab|categories?\s+(?:de\s+)?fabricant)\b/g,
   /\b(?:propose|proposent|vend|vends|vendent|fabrique|fabriquent|distribue|distribuent)\s+(.+?)(?=\s+(?:dans|sur)\b|[?.!;]|$)/g,
@@ -102,6 +110,7 @@ const extractSearchTerms = (value: string): string[] => {
             /^(?:(?:des?|du|de\s+la|d['’]|les?|la|un|une)\s*)+/g,
             "",
           )
+          .replace(/^[\p{P}\p{S}\s]+|[\p{P}\p{S}\s]+$/gu, "")
           .trim()
           .slice(0, 80);
         if (term.length > 0 && !terms.includes(term)) terms.push(term);
@@ -390,6 +399,20 @@ export const parseAssistantReferenceIntent = (
       dimension: "brand",
       filters: {},
       executionMode: "deterministic_direct",
+      clarification: null,
+    };
+  }
+  const asksOpenProductSearch = terms.length > 0 && (
+    catFab || hasSupplierProductRelation(value) ||
+    /\bmarques?\b.{0,80}\b(?:ont|ayant|avec|contenant|comprenant|incluant)\b/
+      .test(value)
+  );
+  if (asksOpenProductSearch) {
+    return {
+      kind: "product_semantic_search",
+      dimension: "cat_fab",
+      filters: {},
+      executionMode: "bounded_provider",
       clarification: null,
     };
   }

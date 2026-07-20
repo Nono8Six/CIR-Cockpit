@@ -9,6 +9,7 @@ import {
   selectToolsForAssistantIntent,
 } from "./assistantIntentRouting.ts";
 import { openRouterToolDefinitions } from "./assistantTools.ts";
+import { productSemanticToolDefinitions } from "./assistantSemanticPlanner.ts";
 import {
   buildDeterministicToolAnswer,
   executeDeterministicReferenceTool,
@@ -51,26 +52,38 @@ const matrix: MatrixCase[] = [
   },
   {
     question: "CAT_FAB avec Drive",
-    kind: "supplier_category_search",
+    kind: "product_semantic_search",
     dimension: "cat_fab",
-    mode: "deterministic_direct",
-    tools: ["search_supplier_categories"],
+    mode: "bounded_provider",
+    tools: [
+      "search_product_candidates",
+      "submit_product_qualification",
+      "request_product_clarification",
+    ],
     clarification: false,
   },
   {
     question: "Marques avec VFD dans les catégories fabricant",
-    kind: "supplier_category_search",
+    kind: "product_semantic_search",
     dimension: "cat_fab",
-    mode: "deterministic_direct",
-    tools: ["search_supplier_categories"],
+    mode: "bounded_provider",
+    tools: [
+      "search_product_candidates",
+      "submit_product_qualification",
+      "request_product_clarification",
+    ],
     clarification: false,
   },
   {
     question: "Est-ce que ROCKWELL a des CAT_FAB contenant drive ?",
-    kind: "supplier_brand_check",
+    kind: "product_semantic_search",
     dimension: "cat_fab",
-    mode: "deterministic_direct",
-    tools: ["check_brand_matches"],
+    mode: "bounded_provider",
+    tools: [
+      "search_product_candidates",
+      "submit_product_qualification",
+      "request_product_clarification",
+    ],
     clarification: false,
   },
   {
@@ -245,7 +258,10 @@ Deno.test("P2 matrice versionnee intention dimension mode et outils exacts", () 
       item.question,
     );
     assertEquals(
-      selectToolsForAssistantIntent(intent, openRouterToolDefinitions).map((
+      selectToolsForAssistantIntent(intent, [
+        ...openRouterToolDefinitions,
+        ...productSemanticToolDefinitions,
+      ]).map((
         tool,
       ) => tool.function.name),
       item.tools,
@@ -278,54 +294,68 @@ Deno.test("P2 priorites empechent recherche CAT_FAB de capturer diff et anomalie
   );
 });
 
-Deno.test("P3-bis conserve les termes d une recherche ambigue dans la clarification", () => {
+Deno.test("P3-bis route une recherche produit ouverte sans extraire le produit", () => {
   const intent = parseAssistantReferenceIntent(
     "Quelles marques ont des familles de produits avec des variateurs ou drives ?",
   );
-  assertEquals(intent.kind, "clarification");
-  assertEquals(intent.filters, {
-    terms: ["variateurs", "drives"],
-    mode: "any",
-  });
+  assertEquals(intent.kind, "product_semantic_search");
+  assertEquals(intent.filters, {});
+});
+
+Deno.test("P3-bis route les CAT_FAB correspondant a un produit", () => {
+  const intent = parseAssistantReferenceIntent(
+    "Combien de CAT_FAB correspondent aux vérins pneumatiques complets, toutes marques et toutes séries ? Quelles marques restent ?",
+  );
+  assertEquals(intent.kind, "product_semantic_search");
+  assertEquals(intent.filters, {});
+  assertEquals(intent.executionMode, "bounded_provider");
 });
 
 Deno.test("P3-bis extrait des termes metier generiques sans dictionnaire ferme", () => {
   const raccord = parseAssistantReferenceIntent(
     "Quelles marques ont des familles de produits avec des raccords ?",
   );
-  assertEquals(raccord.kind, "clarification");
-  assertEquals(raccord.filters, { terms: ["raccords"], mode: "any" });
+  assertEquals(raccord.kind, "product_semantic_search");
+  assertEquals(raccord.filters, {});
 
   const raccordExplicite = parseAssistantReferenceIntent(
     "Quelles marques ont des raccords dans CAT_FAB ?",
   );
-  assertEquals(raccordExplicite.kind, "supplier_category_search");
-  assertEquals(raccordExplicite.filters, {
-    terms: ["raccords"],
-    mode: "any",
-  });
+  assertEquals(raccordExplicite.kind, "product_semantic_search");
+  assertEquals(raccordExplicite.filters, {});
 
   const expressions = parseAssistantReferenceIntent(
     "CAT_FAB comprenant des pompes hydrauliques ou moteurs brushless",
   );
-  assertEquals(expressions.kind, "supplier_category_search");
-  assertEquals(expressions.filters, {
-    terms: ["pompes hydrauliques", "moteurs brushless"],
-    mode: "any",
-  });
+  assertEquals(expressions.kind, "product_semantic_search");
+  assertEquals(expressions.filters, {});
 
   const propositionProduit = parseAssistantReferenceIntent(
     "Tu peux me dire le nombre de marque qui propose des raccord pneumatique ?",
   );
-  assertEquals(propositionProduit.kind, "supplier_category_search");
+  assertEquals(propositionProduit.kind, "product_semantic_search");
   assertEquals(propositionProduit.dimension, "cat_fab");
-  assertEquals(propositionProduit.filters, {
-    terms: ["raccord pneumatique"],
-    mode: "any",
-  });
+  assertEquals(propositionProduit.filters, {});
 });
 
-Deno.test("P6 les chemins directs promus ne sollicitent jamais le provider", async () => {
+Deno.test("P3-bis comprend une CAT_FAB qui contient un produit avant la relance sur les marques", () => {
+  const intent = parseAssistantReferenceIntent(
+    "Il y a combien de CAT_FAB qui ont des vérin pneumatique ? quelles sont les marques qui en propose ?",
+  );
+  assertEquals(intent.kind, "product_semantic_search");
+  assertEquals(intent.dimension, "cat_fab");
+  assertEquals(intent.executionMode, "bounded_provider");
+  assertEquals(intent.filters, {});
+});
+
+Deno.test("P3-bis ne transforme jamais une ponctuation en terme CAT_FAB", () => {
+  const intent = parseAssistantReferenceIntent(
+    "Quelles sont les marques qui en proposent ?",
+  );
+  assertEquals(intent.filters.terms, undefined);
+});
+
+Deno.test("P6 les chemins strictement deterministes ne sollicitent jamais le provider", async () => {
   let providerCalls = 0;
   const provider = (): never => {
     providerCalls += 1;
@@ -334,8 +364,6 @@ Deno.test("P6 les chemins directs promus ne sollicitent jamais le provider", asy
   const questions = [
     "Combien de CAT_FAB chez FESTO ?",
     "Il y a combien de marques distinctes ?",
-    "CAT_FAB avec Drive",
-    "Est-ce que ROCKWELL a des CAT_FAB contenant drive ?",
     "Où sont stockées les remises ?",
     "Quels écarts de remise supérieurs à 20 % par rapport au snapshot précédent, mesure remise et direction baisse ?",
   ];

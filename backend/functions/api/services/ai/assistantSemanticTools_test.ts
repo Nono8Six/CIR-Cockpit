@@ -9,6 +9,7 @@ import {
 } from "./assistantBroker.ts";
 import {
   executeAssistantTool,
+  normalizeAssistantReferenceId,
   openRouterToolDefinitions,
 } from "./assistantTools.ts";
 import {
@@ -27,6 +28,15 @@ const authContext = {
 const snapshotId = "4e216bc4-7d82-4eb7-aa20-2cc8316667cc";
 const dialect = new PgDialect();
 
+Deno.test("P1C traite l UUID nul fourni par le provider comme un identifiant absent", () => {
+  assertEquals(
+    normalizeAssistantReferenceId("00000000-0000-0000-0000-000000000000"),
+    null,
+  );
+  assertEquals(normalizeAssistantReferenceId(undefined), null);
+  assertEquals(normalizeAssistantReferenceId(snapshotId), snapshotId);
+});
+
 const fakeDb = (responses: unknown[][]) => {
   const queue = [...responses];
   const queries: Array<{ sql: string; params: unknown[] }> = [];
@@ -39,7 +49,7 @@ const fakeDb = (responses: unknown[][]) => {
   return { db, queries };
 };
 
-Deno.test("P1 centralise les alias de marque et les synonymes CAT_FAB", () => {
+Deno.test("P1 centralise les alias de marque et normalise les termes CAT_FAB", () => {
   assertEquals(normalizePricingReferenceBrand(" FESTO "), "FEST");
   assertEquals(normalizePricingReferenceBrand("Rockwell"), "ROCK");
   assertEquals(
@@ -53,11 +63,11 @@ Deno.test("P1 centralise les alias de marque et les synonymes CAT_FAB", () => {
   assertEquals(escapePricingReferenceLikeTerm("50%_\\"), "50\\%\\_\\\\");
 });
 
-Deno.test("P1 correctif preserve VFD, le terme demande et les accents", () => {
+Deno.test("P1 preserve chaque terme demande sans dictionnaire produit", () => {
   assertEquals(expandPricingReferenceSearchTerms(["VFD"]), {
     requested_terms: ["vfd"],
     canonical_terms: ["vfd"],
-    query_terms: ["vfd", "drive", "drives", "variateur"],
+    query_terms: ["vfd"],
   });
   assertEquals(expandPricingReferenceSearchTerms(["électrique"]), {
     requested_terms: ["électrique"],
@@ -66,7 +76,7 @@ Deno.test("P1 correctif preserve VFD, le terme demande et les accents", () => {
   });
 });
 
-Deno.test("P1 route les trois intentions connues vers un seul outil metier", () => {
+Deno.test("P1 conserve les comptages exacts et sort les produits ouverts du chemin direct", () => {
   assertEquals(
     getDeterministicReferenceIntent("Il y a combien de marque différentes ?"),
     {
@@ -78,25 +88,14 @@ Deno.test("P1 route les trois intentions connues vers un seul outil metier", () 
     getDeterministicReferenceIntent(
       "Quelles marques ont variateur ou drive dans CAT_FAB ?",
     ),
-    {
-      tool: "search_supplier_categories",
-      args: { terms: ["variateur", "drive"], mode: "any" },
-    },
-  );
-  assertEquals(
-    selectAssistantTools(
-      "Quelles marques ont Drive dans CAT_FAB ?",
-      openRouterToolDefinitions,
-    )
-      .map((tool) => tool.function.name),
-    ["search_supplier_categories"],
+    null,
   );
   for (const term of ["drive", "Drive", "Drives", "DRIVE"]) {
     assertEquals(
       getDeterministicReferenceIntent(
         `Quelles marques ont ${term} dans CAT_FAB ?`,
-      )?.tool,
-      "search_supplier_categories",
+      ),
+      null,
     );
   }
   assertEquals(
@@ -228,10 +227,10 @@ Deno.test("P1 retourne les verites FEST, ROCK, huit marques et 140 sur le snapsh
   assertEquals(check.output.data, {
     snapshot_id: snapshotId,
     marque: "ROCK",
-    terms: ["drive", "drives", "variateur", "vfd"],
+    terms: ["drive"],
     requested_terms: ["drive"],
     canonical_terms: ["drive"],
-    query_terms: ["drive", "drives", "variateur", "vfd"],
+    query_terms: ["drive"],
     dimension: "cat_fab",
     matches: true,
     segment_rows: 234,
@@ -270,7 +269,7 @@ Deno.test("P1 parametre et echappe les caracteres LIKE utilisateur", async () =>
   assertEquals(queries[0].params.includes("%50\\%\\_\\\\%"), true);
 });
 
-Deno.test("P1 correctif requete VFD et accent sans perte du litteral", async () => {
+Deno.test("P1 preserve VFD et les accents sans ajouter de synonyme", async () => {
   const { db, queries } = fakeDb([[], []]);
   await executeAssistantTool(
     db,
@@ -289,7 +288,7 @@ Deno.test("P1 correctif requete VFD et accent sans perte du litteral", async () 
     { surface: "pricing.references", target_snapshot_id: snapshotId },
   );
   assertEquals(queries[0].params.includes("%vfd%"), true);
-  assertEquals(queries[0].params.includes("%variateur%"), true);
+  assertEquals(queries[0].params.includes("%variateur%"), false);
   assertEquals(queries[1].params.includes("%électrique%"), true);
   assertEquals(queries[1].params.includes("%electrique%"), false);
 });

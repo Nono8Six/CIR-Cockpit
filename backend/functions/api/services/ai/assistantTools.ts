@@ -223,6 +223,7 @@ const boundedBrandsSchema = z.array(
 const brandCountSchema = z.strictObject({
   marque: z.string().trim().min(1),
   segment_rows: z.number().int().nonnegative(),
+  distinct_cat_fab: z.number().int().nonnegative().optional(),
 });
 const categoryExampleSchema = z.strictObject({
   marque: z.string().trim().min(1),
@@ -248,6 +249,7 @@ const searchSupplierCategoriesOutputSchema = z.union([
       marques: z.array(z.string()),
       matching_brands: z.array(z.string()).max(MAX_TOOL_RESULT_ROWS),
       distinct_brand_count: z.number().int().nonnegative(),
+      distinct_cat_fab: z.number().int().nonnegative(),
       segment_rows: z.number().int().nonnegative(),
       counts_by_brand: z.array(brandCountSchema).max(MAX_TOOL_RESULT_ROWS),
       examples: z.array(categoryExampleSchema).max(10),
@@ -337,6 +339,13 @@ type ResolvedReferenceContext = {
   selector: Record<string, unknown> | null;
 };
 
+const NULL_UUID = "00000000-0000-0000-0000-000000000000";
+
+export const normalizeAssistantReferenceId = (
+  value: unknown,
+): string | null =>
+  typeof value === "string" && value !== NULL_UUID ? value : null;
+
 const resolveReferenceContext = async (
   db: DbClient,
   authContext: AuthContext,
@@ -345,15 +354,13 @@ const resolveReferenceContext = async (
   pageContext: AiAssistantPageContext,
   requireDiffRun = false,
 ): Promise<ResolvedReferenceContext> => {
-  const runId = args.run_id ?? pageContext.run_id;
-  let importId = typeof args.import_id === "string"
-    ? args.import_id
-    : pageContext.import_id ?? null;
-  let snapshotId = typeof args.snapshot_id === "string"
-    ? args.snapshot_id
-    : typeof args.target_snapshot_id === "string"
-    ? args.target_snapshot_id
-    : pageContext.target_snapshot_id ?? null;
+  const runId = normalizeAssistantReferenceId(args.run_id) ??
+    normalizeAssistantReferenceId(pageContext.run_id);
+  let importId = normalizeAssistantReferenceId(args.import_id) ??
+    normalizeAssistantReferenceId(pageContext.import_id);
+  let snapshotId = normalizeAssistantReferenceId(args.snapshot_id) ??
+    normalizeAssistantReferenceId(args.target_snapshot_id) ??
+    normalizeAssistantReferenceId(pageContext.target_snapshot_id);
 
   if (!runId && !snapshotId && !importId) {
     const latest = await listPricingReferenceImports(
