@@ -184,11 +184,12 @@ Deux écarts assumés, à inscrire dans le plan directeur au démarrage du chant
 
 ### 7.3 Checkpoint CP-C3
 
-- [~] « servomoteur électrique » et « Servomoteurs électriques » se replient tous deux en `servomoteur electrique` ; contrôle SQL direct du 2026-07-22 : 1 CAT_FAB / 1 ligne sur le chemin déterministe et 1 identité candidate sur le chemin sémantique pour chaque formulation. Preuve API déployée encore requise.
-- [~] `debimetre` classe uniquement le vrai libellé `Capteurs/débitmètres` au-dessus du seuil (score 0,615385) ; test planificateur : réponse locale exacte, zéro fait/total/citation, trace limitée à `search_product_candidates`, un seul round provider. Preuve API déployée encore requise.
-- [x] Les agrégats ne sont pas modifiés ; les modes déterministes `any/all`, FEST/FESTO, les contrats et les suites de régression IA restent verts localement. `qa:back` vert le 2026-07-22.
-- [x] Aucun composant UI, schéma partagé, migration, prompt, FTS ou index ajouté. `AI_ASSISTANT_MODEL_ROUTING_ENABLED` reste à `false` ; aucun déploiement, commit ou push CP-C3.
-- [ ] Décision PO : GO / NO-GO.
+- [~] « servomoteur électrique » et « Servomoteurs électriques » se replient tous deux en `servomoteur electrique` ; contrôle SQL direct du 2026-07-22 : 1 CAT_FAB / 1 ligne sur le chemin déterministe et 1 identité candidate sur le chemin sémantique pour chaque formulation. Sur l'API v198, les réponses end-to-end divergent toutefois à cause des plans et partitions Mistral : demande `1ae1f956…` = 116 couples / 5 marques au singulier, demande `593c015e…` = 87 couples / 6 marques au pluriel. Le folding est symétrique, mais le critère d'équivalence end-to-end n'est pas satisfait.
+- [~] `debimetre` classe uniquement le vrai libellé `Capteurs/débitmètres` au-dessus du seuil (score 0,615385) dans la requête trigram et le test planificateur produit la réponse locale exacte, sans fait/total/citation et avec un seul round provider. Sur l'API v198, la formulation naturelle est autocorrigée par la passe 1 avant le zéro-candidat : demande `088bab5e…`, 25 couples / 6 marques, deux rounds, coût 0,011528 USD. La branche de suggestion est déployée mais ce témoin ne l'atteint donc pas.
+- [x] Les agrégats ne sont pas modifiés ; les modes déterministes `any/all`, FEST/FESTO, les contrats et les suites de régression IA restent verts. `qa:back` final : 449 réussites / 0 échec / 14 intégrations ignorées ; `qa:fast` vert le 2026-07-23.
+- [x] Aucun composant UI, schéma partagé, migration, prompt, FTS ou index ajouté. Commit `1f2c61c` poussé sur `origin/codex/mistral-phase-1b-total`, Edge Function `api` v198 ACTIVE, wrapper/import map et `verify_jwt=false` confirmés. `OPTIONS 200` et appel sans Bearer `401 AUTH_REQUIRED`. Aucune migration artificielle : parité locale/distante déjà complète.
+- [x] `AI_ASSISTANT_MODEL_ROUTING_ENABLED` reste à `false` après déploiement : la question CP-C2 retourne la clarification déterministe FAM/CAT_FAB en 1,7 s, sans outil, usage ni appel provider (demande `9dd3ed65…`).
+- [ ] Décision PO : **NO-GO technique recommandé en l'état**. La livraison est active, mais CP-C3 ne peut pas être déclaré vert tant que le contrat attendu n'est pas aligné avec la liberté de planification de la passe 1 (ou rendu déterministe avant cette passe).
 
 ### 7.4 Prompt de lancement (conversation vierge)
 
