@@ -22,28 +22,17 @@ Deno.test({
     if (!db) return;
     const sql = postgres(databaseUrl, { max: 1, prepare: false });
     try {
-      const [flash, pro] = await Promise.all([
-        resolveModelAndPromptForFeature(
-          db,
-          'assistant.referentiels',
-          undefined,
-          undefined,
-          false,
-          { preferredModelId: 'deepseek/deepseek-v4-flash' },
-        ),
-        resolveModelAndPromptForFeature(
-          db,
-          'assistant.referentiels',
-          undefined,
-          undefined,
-          false,
-          { preferredModelId: 'deepseek/deepseek-v4-pro' },
-        ),
-      ]);
-      assertEquals(flash?.model.model_id, 'deepseek/deepseek-v4-flash');
-      assertEquals(pro?.model.model_id, 'deepseek/deepseek-v4-pro');
-      assertEquals(flash?.model.is_default, false);
-      assertEquals(pro?.model.is_default, false);
+      // Chantier 2 : le modele assistant est resolu par l affectation de
+      // feature (mistral-large-2512), sans politique modele DeepSeek legacy.
+      const assigned = await resolveModelAndPromptForFeature(
+        db,
+        'assistant.referentiels',
+        undefined,
+        undefined,
+        false,
+      );
+      assertEquals(Boolean(assigned), true);
+      assertEquals(assigned?.provider.provider, 'mistral');
 
       const [superAdmin] = await sql<{ id: string }[]>`
         select id from public.profiles
@@ -64,11 +53,9 @@ Deno.test({
         crypto.randomUUID(),
         {},
       );
-      assertEquals(status, {
-        enabled: true,
-        model_id: 'deepseek/deepseek-v4-flash',
-        reason: null,
-      });
+      assertEquals(status.enabled, true);
+      assertEquals(status.reason, null);
+      assertEquals(status.model_id, assigned?.model.model_id ?? null);
     } finally {
       await sql.end({ timeout: 5 });
       await resetDbClientForTests();

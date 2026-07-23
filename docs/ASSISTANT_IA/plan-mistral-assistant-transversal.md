@@ -310,6 +310,20 @@ Le broker doit essayer les niveaux dans cet ordre lorsque l’intention le perme
 
 L0 peut répondre directement. L1 et L2 peuvent aussi produire une réponse locale lorsque le format est stable. L5 n’est jamais le chemin par défaut et ne s’étend jamais aux tables brutes.
 
+#### Amendement du 2026-07-21 — routage model-first (chantier 2, §2.2.1 du plan enfant)
+
+Le schéma §4.1 et le niveau L0 ci-dessus plaçaient le routeur d’intention déterministe (regex) en gardien universel : chaque question passait d’abord par lui, et toute question non reconnue tombait dans un repli `general_sql` ou dans une clarification en conserve « FAM ou CAT_FAB ? ». Cette implémentation ne réalisait pas le principe §4.1 (« le modèle reçoit un contexte minimal lui permettant de choisir une capacité ») : c’est la regex, pas le modèle, qui choisissait la capacité, et deux questions légitimes du jeu réel restaient bloquées (débitmètres, servomoteurs).
+
+Amendement acté et livré :
+
+- Le routeur regex reste le **fast-path zéro token** pour ce qu’il sait router avec certitude : refus sécurité, hors-scope, `segment_count` avec marque explicite, `supplier_brand_count`, `purchase_terms_ranking`, `schema_location`, seuils de diff chiffrés, résumés déterministes de diff et d’anomalies, ainsi que les capacités déjà correctement détectées (recherche produit sémantique, analyses diff/anomalie/santé bornées) et les relances conversationnelles déterministes.
+- Les **deux seules issues « je ne sais pas » de la regex** — la clarification en conserve « FAM ou CAT_FAB ? » et le repli par défaut vers `general_sql` — ne sont plus émises. Ces questions passent par une **passe de compréhension Mistral** (`classify_assistant_request`, `tool_choice` forcé, `mistral-large-2512`, une seule passe) qui reçoit une carte de domaine compacte versionnée en code (CAT_FAB = famille produit ; « la CIR » = l’entreprise ; marque = fournisseur ; snapshot = version des référentiels) plus la liste des capacités typées, et choisit **une** capacité. Le modèle route, il n’exécute rien : la capacité choisie emprunte ensuite exactement les chemins d’exécution existants (planificateur sémantique, outils déterministes via la boucle bornée, SQL borné en dernier recours). C’est l’application du principe §4.1 que L0 seul ne réalisait pas.
+- L0 du tableau ci-dessus reste donc valable comme fast-path déterministe, mais **cesse d’être le gardien universel** : il ne capture plus « toute autre question » par un repli, il ne capture que les fast-paths exacts. La compréhension du reste est déléguée au modèle.
+- Budget : +1 appel provider léger (entrée cible ≤ 2 000 tokens : carte de domaine + question + contexte conversationnel court) uniquement pour les questions non couvertes par un fast-path ; les fast-paths restent à zéro token.
+- Réversibilité : flag dédié `AI_ASSISTANT_MODEL_ROUTING_ENABLED`. À `false`, le comportement regex actuel (y compris la clarification en conserve et le repli `general_sql`) reste intégral pour le rollback ; ces deux branches ne sont donc pas encore supprimées du code, elles sont neutralisées dans le chemin model-first et seront retirées au démantèlement du flag après GO.
+
+Nettoyage legacy livré avec le chantier : la politique modèle `ASSISTANT_MODEL_POLICY` (identifiants DeepSeek Flash/Pro, morts depuis l’affectation de feature Mistral) et le `selectAssistantModelId` associé sont supprimés ; `getAssistantStatus` ne dépend plus des deux modèles DeepSeek et reflète la résolution du modèle affecté à la feature (`mistral-large-2512`). Le paramètre `preferredModelId` de `resolveModelAndPromptForFeature` demeure mais reste ignoré tant qu’une affectation de feature existe (comportement inchangé).
+
 ### 4.3 Registre de capacités par domaine
 
 Chaque brique métier publie un manifeste versionné, défini en code et validé par schéma. Il contient au minimum :
@@ -1497,9 +1511,9 @@ L’exécution réelle a divergé de l’ordre ci-dessus : après P0, les travau
 
 L’ordre courant est porté par le plan d’exécution enfant `docs/ASSISTANT_IA/plan-semantique-4-chantiers.md`, issu du diagnostic sémantique du 2026-07-20 (cas débitmètres et servomoteurs, routage regex bloquant) :
 
-1. Chantier 1 — taxonomie CIR visible par le planificateur (continuation P5).
-2. Chantier 2 — routage model-first (P4 minimal ; amendement §4.2 à consigner à son démarrage).
-3. Chantier 3 — tolérance lexicale pluriels/typos (P5).
+1. Chantier 1 — taxonomie CIR visible par le planificateur (continuation P5) : **GO le 2026-07-20**.
+2. Chantier 2 — routage model-first (P4 minimal) : **implémenté et prouvé le 2026-07-22, décision PO en attente, flag restauré à `false`** ; amendement §4.2 consigné.
+3. Chantier 3 — tolérance lexicale pluriels/typos (P5) : prochaine tranche recommandée après GO CP-C2.
 4. Chantier 4 — clarifications ancrées, tour de réparation, présentation (P5 ; amendement du budget d’appels à consigner à son démarrage).
 5. Reprise des dettes : P1-B zéro-token, P1-D livraison formelle, puis phases 2 et 3.
 
@@ -1598,6 +1612,8 @@ Copier ce bloc pour chaque checkpoint. Ne jamais cocher sans preuve.
 - Contrats : schémas Zod stricts, 12 termes maximum par liste et 80 caractères par terme ; 80 groupes/64 Ko maximum ; identifiants opaques contrôlés ; aucun total sur jeu tronqué, vide ou ambigu ; contexte de clarification borné au concept, à la question, aux options et au snapshot
 - Recherche et index : `pg_trgm` déjà présent ; `EXPLAIN` observé autour de 94 ms sur la recherche témoin avant index ; aucun index trigram ajouté faute de preuve qu’il soit nécessaire sur ce volume
 - Recherche finale : les expressions positives sont recherchées comme conjonctions lexicales dans les deux ordres, jamais comme mots adjectifs isolés ; les variantes sont classées par sélectivité et leur union reste sous 80 groupes ; une demande explicite « toutes les séries/types/variantes » force la qualification de toutes les familles qui nomment directement le produit et exclut les familles parentes
+- Tolérance lexicale CP-C3 implémentée localement le 2026-07-22 : normalisation TS/SQL partagée (accents + suppression finale `s`/`x` à partir de 5 caractères, hors références alphanumériques), motifs ordonnés identiques sur les chemins déterministe et sémantique, et secours `pg_trgm` limité au snapshot sur zéro groupe. Une suggestion reste un libellé SQL, déclenche une réponse locale sans total et évite le second round provider ; le zéro-candidat sans suggestion reste au chantier 4. Aucun prompt, schéma partagé, migration, FTS ou index ajouté
+- Preuves locales CP-C3 : singulier/pluriel servomoteurs → même forme `servomoteur electrique`, 1 CAT_FAB déterministe et 1 identité candidate sémantique pour chaque formulation sur le snapshot actif ; `debimetre` → unique suggestion `Capteurs/débitmètres` à 0,615385 ; `EXPLAIN ANALYZE` 147 ms sur 6 816 libellés, 0 bloc disque lu. Tests ciblés CP-C3 36/36, suite IA élargie 93/93, `deno check` et `qa:back` verts (449 réussites / 0 échec / 14 intégrations ignorées). Aucun déploiement/commit ; preuve API déployée et décision PO encore requises, `AI_ASSISTANT_MODEL_ROUTING_ENABLED=false` conservé
 - Tests ciblés finaux : format Deno vert ; routage 15/15, planificateur 16/16 et contexte conversationnel 10/10, soit 41/41 ; `deno check backend/functions/api/index.ts` vert
 - QA élargie : `qa:back` final du 2026-07-20 vert avec 432 réussites, 0 échec et 14 intégrations conditionnelles ignorées ; `qa:fast` vert avec 694 tests frontend et 433 tests backend avant retrait du test spécialisé désormais supprimé ; `qa` atteint tous les tests frontend mais reste bloqué uniquement par le seuil branches préexistant de `useDashboardStatusHelpers.ts` (13,33 % pour 30 %, fichier non modifié)
 - Probes déployées : `OPTIONS 200` avec origine `http://localhost:3000` et méthodes `GET, POST, OPTIONS` ; `POST ai.assistant.ask` sans Bearer applicatif `401 AUTH_REQUIRED`, `retryable=false`, `recoveryAction=relogin`
@@ -1631,10 +1647,10 @@ Copier ce bloc pour chaque checkpoint. Ne jamais cocher sans preuve.
 | P1-B | Non commencé | Réponse déterministe réelle à zéro token ; constat code du 2026-07-20 : le broker résout encore provider/modèle avant clarifications et outils déterministes |
 | P1-C | GO le 2026-07-19 | Première réponse Mistral sourcée dans l’UI ; modèle, outils, latence, tokens et coût consignés |
 | P1-D | Partiel, non consigné | QA, migration, deploy et rollback vérifiés ; réalité au 2026-07-20 : déploiements v141 à v188 avec probes et `qa:back` verts consignés dans CP-P5, mais matrice de fautes complète et rollback formel non prouvés |
-| P2 | Non commencé | Gouvernance provider-neutre ; reliquats mesurés le 2026-07-20 : `ASSISTANT_MODEL_POLICY` référence encore des modèles DeepSeek et le statut assistant exige les deux modèles Flash et Pro |
+| P2 | Non commencé (nettoyage legacy partiel livré le 2026-07-21 par le chantier 2) | Gouvernance provider-neutre ; reliquats du 2026-07-20 résorbés côté modèle : `ASSISTANT_MODEL_POLICY` et `selectAssistantModelId` (IDs DeepSeek) supprimés, `getAssistantStatus` reflète désormais le modèle affecté à la feature ; le reste de la gouvernance provider-neutre reste à extraire |
 | P3 | Non commencé | Backend décomposé sans régression |
-| P4 | Non commencé | Registre de capacités opérationnel ; le chantier 2 de `plan-semantique-4-chantiers.md` en livre la version minimale (routage model-first) |
-| P5 | GO contrôlé le 2026-07-20, NO-GO global maintenu | Vérins (75 couples, 5 marques) et variateur (305 couples, 6 marques) prouvés ; `AI_ASSISTANT_SEMANTIC_PLANNER_ENABLED=true` activé en v188 sur décision PO ; jeu d’or restant et correctifs débitmètres/servomoteurs portés par `plan-semantique-4-chantiers.md` |
+| P4 | Version minimale implémentée et prouvée sous flag le 2026-07-22, non activée et non committée (chantier 2) | Routage model-first prouvé sur servomoteurs ; fast-paths zéro token et rollback prouvés ; `AI_ASSISTANT_MODEL_ROUTING_ENABLED=false` dans l'état runtime courant. Recommandation : GO CP-C2 pour poursuivre, NO-GO d'activation jusqu'à CP-C3/CP-C4 ; décision PO à finaliser dans le plan enfant. |
+| P5 | GO contrôlé le 2026-07-20, NO-GO global maintenu ; CP-C3 local vert le 2026-07-22, fermeture en attente | Vérins (75 couples, 5 marques), variateur (308 couples, 6 marques, ancrage révisé validé au CP-C1) et débitmètres (25 couples, 6 marques) prouvés ; tolérance singulier/pluriel et suggestion `debimetre` prouvées en tests + SQL direct, mais pas encore sur l'API redéployée ; `AI_ASSISTANT_SEMANTIC_PLANNER_ENABLED=true`, routage model-first maintenu à `false` ; jeu d'or restant et stabilisation servomoteurs/partition portés par le chantier 4 |
 | P6-N | Non commencé | Un checkpoint par brique métier |
 | P7 | Non commencé | Ingestion catalogue à l’échelle |
 | P8 | Non commencé | Pilotage qualité/coût complet |

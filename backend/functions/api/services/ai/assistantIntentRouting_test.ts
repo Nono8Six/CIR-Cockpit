@@ -1,13 +1,21 @@
 import { assertEquals } from "std/assert";
 
 import {
+  assistantClassificationSchema,
+  ASSISTANT_DOMAIN_MAP,
   ASSISTANT_INTENT_TOOL_POLICY,
   type AssistantExecutionMode,
   type AssistantReferenceIntentKind,
+  buildAssistantClassificationMessages,
+  classificationClarification,
+  classifyAssistantRequestTool,
+  intentFromClassification,
+  needsModelRouting,
+  parseAssistantClassification,
   parseAssistantReferenceIntent,
-  selectAssistantModelId,
   selectToolsForAssistantIntent,
 } from "./assistantIntentRouting.ts";
+import type { OpenRouterToolResponse } from "./aiGovernance.ts";
 import { openRouterToolDefinitions } from "./assistantTools.ts";
 import { productSemanticToolDefinitions } from "./assistantSemanticPlanner.ts";
 import {
@@ -270,17 +278,178 @@ Deno.test("P2 matrice versionnee intention dimension mode et outils exacts", () 
   }
 });
 
-Deno.test("E4 selectionne Flash et Pro uniquement pour les regimes provider", () => {
-  assertEquals(selectAssistantModelId("deterministic_direct"), null);
-  assertEquals(selectAssistantModelId("clarification"), null);
+Deno.test("C2 seules la clarification en conserve et le repli general_sql partent en routage model-first", () => {
+  const routed: AssistantReferenceIntentKind[] = [
+    "clarification",
+    "general_sql",
+  ];
+  const fastPaths: AssistantReferenceIntentKind[] = [
+    "security_refusal",
+    "out_of_scope",
+    "segment_count",
+    "supplier_brand_count",
+    "supplier_category_search",
+    "supplier_brand_check",
+    "product_semantic_search",
+    "diff_analysis",
+    "anomaly_analysis",
+    "health_analysis",
+    "schema_location",
+    "purchase_terms_ranking",
+  ];
+  for (const kind of routed) {
+    assertEquals(needsModelRouting({
+      kind,
+      dimension: null,
+      filters: {},
+      executionMode: "general_sql_fallback",
+      clarification: null,
+    }), true, kind);
+  }
+  for (const kind of fastPaths) {
+    assertEquals(needsModelRouting({
+      kind,
+      dimension: null,
+      filters: {},
+      executionMode: "deterministic_direct",
+      clarification: null,
+    }), false, kind);
+  }
+});
+
+Deno.test("C2 la carte de domaine mappe famille produit et la CIR", () => {
+  assertEquals(ASSISTANT_DOMAIN_MAP.includes("famille produit"), true);
+  assertEquals(ASSISTANT_DOMAIN_MAP.includes("l entreprise distributrice"), true);
   assertEquals(
-    selectAssistantModelId("bounded_provider"),
-    "deepseek/deepseek-v4-flash",
+    ASSISTANT_DOMAIN_MAP.includes("product_semantic_search"),
+    true,
+  );
+});
+
+Deno.test("C2 l outil de classification est strict et sans schema imbrique", () => {
+  assertEquals(classifyAssistantRequestTool.function.strict, true);
+  assertEquals(classifyAssistantRequestTool.function.name, "classify_assistant_request");
+  const parameters = classifyAssistantRequestTool.function.parameters as {
+    $schema?: unknown;
+    required?: string[];
+  };
+  assertEquals(parameters.$schema, undefined);
+});
+
+Deno.test("C2 la classification produit route vers le planificateur semantique", () => {
+  const intent = intentFromClassification({
+    intent: "product_semantic_search",
+    terms: ["servomoteur electrique"],
+    marques: [],
+    clarification_question: "",
+    clarification_options: [],
+  });
+  assertEquals(intent.kind, "product_semantic_search");
+  assertEquals(intent.dimension, "cat_fab");
+  assertEquals(intent.executionMode, "bounded_provider");
+});
+
+Deno.test("C2 la classification structurelle porte marques et termes normalises", () => {
+  const count = intentFromClassification({
+    intent: "segment_count",
+    terms: [],
+    marques: ["festo"],
+    clarification_question: "",
+    clarification_options: [],
+  });
+  assertEquals(count.kind, "segment_count");
+  assertEquals(count.filters, { metric: "distinct_cat_fab", marques: ["FESTO"] });
+
+  const search = intentFromClassification({
+    intent: "supplier_category_search",
+    terms: ["joint"],
+    marques: [],
+    clarification_question: "",
+    clarification_options: [],
+  });
+  assertEquals(search.filters, { terms: ["joint"], mode: "any" });
+});
+
+Deno.test("C2 une clarification de routage n est extraite qu avec deux options reelles", () => {
+  assertEquals(
+    classificationClarification({
+      intent: "diff_analysis",
+      terms: [],
+      marques: [],
+      clarification_question: "Parlez-vous des changements ou des anomalies ?",
+      clarification_options: ["Changements de remise", "Anomalies d import"],
+    }),
+    {
+      question: "Parlez-vous des changements ou des anomalies ?",
+      options: ["Changements de remise", "Anomalies d import"],
+    },
   );
   assertEquals(
-    selectAssistantModelId("general_sql_fallback"),
-    "deepseek/deepseek-v4-pro",
+    classificationClarification({
+      intent: "product_semantic_search",
+      terms: [],
+      marques: [],
+      clarification_question: "",
+      clarification_options: [],
+    }),
+    null,
   );
+  assertEquals(
+    classificationClarification({
+      intent: "diff_analysis",
+      terms: [],
+      marques: [],
+      clarification_question: "Ambigu ?",
+      clarification_options: ["Une seule option"],
+    }),
+    null,
+  );
+});
+
+Deno.test("C2 parse rejette un outil de routage inattendu", () => {
+  const response = {
+    toolCalls: [{
+      id: "call_1",
+      type: "function" as const,
+      function: { name: "search_product_candidates", arguments: "{}" },
+    }],
+  } as unknown as OpenRouterToolResponse;
+  let threw = false;
+  try {
+    parseAssistantClassification(response);
+  } catch (error) {
+    threw = true;
+    assertEquals(
+      error instanceof Error ? Reflect.get(error, "code") : undefined,
+      "AI_RESPONSE_INVALID",
+    );
+  }
+  assertEquals(threw, true);
+});
+
+Deno.test("C2 parse valide la sortie de classification et borne l historique", () => {
+  const parsed = assistantClassificationSchema.safeParse({
+    intent: "product_semantic_search",
+    terms: ["servomoteur"],
+    marques: ["SPIR"],
+    clarification_question: "",
+    clarification_options: [],
+  });
+  assertEquals(parsed.success, true);
+
+  const messages = buildAssistantClassificationMessages(
+    "Combien de familles produit a la CIR proposent des servomoteurs electriques ?",
+    [
+      { role: "assistant", content: "a".repeat(1000) },
+      { role: "user", content: "b".repeat(1000) },
+      { role: "user", content: "c".repeat(1000) },
+    ],
+  );
+  // system + 2 derniers messages tronques + question
+  assertEquals(messages.length, 4);
+  assertEquals(messages[0].role, "system");
+  assertEquals(messages[3].role, "user");
+  assertEquals((messages[1].content ?? "").length <= 300, true);
 });
 
 Deno.test("P2 priorites empechent recherche CAT_FAB de capturer diff et anomalies", () => {

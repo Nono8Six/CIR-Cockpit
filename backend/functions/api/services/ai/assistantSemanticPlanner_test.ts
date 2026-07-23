@@ -85,13 +85,18 @@ const makeDb = (
   candidateRows: unknown[],
   aggregateRows: unknown[] = [],
   taxonomyRows: unknown[] = [taxonomyRow],
+  suggestionRows: unknown[] = [],
 ) => {
   let calls = 0;
   const db = {
     execute: () => {
       calls += 1;
       if (calls === 1) return Promise.resolve(taxonomyRows);
-      return Promise.resolve(calls === 2 ? candidateRows : aggregateRows);
+      if (calls === 2) return Promise.resolve(candidateRows);
+      if (candidateRows.length === 0 && calls === 3) {
+        return Promise.resolve(suggestionRows);
+      }
+      return Promise.resolve(aggregateRows);
     },
   } as unknown as DbClient;
   return { db, calls: () => calls };
@@ -172,22 +177,38 @@ Deno.test("la recherche conserve les expressions produit sans elargir leurs adje
     ],
   });
   assertEquals(
-    terms.includes("verins pneumatiques complets"),
+    terms.includes("verin pneumatique complet"),
     true,
   );
   assertEquals(
-    terms.includes("complets pneumatiques verins"),
+    terms.includes("complet pneumatique verin"),
     true,
   );
   assertEquals(terms.includes("pneumatiques"), false);
   assertEquals(terms.includes("cylinders"), false);
 });
 
+Deno.test("CP-C3 produit les memes termes semantiques au singulier et au pluriel", () => {
+  const singular = expandProductLookupTerms({
+    ...plan,
+    positive_terms: ["servomoteur électrique"],
+  });
+  const plural = expandProductLookupTerms({
+    ...plan,
+    positive_terms: ["servomoteurs électriques"],
+  });
+  assertEquals(singular, plural);
+  assertEquals(singular, [
+    "servomoteur electrique",
+    "electrique servomoteur",
+  ]);
+});
+
 Deno.test("une branche parente ne transforme pas DIVERS en scope produit", async () => {
-  let renderedSql = "";
+  const renderedQueries: string[] = [];
   const db = {
     execute: (query: unknown) => {
-      renderedSql = renderChunks(query);
+      renderedQueries.push(renderChunks(query));
       return Promise.resolve([]);
     },
   } as unknown as DbClient;
@@ -201,18 +222,20 @@ Deno.test("une branche parente ne transforme pas DIVERS en scope produit", async
 
   const leafExpression =
     "regexp_replace(coalesce(v.cir_path, ''), '^.*>[[:space:]]*', '')";
+  const renderedSql = renderedQueries[0];
   assertEquals(renderedSql.split(leafExpression).length - 1, 3);
   assertStringIncludes(
     renderedSql,
-    "translate(lower(concat_ws(' ', v.cat_fab, v.cat_fab_l))",
+    "lower(coalesce(concat_ws(' ', v.cat_fab, v.cat_fab_l), ''))",
   );
+  assertStringIncludes(renderedSql, "'\\m([[:alpha:]]{4,})[sx]\\M'");
 });
 
 Deno.test("les chemins selectionnes deviennent des scopes exacts prioritaires", async () => {
-  let renderedSql = "";
+  const renderedQueries: string[] = [];
   const db = {
     execute: (query: unknown) => {
-      renderedSql = renderChunks(query);
+      renderedQueries.push(renderChunks(query));
       return Promise.resolve([]);
     },
   } as unknown as DbClient;
@@ -223,6 +246,8 @@ Deno.test("les chemins selectionnes deviennent des scopes exacts prioritaires", 
     positive_terms: ["debitmetre", "flowmeter"],
     selected_paths: ["FLUIDES PROCESS > CONTROLE ET MESURE > DEBIT"],
   });
+
+  const renderedSql = renderedQueries[0];
 
   assertStringIncludes(
     renderedSql,
@@ -784,7 +809,47 @@ Deno.test("une recherche sans candidat interdit un faux total a zero", async () 
     result.conversationContext?.kind,
     "product_semantic_clarification",
   );
-  assertEquals(state.calls(), 2);
+  assertEquals(state.calls(), 3);
+});
+
+Deno.test("CP-C3 une faute suggeree repond localement apres un seul round provider", async () => {
+  const suggestion = {
+    label: "Capteurs/débitmètres",
+    matched_term: "debimetre",
+    score: 0.46666667,
+  };
+  const state = makeDb([], [], [taxonomyRow], [suggestion]);
+  let providerRounds = 0;
+  const result = await runProductSemanticPlanner(
+    state.db,
+    { ...input, question: "Quelles marques proposent des debimetre ?" },
+    prompt,
+    snapshotId,
+    () => {
+      providerRounds += 1;
+      return Promise.resolve(response("search_product_candidates", {
+        ...plan,
+        concept: "debimetre",
+        positive_terms: ["debimetre"],
+        selected_paths: [],
+      }));
+    },
+  );
+  assertEquals(providerRounds, 1);
+  assertEquals(state.calls(), 3);
+  assertEquals(
+    result.answer,
+    "Aucune correspondance exacte. Vouliez-vous dire…\n\n1. Capteurs/débitmètres",
+  );
+  assertEquals(result.evidence.facts, []);
+  assertEquals(result.citations, []);
+  assertEquals(result.toolTrace.map((trace) => trace.name), [
+    "search_product_candidates",
+  ]);
+  assertEquals(
+    result.conversationContext?.kind,
+    "product_semantic_clarification",
+  );
 });
 
 Deno.test("une famille CIR acceptee est etendue sans qualifier chaque CAT_FAB", async () => {

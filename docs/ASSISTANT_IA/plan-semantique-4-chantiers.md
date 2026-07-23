@@ -2,7 +2,7 @@
 
 - Date de rédaction : 2026-07-20
 - Auteur : Claude, sur diagnostic runtime du 2026-07-20 validé par sondes SQL en lecture seule
-- Statut : proposé, en attente de validation PO chantier par chantier
+- Statut : en cours — CP-C1 validé ; CP-C2 implémenté et prouvé, décision PO en attente ; activation model-first maintenue en NO-GO
 - Document parent : `docs/ASSISTANT_IA/plan-mistral-assistant-transversal.md` (le « plan directeur »)
 - Position : continuation directe du checkpoint ouvert `CP-P5-SEMANTIC-PLANNER` (GO contrôlé, NO-GO P5 global) plus une version minimale du registre de capacités P4 pour le routage
 
@@ -148,15 +148,16 @@ Deux écarts assumés, à inscrire dans le plan directeur au démarrage du chant
 ### 6.3 Budget
 
 - +1 appel provider léger pour les questions non couvertes par un fast-path (entrée cible ≤ 2K tokens : carte de domaine + question + contexte conversationnel court). Les questions fast-path restent à zéro token.
+- Mesure CP-C2 : les tokens sont aujourd'hui cumulés au niveau de la demande et ne permettent pas d'isoler exactement la passe de routage. Sa latence provider est de 0,9 à 1,2 s sur 5 des 6 essais, avec un outlier à 37,8 s ; le caractère « léger » est donc confirmé en régime nominal, pas encore comme borne de latence. Ajouter des métriques par round avant toute optimisation de modèle en phase 8.
 
 ### 6.4 Checkpoint CP-C2
 
-- [ ] « Combien de familles produit à la CIR proposent des servomoteurs électriques ? » atteint le planificateur sémantique et aboutit (réponse qualifiée ou clarification réelle vannes/servo-variateurs).
-- [ ] Les 15 cas de routage existants restent verts (fast-paths conservés à zéro token, preuve par `ai_usage_events`).
-- [ ] Le refus sécurité et le hors-scope restent déterministes sans appel provider.
-- [ ] La clarification en conserve et sa branche morte ont disparu du code.
-- [ ] Amendement consigné dans le plan directeur.
-- [ ] Décision PO : GO / NO-GO.
+- [x] « Combien de familles produit à la CIR proposent des servomoteurs électriques ? » atteint le planificateur sémantique et aboutit : preuve runtime déployée (demande `55e736d0…`), `tool_trace = classify_assistant_request → search_product_candidates → submit_product_qualification`, réponse `qualified` 88 couples / 5 marques, recomptage SQL témoin identique. La complétion end-to-end reste ~50 % stable (partition/oscillation → chantiers 3-4).
+- [x] Les 15 cas de routage existants restent verts : matrice `assistantIntentRouting_test.ts` inchangée et verte, `parseAssistantReferenceIntent` non modifié ; preuve runtime `ai_usage_events` — fast-paths à zéro token, aucun n'appelle `classify_assistant_request`.
+- [x] Le refus sécurité et le hors-scope restent déterministes sans appel provider : preuve runtime (`usage=null`, `cost=null`, `tool_trace=[]`, aucun round provider).
+- [~] La clarification en conserve et sa branche morte sont **neutralisées dans le chemin model-first** (flag ON) ; elles restent dans le code uniquement pour le rollback flag OFF (`AI_ASSISTANT_MODEL_ROUTING_ENABLED=false` = comportement actuel intégral) et seront supprimées au démantèlement du flag après GO. Écart assumé et consigné (§4.2 du plan directeur).
+- [x] Amendement consigné dans le plan directeur (§4.2, « Amendement du 2026-07-21 — routage model-first »).
+- [ ] Décision PO sur le chantier : GO / NO-GO. Recommandation technique du 2026-07-22 : **GO CP-C2 pour autoriser le chantier 3, mais NO-GO d'activation** ; conserver le flag à `false` jusqu'aux preuves CP-C3/CP-C4 et au jeu d'or vert.
 
 ### 6.5 Prompt de lancement (conversation vierge)
 
@@ -170,9 +171,9 @@ Deux écarts assumés, à inscrire dans le plan directeur au démarrage du chant
 
 ### 7.1 Travaux
 
-1. **Folding singulier/pluriel** dans la tokenisation partagée : au moment du match, les tokens de longueur ≥ 4 perdent leur `s`/`x` final des deux côtés (motif SQL et normalisation TypeScript restent symétriques, comme l'actuel couple `translate`/`normalizedText`). Appliqué à `referenceProductSemantics.ts` (recherche sémantique) et `referenceImports.ts` (`categoryTermCondition` : tokenisation de la phrase au lieu du LIKE de phrase littérale).
-2. **Secours trigram** : quand une recherche retourne zéro groupe, une requête `similarity()` (`pg_trgm` déjà installé) propose jusqu'à 5 libellés proches (seuil 0,35) retournés comme suggestions dans la clarification — jamais comme résultats.
-3. **Décision explicite hors périmètre :** pas de FTS `to_tsvector('french', ...)` tant que le jeu d'or ne montre pas un échec que le folding ne couvre pas ; pas d'index trigram (94 ms mesurés sur 9,3K lignes au CP-P5).
+1. **Folding singulier/pluriel** dans la tokenisation partagée : au moment du match, les tokens alphabétiques de longueur ≥ 5 perdent leur `s`/`x` final des deux côtés. `inox`, `ATEX`, `kits`, `plus`, `flex`, `VFD` et les références alphanumériques restent intacts. Les tableaux publics `requested_terms`, `canonical_terms` et `query_terms` conservent la provenance ; seul le matching est replié. Appliqué à `referenceProductSemantics.ts` (recherche sémantique) et `referenceImports.ts` (`categoryTermCondition` : motif ordonné de tokens au lieu du LIKE de phrase littérale).
+2. **Secours trigram** : uniquement quand la recherche sémantique retourne zéro groupe, une requête séparée et paramétrée compare les tokens de requête de longueur ≥ 5 aux tokens des vrais libellés du snapshot via `extensions.similarity()`. Maximum du score token/token, seuil 0,35, dédoublonnage par libellé, ordre score décroissant puis libellé, cinq suggestions maximum. Une suggestion déclenche la réponse locale « Aucune correspondance exacte. Vouliez-vous dire… », conserve le contexte de clarification et supprime le second round provider ; elle ne devient jamais un résultat.
+3. **Décision explicite hors périmètre :** pas de FTS `to_tsvector('french', ...)` tant que le jeu d'or ne montre pas un échec que le folding ne couvre pas ; pas d'index trigram. La requête finale est mesurée à 147 ms sur 6 816 libellés du snapshot actif, contre environ 125 ms lors de la préparation, avec 0 bloc disque lu.
 
 ### 7.2 Fichiers touchés
 
@@ -183,9 +184,10 @@ Deux écarts assumés, à inscrire dans le plan directeur au démarrage du chant
 
 ### 7.3 Checkpoint CP-C3
 
-- [ ] « servomoteur électrique » (singulier) matche « SERVOMOTEURS ELECTRIQUES » sur le chemin déterministe et le chemin sémantique.
-- [ ] « debimetre » (faute) produit une suggestion « vouliez-vous dire » construite sur les vrais libellés, zéro résultat inventé.
-- [ ] Les comptages exacts existants (FESTO, marques distinctes) restent identiques au recomptage SQL.
+- [~] « servomoteur électrique » et « Servomoteurs électriques » se replient tous deux en `servomoteur electrique` ; contrôle SQL direct du 2026-07-22 : 1 CAT_FAB / 1 ligne sur le chemin déterministe et 1 identité candidate sur le chemin sémantique pour chaque formulation. Preuve API déployée encore requise.
+- [~] `debimetre` classe uniquement le vrai libellé `Capteurs/débitmètres` au-dessus du seuil (score 0,615385) ; test planificateur : réponse locale exacte, zéro fait/total/citation, trace limitée à `search_product_candidates`, un seul round provider. Preuve API déployée encore requise.
+- [x] Les agrégats ne sont pas modifiés ; les modes déterministes `any/all`, FEST/FESTO, les contrats et les suites de régression IA restent verts localement. `qa:back` vert le 2026-07-22.
+- [x] Aucun composant UI, schéma partagé, migration, prompt, FTS ou index ajouté. `AI_ASSISTANT_MODEL_ROUTING_ENABLED` reste à `false` ; aucun déploiement, commit ou push CP-C3.
 - [ ] Décision PO : GO / NO-GO.
 
 ### 7.4 Prompt de lancement (conversation vierge)
@@ -201,7 +203,7 @@ Deux écarts assumés, à inscrire dans le plan directeur au démarrage du chant
 ### 8.1 Travaux
 
 1. **Clarifications ancrées** : quand la passe 2 choisit `request_product_clarification`, les options proposées doivent référencer des groupes candidats réels (libellé + chemin + comptes). Le contexte `product_semantic_clarification` porte les sélecteurs des options pour que la réponse utilisateur (« les vannes », « le premier ») se résolve déterministiquement sans nouvelle recherche complète. Zéro option hallucinée : une option sans groupe correspondant invalide la passe.
-2. **Cas zéro candidat honnête** : réponse locale « aucune famille ne correspond à X dans ce snapshot » plus les suggestions trigram du chantier 3, au lieu d'une clarification sans matière.
+2. **Cas zéro candidat honnête sans suggestion** : le chantier 3 répond déjà localement lorsqu'une suggestion trigram existe. Le chantier 4 traite définitivement le zéro-candidat sans suggestion, encore envoyé provisoirement dans le flux de clarification existant.
 3. **Tour de réparation** : sur violation de partition (`accepted + excluded ≠ candidats`), un unique appel correctif renvoie l'erreur précise au modèle ; en cas de second échec, l'erreur actuelle est conservée. Métadonnées d'usage : `repair_round: true`. Amendement « 3 appels max dont 1 réparation » consigné (§2.2.2).
 4. **Templates markdown** : les réponses locales (qualification, relances, déterministe) passent en markdown structuré que `AssistantMessageContent.tsx` sait déjà rendre — phrase de résultat en tête, puis puces par marque (top 10 + « et N autres »), ligne « Critères », UUID de snapshot retiré du texte (il reste dans citations/evidence, affiché par `AssistantSources`).
 5. **Vérification UI** : rendu contrôlé dans le chat (dialog centré existant), aucun changement de composant attendu au-delà d'éventuels ajustements mineurs.
@@ -272,22 +274,38 @@ Le NO-GO P5 global du plan directeur reste en vigueur tant que ce tableau n'est 
 
 ### CP-C2 — Routage model-first
 
-- Date :
-- Commit :
-- Deploy :
-- Preuve runtime servomoteurs :
-- Fast-paths zéro token vérifiés :
-- Amendement plan directeur consigné :
-- Décision PO : GO / NO-GO
-- [ ] Checkpoint validé
+- Date : 2026-07-21 (code et gate locale), complété le 2026-07-22 (preuve runtime et audit indépendant)
+- Périmètre livré : flag `AI_ASSISTANT_MODEL_ROUTING_ENABLED` (rollback indépendant, défaut `false`) ; carte de domaine compacte versionnée en code (`ASSISTANT_DOMAIN_MAP`, `ASSISTANT_DOMAIN_MAP_VERSION=v1`) ; outil strict `classify_assistant_request` (schéma Zod `assistantClassificationSchema`, `tool_choice` forcé, `mistral-large-2512`) ; passe de routage insérée dans `assistantBroker.ts` pour les seules issues non-routantes du regex (clarification en conserve + repli `general_sql`), dispatch inchangé pour la capacité choisie ; nettoyage legacy `ASSISTANT_MODEL_POLICY`/`selectAssistantModelId` supprimés et `getAssistantStatus` recablé sur la résolution du modèle affecté à la feature
+- Fichiers : `backend/functions/api/services/ai/assistantIntentRouting.ts` (+ test), `backend/functions/api/services/ai/assistantBroker.ts`, `backend/functions/api/services/ai/aiAssistantContracts_test.ts`, `backend/functions/api/integration/assistantAccessIdentity_integration_test.ts`, `docs/ASSISTANT_IA/plan-mistral-assistant-transversal.md` (amendement §4.2)
+- Commit : non créé (branche `codex/mistral-phase-1b-total`, worktree)
+- Deploy : Edge Function `api` redéployée sur le projet lié `rbjtrcorlezvocayluok` (`--use-api --import-map deno.json --no-verify-jwt`) le 2026-07-22 sur autorisation PO explicite ; secret `AI_ASSISTANT_MODEL_ROUTING_ENABLED` posé à `true` pour la preuve puis **remis à `false` + redéploiement** (flag désactivé, comportement actuel intégral restauré en attente du GO PO). `AI_ASSISTANT_SEMANTIC_PLANNER_ENABLED=true` déjà en place. Probes vertes : `OPTIONS 200` (origine `http://localhost:3000`, méthodes `GET, POST, OPTIONS`), `POST ai.assistant.ask` sans Bearer `401 AUTH_REQUIRED`
+- Preuve runtime servomoteurs (flag ON) : question exacte « Combien de familles produit à la CIR proposent des servomoteurs électriques ? », demande `55e736d0-79bc-4e7d-9c0b-a3c3b368d05d`, HTTP 200. **Le routage model-first amène la question au planificateur** : `tool_trace = classify_assistant_request → search_product_candidates → submit_product_qualification`, `ai_usage_events.metadata.execution_mode = product_semantic_search`, `routed_intent = product_semantic_search`, `provider_rounds = 3`. Réponse `qualified` : 88 couples marque + CAT_FAB, 88 libellés, 5 marques (ROCK 62, SIEM 15, FEST 5, PARK 4, LERO 2), 16 groupes inspectés / 13 acceptés / 3 exclus. Tokens 25 314 entrée / 906 sortie / 0 cache, coût `0,014016 USD`, latence ~58 s (classify ≈ +1-2K tokens sur la baseline planificateur CP-C1, conforme au budget « +1 appel léger »). Artefacts : `frontend/e2e-proof-cp-c2/servomoteurs-flagon-qualified.json`
+- Recomptage SQL témoin indépendant : réplique exacte de `aggregateQualifiedProductGroups` (link_status='complete_valid' sur les scopes seuls, direct labels matchés par `(normalized_cat_fab, cir_path)`, couples sur `cat_fab` brut) sur le snapshot `4e216bc4-7d82-4eb7-aa20-2cc8316667cc` → **88 couples / 5 marques**, mêmes détails par marque : identique à la réponse. Le total qualifié est un comptage base, pas une hallucination
+- Stabilité de la qualification : **3 succès `qualified` sur 6 essais (50 %) et 3 erreurs** dans la campagne distante du 2026-07-22. Deux succès retournent 88 couples / 5 marques, un succès retourne 90 / 5 ; les trois échecs sont `AI_RESPONSE_INVALID « La qualification sémantique ne couvre pas exactement les groupes candidats »` (partition incomplète, §1.2.4). Le routage est stable sur les six essais ; l'instabilité se situe après `classify_assistant_request`, dans la recherche/qualification sémantique. La partition incomplète relève du chantier 4 (tour de réparation et clarification ancrée) ; la variation 88/90 doit être caractérisée pendant le chantier 3 avant de l'attribuer entièrement à la tolérance lexicale. Conforme au jeu d'or §9 qui note servomoteurs = « 2 (routage) + 4 (clarification) »
+- Mesure du round de routage : 5 essais sur 6 entre 0,9 et 1,2 s ; un outlier à 37,8 s sur la demande finale `55e736d0…`. Les tokens par round ne sont pas persistés séparément, donc le surcoût « +1-2K tokens » reste une estimation par différence de total, pas une mesure directe.
+- Fast-paths zéro token vérifiés (flag ON, `frontend/e2e-proof-cp-c2/fastpaths-flagon.json`) : refus sécurité (`6418607b…`) et hors-scope (`9d487f49…`) → réponse déterministe statique, `usage=null`, `cost=null`, `model_id=null`, `tool_trace=[]`, **aucun appel provider** ; comptage FESTO (`e30eb011…`) → `tool_trace=[aggregate_segments]`, 0 token entrée/sortie, coût 0, 673 CAT_FAB. Aucun des trois ne déclenche `classify_assistant_request` : les fast-paths ne partent pas en routage model-first
+- Rollback vérifié : flag remis à `false`, la même question servomoteurs retourne la clarification en conserve « FAM ou CAT_FAB ? » (`usage=null`, `tool_trace=[]`, aucun appel provider) — comportement actuel intégral restauré (`frontend/e2e-proof-cp-c2/servomoteurs-flagoff-rollback.json`)
+- Fast-paths au niveau contrat : `parseAssistantReferenceIntent` inchangé, matrice de routage verte, nouveaux tests C2 (`needsModelRouting`, carte de domaine, outil strict, `intentFromClassification`, parse) verts
+- Dette d'observabilité révélée par l'audit du 2026-07-22 : lors des trois erreurs post-routage, `ai_usage_events.metadata.execution_mode` vaut encore `clarification`, `routed_intent` est absent et la trace persistée ne contient que `classify_assistant_request`. Le routage a pourtant réussi et les trois rounds provider sont présents. Corriger cette attribution au début du chantier 4, ou dans une tranche d'observabilité dédiée sans modifier le comportement, afin de distinguer un échec de routage d'un échec de qualification.
+- QA : `qa:back` complet vert le 2026-07-21 — `repo:check` OK, `deno lint` 137 fichiers OK, `deno check` index OK, `deno test` backend **444 réussites / 0 échec / 15 intégrations ignorées** ; suites ciblées AI (routage, planificateur, contexte conversationnel, outils sémantiques, adaptateur Mistral, contrats, phase 6) 136/136
+- Contre-vérification Codex du 2026-07-22 : Supabase MCP confirme `api` v197 `ACTIVE`, wrapper `source/supabase/functions/api/index.ts`, import map `source/deno.json` et `verify_jwt=false` ; lecture SQL de `ai_usage_events`/`ai_request_reservations` confirme les six essais, les coûts et les trois erreurs ci-dessus ; tests locaux ciblés routage + planificateur + contrats **63/63**, `deno check` de l'entrypoint et `qa:docs` verts.
+- Amendement plan directeur consigné : oui (§4.2, « Amendement du 2026-07-21 — routage model-first (chantier 2, §2.2.1 du plan enfant) »)
+- Écarts au plan : (1) réduction du routeur ciblée sur les seules issues non-routantes du regex (clarification en conserve + repli `general_sql`) plutôt que sur « toute autre question » — les capacités déjà correctement détectées gardent leur route regex, ce qui préserve à l'identique les cas d'ancrage CP-C1 (zéro régression) ; écart assumé et consigné §4.2. (2) Clarification en conserve et branche morte neutralisées dans le chemin model-first mais conservées pour le rollback flag OFF (suppression au démantèlement du flag après GO). (3) Preuve runtime obtenue en process/HTTP direct sur la fonction déployée (le secret de déchiffrement de la clé Mistral n'existe pas en local) ; la couche HTTP/tRPC/auth n'est pas touchée par le chantier 2
+- Décision PO : GO / NO-GO — **en attente**. Recommandation technique : **GO de checkpoint CP-C2 / NO-GO d'activation** ; passer au chantier 3 avec `AI_ASSISTANT_MODEL_ROUTING_ENABLED=false`, puis exiger CP-C3 et CP-C4 avant réactivation durable.
+- [ ] Checkpoint validé (routage prouvé ; validation PO en attente)
 
 ### CP-C3 — Tolérance lexicale
 
-- Date :
-- Commit :
-- Preuves singulier/pluriel et faute :
-- Comptages exacts inchangés :
-- Décision PO : GO / NO-GO
+- Date : 2026-07-22 (implémentation locale et preuves SQL directes ; déploiement non autorisé/non effectué)
+- Commit : non créé (worktree partagé ; modifications dashboard et CP-C2 préservées)
+- Périmètre livré localement : folding TS/SQL centralisé à partir de 5 caractères, références alphanumériques et codes courts préservés, motifs ordonnés sur le déterministe et le sémantique, suggestions trigram internes sourcées, réponse locale avec contexte de clarification et un seul round provider
+- Preuves singulier/pluriel : contrôle SQL direct sur le snapshot `4e216bc4-7d82-4eb7-aa20-2cc8316667cc` — les deux formulations produisent `servomoteur electrique`, 1 CAT_FAB / 1 ligne déterministe et 1 identité candidate sémantique chacune
+- Preuve faute : `debimetre` retourne uniquement `Capteurs/débitmètres`, score `0,615385` ; aucun libellé seulement lié à « débit » ne franchit 0,35. `EXPLAIN ANALYZE` : 147 ms, 6 816 libellés, 0 bloc lu, contre ~125 ms préparatoires
+- Preuve orchestration locale : test planificateur avec zéro groupe + suggestion — réponse exacte « Aucune correspondance exacte. Vouliez-vous dire… », aucun fait/total/citation, une seule trace outil et un seul round provider ; zéro groupe sans suggestion conserve le flux à deux passes du chantier 4
+- Comptages exacts inchangés : logique d'agrégation non modifiée ; tests FEST/FESTO, modes `any/all`, vérins, variateur, contexte qualifié et contrats IA verts ; tests ciblés CP-C3 36/36, suite ciblée IA 93/93, `deno check` de l'entrypoint et `qa:back` verts (**449 réussites / 0 échec / 14 intégrations ignorées**)
+- Déploiement/runtime : aucun ; `AI_ASSISTANT_MODEL_ROUTING_ENABLED=false` reste l'état courant, aucune activation payante. Les probes API, le rejeu UI/runtime et les artefacts `frontend/e2e-proof-cp-c3/` restent conditionnés à une autorisation explicite
+- Décision technique : implémentation locale verte ; **NO-GO de fermeture CP-C3** avant preuve sur l'API déployée et décision PO
+- Décision PO : GO / NO-GO — en attente
 - [ ] Checkpoint validé
 
 ### CP-C4 — Clarifications, réparation, présentation

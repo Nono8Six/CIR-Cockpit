@@ -13,10 +13,13 @@ import {
   openRouterToolDefinitions,
 } from "./assistantTools.ts";
 import {
+  buildPricingReferenceLexicalLikePattern,
   escapePricingReferenceLikeTerm,
   expandPricingReferenceSearchTerms,
+  foldPricingReferenceLexicalText,
   normalizePricingReferenceBrand,
   normalizePricingReferenceSearchTerms,
+  tokenizePricingReferenceLexicalText,
 } from "../pricing/references/referenceSemantics.ts";
 import type { AuthContext, DbClient } from "../../types.ts";
 
@@ -61,6 +64,10 @@ Deno.test("P1 centralise les alias de marque et normalise les termes CAT_FAB", (
     ],
   );
   assertEquals(escapePricingReferenceLikeTerm("50%_\\"), "50\\%\\_\\\\");
+  assertEquals(
+    buildPricingReferenceLexicalLikePattern("50%_\\"),
+    "%50%\\%%\\_%\\\\%",
+  );
 });
 
 Deno.test("P1 preserve chaque terme demande sans dictionnaire produit", () => {
@@ -74,6 +81,26 @@ Deno.test("P1 preserve chaque terme demande sans dictionnaire produit", () => {
     canonical_terms: ["electrique"],
     query_terms: ["électrique"],
   });
+});
+
+Deno.test("CP-C3 replie accents et pluriels uniquement a partir de cinq caracteres", () => {
+  assertEquals(
+    foldPricingReferenceLexicalText("Servomoteurs électriques"),
+    "servomoteur electrique",
+  );
+  assertEquals(
+    foldPricingReferenceLexicalText("servomoteur electrique"),
+    "servomoteur electrique",
+  );
+  assertEquals(
+    tokenizePricingReferenceLexicalText("inox ATEX kits plus flex VFD AB12S"),
+    ["inox", "atex", "kits", "plus", "flex", "vfd", "ab12s"],
+  );
+  assertEquals(
+    foldPricingReferenceLexicalText("inox ATEX kits plus flex VFD AB12S"),
+    "inox atex kits plus flex vfd ab12s",
+  );
+  assertEquals(escapePricingReferenceLikeTerm("50%_\\"), "50\\%\\_\\\\");
 });
 
 Deno.test("P1 conserve les comptages exacts et sort les produits ouverts du chemin direct", () => {
@@ -266,7 +293,8 @@ Deno.test("P1 parametre et echappe les caracteres LIKE utilisateur", async () =>
     { surface: "pricing.references", target_snapshot_id: snapshotId },
   );
   assertStringIncludes(queries[0].sql, "escape '\\'");
-  assertEquals(queries[0].params.includes("%50\\%\\_\\\\%"), true);
+  assertEquals(queries[0].params.includes("%50%\\%%\\_%\\\\%"), true);
+  assertEquals(escapePricingReferenceLikeTerm("%_\\"), "\\%\\_\\\\");
 });
 
 Deno.test("P1 preserve VFD et les accents sans ajouter de synonyme", async () => {
@@ -289,8 +317,51 @@ Deno.test("P1 preserve VFD et les accents sans ajouter de synonyme", async () =>
   );
   assertEquals(queries[0].params.includes("%vfd%"), true);
   assertEquals(queries[0].params.includes("%variateur%"), false);
-  assertEquals(queries[1].params.includes("%électrique%"), true);
-  assertEquals(queries[1].params.includes("%electrique%"), false);
+  assertEquals(queries[1].params.includes("%electrique%"), true);
+  assertEquals(queries[1].params.includes("%électrique%"), false);
+});
+
+Deno.test("CP-C3 le chemin deterministe garde any all et replie les phrases symetriquement", async () => {
+  const { db, queries } = fakeDb([[], [], [], []]);
+  for (
+    const term of [
+      "servomoteur électrique",
+      "servomoteurs électriques",
+    ]
+  ) {
+    await executeAssistantTool(
+      db,
+      authContext,
+      `cp-c3-${term}`,
+      "search_supplier_categories",
+      { terms: [term], mode: "any", examples_limit: 0 },
+      { surface: "pricing.references", target_snapshot_id: snapshotId },
+    );
+  }
+  for (const mode of ["any", "all"] as const) {
+    await executeAssistantTool(
+      db,
+      authContext,
+      `cp-c3-${mode}`,
+      "search_supplier_categories",
+      {
+        terms: ["servomoteurs électriques", "vannes"],
+        mode,
+        examples_limit: 0,
+      },
+      { surface: "pricing.references", target_snapshot_id: snapshotId },
+    );
+  }
+  assertEquals(
+    queries[0].params.includes("%servomoteur%electrique%"),
+    true,
+  );
+  assertEquals(
+    queries[1].params.includes("%servomoteur%electrique%"),
+    true,
+  );
+  assertStringIncludes(queries[2].sql, ") or (");
+  assertStringIncludes(queries[3].sql, ") and (");
 });
 
 Deno.test("P1 refuse une sortie agregee au-dela du plafond contractuel", async () => {

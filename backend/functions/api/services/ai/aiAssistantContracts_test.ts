@@ -188,7 +188,7 @@ Deno.test("feature assignment selects Mistral before legacy OpenRouter routing p
     undefined,
     undefined,
     false,
-    { preferredModelId: "deepseek/deepseek-v4-pro" },
+    { preferredModelId: "legacy/ignored-preference" },
   );
   assertEquals(resolved?.model.model_id, "mistral-large-2512");
   assertEquals(resolved?.provider.provider, "mistral");

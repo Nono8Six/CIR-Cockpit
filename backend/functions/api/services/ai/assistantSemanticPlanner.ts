@@ -465,6 +465,35 @@ export const runProductSemanticPlanner = async (
     content: JSON.stringify(candidatePayload),
   });
 
+  if (fitted.groups.length === 0 && candidates.suggestions.length > 0) {
+    const clarification = {
+      question: "Aucune correspondance exacte. Vouliez-vous dire…",
+      options: candidates.suggestions.map((suggestion) => suggestion.label),
+    };
+    return {
+      answer: `${clarification.question}\n\n${
+        clarification.options.map((option, index) => `${index + 1}. ${option}`)
+          .join("\n")
+      }`,
+      citations: [],
+      evidence: {
+        status: "failed",
+        intent: "product_semantic_search",
+        dimension: "cat_fab",
+        facts: [],
+        executions: [],
+      },
+      toolTrace,
+      conversationContext: buildClarificationContext(
+        plan.concept,
+        clarification,
+        snapshotId,
+        input,
+      ),
+      servedModelId: planningResponse.modelId,
+    };
+  }
+
   const userResolvedClarification = clarificationContext !== null &&
     /\b(?:retenir|retient|uniquement|seulement|exclure|exclus|exclut|tout le reste|tous les types|aucun)\b/i
       .test(input.question);

@@ -2,7 +2,13 @@ import { sql } from "drizzle-orm";
 
 import { httpError } from "../../../middleware/errorHandler.ts";
 import type { DbClient } from "../../../types.ts";
-import { escapePricingReferenceLikeTerm } from "./referenceSemantics.ts";
+import {
+  buildPricingReferenceLexicalLikePattern,
+  foldPricingReferenceLexicalText,
+  normalizePricingReferenceLexicalText,
+  pricingReferenceFoldedSql,
+  tokenizePricingReferenceLexicalText,
+} from "./referenceSemantics.ts";
 
 export const MAX_PRODUCT_CANDIDATE_GROUPS = 80;
 export const MAX_PRODUCT_TAXONOMY_PATHS = 400;
@@ -51,12 +57,19 @@ export type ProductCandidateIdentity = {
   cirPath: string;
 };
 
+export type ProductCandidateSuggestion = {
+  label: string;
+  matched_term: string;
+  score: number;
+};
+
 export type ProductCandidateSearchResult = {
   snapshot_id: string;
   concept: string;
   groups: ProductCandidateGroup[];
   truncated: boolean;
   identities: Map<string, ProductCandidateIdentity>;
+  suggestions: ProductCandidateSuggestion[];
 };
 
 export type ProductQualificationAggregate = {
@@ -91,20 +104,12 @@ export type ProductQualifiedBrandDetails = {
 
 const MAX_PRODUCT_DETAIL_ROWS = 50;
 
-const normalizedText = (value: string): string =>
-  value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-
-const lexicalTokens = (value: string): string[] =>
-  normalizedText(value).split(/[^\p{L}\p{N}]+/u).filter((token) =>
-    token.length >= 3
-  );
-
 export const expandProductLookupTerms = (
   plan: ProductSearchPlan,
 ): string[] => {
   return [
     ...new Set(plan.positive_terms.flatMap((term) => {
-      const tokens = lexicalTokens(term);
+      const tokens = tokenizePricingReferenceLexicalText(term, 3);
       if (tokens.length <= 1) return tokens;
       return [tokens.join(" "), [...tokens].reverse().join(" ")];
     })),
@@ -112,8 +117,57 @@ export const expandProductLookupTerms = (
 };
 
 const matchingTerms = (text: string, terms: readonly string[]): string[] => {
-  const haystack = normalizedText(text);
-  return terms.filter((term) => haystack.includes(normalizedText(term)));
+  const haystack = foldPricingReferenceLexicalText(text);
+  return terms.filter((term) =>
+    haystack.includes(foldPricingReferenceLexicalText(term))
+  );
+};
+
+const searchProductCandidateSuggestions = async (
+  db: DbClient,
+  snapshotId: string,
+  plan: ProductSearchPlan,
+): Promise<ProductCandidateSuggestion[]> => {
+  const queryTerms = [
+    ...new Set(
+      plan.positive_terms.flatMap((term) =>
+        tokenizePricingReferenceLexicalText(term, 5)
+      ),
+    ),
+  ];
+  if (queryTerms.length === 0) return [];
+  const foldedLabelSql = pricingReferenceFoldedSql(sql`labels.label`);
+  return await db.execute<ProductCandidateSuggestion>(sql`
+    with query_terms(term) as (
+      values ${sql.join(queryTerms.map((term) => sql`(${term})`), sql`, `)}
+    ), labels as (
+      select distinct coalesce(nullif(v.cat_fab_l, ''), v.cat_fab) as label
+      from public.ai_v_product_semantics v
+      where v.snapshot_id = ${snapshotId}
+        and coalesce(nullif(v.cat_fab_l, ''), v.cat_fab) <> ''
+    ), label_tokens as (
+      select distinct labels.label, token.value as token
+      from labels
+      cross join lateral regexp_split_to_table(
+        ${foldedLabelSql},
+        '[^[:alnum:]]+'
+      ) as token(value)
+      where length(token.value) >= 3
+    ), best_per_label as (
+      select distinct on (label_tokens.label)
+        label_tokens.label,
+        query_terms.term as matched_term,
+        extensions.similarity(label_tokens.token, query_terms.term)::real as score
+      from label_tokens
+      cross join query_terms
+      where extensions.similarity(label_tokens.token, query_terms.term) >= 0.35
+      order by label_tokens.label, score desc, query_terms.term asc
+    )
+    select label, matched_term, score
+    from best_per_label
+    order by score desc, label asc
+    limit 5
+  `);
 };
 
 export const listProductSemanticTaxonomy = async (
@@ -143,7 +197,9 @@ export const listProductSemanticTaxonomy = async (
   const compactText = rows.map((row) =>
     `${row.cir_path} | ${row.distinct_cat_fab} | ${row.distinct_brands}`
   ).join("\n");
-  if (new TextEncoder().encode(compactText).length > MAX_PRODUCT_TAXONOMY_BYTES) {
+  if (
+    new TextEncoder().encode(compactText).length > MAX_PRODUCT_TAXONOMY_BYTES
+  ) {
     throw httpError(
       500,
       "AI_TOOL_EXECUTION_FAILED",
@@ -163,14 +219,21 @@ export const searchProductSemanticCandidates = async (
   plan: ProductSearchPlan,
 ): Promise<ProductCandidateSearchResult> => {
   const scopeTerms = expandProductLookupTerms(plan);
-  const searchPatterns = scopeTerms.map((term) =>
-    `%${lexicalTokens(term).map(escapePricingReferenceLikeTerm).join("%")}%`
-  );
+  const searchPatterns = scopeTerms.flatMap((term) => {
+    const pattern = buildPricingReferenceLexicalLikePattern(term, 3);
+    return pattern ? [pattern] : [];
+  });
   const selectedPaths = [...new Set(plan.selected_paths)];
   // Une liste vide est representee par une valeur vide inerte : cir_path est
   // toujours non vide sur les lignes complete_valid, donc elle ne matche rien.
   const selectedPathValues = selectedPaths.length > 0 ? selectedPaths : [""];
   const lexicalBudget = MAX_PRODUCT_CANDIDATE_GROUPS - selectedPaths.length;
+  const terminalPathSql = pricingReferenceFoldedSql(
+    sql`regexp_replace(coalesce(v.cir_path, ''), '^.*>[[:space:]]*', '')`,
+  );
+  const productLabelSql = pricingReferenceFoldedSql(
+    sql`concat_ws(' ', v.cat_fab, v.cat_fab_l)`,
+  );
   const rows = await db.execute<{
     selection_kind: "classification_scope" | "direct_label";
     normalized_cat_fab: string | null;
@@ -195,10 +258,10 @@ export const searchProductSemanticCandidates = async (
         case
           when v.link_status = 'complete_valid'
             and coalesce(v.cir_path, '') <> ''
-            and translate(lower(regexp_replace(coalesce(v.cir_path, ''), '^.*>[[:space:]]*', '')), 'àáâäãåçèéêëìíîïñòóôöõùúûüýÿ', 'aaaaaaceeeeiiiinooooouuuuyy')
+            and ${terminalPathSql}
               like terms.pattern escape '\'
             then 'scope:' || v.cir_path
-          when translate(lower(concat_ws(' ', v.cat_fab, v.cat_fab_l)), 'àáâäãåçèéêëìíîïñòóôöõùúûüýÿ', 'aaaaaaceeeeiiiinooooouuuuyy')
+          when ${productLabelSql}
               like terms.pattern escape '\'
             then 'label:' || v.normalized_cat_fab || '|' || coalesce(v.cir_path, '')
           else null
@@ -207,9 +270,9 @@ export const searchProductSemanticCandidates = async (
       join public.ai_v_product_semantics v
         on v.snapshot_id = ${snapshotId}
         and (
-          translate(lower(regexp_replace(coalesce(v.cir_path, ''), '^.*>[[:space:]]*', '')), 'àáâäãåçèéêëìíîïñòóôöõùúûüýÿ', 'aaaaaaceeeeiiiinooooouuuuyy')
+          ${terminalPathSql}
             like terms.pattern escape '\'
-          or translate(lower(concat_ws(' ', v.cat_fab, v.cat_fab_l)), 'àáâäãåçèéêëìíîïñòóôöõùúûüýÿ', 'aaaaaaceeeeiiiinooooouuuuyy')
+          or ${productLabelSql}
             like terms.pattern escape '\'
         )
     ), pattern_stats as (
@@ -277,7 +340,7 @@ export const searchProductSemanticCandidates = async (
         and exists (
           select 1
           from eligible_patterns terms
-          where translate(lower(regexp_replace(coalesce(v.cir_path, ''), '^.*>[[:space:]]*', '')), 'àáâäãåçèéêëìíîïñòóôöõùúûüýÿ', 'aaaaaaceeeeiiiinooooouuuuyy')
+          where ${terminalPathSql}
             like terms.pattern escape '\'
         )
       group by v.cir_path
@@ -297,7 +360,7 @@ export const searchProductSemanticCandidates = async (
         and exists (
           select 1
           from eligible_patterns terms
-          where translate(lower(concat_ws(' ', v.cat_fab, v.cat_fab_l)), 'àáâäãåçèéêëìíîïñòóôöõùúûüýÿ', 'aaaaaaceeeeiiiinooooouuuuyy')
+          where ${productLabelSql}
             like terms.pattern escape '\'
         )
         and not exists (
@@ -359,12 +422,16 @@ export const searchProductSemanticCandidates = async (
       ),
     };
   });
+  const suggestions = groups.length === 0
+    ? await searchProductCandidateSuggestions(db, snapshotId, plan)
+    : [];
   return {
     snapshot_id: snapshotId,
     concept: plan.concept,
     groups,
     truncated,
     identities,
+    suggestions,
   };
 };
 
@@ -456,7 +523,7 @@ export const getQualifiedProductBrandDetails = async (
       truncated: false,
     };
   }
-  const normalizedBrand = normalizedText(requestedBrand).trim();
+  const normalizedBrand = normalizePricingReferenceLexicalText(requestedBrand);
   const rows = await db.execute<{
     marque: string;
     cat_fab: string;

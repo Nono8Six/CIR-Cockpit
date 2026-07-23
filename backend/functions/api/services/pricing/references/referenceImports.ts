@@ -1,9 +1,10 @@
 import { and, desc, eq, type SQL, sql } from "drizzle-orm";
 import { strToU8, zipSync } from "fflate";
 import {
-  escapePricingReferenceLikeTerm,
+  buildPricingReferenceLexicalLikePattern,
   expandPricingReferenceSearchTerms,
   normalizePricingReferenceBrands,
+  pricingReferenceFoldedSql,
 } from "./referenceSemantics.ts";
 
 import {
@@ -2656,10 +2657,11 @@ export const aggregatePricingReferenceSegments = async (
 };
 
 const categoryTermCondition = (term: string): SQL => {
-  const pattern = `%${escapePricingReferenceLikeTerm(term)}%`;
+  const pattern = buildPricingReferenceLexicalLikePattern(term);
+  if (!pattern) return sql<boolean>`false`;
   return sql<
     boolean
-  >`lower(coalesce(s.cat_fab_l, '')) like ${pattern} escape '\\'`;
+  >`${pricingReferenceFoldedSql(sql`s.cat_fab_l`)} like ${pattern} escape '\\'`;
 };
 
 const categorySearchConditions = (

@@ -38,9 +38,14 @@ import {
 import { resolveAssistantAccess } from "./aiAccess.ts";
 import { checkRateLimit } from "../rate-limiting/rateLimit.ts";
 import {
-  ASSISTANT_MODEL_POLICY,
+  buildAssistantClassificationMessages,
+  classificationClarification,
+  classifyAssistantRequestTool,
+  intentFromClassification,
+  isModelRoutingEnabled,
+  needsModelRouting,
+  parseAssistantClassification,
   parseAssistantReferenceIntent,
-  selectAssistantModelId,
   selectToolsForAssistantIntent,
 } from "./assistantIntentRouting.ts";
 import {
@@ -1771,12 +1776,15 @@ export const runAssistantAsk = async (
     activeConversationContext,
     input.page_context,
   );
+  // Le modele assistant est resolu par l affectation de feature
+  // (mistral-large-2512) ; on ne force un modele que pour la recherche
+  // semantique produit. La resolution provider par defaut couvre le reste.
   const preferredModelId = evaluation?.modelConfigId ||
       conversationAwareIntent || productResultFollowup
     ? undefined
     : isProductSemanticSearch
     ? PRODUCT_SEMANTIC_MODEL_ID
-    : selectAssistantModelId(parsedIntent.executionMode) ?? undefined;
+    : undefined;
   const resolved = await resolveModelAndPromptForFeature(
     db,
     FEATURE,
@@ -1792,7 +1800,14 @@ export const runAssistantAsk = async (
     );
   }
 
-  const familyClarification = parsedIntent.clarification;
+  // Routage model-first (chantier 2) : sous flag, la clarification en conserve
+  // FAM/CAT_FAB et sa branche morte « famille CIR pas encore disponible » ne
+  // sont plus emises ; ces questions partent en passe de comprehension Mistral
+  // plus bas. A flag false, le comportement regex actuel reste integral.
+  const modelRoutingEnabled = isModelRoutingEnabled();
+  const familyClarification = modelRoutingEnabled
+    ? null
+    : parsedIntent.clarification;
   if (familyClarification) {
     return aiAssistantAskResponseSchema.parse({
       ok: true,
@@ -1813,11 +1828,13 @@ export const runAssistantAsk = async (
     });
   }
 
-  const unsupportedPendingAnswer = getUnsupportedPendingClarificationAnswer(
-    input.question,
-    activeConversationContext,
-    input.page_context,
-  );
+  const unsupportedPendingAnswer = modelRoutingEnabled
+    ? null
+    : getUnsupportedPendingClarificationAnswer(
+      input.question,
+      activeConversationContext,
+      input.page_context,
+    );
   if (unsupportedPendingAnswer) {
     return aiAssistantAskResponseSchema.parse({
       ok: true,
@@ -2403,7 +2420,124 @@ export const runAssistantAsk = async (
       });
       return response;
     };
-    if (isProductSemanticSearch) {
+    // ---- Routage model-first (chantier 2) ----
+    // Les fast-paths deterministes ont deja repondu au-dessus. Ici, seules les
+    // deux issues « je ne sais pas » du regex (clarification en conserve,
+    // repli general_sql) sont reroutees par une passe Mistral qui choisit une
+    // capacite typee. La capacite choisie emprunte ensuite exactement les
+    // memes chemins d execution qu aujourd hui (dispatch inchange).
+    let routedIntent = parsedIntent;
+    let effectiveProductSemantic = isProductSemanticSearch;
+    let routingTrace: AiAssistantToolCallTrace | null = null;
+    if (
+      modelRoutingEnabled && !semanticFollowup && needsModelRouting(parsedIntent)
+    ) {
+      const routingStarted = performance.now();
+      const classificationResponse = await providerCall(
+        buildAssistantClassificationMessages(input.question, input.history),
+        [classifyAssistantRequestTool],
+        "any",
+      );
+      const classification = parseAssistantClassification(classificationResponse);
+      const routingDuration = Math.max(
+        0,
+        Math.round(performance.now() - routingStarted),
+      );
+      const routingClarification = classificationClarification(classification);
+      const classifyTrace = aiAssistantToolCallTraceSchema.parse({
+        name: "classify_assistant_request",
+        arguments: {
+          intent: classification.intent,
+          ...(classification.terms.length > 0
+            ? { terms: classification.terms }
+            : {}),
+          ...(classification.marques.length > 0
+            ? { marques: classification.marques }
+            : {}),
+          ...(routingClarification ? { needs_clarification: true } : {}),
+        },
+        ok: true,
+        executed: true,
+        blocked_reason: null,
+        row_count: null,
+        duration_ms: routingDuration,
+      });
+      routingTrace = classifyTrace;
+      partialToolTrace.push(classifyTrace);
+      if (routingClarification) {
+        const answer = `${routingClarification.question}\n\n${
+          routingClarification.options.map((option, index) =>
+            `${index + 1}. ${option}`
+          ).join("\n")
+        }`;
+        const cost = computeCost(resolved.model, partialUsage);
+        const response = aiAssistantAskResponseSchema.parse({
+          ok: true,
+          request_id: requestId,
+          ai_available: true,
+          answer,
+          citations: [],
+          tool_trace: [classifyTrace],
+          evidence: {
+            status: "failed",
+            intent: "assistant_request_routing",
+            dimension: null,
+            facts: [],
+            executions: [],
+          },
+          usage: {
+            provider: resolved.model.provider,
+            model_id: classificationResponse.modelId,
+            input_tokens: partialUsage.inputTokens,
+            output_tokens: partialUsage.outputTokens,
+            cached_input_tokens: partialUsage.cachedInputTokens,
+            reasoning_tokens: partialUsage.reasoningTokens,
+          },
+          cost: {
+            amount: cost,
+            currency: resolved.model.currency,
+            priced: cost !== null,
+          },
+          fallback_reason: null,
+          model_id: classificationResponse.modelId,
+          truncated: false,
+          conversation_context: null,
+        });
+        await db.transaction(async (tx) => {
+          await recordUsage(tx as DbClient, {
+            requestId,
+            authContext,
+            feature: FEATURE,
+            model: resolved.model,
+            prompt: resolved.prompt,
+            usage: partialUsage,
+            costAmount: cost,
+            cacheHit: false,
+            status: "success",
+            latencyMs: Math.round(performance.now() - started),
+            metadata: {
+              execution_mode: "model_routing_clarification",
+              routed_intent: classification.intent,
+              tool_trace: auditToolTrace([classifyTrace]),
+              provider_rounds: partialProviderRounds,
+            },
+          });
+          await tx.update(ai_request_reservations).set({
+            status: "success",
+            actual_tokens: partialUsage.inputTokens + partialUsage.outputTokens +
+              partialUsage.cachedInputTokens + partialUsage.reasoningTokens,
+            actual_cost_amount: cost === null ? null : String(cost),
+            response,
+            expires_at: new Date(Date.now() + IDEMPOTENCY_TTL_MS).toISOString(),
+            updated_at: new Date().toISOString(),
+          }).where(eq(ai_request_reservations.id, reservation.reservation_id));
+        });
+        return response;
+      }
+      routedIntent = intentFromClassification(classification);
+      effectiveProductSemantic = routedIntent.kind === "product_semantic_search";
+    }
+    if (effectiveProductSemantic) {
       if (!isProductSemanticPlannerEnabled()) {
         throw httpError(
           503,
@@ -2432,6 +2566,10 @@ export const runAssistantAsk = async (
         providerCall,
       );
       partialToolTrace.push(...semantic.toolTrace);
+      const semanticTrace = [
+        ...(routingTrace ? [routingTrace] : []),
+        ...semantic.toolTrace,
+      ];
       const cost = computeCost(resolved.model, partialUsage);
       const response = aiAssistantAskResponseSchema.parse({
         ok: true,
@@ -2439,7 +2577,7 @@ export const runAssistantAsk = async (
         ai_available: true,
         answer: semantic.answer,
         citations: semantic.citations,
-        tool_trace: semantic.toolTrace,
+        tool_trace: semanticTrace,
         evidence: semantic.evidence,
         usage: {
           provider: resolved.model.provider,
@@ -2473,7 +2611,8 @@ export const runAssistantAsk = async (
           latencyMs: Math.round(performance.now() - started),
           metadata: {
             execution_mode: "product_semantic_search",
-            tool_trace: auditToolTrace(semantic.toolTrace),
+            ...(routingTrace ? { routed_intent: routedIntent.kind } : {}),
+            tool_trace: auditToolTrace(semanticTrace),
             provider_rounds: partialProviderRounds,
           },
         });
@@ -2489,8 +2628,11 @@ export const runAssistantAsk = async (
       });
       return response;
     }
-    const selectedTools = selectAssistantTools(
-      input.question,
+    // Dispatch inchange : le modele a route (fast-path regex ou passe de
+    // classification), la boucle bornee execute la capacite choisie avec ses
+    // outils. `routedIntent` egale `parsedIntent` hors routage model-first.
+    const selectedTools = selectToolsForAssistantIntent(
+      routedIntent,
       openRouterToolDefinitions,
     );
     const loop = await runAssistantToolLoop(
@@ -2512,22 +2654,27 @@ export const runAssistantAsk = async (
         DEFAULT_MAX_REQUEST_COST_USD,
       ),
     );
-    const cost = computeCost(resolved.model, loop.usage);
+    // partialUsage cumule l eventuel appel de routage plus les tours de boucle.
+    const cost = computeCost(resolved.model, partialUsage);
+    const loopTrace = [
+      ...(routingTrace ? [routingTrace] : []),
+      ...loop.toolTrace,
+    ];
     const response = aiAssistantAskResponseSchema.parse({
       ok: true,
       request_id: requestId,
       ai_available: true,
       answer: loop.answer,
       citations: loop.citations,
-      tool_trace: loop.toolTrace,
+      tool_trace: loopTrace,
       evidence: loop.evidence,
       usage: {
         provider: resolved.model.provider,
         model_id: loop.servedModelId,
-        input_tokens: loop.usage.inputTokens,
-        output_tokens: loop.usage.outputTokens,
-        cached_input_tokens: loop.usage.cachedInputTokens,
-        reasoning_tokens: loop.usage.reasoningTokens,
+        input_tokens: partialUsage.inputTokens,
+        output_tokens: partialUsage.outputTokens,
+        cached_input_tokens: partialUsage.cachedInputTokens,
+        reasoning_tokens: partialUsage.reasoningTokens,
       },
       cost: {
         amount: cost,
@@ -2546,22 +2693,25 @@ export const runAssistantAsk = async (
         feature: FEATURE,
         model: resolved.model,
         prompt: resolved.prompt,
-        usage: loop.usage,
+        usage: partialUsage,
         costAmount: cost,
         cacheHit: false,
         status: "success",
         latencyMs: Math.round(performance.now() - started),
         metadata: {
           ...auditMetadata(loop),
-          execution_mode: parsedIntent.executionMode,
+          tool_trace: auditToolTrace(loopTrace),
+          provider_rounds: partialProviderRounds,
+          execution_mode: routedIntent.executionMode,
+          ...(routingTrace ? { routed_intent: routedIntent.kind } : {}),
           requested_model_id: preferredModelId ?? resolved.model.model_id,
           assistant_run_id: assistantRunId,
         },
       });
       await tx.update(ai_request_reservations).set({
         status: "success",
-        actual_tokens: loop.usage.inputTokens + loop.usage.outputTokens +
-          loop.usage.cachedInputTokens + loop.usage.reasoningTokens,
+        actual_tokens: partialUsage.inputTokens + partialUsage.outputTokens +
+          partialUsage.cachedInputTokens + partialUsage.reasoningTokens,
         actual_cost_amount: cost === null ? null : String(cost),
         response,
         expires_at: new Date(Date.now() + IDEMPOTENCY_TTL_MS).toISOString(),
@@ -2634,31 +2784,17 @@ export const getAssistantStatus = async (
       reason: access.reason ?? "Acces non autorise",
     });
   }
-  const [primary, fallback] = await Promise.all([
-    resolveModelAndPromptForFeature(
-      db,
-      FEATURE,
-      undefined,
-      undefined,
-      false,
-      { preferredModelId: ASSISTANT_MODEL_POLICY.bounded_provider },
-    ),
-    resolveModelAndPromptForFeature(
-      db,
-      FEATURE,
-      undefined,
-      undefined,
-      false,
-      { preferredModelId: ASSISTANT_MODEL_POLICY.general_sql_fallback },
-    ),
-  ]);
+  // Le modele assistant est resolu par l affectation de feature
+  // (mistral-large-2512) ; le statut reflete cette resolution par defaut, sans
+  // exiger de politique modele externe.
+  const resolved = await resolveModelAndPromptForFeature(db, FEATURE);
   return aiAssistantStatusResponseSchema.parse(
-    primary && fallback
-      ? { enabled: true, model_id: primary.model.model_id, reason: null }
+    resolved
+      ? { enabled: true, model_id: resolved.model.model_id, reason: null }
       : {
         enabled: false,
         model_id: null,
-        reason: "Configuration du routage assistant Flash vers Pro incomplete.",
+        reason: "Configuration du modele assistant indisponible.",
       },
   );
 };
