@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-07-27T06:41:16.700Z",
-  "fingerprint_sha256": "8ae3946c73295037f824984774177efa0e16aa9a5ddce6f0b82241fa83e1da97",
+  "generated_at": "2026-07-27T14:48:44.673Z",
+  "fingerprint_sha256": "0a295854acae92bc239b610cdf5ffa2837802b6926912a84a8f0dd79425a0876",
   "decision": "GO_TECHNIQUE",
   "non_regression": [
     {
@@ -21,8 +21,34 @@
       "critere": "Aucune des 37 917 cotes perdue hors fusion de doublon tracee",
       "verdict": "OK",
       "attendu": "toute cellule source rattachable representee, aucun nouveau bloc orphelin, ecart 37 917 -> cible explique ligne par ligne",
-      "observe": "30582 cellules rattachees, 30582 representees, 0 fusionnees ; ecart constate -160, explique -160",
+      "observe": "30419 cellules rattachees, 30419 representees, 0 fusionnees ; ecart constate -372, explique -372",
       "commentaire": "47 blocs sans modele contre 69 dans l oracle SQLite ; detail par model_key dans reconciliation_par_modele"
+    },
+    {
+      "critere": "Les cinq cotes B Bonfiglioli corrigees correspondent au PDF page 58",
+      "verdict": "OK",
+      "attendu": {
+        "BY 280SCK": 368,
+        "BY 280MAK": 419,
+        "BY 315SCK": 406,
+        "BY 315SDK": 406,
+        "BY 315MBK": 457
+      },
+      "observe": {
+        "BY 280SCK": 368,
+        "BY 280MAK": 419,
+        "BY 315SCK": 406,
+        "BY 315SDK": 406,
+        "BY 315MBK": 457
+      },
+      "commentaire": "fixtures exactes, aucune correction automatique"
+    },
+    {
+      "critere": "Aucune cote manifestement implausible ne peut etre publiee",
+      "verdict": "OK",
+      "attendu": 0,
+      "observe": 0,
+      "commentaire": "une anomalie bloque le lot et exige une relecture du PDF"
     },
     {
       "critere": "324 points Bonfiglioli legacy ajoutes",
@@ -147,7 +173,7 @@
       "motor_efficiency_point": 5699,
       "motor_torque_point": 2370,
       "motor_dimension_definition": 59,
-      "motor_dimension": 37757,
+      "motor_dimension": 37545,
       "motor_flange_option": 7926,
       "motor_brake_option": 256,
       "motor_vendor_correlation": 599,
@@ -178,12 +204,31 @@
       "INERTIA_IMPLAUSIBLE|warning": 4
     }
   },
+  "source_fixtures": {
+    "bonfiglioli_b_pdf_page_58": {
+      "ok": true,
+      "expected": {
+        "BY 280SCK": 368,
+        "BY 280MAK": 419,
+        "BY 315SCK": 406,
+        "BY 315SDK": 406,
+        "BY 315MBK": 457
+      },
+      "observed": {
+        "BY 280SCK": 368,
+        "BY 280MAK": 419,
+        "BY 315SCK": 406,
+        "BY 315SDK": 406,
+        "BY 315MBK": 457
+      }
+    }
+  },
   "reconciliation_par_modele": {
     "available": true,
     "oracle_dimensions": 37917,
-    "candidate_dimensions": 37757,
-    "delta_dimensions_explique": -160,
-    "delta_dimensions_constate": -160,
+    "candidate_dimensions": 37545,
+    "delta_dimensions_explique": -372,
+    "delta_dimensions_constate": -372,
     "oracle_flanges": 8196,
     "candidate_flanges": 7926,
     "delta_flanges_explique": -270,
@@ -192,11 +237,11 @@
       "dimensions": {
         "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)": {
           "groupes": 67,
-          "delta": 2432
+          "delta": 2383
         },
         "eclatement par montage et polarite": {
-          "groupes": 40,
-          "delta": 990
+          "groupes": 95,
+          "delta": 827
         },
         "fusion de 2 modeles oracle en un model_key": {
           "groupes": 44,
@@ -1158,6 +1203,30 @@
         "cause": "fusion de 2 modeles oracle en un model_key"
       },
       {
+        "model_key": "bonfiglioli:bn160m:j-0p047900000000000005-m-73",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 25,
+        "delta_dimensions": 25,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:bn160m:j-0p07400000000000001-m-83",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 25,
+        "delta_dimensions": 25,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
         "model_key": "innomotics:1le10111aj4:j-0p0059-m-18",
         "designations": [
           "1LE1011-1AJ4"
@@ -1614,54 +1683,6 @@
         "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
       },
       {
-        "model_key": "bonfiglioli:bn160m:j-0p047900000000000005-m-73",
-        "designations": [],
-        "oracle_models": 0,
-        "oracle_dimensions": 0,
-        "candidate_dimensions": 24,
-        "delta_dimensions": 24,
-        "oracle_flanges": 0,
-        "candidate_flanges": 1,
-        "delta_flanges": 1,
-        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
-      },
-      {
-        "model_key": "bonfiglioli:bn160m:j-0p07400000000000001-m-83",
-        "designations": [],
-        "oracle_models": 0,
-        "oracle_dimensions": 0,
-        "candidate_dimensions": 24,
-        "delta_dimensions": 24,
-        "oracle_flanges": 0,
-        "candidate_flanges": 1,
-        "delta_flanges": 1,
-        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
-      },
-      {
-        "model_key": "bonfiglioli:bn180l:j-0p125-m-135",
-        "designations": [],
-        "oracle_models": 0,
-        "oracle_dimensions": 0,
-        "candidate_dimensions": 24,
-        "delta_dimensions": 24,
-        "oracle_flanges": 0,
-        "candidate_flanges": 1,
-        "delta_flanges": 1,
-        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
-      },
-      {
-        "model_key": "bonfiglioli:bn180l:j-0p155-m-130",
-        "designations": [],
-        "oracle_models": 0,
-        "oracle_dimensions": 0,
-        "candidate_dimensions": 24,
-        "delta_dimensions": 24,
-        "oracle_flanges": 0,
-        "candidate_flanges": 1,
-        "delta_flanges": 1,
-        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
-      },
-      {
         "model_key": "bonfiglioli:bn200l:j-0p165-m-157",
         "designations": [],
         "oracle_models": 0,
@@ -2080,7 +2101,7 @@
         "cause": "fusion de 2 modeles oracle en un model_key"
       },
       {
-        "model_key": "bonfiglioli:be160l:j-0p049-m-109",
+        "model_key": "bonfiglioli:bn180l:j-0p125-m-135",
         "designations": [],
         "oracle_models": 0,
         "oracle_dimensions": 0,
@@ -2092,43 +2113,7 @@
         "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
       },
       {
-        "model_key": "bonfiglioli:be160l:j-0p079-m-115",
-        "designations": [],
-        "oracle_models": 0,
-        "oracle_dimensions": 0,
-        "candidate_dimensions": 22,
-        "delta_dimensions": 22,
-        "oracle_flanges": 0,
-        "candidate_flanges": 1,
-        "delta_flanges": 1,
-        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
-      },
-      {
-        "model_key": "bonfiglioli:be160m:j-0p065-m-99",
-        "designations": [],
-        "oracle_models": 0,
-        "oracle_dimensions": 0,
-        "candidate_dimensions": 22,
-        "delta_dimensions": 22,
-        "oracle_flanges": 0,
-        "candidate_flanges": 1,
-        "delta_flanges": 1,
-        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
-      },
-      {
-        "model_key": "bonfiglioli:be180l:j-0p165-m-157",
-        "designations": [],
-        "oracle_models": 0,
-        "oracle_dimensions": 0,
-        "candidate_dimensions": 22,
-        "delta_dimensions": 22,
-        "oracle_flanges": 0,
-        "candidate_flanges": 1,
-        "delta_flanges": 1,
-        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
-      },
-      {
-        "model_key": "bonfiglioli:be180m:j-0p125-m-135",
+        "model_key": "bonfiglioli:bn180l:j-0p155-m-130",
         "designations": [],
         "oracle_models": 0,
         "oracle_dimensions": 0,
@@ -2222,90 +2207,6 @@
         "candidate_flanges": 2,
         "delta_flanges": -2,
         "cause": "fusion de 2 modeles oracle en un model_key"
-      },
-      {
-        "model_key": "bonfiglioli:be132ma:j-0p031900000000000005-m-59",
-        "designations": [],
-        "oracle_models": 0,
-        "oracle_dimensions": 0,
-        "candidate_dimensions": 20,
-        "delta_dimensions": 20,
-        "oracle_flanges": 0,
-        "candidate_flanges": 2,
-        "delta_flanges": 2,
-        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
-      },
-      {
-        "model_key": "bonfiglioli:be132ma:j-0p0383-m-44",
-        "designations": [],
-        "oracle_models": 0,
-        "oracle_dimensions": 0,
-        "candidate_dimensions": 20,
-        "delta_dimensions": 20,
-        "oracle_flanges": 0,
-        "candidate_flanges": 2,
-        "delta_flanges": 2,
-        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
-      },
-      {
-        "model_key": "bonfiglioli:be132ma:j-0p0383-m-56",
-        "designations": [],
-        "oracle_models": 0,
-        "oracle_dimensions": 0,
-        "candidate_dimensions": 20,
-        "delta_dimensions": 20,
-        "oracle_flanges": 0,
-        "candidate_flanges": 2,
-        "delta_flanges": 2,
-        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
-      },
-      {
-        "model_key": "bonfiglioli:be132mb:j-0p021-m-65",
-        "designations": [],
-        "oracle_models": 0,
-        "oracle_dimensions": 0,
-        "candidate_dimensions": 20,
-        "delta_dimensions": 20,
-        "oracle_flanges": 0,
-        "candidate_flanges": 2,
-        "delta_flanges": 2,
-        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
-      },
-      {
-        "model_key": "bonfiglioli:be132mb:j-0p036000000000000004-m-70",
-        "designations": [],
-        "oracle_models": 0,
-        "oracle_dimensions": 0,
-        "candidate_dimensions": 20,
-        "delta_dimensions": 20,
-        "oracle_flanges": 0,
-        "candidate_flanges": 2,
-        "delta_flanges": 2,
-        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
-      },
-      {
-        "model_key": "bonfiglioli:be132s:j-0p027-m-53",
-        "designations": [],
-        "oracle_models": 0,
-        "oracle_dimensions": 0,
-        "candidate_dimensions": 20,
-        "delta_dimensions": 20,
-        "oracle_flanges": 0,
-        "candidate_flanges": 2,
-        "delta_flanges": 2,
-        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
-      },
-      {
-        "model_key": "bonfiglioli:be132s:j-0p029500000000000002-m-44",
-        "designations": [],
-        "oracle_models": 0,
-        "oracle_dimensions": 0,
-        "candidate_dimensions": 20,
-        "delta_dimensions": 20,
-        "oracle_flanges": 0,
-        "candidate_flanges": 2,
-        "delta_flanges": 2,
-        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
       },
       {
         "model_key": "leroy-somer:cils315m:standard",
@@ -2466,6 +2367,102 @@
         "cause": "fusion de 2 modeles oracle en un model_key"
       },
       {
+        "model_key": "bonfiglioli:be132ma:j-0p031900000000000005-m-59",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 18,
+        "delta_dimensions": 18,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:be132ma:j-0p0383-m-44",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 18,
+        "delta_dimensions": 18,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:be132ma:j-0p0383-m-56",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 18,
+        "delta_dimensions": 18,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:be132mb:j-0p021-m-65",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 18,
+        "delta_dimensions": 18,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:be132mb:j-0p036000000000000004-m-70",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 18,
+        "delta_dimensions": 18,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:be132s:j-0p027-m-53",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 18,
+        "delta_dimensions": 18,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:be132s:j-0p029500000000000002-m-44",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 18,
+        "delta_dimensions": 18,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:be180l:j-0p165-m-157",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 18,
+        "delta_dimensions": 18,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
         "model_key": "bonfiglioli:be90l:j-0p00167-m-14",
         "designations": [],
         "oracle_models": 0,
@@ -2618,7 +2615,55 @@
         "cause": "fusion de 2 modeles oracle en un model_key"
       },
       {
+        "model_key": "bonfiglioli:be160m:j-0p065-m-99",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 17,
+        "delta_dimensions": 17,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:be180m:j-0p125-m-135",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 17,
+        "delta_dimensions": 17,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
         "model_key": "bonfiglioli:bn160mr:j-0p021-m-65",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 17,
+        "delta_dimensions": 17,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:bn160mr:j-0p036000000000000004-m-70",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 17,
+        "delta_dimensions": 17,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:be160l:j-0p049-m-109",
         "designations": [],
         "oracle_models": 0,
         "oracle_dimensions": 0,
@@ -2630,7 +2675,7 @@
         "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
       },
       {
-        "model_key": "bonfiglioli:bn160mr:j-0p036000000000000004-m-70",
+        "model_key": "bonfiglioli:be160l:j-0p079-m-115",
         "designations": [],
         "oracle_models": 0,
         "oracle_dimensions": 0,
@@ -2646,8 +2691,8 @@
         "designations": [],
         "oracle_models": 0,
         "oracle_dimensions": 0,
-        "candidate_dimensions": 16,
-        "delta_dimensions": 16,
+        "candidate_dimensions": 14,
+        "delta_dimensions": 14,
         "oracle_flanges": 0,
         "candidate_flanges": 1,
         "delta_flanges": 1,
@@ -2658,8 +2703,8 @@
         "designations": [],
         "oracle_models": 0,
         "oracle_dimensions": 0,
-        "candidate_dimensions": 16,
-        "delta_dimensions": 16,
+        "candidate_dimensions": 14,
+        "delta_dimensions": 14,
         "oracle_flanges": 0,
         "candidate_flanges": 1,
         "delta_flanges": 1,
@@ -2679,66 +2724,6 @@
       },
       {
         "model_key": "bonfiglioli:m4lc:j-0p036000000000000004-m-65",
-        "designations": [],
-        "oracle_models": 0,
-        "oracle_dimensions": 0,
-        "candidate_dimensions": 13,
-        "delta_dimensions": 13,
-        "oracle_flanges": 0,
-        "candidate_flanges": 0,
-        "delta_flanges": 0,
-        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
-      },
-      {
-        "model_key": "bonfiglioli:me4la:j-0p0178-m-51",
-        "designations": [],
-        "oracle_models": 0,
-        "oracle_dimensions": 0,
-        "candidate_dimensions": 13,
-        "delta_dimensions": 13,
-        "oracle_flanges": 0,
-        "candidate_flanges": 0,
-        "delta_flanges": 0,
-        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
-      },
-      {
-        "model_key": "bonfiglioli:me4la:j-0p031900000000000005-m-57",
-        "designations": [],
-        "oracle_models": 0,
-        "oracle_dimensions": 0,
-        "candidate_dimensions": 13,
-        "delta_dimensions": 13,
-        "oracle_flanges": 0,
-        "candidate_flanges": 0,
-        "delta_flanges": 0,
-        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
-      },
-      {
-        "model_key": "bonfiglioli:me4la:j-0p0383-m-54",
-        "designations": [],
-        "oracle_models": 0,
-        "oracle_dimensions": 0,
-        "candidate_dimensions": 13,
-        "delta_dimensions": 13,
-        "oracle_flanges": 0,
-        "candidate_flanges": 0,
-        "delta_flanges": 0,
-        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
-      },
-      {
-        "model_key": "bonfiglioli:me4lb:j-0p021-m-60",
-        "designations": [],
-        "oracle_models": 0,
-        "oracle_dimensions": 0,
-        "candidate_dimensions": 13,
-        "delta_dimensions": 13,
-        "oracle_flanges": 0,
-        "candidate_flanges": 0,
-        "delta_flanges": 0,
-        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
-      },
-      {
-        "model_key": "bonfiglioli:me4lb:j-0p036000000000000004-m-65",
         "designations": [],
         "oracle_models": 0,
         "oracle_dimensions": 0,
@@ -2784,6 +2769,836 @@
         "candidate_flanges": 0,
         "delta_flanges": 0,
         "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:me4la:j-0p0178-m-51",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 12,
+        "delta_dimensions": 12,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:me4la:j-0p031900000000000005-m-57",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 12,
+        "delta_dimensions": 12,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:me4la:j-0p0383-m-54",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 12,
+        "delta_dimensions": 12,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:me4lb:j-0p021-m-60",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 12,
+        "delta_dimensions": 12,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:me4lb:j-0p036000000000000004-m-65",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 12,
+        "delta_dimensions": 12,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:bx132ma:j-0p036000000000000004-m-67",
+        "designations": [
+          "BX 132MA"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 17,
+        "delta_dimensions": -8,
+        "oracle_flanges": 2,
+        "candidate_flanges": 2,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:bx132ma:j-0p041-m-77",
+        "designations": [
+          "BX 132MA"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 17,
+        "delta_dimensions": -8,
+        "oracle_flanges": 2,
+        "candidate_flanges": 2,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:bx132sb:j-0p031-m-57",
+        "designations": [
+          "BX 132SB"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 18,
+        "delta_dimensions": -7,
+        "oracle_flanges": 2,
+        "candidate_flanges": 2,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:bx132sb:j-0p041-m-77",
+        "designations": [
+          "BX 132SB"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 18,
+        "delta_dimensions": -7,
+        "oracle_flanges": 2,
+        "candidate_flanges": 2,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:bx355mak:j-6p9-m-1780",
+        "designations": [
+          "BX 355MAK"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 24,
+        "candidate_dimensions": 17,
+        "delta_dimensions": -7,
+        "oracle_flanges": 1,
+        "candidate_flanges": 1,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:bx355sak:j-5p9-m-1610",
+        "designations": [
+          "BX 355SAK"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 24,
+        "candidate_dimensions": 17,
+        "delta_dimensions": -7,
+        "oracle_flanges": 1,
+        "candidate_flanges": 1,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:bx71a:j-0p00063-m-5p5",
+        "designations": [
+          "BX 71A"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 18,
+        "delta_dimensions": -7,
+        "oracle_flanges": 2,
+        "candidate_flanges": 2,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:bx71a:j-0p00063-m-5p7",
+        "designations": [
+          "BX 71A"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 18,
+        "delta_dimensions": -7,
+        "oracle_flanges": 2,
+        "candidate_flanges": 2,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:bx80a:j-0p0028-m-12p2",
+        "designations": [
+          "BX 80A"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 18,
+        "delta_dimensions": -7,
+        "oracle_flanges": 2,
+        "candidate_flanges": 2,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:bx80b:j-0p0035-m-16",
+        "designations": [
+          "BX 80B"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 18,
+        "delta_dimensions": -7,
+        "oracle_flanges": 2,
+        "candidate_flanges": 2,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:bx90s:j-0p0027-m-16",
+        "designations": [
+          "BX 90S"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 18,
+        "delta_dimensions": -7,
+        "oracle_flanges": 2,
+        "candidate_flanges": 2,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:by280mak:j-2p3-m-840",
+        "designations": [
+          "BY 280MAK"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 24,
+        "candidate_dimensions": 17,
+        "delta_dimensions": -7,
+        "oracle_flanges": 1,
+        "candidate_flanges": 1,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:by280sck:j-1p9-m-725",
+        "designations": [
+          "BY 280SCK"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 24,
+        "candidate_dimensions": 17,
+        "delta_dimensions": -7,
+        "oracle_flanges": 1,
+        "candidate_flanges": 1,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:bx355mbk:j-7p2-m-1820",
+        "designations": [
+          "BX 355MBK"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 24,
+        "candidate_dimensions": 18,
+        "delta_dimensions": -6,
+        "oracle_flanges": 1,
+        "candidate_flanges": 1,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:bx355mck:j-8p4-m-2140",
+        "designations": [
+          "BX 355MCK"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 24,
+        "candidate_dimensions": 18,
+        "delta_dimensions": -6,
+        "oracle_flanges": 1,
+        "candidate_flanges": 1,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:bx71b:j-0p001-m-7p3",
+        "designations": [
+          "BX 71B"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 20,
+        "delta_dimensions": -5,
+        "oracle_flanges": 2,
+        "candidate_flanges": 2,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:bx90la:j-0p0031000000000000003-m-17",
+        "designations": [
+          "BX 90LA"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 20,
+        "delta_dimensions": -5,
+        "oracle_flanges": 2,
+        "candidate_flanges": 2,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:bx180l:j-0p166-m-163",
+        "designations": [
+          "BX 180L"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 24,
+        "candidate_dimensions": 20,
+        "delta_dimensions": -4,
+        "oracle_flanges": 1,
+        "candidate_flanges": 1,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:bx280sbk:j-1p85-m-725",
+        "designations": [
+          "BX 280SBK"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 22,
+        "candidate_dimensions": 18,
+        "delta_dimensions": -4,
+        "oracle_flanges": 1,
+        "candidate_flanges": 1,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:bx180m:j-0p156-m-155",
+        "designations": [
+          "BX 180M"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 24,
+        "candidate_dimensions": 21,
+        "delta_dimensions": -3,
+        "oracle_flanges": 1,
+        "candidate_flanges": 1,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:bx250mak:j-0p93-m-476",
+        "designations": [
+          "BX 250MAK"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 22,
+        "candidate_dimensions": 25,
+        "delta_dimensions": 3,
+        "oracle_flanges": 1,
+        "candidate_flanges": 1,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:bx280sak:j-1p5-m-665",
+        "designations": [
+          "BX 280SAK"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 22,
+        "candidate_dimensions": 19,
+        "delta_dimensions": -3,
+        "oracle_flanges": 1,
+        "candidate_flanges": 1,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:bx63a:j-0p00018-m-3p2",
+        "designations": [
+          "BX 63A"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -2,
+        "oracle_flanges": 2,
+        "candidate_flanges": 2,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:bx63a:j-0p000182-m-3p2",
+        "designations": [
+          "BX 63A"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -2,
+        "oracle_flanges": 2,
+        "candidate_flanges": 2,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:bx63b:j-0p00029-m-5p1",
+        "designations": [
+          "BX 63B"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -2,
+        "oracle_flanges": 2,
+        "candidate_flanges": 2,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:bx63c:j-0p00043-m-5p4",
+        "designations": [
+          "BX 63C"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -2,
+        "oracle_flanges": 2,
+        "candidate_flanges": 2,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:bx90sr:j-0p0027-m-16",
+        "designations": [
+          "BX 90SR"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -2,
+        "oracle_flanges": 2,
+        "candidate_flanges": 2,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:by315sck:j-2p9-m-1000",
+        "designations": [
+          "BY 315SCK"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 24,
+        "candidate_dimensions": 22,
+        "delta_dimensions": -2,
+        "oracle_flanges": 1,
+        "candidate_flanges": 1,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:bx225sak:j-0p54-m-398",
+        "designations": [
+          "BX 225SAK"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 22,
+        "candidate_dimensions": 21,
+        "delta_dimensions": -1,
+        "oracle_flanges": 1,
+        "candidate_flanges": 1,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:bx225sbk:j-0p54-m-398",
+        "designations": [
+          "BX 225SBK"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 22,
+        "candidate_dimensions": 21,
+        "delta_dimensions": -1,
+        "oracle_flanges": 1,
+        "candidate_flanges": 1,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:by315mbk:j-3p9-m-1220",
+        "designations": [
+          "BY 315MBK"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 24,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -1,
+        "oracle_flanges": 1,
+        "candidate_flanges": 1,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:by315sdk:j-3p2-m-1065",
+        "designations": [
+          "BY 315SDK"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 24,
+        "candidate_dimensions": 25,
+        "delta_dimensions": 1,
+        "oracle_flanges": 1,
+        "candidate_flanges": 1,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:by355sak:j-5p9-m-1610",
+        "designations": [
+          "BY 355SAK"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 23,
+        "candidate_dimensions": 22,
+        "delta_dimensions": -1,
+        "oracle_flanges": 1,
+        "candidate_flanges": 1,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:mx05a:j-0p00018-m-3p2",
+        "designations": [
+          "MX 05A"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 13,
+        "candidate_dimensions": 12,
+        "delta_dimensions": -1,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:mx05a:j-0p000182-m-2p9",
+        "designations": [
+          "MX 05A"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 13,
+        "candidate_dimensions": 12,
+        "delta_dimensions": -1,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:mx05b:j-0p00029-m-4p8",
+        "designations": [
+          "MX 05B"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 13,
+        "candidate_dimensions": 12,
+        "delta_dimensions": -1,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:mx05b:j-0p00029-m-5p1",
+        "designations": [
+          "MX 05B"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 13,
+        "candidate_dimensions": 12,
+        "delta_dimensions": -1,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:mx1sa:j-0p00063-m-5p4",
+        "designations": [
+          "MX 1SA"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 13,
+        "candidate_dimensions": 12,
+        "delta_dimensions": -1,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:mx1sb:j-0p001-m-6p9",
+        "designations": [
+          "MX 1SB"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 13,
+        "candidate_dimensions": 12,
+        "delta_dimensions": -1,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:mx2sa:j-0p0028-m-12p2",
+        "designations": [
+          "MX 2SA"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 13,
+        "candidate_dimensions": 12,
+        "delta_dimensions": -1,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:mx2sb:j-0p0027-m-16",
+        "designations": [
+          "MX 2SB"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 13,
+        "candidate_dimensions": 12,
+        "delta_dimensions": -1,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:mx2sb:j-0p0035-m-16",
+        "designations": [
+          "MX 2SB"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 13,
+        "candidate_dimensions": 12,
+        "delta_dimensions": -1,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:mx3la:j-0p0058000000000000005-m-24",
+        "designations": [
+          "MX 3LA"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 13,
+        "candidate_dimensions": 12,
+        "delta_dimensions": -1,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:mx3la:j-0p0073-m-29",
+        "designations": [
+          "MX 3LA"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 13,
+        "candidate_dimensions": 12,
+        "delta_dimensions": -1,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:mx3lb:j-0p0073-m-29",
+        "designations": [
+          "MX 3LB"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 13,
+        "candidate_dimensions": 12,
+        "delta_dimensions": -1,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:mx3sa:j-0p0035-m-17",
+        "designations": [
+          "MX 3SA"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 13,
+        "candidate_dimensions": 12,
+        "delta_dimensions": -1,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:mx3sb:j-0p0043-m-20",
+        "designations": [
+          "MX 3SB"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 13,
+        "candidate_dimensions": 12,
+        "delta_dimensions": -1,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:mx4la:j-0p036000000000000004-m-67",
+        "designations": [
+          "MX 4LA"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 13,
+        "candidate_dimensions": 12,
+        "delta_dimensions": -1,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:mx4la:j-0p041-m-77",
+        "designations": [
+          "MX 4LA"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 13,
+        "candidate_dimensions": 12,
+        "delta_dimensions": -1,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:mx4sa:j-0p022500000000000003-m-45",
+        "designations": [
+          "MX 4SA"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 13,
+        "candidate_dimensions": 12,
+        "delta_dimensions": -1,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:mx4sb:j-0p031-m-57",
+        "designations": [
+          "MX 4SB"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 13,
+        "candidate_dimensions": 12,
+        "delta_dimensions": -1,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:mx4sb:j-0p041-m-77",
+        "designations": [
+          "MX 4SB"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 13,
+        "candidate_dimensions": 12,
+        "delta_dimensions": -1,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:mx5la:j-0p08900000000000001-m-121",
+        "designations": [
+          "MX 5LA"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 13,
+        "candidate_dimensions": 12,
+        "delta_dimensions": -1,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:mx5sa:j-0p065-m-95",
+        "designations": [
+          "MX 5SA"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 13,
+        "candidate_dimensions": 12,
+        "delta_dimensions": -1,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:mx5sb:j-0p078-m-110",
+        "designations": [
+          "MX 5SB"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 13,
+        "candidate_dimensions": 12,
+        "delta_dimensions": -1,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
       }
     ]
   },
@@ -2860,15 +3675,15 @@
   "dimension_reconciliation": {
     "blocks_in": 1352,
     "blocks_matched": 1305,
-    "source_cells_total": 31367,
-    "source_cells_matched": 30582,
-    "source_cells_unmatched": 785,
+    "source_cells_total": 31192,
+    "source_cells_matched": 30419,
+    "source_cells_unmatched": 773,
     "source_flanges_total": 7675,
     "source_flanges_matched": 7609,
     "source_flanges_unmatched": 66,
-    "expanded_dimension_rows": 37757,
+    "expanded_dimension_rows": 37545,
     "merged_dimension_rows": 0,
-    "distinct_source_cells_represented": 30582,
+    "distinct_source_cells_represented": 30419,
     "expanded_flange_rows": 8292,
     "merged_flange_rows": 366,
     "distinct_source_flanges_represented": 7228,
@@ -3772,7 +4587,7 @@
       "brand": "Bonfiglioli",
       "join_value": "be100",
       "designation": "BE 100",
-      "cells": 19,
+      "cells": 18,
       "flanges": 2
     },
     {
@@ -3780,7 +4595,7 @@
       "brand": "Bonfiglioli",
       "join_value": "be112",
       "designation": "BE 112",
-      "cells": 19,
+      "cells": 18,
       "flanges": 2
     },
     {
@@ -3844,7 +4659,7 @@
       "brand": "Bonfiglioli",
       "join_value": "bn132",
       "designation": "BN 132",
-      "cells": 10,
+      "cells": 9,
       "flanges": 2
     },
     {
@@ -3900,7 +4715,7 @@
       "brand": "Bonfiglioli",
       "join_value": "m4",
       "designation": "M 4",
-      "cells": 13,
+      "cells": 12,
       "flanges": 0
     },
     {
@@ -3924,7 +4739,7 @@
       "brand": "Bonfiglioli",
       "join_value": "me05",
       "designation": "ME 05",
-      "cells": 13,
+      "cells": 12,
       "flanges": 0
     },
     {
@@ -3932,7 +4747,7 @@
       "brand": "Bonfiglioli",
       "join_value": "me1s",
       "designation": "ME 1S",
-      "cells": 13,
+      "cells": 12,
       "flanges": 0
     },
     {
@@ -3940,7 +4755,7 @@
       "brand": "Bonfiglioli",
       "join_value": "me2s",
       "designation": "ME 2S",
-      "cells": 13,
+      "cells": 12,
       "flanges": 0
     },
     {
@@ -3948,7 +4763,7 @@
       "brand": "Bonfiglioli",
       "join_value": "me3l",
       "designation": "ME 3L",
-      "cells": 13,
+      "cells": 12,
       "flanges": 0
     },
     {
@@ -3956,7 +4771,7 @@
       "brand": "Bonfiglioli",
       "join_value": "me3s",
       "designation": "ME 3S",
-      "cells": 13,
+      "cells": 12,
       "flanges": 0
     },
     {
@@ -3972,7 +4787,7 @@
       "brand": "Bonfiglioli",
       "join_value": "me4s",
       "designation": "ME 4S",
-      "cells": 13,
+      "cells": 12,
       "flanges": 0
     },
     {
@@ -3980,7 +4795,7 @@
       "brand": "Bonfiglioli",
       "join_value": "me5l",
       "designation": "ME 5L",
-      "cells": 13,
+      "cells": 12,
       "flanges": 0
     },
     {
@@ -3988,7 +4803,7 @@
       "brand": "Bonfiglioli",
       "join_value": "me5s",
       "designation": "ME 5S",
-      "cells": 13,
+      "cells": 12,
       "flanges": 0
     }
   ],

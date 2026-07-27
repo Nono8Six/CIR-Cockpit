@@ -254,7 +254,7 @@
     "context": {
       "origin": "dimensions-bonfiglioli.json#5",
       "brand": "Bonfiglioli",
-      "cells": 19,
+      "cells": 18,
       "flanges": 2
     },
     "activation_blocking": false
@@ -266,7 +266,7 @@
     "context": {
       "origin": "dimensions-bonfiglioli.json#6",
       "brand": "Bonfiglioli",
-      "cells": 19,
+      "cells": 18,
       "flanges": 2
     },
     "activation_blocking": false
@@ -362,7 +362,7 @@
     "context": {
       "origin": "dimensions-bonfiglioli.json#23",
       "brand": "Bonfiglioli",
-      "cells": 10,
+      "cells": 9,
       "flanges": 2
     },
     "activation_blocking": false
@@ -446,7 +446,7 @@
     "context": {
       "origin": "dimensions-bonfiglioli.json#77",
       "brand": "Bonfiglioli",
-      "cells": 13,
+      "cells": 12,
       "flanges": 0
     },
     "activation_blocking": false
@@ -482,7 +482,7 @@
     "context": {
       "origin": "dimensions-bonfiglioli.json#81",
       "brand": "Bonfiglioli",
-      "cells": 13,
+      "cells": 12,
       "flanges": 0
     },
     "activation_blocking": false
@@ -494,7 +494,7 @@
     "context": {
       "origin": "dimensions-bonfiglioli.json#82",
       "brand": "Bonfiglioli",
-      "cells": 13,
+      "cells": 12,
       "flanges": 0
     },
     "activation_blocking": false
@@ -506,7 +506,7 @@
     "context": {
       "origin": "dimensions-bonfiglioli.json#83",
       "brand": "Bonfiglioli",
-      "cells": 13,
+      "cells": 12,
       "flanges": 0
     },
     "activation_blocking": false
@@ -518,7 +518,7 @@
     "context": {
       "origin": "dimensions-bonfiglioli.json#84",
       "brand": "Bonfiglioli",
-      "cells": 13,
+      "cells": 12,
       "flanges": 0
     },
     "activation_blocking": false
@@ -530,7 +530,7 @@
     "context": {
       "origin": "dimensions-bonfiglioli.json#85",
       "brand": "Bonfiglioli",
-      "cells": 13,
+      "cells": 12,
       "flanges": 0
     },
     "activation_blocking": false
@@ -554,7 +554,7 @@
     "context": {
       "origin": "dimensions-bonfiglioli.json#89",
       "brand": "Bonfiglioli",
-      "cells": 13,
+      "cells": 12,
       "flanges": 0
     },
     "activation_blocking": false
@@ -566,7 +566,7 @@
     "context": {
       "origin": "dimensions-bonfiglioli.json#90",
       "brand": "Bonfiglioli",
-      "cells": 13,
+      "cells": 12,
       "flanges": 0
     },
     "activation_blocking": false
@@ -578,7 +578,7 @@
     "context": {
       "origin": "dimensions-bonfiglioli.json#91",
       "brand": "Bonfiglioli",
-      "cells": 13,
+      "cells": 12,
       "flanges": 0
     },
     "activation_blocking": false

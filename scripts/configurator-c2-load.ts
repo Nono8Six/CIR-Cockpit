@@ -588,7 +588,15 @@ async function activate(): Promise<void> {
   const [candidate] = await sql`
     select s.id, s.status, s.counters, s.activation_gate_status,
            (select count(*) from configurator.catalog_snapshot a
-             where a.domain = s.domain and a.is_active) as actifs_avant
+             where a.domain = s.domain and a.is_active) as actifs_avant,
+           (select a.id from configurator.catalog_snapshot a
+             where a.domain = s.domain and a.is_active
+             order by a.activated_at desc nulls last
+             limit 1) as previous_active_id,
+           (select a.counters from configurator.catalog_snapshot a
+             where a.domain = s.domain and a.is_active
+             order by a.activated_at desc nulls last
+             limit 1) as previous_counters
     from configurator.catalog_snapshot s
     where s.id = ${SNAPSHOT_ARG}
   `;
@@ -597,8 +605,8 @@ async function activate(): Promise<void> {
   // Empreinte du diff : contenu, jamais identifiants, donc reproductible.
   const diff = {
     domain: 'motor',
-    previous_active: null,
-    previous_counters: {},
+    previous_active: candidate.previous_active_id ?? null,
+    previous_counters: candidate.previous_counters ?? {},
     candidate_counters: candidate.counters,
     lot_fingerprint_sha256: (readJson(MANIFEST_PATH) as Row).fingerprint_sha256,
   };

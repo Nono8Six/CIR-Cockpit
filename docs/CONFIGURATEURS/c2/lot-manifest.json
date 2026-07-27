@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-07-27T06:41:16.700Z",
+  "generated_at": "2026-07-27T14:48:44.673Z",
   "domain": "motor",
   "source_root": "C:\\GitHub\\CIR_Moteur",
-  "fingerprint_sha256": "8ae3946c73295037f824984774177efa0e16aa9a5ddce6f0b82241fa83e1da97",
+  "fingerprint_sha256": "0a295854acae92bc239b610cdf5ffa2837802b6926912a84a8f0dd79425a0876",
   "rules": {
     "model_key": "cir.motor.model-key/v1",
     "identity_discriminator": "cir.motor.identity-discriminator/v1",
@@ -154,8 +154,8 @@
       "kind": "dimension",
       "filename": "dimensions-bonfiglioli.json",
       "absolute_path": "C:\\GitHub\\CIR_Moteur\\tools\\extract\\out\\dimensions-bonfiglioli.json",
-      "sha256": "97024f0c5fe2cbad76318613c196b6ac01cf7560064c7e101b09c1e9ac2c8a07",
-      "size_bytes": 208271,
+      "sha256": "481036293c27f95a1cf3eeee9ec9175164d3f6b83c5e8845b96535bae3eb163d",
+      "size_bytes": 209767,
       "row_count": 108,
       "validated": true,
       "read_status": "readable"
@@ -352,9 +352,9 @@
       "occurrences": 599
     },
     {
-      "verbatim": "pdfplumber-rotated-transposed-table",
+      "verbatim": "pdfplumber-rotated-transposed-geometric-table",
       "normalized": "pdfplumber-rotated",
-      "occurrences": 1629
+      "occurrences": 1466
     },
     {
       "verbatim": "pdfplumber-shaft",

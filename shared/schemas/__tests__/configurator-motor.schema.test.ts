@@ -56,6 +56,7 @@ const validInput = {
         B: confirmedMeasurement(286),
         C: confirmedMeasurement(149),
         H: confirmedMeasurement(225),
+        K: confirmedMeasurement(24),
         D: confirmedMeasurement(60),
         E: confirmedMeasurement(140),
         F: confirmedMeasurement(18)
@@ -170,6 +171,15 @@ describe('dimensions mecaniques moteur', () => {
     });
 
     expect(result.success).toBe(true);
+  });
+
+  it('accepte K comme diametre de trou catalogue en millimetres', () => {
+    expect(motorFrameDimensionsSchema.safeParse({
+      K: confirmedMeasurement(24)
+    }).success).toBe(true);
+    expect(motorFrameDimensionsSchema.safeParse({
+      K: confirmedMeasurement(-1)
+    }).success).toBe(false);
   });
 
   it('limite la phase 1 aux cinq montages fonctionnels', () => {

@@ -48,6 +48,7 @@ export const motorDimensionCodeSchema = z.enum([
   'B',
   'C',
   'H',
+  'K',
   'D',
   'E',
   'F',
@@ -122,6 +123,7 @@ export const motorFrameDimensionsSchema = z.strictObject({
   B: motorNonNegativeDimensionConstraintSchema().optional(),
   C: motorNonNegativeDimensionConstraintSchema().optional(),
   H: motorNonNegativeDimensionConstraintSchema().optional(),
+  K: motorNonNegativeDimensionConstraintSchema().optional(),
   D: motorNonNegativeDimensionConstraintSchema().optional(),
   E: motorNonNegativeDimensionConstraintSchema().optional(),
   F: motorNonNegativeDimensionConstraintSchema().optional()
@@ -167,6 +169,7 @@ export const motorToleranceSchema = z.strictObject({
   B: nonNegativeNumberSchema.optional(),
   C: nonNegativeNumberSchema.optional(),
   H: nonNegativeNumberSchema.optional(),
+  K: nonNegativeNumberSchema.optional(),
   D: nonNegativeNumberSchema.optional(),
   E: nonNegativeNumberSchema.optional(),
   F: nonNegativeNumberSchema.optional(),

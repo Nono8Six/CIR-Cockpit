@@ -130,8 +130,25 @@ const SOURCE_FILES = [
   { role: 'validation_issues', name: 'cils-anomalies.json', dir: EXTRACT_DIR, kind: 'anomaly', validated: true },
 ];
 
-const CANONICAL_CODES = new Set(['A', 'B', 'C', 'H', 'D', 'E', 'F', 'M', 'N', 'P', 'S', 'T', 'Z']);
-const CANONICAL_DIMENSION_CODES = new Set(['A', 'B', 'C', 'H', 'D', 'E', 'F']);
+const CANONICAL_CODES = new Set(['A', 'B', 'C', 'H', 'K', 'D', 'E', 'F', 'M', 'N', 'P', 'S', 'T', 'Z']);
+const CANONICAL_DIMENSION_CODES = new Set(['A', 'B', 'C', 'H', 'K', 'D', 'E', 'F']);
+const BONFIGLIOLI_B_FIXTURES = new Map([
+  ['BY 280SCK', 368],
+  ['BY 280MAK', 419],
+  ['BY 315SCK', 406],
+  ['BY 315SDK', 406],
+  ['BY 315MBK', 457],
+]);
+const DIMENSION_ABSOLUTE_MAX_MM = new Map([
+  ['A', 1500], ['AB', 2500], ['AC', 2500], ['AD', 2500], ['AF', 2500],
+  ['B', 1500], ['BB', 2500], ['C', 1000],
+  ['D', 500], ['DA', 500], ['DB', 500],
+  ['E', 1000], ['EA', 1000],
+  ['F', 250], ['FA', 250], ['GA', 500], ['GC', 500],
+  ['H', 1000], ['HA', 500], ['J', 1000], ['K', 150],
+  ['L', 3000], ['LB', 3000], ['LC', 3000], ['LL', 3000],
+  ['R', 1000], ['V', 1000],
+]);
 const ALLOWED_POLES = new Set([2, 4, 6, 8, 10, 12]);
 const ALLOWED_FLANGE_MOUNTINGS = new Set(['B5', 'B14', 'B34', 'B35']);
 const ALLOWED_DIMENSION_MOUNTINGS = new Set(['B3', 'B5', 'B14', 'B34', 'B35', 'V1', 'ANY']);
@@ -222,6 +239,37 @@ function stableStringify(value) {
 const issues = [];
 function addIssue(severity, code, message, context, activationBlocking) {
   issues.push({ severity, issue_code: code, message, context, activation_blocking: activationBlocking });
+}
+
+function dimensionImplausibility(code, value) {
+  if (typeof value !== 'number') return null;
+  if (!(value > 0)) return 'valeur non positive';
+  const maximum = DIMENSION_ABSOLUTE_MAX_MM.get(code);
+  return maximum != null && value > maximum ? `maximum prudent ${maximum} mm` : null;
+}
+
+function validateBonfiglioliBFixtures(dimensionRows) {
+  const rows = dimensionRows.filter(({ file }) => file === 'dimensions-bonfiglioli.json');
+  const observed = Object.fromEntries(
+    [...BONFIGLIOLI_B_FIXTURES].map(([designation]) => {
+      const entry = rows.find(({ row }) => row.designation === designation);
+      return [designation, entry?.row?.dimensions?.B ?? null];
+    }),
+  );
+  const expected = Object.fromEntries(BONFIGLIOLI_B_FIXTURES);
+  const ok = [...BONFIGLIOLI_B_FIXTURES].every(
+    ([designation, value]) => observed[designation] === value,
+  );
+  if (!ok) {
+    addIssue(
+      'error',
+      'BONFIGLIOLI_B_FIXTURE_MISMATCH',
+      'Les cinq cotes B Bonfiglioli de non-regression ne correspondent pas au PDF',
+      { expected, observed, pdf_page: 58 },
+      true,
+    );
+  }
+  return { ok, expected, observed };
 }
 
 // ---------------------------------------------------------------------------
@@ -878,6 +926,16 @@ function buildDimensionsAndFlanges(dimensionRows, models, sourceRefs) {
           addIssue('error', 'DIMENSION_VALUE_UNSUPPORTED', `Valeur de cote non exploitable pour ${code}`, { origin, code, raw: String(raw) }, true);
           continue;
         }
+        const implausibility = dimensionImplausibility(code, value.value_mm);
+        if (implausibility) {
+          addIssue(
+            'error',
+            'DIMENSION_VALUE_IMPLAUSIBLE',
+            `Cote ${code} manifestement implausible : relecture du PDF requise`,
+            { origin, code, value_mm: value.value_mm, reason: implausibility },
+            true,
+          );
+        }
         const keyword = SHAFT_CODES.has(code) ? 'shaft' : 'b3';
         const selected = chooseSource(row, keyword);
         const ref = sourceRefs.ensure(selected, row.provenance, `${origin}:${block.mounting}:${code}`);
@@ -1460,6 +1518,7 @@ function main() {
 
   const productRows = load('product');
   const dimensionRows = load('dimension');
+  const bonfiglioliBFixtureCheck = validateBonfiglioliBFixtures(dimensionRows);
   const correlationRows = load('correlation');
   const iec30_1Rows = load('iec30_1');
   const iec30_2Rows = load('iec30_2');
@@ -1704,6 +1763,20 @@ function main() {
       `${dimensionResult.counters.source_cells_matched} cellules rattachees, ${dimensionResult.counters.distinct_source_cells_represented} representees, ${dimensionResult.counters.merged_dimension_rows} fusionnees ; ecart constate ${perModelReconciliation.available ? perModelReconciliation.delta_dimensions_constate : 'n/a'}, explique ${perModelReconciliation.available ? perModelReconciliation.delta_dimensions_explique : 'n/a'}`,
       `${dimensionResult.counters.blocks_in - dimensionResult.counters.blocks_matched} blocs sans modele contre ${oracleUnmatchedBlocks} dans l oracle SQLite ; detail par model_key dans reconciliation_par_modele`,
     ),
+    criterion(
+      'Les cinq cotes B Bonfiglioli corrigees correspondent au PDF page 58',
+      bonfiglioliBFixtureCheck.ok,
+      bonfiglioliBFixtureCheck.expected,
+      bonfiglioliBFixtureCheck.observed,
+      'fixtures exactes, aucune correction automatique',
+    ),
+    criterion(
+      'Aucune cote manifestement implausible ne peut etre publiee',
+      !issues.some((issue) => issue.issue_code === 'DIMENSION_VALUE_IMPLAUSIBLE'),
+      0,
+      issues.filter((issue) => issue.issue_code === 'DIMENSION_VALUE_IMPLAUSIBLE').length,
+      'une anomalie bloque le lot et exige une relecture du PDF',
+    ),
     criterion('324 points Bonfiglioli legacy ajoutes', legacyBonfiglioliPoints === 324, 324, legacyBonfiglioliPoints, null),
     criterion('34 points CILS ajoutes', cilsPoints === 34, 34, cilsPoints, null),
     criterion('68 couples CILS ajoutes', cilsTorquePoints === 68, 68, cilsTorquePoints, cilsTorquePoints === 68 ? null : 'couples orphelins : voir TORQUE_POINT_UNATTACHED'),
@@ -1794,6 +1867,9 @@ function main() {
       },
     },
     oracle: oracle.available ? { counts: oracle.counts, validation_summary: oracleValidationSummary } : oracle,
+    source_fixtures: {
+      bonfiglioli_b_pdf_page_58: bonfiglioliBFixtureCheck,
+    },
     reconciliation_par_modele: perModelReconciliation,
     deduplication: {
       product_rows_in: productRows.length,

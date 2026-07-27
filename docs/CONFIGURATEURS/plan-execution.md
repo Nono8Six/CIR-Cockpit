@@ -272,7 +272,28 @@ colonne était renseignée depuis la première ligne source rencontrée alors qu
 - [x] Parité de la migration locale/distante vérifiée par empreinte.
 - [x] Advisors et contrôles runtime relus.
 - [x] Rollback démontré en conditions réelles, voir « Preuve de rollback ».
-- [x] Décision **GO vers C3** consignée.
+- [x] Décision initiale **GO vers C3** consignée.
+- [ ] Décision désormais suspendue jusqu’à l’activation du correctif C2b
+  décrit ci-dessous.
+
+### Gate corrective C2b avant C3
+
+- [x] Lecture sémantique des cellules fusionnées Bonfiglioli corrigée.
+- [x] Cinq fixtures B exactes vérifiées sur la page PDF 58.
+- [x] Contrôle d’implausibilité bloquant ajouté au pipeline.
+- [x] `K` ajouté au vocabulaire canonique et aux contrats moteur.
+- [x] Migration distante `20260727145013_configurator_c2b_dimension_k`.
+- [x] 540 valeurs K sourcées et mappées, 0 non mappée.
+- [x] Dry-run `GO_TECHNIQUE`, 17 critères sur 17.
+- [x] Snapshot candidat `bcb48c8f-44e6-486f-a8ad-0d1a837ebed3`
+  chargé via MCP, `ready/passed`, 0 anomalie bloquante.
+- [x] Snapshot `2bb33c0b-8bf0-401c-8016-5e0fbd1bee54` conservé comme
+  unique actif.
+- [ ] **VALIDATION PO** pour activer le candidat C2b.
+- [ ] Rejouer les preuves RLS après activation.
+
+Le plan de reprise détaillé, découpé par checkpoints, est
+`docs/CONFIGURATEURS/plan-c3-compatibilite-technique.md`.
 
 ### Rollback disponible
 
@@ -285,8 +306,8 @@ colonne était renseignée depuis la première ligne source rencontrée alors qu
 
 ## Tranches suivantes
 
-- [ ] C3 — Services backend Deno/tRPC.
-- [ ] C4 — Noyau `spec vs candidat`.
+- [ ] C3 — Compatibilité technique backend Deno/tRPC, incluant l’ancien C4.
+- [ ] C4 — Absorbée par C3, aucune tranche indépendante.
 - [ ] C5 — Socle frontend.
 - [ ] C6 — Première tranche verticale.
 - [ ] C7 — Parcours Remplacement complet.
@@ -317,3 +338,7 @@ colonne était renseignée depuis la première ligne source rencontrée alors qu
 | 27/07/2026 | C2 | Chargeur `DATABASE_URL` livré et exécuté; premier essai annulé par contrainte d'horodatage, rollback intégral vérifié, puis chargement réussi en une transaction. | `scripts/configurator-c2-load.ts`, snapshot `2bb33c0b-…` |
 | 27/07/2026 | C2 | Idempotence prouvée : le rejeu du même lot est reconnu sans écriture ni doublon. | code de sortie 0, volumes inchangés |
 | 27/07/2026 | C2 | Snapshot activé via `configurator.activate_snapshot`; un seul actif, lecture RLS conforme, `anon` refusé, advisors sans alerte critique. | `c2/diff-activation.json` — **GO C3** |
+| 27/07/2026 | C2b | Défaut de cellules fusionnées Bonfiglioli corrigé; cinq cotes B exactes, gate d’implausibilité et K canonique ajoutés. | empreinte `0a295854…`, 17/17 contrôles OK |
+| 27/07/2026 | C2b | Migration K appliquée via MCP; 540/540 valeurs reprises sans invention. | `20260727145013_configurator_c2b_dimension_k` |
+| 27/07/2026 | C2b | Nouveau snapshot candidat chargé via MCP et validé, sans activation implicite. | candidat `bcb48c8f-…` `ready/passed`, actif précédent inchangé |
+| 27/07/2026 | Suivi | C3 absorbe C4 et reçoit un plan autonome par phases et checkpoints. | `plan-c3-compatibilite-technique.md` |
