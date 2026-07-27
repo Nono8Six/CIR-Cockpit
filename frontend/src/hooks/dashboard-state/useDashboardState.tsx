@@ -1,11 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useDeferredValue, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
 import type { ConvertClientEntity } from '@/components/ConvertClientDialog';
-import type { DashboardHeaderStats } from '@/components/dashboard/DashboardPageHeader';
 import { isProspectRelationValue } from '@/constants/relations';
-import { useDashboardFilters } from './useDashboardFilters';
-import { createAppError, isAppError } from '@/services/errors/AppError';
+import { isAppError } from '@/services/errors/AppError';
 import { handleUiError } from '@/services/errors/handleUiError';
 import { notifySuccess } from '@/services/errors/notifySuccess';
 import { invalidateInteractionsQuery } from '@/services/query/queryInvalidation';
@@ -15,7 +13,19 @@ import {
   buildMyDayView,
   type MyDayView
 } from '@/utils/dashboard/dashboardAggregates';
-import type { DashboardViewMode } from '@/utils/dashboard/dashboardFilters';
+import { filterInteractionsBySearch } from '@/utils/dashboard/dashboardFilters';
+import {
+  buildTopClients,
+  buildWeeklyEvolution,
+  computeConversionRate,
+  filterDossiersForTable,
+  getOldestOverdueDays,
+  getOverviewPeriodDays,
+  type DossierChannelFilter,
+  type OverviewPeriodKey,
+  type TopClientEntry,
+  type WeeklyEvolutionPoint
+} from '@/utils/dashboard/dashboardOverview';
 import {
   buildPipelineBoard,
   getPipelineStageLabel,
@@ -31,6 +41,19 @@ import { useAddTimelineEvent } from '../interactions/timeline/useAddTimelineEven
 import { useDeleteInteraction } from '../interactions/core/actions/useDeleteInteraction';
 import { getDashboardChannelIcon } from './getDashboardChannelIcon';
 import { useDashboardStatusHelpers } from './useDashboardStatusHelpers';
+
+export type DashboardOverviewKpis = {
+  overdueCount: number;
+  oldestOverdueDays: number | null;
+  dueTodayCount: number;
+  toPlanCount: number;
+  openCount: number;
+  pipelineOpenCount: number;
+  pipelineOpenAmount: number;
+  wonCount30d: number;
+  lostCount30d: number;
+  conversionRate: number | null;
+};
 
 type UseDashboardStateParams = {
   interactions: Interaction[];
@@ -73,98 +96,93 @@ export const useDashboardState = ({
   statuses,
   agencyId,
   onRequestConvert,
-  resolutions,
+  resolutions = [],
 }: UseDashboardStateParams) => {
-  const [viewMode, setViewMode] = useState<DashboardViewMode>('myday');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [overviewPeriod, setOverviewPeriod] = useState<OverviewPeriodKey>('30d');
+  const [channelFilter, setChannelFilter] = useState<DossierChannelFilter>('all');
   const [selectedInteraction, setSelectedInteraction] = useState<Interaction | null>(null);
   const [interactionToDelete, setInteractionToDelete] = useState<Interaction | null>(null);
 
   const queryClient = useQueryClient();
   const addTimelineMutation = useAddTimelineEvent(agencyId);
   const deleteInteractionMutation = useDeleteInteraction({ agencyId });
-  const lastPeriodErrorMessageRef = useRef<string | null>(null);
 
   const { statusById, getStatusMeta, isStatusDone, isStatusTodo, getStatusBadgeClass } =
     useDashboardStatusHelpers(statuses, resolutions);
 
+  const deferredSearchTerm = useDeferredValue(searchTerm);
+  const normalizedSearchTerm = useMemo(
+    () => deferredSearchTerm.trim().toLowerCase(),
+    [deferredSearchTerm]
+  );
+  const compactSearchTerm = useMemo(
+    () => normalizedSearchTerm.replace(/\s/g, ''),
+    [normalizedSearchTerm]
+  );
 
-  const {
-    searchTerm,
-    setSearchTerm,
-    period,
-    setPeriod,
-    periodErrorMessage,
-    effectiveStartDate,
-    effectiveEndDate,
-    filteredData,
-    handleDateRangeChange,
-    handleStartDateChange,
-    handleEndDateChange,
-  } = useDashboardFilters({
-    interactions,
-    viewMode,
-    isStatusDone,
-    resolutions,
-  });
+  const searchedInteractions = useMemo(
+    () => filterInteractionsBySearch(interactions, normalizedSearchTerm, compactSearchTerm, resolutions),
+    [compactSearchTerm, interactions, normalizedSearchTerm, resolutions]
+  );
 
-  useEffect(() => {
-    if (!periodErrorMessage) {
-      lastPeriodErrorMessageRef.current = null;
-      return;
-    }
+  // Les agregats (KPI, pipeline, courbes, top clients) reposent sur tout le
+  // perimetre ; la recherche ne filtre que les listes (file et table).
+  const pipelineBoard = useMemo<PipelineBoard>(
+    () => buildPipelineBoard({ interactions, isStatusDone }),
+    [interactions, isStatusDone]
+  );
 
-    if (periodErrorMessage === lastPeriodErrorMessageRef.current) {
-      return;
-    }
+  const globalMyDay = useMemo<MyDayView>(
+    () => buildMyDayView(interactions, { isStatusDone, isStatusTodo }),
+    [interactions, isStatusDone, isStatusTodo]
+  );
 
-    lastPeriodErrorMessageRef.current = periodErrorMessage;
-    handleUiError(
-      createAppError({
-        code: 'VALIDATION_ERROR',
-        message: periodErrorMessage,
-        source: 'validation',
-      }),
-      periodErrorMessage,
-      { source: 'dashboard.filters' },
-    );
-  }, [periodErrorMessage]);
+  const myDayView = useMemo<MyDayView>(
+    () => buildMyDayView(searchedInteractions, { isStatusDone, isStatusTodo }),
+    [isStatusDone, isStatusTodo, searchedInteractions]
+  );
 
-  // Statistiques d'en-tete calculees sur l'ensemble des dossiers (hors recherche/periode)
-  // pour que le titre et les onglets racontent toujours le meme etat global.
-  const headerStats = useMemo<DashboardHeaderStats>(() => {
-    const globalMyDay = buildMyDayView(interactions, { isStatusDone, isStatusTodo });
-    const globalPipeline = buildPipelineBoard({ interactions, isStatusDone });
-
+  const kpis = useMemo<DashboardOverviewKpis>(() => {
     return {
       overdueCount: globalMyDay.kpis.overdueCount,
+      oldestOverdueDays: getOldestOverdueDays(globalMyDay.groups.overdue),
       dueTodayCount: globalMyDay.kpis.dueTodayCount,
+      toPlanCount: globalMyDay.groups.toPlan.length,
       openCount: globalMyDay.kpis.openCount,
       pipelineOpenCount:
-        globalPipeline.unqualified.length
-        + globalPipeline.qualification.length
-        + globalPipeline.quote_sent.length
-        + globalPipeline.negotiation.length,
-      pipelineOpenAmount: globalPipeline.openAmountTotal,
-      wonCount30d: globalPipeline.wonCount30d,
-      lostCount30d: globalPipeline.lostCount30d
+        pipelineBoard.unqualified.length
+        + pipelineBoard.qualification.length
+        + pipelineBoard.quote_sent.length
+        + pipelineBoard.negotiation.length,
+      pipelineOpenAmount: pipelineBoard.openAmountTotal,
+      wonCount30d: pipelineBoard.wonCount30d,
+      lostCount30d: pipelineBoard.lostCount30d,
+      conversionRate: computeConversionRate(pipelineBoard.wonCount30d, pipelineBoard.lostCount30d)
     };
-  }, [interactions, isStatusDone, isStatusTodo]);
+  }, [globalMyDay, pipelineBoard]);
 
-  const myDayView = useMemo<MyDayView | null>(() => {
-    if (viewMode !== 'myday') {
-      return null;
-    }
+  const evolution = useMemo<WeeklyEvolutionPoint[]>(
+    () => buildWeeklyEvolution({ interactions, isStatusDone }),
+    [interactions, isStatusDone]
+  );
 
-    return buildMyDayView(filteredData, { isStatusDone, isStatusTodo });
-  }, [filteredData, isStatusDone, isStatusTodo, viewMode]);
+  const periodDays = getOverviewPeriodDays(overviewPeriod);
 
-  const pipelineBoard = useMemo<PipelineBoard | null>(() => {
-    if (viewMode !== 'pipeline') {
-      return null;
-    }
+  const topClients = useMemo<TopClientEntry[]>(
+    () => buildTopClients({ interactions, periodDays }),
+    [interactions, periodDays]
+  );
 
-    return buildPipelineBoard({ interactions: filteredData, isStatusDone });
-  }, [filteredData, isStatusDone, viewMode]);
+  const tableRows = useMemo(
+    () =>
+      filterDossiersForTable({
+        interactions: searchedInteractions,
+        periodDays,
+        channel: channelFilter
+      }),
+    [channelFilter, periodDays, searchedInteractions]
+  );
 
   const handleConvertRequest = useCallback(
     (interaction: Interaction) => {
@@ -328,28 +346,23 @@ export const useDashboardState = ({
   }, [deleteInteractionMutation, interactionToDelete, selectedInteraction]);
 
   return {
-    viewMode,
     searchTerm,
+    setSearchTerm,
+    overviewPeriod,
+    setOverviewPeriod,
+    channelFilter,
+    setChannelFilter,
     selectedInteraction,
-    period,
-    periodErrorMessage,
-    effectiveStartDate,
-    effectiveEndDate,
-    filteredData,
-    headerStats,
+    setSelectedInteraction,
+    kpis,
     myDayView,
     pipelineBoard,
+    evolution,
+    topClients,
+    tableRows,
     getStatusMeta,
     getStatusBadgeClass,
     getChannelIcon: getDashboardChannelIcon,
-    setViewMode,
-    setSearchTerm,
-    setPeriod,
-    setSelectedInteraction,
-    setInteractionToDelete,
-    handleDateRangeChange,
-    handleStartDateChange,
-    handleEndDateChange,
     handleConvertRequest,
     handleInteractionUpdate,
     handleCompleteReminder,
@@ -358,7 +371,8 @@ export const useDashboardState = ({
     isInteractionUpdatePending: addTimelineMutation.isPending,
     interactionToDelete,
     isDeleteInteractionPending: deleteInteractionMutation.isPending,
+    setInteractionToDelete,
     handleRequestDeleteInteraction,
-    handleConfirmDeleteInteraction,
+    handleConfirmDeleteInteraction
   };
 };

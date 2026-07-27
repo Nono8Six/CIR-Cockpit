@@ -1,0 +1,256 @@
+{
+  "question": "Combien de CAT_FAB ont des verins pneumatiques et quelles marques en proposent ?",
+  "http_status": 200,
+  "elapsed_ms": 13858,
+  "body": {
+    "result": {
+      "data": {
+        "ok": true,
+        "request_id": "9a830cb0-3262-4984-894f-9aabd227b75b",
+        "ai_available": true,
+        "answer": "Dans le snapshot 4e216bc4-7d82-4eb7-aa20-2cc8316667cc, la qualification de « vérins pneumatiques » retient 75 couples marque + CAT_FAB, soit 75 libellés CAT_FAB distincts et 5 marques : FEST (37), PARK (16), AVEN (12), AIGN (7), ASCO (3). Critères appliqués : vérin pneumatique, vérins pneumatiques, pneumatic cylinder, pneumatic actuator, actionneur pneumatique, vérin CNOMO, vérin normalisé, vérin non normalisé, cylindre pneumatique, actuateur pneumatique; contextes exclus : aucun.",
+        "citations": [
+          {
+            "tool": "submit_product_qualification",
+            "label": "Qualification produit sur le snapshot 4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+            "ref": {
+              "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+              "concept": "vérins pneumatiques",
+              "groups_inspected": 3,
+              "groups_accepted": 3,
+              "groups_excluded": 0
+            }
+          }
+        ],
+        "tool_trace": [
+          {
+            "name": "search_product_candidates",
+            "arguments": {
+              "concept": "vérins pneumatiques",
+              "positive_terms": [
+                "vérin pneumatique",
+                "vérins pneumatiques",
+                "pneumatic cylinder",
+                "pneumatic actuator",
+                "actionneur pneumatique",
+                "vérin CNOMO",
+                "vérin normalisé",
+                "vérin non normalisé",
+                "cylindre pneumatique",
+                "actuateur pneumatique"
+              ],
+              "required_context": [],
+              "excluded_context": [],
+              "selected_paths": [
+                "PNEUMATIQUE > COMPOSANTS > VERINS CNOMO",
+                "PNEUMATIQUE > COMPOSANTS > VERINS NON NORMALISES",
+                "PNEUMATIQUE > COMPOSANTS > VERINS NORMALISES"
+              ]
+            },
+            "ok": true,
+            "executed": true,
+            "blocked_reason": null,
+            "row_count": 3,
+            "duration_ms": 8482
+          },
+          {
+            "name": "submit_product_qualification",
+            "arguments": {
+              "accepted_group_count": 3,
+              "excluded_group_count": 0
+            },
+            "ok": true,
+            "executed": true,
+            "blocked_reason": null,
+            "row_count": 3,
+            "duration_ms": 3575
+          }
+        ],
+        "evidence": {
+          "status": "qualified",
+          "intent": "product_semantic_search",
+          "dimension": "cat_fab",
+          "facts": [
+            {
+              "label": "Couples marque + CAT_FAB qualifies",
+              "tool": "submit_product_qualification",
+              "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+              "result_field": "distinct_brand_cat_fab",
+              "source_value": 75,
+              "displayed_value": 75,
+              "derivation": "direct"
+            },
+            {
+              "label": "Marques qualifiees",
+              "tool": "submit_product_qualification",
+              "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+              "result_field": "matching_brands",
+              "source_value": [
+                "FEST",
+                "PARK",
+                "AVEN",
+                "AIGN",
+                "ASCO"
+              ],
+              "displayed_value": [
+                "FEST",
+                "PARK",
+                "AVEN",
+                "AIGN",
+                "ASCO"
+              ],
+              "derivation": "direct"
+            },
+            {
+              "label": "Nombre de marques qualifiees",
+              "tool": "submit_product_qualification",
+              "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+              "result_field": "distinct_brand_count",
+              "source_value": 5,
+              "displayed_value": 5,
+              "derivation": "direct"
+            },
+            {
+              "label": "Groupes inspectes",
+              "tool": "search_product_candidates",
+              "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+              "result_field": "groups_inspected",
+              "source_value": 3,
+              "displayed_value": 3,
+              "derivation": "direct"
+            },
+            {
+              "label": "Groupes acceptes",
+              "tool": "submit_product_qualification",
+              "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+              "result_field": "accepted_groups",
+              "source_value": 3,
+              "displayed_value": 3,
+              "derivation": "direct"
+            },
+            {
+              "label": "Groupes exclus",
+              "tool": "submit_product_qualification",
+              "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+              "result_field": "excluded_groups",
+              "source_value": 0,
+              "displayed_value": 0,
+              "derivation": "direct"
+            }
+          ],
+          "executions": [
+            {
+              "tool": "search_product_candidates",
+              "ok": true,
+              "duration_ms": 8482,
+              "row_count": 3,
+              "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+              "requested_filters": {
+                "concept": "vérins pneumatiques"
+              },
+              "canonical_filters": {
+                "positive_terms": [
+                  "vérin pneumatique",
+                  "vérins pneumatiques",
+                  "pneumatic cylinder",
+                  "pneumatic actuator",
+                  "actionneur pneumatique",
+                  "vérin CNOMO",
+                  "vérin normalisé",
+                  "vérin non normalisé",
+                  "cylindre pneumatique",
+                  "actuateur pneumatique"
+                ],
+                "required_context": [],
+                "excluded_context": [],
+                "selected_paths": [
+                  "PNEUMATIQUE > COMPOSANTS > VERINS CNOMO",
+                  "PNEUMATIQUE > COMPOSANTS > VERINS NON NORMALISES",
+                  "PNEUMATIQUE > COMPOSANTS > VERINS NORMALISES"
+                ]
+              },
+              "server_filters": {
+                "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc"
+              },
+              "sql_attempt": null,
+              "executed_sql": null,
+              "error_code": null
+            },
+            {
+              "tool": "submit_product_qualification",
+              "ok": true,
+              "duration_ms": 3575,
+              "row_count": 3,
+              "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+              "requested_filters": {},
+              "canonical_filters": {
+                "accepted_groups": 3,
+                "excluded_groups": 0
+              },
+              "server_filters": {
+                "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc"
+              },
+              "sql_attempt": null,
+              "executed_sql": null,
+              "error_code": null
+            }
+          ]
+        },
+        "usage": {
+          "provider": "mistral",
+          "model_id": "mistral-large-2512",
+          "input_tokens": 22404,
+          "output_tokens": 293,
+          "cached_input_tokens": 1472,
+          "reasoning_tokens": 0
+        },
+        "cost": {
+          "amount": 0.0123775,
+          "currency": "USD",
+          "priced": true
+        },
+        "fallback_reason": null,
+        "model_id": "mistral-large-2512",
+        "truncated": false,
+        "conversation_context": {
+          "version": 1,
+          "surface": "pricing.references",
+          "domain": "pricing_references",
+          "import_id": null,
+          "created_at": "2026-07-20T13:54:33.364Z",
+          "expires_at": "2026-07-20T14:09:33.364Z",
+          "kind": "product_semantic_result",
+          "intent": "product_semantic_search",
+          "concept": "vérins pneumatiques",
+          "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+          "source_client_request_id": "3ea05bd1-b4aa-44a2-99fc-88bd7664d29a",
+          "accepted_selections": [
+            {
+              "kind": "classification_scope",
+              "cir_path": "PNEUMATIQUE > COMPOSANTS > VERINS NORMALISES"
+            },
+            {
+              "kind": "classification_scope",
+              "cir_path": "PNEUMATIQUE > COMPOSANTS > VERINS NON NORMALISES"
+            },
+            {
+              "kind": "classification_scope",
+              "cir_path": "PNEUMATIQUE > COMPOSANTS > VERINS CNOMO"
+            }
+          ],
+          "result_summary": {
+            "matching_brands": [
+              "FEST",
+              "PARK",
+              "AVEN",
+              "AIGN",
+              "ASCO"
+            ],
+            "distinct_brand_count": 5,
+            "distinct_brand_cat_fab": 75
+          }
+        }
+      }
+    }
+  }
+}

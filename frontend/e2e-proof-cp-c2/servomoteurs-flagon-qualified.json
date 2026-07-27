@@ -1,0 +1,313 @@
+{
+  "ok": true,
+  "cost": {
+    "amount": 0.014016,
+    "priced": true,
+    "currency": "USD"
+  },
+  "usage": {
+    "model_id": "mistral-large-2512",
+    "provider": "mistral",
+    "input_tokens": 25314,
+    "output_tokens": 906,
+    "reasoning_tokens": 0,
+    "cached_input_tokens": 0
+  },
+  "answer": "Dans le snapshot 4e216bc4-7d82-4eb7-aa20-2cc8316667cc, la qualification de « servomoteurs électriques » retient 88 couples marque + CAT_FAB, soit 88 libellés CAT_FAB distincts et 5 marques : ROCK (62), SIEM (15), FEST (5), PARK (4), LERO (2). Critères appliqués : servomoteur électrique, servo motor electric, servomoteur, servo moteur, servo actionneur électrique, electric servo actuator, servo drive électrique, servo motor, servo actionneur, servo variateur, servo électrique, electric servo motor; contextes exclus : aucun.",
+  "evidence": {
+    "facts": [
+      {
+        "tool": "submit_product_qualification",
+        "label": "Couples marque + CAT_FAB qualifies",
+        "derivation": "direct",
+        "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+        "result_field": "distinct_brand_cat_fab",
+        "source_value": 88,
+        "displayed_value": 88
+      },
+      {
+        "tool": "submit_product_qualification",
+        "label": "Marques qualifiees",
+        "derivation": "direct",
+        "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+        "result_field": "matching_brands",
+        "source_value": [
+          "ROCK",
+          "SIEM",
+          "FEST",
+          "PARK",
+          "LERO"
+        ],
+        "displayed_value": [
+          "ROCK",
+          "SIEM",
+          "FEST",
+          "PARK",
+          "LERO"
+        ]
+      },
+      {
+        "tool": "submit_product_qualification",
+        "label": "Nombre de marques qualifiees",
+        "derivation": "direct",
+        "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+        "result_field": "distinct_brand_count",
+        "source_value": 5,
+        "displayed_value": 5
+      },
+      {
+        "tool": "search_product_candidates",
+        "label": "Groupes inspectes",
+        "derivation": "direct",
+        "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+        "result_field": "groups_inspected",
+        "source_value": 16,
+        "displayed_value": 16
+      },
+      {
+        "tool": "submit_product_qualification",
+        "label": "Groupes acceptes",
+        "derivation": "direct",
+        "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+        "result_field": "accepted_groups",
+        "source_value": 13,
+        "displayed_value": 13
+      },
+      {
+        "tool": "submit_product_qualification",
+        "label": "Groupes exclus",
+        "derivation": "direct",
+        "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+        "result_field": "excluded_groups",
+        "source_value": 3,
+        "displayed_value": 3
+      }
+    ],
+    "intent": "product_semantic_search",
+    "status": "qualified",
+    "dimension": "cat_fab",
+    "executions": [
+      {
+        "ok": true,
+        "tool": "search_product_candidates",
+        "row_count": 16,
+        "error_code": null,
+        "duration_ms": 6837,
+        "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+        "sql_attempt": null,
+        "executed_sql": null,
+        "server_filters": {
+          "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc"
+        },
+        "canonical_filters": {
+          "positive_terms": [
+            "servomoteur électrique",
+            "servo motor electric",
+            "servomoteur",
+            "servo moteur",
+            "servo actionneur électrique",
+            "electric servo actuator",
+            "servo drive électrique",
+            "servo motor",
+            "servo actionneur",
+            "servo variateur",
+            "servo électrique",
+            "electric servo motor"
+          ],
+          "selected_paths": [
+            "AUTOMATISME > VARIATEURS, SERVO-VAR ET DEMARREURS > SERVO-VARIATEURS"
+          ],
+          "excluded_context": [],
+          "required_context": []
+        },
+        "requested_filters": {
+          "concept": "servomoteurs électriques"
+        }
+      },
+      {
+        "ok": true,
+        "tool": "submit_product_qualification",
+        "row_count": 13,
+        "error_code": null,
+        "duration_ms": 12921,
+        "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+        "sql_attempt": null,
+        "executed_sql": null,
+        "server_filters": {
+          "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc"
+        },
+        "canonical_filters": {
+          "accepted_groups": 13,
+          "excluded_groups": 3
+        },
+        "requested_filters": {}
+      }
+    ]
+  },
+  "model_id": "mistral-large-2512",
+  "citations": [
+    {
+      "ref": {
+        "concept": "servomoteurs électriques",
+        "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+        "groups_accepted": 13,
+        "groups_excluded": 3,
+        "groups_inspected": 16
+      },
+      "tool": "submit_product_qualification",
+      "label": "Qualification produit sur le snapshot 4e216bc4-7d82-4eb7-aa20-2cc8316667cc"
+    }
+  ],
+  "truncated": false,
+  "request_id": "55e736d0-79bc-4e7d-9c0b-a3c3b368d05d",
+  "tool_trace": [
+    {
+      "ok": true,
+      "name": "classify_assistant_request",
+      "executed": true,
+      "arguments": {
+        "terms": [
+          "servomoteurs électriques"
+        ],
+        "intent": "product_semantic_search"
+      },
+      "row_count": null,
+      "duration_ms": 37759,
+      "blocked_reason": null
+    },
+    {
+      "ok": true,
+      "name": "search_product_candidates",
+      "executed": true,
+      "arguments": {
+        "concept": "servomoteurs électriques",
+        "positive_terms": [
+          "servomoteur électrique",
+          "servo motor electric",
+          "servomoteur",
+          "servo moteur",
+          "servo actionneur électrique",
+          "electric servo actuator",
+          "servo drive électrique",
+          "servo motor",
+          "servo actionneur",
+          "servo variateur",
+          "servo électrique",
+          "electric servo motor"
+        ],
+        "selected_paths": [
+          "AUTOMATISME > VARIATEURS, SERVO-VAR ET DEMARREURS > SERVO-VARIATEURS"
+        ],
+        "excluded_context": [],
+        "required_context": []
+      },
+      "row_count": 16,
+      "duration_ms": 6837,
+      "blocked_reason": null
+    },
+    {
+      "ok": true,
+      "name": "submit_product_qualification",
+      "executed": true,
+      "arguments": {
+        "accepted_group_count": 13,
+        "excluded_group_count": 3
+      },
+      "row_count": 13,
+      "duration_ms": 12921,
+      "blocked_reason": null
+    }
+  ],
+  "ai_available": true,
+  "fallback_reason": null,
+  "conversation_context": {
+    "kind": "product_semantic_result",
+    "domain": "pricing_references",
+    "intent": "product_semantic_search",
+    "concept": "servomoteurs électriques",
+    "surface": "pricing.references",
+    "version": 1,
+    "import_id": null,
+    "created_at": "2026-07-22T03:41:20.126Z",
+    "expires_at": "2026-07-22T03:56:20.126Z",
+    "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+    "result_summary": {
+      "matching_brands": [
+        "ROCK",
+        "SIEM",
+        "FEST",
+        "PARK",
+        "LERO"
+      ],
+      "distinct_brand_count": 5,
+      "distinct_brand_cat_fab": 88
+    },
+    "accepted_selections": [
+      {
+        "kind": "classification_scope",
+        "cir_path": "AUTOMATISME > VARIATEURS, SERVO-VAR ET DEMARREURS > SERVO-VARIATEURS"
+      },
+      {
+        "kind": "direct_label",
+        "cir_path": "PNEUMATIQUE > COMPOSANTS > MOTEURS ET VARIATEURS",
+        "normalized_cat_fab": "emmb-as, servo motor"
+      },
+      {
+        "kind": "direct_label",
+        "cir_path": "PNEUMATIQUE > COMPOSANTS > MOTEURS ET VARIATEURS",
+        "normalized_cat_fab": "emms-as, servo motor, variants, size 140-190"
+      },
+      {
+        "kind": "direct_label",
+        "cir_path": "PNEUMATIQUE > COMPOSANTS > MOTEURS ET VARIATEURS",
+        "normalized_cat_fab": "emms-as, servo motor, variants, size 40-100"
+      },
+      {
+        "kind": "direct_label",
+        "cir_path": "PNEUMATIQUE > COMPOSANTS > MOTEURS ET VARIATEURS",
+        "normalized_cat_fab": "emmt-as, servo motor"
+      },
+      {
+        "kind": "direct_label",
+        "cir_path": "PNEUMATIQUE > COMPOSANTS > MOTEURS ET VARIATEURS",
+        "normalized_cat_fab": "emmt-ec, servo motor"
+      },
+      {
+        "kind": "direct_label",
+        "cir_path": "MOTORISATION > MOTEURS > SYNCHRONES",
+        "normalized_cat_fab": "moteur synchrone (servo-moteur)"
+      },
+      {
+        "kind": "direct_label",
+        "cir_path": "AUTOMATISME > VARIATEURS, SERVO-VAR ET DEMARREURS > DIVERS",
+        "normalized_cat_fab": "motion products - linear mtr/actuator - ldc iron core linear servo motors"
+      },
+      {
+        "kind": "direct_label",
+        "cir_path": "AUTOMATISME > VARIATEURS, SERVO-VAR ET DEMARREURS > DIVERS",
+        "normalized_cat_fab": "motion products - linear mtr/actuator - ldl ironless linear servo motors"
+      },
+      {
+        "kind": "direct_label",
+        "cir_path": "",
+        "normalized_cat_fab": "servo moteurs mh/mb/smb/smh/motornet/act"
+      },
+      {
+        "kind": "direct_label",
+        "cir_path": "",
+        "normalized_cat_fab": "servo motors rx/rs"
+      },
+      {
+        "kind": "direct_label",
+        "cir_path": "",
+        "normalized_cat_fab": "servo variateurs c3"
+      },
+      {
+        "kind": "direct_label",
+        "cir_path": "",
+        "normalized_cat_fab": "servo variateurs psd1_"
+      }
+    ],
+    "source_client_request_id": "bd601e40-de58-4dfe-8245-468f9a38822b"
+  }
+}

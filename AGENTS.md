@@ -8,6 +8,7 @@ Guide operationnel pour les agents autonomes dans CIR Cockpit.
 - Ne pas lire `CLAUDE.md` par defaut. `CLAUDE.md` est l'adaptateur Claude Code et importe ces regles.
 - Lire les documents lourds seulement quand ils sont utiles:
   - `docs/architecture-cible-cir-cockpit.md`: lecture obligatoire avant toute decision non triviale de produit, modele metier, architecture, donnees, IA, tiers, interaction/activite, pilotage, catalogue, import ou tarification. Identifier la brique concernee, respecter les decisions verrouillees et ne jamais trancher silencieusement une decision marquee `A VALIDER`.
+  - `docs/CONFIGURATEURS/plan-execution.md`: point d'entree obligatoire avant tout travail Configurateurs. Mettre a jour les cases, la preuve et le changelog apres chaque checkpoint; ne jamais avancer une tranche sans decision de sortie explicite.
   - `docs/ASSISTANT_IA/plan-mistral-assistant-transversal.md`: lecture obligatoire avant toute modification de l’assistant, du provider, du broker, des outils IA, de la couche semantique ou des evaluations. Respecter l’ordre des phases et ne cocher un checkpoint qu’avec sa preuve runtime.
   - `docs/qa-runbook.md`: avant une livraison finale, une PR/merge/deploiement, une modification de QA, ou une demande explicite de verification complete.
   - `docs/testing.md`: quand la demande touche tests, couverture, E2E ou Playwright.
@@ -64,6 +65,19 @@ Invoquer le skill pertinent avant d'ecrire du code:
 - Si le site doit etre verifie en direct dans Codex, utiliser le navigateur in-app Codex [@Navigateur](plugin://browser@openai-bundled) en priorite pour ouvrir, naviguer et inspecter le rendu. Garder Playwright/E2E pour les scenarios automatises, traces, screenshots reproductibles ou demandes explicites.
 - Chrome DevTools/Playwright seulement si un parcours UI doit etre verifie; ne pas lancer d'E2E automatiquement sans demande utilisateur.
 - shadcn MCP seulement pour rechercher/installer/verifier des composants UI.
+
+## Migrations Supabase: convention globale MCP-first
+
+- Cette convention s'applique a toutes les briques et tous les schemas, sans exception par domaine.
+- Supabase distant est la verite de l'etat runtime; `backend/migrations/` est l'historique SQL durable, relisible et reconstructible. Une migration n'est terminee que lorsqu'elle existe des deux cotes avec la meme version, le meme nom et le meme SQL.
+- Toute ecriture de schema sur le projet lie passe par `apply_migration` du MCP Supabase, apres autorisation explicite du PO. Ne pas utiliser `supabase db push`, le SQL Editor du Dashboard ou une connexion directe comme voie concurrente.
+- Avant l'ecriture: inspecter l'etat distant en lecture seule, preparer une migration additive et transactionnelle quand PostgreSQL le permet, relire les RLS/ACL/fonctions concernees et definir les preuves et le rollback.
+- Apres succes de `apply_migration`: relire immediatement `supabase_migrations.schema_migrations`, recuperer le SQL exact enregistre par Supabase sans le retaper, puis l'ecrire dans `backend/migrations/<version_distante>_<nom>.sql`.
+- Verifier pendant cette meme operation l'egalite du nom, de la version et d'une empreinte du SQL normalise entre le distant et le fichier genere. Cette empreinte est une preuve d'extraction ponctuelle, pas une seconde liste durable a maintenir.
+- Rejouer ensuite les controles runtime cibles, les advisors pertinents et `pnpm run repo:check`. Si la generation locale ou la parite echoue apres l'application distante, arreter les migrations suivantes et traiter cette migration comme incomplete.
+- Ne pas creer de dossier miroir par brique, de liste `remote-only`, de manifeste de checksums ecrit a la main ni de script d'integrite specifique a un domaine. La parite globale reste centralisee dans `scripts/check-repo-state.mjs`.
+- Ne jamais modifier une migration historique deja appliquee. Toute correction passe par une nouvelle migration additive. Les anciens ecarts de versions restent geres par les compatibilites existantes jusqu'a une reconciliation explicitement autorisee.
+- Procedure detaillee et format des fichiers: `backend/migrations/README.md`.
 
 ## Politique QA optimisee
 

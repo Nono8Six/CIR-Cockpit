@@ -48,22 +48,25 @@ const CockpitSkeleton = () => (
 );
 
 const DashboardSkeleton = () => (
-  <div className="flex h-full min-h-0 flex-col rounded-lg border border-border bg-card shadow-sm">
-    {/* Toolbar */}
-    <div className="flex items-center gap-3 border-b border-border px-4 py-3">
-      <div className="skeleton-shimmer h-8 w-56 rounded-lg" />
-      <div className="skeleton-shimmer h-8 w-48 rounded-lg" />
+  <div className="flex h-full min-h-0 flex-col gap-3.5">
+    {/* En-tete : titre, perimetre, periode, recherche */}
+    <div className="flex items-center gap-3 border-b border-border-subtle pb-3">
+      <div className="skeleton-shimmer h-9 w-44 rounded-lg" />
+      <div className="skeleton-shimmer h-8 w-40 rounded-lg" />
       <div className="ml-auto skeleton-shimmer h-8 w-56 rounded-lg" />
     </div>
+    {/* Rangee KPI */}
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
+      {[0, 1, 2, 3, 4].map((i) => (
+        <div key={i} className="skeleton-shimmer h-24 rounded-lg" />
+      ))}
+    </div>
+    {/* Graphique */}
+    <div className="skeleton-shimmer h-48 rounded-lg" />
     {/* 3 colonnes */}
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1 min-h-0 p-4">
+    <div className="grid min-h-0 flex-1 grid-cols-1 gap-3.5 md:grid-cols-3">
       {[0, 1, 2].map((i) => (
-        <div key={i} className="flex flex-col gap-3">
-          <div className="skeleton-shimmer h-4 w-36 rounded" />
-          {[1, 2].map((j) => (
-            <div key={j} className="skeleton-shimmer rounded-xl" style={{ height: 88 }} />
-          ))}
-        </div>
+        <div key={i} className="skeleton-shimmer rounded-lg" style={{ minHeight: 160 }} />
       ))}
     </div>
   </div>

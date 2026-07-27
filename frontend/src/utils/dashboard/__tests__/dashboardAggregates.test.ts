@@ -5,7 +5,6 @@ import {
   buildMyDayView,
   countWorkQueueInteractions,
   createInteractionStatusPredicates,
-  flattenMyDayGroups,
   inferStatusCategoryFromLabel,
   isInteractionInWorkQueue
 } from '@/utils/dashboard/dashboardAggregates';
@@ -153,12 +152,13 @@ describe('buildMyDayView', () => {
     expect(view.groups.toPlan.map((row) => row.id)).toEqual(['to-plan']);
 
     // Un dossier en cours sans rappel n'est ni a planifier ni ailleurs (pas d'action requise).
-    expect(flattenMyDayGroups(view.groups).map((row) => row.id)).toEqual([
-      'overdue',
-      'due-today',
-      'upcoming',
-      'to-plan'
-    ]);
+    const allGroupIds = [
+      ...view.groups.overdue,
+      ...view.groups.dueToday,
+      ...view.groups.upcoming,
+      ...view.groups.toPlan
+    ].map((row) => row.id);
+    expect(allGroupIds).toEqual(['overdue', 'due-today', 'upcoming', 'to-plan']);
   });
 
   it('calcule les indicateurs sur les dossiers ouverts', () => {

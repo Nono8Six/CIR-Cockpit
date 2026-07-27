@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import type {
   AgencyStatus,
   Interaction,
@@ -25,6 +27,7 @@ type DashboardDetailsOverlayProps = {
   ) => Promise<void>;
   onRequestConvert: (interaction: Interaction) => void;
   onDeleteInteraction: (interaction: Interaction) => void;
+  quickActions?: ReactNode;
 };
 
 const DashboardDetailsOverlay = ({
@@ -34,7 +37,8 @@ const DashboardDetailsOverlay = ({
   onClose,
   onUpdate,
   onRequestConvert,
-  onDeleteInteraction
+  onDeleteInteraction,
+  quickActions
 }: DashboardDetailsOverlayProps) => (
   <Dialog
     open
@@ -64,6 +68,7 @@ const DashboardDetailsOverlay = ({
         historicalStatuses={historicalStatuses}
         onRequestConvert={onRequestConvert}
         onDeleteInteraction={onDeleteInteraction}
+        quickActions={quickActions}
       />
     </DialogContent>
   </Dialog>

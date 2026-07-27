@@ -1,0 +1,261 @@
+{
+  "question": "Quelles marques proposent des débitmètres ?",
+  "http_status": 200,
+  "elapsed_ms": 14787,
+  "body": {
+    "result": {
+      "data": {
+        "ok": true,
+        "request_id": "a877753a-f9ab-4c29-952d-eb514be6b699",
+        "ai_available": true,
+        "answer": "Dans le snapshot 4e216bc4-7d82-4eb7-aa20-2cc8316667cc, la qualification de « débitmètres » retient 25 couples marque + CAT_FAB, soit 25 libellés CAT_FAB distincts et 6 marques : SPIR (9), SIEM (7), SICK (6), BALL (1), CITE (1), PARK (1). Critères appliqués : débitmètre, débitmètres, flow meter, flowmeters, débitmètre à insertion, débitmètre massique, débitmètre électromagnétique, débitmètre à ultrasons, débitmètre à turbine, débitmètre à palette, débitmètre à engrenage, débitmètre à pression différentielle; contextes exclus : aucun.",
+        "citations": [
+          {
+            "tool": "submit_product_qualification",
+            "label": "Qualification produit sur le snapshot 4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+            "ref": {
+              "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+              "concept": "débitmètres",
+              "groups_inspected": 3,
+              "groups_accepted": 3,
+              "groups_excluded": 0
+            }
+          }
+        ],
+        "tool_trace": [
+          {
+            "name": "search_product_candidates",
+            "arguments": {
+              "concept": "débitmètres",
+              "positive_terms": [
+                "débitmètre",
+                "débitmètres",
+                "flow meter",
+                "flowmeters",
+                "débitmètre à insertion",
+                "débitmètre massique",
+                "débitmètre électromagnétique",
+                "débitmètre à ultrasons",
+                "débitmètre à turbine",
+                "débitmètre à palette",
+                "débitmètre à engrenage",
+                "débitmètre à pression différentielle"
+              ],
+              "required_context": [],
+              "excluded_context": [],
+              "selected_paths": [
+                "FLUIDES PROCESS > CONTROLE ET MESURE > DEBIT"
+              ]
+            },
+            "ok": true,
+            "executed": true,
+            "blocked_reason": null,
+            "row_count": 3,
+            "duration_ms": 8432
+          },
+          {
+            "name": "submit_product_qualification",
+            "arguments": {
+              "accepted_group_count": 3,
+              "excluded_group_count": 0
+            },
+            "ok": true,
+            "executed": true,
+            "blocked_reason": null,
+            "row_count": 3,
+            "duration_ms": 2832
+          }
+        ],
+        "evidence": {
+          "status": "qualified",
+          "intent": "product_semantic_search",
+          "dimension": "cat_fab",
+          "facts": [
+            {
+              "label": "Couples marque + CAT_FAB qualifies",
+              "tool": "submit_product_qualification",
+              "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+              "result_field": "distinct_brand_cat_fab",
+              "source_value": 25,
+              "displayed_value": 25,
+              "derivation": "direct"
+            },
+            {
+              "label": "Marques qualifiees",
+              "tool": "submit_product_qualification",
+              "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+              "result_field": "matching_brands",
+              "source_value": [
+                "SPIR",
+                "SIEM",
+                "SICK",
+                "BALL",
+                "CITE",
+                "PARK"
+              ],
+              "displayed_value": [
+                "SPIR",
+                "SIEM",
+                "SICK",
+                "BALL",
+                "CITE",
+                "PARK"
+              ],
+              "derivation": "direct"
+            },
+            {
+              "label": "Nombre de marques qualifiees",
+              "tool": "submit_product_qualification",
+              "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+              "result_field": "distinct_brand_count",
+              "source_value": 6,
+              "displayed_value": 6,
+              "derivation": "direct"
+            },
+            {
+              "label": "Groupes inspectes",
+              "tool": "search_product_candidates",
+              "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+              "result_field": "groups_inspected",
+              "source_value": 3,
+              "displayed_value": 3,
+              "derivation": "direct"
+            },
+            {
+              "label": "Groupes acceptes",
+              "tool": "submit_product_qualification",
+              "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+              "result_field": "accepted_groups",
+              "source_value": 3,
+              "displayed_value": 3,
+              "derivation": "direct"
+            },
+            {
+              "label": "Groupes exclus",
+              "tool": "submit_product_qualification",
+              "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+              "result_field": "excluded_groups",
+              "source_value": 0,
+              "displayed_value": 0,
+              "derivation": "direct"
+            }
+          ],
+          "executions": [
+            {
+              "tool": "search_product_candidates",
+              "ok": true,
+              "duration_ms": 8432,
+              "row_count": 3,
+              "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+              "requested_filters": {
+                "concept": "débitmètres"
+              },
+              "canonical_filters": {
+                "positive_terms": [
+                  "débitmètre",
+                  "débitmètres",
+                  "flow meter",
+                  "flowmeters",
+                  "débitmètre à insertion",
+                  "débitmètre massique",
+                  "débitmètre électromagnétique",
+                  "débitmètre à ultrasons",
+                  "débitmètre à turbine",
+                  "débitmètre à palette",
+                  "débitmètre à engrenage",
+                  "débitmètre à pression différentielle"
+                ],
+                "required_context": [],
+                "excluded_context": [],
+                "selected_paths": [
+                  "FLUIDES PROCESS > CONTROLE ET MESURE > DEBIT"
+                ]
+              },
+              "server_filters": {
+                "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc"
+              },
+              "sql_attempt": null,
+              "executed_sql": null,
+              "error_code": null
+            },
+            {
+              "tool": "submit_product_qualification",
+              "ok": true,
+              "duration_ms": 2832,
+              "row_count": 3,
+              "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+              "requested_filters": {},
+              "canonical_filters": {
+                "accepted_groups": 3,
+                "excluded_groups": 0
+              },
+              "server_filters": {
+                "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc"
+              },
+              "sql_attempt": null,
+              "executed_sql": null,
+              "error_code": null
+            }
+          ]
+        },
+        "usage": {
+          "provider": "mistral",
+          "model_id": "mistral-large-2512",
+          "input_tokens": 22234,
+          "output_tokens": 276,
+          "cached_input_tokens": 0,
+          "reasoning_tokens": 0
+        },
+        "cost": {
+          "amount": 0.011531,
+          "currency": "USD",
+          "priced": true
+        },
+        "fallback_reason": null,
+        "model_id": "mistral-large-2512",
+        "truncated": false,
+        "conversation_context": {
+          "version": 1,
+          "surface": "pricing.references",
+          "domain": "pricing_references",
+          "import_id": null,
+          "created_at": "2026-07-20T13:54:13.571Z",
+          "expires_at": "2026-07-20T14:09:13.571Z",
+          "kind": "product_semantic_result",
+          "intent": "product_semantic_search",
+          "concept": "débitmètres",
+          "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+          "source_client_request_id": "23ed3d5e-87dc-41ed-8560-131f4c9d437f",
+          "accepted_selections": [
+            {
+              "kind": "classification_scope",
+              "cir_path": "FLUIDES PROCESS > CONTROLE ET MESURE > DEBIT"
+            },
+            {
+              "kind": "direct_label",
+              "normalized_cat_fab": "beltscale and solid flowmeter (mass dynamics)",
+              "cir_path": "AUTOMATISME > DIVERS > DIVERS"
+            },
+            {
+              "kind": "direct_label",
+              "normalized_cat_fab": "capteurs/débitmètres",
+              "cir_path": "HYDRAULIQUE > FILTRES > MONITORING"
+            }
+          ],
+          "result_summary": {
+            "matching_brands": [
+              "SPIR",
+              "SIEM",
+              "SICK",
+              "BALL",
+              "CITE",
+              "PARK"
+            ],
+            "distinct_brand_count": 6,
+            "distinct_brand_cat_fab": 25
+          }
+        }
+      }
+    }
+  }
+}

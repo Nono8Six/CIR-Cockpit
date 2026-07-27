@@ -1,0 +1,44 @@
+{
+  "question": "Combien de familles produit à la CIR proposent des servomoteurs électriques ?",
+  "client_request_id": "eef432c8-9210-48f4-97c2-2441cc3b27db",
+  "http_status": 200,
+  "elapsed_ms": 3442,
+  "body": {
+    "ok": true,
+    "request_id": "7bc811ab-ea87-4d99-b204-68c294957fe2",
+    "ai_available": true,
+    "answer": "Souhaitez-vous analyser la famille CIR (FAM/FAM_LIB) ou la catégorie fabricant (CAT_FAB) ?",
+    "citations": [],
+    "tool_trace": [],
+    "evidence": {
+      "status": "failed",
+      "intent": "unknown",
+      "dimension": null,
+      "facts": [],
+      "executions": []
+    },
+    "usage": null,
+    "cost": null,
+    "fallback_reason": null,
+    "model_id": "mistral-large-2512",
+    "truncated": false,
+    "conversation_context": {
+      "version": 1,
+      "surface": "pricing.references",
+      "domain": "pricing_references",
+      "import_id": null,
+      "created_at": "2026-07-22T03:47:34.862Z",
+      "expires_at": "2026-07-22T04:02:34.862Z",
+      "kind": "pending_clarification",
+      "intent": "supplier_category_search",
+      "requested_terms": [
+        "servomoteurs electriques"
+      ],
+      "options": [
+        "cat_fab",
+        "fam_cir"
+      ],
+      "target_snapshot_id": null
+    }
+  }
+}

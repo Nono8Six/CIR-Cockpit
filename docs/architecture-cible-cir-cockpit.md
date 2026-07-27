@@ -42,6 +42,23 @@ Ordre d’autorité documentaire :
 
 En cas de conflit, il ne faut ni suivre aveuglément un ancien plan ni modifier automatiquement le code. Le conflit doit être nommé, l’état réel vérifié, puis une migration explicite doit être proposée.
 
+### Doctrine globale des migrations Supabase
+
+Le projet suit un flux **MCP-first** commun à toutes les briques et à tous les
+schémas. Toute écriture de schéma sur le projet lié passe par
+`apply_migration` du MCP Supabase après autorisation explicite. Le projet
+distant fait foi pour l'état runtime; chaque migration appliquée est ensuite
+extraite sans transcription manuelle et conservée sous sa version distante dans
+`backend/migrations/`, qui constitue l'historique SQL durable et
+reconstructible.
+
+Une migration n'est complète que si sa version, son nom et son SQL concordent
+entre l'historique distant et le fichier local. Cette règle interdit les
+historiques `remote-only`, les miroirs propres à une brique et les voies
+d'écriture concurrentes telles que `supabase db push` ou le SQL Editor. La
+procédure opérationnelle unique est définie dans `AGENTS.md` et
+`backend/migrations/README.md`.
+
 ## 1. Décision exécutive
 
 ### 1.1 La prochaine étape

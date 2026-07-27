@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import type { AgencyStatus, Interaction, InteractionUpdate, TimelineEvent } from '@/types';
 import { useInteractionDetailsState } from '../hooks/interactions/core/queries/useInteractionDetailsState';
 import InteractionDetailsFooter from './interactions/InteractionDetailsFooter';
@@ -17,6 +19,8 @@ interface Props {
   historicalStatuses?: AgencyStatus[];
   onRequestConvert: (interaction: Interaction) => void;
   onDeleteInteraction: (interaction: Interaction) => void;
+  // Barre d'actions contextuelle optionnelle inseree entre l'en-tete et le contenu.
+  quickActions?: ReactNode;
 }
 
 const InteractionDetails = ({
@@ -26,7 +30,8 @@ const InteractionDetails = ({
   statuses,
   historicalStatuses = [],
   onRequestConvert,
-  onDeleteInteraction
+  onDeleteInteraction,
+  quickActions
 }: Props) => {
   const {
     note,
@@ -56,6 +61,7 @@ const InteractionDetails = ({
         onDeleteInteraction={onDeleteInteraction}
         onClose={onClose}
       />
+      {quickActions}
       <div className="flex-1 overflow-y-auto bg-card px-4 py-4 sm:px-5" ref={scrollRef}>
         <InteractionDetailsSubjectCard interaction={interaction} />
         <InteractionDetailsTimeline timeline={interaction.timeline} />

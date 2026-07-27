@@ -1,12 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { Channel, type Interaction } from '@/types';
-import {
-  buildDateBounds,
-  filterInteractionsBySearch,
-  filterInteractionsByViewMode,
-  validateCustomDateRange
-} from '@/utils/dashboard/dashboardFilters';
+import { filterInteractionsBySearch } from '@/utils/dashboard/dashboardFilters';
 
 const buildInteraction = (overrides: Partial<Interaction> = {}): Interaction => ({
   id: 'interaction-1',
@@ -44,14 +39,6 @@ const buildInteraction = (overrides: Partial<Interaction> = {}): Interaction => 
 } as Interaction);
 
 describe('dashboardFilters', () => {
-  it('validates custom date range', () => {
-    expect(validateCustomDateRange('', '')).toBe('Renseignez une date de début et de fin.');
-    expect(validateCustomDateRange('2026-02-10', '2026-02-01')).toBe(
-      'La date de début doit précéder la date de fin.'
-    );
-    expect(validateCustomDateRange('2026-02-01', '2026-02-10')).toBeNull();
-  });
-
   it('filters interactions by search term across key fields', () => {
     const matching = buildInteraction({
       id: 'match',
@@ -68,6 +55,13 @@ describe('dashboardFilters', () => {
     expect(filtered.map((row) => row.id)).toEqual(['match']);
   });
 
+  it('returns the full list when the search term is empty', () => {
+    const first = buildInteraction({ id: 'first' });
+    const second = buildInteraction({ id: 'second' });
+
+    expect(filterInteractionsBySearch([first, second], '', '')).toEqual([first, second]);
+  });
+
   it('finds a historical status through its active resolution', () => {
     const interaction = buildInteraction({ status: 'Ancien statut' });
     const filtered = filterInteractionsBySearch([interaction], 'traité', 'traité', [
@@ -81,62 +75,5 @@ describe('dashboardFilters', () => {
     ]);
 
     expect(filtered).toEqual([interaction]);
-  });
-
-  it('filters by date bounds in list mode and sorts by latest activity', () => {
-    const inRangeNewest = buildInteraction({
-      id: 'newest',
-      last_action_at: '2026-02-10T10:00:00.000Z'
-    });
-    const inRangeOldest = buildInteraction({
-      id: 'oldest',
-      last_action_at: '2026-02-10T08:00:00.000Z'
-    });
-    const outOfRange = buildInteraction({
-      id: 'out',
-      last_action_at: '2026-02-01T08:00:00.000Z'
-    });
-
-    const dateBounds = buildDateBounds('2026-02-10', '2026-02-10');
-    const filtered = filterInteractionsByViewMode({
-      interactions: [inRangeOldest, outOfRange, inRangeNewest],
-      viewMode: 'list',
-      dateBounds,
-      isStatusDone: () => false
-    });
-
-    expect(filtered.map((row) => row.id)).toEqual(['newest', 'oldest']);
-  });
-
-  it('excludes done items in myday mode when date bounds are absent', () => {
-    const todoInteraction = buildInteraction({ id: 'todo', status_is_terminal: false });
-    const doneInteraction = buildInteraction({ id: 'done', status_is_terminal: true });
-
-    const filtered = filterInteractionsByViewMode({
-      interactions: [todoInteraction, doneInteraction],
-      viewMode: 'myday',
-      dateBounds: null,
-      isStatusDone: (interaction) => Boolean(interaction.status_is_terminal)
-    });
-
-    expect(filtered.map((row) => row.id)).toEqual(['todo']);
-  });
-
-  it('does not bypass the period filter in list mode', () => {
-    const overdueOutOfRange = buildInteraction({
-      id: 'overdue-out',
-      last_action_at: '2026-01-05T08:00:00.000Z',
-      reminder_at: '2026-01-10T09:00:00.000Z'
-    });
-
-    const dateBounds = buildDateBounds('2026-02-10', '2026-02-10');
-    const filtered = filterInteractionsByViewMode({
-      interactions: [overdueOutOfRange],
-      viewMode: 'list',
-      dateBounds,
-      isStatusDone: () => false
-    });
-
-    expect(filtered).toEqual([]);
   });
 });

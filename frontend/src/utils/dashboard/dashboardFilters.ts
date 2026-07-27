@@ -1,53 +1,7 @@
 import type { Interaction } from '@/types';
 
-import {
-  resolveActivityTimestamp,
-  sortInteractionsByLatestActivity
-} from '@/utils/dashboard/dashboardSort';
-import { getEndOfDay } from '@/utils/date/getEndOfDay';
-import { getStartOfDay } from '@/utils/date/getStartOfDay';
 import type { AgencyConfig } from '@/services/config';
 import { resolveReferenceLabel } from '@/utils/references/resolveReferenceLabel';
-
-export type DateBounds = {
-  start: number;
-  end: number;
-};
-
-export type DashboardViewMode = 'myday' | 'pipeline' | 'list';
-
-type FilterInteractionsByViewModeParams = {
-  interactions: Interaction[];
-  viewMode: DashboardViewMode;
-  dateBounds: DateBounds | null;
-  isStatusDone: (interaction: Interaction) => boolean;
-};
-
-export const validateCustomDateRange = (startDate: string, endDate: string): string | null => {
-  if (!startDate || !endDate) {
-    return 'Renseignez une date de début et de fin.';
-  }
-
-  if (startDate > endDate) {
-    return 'La date de début doit précéder la date de fin.';
-  }
-
-  return null;
-};
-
-export const buildDateBounds = (startDate: string, endDate: string): DateBounds | null => {
-  const start = getStartOfDay(startDate).getTime();
-  const end = getEndOfDay(endDate).getTime();
-
-  if (Number.isNaN(start) || Number.isNaN(end) || start > end) {
-    return null;
-  }
-
-  return { start, end };
-};
-
-export const isTimestampWithinBounds = (timestamp: number, bounds: DateBounds): boolean =>
-  timestamp >= bounds.start && timestamp <= bounds.end;
 
 export const filterInteractionsBySearch = (
   interactions: Interaction[],
@@ -76,35 +30,5 @@ export const filterInteractionsBySearch = (
     || resolveReferenceLabel('services', interaction.contact_service, resolutions).toLowerCase().includes(normalizedSearchTerm)
     || resolveReferenceLabel('interaction_types', interaction.interaction_type, resolutions).toLowerCase().includes(normalizedSearchTerm)
     || resolveReferenceLabel('statuses', interaction.status, resolutions).toLowerCase().includes(normalizedSearchTerm)
-  );
-};
-
-export const filterInteractionsByViewMode = ({
-  interactions,
-  viewMode,
-  dateBounds,
-  isStatusDone
-}: FilterInteractionsByViewModeParams): Interaction[] => {
-  // Ma journee est une file de travail : jamais de filtre temporel, seulement les dossiers ouverts.
-  if (viewMode === 'myday') {
-    return interactions.filter((interaction) => !isStatusDone(interaction));
-  }
-
-  // Le pipeline est un stock complet : le regroupement et la fenetre "clotures 30 j"
-  // sont geres par buildPipelineBoard, pas par le filtre de periode.
-  if (viewMode === 'pipeline') {
-    return interactions;
-  }
-
-  // Historique : journal filtre par periode sur la date de derniere action.
-  if (!dateBounds) {
-    return sortInteractionsByLatestActivity(interactions);
-  }
-
-  return sortInteractionsByLatestActivity(
-    interactions.filter((interaction) => {
-      const lastActivityAt = resolveActivityTimestamp(interaction);
-      return isTimestampWithinBounds(lastActivityAt, dateBounds);
-    })
   );
 };

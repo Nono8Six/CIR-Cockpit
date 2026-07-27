@@ -1,0 +1,311 @@
+{
+  "question": "Combien j'ai de CAT_FAB avec des variateur de vitesse ?",
+  "http_status": 200,
+  "elapsed_ms": 28227,
+  "body": {
+    "result": {
+      "data": {
+        "ok": true,
+        "request_id": "09df3cd3-eeef-49b8-bad4-9c603e4d794e",
+        "ai_available": true,
+        "answer": "Dans le snapshot 4e216bc4-7d82-4eb7-aa20-2cc8316667cc, la qualification de « variateur de vitesse » retient 308 couples marque + CAT_FAB, soit 308 libellés CAT_FAB distincts et 6 marques : ROCK (259), FEST (20), SIEM (20), PARK (6), LERO (2), BONF (1). Critères appliqués : variateur de vitesse, variateur, variateur électronique, speed drive, variable speed drive, VSD, variateur de fréquence, frequency drive, inverter, servo-variateur, servo drive, variateur hydraulique; contextes exclus : aucun.",
+        "citations": [
+          {
+            "tool": "submit_product_qualification",
+            "label": "Qualification produit sur le snapshot 4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+            "ref": {
+              "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+              "concept": "variateur de vitesse",
+              "groups_inspected": 15,
+              "groups_accepted": 13,
+              "groups_excluded": 2
+            }
+          }
+        ],
+        "tool_trace": [
+          {
+            "name": "search_product_candidates",
+            "arguments": {
+              "concept": "variateur de vitesse",
+              "positive_terms": [
+                "variateur de vitesse",
+                "variateur",
+                "variateur électronique",
+                "speed drive",
+                "variable speed drive",
+                "VSD",
+                "variateur de fréquence",
+                "frequency drive",
+                "inverter",
+                "servo-variateur",
+                "servo drive",
+                "variateur hydraulique"
+              ],
+              "required_context": [],
+              "excluded_context": [],
+              "selected_paths": [
+                "AUTOMATISME > VARIATEURS, SERVO-VAR ET DEMARREURS > VARIATEURS",
+                "AUTOMATISME > VARIATEURS, SERVO-VAR ET DEMARREURS > SERVO-VARIATEURS"
+              ]
+            },
+            "ok": true,
+            "executed": true,
+            "blocked_reason": null,
+            "row_count": 15,
+            "duration_ms": 6945
+          },
+          {
+            "name": "submit_product_qualification",
+            "arguments": {
+              "accepted_group_count": 13,
+              "excluded_group_count": 2
+            },
+            "ok": true,
+            "executed": true,
+            "blocked_reason": null,
+            "row_count": 13,
+            "duration_ms": 19096
+          }
+        ],
+        "evidence": {
+          "status": "qualified",
+          "intent": "product_semantic_search",
+          "dimension": "cat_fab",
+          "facts": [
+            {
+              "label": "Couples marque + CAT_FAB qualifies",
+              "tool": "submit_product_qualification",
+              "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+              "result_field": "distinct_brand_cat_fab",
+              "source_value": 308,
+              "displayed_value": 308,
+              "derivation": "direct"
+            },
+            {
+              "label": "Marques qualifiees",
+              "tool": "submit_product_qualification",
+              "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+              "result_field": "matching_brands",
+              "source_value": [
+                "ROCK",
+                "FEST",
+                "SIEM",
+                "PARK",
+                "LERO",
+                "BONF"
+              ],
+              "displayed_value": [
+                "ROCK",
+                "FEST",
+                "SIEM",
+                "PARK",
+                "LERO",
+                "BONF"
+              ],
+              "derivation": "direct"
+            },
+            {
+              "label": "Nombre de marques qualifiees",
+              "tool": "submit_product_qualification",
+              "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+              "result_field": "distinct_brand_count",
+              "source_value": 6,
+              "displayed_value": 6,
+              "derivation": "direct"
+            },
+            {
+              "label": "Groupes inspectes",
+              "tool": "search_product_candidates",
+              "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+              "result_field": "groups_inspected",
+              "source_value": 15,
+              "displayed_value": 15,
+              "derivation": "direct"
+            },
+            {
+              "label": "Groupes acceptes",
+              "tool": "submit_product_qualification",
+              "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+              "result_field": "accepted_groups",
+              "source_value": 13,
+              "displayed_value": 13,
+              "derivation": "direct"
+            },
+            {
+              "label": "Groupes exclus",
+              "tool": "submit_product_qualification",
+              "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+              "result_field": "excluded_groups",
+              "source_value": 2,
+              "displayed_value": 2,
+              "derivation": "direct"
+            }
+          ],
+          "executions": [
+            {
+              "tool": "search_product_candidates",
+              "ok": true,
+              "duration_ms": 6945,
+              "row_count": 15,
+              "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+              "requested_filters": {
+                "concept": "variateur de vitesse"
+              },
+              "canonical_filters": {
+                "positive_terms": [
+                  "variateur de vitesse",
+                  "variateur",
+                  "variateur électronique",
+                  "speed drive",
+                  "variable speed drive",
+                  "VSD",
+                  "variateur de fréquence",
+                  "frequency drive",
+                  "inverter",
+                  "servo-variateur",
+                  "servo drive",
+                  "variateur hydraulique"
+                ],
+                "required_context": [],
+                "excluded_context": [],
+                "selected_paths": [
+                  "AUTOMATISME > VARIATEURS, SERVO-VAR ET DEMARREURS > VARIATEURS",
+                  "AUTOMATISME > VARIATEURS, SERVO-VAR ET DEMARREURS > SERVO-VARIATEURS"
+                ]
+              },
+              "server_filters": {
+                "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc"
+              },
+              "sql_attempt": null,
+              "executed_sql": null,
+              "error_code": null
+            },
+            {
+              "tool": "submit_product_qualification",
+              "ok": true,
+              "duration_ms": 19096,
+              "row_count": 13,
+              "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+              "requested_filters": {},
+              "canonical_filters": {
+                "accepted_groups": 13,
+                "excluded_groups": 2
+              },
+              "server_filters": {
+                "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc"
+              },
+              "sql_attempt": null,
+              "executed_sql": null,
+              "error_code": null
+            }
+          ]
+        },
+        "usage": {
+          "provider": "mistral",
+          "model_id": "mistral-large-2512",
+          "input_tokens": 24281,
+          "output_tokens": 796,
+          "cached_input_tokens": 1920,
+          "reasoning_tokens": 0
+        },
+        "cost": {
+          "amount": 0.0142945,
+          "currency": "USD",
+          "priced": true
+        },
+        "fallback_reason": null,
+        "model_id": "mistral-large-2512",
+        "truncated": false,
+        "conversation_context": {
+          "version": 1,
+          "surface": "pricing.references",
+          "domain": "pricing_references",
+          "import_id": null,
+          "created_at": "2026-07-20T13:55:07.450Z",
+          "expires_at": "2026-07-20T14:10:07.450Z",
+          "kind": "product_semantic_result",
+          "intent": "product_semantic_search",
+          "concept": "variateur de vitesse",
+          "snapshot_id": "4e216bc4-7d82-4eb7-aa20-2cc8316667cc",
+          "source_client_request_id": "7e0a8d04-233a-4e06-9d36-7a836897a8ff",
+          "accepted_selections": [
+            {
+              "kind": "classification_scope",
+              "cir_path": "AUTOMATISME > VARIATEURS, SERVO-VAR ET DEMARREURS > VARIATEURS"
+            },
+            {
+              "kind": "classification_scope",
+              "cir_path": "AUTOMATISME > VARIATEURS, SERVO-VAR ET DEMARREURS > SERVO-VARIATEURS"
+            },
+            {
+              "kind": "classification_scope",
+              "cir_path": "PNEUMATIQUE > COMPOSANTS > MOTEURS ET VARIATEURS"
+            },
+            {
+              "kind": "direct_label",
+              "normalized_cat_fab": "motion products - servo drives - 2090: shunt",
+              "cir_path": "AUTOMATISME > VARIATEURS, SERVO-VAR ET DEMARREURS > DIVERS"
+            },
+            {
+              "kind": "direct_label",
+              "normalized_cat_fab": "motion products - servo drives - 2094: lim",
+              "cir_path": "AUTOMATISME > VARIATEURS, SERVO-VAR ET DEMARREURS > DIVERS"
+            },
+            {
+              "kind": "direct_label",
+              "normalized_cat_fab": "motion products - servo drives - 8720mc: servo drives & accessories",
+              "cir_path": "AUTOMATISME > VARIATEURS, SERVO-VAR ET DEMARREURS > DIVERS"
+            },
+            {
+              "kind": "direct_label",
+              "normalized_cat_fab": "motion products - servo drives - armorkinetix",
+              "cir_path": "AUTOMATISME > VARIATEURS, SERVO-VAR ET DEMARREURS > DIVERS"
+            },
+            {
+              "kind": "direct_label",
+              "normalized_cat_fab": "servo variateurs c3",
+              "cir_path": ""
+            },
+            {
+              "kind": "direct_label",
+              "normalized_cat_fab": "servo variateurs psd1_",
+              "cir_path": ""
+            },
+            {
+              "kind": "direct_label",
+              "normalized_cat_fab": "v12-v14-v16, c24, variateurs",
+              "cir_path": "HYDRAULIQUE > COMPOSANTS > ELECTRONIQUE DIVERS"
+            },
+            {
+              "kind": "direct_label",
+              "normalized_cat_fab": "variateurs dc serie 590p",
+              "cir_path": ""
+            },
+            {
+              "kind": "direct_label",
+              "normalized_cat_fab": "variateurs serie ac10",
+              "cir_path": ""
+            },
+            {
+              "kind": "direct_label",
+              "normalized_cat_fab": "variateurs serie ac30",
+              "cir_path": ""
+            }
+          ],
+          "result_summary": {
+            "matching_brands": [
+              "ROCK",
+              "FEST",
+              "SIEM",
+              "PARK",
+              "LERO",
+              "BONF"
+            ],
+            "distinct_brand_count": 6,
+            "distinct_brand_cat_fab": 308
+          }
+        }
+      }
+    }
+  }
+}

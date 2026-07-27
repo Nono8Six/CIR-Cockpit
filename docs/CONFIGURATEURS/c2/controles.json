@@ -1,0 +1,4124 @@
+{
+  "generated_at": "2026-07-27T06:41:16.700Z",
+  "fingerprint_sha256": "8ae3946c73295037f824984774177efa0e16aa9a5ddce6f0b82241fa83e1da97",
+  "decision": "GO_TECHNIQUE",
+  "non_regression": [
+    {
+      "critere": "Les 2 355 points source sont tous representes",
+      "verdict": "OK",
+      "attendu": "2355 points source",
+      "observe": "2355 retenus, 0 bloques",
+      "commentaire": null
+    },
+    {
+      "critere": "Aucun des 1 997 points de depart perdu hors remplacement CILS trace",
+      "verdict": "OK",
+      "attendu": "1997 points d origine tous representes",
+      "observe": "1997 retenus, 0 bloques",
+      "commentaire": "aucun point d origine perdu"
+    },
+    {
+      "critere": "Aucune des 37 917 cotes perdue hors fusion de doublon tracee",
+      "verdict": "OK",
+      "attendu": "toute cellule source rattachable representee, aucun nouveau bloc orphelin, ecart 37 917 -> cible explique ligne par ligne",
+      "observe": "30582 cellules rattachees, 30582 representees, 0 fusionnees ; ecart constate -160, explique -160",
+      "commentaire": "47 blocs sans modele contre 69 dans l oracle SQLite ; detail par model_key dans reconciliation_par_modele"
+    },
+    {
+      "critere": "324 points Bonfiglioli legacy ajoutes",
+      "verdict": "OK",
+      "attendu": 324,
+      "observe": 324,
+      "commentaire": null
+    },
+    {
+      "critere": "34 points CILS ajoutes",
+      "verdict": "OK",
+      "attendu": 34,
+      "observe": 34,
+      "commentaire": null
+    },
+    {
+      "critere": "68 couples CILS ajoutes",
+      "verdict": "OK",
+      "attendu": 68,
+      "observe": 68,
+      "commentaire": null
+    },
+    {
+      "critere": "8 types dimensionnels CILS ajoutes",
+      "verdict": "OK",
+      "attendu": 8,
+      "observe": 8,
+      "commentaire": null
+    },
+    {
+      "critere": "8 196 brides reconciliees",
+      "verdict": "OK",
+      "attendu": "7675 brides source, toutes representees ou fusionnees a l identique, ecart 8 196 -> cible explique ligne par ligne",
+      "observe": "7926 lignes cible, 7228 brides source representees, 366 fusions identiques, 15 brides V1 hors perimetre ; ecart constate -270, explique -270",
+      "commentaire": "oracle SQLite : 8 196 lignes obtenues avec 1 652 modeles ; detail par model_key dans reconciliation_par_modele"
+    },
+    {
+      "critere": "599 correlations reconciliees",
+      "verdict": "OK",
+      "attendu": 599,
+      "observe": 599,
+      "commentaire": "frequency_hz publiee conservee et integree a l unicite"
+    },
+    {
+      "critere": "705 seuils avec provenance",
+      "verdict": "OK",
+      "attendu": 705,
+      "observe": "640 + 65 = 705, 0 sans provenance",
+      "commentaire": null
+    },
+    {
+      "critere": "38 anomalies avec les memes codes et cibles",
+      "verdict": "OK",
+      "attendu": "38 anomalies oracle toutes retrouvees",
+      "observe": "38 retrouvees, 0 manquantes, 24 nouvelles",
+      "commentaire": "les nouvelles anomalies proviennent des jeux Bonfiglioli legacy et CILS absents de l oracle ; detail dans anomalies_reconciliation"
+    },
+    {
+      "critere": "Aucun point ni seuil sans provenance",
+      "verdict": "OK",
+      "attendu": 0,
+      "observe": 0,
+      "commentaire": null
+    },
+    {
+      "critere": "LSHRM 160MR1 conserve ses quatre points",
+      "verdict": "OK",
+      "attendu": "4 points par variante",
+      "observe": [
+        {
+          "model_key": "leroy-somer:lshrm160mr1:j-0p0262-m-72",
+          "mass_kg": 72,
+          "inertia_kgm2": 0.0262,
+          "retained_points": 4
+        },
+        {
+          "model_key": "leroy-somer:lshrm160mr1:j-0p0293-m-46",
+          "mass_kg": 46,
+          "inertia_kgm2": 0.0293,
+          "retained_points": 4
+        },
+        {
+          "model_key": "leroy-somer:lshrm160mr1:j-0p0217-m-54",
+          "mass_kg": 54,
+          "inertia_kgm2": 0.0217,
+          "retained_points": 4
+        }
+      ],
+      "commentaire": null
+    },
+    {
+      "critere": "Aucun IE5 sur reseau",
+      "verdict": "OK",
+      "attendu": 0,
+      "observe": 0,
+      "commentaire": null
+    },
+    {
+      "critere": "Aucune valeur PDF supprimee ou corrigee silencieusement",
+      "verdict": "OK",
+      "attendu": "0 conflit de valeur, 0 violation de contrainte",
+      "observe": "0 conflits de cote, 0 conflits de bride, 0 violations",
+      "commentaire": "toute divergence est journalisee, aucune valeur n est reecrite"
+    }
+  ],
+  "volumes": {
+    "source_rows": {
+      "product": 2355,
+      "dimension_blocks": 1352,
+      "cils_vfd_torque": 68,
+      "correlations": 599,
+      "iec_30_1": 640,
+      "iec_30_2": 65,
+      "printed_anomalies": 6
+    },
+    "target_rows": {
+      "source_document": 6,
+      "source_ref": 169,
+      "motor_model": 1721,
+      "motor_operating_point": 2355,
+      "motor_operating_point_blocked": 0,
+      "motor_efficiency_point": 5699,
+      "motor_torque_point": 2370,
+      "motor_dimension_definition": 59,
+      "motor_dimension": 37757,
+      "motor_flange_option": 7926,
+      "motor_brake_option": 256,
+      "motor_vendor_correlation": 599,
+      "motor_iec_threshold": 640,
+      "motor_iec_vsd_threshold": 65,
+      "motor_validation_issue": 62
+    }
+  },
+  "oracle": {
+    "counts": {
+      "catalog_document": 4,
+      "source_ref": 123,
+      "motor_model": 1652,
+      "motor_operating_point": 1997,
+      "efficiency_point": 4859,
+      "torque_point": 2302,
+      "model_dimension": 37917,
+      "flange_option": 8196,
+      "vendor_correlation": 599,
+      "iec_efficiency_threshold": 640,
+      "iec_vsd_efficiency_threshold": 65,
+      "validation_issue": 38
+    },
+    "validation_summary": {
+      "CURRENT_MISMATCH|error": 2,
+      "EFFICIENCY_CURVE|warning": 18,
+      "IE_BELOW_THRESHOLD|error": 14,
+      "INERTIA_IMPLAUSIBLE|warning": 4
+    }
+  },
+  "reconciliation_par_modele": {
+    "available": true,
+    "oracle_dimensions": 37917,
+    "candidate_dimensions": 37757,
+    "delta_dimensions_explique": -160,
+    "delta_dimensions_constate": -160,
+    "oracle_flanges": 8196,
+    "candidate_flanges": 7926,
+    "delta_flanges_explique": -270,
+    "delta_flanges_constate": -270,
+    "causes": {
+      "dimensions": {
+        "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)": {
+          "groupes": 67,
+          "delta": 2432
+        },
+        "eclatement par montage et polarite": {
+          "groupes": 40,
+          "delta": 990
+        },
+        "fusion de 2 modeles oracle en un model_key": {
+          "groupes": 44,
+          "delta": -971
+        },
+        "fusion de 4 modeles oracle en un model_key": {
+          "groupes": 6,
+          "delta": -426
+        },
+        "fusion de 5 modeles oracle en un model_key": {
+          "groupes": 5,
+          "delta": -508
+        },
+        "fusion de 3 modeles oracle en un model_key": {
+          "groupes": 23,
+          "delta": -968
+        },
+        "fusion de 6 modeles oracle en un model_key": {
+          "groupes": 4,
+          "delta": -535
+        },
+        "fusion de 7 modeles oracle en un model_key": {
+          "groupes": 1,
+          "delta": -174
+        }
+      },
+      "flanges": {
+        "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)": {
+          "groupes": 57,
+          "delta": 89
+        },
+        "fusion de 2 modeles oracle en un model_key": {
+          "groupes": 44,
+          "delta": -108
+        },
+        "fusion de 4 modeles oracle en un model_key": {
+          "groupes": 6,
+          "delta": -39
+        },
+        "fusion de 5 modeles oracle en un model_key": {
+          "groupes": 5,
+          "delta": -40
+        },
+        "fusion de 3 modeles oracle en un model_key": {
+          "groupes": 23,
+          "delta": -120
+        },
+        "fusion de 6 modeles oracle en un model_key": {
+          "groupes": 4,
+          "delta": -40
+        },
+        "fusion de 7 modeles oracle en un model_key": {
+          "groupes": 1,
+          "delta": -12
+        }
+      }
+    },
+    "lignes": [
+      {
+        "model_key": "leroy-somer:lshrm180l1m:j-0p1142-m-152",
+        "designations": [
+          "LSHRM 180L1M"
+        ],
+        "oracle_models": 7,
+        "oracle_dimensions": 203,
+        "candidate_dimensions": 29,
+        "delta_dimensions": -174,
+        "oracle_flanges": 14,
+        "candidate_flanges": 2,
+        "delta_flanges": -12,
+        "cause": "fusion de 7 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:lshrm160lr3:j-0p0309-m-80",
+        "designations": [
+          "LSHRM 160LR3"
+        ],
+        "oracle_models": 6,
+        "oracle_dimensions": 174,
+        "candidate_dimensions": 29,
+        "delta_dimensions": -145,
+        "oracle_flanges": 12,
+        "candidate_flanges": 2,
+        "delta_flanges": -10,
+        "cause": "fusion de 6 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:lshrm200lr1:j-0p1333-m-174",
+        "designations": [
+          "LSHRM 200LR1"
+        ],
+        "oracle_models": 6,
+        "oracle_dimensions": 174,
+        "candidate_dimensions": 29,
+        "delta_dimensions": -145,
+        "oracle_flanges": 12,
+        "candidate_flanges": 2,
+        "delta_flanges": -10,
+        "cause": "fusion de 6 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:lshrm225mg1m:j-0p7319-m-380",
+        "designations": [
+          "LSHRM 225MG1M"
+        ],
+        "oracle_models": 6,
+        "oracle_dimensions": 174,
+        "candidate_dimensions": 29,
+        "delta_dimensions": -145,
+        "oracle_flanges": 12,
+        "candidate_flanges": 2,
+        "delta_flanges": -10,
+        "cause": "fusion de 6 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:lshrm132mu3:j-0p0262-m-63",
+        "designations": [
+          "LSHRM 132MU3"
+        ],
+        "oracle_models": 5,
+        "oracle_dimensions": 145,
+        "candidate_dimensions": 29,
+        "delta_dimensions": -116,
+        "oracle_flanges": 10,
+        "candidate_flanges": 2,
+        "delta_flanges": -8,
+        "cause": "fusion de 5 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:lshrm250mf1:j-0p7409-m-480",
+        "designations": [
+          "LSHRM 250MF1"
+        ],
+        "oracle_models": 5,
+        "oracle_dimensions": 145,
+        "candidate_dimensions": 29,
+        "delta_dimensions": -116,
+        "oracle_flanges": 10,
+        "candidate_flanges": 2,
+        "delta_flanges": -8,
+        "cause": "fusion de 5 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:lshrm280mu:j-2p4304-m-820",
+        "designations": [
+          "LSHRM 280MU"
+        ],
+        "oracle_models": 5,
+        "oracle_dimensions": 140,
+        "candidate_dimensions": 28,
+        "delta_dimensions": -112,
+        "oracle_flanges": 10,
+        "candidate_flanges": 2,
+        "delta_flanges": -8,
+        "cause": "fusion de 5 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses355lb:standard",
+        "designations": [
+          "FLSES 355 LB"
+        ],
+        "oracle_models": 6,
+        "oracle_dimensions": 120,
+        "candidate_dimensions": 20,
+        "delta_dimensions": -100,
+        "oracle_flanges": 12,
+        "candidate_flanges": 2,
+        "delta_flanges": -10,
+        "cause": "fusion de 6 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses200lu:standard",
+        "designations": [
+          "FLSES 200 LU"
+        ],
+        "oracle_models": 5,
+        "oracle_dimensions": 115,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -92,
+        "oracle_flanges": 10,
+        "candidate_flanges": 2,
+        "delta_flanges": -8,
+        "cause": "fusion de 5 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:lshrm315mr:j-2p437-m-874",
+        "designations": [
+          "LSHRM 315MR"
+        ],
+        "oracle_models": 4,
+        "oracle_dimensions": 112,
+        "candidate_dimensions": 28,
+        "delta_dimensions": -84,
+        "oracle_flanges": 8,
+        "candidate_flanges": 2,
+        "delta_flanges": -6,
+        "cause": "fusion de 4 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:plshrm315ld:j-3p45-m-935",
+        "designations": [
+          "PLSHRM 315LD"
+        ],
+        "oracle_models": 4,
+        "oracle_dimensions": 112,
+        "candidate_dimensions": 28,
+        "delta_dimensions": -84,
+        "oracle_flanges": 4,
+        "candidate_flanges": 1,
+        "delta_flanges": -3,
+        "cause": "fusion de 4 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:plses315lg:standard",
+        "designations": [
+          "PLSES 315 LG"
+        ],
+        "oracle_models": 5,
+        "oracle_dimensions": 90,
+        "candidate_dimensions": 18,
+        "delta_dimensions": -72,
+        "oracle_flanges": 10,
+        "candidate_flanges": 2,
+        "delta_flanges": -8,
+        "cause": "fusion de 5 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses132sm:standard",
+        "designations": [
+          "FLSES 132 SM"
+        ],
+        "oracle_models": 4,
+        "oracle_dimensions": 92,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -69,
+        "oracle_flanges": 16,
+        "candidate_flanges": 4,
+        "delta_flanges": -12,
+        "cause": "fusion de 4 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses160m:standard",
+        "designations": [
+          "FLSES 160 M"
+        ],
+        "oracle_models": 4,
+        "oracle_dimensions": 92,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -69,
+        "oracle_flanges": 8,
+        "candidate_flanges": 2,
+        "delta_flanges": -6,
+        "cause": "fusion de 4 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:cils225m:j-0p35-m-368",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 67,
+        "delta_dimensions": 67,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "leroy-somer:cils225m:j-0p79-m-423",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 67,
+        "delta_dimensions": 67,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "leroy-somer:cils225m:standard",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 67,
+        "delta_dimensions": 67,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "leroy-somer:cils250m:j-0p42-m-460",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 67,
+        "delta_dimensions": 67,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "leroy-somer:cils250m:j-1p08-m-555",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 67,
+        "delta_dimensions": 67,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "leroy-somer:cils250m:standard",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 67,
+        "delta_dimensions": 67,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "leroy-somer:cils280mg:j-1p05-m-840",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 67,
+        "delta_dimensions": 67,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "leroy-somer:cils280mg:j-2p06-m-912",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 67,
+        "delta_dimensions": 67,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "leroy-somer:cils280mg:standard",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 67,
+        "delta_dimensions": 67,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "leroy-somer:cils280sg:j-1-m-810",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 67,
+        "delta_dimensions": 67,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "leroy-somer:cils280sg:j-1p82-m-860",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 67,
+        "delta_dimensions": 67,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "leroy-somer:cils280sg:standard",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 67,
+        "delta_dimensions": 67,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "leroy-somer:cils315le:j-1p44-m-1050",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 67,
+        "delta_dimensions": 67,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "leroy-somer:cils315le:j-1p62-m-1140",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 67,
+        "delta_dimensions": 67,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "leroy-somer:cils315le:j-2p92-m-1155",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 67,
+        "delta_dimensions": 67,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "leroy-somer:cils315le:j-3p16-m-1240",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 67,
+        "delta_dimensions": 67,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "leroy-somer:cils315le:standard",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 67,
+        "delta_dimensions": 67,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "leroy-somer:cils315me:j-1p25-m-940",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 67,
+        "delta_dimensions": 67,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "leroy-somer:cils315me:j-2p68-m-1090",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 67,
+        "delta_dimensions": 67,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "leroy-somer:cils315me:standard",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 67,
+        "delta_dimensions": 67,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "leroy-somer:cils315se:j-1p2-m-890",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 67,
+        "delta_dimensions": 67,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "leroy-somer:cils315se:j-2p31-m-980",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 67,
+        "delta_dimensions": 67,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "leroy-somer:cils315se:standard",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 67,
+        "delta_dimensions": 67,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "leroy-somer:cils315l:standard",
+        "designations": [
+          "CILS 315 L"
+        ],
+        "oracle_models": 4,
+        "oracle_dimensions": 80,
+        "candidate_dimensions": 20,
+        "delta_dimensions": -60,
+        "oracle_flanges": 8,
+        "candidate_flanges": 2,
+        "delta_flanges": -6,
+        "cause": "fusion de 4 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses355lc:standard",
+        "designations": [
+          "FLSES 355 LC"
+        ],
+        "oracle_models": 4,
+        "oracle_dimensions": 80,
+        "candidate_dimensions": 20,
+        "delta_dimensions": -60,
+        "oracle_flanges": 8,
+        "candidate_flanges": 2,
+        "delta_flanges": -6,
+        "cause": "fusion de 4 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:cils225s:j-0p38-m-388",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 57,
+        "delta_dimensions": 57,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "leroy-somer:cils225s:standard",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 57,
+        "delta_dimensions": 57,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "leroy-somer:flses280s:standard",
+        "designations": [
+          "FLSES 280 S"
+        ],
+        "oracle_models": 3,
+        "oracle_dimensions": 69,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -46,
+        "oracle_flanges": 6,
+        "candidate_flanges": 2,
+        "delta_flanges": -4,
+        "cause": "fusion de 3 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses450ld:standard",
+        "designations": [
+          "FLSES 450 LD"
+        ],
+        "oracle_models": 3,
+        "oracle_dimensions": 69,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -46,
+        "oracle_flanges": 6,
+        "candidate_flanges": 2,
+        "delta_flanges": -4,
+        "cause": "fusion de 3 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses90lu:standard",
+        "designations": [
+          "FLSES 90 LU"
+        ],
+        "oracle_models": 3,
+        "oracle_dimensions": 69,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -46,
+        "oracle_flanges": 12,
+        "candidate_flanges": 4,
+        "delta_flanges": -8,
+        "cause": "fusion de 3 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses90sl:standard",
+        "designations": [
+          "FLSES 90 SL"
+        ],
+        "oracle_models": 3,
+        "oracle_dimensions": 69,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -46,
+        "oracle_flanges": 12,
+        "candidate_flanges": 4,
+        "delta_flanges": -8,
+        "cause": "fusion de 3 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:lses132m:standard",
+        "designations": [
+          "LSES 132 M"
+        ],
+        "oracle_models": 3,
+        "oracle_dimensions": 69,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -46,
+        "oracle_flanges": 12,
+        "candidate_flanges": 4,
+        "delta_flanges": -8,
+        "cause": "fusion de 3 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:lses132sm:standard",
+        "designations": [
+          "LSES 132 SM"
+        ],
+        "oracle_models": 3,
+        "oracle_dimensions": 69,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -46,
+        "oracle_flanges": 12,
+        "candidate_flanges": 4,
+        "delta_flanges": -8,
+        "cause": "fusion de 3 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:lses80lg:standard",
+        "designations": [
+          "LSES 80 LG"
+        ],
+        "oracle_models": 3,
+        "oracle_dimensions": 69,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -46,
+        "oracle_flanges": 12,
+        "candidate_flanges": 4,
+        "delta_flanges": -8,
+        "cause": "fusion de 3 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:lses90lu:standard",
+        "designations": [
+          "LSES 90 LU"
+        ],
+        "oracle_models": 3,
+        "oracle_dimensions": 69,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -46,
+        "oracle_flanges": 12,
+        "candidate_flanges": 4,
+        "delta_flanges": -8,
+        "cause": "fusion de 3 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:lses90sl:standard",
+        "designations": [
+          "LSES 90 SL"
+        ],
+        "oracle_models": 3,
+        "oracle_dimensions": 69,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -46,
+        "oracle_flanges": 12,
+        "candidate_flanges": 4,
+        "delta_flanges": -8,
+        "cause": "fusion de 3 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses280m:standard",
+        "designations": [
+          "FLSES 280 M"
+        ],
+        "oracle_models": 3,
+        "oracle_dimensions": 63,
+        "candidate_dimensions": 21,
+        "delta_dimensions": -42,
+        "oracle_flanges": 6,
+        "candidate_flanges": 2,
+        "delta_flanges": -4,
+        "cause": "fusion de 3 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:plses400la:standard",
+        "designations": [
+          "PLSES 400 LA"
+        ],
+        "oracle_models": 3,
+        "oracle_dimensions": 63,
+        "candidate_dimensions": 21,
+        "delta_dimensions": -42,
+        "oracle_flanges": 6,
+        "candidate_flanges": 2,
+        "delta_flanges": -4,
+        "cause": "fusion de 3 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:plses400lb:standard",
+        "designations": [
+          "PLSES 400LB"
+        ],
+        "oracle_models": 3,
+        "oracle_dimensions": 63,
+        "candidate_dimensions": 21,
+        "delta_dimensions": -42,
+        "oracle_flanges": 6,
+        "candidate_flanges": 2,
+        "delta_flanges": -4,
+        "cause": "fusion de 3 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses315la:standard",
+        "designations": [
+          "FLSES 315 LA"
+        ],
+        "oracle_models": 3,
+        "oracle_dimensions": 60,
+        "candidate_dimensions": 20,
+        "delta_dimensions": -40,
+        "oracle_flanges": 6,
+        "candidate_flanges": 2,
+        "delta_flanges": -4,
+        "cause": "fusion de 3 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses315lb:standard",
+        "designations": [
+          "FLSES 315 LB"
+        ],
+        "oracle_models": 3,
+        "oracle_dimensions": 60,
+        "candidate_dimensions": 20,
+        "delta_dimensions": -40,
+        "oracle_flanges": 6,
+        "candidate_flanges": 2,
+        "delta_flanges": -4,
+        "cause": "fusion de 3 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses315m:standard",
+        "designations": [
+          "FLSES 315 M"
+        ],
+        "oracle_models": 3,
+        "oracle_dimensions": 60,
+        "candidate_dimensions": 20,
+        "delta_dimensions": -40,
+        "oracle_flanges": 6,
+        "candidate_flanges": 2,
+        "delta_flanges": -4,
+        "cause": "fusion de 3 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses315s:standard",
+        "designations": [
+          "FLSES 315 S"
+        ],
+        "oracle_models": 3,
+        "oracle_dimensions": 60,
+        "candidate_dimensions": 20,
+        "delta_dimensions": -40,
+        "oracle_flanges": 6,
+        "candidate_flanges": 2,
+        "delta_flanges": -4,
+        "cause": "fusion de 3 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses355la:standard",
+        "designations": [
+          "FLSES 355 LA"
+        ],
+        "oracle_models": 3,
+        "oracle_dimensions": 60,
+        "candidate_dimensions": 20,
+        "delta_dimensions": -40,
+        "oracle_flanges": 6,
+        "candidate_flanges": 2,
+        "delta_flanges": -4,
+        "cause": "fusion de 3 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses355ld:standard",
+        "designations": [
+          "FLSES 355 LD"
+        ],
+        "oracle_models": 3,
+        "oracle_dimensions": 60,
+        "candidate_dimensions": 20,
+        "delta_dimensions": -40,
+        "oracle_flanges": 6,
+        "candidate_flanges": 2,
+        "delta_flanges": -4,
+        "cause": "fusion de 3 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses355lkb:standard",
+        "designations": [
+          "FLSES 355 LKB"
+        ],
+        "oracle_models": 3,
+        "oracle_dimensions": 60,
+        "candidate_dimensions": 20,
+        "delta_dimensions": -40,
+        "oracle_flanges": 6,
+        "candidate_flanges": 2,
+        "delta_flanges": -4,
+        "cause": "fusion de 3 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:plses315lus:standard",
+        "designations": [
+          "PLSES 315 LUS"
+        ],
+        "oracle_models": 3,
+        "oracle_dimensions": 60,
+        "candidate_dimensions": 20,
+        "delta_dimensions": -40,
+        "oracle_flanges": 6,
+        "candidate_flanges": 2,
+        "delta_flanges": -4,
+        "cause": "fusion de 3 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:plses315vlgu:standard",
+        "designations": [
+          "PLSES 315 VLGU"
+        ],
+        "oracle_models": 3,
+        "oracle_dimensions": 54,
+        "candidate_dimensions": 18,
+        "delta_dimensions": -36,
+        "oracle_flanges": 6,
+        "candidate_flanges": 2,
+        "delta_flanges": -4,
+        "cause": "fusion de 3 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:plses355la:standard",
+        "designations": [
+          "PLSES 355 LA"
+        ],
+        "oracle_models": 3,
+        "oracle_dimensions": 54,
+        "candidate_dimensions": 18,
+        "delta_dimensions": -36,
+        "oracle_flanges": 6,
+        "candidate_flanges": 2,
+        "delta_flanges": -4,
+        "cause": "fusion de 3 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:plses355lb:standard",
+        "designations": [
+          "PLSES 355 LB"
+        ],
+        "oracle_models": 3,
+        "oracle_dimensions": 54,
+        "candidate_dimensions": 18,
+        "delta_dimensions": -36,
+        "oracle_flanges": 6,
+        "candidate_flanges": 2,
+        "delta_flanges": -4,
+        "cause": "fusion de 3 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:lshrm132mu1:j-0p0262-m-63",
+        "designations": [
+          "LSHRM 132MU1"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 58,
+        "candidate_dimensions": 29,
+        "delta_dimensions": -29,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:lshrm160lr1:j-0p0309-m-80",
+        "designations": [
+          "LSHRM 160LR1"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 58,
+        "candidate_dimensions": 29,
+        "delta_dimensions": -29,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:lshrm200lq1:j-0p1169-m-152",
+        "designations": [
+          "LSHRM 200LQ1"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 58,
+        "candidate_dimensions": 29,
+        "delta_dimensions": -29,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:lshrm315mp:j-2p205-m-712",
+        "designations": [
+          "LSHRM 315MP"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 56,
+        "candidate_dimensions": 28,
+        "delta_dimensions": -28,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "innomotics:1le10111aj4:j-0p0059-m-18",
+        "designations": [
+          "1LE1011-1AJ4"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 50,
+        "delta_dimensions": 25,
+        "oracle_flanges": 12,
+        "candidate_flanges": 12,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10111aj5:j-0p0078-m-22",
+        "designations": [
+          "1LE1011-1AJ5"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 50,
+        "delta_dimensions": 25,
+        "oracle_flanges": 12,
+        "candidate_flanges": 12,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10111al4:j-0p0059-m-18",
+        "designations": [
+          "1LE1011-1AL4"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 50,
+        "delta_dimensions": 25,
+        "oracle_flanges": 12,
+        "candidate_flanges": 12,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10111al5:j-0p0078-m-22",
+        "designations": [
+          "1LE1011-1AL5"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 50,
+        "delta_dimensions": 25,
+        "oracle_flanges": 12,
+        "candidate_flanges": 12,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10111ap4:j-0p0059-m-18",
+        "designations": [
+          "1LE1011-1AP4"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 50,
+        "delta_dimensions": 25,
+        "oracle_flanges": 12,
+        "candidate_flanges": 12,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10111ap5:j-0p0078-m-22",
+        "designations": [
+          "1LE1011-1AP5"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 50,
+        "delta_dimensions": 25,
+        "oracle_flanges": 12,
+        "candidate_flanges": 12,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10111ar4:j-0p0078-m-22",
+        "designations": [
+          "1LE1011-1AR4"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 50,
+        "delta_dimensions": 25,
+        "oracle_flanges": 12,
+        "candidate_flanges": 12,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10111ar5:j-0p0078-m-22",
+        "designations": [
+          "1LE1011-1AR5"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 50,
+        "delta_dimensions": 25,
+        "oracle_flanges": 12,
+        "candidate_flanges": 12,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10111bj2:j-0p01-m-27",
+        "designations": [
+          "1LE1011-1BJ2"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 50,
+        "delta_dimensions": 25,
+        "oracle_flanges": 12,
+        "candidate_flanges": 12,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10111bl2:j-0p01-m-27",
+        "designations": [
+          "1LE1011-1BL2"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 50,
+        "delta_dimensions": 25,
+        "oracle_flanges": 12,
+        "candidate_flanges": 12,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10111bp2:j-0p01-m-27",
+        "designations": [
+          "1LE1011-1BP2"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 50,
+        "delta_dimensions": 25,
+        "oracle_flanges": 12,
+        "candidate_flanges": 12,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10111br2:j-0p01-m-27",
+        "designations": [
+          "1LE1011-1BR2"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 50,
+        "delta_dimensions": 25,
+        "oracle_flanges": 12,
+        "candidate_flanges": 12,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10111cj0:j-0p019-m-38",
+        "designations": [
+          "1LE1011-1CJ0"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 50,
+        "delta_dimensions": 25,
+        "oracle_flanges": 10,
+        "candidate_flanges": 10,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10111cj2:j-0p024-m-44",
+        "designations": [
+          "1LE1011-1CJ2"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 50,
+        "delta_dimensions": 25,
+        "oracle_flanges": 10,
+        "candidate_flanges": 10,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10111cl0:j-0p019-m-38",
+        "designations": [
+          "1LE1011-1CL0"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 50,
+        "delta_dimensions": 25,
+        "oracle_flanges": 10,
+        "candidate_flanges": 10,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10111cl2:j-0p024-m-44",
+        "designations": [
+          "1LE1011-1CL2"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 50,
+        "delta_dimensions": 25,
+        "oracle_flanges": 10,
+        "candidate_flanges": 10,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10111cp0:j-0p019-m-38",
+        "designations": [
+          "1LE1011-1CP0"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 50,
+        "delta_dimensions": 25,
+        "oracle_flanges": 10,
+        "candidate_flanges": 10,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10111cp2:j-0p024-m-44",
+        "designations": [
+          "1LE1011-1CP2"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 50,
+        "delta_dimensions": 25,
+        "oracle_flanges": 10,
+        "candidate_flanges": 10,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10111cr0:j-0p019-m-38",
+        "designations": [
+          "1LE1011-1CR0"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 50,
+        "delta_dimensions": 25,
+        "oracle_flanges": 10,
+        "candidate_flanges": 10,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10111cr2:j-0p024-m-44",
+        "designations": [
+          "1LE1011-1CR2"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 50,
+        "delta_dimensions": 25,
+        "oracle_flanges": 10,
+        "candidate_flanges": 10,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10111er2:j-0p12-m-128",
+        "designations": [
+          "1LE1011-1ER2"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 50,
+        "delta_dimensions": 25,
+        "oracle_flanges": 6,
+        "candidate_flanges": 6,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10111er4:j-0p13-m-132",
+        "designations": [
+          "1LE1011-1ER4"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 50,
+        "delta_dimensions": 25,
+        "oracle_flanges": 6,
+        "candidate_flanges": 6,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10112ar5:j-0p2-m-173",
+        "designations": [
+          "1LE1011-2AR5"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 50,
+        "delta_dimensions": 25,
+        "oracle_flanges": 4,
+        "candidate_flanges": 4,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10121aq4:j-0p0059-m-18",
+        "designations": [
+          "1LE1012-1AQ4"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 50,
+        "delta_dimensions": 25,
+        "oracle_flanges": 12,
+        "candidate_flanges": 12,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10121aq5:j-0p0078-m-22",
+        "designations": [
+          "1LE1012-1AQ5"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 50,
+        "delta_dimensions": 25,
+        "oracle_flanges": 12,
+        "candidate_flanges": 12,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10121bq2:j-0p01-m-27",
+        "designations": [
+          "1LE1012-1BQ2"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 50,
+        "delta_dimensions": 25,
+        "oracle_flanges": 12,
+        "candidate_flanges": 12,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10121cq0:j-0p019-m-38",
+        "designations": [
+          "1LE1012-1CQ0"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 50,
+        "delta_dimensions": 25,
+        "oracle_flanges": 10,
+        "candidate_flanges": 10,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10121cq2:j-0p024-m-44",
+        "designations": [
+          "1LE1012-1CQ2"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 50,
+        "delta_dimensions": 25,
+        "oracle_flanges": 10,
+        "candidate_flanges": 10,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10121eq4:j-0p13-m-132",
+        "designations": [
+          "1LE1012-1EQ4"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 50,
+        "delta_dimensions": 25,
+        "oracle_flanges": 6,
+        "candidate_flanges": 6,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10122aq5:j-0p2-m-173",
+        "designations": [
+          "1LE1012-2AQ5"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 25,
+        "candidate_dimensions": 50,
+        "delta_dimensions": 25,
+        "oracle_flanges": 4,
+        "candidate_flanges": 4,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "bonfiglioli:bn160l:j-0p042-m-97",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 24,
+        "delta_dimensions": 24,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:bn160l:j-0p065-m-99",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 24,
+        "delta_dimensions": 24,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:bn160l:j-0p097-m-103",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 24,
+        "delta_dimensions": 24,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:bn160m:j-0p047900000000000005-m-73",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 24,
+        "delta_dimensions": 24,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:bn160m:j-0p07400000000000001-m-83",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 24,
+        "delta_dimensions": 24,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:bn180l:j-0p125-m-135",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 24,
+        "delta_dimensions": 24,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:bn180l:j-0p155-m-130",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 24,
+        "delta_dimensions": 24,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:bn200l:j-0p165-m-157",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 24,
+        "delta_dimensions": 24,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "innomotics:1le10111dj2:j-0p044-m-62",
+        "designations": [
+          "1LE1011-1DJ2"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 24,
+        "candidate_dimensions": 48,
+        "delta_dimensions": 24,
+        "oracle_flanges": 6,
+        "candidate_flanges": 6,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10111dj6:j-0p068-m-85",
+        "designations": [
+          "1LE1011-1DJ6"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 24,
+        "candidate_dimensions": 48,
+        "delta_dimensions": 24,
+        "oracle_flanges": 6,
+        "candidate_flanges": 6,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10111dl2:j-0p044-m-62",
+        "designations": [
+          "1LE1011-1DL2"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 24,
+        "candidate_dimensions": 48,
+        "delta_dimensions": 24,
+        "oracle_flanges": 6,
+        "candidate_flanges": 6,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10111dl4:j-0p056-m-73",
+        "designations": [
+          "1LE1011-1DL4"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 24,
+        "candidate_dimensions": 48,
+        "delta_dimensions": 24,
+        "oracle_flanges": 6,
+        "candidate_flanges": 6,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10111dp2:j-0p044-m-62",
+        "designations": [
+          "1LE1011-1DP2"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 24,
+        "candidate_dimensions": 48,
+        "delta_dimensions": 24,
+        "oracle_flanges": 6,
+        "candidate_flanges": 6,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10111dp6:j-0p068-m-85",
+        "designations": [
+          "1LE1011-1DP6"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 24,
+        "candidate_dimensions": 48,
+        "delta_dimensions": 24,
+        "oracle_flanges": 6,
+        "candidate_flanges": 6,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10111dr2:j-0p044-m-62",
+        "designations": [
+          "1LE1011-1DR2"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 24,
+        "candidate_dimensions": 48,
+        "delta_dimensions": 24,
+        "oracle_flanges": 6,
+        "candidate_flanges": 6,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10111dr4:j-0p056-m-73",
+        "designations": [
+          "1LE1011-1DR4"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 24,
+        "candidate_dimensions": 48,
+        "delta_dimensions": 24,
+        "oracle_flanges": 6,
+        "candidate_flanges": 6,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10121dq2:j-0p044-m-62",
+        "designations": [
+          "1LE1012-1DQ2"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 24,
+        "candidate_dimensions": 48,
+        "delta_dimensions": 24,
+        "oracle_flanges": 6,
+        "candidate_flanges": 6,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "innomotics:1le10121dq4:j-0p059-m-73",
+        "designations": [
+          "1LE1012-1DQ4"
+        ],
+        "oracle_models": 1,
+        "oracle_dimensions": 24,
+        "candidate_dimensions": 48,
+        "delta_dimensions": 24,
+        "oracle_flanges": 6,
+        "candidate_flanges": 6,
+        "delta_flanges": 0,
+        "cause": "eclatement par montage et polarite"
+      },
+      {
+        "model_key": "leroy-somer:flses100lg:standard",
+        "designations": [
+          "FLSES 100 LG"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 46,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -23,
+        "oracle_flanges": 8,
+        "candidate_flanges": 4,
+        "delta_flanges": -4,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses112mu:standard",
+        "designations": [
+          "FLSES 112 MU"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 46,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -23,
+        "oracle_flanges": 8,
+        "candidate_flanges": 4,
+        "delta_flanges": -4,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses132m:standard",
+        "designations": [
+          "FLSES 132 M"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 46,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -23,
+        "oracle_flanges": 8,
+        "candidate_flanges": 4,
+        "delta_flanges": -4,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses160lur:standard",
+        "designations": [
+          "FLSES 160 LUR"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 46,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -23,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses180lur:standard",
+        "designations": [
+          "FLSES 180 LUR"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 46,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -23,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses225m:standard",
+        "designations": [
+          "FLSES 225 M"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 46,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -23,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses450la:standard",
+        "designations": [
+          "FLSES 450 LA"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 46,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -23,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses450lb:standard",
+        "designations": [
+          "FLSES 450 LB"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 46,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -23,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses80lg:standard",
+        "designations": [
+          "FLSES 80 LG"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 46,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -23,
+        "oracle_flanges": 8,
+        "candidate_flanges": 4,
+        "delta_flanges": -4,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:lses100l:standard",
+        "designations": [
+          "LSES 100 L"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 46,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -23,
+        "oracle_flanges": 8,
+        "candidate_flanges": 4,
+        "delta_flanges": -4,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:lses100lg:standard",
+        "designations": [
+          "LSES 100 LG"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 46,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -23,
+        "oracle_flanges": 8,
+        "candidate_flanges": 4,
+        "delta_flanges": -4,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:lses112mu:standard",
+        "designations": [
+          "LSES 112 MU"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 46,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -23,
+        "oracle_flanges": 8,
+        "candidate_flanges": 4,
+        "delta_flanges": -4,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:lses160l:standard",
+        "designations": [
+          "LSES 160 L"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 46,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -23,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:lses160mp:standard",
+        "designations": [
+          "LSES 160 MP"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 46,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -23,
+        "oracle_flanges": 8,
+        "candidate_flanges": 4,
+        "delta_flanges": -4,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:lses160mr:standard",
+        "designations": [
+          "LSES 160 MR"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 46,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -23,
+        "oracle_flanges": 8,
+        "candidate_flanges": 4,
+        "delta_flanges": -4,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:lses180lur:standard",
+        "designations": [
+          "LSES 180 LUR"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 46,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -23,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:lses200lr:standard",
+        "designations": [
+          "LSES 200 LR"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 46,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -23,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:lses200lu:standard",
+        "designations": [
+          "LSES 200 LU"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 46,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -23,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:lses80lg:j-0p00265-m-11p6",
+        "designations": [
+          "LSES 80 LG"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 46,
+        "candidate_dimensions": 23,
+        "delta_dimensions": -23,
+        "oracle_flanges": 8,
+        "candidate_flanges": 4,
+        "delta_flanges": -4,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "bonfiglioli:be160l:j-0p049-m-109",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 22,
+        "delta_dimensions": 22,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:be160l:j-0p079-m-115",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 22,
+        "delta_dimensions": 22,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:be160m:j-0p065-m-99",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 22,
+        "delta_dimensions": 22,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:be180l:j-0p165-m-157",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 22,
+        "delta_dimensions": 22,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:be180m:j-0p125-m-135",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 22,
+        "delta_dimensions": 22,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "leroy-somer:flses250m:standard",
+        "designations": [
+          "FLSES 250 M"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 44,
+        "candidate_dimensions": 22,
+        "delta_dimensions": -22,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:lses250me:standard",
+        "designations": [
+          "LSES 250 ME"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 44,
+        "candidate_dimensions": 22,
+        "delta_dimensions": -22,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:cils280m:standard",
+        "designations": [
+          "CILS 280 M"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 42,
+        "candidate_dimensions": 21,
+        "delta_dimensions": -21,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:cils280s:standard",
+        "designations": [
+          "CILS 280 S"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 42,
+        "candidate_dimensions": 21,
+        "delta_dimensions": -21,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:plses280sgj:standard",
+        "designations": [
+          "PLSES 280 SGJ"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 42,
+        "candidate_dimensions": 21,
+        "delta_dimensions": -21,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:plses355lc:standard",
+        "designations": [
+          "PLSES 355 LC"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 42,
+        "candidate_dimensions": 21,
+        "delta_dimensions": -21,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "bonfiglioli:be132ma:j-0p031900000000000005-m-59",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 20,
+        "delta_dimensions": 20,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:be132ma:j-0p0383-m-44",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 20,
+        "delta_dimensions": 20,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:be132ma:j-0p0383-m-56",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 20,
+        "delta_dimensions": 20,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:be132mb:j-0p021-m-65",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 20,
+        "delta_dimensions": 20,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:be132mb:j-0p036000000000000004-m-70",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 20,
+        "delta_dimensions": 20,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:be132s:j-0p027-m-53",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 20,
+        "delta_dimensions": 20,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:be132s:j-0p029500000000000002-m-44",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 20,
+        "delta_dimensions": 20,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "leroy-somer:cils315m:standard",
+        "designations": [
+          "CILS 315 M"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 40,
+        "candidate_dimensions": 20,
+        "delta_dimensions": -20,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:cils315s:standard",
+        "designations": [
+          "CILS 315 S"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 40,
+        "candidate_dimensions": 20,
+        "delta_dimensions": -20,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses280mkb:standard",
+        "designations": [
+          "FLSES 280 MKB"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 40,
+        "candidate_dimensions": 20,
+        "delta_dimensions": -20,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses315lb:j-2p86-m-1245",
+        "designations": [
+          "FLSES 315 LB",
+          "FLSES 315LB*"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 40,
+        "candidate_dimensions": 20,
+        "delta_dimensions": -20,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses355lb:j-3p62-m-1650",
+        "designations": [
+          "FLSES 355 LB",
+          "FLSES 355LB"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 40,
+        "candidate_dimensions": 20,
+        "delta_dimensions": -20,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses355lb:j-6p56-m-1720",
+        "designations": [
+          "FLSES 355 LB",
+          "FLSES 355LB"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 40,
+        "candidate_dimensions": 20,
+        "delta_dimensions": -20,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses355lc:j-3p64-m-1660",
+        "designations": [
+          "FLSES 355 LC",
+          "FLSES 355LC"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 40,
+        "candidate_dimensions": 20,
+        "delta_dimensions": -20,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses400lb:standard",
+        "designations": [
+          "FLSES 400 LB"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 40,
+        "candidate_dimensions": 20,
+        "delta_dimensions": -20,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:lses225mg:standard",
+        "designations": [
+          "LSES 225 MG"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 40,
+        "candidate_dimensions": 20,
+        "delta_dimensions": -20,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:plses225mg:standard",
+        "designations": [
+          "PLSES 225 MG"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 40,
+        "candidate_dimensions": 20,
+        "delta_dimensions": -20,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:flses315lkb:standard",
+        "designations": [
+          "FLSES 315 LKB"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 38,
+        "candidate_dimensions": 19,
+        "delta_dimensions": -19,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "bonfiglioli:be90l:j-0p00167-m-14",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 18,
+        "delta_dimensions": 18,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:be90s:j-0p0028-m-13p6",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 18,
+        "delta_dimensions": 18,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:be90s:j-0p0033-m-15",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 18,
+        "delta_dimensions": 18,
+        "oracle_flanges": 0,
+        "candidate_flanges": 2,
+        "delta_flanges": 2,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:bn90l:j-0p00167-m-14",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 18,
+        "delta_dimensions": 18,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:bn90l:j-0p00167-m-14p1",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 18,
+        "delta_dimensions": 18,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:bn90l:j-0p0033-m-15",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 18,
+        "delta_dimensions": 18,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:bn90s:j-0p0021000000000000003-m-12p2",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 18,
+        "delta_dimensions": 18,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:bn90s:j-0p0026000000000000003-m-12p6",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 18,
+        "delta_dimensions": 18,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "leroy-somer:plses315ld:standard",
+        "designations": [
+          "PLSES 315 LD"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 36,
+        "candidate_dimensions": 18,
+        "delta_dimensions": -18,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:plses315vlg:standard",
+        "designations": [
+          "PLSES 315 VLG"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 36,
+        "candidate_dimensions": 18,
+        "delta_dimensions": -18,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:plses355ma:standard",
+        "designations": [
+          "PLSES 355 MA"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 36,
+        "candidate_dimensions": 18,
+        "delta_dimensions": -18,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "leroy-somer:plses355mb:standard",
+        "designations": [
+          "PLSES 355 MB"
+        ],
+        "oracle_models": 2,
+        "oracle_dimensions": 36,
+        "candidate_dimensions": 18,
+        "delta_dimensions": -18,
+        "oracle_flanges": 4,
+        "candidate_flanges": 2,
+        "delta_flanges": -2,
+        "cause": "fusion de 2 modeles oracle en un model_key"
+      },
+      {
+        "model_key": "bonfiglioli:bn160mr:j-0p021-m-65",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 16,
+        "delta_dimensions": 16,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:bn160mr:j-0p036000000000000004-m-70",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 16,
+        "delta_dimensions": 16,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:bn180m:j-0p049-m-109",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 16,
+        "delta_dimensions": 16,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:bn180m:j-0p079-m-115",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 16,
+        "delta_dimensions": 16,
+        "oracle_flanges": 0,
+        "candidate_flanges": 1,
+        "delta_flanges": 1,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:m4lc:j-0p021-m-60",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 13,
+        "delta_dimensions": 13,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:m4lc:j-0p036000000000000004-m-65",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 13,
+        "delta_dimensions": 13,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:me4la:j-0p0178-m-51",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 13,
+        "delta_dimensions": 13,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:me4la:j-0p031900000000000005-m-57",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 13,
+        "delta_dimensions": 13,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:me4la:j-0p0383-m-54",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 13,
+        "delta_dimensions": 13,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:me4lb:j-0p021-m-60",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 13,
+        "delta_dimensions": 13,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:me4lb:j-0p036000000000000004-m-65",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 13,
+        "delta_dimensions": 13,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:bn132m:j-0p0178-m-53",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 12,
+        "delta_dimensions": 12,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:bn132s:j-0p0213-m-44",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 12,
+        "delta_dimensions": 12,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      },
+      {
+        "model_key": "bonfiglioli:bn132s:j-0p0216-m-36",
+        "designations": [],
+        "oracle_models": 0,
+        "oracle_dimensions": 0,
+        "candidate_dimensions": 12,
+        "delta_dimensions": 12,
+        "oracle_flanges": 0,
+        "candidate_flanges": 0,
+        "delta_flanges": 0,
+        "cause": "modele absent de l oracle (jeux Bonfiglioli legacy et CILS)"
+      }
+    ]
+  },
+  "deduplication": {
+    "product_rows_in": 2355,
+    "distinct_model_keys": 1721,
+    "rows_rejected_before_identity": 0,
+    "exact_duplicate_identities": 0,
+    "exact_duplicate_rows_merged": 0,
+    "divergent_identity_collisions": 0,
+    "divergent_rows_blocked": 0,
+    "model_attribute_conflicts": 0,
+    "derived_rows_merged": {
+      "efficiency": 0,
+      "torque": 0,
+      "brakes": 144
+    },
+    "derived_rows_lost_to_blocked_points": {
+      "efficiency": 0,
+      "torque": 0
+    }
+  },
+  "identity_rule_options": [
+    {
+      "option": "A - C1 tel quel : discriminant (J, masse), identite (poles, alimentation, f, U, couplage)",
+      "models": 1721,
+      "collisions": 85,
+      "blocked_rows": 93,
+      "respecte_decision_15": true
+    },
+    {
+      "option": "B - A + power_kw dans l identite du point",
+      "models": 1721,
+      "collisions": 20,
+      "blocked_rows": 20,
+      "respecte_decision_15": true
+    },
+    {
+      "option": "C - A + power_kw et classe IE dans l identite du point",
+      "models": 1721,
+      "collisions": 1,
+      "blocked_rows": 1,
+      "respecte_decision_15": true
+    },
+    {
+      "option": "D - discriminant (J, masse, variant_key), identite v1",
+      "models": 1844,
+      "collisions": 43,
+      "blocked_rows": 45,
+      "respecte_decision_15": false
+    },
+    {
+      "option": "E - D + power_kw dans l identite du point",
+      "models": 1844,
+      "collisions": 19,
+      "blocked_rows": 19,
+      "respecte_decision_15": false
+    },
+    {
+      "option": "F - D + power_kw et classe IE dans l identite du point",
+      "models": 1844,
+      "collisions": 0,
+      "blocked_rows": 0,
+      "respecte_decision_15": false
+    },
+    {
+      "option": "G - APPLIQUEE : discriminant v1 inchange, identite du point + power_kw + classe IE + variant_key publie",
+      "models": 1721,
+      "collisions": 0,
+      "blocked_rows": 0,
+      "respecte_decision_15": true
+    }
+  ],
+  "dimension_reconciliation": {
+    "blocks_in": 1352,
+    "blocks_matched": 1305,
+    "source_cells_total": 31367,
+    "source_cells_matched": 30582,
+    "source_cells_unmatched": 785,
+    "source_flanges_total": 7675,
+    "source_flanges_matched": 7609,
+    "source_flanges_unmatched": 66,
+    "expanded_dimension_rows": 37757,
+    "merged_dimension_rows": 0,
+    "distinct_source_cells_represented": 30582,
+    "expanded_flange_rows": 8292,
+    "merged_flange_rows": 366,
+    "distinct_source_flanges_represented": 7228,
+    "unmatched_blocks_outside_oracle_scope": []
+  },
+  "anomalies_reconciliation": {
+    "available": true,
+    "oracle_total": 38,
+    "matched": 38,
+    "missing": [],
+    "added": [
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "model_key": "bonfiglioli:be112m:j-0p0105-m-32",
+        "point_origin": "bonfiglioli-legacy.json#23",
+        "observed": "27",
+        "expected": "24.040 a 24.870"
+      },
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "model_key": "bonfiglioli:be132ma:j-0p031900000000000005-m-59",
+        "point_origin": "bonfiglioli-legacy.json#54",
+        "observed": "43",
+        "expected": "40.310 a 41.084"
+      },
+      {
+        "rule_code": "CURRENT_MISMATCH",
+        "model_key": "bonfiglioli:be71a:j-0p00058-m-5p1",
+        "point_origin": "bonfiglioli-legacy.json#43",
+        "observed": "1.04",
+        "expected": "0.61"
+      },
+      {
+        "rule_code": "IE_BELOW_THRESHOLD",
+        "model_key": "bonfiglioli:bn100lc:j-0p0061-m-24",
+        "point_origin": "bonfiglioli-legacy.json#151",
+        "observed": "82.7",
+        "expected": "83.1"
+      },
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "model_key": "bonfiglioli:bn132s:j-0p0213-m-44",
+        "point_origin": "bonfiglioli-legacy.json#227",
+        "observed": "30.8",
+        "expected": "29.999 a 30.726"
+      },
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "model_key": "bonfiglioli:bn132sa:j-0p010100000000000001-m-35",
+        "point_origin": "bonfiglioli-legacy.json#199",
+        "observed": "15.3",
+        "expected": "14.892 a 15.209"
+      },
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "model_key": "bonfiglioli:bn160l:j-0p042-m-97",
+        "point_origin": "bonfiglioli-legacy.json#204",
+        "observed": "50.7",
+        "expected": "49.985 a 50.399"
+      },
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "model_key": "bonfiglioli:bn180m:j-0p079-m-115",
+        "point_origin": "bonfiglioli-legacy.json#233",
+        "observed": "101.1",
+        "expected": "99.829 a 100.942"
+      },
+      {
+        "rule_code": "IE_BELOW_THRESHOLD",
+        "model_key": "bonfiglioli:bn63b:j-0p00022999999999999998-m-3p9",
+        "point_origin": "bonfiglioli-legacy.json#138",
+        "observed": "54.8",
+        "expected": "57"
+      },
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "model_key": "bonfiglioli:bn71b:j-0p00041-m-6p2",
+        "point_origin": "bonfiglioli-legacy.json#186",
+        "observed": "1.55",
+        "expected": "1.506 a 1.539"
+      },
+      {
+        "rule_code": "IE_BELOW_THRESHOLD",
+        "model_key": "bonfiglioli:bn71c:j-0p00091-m-7p3",
+        "point_origin": "bonfiglioli-legacy.json#142",
+        "observed": "69",
+        "expected": "70"
+      },
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "model_key": "bonfiglioli:m05a:j-0p0002-m-3p2",
+        "point_origin": "bonfiglioli-legacy.json#287",
+        "observed": "0.53",
+        "expected": "0.494 a 0.523"
+      },
+      {
+        "rule_code": "IE_BELOW_THRESHOLD",
+        "model_key": "bonfiglioli:m05b:j-0p00022999999999999998-m-3p6",
+        "point_origin": "bonfiglioli-legacy.json#255",
+        "observed": "54.8",
+        "expected": "57"
+      },
+      {
+        "rule_code": "IE_BELOW_THRESHOLD",
+        "model_key": "bonfiglioli:m1la:j-0p00091-m-6p9",
+        "point_origin": "bonfiglioli-legacy.json#258",
+        "observed": "69",
+        "expected": "70"
+      },
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "model_key": "bonfiglioli:m1la:j-0p00091-m-6p9",
+        "point_origin": "bonfiglioli-legacy.json#310",
+        "observed": "3.12",
+        "expected": "3.035 a 3.109"
+      },
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "model_key": "bonfiglioli:m1sd:j-0p00041-m-5p8",
+        "point_origin": "bonfiglioli-legacy.json#290",
+        "observed": "1.55",
+        "expected": "1.506 a 1.539"
+      },
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "model_key": "bonfiglioli:m3lb:j-0p0039000000000000003-m-22",
+        "point_origin": "bonfiglioli-legacy.json#296",
+        "observed": "10.4",
+        "expected": "9.974 a 10.276"
+      },
+      {
+        "rule_code": "IE_BELOW_THRESHOLD",
+        "model_key": "bonfiglioli:m3lc:j-0p0061-m-23",
+        "point_origin": "bonfiglioli-legacy.json#264",
+        "observed": "82.7",
+        "expected": "83.1"
+      },
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "model_key": "bonfiglioli:m4sa:j-0p010100000000000001-m-33",
+        "point_origin": "bonfiglioli-legacy.json#298",
+        "observed": "15.3",
+        "expected": "14.892 a 15.209"
+      },
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "model_key": "bonfiglioli:m4sa:j-0p0213-m-42",
+        "point_origin": "bonfiglioli-legacy.json#318",
+        "observed": "30.8",
+        "expected": "29.999 a 30.726"
+      },
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "model_key": "bonfiglioli:m5sc:j-0p042-m-83",
+        "point_origin": "bonfiglioli-legacy.json#303",
+        "observed": "50.7",
+        "expected": "49.985 a 50.399"
+      },
+      {
+        "rule_code": "CURRENT_MISMATCH",
+        "model_key": "bonfiglioli:me1sa:j-0p00058-m-4p8",
+        "point_origin": "bonfiglioli-legacy.json#97",
+        "observed": "1.04",
+        "expected": "0.61"
+      },
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "model_key": "bonfiglioli:me4la:j-0p031900000000000005-m-57",
+        "point_origin": "bonfiglioli-legacy.json#108",
+        "observed": "43",
+        "expected": "40.310 a 41.084"
+      },
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "model_key": "bonfiglioli:me4sa:j-0p0213-m-42",
+        "point_origin": "bonfiglioli-legacy.json#83",
+        "observed": "27",
+        "expected": "23.794 a 24.613"
+      }
+    ]
+  },
+  "validation": {
+    "candidate_summary": {
+      "TORQUE_MISMATCH|error": 16,
+      "CURRENT_MISMATCH|error": 4,
+      "IE_BELOW_THRESHOLD|error": 20,
+      "EFFICIENCY_CURVE|warning": 18,
+      "INERTIA_IMPLAUSIBLE|warning": 4
+    },
+    "issues": [
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "severity": "error",
+        "model_key": "bonfiglioli:be112m:j-0p0105-m-32",
+        "point_origin": "bonfiglioli-legacy.json#23",
+        "observed": "27",
+        "expected": "24.040 a 24.870"
+      },
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "severity": "error",
+        "model_key": "bonfiglioli:be132ma:j-0p031900000000000005-m-59",
+        "point_origin": "bonfiglioli-legacy.json#54",
+        "observed": "43",
+        "expected": "40.310 a 41.084"
+      },
+      {
+        "rule_code": "CURRENT_MISMATCH",
+        "severity": "error",
+        "model_key": "bonfiglioli:be71a:j-0p00058-m-5p1",
+        "point_origin": "bonfiglioli-legacy.json#43",
+        "observed": "1.04",
+        "expected": "0.61"
+      },
+      {
+        "rule_code": "IE_BELOW_THRESHOLD",
+        "severity": "error",
+        "model_key": "bonfiglioli:bn100lc:j-0p0061-m-24",
+        "point_origin": "bonfiglioli-legacy.json#151",
+        "observed": "82.7",
+        "expected": "83.1"
+      },
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "severity": "error",
+        "model_key": "bonfiglioli:bn132s:j-0p0213-m-44",
+        "point_origin": "bonfiglioli-legacy.json#227",
+        "observed": "30.8",
+        "expected": "29.999 a 30.726"
+      },
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "severity": "error",
+        "model_key": "bonfiglioli:bn132sa:j-0p010100000000000001-m-35",
+        "point_origin": "bonfiglioli-legacy.json#199",
+        "observed": "15.3",
+        "expected": "14.892 a 15.209"
+      },
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "severity": "error",
+        "model_key": "bonfiglioli:bn160l:j-0p042-m-97",
+        "point_origin": "bonfiglioli-legacy.json#204",
+        "observed": "50.7",
+        "expected": "49.985 a 50.399"
+      },
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "severity": "error",
+        "model_key": "bonfiglioli:bn180m:j-0p079-m-115",
+        "point_origin": "bonfiglioli-legacy.json#233",
+        "observed": "101.1",
+        "expected": "99.829 a 100.942"
+      },
+      {
+        "rule_code": "IE_BELOW_THRESHOLD",
+        "severity": "error",
+        "model_key": "bonfiglioli:bn63b:j-0p00022999999999999998-m-3p9",
+        "point_origin": "bonfiglioli-legacy.json#138",
+        "observed": "54.8",
+        "expected": "57"
+      },
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "severity": "error",
+        "model_key": "bonfiglioli:bn71b:j-0p00041-m-6p2",
+        "point_origin": "bonfiglioli-legacy.json#186",
+        "observed": "1.55",
+        "expected": "1.506 a 1.539"
+      },
+      {
+        "rule_code": "IE_BELOW_THRESHOLD",
+        "severity": "error",
+        "model_key": "bonfiglioli:bn71c:j-0p00091-m-7p3",
+        "point_origin": "bonfiglioli-legacy.json#142",
+        "observed": "69",
+        "expected": "70"
+      },
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "severity": "error",
+        "model_key": "bonfiglioli:m05a:j-0p0002-m-3p2",
+        "point_origin": "bonfiglioli-legacy.json#287",
+        "observed": "0.53",
+        "expected": "0.494 a 0.523"
+      },
+      {
+        "rule_code": "IE_BELOW_THRESHOLD",
+        "severity": "error",
+        "model_key": "bonfiglioli:m05b:j-0p00022999999999999998-m-3p6",
+        "point_origin": "bonfiglioli-legacy.json#255",
+        "observed": "54.8",
+        "expected": "57"
+      },
+      {
+        "rule_code": "IE_BELOW_THRESHOLD",
+        "severity": "error",
+        "model_key": "bonfiglioli:m1la:j-0p00091-m-6p9",
+        "point_origin": "bonfiglioli-legacy.json#258",
+        "observed": "69",
+        "expected": "70"
+      },
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "severity": "error",
+        "model_key": "bonfiglioli:m1la:j-0p00091-m-6p9",
+        "point_origin": "bonfiglioli-legacy.json#310",
+        "observed": "3.12",
+        "expected": "3.035 a 3.109"
+      },
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "severity": "error",
+        "model_key": "bonfiglioli:m1sd:j-0p00041-m-5p8",
+        "point_origin": "bonfiglioli-legacy.json#290",
+        "observed": "1.55",
+        "expected": "1.506 a 1.539"
+      },
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "severity": "error",
+        "model_key": "bonfiglioli:m3lb:j-0p0039000000000000003-m-22",
+        "point_origin": "bonfiglioli-legacy.json#296",
+        "observed": "10.4",
+        "expected": "9.974 a 10.276"
+      },
+      {
+        "rule_code": "IE_BELOW_THRESHOLD",
+        "severity": "error",
+        "model_key": "bonfiglioli:m3lc:j-0p0061-m-23",
+        "point_origin": "bonfiglioli-legacy.json#264",
+        "observed": "82.7",
+        "expected": "83.1"
+      },
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "severity": "error",
+        "model_key": "bonfiglioli:m4sa:j-0p010100000000000001-m-33",
+        "point_origin": "bonfiglioli-legacy.json#298",
+        "observed": "15.3",
+        "expected": "14.892 a 15.209"
+      },
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "severity": "error",
+        "model_key": "bonfiglioli:m4sa:j-0p0213-m-42",
+        "point_origin": "bonfiglioli-legacy.json#318",
+        "observed": "30.8",
+        "expected": "29.999 a 30.726"
+      },
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "severity": "error",
+        "model_key": "bonfiglioli:m5sc:j-0p042-m-83",
+        "point_origin": "bonfiglioli-legacy.json#303",
+        "observed": "50.7",
+        "expected": "49.985 a 50.399"
+      },
+      {
+        "rule_code": "CURRENT_MISMATCH",
+        "severity": "error",
+        "model_key": "bonfiglioli:me1sa:j-0p00058-m-4p8",
+        "point_origin": "bonfiglioli-legacy.json#97",
+        "observed": "1.04",
+        "expected": "0.61"
+      },
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "severity": "error",
+        "model_key": "bonfiglioli:me4la:j-0p031900000000000005-m-57",
+        "point_origin": "bonfiglioli-legacy.json#108",
+        "observed": "43",
+        "expected": "40.310 a 41.084"
+      },
+      {
+        "rule_code": "TORQUE_MISMATCH",
+        "severity": "error",
+        "model_key": "bonfiglioli:me4sa:j-0p0213-m-42",
+        "point_origin": "bonfiglioli-legacy.json#83",
+        "observed": "27",
+        "expected": "23.794 a 24.613"
+      },
+      {
+        "rule_code": "EFFICIENCY_CURVE",
+        "severity": "warning",
+        "model_key": "innomotics:1le10010da2:j-0p0008-m-9",
+        "point_origin": "innomotics.json#455",
+        "observed": "80.1",
+        "expected": "<= 78.9"
+      },
+      {
+        "rule_code": "EFFICIENCY_CURVE",
+        "severity": "warning",
+        "model_key": "innomotics:1le10010da6:j-0p0013-m-16",
+        "point_origin": "innomotics.json#522",
+        "observed": "83.6",
+        "expected": "<= 82.8"
+      },
+      {
+        "rule_code": "EFFICIENCY_CURVE",
+        "severity": "warning",
+        "model_key": "innomotics:1le10011ca6:j-0p023-m-62",
+        "point_origin": "innomotics.json#526",
+        "observed": "92.2",
+        "expected": "<= 90.9"
+      },
+      {
+        "rule_code": "EFFICIENCY_CURVE",
+        "severity": "warning",
+        "model_key": "innomotics:1le10012ad5:j-0p344-m-172",
+        "point_origin": "innomotics.json#520",
+        "observed": "89.9",
+        "expected": "<= 89.5"
+      },
+      {
+        "rule_code": "EFFICIENCY_CURVE",
+        "severity": "warning",
+        "model_key": "innomotics:1le10012ad6:j-0p416-m-198",
+        "point_origin": "innomotics.json#547",
+        "observed": "90.2",
+        "expected": "<= 90.1"
+      },
+      {
+        "rule_code": "EFFICIENCY_CURVE",
+        "severity": "warning",
+        "model_key": "innomotics:1le10020ea4:j-0p004612-m-14",
+        "point_origin": "innomotics.json#793",
+        "observed": "81.3",
+        "expected": "<= 81.2"
+      },
+      {
+        "rule_code": "EFFICIENCY_CURVE",
+        "severity": "warning",
+        "model_key": "innomotics:1le10022ad5:j-0p3-m-170",
+        "point_origin": "innomotics.json#850",
+        "observed": "88.4",
+        "expected": "<= 87.7"
+      },
+      {
+        "rule_code": "CURRENT_MISMATCH",
+        "severity": "error",
+        "model_key": "innomotics:1le10111dj6:j-0p068-m-85",
+        "point_origin": "innomotics.json#988",
+        "observed": "35.5",
+        "expected": "28.57"
+      },
+      {
+        "rule_code": "EFFICIENCY_CURVE",
+        "severity": "warning",
+        "model_key": "innomotics:1le15010da2:j-0p0008-m-16",
+        "point_origin": "innomotics.json#550",
+        "observed": "80.1",
+        "expected": "<= 78.9"
+      },
+      {
+        "rule_code": "EFFICIENCY_CURVE",
+        "severity": "warning",
+        "model_key": "innomotics:1le15011ca6:j-0p023-m-80",
+        "point_origin": "innomotics.json#724",
+        "observed": "92.2",
+        "expected": "<= 90.9"
+      },
+      {
+        "rule_code": "EFFICIENCY_CURVE",
+        "severity": "warning",
+        "model_key": "innomotics:1le15012ad5:j-0p344-m-220",
+        "point_origin": "innomotics.json#637",
+        "observed": "89.9",
+        "expected": "<= 89.5"
+      },
+      {
+        "rule_code": "EFFICIENCY_CURVE",
+        "severity": "warning",
+        "model_key": "innomotics:1le15012ad6:j-0p416-m-243",
+        "point_origin": "innomotics.json#750",
+        "observed": "90.2",
+        "expected": "<= 90.1"
+      },
+      {
+        "rule_code": "EFFICIENCY_CURVE",
+        "severity": "warning",
+        "model_key": "innomotics:1le15022ad5:j-0p3-m-218",
+        "point_origin": "innomotics.json#932",
+        "observed": "88.4",
+        "expected": "<= 87.7"
+      },
+      {
+        "rule_code": "EFFICIENCY_CURVE",
+        "severity": "warning",
+        "model_key": "innomotics:1le15022dd2:j-1p42-m-500",
+        "point_origin": "innomotics.json#937",
+        "observed": "90.8",
+        "expected": "<= 90.7"
+      },
+      {
+        "rule_code": "EFFICIENCY_CURVE",
+        "severity": "warning",
+        "model_key": "innomotics:1le16011ca6:j-0p023-m-80",
+        "point_origin": "innomotics.json#756",
+        "observed": "92.2",
+        "expected": "<= 90.9"
+      },
+      {
+        "rule_code": "EFFICIENCY_CURVE",
+        "severity": "warning",
+        "model_key": "innomotics:1le16012ad5:j-0p344-m-220",
+        "point_origin": "innomotics.json#712",
+        "observed": "89.9",
+        "expected": "<= 89.5"
+      },
+      {
+        "rule_code": "EFFICIENCY_CURVE",
+        "severity": "warning",
+        "model_key": "innomotics:1le16012ad6:j-0p416-m-243",
+        "point_origin": "innomotics.json#782",
+        "observed": "90.2",
+        "expected": "<= 90.1"
+      },
+      {
+        "rule_code": "CURRENT_MISMATCH",
+        "severity": "error",
+        "model_key": "leroy-somer:flses160mu:j-0p1295-m-117",
+        "point_origin": "leroy-somer.json#240",
+        "observed": "17.4",
+        "expected": "15.71"
+      },
+      {
+        "rule_code": "IE_BELOW_THRESHOLD",
+        "severity": "error",
+        "model_key": "leroy-somer:flshrm280ma:j-0p5223-m-522",
+        "point_origin": "dyneo.json#127",
+        "observed": "95.8",
+        "expected": "96.1"
+      },
+      {
+        "rule_code": "IE_BELOW_THRESHOLD",
+        "severity": "error",
+        "model_key": "leroy-somer:flshrm280sa:j-0p4413-m-495",
+        "point_origin": "dyneo.json#124",
+        "observed": "94.2",
+        "expected": "96"
+      },
+      {
+        "rule_code": "IE_BELOW_THRESHOLD",
+        "severity": "error",
+        "model_key": "leroy-somer:flshrm315mt:j-0p6958-m-633",
+        "point_origin": "dyneo.json#133",
+        "observed": "95.4",
+        "expected": "96.2"
+      },
+      {
+        "rule_code": "IE_BELOW_THRESHOLD",
+        "severity": "error",
+        "model_key": "leroy-somer:flshrm355ltc:j-2p94-m-1297",
+        "point_origin": "dyneo.json#150",
+        "observed": "95.8",
+        "expected": "96"
+      },
+      {
+        "rule_code": "INERTIA_IMPLAUSIBLE",
+        "severity": "warning",
+        "model_key": "leroy-somer:lshrm132mu3:j-0p0262-m-63",
+        "point_origin": "dyneo.json#199",
+        "observed": "4.678571e-4 kgm2/kW",
+        "expected": "0.0005 a 0.15 kgm2/kW"
+      },
+      {
+        "rule_code": "INERTIA_IMPLAUSIBLE",
+        "severity": "warning",
+        "model_key": "leroy-somer:lshrm132mu3:j-0p0262-m-63",
+        "point_origin": "dyneo.json#248",
+        "observed": "4.596491e-4 kgm2/kW",
+        "expected": "0.0005 a 0.15 kgm2/kW"
+      },
+      {
+        "rule_code": "EFFICIENCY_CURVE",
+        "severity": "warning",
+        "model_key": "leroy-somer:lshrm160lr1:j-0p0309-m-80",
+        "point_origin": "dyneo.json#156",
+        "observed": "94.6",
+        "expected": "<= 94.1"
+      },
+      {
+        "rule_code": "IE_BELOW_THRESHOLD",
+        "severity": "error",
+        "model_key": "leroy-somer:lshrm160lr3:j-0p0309-m-80",
+        "point_origin": "dyneo.json#200",
+        "observed": "94.9",
+        "expected": "95.2"
+      },
+      {
+        "rule_code": "IE_BELOW_THRESHOLD",
+        "severity": "error",
+        "model_key": "leroy-somer:lshrm160lr3:j-0p0309-m-80",
+        "point_origin": "dyneo.json#201",
+        "observed": "93.7",
+        "expected": "95.2"
+      },
+      {
+        "rule_code": "INERTIA_IMPLAUSIBLE",
+        "severity": "warning",
+        "model_key": "leroy-somer:lshrm160lr3:j-0p0309-m-80",
+        "point_origin": "dyneo.json#203",
+        "observed": "4.753846e-4 kgm2/kW",
+        "expected": "0.0005 a 0.15 kgm2/kW"
+      },
+      {
+        "rule_code": "INERTIA_IMPLAUSIBLE",
+        "severity": "warning",
+        "model_key": "leroy-somer:lshrm160lr3:j-0p0309-m-80",
+        "point_origin": "dyneo.json#249",
+        "observed": "4.753846e-4 kgm2/kW",
+        "expected": "0.0005 a 0.15 kgm2/kW"
+      },
+      {
+        "rule_code": "IE_BELOW_THRESHOLD",
+        "severity": "error",
+        "model_key": "leroy-somer:lshrm200lq1:j-0p0659-m-115",
+        "point_origin": "dyneo.json#72",
+        "observed": "93.7",
+        "expected": "94.9"
+      },
+      {
+        "rule_code": "IE_BELOW_THRESHOLD",
+        "severity": "error",
+        "model_key": "leroy-somer:lshrm250me:j-0p4057-m-245",
+        "point_origin": "dyneo.json#80",
+        "observed": "95.6",
+        "expected": "95.7"
+      },
+      {
+        "rule_code": "IE_BELOW_THRESHOLD",
+        "severity": "error",
+        "model_key": "leroy-somer:lshrm250me:j-0p4057-m-245",
+        "point_origin": "dyneo.json#81",
+        "observed": "94.6",
+        "expected": "95.7"
+      },
+      {
+        "rule_code": "EFFICIENCY_CURVE",
+        "severity": "warning",
+        "model_key": "leroy-somer:lshrm250me:j-0p5701-m-320",
+        "point_origin": "dyneo.json#28",
+        "observed": "98.2",
+        "expected": "<= 97.7"
+      },
+      {
+        "rule_code": "IE_BELOW_THRESHOLD",
+        "severity": "error",
+        "model_key": "leroy-somer:lshrm280mc:j-0p4905-m-294",
+        "point_origin": "dyneo.json#87",
+        "observed": "95.8",
+        "expected": "96.1"
+      },
+      {
+        "rule_code": "IE_BELOW_THRESHOLD",
+        "severity": "error",
+        "model_key": "leroy-somer:lshrm280sc:j-0p4057-m-245",
+        "point_origin": "dyneo.json#83",
+        "observed": "95.9",
+        "expected": "96"
+      },
+      {
+        "rule_code": "IE_BELOW_THRESHOLD",
+        "severity": "error",
+        "model_key": "leroy-somer:lshrm280sc:j-0p4057-m-245",
+        "point_origin": "dyneo.json#84",
+        "observed": "94.2",
+        "expected": "96"
+      },
+      {
+        "rule_code": "IE_BELOW_THRESHOLD",
+        "severity": "error",
+        "model_key": "leroy-somer:lshrm315mn1:j-0p6568-m-340",
+        "point_origin": "dyneo.json#93",
+        "observed": "95.4",
+        "expected": "96.2"
+      },
+      {
+        "rule_code": "IE_BELOW_THRESHOLD",
+        "severity": "error",
+        "model_key": "leroy-somer:plses355lb:j-15p4-m-2245",
+        "point_origin": "leroy-somer.json#489",
+        "observed": "94.6",
+        "expected": "95.8"
+      }
+    ]
+  },
+  "printed_anomalies": [
+    {
+      "origin": "bonfiglioli-legacy-anomalies.json#0",
+      "rule_code": "TORQUE_MISMATCH",
+      "designation": "BE 112M",
+      "poles": 4,
+      "power_kw": 3.7,
+      "pdf_page": 83,
+      "message": "BE 112M 4P 50Hz : couple publie 27.0 N.m contre 24.5 N.m deduit de 3.7 kW a 1445 tr/min"
+    },
+    {
+      "origin": "bonfiglioli-legacy-anomalies.json#1",
+      "rule_code": "CURRENT_MISMATCH",
+      "designation": "BE 71A",
+      "poles": 4,
+      "power_kw": 0.25,
+      "pdf_page": 85,
+      "message": "BE 71A 4P 60Hz : courant publie 1.04 A contre 0.61 A deduit de 0.25 kW, 70.0 %, cos phi 0.74 sous 460 V"
+    },
+    {
+      "origin": "bonfiglioli-legacy-anomalies.json#2",
+      "rule_code": "TORQUE_MISMATCH",
+      "designation": "ME 4SA",
+      "poles": 4,
+      "power_kw": 3.7,
+      "pdf_page": 87,
+      "message": "ME 4SA 4P 50Hz : couple publie 27.0 N.m contre 24.2 N.m deduit de 3.7 kW a 1460 tr/min"
+    },
+    {
+      "origin": "bonfiglioli-legacy-anomalies.json#3",
+      "rule_code": "CURRENT_MISMATCH",
+      "designation": "ME 1SA",
+      "poles": 4,
+      "power_kw": 0.25,
+      "pdf_page": 89,
+      "message": "ME 1SA 4P 60Hz : courant publie 1.04 A contre 0.61 A deduit de 0.25 kW, 70.0 %, cos phi 0.74 sous 460 V"
+    },
+    {
+      "origin": "bonfiglioli-legacy-anomalies.json#4",
+      "rule_code": "UNIT_CROSSCHECK_MISMATCH",
+      "designation": "BN 160M",
+      "poles": 4,
+      "power_kw": 11,
+      "pdf_page": 102,
+      "message": "BN 160M 4P 60Hz : inertie imprime 1.367 lb.ft2 contre 1.1367 deduit de la valeur SI publiee. Valeur SI conservee, colonne lb.ft2 non retenue"
+    },
+    {
+      "origin": "bonfiglioli-legacy-anomalies.json#5",
+      "rule_code": "UNIT_CROSSCHECK_MISMATCH",
+      "designation": "M 3LA",
+      "poles": 2,
+      "power_kw": 3,
+      "pdf_page": 106,
+      "message": "M 3LA 2P 60Hz : masse imprime 34.0 lbs contre 41.2264 deduit de la valeur SI publiee. Valeur SI conservee, colonne lbs non retenue"
+    }
+  ],
+  "constraint_violations": [],
+  "dimension_blocks_unmatched": [
+    {
+      "origin": "dimensions-leroy-somer.json#7",
+      "brand": "Leroy-Somer",
+      "join_value": "flses90l",
+      "designation": "FLSES 90 L",
+      "cells": 23,
+      "flanges": 4
+    },
+    {
+      "origin": "dimensions-leroy-somer.json#19",
+      "brand": "Leroy-Somer",
+      "join_value": "flses160l",
+      "designation": "FLSES 160 L",
+      "cells": 23,
+      "flanges": 2
+    },
+    {
+      "origin": "dimensions-leroy-somer.json#26",
+      "brand": "Leroy-Somer",
+      "join_value": "flses180mt",
+      "designation": "FLSES 180 MT",
+      "cells": 23,
+      "flanges": 2
+    },
+    {
+      "origin": "dimensions-leroy-somer.json#32",
+      "brand": "Leroy-Somer",
+      "join_value": "flses225sr",
+      "designation": "FLSES 225 SR",
+      "cells": 23,
+      "flanges": 2
+    },
+    {
+      "origin": "dimensions-leroy-somer.json#60",
+      "brand": "Leroy-Somer",
+      "join_value": "lses71l",
+      "designation": "LSES 71 L",
+      "cells": 12,
+      "flanges": 4
+    },
+    {
+      "origin": "dimensions-leroy-somer.json#71",
+      "brand": "Leroy-Somer",
+      "join_value": "lses112m",
+      "designation": "LSES 112 M",
+      "cells": 23,
+      "flanges": 4
+    },
+    {
+      "origin": "dimensions-leroy-somer.json#78",
+      "brand": "Leroy-Somer",
+      "join_value": "lses132su",
+      "designation": "LSES 132 SU",
+      "cells": 23,
+      "flanges": 4
+    },
+    {
+      "origin": "dimensions-leroy-somer.json#80",
+      "brand": "Leroy-Somer",
+      "join_value": "lses160lur",
+      "designation": "LSES 160 LUR",
+      "cells": 23,
+      "flanges": 2
+    },
+    {
+      "origin": "dimensions-leroy-somer.json#86",
+      "brand": "Leroy-Somer",
+      "join_value": "lses180lr",
+      "designation": "LSES 180 LR",
+      "cells": 23,
+      "flanges": 2
+    },
+    {
+      "origin": "dimensions-leroy-somer.json#90",
+      "brand": "Leroy-Somer",
+      "join_value": "lses180mt",
+      "designation": "LSES 180 MT",
+      "cells": 23,
+      "flanges": 2
+    },
+    {
+      "origin": "dimensions-leroy-somer.json#96",
+      "brand": "Leroy-Somer",
+      "join_value": "lses225mt",
+      "designation": "LSES 225 MT",
+      "cells": 23,
+      "flanges": 2
+    },
+    {
+      "origin": "dimensions-leroy-somer.json#98",
+      "brand": "Leroy-Somer",
+      "join_value": "lses225st",
+      "designation": "LSES 225 ST",
+      "cells": 23,
+      "flanges": 2
+    },
+    {
+      "origin": "dimensions-leroy-somer.json#107",
+      "brand": "Leroy-Somer",
+      "join_value": "plses280mg",
+      "designation": "PLSES 280 MG",
+      "cells": 21,
+      "flanges": 2
+    },
+    {
+      "origin": "dimensions-leroy-somer.json#114",
+      "brand": "Leroy-Somer",
+      "join_value": "plses315lu",
+      "designation": "PLSES 315 LU",
+      "cells": 18,
+      "flanges": 2
+    },
+    {
+      "origin": "dimensions-leroy-somer.json#116",
+      "brand": "Leroy-Somer",
+      "join_value": "plses315m",
+      "designation": "PLSES 315 M",
+      "cells": 18,
+      "flanges": 2
+    },
+    {
+      "origin": "dimensions-leroy-somer.json#121",
+      "brand": "Leroy-Somer",
+      "join_value": "plses315sur",
+      "designation": "PLSES 315 SUR",
+      "cells": 21,
+      "flanges": 2
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#0",
+      "brand": "Bonfiglioli",
+      "join_value": "be63",
+      "designation": "BE 63",
+      "cells": 18,
+      "flanges": 2
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#1",
+      "brand": "Bonfiglioli",
+      "join_value": "be71",
+      "designation": "BE 71",
+      "cells": 18,
+      "flanges": 2
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#2",
+      "brand": "Bonfiglioli",
+      "join_value": "be80",
+      "designation": "BE 80",
+      "cells": 18,
+      "flanges": 2
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#5",
+      "brand": "Bonfiglioli",
+      "join_value": "be100",
+      "designation": "BE 100",
+      "cells": 19,
+      "flanges": 2
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#6",
+      "brand": "Bonfiglioli",
+      "join_value": "be112",
+      "designation": "BE 112",
+      "cells": 19,
+      "flanges": 2
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#14",
+      "brand": "Bonfiglioli",
+      "join_value": "bn56",
+      "designation": "BN 56",
+      "cells": 9,
+      "flanges": 2
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#15",
+      "brand": "Bonfiglioli",
+      "join_value": "bn63",
+      "designation": "BN 63",
+      "cells": 18,
+      "flanges": 2
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#16",
+      "brand": "Bonfiglioli",
+      "join_value": "bn71",
+      "designation": "BN 71",
+      "cells": 18,
+      "flanges": 2
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#17",
+      "brand": "Bonfiglioli",
+      "join_value": "bn80",
+      "designation": "BN 80",
+      "cells": 18,
+      "flanges": 2
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#18",
+      "brand": "Bonfiglioli",
+      "join_value": "bn90",
+      "designation": "BN 90",
+      "cells": 9,
+      "flanges": 2
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#21",
+      "brand": "Bonfiglioli",
+      "join_value": "bn100",
+      "designation": "BN 100",
+      "cells": 18,
+      "flanges": 2
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#22",
+      "brand": "Bonfiglioli",
+      "join_value": "bn112",
+      "designation": "BN 112",
+      "cells": 18,
+      "flanges": 2
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#23",
+      "brand": "Bonfiglioli",
+      "join_value": "bn132",
+      "designation": "BN 132",
+      "cells": 10,
+      "flanges": 2
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#71",
+      "brand": "Bonfiglioli",
+      "join_value": "m0",
+      "designation": "M 0",
+      "cells": 12,
+      "flanges": 0
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#72",
+      "brand": "Bonfiglioli",
+      "join_value": "m05",
+      "designation": "M 05",
+      "cells": 13,
+      "flanges": 0
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#73",
+      "brand": "Bonfiglioli",
+      "join_value": "m1",
+      "designation": "M 1",
+      "cells": 13,
+      "flanges": 0
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#74",
+      "brand": "Bonfiglioli",
+      "join_value": "m2s",
+      "designation": "M 2S",
+      "cells": 13,
+      "flanges": 0
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#75",
+      "brand": "Bonfiglioli",
+      "join_value": "m3l",
+      "designation": "M 3L",
+      "cells": 13,
+      "flanges": 0
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#76",
+      "brand": "Bonfiglioli",
+      "join_value": "m3s",
+      "designation": "M 3S",
+      "cells": 13,
+      "flanges": 0
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#77",
+      "brand": "Bonfiglioli",
+      "join_value": "m4",
+      "designation": "M 4",
+      "cells": 13,
+      "flanges": 0
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#79",
+      "brand": "Bonfiglioli",
+      "join_value": "m5l",
+      "designation": "M 5L",
+      "cells": 13,
+      "flanges": 0
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#80",
+      "brand": "Bonfiglioli",
+      "join_value": "m5s",
+      "designation": "M 5S",
+      "cells": 13,
+      "flanges": 0
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#81",
+      "brand": "Bonfiglioli",
+      "join_value": "me05",
+      "designation": "ME 05",
+      "cells": 13,
+      "flanges": 0
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#82",
+      "brand": "Bonfiglioli",
+      "join_value": "me1s",
+      "designation": "ME 1S",
+      "cells": 13,
+      "flanges": 0
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#83",
+      "brand": "Bonfiglioli",
+      "join_value": "me2s",
+      "designation": "ME 2S",
+      "cells": 13,
+      "flanges": 0
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#84",
+      "brand": "Bonfiglioli",
+      "join_value": "me3l",
+      "designation": "ME 3L",
+      "cells": 13,
+      "flanges": 0
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#85",
+      "brand": "Bonfiglioli",
+      "join_value": "me3s",
+      "designation": "ME 3S",
+      "cells": 13,
+      "flanges": 0
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#86",
+      "brand": "Bonfiglioli",
+      "join_value": "me4l",
+      "designation": "ME 4L",
+      "cells": 12,
+      "flanges": 0
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#89",
+      "brand": "Bonfiglioli",
+      "join_value": "me4s",
+      "designation": "ME 4S",
+      "cells": 13,
+      "flanges": 0
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#90",
+      "brand": "Bonfiglioli",
+      "join_value": "me5l",
+      "designation": "ME 5L",
+      "cells": 13,
+      "flanges": 0
+    },
+    {
+      "origin": "dimensions-bonfiglioli.json#91",
+      "brand": "Bonfiglioli",
+      "join_value": "me5s",
+      "designation": "ME 5S",
+      "cells": 13,
+      "flanges": 0
+    }
+  ],
+  "flanges_out_of_scope": [
+    {
+      "origin": "dimensions-cils.json#0",
+      "mounting": "V1",
+      "designation": "FF400",
+      "models": 3
+    },
+    {
+      "origin": "dimensions-cils.json#0",
+      "mounting": "V1",
+      "designation": "FF500",
+      "models": 3
+    },
+    {
+      "origin": "dimensions-cils.json#1",
+      "mounting": "V1",
+      "designation": "FF400",
+      "models": 2
+    },
+    {
+      "origin": "dimensions-cils.json#1",
+      "mounting": "V1",
+      "designation": "FF500",
+      "models": 2
+    },
+    {
+      "origin": "dimensions-cils.json#2",
+      "mounting": "V1",
+      "designation": "FF500",
+      "models": 3
+    },
+    {
+      "origin": "dimensions-cils.json#3",
+      "mounting": "V1",
+      "designation": "FF500",
+      "models": 3
+    },
+    {
+      "origin": "dimensions-cils.json#3",
+      "mounting": "V1",
+      "designation": "FF600",
+      "models": 3
+    },
+    {
+      "origin": "dimensions-cils.json#4",
+      "mounting": "V1",
+      "designation": "FF500",
+      "models": 3
+    },
+    {
+      "origin": "dimensions-cils.json#4",
+      "mounting": "V1",
+      "designation": "FF600",
+      "models": 3
+    },
+    {
+      "origin": "dimensions-cils.json#5",
+      "mounting": "V1",
+      "designation": "FF500",
+      "models": 5
+    },
+    {
+      "origin": "dimensions-cils.json#5",
+      "mounting": "V1",
+      "designation": "FF600",
+      "models": 5
+    },
+    {
+      "origin": "dimensions-cils.json#6",
+      "mounting": "V1",
+      "designation": "FF500",
+      "models": 3
+    },
+    {
+      "origin": "dimensions-cils.json#6",
+      "mounting": "V1",
+      "designation": "FF600",
+      "models": 3
+    },
+    {
+      "origin": "dimensions-cils.json#7",
+      "mounting": "V1",
+      "designation": "FF500",
+      "models": 3
+    },
+    {
+      "origin": "dimensions-cils.json#7",
+      "mounting": "V1",
+      "designation": "FF600",
+      "models": 3
+    }
+  ],
+  "dimension_value_conflicts": [],
+  "flange_conflicts": [],
+  "correlation_frequency_collapse": [],
+  "blocking_details": {
+    "model_attribute_conflicts": [],
+    "divergent_identity_collisions": [],
+    "blocked_operating_points": []
+  },
+  "issue_summary": {
+    "SOURCE_DOCUMENT_EDITION_ABSENT": {
+      "severity": "info",
+      "activation_blocking": false,
+      "count": 1
+    },
+    "BRAKE_OPTION_REPEATED": {
+      "severity": "info",
+      "activation_blocking": false,
+      "count": 1
+    },
+    "DIMENSION_BLOCK_UNMATCHED": {
+      "severity": "warning",
+      "activation_blocking": false,
+      "count": 47
+    },
+    "FLANGE_MOUNTING_OUT_OF_SCOPE": {
+      "severity": "info",
+      "activation_blocking": false,
+      "count": 15
+    },
+    "PROVENANCE_SHA_RESOLVED_BY_FILENAME": {
+      "severity": "info",
+      "activation_blocking": false,
+      "count": 640
+    }
+  },
+  "issues_blocking": 0,
+  "issues_total": 704
+}

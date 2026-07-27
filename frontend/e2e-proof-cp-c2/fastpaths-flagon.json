@@ -1,0 +1,8 @@
+{
+  "note": "Fast-paths verified with AI_ASSISTANT_MODEL_ROUTING_ENABLED=true (deployed api). None triggered classify_assistant_request; no provider tokens.",
+  "cases": [
+    {"id":"security_refusal","request_id":"6418607b-6302-4dca-8a69-97db9092c71f","http_status":200,"usage":null,"cost":null,"model_id":null,"tool_trace":[],"has_classify":false,"answer_head":"Je ne peux ni révéler des secrets ni exécuter une écriture SQL."},
+    {"id":"out_of_scope","request_id":"9d487f49-63ae-4715-b401-cb01ee4154f3","http_status":200,"usage":null,"cost":null,"model_id":null,"tool_trace":[],"has_classify":false,"answer_head":"Cette demande est hors du périmètre de l'assistant CIR Cockpit."},
+    {"id":"segment_count_festo","request_id":"e30eb011-8dcc-4819-8659-a86dad3e9499","http_status":200,"usage":{"input_tokens":0,"output_tokens":0},"cost":0,"model_id":"mistral-large-2512","tool_trace":["aggregate_segments"],"has_classify":false,"answer_head":"Le snapshot actif contient 673 catégories fabricant (CAT_FAB) distinctes pour la marque FESTO"}
+  ]
+}

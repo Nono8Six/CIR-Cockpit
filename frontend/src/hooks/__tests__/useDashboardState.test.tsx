@@ -25,6 +25,9 @@ vi.mock('@/services/errors/notifySuccess', () => ({
 const mockHandleUiError = vi.mocked(handleUiError);
 const mockAddTimelineEvent = vi.mocked(addTimelineEvent);
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+const daysAgo = (days: number): string => new Date(Date.now() - days * DAY_MS).toISOString();
+
 const buildInteraction = (overrides: Partial<Interaction> = {}): Interaction => ({
   id: 'interaction-1',
   agency_id: 'agency-1',
@@ -35,12 +38,12 @@ const buildInteraction = (overrides: Partial<Interaction> = {}): Interaction => 
   contact_name: 'Alice Martin',
   contact_phone: '0102030405',
   contact_service: 'Atelier',
-  created_at: '2026-02-01T09:00:00.000Z',
+  created_at: daysAgo(20),
   created_by: 'user-1',
   entity_id: null,
   entity_type: 'Client',
   interaction_type: 'Demande',
-  last_action_at: '2026-02-01T09:00:00.000Z',
+  last_action_at: daysAgo(2),
   mega_families: ['Freinage'],
   notes: null,
   order_ref: null,
@@ -50,7 +53,7 @@ const buildInteraction = (overrides: Partial<Interaction> = {}): Interaction => 
   status_is_terminal: false,
   subject: 'Demande de devis',
   timeline: [],
-  updated_at: '2026-02-01T09:00:00.000Z',
+  updated_at: daysAgo(2),
   updated_by: null,
   stage: null,
   stage_changed_at: null,
@@ -80,74 +83,6 @@ const terminalStatus: AgencyStatus = {
 };
 
 describe('useDashboardState', () => {
-  it('expose une erreur utilisateur lorsque la plage personnalisee est invalide', () => {
-    const { result } = renderHook(
-      () =>
-        useDashboardState({
-          interactions: [],
-          statuses: [],
-          agencyId: 'agency-1',
-          onRequestConvert: vi.fn()
-        }),
-      { wrapper: buildWrapper() }
-    );
-
-    act(() => {
-      result.current.handleStartDateChange('2026-02-10');
-      result.current.handleEndDateChange('2026-02-01');
-    });
-
-    expect(result.current.period).toBe('custom');
-    expect(result.current.periodErrorMessage).toBe(
-      'La date de début doit précéder la date de fin.'
-    );
-    expect(mockHandleUiError).toHaveBeenCalledTimes(1);
-  });
-
-  it('efface l erreur de periode quand un preset est reapplique', () => {
-    const { result } = renderHook(
-      () =>
-        useDashboardState({
-          interactions: [],
-          statuses: [],
-          agencyId: 'agency-1',
-          onRequestConvert: vi.fn()
-        }),
-      { wrapper: buildWrapper() }
-    );
-
-    act(() => {
-      result.current.handleStartDateChange('2026-02-10');
-      result.current.handleEndDateChange('2026-02-01');
-      result.current.setPeriod('today');
-    });
-
-    expect(result.current.periodErrorMessage).toBeNull();
-  });
-
-  it('met a jour la plage personnalisee de facon atomique avec handleDateRangeChange', () => {
-    const { result } = renderHook(
-      () =>
-        useDashboardState({
-          interactions: [],
-          statuses: [],
-          agencyId: 'agency-1',
-          onRequestConvert: vi.fn()
-        }),
-      { wrapper: buildWrapper() }
-    );
-
-    act(() => {
-      result.current.handleDateRangeChange('2026-02-10', '2026-02-10');
-      result.current.handleDateRangeChange('2026-01-22', '2026-02-10');
-    });
-
-    expect(result.current.period).toBe('custom');
-    expect(result.current.effectiveStartDate).toBe('2026-01-22');
-    expect(result.current.effectiveEndDate).toBe('2026-02-10');
-    expect(result.current.periodErrorMessage).toBeNull();
-  });
-
   it('route les erreurs de mise a jour detail vers handleUiError', async () => {
     const appError = createAppError({
       code: 'UNKNOWN_ERROR',
@@ -170,7 +105,7 @@ describe('useDashboardState', () => {
     await act(async () => {
       await result.current.handleInteractionUpdate(buildInteraction(), {
         id: 'event-2',
-        date: '2026-02-01T10:00:00.000Z',
+        date: daysAgo(0),
         type: 'note',
         content: 'Test'
       });
@@ -183,16 +118,12 @@ describe('useDashboardState', () => {
     );
   });
 
-  it('garde un dossier termine visible sur la periode selon last_action_at', () => {
-    const doneInteraction: Interaction = {
-      ...buildInteraction(),
-      created_at: '2026-01-01T09:00:00.000Z',
-      last_action_at: '2026-02-10T10:00:00.000Z',
-      updated_at: '2026-02-10T10:00:00.000Z',
+  it('garde un dossier termine visible dans la table selon sa derniere activite', () => {
+    const doneInteraction = buildInteraction({
       status: 'Offre de prix envoyé',
       status_id: 'status-done',
       status_is_terminal: true
-    };
+    });
 
     const { result } = renderHook(
       () =>
@@ -205,41 +136,81 @@ describe('useDashboardState', () => {
       { wrapper: buildWrapper() }
     );
 
-    act(() => {
-      result.current.setViewMode('list');
-      result.current.setPeriod('custom');
-      result.current.handleStartDateChange('2026-02-10');
-      result.current.handleEndDateChange('2026-02-10');
-    });
-
-    expect(result.current.filteredData).toHaveLength(1);
+    expect(result.current.tableRows).toHaveLength(1);
   });
 
-  it('filtre aussi les dossiers non termines sur la periode en vue historique', () => {
-    const interactionInRange: Interaction = {
-      ...buildInteraction(),
-      id: 'interaction-in-range',
-      status: 'A traiter',
-      status_id: null,
-      status_is_terminal: false,
-      last_action_at: '2026-02-10T09:00:00.000Z',
-      updated_at: '2026-02-10T09:00:00.000Z'
-    };
-
-    const interactionOutOfRange: Interaction = {
-      ...buildInteraction(),
-      id: 'interaction-out-of-range',
-      status: 'En cours',
-      status_id: null,
-      status_is_terminal: false,
-      last_action_at: '2026-02-01T09:00:00.000Z',
-      updated_at: '2026-02-01T09:00:00.000Z'
-    };
+  it('exclut de la table les dossiers hors periode et filtre par canal', () => {
+    const recentPhone = buildInteraction({ id: 'recent-phone', channel: Channel.PHONE });
+    const recentMail = buildInteraction({ id: 'recent-mail', channel: Channel.EMAIL, timeline: [] });
+    const outOfPeriod = buildInteraction({
+      id: 'out-of-period',
+      last_action_at: daysAgo(120),
+      updated_at: daysAgo(120)
+    });
 
     const { result } = renderHook(
       () =>
         useDashboardState({
-          interactions: [interactionInRange, interactionOutOfRange],
+          interactions: [recentPhone, recentMail, outOfPeriod],
+          statuses: [],
+          agencyId: 'agency-1',
+          onRequestConvert: vi.fn()
+        }),
+      { wrapper: buildWrapper() }
+    );
+
+    expect(result.current.tableRows.map((row) => row.id)).toEqual(['recent-phone', 'recent-mail']);
+
+    act(() => {
+      result.current.setChannelFilter(Channel.EMAIL);
+    });
+
+    expect(result.current.tableRows.map((row) => row.id)).toEqual(['recent-mail']);
+  });
+
+  it('calcule les KPI de la vue d ensemble sur tout le perimetre', () => {
+    const overdue = buildInteraction({ id: 'overdue', reminder_at: daysAgo(3) });
+    const won = buildInteraction({
+      id: 'won',
+      stage: 'won',
+      stage_changed_at: daysAgo(5),
+      amount: 1000
+    });
+    const lost = buildInteraction({
+      id: 'lost',
+      stage: 'lost',
+      stage_changed_at: daysAgo(4),
+      amount: 500
+    });
+    const openDeal = buildInteraction({ id: 'open-deal', stage: 'quote_sent', amount: 2000 });
+
+    const { result } = renderHook(
+      () =>
+        useDashboardState({
+          interactions: [overdue, won, lost, openDeal],
+          statuses: [],
+          agencyId: 'agency-1',
+          onRequestConvert: vi.fn()
+        }),
+      { wrapper: buildWrapper() }
+    );
+
+    expect(result.current.kpis.overdueCount).toBe(1);
+    expect(result.current.kpis.oldestOverdueDays).toBe(3);
+    expect(result.current.kpis.wonCount30d).toBe(1);
+    expect(result.current.kpis.lostCount30d).toBe(1);
+    expect(result.current.kpis.conversionRate).toBe(50);
+    expect(result.current.kpis.pipelineOpenAmount).toBe(2000);
+  });
+
+  it('la recherche filtre la table et la file mais pas les KPI', () => {
+    const alpha = buildInteraction({ id: 'alpha', company_name: 'Garage Alpha', reminder_at: daysAgo(1) });
+    const beta = buildInteraction({ id: 'beta', company_name: 'Atelier Beta', reminder_at: daysAgo(2) });
+
+    const { result } = renderHook(
+      () =>
+        useDashboardState({
+          interactions: [alpha, beta],
           statuses: [],
           agencyId: 'agency-1',
           onRequestConvert: vi.fn()
@@ -248,22 +219,20 @@ describe('useDashboardState', () => {
     );
 
     act(() => {
-      result.current.setViewMode('list');
-      result.current.handleDateRangeChange('2026-02-10', '2026-02-10');
+      result.current.setSearchTerm('alpha');
     });
 
-    expect(result.current.filteredData).toHaveLength(1);
-    expect(result.current.filteredData[0]?.id).toBe('interaction-in-range');
+    expect(result.current.tableRows.map((row) => row.id)).toEqual(['alpha']);
+    expect(result.current.myDayView.groups.overdue.map((row) => row.id)).toEqual(['alpha']);
+    expect(result.current.kpis.overdueCount).toBe(2);
   });
 
   it('classe un ancien statut selon son rattachement historique', () => {
-    const interaction = {
-      ...buildInteraction(),
+    const interaction = buildInteraction({
       status: 'Ancien statut terminé',
       status_id: null,
-      status_is_terminal: false,
-      last_action_at: new Date().toISOString(),
-    };
+      status_is_terminal: false
+    });
     const { result } = renderHook(
       () =>
         useDashboardState({
@@ -282,10 +251,6 @@ describe('useDashboardState', () => {
       { wrapper: buildWrapper() },
     );
 
-    act(() => {
-      result.current.setViewMode('pipeline');
-    });
-
-    expect(result.current.pipelineBoard?.unqualified).toHaveLength(0);
+    expect(result.current.pipelineBoard.unqualified).toHaveLength(0);
   });
 });

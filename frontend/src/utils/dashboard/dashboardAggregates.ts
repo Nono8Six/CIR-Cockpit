@@ -190,10 +190,3 @@ export const buildMyDayView = (
     }
   };
 };
-
-export const flattenMyDayGroups = (groups: MyDayGroups): Interaction[] => [
-  ...groups.overdue,
-  ...groups.dueToday,
-  ...groups.upcoming,
-  ...groups.toPlan
-];
