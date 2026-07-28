@@ -1,0 +1,977 @@
+[
+  {
+    "efficiencyClass": "IE1",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 11.0,
+    "minEfficiency": 86.0,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE2",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 11.0,
+    "minEfficiency": 88.0,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE3",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 11.0,
+    "minEfficiency": 90.0,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE4",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 11.0,
+    "minEfficiency": 91.6,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE5",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 11.0,
+    "minEfficiency": 93.2,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE1",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 15.0,
+    "minEfficiency": 87.2,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE2",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 15.0,
+    "minEfficiency": 89.0,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE3",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 15.0,
+    "minEfficiency": 90.8,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE4",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 15.0,
+    "minEfficiency": 92.4,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE5",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 15.0,
+    "minEfficiency": 93.7,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE1",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 18.5,
+    "minEfficiency": 87.9,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE2",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 18.5,
+    "minEfficiency": 89.7,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE3",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 18.5,
+    "minEfficiency": 91.4,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE4",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 18.5,
+    "minEfficiency": 92.8,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE5",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 18.5,
+    "minEfficiency": 94.2,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE1",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 22.0,
+    "minEfficiency": 88.6,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE2",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 22.0,
+    "minEfficiency": 90.1,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE3",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 22.0,
+    "minEfficiency": 91.7,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE4",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 22.0,
+    "minEfficiency": 93.2,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE5",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 22.0,
+    "minEfficiency": 94.4,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE1",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 30.0,
+    "minEfficiency": 89.5,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE2",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 30.0,
+    "minEfficiency": 90.9,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE3",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 30.0,
+    "minEfficiency": 92.4,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE4",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 30.0,
+    "minEfficiency": 93.7,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE5",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 30.0,
+    "minEfficiency": 94.9,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE1",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 37.0,
+    "minEfficiency": 90.0,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE2",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 37.0,
+    "minEfficiency": 91.5,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE3",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 37.0,
+    "minEfficiency": 92.8,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE4",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 37.0,
+    "minEfficiency": 94.1,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE5",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 37.0,
+    "minEfficiency": 95.2,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE1",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 45.0,
+    "minEfficiency": 90.6,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE2",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 45.0,
+    "minEfficiency": 91.9,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE3",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 45.0,
+    "minEfficiency": 93.2,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE4",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 45.0,
+    "minEfficiency": 94.3,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE5",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 45.0,
+    "minEfficiency": 95.4,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE1",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 55.0,
+    "minEfficiency": 91.0,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE2",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 55.0,
+    "minEfficiency": 92.3,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE3",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 55.0,
+    "minEfficiency": 93.5,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE4",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 55.0,
+    "minEfficiency": 94.6,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE5",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 55.0,
+    "minEfficiency": 95.7,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE1",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 75.0,
+    "minEfficiency": 91.7,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE2",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 75.0,
+    "minEfficiency": 92.9,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE3",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 75.0,
+    "minEfficiency": 94.0,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE4",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 75.0,
+    "minEfficiency": 95.0,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE5",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 75.0,
+    "minEfficiency": 96.0,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE1",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 90.0,
+    "minEfficiency": 92.0,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE2",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 90.0,
+    "minEfficiency": 93.3,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE3",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 90.0,
+    "minEfficiency": 94.3,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE4",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 90.0,
+    "minEfficiency": 95.2,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE5",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 90.0,
+    "minEfficiency": 96.1,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE1",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 110.0,
+    "minEfficiency": 91.8,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE2",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 110.0,
+    "minEfficiency": 93.0,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE3",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 110.0,
+    "minEfficiency": 94.1,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE4",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 110.0,
+    "minEfficiency": 95.0,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE5",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 110.0,
+    "minEfficiency": 96.0,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE1",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 132.0,
+    "minEfficiency": 92.0,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE2",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 132.0,
+    "minEfficiency": 93.3,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE3",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 132.0,
+    "minEfficiency": 94.3,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE4",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 132.0,
+    "minEfficiency": 95.3,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE5",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 132.0,
+    "minEfficiency": 96.2,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE1",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 160.0,
+    "minEfficiency": 92.4,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE2",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 160.0,
+    "minEfficiency": 93.6,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE3",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 160.0,
+    "minEfficiency": 94.6,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE4",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 160.0,
+    "minEfficiency": 95.4,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  },
+  {
+    "efficiencyClass": "IE5",
+    "speedMinRpm": 1801,
+    "speedMaxRpm": 6000,
+    "powerKw": 160.0,
+    "minEfficiency": 96.3,
+    "standardRef": "IEC TS 60034-30-2:2016",
+    "provenance": {
+      "catalog": "Dyneo   IE5.pdf",
+      "catalogSha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "pdfPage": 6,
+      "catalogPage": "6",
+      "extractionMethod": "pdfplumber-text-right-block"
+    }
+  }
+]

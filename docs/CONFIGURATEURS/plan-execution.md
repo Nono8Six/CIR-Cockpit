@@ -5,7 +5,7 @@ Configurateurs. Il complète le plan directeur
 `C:\GitHub\CIR_Moteur\plan-brique-configurateurs.md` sans remplacer les preuves
 de chaque tranche.
 
-## Situation au 27/07/2026
+## Situation au 28/07/2026
 
 | Tranche | Statut | Décision | Preuve |
 | --- | --- | --- | --- |
@@ -289,8 +289,97 @@ colonne était renseignée depuis la première ligne source rencontrée alors qu
   chargé via MCP, `ready/passed`, 0 anomalie bloquante.
 - [x] Snapshot `2bb33c0b-8bf0-401c-8016-5e0fbd1bee54` conservé comme
   unique actif.
-- [ ] **VALIDATION PO** pour activer le candidat C2b.
-- [ ] Rejouer les preuves RLS après activation.
+- [x] **VALIDATION PO** pour activer le candidat C2b : accordée le 27/07/2026.
+- [x] Activation exécutée via `configurator.activate_snapshot`, sous rôle
+  `authenticated` et claims du profil super_admin, empreinte de diff recalculée
+  et non recopiée (`3083b3b9…`). Candidat `bcb48c8f-…` actif,
+  `2bb33c0b-…` `retired`, même horodatage donc même transaction.
+- [x] Rejouer les preuves RLS après activation : `anon` refusé au niveau du
+  schéma, `tcs` et `super_admin` lisent le catalogue, compteurs actifs conformes
+  au manifeste (1 721 modèles, 37 545 cotes, 540 K).
+- [ ] Sonde RLS `agency_admin` : aucun profil de ce rôle n’existe, non exécutée.
+
+### Gate corrective C2c avant C3-4
+
+Diagnostic du 27/07/2026, en lecture seule sur le candidat C2b.
+
+Couverture réelle des cotes de fixation : K sur 515 modèles / 1721, H sur 1172.
+Les 1 012 modèles « A sans K » et les 355 « A sans H » sont **tous** Innomotics.
+Leroy-Somer et Bonfiglioli sont à 100 % de couverture.
+
+Cause unique, prouvée sur le PDF Innomotics (Catalog D 81.1, édition 02/2026) :
+les cotes de pattes sont lues par `FOOT_DIMENSION_PAGES` (296, 298, 320, 324,
+…), or ces pages ne publient ni K ni K'. Ces deux cotes figurent sur les pages
+arbre voisines (297, 299, 321, 325, 413, 421), que l'extracteur ne lit que pour
+D/E/F. Les pages 320 et 324 ne publient pas non plus H, HA ni Y : ces trois
+cotes sont sur 321 et 325. Un seul défaut de périmètre de lecture explique donc
+les deux trous.
+
+En-têtes relevés :
+
+| Pages | Colonnes publiées |
+| --- | --- |
+| 296, 298 | `A AA AB AC AD AD' AF AF' AG AS B BA BB BC BE BE' C CA H HA Y` |
+| 320, 324 | idem sans `H HA Y` |
+| 297, 299 | `HH K K' L1 LC LL D DB E EB ED F GA …` |
+| 321, 325 | `H HA Y HH K K' L LC LL D DB E …` |
+
+- [x] Étendre la lecture aux pages arbre pour K, K', et pour H/HA/Y quand la
+  page de pattes ne les publie pas.
+- [x] `K'` reste une variante primée : `base_published_code = 'K'`,
+  `variant_context` renseigné, `canonical_code` nul, comme `B'` et `AD'`
+  aujourd'hui.
+- [x] Ajouter un contrôle de couverture d'en-tête : toute colonne présente dans
+  l'en-tête PDF et absente de la liste blanche lève une anomalie explicite.
+- [x] Fixtures : frame 63 et 71 → K = 7 ; frame 80 → K = 9,5 ; frame 90 → K = 10 ; frame 180 → K = 15, H = 180 ; frame 315 → K = 28, H = 315.
+- [x] Diff strictement additif sur `motor_dimension` (+4 214 cotes, 0 modifiée, 0 supprimée, 0 modèle ambigu).
+- [x] Aucune migration requise : `K` est au vocabulaire canonique depuis
+  `20260727145013`.
+- [x] `HH` est ingérée comme code publié distinct (1 041 lignes), `unmapped` et
+  sans `canonical_code`. Elle n'est **pas** la hauteur d'axe : sur la carcasse 80
+  elle vaut 73, sur la 315 elle vaut 238. Ne jamais la confondre avec `H`.
+- [x] Les 169 `source_ref` partagés ont retrouvé leur `extracted_at` d'origine,
+  `2026-07-27 06:43:33.83623+00`. La migration distante
+  `20260728045157_configurator_c2c_provenance_and_jsonb_invariants` a aussi
+  converti les compteurs des trois snapshots, des trois lots et les 2 112
+  contextes d'anomalie en vrais objets JSONB, puis validé trois contraintes
+  empêchant leur réencodage comme chaînes.
+
+Les ~194 modèles sans A ni K restants sont des moteurs à bride seule
+(Bonfiglioli M, ME, MX et une partie des BN/BE). Pour eux `indeterminate` sur la
+règle pattes est le verdict correct.
+
+#### Checkpoint pré-activation C2c — 28/07/2026
+
+- [x] Candidat `4ee230e7-47b0-4637-90b2-3c76b1607a73` toujours
+  `ready/passed`, non actif ; C2b reste l'unique actif.
+- [x] Migration corrective appliquée via MCP, historique distant restitué dans
+  `backend/migrations/`.
+- [x] `repo:check`, `deno check`, 6 tests d'extraction, `qa:back` et `qa:fast`
+  verts.
+- [ ] `pnpm run qa` : arrêt sur un seuil de couverture frontend préexistant et
+  hors diff C2c (`useDashboardStatusHelpers.ts`, branches 13,33 % pour 30 %).
+  Les 155 fichiers / 706 tests frontend ont néanmoins réussi.
+- [x] Autorisation PO reçue le 28/07/2026 pour réparer puis activer C2c.
+- [ ] Commit et push du checkpoint sur `main`.
+- [ ] Activation distante et probes post-activation.
+
+### Rapatriement de `tools/extract`
+
+Depuis le 27/07/2026, les extracteurs et leurs sorties sont versionnés dans ce
+dépôt sous `tools/extract/`, à côté de `scripts/configurator-c2-import.mjs` qui
+les consomme. Reproduction vérifiée : `dimensions-innomotics.json` régénéré
+depuis le nouvel emplacement est identique au bit près à l'original
+(`397bc0b6…`), et les deux tests C2b passent.
+
+Restent hors dépôt, sous `CIR_MOTEUR_ROOT` ou `--source-root` : les PDF
+fabricant (168 Mo, propriété des constructeurs) et l'oracle SQLite (28 Mo).
+`tools/extract/raw/` est un intermédiaire régénérable et reste ignoré. Le chemin
+n'a plus de valeur par défaut codée en dur : son absence est une erreur
+explicite.
+
+`iec-30-1-thresholds.json` reste lu depuis `CIR_MOTEUR_ROOT/backend/data` et
+n'a pas été rapatrié : son déplacement n'était pas demandé.
 
 Le plan de reprise détaillé, découpé par checkpoints, est
 `docs/CONFIGURATEURS/plan-c3-compatibilite-technique.md`.
@@ -306,6 +395,8 @@ Le plan de reprise détaillé, découpé par checkpoints, est
 
 ## Tranches suivantes
 
+- [ ] C2c — Correctif d’extraction K/K' et H/HA/Y Innomotics validé ; activation
+  distante autorisée et en attente du checkpoint pré-activation poussé.
 - [ ] C3 — Compatibilité technique backend Deno/tRPC, incluant l’ancien C4.
 - [ ] C4 — Absorbée par C3, aucune tranche indépendante.
 - [ ] C5 — Socle frontend.
@@ -342,3 +433,17 @@ Le plan de reprise détaillé, découpé par checkpoints, est
 | 27/07/2026 | C2b | Migration K appliquée via MCP; 540/540 valeurs reprises sans invention. | `20260727145013_configurator_c2b_dimension_k` |
 | 27/07/2026 | C2b | Nouveau snapshot candidat chargé via MCP et validé, sans activation implicite. | candidat `bcb48c8f-…` `ready/passed`, actif précédent inchangé |
 | 27/07/2026 | Suivi | C3 absorbe C4 et reçoit un plan autonome par phases et checkpoints. | `plan-c3-compatibilite-technique.md` |
+| 27/07/2026 | C2b | Pré-activation revérifiée en lecture seule sur le distant : 5 fixtures B exactes, 540 K mappées 6–35 mm, 12 compteurs conformes, diff réconcilié 37 449 / 67 / 241 / 29. Snapshot actif porte bien des B faux (1968, 5706). | requêtes MCP du 27/07/2026 |
+| 27/07/2026 | C3-4 | **Décision PO** : diamètre D identique et ajustement différent restent `satisfied`, avec alerte informative dans `checks_required`. | `plan-c3-compatibilite-technique.md` §8 |
+| 27/07/2026 | C2c | Cause unique identifiée pour les trous K (1 012 modèles) et H (355), tous Innomotics : les pages de pattes lues ne publient pas ces cotes, qui sont sur les pages arbre voisines. Correctif non appliqué. | En-têtes PDF pages 296/298/320/324 contre 297/299/321/325 |
+| 27/07/2026 | Outillage | `tools/extract` rapatrié dans le dépôt; sortie régénérée identique au bit près, tests C2b verts. PDF et oracle hors dépôt via `CIR_MOTEUR_ROOT`. | `397bc0b6…`, 2/2 tests |
+| 27/07/2026 | C2b | **Candidat activé.** Un seul actif, ancien `retired`, cotes B exactes sur l'actif (BY 315MBK = 457 mm). Rollback disponible par la même fonction. | `activation_diff_sha256 = 3083b3b9…` |
+| 27/07/2026 | C3 | Snapshot retiré lisible par tout authentifié : `tcs` voit les deux snapshots cumulés. La résolution de l'actif devient une obligation de service testée en C3-3, pas une garantie RLS. | Sonde `tcs` : 3 442 modèles, 75 302 cotes |
+| 27/07/2026 | C2c | Correctif d'extraction K/K' et H/HA/Y Innomotics appliqué et validé sur le snapshot candidat `4ee230e7-47b0-4637-90b2-3c76b1607a73`; diff strictement additif (+4 214 cotes, 0 modifiée, 0 supprimée, 0 modèle ambigu). Garde de couverture d'en-tête ajoutée. Non activé. | `docs/CONFIGURATEURS/c2/diff-c2c.json` — Candidat ready/passed |
+| 27/07/2026 | C2c | Couverture réelle après correctif : K passe de **0 à 1 012 modèles** Innomotics (1 052 lignes), H de 657 à 1 012. Tous domaines : `A sans K` = 0, `A sans H` = 0, 1 527 / 1 527. | SQL sur le candidat |
+| 27/07/2026 | C2c | Contre-vérification indépendante : K Innomotics aligné carcasse par carcasse avec Leroy-Somer et Bonfiglioli, extraits par des pipelines distincts (63→7, 90→10, 132→12, 250→24, 315→28). Valeurs page 297 recoupées à la main. Extracteur déterministe, 17 sorties sur 18 identiques au bit près. | Croisement 3 marques + relevé PDF |
+| 27/07/2026 | C2c | Tests convertis en `unittest.TestCase` : ils n'étaient découverts par aucun runner installé (`pytest` absent, fonctions de module). 6 tests verts. Chemin `CIR_MOTEUR_ROOT` codé en dur retiré du fichier de test. | `python -m unittest`, 6/6 |
+| 27/07/2026 | Chargeur | `source_document` et `source_ref` sont partagés et dédupliqués par contenu. L'upsert introduit pour C2c réécrivait leurs métadonnées et `extracted_at` ; les 169 provenances sont citées par le snapshot **actif**. Remplacé par une réutilisation sans écriture, avec remontée d'erreur si le lot contredit un document déjà enregistré. | `scripts/configurator-c2-load.ts`, `deno check` vert |
+| 28/07/2026 | Chargeur | Cause transverse JSONB corrigée : Postgres.js reçoit désormais `sql.json(...)` pour les compteurs et les contextes, au lieu d'une chaîne issue de `JSON.stringify`. | `scripts/configurator-c2-load.ts` |
+| 28/07/2026 | C2c | Réparation distante appliquée via MCP : 169 dates de provenance restaurées, 6 compteurs et 2 112 contextes convertis en objets JSONB ; trois contraintes validées empêchent la récidive. | `20260728045157_configurator_c2c_provenance_and_jsonb_invariants` |
+| 28/07/2026 | QA | `qa:back` et `qa:fast` verts ; `pnpm run qa` atteint 155/155 fichiers et 706/706 tests frontend puis échoue sur la couverture d'un fichier frontend absent du diff C2c. | `useDashboardStatusHelpers.ts` : branches 13,33 % / seuil 30 % |

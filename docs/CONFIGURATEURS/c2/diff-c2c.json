@@ -1,0 +1,19 @@
+{
+  "active_snapshot_id": "bcb48c8f-44e6-486f-a8ad-0d1a837ebed3",
+  "candidate_snapshot_id": "4ee230e7-47b0-4637-90b2-3c76b1607a73",
+  "active_motor_dimension_count": 37545,
+  "candidate_motor_dimension_count": 41759,
+  "unchanged_count": 37545,
+  "added_count": 4214,
+  "modified_count": 0,
+  "removed_count": 0,
+  "added_by_code": {
+    "K'": 1052,
+    "K": 1052,
+    "HH": 1041,
+    "H": 355,
+    "HA": 355,
+    "Y": 359
+  },
+  "is_strictly_additive": true
+}

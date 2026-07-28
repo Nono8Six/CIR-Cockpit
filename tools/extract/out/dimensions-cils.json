@@ -1,0 +1,1527 @@
+[
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "designation": "CILS 225 M",
+    "frameSize": 225,
+    "casingMaterial": "cast-iron",
+    "lifecycle": "current",
+    "dimensionsByMounting": {
+      "B3": {
+        "A": 356.0,
+        "AB": 426.0,
+        "B": 311.0,
+        "BB": 375.0,
+        "C": 149.0,
+        "x": 32.0,
+        "AA": 80.0,
+        "K": 18.5,
+        "HA": 27.0,
+        "H": 225.0,
+        "AC": 487.0,
+        "HD": 652.0,
+        "LB": 787.0,
+        "LJ": 69.5,
+        "J": 352.0,
+        "I": 175.0,
+        "II": 212.0,
+        "AD": 276.0,
+        "AD1": 45.0
+      },
+      "B35": {
+        "A": 356.0,
+        "AB": 426.0,
+        "B": 311.0,
+        "BB": 375.0,
+        "C": 149.0,
+        "x": 32.0,
+        "AA": 80.0,
+        "K": 18.5,
+        "HA": 27.0,
+        "H": 225.0,
+        "AC": 487.0,
+        "HD": 652.0,
+        "LB": 787.0,
+        "LJ": 69.5,
+        "J": 352.0,
+        "I": 175.0,
+        "II": 212.0,
+        "AD": 276.0,
+        "AD1": 45.0
+      },
+      "V1": {
+        "AC": 487.0,
+        "LB": 787.0,
+        "HJ": 427.0,
+        "LJ": 69.5,
+        "J": 352.0,
+        "I": 175.0,
+        "II": 212.0,
+        "AD": 276.0,
+        "AD1": 45.0
+      }
+    },
+    "shaftByPoles": {
+      "2": {
+        "F": 16.0,
+        "GD": 10.0,
+        "D": 55.0,
+        "D_tolerance": "m6",
+        "G": 49.0,
+        "E": 110.0,
+        "O": null,
+        "O_thread": "M20",
+        "p": 42.0,
+        "L": 90.0,
+        "LO": 20.0
+      },
+      "4": {
+        "F": 18.0,
+        "GD": 11.0,
+        "D": 60.0,
+        "D_tolerance": "m6",
+        "G": 53.0,
+        "E": 140.0,
+        "O": null,
+        "O_thread": "M20",
+        "p": 42.0,
+        "L": 125.0,
+        "LO": 15.0
+      }
+    },
+    "flanges": [
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF400",
+        "orderCode": null,
+        "M": 400.0,
+        "N": 350.0,
+        "P": 450.0,
+        "S": 18.5,
+        "T": 5.0,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "LA": 16.0,
+        "boreType": "through"
+      },
+      {
+        "mounting": "V1",
+        "role": "standard",
+        "designation": "FF400",
+        "orderCode": null,
+        "M": 400.0,
+        "N": 350.0,
+        "P": 450.0,
+        "S": 18.5,
+        "T": 5.0,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "LA": 16.0,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "larger",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500.0,
+        "N": 450.0,
+        "P": 550.0,
+        "S": 18.5,
+        "T": 5.0,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "LA": 18.0,
+        "boreType": "through"
+      },
+      {
+        "mounting": "V1",
+        "role": "larger",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500.0,
+        "N": 450.0,
+        "P": 550.0,
+        "S": 18.5,
+        "T": 5.0,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "LA": 18.0,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Cotes rendues par montage : AD differe entre B3 et B35/V1 sur les hauteurs 280 et 315. Une fusion des trois pages ecraserait une valeur publiee. Bout d'arbre publie separement en 2 poles et en 4 poles ; les deux jeux sont conserves distincts car ils diffferent (exemple CILS 280 SG : diametre 65 mm en 2 poles, 75 mm en 4 poles). Role deduit par comparaison de la cote M avec la bride portee par la colonne Symb. des pages 12 et 13. La legende l/u de la page 15, qui distingue arbre adapte et adaptable sans modification, reste a lire.",
+      "sources": [
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 11,
+          "catalogPage": "11",
+          "extractionMethod": "pdfplumber-column-bands-b3"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 12,
+          "catalogPage": "12",
+          "extractionMethod": "pdfplumber-column-bands-v1"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 13,
+          "catalogPage": "13",
+          "extractionMethod": "pdfplumber-column-bands-b35"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 14,
+          "catalogPage": "14",
+          "extractionMethod": "pdfplumber-column-bands-shaft"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 15,
+          "catalogPage": "15",
+          "extractionMethod": "pdfplumber-column-bands-flange"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "designation": "CILS 225 S",
+    "frameSize": 225,
+    "casingMaterial": "cast-iron",
+    "lifecycle": "current",
+    "dimensionsByMounting": {
+      "B3": {
+        "A": 356.0,
+        "AB": 426.0,
+        "B": 286.0,
+        "BB": 375.0,
+        "C": 149.0,
+        "x": 32.0,
+        "AA": 80.0,
+        "K": 18.5,
+        "HA": 27.0,
+        "H": 225.0,
+        "AC": 487.0,
+        "HD": 652.0,
+        "LB": 787.0,
+        "LJ": 69.5,
+        "J": 352.0,
+        "I": 175.0,
+        "II": 212.0,
+        "AD": 276.0,
+        "AD1": 45.0
+      },
+      "B35": {
+        "A": 356.0,
+        "AB": 426.0,
+        "B": 286.0,
+        "BB": 375.0,
+        "C": 149.0,
+        "x": 32.0,
+        "AA": 80.0,
+        "K": 18.5,
+        "HA": 27.0,
+        "H": 225.0,
+        "AC": 487.0,
+        "HD": 652.0,
+        "LB": 787.0,
+        "LJ": 69.5,
+        "J": 352.0,
+        "I": 175.0,
+        "II": 212.0,
+        "AD": 276.0,
+        "AD1": 45.0
+      },
+      "V1": {
+        "AC": 487.0,
+        "LB": 787.0,
+        "HJ": 427.0,
+        "LJ": 69.5,
+        "J": 352.0,
+        "I": 175.0,
+        "II": 212.0,
+        "AD": 276.0,
+        "AD1": 45.0
+      }
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 18.0,
+        "GD": 11.0,
+        "D": 60.0,
+        "D_tolerance": "m6",
+        "G": 53.0,
+        "E": 140.0,
+        "O": null,
+        "O_thread": "M20",
+        "p": 42.0,
+        "L": 125.0,
+        "LO": 15.0
+      }
+    },
+    "flanges": [
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF400",
+        "orderCode": null,
+        "M": 400.0,
+        "N": 350.0,
+        "P": 450.0,
+        "S": 18.5,
+        "T": 5.0,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "LA": 16.0,
+        "boreType": "through"
+      },
+      {
+        "mounting": "V1",
+        "role": "standard",
+        "designation": "FF400",
+        "orderCode": null,
+        "M": 400.0,
+        "N": 350.0,
+        "P": 450.0,
+        "S": 18.5,
+        "T": 5.0,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "LA": 16.0,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "larger",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500.0,
+        "N": 450.0,
+        "P": 550.0,
+        "S": 18.5,
+        "T": 5.0,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "LA": 18.0,
+        "boreType": "through"
+      },
+      {
+        "mounting": "V1",
+        "role": "larger",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500.0,
+        "N": 450.0,
+        "P": 550.0,
+        "S": 18.5,
+        "T": 5.0,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "LA": 18.0,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Cotes rendues par montage : AD differe entre B3 et B35/V1 sur les hauteurs 280 et 315. Une fusion des trois pages ecraserait une valeur publiee. Bout d'arbre publie separement en 2 poles et en 4 poles ; les deux jeux sont conserves distincts car ils diffferent (exemple CILS 280 SG : diametre 65 mm en 2 poles, 75 mm en 4 poles). Role deduit par comparaison de la cote M avec la bride portee par la colonne Symb. des pages 12 et 13. La legende l/u de la page 15, qui distingue arbre adapte et adaptable sans modification, reste a lire.",
+      "sources": [
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 11,
+          "catalogPage": "11",
+          "extractionMethod": "pdfplumber-column-bands-b3"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 12,
+          "catalogPage": "12",
+          "extractionMethod": "pdfplumber-column-bands-v1"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 13,
+          "catalogPage": "13",
+          "extractionMethod": "pdfplumber-column-bands-b35"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 14,
+          "catalogPage": "14",
+          "extractionMethod": "pdfplumber-column-bands-shaft"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 15,
+          "catalogPage": "15",
+          "extractionMethod": "pdfplumber-column-bands-flange"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "designation": "CILS 250 M",
+    "frameSize": 250,
+    "casingMaterial": "cast-iron",
+    "lifecycle": "current",
+    "dimensionsByMounting": {
+      "B3": {
+        "A": 406.0,
+        "AB": 476.0,
+        "B": 349.0,
+        "BB": 413.0,
+        "C": 168.0,
+        "x": 32.0,
+        "AA": 80.0,
+        "K": 24.0,
+        "HA": 27.0,
+        "H": 250.0,
+        "AC": 487.0,
+        "HD": 677.0,
+        "LB": 867.0,
+        "LJ": 69.5,
+        "J": 352.0,
+        "I": 175.0,
+        "II": 212.0,
+        "AD": 276.0,
+        "AD1": 45.0
+      },
+      "B35": {
+        "A": 406.0,
+        "AB": 476.0,
+        "B": 349.0,
+        "BB": 413.0,
+        "C": 168.0,
+        "x": 32.0,
+        "AA": 80.0,
+        "K": 24.0,
+        "HA": 27.0,
+        "H": 250.0,
+        "AC": 487.0,
+        "HD": 677.0,
+        "LB": 867.0,
+        "LJ": 69.5,
+        "J": 352.0,
+        "I": 175.0,
+        "II": 212.0,
+        "AD": 276.0,
+        "AD1": 45.0
+      },
+      "V1": {
+        "AC": 487.0,
+        "LB": 867.0,
+        "HJ": 427.0,
+        "LJ": 69.5,
+        "J": 352.0,
+        "I": 175.0,
+        "II": 212.0,
+        "AD": 276.0,
+        "AD1": 45.0
+      }
+    },
+    "shaftByPoles": {
+      "2": {
+        "F": 18.0,
+        "GD": 11.0,
+        "D": 65.0,
+        "D_tolerance": "m6",
+        "G": 58.0,
+        "E": 140.0,
+        "O": null,
+        "O_thread": "M20",
+        "p": 42.0,
+        "L": 125.0,
+        "LO": 15.0
+      },
+      "4": {
+        "F": 18.0,
+        "GD": 11.0,
+        "D": 65.0,
+        "D_tolerance": "m6",
+        "G": 58.0,
+        "E": 140.0,
+        "O": null,
+        "O_thread": "M20",
+        "p": 42.0,
+        "L": 125.0,
+        "LO": 15.0
+      }
+    },
+    "flanges": [
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500.0,
+        "N": 450.0,
+        "P": 550.0,
+        "S": 18.5,
+        "T": 5.0,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "LA": 18.0,
+        "boreType": "through"
+      },
+      {
+        "mounting": "V1",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500.0,
+        "N": 450.0,
+        "P": 550.0,
+        "S": 18.5,
+        "T": 5.0,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "LA": 18.0,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Cotes rendues par montage : AD differe entre B3 et B35/V1 sur les hauteurs 280 et 315. Une fusion des trois pages ecraserait une valeur publiee. Bout d'arbre publie separement en 2 poles et en 4 poles ; les deux jeux sont conserves distincts car ils diffferent (exemple CILS 280 SG : diametre 65 mm en 2 poles, 75 mm en 4 poles). Role deduit par comparaison de la cote M avec la bride portee par la colonne Symb. des pages 12 et 13. La legende l/u de la page 15, qui distingue arbre adapte et adaptable sans modification, reste a lire.",
+      "sources": [
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 11,
+          "catalogPage": "11",
+          "extractionMethod": "pdfplumber-column-bands-b3"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 12,
+          "catalogPage": "12",
+          "extractionMethod": "pdfplumber-column-bands-v1"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 13,
+          "catalogPage": "13",
+          "extractionMethod": "pdfplumber-column-bands-b35"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 14,
+          "catalogPage": "14",
+          "extractionMethod": "pdfplumber-column-bands-shaft"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 15,
+          "catalogPage": "15",
+          "extractionMethod": "pdfplumber-column-bands-flange"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "designation": "CILS 280 MG",
+    "frameSize": 280,
+    "casingMaterial": "cast-iron",
+    "lifecycle": "current",
+    "dimensionsByMounting": {
+      "B3": {
+        "A": 457.0,
+        "AB": 532.0,
+        "B": 419.0,
+        "BB": 545.0,
+        "C": 190.0,
+        "x": 51.5,
+        "AA": 86.0,
+        "K": 24.0,
+        "HA": 40.0,
+        "H": 280.0,
+        "AC": 554.0,
+        "HD": 788.5,
+        "LB": 927.0,
+        "LJ": 44.0,
+        "J": 390.0,
+        "I": 189.0,
+        "II": 179.0,
+        "AD": 350.0,
+        "AD1": 45.0
+      },
+      "B35": {
+        "A": 457.0,
+        "AB": 532.0,
+        "B": 419.0,
+        "BB": 545.0,
+        "C": 190.0,
+        "x": 51.5,
+        "AA": 86.0,
+        "K": 24.0,
+        "HA": 40.0,
+        "H": 280.0,
+        "AC": 554.0,
+        "HD": 788.5,
+        "LB": 927.0,
+        "LJ": 44.0,
+        "J": 390.0,
+        "I": 189.0,
+        "II": 179.0,
+        "AD": 355.0,
+        "AD1": 45.0
+      },
+      "V1": {
+        "AC": 554.0,
+        "LB": 927.0,
+        "HJ": 508.5,
+        "LJ": 44.0,
+        "J": 390.0,
+        "I": 189.0,
+        "II": 179.0,
+        "AD": 355.0,
+        "AD1": 45.0
+      }
+    },
+    "shaftByPoles": {
+      "2": {
+        "F": 18.0,
+        "GD": 11.0,
+        "D": 65.0,
+        "D_tolerance": "m6",
+        "G": 58.0,
+        "E": 140.0,
+        "O": null,
+        "O_thread": "M20",
+        "p": 42.0,
+        "L": 125.0,
+        "LO": 15.0
+      },
+      "4": {
+        "F": 20.0,
+        "GD": 12.0,
+        "D": 75.0,
+        "D_tolerance": "m6",
+        "G": 67.5,
+        "E": 140.0,
+        "O": null,
+        "O_thread": "M20",
+        "p": 42.0,
+        "L": 125.0,
+        "LO": 15.0
+      }
+    },
+    "flanges": [
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500.0,
+        "N": 450.0,
+        "P": 550.0,
+        "S": 18.5,
+        "T": 5.0,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "LA": 24.5,
+        "boreType": "through"
+      },
+      {
+        "mounting": "V1",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500.0,
+        "N": 450.0,
+        "P": 550.0,
+        "S": 18.5,
+        "T": 5.0,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "LA": 24.5,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "larger",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600.0,
+        "N": 550.0,
+        "P": 660.0,
+        "S": 24.0,
+        "T": 6.0,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "LA": 24.5,
+        "boreType": "through"
+      },
+      {
+        "mounting": "V1",
+        "role": "larger",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600.0,
+        "N": 550.0,
+        "P": 660.0,
+        "S": 24.0,
+        "T": 6.0,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "LA": 24.5,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Cotes rendues par montage : AD differe entre B3 et B35/V1 sur les hauteurs 280 et 315. Une fusion des trois pages ecraserait une valeur publiee. Bout d'arbre publie separement en 2 poles et en 4 poles ; les deux jeux sont conserves distincts car ils diffferent (exemple CILS 280 SG : diametre 65 mm en 2 poles, 75 mm en 4 poles). Role deduit par comparaison de la cote M avec la bride portee par la colonne Symb. des pages 12 et 13. La legende l/u de la page 15, qui distingue arbre adapte et adaptable sans modification, reste a lire.",
+      "sources": [
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 11,
+          "catalogPage": "11",
+          "extractionMethod": "pdfplumber-column-bands-b3"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 12,
+          "catalogPage": "12",
+          "extractionMethod": "pdfplumber-column-bands-v1"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 13,
+          "catalogPage": "13",
+          "extractionMethod": "pdfplumber-column-bands-b35"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 14,
+          "catalogPage": "14",
+          "extractionMethod": "pdfplumber-column-bands-shaft"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 15,
+          "catalogPage": "15",
+          "extractionMethod": "pdfplumber-column-bands-flange"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "designation": "CILS 280 SG",
+    "frameSize": 280,
+    "casingMaterial": "cast-iron",
+    "lifecycle": "current",
+    "dimensionsByMounting": {
+      "B3": {
+        "A": 457.0,
+        "AB": 532.0,
+        "B": 368.0,
+        "BB": 545.0,
+        "C": 190.0,
+        "x": 51.5,
+        "AA": 86.0,
+        "K": 24.0,
+        "HA": 40.0,
+        "H": 280.0,
+        "AC": 554.0,
+        "HD": 788.5,
+        "LB": 927.0,
+        "LJ": 44.0,
+        "J": 390.0,
+        "I": 189.0,
+        "II": 179.0,
+        "AD": 350.0,
+        "AD1": 45.0
+      },
+      "B35": {
+        "A": 457.0,
+        "AB": 532.0,
+        "B": 368.0,
+        "BB": 545.0,
+        "C": 190.0,
+        "x": 51.5,
+        "AA": 86.0,
+        "K": 24.0,
+        "HA": 40.0,
+        "H": 280.0,
+        "AC": 554.0,
+        "HD": 788.5,
+        "LB": 927.0,
+        "LJ": 44.0,
+        "J": 390.0,
+        "I": 189.0,
+        "II": 179.0,
+        "AD": 355.0,
+        "AD1": 45.0
+      },
+      "V1": {
+        "AC": 554.0,
+        "LB": 927.0,
+        "HJ": 508.5,
+        "LJ": 44.0,
+        "J": 390.0,
+        "I": 189.0,
+        "II": 179.0,
+        "AD": 355.0,
+        "AD1": 45.0
+      }
+    },
+    "shaftByPoles": {
+      "2": {
+        "F": 18.0,
+        "GD": 11.0,
+        "D": 65.0,
+        "D_tolerance": "m6",
+        "G": 58.0,
+        "E": 140.0,
+        "O": null,
+        "O_thread": "M20",
+        "p": 42.0,
+        "L": 125.0,
+        "LO": 15.0
+      },
+      "4": {
+        "F": 20.0,
+        "GD": 12.0,
+        "D": 75.0,
+        "D_tolerance": "m6",
+        "G": 67.5,
+        "E": 140.0,
+        "O": null,
+        "O_thread": "M20",
+        "p": 42.0,
+        "L": 125.0,
+        "LO": 15.0
+      }
+    },
+    "flanges": [
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500.0,
+        "N": 450.0,
+        "P": 550.0,
+        "S": 18.5,
+        "T": 5.0,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "LA": 24.5,
+        "boreType": "through"
+      },
+      {
+        "mounting": "V1",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500.0,
+        "N": 450.0,
+        "P": 550.0,
+        "S": 18.5,
+        "T": 5.0,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "LA": 24.5,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "larger",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600.0,
+        "N": 550.0,
+        "P": 660.0,
+        "S": 24.0,
+        "T": 6.0,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "LA": 24.5,
+        "boreType": "through"
+      },
+      {
+        "mounting": "V1",
+        "role": "larger",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600.0,
+        "N": 550.0,
+        "P": 660.0,
+        "S": 24.0,
+        "T": 6.0,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "LA": 24.5,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Cotes rendues par montage : AD differe entre B3 et B35/V1 sur les hauteurs 280 et 315. Une fusion des trois pages ecraserait une valeur publiee. Bout d'arbre publie separement en 2 poles et en 4 poles ; les deux jeux sont conserves distincts car ils diffferent (exemple CILS 280 SG : diametre 65 mm en 2 poles, 75 mm en 4 poles). Role deduit par comparaison de la cote M avec la bride portee par la colonne Symb. des pages 12 et 13. La legende l/u de la page 15, qui distingue arbre adapte et adaptable sans modification, reste a lire.",
+      "sources": [
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 11,
+          "catalogPage": "11",
+          "extractionMethod": "pdfplumber-column-bands-b3"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 12,
+          "catalogPage": "12",
+          "extractionMethod": "pdfplumber-column-bands-v1"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 13,
+          "catalogPage": "13",
+          "extractionMethod": "pdfplumber-column-bands-b35"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 14,
+          "catalogPage": "14",
+          "extractionMethod": "pdfplumber-column-bands-shaft"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 15,
+          "catalogPage": "15",
+          "extractionMethod": "pdfplumber-column-bands-flange"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "designation": "CILS 315 LE",
+    "frameSize": 315,
+    "casingMaterial": "cast-iron",
+    "lifecycle": "current",
+    "dimensionsByMounting": {
+      "B3": {
+        "A": 508.0,
+        "AB": 587.0,
+        "B": 508.0,
+        "BB": 662.0,
+        "C": 216.0,
+        "x": 77.5,
+        "AA": 88.0,
+        "K": 28.0,
+        "HA": 42.0,
+        "H": 315.0,
+        "AC": 554.0,
+        "HD": 823.5,
+        "LB": 1107.0,
+        "LJ": 44.0,
+        "J": 390.0,
+        "I": 189.0,
+        "II": 179.0,
+        "AD": 350.0,
+        "AD1": 45.0
+      },
+      "B35": {
+        "A": 508.0,
+        "AB": 587.0,
+        "B": 508.0,
+        "BB": 662.0,
+        "C": 216.0,
+        "x": 77.5,
+        "AA": 88.0,
+        "K": 28.0,
+        "HA": 42.0,
+        "H": 315.0,
+        "AC": 554.0,
+        "HD": 823.5,
+        "LB": 1107.0,
+        "LJ": 44.0,
+        "J": 390.0,
+        "I": 189.0,
+        "II": 179.0,
+        "AD": 355.0,
+        "AD1": 45.0
+      },
+      "V1": {
+        "AC": 554.0,
+        "LB": 1107.0,
+        "HJ": 508.5,
+        "LJ": 44.0,
+        "J": 390.0,
+        "I": 189.0,
+        "II": 179.0,
+        "AD": 355.0,
+        "AD1": 45.0
+      }
+    },
+    "shaftByPoles": {
+      "2": {
+        "F": 18.0,
+        "GD": 11.0,
+        "D": 65.0,
+        "D_tolerance": "m6",
+        "G": 58.0,
+        "E": 140.0,
+        "O": null,
+        "O_thread": "M20",
+        "p": 42.0,
+        "L": 125.0,
+        "LO": 15.0
+      },
+      "4": {
+        "F": 25.0,
+        "GD": 14.0,
+        "D": 90.0,
+        "D_tolerance": "m6",
+        "G": 81.0,
+        "E": 170.0,
+        "O": null,
+        "O_thread": "M24",
+        "p": 50.0,
+        "L": 140.0,
+        "LO": 30.0
+      }
+    },
+    "flanges": [
+      {
+        "mounting": "B35",
+        "role": "smaller",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500.0,
+        "N": 450.0,
+        "P": 550.0,
+        "S": 18.5,
+        "T": 5.0,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "LA": 24.5,
+        "boreType": "through"
+      },
+      {
+        "mounting": "V1",
+        "role": "smaller",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500.0,
+        "N": 450.0,
+        "P": 550.0,
+        "S": 18.5,
+        "T": 5.0,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "LA": 24.5,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600.0,
+        "N": 550.0,
+        "P": 660.0,
+        "S": 24.0,
+        "T": 6.0,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "LA": 24.5,
+        "boreType": "through"
+      },
+      {
+        "mounting": "V1",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600.0,
+        "N": 550.0,
+        "P": 660.0,
+        "S": 24.0,
+        "T": 6.0,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "LA": 24.5,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Cotes rendues par montage : AD differe entre B3 et B35/V1 sur les hauteurs 280 et 315. Une fusion des trois pages ecraserait une valeur publiee. Bout d'arbre publie separement en 2 poles et en 4 poles ; les deux jeux sont conserves distincts car ils diffferent (exemple CILS 280 SG : diametre 65 mm en 2 poles, 75 mm en 4 poles). Role deduit par comparaison de la cote M avec la bride portee par la colonne Symb. des pages 12 et 13. La legende l/u de la page 15, qui distingue arbre adapte et adaptable sans modification, reste a lire.",
+      "sources": [
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 11,
+          "catalogPage": "11",
+          "extractionMethod": "pdfplumber-column-bands-b3"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 12,
+          "catalogPage": "12",
+          "extractionMethod": "pdfplumber-column-bands-v1"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 13,
+          "catalogPage": "13",
+          "extractionMethod": "pdfplumber-column-bands-b35"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 14,
+          "catalogPage": "14",
+          "extractionMethod": "pdfplumber-column-bands-shaft"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 15,
+          "catalogPage": "15",
+          "extractionMethod": "pdfplumber-column-bands-flange"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "designation": "CILS 315 ME",
+    "frameSize": 315,
+    "casingMaterial": "cast-iron",
+    "lifecycle": "current",
+    "dimensionsByMounting": {
+      "B3": {
+        "A": 508.0,
+        "AB": 587.0,
+        "B": 457.0,
+        "BB": 662.0,
+        "C": 216.0,
+        "x": 77.5,
+        "AA": 88.0,
+        "K": 28.0,
+        "HA": 42.0,
+        "H": 315.0,
+        "AC": 554.0,
+        "HD": 823.5,
+        "LB": 1107.0,
+        "LJ": 44.0,
+        "J": 390.0,
+        "I": 189.0,
+        "II": 179.0,
+        "AD": 350.0,
+        "AD1": 45.0
+      },
+      "B35": {
+        "A": 508.0,
+        "AB": 587.0,
+        "B": 457.0,
+        "BB": 662.0,
+        "C": 216.0,
+        "x": 77.5,
+        "AA": 88.0,
+        "K": 28.0,
+        "HA": 42.0,
+        "H": 315.0,
+        "AC": 554.0,
+        "HD": 823.5,
+        "LB": 1107.0,
+        "LJ": 44.0,
+        "J": 390.0,
+        "I": 189.0,
+        "II": 179.0,
+        "AD": 355.0,
+        "AD1": 45.0
+      },
+      "V1": {
+        "AC": 554.0,
+        "LB": 1107.0,
+        "HJ": 508.5,
+        "LJ": 44.0,
+        "J": 390.0,
+        "I": 189.0,
+        "II": 179.0,
+        "AD": 355.0,
+        "AD1": 45.0
+      }
+    },
+    "shaftByPoles": {
+      "2": {
+        "F": 18.0,
+        "GD": 11.0,
+        "D": 65.0,
+        "D_tolerance": "m6",
+        "G": 58.0,
+        "E": 140.0,
+        "O": null,
+        "O_thread": "M20",
+        "p": 42.0,
+        "L": 125.0,
+        "LO": 15.0
+      },
+      "4": {
+        "F": 22.0,
+        "GD": 14.0,
+        "D": 80.0,
+        "D_tolerance": "m6",
+        "G": 71.0,
+        "E": 170.0,
+        "O": null,
+        "O_thread": "M20",
+        "p": 42.0,
+        "L": 140.0,
+        "LO": 30.0
+      }
+    },
+    "flanges": [
+      {
+        "mounting": "B35",
+        "role": "smaller",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500.0,
+        "N": 450.0,
+        "P": 550.0,
+        "S": 18.5,
+        "T": 5.0,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "LA": 24.5,
+        "boreType": "through"
+      },
+      {
+        "mounting": "V1",
+        "role": "smaller",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500.0,
+        "N": 450.0,
+        "P": 550.0,
+        "S": 18.5,
+        "T": 5.0,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "LA": 24.5,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600.0,
+        "N": 550.0,
+        "P": 660.0,
+        "S": 24.0,
+        "T": 6.0,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "LA": 24.5,
+        "boreType": "through"
+      },
+      {
+        "mounting": "V1",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600.0,
+        "N": 550.0,
+        "P": 660.0,
+        "S": 24.0,
+        "T": 6.0,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "LA": 24.5,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Cotes rendues par montage : AD differe entre B3 et B35/V1 sur les hauteurs 280 et 315. Une fusion des trois pages ecraserait une valeur publiee. Bout d'arbre publie separement en 2 poles et en 4 poles ; les deux jeux sont conserves distincts car ils diffferent (exemple CILS 280 SG : diametre 65 mm en 2 poles, 75 mm en 4 poles). Role deduit par comparaison de la cote M avec la bride portee par la colonne Symb. des pages 12 et 13. La legende l/u de la page 15, qui distingue arbre adapte et adaptable sans modification, reste a lire.",
+      "sources": [
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 11,
+          "catalogPage": "11",
+          "extractionMethod": "pdfplumber-column-bands-b3"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 12,
+          "catalogPage": "12",
+          "extractionMethod": "pdfplumber-column-bands-v1"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 13,
+          "catalogPage": "13",
+          "extractionMethod": "pdfplumber-column-bands-b35"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 14,
+          "catalogPage": "14",
+          "extractionMethod": "pdfplumber-column-bands-shaft"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 15,
+          "catalogPage": "15",
+          "extractionMethod": "pdfplumber-column-bands-flange"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "designation": "CILS 315 SE",
+    "frameSize": 315,
+    "casingMaterial": "cast-iron",
+    "lifecycle": "current",
+    "dimensionsByMounting": {
+      "B3": {
+        "A": 508.0,
+        "AB": 587.0,
+        "B": 406.0,
+        "BB": 662.0,
+        "C": 216.0,
+        "x": 77.5,
+        "AA": 88.0,
+        "K": 28.0,
+        "HA": 42.0,
+        "H": 315.0,
+        "AC": 554.0,
+        "HD": 823.5,
+        "LB": 1107.0,
+        "LJ": 44.0,
+        "J": 390.0,
+        "I": 189.0,
+        "II": 179.0,
+        "AD": 350.0,
+        "AD1": 45.0
+      },
+      "B35": {
+        "A": 508.0,
+        "AB": 587.0,
+        "B": 406.0,
+        "BB": 662.0,
+        "C": 216.0,
+        "x": 77.5,
+        "AA": 88.0,
+        "K": 28.0,
+        "HA": 42.0,
+        "H": 315.0,
+        "AC": 554.0,
+        "HD": 823.5,
+        "LB": 1107.0,
+        "LJ": 44.0,
+        "J": 390.0,
+        "I": 189.0,
+        "II": 179.0,
+        "AD": 355.0,
+        "AD1": 45.0
+      },
+      "V1": {
+        "AC": 554.0,
+        "LB": 1107.0,
+        "HJ": 508.5,
+        "LJ": 44.0,
+        "J": 390.0,
+        "I": 189.0,
+        "II": 179.0,
+        "AD": 355.0,
+        "AD1": 45.0
+      }
+    },
+    "shaftByPoles": {
+      "2": {
+        "F": 18.0,
+        "GD": 11.0,
+        "D": 65.0,
+        "D_tolerance": "m6",
+        "G": 58.0,
+        "E": 140.0,
+        "O": null,
+        "O_thread": "M20",
+        "p": 42.0,
+        "L": 125.0,
+        "LO": 15.0
+      },
+      "4": {
+        "F": 22.0,
+        "GD": 14.0,
+        "D": 80.0,
+        "D_tolerance": "m6",
+        "G": 71.0,
+        "E": 170.0,
+        "O": null,
+        "O_thread": "M20",
+        "p": 42.0,
+        "L": 140.0,
+        "LO": 30.0
+      }
+    },
+    "flanges": [
+      {
+        "mounting": "B35",
+        "role": "smaller",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500.0,
+        "N": 450.0,
+        "P": 550.0,
+        "S": 18.5,
+        "T": 5.0,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "LA": 24.5,
+        "boreType": "through"
+      },
+      {
+        "mounting": "V1",
+        "role": "smaller",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500.0,
+        "N": 450.0,
+        "P": 550.0,
+        "S": 18.5,
+        "T": 5.0,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "LA": 24.5,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600.0,
+        "N": 550.0,
+        "P": 660.0,
+        "S": 24.0,
+        "T": 6.0,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "LA": 24.5,
+        "boreType": "through"
+      },
+      {
+        "mounting": "V1",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600.0,
+        "N": 550.0,
+        "P": 660.0,
+        "S": 24.0,
+        "T": 6.0,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "LA": 24.5,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Cotes rendues par montage : AD differe entre B3 et B35/V1 sur les hauteurs 280 et 315. Une fusion des trois pages ecraserait une valeur publiee. Bout d'arbre publie separement en 2 poles et en 4 poles ; les deux jeux sont conserves distincts car ils diffferent (exemple CILS 280 SG : diametre 65 mm en 2 poles, 75 mm en 4 poles). Role deduit par comparaison de la cote M avec la bride portee par la colonne Symb. des pages 12 et 13. La legende l/u de la page 15, qui distingue arbre adapte et adaptable sans modification, reste a lire.",
+      "sources": [
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 11,
+          "catalogPage": "11",
+          "extractionMethod": "pdfplumber-column-bands-b3"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 12,
+          "catalogPage": "12",
+          "extractionMethod": "pdfplumber-column-bands-v1"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 13,
+          "catalogPage": "13",
+          "extractionMethod": "pdfplumber-column-bands-b35"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 14,
+          "catalogPage": "14",
+          "extractionMethod": "pdfplumber-column-bands-shaft"
+        },
+        {
+          "catalog": "6154c_fr_CILS_IE4.pdf",
+          "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+          "pdfPage": 15,
+          "catalogPage": "15",
+          "extractionMethod": "pdfplumber-column-bands-flange"
+        }
+      ]
+    }
+  }
+]

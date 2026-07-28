@@ -1,0 +1,74 @@
+[
+  {
+    "code": "TORQUE_MISMATCH",
+    "designation": "BE 112M",
+    "poles": 4,
+    "frequencyHz": 50,
+    "powerKw": 3.7,
+    "published": 27.0,
+    "computed": 24.45,
+    "deviationPct": 10.4,
+    "message": "BE 112M 4P 50Hz : couple publie 27.0 N.m contre 24.5 N.m deduit de 3.7 kW a 1445 tr/min",
+    "pdfPage": 83
+  },
+  {
+    "code": "CURRENT_MISMATCH",
+    "designation": "BE 71A",
+    "poles": 4,
+    "frequencyHz": 60,
+    "powerKw": 0.25,
+    "published": 1.04,
+    "computed": 0.61,
+    "deviationPct": 71.7,
+    "message": "BE 71A 4P 60Hz : courant publie 1.04 A contre 0.61 A deduit de 0.25 kW, 70.0 %, cos phi 0.74 sous 460 V",
+    "pdfPage": 85
+  },
+  {
+    "code": "TORQUE_MISMATCH",
+    "designation": "ME 4SA",
+    "poles": 4,
+    "frequencyHz": 50,
+    "powerKw": 3.7,
+    "published": 27.0,
+    "computed": 24.2,
+    "deviationPct": 11.6,
+    "message": "ME 4SA 4P 50Hz : couple publie 27.0 N.m contre 24.2 N.m deduit de 3.7 kW a 1460 tr/min",
+    "pdfPage": 87
+  },
+  {
+    "code": "CURRENT_MISMATCH",
+    "designation": "ME 1SA",
+    "poles": 4,
+    "frequencyHz": 60,
+    "powerKw": 0.25,
+    "published": 1.04,
+    "computed": 0.61,
+    "deviationPct": 71.7,
+    "message": "ME 1SA 4P 60Hz : courant publie 1.04 A contre 0.61 A deduit de 0.25 kW, 70.0 %, cos phi 0.74 sous 460 V",
+    "pdfPage": 89
+  },
+  {
+    "code": "UNIT_CROSSCHECK_MISMATCH",
+    "designation": "BN 160M",
+    "poles": 4,
+    "frequencyHz": 60,
+    "powerKw": 11.0,
+    "published": 1.367,
+    "computed": 1.1367,
+    "deviationPct": 20.3,
+    "message": "BN 160M 4P 60Hz : inertie imprime 1.367 lb.ft2 contre 1.1367 deduit de la valeur SI publiee. Valeur SI conservee, colonne lb.ft2 non retenue",
+    "pdfPage": 102
+  },
+  {
+    "code": "UNIT_CROSSCHECK_MISMATCH",
+    "designation": "M 3LA",
+    "poles": 2,
+    "frequencyHz": 60,
+    "powerKw": 3.0,
+    "published": 34.0,
+    "computed": 41.2264,
+    "deviationPct": -17.5,
+    "message": "M 3LA 2P 60Hz : masse imprime 34.0 lbs contre 41.2264 deduit de la valeur SI publiee. Valeur SI conservee, colonne lbs non retenue",
+    "pdfPage": 106
+  }
+]

@@ -99,6 +99,7 @@ const sql = postgres(DATABASE_URL, {
 type Tx = {
   (strings: TemplateStringsArray, ...values: unknown[]): Promise<Row[]>;
   (rows: Row[], ...columns: string[]): unknown;
+  json(value: unknown): unknown;
 };
 
 const begin = <T>(handler: (tx: Tx) => Promise<T>): Promise<T> =>
@@ -209,30 +210,81 @@ async function load(): Promise<void> {
     });
     await tx`insert into configurator.import_file ${tx(files, 'batch_id', 'file_role', 'filename', 'sha256', 'size_bytes', 'row_count', 'read_status')}`;
 
-    // Documents source.
+    // Documents source. `source_document` n'a pas de `snapshot_id` : la table est
+    // partagee et dedupliquee par `sha256`, l'identite d'un document etant son
+    // contenu. Un conflit signifie donc que le PDF est deja enregistre, pas qu'il
+    // faut le reecrire : la ligne existante est reutilisee telle quelle. Ecraser
+    // ses metadonnees modifierait la provenance citee par le snapshot actif.
     const documentIds = new Map<string, string>();
     for (const document of list('documents')) {
+      const sha = document.sha256 as string;
       const [inserted] = await tx`
         insert into configurator.source_document (brand, filename, sha256, edition_label, page_count)
-        values (${document.brand as string}, ${document.filename as string}, ${document.sha256 as string},
+        values (${document.brand as string}, ${document.filename as string}, ${sha},
                 ${document.edition_label as string | null}, ${document.page_count as number})
+        on conflict (sha256) do nothing
         returning id
       `;
-      documentIds.set(document.filename as string, inserted.id as string);
+      if (inserted) {
+        documentIds.set(document.filename as string, inserted.id as string);
+        continue;
+      }
+      const [existing] = await tx`
+        select id, brand, filename, edition_label, page_count
+        from configurator.source_document
+        where sha256 = ${sha}
+      `;
+      if (!existing) throw new Error(`Document source introuvable apres conflit : ${sha}`);
+      // Meme empreinte donc memes octets : toute divergence de libelle est une
+      // contradiction du lot, remontee et jamais absorbee silencieusement.
+      const divergences = (['brand', 'filename', 'edition_label', 'page_count'] as const)
+        .filter((field) => existing[field] !== document[field])
+        .map((field) => `${field}: enregistre=${existing[field]}, lot=${document[field]}`);
+      if (divergences.length > 0) {
+        throw new Error(
+          `Document deja enregistre sous une autre identite (${sha}) : ${divergences.join(' ; ')}`,
+        );
+      }
+      documentIds.set(document.filename as string, existing.id as string);
     }
 
-    // Provenance.
+    // Provenance. Meme regle que les documents : le sextuplet unique EST le fait
+    // de provenance. Si la page a deja ete extraite par la meme methode, la ligne
+    // existante est reutilisee sans etre touchee. `extracted_at` conserve la date
+    // de la premiere extraction : la reecrire ferait mentir la provenance des
+    // snapshots deja charges, dont l'actif.
     const refIds = new Map<string, number>();
     for (const ref of list('source_refs')) {
+      const documentId = documentIds.get(ref.document_filename as string)!;
+      const pdfPage = ref.pdf_page as number;
+      const catalogPage = ref.catalog_page as string | null;
+      const tableIndex = ref.table_index as number | null;
+      const method = ref.extraction_method as string;
+      const note = ref.normalization_note as string | null;
       const [inserted] = await tx`
         insert into configurator.source_ref
           (document_id, pdf_page, catalog_page, table_index, extraction_method, normalization_note, extracted_at)
-        values (${documentIds.get(ref.document_filename as string)!}, ${ref.pdf_page as number},
-                ${ref.catalog_page as string | null}, ${ref.table_index as number | null},
-                ${ref.extraction_method as string}, ${ref.normalization_note as string | null}, now())
+        values (${documentId}, ${pdfPage}, ${catalogPage}, ${tableIndex}, ${method}, ${note}, now())
+        on conflict on constraint "source_ref_page_method_unique" do nothing
         returning id
       `;
-      refIds.set(ref.ref_key as string, Number(inserted.id));
+      if (inserted) {
+        refIds.set(ref.ref_key as string, Number(inserted.id));
+        continue;
+      }
+      const [existing] = await tx`
+        select id from configurator.source_ref
+        where document_id = ${documentId}
+          and pdf_page = ${pdfPage}
+          and catalog_page is not distinct from ${catalogPage}
+          and table_index is not distinct from ${tableIndex}
+          and extraction_method = ${method}
+          and normalization_note is not distinct from ${note}
+      `;
+      if (!existing) {
+        throw new Error(`Provenance introuvable apres conflit : ${ref.ref_key as string}`);
+      }
+      refIds.set(ref.ref_key as string, Number(existing.id));
     }
     const refId = (row: Row): number => {
       const id = refIds.get(sourceRefKeyOf(row));
@@ -534,11 +586,37 @@ async function load(): Promise<void> {
       severity: issue.severity,
       issue_code: issue.issue_code,
       message: issue.message,
-      context: JSON.stringify(issue.context ?? {}),
+      context: issue.context ?? {},
       activation_blocking: issue.activation_blocking,
     }));
     await insertChunks(issueRows, ISSUE_COLUMNS, async (chunk) => {
-      await tx`insert into configurator.import_issue ${tx(chunk, ...ISSUE_COLUMNS)}`;
+      // Postgres.js doit recevoir un vrai document JSON. JSON.stringify(...)
+      // est une valeur scalaire JS et peut donc devenir une chaine JSONB.
+      await tx`
+        insert into configurator.import_issue (
+          batch_id,
+          severity,
+          issue_code,
+          message,
+          context,
+          activation_blocking
+        )
+        select
+          issue.batch_id,
+          issue.severity,
+          issue.issue_code,
+          issue.message,
+          issue.context,
+          issue.activation_blocking
+        from jsonb_to_recordset(${tx.json(chunk)}) as issue(
+          batch_id uuid,
+          severity text,
+          issue_code text,
+          message text,
+          context jsonb,
+          activation_blocking boolean
+        )
+      `;
       return [];
     });
 
@@ -547,13 +625,13 @@ async function load(): Promise<void> {
 
     await tx`
       update configurator.import_batch
-      set status = 'ready', counters = ${JSON.stringify(counters)}::jsonb,
+      set status = 'ready', counters = ${tx.json(counters)},
           analyzed_by = ${ACTOR_ID}, analysis_completed_at = now()
       where id = ${batchId}
     `;
     await tx`
       update configurator.catalog_snapshot
-      set status = 'ready', counters = ${JSON.stringify(counters)}::jsonb,
+      set status = 'ready', counters = ${tx.json(counters)},
           activation_gate_status = 'passed', activation_gate_checked_by = ${ACTOR_ID},
           activation_gate_checked_at = now()
       where id = ${snapshotId}

@@ -43,3 +43,11 @@ Thumbs.db
 
 # Test artifacts
 frontend/test-results/
+
+# Extraction catalogues : intermediaires regenerables, jamais la source
+tools/extract/raw/
+tools/extract/__pycache__/
+
+# Payload de chargement configurateur : artefact de travail ~44 Mo, supprime
+# apres chargement et regenerable par configurator-c2-import.mjs
+.c2-payload/

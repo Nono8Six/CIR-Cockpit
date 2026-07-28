@@ -96,9 +96,17 @@ et ce plan propres à CIR Cockpit sont, eux, versionnés dans CIR Cockpit.
   - aucun advisory de sécurité sur le schéma `configurator` ;
   - uniquement des index `configurator` encore non utilisés en niveau
     information ; aucun index ajouté sans plan SQL démontrant son besoin.
-- [ ] `VALIDATION PO` : activation du candidat C2b.
+- [x] `VALIDATION PO` : candidat C2b activé le 27/07/2026.
 
 `BLOQUANT` : aucune probe mécanique C3 ne doit utiliser l’ancien snapshot actif.
+
+`BLOQUANT` — constat du 27/07/2026 après activation : le snapshot `retired`
+reste **entièrement lisible** par tout utilisateur authentifié. Une sonde `tcs`
+voit 3 442 modèles et 75 302 cotes, soit les deux snapshots cumulés, et une
+lecture non filtrée de `BY 315MBK` renvoie 457 mm (actif) **et** 5 706 mm
+(retiré). Aucune requête C3 ne doit donc dépendre d’un filtre implicite : la
+résolution du snapshot actif est une obligation de service, à couvrir par un
+test dédié en C3-3, et non une propriété garantie par la RLS.
 
 ## 3. Modèle métier verrouillé
 
@@ -145,15 +153,23 @@ Classement :
 
 ### Checklist
 
-- [ ] Relire `docs/CONFIGURATEURS/c2/controles.json`.
-- [ ] Relire `docs/CONFIGURATEURS/c2/diff-activation.json`.
-- [ ] Vérifier les cinq fixtures B par SQL MCP.
-- [ ] Vérifier 540 `K` mappées par SQL MCP.
-- [ ] Vérifier les volumes candidat et 0 anomalie bloquante.
-- [ ] Obtenir la validation explicite du PO.
-- [ ] Activer via `configurator.activate_snapshot`, jamais par `UPDATE` direct.
-- [ ] Prouver un seul snapshot actif et l’ancien `retired`.
-- [ ] Rejouer les lectures RLS `anon`, `tcs`, `agency_admin`, `super_admin`.
+- [x] Relire `docs/CONFIGURATEURS/c2/controles.json`.
+- [x] Relire `docs/CONFIGURATEURS/c2/diff-activation.json`.
+- [x] Vérifier les cinq fixtures B par SQL MCP.
+- [x] Vérifier 540 `K` mappées par SQL MCP.
+- [x] Vérifier les volumes candidat et 0 anomalie bloquante.
+- [x] Obtenir la validation explicite du PO.
+- [x] Activer via `configurator.activate_snapshot`, jamais par `UPDATE` direct.
+- [x] Prouver un seul snapshot actif et l’ancien `retired`.
+- [x] Rejouer les lectures RLS `anon`, `tcs`, `super_admin`.
+- [ ] Rejouer la lecture RLS `agency_admin` : aucun profil de ce rôle n’existe
+  aujourd’hui, la sonde n’a pas pu être exécutée sans créer un compte. Non
+  bloquant pour ce checkpoint : la policy `SELECT` des trois tables catalogue
+  est la même expression pour les trois rôles,
+  `private.configurator_actor_is_active()`, dont le seul test est
+  `role in ('super_admin','agency_admin','tcs')`. Les sondes `tcs` et
+  `super_admin` parcourent déjà ce chemin; `agency_admin` est le littéral
+  central du même `IN`. À exécuter dès qu’un profil de ce rôle existera.
 
 ### Checkpoint C2b-A
 
@@ -196,6 +212,8 @@ Checkpoint C2b-A vert.
 - [ ] Définir `ruleset_id` et une version immuable.
 - [ ] Conserver la surcharge terrain uniquement si explicite et confirmée.
 - [ ] Ajouter les fixtures Zod de refus des champs inconnus.
+- [ ] Porter la décision D/tolérance de la phase C3-4 dans le contrat : la
+  tolérance est un fait distinct du diamètre, jamais fusionné avec lui.
 
 ### Checkpoint C3-1
 
@@ -241,7 +259,10 @@ Checkpoint C2b-A vert.
 
 - [ ] Implémenter `configurator.motor.catalog.list`.
 - [ ] Implémenter `configurator.motor.catalog.get`.
-- [ ] Résoudre uniquement le snapshot moteur actif.
+- [ ] Résoudre uniquement le snapshot moteur actif, par jointure explicite sur
+  `catalog_snapshot.is_active`. Le snapshot retiré reste lisible sous RLS :
+  ajouter un test qui échoue si une lecture catalogue renvoie une ligne d’un
+  snapshot non actif.
 - [ ] Charger modèle, point, rendement, couple, dimensions, brides et options.
 - [ ] Ne pas écraser deux points IE3/IE4 visuellement proches.
 - [ ] Construire `fromMotor` comme spécification catalogue sourcée.
@@ -271,6 +292,11 @@ Checkpoint C2b-A vert.
 ### Arbre
 
 - [ ] D identique pour un remplacement direct.
+- [ ] `DECISION PO 2026-07-27` : diamètre D identique et tolérance d’ajustement
+  différente restent `satisfied`. L’écart est publié dans `checks_required`
+  comme information de montage d’accouplement, jamais dans
+  `adaptations_required`, et ne dégrade aucun statut. Tolérance absente : aucune
+  alerte, aucune réserve.
 - [ ] F identique, sans compensation générique.
 - [ ] E différent : réserve sur engagement et encombrement.
 - [ ] E ne passe à `satisfied` qu’avec preuve de plage d’accouplement.
@@ -286,6 +312,12 @@ Checkpoint C2b-A vert.
 - [ ] Ne jamais déduire une bride depuis H.
 
 ### Checkpoint C3-4
+
+`BLOQUANT` : la tranche corrective C2c doit être activée avant d’écrire ces
+tests. Sur le snapshot C2b, K est absent pour 1 012 modèles et H pour 355, tous
+Innomotics, par défaut d’extraction et non par absence de publication. Écrire
+les tests avant C2c reviendrait à figer `indeterminate` comme verdict nominal.
+Voir `plan-execution.md`, « Gate corrective C2c ».
 
 Tests obligatoires :
 

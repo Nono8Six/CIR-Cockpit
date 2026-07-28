@@ -1,0 +1,1294 @@
+[
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 225 M",
+    "poles": 2,
+    "powerKw": 45.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 5,
+    "torqueNm": 144.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 225 M",
+    "poles": 2,
+    "powerKw": 45.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 10,
+    "torqueNm": 144.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 225 M",
+    "poles": 2,
+    "powerKw": 45.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 17,
+    "torqueNm": 144.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 225 M",
+    "poles": 2,
+    "powerKw": 45.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 25,
+    "torqueNm": 144.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 250 M",
+    "poles": 2,
+    "powerKw": 55.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 5,
+    "torqueNm": 123.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 250 M",
+    "poles": 2,
+    "powerKw": 55.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 10,
+    "torqueNm": 158.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 250 M",
+    "poles": 2,
+    "powerKw": 55.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 17,
+    "torqueNm": 176.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 250 M",
+    "poles": 2,
+    "powerKw": 55.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 25,
+    "torqueNm": 176.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 280 SG",
+    "poles": 2,
+    "powerKw": 75.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 5,
+    "torqueNm": 158.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 280 SG",
+    "poles": 2,
+    "powerKw": 75.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 10,
+    "torqueNm": 241.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 280 SG",
+    "poles": 2,
+    "powerKw": 75.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 17,
+    "torqueNm": 241.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 280 SG",
+    "poles": 2,
+    "powerKw": 75.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 25,
+    "torqueNm": 241.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 280 MG",
+    "poles": 2,
+    "powerKw": 90.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 5,
+    "torqueNm": 189.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 280 MG",
+    "poles": 2,
+    "powerKw": 90.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 10,
+    "torqueNm": 288.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 280 MG",
+    "poles": 2,
+    "powerKw": 90.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 17,
+    "torqueNm": 288.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 280 MG",
+    "poles": 2,
+    "powerKw": 90.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 25,
+    "torqueNm": 288.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 SE",
+    "poles": 2,
+    "powerKw": 110.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 5,
+    "torqueNm": 229.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 SE",
+    "poles": 2,
+    "powerKw": 110.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 10,
+    "torqueNm": 352.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 SE",
+    "poles": 2,
+    "powerKw": 110.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 17,
+    "torqueNm": 352.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 SE",
+    "poles": 2,
+    "powerKw": 110.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 25,
+    "torqueNm": 352.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 ME",
+    "poles": 2,
+    "powerKw": 132.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 5,
+    "torqueNm": 275.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 ME",
+    "poles": 2,
+    "powerKw": 132.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 10,
+    "torqueNm": 423.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 ME",
+    "poles": 2,
+    "powerKw": 132.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 17,
+    "torqueNm": 423.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 ME",
+    "poles": 2,
+    "powerKw": 132.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 25,
+    "torqueNm": 423.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 LE",
+    "poles": 2,
+    "powerKw": 160.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 5,
+    "torqueNm": 333.5,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 LE",
+    "poles": 2,
+    "powerKw": 160.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 10,
+    "torqueNm": 467.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 LE",
+    "poles": 2,
+    "powerKw": 160.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 17,
+    "torqueNm": 490.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 LE",
+    "poles": 2,
+    "powerKw": 160.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 25,
+    "torqueNm": 514.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 LE",
+    "poles": 2,
+    "powerKw": 200.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 5,
+    "torqueNm": 417.3,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 LE",
+    "poles": 2,
+    "powerKw": 200.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 10,
+    "torqueNm": 575.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 LE",
+    "poles": 2,
+    "powerKw": 200.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 17,
+    "torqueNm": 600.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 LE",
+    "poles": 2,
+    "powerKw": 200.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 25,
+    "torqueNm": 642.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 225 S",
+    "poles": 4,
+    "powerKw": 37.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 5,
+    "torqueNm": 238.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 225 S",
+    "poles": 4,
+    "powerKw": 37.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 10,
+    "torqueNm": 238.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 225 S",
+    "poles": 4,
+    "powerKw": 37.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 17,
+    "torqueNm": 238.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 225 S",
+    "poles": 4,
+    "powerKw": 37.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 25,
+    "torqueNm": 238.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 225 M",
+    "poles": 4,
+    "powerKw": 45.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 5,
+    "torqueNm": 289.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 225 M",
+    "poles": 4,
+    "powerKw": 45.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 10,
+    "torqueNm": 289.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 225 M",
+    "poles": 4,
+    "powerKw": 45.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 17,
+    "torqueNm": 289.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 225 M",
+    "poles": 4,
+    "powerKw": 45.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 25,
+    "torqueNm": 289.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 250 M",
+    "poles": 4,
+    "powerKw": 55.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 5,
+    "torqueNm": 318.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 250 M",
+    "poles": 4,
+    "powerKw": 55.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 10,
+    "torqueNm": 353.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 250 M",
+    "poles": 4,
+    "powerKw": 55.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 17,
+    "torqueNm": 353.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 250 M",
+    "poles": 4,
+    "powerKw": 55.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 25,
+    "torqueNm": 353.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 280 SG",
+    "poles": 4,
+    "powerKw": 75.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 5,
+    "torqueNm": 315.3,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 280 SG",
+    "poles": 4,
+    "powerKw": 75.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 10,
+    "torqueNm": 450.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 280 SG",
+    "poles": 4,
+    "powerKw": 75.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 17,
+    "torqueNm": 465.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 280 SG",
+    "poles": 4,
+    "powerKw": 75.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 25,
+    "torqueNm": 481.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 280 MG",
+    "poles": 4,
+    "powerKw": 90.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 5,
+    "torqueNm": 377.7,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 280 MG",
+    "poles": 4,
+    "powerKw": 90.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 10,
+    "torqueNm": 577.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 280 MG",
+    "poles": 4,
+    "powerKw": 90.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 17,
+    "torqueNm": 577.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 280 MG",
+    "poles": 4,
+    "powerKw": 90.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 25,
+    "torqueNm": 577.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 SE",
+    "poles": 4,
+    "powerKw": 110.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 5,
+    "torqueNm": 706.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 SE",
+    "poles": 4,
+    "powerKw": 110.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 10,
+    "torqueNm": 706.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 SE",
+    "poles": 4,
+    "powerKw": 110.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 17,
+    "torqueNm": 706.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 SE",
+    "poles": 4,
+    "powerKw": 110.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 25,
+    "torqueNm": 706.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 ME",
+    "poles": 4,
+    "powerKw": 132.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 5,
+    "torqueNm": 735.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 ME",
+    "poles": 4,
+    "powerKw": 132.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 10,
+    "torqueNm": 772.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 ME",
+    "poles": 4,
+    "powerKw": 132.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 17,
+    "torqueNm": 797.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 ME",
+    "poles": 4,
+    "powerKw": 132.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 25,
+    "torqueNm": 848.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 LE",
+    "poles": 4,
+    "powerKw": 160.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 5,
+    "torqueNm": 900.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 LE",
+    "poles": 4,
+    "powerKw": 160.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 10,
+    "torqueNm": 900.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 LE",
+    "poles": 4,
+    "powerKw": 160.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 17,
+    "torqueNm": 950.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 LE",
+    "poles": 4,
+    "powerKw": 160.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 25,
+    "torqueNm": 1028.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 LE",
+    "poles": 4,
+    "powerKw": 200.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 5,
+    "torqueNm": 1100.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 LE",
+    "poles": 4,
+    "powerKw": 200.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 10,
+    "torqueNm": 1281.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 LE",
+    "poles": 4,
+    "powerKw": 200.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 17,
+    "torqueNm": 1281.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "CILS",
+    "type": "CILS 315 LE",
+    "poles": 4,
+    "powerKw": 200.0,
+    "supplyMode": "vfd",
+    "frequencyHz": 25,
+    "torqueNm": 1281.0,
+    "provenance": {
+      "catalog": "6154c_fr_CILS_IE4.pdf",
+      "catalogSha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "pdfPage": 10,
+      "catalogPage": "10",
+      "extractionMethod": "pdfplumber-column-bands",
+      "catalogEdition": "6154c fr - 2025",
+      "normalizationNote": "Couples disponibles a 5, 10, 17 et 25 Hz publies en N.m ; la valeur maximale de la serie egale le couple nominal reseau du meme moteur, ce qui ecarte une lecture en pourcentage malgre l'en-tete imprime."
+    }
+  }
+]

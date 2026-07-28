@@ -32,8 +32,16 @@ const args = new Map(
   }),
 );
 
-const SOURCE_ROOT = args.get('source-root') ?? 'C:\\GitHub\\CIR_Moteur';
-const EXTRACT_DIR = path.join(SOURCE_ROOT, 'tools', 'extract', 'out');
+// Les extracteurs et leurs sorties sont versionnes dans ce depot. Seuls les
+// PDF fabricant (168 Mo, propriete des constructeurs) et l'oracle SQLite
+// restent hors depot, sous `CIR_MOTEUR_ROOT` ou `--source-root`.
+const SOURCE_ROOT = args.get('source-root') ?? process.env.CIR_MOTEUR_ROOT ?? null;
+if (!SOURCE_ROOT) {
+  throw new Error(
+    "Racine des catalogues absente : renseigner CIR_MOTEUR_ROOT ou --source-root.",
+  );
+}
+const EXTRACT_DIR = path.join(REPO_ROOT, 'tools', 'extract', 'out');
 const DATA_DIR = path.join(SOURCE_ROOT, 'backend', 'data');
 const PDF_ROOT = path.join(SOURCE_ROOT, 'Catalogue fabricant');
 const ORACLE_DB = path.join(DATA_DIR, 'cir-motors.db');

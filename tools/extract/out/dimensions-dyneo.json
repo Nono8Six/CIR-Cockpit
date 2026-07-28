@@ -1,0 +1,5012 @@
+[
+  {
+    "brand": "Leroy-Somer",
+    "series": "FLSHRM",
+    "designation": "FLSHRM 280MA",
+    "frameSize": 280,
+    "version": "interchangeable",
+    "dimensions": {
+      "D": 65,
+      "DPublished": "65m6",
+      "E": 140,
+      "F": 18,
+      "GD": 11,
+      "G": 58,
+      "O": 20,
+      "p": 42,
+      "L": 126,
+      "LO": 14,
+      "A": 457,
+      "AB": 527,
+      "B": 419,
+      "BB": 486,
+      "C": 190,
+      "x": 33,
+      "AA": 80,
+      "K": 24,
+      "HA": 30,
+      "H": 280,
+      "AC": 481,
+      "HJ": 447,
+      "LB": 959,
+      "LJ": 69,
+      "J": 352,
+      "I": 175,
+      "II": 211,
+      "AD": 303,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500,
+        "N": 450,
+        "P": 550,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 18,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500,
+        "N": 450,
+        "P": 550,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 18,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "FLSHRM",
+    "designation": "FLSHRM 280MD",
+    "frameSize": 280,
+    "version": "interchangeable",
+    "dimensions": {
+      "D": 75,
+      "DPublished": "75m6",
+      "E": 140,
+      "F": 20,
+      "GD": 12,
+      "G": 67.5,
+      "O": 20,
+      "p": 42,
+      "L": 125,
+      "LO": 15,
+      "A": 457,
+      "AB": 527,
+      "B": 419,
+      "BB": 486,
+      "C": 190,
+      "x": 33,
+      "AA": 80,
+      "K": 24,
+      "HA": 30,
+      "H": 280,
+      "AC": 481,
+      "HJ": 447,
+      "LB": 959,
+      "LJ": 69,
+      "J": 352,
+      "I": 175,
+      "II": 211,
+      "AD": 303,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500,
+        "N": 450,
+        "P": 550,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 18,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500,
+        "N": 450,
+        "P": 550,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 18,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "FLSHRM",
+    "designation": "FLSHRM 280SA",
+    "frameSize": 280,
+    "version": "interchangeable",
+    "dimensions": {
+      "D": 65,
+      "DPublished": "65m6",
+      "E": 140,
+      "F": 18,
+      "GD": 11,
+      "G": 58,
+      "O": 20,
+      "p": 42,
+      "L": 126,
+      "LO": 14,
+      "A": 457,
+      "AB": 527,
+      "B": 368,
+      "BB": 486,
+      "C": 190,
+      "x": 33,
+      "AA": 80,
+      "K": 24,
+      "HA": 30,
+      "H": 280,
+      "AC": 481,
+      "HJ": 447,
+      "LB": 959,
+      "LJ": 69,
+      "J": 352,
+      "I": 175,
+      "II": 211,
+      "AD": 303,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500,
+        "N": 450,
+        "P": 550,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 18,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500,
+        "N": 450,
+        "P": 550,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 18,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "FLSHRM",
+    "designation": "FLSHRM 280SB",
+    "frameSize": 280,
+    "version": "interchangeable",
+    "dimensions": {
+      "D": 75,
+      "DPublished": "75m6",
+      "E": 140,
+      "F": 20,
+      "GD": 12,
+      "G": 67.5,
+      "O": 20,
+      "p": 42,
+      "L": 125,
+      "LO": 15,
+      "A": 457,
+      "AB": 527,
+      "B": 368,
+      "BB": 486,
+      "C": 190,
+      "x": 33,
+      "AA": 80,
+      "K": 24,
+      "HA": 30,
+      "H": 280,
+      "AC": 481,
+      "HJ": 447,
+      "LB": 959,
+      "LJ": 69,
+      "J": 352,
+      "I": 175,
+      "II": 211,
+      "AD": 303,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500,
+        "N": 450,
+        "P": 550,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 18,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500,
+        "N": 450,
+        "P": 550,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 18,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "FLSHRM",
+    "designation": "FLSHRM 315LA",
+    "frameSize": 315,
+    "version": "interchangeable",
+    "dimensions": {
+      "D": 90,
+      "DPublished": "90m6",
+      "E": 170,
+      "F": 25,
+      "GD": 14,
+      "G": 81,
+      "O": 24,
+      "p": 50,
+      "L": 140,
+      "LO": 30,
+      "A": 508,
+      "AB": 600,
+      "B": 508,
+      "BB": 610,
+      "C": 216,
+      "x": 58,
+      "AA": 100,
+      "K": 28,
+      "HA": 35,
+      "H": 315,
+      "AC": 600,
+      "HJ": 542,
+      "LB": 1177,
+      "LJ": 119,
+      "J": 416,
+      "I": 217,
+      "II": 264,
+      "AD": 343,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600,
+        "N": 550,
+        "P": 660,
+        "T": 6,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 24,
+        "LA": 22,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600,
+        "N": 550,
+        "P": 660,
+        "T": 6,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 24,
+        "LA": 22,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "FLSHRM",
+    "designation": "FLSHRM 315LB",
+    "frameSize": 315,
+    "version": "interchangeable",
+    "dimensions": {
+      "D": 90,
+      "DPublished": "90m6",
+      "E": 170,
+      "F": 25,
+      "GD": 14,
+      "G": 81,
+      "O": 24,
+      "p": 50,
+      "L": 140,
+      "LO": 30,
+      "A": 508,
+      "AB": 600,
+      "B": 508,
+      "BB": 610,
+      "C": 216,
+      "x": 58,
+      "AA": 100,
+      "K": 28,
+      "HA": 35,
+      "H": 315,
+      "AC": 600,
+      "HJ": 542,
+      "LB": 1177,
+      "LJ": 119,
+      "J": 416,
+      "I": 217,
+      "II": 264,
+      "AD": 343,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600,
+        "N": 550,
+        "P": 660,
+        "T": 6,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 24,
+        "LA": 22,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600,
+        "N": 550,
+        "P": 660,
+        "T": 6,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 24,
+        "LA": 22,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "FLSHRM",
+    "designation": "FLSHRM 315LTA",
+    "frameSize": 315,
+    "version": "interchangeable",
+    "dimensions": {
+      "D": 70,
+      "DPublished": "70m6",
+      "E": 140,
+      "F": 20,
+      "GD": 12,
+      "G": 62.5,
+      "O": 20,
+      "p": 42,
+      "L": 125,
+      "LO": 15,
+      "A": 508,
+      "AB": 600,
+      "B": 508,
+      "BB": 610,
+      "C": 216,
+      "x": 58,
+      "AA": 100,
+      "K": 28,
+      "HA": 35,
+      "H": 315,
+      "AC": 481,
+      "HJ": 489,
+      "LB": 959,
+      "LJ": 139,
+      "J": 416,
+      "I": 217,
+      "II": 264,
+      "AD": 303,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600,
+        "N": 550,
+        "P": 660,
+        "T": 6,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 24,
+        "LA": 22,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600,
+        "N": 550,
+        "P": 660,
+        "T": 6,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 24,
+        "LA": 22,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "FLSHRM",
+    "designation": "FLSHRM 315LTB",
+    "frameSize": 315,
+    "version": "interchangeable",
+    "dimensions": {
+      "D": 70,
+      "DPublished": "70m6",
+      "E": 140,
+      "F": 20,
+      "GD": 12,
+      "G": 62.5,
+      "O": 20,
+      "p": 42,
+      "L": 125,
+      "LO": 15,
+      "A": 508,
+      "AB": 600,
+      "B": 508,
+      "BB": 610,
+      "C": 216,
+      "x": 58,
+      "AA": 100,
+      "K": 28,
+      "HA": 35,
+      "H": 315,
+      "AC": 481,
+      "HJ": 489,
+      "LB": 959,
+      "LJ": 139,
+      "J": 416,
+      "I": 217,
+      "II": 264,
+      "AD": 303,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600,
+        "N": 550,
+        "P": 660,
+        "T": 6,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 24,
+        "LA": 22,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600,
+        "N": 550,
+        "P": 660,
+        "T": 6,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 24,
+        "LA": 22,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "FLSHRM",
+    "designation": "FLSHRM 315M",
+    "frameSize": 315,
+    "version": "interchangeable",
+    "dimensions": {
+      "D": 80,
+      "DPublished": "80m6",
+      "E": 170,
+      "F": 22,
+      "GD": 14,
+      "G": 71,
+      "p": 42,
+      "L": 140,
+      "LO": 15,
+      "A": 508,
+      "AB": 600,
+      "B": 457,
+      "BB": 610,
+      "C": 216,
+      "x": 58,
+      "AA": 100,
+      "K": 28,
+      "HA": 35,
+      "H": 315,
+      "AC": 600,
+      "HJ": 542,
+      "LB": 1177,
+      "LJ": 119,
+      "J": 416,
+      "I": 217,
+      "II": 264,
+      "AD": 343,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600,
+        "N": 550,
+        "P": 660,
+        "T": 6,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 24,
+        "LA": 22,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500,
+        "N": 450,
+        "P": 550,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 18,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "FLSHRM",
+    "designation": "FLSHRM 315MT",
+    "frameSize": 315,
+    "version": "interchangeable",
+    "dimensions": {
+      "D": 65,
+      "DPublished": "65m6",
+      "E": 140,
+      "F": 18,
+      "GD": 11,
+      "G": 58,
+      "O": 20,
+      "p": 42,
+      "L": 126,
+      "LO": 14,
+      "A": 508,
+      "AB": 600,
+      "B": 457,
+      "BB": 610,
+      "C": 216,
+      "x": 58,
+      "AA": 100,
+      "K": 28,
+      "HA": 35,
+      "H": 315,
+      "AC": 481,
+      "HJ": 489,
+      "LB": 959,
+      "LJ": 139,
+      "J": 416,
+      "I": 217,
+      "II": 264,
+      "AD": 303,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600,
+        "N": 550,
+        "P": 660,
+        "T": 6,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 24,
+        "LA": 22,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600,
+        "N": 550,
+        "P": 660,
+        "T": 6,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 24,
+        "LA": 22,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "FLSHRM",
+    "designation": "FLSHRM 315STA",
+    "frameSize": 315,
+    "version": "interchangeable",
+    "dimensions": {
+      "D": 65,
+      "DPublished": "65m6",
+      "E": 140,
+      "F": 18,
+      "GD": 11,
+      "G": 58,
+      "O": 20,
+      "p": 42,
+      "L": 126,
+      "LO": 14,
+      "A": 508,
+      "AB": 600,
+      "B": 406,
+      "BB": 610,
+      "C": 216,
+      "x": 58,
+      "AA": 100,
+      "K": 28,
+      "HA": 35,
+      "H": 315,
+      "AC": 481,
+      "HJ": 489,
+      "LB": 959,
+      "LJ": 139,
+      "J": 416,
+      "I": 217,
+      "II": 264,
+      "AD": 303,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600,
+        "N": 550,
+        "P": 660,
+        "T": 6,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 24,
+        "LA": 22,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600,
+        "N": 550,
+        "P": 660,
+        "T": 6,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 24,
+        "LA": 22,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "FLSHRM",
+    "designation": "FLSHRM 315STB",
+    "frameSize": 315,
+    "version": "interchangeable",
+    "dimensions": {
+      "D": 80,
+      "DPublished": "80m6",
+      "E": 170,
+      "F": 22,
+      "GD": 14,
+      "G": 71,
+      "p": 42,
+      "L": 140,
+      "LO": 15,
+      "A": 508,
+      "AB": 600,
+      "B": 406,
+      "BB": 610,
+      "C": 216,
+      "x": 58,
+      "AA": 100,
+      "K": 28,
+      "HA": 35,
+      "H": 315,
+      "AC": 481,
+      "HJ": 489,
+      "LB": 959,
+      "LJ": 139,
+      "J": 416,
+      "I": 217,
+      "II": 264,
+      "AD": 303,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600,
+        "N": 550,
+        "P": 660,
+        "T": 6,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 24,
+        "LA": 22,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600,
+        "N": 550,
+        "P": 660,
+        "T": 6,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 24,
+        "LA": 22,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "FLSHRM",
+    "designation": "FLSHRM 355LTA",
+    "frameSize": 355,
+    "version": "interchangeable",
+    "dimensions": {
+      "D": 80,
+      "DPublished": "80m6",
+      "E": 170,
+      "F": 22,
+      "GD": 14,
+      "G": 71,
+      "p": 42,
+      "L": 140,
+      "LO": 15,
+      "A": 610,
+      "AB": 710,
+      "B": 630,
+      "BB": 756,
+      "C": 254,
+      "x": 76,
+      "AA": 100,
+      "K": 28,
+      "HA": 35,
+      "H": 355,
+      "AC": 600,
+      "HJ": 542,
+      "LB": 1177,
+      "LJ": 119,
+      "J": 416,
+      "I": 217,
+      "II": 349,
+      "AD": 343,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF740",
+        "orderCode": null,
+        "M": 740,
+        "N": 680,
+        "P": 800,
+        "T": 6,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 24,
+        "LA": 25,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF740",
+        "orderCode": null,
+        "M": 740,
+        "N": 680,
+        "P": 800,
+        "T": 6,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 24,
+        "LA": 25,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "FLSHRM",
+    "designation": "FLSHRM 355LTC",
+    "frameSize": 355,
+    "version": "interchangeable",
+    "dimensions": {
+      "D": 80,
+      "DPublished": "80m6",
+      "E": 170,
+      "F": 22,
+      "GD": 14,
+      "G": 71,
+      "p": 42,
+      "L": 140,
+      "LO": 15,
+      "A": 610,
+      "AB": 710,
+      "B": 630,
+      "BB": 756,
+      "C": 254,
+      "x": 76,
+      "AA": 100,
+      "K": 28,
+      "HA": 35,
+      "H": 355,
+      "AC": 600,
+      "HJ": 542,
+      "LB": 1177,
+      "LJ": 119,
+      "J": 416,
+      "I": 217,
+      "II": 349,
+      "AD": 343,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF740",
+        "orderCode": null,
+        "M": 740,
+        "N": 680,
+        "P": 800,
+        "T": 6,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 24,
+        "LA": 25,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF740",
+        "orderCode": null,
+        "M": 740,
+        "N": 680,
+        "P": 800,
+        "T": 6,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 24,
+        "LA": 25,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "LSHRM",
+    "designation": "LSHRM 132MU1",
+    "frameSize": 132,
+    "version": "compacte",
+    "dimensions": {
+      "D": 42,
+      "DPublished": "42k6",
+      "E": 110,
+      "F": 12,
+      "GD": 8,
+      "G": 37,
+      "O": 16,
+      "p": 36,
+      "L": 100,
+      "LO": 6,
+      "A": 216,
+      "AB": 250,
+      "B": 178,
+      "BB": 208,
+      "C": 129,
+      "x": 15,
+      "AA": 50,
+      "K": 12,
+      "HA": 15,
+      "H": 132,
+      "AC": 272,
+      "HJ": 209,
+      "LB": 452,
+      "LJ": 63,
+      "J": 194,
+      "I": 79,
+      "II": 79,
+      "AD": 140,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF265",
+        "orderCode": null,
+        "M": 265,
+        "N": 230,
+        "P": 300,
+        "T": 4,
+        "holes": 4,
+        "alphaDeg": 45,
+        "S": 14.5,
+        "LA": 14,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF265",
+        "orderCode": null,
+        "M": 265,
+        "N": 230,
+        "P": 300,
+        "T": 4,
+        "holes": 4,
+        "alphaDeg": 45,
+        "S": 14.5,
+        "LA": 14,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "LSHRM",
+    "designation": "LSHRM 132MU3",
+    "frameSize": 132,
+    "version": "compacte",
+    "dimensions": {
+      "D": 42,
+      "DPublished": "42k6",
+      "E": 110,
+      "F": 12,
+      "GD": 8,
+      "G": 37,
+      "O": 16,
+      "p": 36,
+      "L": 100,
+      "LO": 6,
+      "A": 216,
+      "AB": 250,
+      "B": 178,
+      "BB": 208,
+      "C": 129,
+      "x": 15,
+      "AA": 50,
+      "K": 12,
+      "HA": 15,
+      "H": 132,
+      "AC": 272,
+      "HJ": 270,
+      "LB": 452,
+      "LJ": 29.5,
+      "J": 231,
+      "I": 119,
+      "II": 141,
+      "AD": 140,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF265",
+        "orderCode": null,
+        "M": 265,
+        "N": 230,
+        "P": 300,
+        "T": 4,
+        "holes": 4,
+        "alphaDeg": 45,
+        "S": 14.5,
+        "LA": 14,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF265",
+        "orderCode": null,
+        "M": 265,
+        "N": 230,
+        "P": 300,
+        "T": 4,
+        "holes": 4,
+        "alphaDeg": 45,
+        "S": 14.5,
+        "LA": 14,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "LSHRM",
+    "designation": "LSHRM 160LR1",
+    "frameSize": 160,
+    "version": "interchangeable",
+    "dimensions": {
+      "D": 42,
+      "DPublished": "42k6",
+      "E": 110,
+      "F": 12,
+      "GD": 8,
+      "G": 37,
+      "O": 16,
+      "p": 36,
+      "L": 100,
+      "LO": 6,
+      "A": 254,
+      "AB": 294,
+      "B": 254,
+      "BB": 294,
+      "C": 108,
+      "x": 20,
+      "AA": 64,
+      "K": 14,
+      "HA": 25,
+      "H": 160,
+      "AC": 272,
+      "HJ": 223,
+      "LB": 495,
+      "LJ": 64,
+      "J": 194,
+      "I": 79,
+      "II": 79,
+      "AD": 156,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF300",
+        "orderCode": null,
+        "M": 300,
+        "N": 250,
+        "P": 350,
+        "T": 5,
+        "holes": 4,
+        "alphaDeg": 45,
+        "S": 18.5,
+        "LA": 15.5,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF300",
+        "orderCode": null,
+        "M": 300,
+        "N": 250,
+        "P": 350,
+        "T": 5,
+        "holes": 4,
+        "alphaDeg": 45,
+        "S": 18.5,
+        "LA": 15,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "LSHRM",
+    "designation": "LSHRM 160LR3",
+    "frameSize": 160,
+    "version": "compacte",
+    "dimensions": {
+      "D": 42,
+      "DPublished": "42k6",
+      "E": 110,
+      "F": 12,
+      "GD": 8,
+      "G": 37,
+      "O": 16,
+      "p": 36,
+      "L": 100,
+      "LO": 6,
+      "A": 254,
+      "AB": 294,
+      "B": 254,
+      "BB": 294,
+      "C": 108,
+      "x": 20,
+      "AA": 64,
+      "K": 14,
+      "HA": 25,
+      "H": 160,
+      "AC": 272,
+      "HJ": 270,
+      "LB": 495,
+      "LJ": 30.5,
+      "J": 231,
+      "I": 119,
+      "II": 141,
+      "AD": 156,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF300",
+        "orderCode": null,
+        "M": 300,
+        "N": 250,
+        "P": 350,
+        "T": 5,
+        "holes": 4,
+        "alphaDeg": 45,
+        "S": 18.5,
+        "LA": 15.5,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF300",
+        "orderCode": null,
+        "M": 300,
+        "N": 250,
+        "P": 350,
+        "T": 5,
+        "holes": 4,
+        "alphaDeg": 45,
+        "S": 18.5,
+        "LA": 15,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "LSHRM",
+    "designation": "LSHRM 160MR1",
+    "frameSize": 160,
+    "version": "interchangeable",
+    "dimensions": {
+      "D": 42,
+      "DPublished": "42k6",
+      "E": 110,
+      "F": 12,
+      "GD": 8,
+      "G": 37,
+      "O": 16,
+      "p": 36,
+      "L": 100,
+      "LO": 6,
+      "A": 254,
+      "AB": 294,
+      "B": 210,
+      "BB": 294,
+      "C": 108,
+      "x": 20,
+      "AA": 64,
+      "K": 14,
+      "HA": 25,
+      "H": 160,
+      "AC": 272,
+      "HJ": 223,
+      "LB": 495,
+      "LJ": 64,
+      "J": 194,
+      "I": 79,
+      "II": 79,
+      "AD": 156,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF300",
+        "orderCode": null,
+        "M": 300,
+        "N": 250,
+        "P": 350,
+        "T": 5,
+        "holes": 4,
+        "alphaDeg": 45,
+        "S": 18.5,
+        "LA": 15.5,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF300",
+        "orderCode": null,
+        "M": 300,
+        "N": 250,
+        "P": 350,
+        "T": 5,
+        "holes": 4,
+        "alphaDeg": 45,
+        "S": 18.5,
+        "LA": 15,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "LSHRM",
+    "designation": "LSHRM 180L1",
+    "frameSize": 180,
+    "version": "interchangeable",
+    "dimensions": {
+      "D": 48,
+      "DPublished": "48k6",
+      "E": 110,
+      "F": 14,
+      "GD": 9,
+      "G": 42.5,
+      "O": 16,
+      "p": 36,
+      "L": 98,
+      "LO": 12,
+      "A": 279,
+      "AB": 339,
+      "B": 279,
+      "BB": 329,
+      "C": 121,
+      "x": 25,
+      "AA": 86,
+      "K": 14.5,
+      "HA": 25,
+      "H": 180,
+      "AC": 350,
+      "HJ": 290,
+      "LB": 552,
+      "LJ": 41,
+      "J": 231,
+      "I": 119,
+      "II": 141,
+      "AD": 225,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF300",
+        "orderCode": null,
+        "M": 300,
+        "N": 250,
+        "P": 350,
+        "T": 5,
+        "holes": 4,
+        "alphaDeg": 45,
+        "S": 18.5,
+        "LA": 15,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF300",
+        "orderCode": null,
+        "M": 300,
+        "N": 250,
+        "P": 350,
+        "T": 5,
+        "holes": 4,
+        "alphaDeg": 45,
+        "S": 18.5,
+        "LA": 15,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "LSHRM",
+    "designation": "LSHRM 180L1M",
+    "frameSize": 180,
+    "version": "compacte",
+    "dimensions": {
+      "D": 55,
+      "DPublished": "55m6",
+      "E": 110,
+      "F": 16,
+      "GD": 10,
+      "G": 49,
+      "O": 20,
+      "p": 42,
+      "L": 97,
+      "LO": 13,
+      "A": 279,
+      "AB": 339,
+      "B": 279,
+      "BB": 329,
+      "C": 121,
+      "x": 25,
+      "AA": 86,
+      "K": 14.5,
+      "HA": 25,
+      "H": 180,
+      "AC": 350,
+      "HJ": 290,
+      "LB": 552,
+      "LJ": 41,
+      "J": 231,
+      "I": 119,
+      "II": 141,
+      "AD": 225,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF300",
+        "orderCode": null,
+        "M": 300,
+        "N": 250,
+        "P": 350,
+        "T": 5,
+        "holes": 4,
+        "alphaDeg": 45,
+        "S": 18.5,
+        "LA": 15,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF300",
+        "orderCode": null,
+        "M": 300,
+        "N": 250,
+        "P": 350,
+        "T": 5,
+        "holes": 4,
+        "alphaDeg": 45,
+        "S": 18.5,
+        "LA": 15,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "LSHRM",
+    "designation": "LSHRM 180M1",
+    "frameSize": 180,
+    "version": "interchangeable",
+    "dimensions": {
+      "D": 48,
+      "DPublished": "48k6",
+      "E": 110,
+      "F": 14,
+      "GD": 9,
+      "G": 42.5,
+      "O": 16,
+      "p": 36,
+      "L": 98,
+      "LO": 12,
+      "A": 279,
+      "AB": 339,
+      "B": 241,
+      "BB": 291,
+      "C": 121,
+      "x": 25,
+      "AA": 86,
+      "K": 14.5,
+      "HA": 25,
+      "H": 180,
+      "AC": 350,
+      "HJ": 290,
+      "LB": 552,
+      "LJ": 41,
+      "J": 231,
+      "I": 119,
+      "II": 141,
+      "AD": 225,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF300",
+        "orderCode": null,
+        "M": 300,
+        "N": 250,
+        "P": 350,
+        "T": 5,
+        "holes": 4,
+        "alphaDeg": 45,
+        "S": 18.5,
+        "LA": 15,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF300",
+        "orderCode": null,
+        "M": 300,
+        "N": 250,
+        "P": 350,
+        "T": 5,
+        "holes": 4,
+        "alphaDeg": 45,
+        "S": 18.5,
+        "LA": 15,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "LSHRM",
+    "designation": "LSHRM 200LQ1",
+    "frameSize": 200,
+    "version": "interchangeable",
+    "dimensions": {
+      "D": 55,
+      "DPublished": "55m6",
+      "E": 110,
+      "F": 16,
+      "GD": 10,
+      "G": 49,
+      "O": 20,
+      "p": 42,
+      "L": 97,
+      "LO": 13,
+      "A": 318,
+      "AB": 378,
+      "B": 305,
+      "BB": 365,
+      "C": 133,
+      "x": 30,
+      "AA": 108,
+      "K": 18.5,
+      "HA": 30,
+      "H": 200,
+      "AC": 350,
+      "HJ": 290,
+      "LB": 558,
+      "LJ": 47,
+      "J": 231,
+      "I": 119,
+      "II": 141,
+      "AD": 225,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF350",
+        "orderCode": null,
+        "M": 350,
+        "N": 300,
+        "P": 400,
+        "T": 5,
+        "holes": 4,
+        "alphaDeg": 45,
+        "S": 18.5,
+        "LA": 15,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF350",
+        "orderCode": null,
+        "M": 350,
+        "N": 300,
+        "P": 400,
+        "T": 5,
+        "holes": 4,
+        "alphaDeg": 45,
+        "S": 18.5,
+        "LA": 15,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "LSHRM",
+    "designation": "LSHRM 200LR1",
+    "frameSize": 200,
+    "version": "compacte",
+    "dimensions": {
+      "D": 55,
+      "DPublished": "55m6",
+      "E": 110,
+      "F": 16,
+      "GD": 10,
+      "G": 49,
+      "O": 20,
+      "p": 42,
+      "L": 97,
+      "LO": 13,
+      "A": 318,
+      "AB": 378,
+      "B": 305,
+      "BB": 365,
+      "C": 133,
+      "x": 30,
+      "AA": 108,
+      "K": 18.5,
+      "HA": 30,
+      "H": 200,
+      "AC": 350,
+      "HJ": 290,
+      "LB": 620,
+      "LJ": 47,
+      "J": 231,
+      "I": 119,
+      "II": 141,
+      "AD": 225,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF350",
+        "orderCode": null,
+        "M": 350,
+        "N": 300,
+        "P": 400,
+        "T": 5,
+        "holes": 4,
+        "alphaDeg": 45,
+        "S": 18.5,
+        "LA": 15,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF350",
+        "orderCode": null,
+        "M": 350,
+        "N": 300,
+        "P": 400,
+        "T": 5,
+        "holes": 4,
+        "alphaDeg": 45,
+        "S": 18.5,
+        "LA": 15,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "LSHRM",
+    "designation": "LSHRM 225MG",
+    "frameSize": 225,
+    "version": "interchangeable",
+    "dimensions": {
+      "D": 60,
+      "DPublished": "60m6",
+      "E": 140,
+      "F": 18,
+      "GD": 11,
+      "G": 53,
+      "O": 20,
+      "p": 42,
+      "L": 126,
+      "LO": 14,
+      "A": 356,
+      "AB": 420,
+      "B": 311,
+      "BB": 375,
+      "C": 149,
+      "x": 30,
+      "AA": 65,
+      "K": 18.5,
+      "HA": 33,
+      "H": 225,
+      "AC": 479,
+      "HJ": 405,
+      "LB": 810,
+      "LJ": 68,
+      "J": 292,
+      "I": 151,
+      "II": 181,
+      "AD": 283,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF400",
+        "orderCode": null,
+        "M": 400,
+        "N": 350,
+        "P": 450,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 16,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF400",
+        "orderCode": null,
+        "M": 400,
+        "N": 350,
+        "P": 450,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 22,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "LSHRM",
+    "designation": "LSHRM 225MG1M",
+    "frameSize": 225,
+    "version": "compacte",
+    "dimensions": {
+      "D": 65,
+      "DPublished": "65m6",
+      "E": 140,
+      "F": 18,
+      "GD": 11,
+      "G": 58,
+      "O": 20,
+      "p": 42,
+      "L": 126,
+      "LO": 14,
+      "A": 356,
+      "AB": 420,
+      "B": 311,
+      "BB": 375,
+      "C": 149,
+      "x": 30,
+      "AA": 65,
+      "K": 18.5,
+      "HA": 33,
+      "H": 225,
+      "AC": 479,
+      "HJ": 494,
+      "LB": 810,
+      "LJ": 4,
+      "J": 420,
+      "I": 180,
+      "II": 235,
+      "AD": 283,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF400",
+        "orderCode": null,
+        "M": 400,
+        "N": 350,
+        "P": 450,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 16,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF400",
+        "orderCode": null,
+        "M": 400,
+        "N": 350,
+        "P": 450,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 22,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "LSHRM",
+    "designation": "LSHRM 225MY1",
+    "frameSize": 225,
+    "version": "interchangeable",
+    "dimensions": {
+      "D": 55,
+      "DPublished": "55m6",
+      "E": 110,
+      "F": 16,
+      "GD": 10,
+      "G": 49,
+      "O": 20,
+      "p": 42,
+      "L": 97,
+      "LO": 13,
+      "A": 356,
+      "AB": 431,
+      "B": 311,
+      "BB": 386,
+      "C": 149,
+      "x": 50,
+      "AA": 127,
+      "K": 18.5,
+      "HA": 36,
+      "H": 225,
+      "AC": 350,
+      "HJ": 290,
+      "LB": 615,
+      "LJ": 77.5,
+      "J": 231,
+      "I": 119,
+      "II": 141,
+      "AD": 225,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF400",
+        "orderCode": null,
+        "M": 400,
+        "N": 350,
+        "P": 450,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 22,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF400",
+        "orderCode": null,
+        "M": 400,
+        "N": 350,
+        "P": 450,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 22,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "LSHRM",
+    "designation": "LSHRM 225SG1",
+    "frameSize": 225,
+    "version": "compacte",
+    "dimensions": {
+      "D": 55,
+      "DPublished": "55m6",
+      "E": 110,
+      "F": 16,
+      "GD": 10,
+      "G": 49,
+      "O": 20,
+      "p": 42,
+      "L": 97,
+      "LO": 13,
+      "A": 356,
+      "AB": 420,
+      "B": 286,
+      "BB": 375,
+      "C": 149,
+      "x": 30,
+      "AA": 65,
+      "K": 18.5,
+      "HA": 33,
+      "H": 225,
+      "AC": 479,
+      "HJ": 494,
+      "LB": 810,
+      "LJ": 4,
+      "J": 420,
+      "I": 180,
+      "II": 235,
+      "AD": 283,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF400",
+        "orderCode": null,
+        "M": 400,
+        "N": 350,
+        "P": 450,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 16,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF400",
+        "orderCode": null,
+        "M": 400,
+        "N": 350,
+        "P": 450,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 22,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "LSHRM",
+    "designation": "LSHRM 225SZ1",
+    "frameSize": 225,
+    "version": "interchangeable",
+    "dimensions": {
+      "D": 60,
+      "DPublished": "60m6",
+      "E": 140,
+      "F": 18,
+      "GD": 11,
+      "G": 53,
+      "O": 20,
+      "p": 42,
+      "L": 126,
+      "LO": 14,
+      "A": 356,
+      "AB": 431,
+      "B": 286,
+      "BB": 386,
+      "C": 149,
+      "x": 50,
+      "AA": 127,
+      "K": 18.5,
+      "HA": 36,
+      "H": 225,
+      "AC": 350,
+      "HJ": 290,
+      "LB": 651,
+      "LJ": 77.5,
+      "J": 231,
+      "I": 119,
+      "II": 141,
+      "AD": 225,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF400",
+        "orderCode": null,
+        "M": 400,
+        "N": 350,
+        "P": 450,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 22,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF400",
+        "orderCode": null,
+        "M": 400,
+        "N": 350,
+        "P": 450,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 22,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "LSHRM",
+    "designation": "LSHRM 250ME",
+    "frameSize": 250,
+    "version": "interchangeable",
+    "dimensions": {
+      "D": 65,
+      "DPublished": "65m6",
+      "E": 140,
+      "F": 18,
+      "GD": 11,
+      "G": 58,
+      "O": 20,
+      "p": 42,
+      "L": 126,
+      "LO": 14,
+      "A": 406,
+      "AB": 470,
+      "B": 349,
+      "BB": 420,
+      "C": 168,
+      "x": 35,
+      "AA": 90,
+      "K": 24,
+      "HA": 35,
+      "H": 250,
+      "AC": 479,
+      "HJ": 405,
+      "LB": 810,
+      "LJ": 68,
+      "J": 292,
+      "I": 151,
+      "II": 181,
+      "AD": 283,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500,
+        "N": 450,
+        "P": 550,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 22,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500,
+        "N": 450,
+        "P": 550,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 18,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "LSHRM",
+    "designation": "LSHRM 250MF1",
+    "frameSize": 250,
+    "version": "compacte",
+    "dimensions": {
+      "D": 70,
+      "DPublished": "70m6",
+      "E": 140,
+      "F": 20,
+      "GD": 12,
+      "G": 62.5,
+      "O": 20,
+      "p": 42,
+      "L": 125,
+      "LO": 15,
+      "A": 406,
+      "AB": 470,
+      "B": 349,
+      "BB": 420,
+      "C": 168,
+      "x": 35,
+      "AA": 90,
+      "K": 24,
+      "HA": 35,
+      "H": 250,
+      "AC": 479,
+      "HJ": 494,
+      "LB": 870,
+      "LJ": 4,
+      "J": 420,
+      "I": 180,
+      "II": 235,
+      "AD": 283,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500,
+        "N": 450,
+        "P": 550,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 22,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500,
+        "N": 450,
+        "P": 550,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 18,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "LSHRM",
+    "designation": "LSHRM 250SF1",
+    "frameSize": 250,
+    "version": "compacte",
+    "dimensions": {
+      "D": 65,
+      "DPublished": "65m6",
+      "E": 140,
+      "F": 18,
+      "GD": 11,
+      "G": 58,
+      "O": 20,
+      "p": 42,
+      "L": 126,
+      "LO": 14,
+      "A": 406,
+      "AB": 470,
+      "B": 311,
+      "BB": 420,
+      "C": 168,
+      "x": 35,
+      "AA": 90,
+      "K": 24,
+      "HA": 35,
+      "H": 250,
+      "AC": 479,
+      "HJ": 494,
+      "LB": 870,
+      "LJ": 4,
+      "J": 420,
+      "I": 180,
+      "II": 235,
+      "AD": 283,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500,
+        "N": 450,
+        "P": 550,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 22,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500,
+        "N": 450,
+        "P": 550,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 18,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "LSHRM",
+    "designation": "LSHRM 250SF1S",
+    "frameSize": 250,
+    "version": "compacte",
+    "dimensions": {
+      "D": 55,
+      "DPublished": "55m6",
+      "E": 110,
+      "F": 16,
+      "GD": 10,
+      "G": 49,
+      "O": 20,
+      "p": 42,
+      "L": 97,
+      "LO": 13,
+      "A": 406,
+      "AB": 470,
+      "B": 311,
+      "BB": 420,
+      "C": 168,
+      "x": 35,
+      "AA": 90,
+      "K": 24,
+      "HA": 35,
+      "H": 250,
+      "AC": 479,
+      "HJ": 494,
+      "LB": 870,
+      "LJ": 4,
+      "J": 420,
+      "I": 180,
+      "II": 235,
+      "AD": 283,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500,
+        "N": 450,
+        "P": 550,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 22,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500,
+        "N": 450,
+        "P": 550,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 18,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "LSHRM",
+    "designation": "LSHRM 280MC",
+    "frameSize": 280,
+    "version": "interchangeable",
+    "dimensions": {
+      "D": 65,
+      "DPublished": "65m6",
+      "E": 140,
+      "F": 18,
+      "GD": 11,
+      "G": 58,
+      "O": 20,
+      "p": 42,
+      "L": 126,
+      "LO": 14,
+      "A": 457,
+      "AB": 520,
+      "B": 419,
+      "BB": 478,
+      "C": 190,
+      "x": 35,
+      "AA": 90,
+      "K": 24,
+      "HA": 35,
+      "H": 280,
+      "AC": 479,
+      "HJ": 405,
+      "LB": 810,
+      "LJ": 68,
+      "J": 292,
+      "I": 151,
+      "II": 181,
+      "AD": 283,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500,
+        "N": 450,
+        "P": 550,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 22,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500,
+        "N": 450,
+        "P": 550,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 18,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "LSHRM",
+    "designation": "LSHRM 280MD",
+    "frameSize": 280,
+    "version": "interchangeable",
+    "dimensions": {
+      "D": 75,
+      "DPublished": "75m6",
+      "E": 140,
+      "F": 20,
+      "GD": 12,
+      "G": 67.5,
+      "O": 20,
+      "p": 42,
+      "L": 125,
+      "LO": 15,
+      "A": 457,
+      "AB": 520,
+      "B": 419,
+      "BB": 478,
+      "C": 190,
+      "x": 35,
+      "AA": 90,
+      "K": 24,
+      "HA": 35,
+      "H": 280,
+      "AC": 479,
+      "HJ": 405,
+      "LB": 870,
+      "LJ": 68,
+      "J": 292,
+      "I": 151,
+      "II": 181,
+      "AD": 283,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500,
+        "N": 450,
+        "P": 550,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 22,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500,
+        "N": 450,
+        "P": 550,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 18,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "LSHRM",
+    "designation": "LSHRM 280MU",
+    "frameSize": 280,
+    "version": "compacte",
+    "dimensions": {
+      "D": 80,
+      "DPublished": "80m6",
+      "E": 170,
+      "F": 22,
+      "GD": 14,
+      "G": 71,
+      "p": 42,
+      "L": 140,
+      "LO": 15,
+      "A": 457,
+      "AB": 533,
+      "B": 419,
+      "BB": 495,
+      "C": 190,
+      "x": 40,
+      "AA": 85,
+      "K": 24,
+      "HA": 35,
+      "H": 280,
+      "AC": 586,
+      "HJ": 555,
+      "LB": 991,
+      "LJ": 34.5,
+      "J": 420,
+      "I": 180,
+      "II": 235,
+      "AD": 340,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500,
+        "N": 450,
+        "P": 550,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 18,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500,
+        "N": 450,
+        "P": 550,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 18,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "LSHRM",
+    "designation": "LSHRM 280MUS",
+    "frameSize": 280,
+    "version": "compacte",
+    "dimensions": {
+      "D": 65,
+      "DPublished": "65m6",
+      "E": 140,
+      "F": 18,
+      "GD": 11,
+      "G": 58,
+      "O": 20,
+      "p": 42,
+      "L": 126,
+      "LO": 14,
+      "A": 457,
+      "AB": 533,
+      "B": 419,
+      "BB": 495,
+      "C": 190,
+      "x": 40,
+      "AA": 85,
+      "K": 24,
+      "HA": 35,
+      "H": 280,
+      "AC": 586,
+      "HJ": 555,
+      "LB": 991,
+      "LJ": 34.5,
+      "J": 420,
+      "I": 180,
+      "II": 235,
+      "AD": 340,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500,
+        "N": 450,
+        "P": 550,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 18,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500,
+        "N": 450,
+        "P": 550,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 18,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "LSHRM",
+    "designation": "LSHRM 280SC",
+    "frameSize": 280,
+    "version": "interchangeable",
+    "dimensions": {
+      "D": 65,
+      "DPublished": "65m6",
+      "E": 140,
+      "F": 18,
+      "GD": 11,
+      "G": 58,
+      "O": 20,
+      "p": 42,
+      "L": 126,
+      "LO": 14,
+      "A": 457,
+      "AB": 520,
+      "B": 368,
+      "BB": 478,
+      "C": 190,
+      "x": 35,
+      "AA": 90,
+      "K": 24,
+      "HA": 35,
+      "H": 280,
+      "AC": 479,
+      "HJ": 405,
+      "LB": 810,
+      "LJ": 68,
+      "J": 292,
+      "I": 151,
+      "II": 181,
+      "AD": 283,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500,
+        "N": 450,
+        "P": 550,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 22,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500,
+        "N": 450,
+        "P": 550,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 18,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "LSHRM",
+    "designation": "LSHRM 280SD",
+    "frameSize": 280,
+    "version": "interchangeable",
+    "dimensions": {
+      "D": 75,
+      "DPublished": "75m6",
+      "E": 140,
+      "F": 20,
+      "GD": 12,
+      "G": 67.5,
+      "O": 20,
+      "p": 42,
+      "L": 125,
+      "LO": 15,
+      "A": 457,
+      "AB": 520,
+      "B": 368,
+      "BB": 478,
+      "C": 190,
+      "x": 35,
+      "AA": 90,
+      "K": 24,
+      "HA": 35,
+      "H": 280,
+      "AC": 479,
+      "HJ": 405,
+      "LB": 870,
+      "LJ": 68,
+      "J": 292,
+      "I": 151,
+      "II": 181,
+      "AD": 283,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500,
+        "N": 450,
+        "P": 550,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 22,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF500",
+        "orderCode": null,
+        "M": 500,
+        "N": 450,
+        "P": 550,
+        "T": 5,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 18.5,
+        "LA": 18,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "LSHRM",
+    "designation": "LSHRM 315MN1",
+    "frameSize": 315,
+    "version": "interchangeable",
+    "dimensions": {
+      "D": 65,
+      "DPublished": "65m6",
+      "E": 140,
+      "F": 18,
+      "GD": 11,
+      "G": 58,
+      "O": 20,
+      "p": 42,
+      "L": 126,
+      "LO": 14,
+      "A": 508,
+      "AB": 594,
+      "B": 457,
+      "BB": 537,
+      "C": 216,
+      "x": 40,
+      "AA": 140,
+      "K": 28,
+      "HA": 50,
+      "H": 315,
+      "AC": 479,
+      "HJ": 494,
+      "LB": 870,
+      "LJ": 4,
+      "J": 420,
+      "I": 180,
+      "II": 235,
+      "AD": 283,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600,
+        "N": 550,
+        "P": 660,
+        "T": 6,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 24,
+        "LA": 22,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600,
+        "N": 550,
+        "P": 660,
+        "T": 6,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 24,
+        "LA": 22,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "LSHRM",
+    "designation": "LSHRM 315MP",
+    "frameSize": 315,
+    "version": "compacte",
+    "dimensions": {
+      "D": 80,
+      "DPublished": "80m6",
+      "E": 170,
+      "F": 22,
+      "GD": 14,
+      "G": 71,
+      "p": 42,
+      "L": 140,
+      "LO": 15,
+      "A": 508,
+      "AB": 594,
+      "B": 457,
+      "BB": 537,
+      "C": 216,
+      "x": 40,
+      "AA": 114,
+      "K": 28,
+      "HA": 70,
+      "H": 315,
+      "AC": 586,
+      "HJ": 555,
+      "LB": 947,
+      "LJ": 60.5,
+      "J": 420,
+      "I": 180,
+      "II": 235,
+      "AD": 340,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600,
+        "N": 550,
+        "P": 660,
+        "T": 6,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 24,
+        "LA": 22,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600,
+        "N": 550,
+        "P": 660,
+        "T": 6,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 24,
+        "LA": 22,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "LSHRM",
+    "designation": "LSHRM 315MR",
+    "frameSize": 315,
+    "version": "compacte",
+    "dimensions": {
+      "D": 80,
+      "DPublished": "80m6",
+      "E": 170,
+      "F": 22,
+      "GD": 14,
+      "G": 71,
+      "p": 42,
+      "L": 140,
+      "LO": 15,
+      "A": 508,
+      "AB": 594,
+      "B": 457,
+      "BB": 537,
+      "C": 216,
+      "x": 40,
+      "AA": 114,
+      "K": 28,
+      "HA": 70,
+      "H": 315,
+      "AC": 586,
+      "HJ": 555,
+      "LB": 1017,
+      "LJ": 60.5,
+      "J": 420,
+      "I": 180,
+      "II": 235,
+      "AD": 340,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600,
+        "N": 550,
+        "P": 660,
+        "T": 6,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 24,
+        "LA": 22,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600,
+        "N": 550,
+        "P": 660,
+        "T": 6,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 24,
+        "LA": 22,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "LSHRM",
+    "designation": "LSHRM 315MRS",
+    "frameSize": 315,
+    "version": "compacte",
+    "dimensions": {
+      "D": 65,
+      "DPublished": "65m6",
+      "E": 140,
+      "F": 18,
+      "GD": 11,
+      "G": 58,
+      "O": 20,
+      "p": 42,
+      "L": 126,
+      "LO": 14,
+      "A": 508,
+      "AB": 594,
+      "B": 457,
+      "BB": 537,
+      "C": 216,
+      "x": 40,
+      "AA": 114,
+      "K": 28,
+      "HA": 70,
+      "H": 315,
+      "AC": 586,
+      "HJ": 555,
+      "LB": 1017,
+      "LJ": 60.5,
+      "J": 420,
+      "I": 180,
+      "II": 235,
+      "AD": 340,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600,
+        "N": 550,
+        "P": 660,
+        "T": 6,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 24,
+        "LA": 22,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600,
+        "N": 550,
+        "P": 660,
+        "T": 6,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 24,
+        "LA": 22,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "LSHRM",
+    "designation": "LSHRM 315SN1",
+    "frameSize": 315,
+    "version": "interchangeable",
+    "dimensions": {
+      "D": 80,
+      "DPublished": "80m6",
+      "E": 170,
+      "F": 22,
+      "GD": 14,
+      "G": 71,
+      "p": 42,
+      "L": 140,
+      "LO": 15,
+      "O": 20,
+      "A": 508,
+      "AB": 594,
+      "B": 406,
+      "BB": 537,
+      "C": 216,
+      "x": 40,
+      "AA": 140,
+      "K": 28,
+      "HA": 50,
+      "H": 315,
+      "AC": 479,
+      "HJ": 494,
+      "LB": 870,
+      "LJ": 4,
+      "J": 420,
+      "I": 180,
+      "II": 235,
+      "AD": 283,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B5",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600,
+        "N": 550,
+        "P": 660,
+        "T": 6,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 24,
+        "LA": 22,
+        "boreType": "through"
+      },
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF600",
+        "orderCode": null,
+        "M": 600,
+        "N": 550,
+        "P": 660,
+        "T": 6,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 24,
+        "LA": 22,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-table"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
+    "series": "PLSHRM",
+    "designation": "PLSHRM 315LD",
+    "frameSize": 315,
+    "version": "compacte",
+    "dimensions": {
+      "D": 80,
+      "DPublished": "80m6",
+      "E": 170,
+      "F": 22,
+      "GD": 14,
+      "G": 71,
+      "p": 42,
+      "L": 140,
+      "LO": 15,
+      "A": 508,
+      "AB": 608,
+      "B": 508,
+      "BB": 588,
+      "C": 216,
+      "x": 40,
+      "AA": 100,
+      "K": 28,
+      "HA": 26,
+      "H": 315,
+      "AC": 680,
+      "HJ": 550,
+      "LB": 1084,
+      "LJ": 241,
+      "J": 420,
+      "I": 180,
+      "II": 391,
+      "AD": 340,
+      "AD1": 45
+    },
+    "flanges": [
+      {
+        "mounting": "B35",
+        "role": "standard",
+        "designation": "FF740",
+        "orderCode": null,
+        "M": 740,
+        "N": 680,
+        "P": 800,
+        "T": 6,
+        "holes": 8,
+        "alphaDeg": 22.5,
+        "S": 24,
+        "LA": 25,
+        "boreType": "through"
+      }
+    ],
+    "provenance": {
+      "catalog": "LSHRM_Leroy-Somer.pdf",
+      "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "catalogEdition": "5729 fr - 2020.03 / a",
+      "sources": [
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 50,
+          "catalogPage": "50",
+          "extractionMethod": "pdfplumber-two-column-shaft-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 51,
+          "catalogPage": "51",
+          "extractionMethod": "pdfplumber-b3-table"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 52,
+          "catalogPage": "52",
+          "extractionMethod": "pdfplumber-b35-symbol-plus-b5-spec"
+        },
+        {
+          "catalog": "LSHRM_Leroy-Somer.pdf",
+          "catalogSha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+          "pdfPage": 53,
+          "catalogPage": "53",
+          "extractionMethod": "pdfplumber-b5-flange-spec"
+        }
+      ]
+    }
+  }
+]
