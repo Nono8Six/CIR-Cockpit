@@ -351,8 +351,8 @@ règle pattes est le verdict correct.
 
 #### Checkpoint pré-activation C2c — 28/07/2026
 
-- [x] Candidat `4ee230e7-47b0-4637-90b2-3c76b1607a73` toujours
-  `ready/passed`, non actif ; C2b reste l'unique actif.
+- [x] Candidat `4ee230e7-47b0-4637-90b2-3c76b1607a73` contrôlé
+  `ready/passed`, avec zéro anomalie bloquante avant activation.
 - [x] Migration corrective appliquée via MCP, historique distant restitué dans
   `backend/migrations/`.
 - [x] `repo:check`, `deno check`, 6 tests d'extraction, `qa:back` et `qa:fast`
@@ -361,8 +361,14 @@ règle pattes est le verdict correct.
   hors diff C2c (`useDashboardStatusHelpers.ts`, branches 13,33 % pour 30 %).
   Les 155 fichiers / 706 tests frontend ont néanmoins réussi.
 - [x] Autorisation PO reçue le 28/07/2026 pour réparer puis activer C2c.
-- [ ] Commit et push du checkpoint sur `main`.
-- [ ] Activation distante et probes post-activation.
+- [x] Commit `743e29b` poussé sur `main` avant activation.
+- [x] Activation distante via `configurator.activate_snapshot` ; empreinte du
+  diff `6c05338ff50e6acc223aeb83f9bb6baefea89b867cb33fe23ae38e7d29f65876`.
+- [x] Probes post-activation : un seul actif, 41 759 dimensions, 0 anomalie
+  bloquante, A sans K = 0, A sans H = 0, cinq fixtures Bonfiglioli exactes.
+- [x] Preuve RLS transactionnelle avec rollback : `anon` refusé ; `tcs`,
+  `agency_admin` et `super_admin` lisent l'actif et ses 41 759 dimensions ;
+  aucune fixture persistée.
 
 ### Rapatriement de `tools/extract`
 
@@ -395,8 +401,8 @@ Le plan de reprise détaillé, découpé par checkpoints, est
 
 ## Tranches suivantes
 
-- [ ] C2c — Correctif d’extraction K/K' et H/HA/Y Innomotics validé ; activation
-  distante autorisée et en attente du checkpoint pré-activation poussé.
+- [x] C2c — Correctif d’extraction K/K' et H/HA/Y Innomotics activé et prouvé
+  le 28/07/2026. C3-4 peut désormais démarrer sur le snapshot corrigé.
 - [ ] C3 — Compatibilité technique backend Deno/tRPC, incluant l’ancien C4.
 - [ ] C4 — Absorbée par C3, aucune tranche indépendante.
 - [ ] C5 — Socle frontend.
@@ -447,3 +453,4 @@ Le plan de reprise détaillé, découpé par checkpoints, est
 | 28/07/2026 | Chargeur | Cause transverse JSONB corrigée : Postgres.js reçoit désormais `sql.json(...)` pour les compteurs et les contextes, au lieu d'une chaîne issue de `JSON.stringify`. | `scripts/configurator-c2-load.ts` |
 | 28/07/2026 | C2c | Réparation distante appliquée via MCP : 169 dates de provenance restaurées, 6 compteurs et 2 112 contextes convertis en objets JSONB ; trois contraintes validées empêchent la récidive. | `20260728045157_configurator_c2c_provenance_and_jsonb_invariants` |
 | 28/07/2026 | QA | `qa:back` et `qa:fast` verts ; `pnpm run qa` atteint 155/155 fichiers et 706/706 tests frontend puis échoue sur la couverture d'un fichier frontend absent du diff C2c. | `useDashboardStatusHelpers.ts` : branches 13,33 % / seuil 30 % |
+| 28/07/2026 | C2c | Checkpoint pré-activation poussé sur `main`, puis candidat activé via MCP. Un seul actif, 41 759 dimensions, 1 012 modèles Innomotics avec K et H, 169 provenances intactes, RLS prouvée sous quatre rôles avec rollback. | commit `743e29b`, diff `6c05338f…`, snapshot `4ee230e7-…` — **GO C3-4 données** |

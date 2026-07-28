@@ -313,11 +313,11 @@ Checkpoint C2b-A vert.
 
 ### Checkpoint C3-4
 
-`BLOQUANT` : la tranche corrective C2c doit être activée avant d’écrire ces
-tests. Sur le snapshot C2b, K est absent pour 1 012 modèles et H pour 355, tous
-Innomotics, par défaut d’extraction et non par absence de publication. Écrire
-les tests avant C2c reviendrait à figer `indeterminate` comme verdict nominal.
-Voir `plan-execution.md`, « Gate corrective C2c ».
+`LEVE LE 28/07/2026` : la tranche corrective C2c est active. K et H sont
+publiés pour les 1 012 modèles Innomotics concernés ; tous domaines confondus,
+les 1 527 modèles portant A portent aussi K et H. Les tests C3-4 doivent cibler
+le snapshot actif `4ee230e7-47b0-4637-90b2-3c76b1607a73`. Voir
+`plan-execution.md`, « Gate corrective C2c ».
 
 Tests obligatoires :
 
@@ -424,7 +424,7 @@ Procédures authentifiées, en query, avec validation entrée/sortie :
 
 GO uniquement si :
 
-- le snapshot C2b corrigé est actif ;
+- le snapshot C2c corrigé est actif ;
 - les sept procédures répondent sur le runtime distant ;
 - toutes les routes sont read-only ;
 - les quatre statuts et leurs preuves sont présents ;
@@ -436,7 +436,7 @@ GO uniquement si :
 
 Ne pas déclarer C3/C4 terminé si l’un des éléments suivants subsiste :
 
-- activation C2b non validée ;
+- snapshot C2c non actif ou probes mécaniques exécutées sur un snapshot retiré ;
 - utilisation de l’ancien snapshot pour les probes ;
 - tolérance fixe arbitraire sur A/B ;
 - H, D, F, bride, puissance, pôles ou fréquence compensés par un score ;
