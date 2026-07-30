@@ -23,7 +23,7 @@ const parseReassignEntityResponse = (payload: unknown): ReassignEntityResponse =
   if (!parsed.success) {
     throw createAppError({
       code: 'REQUEST_FAILED',
-      message: 'Reponse serveur invalide.',
+      message: 'Réponse serveur invalide.',
       source: 'edge',
       details: parsed.error.message
     });
@@ -42,5 +42,5 @@ export const reassignEntity = (
         target_agency_id: payload.target_agency_id
       }, options),
     parseReassignEntityResponse,
-    "Impossible de reassigner l'entite."
+    "Impossible de réassigner l'entité."
   );

@@ -13,9 +13,9 @@ export type OnboardingMode = 'create' | 'convert';
 export type OnboardingSourceLabel =
   | 'Annuaire'
   | 'Cockpit'
-  | 'Edition client'
+  | 'Édition client'
   | 'Fiche prospect'
-  | 'Creation'
+  | 'Création'
   | 'Conversion';
 export type AccountType = z.infer<typeof accountTypeSchema>;
 export type EntityOnboardingSeed = {

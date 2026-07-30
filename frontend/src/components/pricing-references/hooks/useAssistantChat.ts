@@ -123,7 +123,7 @@ export const useAssistantChat = (pageContext: AiAssistantPageContext) => {
       failedRequestRef.current = request;
       const appError = handleUiError(
         caughtError,
-        "Impossible d'obtenir une reponse de l'assistant IA.",
+        "Impossible d'obtenir une réponse de l'assistant IA.",
         { feature: "assistant.referentiels" },
       );
       const uiError = isSqlSemanticFailure(appError)

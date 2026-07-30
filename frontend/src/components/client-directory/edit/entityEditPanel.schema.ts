@@ -4,9 +4,9 @@ import { entityDepartmentCodeSchema } from '../../../../../shared/schemas/admin/
 
 const optionalEmailSchema = z.string().trim().email('Email invalide').optional().or(z.literal(''));
 const optionalTextSchema = z.string().optional();
-const clientNumberSchema = z.string().trim().regex(/^\d{1,10}$/, 'Numero client invalide');
+const clientNumberSchema = z.string().trim().regex(/^\d{1,10}$/, 'Numéro client invalide');
 const supplierCodeSchema = z.string().trim().regex(/^[A-Z0-9]{1,4}$/, 'Code fournisseur invalide');
-const supplierNumberSchema = z.string().trim().regex(/^\d{1,15}$/, 'Numero fournisseur invalide');
+const supplierNumberSchema = z.string().trim().regex(/^\d{1,15}$/, 'Numéro fournisseur invalide');
 const postalCodeSchema = z.string().trim().regex(/^\d{5}$/, 'Code postal invalide');
 
 export const entityEditFormSchema = z.strictObject({
@@ -43,13 +43,13 @@ export const entityEditFormSchema = z.strictObject({
 }).superRefine((values, ctx) => {
   if (values.mode === 'client') {
     if (!clientNumberSchema.safeParse(values.client_number).success) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Numero client invalide', path: ['client_number'] });
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Numéro client invalide', path: ['client_number'] });
     }
     if (!postalCodeSchema.safeParse(values.postal_code).success) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Code postal invalide', path: ['postal_code'] });
     }
     if (!entityDepartmentCodeSchema.safeParse(values.department).success) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Departement invalide', path: ['department'] });
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Département invalide', path: ['department'] });
     }
     if (!values.address?.trim()) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Adresse requise', path: ['address'] });
@@ -75,13 +75,13 @@ export const entityEditFormSchema = z.strictObject({
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Code fournisseur invalide', path: ['supplier_code'] });
     }
     if (values.supplier_number?.trim() && !supplierNumberSchema.safeParse(values.supplier_number).success) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Numero fournisseur invalide', path: ['supplier_number'] });
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Numéro fournisseur invalide', path: ['supplier_number'] });
     }
     if (values.postal_code?.trim() && !postalCodeSchema.safeParse(values.postal_code).success) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Code postal invalide', path: ['postal_code'] });
     }
     if (!values.primary_phone?.trim() && !values.primary_email?.trim()) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Telephone ou email requis', path: ['primary_phone'] });
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Téléphone ou email requis', path: ['primary_phone'] });
     }
   } else if (values.postal_code?.trim() && !postalCodeSchema.safeParse(values.postal_code).success) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Code postal invalide', path: ['postal_code'] });
@@ -89,13 +89,13 @@ export const entityEditFormSchema = z.strictObject({
 
   if (values.mode === 'client' && values.client_kind === 'individual') {
     if (!values.contact_first_name?.trim()) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Prenom requis', path: ['contact_first_name'] });
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Prénom requis', path: ['contact_first_name'] });
     }
     if (!values.contact_last_name?.trim()) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Nom requis', path: ['contact_last_name'] });
     }
     if (!values.contact_email?.trim() && !values.contact_phone?.trim()) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Telephone ou email requis', path: ['contact_phone'] });
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Téléphone ou email requis', path: ['contact_phone'] });
     }
   }
 });

@@ -19,7 +19,7 @@ const parseUpdateUserIdentityResponse = (payload: unknown): UpdateUserIdentityRe
   if (!parsed.success) {
     throw createAppError({
       code: 'EDGE_INVALID_RESPONSE',
-      message: 'Reponse serveur invalide.',
+      message: 'Réponse serveur invalide.',
       source: 'edge',
       details: parsed.error.message
     });
@@ -34,5 +34,5 @@ export const updateAdminUserIdentity = (payload: UpdateUserIdentityPayload) =>
       ...payload
       }, options),
     parseUpdateUserIdentityResponse,
-    "Impossible de mettre a jour l'identite de l'utilisateur."
+    "Impossible de mettre à jour l'identité de l'utilisateur."
   );

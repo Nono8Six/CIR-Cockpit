@@ -54,7 +54,7 @@ describe('AppSearchOverlay', () => {
   it('shows guidance message when query is empty', () => {
     render(<AppSearchOverlay {...baseProps} />);
 
-    expect(screen.getByTestId('app-search-status-live')).toHaveTextContent(/commencez a taper pour rechercher/i);
+    expect(screen.getByTestId('app-search-status-live')).toHaveTextContent(/commencez à taper pour rechercher/i);
   });
 
   it('treats a scope prefix without text as idle guidance', () => {
@@ -65,7 +65,7 @@ describe('AppSearchOverlay', () => {
       />
     );
 
-    expect(screen.getByTestId('app-search-status-live')).toHaveTextContent(/commencez a taper pour rechercher/i);
+    expect(screen.getByTestId('app-search-status-live')).toHaveTextContent(/commencez à taper pour rechercher/i);
   });
 
   it('selects a client with keyboard Enter', async () => {
@@ -106,7 +106,7 @@ describe('AppSearchOverlay', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: /reessayer/i }));
+    await user.click(screen.getByRole('button', { name: /réessayer/i }));
 
     await waitFor(() => {
       expect(handleUiError).toHaveBeenCalled();

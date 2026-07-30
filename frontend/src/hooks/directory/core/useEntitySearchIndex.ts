@@ -15,7 +15,7 @@ export const useEntitySearchIndex = (
     enabled
   });
 
-  useNotifyError(query.error, 'Impossible de charger la recherche des entites', 'useEntitySearchIndex');
+  useNotifyError(query.error, 'Impossible de charger la recherche des entités', 'useEntitySearchIndex');
 
   return query;
 };

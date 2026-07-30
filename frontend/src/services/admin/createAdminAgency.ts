@@ -12,7 +12,7 @@ const parseAdminAgencyResponse = (payload: unknown): AdminAgencyResponse => {
   if (!parsed.success) {
     throw createAppError({
       code: 'EDGE_INVALID_RESPONSE',
-      message: 'Reponse serveur invalide.',
+      message: 'Réponse serveur invalide.',
       source: 'edge',
       details: parsed.error.message
     });
@@ -27,5 +27,5 @@ export const createAdminAgency = (name: string) =>
       name
       }, options),
     parseAdminAgencyResponse,
-    "Impossible de creer l'agence."
+    "Impossible de créer l'agence."
   );

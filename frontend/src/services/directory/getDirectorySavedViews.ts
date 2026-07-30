@@ -13,7 +13,7 @@ const parseDirectorySavedViewsListResponse = (payload: unknown): DirectorySavedV
   if (!parsed.success) {
     throw createAppError({
       code: 'REQUEST_FAILED',
-      message: 'Reponse serveur invalide.',
+      message: 'Réponse serveur invalide.',
       source: 'edge',
       details: parsed.error.message
     });
@@ -28,5 +28,5 @@ export const getDirectorySavedViews = (
   invokeTrpc(
     (api, options) => api.directory['saved-views'].list.query(input, options),
     parseDirectorySavedViewsListResponse,
-    'Impossible de charger les vues sauvegardees.'
+    'Impossible de charger les vues sauvegardées.'
   );

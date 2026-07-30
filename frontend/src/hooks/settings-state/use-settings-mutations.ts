@@ -34,7 +34,7 @@ export const useSettingsMutations = (agencyId: string | null) => {
       ]);
     },
     onError: (error) => {
-      handleUiError(error, 'Impossible de sauvegarder les referentiels.', {
+      handleUiError(error, 'Impossible de sauvegarder les référentiels.', {
         source: 'useSettingsState.saveReferences'
       });
     }
@@ -59,7 +59,7 @@ export const useSettingsMutations = (agencyId: string | null) => {
       ]);
     },
     onError: (error) => {
-      handleUiError(error, 'Impossible de mettre a jour le referentiel.', {
+      handleUiError(error, 'Impossible de mettre à jour le référentiel.', {
         source: 'useSettingsState.referenceAction'
       });
     }

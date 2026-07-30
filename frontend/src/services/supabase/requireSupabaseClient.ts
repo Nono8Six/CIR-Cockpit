@@ -9,7 +9,7 @@ export const requireSupabaseClient = (): SupabaseClient<Database> => {
   if (!client) {
     throw createAppError({
       code: 'CLIENT_NOT_CONFIGURED',
-      message: 'Client Supabase non configure.',
+      message: 'Client Supabase non configuré.',
       source: 'client'
     });
   }

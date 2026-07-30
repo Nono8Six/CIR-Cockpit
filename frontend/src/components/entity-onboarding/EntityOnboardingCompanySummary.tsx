@@ -93,7 +93,7 @@ export const EntityOnboardingCompanySummary = ({
             </div>
           ) : null}
           {companyDetailsUnavailable ? (
-            <p className="pt-1 text-[11px] leading-relaxed text-warning font-medium">
+            <p className="pt-1 text-[11px] leading-relaxed text-warning-strong font-medium">
               Données enrichies indisponibles.
             </p>
           ) : null}
@@ -108,7 +108,7 @@ export const EntityOnboardingCompanySummary = ({
 
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-lg border border-border bg-surface-2/40 p-3">
-          <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/80">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80">
             SIREN
           </p>
           <p className="mt-1 font-mono text-[12px] font-bold text-foreground">
@@ -116,7 +116,7 @@ export const EntityOnboardingCompanySummary = ({
           </p>
         </div>
         <div className="rounded-lg border border-border bg-surface-2/40 p-3">
-          <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/80">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80">
             Code NAF
           </p>
           <p className="mt-1 text-[12px] font-bold leading-snug text-foreground break-words">

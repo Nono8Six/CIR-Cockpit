@@ -65,7 +65,7 @@ describe('useAgenciesManager', () => {
     await act(async () => {
       await result.current.handleCreate('Agence C');
     });
-    expect(notifySuccess).toHaveBeenCalledWith('Agence creee.');
+    expect(notifySuccess).toHaveBeenCalledWith('Agence créée.');
 
     act(() => {
       result.current.openRenameDialog(createAgency());
@@ -81,7 +81,7 @@ describe('useAgenciesManager', () => {
     await act(async () => {
       await result.current.executeArchiveToggle();
     });
-    expect(notifySuccess).toHaveBeenCalledWith('Agence archivee.');
+    expect(notifySuccess).toHaveBeenCalledWith('Agence archivée.');
   });
 
   it('swallows archive mutation errors without throwing', async () => {
@@ -97,7 +97,7 @@ describe('useAgenciesManager', () => {
       await result.current.executeArchiveToggle();
     });
 
-    expect(notifySuccess).not.toHaveBeenCalledWith('Agence archivee.');
+    expect(notifySuccess).not.toHaveBeenCalledWith('Agence archivée.');
   });
 
   it('filters agencies by search term and opens rename dialog', () => {

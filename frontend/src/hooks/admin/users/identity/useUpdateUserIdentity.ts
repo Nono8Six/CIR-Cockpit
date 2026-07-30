@@ -22,7 +22,7 @@ export const useUpdateUserIdentity = () => {
     onError: (err) => {
       const appError = mapAdminDomainError(err, {
         action: 'update_user',
-        fallbackMessage: "Impossible de mettre a jour l'utilisateur."
+        fallbackMessage: "Impossible de mettre à jour l'utilisateur."
       });
       handleUiError(appError, appError.message, { source: 'useUpdateUserIdentity' });
     }

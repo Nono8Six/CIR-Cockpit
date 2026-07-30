@@ -7,21 +7,21 @@ describe('mapAdminDomainError', () => {
   it('maps unknown admin update error to USER_UPDATE_FAILED', () => {
     const appError = mapAdminDomainError(new Error('boom'), {
       action: 'update_user',
-      fallbackMessage: "Impossible de mettre a jour l'utilisateur."
+      fallbackMessage: "Impossible de mettre à jour l'utilisateur."
     });
 
     expect(appError.code).toBe('USER_UPDATE_FAILED');
-    expect(appError.message).toBe("Impossible de mettre a jour l'utilisateur.");
+    expect(appError.message).toBe("Impossible de mettre à jour l'utilisateur.");
   });
 
   it('maps reset password to PASSWORD_RESET_FAILED for unknown errors', () => {
     const appError = mapAdminDomainError(new Error('boom'), {
       action: 'reset_password',
-      fallbackMessage: 'Impossible de reinitialiser le mot de passe.'
+      fallbackMessage: 'Impossible de réinitialiser le mot de passe.'
     });
 
     expect(appError.code).toBe('PASSWORD_RESET_FAILED');
-    expect(appError.message).toBe('Impossible de reinitialiser le mot de passe.');
+    expect(appError.message).toBe('Impossible de réinitialiser le mot de passe.');
   });
 
   it('maps unknown delete user error to USER_DELETE_FAILED', () => {

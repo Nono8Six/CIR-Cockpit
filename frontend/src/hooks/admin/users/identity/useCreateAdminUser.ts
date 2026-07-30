@@ -14,7 +14,7 @@ export const useCreateAdminUser = () => {
         (error) => {
           throw mapAdminDomainError(error, {
             action: 'create_user',
-            fallbackMessage: "Impossible de creer l'utilisateur."
+            fallbackMessage: "Impossible de créer l'utilisateur."
           });
         }
       ),

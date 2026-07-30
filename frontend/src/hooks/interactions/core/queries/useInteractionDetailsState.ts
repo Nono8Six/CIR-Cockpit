@@ -25,7 +25,7 @@ const interactionDetailsFormSchema = z.strictObject({
   amount: z
     .string()
     .refine((value) => parseAmountInput(value) !== undefined, 'Montant invalide'),
-  orderRef: z.string().trim().max(255, 'Reference trop longue')
+  orderRef: z.string().trim().max(255, 'Référence trop longue')
 });
 
 type InteractionDetailsFormValues = z.infer<typeof interactionDetailsFormSchema>;
@@ -133,7 +133,7 @@ export const useInteractionDetailsState = ({
       ?? form.formState.errors.orderRef?.message
       ?? form.formState.errors.reminder?.message
       ?? form.formState.errors.amount?.message
-      ?? 'Verification du formulaire impossible.';
+      ?? 'Vérification du formulaire impossible.';
     setErrorMessage(firstError);
   });
 

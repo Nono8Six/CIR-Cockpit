@@ -22,7 +22,7 @@ export const useBulkDeleteUsers = () => {
     onError: (err) => {
       const appError = mapAdminDomainError(err, {
         action: 'delete_user',
-        fallbackMessage: 'Impossible de supprimer les utilisateurs selectionnes.'
+        fallbackMessage: 'Impossible de supprimer les utilisateurs sélectionnés.'
       });
       handleUiError(appError, appError.message, { source: 'useBulkDeleteUsers' });
     }

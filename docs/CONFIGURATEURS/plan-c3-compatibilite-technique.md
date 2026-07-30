@@ -28,6 +28,38 @@ Règles permanentes :
 
 ## 2. État exact du handoff
 
+### Handoff consolidé au 30/07/2026
+
+Ce bloc remplace les snapshots C2b/C2c ci-dessous comme référence runtime. Les
+sections historiques restent conservées pour expliquer les décisions et les
+preuves de chaque correction.
+
+- Branche cible : `main`.
+- C0, C1 et C2/C2d : terminés avec **GO pour démarrer C3**.
+- C3/C4 : aucune implémentation commencée.
+- Snapshot moteur actif unique :
+  `6fbf4046-be74-4422-9fe8-2d2d8a8d9157`, statut `active`, gate `passed`.
+- Lot actif : `cc5689ac-cbf1-45e8-a079-62df8f77dfd8`, empreinte
+  `5db53991095401581953e48fd9b4bbba68c8a8be5b4d5f8c227456fc14256bdb`.
+- Volumes de départ C3 : 1 665 modèles, 2 355 points de fonctionnement,
+  5 699 rendements, 2 370 couples, 45 568 cotes, 7 940 brides et
+  141 issues moteur explicites.
+- Qualifications de départ : 59 VFD obligatoires, 109 intégrés non-IEC,
+  aucune qualification nulle sur le snapshot actif.
+- Schéma distant : 20 tables, RLS activée et forcée sur les 20, 44 policies,
+  aucun advisor sécurité propre à `configurator`.
+- Edge Function `api` active en version 198, mais la probe
+  `configurator.motor.catalog.list` répond `404 NOT_FOUND`.
+- Surface locale : contrats dans `shared/schemas/configurator/`, mais aucun
+  routeur/service Configurateurs dans `backend/functions/api` et aucune
+  intégration frontend.
+- Registre d'incertitudes obligatoire :
+  `docs/CONFIGURATEURS/c2d/incertitudes-restantes.md`.
+- Audit complet : `docs/CONFIGURATEURS/audit-etat-2026-07-30.md`.
+
+Les tests et probes C3 doivent toujours résoudre le snapshot actif par la base.
+L'UUID ci-dessus est une preuve de handoff, pas une constante applicative.
+
 ### Socle versionné avant C2b
 
 - Branche : `main`.
@@ -313,11 +345,11 @@ Checkpoint C2b-A vert.
 
 ### Checkpoint C3-4
 
-`LEVE LE 28/07/2026` : la tranche corrective C2c est active. K et H sont
-publiés pour les 1 012 modèles Innomotics concernés ; tous domaines confondus,
-les 1 527 modèles portant A portent aussi K et H. Les tests C3-4 doivent cibler
-le snapshot actif `4ee230e7-47b0-4637-90b2-3c76b1607a73`. Voir
-`plan-execution.md`, « Gate corrective C2c ».
+`LEVE LE 28/07/2026`, revalidé le 30/07/2026 : C2c a publié K et H pour les
+1 012 modèles Innomotics concernés, puis C2d a activé le catalogue qualifié.
+Les tests C3-4 doivent résoudre dynamiquement l'unique snapshot actif, dont la
+preuve actuelle est `6fbf4046-be74-4422-9fe8-2d2d8a8d9157`. Voir
+`plan-execution.md`, gates correctives C2c et C2d.
 
 Tests obligatoires :
 
@@ -424,7 +456,7 @@ Procédures authentifiées, en query, avec validation entrée/sortie :
 
 GO uniquement si :
 
-- le snapshot C2c corrigé est actif ;
+- le snapshot C2d qualifié est l'unique actif ;
 - les sept procédures répondent sur le runtime distant ;
 - toutes les routes sont read-only ;
 - les quatre statuts et leurs preuves sont présents ;
@@ -436,7 +468,7 @@ GO uniquement si :
 
 Ne pas déclarer C3/C4 terminé si l’un des éléments suivants subsiste :
 
-- snapshot C2c non actif ou probes mécaniques exécutées sur un snapshot retiré ;
+- snapshot C2d non actif ou probes mécaniques exécutées sur un snapshot retiré ;
 - utilisation de l’ancien snapshot pour les probes ;
 - tolérance fixe arbitraire sur A/B ;
 - H, D, F, bride, puissance, pôles ou fréquence compensés par un score ;

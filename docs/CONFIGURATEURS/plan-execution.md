@@ -5,7 +5,7 @@ Configurateurs. Il complète le plan directeur
 `C:\GitHub\CIR_Moteur\plan-brique-configurateurs.md` sans remplacer les preuves
 de chaque tranche.
 
-## Situation au 28/07/2026
+## Situation au 30/07/2026
 
 | Tranche | Statut | Décision | Preuve |
 | --- | --- | --- | --- |
@@ -14,10 +14,20 @@ de chaque tranche.
 | C2 — Migration des données | ✅ terminée | **GO C3** | section C2 ci-dessous |
 | C3 à C14 | ⬜ non commencées | non autorisées | plan directeur |
 
+**Verdict au 30/07/2026 :** le socle de données autorise l'ouverture de C3,
+mais la fonctionnalité Configurateurs n'est pas encore disponible dans
+l'application. Aucun routeur, service backend, service frontend ou écran C3
+n'est implémenté. La probe distante
+`configurator.motor.catalog.list` répond `404 NOT_FOUND`.
+
 **Prochaine action :** ouvrir C3, services backend Deno/tRPC, sur autorisation
-explicite. Le catalogue technique moteur est chargé et actif : snapshot
-`2bb33c0b-8bf0-401c-8016-5e0fbd1bee54`, lot `8ae3946c…`, 2 355 points de
-fonctionnement.
+explicite, en suivant
+`docs/CONFIGURATEURS/plan-c3-compatibilite-technique.md`. Le catalogue technique
+moteur est chargé et actif : snapshot
+`6fbf4046-be74-4422-9fe8-2d2d8a8d9157`, lot `cc5689ac…`, 1 665 modèles
+physiques, 2 355 points de fonctionnement et 45 568 cotes.
+
+Audit consolidé : `docs/CONFIGURATEURS/audit-etat-2026-07-30.md`.
 
 ## Règle de suivi
 
@@ -27,6 +37,43 @@ fonctionnement.
   les preuves et la prochaine action.
 - Aucun travail d'une tranche suivante ne vaut autorisation implicite.
 - Les changements Dashboard présents dans le worktree restent hors périmètre.
+
+## Checkpoint d'audit du 30/07/2026
+
+- [x] État local relu : contrats Zod, migrations, scripts d'import,
+  extracteurs, tests, routeur tRPC et frontend.
+- [x] État Git relu sur `main` avant livraison.
+- [x] Projet Supabase lié confirmé :
+  `CIR_Cockpit` (`rbjtrcorlezvocayluok`), PostgreSQL 17.6, état
+  `ACTIVE_HEALTHY`.
+- [x] Historique distant confirmé : 128 migrations, dont 10 migrations
+  `configurator` de C1 à C2d.
+- [x] Parité C2d confirmée depuis le SQL distant : version, nom et SQL
+  normalisé identiques au fichier local ; longueur 1 339, MD5
+  `05eb28807759b04565d099047d89821c`.
+- [x] Schéma distant confirmé : 20 tables, RLS activée et forcée sur les
+  20 tables, 44 policies.
+- [x] Snapshot actif confirmé : un seul actif, statut `active`, gate `passed`,
+  empreinte de lot `5db53991…`, 0 issue d'import bloquante non résolue.
+- [x] Qualifications confirmées : 59 moteurs VFD obligatoires, 109 moteurs
+  intégrés non-IEC, 0 qualification nulle ou incohérente sur l'actif.
+- [x] Advisors confirmés : aucun advisory sécurité `configurator` ; 15 index
+  encore inutilisés au niveau information, à réévaluer uniquement sur plans
+  réels C3.
+- [x] Edge Function `api` active, version 198, `verify_jwt=false` conformément
+  à l'authentification applicative.
+- [x] Absence C3 prouvée localement et au runtime : aucun symbole
+  `configurator` dans `backend/functions/api` ou `frontend/src`, et
+  `configurator.motor.catalog.list` répond `404 NOT_FOUND`.
+- [ ] Gate finale `pnpm run qa` entièrement verte : étapes 0 à 8 validées,
+  mais étape 9 bloquée par la fixture d'intégration distante supprimée. Les
+  159 fichiers / 735 tests frontend, les seuils de couverture, le build et les
+  449 tests backend passent. Six tests d'intégration échouent en cascade parce
+  que `AUDIT_20260604_api_int_user@cir.invalid` n'existe plus dans
+  `auth.users` ; les logs Auth confirment `invalid_credentials`.
+
+Décision : **GO pour démarrer C3 ; NO-GO pour présenter Configurateurs comme
+une fonctionnalité livrée ou utilisable.**
 
 ## C0 — Cadrage
 
@@ -73,10 +120,10 @@ dans Supabase et le snapshot est actif.
 
 | Élément | Valeur |
 | --- | --- |
-| Empreinte du lot | `8ae3946c73295037f824984774177efa0e16aa9a5ddce6f0b82241fa83e1da97` |
-| Snapshot actif | `2bb33c0b-8bf0-401c-8016-5e0fbd1bee54` |
-| Lot d'import | `79f56be3-488f-4226-93cb-77731ebdc4b0`, statut `ready` |
-| Empreinte du diff d'activation | `6521ce417718e06993db130c79bc3608a8ae4b67cefcb1e85084fae35326210a` |
+| Empreinte du lot | `5db53991095401581953e48fd9b4bbba68c8a8be5b4d5f8c227456fc14256bdb` |
+| Snapshot actif | `6fbf4046-be74-4422-9fe8-2d2d8a8d9157` |
+| Lot d'import | `cc5689ac-cbf1-45e8-a079-62df8f77dfd8`, statut `ready` |
+| Empreinte du diff d'activation | `d7e44f390d5ea0736f48ae12fefebd6a5b44d28caf783fb7fc5e5abe19860bed` |
 
 Outils, deux scripts et rien de plus :
 
@@ -98,7 +145,7 @@ node scripts/configurator-c2-import.mjs --emit-payload=./.c2-payload
 deno run --allow-env --allow-read --allow-net --allow-write --env-file=backend/.env \
   --config deno.json scripts/configurator-c2-load.ts --mode=load \
   --payload=./.c2-payload/candidate-payload.json --actor=<super_admin>
-deno run ... --mode=activate --snapshot=2bb33c0b-... --actor=<super_admin> --note="..."
+deno run ... --mode=activate --snapshot=6fbf4046-... --actor=<super_admin> --note="..."
 ```
 
 Le répertoire `.c2-payload/` est un artefact de travail de 43 Mo, régénérable et
@@ -370,6 +417,53 @@ règle pattes est le verdict correct.
   `agency_admin` et `super_admin` lisent l'actif et ses 41 759 dimensions ;
   aucune fixture persistée.
 
+### Gate corrective C2d — qualifications factuelles moteur
+
+Checkpoint du 28/07/2026 : **terminé et activé**. La preuve détaillée est dans
+`docs/CONFIGURATEURS/c2d/README.md`.
+
+- [x] Migration distante
+  `20260728120556_configurator_c2d_motor_qualifications` appliquée via MCP et
+  reproduite localement avec le même SQL normalisé (1 433 caractères,
+  MD5 `8654758944d3ec323172d9c3c1653d92`).
+- [x] `requires_vfd`, `is_iec_standard` et `article_no_status` sont structurés
+  et protégés par des contraintes de cohérence ; `shaft_spec` qualifie les
+  109 Bonfiglioli M/ME/MX intégrés comme `integrated_gearmotor_non_iec`.
+- [x] Les 59 PMaSynRM Leroy-Somer sont marqués variateur obligatoire. Aucun
+  asynchrone n'est classé ainsi.
+- [x] Les références article absentes des catalogues ne sont pas inventées :
+  1 017 `published`, 648 `not_published_in_source`, aucun statut incohérent.
+- [x] 56 doublons logiques Leroy-Somer VFD ont été rattachés à leur modèle
+  physique uniquement quand désignation normalisée + pôles + puissance
+  désignent une masse, une inertie et un montage uniques. Le catalogue passe
+  de 1 721 à 1 665 modèles sans perdre de point de fonctionnement : 2 355 avant
+  et après.
+- [x] Protection et matériau qualifiés depuis les gammes constructeur :
+  Innomotics IP55 ; Leroy-Somer IP55 sauf PLSES/PLSHRM IP23 ; Bonfiglioli IP55
+  sauf les 6 BY dont la source autorise IP55/IP56 sans lever la variante.
+- [x] La cote composite B `368/419` du PLSES 280 MGU est conservée comme texte
+  publié, sans conversion arbitraire en millimètres.
+- [x] 79 incertitudes résiduelles sont explicites dans
+  `motor_validation_issue` : 65 attributs physiques Leroy-Somer non
+  rapprochables sans ambiguïté, 6 indices IP BY, 1 conflit d'inertie Innomotics
+  et 7 jeux de cotes IEC incomplets (6 Bonfiglioli, 1 Innomotics). Avec les
+  62 contrôles antérieurs, le snapshot actif porte 141 issues et zéro anomalie
+  bloquante.
+- [x] Couverture active des cotes IEC principales A/B/C/H/K/D/E/F :
+  Leroy-Somer 384/384 ; Innomotics 1 016/1 017 pour les cotes de pieds et
+  1 017/1 017 pour D/E/F ; Bonfiglioli IEC 149/155 pour les cotes de pieds,
+  155/155 pour D/F et 153/155 pour E. Les 109 intégrés non-IEC ne reçoivent
+  aucune fausse cote IEC.
+- [x] Snapshot `6fbf4046-be74-4422-9fe8-2d2d8a8d9157` activé atomiquement :
+  un seul actif, gate `passed`, 1 665 modèles, 2 355 points, 45 568 cotes et
+  7 940 options de bride.
+- [x] RLS rejouée avec rollback : `anon` ne lit pas le catalogue ; un profil
+  `tcs` humain lit les 1 665 modèles et 45 568 cotes. Le premier profil TCS
+  inspecté était un compte système, volontairement refusé par la politique.
+- [x] `node --check`, `deno check`, 13 tests d'extraction, `qa:docs` et
+  `qa:back` verts ; 449 tests backend réussis, 14 intégrations conditionnelles
+  ignorées, zéro échec. Aucun advisor sécurité spécifique à `configurator`.
+
 ### Rapatriement de `tools/extract`
 
 Depuis le 27/07/2026, les extracteurs et leurs sorties sont versionnés dans ce
@@ -394,15 +488,17 @@ Le plan de reprise détaillé, découpé par checkpoints, est
 
 | Portée | Procédure |
 | --- | --- |
-| Retirer le catalogue actif | `configurator.activate_snapshot` sur un autre snapshot du domaine. Aucun autre n'existe aujourd'hui : le retrait passerait par un nouveau lot activé, jamais par une suppression. |
-| Supprimer le snapshot et ses données | `delete from configurator.catalog_snapshot where id = '2bb33c0b-…'`. Les clés étrangères composites vident les 12 tables techniques en cascade ; `motor_dimension_canonical` n'est pas touchée. Le lot d'import et ses 704 anomalies partent avec lui. |
-| Rejouer le lot | Le pipeline est déterministe : la même empreinte `8ae3946c…` est reproductible depuis les sources CIR Moteur. |
+| Retirer le catalogue actif | Réactiver le snapshot précédent `900dfe00-d0e1-4f9d-8281-25c5f1beab50` avec `configurator.activate_snapshot`, après recalcul et validation du diff. |
+| Supprimer un snapshot et ses données | Seulement après retrait : suppression ciblée de son `catalog_snapshot`. Les clés étrangères composites vident les tables techniques en cascade ; `motor_dimension_canonical` n'est pas touchée. |
+| Rejouer le lot | Le pipeline est déterministe : la même empreinte `5db53991…` est reproductible depuis les sources CIR Moteur. |
 | Annuler les migrations correctives | Nouvelle migration additive inverse. Une migration appliquée n'est jamais modifiée. |
 
 ## Tranches suivantes
 
 - [x] C2c — Correctif d’extraction K/K' et H/HA/Y Innomotics activé et prouvé
   le 28/07/2026. C3-4 peut désormais démarrer sur le snapshot corrigé.
+- [x] C2d — Qualifications moteur, rapprochements physiques sûrs et
+  incertitudes résiduelles structurées activés et prouvés le 28/07/2026.
 - [ ] C3 — Compatibilité technique backend Deno/tRPC, incluant l’ancien C4.
 - [ ] C4 — Absorbée par C3, aucune tranche indépendante.
 - [ ] C5 — Socle frontend.
@@ -454,3 +550,5 @@ Le plan de reprise détaillé, découpé par checkpoints, est
 | 28/07/2026 | C2c | Réparation distante appliquée via MCP : 169 dates de provenance restaurées, 6 compteurs et 2 112 contextes convertis en objets JSONB ; trois contraintes validées empêchent la récidive. | `20260728045157_configurator_c2c_provenance_and_jsonb_invariants` |
 | 28/07/2026 | QA | `qa:back` et `qa:fast` verts ; `pnpm run qa` atteint 155/155 fichiers et 706/706 tests frontend puis échoue sur la couverture d'un fichier frontend absent du diff C2c. | `useDashboardStatusHelpers.ts` : branches 13,33 % / seuil 30 % |
 | 28/07/2026 | C2c | Checkpoint pré-activation poussé sur `main`, puis candidat activé via MCP. Un seul actif, 41 759 dimensions, 1 012 modèles Innomotics avec K et H, 169 provenances intactes, RLS prouvée sous quatre rôles avec rollback. | commit `743e29b`, diff `6c05338f…`, snapshot `4ee230e7-…` — **GO C3-4 données** |
+| 28/07/2026 | C2d | Qualifications factuelles activées : VFD obligatoire, IEC/non-IEC, statut de référence article, IP/matériau, rapprochement sûr de 56 doublons VFD et conservation de la cote composite PLSES. Les 79 inconnues restantes sont explicites, jamais inventées. | migration `20260728120556`, snapshot `6fbf4046-…`, `docs/CONFIGURATEURS/c2d/README.md` |
+| 30/07/2026 | Audit | État local et distant réconcilié : C0–C2d terminés, C3 non commencé, snapshot C2d actif et sécurisé, route catalogue absente au runtime. Gate finale verte jusqu'à l'étape 8/9 ; intégrations bloquées par la suppression du compte fixture distant. | `audit-etat-2026-07-30.md`, MCP Supabase, `404 NOT_FOUND`, Auth `invalid_credentials` |

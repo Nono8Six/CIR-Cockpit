@@ -36,7 +36,7 @@ const parseEntityResponse = (payload: unknown): Client => {
   if (!parsed.success) {
     throw createAppError({
       code: 'REQUEST_FAILED',
-      message: 'Reponse serveur invalide.',
+      message: 'Réponse serveur invalide.',
       source: 'edge',
       details: parsed.error.message
     });
@@ -58,7 +58,7 @@ const requireClientText = (value: string | null | undefined, message: string): s
 
 export const saveClient = (payload: ClientPayload): ResultAsync<Client, AppError> => {
   const agencyId = requireClientText(payload.agency_id, 'Agence requise.');
-  const clientNumber = requireClientText(payload.client_number, 'Numero client requis.');
+  const clientNumber = requireClientText(payload.client_number, 'Numéro client requis.');
 
   if (payload.client_kind === 'company') {
     const entity = {

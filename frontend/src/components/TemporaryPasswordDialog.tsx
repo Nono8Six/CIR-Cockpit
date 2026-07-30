@@ -29,7 +29,7 @@ const TemporaryPasswordDialog = ({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description ?? 'Mot de passe temporaire genere.'}</DialogDescription>
+          <DialogDescription>{description ?? 'Mot de passe temporaire généré.'}</DialogDescription>
         </DialogHeader>
         <div className="bg-muted border border-border rounded-md p-3 font-mono text-sm text-foreground">
           {password}

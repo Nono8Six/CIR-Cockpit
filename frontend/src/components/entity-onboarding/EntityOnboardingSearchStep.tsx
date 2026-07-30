@@ -128,12 +128,12 @@ const STATUS_FILTER_OPTIONS: Array<{
   { value: "all", label: "Tous les statuts", compactLabel: "Tous" },
   {
     value: "open",
-    label: "Etablissements actifs",
+    label: "Établissements actifs",
     compactLabel: "Actifs",
   },
   {
     value: "closed",
-    label: "Etablissements fermes",
+    label: "Établissements fermés",
     compactLabel: "Fermés",
   },
   {
@@ -279,7 +279,7 @@ const EntityOnboardingSearchStep = ({
             Recherche officielle
           </h2>
           <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
-            Trouve l&apos;etablissement via la base officielle pour importer les
+            Trouve l&apos;établissement via la base officielle pour importer les
             donnees.
           </p>
         </div>
@@ -303,8 +303,8 @@ const EntityOnboardingSearchStep = ({
               Saisie manuelle active
             </p>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              Le flux continue sans donnees officielles. Les champs identite,
-              adresse et rattachement agence pourront etre saisis a l&apos;etape
+              Le flux continue sans données officielles. Les champs identité,
+              adresse et rattachement agence pourront être saisis à l&apos;étape
               suivante.
             </p>
           </div>
@@ -322,7 +322,7 @@ const EntityOnboardingSearchStep = ({
                 spellCheck={false}
                 value={searchDraft}
                 onChange={(event) => onSearchDraftChange(event.target.value)}
-                placeholder="Nom de societe, SIREN ou SIRET…"
+                placeholder="Nom de société, SIREN ou SIRET…"
                 className="h-12 w-full rounded-lg border border-border bg-surface-1/30 pl-12 pr-12 text-lg font-medium tracking-tight text-foreground shadow-sm transition-[border-color,background-color,box-shadow] placeholder:text-muted-foreground/40 focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
               {isFetching && (
@@ -341,7 +341,7 @@ const EntityOnboardingSearchStep = ({
               <SlidersHorizontal className="size-4 mr-2" />
               {showFilters ? "Masquer les filtres" : "Filtres"}
               {activeOfficialFilterCount > 0 && (
-                <span className="ml-1.5 flex size-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground">
+                <span className="ml-1.5 flex size-5 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">
                   {activeOfficialFilterCount}
                 </span>
               )}
@@ -702,7 +702,7 @@ const EntityOnboardingSearchStep = ({
                                       establishment.city,
                                     ]
                                       .filter(Boolean)
-                                      .join(" ") || "Etablissement";
+                                      .join(" ") || "Établissement";
                                   const isClosed =
                                     establishment.establishment_status ===
                                     "closed";
@@ -819,11 +819,11 @@ const EntityOnboardingSearchStep = ({
                                                 aria-hidden="true"
                                                 className="size-3.5"
                                               />
-                                              Site ferme
+                                              Site fermé
                                             </div>
                                             <p className="mt-1 text-xs leading-relaxed">
                                               {formattedClosedAt
-                                                ? `Ferme officiellement le ${formattedClosedAt}.`
+                                                ? `Fermé officiellement le ${formattedClosedAt}.`
                                                 : "Fermeture officielle signalée par la base SIRENE."}
                                             </p>
                                           </div>

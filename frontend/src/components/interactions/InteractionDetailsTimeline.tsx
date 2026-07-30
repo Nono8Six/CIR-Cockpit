@@ -15,7 +15,7 @@ const getEventIcon = (type: string) => {
     case 'status_change':
       return <ArrowRight size={14} className="text-primary" />;
     case 'reminder_change':
-      return <Clock size={14} className="text-warning" />;
+      return <Clock size={14} className="text-warning-strong" />;
     case 'order_ref_change':
       return <Hash size={14} className="text-warning-foreground" />;
     case 'stage_change':

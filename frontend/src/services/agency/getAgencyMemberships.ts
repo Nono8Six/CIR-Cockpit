@@ -33,10 +33,10 @@ export const getAgencyMemberships = async (allowEmpty = false): Promise<AgencyMe
   if (error) throw mapPostgrestError(error, { operation: 'read', resource: 'les agences', status });
 
   const rows = (data ?? []).map(toMembershipRow).filter((row): row is AgencyMembershipRow => Boolean(row));
-  if (rows.length === 0 && !allowEmpty) throw createAppError({ code: 'MEMBERSHIP_NOT_FOUND', message: 'Aucune agence associee a cet utilisateur.', source: 'db' });
+  if (rows.length === 0 && !allowEmpty) throw createAppError({ code: 'MEMBERSHIP_NOT_FOUND', message: 'Aucune agence associée à cet utilisateur.', source: 'db' });
 
   const memberships = rows.filter(row => row.agencies?.name).map(row => ({ agency_id: row.agency_id, agency_name: row.agencies?.name ?? '' })).filter(row => row.agency_name);
-  if (memberships.length === 0 && !allowEmpty) throw createAppError({ code: 'MEMBERSHIP_NOT_FOUND', message: 'Aucune agence associee a cet utilisateur.', source: 'db' });
+  if (memberships.length === 0 && !allowEmpty) throw createAppError({ code: 'MEMBERSHIP_NOT_FOUND', message: 'Aucune agence associée à cet utilisateur.', source: 'db' });
 
   cachedMemberships = memberships;
   cachedUserId = userId;

@@ -23,7 +23,7 @@ const ProspectDetailHeader = ({
         </p>
         <h2 className="text-lg font-semibold text-foreground">{prospect.name}</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          {addressLine || 'Adresse non renseignee'}
+          {addressLine || 'Adresse non renseignée'}
         </p>
         <p className="text-xs text-muted-foreground/80 mt-1">Agence: {agencyName}</p>
       </div>

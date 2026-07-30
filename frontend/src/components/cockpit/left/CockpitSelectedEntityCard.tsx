@@ -36,7 +36,7 @@ const CockpitSelectedEntityCard = ({
             <p className="truncate text-[13px] font-bold text-foreground">
               {selectedEntity.name}
             </p>
-            <Badge variant="secondary" className="text-[9px] uppercase tracking-wide px-1.5 py-0.5">
+            <Badge variant="secondary" className="text-[11px] uppercase tracking-normal px-1.5 py-0.5">
               {selectedEntity.entity_type}
             </Badge>
           </div>

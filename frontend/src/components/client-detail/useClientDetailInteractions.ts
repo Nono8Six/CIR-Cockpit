@@ -21,18 +21,18 @@ const buildTimelineSuccessMessage = (
   statusById: Map<string, AgencyStatus>
 ): string => {
   if (updates?.status_id) {
-    return `Statut change : ${statusById.get(updates.status_id)?.label ?? updates.status ?? 'Statut mis a jour'}`;
+    return `Statut changé : ${statusById.get(updates.status_id)?.label ?? updates.status ?? 'Statut mis à jour'}`;
   }
   if (updates?.status) {
-    return `Statut change : ${updates.status}`;
+    return `Statut changé : ${updates.status}`;
   }
   if (updates?.order_ref) {
-    return 'N° de dossier enregistre';
+    return 'N° de dossier enregistré';
   }
   if (event.type === 'note') {
-    return 'Note ajoutee';
+    return 'Note ajoutée';
   }
-  return 'Dossier mis a jour';
+  return 'Dossier mis à jour';
 };
 
 type UseClientDetailInteractionsParams = {
@@ -91,13 +91,13 @@ export const useClientDetailInteractions = ({
           void invalidateInteractionsQuery(queryClient, activeAgencyId);
           handleUiError(
             error,
-            'Ce dossier a ete modifie par un autre utilisateur. Rechargez les donnees.',
+            'Ce dossier a été modifié par un autre utilisateur. Rechargez les données.',
             { source: 'client.details.conflict' }
           );
           return;
         }
 
-        handleUiError(error, 'Impossible de mettre a jour le dossier.', {
+        handleUiError(error, 'Impossible de mettre à jour le dossier.', {
           source: 'client.details.update'
         });
       }
@@ -119,7 +119,7 @@ export const useClientDetailInteractions = ({
         setPage((current) => Math.max(1, current - 1));
       }
       setInteractionToDelete(null);
-      notifySuccess('Interaction supprimee.');
+      notifySuccess('Interaction supprimée.');
     } catch {
       return;
     }

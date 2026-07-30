@@ -38,8 +38,8 @@ const CockpitContactNameFields = ({
         }}
         value={firstName}
         onChange={onFirstNameChange}
-        placeholder="Prenom…"
-        aria-label="Prenom"
+        placeholder="Prénom…"
+        aria-label="Prénom"
         autoComplete="given-name"
       />
       <CockpitFieldError message={firstNameError} />

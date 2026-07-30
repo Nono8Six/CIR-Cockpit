@@ -49,7 +49,7 @@ export const useReferenceItems = ({
           return;
         }
         clearInput();
-        notifySuccess('Valeur ajoutee.');
+        notifySuccess('Valeur ajoutée.');
       }
     },
     [agencyId, canRunImmediateAction, referenceActionMutation]
@@ -78,7 +78,7 @@ export const useReferenceItems = ({
       } catch {
         return;
       }
-      notifySuccess('Valeur retiree.');
+      notifySuccess('Valeur retirée.');
     },
     [agencyId, canRunImmediateAction, referenceActionMutation]
   );
@@ -109,7 +109,7 @@ export const useReferenceItems = ({
       } catch {
         return;
       }
-      notifySuccess('Libelle corrige.');
+      notifySuccess('Libellé corrigé.');
     },
     [agencyId, canRunImmediateAction, referenceActionMutation]
   );

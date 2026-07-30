@@ -101,7 +101,7 @@ const CockpitStatusControl = ({
         <label className={cn(footerLabelStyle, 'inline-flex h-5 items-center leading-none', isInline && 'mb-0')} htmlFor="interaction-status-trigger">Statut</label>
         {statusMeta && statusCategoryLabel ? (
           <span className={cn(
-            "inline-flex h-5 shrink-0 items-center whitespace-nowrap rounded-full border px-2 text-[9px] font-extrabold uppercase leading-none tracking-[0.12em] shadow-[0_1px_2px_rgba(0,0,0,0.01)]",
+            "inline-flex h-5 shrink-0 items-center whitespace-nowrap rounded-full border px-2 text-[11px] font-bold uppercase leading-none tracking-[0.04em] shadow-[0_1px_2px_rgba(0,0,0,0.01)]",
             statusCategoryBadges[statusMeta.category]
           )}>
             {statusCategoryLabel}

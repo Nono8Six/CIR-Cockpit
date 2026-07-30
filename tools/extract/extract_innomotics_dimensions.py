@@ -45,6 +45,17 @@ FOOT_DIMENSION_PAGES = (
 )
 FOOT_DIMENSION_SUFFIX_MATCH_PAGES = {296, 298, 300, 306, 412}
 
+# Rattachements relus visuellement dans le catalogue avec le PO. Les valeurs
+# restent extraites des lignes PDF; aucune cote n'est codée dans cette table.
+# 1LE1003-1BD2 reste volontairement absent : la référence complète n'a pas
+# encore été retrouvée dans le tableau mécanique.
+VALIDATED_FOOT_ROWS = {
+    "1LE1003-0CA6": (296, 297, 71),
+    "1LE1003-1BC6": (298, 299, 112),
+    "1LE1003-1CB6": (298, 299, 132),
+    "1LE5584-3BC2": (419, 419, 355),
+}
+
 # Table de correspondance pattes <-> arbre : chaque page de pattes a sa page arbre associée (pdf_page + 1).
 SHAFT_DIMENSION_PAGES = {f_page: f_page + 1 for f_page, _ in FOOT_DIMENSION_PAGES}
 
@@ -374,6 +385,35 @@ def foot_dimensions_for(motors, sha):
                         result[key] = {"values": {}, "pages": previous["pages"] + [pdf_page], "ambiguous": True}
                     elif previous is None:
                         result[key] = {"values": merged, "pages": [pdf_page], "ambiguous": False}
+        for article_no, (foot_page, shaft_page, frame) in VALIDATED_FOOT_ROWS.items():
+            motor = next((row for row in motors if row["articleNo"] == article_no), None)
+            if motor is None or motor.get("frameSize") != frame:
+                raise ValueError(
+                    f"rattachement de cote valide incoherent pour {article_no}: "
+                    f"frame attendu {frame}, moteur={motor}"
+                )
+            f_values = foot_rows_from_page(pdf, foot_page).get(frame)
+            shaft_candidates = extract_shaft_rows_from_page(pdf, shaft_page).get(frame, [])
+            if not f_values:
+                raise ValueError(
+                    f"ligne de pattes validee introuvable pour {article_no} "
+                    f"page {foot_page}, frame {frame}"
+                )
+            s_values = shaft_candidates[0][1] if shaft_candidates else {}
+            merged = dict(f_values)
+            for key in ("K", "K'", "HH", "H", "HA", "Y"):
+                if s_values.get(key) is not None:
+                    if merged.get(key) is not None and merged[key] != s_values[key]:
+                        raise ValueError(
+                            f"conflit de cote validee {key} pour {article_no}: "
+                            f"pattes={merged[key]} vs arbre={s_values[key]}"
+                        )
+                    merged[key] = s_values[key]
+            result[article_no] = {
+                "values": merged,
+                "pages": sorted({foot_page, shaft_page}),
+                "ambiguous": False,
+            }
     return result
 
 

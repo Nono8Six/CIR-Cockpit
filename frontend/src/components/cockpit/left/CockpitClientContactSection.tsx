@@ -57,7 +57,7 @@ const CockpitClientContactSection = ({
       ) : (
         <div className="rounded-md border border-dashed border-border bg-surface-1/40 px-3 py-2.5">
           <p className="text-sm font-medium text-foreground">Aucun contact rattaché</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">Ajoute un contact pour continuer.</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">Ajoutez un contact pour continuer.</p>
         </div>
       )}
 

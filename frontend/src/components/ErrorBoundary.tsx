@@ -17,12 +17,12 @@ const ErrorFallback = ({ resetErrorBoundary }: FallbackProps) => {
         <CardHeader>
           <CardTitle>Erreur inattendue</CardTitle>
           <CardDescription>
-            Une erreur s&apos;est produite. Rechargez la page ou reconnectez-vous si le probleme persiste.
+            Une erreur s&apos;est produite. Rechargez la page ou reconnectez-vous si le problème persiste.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Si le probleme persiste, exportez le journal d&apos;erreurs depuis l&apos;admin.
+            Si le problème persiste, exportez le journal d&apos;erreurs depuis l&apos;admin.
           </p>
         </CardContent>
         <CardFooter>

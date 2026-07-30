@@ -1048,7 +1048,7 @@ describe('PricingReferencesPage', () => {
     await user.click(await screen.findByRole('button', { name: /^importer$/i }));
     await user.click(await screen.findByRole('menuitem', { name: /classification produit cir/i }));
 
-    const previewButton = await screen.findByRole('button', { name: /previsualiser/i });
+    const previewButton = await screen.findByRole('button', { name: /prévisualiser/i });
     const classificationInput = screen.getByLabelText('Classification produit CIR');
 
     expect(previewButton).toBeDisabled();
@@ -1088,7 +1088,7 @@ describe('PricingReferencesPage', () => {
 
     await user.click(await screen.findByRole('button', { name: /^importer$/i }));
     await user.click(await screen.findByRole('menuitem', { name: /segments & grilles fabricant/i }));
-    const previewButton = await screen.findByRole('button', { name: /previsualiser/i });
+    const previewButton = await screen.findByRole('button', { name: /prévisualiser/i });
     const segmentsInput = screen.getByLabelText('Segments et grilles fabricant');
     await user.upload(
       segmentsInput,
@@ -1142,7 +1142,7 @@ describe('PricingReferencesPage', () => {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       })
     );
-    await user.click(await screen.findByRole('button', { name: /previsualiser/i }));
+    await user.click(await screen.findByRole('button', { name: /prévisualiser/i }));
 
     expect(await screen.findByText(/Colonnes obligatoires non mappees: MEGA_LIB/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /confirmer le mapping/i })).toBeDisabled();
@@ -1306,7 +1306,7 @@ describe('PricingReferencesPage', () => {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       })
     );
-    await user.click(await screen.findByRole('button', { name: /previsualiser/i }));
+    await user.click(await screen.findByRole('button', { name: /prévisualiser/i }));
     await screen.findByText('Mapping complet');
     await user.click(screen.getByRole('button', { name: /confirmer le mapping/i }));
     await user.click(await screen.findByRole('button', { name: /analyser l import/i }));
@@ -1348,7 +1348,7 @@ describe('PricingReferencesPage', () => {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       })
     );
-    await user.click(await screen.findByRole('button', { name: /previsualiser/i }));
+    await user.click(await screen.findByRole('button', { name: /prévisualiser/i }));
     await screen.findByText('Mapping complet');
     await user.click(screen.getByRole('button', { name: /confirmer le mapping/i }));
     await user.click(await screen.findByRole('button', { name: /analyser l import/i }));

@@ -22,7 +22,7 @@ export const useUnarchiveUser = () => {
     onError: (err) => {
       const appError = mapAdminDomainError(err, {
         action: 'update_user',
-        fallbackMessage: "Impossible de reactiver l'utilisateur."
+        fallbackMessage: "Impossible de réactiver l'utilisateur."
       });
       handleUiError(appError, appError.message, { source: 'useUnarchiveUser' });
     }

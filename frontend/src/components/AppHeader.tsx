@@ -2,7 +2,7 @@ import { memo, type ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useReducedMotion } from 'motion/react';
 import { getPathForShellNavItem, isShellNavItemActive } from '@/app/appRoutes';
-import { Bell, ChevronDown, Menu, User } from 'lucide-react';
+import { ChevronDown, Menu, User } from 'lucide-react';
 
 import type { AppHeaderProps } from '@/components/app-header/AppHeader.types';
 import { APP_SHELL_CLASSES, APP_SHELL_DIMENSIONS } from '@/components/app-shell/appShellTokens';
@@ -144,14 +144,6 @@ const AppHeader = ({
             onOpenSearch={onOpenSearch}
             onSearchIntent={onSearchIntent}
           />
-
-          <button
-            type="button"
-            aria-label="Notifications"
-            className={cn(APP_SHELL_CLASSES.control, 'hidden md:inline-flex')}
-          >
-            <Bell size={14} aria-hidden="true" />
-          </button>
 
           <div className="hidden items-center gap-2 md:flex">
             <DropdownMenu open={isProfileMenuOpen} onOpenChange={onProfileMenuOpenChange}>

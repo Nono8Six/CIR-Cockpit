@@ -54,7 +54,7 @@ export const renderInfoItems = (items: InfoItem[]) => {
     <dl className="grid grid-cols-2 gap-x-3 gap-y-2">
       {visibleItems.map((item) => (
         <div key={item.label} className="min-w-0 border-t border-[hsl(var(--border-subtle))] pt-2">
-          <dt className="text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">
+          <dt className="text-[11px] font-semibold uppercase tracking-[0.04em] text-muted-foreground/80">
             {item.label}
           </dt>
           <dd className="mt-0.5 truncate text-[11px] font-medium text-foreground">{item.value}</dd>

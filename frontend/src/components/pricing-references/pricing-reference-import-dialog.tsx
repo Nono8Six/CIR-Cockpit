@@ -57,7 +57,7 @@ const importAssistantConfigs: Record<PricingReferenceFileKind, {
   classification: {
     label: 'Classification produit CIR',
     shortLabel: 'Classification produit',
-    description: 'Codes MEGA/FAM/SFA et libelles produit CIR.',
+    description: 'Codes MEGA/FAM/SFA et libellés produit CIR.',
     inputId: 'pricing-reference-classification-file-dialog',
     expectedColumns: PRICING_REFERENCE_CLASSIFICATION_COLUMNS
   },
@@ -73,7 +73,7 @@ const importAssistantConfigs: Record<PricingReferenceFileKind, {
 const mappingStatusLabels: Record<PricingReferenceColumnMappingCandidate['status'], string> = {
   auto: 'Auto',
   alias: 'Alias',
-  a_confirmer: 'A confirmer',
+  a_confirmer: 'À confirmer',
   manuel: 'Manuel',
   manquant: 'Manquant'
 };
@@ -666,7 +666,7 @@ export const PricingReferenceImportDialog = ({
                   onClick={() => previewMutation.mutate()}
                 >
                   {previewMutation.isPending && <RefreshCw className="size-3.5 animate-spin mr-1.5" />}
-                  Previsualiser
+                  Prévisualiser
                 </Button>
               </div>
             </div>
@@ -755,7 +755,7 @@ export const PricingReferenceImportDialog = ({
                       <div key={column} className="flex flex-col gap-1.5 pb-2 border-b border-border/40 last:border-b-0 last:pb-0">
                         <div className="flex items-center justify-between gap-2">
                           <span className="font-mono text-[11px] font-semibold text-foreground">{column}</span>
-                          <Badge variant={getMappingBadgeVariant(status)} className="text-[9px] px-1 py-0 h-4">
+                          <Badge variant={getMappingBadgeVariant(status)} className="text-[11px] px-1.5 py-0 h-5">
                             {mappingStatusLabels[status]}
                           </Badge>
                         </div>

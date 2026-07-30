@@ -13,7 +13,7 @@ const UserCreateFooter = ({ canSubmit, isSubmitting, onCancel }: UserCreateFoote
         Annuler
       </Button>
       <Button type="submit" disabled={!canSubmit || isSubmitting}>
-        Creer
+        Créer
       </Button>
     </div>
   );

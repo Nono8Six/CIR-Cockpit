@@ -59,7 +59,7 @@ export const useOnboardingNavigation = ({
         'city',
       ] as never);
       if (!isValid) {
-        setStepError('Renseigne l identite et au moins un moyen de contact.');
+        setStepError('Renseignez l’identité et au moins un moyen de contact.');
         return;
       }
 
@@ -91,8 +91,8 @@ export const useOnboardingNavigation = ({
     if (!displaySelectedCompany && !manualEntry) {
       setStepError(
         allowManualEntry
-          ? 'Selectionne un etablissement officiel ou passe en saisie manuelle.'
-          : 'Selectionne un etablissement officiel pour continuer.',
+          ? 'Sélectionnez un établissement officiel ou passez en saisie manuelle.'
+          : 'Sélectionnez un établissement officiel pour continuer.',
       );
       return;
     }
@@ -141,7 +141,7 @@ export const useOnboardingNavigation = ({
         : ['name', 'city', 'agency_id'];
 
     if (!(await form.trigger(fields as never))) {
-      setStepError('Des champs obligatoires doivent encore etre completes.');
+      setStepError('Des champs obligatoires doivent encore être complétés.');
       return;
     }
 

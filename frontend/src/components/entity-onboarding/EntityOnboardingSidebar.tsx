@@ -169,7 +169,7 @@ const EntityOnboardingSidebar = ({
                 </SidebarSection>
               ) : (
                 <div className="rounded-lg border border-dashed border-border bg-surface-1/40 px-4 py-3 text-[11px] text-muted-foreground text-center">
-                  Sélectionne un établissement pour voir les infos du site.
+                  Sélectionnez un établissement pour voir les infos du site.
                 </div>
               )}
 
@@ -223,7 +223,7 @@ const EntityOnboardingSidebar = ({
                     <div className="rounded-lg border border-border bg-background p-3">
                       <div className="flex items-center gap-2">
                         <Landmark className="size-3.5 text-muted-foreground/50" />
-                        <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/80">Chiffre d&apos;Affaires</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80">Chiffre d&apos;Affaires</p>
                       </div>
                       <p className="mt-1.5 text-[13px] font-bold text-foreground">
                         {formatMoney(companyDetails.financials.revenue) ?? 'Non renseigné'}
@@ -232,7 +232,7 @@ const EntityOnboardingSidebar = ({
                     <div className="rounded-lg border border-border bg-background p-3">
                       <div className="flex items-center gap-2">
                         <Factory className="size-3.5 text-muted-foreground/50" />
-                        <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/80">Résultat net</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80">Résultat net</p>
                       </div>
                       <p className="mt-1.5 text-[13px] font-bold text-foreground">
                         {formatMoney(companyDetails.financials.net_income) ?? 'Non renseigné'}
@@ -256,8 +256,8 @@ const EntityOnboardingSidebar = ({
 
           {!isReviewStep && duplicateMatches.length > 0 ? (
             <div className="space-y-2">
-              <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-warning">
-                <AlertCircle className="size-3.5 text-warning" aria-hidden="true" />
+              <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-warning-strong">
+                <AlertCircle className="size-3.5 text-warning-strong" aria-hidden="true" />
                 Doublons détectés ({duplicateMatches.length})
               </div>
               <ul className="space-y-2">
@@ -281,7 +281,7 @@ const EntityOnboardingSidebar = ({
           {isDetailsStep ? (
             missingChecklist.length > 0 ? (
               <div className="space-y-3 pt-1">
-                <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">
+                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/50">
                   <div className="h-px flex-1 bg-border" />
                   <span>Checklist</span>
                   <div className="h-px flex-1 bg-border" />
@@ -307,7 +307,7 @@ const EntityOnboardingSidebar = ({
           ) : null}
 
           <div className="space-y-2 pt-1">
-            <div className="text-center text-[9px] font-bold uppercase tracking-wider text-muted-foreground/50">
+            <div className="text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/50">
               Notes de parcours
             </div>
             <div className="rounded-xl border border-border bg-surface-2/30 p-4 text-[12px] italic leading-relaxed text-muted-foreground/80">

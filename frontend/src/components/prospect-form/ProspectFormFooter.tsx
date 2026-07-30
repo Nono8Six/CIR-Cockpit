@@ -16,7 +16,7 @@ const ProspectFormFooter = ({
       Annuler
     </Button>
     <Button type="submit" disabled={isSubmitting}>
-      {isEdit ? 'Enregistrer' : 'Creer'}
+      {isEdit ? 'Enregistrer' : 'Créer'}
     </Button>
   </div>
 );

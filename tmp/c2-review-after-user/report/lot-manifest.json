@@ -1,0 +1,380 @@
+{
+  "generated_at": "2026-07-28T06:51:23.588Z",
+  "domain": "motor",
+  "source_root": "C:\\GitHub\\CIR_Moteur",
+  "fingerprint_sha256": "ccfb2f8768450698245ace194230e7955866c7f9a07d7c4f74fd938640550cd8",
+  "rules": {
+    "model_key": "cir.motor.model-key/v1",
+    "identity_discriminator": "cir.motor.identity-discriminator/v1",
+    "operating_point_identity": "cir.motor.operating-point-identity/v2",
+    "dimension_vocabulary_version": 1
+  },
+  "documents": [
+    {
+      "filename": "Catalogue_LS_LSES.pdf",
+      "brand": "Leroy-Somer",
+      "sha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+      "edition_label": "5147 fr - 2023.08 / j",
+      "edition_evidence": "catalogEdition des sorties dimensions-leroy-somer.json + LISEZ_MOI.txt",
+      "publisher_filename": null,
+      "page_count": 152,
+      "physical_path": "C:\\GitHub\\CIR_Moteur\\Catalogue fabricant\\Catalogue_LS_LSES.pdf"
+    },
+    {
+      "filename": "Catalogue_BONFIGLIOLI_Moteur.pdf",
+      "brand": "Bonfiglioli",
+      "sha256": "99a9706509d9042361778e8da704871e25b44e2a65503d4bec9713abc1cffe11",
+      "edition_label": null,
+      "edition_evidence": "aucune reference d'edition imprimee dans le PDF",
+      "publisher_filename": "Bonfiglioli_Moteurs_BN_BE_M_ME_BNEXY_R07_0_EN.pdf",
+      "page_count": 118,
+      "physical_path": "C:\\GitHub\\CIR_Moteur\\Catalogue fabricant\\Catalogue_BONFIGLIOLI_Moteur.pdf"
+    },
+    {
+      "filename": "Catalogue_Moteur_Innomotics.pdf",
+      "brand": "Innomotics",
+      "sha256": "6b61767f9307ccbae50cf5f6e2ab7c9ec9d0fc908de76d4585f9a258349cf113",
+      "edition_label": "Catalog D 81.1 - Edition 02/2026",
+      "edition_evidence": "page 1 imprimee : \"Catalog D 81.1 | Edition 02/2026\"",
+      "publisher_filename": null,
+      "page_count": 768,
+      "physical_path": "C:\\GitHub\\CIR_Moteur\\Catalogue fabricant\\Catalogue_Moteur_Innomotics.pdf"
+    },
+    {
+      "filename": "LSHRM_Leroy-Somer.pdf",
+      "brand": "Leroy-Somer",
+      "sha256": "a4e7a40d29d478f44ad2cdc4014994414f23046b8759f120509b930381605099",
+      "edition_label": "5729 fr - 2020.03 / a",
+      "edition_evidence": "catalogEdition des sorties dimensions-dyneo.json + LISEZ_MOI.txt",
+      "publisher_filename": null,
+      "page_count": 76,
+      "physical_path": "C:\\GitHub\\CIR_Moteur\\Catalogue fabricant\\LSHRM_Leroy-Somer.pdf"
+    },
+    {
+      "filename": "Dyneo   IE5.pdf",
+      "brand": "Leroy-Somer",
+      "sha256": "90b8f8c30795e186a529a12941fbf979af5e67b5042917d0a38054e58feb52ab",
+      "edition_label": "5842 fr - 2020.05 / d",
+      "edition_evidence": "page 1 imprimee : \"5842 fr - 2020.05 / d\"",
+      "publisher_filename": null,
+      "page_count": 54,
+      "physical_path": "C:\\GitHub\\CIR_Moteur\\Catalogue fabricant\\Dyneo   IE5.pdf"
+    },
+    {
+      "filename": "6154c_fr_CILS_IE4.pdf",
+      "brand": "Leroy-Somer",
+      "sha256": "d87acd540676d324b9ca812700b16935e6a8033aea7719e893f63c694217c7f4",
+      "edition_label": "6154c fr - 2025",
+      "edition_evidence": "catalogEdition des sorties cils.json + LISEZ_MOI.txt",
+      "publisher_filename": null,
+      "page_count": 20,
+      "physical_path": "C:\\GitHub\\CIR_Moteur\\Catalogue fabricant\\Leroy_Somer_catalogues_moteurs\\6154c_fr_CILS_IE4.pdf"
+    }
+  ],
+  "files": [
+    {
+      "file_role": "models",
+      "kind": "product",
+      "filename": "leroy-somer.json",
+      "absolute_path": "C:\\GitHub\\CIR_Cockpit\\CIR-Cockpit\\tools\\extract\\out\\leroy-somer.json",
+      "sha256": "3b56ce8d8a81613d3833a4d2ffc4763d254d61860f8edce7011a85c7b5edf919",
+      "size_bytes": 571624,
+      "row_count": 580,
+      "validated": true,
+      "read_status": "readable"
+    },
+    {
+      "file_role": "models",
+      "kind": "product",
+      "filename": "bonfiglioli.json",
+      "absolute_path": "C:\\GitHub\\CIR_Cockpit\\CIR-Cockpit\\tools\\extract\\out\\bonfiglioli.json",
+      "sha256": "f76f88352d4c4b3bda0c2b6eeec1c5408b3293d73c2d2fcbda64c783afb8705f",
+      "size_bytes": 132410,
+      "row_count": 106,
+      "validated": true,
+      "read_status": "readable"
+    },
+    {
+      "file_role": "models",
+      "kind": "product",
+      "filename": "innomotics.json",
+      "absolute_path": "C:\\GitHub\\CIR_Cockpit\\CIR-Cockpit\\tools\\extract\\out\\innomotics.json",
+      "sha256": "d0cb5c67cfe5f51a6ed7af00de45acb810f62f13201eac5a23767884e84c83b6",
+      "size_bytes": 1209878,
+      "row_count": 1057,
+      "validated": true,
+      "read_status": "readable"
+    },
+    {
+      "file_role": "models",
+      "kind": "product",
+      "filename": "dyneo.json",
+      "absolute_path": "C:\\GitHub\\CIR_Cockpit\\CIR-Cockpit\\tools\\extract\\out\\dyneo.json",
+      "sha256": "390f1547f78c08c84291775ab2057464abb5f9bcb8a778cb1a7b77b603b96052",
+      "size_bytes": 391038,
+      "row_count": 254,
+      "validated": true,
+      "read_status": "readable"
+    },
+    {
+      "file_role": "models",
+      "kind": "product",
+      "filename": "bonfiglioli-legacy.json",
+      "absolute_path": "C:\\GitHub\\CIR_Cockpit\\CIR-Cockpit\\tools\\extract\\out\\bonfiglioli-legacy.json",
+      "sha256": "28346c48d65a491bf9a3d86ad0b26bf3b9dfe7ef6fef1afb12d77538eee5d589",
+      "size_bytes": 451630,
+      "row_count": 324,
+      "validated": true,
+      "read_status": "readable"
+    },
+    {
+      "file_role": "models",
+      "kind": "product",
+      "filename": "cils.json",
+      "absolute_path": "C:\\GitHub\\CIR_Cockpit\\CIR-Cockpit\\tools\\extract\\out\\cils.json",
+      "sha256": "e8e1bb61f377362f3654033d1fcc08e1cd355d3c61437609367ae82c00d32b49",
+      "size_bytes": 42816,
+      "row_count": 34,
+      "validated": true,
+      "read_status": "readable"
+    },
+    {
+      "file_role": "dimensions",
+      "kind": "dimension",
+      "filename": "dimensions-leroy-somer.json",
+      "absolute_path": "C:\\GitHub\\CIR_Cockpit\\CIR-Cockpit\\tools\\extract\\out\\dimensions-leroy-somer.json",
+      "sha256": "2f964372090e029a735ab65b74acf4c23822e545e36f07f018266d205a93ced0",
+      "size_bytes": 397772,
+      "row_count": 135,
+      "validated": true,
+      "read_status": "readable"
+    },
+    {
+      "file_role": "dimensions",
+      "kind": "dimension",
+      "filename": "dimensions-bonfiglioli.json",
+      "absolute_path": "C:\\GitHub\\CIR_Cockpit\\CIR-Cockpit\\tools\\extract\\out\\dimensions-bonfiglioli.json",
+      "sha256": "e59c83a9917d1bcac710f8170849d9f443ffb04c0bb94eeba19ad14a91cc8328",
+      "size_bytes": 213162,
+      "row_count": 108,
+      "validated": true,
+      "read_status": "readable"
+    },
+    {
+      "file_role": "dimensions",
+      "kind": "dimension",
+      "filename": "dimensions-innomotics.json",
+      "absolute_path": "C:\\GitHub\\CIR_Cockpit\\CIR-Cockpit\\tools\\extract\\out\\dimensions-innomotics.json",
+      "sha256": "9ad4ed91c70b1a5553b50cbb60e07964c5c9bdf240d4b18c65fadd03820a5f7f",
+      "size_bytes": 4513367,
+      "row_count": 1057,
+      "validated": true,
+      "read_status": "readable"
+    },
+    {
+      "file_role": "dimensions",
+      "kind": "dimension",
+      "filename": "dimensions-dyneo.json",
+      "absolute_path": "C:\\GitHub\\CIR_Cockpit\\CIR-Cockpit\\tools\\extract\\out\\dimensions-dyneo.json",
+      "sha256": "d5fe762b5bbf6632c833f37a0cdc84ab38e0ab464191bef6a7609e6b2cd7d2e4",
+      "size_bytes": 135712,
+      "row_count": 45,
+      "validated": true,
+      "read_status": "readable"
+    },
+    {
+      "file_role": "dimensions",
+      "kind": "dimension",
+      "filename": "dimensions-cils.json",
+      "absolute_path": "C:\\GitHub\\CIR_Cockpit\\CIR-Cockpit\\tools\\extract\\out\\dimensions-cils.json",
+      "sha256": "88e7b95575ffe79aa29545fb309e903c79d2eb728ab5dec7d3c0e70857e2eb0f",
+      "size_bytes": 42812,
+      "row_count": 8,
+      "validated": true,
+      "read_status": "readable"
+    },
+    {
+      "file_role": "torque_points",
+      "kind": "torque",
+      "filename": "cils-vfd-torque.json",
+      "absolute_path": "C:\\GitHub\\CIR_Cockpit\\CIR-Cockpit\\tools\\extract\\out\\cils-vfd-torque.json",
+      "sha256": "6d617ff80ec482584ee4b0ac17dc4d36b08b4856ca8450c642829288857d2fcc",
+      "size_bytes": 50867,
+      "row_count": 68,
+      "validated": true,
+      "read_status": "readable"
+    },
+    {
+      "file_role": "correlations",
+      "kind": "correlation",
+      "filename": "bonfiglioli-correlation.json",
+      "absolute_path": "C:\\GitHub\\CIR_Cockpit\\CIR-Cockpit\\tools\\extract\\out\\bonfiglioli-correlation.json",
+      "sha256": "b823785c6e5e092003a9fb4d36f237ec21d0303af748e7c9d7a9a64ed1093dcf",
+      "size_bytes": 325325,
+      "row_count": 599,
+      "validated": true,
+      "read_status": "readable"
+    },
+    {
+      "file_role": "iec_thresholds",
+      "kind": "iec30_1",
+      "filename": "iec-30-1-thresholds.json",
+      "absolute_path": "C:\\GitHub\\CIR_Moteur\\backend\\data\\iec-30-1-thresholds.json",
+      "sha256": "22c378c7ba7fd44d8b5b62a5742c05a4cb0000f25173b3fcc32b4a98c80d93a6",
+      "size_bytes": 255093,
+      "row_count": 640,
+      "validated": true,
+      "read_status": "readable"
+    },
+    {
+      "file_role": "iec_thresholds",
+      "kind": "iec30_2",
+      "filename": "iec-30-2-thresholds.json",
+      "absolute_path": "C:\\GitHub\\CIR_Cockpit\\CIR-Cockpit\\tools\\extract\\out\\iec-30-2-thresholds.json",
+      "sha256": "36acf5ff976f7563a87fcb7e1b0f9e30131b9223d4ee1a48e294cc10f96aed9c",
+      "size_bytes": 29398,
+      "row_count": 65,
+      "validated": true,
+      "read_status": "readable"
+    },
+    {
+      "file_role": "validation_issues",
+      "kind": "anomaly",
+      "filename": "bonfiglioli-legacy-anomalies.json",
+      "absolute_path": "C:\\GitHub\\CIR_Cockpit\\CIR-Cockpit\\tools\\extract\\out\\bonfiglioli-legacy-anomalies.json",
+      "sha256": "e8a0b418c22a43ea9f38ae9d6a01379727b105b87fb72658e3741faada3203fb",
+      "size_bytes": 2174,
+      "row_count": 6,
+      "validated": true,
+      "read_status": "readable"
+    },
+    {
+      "file_role": "validation_issues",
+      "kind": "anomaly",
+      "filename": "cils-anomalies.json",
+      "absolute_path": "C:\\GitHub\\CIR_Cockpit\\CIR-Cockpit\\tools\\extract\\out\\cils-anomalies.json",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size_bytes": 2,
+      "row_count": 0,
+      "validated": true,
+      "read_status": "readable"
+    }
+  ],
+  "extraction_method_normalization": [
+    {
+      "verbatim": "pdfplumber-anchored-pole-changing",
+      "normalized": "pdfplumber-anchored",
+      "occurrences": 80
+    },
+    {
+      "verbatim": "pdfplumber-b14",
+      "normalized": "pdfplumber-table",
+      "occurrences": 33
+    },
+    {
+      "verbatim": "pdfplumber-b3",
+      "normalized": "pdfplumber-table",
+      "occurrences": 2298
+    },
+    {
+      "verbatim": "pdfplumber-b3-table",
+      "normalized": "pdfplumber-table",
+      "occurrences": 990
+    },
+    {
+      "verbatim": "pdfplumber-b34",
+      "normalized": "pdfplumber-table",
+      "occurrences": 33
+    },
+    {
+      "verbatim": "pdfplumber-b35",
+      "normalized": "pdfplumber-table",
+      "occurrences": 118
+    },
+    {
+      "verbatim": "pdfplumber-b35-symbol-plus-b5-spec",
+      "normalized": "pdfplumber-table",
+      "occurrences": 89
+    },
+    {
+      "verbatim": "pdfplumber-b5",
+      "normalized": "pdfplumber-table",
+      "occurrences": 118
+    },
+    {
+      "verbatim": "pdfplumber-column-bands",
+      "normalized": "pdfplumber-table",
+      "occurrences": 102
+    },
+    {
+      "verbatim": "pdfplumber-column-bands-b3",
+      "normalized": "pdfplumber-table",
+      "occurrences": 421
+    },
+    {
+      "verbatim": "pdfplumber-column-bands-b35",
+      "normalized": "pdfplumber-table",
+      "occurrences": 15
+    },
+    {
+      "verbatim": "pdfplumber-column-bands-shaft",
+      "normalized": "pdfplumber-table",
+      "occurrences": 105
+    },
+    {
+      "verbatim": "pdfplumber-coordinate-foot-dimension-table",
+      "normalized": "pdfplumber-table",
+      "occurrences": 4942
+    },
+    {
+      "verbatim": "pdfplumber-coordinate-table",
+      "normalized": "pdfplumber-table",
+      "occurrences": 640
+    },
+    {
+      "verbatim": "pdfplumber-flange-table",
+      "normalized": "pdfplumber-table",
+      "occurrences": 9
+    },
+    {
+      "verbatim": "pdfplumber-imb35-shaft",
+      "normalized": "pdfplumber-table",
+      "occurrences": 31138
+    },
+    {
+      "verbatim": "pdfplumber-rotated-column-bands",
+      "normalized": "pdfplumber-rotated",
+      "occurrences": 324
+    },
+    {
+      "verbatim": "pdfplumber-rotated-table",
+      "normalized": "pdfplumber-rotated",
+      "occurrences": 599
+    },
+    {
+      "verbatim": "pdfplumber-rotated-transposed-geometric-table",
+      "normalized": "pdfplumber-rotated",
+      "occurrences": 1706
+    },
+    {
+      "verbatim": "pdfplumber-shaft",
+      "normalized": "pdfplumber-table",
+      "occurrences": 957
+    },
+    {
+      "verbatim": "pdfplumber-text-paired-pages",
+      "normalized": "pdfplumber-table",
+      "occurrences": 254
+    },
+    {
+      "verbatim": "pdfplumber-text-right-block",
+      "normalized": "pdfplumber-table",
+      "occurrences": 65
+    },
+    {
+      "verbatim": "pdfplumber-two-column-shaft-table",
+      "normalized": "pdfplumber-table",
+      "occurrences": 307
+    }
+  ]
+}

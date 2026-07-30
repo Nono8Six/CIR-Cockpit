@@ -40,7 +40,7 @@ const ProfileErrorScreen = ({ profileError, onProfileRetry, onSignOut }: {
       <h1 className="text-lg font-semibold text-foreground">Profil indisponible</h1>
       <p className="text-sm text-muted-foreground mt-2">{profileError}</p>
       <div className="mt-4 flex gap-2">
-        <Button className="flex-1" onClick={onProfileRetry}>Reessayer</Button>
+        <Button className="flex-1" onClick={onProfileRetry}>Réessayer</Button>
         <Button className="flex-1" variant="outline" onClick={onSignOut}>Se deconnecter</Button>
       </div>
     </div>
@@ -51,7 +51,7 @@ const ProfileMissingScreen = ({ onSignOut }: { onSignOut: () => void }) => (
   <div className="min-h-[100dvh] w-full flex items-center justify-center bg-surface-1/80 text-muted-foreground font-sans p-6">
     <div className="w-full max-w-md bg-card border border-border rounded-xl p-6 shadow-sm">
       <h1 className="text-lg font-semibold text-foreground">Profil introuvable</h1>
-      <p className="text-sm text-muted-foreground mt-2">Votre profil n&apos;a pas pu etre charge. Veuillez vous reconnecter.</p>
+      <p className="text-sm text-muted-foreground mt-2">Votre profil n&apos;a pas pu être chargé. Veuillez vous reconnecter.</p>
       <Button className="mt-4 w-full" variant="outline" onClick={onSignOut}>Se deconnecter</Button>
     </div>
   </div>
@@ -71,7 +71,7 @@ export const getAppGate = ({
   if (!authReady) return <LoadingScreen message="Chargement…" />;
   if (!session) {
     return (
-      <Suspense fallback={<LoadingScreen message="Chargement de l'ecran de connexion…" />}>
+      <Suspense fallback={<LoadingScreen message="Chargement de l'écran de connexion…" />}>
         <LoginScreen />
       </Suspense>
     );
@@ -83,7 +83,7 @@ export const getAppGate = ({
   if (!profile) return <ProfileMissingScreen onSignOut={onSignOut} />;
   if (mustChangePassword) {
     return (
-      <Suspense fallback={<LoadingScreen message="Chargement de l'ecran de securite…" />}>
+      <Suspense fallback={<LoadingScreen message="Chargement de l'écran de sécurité…" />}>
         <ChangePasswordScreen
           userEmail={profile.email}
           onComplete={onPasswordChanged}

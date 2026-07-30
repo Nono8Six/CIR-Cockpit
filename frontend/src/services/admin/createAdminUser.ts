@@ -22,7 +22,7 @@ const parseCreateAdminUserResponse = (payload: unknown): CreateAdminUserResponse
   if (!parsed.success) {
     throw createAppError({
       code: 'EDGE_INVALID_RESPONSE',
-      message: 'Reponse serveur invalide.',
+      message: 'Réponse serveur invalide.',
       source: 'edge',
       details: parsed.error.message
     });
@@ -37,5 +37,5 @@ export const createAdminUser = (payload: CreateAdminUserPayload) =>
       ...payload
       }, options),
     parseCreateAdminUserResponse,
-    "Impossible de creer l'utilisateur."
+    "Impossible de créer l'utilisateur."
   );

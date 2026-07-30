@@ -13,7 +13,7 @@ const parseDirectoryDuplicatesResponse = (payload: unknown): DirectoryDuplicates
   if (!parsed.success) {
     throw createAppError({
       code: 'REQUEST_FAILED',
-      message: 'Reponse serveur invalide.',
+      message: 'Réponse serveur invalide.',
       source: 'edge',
       details: parsed.error.message
     });
@@ -28,5 +28,5 @@ export const getDirectoryDuplicates = async (
   invokeTrpc(
     (api, options) => api.directory.duplicates.query(input, options),
     parseDirectoryDuplicatesResponse,
-    'Impossible de verifier les doublons.'
+    'Impossible de vérifier les doublons.'
   );

@@ -46,7 +46,7 @@ const InteractionSearchFooter = ({
           <span className="sm:hidden">Voir tout</span>
           <span className="hidden sm:inline-flex items-center gap-1.5">
             Voir tout
-            <kbd className="rounded border border-border/80 bg-background px-1.5 py-0.5 font-mono text-[9px] font-bold text-muted-foreground/80 shadow-sm ml-0.5">
+            <kbd className="rounded border border-border/80 bg-background px-1.5 py-0.5 font-mono text-[11px] font-semibold text-muted-foreground/80 shadow-sm ml-0.5">
               Ctrl+K
             </kbd>
           </span>

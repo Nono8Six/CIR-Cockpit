@@ -57,8 +57,21 @@ def table_with_type(page) -> list[list[Any]]:
     return max(candidates, key=lambda table: len(table) * max(map(len, table)))
 
 
-def row_values(row: list[Any], start: int, names: list[str]) -> dict[str, int | float | None]:
-    return {name: number(row[start + index]) if start + index < len(row) else None for index, name in enumerate(names)}
+def dimension_value(name: str, value: Any) -> int | float | str | None:
+    text = str(value or "").strip()
+    if name == "B" and re.fullmatch(r"\d+(?:[,.]\d+)?/\d+(?:[,.]\d+)?", text):
+        # Le catalogue publie volontairement deux entraxes sans discriminator
+        # exploitable (PLSES 280 MGU : 368/419). La valeur verbatim est plus
+        # fiable qu'un choix arbitraire et reste non comparable numériquement.
+        return text
+    return number(value)
+
+
+def row_values(row: list[Any], start: int, names: list[str]) -> dict[str, int | float | str | None]:
+    return {
+        name: dimension_value(name, row[start + index]) if start + index < len(row) else None
+        for index, name in enumerate(names)
+    }
 
 
 class Collector:
@@ -75,7 +88,8 @@ class Collector:
             casing = {"LSES": "aluminium", "FLSES": "cast-iron", "CILS": "cast-iron", "PLSES": "steel"}[series]
             self.items[name] = {
                 "brand": "Leroy-Somer", "designation": name, "frameSize": frame,
-                "casingMaterial": casing, "dimensions": {}, "flanges": [], "_sources": set(),
+                "casingMaterial": casing, "dimensions": {}, "shaftByPoles": {},
+                "flanges": [], "_sources": set(),
             }
         return self.items[name]
 
@@ -98,6 +112,25 @@ class Collector:
                       "T": spec.get("T"), "holes": spec.get("holes"), "boreType": bore_type}
             if not any(old["mounting"] == mounting and old["designation"] == flange["designation"] for old in item["flanges"]):
                 item["flanges"].append(flange)
+            item["_sources"].add((page, method))
+
+    def add_shaft_by_poles(
+        self,
+        raw_type: str,
+        poles: tuple[int, ...],
+        values: dict[str, Any],
+        page: int,
+        method: str,
+    ) -> None:
+        if not any(value is not None for value in values.values()):
+            return
+        for name in expand_types(raw_type):
+            item = self.item(name)
+            for polarity in poles:
+                existing = item["shaftByPoles"].setdefault(str(polarity), {})
+                for key, value in values.items():
+                    if value is not None:
+                        existing[key] = value
             item["_sources"].add((page, method))
 
 
@@ -181,14 +214,14 @@ def parse_shafts(collector: Collector, page, pdf_page: int) -> None:
     for row in table[3:]:
         if not row or not row[0] or not re.match(r"^(?:LS|LSES|FLSES|CILS|PLSES)", str(row[0]).strip()):
             continue
-        # D/E/F for 4-6 poles and 2 poles. A value is kept only when both published
-        # alternatives agree, or when the other alternative is explicitly absent.
+        # La page publie deux blocs distincts : 4/6 pôles à gauche et 2 pôles
+        # à droite. Les conserver avec leur polarité évite de perdre les
+        # diamètres réellement différents (par exemple CILS 280 M).
         shaft_number = lambda value: number(re.match(r"\d+(?:[,.]\d+)?", str(value or "")).group(0)) if re.match(r"\d+(?:[,.]\d+)?", str(value or "")) else None
         left = {"F": shaft_number(row[1]), "D": shaft_number(row[3]), "E": shaft_number(row[5])}
         right = {"F": shaft_number(row[10]), "D": shaft_number(row[12]), "E": shaft_number(row[14])}
-        agreed = {key: left[key] if left[key] is not None and (right[key] is None or right[key] == left[key]) else right[key] if right[key] is not None and left[key] is None else None for key in left}
-        if any(value is not None for value in agreed.values()):
-            collector.add_dimensions(str(row[0]), agreed, pdf_page, "pdfplumber-shaft")
+        collector.add_shaft_by_poles(str(row[0]), (4, 6), left, pdf_page, "pdfplumber-shaft")
+        collector.add_shaft_by_poles(str(row[0]), (2,), right, pdf_page, "pdfplumber-shaft")
 
 
 def main() -> None:
@@ -218,7 +251,7 @@ def main() -> None:
 
     rows = []
     for item in collector.items.values():
-        item["dimensions"] = {**{key: None for key in ("D", "E", "F")}, **item["dimensions"]}
+        item["dimensions"] = {**item["dimensions"]}
         item["provenance"] = {"catalog": PDF_NAME, "catalogSha256": sha, "catalogEdition": CATALOG_EDITION,
                               "sources": [collector.source(page, method) for page, method in sorted(item.pop("_sources"))]}
         rows.append(item)
@@ -231,7 +264,16 @@ def main() -> None:
     missing_dimensions = sorted(characteristics - dimensions)
     missing_characteristics = sorted(dimensions - characteristics)
     mismatches = [row["designation"] for row in rows if row["dimensions"].get("H") is not None and row["dimensions"]["H"] != row["frameSize"]]
-    no_dimensions = [row["designation"] for row in rows if not any(value is not None for value in row["dimensions"].values())]
+    no_dimensions = [
+        row["designation"]
+        for row in rows
+        if not any(value is not None for value in row["dimensions"].values())
+        and not any(
+            value is not None
+            for shaft in row["shaftByPoles"].values()
+            for value in shaft.values()
+        )
+    ]
     bad_flanges = [row["designation"] for row in rows if row["flanges"] and any(flange["M"] is None or flange["N"] is None or flange["P"] is None for flange in row["flanges"])]
     print("[controle] moteurs par serie:", dict(sorted(Counter(row["designation"].split()[0] for row in rows).items())))
     print("[controle] brides par montage:", dict(sorted(Counter(flange["mounting"] for row in rows for flange in row["flanges"]).items())))

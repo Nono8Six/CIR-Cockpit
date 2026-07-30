@@ -39,7 +39,7 @@ const UserCreateDialog = ({ open, onOpenChange, agencies, onCreate }: UserCreate
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Creer un utilisateur</DialogTitle>
+          <DialogTitle>Créer un utilisateur</DialogTitle>
           <DialogDescription className="sr-only">
             Renseignez les informations du nouvel utilisateur et ses droits.
           </DialogDescription>

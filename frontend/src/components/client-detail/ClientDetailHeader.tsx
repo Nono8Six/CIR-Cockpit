@@ -20,7 +20,7 @@ const ClientDetailHeader = ({
       </div>
       <div>
         <p className="text-xs uppercase tracking-widest text-muted-foreground/80">
-          {formatClientNumber(client.client_number)} · {client.account_type === 'cash' ? 'Comptant' : 'Compte a terme'}
+          {formatClientNumber(client.client_number)} · {client.account_type === 'cash' ? 'Comptant' : 'Compte à terme'}
         </p>
         <h2 className="text-lg font-semibold text-foreground">{client.name}</h2>
         <p className="text-sm text-muted-foreground mt-1">

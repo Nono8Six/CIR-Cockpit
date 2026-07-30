@@ -99,7 +99,7 @@ describe('useUsersManager', () => {
       });
     });
 
-    expect(notifySuccess).toHaveBeenCalledWith('Utilisateur cree.');
+    expect(notifySuccess).toHaveBeenCalledWith('Utilisateur créé.');
     expect(result.current.passwordDialogOpen).toBe(true);
     expect(result.current.tempPassword).toBe('Temp#123');
   });
@@ -114,7 +114,7 @@ describe('useUsersManager', () => {
       await result.current.handleRoleChange('user-1', 'agency_admin');
     });
 
-    expect(notifySuccess).not.toHaveBeenCalledWith('Role mis a jour.');
+    expect(notifySuccess).not.toHaveBeenCalledWith('Rôle mis à jour.');
   });
 
   it('reports anonymized interactions count on delete', async () => {
@@ -131,7 +131,7 @@ describe('useUsersManager', () => {
     });
 
     expect(notifySuccess).toHaveBeenCalledWith(
-      'Utilisateur supprime. 3 interaction(s) reattribuee(s).'
+      'Utilisateur supprimé. 3 interaction(s) reattribuee(s).'
     );
   });
 

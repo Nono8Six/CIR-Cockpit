@@ -205,7 +205,7 @@ describe('EntityOnboardingDialog', () => {
     expect(screen.getByRole('textbox', { name: /département client/i })).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: /code postal client/i })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: /section activité client/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /etablissements actifs/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /établissements actifs/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^continuer$/i })).toBeDisabled();
   });
 
@@ -332,8 +332,8 @@ describe('EntityOnboardingDialog', () => {
     expect(screen.getByRole('button', { name: /33170 gradignan/i })).toBeInTheDocument();
     const closedSiteButton = screen.getByRole('button', { name: /33520 bruges/i });
     expect(closedSiteButton).toBeInTheDocument();
-    expect(within(closedSiteButton).getByText(/^site ferme$/i)).toBeInTheDocument();
-    expect(screen.getByText(/ferme officiellement le/i)).toBeInTheDocument();
+    expect(within(closedSiteButton).getByText(/^site fermé$/i)).toBeInTheDocument();
+    expect(screen.getByText(/fermé officiellement le/i)).toBeInTheDocument();
     expect(screen.getByText(/ancien siège/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /33170 gradignan/i }));
@@ -447,16 +447,16 @@ describe('EntityOnboardingDialog', () => {
     expect(
       screen.getByText(/3 établissements affichés sur 4 sites officiels/i)
     ).toBeInTheDocument();
-    expect(screen.getAllByText(/^site ferme$/i)).toHaveLength(2);
-    expect(screen.getByText(/ferme officiellement le 05\/06\/2010/i)).toBeInTheDocument();
-    expect(screen.getByText(/ferme officiellement le 17\/02\/2014/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/^site fermé$/i)).toHaveLength(2);
+    expect(screen.getByText(/fermé officiellement le 05\/06\/2010/i)).toBeInTheDocument();
+    expect(screen.getByText(/fermé officiellement le 17\/02\/2014/i)).toBeInTheDocument();
 
     const closedSiteButton = screen.getByRole('button', { name: /33110 le bouscat/i });
-    expect(within(closedSiteButton).getByText(/^site ferme$/i)).toBeInTheDocument();
+    expect(within(closedSiteButton).getByText(/^site fermé$/i)).toBeInTheDocument();
 
     await user.click(closedSiteButton);
     expect(continueButton).toBeEnabled();
-    expect(within(closedSiteButton).getByText(/^site ferme$/i)).toBeInTheDocument();
+    expect(within(closedSiteButton).getByText(/^site fermé$/i)).toBeInTheDocument();
   });
 
   it('filters visible establishments by status and clears a hidden selection', async () => {
@@ -540,7 +540,7 @@ describe('EntityOnboardingDialog', () => {
 
     expect(continueButton).toBeEnabled();
 
-    await user.click(screen.getByRole('button', { name: /etablissements actifs/i }));
+    await user.click(screen.getByRole('button', { name: /établissements actifs/i }));
 
     expect(continueButton).toBeDisabled();
     expect(
@@ -653,7 +653,7 @@ describe('EntityOnboardingDialog', () => {
     expect(screen.getByText(/10 à 19 salariés/i)).toBeInTheDocument();
     expect(screen.getByText('ESS')).toBeInTheDocument();
     expect(screen.getByText('RGE')).toBeInTheDocument();
-    expect(screen.getByText(/sélectionne un établissement pour voir les infos du site/i)).toBeInTheDocument();
+    expect(screen.getByText(/sélectionnez un établissement pour voir les infos du site/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /dirigeants/i }));
     expect(screen.getByText('Jean Martin')).toBeInTheDocument();
@@ -872,20 +872,20 @@ describe('EntityOnboardingDialog', () => {
       />
     );
 
-    const clientIntentRadio = screen.getByRole('radio', { name: /selectionner client/i });
+    const clientIntentRadio = screen.getByRole('radio', { name: /sélectionner client/i });
     clientIntentRadio.focus();
     await user.keyboard('{ArrowLeft}');
 
-    expect(screen.getByRole('radio', { name: /selectionner prospect/i })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('radio', { name: /sélectionner prospect/i })).toHaveAttribute('aria-checked', 'true');
 
     await user.keyboard('{ArrowRight}');
     expect(clientIntentRadio).toHaveAttribute('aria-checked', 'true');
 
-    const companyKindRadio = screen.getByRole('radio', { name: /selectionner societe/i });
+    const companyKindRadio = screen.getByRole('radio', { name: /sélectionner société/i });
     companyKindRadio.focus();
     await user.keyboard('{ArrowRight}');
 
-    expect(screen.getByRole('radio', { name: /selectionner particulier/i })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('radio', { name: /sélectionner particulier/i })).toHaveAttribute('aria-checked', 'true');
   });
 
   it('confirms before closing when the form is dirty', async () => {
@@ -911,7 +911,7 @@ describe('EntityOnboardingDialog', () => {
       />
     );
 
-    await user.click(screen.getByRole('radio', { name: /selectionner prospect/i }));
+    await user.click(screen.getByRole('radio', { name: /sélectionner prospect/i }));
     await user.click(screen.getByRole('button', { name: /^annuler$/i }));
 
     expect(await screen.findByRole('alertdialog')).toBeInTheDocument();
@@ -946,7 +946,7 @@ describe('EntityOnboardingDialog', () => {
     );
 
     await user.click(screen.getByRole('button', { name: /^continuer$/i }));
-    await user.type(screen.getByPlaceholderText(/nom de societe, siren ou siret/i), 'sea');
+    await user.type(screen.getByPlaceholderText(/nom de société, siren ou siret/i), 'sea');
     await user.click(screen.getByRole('button', { name: /^annuler$/i }));
 
     expect(await screen.findByRole('alertdialog')).toBeInTheDocument();

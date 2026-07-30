@@ -12,8 +12,17 @@ import { getPathForTab, isShellNavItemActive } from '@/app/appRoutes';
 import type { AppShellNavSection } from '@/app/appConstants';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/feedback/Tooltip';
 import { Kbd } from '../ui/data-display/Kbd';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '../ui/navigation/DropdownMenu';
 import { cn } from '@/lib/utils';
-import type { AppTab } from '@/types';
+import type { AgencyMembershipSummary, AppTab } from '@/types';
 
 import AppSidebarNavItemLink from './AppSidebarNavItemLink';
 
@@ -23,6 +32,9 @@ export interface AppSidebarContentProps {
   activePath: string;
   agencyName?: string;
   agencySubtitle?: string;
+  agencyMemberships?: AgencyMembershipSummary[];
+  activeAgencyId?: string;
+  onAgencyChange?: (agencyId: string) => void;
   userName?: string;
   userRoleLabel?: string;
   userInitials?: string;
@@ -39,6 +51,9 @@ const AppSidebarContent = ({
   activePath,
   agencyName,
   agencySubtitle = 'Agence active',
+  agencyMemberships,
+  activeAgencyId,
+  onAgencyChange,
   userName,
   userRoleLabel,
   userInitials,
@@ -53,6 +68,17 @@ const AppSidebarContent = ({
   const toggleShortcut = getSidebarToggleShortcutLabel();
   const reducedMotion = useReducedMotion() ?? false;
   const shouldAnimateMobileOpen = !collapsed && Boolean(mobileOpen) && !reducedMotion;
+  const safeAgencyMemberships = Array.isArray(agencyMemberships) ? agencyMemberships : [];
+  const canSwitchAgency = safeAgencyMemberships.length > 1 && typeof onAgencyChange === 'function';
+  const agencyBlockContent = (
+    <>
+      <span className="h-1.5 w-1.5 rounded-full bg-success shadow-[0_0_0_2px_hsl(var(--success)/0.14)]" aria-hidden="true" />
+      <span className="min-w-0 flex-1 leading-tight">
+        <span className="block truncate font-semibold text-foreground">{agencyName}</span>
+        <span className="block truncate text-[10.5px] text-muted-foreground">{agencySubtitle}</span>
+      </span>
+    </>
+  );
   const fadeSlideTransition: Transition = reducedMotion
     ? { duration: 0 }
     : { duration: 0.15, ease: 'easeOut' };
@@ -91,20 +117,49 @@ const AppSidebarContent = ({
         ) : null}
 
         {!collapsed && agencyName ? (
-          <button
-            type="button"
-            className={cn(
-              'mx-2.5 mt-2 flex h-9 items-center gap-2 rounded-lg border border-border bg-card px-2.5 text-left text-xs transition-[background-color,border-color,box-shadow] duration-150 hover:border-border/80 hover:bg-background',
-              APP_SHELL_CLASSES.sidebarFocus
-            )}
-          >
-            <span className="h-1.5 w-1.5 rounded-full bg-success shadow-[0_0_0_2px_hsl(var(--success)/0.14)]" aria-hidden="true" />
-            <span className="min-w-0 flex-1 leading-tight">
-              <span className="block truncate font-semibold text-foreground">{agencyName}</span>
-              <span className="block truncate text-[10.5px] text-muted-foreground">{agencySubtitle}</span>
-            </span>
-            <ChevronDown size={12} className="text-muted-foreground" aria-hidden="true" />
-          </button>
+          canSwitchAgency ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="Changer d'agence"
+                  className={cn(
+                    'group mx-2.5 mt-2 flex h-9 items-center gap-2 rounded-lg border border-border bg-card px-2.5 text-left text-xs transition-[background-color,border-color,box-shadow] duration-150 hover:border-border/80 hover:bg-background',
+                    APP_SHELL_CLASSES.sidebarFocus
+                  )}
+                >
+                  {agencyBlockContent}
+                  <ChevronDown
+                    size={12}
+                    className="text-muted-foreground transition-transform duration-150 group-data-[state=open]:rotate-180"
+                    aria-hidden="true"
+                  />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                <DropdownMenuLabel className="text-xs">Changer d&apos;agence</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuRadioGroup
+                  value={activeAgencyId ?? ''}
+                  onValueChange={(value) => onAgencyChange?.(value)}
+                >
+                  {safeAgencyMemberships.map((membership) => (
+                    <DropdownMenuRadioItem
+                      key={membership.agency_id}
+                      value={membership.agency_id}
+                      className="cursor-pointer text-[12.5px]"
+                    >
+                      <span className="truncate">{membership.agency_name}</span>
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <div className="mx-2.5 mt-2 flex h-9 items-center gap-2 rounded-lg border border-border bg-card px-2.5 text-left text-xs">
+              {agencyBlockContent}
+            </div>
+          )
         ) : null}
 
         {!collapsed ? (

@@ -234,6 +234,120 @@ function derivePoles(row) {
   return null;
 }
 
+function productSeries(row) {
+  if (row.series != null) return String(row.series).trim().toUpperCase();
+  const designation = String(row.type ?? row.designation ?? '').trim().toUpperCase();
+  return designation.match(/^(FLSHRM|PLSHRM|LSHRM|FLSES|PLSES|LSES|CILS|BE|BN|BX|BY|ME|MX|M)\b/)?.[1] ?? null;
+}
+
+function productPhysicalKey(row) {
+  const designation = row.type ?? row.designation ?? '';
+  const poles = derivePoles(row);
+  const power = row.powerKw == null ? null : Number(row.powerKw);
+  if (!designation || poles == null || !Number.isFinite(power)) return null;
+  return `${normalizeDesignation(designation)}|${poles}|${canonicalNumericToken(power)}`;
+}
+
+function qualifyProductRows(entries) {
+  const qualified = entries.map((entry) => ({ ...entry, row: { ...entry.row } }));
+  const leroyMainsPhysical = new Map();
+
+  for (const { row } of qualified) {
+    if (row.brand !== 'Leroy-Somer'
+        || (row.motorTechnology ?? 'asynchronous') !== 'asynchronous'
+        || row.supplyMode !== 'mains') continue;
+    const key = productPhysicalKey(row);
+    const { mass, mounting } = massFields(row);
+    const inertia = row.inertiaKgm2 ?? null;
+    if (key == null || mass == null || inertia == null) continue;
+    const candidates = leroyMainsPhysical.get(key) ?? new Map();
+    const signature = `${canonicalNumericToken(mass)}|${canonicalNumericToken(inertia)}|${mounting ?? NIL}`;
+    candidates.set(signature, { mass, inertia, mounting });
+    leroyMainsPhysical.set(key, candidates);
+  }
+
+  const stats = {
+    protection_ip: {},
+    casing_material: {},
+    frame_from_designation: 0,
+    requires_vfd: 0,
+    integrated_non_iec: 0,
+    article_no_status: {},
+    leroy_physical_backfill: 0,
+    leroy_physical_ambiguous: new Set(),
+  };
+  const count = (bucket, key) => { bucket[key] = (bucket[key] ?? 0) + 1; };
+
+  for (const { row } of qualified) {
+    const series = productSeries(row);
+    const technology = row.motorTechnology ?? 'asynchronous';
+
+    row.requiresVfd = technology === 'PMaSynRM' || technology === 'SynRM' || technology === 'PM';
+    if (row.requiresVfd) stats.requires_vfd += 1;
+
+    row.articleNoStatus = row.articleNo == null ? 'not_published_in_source' : 'published';
+    count(stats.article_no_status, row.articleNoStatus);
+
+    row.isIecStandard = !(row.brand === 'Bonfiglioli' && ['M', 'ME', 'MX'].includes(series));
+    if (!row.isIecStandard) {
+      row.shaftSpec = 'integrated_gearmotor_non_iec';
+      stats.integrated_non_iec += 1;
+    }
+
+    if (row.brand === 'Innomotics') {
+      row.protectionIp ??= 'IP55';
+    } else if (row.brand === 'Leroy-Somer') {
+      if (['LSES', 'FLSES', 'CILS', 'LSHRM', 'FLSHRM'].includes(series)) row.protectionIp ??= 'IP55';
+      if (['PLSES', 'PLSHRM'].includes(series)) row.protectionIp ??= 'IP23';
+      if (['LSHRM', 'FLSHRM', 'PLSHRM'].includes(series) && row.frameSize == null) {
+        const designation = String(row.type ?? row.designation ?? '').trim().toUpperCase();
+        const match = designation.match(/^(?:LSHRM|FLSHRM|PLSHRM)\s+(\d{2,3})(?:[A-Z]|$)/);
+        if (match) {
+          row.frameSize = Number(match[1]);
+          stats.frame_from_designation += 1;
+        }
+      }
+    } else if (row.brand === 'Bonfiglioli') {
+      if (series !== 'BY') row.protectionIp ??= 'IP55';
+      if (['BE', 'BN', 'M', 'ME', 'MX'].includes(series)) row.casingMaterial ??= 'aluminium';
+      if (series === 'BY') row.casingMaterial ??= 'cast-iron';
+      if (series === 'BX') {
+        row.casingMaterial ??= Number(row.frameSize) >= 200 ? 'cast-iron' : 'aluminium';
+      }
+    }
+
+    if (row.protectionIp != null) count(stats.protection_ip, `${row.brand}|${series}|${row.protectionIp}`);
+    if (row.casingMaterial != null) count(stats.casing_material, `${row.brand}|${series}|${row.casingMaterial}`);
+
+    if (row.brand === 'Leroy-Somer'
+        && technology === 'asynchronous'
+        && row.supplyMode === 'vfd'
+        && massFields(row).mass == null
+        && row.inertiaKgm2 == null) {
+      const key = productPhysicalKey(row);
+      const candidates = key == null ? null : leroyMainsPhysical.get(key);
+      if (candidates?.size === 1) {
+        const [{ mass, inertia, mounting }] = candidates.values();
+        row.inertiaKgm2 = inertia;
+        if (mounting === 'B3') row.massB3Kg = mass;
+        else if (mounting === 'B5') row.massB5Kg = mass;
+        else row.massKg = mass;
+        stats.leroy_physical_backfill += 1;
+      } else if (candidates?.size > 1 && key != null) {
+        stats.leroy_physical_ambiguous.add(key);
+      }
+    }
+  }
+
+  return {
+    rows: qualified,
+    stats: {
+      ...stats,
+      leroy_physical_ambiguous: [...stats.leroy_physical_ambiguous].sort(),
+    },
+  };
+}
+
 function stableStringify(value) {
   if (value === null || typeof value !== 'object') return JSON.stringify(value);
   if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`;
@@ -451,6 +565,10 @@ const MODEL_ATTRIBUTES = [
   ['casing_material', (r) => r.casingMaterial ?? null],
   ['protection_ip', (r) => r.protectionIp ?? null],
   ['frame_size', (r) => (r.frameSize == null ? null : Number(r.frameSize))],
+  ['shaft_spec', (r) => r.shaftSpec ?? null],
+  ['requires_vfd', (r) => r.requiresVfd ?? null],
+  ['is_iec_standard', (r) => r.isIecStandard ?? null],
+  ['article_no_status', (r) => r.articleNoStatus ?? null],
   ['lifecycle', (r) => r.lifecycle ?? 'current'],
 ];
 
@@ -822,6 +940,66 @@ function chooseSource(row, keyword) {
 
 const SHAFT_CODES = new Set(['D', 'DPublished', 'E', 'F', 'G', 'GD', 'DB', 'O', 'D_tolerance', 'O_thread', 'GA', 'GC', 'DA', 'EA', 'FA']);
 
+function bonfiglioliGeometryDesignation(value) {
+  const designation = normalizeDesignation(String(value ?? ''));
+  let match = designation.match(/^be(63|71|80|100|112)[a-z]*$/);
+  if (match) return `be${match[1]}`;
+  match = designation.match(/^be(90)(s|l)[a-z]*$/);
+  if (match) return `be${match[1]}${match[2]}`;
+  match = designation.match(/^be(132)(s|ma|mb)[a-z]*$/);
+  if (match) return `be${match[1]}${match[2]}`;
+  match = designation.match(/^be(160)(l|m)[a-z]*$/);
+  if (match) return `be${match[1]}${match[2]}`;
+  match = designation.match(/^be(180)(l|m)[a-z]*$/);
+  if (match) return `be${match[1]}${match[2]}`;
+
+  match = designation.match(/^bn(56|63|71|80|100|112)[a-z]*$/);
+  if (match) return `bn${match[1]}`;
+  match = designation.match(/^bn(90)(s|l)[a-z]*$/);
+  if (match) return `bn${match[1]}${match[2]}`;
+  match = designation.match(/^bn(132)(s|m)[a-z]*$/);
+  if (match) return `bn${match[1]}${match[2]}`;
+  match = designation.match(/^bn(160)(mr|m|l)[a-z]*$/);
+  if (match) return `bn${match[1]}${match[2]}`;
+  match = designation.match(/^bn(180)(l|m)[a-z]*$/);
+  if (match) return `bn${match[1]}${match[2]}`;
+  match = designation.match(/^bn(200)(l)[a-z]*$/);
+  if (match) return `bn${match[1]}${match[2]}`;
+
+  match = designation.match(/^m05[a-z]*$/);
+  if (match) return 'm05';
+  match = designation.match(/^m0[a-z]*$/);
+  if (match) return 'm0';
+  match = designation.match(/^m1[a-z]*$/);
+  if (match) return 'm1';
+  match = designation.match(/^m2s[a-z]*$/);
+  if (match) return 'm2s';
+  match = designation.match(/^m3(l|s)[a-z]*$/);
+  if (match) return `m3${match[1]}`;
+  if (designation === 'm4lc') return 'm4lc';
+  match = designation.match(/^m4[a-z]*$/);
+  if (match) return 'm4';
+  match = designation.match(/^m5(l|s)[a-z]*$/);
+  if (match) return `m5${match[1]}`;
+
+  match = designation.match(/^me05[a-z]*$/);
+  if (match) return 'me05';
+  match = designation.match(/^me1s[a-z]*$/);
+  if (match) return 'me1s';
+  match = designation.match(/^me2s[a-z]*$/);
+  if (match) return 'me2s';
+  match = designation.match(/^me3(l|s)[a-z]*$/);
+  if (match) return `me3${match[1]}`;
+  if (designation === 'me4la' || designation === 'me4lb') return designation;
+  match = designation.match(/^me4l[a-z]*$/);
+  if (match) return 'me4l';
+  match = designation.match(/^me4s[a-z]*$/);
+  if (match) return 'me4s';
+  match = designation.match(/^me5(l|s)[a-z]*$/);
+  if (match) return `me5${match[1]}`;
+  return null;
+}
+
 function buildDimensionsAndFlanges(dimensionRows, models, sourceRefs) {
   // Index de rattachement, identique au chargeur SQLite : articleNo pour
   // Innomotics, designation normalisee ailleurs. Un bloc de cotes s'applique a
@@ -831,9 +1009,16 @@ function buildDimensionsAndFlanges(dimensionRows, models, sourceRefs) {
     const joinValue = model.brand === 'Innomotics'
       ? String(model.attributes.article_no ?? '').toUpperCase()
       : model.normalized_designation;
-    const key = `${model.brand}|${joinValue}`;
-    if (!index.has(key)) index.set(key, []);
-    index.get(key).push(model);
+    const joinValues = [joinValue];
+    if (model.brand === 'Bonfiglioli') {
+      const geometry = bonfiglioliGeometryDesignation(joinValue);
+      if (geometry && geometry !== joinValue) joinValues.push(`geometry:${geometry}`);
+    }
+    for (const value of joinValues) {
+      const key = `${model.brand}|${value}`;
+      if (!index.has(key)) index.set(key, []);
+      index.get(key).push(model);
+    }
   }
 
   const definitions = new Map();
@@ -893,7 +1078,12 @@ function buildDimensionsAndFlanges(dimensionRows, models, sourceRefs) {
     const joinValue = row.brand === 'Innomotics'
       ? String(row.articleNo ?? '').toUpperCase()
       : normalizeDesignation(String(row.designation ?? ''));
-    const matches = index.get(`${row.brand}|${joinValue}`) ?? [];
+    const matchGroups = [index.get(`${row.brand}|${joinValue}`) ?? []];
+    if (row.brand === 'Bonfiglioli') {
+      const geometry = bonfiglioliGeometryDesignation(joinValue);
+      if (geometry) matchGroups.push(index.get(`${row.brand}|geometry:${geometry}`) ?? []);
+    }
+    const matches = [...new Map(matchGroups.flat().map((model) => [model.model_key, model])).values()];
     const cells = countCells(row);
     const flangeCount = (row.flanges ?? []).length;
     counters.source_cells_total += cells;
@@ -1244,6 +1434,88 @@ function runValidators(models, efficiencyRows, thresholds) {
   return found;
 }
 
+function buildQualificationIssues(models, dimensions) {
+  const found = [];
+  const dimensionsByModel = new Map();
+  for (const dimension of dimensions) {
+    if (dimension.canonical_code == null) continue;
+    const codes = dimensionsByModel.get(dimension.model_key) ?? new Set();
+    codes.add(dimension.canonical_code);
+    dimensionsByModel.set(dimension.model_key, codes);
+  }
+  const requiredIecCodes = ['A', 'B', 'C', 'H', 'K', 'D', 'E', 'F'];
+
+  for (const model of [...models.values()].sort((a, b) => a.model_key.localeCompare(b.model_key))) {
+    if (model.brand === 'Innomotics' && model.designation === '1LE1583-3AB5' && model.inertia_kgm2 == null) {
+      found.push({
+        model_key: model.model_key,
+        point_origin: null,
+        severity: 'warning',
+        rule_code: 'INERTIA_SOURCE_CONFLICT',
+        message: "Le catalogue 2026 imprime « 3443 » sans separateur decimal ; aucune correction n'est inferable",
+        observed: '3443 kg.m2 imprime',
+        expected: 'valeur constructeur non ambigue',
+        restriction: "Aucun calcul ni conseil fonde sur l'inertie jusqu'a publication d'une source constructeur coherente",
+        source_ref: model.source_ref,
+        target_key: `INERTIA_SOURCE_CONFLICT|${model.normalized_brand}|${model.normalized_designation}|model`,
+      });
+    }
+    if (model.attributes.is_iec_standard === true) {
+      const publishedCodes = dimensionsByModel.get(model.model_key) ?? new Set();
+      const missingCodes = requiredIecCodes.filter((code) => !publishedCodes.has(code));
+      if (missingCodes.length > 0) {
+      found.push({
+        model_key: model.model_key,
+        point_origin: null,
+        severity: 'info',
+        rule_code: 'IEC_DIMENSIONS_UNRESOLVED',
+        message: `Le jeu de cotes IEC principal est incomplet dans les lignes source : ${missingCodes.join('/')}`,
+        observed: `${missingCodes.join('/')} absentes`,
+        expected: 'A/B/C/H/K/D/E/F publiees pour le modele physique exact',
+        restriction: `Compatibilite mecanique indeterminee pour ${missingCodes.join('/')}; obtenir la page constructeur portant exactement la variante`,
+        source_ref: model.source_ref,
+        target_key: `IEC_DIMENSIONS_UNRESOLVED|${model.model_key}|model`,
+      });
+      }
+    }
+    if (model.brand === 'Bonfiglioli' && model.attributes.series === 'BY' && model.attributes.protection_ip == null) {
+      found.push({
+        model_key: model.model_key,
+        point_origin: null,
+        severity: 'info',
+        rule_code: 'PROTECTION_IP_VARIANT_UNRESOLVED',
+        message: 'La gamme BY publie IP55/IP56 sans discriminator de variante exploitable dans la ligne moteur',
+        observed: 'protection_ip NULL',
+        expected: 'variante IP exacte publiee',
+        restriction: "Ne pas afficher un indice IP unique tant que l'option exacte n'est pas qualifiee",
+        source_ref: model.source_ref,
+        target_key: `PROTECTION_IP_VARIANT_UNRESOLVED|${model.normalized_brand}|${model.normalized_designation}|model`,
+      });
+    }
+
+    const unresolvedLeroyPhysical = model.brand === 'Leroy-Somer'
+      && model.attributes.motor_technology === 'asynchronous'
+      && model.mass_kg == null
+      && model.inertia_kgm2 == null
+      && model.points.some((point) => point.retained && point.supply_mode === 'vfd');
+    if (unresolvedLeroyPhysical) {
+      found.push({
+        model_key: model.model_key,
+        point_origin: null,
+        severity: 'info',
+        rule_code: 'PHYSICAL_ATTRIBUTES_UNRESOLVED',
+        message: 'Masse et inertie non reprises : aucune correspondance physique unique avec une ligne reseau du catalogue',
+        observed: 'masse NULL, inertie NULL',
+        expected: 'une seule variante source a designation, poles et puissance identiques',
+        restriction: "Aucune comparaison de masse ou d'inertie pour ce modele",
+        source_ref: model.source_ref,
+        target_key: `PHYSICAL_ATTRIBUTES_UNRESOLVED|${model.normalized_brand}|${model.normalized_designation}|model`,
+      });
+    }
+  }
+  return found;
+}
+
 // ---------------------------------------------------------------------------
 // Etape 8 - controles de contraintes PostgreSQL simules en local
 // ---------------------------------------------------------------------------
@@ -1262,6 +1534,11 @@ function checkTargetConstraints(bundle) {
     if (!ALLOWED_TECHNOLOGIES.has(model.motor_technology)) fail('motor_model', 'motor_model_technology_check', `${model.model_key} -> ${model.motor_technology}`);
     if (model.casing_material != null && !ALLOWED_CASINGS.has(model.casing_material)) fail('motor_model', 'motor_model_casing_check', `${model.model_key} -> ${model.casing_material}`);
     if (model.frame_size != null && (model.frame_size < 56 || model.frame_size > 450)) fail('motor_model', 'motor_model_frame_size_check', `${model.model_key} -> ${model.frame_size}`);
+    if (typeof model.requires_vfd !== 'boolean') fail('motor_model', 'motor_model_requires_vfd_check', `${model.model_key} -> ${model.requires_vfd}`);
+    if (typeof model.is_iec_standard !== 'boolean') fail('motor_model', 'motor_model_is_iec_standard_check', `${model.model_key} -> ${model.is_iec_standard}`);
+    if (!['published', 'not_published_in_source'].includes(model.article_no_status)) fail('motor_model', 'motor_model_article_no_status_check', `${model.model_key} -> ${model.article_no_status}`);
+    if (model.requires_vfd !== ['PMaSynRM', 'SynRM', 'PM'].includes(model.motor_technology)) fail('motor_model', 'motor_model_requires_vfd_value_check', `${model.model_key} -> ${model.requires_vfd}/${model.motor_technology}`);
+    if (model.is_iec_standard === false && model.shaft_spec !== 'integrated_gearmotor_non_iec') fail('motor_model', 'motor_model_non_iec_shaft_spec_check', `${model.model_key} -> ${model.shaft_spec}`);
     if (model.inertia_kgm2 != null && model.inertia_kgm2 < 0) fail('motor_model', 'motor_model_inertia_check', model.model_key);
     if (model.mass_kg != null && !(model.mass_kg > 0)) fail('motor_model', 'motor_model_mass_check', model.model_key);
     if (model.mass_mounting != null && !['B3', 'B5', 'B14', 'B34', 'B35', 'V1'].includes(model.mass_mounting)) fail('motor_model', 'motor_model_mass_mounting_check', model.model_key);
@@ -1524,7 +1801,8 @@ function main() {
     return rows;
   };
 
-  const productRows = load('product');
+  const productQualification = qualifyProductRows(load('product'));
+  const productRows = productQualification.rows;
   const dimensionRows = load('dimension');
   const bonfiglioliBFixtureCheck = validateBonfiglioliBFixtures(dimensionRows);
   const correlationRows = load('correlation');
@@ -1561,7 +1839,10 @@ function main() {
   const correlationResult = buildCorrelations(correlationRows, sourceRefs);
   const correlations = correlationResult.rows;
   const thresholds = buildThresholds(iec30_1Rows, iec30_2Rows, sourceRefs);
-  const validationIssues = runValidators(models, derived.efficiency, thresholds);
+  const validationIssues = [
+    ...runValidators(models, derived.efficiency, thresholds),
+    ...buildQualificationIssues(models, dimensionResult.dimensions),
+  ];
 
   // Anomalies imprimees deja relevees par les extracteurs, conservees telles quelles.
   const printedAnomalies = anomalyRows.map(({ file, index, row }) => ({
@@ -1583,6 +1864,10 @@ function main() {
     casing_material: m.attributes.casing_material,
     protection_ip: m.attributes.protection_ip,
     frame_size: m.attributes.frame_size,
+    shaft_spec: m.attributes.shaft_spec,
+    requires_vfd: m.attributes.requires_vfd,
+    is_iec_standard: m.attributes.is_iec_standard,
+    article_no_status: m.attributes.article_no_status,
     inertia_kgm2: m.inertia_kgm2,
     mass_kg: m.mass_kg,
     mass_mounting: m.mass_mounting,
@@ -1648,6 +1933,7 @@ function main() {
       model_key: 'cir.motor.model-key/v1',
       identity_discriminator: 'cir.motor.identity-discriminator/v1',
       operating_point_identity: 'cir.motor.operating-point-identity/v2',
+    catalog_qualification: 'cir.motor.catalog-qualification/v2',
       dimension_vocabulary_version: 1,
     },
   });
@@ -1839,6 +2125,28 @@ function main() {
       `${dimensionResult.dimensionConflicts.length} conflits de cote, ${dimensionResult.flangeConflicts.length} conflits de bride, ${constraintViolations.length} violations`,
       'toute divergence est journalisee, aucune valeur n est reecrite',
     ),
+    criterion(
+      'Qualifications moteur explicites et factuelles',
+      modelRows.every((model) =>
+        model.requires_vfd != null
+        && model.is_iec_standard != null
+        && model.article_no_status != null
+      )
+        && modelRows.filter((model) => model.requires_vfd).length === 59
+        && modelRows.filter((model) => model.is_iec_standard === false).length === 109
+        && modelRows.filter((model) => model.brand === 'Innomotics' && model.protection_ip === 'IP55').length === 1017
+        && modelRows.filter((model) => model.brand === 'Leroy-Somer' && model.protection_ip === 'IP55').length === 357
+        && modelRows.filter((model) => model.brand === 'Leroy-Somer' && model.protection_ip === 'IP23').length === 83,
+      '59 VFD obligatoires, 109 integres non IEC, Innomotics 1017 IP55, Leroy-Somer 357 IP55 et 83 IP23',
+      {
+        requires_vfd: modelRows.filter((model) => model.requires_vfd).length,
+        integrated_non_iec: modelRows.filter((model) => model.is_iec_standard === false).length,
+        innomotics_ip55: modelRows.filter((model) => model.brand === 'Innomotics' && model.protection_ip === 'IP55').length,
+        leroy_somer_ip55: modelRows.filter((model) => model.brand === 'Leroy-Somer' && model.protection_ip === 'IP55').length,
+        leroy_somer_ip23: modelRows.filter((model) => model.brand === 'Leroy-Somer' && model.protection_ip === 'IP23').length,
+      },
+      'toute difference bloque le lot',
+    ),
   ];
 
   const report = {
@@ -1892,6 +2200,7 @@ function main() {
       derived_rows_lost_to_blocked_points: derivedLostToBlockedPoints,
     },
     identity_rule_options: identityOptions,
+    product_qualification: productQualification.stats,
     dimension_reconciliation: { ...dimensionResult.counters, unmatched_blocks_outside_oracle_scope: unmatchedOutsideOracleScope },
     anomalies_reconciliation: anomalyReconciliation,
     validation: { candidate_summary: validationSummary, issues: validationIssues.map((i) => ({ rule_code: i.rule_code, severity: i.severity, model_key: i.model_key, point_origin: i.point_origin, observed: i.observed, expected: i.expected })) },

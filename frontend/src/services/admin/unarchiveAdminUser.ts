@@ -12,7 +12,7 @@ const parseUnarchiveUserResponse = (payload: unknown): UnarchiveUserResponse => 
   if (!parsed.success) {
     throw createAppError({
       code: 'EDGE_INVALID_RESPONSE',
-      message: 'Reponse serveur invalide.',
+      message: 'Réponse serveur invalide.',
       source: 'edge',
       details: parsed.error.message
     });
@@ -27,5 +27,5 @@ export const unarchiveAdminUser = (userId: string) =>
       user_id: userId
       }, options),
     parseUnarchiveUserResponse,
-    "Impossible de reactiver l'utilisateur."
+    "Impossible de réactiver l'utilisateur."
   );

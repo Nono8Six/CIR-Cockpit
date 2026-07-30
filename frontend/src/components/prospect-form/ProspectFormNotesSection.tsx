@@ -13,7 +13,7 @@ const ProspectFormNotesSection = ({ notesField }: ProspectFormNotesSectionProps)
       id="prospect-notes"
       {...notesField}
       rows={3}
-      placeholder="Informations complementaires"
+      placeholder="Informations complémentaires"
     />
   </div>
 );

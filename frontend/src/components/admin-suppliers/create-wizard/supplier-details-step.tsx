@@ -40,7 +40,7 @@ const SupplierDetailsStep = ({
       <div>
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Étape 2</p>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Fiche d&apos;informations</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Renseigne les coordonnées et identifiants permanents du fournisseur.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Renseignez les coordonnées et identifiants permanents du fournisseur.</p>
       </div>
       <div className="flex flex-col gap-6">
         {/* General Info */}

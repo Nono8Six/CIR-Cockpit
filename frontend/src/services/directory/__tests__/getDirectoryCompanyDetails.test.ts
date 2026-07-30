@@ -94,7 +94,7 @@ describe('getDirectoryCompanyDetails', () => {
 
     await expect(getDirectoryCompanyDetails({ siren: '451013759' })).rejects.toMatchObject({
       code: 'REQUEST_FAILED',
-      message: 'Reponse serveur invalide.'
+      message: 'Réponse serveur invalide.'
     });
   });
 

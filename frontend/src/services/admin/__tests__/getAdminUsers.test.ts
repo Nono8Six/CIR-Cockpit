@@ -69,7 +69,7 @@ describe('getAdminUsers', () => {
 
     await expect(getAdminUsers()).rejects.toMatchObject({
       code: 'EDGE_INVALID_RESPONSE',
-      message: 'Reponse serveur invalide.'
+      message: 'Réponse serveur invalide.'
     });
   });
 });

@@ -4,7 +4,7 @@ import { motion, useReducedMotion, type Transition } from 'motion/react';
 import type { AppShellNavSection } from '@/app/appConstants';
 import { APP_SHELL_DIMENSIONS } from '@/components/app-shell/appShellTokens';
 import { Sheet, SheetContent } from './ui/feedback/Sheet';
-import type { AppTab } from '@/types';
+import type { AgencyMembershipSummary, AppTab } from '@/types';
 
 import AppSidebarContent from './app-sidebar/AppSidebarContent';
 
@@ -14,6 +14,9 @@ export interface AppSidebarProps {
   activePath: string;
   agencyName?: string;
   agencySubtitle?: string;
+  agencyMemberships?: AgencyMembershipSummary[];
+  activeAgencyId?: string;
+  onAgencyChange?: (agencyId: string) => void;
   userName?: string;
   userRoleLabel?: string;
   userInitials?: string;
@@ -30,6 +33,9 @@ const AppSidebar = ({
   activePath,
   agencyName,
   agencySubtitle,
+  agencyMemberships,
+  activeAgencyId,
+  onAgencyChange,
   userName,
   userRoleLabel,
   userInitials,
@@ -58,6 +64,9 @@ const AppSidebar = ({
           activePath={activePath}
           agencyName={agencyName}
           agencySubtitle={agencySubtitle}
+          agencyMemberships={agencyMemberships}
+          activeAgencyId={activeAgencyId}
+          onAgencyChange={onAgencyChange}
           userName={userName}
           userRoleLabel={userRoleLabel}
           userInitials={userInitials}

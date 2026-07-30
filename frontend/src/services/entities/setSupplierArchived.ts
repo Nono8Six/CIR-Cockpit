@@ -9,7 +9,7 @@ const parseEntityResponse = (payload: unknown): Entity => {
   if (!parsed.success) {
     throw createAppError({
       code: 'REQUEST_FAILED',
-      message: 'Reponse serveur invalide.',
+      message: 'Réponse serveur invalide.',
       source: 'edge',
       details: parsed.error.message
     });
@@ -32,5 +32,5 @@ export const setSupplierArchived = (supplierId: string, archived: boolean): Resu
         archived
       }, options),
     parseEntityResponse,
-    'Impossible de mettre a jour le fournisseur.'
+    'Impossible de mettre à jour le fournisseur.'
   );

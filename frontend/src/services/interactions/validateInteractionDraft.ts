@@ -3,7 +3,7 @@ import { interactionDraftSchema } from '../../../../shared/schemas/interaction/i
 import { createAppError } from '@/services/errors/AppError';
 
 const FIELD_LABELS: Record<string, string> = {
-  company_name: 'Nom de la societe',
+  company_name: 'Nom de la société',
   subject: 'Sujet',
   entity_type: 'Type de tiers',
   contact_service: 'Service',
@@ -11,9 +11,9 @@ const FIELD_LABELS: Record<string, string> = {
   channel: 'Canal',
   interaction_type: "Type d'interaction",
   contact_name: 'Contact',
-  entity_id: 'Entite',
+  entity_id: 'Entité',
   contact_id: 'Contact',
-  contact_phone: 'Telephone',
+  contact_phone: 'Téléphone',
   contact_email: 'Email'
 };
 

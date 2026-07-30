@@ -14,6 +14,7 @@ from extract_bonfiglioli_dimensions import (
     assert_exact_b_fixtures,
     implausible_dimensions,
     parse_page,
+    values_for,
 )
 
 
@@ -44,6 +45,13 @@ class BonfiglioliDimensionExtractionTest(unittest.TestCase):
             [("BY 280SCK", "B", 1968, "maximum prudent 1500 mm")],
         )
         self.assertEqual(rows[0]["dimensions"]["B"], 1968)
+
+    def test_single_published_value_under_double_header_applies_to_both_codes(self) -> None:
+        self.assertEqual(values_for("D DA", "11"), {"D": 11, "DA": 11})
+        self.assertEqual(values_for("E EA", "23"), {"E": 23, "EA": 23})
+
+    def test_two_published_values_under_double_header_remain_distinct(self) -> None:
+        self.assertEqual(values_for("D DA", "42 38"), {"D": 42, "DA": 38})
 
 
 if __name__ == "__main__":

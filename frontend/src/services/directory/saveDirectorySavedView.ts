@@ -13,7 +13,7 @@ const parseDirectorySavedViewResponse = (payload: unknown): DirectorySavedViewRe
   if (!parsed.success) {
     throw createAppError({
       code: 'REQUEST_FAILED',
-      message: 'Reponse serveur invalide.',
+      message: 'Réponse serveur invalide.',
       source: 'edge',
       details: parsed.error.message
     });

@@ -12,7 +12,7 @@ const parseDirectoryOptionDepartmentsResponse = (payload: unknown): DirectoryOpt
   if (!parsed.success) {
     throw createAppError({
       code: 'REQUEST_FAILED',
-      message: 'Reponse serveur invalide.',
+      message: 'Réponse serveur invalide.',
       source: 'edge',
       details: parsed.error.message
     });
@@ -27,5 +27,5 @@ export const getDirectoryOptionDepartments = (
   invokeTrpc(
     (api, options) => api.directory.options.departments.query(input, options),
     parseDirectoryOptionDepartmentsResponse,
-    "Impossible de charger les departements de l'annuaire."
+    "Impossible de charger les départements de l'annuaire."
   );

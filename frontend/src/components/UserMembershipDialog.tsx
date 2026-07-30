@@ -63,8 +63,8 @@ const UserMembershipDialog = ({
     [agencies, selectedSet]
   );
   const triggerLabel = selectedAgencies.length === 0
-    ? 'Selectionner les agences'
-    : `${selectedAgencies.length} agence${selectedAgencies.length > 1 ? 's' : ''} selectionnee${selectedAgencies.length > 1 ? 's' : ''}`;
+    ? 'Sélectionner les agences'
+    : `${selectedAgencies.length} agence${selectedAgencies.length > 1 ? 's' : ''} sélectionnée${selectedAgencies.length > 1 ? 's' : ''}`;
 
   const toggleAgency = (agencyId: string) => {
     if (selectedSet.has(agencyId)) {
@@ -93,7 +93,7 @@ const UserMembershipDialog = ({
       await onSave(values.agency_ids);
       handleDialogOpenChange(false);
     } catch (error) {
-      const appError = handleUiError(error, 'Impossible de mettre a jour les agences.', {
+      const appError = handleUiError(error, 'Impossible de mettre à jour les agences.', {
         source: 'UserMembershipDialog.submit'
       });
       setServerError(appError.message);
@@ -106,7 +106,7 @@ const UserMembershipDialog = ({
         <DialogHeader>
           <DialogTitle>Modifier les agences</DialogTitle>
           <DialogDescription className="sr-only">
-            Selectionnez les agences rattachees a cet utilisateur.
+            Sélectionnez les agences rattachées à cet utilisateur.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleFormSubmit} className="space-y-4">
@@ -171,7 +171,7 @@ const UserMembershipDialog = ({
                 </Badge>
               ))}
               {selectedAgencies.length === 0 && (
-                <p className="text-xs text-muted-foreground/80">Aucune agence selectionnee.</p>
+                <p className="text-xs text-muted-foreground/80">Aucune agence sélectionnée.</p>
               )}
             </div>
           </div>

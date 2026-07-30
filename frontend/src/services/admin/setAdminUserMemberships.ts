@@ -14,7 +14,7 @@ const parseSetUserMembershipsResponse = (payload: unknown): SetUserMembershipsRe
   if (!parsed.success) {
     throw createAppError({
       code: 'EDGE_INVALID_RESPONSE',
-      message: 'Reponse serveur invalide.',
+      message: 'Réponse serveur invalide.',
       source: 'edge',
       details: parsed.error.message
     });
@@ -35,5 +35,5 @@ export const setAdminUserMemberships = (
       mode
       }, options),
     parseSetUserMembershipsResponse,
-    "Impossible de mettre a jour les agences."
+    "Impossible de mettre à jour les agences."
   );

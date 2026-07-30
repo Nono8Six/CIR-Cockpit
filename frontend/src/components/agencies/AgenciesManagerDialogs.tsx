@@ -60,7 +60,7 @@ const AgenciesManagerDialogs = ({
         onOpenChange={(open) => { if (!open) onConfirmArchiveChange(null); }}
         title={confirmArchive?.nextArchived ? "Archiver l'agence" : "Restaurer l'agence"}
         description={confirmArchive?.nextArchived
-          ? `L'agence ${confirmArchive?.agency.name ?? ''} sera archivee.`
+          ? `L'agence ${confirmArchive?.agency.name ?? ''} sera archivée.`
           : `L'agence ${confirmArchive?.agency.name ?? ''} sera restauree.`}
         confirmLabel={confirmArchive?.nextArchived ? 'Archiver' : 'Restaurer'}
         variant={confirmArchive?.nextArchived ? 'destructive' : 'default'}
@@ -71,7 +71,7 @@ const AgenciesManagerDialogs = ({
         open={confirmDelete !== null}
         onOpenChange={(open) => { if (!open) onConfirmDeleteChange(null); }}
         title="Supprimer l'agence"
-        description={`L'agence ${confirmDelete?.name ?? ''} sera definitivement supprimee.`}
+        description={`L'agence ${confirmDelete?.name ?? ''} sera définitivement supprimée.`}
         confirmLabel="Supprimer"
         variant="destructive"
         onConfirm={onConfirmDelete}

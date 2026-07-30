@@ -13,7 +13,7 @@ const parseCockpitPhoneLookupResponse = (payload: unknown): CockpitPhoneLookupRe
   if (!parsed.success) {
     throw createAppError({
       code: 'REQUEST_FAILED',
-      message: 'Reponse serveur invalide.',
+      message: 'Réponse serveur invalide.',
       source: 'edge',
       details: parsed.error.message
     });
@@ -28,5 +28,5 @@ export const getCockpitPhoneLookup = (
   invokeTrpc(
     (api, options) => api.cockpit['phone-lookup'].query(input, options),
     parseCockpitPhoneLookupResponse,
-    "Impossible de rechercher l'historique du numero."
+    "Impossible de rechercher l'historique du numéro."
   );

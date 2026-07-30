@@ -68,7 +68,7 @@ const UserIdentityDialog = ({ open, onOpenChange, user, onSave }: UserIdentityDi
       });
       handleDialogOpenChange(false);
     } catch (err) {
-      const appError = handleUiError(err, "Impossible de mettre a jour l'utilisateur.", {
+      const appError = handleUiError(err, "Impossible de mettre à jour l'utilisateur.", {
         source: 'UserIdentityDialog.submit'
       });
       setServerError(appError.message);

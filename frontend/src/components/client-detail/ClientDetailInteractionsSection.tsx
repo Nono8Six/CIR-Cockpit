@@ -59,7 +59,7 @@ const ClientDetailInteractionsSection = ({
           <p>Impossible de charger les interactions de ce client.</p>
           <Button type="button" variant="outline" size="dense" className="mt-2 h-8" onClick={onRetry}>
             <RefreshCcw size={14} />
-            Reessayer
+            Réessayer
           </Button>
         </div>
       ) : interactions.length === 0 ? (

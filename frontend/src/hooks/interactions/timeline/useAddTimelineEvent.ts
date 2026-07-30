@@ -25,7 +25,7 @@ export const useAddTimelineEvent = (agencyId: string | null) => {
       );
     },
     onError: (error) => {
-      handleUiError(error, "Impossible d'ajouter l'evenement.", {
+      handleUiError(error, "Impossible d'ajouter l'événement.", {
         source: 'useAddTimelineEvent'
       });
     }

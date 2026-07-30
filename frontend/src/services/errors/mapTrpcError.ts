@@ -39,7 +39,7 @@ export const mapTrpcError = (error: unknown, fallbackMessage: string): AppError 
       if (isNetworkErrorMessage(error.message)) {
         return createAppError({
           code: 'NETWORK_ERROR',
-          message: 'Impossible de joindre le serveur. Verifiez votre connexion.',
+          message: 'Impossible de joindre le serveur. Vérifiez votre connexion.',
           source: 'network',
           details: error.message,
           cause: error

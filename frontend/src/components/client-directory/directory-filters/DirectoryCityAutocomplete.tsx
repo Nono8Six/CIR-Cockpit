@@ -141,7 +141,7 @@ const DirectoryCityAutocomplete = ({
                 <CommandLoading>Chargement des villes…</CommandLoading>
               ) : null}
               {!suggestionsQuery.isFetching && suggestions.length === 0 ? (
-                <CommandEmpty>Aucune ville trouvee.</CommandEmpty>
+                <CommandEmpty>Aucune ville trouvée.</CommandEmpty>
               ) : null}
               {suggestions.map((suggestion) => {
                 const isSelected = suggestion.value === (committedValue ?? '');

@@ -17,15 +17,17 @@
     --primary-foreground: 0 0% 98%;
     --warning: 39 78% 49%;
     --warning-foreground: 36 62% 17%;
-    --success: 148 49% 37%;
+    /* Ambre lisible en texte: --warning ne peut pas tenir 4,5:1 sans virer au brun. */
+    --warning-strong: 38 85% 31%;
+    --success: 148 49% 33%;
     --success-foreground: 0 0% 98%;
     --secondary: 44 24% 96%;
     --secondary-foreground: 30 9% 17%;
     --muted: 44 24% 96%;
-    --muted-foreground: 31 7% 45%;
+    --muted-foreground: 31 7% 43%;
     --accent: 7 58% 96%;
     --accent-foreground: 6 72% 30%;
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84.2% 47%;
     --destructive-foreground: 0 0% 98%;
     --border: 36 12% 88%;
     --input: 36 12% 88%;

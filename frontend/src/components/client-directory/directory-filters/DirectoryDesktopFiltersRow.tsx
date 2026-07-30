@@ -169,14 +169,14 @@ const DirectoryDesktopFiltersRow = ({
             onValuesChange={(values) => onSearchPatch({ scope: toSelectedAgenciesScope(values), page: 1 })}
             allLabel="Toutes les agences"
             searchPlaceholder="Rechercher une agence…"
-            emptyLabel="Aucune agence trouvee."
+            emptyLabel="Aucune agence trouvée."
             multiple
           />
         </DirectoryDesktopSmartPill>
       ) : null}
 
       <DirectoryDesktopSmartPill
-        label="Departement"
+        label="Département"
         summary={departmentSummary}
         open={openFilter === 'department'}
         onOpenChange={(nextOpen) => {
@@ -191,9 +191,9 @@ const DirectoryDesktopFiltersRow = ({
           items={departmentItems}
           values={search.departments}
           onValuesChange={(values) => onSearchPatch({ departments: values, page: 1 })}
-          allLabel="Tous les departements"
-          searchPlaceholder="Rechercher un departement…"
-          emptyLabel="Aucun departement trouve."
+          allLabel="Tous les départements"
+          searchPlaceholder="Rechercher un département…"
+          emptyLabel="Aucun département trouvé."
           multiple
         />
       </DirectoryDesktopSmartPill>
@@ -242,7 +242,7 @@ const DirectoryDesktopFiltersRow = ({
             onValuesChange={(values) => onSearchPatch({ cirCommercialIds: values, page: 1 })}
             allLabel="Tous les commerciaux"
             searchPlaceholder="Rechercher un commercial…"
-            emptyLabel="Aucun commercial trouve."
+            emptyLabel="Aucun commercial trouvé."
             multiple
           />
         </DirectoryDesktopSmartPill>

@@ -101,7 +101,7 @@ export const useSettingsState = ({
 
   const handleSave = async () => {
     if (readOnly) {
-      return void notifyInfo('Acces lecture seule. Contactez un administrateur pour modifier.');
+      return void notifyInfo('Accès lecture seule. Contactez un administrateur pour modifier.');
     }
 
     const submit = handleSubmit(
@@ -131,7 +131,7 @@ export const useSettingsState = ({
             newStatus: '',
             newStatusCategory: 'todo',
           });
-          notifySuccess('Configuration sauvegardee');
+          notifySuccess('Configuration sauvegardée');
         } catch {
           return;
         }

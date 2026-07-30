@@ -41,7 +41,7 @@ export const useReferenceStatuses = ({
       return;
     const nextStatus = createStatus(newStatus, newStatusCategory, statuses.length + 1);
     if (!nextStatus)
-      return void notifyInfo('Impossible de generer un identifiant de statut. Rechargez la page.');
+      return void notifyInfo('Impossible de générer un identifiant de statut. Rechargez la page.');
     if (!agencyId) {
       return void notifyInfo('Identifiant agence requis.');
     }
@@ -60,7 +60,7 @@ export const useReferenceStatuses = ({
     }
     setNewStatus('');
     setNewStatusCategory('todo');
-    notifySuccess('Statut ajoute.');
+    notifySuccess('Statut ajouté.');
   }, [
     agencyId,
     canRunImmediateAction,
@@ -88,7 +88,7 @@ export const useReferenceStatuses = ({
       } catch {
         return;
       }
-      notifySuccess('Statut retire.');
+      notifySuccess('Statut retiré.');
     },
     [agencyId, canRunImmediateAction, referenceActionMutation, statuses]
   );
@@ -131,7 +131,7 @@ export const useReferenceStatuses = ({
       } catch {
         return;
       }
-      notifySuccess('Libelle du statut corrige.');
+      notifySuccess('Libellé du statut corrigé.');
     },
     [agencyId, canRunImmediateAction, referenceActionMutation, statuses]
   );

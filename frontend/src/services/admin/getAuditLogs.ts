@@ -23,7 +23,7 @@ const parseAuditLogsResponse = (payload: unknown): AuditLogEntry[] => {
   if (!parsed.success) {
     throw createAppError({
       code: 'EDGE_INVALID_RESPONSE',
-      message: 'Reponse serveur invalide.',
+      message: 'Réponse serveur invalide.',
       source: 'edge',
       details: parsed.error.message
     });

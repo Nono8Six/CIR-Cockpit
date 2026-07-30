@@ -83,11 +83,11 @@ const ClientDirectoryCreatePage = () => {
         commercials={commercialsQuery.data?.commercials ?? []}
         sourceLabel="Annuaire"
         surface="page"
-        backLabel="Retour aux resultats"
+        backLabel="Retour aux résultats"
         onSaveClient={(payload) => saveClientMutation.mutateAsync(payload)}
         onSaveProspect={(payload) => saveProspectMutation.mutateAsync(payload)}
         onComplete={({ intent, client_number, entity_id }) => {
-          notifySuccess(intent === 'client' ? 'Client cree.' : 'Prospect cree.');
+          notifySuccess(intent === 'client' ? 'Client créé.' : 'Prospect créé.');
 
           if (intent === 'client' && client_number) {
             void navigate({

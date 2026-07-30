@@ -41,7 +41,7 @@ const GuidedTierSearchShell = ({
             Recherche
           </p>
           {shortcutLabel ? (
-            <kbd className="rounded border border-border bg-card px-1.5 py-0.5 font-mono text-[9px] font-bold text-muted-foreground shadow-sm">
+            <kbd className="rounded border border-border bg-card px-1.5 py-0.5 font-mono text-[11px] font-semibold text-muted-foreground shadow-sm">
               {shortcutLabel}
             </kbd>
           ) : null}

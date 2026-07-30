@@ -62,7 +62,7 @@ export const invokeTrpc = async <TResponse>(
   if (!isRecord(payload)) {
     throw createAppError({
       code: 'EDGE_FUNCTION_ERROR',
-      message: 'Reponse serveur invalide.',
+      message: 'Réponse serveur invalide.',
       source: 'edge',
       details: describeInvalidPayload(payload)
     });

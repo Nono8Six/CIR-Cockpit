@@ -12,5 +12,5 @@ export const saveSettingsReferences = (config: DataConfigPayload): ResultAsync<v
       return api.data.config.mutate(config, options);
     },
     parseVoidResponse,
-    'Impossible de mettre a jour les referentiels.'
+    'Impossible de mettre à jour les référentiels.'
   );

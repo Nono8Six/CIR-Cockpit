@@ -22,7 +22,7 @@ export const useResetUserPassword = () => {
     onError: (err) => {
       const appError = mapAdminDomainError(err, {
         action: 'reset_password',
-        fallbackMessage: 'Impossible de reinitialiser le mot de passe.'
+        fallbackMessage: 'Impossible de réinitialiser le mot de passe.'
       });
       handleUiError(appError, appError.message, { source: 'useResetUserPassword' });
     }

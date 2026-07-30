@@ -293,7 +293,7 @@ const CockpitSolicitationLookup = ({
 
         {!showCreate && !lookup.isFetching && !hasMatches && !canContinue ? (
           <p className="px-5 py-3 text-xs font-medium text-muted-foreground" role="status" aria-live="polite">
-            Saisis un numéro pour retrouver l’historique.
+            Saisissez un numéro pour retrouver l’historique.
           </p>
         ) : null}
       </div>

@@ -29,7 +29,7 @@ export const EntityRecordWizardProgress = ({
           <>
             <span
               className={cn(
-                'flex size-4 shrink-0 items-center justify-center rounded-full text-[9px] font-bold',
+                'flex size-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold',
                 isCompleted && 'bg-success text-success-foreground',
                 isCurrent && 'bg-primary text-primary-foreground',
                 !isCompleted && !isCurrent && 'border border-border bg-background text-muted-foreground/60'

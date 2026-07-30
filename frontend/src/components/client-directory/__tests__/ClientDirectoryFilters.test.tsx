@@ -98,7 +98,7 @@ describe('ClientDirectoryFilters', () => {
     expect(screen.getAllByText('Affichage').length).toBeGreaterThan(0);
     expect(screen.getByText('Type : Tous')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Agence' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Departement' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Département' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Ville' })).toBeInTheDocument();
     expect(resetButtons).toHaveLength(2);
     resetButtons.forEach((button) => expect(button).toBeDisabled());

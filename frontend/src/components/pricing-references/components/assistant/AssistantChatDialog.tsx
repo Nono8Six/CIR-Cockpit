@@ -133,7 +133,7 @@ export const AssistantChatDialog = ({
 
             {!statusLoading && disabledReason ? (
               <div className="m-auto max-w-sm text-center">
-                <span className="mx-auto mb-3 flex size-9 items-center justify-center rounded-lg border border-warning/25 bg-warning/10 text-warning">
+                <span className="mx-auto mb-3 flex size-9 items-center justify-center rounded-lg border border-warning/25 bg-warning/10 text-warning-strong">
                   <AlertCircle className="size-4" aria-hidden="true" />
                 </span>
                 <p className="text-sm font-semibold text-foreground">Assistant indisponible</p>

@@ -18,7 +18,7 @@ export const useEntityInteractions = (
       if (!entityId) {
         return Promise.reject(createAppError({
           code: 'VALIDATION_ERROR',
-          message: "Identifiant d'entite requis.",
+          message: "Identifiant d'entité requis.",
           source: 'validation'
         }));
       }

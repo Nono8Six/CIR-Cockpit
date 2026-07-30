@@ -68,7 +68,7 @@ const CockpitFooterSection = ({
               maxLength={6}
               placeholder="N° Devis…"
               className="h-9 w-full sm:w-[130px] text-xs font-mono text-foreground"
-              aria-label="Reference dossier"
+              aria-label="Référence dossier"
               autoComplete="off"
               spellCheck={false}
             />
@@ -95,8 +95,8 @@ const CockpitFooterSection = ({
         </div>
       </div>
       {!hasStatuses ? (
-        <p id={statusHelpId} className="text-xs text-warning">
-          Ajoutez des statuts dans Parametres.
+        <p id={statusHelpId} className="text-xs text-warning-strong">
+          Ajoutez des statuts dans Paramètres.
         </p>
       ) : null}
     </div>

@@ -70,29 +70,29 @@ export const getInteractionGateState = (input: GateInput): GateState => {
   if (!canSave) {
     if (input.isClientRelation) {
       if (!hasRequiredFamilies) {
-        gateMessage = 'Selectionnez au moins une famille produit.';
+        gateMessage = 'Sélectionnez au moins une famille produit.';
       } else if (!input.hasSelectedEntity) {
-        gateMessage = 'Selectionnez un client.';
+        gateMessage = 'Sélectionnez un client.';
       } else if (!input.hasSelectedContact) {
-        gateMessage = 'Selectionnez un contact.';
+        gateMessage = 'Sélectionnez un contact.';
       } else {
-        gateMessage = 'Completer les informations du client.';
+        gateMessage = 'Compléter les informations du client.';
       }
     } else {
       if (!hasRequiredFamilies) {
-        gateMessage = 'Selectionnez au moins une famille produit.';
+        gateMessage = 'Sélectionnez au moins une famille produit.';
       } else if (!input.isInternalRelation && !isIndividual && !isSolicitation && !hasValue(input.companyName)) {
-        gateMessage = 'Renseignez la societe.';
+        gateMessage = 'Renseignez la société.';
       } else if (!input.isInternalRelation && needsCity && !hasValue(input.companyCity)) {
         gateMessage = 'Renseignez la ville.';
       } else if (!isSolicitation && !isSupplier && (!hasValue(input.contactFirstName) || !hasValue(input.contactLastName))) {
         gateMessage = 'Renseignez le contact.';
       } else if (!input.isInternalRelation && !isSupplier && !hasContactMethod) {
-        gateMessage = isSolicitation ? 'Renseignez le numero.' : 'Telephone ou email requis.';
+        gateMessage = isSolicitation ? 'Renseignez le numéro.' : 'Téléphone ou email requis.';
       } else if (!hasValue(input.interactionType)) {
         gateMessage = "Type d'interaction requis.";
       } else {
-        gateMessage = 'Completer les champs obligatoires.';
+        gateMessage = 'Compléter les champs obligatoires.';
       }
     }
   }

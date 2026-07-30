@@ -31,7 +31,7 @@ const AuditLogsRow = ({ log, variant }: AuditLogsRowProps) => {
     }
     if (act.includes('UPDATE') || act.includes('EDIT') || act.includes('RENAME') || act.includes('MODIF')) {
       return (
-        <Badge variant="warning" className="text-[10px] bg-warning/10 text-warning border-warning/20 hover:bg-warning hover:text-warning-foreground transition-all duration-200 uppercase font-semibold">
+        <Badge variant="warning" className="text-[10px] bg-warning/10 text-warning-strong border-warning/20 hover:bg-warning hover:text-warning-foreground transition-all duration-200 uppercase font-semibold">
           Modification
         </Badge>
       );

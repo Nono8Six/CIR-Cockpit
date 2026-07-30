@@ -22,7 +22,7 @@ export const useUnarchiveAgency = () => {
     onError: (err) => {
       const appError = mapAdminDomainError(err, {
         action: 'update_agency',
-        fallbackMessage: "Impossible de reactiver l'agence."
+        fallbackMessage: "Impossible de réactiver l'agence."
       });
       handleUiError(appError, appError.message, { source: 'useUnarchiveAgency' });
     }

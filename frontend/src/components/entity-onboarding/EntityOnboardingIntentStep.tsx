@@ -24,25 +24,25 @@ const INTENT_OPTIONS: ChoiceOption[] = [
   {
     id: "prospect",
     title: "Prospect",
-    body: "Qualification legere pour une prise de contact.",
+    body: "Qualification légère pour une prise de contact.",
   },
   {
     id: "client",
     title: "Client",
-    body: "Creation d'un compte complet pour l'annuaire.",
+    body: "Création d'un compte complet pour l'annuaire.",
   },
 ];
 
 const CLIENT_KIND_OPTIONS: ChoiceOption[] = [
   {
     id: "company",
-    title: "Societe",
-    body: "Recherche SIRENE, etablissements et controle CIR.",
+    title: "Société",
+    body: "Recherche SIRENE, établissements et contrôle CIR.",
   },
   {
     id: "individual",
     title: "Particulier",
-    body: "Client sans entite, avec compte comptant direct.",
+    body: "Client sans entité, avec compte comptant direct.",
   },
 ];
 
@@ -207,10 +207,10 @@ const EntityOnboardingIntentStep = ({
       <div className="space-y-4">
         <div className="flex items-center gap-2 border-b border-border-subtle bg-surface-1/45 px-3 py-2 text-sm font-medium text-foreground">
           <Building2 aria-hidden="true" className="size-4 text-muted-foreground" />
-          <h3>Intention de creation</h3>
+          <h3>Intention de création</h3>
           {isIntentLocked ? (
             <Badge variant="outline" className="ml-auto text-[10px]">
-              Type impose
+              Type imposé
             </Badge>
           ) : null}
         </div>
@@ -227,7 +227,7 @@ const EntityOnboardingIntentStep = ({
                 type="button"
                 role="radio"
                 aria-checked={isActive}
-                aria-label={`Selectionner ${option.title}`}
+                aria-label={`Sélectionner ${option.title}`}
                 disabled={isIntentLocked}
                 tabIndex={index === focusableIntentIndex && !isIntentLocked ? 0 : -1}
                 onClick={() => onIntentChange(option.id as OnboardingIntent)}
@@ -273,7 +273,7 @@ const EntityOnboardingIntentStep = ({
             <h3>Nature du compte</h3>
             {mode === "convert" ? (
               <Badge variant="outline" className="ml-auto text-[10px]">
-                Societe imposee
+                Société imposée
               </Badge>
             ) : null}
           </div>
@@ -293,7 +293,7 @@ const EntityOnboardingIntentStep = ({
                   type="button"
                   role="radio"
                   aria-checked={isActive}
-                  aria-label={`Selectionner ${option.title}`}
+                  aria-label={`Sélectionner ${option.title}`}
                   disabled={isDisabled}
                   tabIndex={index === focusableClientKindIndex && !isDisabled ? 0 : -1}
                   onClick={() =>

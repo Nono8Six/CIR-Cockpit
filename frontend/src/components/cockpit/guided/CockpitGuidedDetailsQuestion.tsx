@@ -246,7 +246,7 @@ const CockpitGuidedDetailsQuestion = ({
               </SelectContent>
             </Select>
             {!leftPaneProps.hasInteractionTypes ? (
-              <p id={leftPaneProps.interactionTypeHelpId} className="text-[10px] text-warning mt-1 font-medium">
+              <p id={leftPaneProps.interactionTypeHelpId} className="text-[10px] text-warning-strong mt-1 font-medium">
                 Ajoutez des types dans Paramètres.
               </p>
             ) : null}

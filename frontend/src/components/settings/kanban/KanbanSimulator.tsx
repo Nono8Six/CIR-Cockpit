@@ -38,13 +38,13 @@ const KanbanSimulator = ({ statuses }: KanbanSimulatorProps) => {
               <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                 {lane.title}
               </span>
-              <span className="bg-surface-1 px-1.5 py-0.5 font-mono text-[9px] font-semibold text-muted-foreground tabular-nums">
+              <span className="bg-surface-1 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-muted-foreground tabular-nums">
                 {lane.statuses.length}
               </span>
             </div>
             <div className="flex min-h-[62px] flex-col gap-1.5">
               {lane.statuses.length === 0 ? (
-                <div className="flex flex-1 items-center justify-center border border-dashed border-border/60 p-3 text-center text-[9px] text-muted-foreground/70">
+                <div className="flex flex-1 items-center justify-center border border-dashed border-border/60 p-3 text-center text-[11px] text-muted-foreground/70">
                   Aucun statut
                 </div>
               ) : (
@@ -61,7 +61,7 @@ const KanbanSimulator = ({ statuses }: KanbanSimulatorProps) => {
                     <div className="flex min-w-0 items-center justify-between gap-2">
                       <span className="truncate font-medium text-foreground">{status.label}</span>
                       {isDefault && (
-                        <span className="shrink-0 text-[8px] font-semibold uppercase tracking-wider text-primary">
+                        <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-primary">
                           Défaut
                         </span>
                       )}

@@ -69,11 +69,11 @@ const EntityOnboardingIndividualSearchStep = ({
           <span>Client particulier</span>
         </div>
         <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-          Identite du particulier
+          Identité du particulier
         </h2>
         <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
-          Saisis les coordonnees. La verification des doublons se met a jour en
-          temps reel dans le panneau de droite.
+          Saisissez les coordonnées. La vérification des doublons se met à jour en
+          temps réel dans le panneau de droite.
         </p>
       </div>
 
@@ -95,7 +95,7 @@ const EntityOnboardingIndividualSearchStep = ({
           type="tel"
           autoComplete="tel"
           inputClassName="font-mono tabular-nums"
-          label="Telephone"
+          label="Téléphone"
           error={errors.phone?.message}
           {...form.register("phone")}
         />
@@ -153,7 +153,7 @@ const EntityOnboardingIndividualSearchStep = ({
           autoComplete="street-address"
           wrapperClassName="md:col-span-2"
           label="Adresse"
-          hint="Optionnelle. Peut etre completee a l'etape suivante."
+          hint="Optionnelle. Peut être complétée à l'étape suivante."
           {...form.register("address")}
         />
       </div>

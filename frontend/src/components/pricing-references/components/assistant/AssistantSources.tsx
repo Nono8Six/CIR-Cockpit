@@ -57,7 +57,7 @@ const STATUS = {
   partial: {
     label: "Analyse partielle",
     icon: AlertTriangle,
-    className: "text-warning",
+    className: "text-warning-strong",
   },
   failed: {
     label: "Échec de vérification",

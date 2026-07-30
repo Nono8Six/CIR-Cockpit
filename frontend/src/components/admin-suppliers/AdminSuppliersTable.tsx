@@ -74,7 +74,7 @@ const renderHeader = (
 const renderSupplierBadge = (row: DirectoryListRow) => {
   if (row.archived_at) {
     return (
-      <span className="inline-flex items-center rounded-full border border-warning/20 bg-warning/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-warning">
+      <span className="inline-flex items-center rounded-full border border-warning/20 bg-warning/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-warning-strong">
         Archive
       </span>
     );

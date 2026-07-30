@@ -29,7 +29,7 @@ const SupplierReviewStep = ({ draft }: SupplierReviewStepProps) => {
       <div>
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Étape 3</p>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Validation finale</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Vérifie l&apos;exactitude des informations avant la création définitive du fournisseur.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Vérifiez l&apos;exactitude des informations avant la création définitive du fournisseur.</p>
       </div>
       <div className="rounded-xl border border-border bg-card p-6 shadow-sm space-y-6">
         <div className="flex items-start justify-between gap-4 border-b border-border-subtle pb-4">

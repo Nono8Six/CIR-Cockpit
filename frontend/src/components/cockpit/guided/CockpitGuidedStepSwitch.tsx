@@ -105,12 +105,12 @@ const CockpitGuidedStepSwitch = ({
     return (
       <CockpitGuidedQuestionFrame
         eyebrow="Contact"
-        title={isInternalRelation ? 'Contact interne' : isSupplierRelation ? 'Contact fournisseur' : 'Avec qui as-tu échangé ?'}
+        title={isInternalRelation ? 'Contact interne' : isSupplierRelation ? 'Contact fournisseur' : 'Avec qui avez-vous échangé ?'}
         description={isInternalRelation
           ? 'Membre CIR existant ou contact ponctuel.'
           : isSupplierRelation
             ? 'Contact existant, ajout rapide, ou passage sans contact.'
-          : 'Choisis un contact existant du tiers, ou ajoute-en un nouveau.'}
+          : 'Choisissez un contact existant du tiers, ou ajoutez-en un nouveau.'}
         density={isInternalRelation ? 'compact' : isSupplierRelation ? 'compact' : 'comfortable'}
         actions={isSupplierRelation ? null : (
           <Button

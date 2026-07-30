@@ -73,7 +73,7 @@ export const useUsersManager = () => {
 
   const handleCreateUser = async (payload: CreateAdminUserPayload) => {
     const response = await createUserMutation.mutateAsync(payload);
-    notifySuccess('Utilisateur cree.');
+    notifySuccess('Utilisateur créé.');
     if (response.temporary_password) {
       setTempPassword(response.temporary_password);
       setPasswordDialogOpen(true);
@@ -83,7 +83,7 @@ export const useUsersManager = () => {
   const handleRoleChange = async (userId: string, role: UserRole) => {
     try {
       await setRoleMutation.mutateAsync({ userId, role });
-      notifySuccess('Role mis a jour.');
+      notifySuccess('Rôle mis à jour.');
     } catch {
       return;
     }
@@ -92,7 +92,7 @@ export const useUsersManager = () => {
   const handleMembershipSave = async (agencyIds: string[]) => {
     if (!selectedUser) return;
     await setMembershipMutation.mutateAsync({ userId: selectedUser.id, agencyIds });
-    notifySuccess('Agences mises a jour.');
+    notifySuccess('Agences mises à jour.');
   };
 
   const executeResetPassword = async () => {
@@ -115,7 +115,7 @@ export const useUsersManager = () => {
       } else {
         await unarchiveMutation.mutateAsync(confirmArchive.user.id);
       }
-      notifySuccess(confirmArchive.nextArchived ? 'Utilisateur archive.' : 'Utilisateur restaure.');
+      notifySuccess(confirmArchive.nextArchived ? 'Utilisateur archivé.' : 'Utilisateur restauré.');
     } catch {
       return;
     }
@@ -123,7 +123,7 @@ export const useUsersManager = () => {
 
   const handleIdentitySave = async (payload: UpdateUserIdentityPayload) => {
     await updateIdentityMutation.mutateAsync(payload);
-    notifySuccess('Utilisateur mis a jour.');
+    notifySuccess('Utilisateur mis à jour.');
   };
 
   const executeDeleteUser = async () => {
@@ -132,9 +132,9 @@ export const useUsersManager = () => {
       const response = await deleteUserMutation.mutateAsync(confirmDeleteUser.id);
       const anonymizedCount = response.anonymized_interactions ?? 0;
       if (anonymizedCount > 0) {
-        notifySuccess(`Utilisateur supprime. ${anonymizedCount} interaction(s) reattribuee(s).`);
+        notifySuccess(`Utilisateur supprimé. ${anonymizedCount} interaction(s) reattribuee(s).`);
       } else {
-        notifySuccess('Utilisateur supprime.');
+        notifySuccess('Utilisateur supprimé.');
       }
     } catch {
       return;

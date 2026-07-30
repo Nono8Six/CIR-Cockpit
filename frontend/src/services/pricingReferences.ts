@@ -97,7 +97,7 @@ const parseResponse = <TResponse>(
   if (!parsed.success) {
     throw createAppError({
       code: 'REQUEST_FAILED',
-      message: 'Reponse serveur invalide.',
+      message: 'Réponse serveur invalide.',
       source: 'edge',
       details: parsed.error.message
     });
@@ -110,7 +110,7 @@ const assertBrowserFile = (file: File, label: string): void => {
   if (!file.name.trim().toLowerCase().endsWith('.xlsx')) {
     throw createAppError({
       code: 'PRICING_REFERENCE_IMPORT_INVALID_FILE',
-      message: `${label}: le fichier doit etre au format .xlsx.`,
+      message: `${label}: le fichier doit être au format .xlsx.`,
       source: 'validation'
     });
   }
@@ -126,7 +126,7 @@ const assertBrowserFile = (file: File, label: string): void => {
   if (file.size > PRICING_REFERENCE_MAX_FILE_SIZE_BYTES) {
     throw createAppError({
       code: 'PRICING_REFERENCE_IMPORT_TOO_LARGE',
-      message: `${label}: le fichier depasse 50 MB.`,
+      message: `${label}: le fichier dépasse 50 MB.`,
       source: 'validation'
     });
   }
@@ -212,21 +212,21 @@ export const listPricingReferenceImports = (input: PricingReferenceImportsListIn
   invokeTrpc(
     (api, options) => api.pricing.references.imports.list.query(input, options),
     (payload) => parseResponse(pricingReferenceImportsListResponseSchema, payload),
-    'Impossible de charger les imports referentiels.'
+    'Impossible de charger les imports référentiels.'
   );
 
 export const getPricingReferenceImport = (input: PricingReferenceImportGetInput): Promise<PricingReferenceImportGetResponse> =>
   invokeTrpc(
     (api, options) => api.pricing.references.imports.get.query(input, options),
     (payload) => parseResponse(pricingReferenceImportGetResponseSchema, payload),
-    'Impossible de charger le detail de l import.'
+    'Impossible de charger le détail de l import.'
   );
 
 export const getPricingReferenceHealth = (input: { import_id?: string }): Promise<PricingReferenceHealthGetResponse> =>
   invokeTrpc(
     (api, options) => api.pricing.references.health.get.query(input, options),
     (payload) => parseResponse(pricingReferenceHealthGetResponseSchema, payload),
-    'Impossible de charger le rapport referentiel.'
+    'Impossible de charger le rapport référentiel.'
   );
 
 export const listPricingReferenceClassification = (
@@ -253,7 +253,7 @@ export const getPricingReferenceSegmentDetail = (
   invokeTrpc(
     (api, options) => api.pricing.references.segments.get.query(input, options),
     (payload) => parseResponse(pricingReferenceSegmentDetailResponseSchema, payload),
-    'Impossible de charger le detail du segment fabricant.'
+    'Impossible de charger le détail du segment fabricant.'
   );
 
 export const listPricingReferenceAnomalies = (
@@ -271,7 +271,7 @@ export const getPricingReferenceAnomaliesSummary = (
   invokeTrpc(
     (api, options) => api.pricing.references.anomalies.summary.query(input, options),
     (payload) => parseResponse(pricingReferenceAnomaliesSummaryResponseSchema, payload),
-    'Impossible de charger la synthese des anomalies.'
+    'Impossible de charger la synthèse des anomalies.'
   );
 
 export const exportPricingReferenceAnomalies = (
@@ -280,7 +280,7 @@ export const exportPricingReferenceAnomalies = (
   invokeTrpc(
     (api, options) => api.pricing.references.anomalies.export.mutate(input, options),
     (payload) => parseResponse(pricingReferenceAnomaliesExportResponseSchema, payload),
-    'Impossible de generer l export des anomalies.'
+    'Impossible de générer l export des anomalies.'
   );
 
 export const getPricingReferenceDiffSummary = (
@@ -316,7 +316,7 @@ export const listAllPricingReferenceClassification = (
   invokeTrpc(
     (api, options) => api.pricing.references.classification.listAll.query(input, options),
     (payload) => parseResponse(pricingReferenceClassificationListAllResponseSchema, payload),
-    'Impossible de charger la classification complete.'
+    'Impossible de charger la classification complète.'
   );
 
 export const diagnosePricingReference = (
@@ -333,7 +333,7 @@ export const preparePricingReferenceImport = (input: PricingReferenceImportsPrep
   invokeTrpc(
     (api, options) => api.pricing.references.imports.prepare.mutate(input, options),
     (payload) => parseResponse(pricingReferenceImportsPrepareResponseSchema, payload),
-    'Impossible de preparer l import referentiel.'
+    'Impossible de préparer l import référentiel.'
   );
 
 export const inspectPricingReferenceImport = (
@@ -342,7 +342,7 @@ export const inspectPricingReferenceImport = (
   invokeTrpc(
     (api, options) => api.pricing.references.imports.inspect.mutate(input, options),
     (payload) => parseResponse(pricingReferenceImportInspectResponseSchema, payload),
-    'Impossible de previsualiser le fichier referentiel.'
+    'Impossible de prévisualiser le fichier référentiel.'
   );
 
 export const assistPricingReferenceImportMapping = (
@@ -376,7 +376,7 @@ export const analyzePricingReferenceImport = (importId: string): Promise<Pricing
   invokeTrpc(
     (api, options) => api.pricing.references.imports.analyze.mutate({ import_id: importId }, options),
     (payload) => parseResponse(pricingReferenceImportAnalyzeResponseSchema, payload),
-    'Impossible d analyser l import referentiel.'
+    'Impossible d analyser l import référentiel.'
   );
 
 export const prepareUploadAndInspectPricingReferenceFile = async (
@@ -400,13 +400,13 @@ export const prepareUploadAndInspectPricingReferenceFile = async (
     }
   };
 
-  onProgress?.({ step: 'preparing', label: 'Preparation Storage' });
+  onProgress?.({ step: 'preparing', label: 'Préparation Storage' });
   const prepared = await preparePricingReferenceImport(input);
   const preparedFile = prepared.files[fileKind];
   if (!preparedFile) {
     throw createAppError({
       code: 'PRICING_REFERENCE_IMPORT_INVALID_FILE',
-      message: 'Fichier prepare introuvable dans la reponse serveur.',
+      message: 'Fichier préparé introuvable dans la réponse serveur.',
       source: 'edge'
     });
   }
@@ -414,7 +414,7 @@ export const prepareUploadAndInspectPricingReferenceFile = async (
   onProgress?.({ step: 'uploading', label: 'Televersement du fichier XLSX' });
   await uploadPricingReferencePreparedFile(preparedFile, file);
 
-  onProgress?.({ step: 'inspecting', label: 'Previsualisation des colonnes' });
+  onProgress?.({ step: 'inspecting', label: 'Prévisualisation des colonnes' });
   const inspection = await inspectPricingReferenceImport({
     import_id: prepared.import_id,
     file_id: preparedFile.id,
@@ -437,7 +437,7 @@ export const runPricingReferenceImport = async (
   if (!files.classification && !files.segments_grids) {
     throw createAppError({
       code: 'PRICING_REFERENCE_IMPORT_INVALID_FILE',
-      message: 'Selectionnez au moins un export CIR.',
+      message: 'Sélectionnez au moins un export CIR.',
       source: 'validation'
     });
   }
@@ -460,7 +460,7 @@ export const runPricingReferenceImport = async (
     }
   };
 
-  onProgress?.({ step: 'preparing', label: 'Preparation Storage' });
+  onProgress?.({ step: 'preparing', label: 'Préparation Storage' });
   const prepared = await preparePricingReferenceImport(input);
 
   onProgress?.({ step: 'uploading', label: 'Televersement des exports XLSX' });
@@ -505,10 +505,10 @@ export const runPricingReferenceImport = async (
     });
   }
 
-  onProgress?.({ step: 'analyzing', label: 'Analyse des referentiels' });
+  onProgress?.({ step: 'analyzing', label: 'Analyse des référentiels' });
   const response = await analyzePricingReferenceImport(prepared.import_id);
 
-  onProgress?.({ step: 'done', label: 'Rapport pret' });
+  onProgress?.({ step: 'done', label: 'Rapport prêt' });
   return response;
 };
 

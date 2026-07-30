@@ -36,7 +36,7 @@ const DashboardSearchInput = forwardRef<HTMLInputElement, DashboardSearchInputPr
         autoComplete="off"
         name="dashboard-search"
       />
-      <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 select-none rounded border border-border bg-surface-1 px-1.5 py-0.5 font-mono text-[9px] font-semibold text-muted-foreground/80 transition-opacity duration-150 group-focus-within:opacity-0">
+      <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 select-none rounded border border-border bg-surface-1 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-muted-foreground/80 transition-opacity duration-150 group-focus-within:opacity-0">
         /
       </kbd>
     </div>

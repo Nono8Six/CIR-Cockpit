@@ -25,7 +25,7 @@ const parseContactResponse = (payload: unknown): EntityContact => {
   if (!parsed.success || !('contact' in parsed.data)) {
     throw createAppError({
       code: 'REQUEST_FAILED',
-      message: 'Reponse serveur invalide.',
+      message: 'Réponse serveur invalide.',
       source: 'edge',
       details: parsed.success ? undefined : parsed.error.message
     });

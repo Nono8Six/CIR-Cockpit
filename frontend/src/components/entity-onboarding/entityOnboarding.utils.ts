@@ -56,18 +56,18 @@ export const getDepartmentFromPostalCode = (postalCode: string): string =>
 
 export const getDuplicateReason = (record: DirectoryListRow, values: OnboardingValues): string | null => {
   if (values.siret && values.siret === record.siret) {
-    return 'SIRET deja present';
+    return 'SIRET déjà présent';
   }
 
   if (values.siren && values.siren === record.siren) {
-    return 'SIREN deja present';
+    return 'SIREN déjà présent';
   }
 
   if (
     values.name.trim().toLowerCase() === record.name.trim().toLowerCase()
     && values.city.trim().toLowerCase() === (record.city ?? '').trim().toLowerCase()
   ) {
-    return 'Nom et ville deja presents';
+    return 'Nom et ville déjà présents';
   }
 
   return null;
@@ -127,7 +127,7 @@ export const getCompanySearchStatusLabel = (
   }
 
   if (status === 'closed') {
-    return 'Ferme';
+    return 'Fermé';
   }
 
   return 'Statut inconnu';

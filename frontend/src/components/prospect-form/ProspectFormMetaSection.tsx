@@ -70,10 +70,10 @@ const ProspectFormMetaSection = ({
                 onBlur={agencyField.onBlur}
                 aria-invalid={Boolean(errors.agency_id)}
               >
-                <SelectValue placeholder="Selectionner une agence" />
+                <SelectValue placeholder="Sélectionner une agence" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={EMPTY_AGENCY_VALUE}>Selectionner une agence</SelectItem>
+                <SelectItem value={EMPTY_AGENCY_VALUE}>Sélectionner une agence</SelectItem>
                 {agencies.map((agency) => (
                   <SelectItem key={agency.id} value={agency.id}>
                     {agency.name}

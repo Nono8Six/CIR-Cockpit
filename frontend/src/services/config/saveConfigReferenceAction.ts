@@ -15,7 +15,7 @@ const parseConfigReferenceActionResponse = (payload: unknown): ConfigReferenceAc
   if (!parsed.success) {
     throw createAppError({
       code: 'REQUEST_FAILED',
-      message: 'Reponse serveur invalide.',
+      message: 'Réponse serveur invalide.',
       source: 'edge',
       details: parsed.error.message
     });
@@ -30,5 +30,5 @@ export const saveConfigReferenceAction = (
   safeTrpc(
     async (api, options) => api.config.reference.mutate(input, options),
     parseConfigReferenceActionResponse,
-    'Impossible de mettre a jour le referentiel.'
+    'Impossible de mettre à jour le référentiel.'
   );

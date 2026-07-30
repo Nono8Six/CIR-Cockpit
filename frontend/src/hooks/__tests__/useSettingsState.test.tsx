@@ -111,7 +111,7 @@ describe('useSettingsState', () => {
         },
       ],
     });
-    expect(notifySuccess).toHaveBeenCalledWith('Configuration sauvegardee');
+    expect(notifySuccess).toHaveBeenCalledWith('Configuration sauvegardée');
   });
 
   it('returns read-only feedback when user cannot edit', async () => {
@@ -130,7 +130,7 @@ describe('useSettingsState', () => {
     });
 
     expect(notifyInfo).toHaveBeenCalledWith(
-      'Acces lecture seule. Contactez un administrateur pour modifier.',
+      'Accès lecture seule. Contactez un administrateur pour modifier.',
     );
   });
 

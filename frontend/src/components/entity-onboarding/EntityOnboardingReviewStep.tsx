@@ -157,18 +157,18 @@ const EntityOnboardingReviewStep = ({
             )}
           </div>
           <p className="text-[12px] leading-relaxed text-muted-foreground">
-            Contrôle final avant enregistrement. Vérifie attentivement ces données, elles serviront de base pour le compte.
+            Contrôle final avant enregistrement. Vérifiez attentivement ces données, elles serviront de base pour le compte.
           </p>
         </div>
       </div>
 
       {duplicateMatches.length > 0 && (
         <div className="flex items-start gap-3 border border-warning/30 bg-warning/5 p-4 text-warning-foreground">
-          <AlertCircle className="size-4 shrink-0 mt-0.5 text-warning" />
+          <AlertCircle className="size-4 shrink-0 mt-0.5 text-warning-strong" />
           <div className="text-[12px] leading-relaxed">
             <p className="font-bold">Doublons potentiels détectés ({duplicateMatches.length})</p>
             <p className="mt-0.5 opacity-90">
-              Des fiches similaires existent déjà dans la base de données. Assure-toi qu&apos;il s&apos;agit bien d&apos;une nouvelle entité avant de valider.
+              Des fiches similaires existent déjà dans la base de données. Assurez-vous qu&apos;il s&apos;agit bien d&apos;une nouvelle entité avant de valider.
             </p>
           </div>
         </div>

@@ -64,7 +64,7 @@ describe('getDirectoryDuplicates', () => {
 
     await expect(getDirectoryDuplicates(input)).rejects.toMatchObject({
       code: 'REQUEST_FAILED',
-      message: 'Reponse serveur invalide.'
+      message: 'Réponse serveur invalide.'
     });
   });
 

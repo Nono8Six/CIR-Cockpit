@@ -45,11 +45,11 @@ const InteractionSearchRecents = ({
                 <Icon size={11} className="shrink-0 text-muted-foreground/60 transition-colors group-hover:text-primary" aria-hidden="true" />
                 <span className="min-w-0 truncate max-w-[170px] text-foreground/90 font-medium">{entity.name}</span>
                 {showTypeBadge && entity.entity_type ? (
-                  <span className="shrink-0 rounded-full border border-border/80 bg-surface-3/80 px-1.5 py-[0.5px] text-[8px] font-bold uppercase tracking-widest text-foreground/80">
+                  <span className="shrink-0 rounded-full border border-border/80 bg-surface-3/80 px-1.5 py-[0.5px] text-[11px] font-semibold uppercase tracking-wide text-foreground/80">
                     {entity.entity_type}
                   </span>
                 ) : null}
-                <span className="hidden font-mono text-[9px] tracking-tight text-muted-foreground sm:inline">
+                <span className="hidden font-mono text-[11px] tracking-tight text-muted-foreground sm:inline">
                   {formatClientNumber(entity.client_number)}
                 </span>
               </motion.button>

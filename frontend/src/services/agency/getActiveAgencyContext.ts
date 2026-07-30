@@ -28,7 +28,7 @@ export const getActiveAgencyContext = async (): Promise<AgencyContext> => {
   if (!selected) {
     throw createAppError({
       code: 'MEMBERSHIP_NOT_FOUND',
-      message: 'Aucune agence associee a cet utilisateur.',
+      message: 'Aucune agence associée à cet utilisateur.',
       source: 'db'
     });
   }

@@ -101,6 +101,12 @@ def values_for(code: str, cell: Any) -> dict[str, int | float | str | None]:
     if len(codes) == 1:
         return {codes[0]: scalar(text)}
     parts = re.findall(r"M\d+(?:[.,]\d+)?|[-+]?\d+(?:[.,]\d+)?|—|-", text)
+    if len(codes) == 2 and len(parts) == 1:
+        # Une seule cellule imprimée sous un en-tête double signifie que la
+        # même cote est publiée pour les deux bouts d'arbre. Exemple page 90 :
+        # BE 63 publie « 11 » sous D/DA, puis « 23 » sous E/EA.
+        value = scalar(parts[0])
+        return {key: value for key in codes}
     if len(parts) != len(codes):
         # La source ne permet pas d'associer surement les deux valeurs.
         return {key: None for key in codes}

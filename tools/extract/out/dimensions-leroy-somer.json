@@ -5,9 +5,6 @@
     "frameSize": 280,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": null,
-      "E": 140,
-      "F": null,
       "A": 457,
       "AB": 532,
       "B": 419,
@@ -28,6 +25,23 @@
       "AD": 350,
       "AD1": 45,
       "HJ": 508.5
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 20,
+        "D": 75,
+        "E": 140
+      },
+      "6": {
+        "F": 20,
+        "D": 75,
+        "E": 140
+      },
+      "2": {
+        "F": 18,
+        "D": 65,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -99,9 +113,6 @@
     "frameSize": 280,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": null,
-      "E": 140,
-      "F": null,
       "A": 457,
       "AB": 532,
       "B": 368,
@@ -122,6 +133,23 @@
       "AD": 350,
       "AD1": 45,
       "HJ": 508.5
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 20,
+        "D": 75,
+        "E": 140
+      },
+      "6": {
+        "F": 20,
+        "D": 75,
+        "E": 140
+      },
+      "2": {
+        "F": 18,
+        "D": 65,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -193,9 +221,6 @@
     "frameSize": 315,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 508,
       "AB": 587,
       "B": 508,
@@ -216,6 +241,23 @@
       "AD": 350,
       "AD1": 45,
       "HJ": 508.5
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 25,
+        "D": 90,
+        "E": 170
+      },
+      "6": {
+        "F": 25,
+        "D": 90,
+        "E": 170
+      },
+      "2": {
+        "F": 18,
+        "D": 65,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -250,6 +292,13 @@
       "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
       "catalogEdition": "5147 fr - 2023.08 / j",
       "sources": [
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 94,
+          "catalogPage": "94",
+          "extractionMethod": "pdfplumber-shaft"
+        },
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
@@ -280,9 +329,6 @@
     "frameSize": 315,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 508,
       "AB": 587,
       "B": 457,
@@ -303,6 +349,23 @@
       "AD": 350,
       "AD1": 45,
       "HJ": 508.5
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      },
+      "6": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      },
+      "2": {
+        "F": 18,
+        "D": 65,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -337,6 +400,13 @@
       "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
       "catalogEdition": "5147 fr - 2023.08 / j",
       "sources": [
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 94,
+          "catalogPage": "94",
+          "extractionMethod": "pdfplumber-shaft"
+        },
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
@@ -367,9 +437,6 @@
     "frameSize": 315,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 508,
       "AB": 587,
       "B": 406,
@@ -390,6 +457,23 @@
       "AD": 350,
       "AD1": 45,
       "HJ": 508.5
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      },
+      "6": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      },
+      "2": {
+        "F": 18,
+        "D": 65,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -427,6 +511,13 @@
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 94,
+          "catalogPage": "94",
+          "extractionMethod": "pdfplumber-shaft"
+        },
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
           "pdfPage": 95,
           "catalogPage": "95",
           "extractionMethod": "pdfplumber-b3"
@@ -454,9 +545,6 @@
     "frameSize": 80,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 19,
-      "E": 40,
-      "F": 6,
       "A": 125,
       "AB": 157,
       "B": 100,
@@ -477,6 +565,23 @@
       "HJ": 148,
       "AD": 10,
       "AD1": 10
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 6,
+        "D": 19,
+        "E": 40
+      },
+      "6": {
+        "F": 6,
+        "D": 19,
+        "E": 40
+      },
+      "2": {
+        "F": 6,
+        "D": 19,
+        "E": 40
+      }
     },
     "flanges": [
       {
@@ -588,9 +693,6 @@
     "frameSize": 80,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 19,
-      "E": 40,
-      "F": 6,
       "A": 125,
       "AB": 170,
       "B": 100,
@@ -611,6 +713,23 @@
       "AD": 135,
       "AD1": 41,
       "HJ": 158
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 6,
+        "D": 19,
+        "E": 40
+      },
+      "6": {
+        "F": 6,
+        "D": 19,
+        "E": 40
+      },
+      "2": {
+        "F": 6,
+        "D": 19,
+        "E": 40
+      }
     },
     "flanges": [
       {
@@ -722,9 +841,6 @@
     "frameSize": 90,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 24,
-      "E": 50,
-      "F": 8,
       "A": 140,
       "AB": 170,
       "B": 125,
@@ -745,6 +861,23 @@
       "AD": 135,
       "AD1": 41,
       "HJ": 158
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 8,
+        "D": 24,
+        "E": 50
+      },
+      "6": {
+        "F": 8,
+        "D": 24,
+        "E": 50
+      },
+      "2": {
+        "F": 8,
+        "D": 24,
+        "E": 50
+      }
     },
     "flanges": [
       {
@@ -856,9 +989,6 @@
     "frameSize": 90,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 24,
-      "E": 50,
-      "F": 8,
       "A": 140,
       "AB": 170,
       "B": 125,
@@ -879,6 +1009,23 @@
       "AD": 135,
       "AD1": 41,
       "HJ": 158
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 8,
+        "D": 24,
+        "E": 50
+      },
+      "6": {
+        "F": 8,
+        "D": 24,
+        "E": 50
+      },
+      "2": {
+        "F": 8,
+        "D": 24,
+        "E": 50
+      }
     },
     "flanges": [
       {
@@ -990,9 +1137,6 @@
     "frameSize": 90,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 24,
-      "E": 50,
-      "F": 8,
       "A": 140,
       "AB": 170,
       "B": 125,
@@ -1013,6 +1157,23 @@
       "AD": 135,
       "AD1": 41,
       "HJ": 158
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 8,
+        "D": 24,
+        "E": 50
+      },
+      "6": {
+        "F": 8,
+        "D": 24,
+        "E": 50
+      },
+      "2": {
+        "F": 8,
+        "D": 24,
+        "E": 50
+      }
     },
     "flanges": [
       {
@@ -1124,9 +1285,6 @@
     "frameSize": 100,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 28,
-      "E": 60,
-      "F": 8,
       "A": 160,
       "AB": 196,
       "B": 140,
@@ -1147,6 +1305,23 @@
       "AD": 135,
       "AD1": 41,
       "HJ": 158
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 8,
+        "D": 28,
+        "E": 60
+      },
+      "6": {
+        "F": 8,
+        "D": 28,
+        "E": 60
+      },
+      "2": {
+        "F": 8,
+        "D": 28,
+        "E": 60
+      }
     },
     "flanges": [
       {
@@ -1258,9 +1433,6 @@
     "frameSize": 100,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 28,
-      "E": 60,
-      "F": 8,
       "A": 160,
       "AB": 196,
       "B": 140,
@@ -1281,6 +1453,23 @@
       "AD": 130,
       "AD1": 45,
       "HJ": 164
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 8,
+        "D": 28,
+        "E": 60
+      },
+      "6": {
+        "F": 8,
+        "D": 28,
+        "E": 60
+      },
+      "2": {
+        "F": 8,
+        "D": 28,
+        "E": 60
+      }
     },
     "flanges": [
       {
@@ -1392,9 +1581,6 @@
     "frameSize": 100,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 28,
-      "E": 60,
-      "F": 8,
       "A": 160,
       "AB": 196,
       "B": 140,
@@ -1415,6 +1601,23 @@
       "AD": 135,
       "AD1": 41,
       "HJ": 158
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 8,
+        "D": 28,
+        "E": 60
+      },
+      "6": {
+        "F": 8,
+        "D": 28,
+        "E": 60
+      },
+      "2": {
+        "F": 8,
+        "D": 28,
+        "E": 60
+      }
     },
     "flanges": [
       {
@@ -1526,9 +1729,6 @@
     "frameSize": 112,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 28,
-      "E": 60,
-      "F": 8,
       "A": 190,
       "AB": 230,
       "B": 140,
@@ -1549,6 +1749,23 @@
       "AD": 148,
       "AD1": 41,
       "HJ": 182
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 8,
+        "D": 28,
+        "E": 60
+      },
+      "6": {
+        "F": 8,
+        "D": 28,
+        "E": 60
+      },
+      "2": {
+        "F": 8,
+        "D": 28,
+        "E": 60
+      }
     },
     "flanges": [
       {
@@ -1660,9 +1877,6 @@
     "frameSize": 112,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 28,
-      "E": 60,
-      "F": 8,
       "A": 190,
       "AB": 230,
       "B": 140,
@@ -1683,6 +1897,23 @@
       "AD": 148,
       "AD1": 41,
       "HJ": 182
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 8,
+        "D": 28,
+        "E": 60
+      },
+      "6": {
+        "F": 8,
+        "D": 28,
+        "E": 60
+      },
+      "2": {
+        "F": 8,
+        "D": 28,
+        "E": 60
+      }
     },
     "flanges": [
       {
@@ -1794,9 +2025,6 @@
     "frameSize": 132,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 38,
-      "E": 80,
-      "F": 10,
       "A": 216,
       "AB": 255,
       "B": 178,
@@ -1817,6 +2045,23 @@
       "AD": 165,
       "AD1": 37.5,
       "HJ": 203
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 10,
+        "D": 38,
+        "E": 80
+      },
+      "6": {
+        "F": 10,
+        "D": 38,
+        "E": 80
+      },
+      "2": {
+        "F": 10,
+        "D": 38,
+        "E": 80
+      }
     },
     "flanges": [
       {
@@ -1928,9 +2173,6 @@
     "frameSize": 132,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 38,
-      "E": 80,
-      "F": 10,
       "A": 216,
       "AB": 255,
       "B": 178,
@@ -1951,6 +2193,23 @@
       "AD": 165,
       "AD1": 37.5,
       "HJ": 203
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 10,
+        "D": 38,
+        "E": 80
+      },
+      "6": {
+        "F": 10,
+        "D": 38,
+        "E": 80
+      },
+      "2": {
+        "F": 10,
+        "D": 38,
+        "E": 80
+      }
     },
     "flanges": [
       {
@@ -2062,9 +2321,6 @@
     "frameSize": 132,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 38,
-      "E": 80,
-      "F": 10,
       "A": 216,
       "AB": 255,
       "B": 178,
@@ -2085,6 +2341,23 @@
       "AD": 165,
       "AD1": 37.5,
       "HJ": 203
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 10,
+        "D": 38,
+        "E": 80
+      },
+      "6": {
+        "F": 10,
+        "D": 38,
+        "E": 80
+      },
+      "2": {
+        "F": 10,
+        "D": 38,
+        "E": 80
+      }
     },
     "flanges": [
       {
@@ -2196,9 +2469,6 @@
     "frameSize": 132,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 38,
-      "E": 80,
-      "F": 10,
       "A": 216,
       "AB": 255,
       "B": 140,
@@ -2219,6 +2489,23 @@
       "AD": 165,
       "AD1": 37.5,
       "HJ": 203
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 10,
+        "D": 38,
+        "E": 80
+      },
+      "6": {
+        "F": 10,
+        "D": 38,
+        "E": 80
+      },
+      "2": {
+        "F": 10,
+        "D": 38,
+        "E": 80
+      }
     },
     "flanges": [
       {
@@ -2330,9 +2617,6 @@
     "frameSize": 160,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 42,
-      "E": 110,
-      "F": 12,
       "A": 254,
       "AB": 294,
       "B": 254,
@@ -2353,6 +2637,23 @@
       "AD": 179,
       "AD1": 45,
       "HJ": 276
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 12,
+        "D": 42,
+        "E": 110
+      },
+      "6": {
+        "F": 12,
+        "D": 42,
+        "E": 110
+      },
+      "2": {
+        "F": 12,
+        "D": 42,
+        "E": 110
+      }
     },
     "flanges": [
       {
@@ -2424,9 +2725,6 @@
     "frameSize": 160,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 42,
-      "E": 110,
-      "F": 12,
       "A": 254,
       "AB": 294,
       "B": 254,
@@ -2447,6 +2745,23 @@
       "AD": 179,
       "AD1": 45,
       "HJ": 276
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 12,
+        "D": 42,
+        "E": 110
+      },
+      "6": {
+        "F": 12,
+        "D": 42,
+        "E": 110
+      },
+      "2": {
+        "F": 12,
+        "D": 42,
+        "E": 110
+      }
     },
     "flanges": [
       {
@@ -2518,9 +2833,6 @@
     "frameSize": 160,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 42,
-      "E": 110,
-      "F": 12,
       "A": 254,
       "AB": 294,
       "B": 210,
@@ -2541,6 +2853,23 @@
       "AD": 179,
       "AD1": 45,
       "HJ": 276
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 12,
+        "D": 42,
+        "E": 110
+      },
+      "6": {
+        "F": 12,
+        "D": 42,
+        "E": 110
+      },
+      "2": {
+        "F": 12,
+        "D": 42,
+        "E": 110
+      }
     },
     "flanges": [
       {
@@ -2612,9 +2941,6 @@
     "frameSize": 160,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 42,
-      "E": 110,
-      "F": 12,
       "A": 254,
       "AB": 294,
       "B": 210,
@@ -2635,6 +2961,23 @@
       "AD": 179,
       "AD1": 45,
       "HJ": 276
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 12,
+        "D": 42,
+        "E": 110
+      },
+      "6": {
+        "F": 12,
+        "D": 42,
+        "E": 110
+      },
+      "2": {
+        "F": 12,
+        "D": 42,
+        "E": 110
+      }
     },
     "flanges": [
       {
@@ -2706,9 +3049,6 @@
     "frameSize": 180,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 48,
-      "E": 110,
-      "F": 14,
       "A": 279,
       "AB": 330,
       "B": 279,
@@ -2729,6 +3069,23 @@
       "AD": 190,
       "AD1": 45,
       "HJ": 297
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      },
+      "6": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      },
+      "2": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      }
     },
     "flanges": [
       {
@@ -2800,9 +3157,6 @@
     "frameSize": 180,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 48,
-      "E": 110,
-      "F": 14,
       "A": 279,
       "AB": 330,
       "B": 241,
@@ -2823,6 +3177,23 @@
       "AD": 190,
       "AD1": 45,
       "HJ": 297
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      },
+      "6": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      },
+      "2": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      }
     },
     "flanges": [
       {
@@ -2894,9 +3265,6 @@
     "frameSize": 180,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 48,
-      "E": 110,
-      "F": 14,
       "A": 279,
       "AB": 330,
       "B": 279,
@@ -2917,6 +3285,23 @@
       "AD": 190,
       "AD1": 45,
       "HJ": 297
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      },
+      "6": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      },
+      "2": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      }
     },
     "flanges": [
       {
@@ -2988,9 +3373,6 @@
     "frameSize": 180,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 48,
-      "E": 110,
-      "F": 14,
       "A": 279,
       "AB": 330,
       "B": 241,
@@ -3011,6 +3393,23 @@
       "AD": 190,
       "AD1": 45,
       "HJ": 297
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      },
+      "6": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      },
+      "2": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      }
     },
     "flanges": [
       {
@@ -3082,9 +3481,6 @@
     "frameSize": 180,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 48,
-      "E": 110,
-      "F": 14,
       "A": 279,
       "AB": 324,
       "B": 241,
@@ -3105,6 +3501,23 @@
       "AD": 179,
       "AD1": 45,
       "HJ": 276
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      },
+      "6": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      },
+      "2": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      }
     },
     "flanges": [
       {
@@ -3176,9 +3589,6 @@
     "frameSize": 200,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 55,
-      "E": 110,
-      "F": 16,
       "A": 318,
       "AB": 374,
       "B": 305,
@@ -3199,6 +3609,23 @@
       "AD": 243,
       "AD1": 45,
       "HJ": 328
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 16,
+        "D": 55,
+        "E": 110
+      },
+      "6": {
+        "F": 16,
+        "D": 55,
+        "E": 110
+      },
+      "2": {
+        "F": 16,
+        "D": 55,
+        "E": 110
+      }
     },
     "flanges": [
       {
@@ -3270,9 +3697,6 @@
     "frameSize": 225,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 60,
-      "E": 140,
-      "F": 18,
       "A": 356,
       "AB": 426,
       "B": 311,
@@ -3293,6 +3717,18 @@
       "AD": 276,
       "AD1": 45,
       "HJ": 427
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 18,
+        "D": 60,
+        "E": 140
+      },
+      "6": {
+        "F": 18,
+        "D": 60,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -3364,9 +3800,6 @@
     "frameSize": 225,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 55,
-      "E": 110,
-      "F": 16,
       "A": 356,
       "AB": 426,
       "B": 311,
@@ -3387,6 +3820,13 @@
       "AD": 243,
       "AD1": 45,
       "HJ": 328
+    },
+    "shaftByPoles": {
+      "2": {
+        "F": 16,
+        "D": 55,
+        "E": 110
+      }
     },
     "flanges": [
       {
@@ -3458,9 +3898,6 @@
     "frameSize": 225,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 60,
-      "E": 140,
-      "F": 18,
       "A": 356,
       "AB": 426,
       "B": 286,
@@ -3481,6 +3918,18 @@
       "AD": 276,
       "AD1": 45,
       "HJ": 427
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 18,
+        "D": 60,
+        "E": 140
+      },
+      "6": {
+        "F": 18,
+        "D": 60,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -3552,9 +4001,6 @@
     "frameSize": 225,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 60,
-      "E": 140,
-      "F": 18,
       "A": 356,
       "AB": 426,
       "B": 286,
@@ -3575,6 +4021,18 @@
       "AD": 243,
       "AD1": 45,
       "HJ": 328
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 18,
+        "D": 60,
+        "E": 140
+      },
+      "6": {
+        "F": 18,
+        "D": 60,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -3646,9 +4104,6 @@
     "frameSize": 250,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": null,
-      "E": 140,
-      "F": 18,
       "A": 406,
       "AB": 476,
       "B": 349,
@@ -3669,6 +4124,23 @@
       "AD": 276,
       "AD1": 45,
       "HJ": 427
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 18,
+        "D": 65,
+        "E": 140
+      },
+      "6": {
+        "F": 18,
+        "D": 65,
+        "E": 140
+      },
+      "2": {
+        "F": 18,
+        "D": 60,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -3740,9 +4212,6 @@
     "frameSize": 250,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 65,
-      "E": 140,
-      "F": 18,
       "A": 406,
       "AB": 476,
       "B": 349,
@@ -3763,6 +4232,18 @@
       "AD": 276,
       "AD1": 45,
       "HJ": 427
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 18,
+        "D": 65,
+        "E": 140
+      },
+      "6": {
+        "F": 18,
+        "D": 65,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -3834,9 +4315,6 @@
     "frameSize": 280,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": null,
-      "E": 140,
-      "F": null,
       "A": 457,
       "AB": 527,
       "B": 419,
@@ -3857,6 +4335,23 @@
       "AD": 305,
       "AD1": 45,
       "HJ": 439
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 20,
+        "D": 75,
+        "E": 140
+      },
+      "6": {
+        "F": 20,
+        "D": 75,
+        "E": 140
+      },
+      "2": {
+        "F": 18,
+        "D": 65,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -3928,9 +4423,6 @@
     "frameSize": 280,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 75,
-      "E": 140,
-      "F": 20,
       "A": 457,
       "AB": 527,
       "B": 419,
@@ -3950,6 +4442,18 @@
       "AD1": 45,
       "HJ": 507,
       "AD": 24
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 20,
+        "D": 75,
+        "E": 140
+      },
+      "6": {
+        "F": 20,
+        "D": 75,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -4021,9 +4525,6 @@
     "frameSize": 280,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": null,
-      "E": 140,
-      "F": null,
       "A": 457,
       "AB": 527,
       "B": 419,
@@ -4043,6 +4544,23 @@
       "AD1": 45,
       "HJ": 507,
       "AD": 24
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 20,
+        "D": 75,
+        "E": 140
+      },
+      "6": {
+        "F": 20,
+        "D": 75,
+        "E": 140
+      },
+      "2": {
+        "F": 18,
+        "D": 65,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -4114,9 +4632,6 @@
     "frameSize": 280,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 65,
-      "E": 140,
-      "F": 18,
       "A": 457,
       "AB": 527,
       "B": 368,
@@ -4137,6 +4652,13 @@
       "AD": 305,
       "AD1": 45,
       "HJ": 454
+    },
+    "shaftByPoles": {
+      "2": {
+        "F": 18,
+        "D": 65,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -4204,13 +4726,49 @@
   },
   {
     "brand": "Leroy-Somer",
+    "designation": "FLSES 315 L",
+    "frameSize": 315,
+    "casingMaterial": "cast-iron",
+    "dimensions": {},
+    "shaftByPoles": {
+      "4": {
+        "F": 25,
+        "D": 90,
+        "E": 170
+      },
+      "6": {
+        "F": 25,
+        "D": 90,
+        "E": 170
+      },
+      "2": {
+        "F": 20,
+        "D": 70,
+        "E": 140
+      }
+    },
+    "flanges": [],
+    "provenance": {
+      "catalog": "Catalogue_LS_LSES.pdf",
+      "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+      "catalogEdition": "5147 fr - 2023.08 / j",
+      "sources": [
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 94,
+          "catalogPage": "94",
+          "extractionMethod": "pdfplumber-shaft"
+        }
+      ]
+    }
+  },
+  {
+    "brand": "Leroy-Somer",
     "designation": "FLSES 315 LA",
     "frameSize": 315,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 508,
       "AB": 600,
       "B": 508,
@@ -4231,6 +4789,23 @@
       "AD": 343,
       "AD1": 45,
       "HJ": 532
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 25,
+        "D": 90,
+        "E": 170
+      },
+      "6": {
+        "F": 25,
+        "D": 90,
+        "E": 170
+      },
+      "2": {
+        "F": 20,
+        "D": 70,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -4265,6 +4840,13 @@
       "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
       "catalogEdition": "5147 fr - 2023.08 / j",
       "sources": [
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 94,
+          "catalogPage": "94",
+          "extractionMethod": "pdfplumber-shaft"
+        },
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
@@ -4295,9 +4877,6 @@
     "frameSize": 315,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 508,
       "AB": 600,
       "B": 508,
@@ -4318,6 +4897,23 @@
       "AD": 343,
       "AD1": 45,
       "HJ": 532
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 25,
+        "D": 90,
+        "E": 170
+      },
+      "6": {
+        "F": 25,
+        "D": 90,
+        "E": 170
+      },
+      "2": {
+        "F": 20,
+        "D": 70,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -4355,6 +4951,13 @@
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 94,
+          "catalogPage": "94",
+          "extractionMethod": "pdfplumber-shaft"
+        },
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
           "pdfPage": 95,
           "catalogPage": "95",
           "extractionMethod": "pdfplumber-b3"
@@ -4382,9 +4985,6 @@
     "frameSize": 315,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 90,
-      "E": 170,
-      "F": 25,
       "A": 508,
       "AB": 600,
       "B": 508,
@@ -4404,6 +5004,18 @@
       "AD1": 45,
       "HJ": 542,
       "AD": 28
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 25,
+        "D": 90,
+        "E": 170
+      },
+      "6": {
+        "F": 25,
+        "D": 90,
+        "E": 170
+      }
     },
     "flanges": [
       {
@@ -4475,9 +5087,6 @@
     "frameSize": 315,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 508,
       "AB": 600,
       "B": 508,
@@ -4497,6 +5106,23 @@
       "AD1": 45,
       "HJ": 542,
       "AD": 28
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 25,
+        "D": 90,
+        "E": 170
+      },
+      "6": {
+        "F": 25,
+        "D": 90,
+        "E": 170
+      },
+      "2": {
+        "F": 20,
+        "D": 70,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -4531,6 +5157,13 @@
       "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
       "catalogEdition": "5147 fr - 2023.08 / j",
       "sources": [
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 94,
+          "catalogPage": "94",
+          "extractionMethod": "pdfplumber-shaft"
+        },
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
@@ -4561,9 +5194,6 @@
     "frameSize": 315,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 508,
       "AB": 600,
       "B": 457,
@@ -4584,6 +5214,23 @@
       "AD": 343,
       "AD1": 45,
       "HJ": 532
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      },
+      "6": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      },
+      "2": {
+        "F": 18,
+        "D": 65,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -4618,6 +5265,13 @@
       "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
       "catalogEdition": "5147 fr - 2023.08 / j",
       "sources": [
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 94,
+          "catalogPage": "94",
+          "extractionMethod": "pdfplumber-shaft"
+        },
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
@@ -4648,9 +5302,6 @@
     "frameSize": 315,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 508,
       "AB": 600,
       "B": 406,
@@ -4671,6 +5322,23 @@
       "AD": 343,
       "AD1": 45,
       "HJ": 532
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      },
+      "6": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      },
+      "2": {
+        "F": 18,
+        "D": 65,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -4705,6 +5373,13 @@
       "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
       "catalogEdition": "5147 fr - 2023.08 / j",
       "sources": [
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 94,
+          "catalogPage": "94",
+          "extractionMethod": "pdfplumber-shaft"
+        },
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
@@ -4735,9 +5410,6 @@
     "frameSize": 355,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 610,
       "AB": 710,
       "B": 630,
@@ -4758,6 +5430,23 @@
       "HJ": 570,
       "AD": 28,
       "AD1": 35
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 28,
+        "D": 100,
+        "E": 210
+      },
+      "6": {
+        "F": 28,
+        "D": 100,
+        "E": 210
+      },
+      "2": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      }
     },
     "flanges": [
       {
@@ -4792,6 +5481,13 @@
       "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
       "catalogEdition": "5147 fr - 2023.08 / j",
       "sources": [
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 94,
+          "catalogPage": "94",
+          "extractionMethod": "pdfplumber-shaft"
+        },
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
@@ -4822,9 +5518,6 @@
     "frameSize": 355,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 610,
       "AB": 710,
       "B": 630,
@@ -4845,6 +5538,23 @@
       "HJ": 570,
       "AD": 28,
       "AD1": 35
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 28,
+        "D": 100,
+        "E": 210
+      },
+      "6": {
+        "F": 28,
+        "D": 100,
+        "E": 210
+      },
+      "2": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      }
     },
     "flanges": [
       {
@@ -4879,6 +5589,13 @@
       "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
       "catalogEdition": "5147 fr - 2023.08 / j",
       "sources": [
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 94,
+          "catalogPage": "94",
+          "extractionMethod": "pdfplumber-shaft"
+        },
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
@@ -4909,9 +5626,6 @@
     "frameSize": 355,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 610,
       "AB": 710,
       "B": 630,
@@ -4932,6 +5646,23 @@
       "HJ": 570,
       "AD": 28,
       "AD1": 35
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 28,
+        "D": 100,
+        "E": 210
+      },
+      "6": {
+        "F": 28,
+        "D": 100,
+        "E": 210
+      },
+      "2": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      }
     },
     "flanges": [
       {
@@ -4966,6 +5697,13 @@
       "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
       "catalogEdition": "5147 fr - 2023.08 / j",
       "sources": [
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 94,
+          "catalogPage": "94",
+          "extractionMethod": "pdfplumber-shaft"
+        },
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
@@ -4996,9 +5734,6 @@
     "frameSize": 355,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 610,
       "AB": 710,
       "B": 630,
@@ -5019,6 +5754,23 @@
       "HJ": 570,
       "AD": 28,
       "AD1": 35
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 28,
+        "D": 100,
+        "E": 210
+      },
+      "6": {
+        "F": 28,
+        "D": 100,
+        "E": 210
+      },
+      "2": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      }
     },
     "flanges": [
       {
@@ -5053,6 +5805,13 @@
       "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
       "catalogEdition": "5147 fr - 2023.08 / j",
       "sources": [
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 94,
+          "catalogPage": "94",
+          "extractionMethod": "pdfplumber-shaft"
+        },
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
@@ -5083,9 +5842,6 @@
     "frameSize": 355,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 610,
       "AB": 710,
       "B": 630,
@@ -5106,6 +5862,23 @@
       "HJ": 570,
       "AD": 28,
       "AD1": 35
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 28,
+        "D": 100,
+        "E": 210
+      },
+      "6": {
+        "F": 28,
+        "D": 100,
+        "E": 210
+      },
+      "2": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      }
     },
     "flanges": [
       {
@@ -5143,6 +5916,13 @@
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 94,
+          "catalogPage": "94",
+          "extractionMethod": "pdfplumber-shaft"
+        },
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
           "pdfPage": 95,
           "catalogPage": "95",
           "extractionMethod": "pdfplumber-b3"
@@ -5170,9 +5950,6 @@
     "frameSize": 355,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 100,
-      "E": 210,
-      "F": 28,
       "A": 610,
       "AB": 750,
       "B": 630,
@@ -5193,6 +5970,18 @@
       "HJ": 762,
       "AD": 27,
       "AD1": 45
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 28,
+        "D": 100,
+        "E": 210
+      },
+      "6": {
+        "F": 28,
+        "D": 100,
+        "E": 210
+      }
     },
     "flanges": [
       {
@@ -5264,9 +6053,6 @@
     "frameSize": 355,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 610,
       "AB": 750,
       "B": 630,
@@ -5287,6 +6073,23 @@
       "HJ": 762,
       "AD": 27,
       "AD1": 45
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 28,
+        "D": 100,
+        "E": 210
+      },
+      "6": {
+        "F": 28,
+        "D": 100,
+        "E": 210
+      },
+      "2": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      }
     },
     "flanges": [
       {
@@ -5324,6 +6127,13 @@
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 94,
+          "catalogPage": "94",
+          "extractionMethod": "pdfplumber-shaft"
+        },
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
           "pdfPage": 95,
           "catalogPage": "95",
           "extractionMethod": "pdfplumber-b3"
@@ -5351,9 +6161,6 @@
     "frameSize": 355,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 100,
-      "E": 210,
-      "F": 28,
       "A": 610,
       "AB": 750,
       "B": 630,
@@ -5374,6 +6181,18 @@
       "HJ": 762,
       "AD": 27,
       "AD1": 45
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 28,
+        "D": 100,
+        "E": 210
+      },
+      "6": {
+        "F": 28,
+        "D": 100,
+        "E": 210
+      }
     },
     "flanges": [
       {
@@ -5445,9 +6264,6 @@
     "frameSize": 400,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 686,
       "AB": 800,
       "B": 710,
@@ -5468,6 +6284,23 @@
       "HJ": 762,
       "AD": 35,
       "AD1": 45
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 28,
+        "D": 110,
+        "E": 210
+      },
+      "6": {
+        "F": 28,
+        "D": 110,
+        "E": 210
+      },
+      "2": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      }
     },
     "flanges": [
       {
@@ -5505,6 +6338,13 @@
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 94,
+          "catalogPage": "94",
+          "extractionMethod": "pdfplumber-shaft"
+        },
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
           "pdfPage": 95,
           "catalogPage": "95",
           "extractionMethod": "pdfplumber-b3"
@@ -5532,9 +6372,6 @@
     "frameSize": 450,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 120,
-      "E": 210,
-      "F": 32,
       "A": 750,
       "AB": 890,
       "B": 800,
@@ -5555,6 +6392,18 @@
       "HJ": 810,
       "AD": 35,
       "AD1": 45
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 32,
+        "D": 120,
+        "E": 210
+      },
+      "6": {
+        "F": 32,
+        "D": 120,
+        "E": 210
+      }
     },
     "flanges": [
       {
@@ -5626,9 +6475,6 @@
     "frameSize": 450,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 120,
-      "E": 210,
-      "F": 32,
       "A": 750,
       "AB": 890,
       "B": 800,
@@ -5649,6 +6495,18 @@
       "HJ": 810,
       "AD": 35,
       "AD1": 45
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 32,
+        "D": 120,
+        "E": 210
+      },
+      "6": {
+        "F": 32,
+        "D": 120,
+        "E": 210
+      }
     },
     "flanges": [
       {
@@ -5720,9 +6578,6 @@
     "frameSize": 450,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 120,
-      "E": 210,
-      "F": 32,
       "A": 750,
       "AB": 890,
       "B": 1000,
@@ -5743,6 +6598,18 @@
       "HJ": 810,
       "AD": 35,
       "AD1": 45
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 32,
+        "D": 120,
+        "E": 210
+      },
+      "6": {
+        "F": 32,
+        "D": 120,
+        "E": 210
+      }
     },
     "flanges": [
       {
@@ -5814,9 +6681,6 @@
     "frameSize": 450,
     "casingMaterial": "cast-iron",
     "dimensions": {
-      "D": 120,
-      "E": 210,
-      "F": 32,
       "A": 750,
       "AB": 890,
       "B": 1000,
@@ -5837,6 +6701,18 @@
       "HJ": 810,
       "AD": 35,
       "AD1": 45
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 32,
+        "D": 120,
+        "E": 210
+      },
+      "6": {
+        "F": 32,
+        "D": 120,
+        "E": 210
+      }
     },
     "flanges": [
       {
@@ -5908,9 +6784,6 @@
     "frameSize": 56,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 9,
-      "E": 20,
-      "F": 3,
       "A": 90,
       "AB": 104,
       "B": 71,
@@ -5931,6 +6804,23 @@
       "HJ": 84,
       "AD": 6,
       "AD1": 7
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 3,
+        "D": 9,
+        "E": 20
+      },
+      "6": {
+        "F": 3,
+        "D": 9,
+        "E": 20
+      },
+      "2": {
+        "F": 3,
+        "D": 9,
+        "E": 20
+      }
     },
     "flanges": [
       {
@@ -6042,9 +6932,6 @@
     "frameSize": 63,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 11,
-      "E": 23,
-      "F": 4,
       "A": 100,
       "AB": 115,
       "B": 80,
@@ -6065,6 +6952,23 @@
       "HJ": 89,
       "AD": 7,
       "AD1": 9
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 4,
+        "D": 11,
+        "E": 23
+      },
+      "6": {
+        "F": 4,
+        "D": 11,
+        "E": 23
+      },
+      "2": {
+        "F": 4,
+        "D": 11,
+        "E": 23
+      }
     },
     "flanges": [
       {
@@ -6176,9 +7080,6 @@
     "frameSize": 71,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 14,
-      "E": 30,
-      "F": 5,
       "AC": 140,
       "LB": 193,
       "HJ": 99,
@@ -6188,6 +7089,23 @@
       "II": 43,
       "AD": 7,
       "AD1": 9
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 5,
+        "D": 14,
+        "E": 30
+      },
+      "6": {
+        "F": 5,
+        "D": 14,
+        "E": 30
+      },
+      "2": {
+        "F": 5,
+        "D": 14,
+        "E": 30
+      }
     },
     "flanges": [
       {
@@ -6292,9 +7210,6 @@
     "frameSize": 71,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 14,
-      "E": 30,
-      "F": 5,
       "A": 112,
       "AB": 126,
       "B": 90,
@@ -6315,6 +7230,23 @@
       "HJ": 100,
       "AD": 7,
       "AD1": 9
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 5,
+        "D": 14,
+        "E": 30
+      },
+      "6": {
+        "F": 5,
+        "D": 14,
+        "E": 30
+      },
+      "2": {
+        "F": 5,
+        "D": 14,
+        "E": 30
+      }
     },
     "flanges": [
       {
@@ -6426,9 +7358,6 @@
     "frameSize": 71,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 14,
-      "E": 30,
-      "F": 5,
       "A": 112,
       "AB": 126,
       "B": 90,
@@ -6449,6 +7378,23 @@
       "HJ": 99,
       "AD": 7,
       "AD1": 9
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 5,
+        "D": 14,
+        "E": 30
+      },
+      "6": {
+        "F": 5,
+        "D": 14,
+        "E": 30
+      },
+      "2": {
+        "F": 5,
+        "D": 14,
+        "E": 30
+      }
     },
     "flanges": [
       {
@@ -6560,9 +7506,6 @@
     "frameSize": 80,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 19,
-      "E": 40,
-      "F": 6,
       "A": 125,
       "AB": 157,
       "B": 100,
@@ -6583,6 +7526,23 @@
       "HJ": 127,
       "AD": 9,
       "AD1": 10
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 6,
+        "D": 19,
+        "E": 40
+      },
+      "6": {
+        "F": 6,
+        "D": 19,
+        "E": 40
+      },
+      "2": {
+        "F": 6,
+        "D": 19,
+        "E": 40
+      }
     },
     "flanges": [
       {
@@ -6694,9 +7654,6 @@
     "frameSize": 80,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 19,
-      "E": 40,
-      "F": 6,
       "A": 125,
       "AB": 157,
       "B": 100,
@@ -6717,6 +7674,23 @@
       "HJ": 137,
       "AD": 9,
       "AD1": 10
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 6,
+        "D": 19,
+        "E": 40
+      },
+      "6": {
+        "F": 6,
+        "D": 19,
+        "E": 40
+      },
+      "2": {
+        "F": 6,
+        "D": 19,
+        "E": 40
+      }
     },
     "flanges": [
       {
@@ -6828,9 +7802,6 @@
     "frameSize": 90,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 24,
-      "E": 50,
-      "F": 8,
       "A": 140,
       "AB": 172,
       "B": 125,
@@ -6851,6 +7822,23 @@
       "HJ": 137,
       "AD": 10,
       "AD1": 11
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 8,
+        "D": 24,
+        "E": 50
+      },
+      "6": {
+        "F": 8,
+        "D": 24,
+        "E": 50
+      },
+      "2": {
+        "F": 8,
+        "D": 24,
+        "E": 50
+      }
     },
     "flanges": [
       {
@@ -6962,9 +7950,6 @@
     "frameSize": 90,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 24,
-      "E": 50,
-      "F": 8,
       "A": 140,
       "AB": 172,
       "B": 125,
@@ -6985,6 +7970,23 @@
       "HJ": 137,
       "AD": 10,
       "AD1": 11
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 8,
+        "D": 24,
+        "E": 50
+      },
+      "6": {
+        "F": 8,
+        "D": 24,
+        "E": 50
+      },
+      "2": {
+        "F": 8,
+        "D": 24,
+        "E": 50
+      }
     },
     "flanges": [
       {
@@ -7096,9 +8098,6 @@
     "frameSize": 90,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 24,
-      "E": 50,
-      "F": 8,
       "A": 140,
       "AB": 172,
       "B": 125,
@@ -7119,6 +8118,23 @@
       "HJ": 137,
       "AD": 10,
       "AD1": 11
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 8,
+        "D": 24,
+        "E": 50
+      },
+      "6": {
+        "F": 8,
+        "D": 24,
+        "E": 50
+      },
+      "2": {
+        "F": 8,
+        "D": 24,
+        "E": 50
+      }
     },
     "flanges": [
       {
@@ -7230,9 +8246,6 @@
     "frameSize": 100,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 28,
-      "E": 60,
-      "F": 8,
       "A": 160,
       "AB": 196,
       "B": 140,
@@ -7253,6 +8266,23 @@
       "AD": 118,
       "AD1": 45,
       "HJ": 142
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 8,
+        "D": 28,
+        "E": 60
+      },
+      "6": {
+        "F": 8,
+        "D": 28,
+        "E": 60
+      },
+      "2": {
+        "F": 8,
+        "D": 28,
+        "E": 60
+      }
     },
     "flanges": [
       {
@@ -7364,9 +8394,6 @@
     "frameSize": 100,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 28,
-      "E": 60,
-      "F": 8,
       "A": 160,
       "AB": 196,
       "B": 140,
@@ -7387,6 +8414,23 @@
       "AD": 130,
       "AD1": 45,
       "HJ": 151
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 8,
+        "D": 28,
+        "E": 60
+      },
+      "6": {
+        "F": 8,
+        "D": 28,
+        "E": 60
+      },
+      "2": {
+        "F": 8,
+        "D": 28,
+        "E": 60
+      }
     },
     "flanges": [
       {
@@ -7498,9 +8542,6 @@
     "frameSize": 100,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 28,
-      "E": 60,
-      "F": 8,
       "A": 160,
       "AB": 196,
       "B": 140,
@@ -7521,6 +8562,23 @@
       "AD": 118,
       "AD1": 45,
       "HJ": 142
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 8,
+        "D": 28,
+        "E": 60
+      },
+      "6": {
+        "F": 8,
+        "D": 28,
+        "E": 60
+      },
+      "2": {
+        "F": 8,
+        "D": 28,
+        "E": 60
+      }
     },
     "flanges": [
       {
@@ -7632,9 +8690,6 @@
     "frameSize": 112,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 28,
-      "E": 60,
-      "F": 8,
       "A": 190,
       "AB": 220,
       "B": 140,
@@ -7655,6 +8710,18 @@
       "AD": 118,
       "AD1": 45,
       "HJ": 142
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 8,
+        "D": 28,
+        "E": 60
+      },
+      "6": {
+        "F": 8,
+        "D": 28,
+        "E": 60
+      }
     },
     "flanges": [
       {
@@ -7766,9 +8833,6 @@
     "frameSize": 112,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 28,
-      "E": 60,
-      "F": 8,
       "A": 190,
       "AB": 220,
       "B": 140,
@@ -7789,6 +8853,18 @@
       "HJ": 151,
       "AD": 12,
       "AD1": 14
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 8,
+        "D": 28,
+        "E": 60
+      },
+      "6": {
+        "F": 8,
+        "D": 28,
+        "E": 60
+      }
     },
     "flanges": [
       {
@@ -7900,9 +8976,6 @@
     "frameSize": 112,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 28,
-      "E": 60,
-      "F": 8,
       "A": 190,
       "AB": 220,
       "B": 140,
@@ -7923,6 +8996,18 @@
       "HJ": 151,
       "AD": 12,
       "AD1": 14
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 8,
+        "D": 28,
+        "E": 60
+      },
+      "6": {
+        "F": 8,
+        "D": 28,
+        "E": 60
+      }
     },
     "flanges": [
       {
@@ -8034,9 +9119,6 @@
     "frameSize": 132,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 38,
-      "E": 80,
-      "F": 10,
       "A": 216,
       "AB": 250,
       "B": 178,
@@ -8057,6 +9139,23 @@
       "AD": 140,
       "AD1": 45,
       "HJ": 190
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 10,
+        "D": 38,
+        "E": 80
+      },
+      "6": {
+        "F": 10,
+        "D": 38,
+        "E": 80
+      },
+      "2": {
+        "F": 10,
+        "D": 38,
+        "E": 80
+      }
     },
     "flanges": [
       {
@@ -8168,9 +9267,6 @@
     "frameSize": 132,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 38,
-      "E": 80,
-      "F": 10,
       "A": 216,
       "AB": 250,
       "B": 178,
@@ -8191,6 +9287,23 @@
       "AD": 140,
       "AD1": 45,
       "HJ": 190
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 10,
+        "D": 38,
+        "E": 80
+      },
+      "6": {
+        "F": 10,
+        "D": 38,
+        "E": 80
+      },
+      "2": {
+        "F": 10,
+        "D": 38,
+        "E": 80
+      }
     },
     "flanges": [
       {
@@ -8302,9 +9415,6 @@
     "frameSize": 132,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 38,
-      "E": 80,
-      "F": 10,
       "A": 216,
       "AB": 250,
       "B": 140,
@@ -8325,6 +9435,23 @@
       "AD": 130,
       "AD1": 45,
       "HJ": 172
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 10,
+        "D": 38,
+        "E": 80
+      },
+      "6": {
+        "F": 10,
+        "D": 38,
+        "E": 80
+      },
+      "2": {
+        "F": 10,
+        "D": 38,
+        "E": 80
+      }
     },
     "flanges": [
       {
@@ -8436,9 +9563,6 @@
     "frameSize": 132,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 38,
-      "E": 80,
-      "F": 10,
       "A": 216,
       "AB": 250,
       "B": 140,
@@ -8459,6 +9583,23 @@
       "AD": 140,
       "AD1": 45,
       "HJ": 190
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 10,
+        "D": 38,
+        "E": 80
+      },
+      "6": {
+        "F": 10,
+        "D": 38,
+        "E": 80
+      },
+      "2": {
+        "F": 10,
+        "D": 38,
+        "E": 80
+      }
     },
     "flanges": [
       {
@@ -8570,9 +9711,6 @@
     "frameSize": 132,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 38,
-      "E": 80,
-      "F": 10,
       "A": 216,
       "AB": 250,
       "B": 140,
@@ -8593,6 +9731,23 @@
       "AD": 130,
       "AD1": 45,
       "HJ": 172
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 10,
+        "D": 38,
+        "E": 80
+      },
+      "6": {
+        "F": 10,
+        "D": 38,
+        "E": 80
+      },
+      "2": {
+        "F": 10,
+        "D": 38,
+        "E": 80
+      }
     },
     "flanges": [
       {
@@ -8704,9 +9859,6 @@
     "frameSize": 160,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 42,
-      "E": 110,
-      "F": 12,
       "A": 254,
       "AB": 294,
       "B": 254,
@@ -8727,6 +9879,23 @@
       "AD": 186,
       "AD1": 45,
       "HJ": 235
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 12,
+        "D": 42,
+        "E": 110
+      },
+      "6": {
+        "F": 12,
+        "D": 42,
+        "E": 110
+      },
+      "2": {
+        "F": 12,
+        "D": 42,
+        "E": 110
+      }
     },
     "flanges": [
       {
@@ -8798,9 +9967,6 @@
     "frameSize": 160,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 42,
-      "E": 110,
-      "F": 12,
       "A": 254,
       "AB": 294,
       "B": 254,
@@ -8821,6 +9987,23 @@
       "AD": 186,
       "AD1": 45,
       "HJ": 235
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 12,
+        "D": 42,
+        "E": 110
+      },
+      "6": {
+        "F": 12,
+        "D": 42,
+        "E": 110
+      },
+      "2": {
+        "F": 12,
+        "D": 42,
+        "E": 110
+      }
     },
     "flanges": [
       {
@@ -8892,9 +10075,6 @@
     "frameSize": 160,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 42,
-      "E": 110,
-      "F": 12,
       "A": 254,
       "AB": 294,
       "B": 210,
@@ -8915,6 +10095,23 @@
       "AD": 186,
       "AD1": 45,
       "HJ": 235
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 12,
+        "D": 42,
+        "E": 110
+      },
+      "6": {
+        "F": 12,
+        "D": 42,
+        "E": 110
+      },
+      "2": {
+        "F": 12,
+        "D": 42,
+        "E": 110
+      }
     },
     "flanges": [
       {
@@ -8986,9 +10183,6 @@
     "frameSize": 160,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 42,
-      "E": 110,
-      "F": 12,
       "A": 254,
       "AB": 294,
       "B": 210,
@@ -9009,6 +10203,23 @@
       "AD": 156,
       "AD1": 45,
       "HJ": 190
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 12,
+        "D": 42,
+        "E": 110
+      },
+      "6": {
+        "F": 12,
+        "D": 42,
+        "E": 110
+      },
+      "2": {
+        "F": 12,
+        "D": 42,
+        "E": 110
+      }
     },
     "flanges": [
       {
@@ -9120,9 +10331,6 @@
     "frameSize": 160,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 42,
-      "E": 110,
-      "F": 12,
       "A": 254,
       "AB": 294,
       "B": 210,
@@ -9143,6 +10351,23 @@
       "AD": 156,
       "AD1": 45,
       "HJ": 190
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 12,
+        "D": 42,
+        "E": 110
+      },
+      "6": {
+        "F": 12,
+        "D": 42,
+        "E": 110
+      },
+      "2": {
+        "F": 12,
+        "D": 42,
+        "E": 110
+      }
     },
     "flanges": [
       {
@@ -9254,9 +10479,6 @@
     "frameSize": 160,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 42,
-      "E": 110,
-      "F": 12,
       "A": 254,
       "AB": 294,
       "B": 210,
@@ -9277,6 +10499,23 @@
       "AD": 186,
       "AD1": 45,
       "HJ": 235
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 12,
+        "D": 42,
+        "E": 110
+      },
+      "6": {
+        "F": 12,
+        "D": 42,
+        "E": 110
+      },
+      "2": {
+        "F": 12,
+        "D": 42,
+        "E": 110
+      }
     },
     "flanges": [
       {
@@ -9348,9 +10587,6 @@
     "frameSize": 180,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 48,
-      "E": 110,
-      "F": 14,
       "A": 279,
       "AB": 339,
       "B": 279,
@@ -9371,6 +10607,23 @@
       "HJ": 256,
       "AD": 14.5,
       "AD1": 25
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      },
+      "6": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      },
+      "2": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      }
     },
     "flanges": [
       {
@@ -9442,9 +10695,6 @@
     "frameSize": 180,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 48,
-      "E": 110,
-      "F": 14,
       "A": 279,
       "AB": 324,
       "B": 279,
@@ -9465,6 +10715,23 @@
       "AD": 186,
       "AD1": 45,
       "HJ": 248
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      },
+      "6": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      },
+      "2": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      }
     },
     "flanges": [
       {
@@ -9536,9 +10803,6 @@
     "frameSize": 180,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 48,
-      "E": 110,
-      "F": 14,
       "A": 279,
       "AB": 339,
       "B": 279,
@@ -9559,6 +10823,23 @@
       "HJ": 256,
       "AD": 14.5,
       "AD1": 25
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      },
+      "6": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      },
+      "2": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      }
     },
     "flanges": [
       {
@@ -9630,9 +10911,6 @@
     "frameSize": 180,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 48,
-      "E": 110,
-      "F": 14,
       "A": 279,
       "AB": 339,
       "B": 241,
@@ -9653,6 +10931,23 @@
       "HJ": 256,
       "AD": 14.5,
       "AD1": 25
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      },
+      "6": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      },
+      "2": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      }
     },
     "flanges": [
       {
@@ -9724,9 +11019,6 @@
     "frameSize": 180,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 48,
-      "E": 110,
-      "F": 14,
       "A": 279,
       "AB": 324,
       "B": 241,
@@ -9747,6 +11039,23 @@
       "AD": 186,
       "AD1": 45,
       "HJ": 248
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      },
+      "6": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      },
+      "2": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      }
     },
     "flanges": [
       {
@@ -9818,9 +11127,6 @@
     "frameSize": 180,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 48,
-      "E": 110,
-      "F": 14,
       "A": 279,
       "AB": 324,
       "B": 241,
@@ -9841,6 +11147,23 @@
       "AD": 186,
       "AD1": 45,
       "HJ": 248
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      },
+      "6": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      },
+      "2": {
+        "F": 14,
+        "D": 48,
+        "E": 110
+      }
     },
     "flanges": [
       {
@@ -9912,9 +11235,6 @@
     "frameSize": 200,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 55,
-      "E": 110,
-      "F": 16,
       "A": 318,
       "AB": 388,
       "B": 305,
@@ -9935,6 +11255,23 @@
       "HJ": 276,
       "AD": 18.5,
       "AD1": 36
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 16,
+        "D": 55,
+        "E": 110
+      },
+      "6": {
+        "F": 16,
+        "D": 55,
+        "E": 110
+      },
+      "2": {
+        "F": 16,
+        "D": 55,
+        "E": 110
+      }
     },
     "flanges": [
       {
@@ -10006,9 +11343,6 @@
     "frameSize": 200,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 55,
-      "E": 110,
-      "F": 16,
       "A": 318,
       "AB": 378,
       "B": 305,
@@ -10029,6 +11363,23 @@
       "HJ": 256,
       "AD": 18.5,
       "AD1": 30
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 16,
+        "D": 55,
+        "E": 110
+      },
+      "6": {
+        "F": 16,
+        "D": 55,
+        "E": 110
+      },
+      "2": {
+        "F": 16,
+        "D": 55,
+        "E": 110
+      }
     },
     "flanges": [
       {
@@ -10100,9 +11451,6 @@
     "frameSize": 200,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 55,
-      "E": 110,
-      "F": 16,
       "A": 318,
       "AB": 388,
       "B": 305,
@@ -10123,6 +11471,23 @@
       "HJ": 276,
       "AD": 18.5,
       "AD1": 36
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 16,
+        "D": 55,
+        "E": 110
+      },
+      "6": {
+        "F": 16,
+        "D": 55,
+        "E": 110
+      },
+      "2": {
+        "F": 16,
+        "D": 55,
+        "E": 110
+      }
     },
     "flanges": [
       {
@@ -10194,9 +11559,6 @@
     "frameSize": 225,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 356,
       "AB": 420,
       "B": 311,
@@ -10217,6 +11579,23 @@
       "AD": 283,
       "AD1": 45,
       "HJ": 405
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 18,
+        "D": 60,
+        "E": 140
+      },
+      "6": {
+        "F": 18,
+        "D": 60,
+        "E": 140
+      },
+      "2": {
+        "F": 16,
+        "D": 55,
+        "E": 110
+      }
     },
     "flanges": [
       {
@@ -10251,6 +11630,13 @@
       "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
       "catalogEdition": "5147 fr - 2023.08 / j",
       "sources": [
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 64,
+          "catalogPage": "64",
+          "extractionMethod": "pdfplumber-shaft"
+        },
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
@@ -10281,9 +11667,6 @@
     "frameSize": 225,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 356,
       "AB": 431,
       "B": 311,
@@ -10304,6 +11687,23 @@
       "HJ": 310,
       "AD": 18.5,
       "AD1": 36
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 18,
+        "D": 60,
+        "E": 140
+      },
+      "6": {
+        "F": 18,
+        "D": 60,
+        "E": 140
+      },
+      "2": {
+        "F": 16,
+        "D": 55,
+        "E": 110
+      }
     },
     "flanges": [
       {
@@ -10341,6 +11741,13 @@
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 64,
+          "catalogPage": "64",
+          "extractionMethod": "pdfplumber-shaft"
+        },
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
           "pdfPage": 65,
           "catalogPage": "65",
           "extractionMethod": "pdfplumber-b3"
@@ -10368,9 +11775,6 @@
     "frameSize": 225,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 55,
-      "E": 110,
-      "F": 16,
       "A": 356,
       "AB": 431,
       "B": 311,
@@ -10391,6 +11795,13 @@
       "HJ": 310,
       "AD": 18.5,
       "AD1": 36
+    },
+    "shaftByPoles": {
+      "2": {
+        "F": 16,
+        "D": 55,
+        "E": 110
+      }
     },
     "flanges": [
       {
@@ -10462,9 +11873,6 @@
     "frameSize": 225,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 60,
-      "E": 140,
-      "F": 18,
       "A": 356,
       "AB": 431,
       "B": 286,
@@ -10485,6 +11893,18 @@
       "HJ": 310,
       "AD": 18.5,
       "AD1": 36
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 18,
+        "D": 60,
+        "E": 140
+      },
+      "6": {
+        "F": 18,
+        "D": 60,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -10556,9 +11976,6 @@
     "frameSize": 225,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 60,
-      "E": 140,
-      "F": 18,
       "A": 356,
       "AB": 431,
       "B": 286,
@@ -10579,6 +11996,18 @@
       "HJ": 310,
       "AD": 18.5,
       "AD1": 36
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 18,
+        "D": 60,
+        "E": 140
+      },
+      "6": {
+        "F": 18,
+        "D": 60,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -10650,9 +12079,6 @@
     "frameSize": 250,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": null,
-      "E": 140,
-      "F": 18,
       "A": 406,
       "AB": 470,
       "B": 349,
@@ -10673,6 +12099,23 @@
       "AD": 283,
       "AD1": 45,
       "HJ": 405
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 18,
+        "D": 65,
+        "E": 140
+      },
+      "6": {
+        "F": 18,
+        "D": 65,
+        "E": 140
+      },
+      "2": {
+        "F": 18,
+        "D": 60,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -10744,9 +12187,6 @@
     "frameSize": 250,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 60,
-      "E": 140,
-      "F": 18,
       "A": 406,
       "AB": 470,
       "B": 349,
@@ -10767,6 +12207,13 @@
       "HJ": 310,
       "AD": 24,
       "AD1": 47
+    },
+    "shaftByPoles": {
+      "2": {
+        "F": 18,
+        "D": 60,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -10838,9 +12285,6 @@
     "frameSize": 280,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 75,
-      "E": 140,
-      "F": 20,
       "A": 457,
       "AB": 520,
       "B": 419,
@@ -10861,6 +12305,18 @@
       "AD": 283,
       "AD1": 45,
       "HJ": 405
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 20,
+        "D": 75,
+        "E": 140
+      },
+      "6": {
+        "F": 20,
+        "D": 75,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -10932,9 +12388,6 @@
     "frameSize": 280,
     "casingMaterial": "aluminium",
     "dimensions": {
-      "D": 75,
-      "E": 140,
-      "F": 20,
       "A": 457,
       "AB": 520,
       "B": 368,
@@ -10955,6 +12408,18 @@
       "AD": 283,
       "AD1": 45,
       "HJ": 405
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 20,
+        "D": 75,
+        "E": 140
+      },
+      "6": {
+        "F": 20,
+        "D": 75,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -11026,9 +12491,6 @@
     "frameSize": 225,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": null,
-      "E": 140,
-      "F": 18,
       "A": 356,
       "AB": 416,
       "B": 311,
@@ -11047,6 +12509,23 @@
       "I": 151,
       "II": 181,
       "HJ": 824
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 18,
+        "D": 65,
+        "E": 140
+      },
+      "6": {
+        "F": 18,
+        "D": 65,
+        "E": 140
+      },
+      "2": {
+        "F": 18,
+        "D": 60,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -11118,9 +12597,6 @@
     "frameSize": 250,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": null,
-      "E": 140,
-      "F": null,
       "A": 406,
       "AB": 466,
       "B": 349,
@@ -11139,6 +12615,23 @@
       "I": 151,
       "II": 181,
       "HJ": 904
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 20,
+        "D": 75,
+        "E": 140
+      },
+      "6": {
+        "F": 20,
+        "D": 75,
+        "E": 140
+      },
+      "2": {
+        "F": 18,
+        "D": 65,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -11210,9 +12703,6 @@
     "frameSize": 250,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": null,
-      "E": 140,
-      "F": null,
       "A": 406,
       "AB": 466,
       "B": 349,
@@ -11231,6 +12721,23 @@
       "I": 151,
       "II": 181,
       "HJ": 904
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 20,
+        "D": 75,
+        "E": 140
+      },
+      "6": {
+        "F": 20,
+        "D": 75,
+        "E": 140
+      },
+      "2": {
+        "F": 18,
+        "D": 65,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -11302,9 +12809,6 @@
     "frameSize": 280,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 457,
       "AB": 517,
       "B": 419,
@@ -11323,6 +12827,23 @@
       "I": 151,
       "II": 181,
       "HJ": 904
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      },
+      "6": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      },
+      "2": {
+        "F": 18,
+        "D": 65,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -11360,6 +12881,13 @@
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 124,
+          "catalogPage": "124",
+          "extractionMethod": "pdfplumber-shaft"
+        },
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
           "pdfPage": 125,
           "catalogPage": "125",
           "extractionMethod": "pdfplumber-b3"
@@ -11387,9 +12915,6 @@
     "frameSize": 280,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": 80,
-      "E": 170,
-      "F": 22,
       "A": 457,
       "AB": 537,
       "B": 419,
@@ -11408,6 +12933,18 @@
       "I": 180,
       "II": 233,
       "HJ": 964
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      },
+      "6": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      }
     },
     "flanges": [
       {
@@ -11479,11 +13016,9 @@
     "frameSize": 280,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": 80,
-      "E": 170,
-      "F": 22,
       "A": 457,
       "AB": 537,
+      "B": "368/419",
       "BB": 499,
       "C": 190,
       "X": 40,
@@ -11498,6 +13033,18 @@
       "I": 180,
       "II": 235,
       "HJ": 1023
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      },
+      "6": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      }
     },
     "flanges": [
       {
@@ -11569,9 +13116,6 @@
     "frameSize": 280,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": 80,
-      "E": 170,
-      "F": 22,
       "A": 457,
       "AB": 537,
       "B": 368,
@@ -11589,6 +13133,18 @@
       "I": 180,
       "II": 235,
       "HJ": 878
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      },
+      "6": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      }
     },
     "flanges": [
       {
@@ -11660,9 +13216,6 @@
     "frameSize": 280,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": 80,
-      "E": 170,
-      "F": 22,
       "A": 457,
       "AB": 537,
       "B": 419,
@@ -11681,6 +13234,18 @@
       "I": 180,
       "II": 233,
       "HJ": 964
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      },
+      "6": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      }
     },
     "flanges": [
       {
@@ -11752,9 +13317,6 @@
     "frameSize": 315,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 508,
       "AB": 608,
       "B": 508,
@@ -11773,6 +13335,23 @@
       "I": 180,
       "II": 233,
       "HJ": 1026
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 25,
+        "D": 90,
+        "E": 170
+      },
+      "6": {
+        "F": 25,
+        "D": 90,
+        "E": 170
+      },
+      "2": {
+        "F": 20,
+        "D": 70,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -11807,6 +13386,13 @@
       "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
       "catalogEdition": "5147 fr - 2023.08 / j",
       "sources": [
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 124,
+          "catalogPage": "124",
+          "extractionMethod": "pdfplumber-shaft"
+        },
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
@@ -11837,9 +13423,6 @@
     "frameSize": 315,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 508,
       "AB": 608,
       "B": 508,
@@ -11858,6 +13441,23 @@
       "I": 180,
       "II": 233,
       "HJ": 1085
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 28,
+        "D": 100,
+        "E": 210
+      },
+      "6": {
+        "F": 28,
+        "D": 100,
+        "E": 210
+      },
+      "2": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      }
     },
     "flanges": [
       {
@@ -11892,6 +13492,13 @@
       "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
       "catalogEdition": "5147 fr - 2023.08 / j",
       "sources": [
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 124,
+          "catalogPage": "124",
+          "extractionMethod": "pdfplumber-shaft"
+        },
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
@@ -11922,9 +13529,6 @@
     "frameSize": 315,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 508,
       "AB": 608,
       "B": 508,
@@ -11943,6 +13547,23 @@
       "I": 206,
       "II": 206,
       "HJ": 1261
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 28,
+        "D": 100,
+        "E": 210
+      },
+      "6": {
+        "F": 28,
+        "D": 100,
+        "E": 210
+      },
+      "2": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      }
     },
     "flanges": [
       {
@@ -11977,6 +13598,13 @@
       "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
       "catalogEdition": "5147 fr - 2023.08 / j",
       "sources": [
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 124,
+          "catalogPage": "124",
+          "extractionMethod": "pdfplumber-shaft"
+        },
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
@@ -12007,9 +13635,6 @@
     "frameSize": 315,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 508,
       "AB": 608,
       "B": 508,
@@ -12028,6 +13653,23 @@
       "I": 180,
       "II": 233,
       "HJ": 1106
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 28,
+        "D": 100,
+        "E": 210
+      },
+      "6": {
+        "F": 28,
+        "D": 100,
+        "E": 210
+      },
+      "2": {
+        "F": 20,
+        "D": 70,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -12065,6 +13707,13 @@
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 124,
+          "catalogPage": "124",
+          "extractionMethod": "pdfplumber-shaft"
+        },
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
           "pdfPage": 125,
           "catalogPage": "125",
           "extractionMethod": "pdfplumber-b3"
@@ -12092,9 +13741,6 @@
     "frameSize": 315,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": 90,
-      "E": 170,
-      "F": 22,
       "A": 508,
       "AB": 608,
       "B": 508,
@@ -12112,6 +13758,13 @@
       "I": 180,
       "II": 235,
       "HJ": 1104
+    },
+    "shaftByPoles": {
+      "2": {
+        "F": 22,
+        "D": 90,
+        "E": 170
+      }
     },
     "flanges": [
       {
@@ -12183,9 +13836,6 @@
     "frameSize": 315,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 508,
       "AB": 608,
       "B": 457,
@@ -12204,6 +13854,23 @@
       "I": 180,
       "II": 233,
       "HJ": 940
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 25,
+        "D": 90,
+        "E": 170
+      },
+      "6": {
+        "F": 25,
+        "D": 90,
+        "E": 170
+      },
+      "2": {
+        "F": 20,
+        "D": 70,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -12238,6 +13905,13 @@
       "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
       "catalogEdition": "5147 fr - 2023.08 / j",
       "sources": [
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 124,
+          "catalogPage": "124",
+          "extractionMethod": "pdfplumber-shaft"
+        },
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
@@ -12268,9 +13942,6 @@
     "frameSize": 315,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 508,
       "AB": 608,
       "B": 457,
@@ -12289,6 +13960,23 @@
       "I": 206,
       "II": 206,
       "HJ": 1261
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 28,
+        "D": 100,
+        "E": 210
+      },
+      "6": {
+        "F": 28,
+        "D": 100,
+        "E": 210
+      },
+      "2": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      }
     },
     "flanges": [
       {
@@ -12323,6 +14011,13 @@
       "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
       "catalogEdition": "5147 fr - 2023.08 / j",
       "sources": [
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 124,
+          "catalogPage": "124",
+          "extractionMethod": "pdfplumber-shaft"
+        },
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
@@ -12353,9 +14048,6 @@
     "frameSize": 315,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 508,
       "AB": 608,
       "B": 457,
@@ -12374,6 +14066,23 @@
       "I": 180,
       "II": 233,
       "HJ": 1025
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 25,
+        "D": 90,
+        "E": 170
+      },
+      "6": {
+        "F": 25,
+        "D": 90,
+        "E": 170
+      },
+      "2": {
+        "F": 20,
+        "D": 70,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -12411,6 +14120,13 @@
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 124,
+          "catalogPage": "124",
+          "extractionMethod": "pdfplumber-shaft"
+        },
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
           "pdfPage": 125,
           "catalogPage": "125",
           "extractionMethod": "pdfplumber-b3"
@@ -12438,9 +14154,6 @@
     "frameSize": 315,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": 90,
-      "E": 170,
-      "F": 25,
       "A": 508,
       "AB": 608,
       "B": 457,
@@ -12459,6 +14172,18 @@
       "I": 180,
       "II": 233,
       "HJ": 1104
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 25,
+        "D": 90,
+        "E": 170
+      },
+      "6": {
+        "F": 25,
+        "D": 90,
+        "E": 170
+      }
     },
     "flanges": [
       {
@@ -12530,9 +14255,6 @@
     "frameSize": 315,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 508,
       "AB": 608,
       "B": 406,
@@ -12551,6 +14273,23 @@
       "I": 180,
       "II": 233,
       "HJ": 940
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 25,
+        "D": 90,
+        "E": 170
+      },
+      "6": {
+        "F": 25,
+        "D": 90,
+        "E": 170
+      },
+      "2": {
+        "F": 20,
+        "D": 70,
+        "E": 140
+      }
     },
     "flanges": [
       {
@@ -12588,6 +14327,13 @@
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 124,
+          "catalogPage": "124",
+          "extractionMethod": "pdfplumber-shaft"
+        },
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
           "pdfPage": 125,
           "catalogPage": "125",
           "extractionMethod": "pdfplumber-b3"
@@ -12615,9 +14361,6 @@
     "frameSize": 315,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": 90,
-      "E": 170,
-      "F": 25,
       "A": 508,
       "AB": 608,
       "B": 406,
@@ -12636,6 +14379,18 @@
       "I": 180,
       "II": 233,
       "HJ": 1025
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 25,
+        "D": 90,
+        "E": 170
+      },
+      "6": {
+        "F": 25,
+        "D": 90,
+        "E": 170
+      }
     },
     "flanges": [
       {
@@ -12707,9 +14462,6 @@
     "frameSize": 315,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 508,
       "AB": 608,
       "B": 560,
@@ -12728,6 +14480,23 @@
       "I": 206,
       "II": 206,
       "HJ": 1321
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 28,
+        "D": 100,
+        "E": 210
+      },
+      "6": {
+        "F": 28,
+        "D": 100,
+        "E": 210
+      },
+      "2": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      }
     },
     "flanges": [
       {
@@ -12762,6 +14531,13 @@
       "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
       "catalogEdition": "5147 fr - 2023.08 / j",
       "sources": [
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 124,
+          "catalogPage": "124",
+          "extractionMethod": "pdfplumber-shaft"
+        },
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
@@ -12792,9 +14568,6 @@
     "frameSize": 315,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 508,
       "AB": 608,
       "B": 560,
@@ -12813,6 +14586,23 @@
       "I": 206,
       "II": 206,
       "HJ": 1391
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 28,
+        "D": 100,
+        "E": 210
+      },
+      "6": {
+        "F": 28,
+        "D": 100,
+        "E": 210
+      },
+      "2": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      }
     },
     "flanges": [
       {
@@ -12847,6 +14637,13 @@
       "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
       "catalogEdition": "5147 fr - 2023.08 / j",
       "sources": [
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 124,
+          "catalogPage": "124",
+          "extractionMethod": "pdfplumber-shaft"
+        },
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
@@ -12877,9 +14674,6 @@
     "frameSize": 355,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 610,
       "AB": 710,
       "B": 800,
@@ -12898,6 +14692,23 @@
       "I": 224,
       "II": 396,
       "HJ": 1710
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 28,
+        "D": 110,
+        "E": 210
+      },
+      "6": {
+        "F": 28,
+        "D": 110,
+        "E": 210
+      },
+      "2": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      }
     },
     "flanges": [
       {
@@ -12932,6 +14743,13 @@
       "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
       "catalogEdition": "5147 fr - 2023.08 / j",
       "sources": [
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 124,
+          "catalogPage": "124",
+          "extractionMethod": "pdfplumber-shaft"
+        },
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
@@ -12962,9 +14780,6 @@
     "frameSize": 355,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 610,
       "AB": 710,
       "B": 800,
@@ -12983,6 +14798,23 @@
       "I": 224,
       "II": 396,
       "HJ": 1710
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 28,
+        "D": 110,
+        "E": 210
+      },
+      "6": {
+        "F": 28,
+        "D": 110,
+        "E": 210
+      },
+      "2": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      }
     },
     "flanges": [
       {
@@ -13020,6 +14852,13 @@
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 124,
+          "catalogPage": "124",
+          "extractionMethod": "pdfplumber-shaft"
+        },
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
           "pdfPage": 125,
           "catalogPage": "125",
           "extractionMethod": "pdfplumber-b3"
@@ -13047,9 +14886,6 @@
     "frameSize": 355,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": 110,
-      "E": 210,
-      "F": 28,
       "A": 610,
       "AB": 710,
       "B": 800,
@@ -13068,6 +14904,18 @@
       "I": 224,
       "II": 396,
       "HJ": 1710
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 28,
+        "D": 110,
+        "E": 210
+      },
+      "6": {
+        "F": 28,
+        "D": 110,
+        "E": 210
+      }
     },
     "flanges": [
       {
@@ -13139,9 +14987,6 @@
     "frameSize": 355,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": 110,
-      "E": 210,
-      "F": 28,
       "A": 610,
       "AB": 710,
       "B": 800,
@@ -13160,6 +15005,18 @@
       "I": 224,
       "II": 396,
       "HJ": 1710
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 28,
+        "D": 110,
+        "E": 210
+      },
+      "6": {
+        "F": 28,
+        "D": 110,
+        "E": 210
+      }
     },
     "flanges": [
       {
@@ -13231,9 +15088,6 @@
     "frameSize": 355,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 610,
       "AB": 710,
       "B": 630,
@@ -13252,6 +15106,23 @@
       "I": 224,
       "II": 396,
       "HJ": 1480
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 28,
+        "D": 110,
+        "E": 210
+      },
+      "6": {
+        "F": 28,
+        "D": 110,
+        "E": 210
+      },
+      "2": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      }
     },
     "flanges": [
       {
@@ -13286,6 +15157,13 @@
       "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
       "catalogEdition": "5147 fr - 2023.08 / j",
       "sources": [
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 124,
+          "catalogPage": "124",
+          "extractionMethod": "pdfplumber-shaft"
+        },
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
@@ -13316,9 +15194,6 @@
     "frameSize": 355,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": null,
-      "E": null,
-      "F": null,
       "A": 610,
       "AB": 710,
       "B": 630,
@@ -13337,6 +15212,23 @@
       "I": 224,
       "II": 396,
       "HJ": 1480
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 28,
+        "D": 110,
+        "E": 210
+      },
+      "6": {
+        "F": 28,
+        "D": 110,
+        "E": 210
+      },
+      "2": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      }
     },
     "flanges": [
       {
@@ -13374,6 +15266,13 @@
         {
           "catalog": "Catalogue_LS_LSES.pdf",
           "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
+          "pdfPage": 124,
+          "catalogPage": "124",
+          "extractionMethod": "pdfplumber-shaft"
+        },
+        {
+          "catalog": "Catalogue_LS_LSES.pdf",
+          "catalogSha256": "ffa793276192285829afce0c4adb1c164cd62516e60b514f0eae91be5ce6176c",
           "pdfPage": 125,
           "catalogPage": "125",
           "extractionMethod": "pdfplumber-b3"
@@ -13401,9 +15300,6 @@
     "frameSize": 355,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": 80,
-      "E": 170,
-      "F": 22,
       "A": 610,
       "AB": 710,
       "B": 630,
@@ -13422,6 +15318,13 @@
       "I": 224,
       "II": 396,
       "HJ": 1480
+    },
+    "shaftByPoles": {
+      "2": {
+        "F": 22,
+        "D": 80,
+        "E": 170
+      }
     },
     "flanges": [
       {
@@ -13493,9 +15396,6 @@
     "frameSize": 400,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": 120,
-      "E": 210,
-      "F": 32,
       "A": 686,
       "AB": 806,
       "B": 710,
@@ -13514,6 +15414,18 @@
       "I": 224,
       "II": 396,
       "HJ": 1755
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 32,
+        "D": 120,
+        "E": 210
+      },
+      "6": {
+        "F": 32,
+        "D": 120,
+        "E": 210
+      }
     },
     "flanges": [
       {
@@ -13585,9 +15497,6 @@
     "frameSize": 400,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": 120,
-      "E": 210,
-      "F": 32,
       "A": 686,
       "AB": 806,
       "B": 710,
@@ -13606,6 +15515,18 @@
       "I": 224,
       "II": 396,
       "HJ": 1755
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 32,
+        "D": 120,
+        "E": 210
+      },
+      "6": {
+        "F": 32,
+        "D": 120,
+        "E": 210
+      }
     },
     "flanges": [
       {
@@ -13677,9 +15598,6 @@
     "frameSize": 400,
     "casingMaterial": "steel",
     "dimensions": {
-      "D": 120,
-      "E": 210,
-      "F": 32,
       "A": 686,
       "AB": 806,
       "B": 710,
@@ -13698,6 +15616,18 @@
       "I": 224,
       "II": 396,
       "HJ": 1755
+    },
+    "shaftByPoles": {
+      "4": {
+        "F": 32,
+        "D": 120,
+        "E": 210
+      },
+      "6": {
+        "F": 32,
+        "D": 120,
+        "E": 210
+      }
     },
     "flanges": [
       {

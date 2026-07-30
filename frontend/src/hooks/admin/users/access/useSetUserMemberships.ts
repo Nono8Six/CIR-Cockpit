@@ -22,7 +22,7 @@ export const useSetUserMemberships = () => {
     onError: (err) => {
       const appError = mapAdminDomainError(err, {
         action: 'update_user',
-        fallbackMessage: 'Impossible de mettre a jour les agences.'
+        fallbackMessage: 'Impossible de mettre à jour les agences.'
       });
       handleUiError(appError, appError.message, { source: 'useSetUserMemberships' });
     }

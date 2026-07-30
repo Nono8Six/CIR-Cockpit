@@ -81,7 +81,7 @@ const SearchResultsList = ({ searchFilters, selection }: SearchResultsListProps)
         <EntityRecordWizardEmptyState
           icon={<Search aria-hidden="true" className="size-9" />}
           title="Aucun établissement trouvé"
-          body="Ajuste la recherche officielle ou poursuis en saisie manuelle."
+          body="Ajustez la recherche officielle ou poursuivez en saisie manuelle."
         />
       ) : null}
     </div>

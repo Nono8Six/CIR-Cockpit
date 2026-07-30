@@ -8,6 +8,6 @@ export async function setProfilePasswordChanged(): Promise<void> {
         action: 'password_changed'
       }, options),
     parseVoidResponse,
-    'Impossible de mettre a jour le profil.'
+    'Impossible de mettre à jour le profil.'
   );
 }

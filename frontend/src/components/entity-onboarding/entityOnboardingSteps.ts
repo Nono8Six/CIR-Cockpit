@@ -1,18 +1,18 @@
 import { defineStepper } from '@stepperize/react';
 
 export const STEP_DEFINITIONS = [
-  { id: 'intent', title: 'Type', description: 'Choisir le cadre de creation' },
+  { id: 'intent', title: 'Type', description: 'Choisir le cadre de création' },
   {
     id: 'company',
     title: 'Recherche',
-    description: "Trouver l entreprise et l etablissement",
+    description: "Trouver l entreprise et l établissement",
   },
   {
     id: 'details',
     title: 'Informations',
-    description: 'Completer les champs metier',
+    description: 'Compléter les champs métier',
   },
-  { id: 'review', title: 'Validation', description: 'Verifier avant creation' },
+  { id: 'review', title: 'Validation', description: 'Vérifier avant création' },
 ] as const;
 
 export type StepId = (typeof STEP_DEFINITIONS)[number]['id'];

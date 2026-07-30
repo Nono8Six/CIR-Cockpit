@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
 import type { DirectoryRecord, DirectoryRouteRef } from '../../../../shared/schemas/system/directory.schema';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
@@ -135,8 +135,6 @@ const ClientDirectoryRecordDetails = ({
   });
   const deleteClientMutation = useDeleteClient(record?.agency_id ?? activeAgencyId ?? null, false);
   const deleteSupplierMutation = useDeleteSupplier(true);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [deleteRelatedInteractions, setDeleteRelatedInteractions] = useState(true);
   const primaryContact = contactsQuery.data?.find((contact) => contact.is_primary && !contact.archived_at) ?? null;
   const addressLine = useMemo(() => buildAddressLine(record), [record]);
   const showAuthContextError = sessionState.authReady && !canLoadDirectory;
@@ -171,8 +169,8 @@ const ClientDirectoryRecordDetails = ({
     ? 'Fournisseur supprimé définitivement.'
     : isProspect ? 'Prospect supprimé définitivement.' : 'Client supprimé définitivement.';
 
-  const handleDeleteRecord = async () => {
-    if (!record) return;
+  const handleDeleteRecord = async (deleteRelatedInteractions: boolean): Promise<boolean> => {
+    if (!record) return false;
 
     try {
       if (isSupplier) {
@@ -188,14 +186,10 @@ const ClientDirectoryRecordDetails = ({
       }
       notifySuccess(deleteMessage);
       onDeleteSuccess?.();
+      return true;
     } catch {
-      return;
+      return false;
     }
-  };
-
-  const handleRequestDelete = () => {
-    setDeleteRelatedInteractions(true);
-    setIsDeleteDialogOpen(true);
   };
 
   const handleConvertProspect = () => {
@@ -356,11 +350,13 @@ const ClientDirectoryRecordDetails = ({
                 isProspect={isProspect}
                 canDeleteRecord={canDeleteRecord}
                 deleteLabel={deleteLabel}
+                recordName={record.name}
+                isDeleting={deleteClientMutation.isPending || deleteSupplierMutation.isPending}
                 onEditClient={handleEditRecord}
                 onEditProspect={handleEditRecord}
                 onEditSupplier={handleEditRecord}
                 onConvertProspect={handleConvertProspect}
-                onRequestDelete={handleRequestDelete}
+                onConfirmDelete={handleDeleteRecord}
                 isSupplier={isSupplier}
               />
             </div>
@@ -487,47 +483,6 @@ const ClientDirectoryRecordDetails = ({
               void interactionsState.handleConfirmDeleteInteraction();
             }}
           />
-
-          <ConfirmDialog
-            open={isDeleteDialogOpen}
-            onOpenChange={(open) => {
-              setIsDeleteDialogOpen(open);
-              if (!open) {
-                setDeleteRelatedInteractions(true);
-              }
-            }}
-            title={isSupplier ? 'Supprimer ce fournisseur' : isProspect ? 'Supprimer ce prospect' : 'Supprimer ce client'}
-            description={
-              isSupplier
-                ? `Le fournisseur ${record.name} sera définitivement supprimé.`
-                : isProspect
-                ? `Le prospect ${record.name} sera définitivement supprimé.`
-                : `Le client ${record.name} sera définitivement supprimé.`
-            }
-            confirmLabel="Supprimer"
-            variant="destructive"
-            onConfirm={() => {
-              void handleDeleteRecord();
-            }}
-          >
-            <label className="flex items-start gap-3 rounded-md border border-border bg-surface-1/60 p-3 text-sm">
-              <input
-                type="checkbox"
-                className="mt-0.5 h-4 w-4 accent-destructive"
-                checked={deleteRelatedInteractions}
-                onChange={(event) => {
-                  setDeleteRelatedInteractions(event.target.checked);
-                }}
-              />
-              <span>
-                {isProspect
-                  ? 'Supprimer aussi toutes les interactions rattachées à ce prospect.'
-                  : isSupplier
-                    ? 'Supprimer aussi toutes les interactions rattachées à ce fournisseur.'
-                    : 'Supprimer aussi toutes les interactions rattachées à ce client.'}
-              </span>
-            </label>
-          </ConfirmDialog>
         </motion.section>
       ) : null}
     </AnimatePresence>

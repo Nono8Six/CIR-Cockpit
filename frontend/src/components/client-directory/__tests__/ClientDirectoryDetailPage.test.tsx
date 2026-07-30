@@ -330,12 +330,14 @@ describe('ClientDirectoryDetailPage', () => {
     renderWithProviders(<ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} />);
 
     expect(screen.queryByRole('button', { name: /retour aux résultats/i })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /supprimer définitivement/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /supprimer définitivement/i })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /supprimer définitivement/i }));
+    await user.click(screen.getByRole('button', { name: "Plus d'actions" }));
+    await user.click(await screen.findByRole('menuitem', { name: /supprimer définitivement/i }));
     expect(screen.getByText(/supprimer aussi toutes les interactions/i)).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /^supprimer$/i }));
+    await user.type(screen.getByPlaceholderText('Nom de la fiche'), 'Test comptant');
+    await user.click(screen.getByRole('button', { name: /supprimer définitivement/i }));
 
     await waitFor(() => {
       expect(mockDeleteMutateAsync).toHaveBeenCalledWith({
@@ -418,7 +420,7 @@ describe('ClientDirectoryDetailPage', () => {
     await user.click(screen.getByRole('button', { name: /^ajouter$/i }));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
 
-    await user.type(screen.getByLabelText(/prenom/i), 'Lina');
+    await user.type(screen.getByLabelText(/prénom/i), 'Lina');
     await user.type(screen.getByLabelText(/^nom$/i), 'Martin');
     await user.type(screen.getByLabelText(/email/i), 'lina.martin@example.test');
     await user.click(screen.getByRole('button', { name: /^ajouter$/i }));
@@ -596,9 +598,13 @@ describe('ClientDirectoryDetailPage', () => {
 
     renderWithProviders(<ClientDirectoryDetailPage routeRef={{ kind: 'supplier', id: 'supplier-1' }} />);
 
+    await user.click(screen.getByRole('button', { name: "Plus d'actions" }));
+    await user.click(await screen.findByRole('menuitem', { name: /supprimer définitivement/i }));
+    expect(
+      screen.getByText(/supprimer aussi toutes les interactions rattachées à ce fournisseur/i)
+    ).toBeInTheDocument();
+    await user.type(screen.getByPlaceholderText('Nom de la fiche'), 'FESTO');
     await user.click(screen.getByRole('button', { name: /supprimer définitivement/i }));
-    expect(screen.getByText(/interactions rattachées à ce fournisseur/i)).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /^supprimer$/i }));
 
     await waitFor(() => {
       expect(mockDeleteSupplierMutateAsync).toHaveBeenCalledWith({
@@ -704,8 +710,10 @@ describe('ClientDirectoryDetailPage', () => {
 
     renderWithProviders(<ClientDirectoryDetailPage routeRef={{ kind: 'client', clientNumber: '98568547' }} />);
 
+    await user.click(screen.getByRole('button', { name: "Plus d'actions" }));
+    await user.click(await screen.findByRole('menuitem', { name: /supprimer d.finitivement/i }));
+    await user.type(screen.getByPlaceholderText('Nom de la fiche'), 'Test comptant');
     await user.click(screen.getByRole('button', { name: /supprimer d.finitivement/i }));
-    await user.click(screen.getByRole('button', { name: /^supprimer$/i }));
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith({

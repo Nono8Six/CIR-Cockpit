@@ -43,8 +43,8 @@ const ChangePasswordScreen = ({
         <ChangePasswordHeader userEmail={userEmail} />
 
         <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-          Pour des raisons de securite, vous devez definir un nouveau mot de passe
-          avant d&apos;acceder a l&apos;application.
+          Pour des raisons de sécurité, vous devez définir un nouveau mot de passe
+          avant d&apos;accéder à l&apos;application.
         </p>
 
         <form onSubmit={(event) => {

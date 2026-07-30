@@ -308,7 +308,7 @@ export const useClientDirectoryWorkspace = ({
       await setDefaultSavedViewMutation.mutateAsync({ id: viewId, viewType: 'clients' });
       notifySuccess('Vue par défaut enregistrée.');
     } catch (error) {
-      handleUiError(error, 'Impossible de definir la vue par defaut.');
+      handleUiError(error, 'Impossible de définir la vue par défaut.');
     }
   };
 

@@ -57,7 +57,7 @@ const parseResponse = <TResponse>(
   if (!parsed.success) {
     throw createAppError({
       code: 'REQUEST_FAILED',
-      message: 'Reponse serveur IA invalide.',
+      message: 'Réponse serveur IA invalide.',
       source: 'edge',
       details: parsed.error.message
     });
@@ -70,7 +70,7 @@ export const getAiSettings = () =>
   invokeTrpc(
     (api, options) => api.ai.settings.get.query({}, options),
     (payload) => parseResponse(aiSettingsGetResponseSchema, payload),
-    'Impossible de charger les parametres IA.'
+    'Impossible de charger les paramètres IA.'
   );
 
 export const saveAiProvider = (input: AiSettingsSaveProviderInput) =>
@@ -84,16 +84,16 @@ export const saveAiModel = (input: AiSettingsSaveModelInput) =>
   invokeTrpc(
     (api, options) => api.ai.settings.saveModel.mutate(input, options),
     (payload) => parseResponse(aiSettingsSaveModelResponseSchema, payload),
-    'Impossible de sauvegarder le modele IA.'
+    'Impossible de sauvegarder le modèle IA.'
   );
 
 export const deleteAiModel = (input: AiSettingsDeleteModelInput) =>
   invokeTrpc((api, options) => api.ai.settings.deleteModel.mutate(input, options),
-    (payload) => parseResponse(aiSettingsDeleteModelResponseSchema, payload), 'Impossible de supprimer le modele IA.');
+    (payload) => parseResponse(aiSettingsDeleteModelResponseSchema, payload), 'Impossible de supprimer le modèle IA.');
 
 export const createAiQuota = (input: AiSettingsCreateQuotaInput) =>
   invokeTrpc((api, options) => api.ai.settings.createQuota.mutate(input, options),
-    (payload) => parseResponse(aiSettingsCreateQuotaResponseSchema, payload), 'Impossible de creer le quota IA.');
+    (payload) => parseResponse(aiSettingsCreateQuotaResponseSchema, payload), 'Impossible de créer le quota IA.');
 
 export const saveAiQuota = (input: AiSettingsSaveQuotaInput) =>
   invokeTrpc(
@@ -108,16 +108,16 @@ export const deleteAiQuota = (input: AiSettingsDeleteQuotaInput) =>
 
 export const listAiAccess = (input: AiFeatureGrantsListInput = {}) =>
   invokeTrpc((api, options) => api.ai.access.list.query(input, options),
-    (payload) => parseResponse(aiFeatureGrantsListResponseSchema, payload), 'Impossible de charger les acces IA.');
+    (payload) => parseResponse(aiFeatureGrantsListResponseSchema, payload), 'Impossible de charger les accès IA.');
 export const saveAiAccess = (input: AiFeatureGrantSaveInput) =>
   invokeTrpc((api, options) => api.ai.access.save.mutate(input, options),
-    (payload) => parseResponse(aiFeatureGrantMutationResponseSchema, payload), 'Impossible de sauvegarder l acces IA.');
+    (payload) => parseResponse(aiFeatureGrantMutationResponseSchema, payload), 'Impossible de sauvegarder l accès IA.');
 export const deleteAiAccess = (input: AiFeatureGrantDeleteInput) =>
   invokeTrpc((api, options) => api.ai.access.delete.mutate(input, options),
-    (payload) => parseResponse(aiFeatureGrantMutationResponseSchema, payload), 'Impossible de supprimer l acces IA.');
+    (payload) => parseResponse(aiFeatureGrantMutationResponseSchema, payload), 'Impossible de supprimer l accès IA.');
 export const getAiMembersAccessOverview = (input: AiMembersAccessOverviewInput) =>
   invokeTrpc((api, options) => api.ai.access.membersOverview.query(input, options),
-    (payload) => parseResponse(aiMembersAccessOverviewResponseSchema, payload), 'Impossible de charger les acces membres IA.');
+    (payload) => parseResponse(aiMembersAccessOverviewResponseSchema, payload), 'Impossible de charger les accès membres IA.');
 export const getAiUsageByMember = (input: AiUsageByMemberInput = { days: 30 }) =>
   invokeTrpc((api, options) => api.ai.usage.byMember.query(input, options),
     (payload) => parseResponse(aiUsageByMemberResponseSchema, payload), 'Impossible de charger la consommation par membre.');
@@ -177,7 +177,7 @@ export const getAiUsageSummary = (input: AiUsageSummaryInput = { days: 30 }) =>
   invokeTrpc(
     (api, options) => api.ai.usage.summary.query(input, options),
     (payload) => parseResponse(aiUsageSummaryResponseSchema, payload),
-    'Impossible de charger la synthese usage IA.'
+    'Impossible de charger la synthèse usage IA.'
   );
 
 export const listAiUsageEvents = (input: AiUsageListInput = { page: 1, page_size: 50 }) =>
@@ -198,5 +198,5 @@ export const getAiAssistantStatus = () =>
   invokeTrpc(
     (api, options) => api.ai.assistant.status.query({}, options),
     (payload) => parseResponse(aiAssistantStatusResponseSchema, payload),
-    "Impossible de verifier la disponibilite de l'assistant IA."
+    "Impossible de vérifier la disponibilité de l'assistant IA."
   );

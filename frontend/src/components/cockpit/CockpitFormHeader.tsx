@@ -65,7 +65,7 @@ const TONE_TEXT_STYLES: Record<StatusTone, string> = {
 const TONE_DOT_STYLES: Record<StatusTone, string> = {
   muted: 'fill-muted-foreground/70 text-muted-foreground/70',
   info: 'fill-info text-info',
-  warning: 'fill-warning text-warning',
+  warning: 'fill-warning text-warning-strong',
   success: 'fill-success text-success'
 };
 

@@ -167,7 +167,7 @@ const ClientFormDialog = (props: ClientFormDialogProps & { defaultName?: string 
         defaultIntent="client"
         defaultClientKind={props.defaultClientKind}
         initialEntity={props.client ?? (props.defaultName ? { name: props.defaultName } : null)}
-        sourceLabel={props.client ? 'Edition client' : 'Creation'}
+        sourceLabel={props.client ? 'Édition client' : 'Création'}
         onSaveClient={props.onSave}
       />
     );

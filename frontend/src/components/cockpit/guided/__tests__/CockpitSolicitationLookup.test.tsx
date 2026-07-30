@@ -158,7 +158,7 @@ describe('CockpitSolicitationLookup', () => {
 
     renderLookup(onComplete);
 
-    expect(screen.getByText('Saisis un numéro pour retrouver l’historique.')).toBeInTheDocument();
+    expect(screen.getByText('Saisissez un numéro pour retrouver l’historique.')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /^ajouter$/i }));
     await user.type(screen.getByRole('textbox', { name: /nom de la sollicitation/i }), 'Comptoir Nord');

@@ -99,6 +99,24 @@ class InnomoticsDimensionFixturesTest(unittest.TestCase):
         self.assertGreaterEqual(min(found), 6, "K sous la plage publiee")
         self.assertLessEqual(max(found), 35, "K au-dessus de la plage publiee")
 
+    def test_po_validated_article_rows_are_read_from_their_pdf_tables(self):
+        expected = {
+            "1LE1003-0CA6": {"A": 112, "B": 90, "C": 45, "H": 71, "K": 7},
+            "1LE1003-1BC6": {"A": 190, "B": 140, "C": 70, "H": 112, "K": 12},
+            "1LE1003-1CB6": {"A": 216, "B": 178, "C": 89, "H": 132, "K": 12},
+            "1LE5584-3BC2": {"A": 610, "B": 630, "C": 254, "H": 355, "K": 35},
+        }
+        for article_no, values in expected.items():
+            with self.subTest(article=article_no):
+                observed = self.values_for(article_no)
+                self.assertEqual(
+                    {key: observed[key] for key in values},
+                    values,
+                )
+
+    def test_unresolved_1le1003_1bd2_is_not_filled_by_neighbouring_row(self):
+        self.assertNotIn("1LE1003-1BD2", self.dimensions)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -182,13 +182,13 @@ const CockpitSupplierLookup = ({
                     <span className="block truncate text-[13px] font-bold text-foreground">{result.label}</span>
                     <span className="block truncate text-[11px] text-muted-foreground mt-0.5">{getMatchLabel(result)}</span>
                   </span>
-                  <span className="rounded-full border border-border/80 bg-muted/60 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground shrink-0">
+                  <span className="rounded-full border border-border/80 bg-muted/60 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground shrink-0">
                     Fournisseur
                   </span>
                 </motion.button>
               )) : (
                 <div className="rounded-xl border border-dashed border-border bg-card p-5 text-center text-xs font-medium text-muted-foreground">
-                  Aucun fournisseur enregistré. Utilise un fournisseur ponctuel pour cette saisie.
+                  Aucun fournisseur enregistré. Utilisez un fournisseur ponctuel pour cette saisie.
                 </div>
               )}
             </div>

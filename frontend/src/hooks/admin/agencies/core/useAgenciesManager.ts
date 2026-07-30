@@ -40,7 +40,7 @@ export const useAgenciesManager = () => {
 
   const handleCreate = useCallback(async (name: string) => {
     await createMutation.mutateAsync(name);
-    notifySuccess('Agence creee.');
+    notifySuccess('Agence créée.');
   }, [createMutation]);
 
   const handleRename = useCallback(async (name: string) => {
@@ -68,7 +68,7 @@ export const useAgenciesManager = () => {
       } else {
         await unarchiveMutation.mutateAsync(agency.id);
       }
-      notifySuccess(nextArchived ? 'Agence archivee.' : 'Agence restauree.');
+      notifySuccess(nextArchived ? 'Agence archivée.' : 'Agence restauree.');
     } catch {
       return;
     }
@@ -82,7 +82,7 @@ export const useAgenciesManager = () => {
     if (!confirmDelete) return;
     try {
       await deleteMutation.mutateAsync(confirmDelete.id);
-      notifySuccess('Agence supprimee.');
+      notifySuccess('Agence supprimée.');
     } catch {
       return;
     }

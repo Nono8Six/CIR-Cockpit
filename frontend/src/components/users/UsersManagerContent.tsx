@@ -70,11 +70,11 @@ const UsersManagerContent = ({ state }: UsersManagerContentProps) => {
           <div className="group rounded-2xl border border-border/50 bg-card p-4 flex items-center justify-between shadow-[0_8px_30px_rgba(0,0,0,0.015)] hover:shadow-[0_12px_30px_rgba(0,0,0,0.03)] hover:-translate-y-0.5 hover:border-warning/30 transition-all duration-300">
             <div className="space-y-1">
               <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block">Archivés</span>
-              <span className="text-2xl font-bold tracking-tight text-warning font-mono">
+              <span className="text-2xl font-bold tracking-tight text-warning-strong font-mono">
                 {usersQuery.data.filter((u) => !!u.archived_at).length}
               </span>
             </div>
-            <div className="p-2.5 rounded-xl bg-warning/10 text-warning group-hover:bg-warning/20 transition-colors duration-300">
+            <div className="p-2.5 rounded-xl bg-warning/10 text-warning-strong group-hover:bg-warning/20 transition-colors duration-300">
               <UserMinus size={20} />
             </div>
           </div>
@@ -125,7 +125,7 @@ const UsersManagerContent = ({ state }: UsersManagerContentProps) => {
                   variant="outline"
                   size="sm"
                   onClick={() => handleBulkArchive(selectedUserIds, true)}
-                  className="inline-flex items-center gap-1.5 h-8.5 rounded-xl text-warning hover:bg-warning/10 hover:text-warning hover:border-warning/30 border-warning/10 bg-warning/5 font-semibold text-xs transition-colors"
+                  className="inline-flex items-center gap-1.5 h-8.5 rounded-xl text-warning-strong hover:bg-warning/10 hover:text-warning-strong hover:border-warning/30 border-warning/10 bg-warning/5 font-semibold text-xs transition-colors"
                 >
                   <Archive size={14} />
                   <span>Archiver</span>

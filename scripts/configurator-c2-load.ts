@@ -296,7 +296,9 @@ async function load(): Promise<void> {
     const MODEL_COLUMNS = [
       'snapshot_id', 'model_key', 'normalized_brand', 'normalized_designation', 'identity_discriminator',
       'brand', 'series', 'designation', 'article_no', 'pole_config', 'motor_technology',
-      'casing_material', 'protection_ip', 'frame_size', 'inertia_kgm2', 'mass_kg', 'mass_mounting',
+      'casing_material', 'protection_ip', 'frame_size', 'shaft_spec',
+      'requires_vfd', 'is_iec_standard', 'article_no_status',
+      'inertia_kgm2', 'mass_kg', 'mass_mounting',
       'lifecycle', 'source_ref_id',
     ];
     const modelRows = list('models').map((model) => ({
@@ -314,6 +316,10 @@ async function load(): Promise<void> {
       casing_material: model.casing_material,
       protection_ip: model.protection_ip,
       frame_size: model.frame_size,
+      shaft_spec: model.shaft_spec,
+      requires_vfd: model.requires_vfd,
+      is_iec_standard: model.is_iec_standard,
+      article_no_status: model.article_no_status,
       inertia_kgm2: model.inertia_kgm2,
       mass_kg: model.mass_kg,
       mass_mounting: model.mass_mounting,
@@ -564,8 +570,8 @@ async function load(): Promise<void> {
     ];
     const validationRows = list('validation_issues').map((row) => ({
       snapshot_id: snapshotId,
-      model_id: modelId(row.model_key as string),
-      operating_point_id: pointId(row.point_origin as string),
+      model_id: row.model_key == null ? null : modelId(row.model_key as string),
+      operating_point_id: row.point_origin == null ? null : pointId(row.point_origin as string),
       severity: row.severity,
       rule_code: row.rule_code,
       message: row.message,

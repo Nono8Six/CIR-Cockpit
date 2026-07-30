@@ -23,7 +23,7 @@ export const useSetUserRole = () => {
     onError: (err) => {
       const appError = mapAdminDomainError(err, {
         action: 'update_user',
-        fallbackMessage: "Impossible de mettre a jour le role."
+        fallbackMessage: "Impossible de mettre à jour le rôle."
       });
       handleUiError(appError, appError.message, { source: 'useSetUserRole' });
     }

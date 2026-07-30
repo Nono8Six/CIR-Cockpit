@@ -33,7 +33,7 @@ describe('getInteractionGateState', () => {
   it('blocks non-client when no phone or email', () => {
     const result = getInteractionGateState({ ...base, contactEmail: '' });
     expect(result.canSave).toBe(false);
-    expect(result.gateMessage).toBe('Telephone ou email requis.');
+    expect(result.gateMessage).toBe('Téléphone ou email requis.');
   });
 
   it('allows internal relation with only name fields', () => {
@@ -103,6 +103,6 @@ describe('getInteractionGateState', () => {
     });
 
     expect(result.canSave).toBe(false);
-    expect(result.gateMessage).toBe('Selectionnez au moins une famille produit.');
+    expect(result.gateMessage).toBe('Sélectionnez au moins une famille produit.');
   });
 });

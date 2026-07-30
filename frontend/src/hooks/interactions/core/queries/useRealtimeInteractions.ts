@@ -79,7 +79,7 @@ export const useRealtimeInteractions = (agencyId: string | null, enabled: boolea
         const hydrated = hydrateTimeline(nextRow);
         queryClient.setQueryData<Interaction[]>(interactionsKey(agencyId), current => current ? upsertInteractionInList(current, hydrated) : current);
       } catch (error) {
-        const appError = normalizeError(error, 'Mise a jour temps reel indisponible.');
+        const appError = normalizeError(error, 'Mise à jour temps réel indisponible.');
         reportError(appError, { source: 'useRealtimeInteractions' });
         if (!notifiedRef.current) {
           notifyError(appError);

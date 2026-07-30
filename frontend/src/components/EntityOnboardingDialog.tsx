@@ -185,14 +185,14 @@ const EntityOnboardingDialog = ({
     if (step.id === "company" && isIndividualClient) {
       return {
         ...step,
-        description: "Qualifier le particulier et verifier les doublons",
+        description: "Qualifier le particulier et vérifier les doublons",
       };
     }
 
     if (step.id === "details" && isIndividualClient) {
       return {
         ...step,
-        description: "Completer les coordonnees et le compte",
+        description: "Compléter les coordonnées et le compte",
       };
     }
 
@@ -371,7 +371,7 @@ const EntityOnboardingDialog = ({
                       Type de profil
                     </h2>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Definit le parcours et les champs obligatoires a collecter.
+                      Définit le parcours et les champs obligatoires à collecter.
                     </p>
                   </div>
                   <EntityOnboardingIntentStep
@@ -439,10 +439,10 @@ const EntityOnboardingDialog = ({
                 >
                   <div className="mb-6 border-b border-border-subtle pb-4">
                     <h2 className="text-xl font-semibold tracking-tight text-foreground">
-                      Informations complementaires
+                      Informations complémentaires
                     </h2>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Completer les donnees necessaires a la facturation et au
+                      Compléter les données nécessaires à la facturation et au
                       rattachement.
                     </p>
                   </div>
@@ -472,7 +472,7 @@ const EntityOnboardingDialog = ({
                       Confirmation finale
                     </h2>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Vérifie les informations avant l&apos;insertion dans la base de
+                      Vérifiez les informations avant l&apos;insertion dans la base de
                       données.
                     </p>
                   </div>
@@ -528,8 +528,8 @@ const EntityOnboardingDialog = ({
         <AlertDialogHeader>
           <AlertDialogTitle>Quitter le parcours ?</AlertDialogTitle>
           <AlertDialogDescription>
-            Les modifications non enregistrées seront perdues si tu fermes
-            maintenant ce flux.
+            Les modifications non enregistrées seront perdues si vous fermez
+            maintenant ce parcours.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

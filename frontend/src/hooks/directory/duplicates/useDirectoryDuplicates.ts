@@ -14,7 +14,7 @@ export const useDirectoryDuplicates = (input: DirectoryDuplicatesInput, enabled 
     staleTime: 15_000
   });
 
-  useNotifyError(query.error, 'Impossible de verifier les doublons', 'useDirectoryDuplicates');
+  useNotifyError(query.error, 'Impossible de vérifier les doublons', 'useDirectoryDuplicates');
 
   return query;
 };

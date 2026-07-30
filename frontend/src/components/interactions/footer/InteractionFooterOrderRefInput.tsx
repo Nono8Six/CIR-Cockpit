@@ -29,7 +29,7 @@ const InteractionFooterOrderRefInput = ({
         type="text"
         value={orderRef}
         onChange={(event) => onOrderRefChange(event.target.value)}
-        placeholder="Reference dossier"
+        placeholder="Référence dossier"
         className="h-9 bg-card pl-8 font-mono text-xs"
         name="interaction-order-ref"
         autoComplete="off"

@@ -115,7 +115,7 @@ const DashboardOverviewHeader = ({
               data-testid="dashboard-scope-picker"
             >
               {selectedMember ? (
-                <AvatarInitials name={selectedMember.name} className="size-5 rounded-md text-[9px]" />
+                <AvatarInitials name={selectedMember.name} className="size-5 rounded-md text-[11px]" />
               ) : (
                 <span className="inline-flex size-5 items-center justify-center rounded-md bg-surface-2 text-muted-foreground">
                   <Building2 size={12} aria-hidden="true" />
@@ -130,7 +130,7 @@ const DashboardOverviewHeader = ({
               </DropdownMenuLabel>
               {viewerMember ? (
                 <DropdownMenuItem onSelect={() => onScopeChange({ kind: 'me' })}>
-                  <AvatarInitials name={viewerMember.name} className="size-5 rounded-md text-[9px]" />
+                  <AvatarInitials name={viewerMember.name} className="size-5 rounded-md text-[11px]" />
                   <span className="flex-1 truncate text-xs font-semibold">
                     {viewerMember.name} <span className="font-normal text-muted-foreground">(moi)</span>
                   </span>
@@ -142,7 +142,7 @@ const DashboardOverviewHeader = ({
                   key={member.profileId}
                   onSelect={() => onScopeChange({ kind: 'member', profileId: member.profileId })}
                 >
-                  <AvatarInitials name={member.name} className="size-5 rounded-md text-[9px]" />
+                  <AvatarInitials name={member.name} className="size-5 rounded-md text-[11px]" />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-xs font-semibold">{member.name}</span>
                     <span className="block truncate text-[10.5px] text-muted-foreground">

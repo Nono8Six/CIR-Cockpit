@@ -25,7 +25,7 @@ const ChangePasswordActions = ({
         disabled={isSubmitting}
         className="w-full rounded-md bg-primary text-white text-sm font-semibold py-2.5 shadow-sm hover:bg-primary/90 disabled:opacity-60"
       >
-        {isSubmitting ? 'Validation…' : 'Reessayer la validation'}
+        {isSubmitting ? 'Validation…' : 'Réessayer la validation'}
       </button>
     ) : (
       <button
@@ -34,7 +34,7 @@ const ChangePasswordActions = ({
         onClick={onSubmit}
         className="w-full rounded-md bg-primary text-white text-sm font-semibold py-2.5 shadow-sm hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed"
       >
-        {isSubmitting ? 'Mise a jour…' : 'Mettre a jour le mot de passe'}
+        {isSubmitting ? 'Mise à jour…' : 'Mettre à jour le mot de passe'}
       </button>
     )}
 

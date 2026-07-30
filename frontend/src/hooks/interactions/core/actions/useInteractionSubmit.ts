@@ -54,14 +54,14 @@ export const useInteractionSubmit = ({ activeAgencyId, selectedEntity, selectedC
             name: entityName,
             agency_id: activeAgencyId,
             city: isProspect ? values.company_city?.trim() || null : null
-          }).match(entity => entity, error => { handleUiError(error, "Impossible de creer l'entite.", { source: 'CockpitForm.saveEntity' }); return null; });
+          }).match(entity => entity, error => { handleUiError(error, "Impossible de créer l'entité.", { source: 'CockpitForm.saveEntity' }); return null; });
           if (!resolvedEntity) return;
           void invalidateEntitySearchIndexQueries(queryClient, activeAgencyId); handleSelectEntity(resolvedEntity);
         }
       }
       if (!resolvedContact && resolvedEntity && (!isSupplier || hasManualContact)) {
         if (!resolvedEntity?.id) {
-          handleUiError(createAppError({ code: 'NOT_FOUND', message: "Entite introuvable pour creer le contact.", source: 'validation' }), "Impossible de creer le contact.", { source: 'CockpitForm.saveEntityContact' });
+          handleUiError(createAppError({ code: 'NOT_FOUND', message: "Entité introuvable pour créer le contact.", source: 'validation' }), "Impossible de créer le contact.", { source: 'CockpitForm.saveEntityContact' });
           return;
         }
         resolvedContact = await saveEntityContact({ entity_id: resolvedEntity.id, first_name: values.contact_first_name?.trim() ?? '', last_name: values.contact_last_name?.trim() ?? '', email: values.contact_email?.trim() || null, phone: values.contact_phone?.trim() || null, position: values.contact_position?.trim() || null, service_label: values.contact_service_label?.trim() || null }).match(contact => contact, error => { handleUiError(error, "Impossible d'enregistrer le contact.", { source: 'CockpitForm.saveEntityContact' }); return null; });
@@ -70,7 +70,7 @@ export const useInteractionSubmit = ({ activeAgencyId, selectedEntity, selectedC
       }
     }
 
-    const creationDate = getNowIsoString(); const timeline: TimelineEvent[] = [{ id: generateId(), date: creationDate, type: 'creation', content: 'Dossier cree' }]; if (values.notes?.trim()) timeline.push({ id: generateId(), date: creationDate, type: 'note', content: values.notes.trim() });
+    const creationDate = getNowIsoString(); const timeline: TimelineEvent[] = [{ id: generateId(), date: creationDate, type: 'creation', content: 'Dossier créé' }]; if (values.notes?.trim()) timeline.push({ id: generateId(), date: creationDate, type: 'note', content: values.notes.trim() });
     const selectedContactLabel = resolvedContact ? `${resolvedContact.first_name ?? ''} ${resolvedContact.last_name}`.trim() : '';
     const resolvedContactName = resolvedContact
       ? selectedContactLabel

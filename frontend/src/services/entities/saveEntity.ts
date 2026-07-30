@@ -44,7 +44,7 @@ const parseEntityResponse = (payload: unknown): Entity => {
   if (!parsed.success) {
     throw createAppError({
       code: 'REQUEST_FAILED',
-      message: 'Reponse serveur invalide.',
+      message: 'Réponse serveur invalide.',
       source: 'edge',
       details: parsed.error.message
     });
@@ -106,7 +106,7 @@ export const saveEntity = (payload: EntityPayload): ResultAsync<Entity, AppError
           }
         }, options),
       parseEntityResponse,
-      "Impossible d'enregistrer l'entite."
+      "Impossible d'enregistrer l'entité."
     );
   }
 
@@ -124,6 +124,6 @@ export const saveEntity = (payload: EntityPayload): ResultAsync<Entity, AppError
         }
       }, options),
     parseEntityResponse,
-    "Impossible d'enregistrer l'entite."
+    "Impossible d'enregistrer l'entité."
   );
 };

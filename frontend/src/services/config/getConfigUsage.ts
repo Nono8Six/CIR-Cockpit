@@ -44,7 +44,7 @@ export const parseConfigUsageResponse = (payload: unknown): ConfigUsageResponse 
   if (!parsed.success) {
     throw createAppError({
       code: 'REQUEST_FAILED',
-      message: 'Reponse serveur invalide.',
+      message: 'Réponse serveur invalide.',
       source: 'edge',
       details: parsed.error.message
     });
@@ -60,7 +60,7 @@ export const getConfigUsage = async (
   const response = await invokeTrpc(
     (api, options) => api.config.usage.query(input, options),
     parseConfigUsageResponse,
-    "Impossible de charger l'impact des parametres."
+    "Impossible de charger l'impact des paramètres."
   );
 
   return response.usage;

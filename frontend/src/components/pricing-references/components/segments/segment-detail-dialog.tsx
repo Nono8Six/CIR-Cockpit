@@ -217,7 +217,7 @@ const CoefficientCell = ({ value, highlight = false }: { value: string | null; h
       <div className={cn('font-mono text-[11.5px] font-semibold tabular-nums', highlight ? 'text-primary' : 'text-foreground')}>
         {formatCoefficient(value)}
       </div>
-      {impact ? <div className="mt-0.5 font-mono text-[9.5px] tabular-nums text-muted-foreground">{impact}</div> : null}
+      {impact ? <div className="mt-0.5 font-mono text-[11px] leading-tight tabular-nums text-muted-foreground">{impact}</div> : null}
     </TableCell>
   );
 };
@@ -246,11 +246,11 @@ const PurchaseGridTable = ({ rows, isLoading }: { rows: PurchaseGridRow[]; isLoa
         <Table scrollArea={false} className="min-w-[1160px] border-collapse">
           <TableHeader className="sticky top-0 z-10 bg-white">
             <TableRow className="hover:bg-transparent">
-              <TableHead colSpan={4} className="h-6 border-r border-border/60 bg-muted/30 px-3 text-[9px] font-semibold uppercase text-muted-foreground">Condition fournisseur</TableHead>
-              <TableHead colSpan={3} className="h-6 border-r border-border/60 bg-muted/30 px-3 text-[9px] font-semibold uppercase text-muted-foreground">Achat fabricant</TableHead>
-              <TableHead className="h-6 border-r border-primary/10 bg-primary/[0.045] px-3 text-[9px] font-semibold uppercase text-primary">Centre logistique</TableHead>
-              <TableHead className="h-6 border-r border-border/60 bg-muted/30 px-3 text-[9px] font-semibold uppercase text-muted-foreground">Agence CIR</TableHead>
-              <TableHead className="h-6 bg-muted/30 px-3 text-[9px] font-semibold uppercase text-muted-foreground">Source</TableHead>
+              <TableHead colSpan={4} className="h-6 border-r border-border/60 bg-muted/30 px-3 text-[11px] font-semibold uppercase text-muted-foreground">Condition fournisseur</TableHead>
+              <TableHead colSpan={3} className="h-6 border-r border-border/60 bg-muted/30 px-3 text-[11px] font-semibold uppercase text-muted-foreground">Achat fabricant</TableHead>
+              <TableHead className="h-6 border-r border-primary/10 bg-primary/[0.045] px-3 text-[11px] font-semibold uppercase text-primary">Centre logistique</TableHead>
+              <TableHead className="h-6 border-r border-border/60 bg-muted/30 px-3 text-[11px] font-semibold uppercase text-muted-foreground">Agence CIR</TableHead>
+              <TableHead className="h-6 bg-muted/30 px-3 text-[11px] font-semibold uppercase text-muted-foreground">Source</TableHead>
             </TableRow>
             <TableRow className="hover:bg-transparent">
               {['Priorité', 'N° fournisseur', 'Type / colonne', 'Période de validité', 'Remise HA', 'Borne achat', 'Coef. HA'].map((label) => (
@@ -272,7 +272,7 @@ const PurchaseGridTable = ({ rows, isLoading }: { rows: PurchaseGridRow[]; isLoa
                 <RawGridCell value={row.num_four} />
                 <TableCell className="h-11 whitespace-nowrap px-3 py-2 text-[11.5px] text-foreground">
                   <div className="font-medium">{formatEmpty(row.type_grill)}</div>
-                  <div className="mt-0.5 font-mono text-[9.5px] text-muted-foreground">Col. {formatEmpty(row.col_ha)}</div>
+                  <div className="mt-0.5 font-mono text-[11px] leading-tight text-muted-foreground">Col. {formatEmpty(row.col_ha)}</div>
                 </TableCell>
                 <TableCell className="h-11 whitespace-nowrap px-3 py-2 font-mono text-[10.5px] tabular-nums text-foreground">
                   {formatDate(row.date_debut_normalized, row.date_debut_raw)}
@@ -355,7 +355,7 @@ export const SegmentDetailDialog = ({ segment, onClose }: SegmentDetailDialogPro
                       <CheckCircle2 className="size-3" aria-hidden="true" /> Liaison CIR valide
                     </span>
                   ) : detailSegment.link_status ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-md border border-warning/25 bg-warning/5 px-2 py-1 text-[10px] font-medium text-warning">
+                    <span className="inline-flex items-center gap-1.5 rounded-md border border-warning/25 bg-warning/5 px-2 py-1 text-[10px] font-medium text-warning-strong">
                       <AlertCircle className="size-3" aria-hidden="true" /> {linkStatusLabels[detailSegment.link_status]}
                     </span>
                   ) : null}

@@ -34,7 +34,7 @@ const InteractionSearchStatusMessage = ({
 
   if (status === 'error') {
     return (
-      <CommandEmpty className="px-5 py-5 text-center text-xs text-warning" aria-live="polite">
+      <CommandEmpty className="px-5 py-5 text-center text-xs text-warning-strong" aria-live="polite">
         Recherche indisponible. Réessayez ou continuez en création rapide.
       </CommandEmpty>
     );

@@ -22,7 +22,7 @@ export const useCreateAgency = () => {
     onError: (err) => {
       const appError = mapAdminDomainError(err, {
         action: 'create_agency',
-        fallbackMessage: "Impossible de creer l'agence."
+        fallbackMessage: "Impossible de créer l'agence."
       });
       handleUiError(appError, appError.message, { source: 'useCreateAgency' });
     }

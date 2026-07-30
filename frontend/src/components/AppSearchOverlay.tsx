@@ -104,10 +104,10 @@ const AppSearchOverlay = ({
     : viewState === 'error'
       ? 'Recherche indisponible.'
       : viewState === 'idle'
-        ? 'Commencez a taper pour rechercher.'
+        ? 'Commencez à taper pour rechercher.'
         : viewState === 'results'
-          ? 'Resultats disponibles.'
-          : 'Aucun resultat trouve.';
+          ? 'Résultats disponibles.'
+          : 'Aucun résultat trouvé.';
 
   const handleRetrySearch = useCallback(() => {
     if (!onRetrySearch) return;
@@ -213,30 +213,30 @@ const AppSearchOverlay = ({
           {viewState === 'loading' && (
             <CommandLoading className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-              Chargement des resultats…
+              Chargement des résultats…
             </CommandLoading>
           )}
           {viewState === 'error' && (
             <CommandEmpty className="space-y-3 px-4 py-8">
               <div className="flex items-center justify-center gap-2 text-sm text-warning-foreground">
                 <AlertTriangle className="size-4" aria-hidden="true" />
-                Recherche indisponible. Veuillez reessayer.
+                Recherche indisponible. Veuillez réessayer.
               </div>
               {onRetrySearch && (
                 <Button type="button" size="sm" variant="outline" onClick={handleRetrySearch}>
-                  Reessayer
+                  Réessayer
                 </Button>
               )}
             </CommandEmpty>
           )}
           {viewState === 'idle' && (
             <CommandEmpty className="px-4 py-8 text-sm text-muted-foreground">
-              Commencez a taper pour rechercher…
+              Commencez à taper pour rechercher…
             </CommandEmpty>
           )}
           {viewState === 'empty' && (
             <CommandEmpty className="px-4 py-8 text-sm text-muted-foreground">
-              Aucun resultat trouve.
+              Aucun résultat trouvé.
             </CommandEmpty>
           )}
           {viewState === 'results' && (

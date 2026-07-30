@@ -84,7 +84,7 @@ describe('getDirectoryCompanySearch', () => {
 
     await expect(getDirectoryCompanySearch({ query: 'sea' })).rejects.toMatchObject({
       code: 'REQUEST_FAILED',
-      message: 'Reponse serveur invalide.'
+      message: 'Réponse serveur invalide.'
     });
   });
 

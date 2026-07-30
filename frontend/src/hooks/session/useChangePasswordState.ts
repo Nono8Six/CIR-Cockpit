@@ -16,7 +16,7 @@ type PasswordRule = {
 };
 
 const PASSWORD_RULES: PasswordRule[] = [
-  { id: 'length', label: 'Au moins 8 caracteres', test: (pw) => pw.length >= 8 },
+  { id: 'length', label: 'Au moins 8 caractères', test: (pw) => pw.length >= 8 },
   { id: 'digit', label: 'Au moins 1 chiffre', test: (pw) => /\d/.test(pw) },
   { id: 'symbol', label: 'Au moins 1 symbole (!@#$…)', test: (pw) => /[^a-zA-Z0-9]/.test(pw) }
 ];

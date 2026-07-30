@@ -103,7 +103,7 @@ const buildIdentityLabel = (props: CockpitFormLeftPaneProps): string => {
 
 const buildRelationLabel = (entityType: string, isRelationConfirmed: boolean): string => {
   if (entityType.trim()) return entityType;
-  return isRelationConfirmed ? 'Relation choisie' : 'A choisir';
+  return isRelationConfirmed ? 'Relation choisie' : 'À choisir';
 };
 
 type GuidedAnswerStep = 'channel' | 'relation' | 'search' | 'contact' | 'subject';
@@ -235,7 +235,7 @@ const CockpitGuidedEntry = ({
                 <CockpitGuidedAnswerRow index={getStepIndex('contact')} label="Contact" value={buildContactLabel(leftPaneProps)} active={false} complete onEdit={() => flow.editStep('contact')} />
               ) : null}
               {visibleAnswerSteps.includes('subject') ? (
-                <CockpitGuidedAnswerRow index={getStepIndex('subject')} label="Sujet" value={rightPaneProps.subject || 'A renseigner'} active={false} complete onEdit={() => flow.editStep('subject')} />
+                <CockpitGuidedAnswerRow index={getStepIndex('subject')} label="Sujet" value={rightPaneProps.subject || 'À renseigner'} active={false} complete onEdit={() => flow.editStep('subject')} />
               ) : null}
             </div>
             <CockpitGuidedStepSwitch

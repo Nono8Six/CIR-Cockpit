@@ -16,7 +16,7 @@ const UsersManagerHeader = ({
   <div className="flex flex-wrap items-center justify-between gap-3" data-testid="admin-users-header">
     <div>
       <h2 className="text-sm font-semibold text-foreground">Utilisateurs</h2>
-      <p className="text-xs text-muted-foreground">Gestion des acces et roles globaux</p>
+      <p className="text-xs text-muted-foreground">Gestion des accès et rôles globaux</p>
     </div>
     <div className="flex items-center gap-2">
       <Button

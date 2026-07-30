@@ -13,7 +13,7 @@ const parseSetDefaultDirectorySavedViewResponse = (payload: unknown): DirectoryS
   if (!parsed.success) {
     throw createAppError({
       code: 'REQUEST_FAILED',
-      message: 'Reponse serveur invalide.',
+      message: 'Réponse serveur invalide.',
       source: 'edge',
       details: parsed.error.message
     });
@@ -28,5 +28,5 @@ export const setDefaultDirectorySavedView = (
   invokeTrpc(
     (api, options) => api.directory['saved-views']['set-default'].mutate(input, options),
     parseSetDefaultDirectorySavedViewResponse,
-    'Impossible de definir la vue par defaut.'
+    'Impossible de définir la vue par défaut.'
   );

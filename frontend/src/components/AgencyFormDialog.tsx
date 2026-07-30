@@ -58,7 +58,7 @@ const AgencyFormDialog = ({
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription className="sr-only">
-            Formulaire de creation ou de modification d une agence.
+            Formulaire de création ou de modification d une agence.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleFormSubmit} className="space-y-4">

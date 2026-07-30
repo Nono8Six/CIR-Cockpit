@@ -45,14 +45,14 @@ const ensureTimelineEvent = (value: unknown): TimelineEvent | null => {
 };
 
 const ensureTimeline = (value: unknown): TimelineEvent[] => {
-  if (!Array.isArray(value)) throw createAppError({ code: 'DB_READ_FAILED', message: "Donnees d'historique invalides. Rechargez la page.", source: 'db', details: 'timeline_invalid' });
+  if (!Array.isArray(value)) throw createAppError({ code: 'DB_READ_FAILED', message: "Données d'historique invalides. Rechargez la page.", source: 'db', details: 'timeline_invalid' });
   const timeline = value.map(ensureTimelineEvent).filter((event): event is TimelineEvent => Boolean(event));
-  if (timeline.length !== value.length) throw createAppError({ code: 'DB_READ_FAILED', message: "Donnees d'historique invalides. Rechargez la page.", source: 'db', details: 'timeline_invalid' });
+  if (timeline.length !== value.length) throw createAppError({ code: 'DB_READ_FAILED', message: "Données d'historique invalides. Rechargez la page.", source: 'db', details: 'timeline_invalid' });
   return timeline;
 };
 
 const ensureChannel = (value: string): Channel => {
-  if (!isChannel(value)) throw createAppError({ code: 'DB_READ_FAILED', message: 'Donnees canal invalides. Rechargez la page.', source: 'db', details: 'canal_invalid' });
+  if (!isChannel(value)) throw createAppError({ code: 'DB_READ_FAILED', message: 'Données canal invalides. Rechargez la page.', source: 'db', details: 'canal_invalid' });
   return value;
 };
 

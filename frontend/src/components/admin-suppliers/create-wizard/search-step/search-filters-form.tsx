@@ -105,7 +105,7 @@ const SearchFiltersForm = ({ searchFilters, onSearchSubmit }: SearchFiltersFormP
           <SlidersHorizontal className="size-4 mr-2" />
           {showFilters ? "Masquer les filtres" : "Filtres"}
           {(department || postalCode || city || nafCode || activitySection || headOffice !== 'all' || statusFilter !== 'all') && (
-            <span className="ml-1.5 flex size-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground">
+            <span className="ml-1.5 flex size-5 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">
               {
                 (department ? 1 : 0) +
                 (postalCode ? 1 : 0) +

@@ -51,7 +51,7 @@ const CockpitInteractionTypeSection = ({
       </SelectContent>
     </Select>
     {!hasInteractionTypes && (
-      <p id={interactionTypeHelpId} className="text-xs text-warning mt-1">
+      <p id={interactionTypeHelpId} className="text-xs text-warning-strong mt-1">
         Ajoutez des types d&apos;interaction dans Paramètres.
       </p>
     )}

@@ -25,7 +25,7 @@ const rootElement = document.getElementById('root');
 if (!rootElement) {
   throw createAppError({
     code: 'CLIENT_NOT_CONFIGURED',
-    message: "Element racine introuvable pour initialiser l'application.",
+    message: "Élément racine introuvable pour initialiser l'application.",
     source: 'client'
   });
 }

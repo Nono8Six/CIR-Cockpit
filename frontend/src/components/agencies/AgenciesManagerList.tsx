@@ -119,7 +119,7 @@ const AgenciesManagerList = ({
                       </TableCell>
                       <TableCell className="py-3.5">
                         {agency.archived_at ? (
-                          <Badge variant="warning" className="inline-flex items-center gap-1.5 text-[10px] bg-warning/10 text-warning border-warning/20 hover:bg-warning hover:text-warning-foreground transition-all duration-200 uppercase font-semibold">
+                          <Badge variant="warning" className="inline-flex items-center gap-1.5 text-[10px] bg-warning/10 text-warning-strong border-warning/20 hover:bg-warning hover:text-warning-foreground transition-all duration-200 uppercase font-semibold">
                             <span className="h-1.5 w-1.5 rounded-full bg-current"></span>
                             Archivée
                           </Badge>

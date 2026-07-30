@@ -13,7 +13,7 @@ const parseSetUserRoleResponse = (payload: unknown): SetUserRoleResponse => {
   if (!parsed.success) {
     throw createAppError({
       code: 'EDGE_INVALID_RESPONSE',
-      message: 'Reponse serveur invalide.',
+      message: 'Réponse serveur invalide.',
       source: 'edge',
       details: parsed.error.message
     });
@@ -29,5 +29,5 @@ export const setAdminUserRole = (userId: string, role: UserRole) =>
       role
       }, options),
     parseSetUserRoleResponse,
-    'Impossible de mettre a jour le role.'
+    'Impossible de mettre à jour le rôle.'
   );

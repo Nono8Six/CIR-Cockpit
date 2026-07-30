@@ -77,7 +77,7 @@ const RenameDialog = ({
 
             {hasUsage && (
               <div className="flex items-start gap-2 border border-warning/20 bg-warning/5 p-2.5 text-xs text-warning-foreground rounded-sm">
-                <AlertCircle className="size-4 shrink-0 text-warning mt-0.5" aria-hidden="true" />
+                <AlertCircle className="size-4 shrink-0 text-warning-strong mt-0.5" aria-hidden="true" />
                 <div className="leading-normal">
                   <span className="font-semibold">Attention : </span>
                   {usageCount} interaction(s) utilisent actuellement cette valeur. La correction mettra à jour tout l&apos;historique de manière définitive. Pour préserver le sens historique, annulez puis utilisez l&apos;action de retrait.

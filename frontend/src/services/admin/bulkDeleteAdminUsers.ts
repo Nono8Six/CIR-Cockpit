@@ -12,7 +12,7 @@ const parseBulkDeleteUsersResponse = (payload: unknown): BulkDeleteUsersResponse
   if (!parsed.success) {
     throw createAppError({
       code: 'EDGE_INVALID_RESPONSE',
-      message: 'Reponse serveur invalide.',
+      message: 'Réponse serveur invalide.',
       source: 'edge',
       details: parsed.error.message
     });
@@ -27,5 +27,5 @@ export const bulkDeleteAdminUsers = (userIds: string[]) =>
       user_ids: userIds
     }, options),
     parseBulkDeleteUsersResponse,
-    'Impossible de supprimer les utilisateurs selectionnes.'
+    'Impossible de supprimer les utilisateurs sélectionnés.'
   );

@@ -16,7 +16,7 @@ export const useDirectorySavedViews = (
     staleTime: 60_000
   });
 
-  useNotifyError(query.error, 'Impossible de charger les vues sauvegardees.', 'useDirectorySavedViews');
+  useNotifyError(query.error, 'Impossible de charger les vues sauvegardées.', 'useDirectorySavedViews');
 
   return query;
 };

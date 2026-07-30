@@ -18,7 +18,7 @@ export const useDirectoryOptionDepartments = (
     staleTime: 60_000
   });
 
-  useNotifyError(query.error, "Impossible de charger les departements de l'annuaire", 'useDirectoryOptionDepartments');
+  useNotifyError(query.error, "Impossible de charger les départements de l'annuaire", 'useDirectoryOptionDepartments');
 
   return query;
 };

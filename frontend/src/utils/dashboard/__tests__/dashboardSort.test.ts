@@ -56,7 +56,7 @@ describe('dashboardSort', () => {
           id: 'event-2',
           date: '2026-02-16T09:00:00.000Z',
           type: 'status_change',
-          content: 'Statut mis a jour'
+          content: 'Statut mis à jour'
         }
       ]
     });

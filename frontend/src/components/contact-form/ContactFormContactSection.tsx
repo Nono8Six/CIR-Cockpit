@@ -35,7 +35,7 @@ const ContactFormContactSection = ({
       )}
     </div>
     <div>
-      <label className="text-xs font-medium text-muted-foreground" htmlFor="contact-phone">Telephone</label>
+      <label className="text-xs font-medium text-muted-foreground" htmlFor="contact-phone">Téléphone</label>
       <Input
         {...phoneField}
         id="contact-phone"

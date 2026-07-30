@@ -152,7 +152,7 @@ describe('useInteractionSubmit', () => {
   it('reports an error when entity creation fails', async () => {
     const appError = createAppError({
       code: 'REQUEST_FAILED',
-      message: "Impossible de creer l'entite.",
+      message: "Impossible de créer l'entité.",
       source: 'edge'
     });
     const onSave = vi.fn<(_: InteractionDraft) => Promise<boolean>>().mockResolvedValue(true);

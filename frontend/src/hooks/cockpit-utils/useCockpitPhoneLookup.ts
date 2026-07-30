@@ -31,7 +31,7 @@ export const useCockpitPhoneLookup = (
     staleTime: 60 * 1000
   });
 
-  useNotifyError(query.error, "Impossible de rechercher l'historique du numero", 'useCockpitPhoneLookup');
+  useNotifyError(query.error, "Impossible de rechercher l'historique du numéro", 'useCockpitPhoneLookup');
 
   return { ...query, normalizedPhone };
 };

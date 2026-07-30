@@ -12,7 +12,7 @@ const parseResetPasswordResponse = (payload: unknown): ResetPasswordResponse => 
   if (!parsed.success) {
     throw createAppError({
       code: 'EDGE_INVALID_RESPONSE',
-      message: 'Reponse serveur invalide.',
+      message: 'Réponse serveur invalide.',
       source: 'edge',
       details: parsed.error.message
     });
@@ -28,5 +28,5 @@ export const resetAdminUserPassword = (userId: string, password?: string) =>
       password
       }, options),
     parseResetPasswordResponse,
-    'Impossible de reinitialiser le mot de passe.'
+    'Impossible de réinitialiser le mot de passe.'
   );

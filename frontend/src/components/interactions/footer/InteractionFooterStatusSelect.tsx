@@ -34,7 +34,7 @@ const InteractionFooterStatusSelect = ({
           className="h-9 bg-card text-sm"
           data-testid="interaction-details-status-select"
         >
-          <SelectValue placeholder="Selectionner un statut" />
+          <SelectValue placeholder="Sélectionner un statut" />
         </SelectTrigger>
         <SelectContent>
           {statusOptions.map((option) => (

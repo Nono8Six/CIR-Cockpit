@@ -218,7 +218,7 @@ const DashboardDossiersTable = ({
                   <span
                     title={interaction.status}
                     className={cn(
-                      'inline-flex max-w-full items-center rounded border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider',
+                      'inline-flex max-w-full items-center rounded border px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide',
                       getStatusBadgeClass(interaction)
                     )}
                   >

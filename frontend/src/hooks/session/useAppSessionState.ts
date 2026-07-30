@@ -28,7 +28,7 @@ export const useAppSessionState = (): { state: AppSessionState; actions: AppSess
         if (!mounted) return;
         setSession(currentSession); sessionRef.current = currentSession; setAuthReady(true);
       } catch (error) {
-        handleAppError(error, 'Impossible de verifier la session.', { source: 'AppSession.initSession' });
+        handleAppError(error, 'Impossible de vérifier la session.', { source: 'AppSession.initSession' });
         if (!mounted) return;
         setSession(null); sessionRef.current = null; setAuthReady(true);
       }
@@ -50,8 +50,8 @@ export const useAppSessionState = (): { state: AppSessionState; actions: AppSess
       setProfileLoading(true); setProfileError(null);
       try { const data = await getProfile(); if (mounted) setProfile(data); }
       catch (error) {
-        handleAppError(error, 'Impossible de charger votre profil. Verifiez votre connexion.', { source: 'AppSession.loadProfile' });
-        if (mounted) { setProfile(null); setProfileError('Impossible de charger votre profil. Verifiez votre connexion.'); }
+        handleAppError(error, 'Impossible de charger votre profil. Vérifiez votre connexion.', { source: 'AppSession.loadProfile' });
+        if (mounted) { setProfile(null); setProfileError('Impossible de charger votre profil. Vérifiez votre connexion.'); }
       } finally { if (mounted) setProfileLoading(false); }
     })();
     return () => { mounted = false; };
@@ -66,7 +66,7 @@ export const useAppSessionState = (): { state: AppSessionState; actions: AppSess
         const [memberships, preferredAgencyId] = await Promise.all([getAgencyMemberships(profile.role !== 'tcs'), getProfileActiveAgencyId()]);
         const selected = (preferredAgencyId ? memberships.find(member => member.agency_id === preferredAgencyId) : null) ?? memberships[0] ?? null;
         if (!selected) {
-          if (profile.role === 'tcs') throw createAppError({ code: 'MEMBERSHIP_NOT_FOUND', message: 'Aucune agence associee a cet utilisateur.', source: 'auth' });
+          if (profile.role === 'tcs') throw createAppError({ code: 'MEMBERSHIP_NOT_FOUND', message: 'Aucune agence associée à cet utilisateur.', source: 'auth' });
           if (mounted) { setAgencyMemberships([]); setAgencyContext(null); setActiveAgencyId(null); setContextError(null); }
           return;
         }
@@ -77,7 +77,7 @@ export const useAppSessionState = (): { state: AppSessionState; actions: AppSess
         setActiveAgencyId(selected.agency_id);
         if (mounted) { setAgencyMemberships(memberships); setAgencyContext({ agency_id: selected.agency_id, agency_name: selected.agency_name }); }
       } catch (error) {
-        if (mounted) { setAgencyContext(null); setAgencyMemberships([]); setContextError('Aucune agence associee a cet utilisateur.'); }
+        if (mounted) { setAgencyContext(null); setAgencyMemberships([]); setContextError('Aucune agence associée à cet utilisateur.'); }
         handleAppError(error, "Impossible de charger le contexte agence", { source: 'AppSession.loadContext' });
       } finally { if (mounted) setContextLoading(false); }
     })();

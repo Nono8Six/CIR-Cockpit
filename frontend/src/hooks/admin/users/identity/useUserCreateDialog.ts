@@ -86,7 +86,7 @@ export const useUserCreateDialog = ({ open, onCreate, onOpenChange }: UseUserCre
       reset(DEFAULT_VALUES);
       onOpenChange(false);
     } catch (submissionError) {
-      const appError = handleUiError(submissionError, "Impossible de creer l'utilisateur.", {
+      const appError = handleUiError(submissionError, "Impossible de créer l'utilisateur.", {
         source: 'useUserCreateDialog'
       });
       setError(appError.message);

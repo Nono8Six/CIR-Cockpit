@@ -69,7 +69,7 @@ const cases: RpcCase[] = [
     endpoint: 'agencies',
     expectedJson: { action: 'create', name: 'CIR Paris' },
     validResponse: { ok: true, agency: { id: 'agency-2', name: 'CIR Paris', archived_at: null } },
-    fallbackMessage: "Impossible de creer l'agence."
+    fallbackMessage: "Impossible de créer l'agence."
   },
   {
     label: 'hardDeleteAdminAgency',
@@ -93,7 +93,7 @@ const cases: RpcCase[] = [
     endpoint: 'agencies',
     expectedJson: { action: 'unarchive', agency_id: 'agency-4' },
     validResponse: { ok: true, agency: { id: 'agency-4', name: 'CIR Lille', archived_at: null } },
-    fallbackMessage: "Impossible de reactiver l'agence."
+    fallbackMessage: "Impossible de réactiver l'agence."
   },
   {
     label: 'archiveAdminUser',
@@ -129,7 +129,7 @@ const cases: RpcCase[] = [
       role: 'tcs',
       agency_ids: ['agency-1']
     },
-    fallbackMessage: "Impossible de creer l'utilisateur."
+    fallbackMessage: "Impossible de créer l'utilisateur."
   },
   {
     label: 'deleteAdminUser',
@@ -153,7 +153,7 @@ const cases: RpcCase[] = [
       anonymized_agency_ids: [],
       anonymized_orphan_interactions: 0
     },
-    fallbackMessage: 'Impossible de supprimer les utilisateurs selectionnes.'
+    fallbackMessage: 'Impossible de supprimer les utilisateurs sélectionnés.'
   },
   {
     label: 'resetAdminUserPassword',
@@ -161,7 +161,7 @@ const cases: RpcCase[] = [
     endpoint: 'users',
     expectedJson: { action: 'reset_password', user_id: 'user-3', password: 'Temp#123' },
     validResponse: { ok: true, user_id: 'user-3', temporary_password: 'Temp#123' },
-    fallbackMessage: 'Impossible de reinitialiser le mot de passe.'
+    fallbackMessage: 'Impossible de réinitialiser le mot de passe.'
   },
   {
     label: 'setAdminUserMemberships',
@@ -179,7 +179,7 @@ const cases: RpcCase[] = [
       agency_ids: ['agency-1', 'agency-2'],
       membership_mode: 'replace'
     },
-    fallbackMessage: 'Impossible de mettre a jour les agences.'
+    fallbackMessage: 'Impossible de mettre à jour les agences.'
   },
   {
     label: 'setAdminUserRole',
@@ -187,7 +187,7 @@ const cases: RpcCase[] = [
     endpoint: 'users',
     expectedJson: { action: 'set_role', user_id: 'user-5', role: 'agency_admin' },
     validResponse: { ok: true, user_id: 'user-5', role: 'agency_admin' },
-    fallbackMessage: 'Impossible de mettre a jour le role.'
+    fallbackMessage: 'Impossible de mettre à jour le rôle.'
   },
   {
     label: 'unarchiveAdminUser',
@@ -195,7 +195,7 @@ const cases: RpcCase[] = [
     endpoint: 'users',
     expectedJson: { action: 'unarchive', user_id: 'user-6' },
     validResponse: { ok: true, user_id: 'user-6', archived: false },
-    fallbackMessage: "Impossible de reactiver l'utilisateur."
+    fallbackMessage: "Impossible de réactiver l'utilisateur."
   },
   {
     label: 'updateAdminUserIdentity',
@@ -222,7 +222,7 @@ const cases: RpcCase[] = [
       last_name: 'Martin',
       display_name: 'Martin Claire'
     },
-    fallbackMessage: "Impossible de mettre a jour l'identite de l'utilisateur."
+    fallbackMessage: "Impossible de mettre à jour l'identité de l'utilisateur."
   }
 ];
 

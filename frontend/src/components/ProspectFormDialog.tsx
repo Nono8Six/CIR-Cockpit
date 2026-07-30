@@ -121,7 +121,7 @@ const ProspectFormDialog = (props: ProspectFormDialogProps) => {
         activeAgencyId={props.activeAgencyId}
         allowedIntents={['prospect']}
         defaultIntent="prospect"
-        sourceLabel="Creation"
+        sourceLabel="Création"
         onSaveProspect={props.onSave}
       />
     );

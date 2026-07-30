@@ -37,7 +37,7 @@ describe('ChangePasswordScreen', () => {
       />
     );
 
-    const submit = screen.getByRole('button', { name: /mettre a jour le mot de passe/i });
+    const submit = screen.getByRole('button', { name: /mettre à jour le mot de passe/i });
     expect(submit).toBeDisabled();
 
     await user.type(screen.getByLabelText(/nouveau mot de passe/i), 'Abc1234!');

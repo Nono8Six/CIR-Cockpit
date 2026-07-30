@@ -286,7 +286,7 @@ export const useSupplierDirectoryWorkspace = ({
       await setDefaultSavedViewMutation.mutateAsync({ id: viewId, viewType: 'suppliers' });
       notifySuccess('Vue par défaut enregistrée.');
     } catch (error) {
-      handleUiError(error, 'Impossible de definir la vue par defaut.');
+      handleUiError(error, 'Impossible de définir la vue par défaut.');
     }
   };
 

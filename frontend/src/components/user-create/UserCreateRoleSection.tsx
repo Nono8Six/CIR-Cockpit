@@ -20,7 +20,7 @@ const UserCreateRoleSection = ({ role, password, onRoleChange, onPasswordChange 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <p id="user-create-role-label" className="text-xs font-medium text-muted-foreground">Role</p>
+        <p id="user-create-role-label" className="text-xs font-medium text-muted-foreground">Rôle</p>
         <Select
           value={role}
           onValueChange={(value) => { if (isUserRole(value)) onRoleChange(value); }}
@@ -41,7 +41,7 @@ const UserCreateRoleSection = ({ role, password, onRoleChange, onPasswordChange 
           id="user-create-temp-password"
           value={password}
           onChange={(event) => onPasswordChange(event.target.value)}
-          placeholder="Laisser vide pour generer"
+          placeholder="Laisser vide pour générer"
           type="text"
         />
       </div>

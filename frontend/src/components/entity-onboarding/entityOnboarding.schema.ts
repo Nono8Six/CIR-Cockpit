@@ -44,7 +44,7 @@ export const onboardingFormSchema = z.strictObject({
     if (!values.client_number.trim()) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Numero client requis',
+        message: 'Numéro client requis',
         path: ['client_number']
       });
     }
@@ -73,7 +73,7 @@ export const onboardingFormSchema = z.strictObject({
     if (!values.first_name.trim()) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Prenom requis',
+        message: 'Prénom requis',
         path: ['first_name']
       });
     }
@@ -89,7 +89,7 @@ export const onboardingFormSchema = z.strictObject({
     if (!values.phone.trim() && !values.email.trim()) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Telephone ou email requis',
+        message: 'Téléphone ou email requis',
         path: ['phone']
       });
     }
@@ -113,7 +113,7 @@ export const onboardingFormSchema = z.strictObject({
     if (values.cir_commercial_id.trim().length > 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Aucun commercial ne doit etre affecte a un client particulier',
+        message: 'Aucun commercial ne doit être affecté à un client particulier',
         path: ['cir_commercial_id']
       });
     }

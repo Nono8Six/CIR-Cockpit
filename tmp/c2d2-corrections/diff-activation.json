@@ -1,0 +1,38 @@
+{
+  "domain": "motor",
+  "previous_active": "4ee230e7-47b0-4637-90b2-3c76b1607a73",
+  "previous_counters": {
+    "source_ref": 169,
+    "motor_model": 1721,
+    "motor_dimension": 41759,
+    "source_document": 6,
+    "motor_brake_option": 256,
+    "motor_torque_point": 2370,
+    "motor_flange_option": 7926,
+    "motor_iec_threshold": 640,
+    "motor_operating_point": 2355,
+    "motor_efficiency_point": 5699,
+    "motor_validation_issue": 62,
+    "motor_iec_vsd_threshold": 65,
+    "motor_vendor_correlation": 599,
+    "motor_dimension_definition": 61
+  },
+  "candidate_counters": {
+    "source_ref": 169,
+    "motor_model": 1665,
+    "motor_dimension": 45568,
+    "source_document": 6,
+    "motor_brake_option": 256,
+    "motor_torque_point": 2370,
+    "motor_flange_option": 7940,
+    "motor_iec_threshold": 640,
+    "motor_operating_point": 2355,
+    "motor_efficiency_point": 5699,
+    "motor_validation_issue": 135,
+    "motor_iec_vsd_threshold": 65,
+    "motor_vendor_correlation": 599,
+    "motor_dimension_definition": 66
+  },
+  "lot_fingerprint_sha256": "470c1064109cb33626385a3d5a904672b66a50827ba779fb7ac53c876240da01",
+  "diff_sha256": "6b8d0747e8c22eb30509088bf55e0ad6fda22bc6fe30791f76be30155d52c85b"
+}
