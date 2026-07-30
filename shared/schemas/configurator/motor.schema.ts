@@ -13,6 +13,13 @@ import {
 const MAX_RESULTS = 50;
 const MAX_EXPLANATION_LENGTH = 2_000;
 const MAX_ISSUES_PER_CANDIDATE = 50;
+const MAX_FACTS_PER_CANDIDATE = 100;
+const MAX_RULES_PER_CANDIDATE = 100;
+
+export const MOTOR_COMPATIBILITY_RULESET = Object.freeze({
+  ruleset_id: 'motor.compatibility.cir',
+  ruleset_version: 1
+} as const);
 
 const nullableFiniteNumberSchema = z.number().finite('Valeur numerique invalide');
 const positiveNumberSchema = nullableFiniteNumberSchema.positive('Valeur strictement positive requise');
@@ -62,6 +69,66 @@ export const motorDimensionCodeSchema = z.enum([
 
 export const motorSupplyModeSchema = z.enum(['mains', 'vfd']);
 export const motorCouplingSchema = z.enum(['Y', 'D']);
+export const motorFactPathSchema = z.enum([
+  'mounting',
+  'electrical.power_kw',
+  'electrical.speed_rpm',
+  'electrical.poles',
+  'electrical.network',
+  'electrical.frequency_hz',
+  'electrical.supply_mode',
+  'electrical.voltage_v',
+  'electrical.coupling',
+  'electrical.rated_current_a',
+  'electrical.rated_torque_nm',
+  'mechanical.frame.A',
+  'mechanical.frame.B',
+  'mechanical.frame.C',
+  'mechanical.frame.H',
+  'mechanical.frame.K',
+  'mechanical.frame.bolt_diameter',
+  'mechanical.frame.transverse_travel',
+  'mechanical.frame.longitudinal_travel',
+  'mechanical.shaft.D',
+  'mechanical.shaft.D_fit_tolerance',
+  'mechanical.shaft.E',
+  'mechanical.shaft.F',
+  'mechanical.coupling.axial_min',
+  'mechanical.coupling.axial_max',
+  'mechanical.flange.M',
+  'mechanical.flange.N',
+  'mechanical.flange.P',
+  'mechanical.flange.S',
+  'mechanical.flange.S_thread',
+  'mechanical.flange.T',
+  'mechanical.flange.Z',
+  'application.ip_rating',
+  'application.brake_required',
+  'application.vfd_required',
+  'application.cooling_method',
+  'application.duty_service',
+  'application.ambient_temperature',
+  'application.starts_per_hour'
+]);
+export const motorRuleCodeSchema = z.enum([
+  'MOUNTING',
+  'FRAME_A',
+  'FRAME_B',
+  'FRAME_C',
+  'FRAME_H',
+  'FRAME_K_BOLT_CLEARANCE',
+  'SHAFT_D',
+  'SHAFT_D_FIT_TOLERANCE',
+  'SHAFT_E_COUPLING_RANGE',
+  'SHAFT_F',
+  'FLANGE_INTERFACE',
+  'POWER',
+  'POLES',
+  'FREQUENCY',
+  'SUPPLY_MODE',
+  'VOLTAGE_COUPLING',
+  'APPLICATION_REQUIREMENT'
+]);
 export const motorSortSchema = z.enum([
   'compatibility',
   'brand',
@@ -81,6 +148,10 @@ export const motorCouplingConstraintSchema = createConstraintValueSchema(motorCo
   (input) => input.unit == null,
   { message: 'Aucune unite attendue', path: ['unit'] }
 );
+export const motorBooleanConstraintSchema = createConstraintValueSchema(z.boolean()).refine(
+  (input) => input.unit == null,
+  { message: 'Aucune unite attendue', path: ['unit'] }
+);
 export const motorPolesConstraintSchema = createConstraintValueSchema(z.union([
   z.literal(2),
   z.literal(4),
@@ -95,7 +166,7 @@ export const motorPolesConstraintSchema = createConstraintValueSchema(z.union([
 
 const createSiConstraintSchema = <TValueSchema extends z.ZodType>(
   valueSchema: TValueSchema,
-  unit: 'kW' | 'rpm' | 'Hz' | 'V' | 'A' | 'N.m' | 'mm' | 'count'
+  unit: 'kW' | 'rpm' | 'Hz' | 'V' | 'A' | 'N.m' | 'mm' | 'count' | 'degC'
 ) => createConstraintValueSchema(valueSchema).superRefine((input, ctx) => {
   if (input.unit !== unit) {
     ctx.addIssue({
@@ -110,6 +181,7 @@ export const motorElectricalSpecSchema = z.strictObject({
   power_kw: createSiConstraintSchema(positiveNumberSchema, 'kW'),
   speed_rpm: createSiConstraintSchema(positiveNumberSchema, 'rpm').optional(),
   poles: motorPolesConstraintSchema.optional(),
+  network: motorTextConstraintSchema,
   frequency_hz: createSiConstraintSchema(positiveNumberSchema, 'Hz'),
   supply_mode: motorSupplyModeConstraintSchema,
   voltage_v: createSiConstraintSchema(positiveNumberSchema, 'V').optional(),
@@ -123,8 +195,12 @@ export const motorFrameDimensionsSchema = z.strictObject({
   B: motorNonNegativeDimensionConstraintSchema().optional(),
   C: motorNonNegativeDimensionConstraintSchema().optional(),
   H: motorNonNegativeDimensionConstraintSchema().optional(),
-  K: motorNonNegativeDimensionConstraintSchema().optional(),
+  K: motorNonNegativeDimensionConstraintSchema().optional()
+});
+
+export const motorShaftDimensionsSchema = z.strictObject({
   D: motorNonNegativeDimensionConstraintSchema().optional(),
+  D_fit_tolerance: motorTextConstraintSchema.optional(),
   E: motorNonNegativeDimensionConstraintSchema().optional(),
   F: motorNonNegativeDimensionConstraintSchema().optional()
 });
@@ -154,14 +230,50 @@ function motorNonNegativeDimensionConstraintSchema() {
   return createSiConstraintSchema(nonNegativeNumberSchema, 'mm');
 }
 
+export const motorFrameAdjustmentSchema = z.strictObject({
+  bolt_diameter: motorNonNegativeDimensionConstraintSchema().optional(),
+  transverse_travel: motorNonNegativeDimensionConstraintSchema().optional(),
+  longitudinal_travel: motorNonNegativeDimensionConstraintSchema().optional()
+});
+
+export const motorCouplingAxialRangeSchema = z.strictObject({
+  axial_min: motorNonNegativeDimensionConstraintSchema().optional(),
+  axial_max: motorNonNegativeDimensionConstraintSchema().optional()
+}).superRefine((range, ctx) => {
+  const minimum = range.axial_min?.value;
+  const maximum = range.axial_max?.value;
+  if (minimum != null && maximum != null && minimum > maximum) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'La borne axiale minimale ne peut pas depasser la borne maximale',
+      path: ['axial_min', 'value']
+    });
+  }
+});
+
 export const motorMechanicalSpecSchema = z.strictObject({
   frame: z.strictObject({
-    dimensions: motorFrameDimensionsSchema
+    dimensions: motorFrameDimensionsSchema,
+    adjustment: motorFrameAdjustmentSchema.optional()
   }),
+  shaft: z.strictObject({
+    dimensions: motorShaftDimensionsSchema
+  }),
+  coupling: motorCouplingAxialRangeSchema.optional(),
   flange: z.strictObject({
     reference: shortTextSchema.optional(),
     dimensions: motorFlangeDimensionsSchema
   }).optional()
+});
+
+export const motorApplicationRequirementsSchema = z.strictObject({
+  ip_rating: motorTextConstraintSchema.optional(),
+  brake_required: motorBooleanConstraintSchema.optional(),
+  vfd_required: motorBooleanConstraintSchema.optional(),
+  cooling_method: motorTextConstraintSchema.optional(),
+  duty_service: motorTextConstraintSchema.optional(),
+  ambient_temperature: createSiConstraintSchema(nullableFiniteNumberSchema, 'degC').optional(),
+  starts_per_hour: createSiConstraintSchema(nonNegativeNumberSchema, 'count').optional()
 });
 
 export const motorToleranceSchema = z.strictObject({
@@ -187,6 +299,7 @@ const motorEquivalentSpecBaseSchema = z.strictObject({
   mounting: motorMountingSchema,
   electrical: motorElectricalSpecSchema,
   mechanical: motorMechanicalSpecSchema,
+  application: motorApplicationRequirementsSchema.optional(),
   tolerances_mm: motorToleranceSchema.optional()
 });
 
@@ -236,6 +349,45 @@ export const motorCriterionValueSchema = z.union([
   z.null()
 ]);
 
+export const motorRulesetReferenceSchema = z.strictObject({
+  ruleset_id: z.literal(MOTOR_COMPATIBILITY_RULESET.ruleset_id),
+  ruleset_version: z.literal(MOTOR_COMPATIBILITY_RULESET.ruleset_version)
+});
+
+export const motorUsedFactSchema = z.strictObject({
+  fact_path: motorFactPathSchema,
+  value: motorCriterionValueSchema,
+  unit: z.string().trim().min(1, 'Unite requise').max(30, 'Unite trop longue').optional(),
+  origin: z.enum([
+    'nameplate',
+    'user_measurement',
+    'catalog',
+    'statistical_suggestion',
+    'calculation'
+  ]),
+  confirmation: z.enum(['unconfirmed', 'confirmed']),
+  evidence: configuratorEvidenceListSchema.refine(
+    (evidence) => evidence.length > 0,
+    'Au moins une preuve utilisee est requise'
+  )
+});
+
+export const motorAppliedRuleSchema = z.strictObject({
+  rule_code: motorRuleCodeSchema,
+  ruleset_id: z.literal(MOTOR_COMPATIBILITY_RULESET.ruleset_id),
+  ruleset_version: z.literal(MOTOR_COMPATIBILITY_RULESET.ruleset_version),
+  status: criterionStatusSchema,
+  decisive: z.boolean(),
+  fact_paths: z.array(motorFactPathSchema).min(1, 'Au moins un fait utilise est requis').max(20)
+});
+
+export const motorRequiredActionSchema = z.strictObject({
+  code: issueCodeSchema,
+  label: shortTextSchema,
+  explanation: z.string().trim().min(1, 'Explication requise').max(MAX_EXPLANATION_LENGTH),
+  evidence: configuratorEvidenceListSchema
+});
+
 export const motorCriterionSchema = z.strictObject({
   code: z.string().trim().min(1, 'Code de critere requis').max(100, 'Code de critere trop long'),
   label: shortTextSchema,
@@ -246,6 +398,7 @@ export const motorCriterionSchema = z.strictObject({
   unit: z.string().trim().min(1, 'Unite requise').max(30, 'Unite trop longue').optional(),
   tolerance: nonNegativeNumberSchema.optional(),
   delta: nullableFiniteNumberSchema.optional(),
+  calculated_clearance: nullableFiniteNumberSchema.optional(),
   explanation: z.string().trim().min(1, 'Explication requise').max(MAX_EXPLANATION_LENGTH, 'Explication trop longue'),
   evidence: configuratorEvidenceListSchema,
   affected_by_issue_codes: z.array(issueCodeSchema).max(MAX_ISSUES_PER_CANDIDATE, 'Trop d anomalies').default([])
@@ -297,11 +450,20 @@ export const motorMatchedFlangeSchema = z.strictObject({
 export const motorCandidateVerdictSchema = z.strictObject({
   candidate: motorCandidateSchema,
   matched_flange: motorMatchedFlangeSchema.nullable(),
-  status: verdictStatusSchema,
+  ruleset_id: z.literal(MOTOR_COMPATIBILITY_RULESET.ruleset_id),
+  ruleset_version: z.literal(MOTOR_COMPATIBILITY_RULESET.ruleset_version),
+  mechanical_status: verdictStatusSchema,
+  electrical_status: verdictStatusSchema,
+  application_status: verdictStatusSchema,
+  overall_status: verdictStatusSchema,
   explanation: z.string().trim().min(1, 'Explication de verdict requise').max(MAX_EXPLANATION_LENGTH, 'Explication de verdict trop longue'),
   criteria: z.array(motorCriterionSchema).min(1, 'Au moins un critere requis').max(100, 'Trop de criteres'),
+  adaptations_required: z.array(motorRequiredActionSchema).max(MAX_ISSUES_PER_CANDIDATE),
+  checks_required: z.array(motorRequiredActionSchema).max(MAX_ISSUES_PER_CANDIDATE),
+  facts_used: z.array(motorUsedFactSchema).min(1, 'Au moins un fait utilise est requis').max(MAX_FACTS_PER_CANDIDATE),
+  rules_applied: z.array(motorAppliedRuleSchema).min(1, 'Au moins une regle appliquee est requise').max(MAX_RULES_PER_CANDIDATE),
   issues: z.array(motorValidationIssueSchema).max(MAX_ISSUES_PER_CANDIDATE, 'Trop d anomalies'),
-  missing_measurements: z.array(motorDimensionCodeSchema).max(motorDimensionCodeSchema.options.length, 'Trop de cotes manquantes')
+  missing_facts: z.array(motorFactPathSchema).max(motorFactPathSchema.options.length, 'Trop de faits manquants')
 });
 
 export const motorEquivalentFromSpecResponseSchema = z.strictObject({
@@ -320,3 +482,22 @@ export type MotorMounting = z.infer<typeof motorMountingSchema>;
 export type MotorDimensionCode = z.infer<typeof motorDimensionCodeSchema>;
 export type MotorEquivalentFromSpecInput = z.infer<typeof motorEquivalentFromSpecInputSchema>;
 export type MotorEquivalentFromSpecResponse = z.infer<typeof motorEquivalentFromSpecResponseSchema>;
+
+export const safeParseMotorEquivalentFromSpecInput = (input: unknown) =>
+  motorEquivalentFromSpecInputSchema.safeParse(input);
+
+export const safeParseMotorCandidateVerdictOutput = (output: unknown) =>
+  motorCandidateVerdictSchema.safeParse(output);
+
+export const isApplicableFieldOverride = (
+  fact: {
+    value: unknown;
+    origin: string;
+    confirmation: string;
+    evidence: readonly unknown[];
+  }
+): boolean =>
+  fact.value !== null
+  && fact.origin === 'user_measurement'
+  && fact.confirmation === 'confirmed'
+  && fact.evidence.length > 0;

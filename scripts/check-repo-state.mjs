@@ -261,6 +261,54 @@ if (forbiddenFrontendEntityTableAccess) {
   );
 }
 
+const forbiddenConfiguratorSavedConfigurationAccess = commandAllowFailure("rg", [
+  "-n",
+  String.raw`\bsaved_configuration\b`,
+  "backend/functions/api/services/configurator",
+  "--glob",
+  "*.ts",
+]);
+if (forbiddenConfiguratorSavedConfigurationAccess) {
+  fail(
+    "C3 Configurateurs must not access saved_configuration:\n"
+      + forbiddenConfiguratorSavedConfigurationAccess,
+  );
+}
+
+const forbiddenConfiguratorRootClientAccess = commandAllowFailure("rg", [
+  "-n",
+  String.raw`getSupabaseAdmin|getDbClient|from\s+['"]postgres['"]|\.begin\s*\(`,
+  "backend/functions/api/services/configurator",
+  "--glob",
+  "*.ts",
+  "--glob",
+  "!configuratorReadExecutor.ts",
+  "--glob",
+  "!*_test.ts",
+]);
+if (forbiddenConfiguratorRootClientAccess) {
+  fail(
+    "C3 services must receive only the typed read transaction, not a root database client:\n"
+      + forbiddenConfiguratorRootClientAccess,
+  );
+}
+
+const configuratorReadExecutorSource = readText(
+  "backend/functions/api/services/configurator/configuratorReadExecutor.ts",
+);
+for (const requiredFragment of [
+  "set transaction read only",
+  "set local role authenticated",
+  "request.jwt.claims",
+  "set local statement_timeout = '5s'",
+  "set local lock_timeout = '1s'",
+  "set local search_path = pg_catalog, configurator, private, auth, public",
+]) {
+  if (!configuratorReadExecutorSource.includes(requiredFragment)) {
+    fail(`Configurator read executor is missing ${JSON.stringify(requiredFragment)}.`);
+  }
+}
+
 const qaGatePs1 = readText("scripts/qa-gate.ps1");
 const qaGateSh = readText("scripts/qa-gate.sh");
 for (const [filename, source] of [

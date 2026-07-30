@@ -228,7 +228,7 @@ Checkpoint C2b-A vert.
 
 ### Checklist
 
-- [ ] Étendre les schémas Zod d’entrée avec :
+- [x] Étendre les schémas Zod d’entrée avec :
   - A/B/C/H/K ;
   - D/E/F ;
   - M/N/P/S ou `S_thread`/T/Z ;
@@ -238,13 +238,13 @@ Checkpoint C2b-A vert.
   - réseau, tension, couplage et mode réseau/variateur ;
   - exigences applicatives facultatives ;
   - origine, confirmation et preuve de chaque mesure.
-- [ ] Créer les schémas de sortie des quatre statuts.
-- [ ] Exposer `adaptations_required`, `checks_required`, valeurs attendues,
+- [x] Créer les schémas de sortie des quatre statuts.
+- [x] Exposer `adaptations_required`, `checks_required`, valeurs attendues,
   observées, delta, jeu calculé et preuves.
-- [ ] Définir `ruleset_id` et une version immuable.
-- [ ] Conserver la surcharge terrain uniquement si explicite et confirmée.
-- [ ] Ajouter les fixtures Zod de refus des champs inconnus.
-- [ ] Porter la décision D/tolérance de la phase C3-4 dans le contrat : la
+- [x] Définir `ruleset_id` et une version immuable.
+- [x] Conserver la surcharge terrain uniquement si explicite et confirmée.
+- [x] Ajouter les fixtures Zod de refus des champs inconnus.
+- [x] Porter la décision D/tolérance de la phase C3-4 dans le contrat : la
   tolérance est un fait distinct du diamètre, jamais fusionné avec lui.
 
 ### Checkpoint C3-1
@@ -254,20 +254,30 @@ Checkpoint C2b-A vert.
 - `K`, diamètre du boulon et course du bâti restent trois faits distincts.
 - Aucun champ prix, stock, remise ou disponibilité.
 
+**Checkpoint validé le 30/07/2026 — VERT.** Preuves :
+`common.schema.ts`, `motor.schema.ts`,
+`configurator-c3-contracts.test.ts` et les deux suites Configurateurs adaptées ;
+3 fichiers / 24 tests ciblés réussis, typecheck et lint ciblé verts. Les
+frontières d'entrée et de sortie appellent `safeParse`, le ruleset
+`motor.compatibility.cir` version `1` est littéral et gelé, et aucune donnée
+commerciale n'est acceptée.
+
+Décision de sortie : **GO C3-2**.
+
 ## 6. Phase C3-2 — Exécuteur PostgreSQL read-only et erreurs
 
 ### Checklist
 
-- [ ] Créer l’exécuteur configurateur transactionnel :
+- [x] Créer l’exécuteur configurateur transactionnel :
   1. `SET TRANSACTION READ ONLY` ;
   2. claims issus de l’`AuthContext` ;
   3. `SET LOCAL ROLE authenticated` ;
   4. `statement_timeout` et `lock_timeout` bornés ;
   5. `search_path` explicite ;
   6. transaction typée seule transmise aux services.
-- [ ] Interdire le client racine dans les services configurateur.
-- [ ] Ajouter une garde statique interdisant `saved_configuration`.
-- [ ] Ajouter les codes CIR :
+- [x] Interdire le client racine dans les services configurateur.
+- [x] Ajouter une garde statique interdisant `saved_configuration`.
+- [x] Ajouter les codes CIR :
   - snapshot absent ou indisponible ;
   - point de fonctionnement absent ;
   - jeu mécanique non calculable ;
@@ -275,8 +285,8 @@ Checkpoint C2b-A vert.
   - lecture PostgreSQL échouée ;
   - timeout ;
   - sortie backend invalide.
-- [ ] Conserver SQL, stack, diagnostics et valeurs brutes côté privé.
-- [ ] Messages publics français, courts, avec `request_id`.
+- [x] Conserver SQL, stack, diagnostics et valeurs brutes côté privé.
+- [x] Messages publics français, courts, avec `request_id`.
 
 ### Checkpoint C3-2
 
@@ -284,6 +294,33 @@ Checkpoint C2b-A vert.
 - Toute tentative d’écriture échoue.
 - Le scan statique trouve zéro accès C3 à `saved_configuration`.
 - Toutes les erreurs publiques passent le catalogue CIR.
+
+**Checkpoint validé le 30/07/2026 — VERT.** Preuves locales :
+`configuratorReadExecutor.ts`, `configuratorErrors.ts`, 5 tests unitaires
+réussis, 1 test d'intégration PostgreSQL distant réussi et garde centrale
+`check-repo-state.mjs`. La transaction relève `current_user=authenticated`,
+les claims issus de l'`AuthContext`, `statement_timeout=5s`,
+`lock_timeout=1s` et le `search_path` explicite. L'écriture de preuve échoue
+avec SQLSTATE `25006` et laisse zéro ligne.
+
+Preuves MCP Supabase, toutes terminées par `ROLLBACK` :
+
+- identité recevable : rôle `authenticated`, claim `sub` exact, lecture RLS
+  autorisée ;
+- identité UUID sans profil : 0 snapshot et 0 modèle visibles ;
+- tentative d'insertion sous profil super_admin réel : refus
+  `read_only_sql_transaction`, 0 ligne dans la transaction et 0 après rollback ;
+- aucun compte Auth, aucune migration, aucun déploiement et aucune mutation
+  persistante créés.
+
+QA de checkpoint : `qa:back` et `qa:fast` sont verts (160 fichiers /
+746 tests frontend, 454 tests backend). `pnpm run qa` valide les étapes 0 à 8,
+puis l'étape 9 conserve 6 échecs historiques dus à l'absence de la fixture
+Auth `AUDIT_20260604_api_int_user@cir.invalid` (`auth.users` = 0). La fixture
+n'a pas été recréée : cette mutation Auth est hors périmètre. Le test
+PostgreSQL C3-2 ciblé reste vert.
+
+Décision de sortie : **GO C3-3**. C3-3 n'est pas commencé dans ce checkpoint.
 
 ## 7. Phase C3-3 — Catalogue et normalisation
 

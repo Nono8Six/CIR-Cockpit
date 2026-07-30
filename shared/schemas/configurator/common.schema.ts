@@ -112,6 +112,16 @@ export const createConstraintValueSchema = <TValueSchema extends z.ZodType>(
   origin: constraintOriginSchema,
   confirmation: constraintConfirmationSchema,
   evidence: configuratorEvidenceListSchema
+}).superRefine((fact, ctx) => {
+  const value = Reflect.get(fact, 'value');
+  const evidence = Reflect.get(fact, 'evidence');
+  if (value !== null && Array.isArray(evidence) && evidence.length === 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Au moins une preuve est requise pour une valeur renseignee',
+      path: ['evidence']
+    });
+  }
 });
 
 export const technicalIdSchema = z

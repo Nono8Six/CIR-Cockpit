@@ -12,17 +12,17 @@ de chaque tranche.
 | C0 — Cadrage | ✅ terminée | GO C1 | `docs/CONFIGURATEURS/00-cadrage-c0.md` |
 | C1 — Schéma PostgreSQL | ✅ terminée | GO C2 | `docs/CONFIGURATEURS/01-schema-c1.md` |
 | C2 — Migration des données | ✅ terminée | **GO C3** | section C2 ci-dessous |
-| C3 à C14 | ⬜ non commencées | non autorisées | plan directeur |
+| C3 — Compatibilité technique backend | 🟠 en cours | **GO C3-3** | checkpoints C3-1/C3-2 ci-dessous |
+| C4 à C14 | ⬜ non commencées | non autorisées | plan directeur |
 
-**Verdict au 30/07/2026 :** le socle de données autorise l'ouverture de C3,
-mais la fonctionnalité Configurateurs n'est pas encore disponible dans
-l'application. Aucun routeur, service backend, service frontend ou écran C3
-n'est implémenté. La probe distante
+**Verdict au 30/07/2026 :** C3 est officiellement ouverte après validation
+locale de C3-1. La fonctionnalité Configurateurs n'est pas encore disponible
+dans l'application : aucun routeur, service frontend ou écran C3 n'est
+implémenté. La probe distante
 `configurator.motor.catalog.list` répond `404 NOT_FOUND`.
 
-**Prochaine action :** ouvrir C3, services backend Deno/tRPC, sur autorisation
-explicite, en suivant
-`docs/CONFIGURATEURS/plan-c3-compatibilite-technique.md`. Le catalogue technique
+**Prochaine action :** démarrer C3-3 seulement sur une nouvelle exécution
+autorisée. Le présent checkpoint s'arrête après C3-2. Le catalogue technique
 moteur est chargé et actif : snapshot
 `6fbf4046-be74-4422-9fe8-2d2d8a8d9157`, lot `cc5689ac…`, 1 665 modèles
 physiques, 2 355 points de fonctionnement et 45 568 cotes.
@@ -62,15 +62,17 @@ Audit consolidé : `docs/CONFIGURATEURS/audit-etat-2026-07-30.md`.
   réels C3.
 - [x] Edge Function `api` active, version 198, `verify_jwt=false` conformément
   à l'authentification applicative.
-- [x] Absence C3 prouvée localement et au runtime : aucun symbole
-  `configurator` dans `backend/functions/api` ou `frontend/src`, et
-  `configurator.motor.catalog.list` répond `404 NOT_FOUND`.
+- [x] Absence C3 initiale prouvée avant C3-1 : aucun symbole `configurator`
+  dans `backend/functions/api` ou `frontend/src`, et
+  `configurator.motor.catalog.list` répondait `404 NOT_FOUND`. Après C3-2,
+  seule la fondation backend locale existe ; la route runtime reste absente.
 - [ ] Gate finale `pnpm run qa` entièrement verte : étapes 0 à 8 validées,
   mais étape 9 bloquée par la fixture d'intégration distante supprimée. Les
-  159 fichiers / 735 tests frontend, les seuils de couverture, le build et les
-  449 tests backend passent. Six tests d'intégration échouent en cascade parce
+  160 fichiers / 746 tests frontend, les seuils de couverture, le build et les
+  454 tests backend passent. Six tests d'intégration échouent en cascade parce
   que `AUDIT_20260604_api_int_user@cir.invalid` n'existe plus dans
-  `auth.users` ; les logs Auth confirment `invalid_credentials`.
+  `auth.users`. La vérification MCP du 30/07/2026 confirme `0` identité
+  correspondante. Aucune mutation Auth n'a été faite.
 
 Décision : **GO pour démarrer C3 ; NO-GO pour présenter Configurateurs comme
 une fonctionnalité livrée ou utilisable.**
@@ -464,6 +466,76 @@ Checkpoint du 28/07/2026 : **terminé et activé**. La preuve détaillée est da
   `qa:back` verts ; 449 tests backend réussis, 14 intégrations conditionnelles
   ignorées, zéro échec. Aucun advisor sécurité spécifique à `configurator`.
 
+## C3 — Compatibilité technique backend
+
+Statut : **en cours depuis le 30/07/2026**. C4 reste absorbée par C3. C3-3,
+C3-4, le frontend et toute IA Configurateurs restent non commencés.
+
+### Checkpoint C3-1 — contrats et règles versionnées
+
+- [x] Contrats externes construits avec `z.strictObject` et frontières
+  `safeParse`.
+- [x] A/B/C/H/K, D/E/F, M/N/P/S ou `S_thread`/T/Z, alimentation et exigences
+  applicatives facultatives couverts.
+- [x] K, diamètre réel du boulon, courses transversale et longitudinale sont
+  quatre faits distincts.
+- [x] D et sa tolérance d'ajustement sont deux faits distincts.
+- [x] Plage axiale de l'accouplement bornée par deux faits sourcés.
+- [x] Toute valeur renseignée exige au moins une preuve ; une inconnue reste
+  `null`.
+- [x] Une surcharge terrain n'est applicable que si elle est explicite,
+  confirmée et prouvée.
+- [x] Quatre statuts, adaptations, contrôles, valeurs attendues/observées,
+  delta, jeu calculé, faits, preuves et règles exposés.
+- [x] Ruleset immuable `motor.compatibility.cir`, version `1`.
+- [x] Champs externes `price`, `discount`, `stock` et `availability` refusés.
+- [x] Tests ciblés : 3 fichiers, **24 tests réussis**, typecheck et lint ciblé
+  verts.
+
+Fichiers :
+`shared/schemas/configurator/common.schema.ts`,
+`shared/schemas/configurator/motor.schema.ts`,
+`shared/schemas/__tests__/configurator-c3-contracts.test.ts` et tests
+Configurateurs existants adaptés.
+
+Décision de sortie : **GO C3-2**.
+
+### Checkpoint C3-2 — exécuteur PostgreSQL read-only et erreurs CIR
+
+- [x] Transaction `SET TRANSACTION READ ONLY` avant toute autre instruction.
+- [x] Rôle local `authenticated` et claims dérivés de l'`AuthContext`.
+- [x] `statement_timeout=5s`, `lock_timeout=1s` et `search_path` explicite.
+- [x] Seule la transaction typée est transmise à l'opération Configurateurs.
+- [x] Client racine confiné à l'exécuteur ; zéro accès client racine dans les
+  services C3.
+- [x] Garde `repo:check` : zéro accès C3 à `saved_configuration`.
+- [x] Zéro mutation métier C3.
+- [x] Sept erreurs C3 ajoutées au catalogue CIR avec messages publics français.
+- [x] SQL, stacks, claims, diagnostics et valeurs brutes absents des réponses
+  publiques ; `request_id` conservé.
+- [x] Tests unitaires : **5 réussis**, 0 échec.
+- [x] Test d'intégration PostgreSQL distant : **1 réussi**, rôle, claims,
+  timeouts, RLS positive/négative, écriture refusée SQLSTATE `25006` et zéro
+  persistance.
+- [x] Preuves MCP Supabase sous transactions rollbackées : lecture recevable,
+  lecture sans droit à 0 ligne, écriture refusée, 0 ligne après rollback.
+- [x] Aucun changement distant persistant, aucune identité Auth, migration ou
+  Edge Function créée ou modifiée.
+- [x] `qa:back` et `qa:fast` verts : 160 fichiers / 746 tests frontend et
+  454 tests backend réussis.
+- [ ] `pnpm run qa` entièrement vert : étapes 0 à 8 réussies, puis 6 échecs
+  historiques à l'étape 9 sur l'unique cause externe de fixture Auth absente
+  (3 réussis, 6 échoués, 7 ignorés). Le test PostgreSQL C3-2 ciblé reste vert.
+
+Fichiers :
+`backend/functions/api/services/configurator/configuratorReadExecutor.ts`,
+`configuratorErrors.ts`, leurs tests, l'intégration
+`backend/functions/api/integration/configuratorReadExecutor_integration_test.ts`,
+`shared/errors/types.ts`, `shared/errors/catalog.ts` et la garde centrale
+`scripts/check-repo-state.mjs`.
+
+Décision de sortie : **GO C3-3**. C3-3 reste non commencé.
+
 ### Rapatriement de `tools/extract`
 
 Depuis le 27/07/2026, les extracteurs et leurs sorties sont versionnés dans ce
@@ -552,3 +624,6 @@ Le plan de reprise détaillé, découpé par checkpoints, est
 | 28/07/2026 | C2c | Checkpoint pré-activation poussé sur `main`, puis candidat activé via MCP. Un seul actif, 41 759 dimensions, 1 012 modèles Innomotics avec K et H, 169 provenances intactes, RLS prouvée sous quatre rôles avec rollback. | commit `743e29b`, diff `6c05338f…`, snapshot `4ee230e7-…` — **GO C3-4 données** |
 | 28/07/2026 | C2d | Qualifications factuelles activées : VFD obligatoire, IEC/non-IEC, statut de référence article, IP/matériau, rapprochement sûr de 56 doublons VFD et conservation de la cote composite PLSES. Les 79 inconnues restantes sont explicites, jamais inventées. | migration `20260728120556`, snapshot `6fbf4046-…`, `docs/CONFIGURATEURS/c2d/README.md` |
 | 30/07/2026 | Audit | État local et distant réconcilié : C0–C2d terminés, C3 non commencé, snapshot C2d actif et sécurisé, route catalogue absente au runtime. Gate finale verte jusqu'à l'étape 8/9 ; intégrations bloquées par la suppression du compte fixture distant. | `audit-etat-2026-07-30.md`, MCP Supabase, `404 NOT_FOUND`, Auth `invalid_credentials` |
+| 30/07/2026 | C3-1 | Contrats stricts C3, provenance obligatoire des valeurs, faits mécaniques distincts, sorties explicables et ruleset immuable version 1. | 3 fichiers / 24 tests ciblés, typecheck et lint ciblé verts — **GO C3-2** |
+| 30/07/2026 | C3-2 | Exécuteur PostgreSQL read-only sous rôle/claims réels, timeouts, RLS, catalogue d'erreurs CIR et gardes de frontière. | 5 tests unitaires + 1 intégration distante, preuves MCP rollbackées, 0 persistance — **GO C3-3** |
+| 30/07/2026 | QA C3-1/C3-2 | `qa:back` et `qa:fast` verts. `pnpm run qa` valide les étapes 0 à 8 puis retrouve les 6 échecs d'intégration historiques dus à la fixture Auth absente (`auth.users` = 0). | C3-1/C3-2 verts ; gate globale finale incomplète, donc commit local sans push |

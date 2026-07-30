@@ -296,3 +296,36 @@ comme entièrement verte.
 - E2E navigateur non lancé : aucun parcours Configurateurs n'existe encore et
   la demande ne portait pas sur un parcours UI automatisé.
 - Aucun déploiement, migration ou changement Auth Supabase pendant l'audit.
+
+## 10. Complément daté du 30/07/2026 — ouverture C3
+
+Après l'audit historique ci-dessus, C3-1 et C3-2 ont été implémentés et
+validés localement, sans démarrer C3-3 :
+
+- C3-1 : contrats stricts, faits mécaniques distincts, provenance obligatoire
+  des valeurs, règles versionnées et sorties explicables ; 3 fichiers /
+  24 tests ciblés réussis ;
+- C3-2 : exécuteur PostgreSQL explicitement read-only, rôle
+  `authenticated`, claims `AuthContext`, timeouts, `search_path`, erreurs CIR
+  et gardes de frontière ; 5 tests unitaires et 1 intégration distante réussis ;
+- preuves Supabase rollbackées : RLS positive et négative, écriture refusée,
+  0 ligne persistante ;
+- aucune migration, mutation Auth, activation ou nouvelle version de l'Edge
+  Function `api`.
+
+Décisions : **GO C3-2** après C3-1, puis **GO C3-3** après C3-2. La route
+runtime `configurator.motor.catalog.list` reste absente, car C3-3 et tout
+déploiement sont hors de ce checkpoint.
+
+QA rejouée après C3-2 :
+
+- `qa:back` vert : parité distante, lint, typecheck et 454 tests backend ;
+- `qa:fast` vert : 160 fichiers / 746 tests frontend et 454 tests backend ;
+- `pnpm run qa` vert jusqu'à l'étape 8 incluse, avec coverage et build, puis
+  3 intégrations réussies, 6 échouées et 7 ignorées à l'étape 9 ;
+- les 6 échecs ont tous la même cause historique, le `signIn` HTTP 400 de
+  `AUDIT_20260604_api_int_user@cir.invalid` ; la lecture MCP de `auth.users`
+  confirme 0 identité correspondante ;
+- aucune mutation Auth n'a été autorisée ou effectuée pour contourner ce
+  blocage. Le push reste donc interdit par la condition de gate finale, tandis
+  que le commit local C3-1/C3-2 est autorisé.

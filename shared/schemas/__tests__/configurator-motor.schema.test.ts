@@ -5,7 +5,8 @@ import {
   motorEquivalentFromSpecInputSchema,
   motorFlangeDimensionsSchema,
   motorFrameDimensionsSchema,
-  motorMountingSchema
+  motorMountingSchema,
+  motorShaftDimensionsSchema
 } from '../configurator/motor.schema.ts';
 
 const snapshotId = '11111111-1111-4111-8111-111111111111';
@@ -39,12 +40,34 @@ const validInput = {
   mounting: 'B35' as const,
   electrical: {
     power_kw: confirmedNameplate(37, 'kW'),
+    network: {
+      value: 'Reseau usine 400 V / 50 Hz',
+      origin: 'nameplate' as const,
+      confirmation: 'confirmed' as const,
+      evidence: [{
+        kind: 'measurement' as const,
+        label: 'Reseau releve sur site'
+      }]
+    },
     frequency_hz: confirmedNameplate(50, 'Hz'),
     supply_mode: {
       value: 'mains' as const,
       origin: 'nameplate' as const,
       confirmation: 'confirmed' as const,
-      evidence: []
+      evidence: [{
+        kind: 'measurement' as const,
+        label: 'Mode releve sur la plaque'
+      }]
+    },
+    voltage_v: confirmedNameplate(400, 'V'),
+    coupling: {
+      value: 'Y' as const,
+      origin: 'nameplate' as const,
+      confirmation: 'confirmed' as const,
+      evidence: [{
+        kind: 'measurement' as const,
+        label: 'Couplage releve sur la plaque'
+      }]
     },
     rated_current_a: confirmedNameplate(67, 'A'),
     rated_torque_nm: confirmedNameplate(240, 'N.m')
@@ -56,11 +79,33 @@ const validInput = {
         B: confirmedMeasurement(286),
         C: confirmedMeasurement(149),
         H: confirmedMeasurement(225),
-        K: confirmedMeasurement(24),
+        K: confirmedMeasurement(24)
+      },
+      adjustment: {
+        bolt_diameter: confirmedMeasurement(20),
+        transverse_travel: confirmedMeasurement(12),
+        longitudinal_travel: confirmedMeasurement(18)
+      }
+    },
+    shaft: {
+      dimensions: {
         D: confirmedMeasurement(60),
+        D_fit_tolerance: {
+          value: 'j6',
+          origin: 'nameplate' as const,
+          confirmation: 'confirmed' as const,
+          evidence: [{
+            kind: 'measurement' as const,
+            label: 'Tolerance relevee sur le plan'
+          }]
+        },
         E: confirmedMeasurement(140),
         F: confirmedMeasurement(18)
       }
+    },
+    coupling: {
+      axial_min: confirmedMeasurement(120),
+      axial_max: confirmedMeasurement(160)
     },
     flange: {
       dimensions: {
@@ -103,9 +148,9 @@ describe('motorEquivalentFromSpecInputSchema', () => {
       },
       mechanical: {
         ...validInput.mechanical,
-        frame: {
+        shaft: {
           dimensions: {
-            ...validInput.mechanical.frame.dimensions,
+            ...validInput.mechanical.shaft.dimensions,
             D: confirmedMeasurement(2.36, 'in')
           }
         }
@@ -116,7 +161,7 @@ describe('motorEquivalentFromSpecInputSchema', () => {
     if (result.success) return;
     expect(result.error.issues.map((issue) => issue.path.join('.'))).toEqual(expect.arrayContaining([
       'electrical.power_kw.unit',
-      'mechanical.frame.dimensions.D.unit'
+      'mechanical.shaft.dimensions.D.unit'
     ]));
   });
 
@@ -124,6 +169,7 @@ describe('motorEquivalentFromSpecInputSchema', () => {
     const result = motorEquivalentFromSpecInputSchema.safeParse({
       ...validInput,
       electrical: {
+        network: validInput.electrical.network,
         power_kw: { ...validInput.electrical.power_kw, value: null },
         frequency_hz: { ...validInput.electrical.frequency_hz, value: null },
         supply_mode: { ...validInput.electrical.supply_mode, value: null }
@@ -156,7 +202,7 @@ describe('dimensions mecaniques moteur', () => {
   });
 
   it('conserve une suggestion statistique comme origine distincte', () => {
-    const result = motorFrameDimensionsSchema.safeParse({
+    const result = motorShaftDimensionsSchema.safeParse({
       D: {
         value: 28,
         unit: 'mm',
@@ -217,7 +263,12 @@ describe('motorCandidateVerdictSchema', () => {
         reference: 'FF400',
         requires_option: true
       },
-      status: 'under_reservation',
+      ruleset_id: 'motor.compatibility.cir',
+      ruleset_version: 1,
+      mechanical_status: 'under_reservation',
+      electrical_status: 'satisfied',
+      application_status: 'indeterminate',
+      overall_status: 'indeterminate',
       explanation: 'Compatibilite sous reserve de confirmer la cote D.',
       criteria: [{
         code: 'SHAFT_D',
@@ -242,8 +293,35 @@ describe('motorCandidateVerdictSchema', () => {
         }],
         affected_by_issue_codes: []
       }],
+      adaptations_required: [],
+      checks_required: [],
+      facts_used: [{
+        fact_path: 'mechanical.shaft.D',
+        value: 28,
+        unit: 'mm',
+        origin: 'catalog',
+        confirmation: 'confirmed',
+        evidence: [{
+          kind: 'source_page',
+          label: 'Catalogue Leroy-Somer page 42',
+          source_document_id: documentId,
+          filename: 'LSHRM_Leroy-Somer.pdf',
+          sha256: 'a'.repeat(64),
+          pdf_page: 42,
+          catalog_page: '42',
+          extraction_method: 'pdfplumber-table'
+        }]
+      }],
+      rules_applied: [{
+        rule_code: 'SHAFT_D',
+        ruleset_id: 'motor.compatibility.cir',
+        ruleset_version: 1,
+        status: 'under_reservation',
+        decisive: true,
+        fact_paths: ['mechanical.shaft.D']
+      }],
       issues: [],
-      missing_measurements: ['D']
+      missing_facts: ['mechanical.shaft.D']
     });
 
     expect(result.success).toBe(true);

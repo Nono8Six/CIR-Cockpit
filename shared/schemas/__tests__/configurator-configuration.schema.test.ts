@@ -13,7 +13,10 @@ const confirmedValue = <T>(value: T, unit?: string) => ({
   unit,
   origin: 'nameplate' as const,
   confirmation: 'confirmed' as const,
-  evidence: []
+  evidence: [{
+    kind: 'measurement' as const,
+    label: 'Valeur confirmee sur la plaque'
+  }]
 });
 
 const validMotorConfiguration = {
@@ -31,11 +34,15 @@ const validMotorConfiguration = {
         mounting: 'B35' as const,
         electrical: {
           power_kw: confirmedValue(37, 'kW'),
+          network: confirmedValue('Reseau usine 400 V / 50 Hz'),
           frequency_hz: confirmedValue(50, 'Hz'),
           supply_mode: confirmedValue('mains' as const)
         },
         mechanical: {
           frame: {
+            dimensions: {}
+          },
+          shaft: {
             dimensions: {}
           }
         }
@@ -59,7 +66,12 @@ const validMotorConfiguration = {
           data_grade: 'B'
         },
         matched_flange: null,
-        status: 'satisfied',
+        ruleset_id: 'motor.compatibility.cir',
+        ruleset_version: 1,
+        mechanical_status: 'satisfied',
+        electrical_status: 'satisfied',
+        application_status: 'satisfied',
+        overall_status: 'satisfied',
         explanation: 'Tous les criteres documentaires sont satisfaits.',
         criteria: [{
           code: 'POWER',
@@ -70,11 +82,35 @@ const validMotorConfiguration = {
           observed: 37,
           unit: 'kW',
           explanation: 'La puissance correspond.',
-          evidence: [],
+          evidence: [{
+            kind: 'measurement' as const,
+            label: 'Valeur confirmee sur la plaque'
+          }],
           affected_by_issue_codes: []
         }],
+        adaptations_required: [],
+        checks_required: [],
+        facts_used: [{
+          fact_path: 'electrical.power_kw',
+          value: 37,
+          unit: 'kW',
+          origin: 'nameplate',
+          confirmation: 'confirmed',
+          evidence: [{
+            kind: 'measurement' as const,
+            label: 'Valeur confirmee sur la plaque'
+          }]
+        }],
+        rules_applied: [{
+          rule_code: 'POWER',
+          ruleset_id: 'motor.compatibility.cir',
+          ruleset_version: 1,
+          status: 'satisfied',
+          decisive: true,
+          fact_paths: ['electrical.power_kw']
+        }],
         issues: [],
-        missing_measurements: []
+        missing_facts: []
       },
       computed_at: '2026-07-26T10:00:00.000Z'
     }
