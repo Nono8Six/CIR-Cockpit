@@ -10,8 +10,14 @@ import {
   motorCatalogService
 } from '../services/configurator/motorCatalog.ts';
 import {
+  evaluateMotorMechanicalCompatibility
+} from '../services/configurator/motorMechanicalCompatibility.ts';
+import {
   resetConfiguratorReadExecutorForTests
 } from '../services/configurator/configuratorReadExecutor.ts';
+import {
+  safeParseMotorMechanicalCompatibilityOutput
+} from '../../../../shared/schemas/configurator/motor.schema.ts';
 
 const databaseUrl = Deno.env.get('DATABASE_URL')?.trim() ?? '';
 const enabled = Deno.env.get('RUN_CONFIGURATOR_DB_PROOFS') === '1';
@@ -152,6 +158,82 @@ Deno.test({
       assert(
         detail.normalization.status === 'satisfied'
         || detail.normalization.status === 'indeterminate'
+      );
+
+      const mechanicalPointCandidates = await adminSql<{ id: string }[]>`
+        select point.id::text
+        from configurator.motor_operating_point point
+        where point.snapshot_id = ${activeSnapshot.id}::uuid
+          and exists (
+            select 1
+            from configurator.motor_flange_option flange
+            where flange.snapshot_id = point.snapshot_id
+              and flange.model_id = point.model_id
+              and flange.mounting = 'B5'
+              and flange.role = 'standard'
+              and flange.bore_type = 'through'
+              and flange.dim_m_mm is not null
+              and flange.dim_n_mm is not null
+              and flange.dim_p_mm is not null
+              and flange.dim_s_mm is not null
+              and flange.dim_t_mm is not null
+              and flange.holes is not null
+          )
+        order by point.id
+        limit 25
+      `;
+      let mechanicalDetail: Awaited<ReturnType<typeof motorCatalogService.get>> | null = null;
+      for (const point of mechanicalPointCandidates) {
+        const candidateDetail = await motorCatalogService.get(
+          authContext,
+          { operating_point_id: point.id, mounting: 'B5' },
+          crypto.randomUUID()
+        );
+        if (candidateDetail.normalization.status === 'satisfied') {
+          mechanicalDetail = candidateDetail;
+          break;
+        }
+      }
+      assert(
+        mechanicalDetail,
+        'Un point B5 actif et mecaniquement complet est requis pour la preuve C3-4'
+      );
+      const selectedFlange = mechanicalDetail.flange_options.find((flange) =>
+        flange.mounting === 'B5' && flange.role === 'standard'
+      );
+      assert(selectedFlange, 'La bride B5 standard normalisee est requise');
+      const mechanicalProof = evaluateMotorMechanicalCompatibility({
+        existing: {
+          mounting: 'B5',
+          mechanical: mechanicalDetail.from_motor_spec.mechanical
+        },
+        candidate: {
+          mounting: 'B5',
+          mechanical: mechanicalDetail.from_motor_spec.mechanical
+        },
+        candidateFlange: {
+          flange_option_id: selectedFlange.id,
+          mounting: 'B5',
+          role: selectedFlange.role,
+          reference: selectedFlange.flange_ref,
+          requires_option: selectedFlange.requires_option
+        }
+      });
+      assertEquals(mechanicalProof.status, 'satisfied');
+      assertEquals(
+        mechanicalProof.matched_flange?.flange_option_id,
+        selectedFlange.id
+      );
+      assert(mechanicalProof.facts_used.length > 0);
+      assert(mechanicalProof.facts_used.every((fact) => fact.evidence.length > 0));
+      const parsedMechanicalProof = safeParseMotorMechanicalCompatibilityOutput(
+        mechanicalProof
+      );
+      assert(
+        parsedMechanicalProof.success,
+        parsedMechanicalProof.success
+          ? undefined
+          : JSON.stringify(parsedMechanicalProof.error.issues)
       );
 
       const [retiredPoint] = await adminSql<{ id: string }[]>`

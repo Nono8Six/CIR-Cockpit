@@ -24,27 +24,30 @@ const REQUIRED_FACTS: Readonly<Record<MotorMounting, readonly MotorFactPath[]>> 
   ],
   B5: [
     'mechanical.flange.M', 'mechanical.flange.N', 'mechanical.flange.P',
-    'mechanical.flange.S', 'mechanical.flange.T', 'mechanical.flange.Z',
+    'mechanical.flange.bore_type', 'mechanical.flange.S',
+    'mechanical.flange.T', 'mechanical.flange.Z',
     'mechanical.shaft.D', 'mechanical.shaft.E', 'mechanical.shaft.F'
   ],
   B14: [
     'mechanical.flange.M', 'mechanical.flange.N', 'mechanical.flange.P',
-    'mechanical.flange.S_thread', 'mechanical.flange.T', 'mechanical.flange.Z',
+    'mechanical.flange.bore_type', 'mechanical.flange.S_thread',
+    'mechanical.flange.T', 'mechanical.flange.Z',
     'mechanical.shaft.D', 'mechanical.shaft.E', 'mechanical.shaft.F'
   ],
   B34: [
     'mechanical.frame.A', 'mechanical.frame.B', 'mechanical.frame.C',
     'mechanical.frame.H', 'mechanical.flange.M', 'mechanical.flange.N',
-    'mechanical.flange.P', 'mechanical.flange.S_thread',
+    'mechanical.flange.P', 'mechanical.flange.bore_type',
+    'mechanical.flange.S_thread',
     'mechanical.flange.T', 'mechanical.flange.Z', 'mechanical.shaft.D',
     'mechanical.shaft.E', 'mechanical.shaft.F'
   ],
   B35: [
     'mechanical.frame.A', 'mechanical.frame.B', 'mechanical.frame.C',
     'mechanical.frame.H', 'mechanical.flange.M', 'mechanical.flange.N',
-    'mechanical.flange.P', 'mechanical.flange.S', 'mechanical.flange.T',
-    'mechanical.flange.Z', 'mechanical.shaft.D', 'mechanical.shaft.E',
-    'mechanical.shaft.F'
+    'mechanical.flange.P', 'mechanical.flange.bore_type',
+    'mechanical.flange.S', 'mechanical.flange.T', 'mechanical.flange.Z',
+    'mechanical.shaft.D', 'mechanical.shaft.E', 'mechanical.shaft.F'
   ]
 };
 
@@ -296,6 +299,10 @@ export const normalizeMotorCatalog = (
         : {
           flange: {
             ...(selectedFlange?.flange_ref ? { reference: selectedFlange.flange_ref } : {}),
+            bore_type: catalogFact(
+              selectedFlange?.bore_type ?? null,
+              flangeEvidence
+            ),
             dimensions: flangeDimensions
           }
         })
@@ -372,6 +379,15 @@ const factObjectPath = (factPath: MotorFactPath): string[] => {
   const parts = factPath.split('.');
   if (parts[0] !== 'mechanical' || parts.length < 3) return parts;
   const section = parts[1];
+  if (section === 'flange' && parts[2] === 'bore_type') {
+    return ['mechanical', 'flange', 'bore_type'];
+  }
+  if (section === 'flange' && parts[2] === 'P_clearance') {
+    return ['mechanical', 'flange', 'clearance', 'P'];
+  }
+  if (section === 'flange' && parts[2] === 'T_clearance') {
+    return ['mechanical', 'flange', 'clearance', 'T'];
+  }
   if (section === 'frame' || section === 'shaft' || section === 'flange') {
     return [parts[0], section, 'dimensions', ...parts.slice(2)];
   }

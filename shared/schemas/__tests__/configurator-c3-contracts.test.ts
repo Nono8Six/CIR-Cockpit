@@ -198,6 +198,34 @@ describe('contrats Configurateurs C3-1', () => {
     expect(result.data.mechanical.shaft.dimensions.D_fit_tolerance?.value).toBe('j6');
   });
 
+  it('conserve la nature d alesage et les degagements P/T comme faits distincts', () => {
+    const result = safeParseMotorEquivalentFromSpecInput({
+      ...validInput,
+      mechanical: {
+        ...validInput.mechanical,
+        flange: {
+          ...validInput.mechanical.flange,
+          bore_type: {
+            value: 'through',
+            origin: 'user_measurement',
+            confirmation: 'confirmed',
+            evidence: measurementEvidence
+          },
+          clearance: {
+            P: confirmedMeasurement(4),
+            T: confirmedMeasurement(3)
+          }
+        }
+      }
+    });
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.mechanical.flange?.bore_type?.value).toBe('through');
+    expect(result.data.mechanical.flange?.clearance?.P?.value).toBe(4);
+    expect(result.data.mechanical.flange?.clearance?.T?.value).toBe(3);
+  });
+
   it('refuse les champs externes inconnus et les objets commerciaux', () => {
     for (const field of ['price', 'discount', 'stock', 'availability']) {
       expect(safeParseMotorEquivalentFromSpecInput({

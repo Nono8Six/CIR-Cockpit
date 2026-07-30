@@ -375,37 +375,37 @@ Décision de sortie : **GO C3-4**. C3-4 n'est pas commencé dans ce checkpoint.
 
 ### Fixation par pattes
 
-- [ ] Montage B3/B35/B34 identique.
-- [ ] H strictement identique ; tout écart implique une adaptation.
-- [ ] Calculer `abs(Acandidat - Aexistant) / 2`.
-- [ ] Calculer `abs(Bcandidat - Bexistant) / 2`.
-- [ ] Calculer `(Kcandidat - diametre_boulon) / 2`.
-- [ ] Ajouter une course de bâti uniquement si mesurée et confirmée.
-- [ ] A/B différents sans mesure du bâti : `under_reservation`.
-- [ ] Écart prouvé supérieur au jeu : `not_satisfied`.
-- [ ] C différent : réserve, puis adaptation si course insuffisante.
+- [x] Montage B3/B35/B34 identique.
+- [x] H strictement identique ; tout écart implique une adaptation.
+- [x] Calculer `abs(Acandidat - Aexistant) / 2`.
+- [x] Calculer `abs(Bcandidat - Bexistant) / 2`.
+- [x] Calculer `(Kcandidat - diametre_boulon) / 2`.
+- [x] Ajouter une course de bâti uniquement si mesurée et confirmée.
+- [x] A/B différents sans mesure du bâti : `under_reservation`.
+- [x] Écart prouvé supérieur au jeu : `not_satisfied`.
+- [x] C différent : réserve, puis adaptation si course insuffisante.
 
 ### Arbre
 
-- [ ] D identique pour un remplacement direct.
-- [ ] `DECISION PO 2026-07-27` : diamètre D identique et tolérance d’ajustement
+- [x] D identique pour un remplacement direct.
+- [x] `DECISION PO 2026-07-27` : diamètre D identique et tolérance d’ajustement
   différente restent `satisfied`. L’écart est publié dans `checks_required`
   comme information de montage d’accouplement, jamais dans
   `adaptations_required`, et ne dégrade aucun statut. Tolérance absente : aucune
   alerte, aucune réserve.
-- [ ] F identique, sans compensation générique.
-- [ ] E différent : réserve sur engagement et encombrement.
-- [ ] E ne passe à `satisfied` qu’avec preuve de plage d’accouplement.
+- [x] F identique, sans compensation générique.
+- [x] E différent : réserve sur engagement et encombrement.
+- [x] E ne passe à `satisfied` qu’avec preuve de plage d’accouplement.
 
 ### Bride
 
-- [ ] Même montage B5/B14/B35/B34.
-- [ ] Même nature de perçage.
-- [ ] N, M, Z et S ou `S_thread` strictement identiques.
-- [ ] P/T différents uniquement avec dégagement vérifié.
-- [ ] Option `larger`/`smaller` admise si interface exacte et
+- [x] Même montage B5/B14/B35/B34.
+- [x] Même nature de perçage.
+- [x] N, M, Z et S ou `S_thread` strictement identiques.
+- [x] P/T différents uniquement avec dégagement vérifié.
+- [x] Option `larger`/`smaller` admise si interface exacte et
   `requires_option = true`.
-- [ ] Ne jamais déduire une bride depuis H.
+- [x] Ne jamais déduire une bride depuis H.
 
 ### Checkpoint C3-4
 
@@ -424,6 +424,44 @@ Tests obligatoires :
 - D/F différents et E différent ;
 - toutes les combinaisons B3/B5/B14/B34/B35 ;
 - bride optionnelle exacte.
+
+**Checkpoint validé le 30/07/2026 — VERT.**
+
+Livraison :
+
+- `motorMechanicalCompatibility.ts` sépare fonctions pures de pattes, arbre et
+  bride, puis agrège les quatre statuts sans score ;
+- `motor.schema.ts` expose un résultat mécanique strict et ajoute seulement les
+  faits décisifs manquants : nature d'alésage et dégagements P/T prouvés ;
+- les calculs A/B, K/boulon, P radial et T axial sont publiés avec leurs entrées
+  et leurs preuves ; aucune inconnue n'est convertie en zéro ;
+- les adaptations et contrôles restent distincts ; la tolérance D différente
+  produit seulement `CHECK_SHAFT_D_FIT`, sans dégrader le verdict ;
+- les options `larger`/`smaller` ne sont appariées qu'après interface exacte et
+  avec `requires_option=true`.
+
+Preuves :
+
+- 41 tests unitaires C3-4 et 6 tests de normalisation réussis ;
+- 19 tests Vitest shared réussis ; lint et typecheck ciblés verts ;
+- preuve distante sous la fixture humaine `tcs` : résolution dynamique du
+  snapshot actif et d'un point B5 complet, lecture réelle catalogue/RLS,
+  provenance conservée, verdict identique `satisfied` ; runner complet
+  `RUN_CONFIGURATOR_DB_PROOFS=1`, 11 intégrations réussies, 0 échec,
+  6 ignorées ;
+- MCP Supabase : actif `6fbf4046-…`, gate `passed`, 1 665 modèles, 2 355 points,
+  45 568 cotes, 7 940 brides, 141 alertes ;
+- `qa:back` et `qa:fast` verts ; gate final rejoué sur l'index C3-4 isolé :
+  743 tests frontend et 501 backend ;
+- `pnpm run qa` vert sur cet index isolé : 743 tests frontend avec couverture,
+  build, 501 tests backend et 9 intégrations standards réussies, 0 échec ;
+- aucune migration, mutation distante, route tRPC ou Edge Function.
+
+Limites conservées : une course, un dégagement ou une plage axiale non prouvé
+reste indéterminé ou sous réserve. La compatibilité électrique/applicative,
+l'agrégation finale, les procédures tRPC et le déploiement restent hors C3-4.
+
+Décision de sortie : **GO C3-5**. C3-5 n'est pas commencé dans ce checkpoint.
 
 ## 9. Phase C3-5 — Compatibilité électrique et applicative
 
