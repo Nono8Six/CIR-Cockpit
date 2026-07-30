@@ -313,12 +313,15 @@ Preuves MCP Supabase, toutes terminées par `ROLLBACK` :
 - aucun compte Auth, aucune migration, aucun déploiement et aucune mutation
   persistante créés.
 
-QA de checkpoint : `qa:back` et `qa:fast` sont verts (160 fichiers /
-746 tests frontend, 454 tests backend). `pnpm run qa` valide les étapes 0 à 8,
-puis l'étape 9 conserve 6 échecs historiques dus à l'absence de la fixture
-Auth `AUDIT_20260604_api_int_user@cir.invalid` (`auth.users` = 0). La fixture
-n'a pas été recréée : cette mutation Auth est hors périmètre. Le test
-PostgreSQL C3-2 ciblé reste vert.
+QA de checkpoint : `qa:back` et `qa:fast` sont verts. Après autorisation
+explicite, la fixture Auth `AUDIT_20260604_api_int_user@cir.invalid` a été
+recréée avec un profil humain actif `tcs` rattaché à l'agence de test CIR
+Bordeaux. `pnpm run qa` est entièrement vert sur le commit `9b97e8a` dans un
+worktree isolé : 160 fichiers / 742 tests frontend, 454 tests backend et
+9 intégrations distantes réussis ; 0 échec, 7 ignorées. La preuve MCP finale
+confirme une identité Auth validée, un profil, un rattachement et
+0 entité / interaction de test résiduelle. Le test PostgreSQL C3-2 ciblé reste
+vert.
 
 Décision de sortie : **GO C3-3**. C3-3 n'est pas commencé dans ce checkpoint.
 

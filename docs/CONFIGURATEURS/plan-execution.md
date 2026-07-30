@@ -66,13 +66,15 @@ Audit consolidé : `docs/CONFIGURATEURS/audit-etat-2026-07-30.md`.
   dans `backend/functions/api` ou `frontend/src`, et
   `configurator.motor.catalog.list` répondait `404 NOT_FOUND`. Après C3-2,
   seule la fondation backend locale existe ; la route runtime reste absente.
-- [ ] Gate finale `pnpm run qa` entièrement verte : étapes 0 à 8 validées,
-  mais étape 9 bloquée par la fixture d'intégration distante supprimée. Les
-  160 fichiers / 746 tests frontend, les seuils de couverture, le build et les
-  454 tests backend passent. Six tests d'intégration échouent en cascade parce
-  que `AUDIT_20260604_api_int_user@cir.invalid` n'existe plus dans
-  `auth.users`. La vérification MCP du 30/07/2026 confirme `0` identité
-  correspondante. Aucune mutation Auth n'a été faite.
+- [x] Gate finale `pnpm run qa` entièrement verte sur le commit `9b97e8a` dans
+  un worktree isolé : 160 fichiers / 742 tests frontend, seuils de couverture,
+  build, 454 tests backend et 9 intégrations distantes réussis ; 0 échec et
+  7 intégrations conditionnelles ignorées. La fixture dédiée
+  `AUDIT_20260604_api_int_user@cir.invalid` a été recréée après autorisation
+  explicite avec un profil humain actif `tcs` et un rattachement à l'agence de
+  test CIR Bordeaux. La preuve MCP finale confirme une identité Auth validée,
+  un profil, un rattachement, le changement de mot de passe enregistré et
+  0 entité / interaction de test résiduelle.
 
 Décision : **GO pour démarrer C3 ; NO-GO pour présenter Configurateurs comme
 une fonctionnalité livrée ou utilisable.**
@@ -523,9 +525,10 @@ Décision de sortie : **GO C3-2**.
   Edge Function créée ou modifiée.
 - [x] `qa:back` et `qa:fast` verts : 160 fichiers / 746 tests frontend et
   454 tests backend réussis.
-- [ ] `pnpm run qa` entièrement vert : étapes 0 à 8 réussies, puis 6 échecs
-  historiques à l'étape 9 sur l'unique cause externe de fixture Auth absente
-  (3 réussis, 6 échoués, 7 ignorés). Le test PostgreSQL C3-2 ciblé reste vert.
+- [x] `pnpm run qa` entièrement vert sur le commit `9b97e8a` dans un worktree
+  isolé : 160 fichiers / 742 tests frontend, 454 tests backend et
+  9 intégrations distantes réussis ; 0 échec, 7 ignorées. Le test PostgreSQL
+  C3-2 ciblé reste vert.
 
 Fichiers :
 `backend/functions/api/services/configurator/configuratorReadExecutor.ts`,
@@ -627,3 +630,4 @@ Le plan de reprise détaillé, découpé par checkpoints, est
 | 30/07/2026 | C3-1 | Contrats stricts C3, provenance obligatoire des valeurs, faits mécaniques distincts, sorties explicables et ruleset immuable version 1. | 3 fichiers / 24 tests ciblés, typecheck et lint ciblé verts — **GO C3-2** |
 | 30/07/2026 | C3-2 | Exécuteur PostgreSQL read-only sous rôle/claims réels, timeouts, RLS, catalogue d'erreurs CIR et gardes de frontière. | 5 tests unitaires + 1 intégration distante, preuves MCP rollbackées, 0 persistance — **GO C3-3** |
 | 30/07/2026 | QA C3-1/C3-2 | `qa:back` et `qa:fast` verts. `pnpm run qa` valide les étapes 0 à 8 puis retrouve les 6 échecs d'intégration historiques dus à la fixture Auth absente (`auth.users` = 0). | C3-1/C3-2 verts ; gate globale finale incomplète, donc commit local sans push |
+| 30/07/2026 | Déblocage QA / livraison | Fixture Auth d'intégration recréée après autorisation, profil humain actif `tcs` rattaché à CIR Bordeaux. `pnpm run qa` vert sur `9b97e8a` : 160/160 fichiers et 742/742 tests frontend, 454 tests backend, 9 intégrations distantes réussies, 0 échec, 7 ignorées. | Preuve MCP : 1 Auth confirmée, 1 profil, 1 rattachement, 0 entité / interaction résiduelle ; push de `main` autorisé |

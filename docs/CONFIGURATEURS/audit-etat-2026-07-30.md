@@ -329,3 +329,36 @@ QA rejouée après C3-2 :
 - aucune mutation Auth n'a été autorisée ou effectuée pour contourner ce
   blocage. Le push reste donc interdit par la condition de gate finale, tandis
   que le commit local C3-1/C3-2 est autorisé.
+
+## 11. Complément daté du 30/07/2026 — déblocage du gate de livraison
+
+Après autorisation explicite, la fixture distante
+`AUDIT_20260604_api_int_user@cir.invalid` a été recréée par le flux applicatif
+d'administration avec :
+
+- une identité Auth confirmée ;
+- un profil humain actif de rôle `tcs` ;
+- un rattachement unique à l'agence de test existante CIR Bordeaux
+  (`a5b5598a-2934-44ff-b038-5b0a506ba676`).
+
+La suite distante ciblée est verte : 9 tests réussis, 0 échec et 7 tests
+conditionnels ignorés. Le test `data.profile password_changed` a enregistré la
+fin du changement de mot de passe attendu par le scénario.
+
+Le gate complet a ensuite été rejoué dans un worktree isolé sur l'état exact du
+commit `9b97e8a` :
+
+- 160/160 fichiers et 742/742 tests frontend ;
+- couverture globale 60,49 % statements, 53,27 % branches, 55,10 % fonctions
+  et 61,97 % lignes ;
+- build frontend, lint et typecheck verts ;
+- 454 tests backend réussis, 0 échec, 15 ignorés ;
+- 9 intégrations distantes réussies, 0 échec, 7 ignorées ;
+- verdict final : `QA Gate PASS`.
+
+La preuve MCP après les tests confirme 1 identité Auth confirmée, 1 profil
+humain actif `tcs`, 1 rattachement à CIR Bordeaux et 0 entité / interaction
+préfixée `AUDIT_20260604` résiduelle. Les traces d'audit normales du parcours
+restent conservées. Aucune migration, activation de snapshot ou nouvelle
+version de l'Edge Function `api` n'a été créée. La condition de livraison de
+`9b97e8a` sur `main` est donc levée ; C3-3 reste non commencé.
