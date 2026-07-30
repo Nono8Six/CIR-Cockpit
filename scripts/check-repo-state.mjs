@@ -233,8 +233,16 @@ if (pnpmVersion && !stackDoc.includes(`pnpm@${pnpmVersion}`)) {
   fail(`docs/stack.md must document package manager pnpm@${pnpmVersion}.`);
 }
 const githubQaWorkflow = readText(".github/workflows/qa.yml");
-if (pnpmVersion && !githubQaWorkflow.includes(`version: ${pnpmVersion}`)) {
-  fail(`.github/workflows/qa.yml must install pnpm ${pnpmVersion}.`);
+const pnpmSetupBlock = githubQaWorkflow.match(
+  /- name: Setup pnpm[\s\S]*?(?=\n\s+- name:|\s*$)/,
+)?.[0] ?? "";
+if (!pnpmSetupBlock.includes("uses: pnpm/action-setup@v4")) {
+  fail(".github/workflows/qa.yml must install pnpm with pnpm/action-setup@v4.");
+}
+if (/^\s+version:/m.test(pnpmSetupBlock)) {
+  fail(
+    ".github/workflows/qa.yml must inherit the pnpm version from package.json packageManager.",
+  );
 }
 
 const frontendSourceFiles = commandAllowFailure("rg", ["-n", "ui-poc|UiPoc|useUiPoc|getUiPoc", "frontend/src"]);
