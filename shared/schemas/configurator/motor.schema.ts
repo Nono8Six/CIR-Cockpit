@@ -19,6 +19,9 @@ const MAX_CATALOG_DIMENSIONS = 500;
 const MAX_CATALOG_FLANGES = 50;
 const MAX_CATALOG_OPTIONS = 100;
 const MAX_CATALOG_POINTS = 100;
+const MAX_ENERGY_PROFILE_POINTS = 100;
+const MAX_COMPARISON_MOTORS = 4;
+const MAX_COMPARISON_ROWS = 100;
 
 export const MOTOR_COMPATIBILITY_RULESET = Object.freeze({
   ruleset_id: 'motor.compatibility.cir',
@@ -551,6 +554,19 @@ const motorEquivalentFromSpecInputBaseSchema = z.strictObject({
 export const motorEquivalentFromSpecInputSchema =
   motorEquivalentFromSpecInputBaseSchema.superRefine(addRequiredSearchCriteria);
 
+export const motorEquivalentFromMotorInputSchema = z.strictObject({
+  operating_point_id: technicalIdSchema,
+  mounting: motorMountingSchema,
+  flange_option_id: technicalIdSchema.optional(),
+  field_overrides: motorFromMotorFieldOverridesSchema.optional(),
+  cursor: z.string().trim().min(1, 'Curseur invalide').max(500, 'Curseur trop long').optional(),
+  limit: z.number().int('Limite invalide').min(1, 'Limite invalide').max(
+    MAX_RESULTS,
+    'Limite trop grande'
+  ).default(25),
+  sort: motorSortSchema.default('compatibility')
+});
+
 export const motorCriterionValueSchema = z.union([
   z.string(),
   z.number().finite(),
@@ -930,6 +946,28 @@ export const motorCandidateVerdictSchema = z.strictObject({
   missing_facts: z.array(motorFactPathSchema).max(motorFactPathSchema.options.length, 'Trop de faits manquants')
 });
 
+export const motorCandidateRankingSchema = z.strictObject({
+  overall_status: verdictStatusSchema,
+  mechanical_status: verdictStatusSchema,
+  reservation_count: z.number().int().nonnegative(),
+  missing_fact_count: z.number().int().nonnegative(),
+  requested_sort: motorSortSchema,
+  requested_sort_value: motorCriterionValueSchema,
+  canonical_key: z.string().trim().min(1, 'Cle de classement requise').max(
+    500,
+    'Cle de classement trop longue'
+  ),
+  evidence: configuratorEvidenceListSchema.refine(
+    (evidence) => evidence.length > 0,
+    'Au moins une preuve de classement est requise'
+  )
+});
+
+export const motorEquivalentCandidateResultSchema = z.strictObject({
+  ...motorCandidateVerdictSchema.shape,
+  ranking: motorCandidateRankingSchema
+});
+
 export const motorEquivalentFromSpecResponseSchema = z.strictObject({
   request_id: uuidSchema,
   snapshot: z.strictObject({
@@ -938,8 +976,244 @@ export const motorEquivalentFromSpecResponseSchema = z.strictObject({
     label: shortTextSchema
   }),
   normalized_spec: motorEquivalentSpecSchema,
-  candidates: z.array(motorCandidateVerdictSchema).max(MAX_RESULTS, 'Trop de candidats'),
+  candidates: z.array(motorEquivalentCandidateResultSchema).max(MAX_RESULTS, 'Trop de candidats'),
   next_cursor: z.string().trim().min(1, 'Curseur invalide').max(500, 'Curseur trop long').nullable()
+});
+
+export const motorAdviceSeveritySchema = z.enum(['critical', 'warning', 'info']);
+export const motorAdviceCategorySchema = z.enum([
+  'mechanical',
+  'electrical',
+  'application',
+  'quality',
+  'energy'
+]);
+
+export const motorEnergyEfficiencyKindSchema = z.enum([
+  'at_threshold',
+  'measured',
+  'unqualified'
+]);
+
+export const motorEnergyLoadPointInputSchema = z.strictObject({
+  load_fraction: positiveNumberSchema,
+  hours_per_year: positiveNumberSchema
+});
+
+export const motorEnergyProfileSchema = z.strictObject({
+  load_points: z.array(motorEnergyLoadPointInputSchema).min(
+    1,
+    'Le profil doit contenir au moins un point de charge'
+  ).max(MAX_ENERGY_PROFILE_POINTS, 'Trop de points de charge')
+}).superRefine((profile, ctx) => {
+  const seen = new Set<number>();
+  for (const [index, point] of profile.load_points.entries()) {
+    if (seen.has(point.load_fraction)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Chaque taux de charge doit etre unique',
+        path: ['load_points', index, 'load_fraction']
+      });
+    }
+    seen.add(point.load_fraction);
+  }
+});
+
+export const motorEnergyComputeInputSchema = z.strictObject({
+  candidate_operating_point_id: technicalIdSchema,
+  reference_operating_point_id: technicalIdSchema.optional(),
+  profile: motorEnergyProfileSchema
+}).superRefine((input, ctx) => {
+  if (
+    input.reference_operating_point_id !== undefined
+    && input.reference_operating_point_id === input.candidate_operating_point_id
+  ) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'La reference et le candidat doivent etre distincts',
+      path: ['reference_operating_point_id']
+    });
+  }
+});
+
+export const motorEnergyIdentitySchema = z.strictObject({
+  model_key: motorModelKeySchema,
+  variant_key: shortTextSchema.nullable(),
+  operating_point_id: technicalIdSchema
+});
+
+export const motorEnergyEfficiencyQualificationSchema = z.strictObject({
+  kind: motorEnergyEfficiencyKindSchema,
+  full_load_efficiency_pct: positiveNumberSchema.nullable(),
+  threshold_pct: positiveNumberSchema.nullable(),
+  standard_ref: shortTextSchema.nullable(),
+  explanation: z.string().trim().min(1, 'Explication requise').max(MAX_EXPLANATION_LENGTH),
+  evidence: configuratorEvidenceListSchema
+});
+
+export const motorEnergyInterpolationBoundSchema = z.strictObject({
+  load_fraction: positiveNumberSchema,
+  efficiency_pct: positiveNumberSchema,
+  evidence: configuratorEvidenceListSchema.refine(
+    (evidence) => evidence.length > 0,
+    'Une preuve de borne est requise'
+  )
+});
+
+export const motorEnergyLoadResultSchema = z.strictObject({
+  status: z.enum(['calculated', 'indeterminate']),
+  load_fraction: positiveNumberSchema,
+  hours_per_year: positiveNumberSchema,
+  shaft_power_kw: nonNegativeNumberSchema,
+  efficiency_pct: positiveNumberSchema.nullable(),
+  efficiency_source: z.enum(['catalogue', 'interpolation', 'not_published']),
+  interpolation_bounds: z.tuple([
+    motorEnergyInterpolationBoundSchema,
+    motorEnergyInterpolationBoundSchema
+  ]).nullable(),
+  input_power_kw: nonNegativeNumberSchema.nullable(),
+  energy_kwh_per_year: nonNegativeNumberSchema.nullable(),
+  formula: z.string().trim().min(1, 'Formule requise').max(MAX_EXPLANATION_LENGTH),
+  evidence: configuratorEvidenceListSchema,
+  affected_by_issue_codes: z.array(issueCodeSchema).max(MAX_ISSUES_PER_CANDIDATE)
+});
+
+export const motorEnergyResultSchema = z.strictObject({
+  motor: motorEnergyIdentitySchema,
+  status: z.enum(['calculated', 'indeterminate']),
+  total_hours_per_year: positiveNumberSchema,
+  energy_kwh_per_year: nonNegativeNumberSchema.nullable(),
+  efficiency_qualification: motorEnergyEfficiencyQualificationSchema,
+  load_results: z.array(motorEnergyLoadResultSchema).min(1).max(MAX_ENERGY_PROFILE_POINTS),
+  restrictions: z.array(motorRequiredActionSchema).max(MAX_ISSUES_PER_CANDIDATE),
+  rounding: z.strictObject({
+    efficiency_decimals: z.literal(6),
+    power_kw_decimals: z.literal(6),
+    energy_kwh_decimals: z.literal(3)
+  })
+});
+
+export const motorEnergyGainSchema = z.strictObject({
+  reference: motorEnergyIdentitySchema,
+  candidate: motorEnergyIdentitySchema,
+  reference_energy_kwh_per_year: nonNegativeNumberSchema.nullable(),
+  candidate_energy_kwh_per_year: nonNegativeNumberSchema.nullable(),
+  difference_kwh_per_year: nullableFiniteNumberSchema.nullable(),
+  qualification: z.enum(['upper', 'lower', 'indeterminate', 'exact']),
+  explanation: z.string().trim().min(1, 'Explication requise').max(MAX_EXPLANATION_LENGTH),
+  evidence: configuratorEvidenceListSchema
+});
+
+export const motorEnergyComputeResponseSchema = z.strictObject({
+  request_id: uuidSchema,
+  snapshot: motorCatalogSnapshotSchema,
+  candidate: motorEnergyResultSchema,
+  reference: motorEnergyResultSchema.nullable(),
+  gain: motorEnergyGainSchema.nullable()
+});
+
+export const motorAdviceInputSchema = z.strictObject({
+  candidate: motorEquivalentCandidateResultSchema,
+  energy: motorEnergyResultSchema.optional()
+});
+
+export const motorAdviceItemSchema = z.strictObject({
+  code: issueCodeSchema,
+  severity: motorAdviceSeveritySchema,
+  category: motorAdviceCategorySchema,
+  label: shortTextSchema,
+  explanation: z.string().trim().min(1, 'Explication requise').max(MAX_EXPLANATION_LENGTH),
+  action: z.string().trim().min(1, 'Action requise').max(MAX_EXPLANATION_LENGTH),
+  source_criterion_codes: z.array(
+    z.string().trim().min(1).max(100)
+  ).max(100),
+  source_issue_codes: z.array(issueCodeSchema).max(MAX_ISSUES_PER_CANDIDATE),
+  missing_facts: z.array(motorFactPathSchema).max(motorFactPathSchema.options.length),
+  ruleset: motorRulesetReferenceSchema,
+  evidence: configuratorEvidenceListSchema.refine(
+    (evidence) => evidence.length > 0,
+    'Au moins une preuve de conseil est requise'
+  )
+});
+
+export const motorAdviceResponseSchema = z.strictObject({
+  ruleset_id: z.literal(MOTOR_COMPATIBILITY_RULESET.ruleset_id),
+  ruleset_version: z.literal(MOTOR_COMPATIBILITY_RULESET.ruleset_version),
+  candidate: motorEnergyIdentitySchema,
+  advice: z.array(motorAdviceItemSchema).max(200)
+});
+
+export const motorCompareInputSchema = z.strictObject({
+  operating_point_ids: z.array(technicalIdSchema).min(
+    2,
+    'Au moins deux moteurs sont requis'
+  ).max(MAX_COMPARISON_MOTORS, 'Quatre moteurs au maximum')
+}).superRefine((input, ctx) => {
+  if (new Set(input.operating_point_ids).size !== input.operating_point_ids.length) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Chaque point de fonctionnement doit etre unique',
+      path: ['operating_point_ids']
+    });
+  }
+});
+
+export const motorComparisonCellSchema = z.strictObject({
+  value: motorCriterionValueSchema,
+  status: z.enum([
+    'published',
+    'not_published',
+    'indeterminate',
+    'at_threshold',
+    'measured'
+  ]),
+  threshold_value: nullableFiniteNumberSchema.optional(),
+  evidence: configuratorEvidenceListSchema
+});
+
+export const motorComparisonRowSchema = z.strictObject({
+  family: z.enum(['electrical', 'mechanical', 'quality']),
+  key: z.string().trim().min(1).max(100),
+  label: shortTextSchema,
+  unit: z.string().trim().max(30),
+  optimization: z.enum(['high', 'low', 'identity', 'none']),
+  values: z.array(motorComparisonCellSchema).min(2).max(MAX_COMPARISON_MOTORS),
+  best_index: z.number().int().min(0).max(MAX_COMPARISON_MOTORS - 1).nullable(),
+  comparable_for_summary: z.boolean(),
+  identity_status: z.enum(['identical', 'different', 'indeterminate']).nullable(),
+  comparison_note: z.string().trim().min(1).max(MAX_EXPLANATION_LENGTH).nullable()
+});
+
+export const motorComparedItemSchema = z.strictObject({
+  model_id: technicalIdSchema,
+  model_key: motorModelKeySchema,
+  operating_point_id: technicalIdSchema,
+  variant_key: shortTextSchema.nullable(),
+  brand: shortTextSchema,
+  designation: shortTextSchema,
+  label: shortTextSchema,
+  provenance: configuratorEvidenceListSchema.refine(
+    (evidence) => evidence.length > 0,
+    'La provenance moteur est requise'
+  ),
+  issues: z.array(motorValidationIssueSchema).max(MAX_ISSUES_PER_CANDIDATE)
+});
+
+export const motorComparisonResponseSchema = z.strictObject({
+  request_id: uuidSchema,
+  snapshot: motorCatalogSnapshotSchema,
+  motors: z.array(motorComparedItemSchema).min(2).max(MAX_COMPARISON_MOTORS),
+  rows: z.array(motorComparisonRowSchema).min(1).max(MAX_COMPARISON_ROWS),
+  summary: z.array(z.strictObject({
+    operating_point_id: technicalIdSchema,
+    criteria_won: z.number().int().nonnegative(),
+    total_comparable_criteria: z.number().int().nonnegative()
+  })).min(2).max(MAX_COMPARISON_MOTORS),
+  mechanical_summary: z.strictObject({
+    core_dimensions_identical: z.boolean().nullable(),
+    differing_criteria: z.array(z.string().trim().min(1).max(100)).max(MAX_COMPARISON_ROWS),
+    indeterminate_criteria: z.array(z.string().trim().min(1).max(100)).max(MAX_COMPARISON_ROWS)
+  })
 });
 
 export type MotorMounting = z.infer<typeof motorMountingSchema>;
@@ -953,6 +1227,8 @@ export type MotorCatalogFlangeOption = z.infer<typeof motorCatalogFlangeOptionSc
 export type MotorFromMotorFieldOverrides = z.infer<typeof motorFromMotorFieldOverridesSchema>;
 export type MotorEquivalentFromSpecInput = z.infer<typeof motorEquivalentFromSpecInputSchema>;
 export type MotorEquivalentFromSpecResponse = z.infer<typeof motorEquivalentFromSpecResponseSchema>;
+export type MotorEquivalentFromMotorInput = z.infer<typeof motorEquivalentFromMotorInputSchema>;
+export type MotorEquivalentCandidateResult = z.infer<typeof motorEquivalentCandidateResultSchema>;
 export type MotorElectricalSpec = z.infer<typeof motorElectricalSpecSchema>;
 export type MotorApplicationRequirements = z.infer<typeof motorApplicationRequirementsSchema>;
 export type MotorMechanicalSpec = z.infer<typeof motorMechanicalSpecSchema>;
@@ -963,6 +1239,14 @@ export type MotorMechanicalCompatibilityResult = z.infer<
 export type MotorElectricalApplicationCompatibilityResult = z.infer<
   typeof motorElectricalApplicationCompatibilityResultSchema
 >;
+export type MotorAdviceInput = z.infer<typeof motorAdviceInputSchema>;
+export type MotorAdviceResponse = z.infer<typeof motorAdviceResponseSchema>;
+export type MotorEnergyProfile = z.infer<typeof motorEnergyProfileSchema>;
+export type MotorEnergyResult = z.infer<typeof motorEnergyResultSchema>;
+export type MotorEnergyComputeInput = z.infer<typeof motorEnergyComputeInputSchema>;
+export type MotorEnergyComputeResponse = z.infer<typeof motorEnergyComputeResponseSchema>;
+export type MotorCompareInput = z.infer<typeof motorCompareInputSchema>;
+export type MotorComparisonResponse = z.infer<typeof motorComparisonResponseSchema>;
 
 export const safeParseMotorCatalogListInput = (input: unknown) =>
   motorCatalogListInputSchema.safeParse(input);
@@ -979,6 +1263,12 @@ export const safeParseMotorCatalogGetOutput = (output: unknown) =>
 export const safeParseMotorEquivalentFromSpecInput = (input: unknown) =>
   motorEquivalentFromSpecInputSchema.safeParse(input);
 
+export const safeParseMotorEquivalentFromMotorInput = (input: unknown) =>
+  motorEquivalentFromMotorInputSchema.safeParse(input);
+
+export const safeParseMotorEquivalentOutput = (output: unknown) =>
+  motorEquivalentFromSpecResponseSchema.safeParse(output);
+
 export const safeParseMotorCandidateVerdictOutput = (output: unknown) =>
   motorCandidateVerdictSchema.safeParse(output);
 
@@ -987,6 +1277,24 @@ export const safeParseMotorMechanicalCompatibilityOutput = (output: unknown) =>
 
 export const safeParseMotorElectricalApplicationCompatibilityOutput = (output: unknown) =>
   motorElectricalApplicationCompatibilityResultSchema.safeParse(output);
+
+export const safeParseMotorAdviceInput = (input: unknown) =>
+  motorAdviceInputSchema.safeParse(input);
+
+export const safeParseMotorAdviceOutput = (output: unknown) =>
+  motorAdviceResponseSchema.safeParse(output);
+
+export const safeParseMotorEnergyInput = (input: unknown) =>
+  motorEnergyComputeInputSchema.safeParse(input);
+
+export const safeParseMotorEnergyOutput = (output: unknown) =>
+  motorEnergyComputeResponseSchema.safeParse(output);
+
+export const safeParseMotorCompareInput = (input: unknown) =>
+  motorCompareInputSchema.safeParse(input);
+
+export const safeParseMotorCompareOutput = (output: unknown) =>
+  motorComparisonResponseSchema.safeParse(output);
 
 export const isApplicableFieldOverride = (
   fact: {

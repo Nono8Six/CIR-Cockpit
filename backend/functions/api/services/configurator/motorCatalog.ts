@@ -194,6 +194,20 @@ type IssueRow = SourceRow & {
   restriction: string | null;
 };
 
+type EfficiencyThresholdRow = SourceRow & {
+  min_efficiency: number;
+  standard_ref: string;
+};
+
+export type MotorEfficiencyQualification = {
+  kind: 'at_threshold' | 'measured' | 'unqualified';
+  full_load_efficiency_pct: number | null;
+  threshold_pct: number | null;
+  standard_ref: string | null;
+  explanation: string;
+  evidence: ConfiguratorEvidence[];
+};
+
 const sourceFromPrefix = (
   row: Record<string, unknown>,
   prefix: 'model_' | 'point_' | ''
@@ -271,7 +285,7 @@ const activeSnapshot = async (
   return rows[0];
 };
 
-const listInTransaction = async (
+export const listMotorCatalogInTransaction = async (
   transaction: ConfiguratorReadTransaction,
   input: MotorCatalogListInput,
   requestId: string
@@ -383,7 +397,7 @@ const listInTransaction = async (
   return parsed.data;
 };
 
-const detailInTransaction = async (
+export const getMotorCatalogInTransaction = async (
   transaction: ConfiguratorReadTransaction,
   input: MotorCatalogGetInput,
   requestId: string
@@ -781,6 +795,126 @@ const loadIssues = async (
   evidence
 }));
 
+const canonicalEvidence = (
+  evidence: readonly ConfiguratorEvidence[]
+): ConfiguratorEvidence[] => {
+  const keyed = new Map<string, ConfiguratorEvidence>();
+  for (const item of evidence) keyed.set(JSON.stringify(item), item);
+  return [...keyed.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([, item]) => item);
+};
+
+export const loadMotorEfficiencyQualificationInTransaction = async (
+  transaction: ConfiguratorReadTransaction,
+  detail: MotorCatalogGetResponse
+): Promise<MotorEfficiencyQualification> => {
+  const fullLoad = detail.efficiency_points.find(
+    (point) => Math.abs(point.load_fraction - 1) < 1e-9
+  );
+  const efficiencyClass = detail.operating_point.efficiency_class;
+  if (!fullLoad || !efficiencyClass) {
+    return {
+      kind: 'unqualified',
+      full_load_efficiency_pct: fullLoad?.efficiency_pct ?? null,
+      threshold_pct: null,
+      standard_ref: null,
+      explanation: 'Le point pleine charge ou la classe IE n est pas publie.',
+      evidence: fullLoad?.evidence ?? []
+    };
+  }
+
+  const rows = detail.operating_point.supply_mode === 'mains'
+    ? await transaction<EfficiencyThresholdRow>`
+      select threshold.min_efficiency::double precision as min_efficiency,
+        threshold.standard_ref,
+        document.id::text as source_document_id,
+        document.filename as source_filename,
+        document.sha256 as source_sha256,
+        source.pdf_page as source_pdf_page,
+        source.catalog_page as source_catalog_page,
+        source.extraction_method as source_extraction_method,
+        source.verified_by::text as source_verified_by,
+        source.verified_at::text as source_verified_at
+      from configurator.catalog_snapshot snapshot
+      join configurator.motor_iec_threshold threshold
+        on threshold.snapshot_id = snapshot.id
+      join configurator.source_ref source on source.id = threshold.source_ref_id
+      join configurator.source_document document on document.id = source.document_id
+      where snapshot.id = ${detail.snapshot.id}::uuid
+        and snapshot.domain = 'motor'
+        and snapshot.is_active is true
+        and snapshot.status = 'active'
+        and snapshot.activation_gate_status = 'passed'
+        and threshold.efficiency_class = ${efficiencyClass}
+        and threshold.poles = ${detail.operating_point.poles}
+        and threshold.frequency_hz = ${detail.operating_point.frequency_hz}
+        and threshold.power_kw = ${detail.operating_point.power_kw}
+      limit 1
+    `
+    : await transaction<EfficiencyThresholdRow>`
+      select threshold.min_efficiency::double precision as min_efficiency,
+        threshold.standard_ref,
+        document.id::text as source_document_id,
+        document.filename as source_filename,
+        document.sha256 as source_sha256,
+        source.pdf_page as source_pdf_page,
+        source.catalog_page as source_catalog_page,
+        source.extraction_method as source_extraction_method,
+        source.verified_by::text as source_verified_by,
+        source.verified_at::text as source_verified_at
+      from configurator.catalog_snapshot snapshot
+      join configurator.motor_iec_vsd_threshold threshold
+        on threshold.snapshot_id = snapshot.id
+      join configurator.source_ref source on source.id = threshold.source_ref_id
+      join configurator.source_document document on document.id = source.document_id
+      where snapshot.id = ${detail.snapshot.id}::uuid
+        and snapshot.domain = 'motor'
+        and snapshot.is_active is true
+        and snapshot.status = 'active'
+        and snapshot.activation_gate_status = 'passed'
+        and threshold.efficiency_class = ${efficiencyClass}
+        and threshold.power_kw = ${detail.operating_point.power_kw}
+        and ${detail.operating_point.rated_speed_rpm}
+          between threshold.speed_min_rpm and threshold.speed_max_rpm
+      order by threshold.speed_min_rpm desc, threshold.speed_max_rpm asc
+      limit 1
+    `;
+  const threshold = rows[0];
+  if (!threshold) {
+    return {
+      kind: 'unqualified',
+      full_load_efficiency_pct: fullLoad.efficiency_pct,
+      threshold_pct: null,
+      standard_ref: null,
+      explanation: 'Aucun seuil normatif applicable n est disponible.',
+      evidence: fullLoad.evidence
+    };
+  }
+
+  const delta = fullLoad.efficiency_pct - threshold.min_efficiency;
+  const kind = Math.abs(delta) < 1e-9
+    ? 'at_threshold' as const
+    : delta > 0
+      ? 'measured' as const
+      : 'unqualified' as const;
+  return {
+    kind,
+    full_load_efficiency_pct: fullLoad.efficiency_pct,
+    threshold_pct: threshold.min_efficiency,
+    standard_ref: threshold.standard_ref,
+    explanation: kind === 'at_threshold'
+      ? 'Le rendement pleine charge publie est egal au seuil normatif applicable.'
+      : kind === 'measured'
+        ? 'Le rendement pleine charge publie est superieur au seuil normatif applicable.'
+        : 'Le rendement pleine charge publie est sous le seuil normatif applicable.',
+    evidence: canonicalEvidence([
+      ...fullLoad.evidence,
+      ...catalogEvidence(threshold)
+    ])
+  };
+};
+
 const mapSourcedRows = <TRow extends SourceRow, TOutput>(
   rows: readonly TRow[],
   mapper: (
@@ -803,7 +937,7 @@ export const createMotorCatalogService = (
     const input = parseInput(safeParseMotorCatalogListInput(rawInput));
     return await runReadOnly(
       authContext,
-      (transaction) => listInTransaction(transaction, input, requestId)
+      (transaction) => listMotorCatalogInTransaction(transaction, input, requestId)
     );
   },
   get: async (
@@ -814,7 +948,7 @@ export const createMotorCatalogService = (
     const input = parseInput(safeParseMotorCatalogGetInput(rawInput));
     return await runReadOnly(
       authContext,
-      (transaction) => detailInTransaction(transaction, input, requestId)
+      (transaction) => getMotorCatalogInTransaction(transaction, input, requestId)
     );
   }
 });

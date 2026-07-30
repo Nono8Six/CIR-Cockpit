@@ -3,13 +3,23 @@ import { describe, expect, it } from 'vitest';
 import {
   MOTOR_COMPATIBILITY_RULESET,
   isApplicableFieldOverride,
+  motorAdviceResponseSchema,
   motorCandidateVerdictSchema,
+  motorCompareInputSchema,
+  motorComparisonResponseSchema,
   motorCouplingAxialRangeSchema,
   motorElectricalApplicationCompatibilityResultSchema,
+  motorEnergyComputeInputSchema,
+  motorEnergyComputeResponseSchema,
+  motorEquivalentFromMotorInputSchema,
+  motorEquivalentFromSpecResponseSchema,
   motorFrameDimensionsSchema,
   motorShaftDimensionsSchema,
+  safeParseMotorAdviceOutput,
   safeParseMotorCandidateVerdictOutput,
+  safeParseMotorCompareOutput,
   safeParseMotorElectricalApplicationCompatibilityOutput,
+  safeParseMotorEnergyOutput,
   safeParseMotorEquivalentFromSpecInput
 } from '../configurator/motor.schema.ts';
 
@@ -225,6 +235,71 @@ const validElectricalApplicationResult = {
   missing_facts: []
 } as const;
 
+const validRankedVerdict = {
+  ...validVerdict,
+  ranking: {
+    overall_status: validVerdict.overall_status,
+    mechanical_status: validVerdict.mechanical_status,
+    reservation_count: 1,
+    missing_fact_count: 1,
+    requested_sort: 'compatibility' as const,
+    requested_sort_value: validVerdict.overall_status,
+    canonical_key: '00000000000000001997',
+    evidence: catalogEvidence
+  }
+} as const;
+
+const validEnergyResult = {
+  motor: {
+    model_key: validVerdict.candidate.model_key,
+    variant_key: validVerdict.candidate.variant_key,
+    operating_point_id: validVerdict.candidate.operating_point_id
+  },
+  status: 'calculated' as const,
+  total_hours_per_year: 1_000,
+  energy_kwh_per_year: 12_500,
+  efficiency_qualification: {
+    kind: 'measured' as const,
+    full_load_efficiency_pct: 95,
+    threshold_pct: 94,
+    standard_ref: 'IEC 60034-30-1',
+    explanation: 'Rendement publie au-dessus du seuil.',
+    evidence: catalogEvidence
+  },
+  load_results: [{
+    status: 'calculated' as const,
+    load_fraction: 1,
+    hours_per_year: 1_000,
+    shaft_power_kw: 12,
+    efficiency_pct: 96,
+    efficiency_source: 'catalogue' as const,
+    interpolation_bounds: null,
+    input_power_kw: 12.5,
+    energy_kwh_per_year: 12_500,
+    formula: 'P entree = P arbre / rendement.',
+    evidence: catalogEvidence,
+    affected_by_issue_codes: []
+  }],
+  restrictions: [],
+  rounding: {
+    efficiency_decimals: 6 as const,
+    power_kw_decimals: 6 as const,
+    energy_kwh_decimals: 3 as const
+  }
+} as const;
+
+const comparedMotor = {
+  model_id: validVerdict.candidate.model_id,
+  model_key: validVerdict.candidate.model_key,
+  operating_point_id: validVerdict.candidate.operating_point_id,
+  variant_key: validVerdict.candidate.variant_key,
+  brand: validVerdict.candidate.brand,
+  designation: validVerdict.candidate.designation,
+  label: 'Leroy-Somer LSHRM 160MR1',
+  provenance: catalogEvidence,
+  issues: []
+} as const;
+
 describe('contrats Configurateurs C3-1', () => {
   it('valide toutes les familles de faits demandees sans les fusionner', () => {
     const result = safeParseMotorEquivalentFromSpecInput(validInput);
@@ -360,6 +435,175 @@ describe('contrats Configurateurs C3-1', () => {
     expect(safeParseMotorElectricalApplicationCompatibilityOutput({
       ...validElectricalApplicationResult,
       availability: true
+    }).success).toBe(false);
+  });
+});
+
+describe('contrats Configurateurs C3-6', () => {
+  it('valide fromMotor et la sortie d equivalence classee avec preuve obligatoire', () => {
+    expect(motorEquivalentFromMotorInputSchema.safeParse({
+      operating_point_id: '1997',
+      mounting: 'B35'
+    }).success).toBe(true);
+    expect(motorEquivalentFromMotorInputSchema.safeParse({
+      operating_point_id: '1997',
+      mounting: 'B35',
+      price: 1
+    }).success).toBe(false);
+
+    const output = {
+      request_id: snapshotId,
+      snapshot: {
+        id: snapshotId,
+        label: 'Catalogue actif',
+        activated_at: '2026-07-28T12:26:35.267Z'
+      },
+      normalized_spec: validInput,
+      candidates: [validRankedVerdict],
+      next_cursor: null
+    };
+    expect(motorEquivalentFromSpecResponseSchema.safeParse(output).success).toBe(true);
+    expect(motorEquivalentFromSpecResponseSchema.safeParse({
+      ...output,
+      candidates: [{
+        ...validRankedVerdict,
+        ranking: { ...validRankedVerdict.ranking, evidence: [] }
+      }]
+    }).success).toBe(false);
+  });
+
+  it('valide le profil et la sortie energetique sans prix ni extrapolation implicite', () => {
+    expect(motorEnergyComputeInputSchema.safeParse({
+      candidate_operating_point_id: '1997',
+      profile: {
+        load_points: [{ load_fraction: 0.75, hours_per_year: 2_000 }]
+      }
+    }).success).toBe(true);
+    for (const invalidProfile of [
+      { load_points: [] },
+      {
+        load_points: [
+          { load_fraction: 0.75, hours_per_year: 1_000 },
+          { load_fraction: 0.75, hours_per_year: 500 }
+        ]
+      },
+      { load_points: [{ load_fraction: 0, hours_per_year: 1_000 }] }
+    ]) {
+      expect(motorEnergyComputeInputSchema.safeParse({
+        candidate_operating_point_id: '1997',
+        profile: invalidProfile
+      }).success).toBe(false);
+    }
+    const output = {
+      request_id: snapshotId,
+      snapshot: {
+        id: snapshotId,
+        label: 'Catalogue actif',
+        activated_at: '2026-07-28T12:26:35.267Z'
+      },
+      candidate: validEnergyResult,
+      reference: null,
+      gain: null
+    };
+    expect(motorEnergyComputeResponseSchema.safeParse(output).success).toBe(true);
+    expect(safeParseMotorEnergyOutput({ ...output, price: 1 }).success).toBe(false);
+  });
+
+  it('exige les preuves des conseils et refuse les champs commerciaux', () => {
+    const output = {
+      ruleset_id: MOTOR_COMPATIBILITY_RULESET.ruleset_id,
+      ruleset_version: MOTOR_COMPATIBILITY_RULESET.ruleset_version,
+      candidate: validEnergyResult.motor,
+      advice: [{
+        code: 'CURRENT_MISMATCH',
+        severity: 'warning',
+        category: 'electrical',
+        label: 'Verifier la protection',
+        explanation: 'Le courant publie porte une alerte.',
+        action: 'Verifier la protection et la chute de tension.',
+        source_criterion_codes: ['CURRENT_INFORMATION'],
+        source_issue_codes: ['CURRENT_MISMATCH'],
+        missing_facts: [],
+        ruleset: MOTOR_COMPATIBILITY_RULESET,
+        evidence: catalogEvidence
+      }]
+    };
+    expect(motorAdviceResponseSchema.safeParse(output).success).toBe(true);
+    expect(safeParseMotorAdviceOutput({
+      ...output,
+      advice: [{ ...output.advice[0], evidence: [] }]
+    }).success).toBe(false);
+    expect(safeParseMotorAdviceOutput({ ...output, stock: 1 }).success).toBe(false);
+  });
+
+  it('borne le comparateur a 2-4 moteurs uniques et valide sa sortie stricte', () => {
+    expect(motorCompareInputSchema.safeParse({
+      operating_point_ids: ['1', '2']
+    }).success).toBe(true);
+    for (const ids of [
+      ['1'],
+      ['1', '1'],
+      ['1', '2', '3', '4', '5']
+    ]) {
+      expect(motorCompareInputSchema.safeParse({
+        operating_point_ids: ids
+      }).success).toBe(false);
+    }
+    const secondMotor = {
+      ...comparedMotor,
+      model_id: '1653',
+      model_key: 'leroy-somer:lshrm:160mr2',
+      operating_point_id: '1998'
+    };
+    const output = {
+      request_id: snapshotId,
+      snapshot: {
+        id: snapshotId,
+        label: 'Catalogue actif',
+        activated_at: '2026-07-28T12:26:35.267Z'
+      },
+      motors: [comparedMotor, secondMotor],
+      rows: [{
+        family: 'mechanical',
+        key: 'dimension_d',
+        label: 'Cote D',
+        unit: 'mm',
+        optimization: 'identity',
+        values: [
+          { value: 60, status: 'published', evidence: catalogEvidence },
+          { value: 60, status: 'published', evidence: catalogEvidence }
+        ],
+        best_index: null,
+        comparable_for_summary: false,
+        identity_status: 'identical',
+        comparison_note: 'Les valeurs dimensionnelles sont identiques.'
+      }],
+      summary: [
+        {
+          operating_point_id: comparedMotor.operating_point_id,
+          criteria_won: 0,
+          total_comparable_criteria: 0
+        },
+        {
+          operating_point_id: secondMotor.operating_point_id,
+          criteria_won: 0,
+          total_comparable_criteria: 0
+        }
+      ],
+      mechanical_summary: {
+        core_dimensions_identical: true,
+        differing_criteria: [],
+        indeterminate_criteria: []
+      }
+    };
+    expect(motorComparisonResponseSchema.safeParse(output).success).toBe(true);
+    expect(safeParseMotorCompareOutput({
+      ...output,
+      availability: true
+    }).success).toBe(false);
+    expect(safeParseMotorCompareOutput({
+      ...output,
+      motors: [{ ...comparedMotor, provenance: [] }, secondMotor]
     }).success).toBe(false);
   });
 });

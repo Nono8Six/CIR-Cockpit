@@ -36,8 +36,8 @@ preuves de chaque correction.
 
 - Branche cible : `main`.
 - C0, C1 et C2/C2d : terminés avec **GO pour démarrer C3**.
-- C3-1 à C3-5 : terminés et prouvés ; décision courante **GO C3-6**.
-  C3 reste globalement en cours et C3-6 n'est pas commencé.
+- C3-1 à C3-6 : terminés et prouvés ; décision courante **GO C3-7**.
+  C3 reste globalement en cours et C3-7 n'est pas commencé.
 - Snapshot moteur actif unique :
   `6fbf4046-be74-4422-9fe8-2d2d8a8d9157`, statut `active`, gate `passed`.
 - Lot actif : `cc5689ac-cbf1-45e8-a079-62df8f77dfd8`, empreinte
@@ -52,7 +52,8 @@ preuves de chaque correction.
 - Edge Function `api` active en version 198, mais la probe
   `configurator.motor.catalog.list` répond `404 NOT_FOUND`.
 - Surface locale : contrats stricts, exécuteur read-only, catalogue,
-  normalisation et moteurs mécanique puis électrique/applicatif présents dans
+  normalisation, moteurs mécanique puis électrique/applicatif, équivalences,
+  conseils, énergie et comparaison présents dans
   `shared/schemas/configurator/` et `backend/functions/api/services/configurator/`.
   Aucune route tRPC Configurateurs, intégration frontend ou surface runtime
   distante n'est encore livrée.
@@ -554,22 +555,68 @@ Décision de sortie : **GO C3-6**. C3-6 n'est pas commencé dans ce checkpoint.
 
 ### Checklist
 
-- [ ] Implémenter `configurator.motor.equivalents.fromSpec`.
-- [ ] Implémenter `configurator.motor.equivalents.fromMotor`.
-- [ ] Implémenter la synthèse et le classement déterministes.
-- [ ] Implémenter `configurator.motor.advice.build`.
-- [ ] Implémenter `configurator.motor.energy.compute`.
-- [ ] Interdire l’extrapolation hors points de rendement publiés.
-- [ ] Implémenter `configurator.motor.compare` pour 2 à 4 moteurs.
-- [ ] Conserver `not_published` comme absence de donnée, jamais comme pénalité.
-- [ ] Reprendre les bornes énergétiques dans le sens référence/candidat.
+- [x] Implémenter `configurator.motor.equivalents.fromSpec`.
+- [x] Implémenter `configurator.motor.equivalents.fromMotor`.
+- [x] Implémenter la synthèse et le classement déterministes.
+- [x] Implémenter `configurator.motor.advice.build`.
+- [x] Implémenter `configurator.motor.energy.compute`.
+- [x] Interdire l’extrapolation hors points de rendement publiés.
+- [x] Implémenter `configurator.motor.compare` pour 2 à 4 moteurs.
+- [x] Conserver `not_published` comme absence de donnée, jamais comme pénalité.
+- [x] Reprendre les bornes énergétiques dans le sens référence/candidat.
 
 ### Checkpoint C3-6
 
-- Un blocage essentiel reste premier quel que soit le reste.
-- Aucun calcul par points pondérés.
-- Les résultats énergétiques incomplets restent indéterminés.
-- Le comparateur est stable et ordonné.
+- [x] Un blocage essentiel reste premier quel que soit le reste ; classement
+  verrouillé par verdict global, verdict mécanique, réserves, faits manquants,
+  tri demandé puis clé technique canonique.
+- [x] Aucun calcul par points pondérés ; les critères informatifs ne compensent
+  jamais une incompatibilité.
+- [x] Les résultats énergétiques incomplets restent `indeterminate` ;
+  interpolation linéaire uniquement entre deux points publiés strictement
+  encadrants, sans profil, heures, rendement, coût ou retour sur investissement
+  par défaut.
+- [x] Les bornes de gain sont calculées sur le couple ordonné
+  référence/candidat avec la matrice `upper | lower | exact | indeterminate`.
+- [x] Les conseils sont structurés, canoniques et sourcés ; les quatre issues
+  `CURRENT_MISMATCH`, `IE_BELOW_THRESHOLD`, `EFFICIENCY_CURVE` et
+  `INERTIA_IMPLAUSIBLE` conservent leurs restrictions.
+- [x] Le comparateur 2 à 4 moteurs est stable et ordonné ; les dimensions sont
+  une identité, les absences restent `not_published`, les mélanges
+  `at_threshold`/`measured` et les ex æquo n'ont aucun gagnant.
+- [x] **33 nouveaux tests Deno C3-6**, non-régression C3-3/C3-4/C3-5 comprise
+  dans une passe ciblée de **145 tests**, et **24 tests Vitest shared** :
+  0 échec, lint et typecheck ciblés verts.
+- [x] `qa:back` vert dans un worktree isolé : **594 tests backend**, 0 échec,
+  16 intégrations conditionnelles ignorées.
+- [x] `qa:fast` vert : **748 tests frontend** et **594 tests backend**, 0
+  échec.
+- [x] `pnpm run qa` vert dans le même worktree isolé : 748 tests frontend,
+  couverture, build et 593 tests backend locaux, 0 échec. Les 17 scénarios
+  distants ont été explicitement ignorés pour respecter le checkpoint
+  read-only et l'interdiction de fixture/écriture distante.
+- [x] MCP Supabase relu sans écriture : projet `rbjtrcorlezvocayluok`
+  `ACTIVE_HEALTHY`, unique snapshot actif `6fbf4046-…` `active/passed`,
+  1 665 modèles, 2 355 points, 5 699 rendements, 2 370 couples, 45 568 cotes,
+  7 940 brides, 141 issues, 59 VFD obligatoires, 109 non-IEC et API v198.
+- [x] Aucune migration, mutation Supabase, fixture persistante, modification
+  Auth/RLS, route tRPC, Edge Function, déploiement ou intégration frontend.
+
+Fichiers :
+`shared/schemas/configurator/motor.schema.ts`,
+`shared/schemas/__tests__/configurator-c3-contracts.test.ts`,
+`backend/functions/api/services/configurator/motorCatalog.ts`,
+`motorC3Determinism.ts`, `motorEquivalence.ts`, `motorAdvice.ts`,
+`motorEnergy.ts`, `motorCompare.ts` et leurs tests.
+
+Limitations explicites : un point énergétique non encadré, une qualification
+normative absente ou une donnée décisive non publiée restent
+`indeterminate`. Les 141 issues catalogue restent visibles et contraignent les
+conclusions concernées. Coût annuel et temps de retour ne sont pas
+contractualisés et restent hors périmètre. Aucune surface tRPC ou preuve runtime
+des nouvelles opérations n'existe avant C3-7.
+
+Décision de sortie : **GO C3-7**. C3-7 n'est pas commencé dans ce checkpoint.
 
 ## 11. Phase C3-7 — Surface tRPC
 
