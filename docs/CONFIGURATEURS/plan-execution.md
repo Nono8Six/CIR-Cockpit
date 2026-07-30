@@ -12,18 +12,18 @@ de chaque tranche.
 | C0 — Cadrage | ✅ terminée | GO C1 | `docs/CONFIGURATEURS/00-cadrage-c0.md` |
 | C1 — Schéma PostgreSQL | ✅ terminée | GO C2 | `docs/CONFIGURATEURS/01-schema-c1.md` |
 | C2 — Migration des données | ✅ terminée | **GO C3** | section C2 ci-dessous |
-| C3 — Compatibilité technique backend | 🟠 en cours | **GO C3-3** | checkpoints C3-1/C3-2 ci-dessous |
+| C3 — Compatibilité technique backend | 🟠 en cours | **GO C3-4** | checkpoints C3-1 à C3-3 ci-dessous |
 | C4 à C14 | ⬜ non commencées | non autorisées | plan directeur |
 
-**Verdict au 30/07/2026 :** C3 est officiellement ouverte après validation
-locale de C3-1. La fonctionnalité Configurateurs n'est pas encore disponible
-dans l'application : aucun routeur, service frontend ou écran C3 n'est
-implémenté. La probe distante
-`configurator.motor.catalog.list` répond `404 NOT_FOUND`.
+**Verdict au 30/07/2026 :** C3-3 est terminé côté services backend. Les
+lectures `catalog.list/get`, la normalisation sourcée et le statut
+`indeterminate` sont prouvés sous rôle `tcs` réel. La fonctionnalité
+Configurateurs n'est pas encore disponible dans l'application : la surface
+tRPC C3-7, le service frontend et les écrans restent absents.
 
-**Prochaine action :** démarrer C3-3 seulement sur une nouvelle exécution
-autorisée. Le présent checkpoint s'arrête après C3-2. Le catalogue technique
-moteur est chargé et actif : snapshot
+**Prochaine action :** démarrer C3-4 seulement sur une nouvelle exécution
+autorisée. Le présent checkpoint s'arrête après C3-3. Le catalogue technique
+moteur utilisé reste le snapshot actif
 `6fbf4046-be74-4422-9fe8-2d2d8a8d9157`, lot `cc5689ac…`, 1 665 modèles
 physiques, 2 355 points de fonctionnement et 45 568 cotes.
 
@@ -537,7 +537,35 @@ Fichiers :
 `shared/errors/types.ts`, `shared/errors/catalog.ts` et la garde centrale
 `scripts/check-repo-state.mjs`.
 
-Décision de sortie : **GO C3-3**. C3-3 reste non commencé.
+Décision de sortie : **GO C3-3**.
+
+### Checkpoint C3-3 — catalogue et normalisation
+
+- [x] Services `catalog.list/get` bornés, paginés et validés en entrée/sortie.
+- [x] Snapshot actif résolu explicitement sur toutes les lectures ; un point
+  retiré est traité comme introuvable.
+- [x] Modèle, point, rendement, couple, dimensions, brides, freins et anomalies
+  chargés sans fusion silencieuse.
+- [x] `fromMotor` construit avec provenance catalogue ; seules les mesures
+  terrain confirmées et prouvées peuvent le surcharger après normalisation.
+- [x] Ambiguïté ou fait mécanique décisif absent renvoyé `indeterminate`.
+- [x] Six tests de normalisation, deux tests d'erreurs, `qa:back`, `qa:fast`
+  et `pnpm run qa` verts : 160 fichiers / 763 tests frontend, couverture,
+  build, 460 tests backend et 9 intégrations standards, 0 échec.
+- [x] Suite distante ciblée avec la fixture `tcs` : 11 intégrations réussies,
+  dont C3-2 et C3-3, 0 échec et 6 ignorées.
+
+Fichiers :
+`shared/schemas/configurator/common.schema.ts`,
+`shared/schemas/configurator/motor.schema.ts`,
+`backend/functions/api/services/configurator/motorCatalog.ts`,
+`motorCatalogNormalization.ts`, leurs tests et
+`backend/functions/api/integration/motorCatalog_integration_test.ts`.
+
+La surface tRPC et le déploiement restent réservés à C3-7/C3-8. Aucun
+changement distant persistant n'a été réalisé.
+
+Décision de sortie : **GO C3-4**. C3-4 reste non commencé.
 
 ### Rapatriement de `tools/extract`
 
@@ -631,3 +659,4 @@ Le plan de reprise détaillé, découpé par checkpoints, est
 | 30/07/2026 | C3-2 | Exécuteur PostgreSQL read-only sous rôle/claims réels, timeouts, RLS, catalogue d'erreurs CIR et gardes de frontière. | 5 tests unitaires + 1 intégration distante, preuves MCP rollbackées, 0 persistance — **GO C3-3** |
 | 30/07/2026 | QA C3-1/C3-2 | `qa:back` et `qa:fast` verts. `pnpm run qa` valide les étapes 0 à 8 puis retrouve les 6 échecs d'intégration historiques dus à la fixture Auth absente (`auth.users` = 0). | C3-1/C3-2 verts ; gate globale finale incomplète, donc commit local sans push |
 | 30/07/2026 | Déblocage QA / livraison | Fixture Auth d'intégration recréée après autorisation, profil humain actif `tcs` rattaché à CIR Bordeaux. `pnpm run qa` vert sur `9b97e8a` : 160/160 fichiers et 742/742 tests frontend, 454 tests backend, 9 intégrations distantes réussies, 0 échec, 7 ignorées. | Preuve MCP : 1 Auth confirmée, 1 profil, 1 rattachement, 0 entité / interaction résiduelle ; push de `main` autorisé |
+| 30/07/2026 | C3-3 | Services catalogue actifs uniquement, détail technique complet, normalisation `fromMotor` sourcée, surcharges terrain strictes et absence décisive indéterminée. | `qa` vert : 763 frontend, 460 backend, 9 intégrations standards ; suite ciblée 11 intégrations dont fixture `tcs`, 0 échec — **GO C3-4** |

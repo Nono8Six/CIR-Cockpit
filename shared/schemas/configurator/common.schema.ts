@@ -61,7 +61,7 @@ export const sourcePageEvidenceSchema = z.strictObject({
   kind: z.literal('source_page'),
   label: evidenceLabelSchema,
   source_document_id: uuidSchema,
-  filename: z.string().trim().min(1, 'Nom de document requis').max(255, 'Nom de document trop long'),
+  filename: z.string().trim().min(1, 'Nom de document requis').max(500, 'Nom de document trop long'),
   sha256: sourceSha256Schema,
   pdf_page: z.number().int('Page PDF invalide').positive('Page PDF invalide'),
   catalog_page: z.string().trim().max(100, 'Page catalogue trop longue').nullable().optional(),

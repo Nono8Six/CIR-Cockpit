@@ -329,23 +329,47 @@ Décision de sortie : **GO C3-3**. C3-3 n'est pas commencé dans ce checkpoint.
 
 ### Checklist
 
-- [ ] Implémenter `configurator.motor.catalog.list`.
-- [ ] Implémenter `configurator.motor.catalog.get`.
-- [ ] Résoudre uniquement le snapshot moteur actif, par jointure explicite sur
+- [x] Implémenter le service de `configurator.motor.catalog.list`.
+- [x] Implémenter le service de `configurator.motor.catalog.get`.
+- [x] Résoudre uniquement le snapshot moteur actif, par jointure explicite sur
   `catalog_snapshot.is_active`. Le snapshot retiré reste lisible sous RLS :
   ajouter un test qui échoue si une lecture catalogue renvoie une ligne d’un
   snapshot non actif.
-- [ ] Charger modèle, point, rendement, couple, dimensions, brides et options.
-- [ ] Ne pas écraser deux points IE3/IE4 visuellement proches.
-- [ ] Construire `fromMotor` comme spécification catalogue sourcée.
-- [ ] Appliquer les mesures terrain confirmées après la spécification catalogue.
-- [ ] Retourner `indeterminate` pour une donnée décisive absente, pas une erreur HTTP.
+- [x] Charger modèle, point, rendement, couple, dimensions, brides et options.
+- [x] Ne pas écraser deux points IE3/IE4 visuellement proches.
+- [x] Construire `fromMotor` comme spécification catalogue sourcée.
+- [x] Appliquer les mesures terrain confirmées après la spécification catalogue.
+- [x] Retourner `indeterminate` pour une donnée décisive absente, pas une erreur HTTP.
 
 ### Checkpoint C3-3
 
-- Probes authentifiées `catalog.list/get`.
-- Provenance présente sur chaque fait décisif.
-- Aucun point, bride ou variante fusionné silencieusement.
+- [x] Probes authentifiées `catalog.list/get` sous la fixture humaine `tcs`.
+- [x] Provenance présente sur chaque fait décisif et chaque ligne technique
+  chargée.
+- [x] Aucun point, bride ou variante fusionné silencieusement.
+
+Preuves du 30/07/2026 :
+
+- la résolution du snapshot impose `domain='motor'`, `is_active=true`,
+  `status='active'` et gate `passed` sur la requête principale et sur chaque
+  chargement enfant ;
+- la pagination est stable sur l'identifiant du point, avec une ligne de liste
+  par point de fonctionnement ;
+- un modèle actif portant IE3 et IE4 renvoie deux identifiants distincts ;
+- un point du snapshot retiré renvoie
+  `CONFIGURATOR_OPERATING_POINT_NOT_FOUND` ;
+- six tests de normalisation et deux tests d'erreurs sont verts ; `qa:back`
+  est vert avec 460 tests backend ;
+- `qa:fast` et le gate complet `pnpm run qa` sont verts : 160 fichiers /
+  763 tests frontend, couverture, build, 460 tests backend et 9 intégrations
+  standards réussies, 0 échec ;
+- la suite distante ciblée est verte : 11 intégrations réussies, 0 échec,
+  6 ignorées, dont la preuve C3-3 sous rôle et claims réels.
+
+La surface tRPC et le déploiement restent respectivement réservés à C3-7 et
+C3-8. Aucun routeur, migration, déploiement ou état distant n'a été modifié.
+
+Décision de sortie : **GO C3-4**. C3-4 n'est pas commencé dans ce checkpoint.
 
 ## 8. Phase C3-4 — Compatibilité mécanique
 

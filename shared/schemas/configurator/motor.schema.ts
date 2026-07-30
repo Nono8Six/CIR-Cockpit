@@ -15,6 +15,10 @@ const MAX_EXPLANATION_LENGTH = 2_000;
 const MAX_ISSUES_PER_CANDIDATE = 50;
 const MAX_FACTS_PER_CANDIDATE = 100;
 const MAX_RULES_PER_CANDIDATE = 100;
+const MAX_CATALOG_DIMENSIONS = 500;
+const MAX_CATALOG_FLANGES = 50;
+const MAX_CATALOG_OPTIONS = 100;
+const MAX_CATALOG_POINTS = 100;
 
 export const MOTOR_COMPATIBILITY_RULESET = Object.freeze({
   ruleset_id: 'motor.compatibility.cir',
@@ -152,14 +156,16 @@ export const motorBooleanConstraintSchema = createConstraintValueSchema(z.boolea
   (input) => input.unit == null,
   { message: 'Aucune unite attendue', path: ['unit'] }
 );
-export const motorPolesConstraintSchema = createConstraintValueSchema(z.union([
+const motorPolesValueSchema = z.union([
   z.literal(2),
   z.literal(4),
   z.literal(6),
   z.literal(8),
   z.literal(10),
   z.literal(12)
-])).refine(
+]);
+
+export const motorPolesConstraintSchema = createConstraintValueSchema(motorPolesValueSchema).refine(
   (input) => input.unit == null,
   { message: 'Aucune unite attendue', path: ['unit'] }
 );
@@ -274,6 +280,166 @@ export const motorApplicationRequirementsSchema = z.strictObject({
   duty_service: motorTextConstraintSchema.optional(),
   ambient_temperature: createSiConstraintSchema(nullableFiniteNumberSchema, 'degC').optional(),
   starts_per_hour: createSiConstraintSchema(nonNegativeNumberSchema, 'count').optional()
+});
+
+const createConfirmedMeasurementSchema = <TSchema extends z.ZodType>(
+  schema: TSchema
+) => schema.superRefine((fact, ctx) => {
+  const factRecord = typeof fact === 'object' && fact !== null
+    ? fact as Record<string, unknown>
+    : {};
+  const value = Reflect.get(factRecord, 'value');
+  const origin = Reflect.get(factRecord, 'origin');
+  const confirmation = Reflect.get(factRecord, 'confirmation');
+  const evidence = Reflect.get(factRecord, 'evidence');
+  const hasMeasurementEvidence = Array.isArray(evidence)
+    && evidence.some((item) =>
+      typeof item === 'object'
+      && item !== null
+      && Reflect.get(item, 'kind') === 'measurement'
+    );
+
+  if (
+    value === null
+    || origin !== 'user_measurement'
+    || confirmation !== 'confirmed'
+    || !hasMeasurementEvidence
+  ) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Une surcharge terrain doit etre une mesure confirmee et prouvee'
+    });
+  }
+});
+
+const confirmedTextMeasurementSchema = createConfirmedMeasurementSchema(
+  motorTextConstraintSchema
+);
+const confirmedSupplyModeMeasurementSchema = createConfirmedMeasurementSchema(
+  motorSupplyModeConstraintSchema
+);
+const confirmedCouplingMeasurementSchema = createConfirmedMeasurementSchema(
+  motorCouplingConstraintSchema
+);
+const confirmedBooleanMeasurementSchema = createConfirmedMeasurementSchema(
+  motorBooleanConstraintSchema
+);
+const confirmedPolesMeasurementSchema = createConfirmedMeasurementSchema(
+  motorPolesConstraintSchema
+);
+const confirmedPowerMeasurementSchema = createConfirmedMeasurementSchema(
+  createSiConstraintSchema(positiveNumberSchema, 'kW')
+);
+const confirmedSpeedMeasurementSchema = createConfirmedMeasurementSchema(
+  createSiConstraintSchema(positiveNumberSchema, 'rpm')
+);
+const confirmedFrequencyMeasurementSchema = createConfirmedMeasurementSchema(
+  createSiConstraintSchema(positiveNumberSchema, 'Hz')
+);
+const confirmedVoltageMeasurementSchema = createConfirmedMeasurementSchema(
+  createSiConstraintSchema(positiveNumberSchema, 'V')
+);
+const confirmedCurrentMeasurementSchema = createConfirmedMeasurementSchema(
+  createSiConstraintSchema(positiveNumberSchema, 'A')
+);
+const confirmedTorqueMeasurementSchema = createConfirmedMeasurementSchema(
+  createSiConstraintSchema(positiveNumberSchema, 'N.m')
+);
+const confirmedDimensionMeasurementSchema = () => createConfirmedMeasurementSchema(
+  motorNonNegativeDimensionConstraintSchema()
+);
+const confirmedCountMeasurementSchema = createConfirmedMeasurementSchema(
+  createSiConstraintSchema(nonNegativeNumberSchema, 'count')
+);
+const confirmedTemperatureMeasurementSchema = createConfirmedMeasurementSchema(
+  createSiConstraintSchema(nullableFiniteNumberSchema, 'degC')
+);
+
+export const motorFromMotorFieldOverridesSchema = z.strictObject({
+  electrical: z.strictObject({
+    power_kw: confirmedPowerMeasurementSchema.optional(),
+    speed_rpm: confirmedSpeedMeasurementSchema.optional(),
+    poles: confirmedPolesMeasurementSchema.optional(),
+    network: confirmedTextMeasurementSchema.optional(),
+    frequency_hz: confirmedFrequencyMeasurementSchema.optional(),
+    supply_mode: confirmedSupplyModeMeasurementSchema.optional(),
+    voltage_v: confirmedVoltageMeasurementSchema.optional(),
+    coupling: confirmedCouplingMeasurementSchema.optional(),
+    rated_current_a: confirmedCurrentMeasurementSchema.optional(),
+    rated_torque_nm: confirmedTorqueMeasurementSchema.optional()
+  }).optional(),
+  mechanical: z.strictObject({
+    frame: z.strictObject({
+      dimensions: z.strictObject({
+        A: confirmedDimensionMeasurementSchema().optional(),
+        B: confirmedDimensionMeasurementSchema().optional(),
+        C: confirmedDimensionMeasurementSchema().optional(),
+        H: confirmedDimensionMeasurementSchema().optional(),
+        K: confirmedDimensionMeasurementSchema().optional()
+      }).optional(),
+      adjustment: z.strictObject({
+        bolt_diameter: confirmedDimensionMeasurementSchema().optional(),
+        transverse_travel: confirmedDimensionMeasurementSchema().optional(),
+        longitudinal_travel: confirmedDimensionMeasurementSchema().optional()
+      }).optional()
+    }).optional(),
+    shaft: z.strictObject({
+      dimensions: z.strictObject({
+        D: confirmedDimensionMeasurementSchema().optional(),
+        D_fit_tolerance: confirmedTextMeasurementSchema.optional(),
+        E: confirmedDimensionMeasurementSchema().optional(),
+        F: confirmedDimensionMeasurementSchema().optional()
+      }).optional()
+    }).optional(),
+    coupling: z.strictObject({
+      axial_min: confirmedDimensionMeasurementSchema().optional(),
+      axial_max: confirmedDimensionMeasurementSchema().optional()
+    }).optional(),
+    flange: z.strictObject({
+      dimensions: z.strictObject({
+        M: confirmedDimensionMeasurementSchema().optional(),
+        N: confirmedDimensionMeasurementSchema().optional(),
+        P: confirmedDimensionMeasurementSchema().optional(),
+        S: confirmedDimensionMeasurementSchema().optional(),
+        S_thread: confirmedTextMeasurementSchema.optional(),
+        T: confirmedDimensionMeasurementSchema().optional(),
+        Z: confirmedCountMeasurementSchema.optional()
+      }).optional()
+    }).optional()
+  }).optional(),
+  application: z.strictObject({
+    ip_rating: confirmedTextMeasurementSchema.optional(),
+    brake_required: confirmedBooleanMeasurementSchema.optional(),
+    vfd_required: confirmedBooleanMeasurementSchema.optional(),
+    cooling_method: confirmedTextMeasurementSchema.optional(),
+    duty_service: confirmedTextMeasurementSchema.optional(),
+    ambient_temperature: confirmedTemperatureMeasurementSchema.optional(),
+    starts_per_hour: confirmedCountMeasurementSchema.optional()
+  }).optional()
+});
+
+export const motorCatalogListInputSchema = z.strictObject({
+  cursor: technicalIdSchema.optional(),
+  limit: z.number().int('Limite invalide').min(1, 'Limite invalide').max(
+    MAX_RESULTS,
+    'Limite trop grande'
+  ).default(25),
+  search: z.string().trim().min(1, 'Recherche invalide').max(
+    100,
+    'Recherche trop longue'
+  ).optional(),
+  brand: shortTextSchema.optional(),
+  power_kw: positiveNumberSchema.optional(),
+  poles: motorPolesValueSchema.optional(),
+  supply_mode: motorSupplyModeSchema.optional(),
+  frequency_hz: positiveNumberSchema.optional()
+});
+
+export const motorCatalogGetInputSchema = z.strictObject({
+  operating_point_id: technicalIdSchema,
+  mounting: motorMountingSchema,
+  flange_option_id: technicalIdSchema.optional(),
+  field_overrides: motorFromMotorFieldOverridesSchema.optional()
 });
 
 export const motorToleranceSchema = z.strictObject({
@@ -447,6 +613,209 @@ export const motorMatchedFlangeSchema = z.strictObject({
   }
 });
 
+const requiredCatalogEvidenceSchema = configuratorEvidenceListSchema.refine(
+  (evidence) => evidence.length > 0,
+  'Au moins une preuve catalogue est requise'
+);
+
+export const motorCatalogSnapshotSchema = z.strictObject({
+  id: uuidSchema,
+  label: shortTextSchema,
+  activated_at: z.string().datetime({ message: 'Date d activation invalide' })
+});
+
+export const motorCatalogListItemSchema = z.strictObject({
+  candidate: motorCandidateSchema,
+  model_evidence: requiredCatalogEvidenceSchema,
+  operating_point_evidence: requiredCatalogEvidenceSchema
+});
+
+export const motorCatalogListResponseSchema = z.strictObject({
+  request_id: uuidSchema,
+  snapshot: motorCatalogSnapshotSchema,
+  items: z.array(motorCatalogListItemSchema).max(MAX_RESULTS, 'Trop de moteurs'),
+  next_cursor: technicalIdSchema.nullable()
+});
+
+export const motorCatalogModelSchema = z.strictObject({
+  id: technicalIdSchema,
+  model_key: motorModelKeySchema,
+  brand: shortTextSchema,
+  series: shortTextSchema.nullable(),
+  designation: shortTextSchema,
+  article_no: shortTextSchema.nullable(),
+  pole_config: shortTextSchema,
+  motor_technology: z.enum(['asynchronous', 'PMaSynRM', 'SynRM', 'PM']),
+  casing_material: z.enum(['aluminium', 'cast-iron', 'steel']).nullable(),
+  protection_ip: shortTextSchema.nullable(),
+  frame_size: z.number().int().positive().nullable(),
+  frame_letter: shortTextSchema.nullable(),
+  shaft_spec: shortTextSchema.nullable(),
+  inertia_kgm2: nonNegativeNumberSchema.nullable(),
+  mass_kg: positiveNumberSchema.nullable(),
+  mass_mounting: z.enum(['B3', 'B5', 'B14', 'B34', 'B35', 'V1']).nullable(),
+  lifecycle: motorLifecycleSchema,
+  requires_vfd: z.boolean(),
+  is_iec_standard: z.boolean(),
+  article_no_status: z.enum(['published', 'not_published_in_source']),
+  data_grade: dataGradeSchema,
+  evidence: requiredCatalogEvidenceSchema
+});
+
+export const motorCatalogOperatingPointSchema = z.strictObject({
+  id: technicalIdSchema,
+  variant_key: shortTextSchema.nullable(),
+  poles: motorPolesValueSchema,
+  supply_mode: motorSupplyModeSchema,
+  frequency_hz: positiveNumberSchema,
+  voltage_v: positiveNumberSchema.nullable(),
+  coupling: motorCouplingSchema.nullable(),
+  rated_speed_rpm: positiveNumberSchema,
+  power_kw: positiveNumberSchema,
+  efficiency_class: z.enum(['IE1', 'IE2', 'IE3', 'IE4', 'IE5']).nullable(),
+  efficiency_standard: shortTextSchema.nullable(),
+  rated_torque_nm: positiveNumberSchema.nullable(),
+  rated_current_a: positiveNumberSchema.nullable(),
+  max_current_a: positiveNumberSchema.nullable(),
+  max_torque_nm: positiveNumberSchema.nullable(),
+  noise_db: nonNegativeNumberSchema.nullable(),
+  cos_phi: positiveNumberSchema.nullable(),
+  starting_torque_ratio: nonNegativeNumberSchema.nullable(),
+  starting_current_ratio: nonNegativeNumberSchema.nullable(),
+  breakdown_torque_ratio: nonNegativeNumberSchema.nullable(),
+  data_grade: dataGradeSchema,
+  evidence: requiredCatalogEvidenceSchema
+});
+
+export const motorCatalogEfficiencyPointSchema = z.strictObject({
+  id: technicalIdSchema,
+  load_fraction: positiveNumberSchema,
+  efficiency_pct: positiveNumberSchema,
+  cos_phi: positiveNumberSchema.nullable(),
+  data_grade: dataGradeSchema,
+  evidence: requiredCatalogEvidenceSchema
+});
+
+export const motorCatalogTorquePointSchema = z.strictObject({
+  id: technicalIdSchema,
+  at_frequency_hz: positiveNumberSchema,
+  torque_nm: positiveNumberSchema,
+  data_grade: dataGradeSchema,
+  evidence: requiredCatalogEvidenceSchema
+});
+
+export const motorCatalogDimensionSchema = z.strictObject({
+  id: technicalIdSchema,
+  definition_id: technicalIdSchema,
+  mounting: z.enum(['B3', 'B5', 'B14', 'B34', 'B35', 'V1', 'ANY']),
+  polarity: z.number().int().positive().nullable(),
+  published_code: shortTextSchema,
+  base_published_code: shortTextSchema.nullable(),
+  canonical_code: motorDimensionCodeSchema.nullable(),
+  mapping_status: z.enum(['mapped', 'unmapped', 'header_contamination']),
+  variant_context: shortTextSchema.nullable(),
+  value_mm: nonNegativeNumberSchema.nullable(),
+  value_text: shortTextSchema.nullable(),
+  data_grade: dataGradeSchema,
+  evidence: requiredCatalogEvidenceSchema
+}).superRefine((dimension, ctx) => {
+  if ((dimension.value_mm === null) === (dimension.value_text === null)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Une cote doit porter une seule valeur'
+    });
+  }
+});
+
+export const motorCatalogFlangeOptionSchema = z.strictObject({
+  id: technicalIdSchema,
+  mounting: z.enum(['B5', 'B14', 'B34', 'B35']),
+  role: motorFlangeRoleSchema,
+  order_code: shortTextSchema.nullable(),
+  flange_ref: shortTextSchema.nullable(),
+  din_ref: shortTextSchema.nullable(),
+  bore_type: z.enum(['through', 'tapped']),
+  dim_m_mm: nonNegativeNumberSchema.nullable(),
+  dim_n_mm: nonNegativeNumberSchema.nullable(),
+  dim_p_mm: nonNegativeNumberSchema.nullable(),
+  dim_s_mm: nonNegativeNumberSchema.nullable(),
+  dim_s_thread: shortTextSchema.nullable(),
+  dim_t_mm: nonNegativeNumberSchema.nullable(),
+  dim_la_mm: nonNegativeNumberSchema.nullable(),
+  dim_le_mm: nonNegativeNumberSchema.nullable(),
+  holes: z.number().int().positive().nullable(),
+  requires_option: z.boolean(),
+  data_grade: dataGradeSchema,
+  evidence: requiredCatalogEvidenceSchema
+}).superRefine((flange, ctx) => {
+  if (flange.requires_option !== (flange.role !== 'standard')) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Une bride larger ou smaller doit etre signalee comme option',
+      path: ['requires_option']
+    });
+  }
+});
+
+export const motorCatalogBrakeOptionSchema = z.strictObject({
+  id: technicalIdSchema,
+  brake_type: shortTextSchema,
+  brake_torque_nm: positiveNumberSchema,
+  order_code: shortTextSchema.nullable(),
+  data_grade: dataGradeSchema,
+  evidence: requiredCatalogEvidenceSchema
+});
+
+export const motorCatalogValidationIssueSchema = motorValidationIssueSchema.extend({
+  model_id: technicalIdSchema.nullable(),
+  operating_point_id: technicalIdSchema.nullable()
+});
+
+export const motorCatalogNormalizationSchema = z.strictObject({
+  status: z.enum(['satisfied', 'indeterminate']),
+  missing_facts: z.array(motorFactPathSchema).max(
+    motorFactPathSchema.options.length,
+    'Trop de faits manquants'
+  ),
+  issues: z.array(motorValidationIssueSchema).max(
+    MAX_ISSUES_PER_CANDIDATE,
+    'Trop d anomalies'
+  )
+});
+
+export const motorCatalogGetResponseSchema = z.strictObject({
+  request_id: uuidSchema,
+  snapshot: motorCatalogSnapshotSchema,
+  model: motorCatalogModelSchema,
+  operating_point: motorCatalogOperatingPointSchema,
+  efficiency_points: z.array(motorCatalogEfficiencyPointSchema).max(
+    MAX_CATALOG_POINTS,
+    'Trop de points de rendement'
+  ),
+  torque_points: z.array(motorCatalogTorquePointSchema).max(
+    MAX_CATALOG_POINTS,
+    'Trop de points de couple'
+  ),
+  dimensions: z.array(motorCatalogDimensionSchema).max(
+    MAX_CATALOG_DIMENSIONS,
+    'Trop de cotes'
+  ),
+  flange_options: z.array(motorCatalogFlangeOptionSchema).max(
+    MAX_CATALOG_FLANGES,
+    'Trop de brides'
+  ),
+  brake_options: z.array(motorCatalogBrakeOptionSchema).max(
+    MAX_CATALOG_OPTIONS,
+    'Trop d options frein'
+  ),
+  issues: z.array(motorCatalogValidationIssueSchema).max(
+    MAX_ISSUES_PER_CANDIDATE,
+    'Trop d anomalies'
+  ),
+  from_motor_spec: motorEquivalentSpecSchema,
+  normalization: motorCatalogNormalizationSchema
+});
+
 export const motorCandidateVerdictSchema = z.strictObject({
   candidate: motorCandidateSchema,
   matched_flange: motorMatchedFlangeSchema.nullable(),
@@ -480,8 +849,27 @@ export const motorEquivalentFromSpecResponseSchema = z.strictObject({
 
 export type MotorMounting = z.infer<typeof motorMountingSchema>;
 export type MotorDimensionCode = z.infer<typeof motorDimensionCodeSchema>;
+export type MotorCatalogListInput = z.infer<typeof motorCatalogListInputSchema>;
+export type MotorCatalogGetInput = z.infer<typeof motorCatalogGetInputSchema>;
+export type MotorCatalogListResponse = z.infer<typeof motorCatalogListResponseSchema>;
+export type MotorCatalogGetResponse = z.infer<typeof motorCatalogGetResponseSchema>;
+export type MotorCatalogDimension = z.infer<typeof motorCatalogDimensionSchema>;
+export type MotorCatalogFlangeOption = z.infer<typeof motorCatalogFlangeOptionSchema>;
+export type MotorFromMotorFieldOverrides = z.infer<typeof motorFromMotorFieldOverridesSchema>;
 export type MotorEquivalentFromSpecInput = z.infer<typeof motorEquivalentFromSpecInputSchema>;
 export type MotorEquivalentFromSpecResponse = z.infer<typeof motorEquivalentFromSpecResponseSchema>;
+
+export const safeParseMotorCatalogListInput = (input: unknown) =>
+  motorCatalogListInputSchema.safeParse(input);
+
+export const safeParseMotorCatalogGetInput = (input: unknown) =>
+  motorCatalogGetInputSchema.safeParse(input);
+
+export const safeParseMotorCatalogListOutput = (output: unknown) =>
+  motorCatalogListResponseSchema.safeParse(output);
+
+export const safeParseMotorCatalogGetOutput = (output: unknown) =>
+  motorCatalogGetResponseSchema.safeParse(output);
 
 export const safeParseMotorEquivalentFromSpecInput = (input: unknown) =>
   motorEquivalentFromSpecInputSchema.safeParse(input);

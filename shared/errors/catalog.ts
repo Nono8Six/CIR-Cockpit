@@ -117,6 +117,13 @@ export const ERROR_CATALOG: Record<string, ErrorCatalogEntry> = {
     "retry",
     true,
   ),
+  CONFIGURATOR_FLANGE_OPTION_NOT_FOUND: makeEntry(
+    "CONFIGURATOR_FLANGE_OPTION_NOT_FOUND",
+    "Option de bride introuvable.",
+    "db",
+    "warning",
+    "reload",
+  ),
   CONFIGURATOR_MECHANICAL_CLEARANCE_UNAVAILABLE: makeEntry(
     "CONFIGURATOR_MECHANICAL_CLEARANCE_UNAVAILABLE",
     "Jeu mécanique non calculable.",

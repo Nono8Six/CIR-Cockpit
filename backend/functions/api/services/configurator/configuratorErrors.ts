@@ -46,6 +46,21 @@ export const configuratorOperatingPointNotFound = (): HttpError =>
     'Point de fonctionnement introuvable.'
   );
 
+export const configuratorFlangeOptionNotFound = (): HttpError =>
+  createConfiguratorError(
+    404,
+    'CONFIGURATOR_FLANGE_OPTION_NOT_FOUND',
+    'Option de bride introuvable.'
+  );
+
+export const configuratorInvalidPayload = (cause?: unknown): HttpError =>
+  createConfiguratorError(
+    400,
+    'INVALID_PAYLOAD',
+    'Payload invalide.',
+    cause
+  );
+
 export const configuratorMechanicalClearanceUnavailable = (): HttpError =>
   createConfiguratorError(
     422,

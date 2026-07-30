@@ -6,6 +6,8 @@ import {
 import { getErrorCatalogEntry } from '../../../../../shared/errors/catalog.ts';
 import { handleError } from '../../middleware/errorHandler.ts';
 import {
+  configuratorFlangeOptionNotFound,
+  configuratorInvalidPayload,
   configuratorMechanicalClearanceUnavailable,
   configuratorOperatingPointNotFound,
   configuratorOutputInvalid,
@@ -31,6 +33,8 @@ const makeContext = (): ContextLike => ({
 const errorFactories = [
   configuratorSnapshotUnavailable,
   configuratorOperatingPointNotFound,
+  configuratorFlangeOptionNotFound,
+  () => configuratorInvalidPayload(new Error('private input diagnostics')),
   configuratorMechanicalClearanceUnavailable,
   configuratorRulesetUnavailable,
   () => mapConfiguratorReadError(Object.assign(new Error('private SQL'), { code: 'XX000' })),
@@ -38,7 +42,7 @@ const errorFactories = [
   () => configuratorOutputInvalid(new Error('private backend output'))
 ];
 
-Deno.test('all C3-2 public errors are catalogued in French', () => {
+Deno.test('all C3 public errors are catalogued in French', () => {
   for (const factory of errorFactories) {
     const error = factory();
     const code = String(Reflect.get(error, 'code'));
@@ -50,7 +54,7 @@ Deno.test('all C3-2 public errors are catalogued in French', () => {
   }
 });
 
-Deno.test('C3-2 public errors expose request_id but no SQL, stack, claims or raw diagnostics', async () => {
+Deno.test('C3 public errors expose request_id but no SQL, stack, claims or raw diagnostics', async () => {
   const canaries = [
     'select secret from private.table',
     'Bearer private-token',
