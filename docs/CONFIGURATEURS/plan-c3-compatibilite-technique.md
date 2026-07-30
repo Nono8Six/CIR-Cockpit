@@ -36,7 +36,8 @@ preuves de chaque correction.
 
 - Branche cible : `main`.
 - C0, C1 et C2/C2d : terminés avec **GO pour démarrer C3**.
-- C3/C4 : aucune implémentation commencée.
+- C3-1 à C3-5 : terminés et prouvés ; décision courante **GO C3-6**.
+  C3 reste globalement en cours et C3-6 n'est pas commencé.
 - Snapshot moteur actif unique :
   `6fbf4046-be74-4422-9fe8-2d2d8a8d9157`, statut `active`, gate `passed`.
 - Lot actif : `cc5689ac-cbf1-45e8-a079-62df8f77dfd8`, empreinte
@@ -50,9 +51,11 @@ preuves de chaque correction.
   aucun advisor sécurité propre à `configurator`.
 - Edge Function `api` active en version 198, mais la probe
   `configurator.motor.catalog.list` répond `404 NOT_FOUND`.
-- Surface locale : contrats dans `shared/schemas/configurator/`, mais aucun
-  routeur/service Configurateurs dans `backend/functions/api` et aucune
-  intégration frontend.
+- Surface locale : contrats stricts, exécuteur read-only, catalogue,
+  normalisation et moteurs mécanique puis électrique/applicatif présents dans
+  `shared/schemas/configurator/` et `backend/functions/api/services/configurator/`.
+  Aucune route tRPC Configurateurs, intégration frontend ou surface runtime
+  distante n'est encore livrée.
 - Registre d'incertitudes obligatoire :
   `docs/CONFIGURATEURS/c2d/incertitudes-restantes.md`.
 - Audit complet : `docs/CONFIGURATEURS/audit-etat-2026-07-30.md`.
@@ -467,34 +470,85 @@ Décision de sortie : **GO C3-5**. C3-5 n'est pas commencé dans ce checkpoint.
 
 ### Électrique bloquant
 
-- [ ] Puissance nominale identique.
-- [ ] Nombre de pôles identique.
-- [ ] Fréquence identique.
-- [ ] Mode réseau ou variateur compatible.
-- [ ] Tension et couplage compatibles avec le réseau fourni.
+- [x] Puissance nominale identique.
+- [x] Nombre de pôles identique.
+- [x] Fréquence identique.
+- [x] Mode réseau ou variateur compatible.
+- [x] Tension et couplage compatibles avec le réseau fourni.
 
 ### Électrique informatif
 
-- [ ] Vitesse, couple, rendement/IE, courant, démarrage, masse, inertie et bruit
+- [x] Vitesse, couple, rendement/IE, courant, démarrage, masse, inertie et bruit
   ne bloquent pas la compatibilité.
-- [ ] Courant supérieur : conseil protection et chute de tension.
-- [ ] Couple inférieur : information, puis contrôle seulement si exigence fournie.
-- [ ] Rendement différent : comparaison énergétique.
-- [ ] Vitesse différente à pôles/fréquence identiques : information de glissement.
+- [x] Courant supérieur : conseil protection et chute de tension.
+- [x] Couple inférieur : information, puis contrôle seulement si exigence fournie.
+- [x] Rendement différent : comparaison énergétique.
+- [x] Vitesse différente à pôles/fréquence identiques : information de glissement.
 
 ### Application
 
-- [ ] IP, frein, VFD, refroidissement, service, température et démarrages/heure
+- [x] IP, frein, VFD, refroidissement, service, température et démarrages/heure
   ne bloquent que s’ils sont explicitement demandés.
-- [ ] Exigence non publiée : `indeterminate`.
-- [ ] Exigence publiée et insuffisante : `not_satisfied`.
-- [ ] Aucune exigence : information seulement.
+- [x] Exigence non publiée : `indeterminate`.
+- [x] Exigence publiée et insuffisante : `not_satisfied`.
+- [x] Aucune exigence : information seulement.
 
 ### Checkpoint C3-5
 
 Tests couvrant chaque exigence absente, satisfaite, non satisfaite et non
 publiée. Un écart de rendement, couple ou courant ne doit jamais masquer ni
 créer un blocage électrique.
+
+**Checkpoint validé le 30/07/2026 — VERT.**
+
+Livraison :
+
+- `motorElectricalApplicationCompatibility.ts` est une frontière métier pure,
+  sans SQL, tRPC, état global, score, donnée commerciale ni appel IA ;
+- les cinq critères électriques décisifs comparent uniquement des valeurs
+  prouvées ; toute absence ou valeur non publiée devient `indeterminate` ;
+- courant, couple sans exigence, classe IE et vitesse/glissement restent
+  informatifs et ne participent pas au verdict électrique ;
+- une exigence explicite de couple devient décisive ; sans cette exigence,
+  aucun écart de couple ne crée d'incompatibilité ;
+- les sept exigences applicatives sont évaluées seulement si elles sont
+  fournies. Une capacité candidate absente ou non interprétable reste
+  `indeterminate`, jamais une non-conformité supposée ;
+- le ruleset reste `motor.compatibility.cir` version `1`, l'agrégation conserve
+  `not_satisfied > indeterminate > under_reservation > satisfied`, et toutes les
+  listes/preuves sont dédupliquées puis ordonnées canoniquement ;
+- la normalisation catalogue propage désormais la classe IE sourcée dans la
+  spécification moteur.
+
+Preuves :
+
+- 60 tests Deno C3-5 réussis ; matrice complète des cinq critères électriques
+  et des sept exigences applicatives, informations non bloquantes, priorité des
+  statuts, `missing_facts`, preuves et ordre d'entrée ;
+- non-régression ciblée : 41 tests C3-4 et 6 tests de normalisation réussis ;
+- 9 tests Vitest shared réussis, dont sortie C3-5 positive/négative et refus
+  d'un champ commercial externe ; lint et typecheck ciblés verts ;
+- `qa:back` vert : 150 fichiers lintés, typecheck backend et 561 tests réussis,
+  0 échec, 16 intégrations conditionnelles ignorées ;
+- `qa:fast` vert dans un worktree isolé : parité migrations, 160 fichiers /
+  744 tests frontend, conformité erreurs, lint/typecheck et 561 tests backend ;
+- `pnpm run qa` vert dans le même worktree isolé : 744 tests frontend avec
+  couverture, build, 561 tests backend et 9 intégrations distantes réussies,
+  0 échec, 8 ignorées ;
+- MCP Supabase en lecture seule : projet `rbjtrcorlezvocayluok`
+  `ACTIVE_HEALTHY`, unique snapshot actif `6fbf4046-be74-4422-9fe8-2d2d8a8d9157`
+  `active/passed`, 1 665 modèles, 2 355 points, 45 568 cotes, 7 940 brides,
+  141 issues, Edge Function `api` active version 198 ;
+- aucune migration, mutation Supabase, fixture persistante, route tRPC,
+  modification Auth/RLS, Edge Function ou intégration frontend.
+
+Limites conservées : une notation IP publiée hors forme comparable reste
+`indeterminate`; refroidissement et service sont comparés comme exigences
+explicites canoniques. Démarrage, masse, inertie et bruit restent informatifs et
+n'entrent dans aucun statut décisif. La recherche d'équivalents, l'énergie, le
+classement, les conseils consolidés, tRPC et le déploiement restent hors C3-5.
+
+Décision de sortie : **GO C3-6**. C3-6 n'est pas commencé dans ce checkpoint.
 
 ## 10. Phase C3-6 — Équivalences, conseils, énergie et comparaison
 

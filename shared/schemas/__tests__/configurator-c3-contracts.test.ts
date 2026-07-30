@@ -5,9 +5,11 @@ import {
   isApplicableFieldOverride,
   motorCandidateVerdictSchema,
   motorCouplingAxialRangeSchema,
+  motorElectricalApplicationCompatibilityResultSchema,
   motorFrameDimensionsSchema,
   motorShaftDimensionsSchema,
   safeParseMotorCandidateVerdictOutput,
+  safeParseMotorElectricalApplicationCompatibilityOutput,
   safeParseMotorEquivalentFromSpecInput
 } from '../configurator/motor.schema.ts';
 
@@ -65,7 +67,8 @@ const validInput = {
       origin: 'nameplate' as const,
       confirmation: 'confirmed' as const,
       evidence: measurementEvidence
-    }
+    },
+    efficiency_class: confirmedText('IE3')
   },
   mechanical: {
     frame: {
@@ -182,6 +185,44 @@ const validVerdict = {
   }],
   issues: [],
   missing_facts: ['application.ip_rating']
+} as const;
+
+const electricalRuleCodes = [
+  'POWER',
+  'POLES',
+  'FREQUENCY',
+  'SUPPLY_MODE',
+  'VOLTAGE_COUPLING'
+] as const;
+
+const validElectricalApplicationResult = {
+  ruleset_id: MOTOR_COMPATIBILITY_RULESET.ruleset_id,
+  ruleset_version: MOTOR_COMPATIBILITY_RULESET.ruleset_version,
+  electrical_status: 'satisfied',
+  application_status: 'satisfied',
+  criteria: electricalRuleCodes.map((code) => ({
+    code,
+    label: `Critere ${code}`,
+    status: 'satisfied' as const,
+    blocking: true,
+    expected: 1,
+    observed: 1,
+    explanation: 'Le critere est satisfait.',
+    evidence: catalogEvidence,
+    affected_by_issue_codes: []
+  })),
+  adaptations_required: [],
+  checks_required: [],
+  facts_used: validVerdict.facts_used,
+  rules_applied: electricalRuleCodes.map((ruleCode) => ({
+    rule_code: ruleCode,
+    ruleset_id: MOTOR_COMPATIBILITY_RULESET.ruleset_id,
+    ruleset_version: MOTOR_COMPATIBILITY_RULESET.ruleset_version,
+    status: 'satisfied' as const,
+    decisive: true,
+    fact_paths: ['electrical.power_kw' as const]
+  })),
+  missing_facts: []
 } as const;
 
 describe('contrats Configurateurs C3-1', () => {
@@ -302,6 +343,23 @@ describe('contrats Configurateurs C3-1', () => {
         ...validVerdict.facts_used[0],
         evidence: []
       }]
+    }).success).toBe(false);
+  });
+
+  it('valide la sortie C3-5 stricte et refuse version ou champ commercial externe', () => {
+    expect(motorElectricalApplicationCompatibilityResultSchema.safeParse(
+      validElectricalApplicationResult
+    ).success).toBe(true);
+    expect(safeParseMotorElectricalApplicationCompatibilityOutput(
+      validElectricalApplicationResult
+    ).success).toBe(true);
+    expect(safeParseMotorElectricalApplicationCompatibilityOutput({
+      ...validElectricalApplicationResult,
+      ruleset_version: 2
+    }).success).toBe(false);
+    expect(safeParseMotorElectricalApplicationCompatibilityOutput({
+      ...validElectricalApplicationResult,
+      availability: true
     }).success).toBe(false);
   });
 });

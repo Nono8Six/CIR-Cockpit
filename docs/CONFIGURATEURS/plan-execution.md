@@ -12,17 +12,17 @@ de chaque tranche.
 | C0 — Cadrage | ✅ terminée | GO C1 | `docs/CONFIGURATEURS/00-cadrage-c0.md` |
 | C1 — Schéma PostgreSQL | ✅ terminée | GO C2 | `docs/CONFIGURATEURS/01-schema-c1.md` |
 | C2 — Migration des données | ✅ terminée | **GO C3** | section C2 ci-dessous |
-| C3 — Compatibilité technique backend | 🟠 en cours | **GO C3-5** | checkpoints C3-1 à C3-4 ci-dessous |
+| C3 — Compatibilité technique backend | 🟠 en cours | **GO C3-6** | checkpoints C3-1 à C3-5 ci-dessous |
 | C4 à C14 | ⬜ non commencées | non autorisées | plan directeur |
 
-**Verdict au 30/07/2026 :** C3-4 est terminé côté services backend. Les
-lectures `catalog.list/get`, la normalisation sourcée et le moteur mécanique
-déterministe sont prouvés sous rôle `tcs` réel. La fonctionnalité
-Configurateurs n'est pas encore disponible dans l'application : C3-5 et C3-6,
-la surface tRPC C3-7, le service frontend et les écrans restent absents.
+**Verdict au 30/07/2026 :** C3-5 est terminé côté services backend. Les
+lectures `catalog.list/get`, la normalisation sourcée et les moteurs mécanique,
+électrique et applicatif déterministes sont prouvés. La fonctionnalité
+Configurateurs n'est pas encore disponible dans l'application : C3-6, la
+surface tRPC C3-7, le service frontend et les écrans restent absents.
 
-**Prochaine action :** démarrer C3-5 seulement sur une nouvelle exécution
-autorisée. Le présent checkpoint s'arrête après C3-4. Le catalogue technique
+**Prochaine action :** démarrer C3-6 seulement sur une nouvelle exécution
+autorisée. Le présent checkpoint s'arrête après C3-5. Le catalogue technique
 moteur utilisé reste le snapshot actif
 `6fbf4046-be74-4422-9fe8-2d2d8a8d9157`, lot `cc5689ac…`, 1 665 modèles
 physiques, 2 355 points de fonctionnement et 45 568 cotes.
@@ -470,8 +470,8 @@ Checkpoint du 28/07/2026 : **terminé et activé**. La preuve détaillée est da
 
 ## C3 — Compatibilité technique backend
 
-Statut : **en cours depuis le 30/07/2026**. C4 reste absorbée par C3. C3-4 est
-terminé ; C3-5, le frontend et toute IA Configurateurs restent non commencés.
+Statut : **en cours depuis le 30/07/2026**. C4 reste absorbée par C3. C3-5 est
+terminé ; C3-6, le frontend et toute IA Configurateurs restent non commencés.
 
 ### Checkpoint C3-1 — contrats et règles versionnées
 
@@ -624,6 +624,60 @@ applicative, ni exposition tRPC.
 
 Décision de sortie : **GO C3-5**. C3-5 reste non commencé.
 
+### Checkpoint C3-5 — compatibilité électrique et applicative
+
+- [x] Frontière métier pure
+  `evaluateMotorElectricalApplicationCompatibility`, sans SQL, tRPC, état
+  global, score, donnée commerciale ou IA.
+- [x] Puissance, pôles, fréquence, mode réseau/variateur et couple
+  tension/couplage évalués comme critères électriques décisifs.
+- [x] Toute donnée décisive absente ou non publiée devient `indeterminate`,
+  avec propagation canonique dans `missing_facts`.
+- [x] Courant supérieur, couple sans exigence, classe IE différente et
+  vitesse/glissement restent informatifs et ne masquent ni ne créent un
+  blocage.
+- [x] Une exigence explicite de couple est contrôlée séparément et devient
+  décisive uniquement lorsqu'elle est réellement fournie.
+- [x] IP, frein, VFD, refroidissement, service, température ambiante et
+  démarrages/heure sont évalués uniquement lorsqu'une exigence explicite existe.
+- [x] Capacité candidate absente/non publiée : `indeterminate`; capacité
+  publiée insuffisante : `not_satisfied`; aucune exigence : aucune pénalité.
+- [x] Ruleset immuable `motor.compatibility.cir` version `1`, quatre statuts et
+  priorité `not_satisfied > indeterminate > under_reservation > satisfied`.
+- [x] Sortie Zod stricte, preuves obligatoires pour tout fait utilisé, listes
+  dédupliquées et canoniques, ordre d'entrée sans effet.
+- [x] **60 tests Deno C3-5**, **41 tests C3-4**, **6 tests de normalisation** et
+  **9 tests Vitest shared** réussis ; lint et typecheck ciblés verts.
+- [x] `qa:back` vert : 150 fichiers, **561 tests backend**, 0 échec et
+  16 intégrations conditionnelles ignorées.
+- [x] `qa:fast` vert dans un worktree isolé : parité migrations, 160 fichiers /
+  **744 tests frontend**, conformité erreurs, lint/typecheck et 561 tests
+  backend.
+- [x] `pnpm run qa` vert dans le même worktree isolé : 744 tests frontend avec
+  couverture, build, 561 tests backend et **9 intégrations distantes réussies**,
+  0 échec, 8 ignorées.
+- [x] Baseline MCP relue sans écriture : `rbjtrcorlezvocayluok`
+  `ACTIVE_HEALTHY`, unique actif `6fbf4046-…` `active/passed`, 1 665 modèles,
+  2 355 points, 45 568 cotes, 7 940 brides, 141 issues, API v198.
+- [x] Aucune migration, mutation Supabase, fixture persistante, modification
+  Auth/RLS, route tRPC, Edge Function, déploiement ou intégration frontend.
+
+Fichiers :
+`shared/schemas/configurator/motor.schema.ts`,
+`shared/schemas/__tests__/configurator-c3-contracts.test.ts`,
+`backend/functions/api/services/configurator/motorCatalogNormalization.ts`,
+`motorCatalogNormalization_test.ts`,
+`motorElectricalApplicationCompatibility.ts` et
+`motorElectricalApplicationCompatibility_test.ts`.
+
+Limitations explicites : notation IP non comparable, capacité applicative
+absente et couple exigé non publié restent `indeterminate`. Démarrage, masse,
+inertie et bruit ne participent à aucun verdict décisif. C3-5 ne fournit ni
+recherche d'équivalents, ni énergie/classement, ni conseils consolidés, ni
+surface tRPC.
+
+Décision de sortie : **GO C3-6**. C3-6 reste non commencé.
+
 ### Rapatriement de `tools/extract`
 
 Depuis le 27/07/2026, les extracteurs et leurs sorties sont versionnés dans ce
@@ -718,3 +772,4 @@ Le plan de reprise détaillé, découpé par checkpoints, est
 | 30/07/2026 | Déblocage QA / livraison | Fixture Auth d'intégration recréée après autorisation, profil humain actif `tcs` rattaché à CIR Bordeaux. `pnpm run qa` vert sur `9b97e8a` : 160/160 fichiers et 742/742 tests frontend, 454 tests backend, 9 intégrations distantes réussies, 0 échec, 7 ignorées. | Preuve MCP : 1 Auth confirmée, 1 profil, 1 rattachement, 0 entité / interaction résiduelle ; push de `main` autorisé |
 | 30/07/2026 | C3-3 | Services catalogue actifs uniquement, détail technique complet, normalisation `fromMotor` sourcée, surcharges terrain strictes et absence décisive indéterminée. | `qa` vert : 763 frontend, 460 backend, 9 intégrations standards ; suite ciblée 11 intégrations dont fixture `tcs`, 0 échec — **GO C3-4** |
 | 30/07/2026 | C3-4 | Moteur mécanique pur et déterministe pour pattes, arbre et brides ; faits absents préservés, preuves propagées, aucune donnée commerciale ni exposition tRPC. | Index C3-4 isolé : `qa` vert, 743 frontend, 501 backend, 9 intégrations standards ; suite ciblée 11 intégrations dont preuve B5 `tcs`, 0 échec — **GO C3-5** |
+| 30/07/2026 | C3-5 | Moteur électrique/applicatif pur : cinq blocages électriques, informations non bloquantes, sept exigences explicites, inconnues préservées et preuves canoniques. | Worktree isolé : 60 tests C3-5, 41 C3-4, 6 normalisation, 9 shared ; `qa` vert avec 744 frontend, 561 backend et 9 intégrations, 0 échec — **GO C3-6** |

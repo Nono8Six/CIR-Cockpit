@@ -274,6 +274,10 @@ export const normalizeMotorCatalog = (
         input.operatingPoint.rated_torque_nm,
         input.operatingPoint.evidence,
         'N.m'
+      ),
+      efficiency_class: catalogFact(
+        input.operatingPoint.efficiency_class,
+        input.operatingPoint.evidence
       )
     },
     mechanical: {

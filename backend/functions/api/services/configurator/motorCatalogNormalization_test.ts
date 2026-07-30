@@ -163,6 +163,7 @@ Deno.test('catalog normalization applies only schema-confirmed measurements afte
 
   assertEquals(result.spec.mechanical.frame.dimensions.H?.value, 165);
   assertEquals(result.spec.mechanical.frame.dimensions.H?.origin, 'user_measurement');
+  assertEquals(result.spec.electrical.efficiency_class?.value, 'IE4');
   assertEquals(result.normalization.status, 'satisfied');
 });
 

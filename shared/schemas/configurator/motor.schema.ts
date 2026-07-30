@@ -74,6 +74,7 @@ export const motorDimensionCodeSchema = z.enum([
 
 export const motorSupplyModeSchema = z.enum(['mains', 'vfd']);
 export const motorCouplingSchema = z.enum(['Y', 'D']);
+export const motorEfficiencyClassSchema = z.enum(['IE1', 'IE2', 'IE3', 'IE4', 'IE5']);
 export const motorFactPathSchema = z.enum([
   'mounting',
   'electrical.power_kw',
@@ -86,6 +87,7 @@ export const motorFactPathSchema = z.enum([
   'electrical.coupling',
   'electrical.rated_current_a',
   'electrical.rated_torque_nm',
+  'electrical.efficiency_class',
   'mechanical.frame.A',
   'mechanical.frame.B',
   'mechanical.frame.C',
@@ -135,6 +137,10 @@ export const motorRuleCodeSchema = z.enum([
   'FREQUENCY',
   'SUPPLY_MODE',
   'VOLTAGE_COUPLING',
+  'SPEED_INFORMATION',
+  'CURRENT_INFORMATION',
+  'TORQUE_INFORMATION',
+  'EFFICIENCY_INFORMATION',
   'APPLICATION_REQUIREMENT'
 ]);
 export const motorSortSchema = z.enum([
@@ -157,6 +163,12 @@ export const motorCouplingConstraintSchema = createConstraintValueSchema(motorCo
   { message: 'Aucune unite attendue', path: ['unit'] }
 );
 export const motorBooleanConstraintSchema = createConstraintValueSchema(z.boolean()).refine(
+  (input) => input.unit == null,
+  { message: 'Aucune unite attendue', path: ['unit'] }
+);
+export const motorEfficiencyClassConstraintSchema = createConstraintValueSchema(
+  motorEfficiencyClassSchema
+).refine(
   (input) => input.unit == null,
   { message: 'Aucune unite attendue', path: ['unit'] }
 );
@@ -197,7 +209,8 @@ export const motorElectricalSpecSchema = z.strictObject({
   voltage_v: createSiConstraintSchema(positiveNumberSchema, 'V').optional(),
   coupling: motorCouplingConstraintSchema.optional(),
   rated_current_a: createSiConstraintSchema(positiveNumberSchema, 'A').optional(),
-  rated_torque_nm: createSiConstraintSchema(positiveNumberSchema, 'N.m').optional()
+  rated_torque_nm: createSiConstraintSchema(positiveNumberSchema, 'N.m').optional(),
+  efficiency_class: motorEfficiencyClassConstraintSchema.optional()
 });
 
 export const motorFrameDimensionsSchema = z.strictObject({
@@ -363,6 +376,9 @@ const confirmedCurrentMeasurementSchema = createConfirmedMeasurementSchema(
 const confirmedTorqueMeasurementSchema = createConfirmedMeasurementSchema(
   createSiConstraintSchema(positiveNumberSchema, 'N.m')
 );
+const confirmedEfficiencyClassMeasurementSchema = createConfirmedMeasurementSchema(
+  motorEfficiencyClassConstraintSchema
+);
 const confirmedDimensionMeasurementSchema = () => createConfirmedMeasurementSchema(
   motorNonNegativeDimensionConstraintSchema()
 );
@@ -387,7 +403,8 @@ export const motorFromMotorFieldOverridesSchema = z.strictObject({
     voltage_v: confirmedVoltageMeasurementSchema.optional(),
     coupling: confirmedCouplingMeasurementSchema.optional(),
     rated_current_a: confirmedCurrentMeasurementSchema.optional(),
-    rated_torque_nm: confirmedTorqueMeasurementSchema.optional()
+    rated_torque_nm: confirmedTorqueMeasurementSchema.optional(),
+    efficiency_class: confirmedEfficiencyClassMeasurementSchema.optional()
   }).optional(),
   mechanical: z.strictObject({
     frame: z.strictObject({
@@ -617,7 +634,7 @@ export const motorCandidateSchema = z.strictObject({
   frequency_hz: positiveNumberSchema,
   poles: z.number().int().positive(),
   supply_mode: motorSupplyModeSchema,
-  efficiency_class: z.enum(['IE1', 'IE2', 'IE3', 'IE4', 'IE5']).nullable(),
+  efficiency_class: motorEfficiencyClassSchema.nullable(),
   lifecycle: motorLifecycleSchema,
   data_grade: dataGradeSchema
 });
@@ -658,6 +675,32 @@ export const motorMechanicalCompatibilityResultSchema = z.strictObject({
   rules_applied: z.array(motorAppliedRuleSchema).min(
     1,
     'Au moins une regle mecanique est requise'
+  ).max(MAX_RULES_PER_CANDIDATE),
+  missing_facts: z.array(motorFactPathSchema).max(
+    motorFactPathSchema.options.length,
+    'Trop de faits manquants'
+  )
+});
+
+export const motorElectricalApplicationCompatibilityResultSchema = z.strictObject({
+  ruleset_id: z.literal(MOTOR_COMPATIBILITY_RULESET.ruleset_id),
+  ruleset_version: z.literal(MOTOR_COMPATIBILITY_RULESET.ruleset_version),
+  electrical_status: verdictStatusSchema,
+  application_status: verdictStatusSchema,
+  criteria: z.array(motorCriterionSchema).min(
+    5,
+    'Les cinq criteres electriques decisifs sont requis'
+  ).max(50, 'Trop de criteres electriques et applicatifs'),
+  adaptations_required: z.array(motorRequiredActionSchema).max(
+    MAX_ISSUES_PER_CANDIDATE
+  ),
+  checks_required: z.array(motorRequiredActionSchema).max(
+    MAX_ISSUES_PER_CANDIDATE
+  ),
+  facts_used: z.array(motorUsedFactSchema).max(MAX_FACTS_PER_CANDIDATE),
+  rules_applied: z.array(motorAppliedRuleSchema).min(
+    5,
+    'Les cinq regles electriques decisives sont requises'
   ).max(MAX_RULES_PER_CANDIDATE),
   missing_facts: z.array(motorFactPathSchema).max(
     motorFactPathSchema.options.length,
@@ -724,7 +767,7 @@ export const motorCatalogOperatingPointSchema = z.strictObject({
   coupling: motorCouplingSchema.nullable(),
   rated_speed_rpm: positiveNumberSchema,
   power_kw: positiveNumberSchema,
-  efficiency_class: z.enum(['IE1', 'IE2', 'IE3', 'IE4', 'IE5']).nullable(),
+  efficiency_class: motorEfficiencyClassSchema.nullable(),
   efficiency_standard: shortTextSchema.nullable(),
   rated_torque_nm: positiveNumberSchema.nullable(),
   rated_current_a: positiveNumberSchema.nullable(),
@@ -910,10 +953,15 @@ export type MotorCatalogFlangeOption = z.infer<typeof motorCatalogFlangeOptionSc
 export type MotorFromMotorFieldOverrides = z.infer<typeof motorFromMotorFieldOverridesSchema>;
 export type MotorEquivalentFromSpecInput = z.infer<typeof motorEquivalentFromSpecInputSchema>;
 export type MotorEquivalentFromSpecResponse = z.infer<typeof motorEquivalentFromSpecResponseSchema>;
+export type MotorElectricalSpec = z.infer<typeof motorElectricalSpecSchema>;
+export type MotorApplicationRequirements = z.infer<typeof motorApplicationRequirementsSchema>;
 export type MotorMechanicalSpec = z.infer<typeof motorMechanicalSpecSchema>;
 export type MotorMatchedFlange = z.infer<typeof motorMatchedFlangeSchema>;
 export type MotorMechanicalCompatibilityResult = z.infer<
   typeof motorMechanicalCompatibilityResultSchema
+>;
+export type MotorElectricalApplicationCompatibilityResult = z.infer<
+  typeof motorElectricalApplicationCompatibilityResultSchema
 >;
 
 export const safeParseMotorCatalogListInput = (input: unknown) =>
@@ -936,6 +984,9 @@ export const safeParseMotorCandidateVerdictOutput = (output: unknown) =>
 
 export const safeParseMotorMechanicalCompatibilityOutput = (output: unknown) =>
   motorMechanicalCompatibilityResultSchema.safeParse(output);
+
+export const safeParseMotorElectricalApplicationCompatibilityOutput = (output: unknown) =>
+  motorElectricalApplicationCompatibilityResultSchema.safeParse(output);
 
 export const isApplicableFieldOverride = (
   fact: {
