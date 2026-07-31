@@ -9,14 +9,10 @@ import DashboardDossiersTable from './dashboard/overview/DashboardDossiersTable'
 import DashboardEvolutionChart from './dashboard/overview/DashboardEvolutionChart';
 import DashboardKpiRow from './dashboard/overview/DashboardKpiRow';
 import DashboardOverviewHeader from './dashboard/overview/DashboardOverviewHeader';
-import DashboardPipelineSummary from './dashboard/overview/DashboardPipelineSummary';
-import DashboardPriorityQueue from './dashboard/overview/DashboardPriorityQueue';
-import DashboardTopClients from './dashboard/overview/DashboardTopClients';
 import PipelineLostDialog from './dashboard/pipeline/PipelineLostDialog';
 import { useDashboardScope } from '@/hooks/dashboard-state/useDashboardScope';
 import { useDashboardState } from '@/hooks/dashboard-state/useDashboardState';
 import { dashboardSearchStateSchema } from '@/app/dashboardSearch';
-import { OVERVIEW_PERIODS } from '@/utils/dashboard/dashboardOverview';
 import type { AgencyConfig } from '@/services/config';
 
 interface DashboardProps {
@@ -65,13 +61,16 @@ const Dashboard = ({
     setOverviewPeriod,
     channelFilter,
     setChannelFilter,
+    scopeFilter,
+    setScopeFilter,
+    sort,
+    toggleSort,
     selectedInteraction,
     setSelectedInteraction,
     kpis,
-    myDayView,
-    pipelineBoard,
     evolution,
-    topClients,
+    showEvolutionChart,
+    openDossiersDelta,
     tableRows,
     getStatusBadgeClass,
     handleConvertRequest,
@@ -148,28 +147,28 @@ const Dashboard = ({
       if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
         if (tableRows.length === 0) return;
         event.preventDefault();
-        const currentIndex = tableRows.findIndex((item) => item.id === activeInteractionId);
+        const currentIndex = tableRows.findIndex((row) => row.interaction.id === activeInteractionId);
         const nextIndex = event.key === 'ArrowDown'
           ? currentIndex === -1 ? 0 : Math.min(currentIndex + 1, tableRows.length - 1)
           : currentIndex === -1 ? 0 : Math.max(currentIndex - 1, 0);
-        setActiveInteractionId(tableRows[nextIndex]?.id ?? null);
+        setActiveInteractionId(tableRows[nextIndex]?.interaction.id ?? null);
         return;
       }
 
       if (activeInteractionId && (event.key === 'Enter' || event.key.toLowerCase() === 'o')) {
         event.preventDefault();
-        const activeItem = tableRows.find((item) => item.id === activeInteractionId);
-        if (activeItem) {
-          setSelectedInteraction(activeItem);
+        const activeRow = tableRows.find((row) => row.interaction.id === activeInteractionId);
+        if (activeRow) {
+          setSelectedInteraction(activeRow.interaction);
         }
         return;
       }
 
       if (activeInteractionId && (event.key === 'Backspace' || event.key === 'Delete')) {
         event.preventDefault();
-        const activeItem = tableRows.find((item) => item.id === activeInteractionId);
-        if (activeItem) {
-          handleRequestDeleteInteraction(activeItem);
+        const activeRow = tableRows.find((row) => row.interaction.id === activeInteractionId);
+        if (activeRow) {
+          handleRequestDeleteInteraction(activeRow.interaction);
         }
       }
     };
@@ -183,8 +182,6 @@ const Dashboard = ({
     handleRequestDeleteInteraction
   ]);
 
-  const periodLabel =
-    OVERVIEW_PERIODS.find((entry) => entry.key === overviewPeriod)?.label ?? '30 j';
   const chartCaption = `${scopeLabel} · 12 dernières semaines`;
 
   return (
@@ -207,51 +204,41 @@ const Dashboard = ({
         searchRef={searchInputRef}
       />
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="flex flex-col gap-3.5 pb-6 pt-3.5">
-          <DashboardKpiRow
-            overdueCount={kpis.overdueCount}
-            oldestOverdueDays={kpis.oldestOverdueDays}
-            dueTodayCount={kpis.dueTodayCount}
-            toPlanCount={kpis.toPlanCount}
-            openCount={kpis.openCount}
-            pipelineOpenAmount={kpis.pipelineOpenAmount}
-            pipelineOpenCount={kpis.pipelineOpenCount}
-            wonCount30d={kpis.wonCount30d}
-            lostCount30d={kpis.lostCount30d}
-            conversionRate={kpis.conversionRate}
-            evolution={evolution}
-          />
+      <div className="flex min-h-0 flex-1 flex-col gap-2.5 pb-3 pt-2.5">
+        <DashboardKpiRow
+          overdueCount={kpis.overdueCount}
+          oldestOverdueDays={kpis.oldestOverdueDays}
+          dueTodayCount={kpis.dueTodayCount}
+          toPlanCount={kpis.toPlanCount}
+          openCount={kpis.openCount}
+          openDossiersDelta={openDossiersDelta}
+          pipelineOpenAmount={kpis.pipelineOpenAmount}
+          pipelineOpenCount={kpis.pipelineOpenCount}
+        />
 
+        {showEvolutionChart ? (
           <DashboardEvolutionChart points={evolution} caption={chartCaption} />
+        ) : null}
 
-          <div className="grid items-start gap-3.5 lg:grid-cols-2 xl:grid-cols-[1.15fr_1.3fr_0.95fr]">
-            <DashboardPriorityQueue
-              view={myDayView}
-              toPlanCount={kpis.toPlanCount}
-              isUpdatePending={isInteractionUpdatePending}
-              onSelectInteraction={handleSelectInteraction}
-              onCompleteReminder={(interaction) => {
-                void handleCompleteReminder(interaction);
-              }}
-              onPostponeReminder={(interaction, daysAhead) => {
-                void handlePostponeReminder(interaction, daysAhead);
-              }}
-            />
-            <DashboardPipelineSummary board={pipelineBoard} />
-            <DashboardTopClients entries={topClients} periodLabel={periodLabel} />
-          </div>
-
-          <DashboardDossiersTable
-            rows={tableRows}
-            totalCount={tableRows.length}
-            channel={channelFilter}
-            onChannelChange={setChannelFilter}
-            getStatusBadgeClass={getStatusBadgeClass}
-            onSelectInteraction={handleSelectInteraction}
-            activeInteractionId={displayedActiveInteractionId}
-          />
-        </div>
+        <DashboardDossiersTable
+          rows={tableRows}
+          scope={scopeFilter}
+          onScopeChange={setScopeFilter}
+          channel={channelFilter}
+          onChannelChange={setChannelFilter}
+          sort={sort}
+          onToggleSort={toggleSort}
+          getStatusBadgeClass={getStatusBadgeClass}
+          onSelectInteraction={handleSelectInteraction}
+          onCompleteReminder={(interaction) => {
+            void handleCompleteReminder(interaction);
+          }}
+          onPostponeReminder={(interaction, daysAhead) => {
+            void handlePostponeReminder(interaction, daysAhead);
+          }}
+          isUpdatePending={isInteractionUpdatePending}
+          activeInteractionId={displayedActiveInteractionId}
+        />
       </div>
 
       {displayedInteraction && (

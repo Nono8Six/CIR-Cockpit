@@ -1,9 +1,10 @@
-import { endOfISOWeek, getISOWeek, startOfISOWeek, subDays, subWeeks } from 'date-fns';
+import { endOfDay, endOfISOWeek, getISOWeek, startOfISOWeek, subDays, subWeeks } from 'date-fns';
 
 import { Channel, type Interaction } from '@/types';
 import { isCommercialInteraction } from '@/utils/dashboard/dashboardPipeline';
-import { resolveActivityTimestamp, sortInteractionsByLatestActivity } from '@/utils/dashboard/dashboardSort';
+import { resolveActivityTimestamp } from '@/utils/dashboard/dashboardSort';
 import { toDate } from '@/utils/date/toDate';
+import { getInteractionDisplayName } from '@/utils/interactions/getInteractionDisplayName';
 
 export type OverviewPeriodKey = '7d' | '30d' | 'quarter';
 
@@ -130,60 +131,61 @@ export const buildWeeklyEvolution = ({
   return points;
 };
 
-export type TopClientEntry = {
-  key: string;
-  name: string;
-  amount: number;
-  ratio: number;
-};
+// Une semaine ne compte comme point reel que si elle porte un montant sur l'une des
+// deux series tracees. Les semaines a zero sont un remplissage, pas une courbe.
+export const EVOLUTION_MIN_POINTS = 8;
 
-type BuildTopClientsParams = {
-  interactions: Interaction[];
-  periodDays: number;
-  now?: Date;
-  limit?: number;
-};
+export const countRealEvolutionPoints = (points: WeeklyEvolutionPoint[]): number =>
+  points.filter(
+    (point) => point.openPipelineAmount > 0 || point.wonCumulativeAmount > 0
+  ).length;
 
-export const buildTopClients = ({
-  interactions,
-  periodDays,
-  now = new Date(),
-  limit = 5
-}: BuildTopClientsParams): TopClientEntry[] => {
-  const periodStart = subDays(now, periodDays).getTime();
-  const totals = new Map<string, { name: string; amount: number }>();
+// Une serie constante repetee sur douze semaines n'est pas une courbe : c'est un seul
+// fait duplique. Il faut donc aussi de la variation pour qu'un trace informe.
+export const EVOLUTION_MIN_DISTINCT_VALUES = 3;
 
-  interactions.forEach((interaction) => {
-    const amount = interaction.amount ?? 0;
-    if (amount <= 0 || !isCommercialInteraction(interaction)) {
-      return;
-    }
-
-    if (resolveActivityTimestamp(interaction) < periodStart) {
-      return;
-    }
-
-    const key = interaction.entity_id ?? interaction.company_name.trim().toLowerCase();
-    const existing = totals.get(key);
-    if (existing) {
-      existing.amount += amount;
-      return;
-    }
-
-    totals.set(key, { name: interaction.company_name, amount });
+export const countDistinctEvolutionValues = (points: WeeklyEvolutionPoint[]): number => {
+  const values = new Set<number>();
+  points.forEach((point) => {
+    values.add(point.openPipelineAmount);
+    values.add(point.wonCumulativeAmount);
   });
+  return values.size;
+};
 
-  const ranked = [...totals.entries()]
-    .map(([key, entry]) => ({ key, ...entry }))
-    .sort((first, second) => second.amount - first.amount)
-    .slice(0, limit);
+export const hasEnoughEvolutionPoints = (points: WeeklyEvolutionPoint[]): boolean =>
+  countRealEvolutionPoints(points) >= EVOLUTION_MIN_POINTS
+  && countDistinctEvolutionValues(points) >= EVOLUTION_MIN_DISTINCT_VALUES;
 
-  const topAmount = ranked[0]?.amount ?? 0;
+export type OpenDossiersDelta = {
+  value: number;
+  label: string;
+};
 
-  return ranked.map((entry) => ({
-    ...entry,
-    ratio: topAmount > 0 ? entry.amount / topAmount : 0
-  }));
+// Substitut chiffre de la courbe quand la serie est trop courte : variation du
+// stock ouvert entre la semaine courante et celle de `weeksBack` semaines avant.
+export const buildOpenDossiersDelta = (
+  points: WeeklyEvolutionPoint[],
+  weeksBack = 4
+): OpenDossiersDelta | null => {
+  if (points.length < weeksBack + 1) {
+    return null;
+  }
+
+  const current = points[points.length - 1].openDossiersCount;
+  const previous = points[points.length - 1 - weeksBack].openDossiersCount;
+  const value = current - previous;
+  const sign = value > 0 ? '+' : value < 0 ? '−' : '';
+  const magnitude = Math.abs(value);
+  const noun = magnitude > 1 ? 'dossiers' : 'dossier';
+
+  return {
+    value,
+    label:
+      value === 0
+        ? `stable sur ${weeksBack} sem.`
+        : `${sign}${magnitude} ${noun} sur ${weeksBack} sem.`
+  };
 };
 
 // Anciennete en jours de la relance en retard la plus ancienne (liste triee par rappel croissant).
@@ -245,33 +247,214 @@ export const DOSSIER_CHANNEL_FILTERS: Array<{ key: DossierChannelFilter; label: 
   { key: Channel.COUNTER, label: Channel.COUNTER }
 ];
 
-type FilterDossiersParams = {
+export type DossierScopeFilter = 'open' | 'period';
+
+export const DOSSIER_SCOPE_FILTERS: Array<{ key: DossierScopeFilter; label: string }> = [
+  { key: 'open', label: 'À traiter' },
+  { key: 'period', label: 'Toute la période' }
+];
+
+export type DossierUrgency = 'overdue' | 'today' | 'upcoming' | 'unplanned' | 'closed';
+
+const URGENCY_RANK: Record<DossierUrgency, number> = {
+  overdue: 0,
+  today: 1,
+  upcoming: 2,
+  unplanned: 3,
+  closed: 4
+};
+
+const STAGE_RANK: Record<string, number> = {
+  unqualified: 0,
+  qualification: 1,
+  quote_sent: 2,
+  negotiation: 3,
+  won: 4,
+  lost: 5
+};
+
+export type DossierRow = {
+  interaction: Interaction;
+  displayName: string;
+  urgency: DossierUrgency;
+  dueTime: number | null;
+  lateDays: number | null;
+  isOpen: boolean;
+  activityTime: number;
+  amount: number | null;
+  stageRank: number;
+};
+
+export type DossierSortKey = 'priority' | 'client' | 'stage' | 'amount' | 'activity';
+export type DossierSortDirection = 'asc' | 'desc';
+
+export type DossierSort = {
+  key: DossierSortKey;
+  direction: DossierSortDirection;
+};
+
+export const DEFAULT_DOSSIER_SORT: DossierSort = { key: 'priority', direction: 'asc' };
+
+// Sens naturel d'une colonne au premier clic : la priorite et le client se lisent
+// du plus urgent / de A a Z, le montant et l'activite du plus grand au plus recent.
+export const getDefaultSortDirection = (key: DossierSortKey): DossierSortDirection =>
+  key === 'priority' || key === 'client' ? 'asc' : 'desc';
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+type BuildDossierRowsParams = {
   interactions: Interaction[];
-  periodDays: number;
-  channel: DossierChannelFilter;
+  isStatusDone: (interaction: Interaction) => boolean;
   now?: Date;
 };
 
-// Table "Dossiers en cours" : journal borne par la periode (derniere activite)
-// et filtrable par canal, trie du plus recent au plus ancien.
-export const filterDossiersForTable = ({
+// Modele unique de la page : un dossier produit une ligne et une seule, portant
+// a la fois son urgence (ex-file de priorite), son etape (ex-pipeline) et son
+// montant (ex-top clients).
+export const buildDossierRows = ({
   interactions,
-  periodDays,
-  channel,
+  isStatusDone,
   now = new Date()
-}: FilterDossiersParams): Interaction[] => {
+}: BuildDossierRowsParams): DossierRow[] => {
+  const nowTime = now.getTime();
+  const endOfTodayTime = endOfDay(now).getTime();
+
+  return interactions.map((interaction) => {
+    const stage = interaction.stage ?? null;
+    const isClosed = stage === 'won' || stage === 'lost' || isStatusDone(interaction);
+    const reminderTime = interaction.reminder_at
+      ? toDate(interaction.reminder_at).getTime()
+      : Number.NaN;
+    const hasReminder = !Number.isNaN(reminderTime);
+
+    let urgency: DossierUrgency;
+    if (isClosed) {
+      urgency = 'closed';
+    } else if (!hasReminder) {
+      urgency = 'unplanned';
+    } else if (reminderTime < nowTime) {
+      urgency = 'overdue';
+    } else if (reminderTime <= endOfTodayTime) {
+      urgency = 'today';
+    } else {
+      urgency = 'upcoming';
+    }
+
+    return {
+      interaction,
+      displayName: getInteractionDisplayName(interaction),
+      urgency,
+      dueTime: hasReminder ? reminderTime : null,
+      lateDays:
+        urgency === 'overdue' ? Math.floor((nowTime - reminderTime) / DAY_MS) : null,
+      isOpen: !isClosed,
+      activityTime: resolveActivityTimestamp(interaction),
+      amount: interaction.amount ?? null,
+      stageRank: STAGE_RANK[stage ?? 'unqualified'] ?? 0
+    };
+  });
+};
+
+const compareByPriority = (first: DossierRow, second: DossierRow): number => {
+  const rankDelta = URGENCY_RANK[first.urgency] - URGENCY_RANK[second.urgency];
+  if (rankDelta !== 0) {
+    return rankDelta;
+  }
+
+  if (first.dueTime !== null && second.dueTime !== null) {
+    return first.dueTime - second.dueTime;
+  }
+
+  // Sans echeance, le dossier laisse sans nouvelle depuis le plus longtemps passe devant ;
+  // les dossiers clos se lisent au contraire du plus recent au plus ancien.
+  return first.urgency === 'closed'
+    ? second.activityTime - first.activityTime
+    : first.activityTime - second.activityTime;
+};
+
+const compareByAmount = (first: DossierRow, second: DossierRow): number => {
+  if (first.amount === null) {
+    return second.amount === null ? 0 : 1;
+  }
+  if (second.amount === null) {
+    return -1;
+  }
+  return second.amount - first.amount;
+};
+
+const COMPARATORS: Record<DossierSortKey, (first: DossierRow, second: DossierRow) => number> = {
+  priority: compareByPriority,
+  client: (first, second) => first.displayName.localeCompare(second.displayName, 'fr'),
+  stage: (first, second) => first.stageRank - second.stageRank || compareByPriority(first, second),
+  amount: (first, second) => compareByAmount(first, second) || compareByPriority(first, second),
+  activity: (first, second) => second.activityTime - first.activityTime
+};
+
+export const sortDossierRows = (rows: DossierRow[], sort: DossierSort): DossierRow[] => {
+  const comparator = COMPARATORS[sort.key];
+  const reversed = sort.direction !== getDefaultSortDirection(sort.key);
+  return [...rows].sort((first, second) => {
+    const result = comparator(first, second);
+    return reversed ? -result : result;
+  });
+};
+
+type SelectDossierRowsParams = {
+  rows: DossierRow[];
+  scope: DossierScopeFilter;
+  channel: DossierChannelFilter;
+  periodDays: number;
+  sort: DossierSort;
+  now?: Date;
+};
+
+// "À traiter" ne garde que les dossiers ouverts ; "Toute la période" y ajoute les
+// dossiers clos dont la derniere activite tombe dans la fenetre choisie.
+export const selectDossierRows = ({
+  rows,
+  scope,
+  channel,
+  periodDays,
+  sort,
+  now = new Date()
+}: SelectDossierRowsParams): DossierRow[] => {
   const periodStart = subDays(now, periodDays).getTime();
 
-  const withinPeriod = interactions.filter(
-    (interaction) => resolveActivityTimestamp(interaction) >= periodStart
+  const inScope = rows.filter((row) =>
+    scope === 'open' ? row.isOpen : row.isOpen || row.activityTime >= periodStart
   );
 
   const byChannel =
     channel === 'all'
-      ? withinPeriod
-      : withinPeriod.filter((interaction) => interaction.channel === channel);
+      ? inScope
+      : inScope.filter((row) => row.interaction.channel === channel);
 
-  return sortInteractionsByLatestActivity(byChannel);
+  return sortDossierRows(byChannel, sort);
+};
+
+// Un libelle raccourci ne doit pas se terminer sur un mot-outil : « Attente elements du… »
+// se lit comme une troncature ratee la ou « Attente elements… » se lit comme un resume.
+const TRAILING_STOP_WORDS = /\s+(de|du|des|la|le|les|un|une|au|aux|a|en|et|pour|sur|par|avec|sans)$/i;
+
+// Les libelles de statut agence sont libres : on les raccourcit a la source sur une
+// frontiere de mot pour qu'aucun badge ne soit coupe en plein milieu.
+export const shortenBadgeLabel = (label: string, maxLength = 24): string => {
+  const trimmed = label.trim();
+  if (trimmed.length <= maxLength) {
+    return trimmed;
+  }
+
+  const cut = trimmed.slice(0, maxLength);
+  const lastSpace = cut.lastIndexOf(' ');
+  let kept = lastSpace > maxLength * 0.5 ? cut.slice(0, lastSpace) : cut;
+
+  let previous = '';
+  while (previous !== kept) {
+    previous = kept;
+    kept = kept.replace(TRAILING_STOP_WORDS, '');
+  }
+
+  return `${kept.replace(/[\s,;:.]+$/, '')}…`;
 };
 
 export const sumClosedAmounts = (

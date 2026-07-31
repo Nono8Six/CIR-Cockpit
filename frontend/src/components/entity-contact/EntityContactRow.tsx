@@ -76,7 +76,7 @@ const EntityContactRow = ({
             <CheckCircle2 size={12} className="shrink-0 text-emerald-600" aria-hidden="true" />
           ) : null}
         </span>
-        <span className="block truncate text-[11px] leading-relaxed text-neutral-500 mt-0.5 font-mono">
+        <span className="block truncate text-[11px] leading-relaxed text-neutral-500 mt-0.5">
           {detail}
         </span>
       </span>

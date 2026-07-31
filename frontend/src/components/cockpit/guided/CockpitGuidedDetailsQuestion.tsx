@@ -18,6 +18,7 @@ type CockpitGuidedDetailsQuestionProps = {
   onReset: () => void;
   onComplete?: () => void;
   canComplete?: boolean;
+  showValidationErrors?: boolean;
   onEditContact?: () => void;
   continueShortcutLabel?: string;
 };
@@ -55,6 +56,7 @@ const CockpitGuidedDetailsQuestion = ({
   onReset,
   onComplete,
   canComplete = true,
+  showValidationErrors = true,
   onEditContact,
   continueShortcutLabel
 }: CockpitGuidedDetailsQuestionProps) => {
@@ -85,7 +87,7 @@ const CockpitGuidedDetailsQuestion = ({
     void rightPaneProps.orderRefField.onChange(event);
   };
 
-  const refinedLabelStyle = 'text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground select-none block mb-1.5';
+  const refinedLabelStyle = 'text-[11px] font-semibold text-muted-foreground select-none block mb-1.5';
 
   const fullName = buildContactName(leftPaneProps);
   const position = buildContactPosition(leftPaneProps);
@@ -98,13 +100,48 @@ const CockpitGuidedDetailsQuestion = ({
     || leftPaneProps.relationMode === 'internal'
     || leftPaneProps.relationMode === 'supplier';
 
+  // Tant que l'etape n'est pas complete, le bouton est un etat neutre a part
+  // entiere: pas de primaire delave, et aucun raccourci annonce.
+  const continueButton = onComplete ? (
+    <motion.button
+      type="button"
+      onClick={onComplete}
+      whileHover={shouldReduceMotion ? {} : { scale: 1.01 }}
+      whileTap={shouldReduceMotion ? {} : { scale: 0.98 }}
+      animate={!shouldReduceMotion && isShortcutPressed && canComplete ? { scale: 0.96 } : {}}
+      initial="initial"
+      className={cn(
+        'inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20',
+        canComplete
+          ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/95'
+          : 'border border-border bg-surface-1 text-muted-foreground hover:bg-surface-2 hover:text-foreground',
+        canComplete && isShortcutPressed && 'bg-primary/95'
+      )}
+    >
+      Continuer
+      {canComplete && continueShortcutLabel ? (
+        <Kbd className="ml-1 border-primary-foreground/30 bg-primary-foreground/15 text-primary-foreground">
+          {continueShortcutLabel}
+        </Kbd>
+      ) : null}
+      <motion.span
+        variants={{
+          initial: { x: 0 },
+          hover: { x: 3 }
+        }}
+        transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+      >
+        <ArrowRight size={14} aria-hidden="true" />
+      </motion.span>
+    </motion.button>
+  ) : null;
+
   if (isDescriptionOnlyRelation) {
     const isInternal = leftPaneProps.relationMode === 'internal';
     const isSupplier = leftPaneProps.relationMode === 'supplier';
 
     return (
       <CockpitGuidedQuestionFrame
-        eyebrow="Description"
         title={isInternal ? 'Relation interne CIR' : isSupplier ? 'Interaction fournisseur' : 'Démarchage téléphonique'}
         description={isInternal
           ? 'Conserve uniquement le contexte utile de l’échange.'
@@ -139,40 +176,7 @@ const CockpitGuidedDetailsQuestion = ({
             <RotateCcw size={13} aria-hidden="true" className="text-muted-foreground/80" />
             Effacer le formulaire
           </motion.button>
-          {onComplete ? (
-            <motion.button
-              type="button"
-              onClick={onComplete}
-              disabled={!canComplete}
-              whileHover={shouldReduceMotion ? {} : { scale: 1.01 }}
-              whileTap={shouldReduceMotion ? {} : { scale: 0.98 }}
-              animate={!shouldReduceMotion && isShortcutPressed ? { scale: 0.96 } : {}}
-              initial="initial"
-              className={cn(
-                "inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 disabled:pointer-events-none disabled:opacity-50 cursor-pointer gap-1.5",
-                isShortcutPressed && "bg-primary/95"
-              )}
-            >
-              Continuer
-              {continueShortcutLabel ? (
-                <Kbd className={cn(
-                  'ml-1 border-primary-foreground/30 bg-primary-foreground/15 text-primary-foreground',
-                  !canComplete && 'border-muted-foreground/20 bg-muted text-muted-foreground'
-                )}>
-                  {continueShortcutLabel}
-                </Kbd>
-              ) : null}
-              <motion.span
-                variants={{
-                  initial: { x: 0 },
-                  hover: { x: 3 }
-                }}
-                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-              >
-                <ArrowRight size={14} aria-hidden="true" />
-              </motion.span>
-            </motion.button>
-          ) : null}
+          {continueButton}
         </div>
       </CockpitGuidedQuestionFrame>
     );
@@ -180,7 +184,6 @@ const CockpitGuidedDetailsQuestion = ({
 
   return (
     <CockpitGuidedQuestionFrame
-      eyebrow="Sujet"
       title="Résumer la demande"
       description="Quelques infos pour finaliser cette interaction."
     >
@@ -316,7 +319,7 @@ const CockpitGuidedDetailsQuestion = ({
               <p className={refinedLabelStyle}>
                 Familles produits *
               </p>
-              {megaFamilies.length === 0 ? (
+              {showValidationErrors && megaFamilies.length === 0 ? (
                 <p className="text-xs font-semibold text-destructive" role="status" aria-live="polite">
                   Au moins une famille produit est requise.
                 </p>
@@ -395,40 +398,7 @@ const CockpitGuidedDetailsQuestion = ({
           <RotateCcw size={13} aria-hidden="true" className="text-muted-foreground/80" />
           Effacer le formulaire
         </motion.button>
-        {onComplete ? (
-          <motion.button
-            type="button"
-            onClick={onComplete}
-            disabled={!canComplete}
-            whileHover={shouldReduceMotion ? {} : { scale: 1.01 }}
-            whileTap={shouldReduceMotion ? {} : { scale: 0.98 }}
-            animate={!shouldReduceMotion && isShortcutPressed ? { scale: 0.96 } : {}}
-            initial="initial"
-            className={cn(
-              "inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 disabled:pointer-events-none disabled:opacity-50 cursor-pointer gap-1.5",
-              isShortcutPressed && "bg-primary/95"
-            )}
-          >
-            Continuer
-            {continueShortcutLabel ? (
-              <Kbd className={cn(
-                'ml-1 border-primary-foreground/30 bg-primary-foreground/15 text-primary-foreground',
-                !canComplete && 'border-muted-foreground/20 bg-muted text-muted-foreground'
-              )}>
-                {continueShortcutLabel}
-              </Kbd>
-            ) : null}
-            <motion.span
-              variants={{
-                initial: { x: 0 },
-                hover: { x: 3 }
-              }}
-              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-            >
-              <ArrowRight size={14} aria-hidden="true" />
-            </motion.span>
-          </motion.button>
-        ) : null}
+        {continueButton}
       </div>
     </CockpitGuidedQuestionFrame>
   );

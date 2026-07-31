@@ -32,7 +32,6 @@ interface EntityOnboardingSidebarProps {
   duplicateMatches: DuplicateMatch[];
   stepError: string | null;
   missingChecklist: string[];
-  footerMessage: string;
   isDetailsStep: boolean;
   isReviewStep: boolean;
   onOpenDuplicate?: (record: DirectoryListRow) => void;
@@ -67,7 +66,6 @@ const EntityOnboardingSidebar = ({
   duplicateMatches,
   stepError,
   missingChecklist,
-  footerMessage,
   isDetailsStep,
   isReviewStep,
   onOpenDuplicate
@@ -305,15 +303,6 @@ const EntityOnboardingSidebar = ({
               </div>
             )
           ) : null}
-
-          <div className="space-y-2 pt-1">
-            <div className="text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/50">
-              Notes de parcours
-            </div>
-            <div className="rounded-xl border border-border bg-surface-2/30 p-4 text-[12px] italic leading-relaxed text-muted-foreground/80">
-              &quot;{footerMessage}&quot;
-            </div>
-          </div>
         </div>
       </div>
     </EntityRecordWizardAside>

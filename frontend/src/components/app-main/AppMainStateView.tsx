@@ -55,20 +55,10 @@ const DashboardSkeleton = () => (
       <div className="skeleton-shimmer h-8 w-40 rounded-lg" />
       <div className="ml-auto skeleton-shimmer h-8 w-56 rounded-lg" />
     </div>
-    {/* Rangee KPI */}
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
-      {[0, 1, 2, 3, 4].map((i) => (
-        <div key={i} className="skeleton-shimmer h-24 rounded-lg" />
-      ))}
-    </div>
-    {/* Graphique */}
-    <div className="skeleton-shimmer h-48 rounded-lg" />
-    {/* 3 colonnes */}
-    <div className="grid min-h-0 flex-1 grid-cols-1 gap-3.5 md:grid-cols-3">
-      {[0, 1, 2].map((i) => (
-        <div key={i} className="skeleton-shimmer rounded-lg" style={{ minHeight: 160 }} />
-      ))}
-    </div>
+    {/* Bande de metriques */}
+    <div className="skeleton-shimmer h-[68px] rounded-lg" />
+    {/* Table unique */}
+    <div className="skeleton-shimmer min-h-0 flex-1 rounded-lg" />
   </div>
 );
 

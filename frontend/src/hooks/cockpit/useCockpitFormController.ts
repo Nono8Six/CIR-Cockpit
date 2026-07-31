@@ -96,6 +96,7 @@ const FOOTER_LABEL_STYLE = 'text-xs font-semibold text-muted-foreground/80 upper
 const EMPTY_ENTITIES: Entity[] = [];
 const EMPTY_INTERACTIONS: Interaction[] = [];
 const CLIENT_CONTEXT_INTERACTIONS_PAGE_SIZE = 6;
+const NOOP_VALIDATION_ATTEMPT = () => {};
 
 /**
  * Converts a unified search result from the directory to a standardized Entity model.
@@ -361,6 +362,12 @@ export const useCockpitFormController = ({
     statusTriggerRef: refs.statusTriggerRef
   });
 
+  // Tentative de validation declenchee par un "Continuer" du parcours guide:
+  // publie les erreurs du schema puis place le focus sur le premier champ fautif.
+  const focusFirstInvalidField = useCallback(() => {
+    void form.handleSubmit(NOOP_VALIDATION_ATTEMPT, onInvalid)();
+  }, [form, onInvalid]);
+
   const canStartNewEntryFromShortcut = Boolean(lastSavedInteraction);
 
   useInteractionHotkeys({
@@ -525,6 +532,7 @@ export const useCockpitFormController = ({
     formRef: refs.formRef,
     handleFormSubmit: form.handleSubmit(onSubmit, onInvalid),
     focusCurrentStep,
+    focusFirstInvalidField,
     leftPaneProps: paneProps.leftPaneProps,
     rightPaneProps: paneProps.rightPaneProps,
     draftStatus,

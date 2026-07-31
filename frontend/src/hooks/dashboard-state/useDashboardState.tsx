@@ -15,15 +15,23 @@ import {
 } from '@/utils/dashboard/dashboardAggregates';
 import { filterInteractionsBySearch } from '@/utils/dashboard/dashboardFilters';
 import {
-  buildTopClients,
+  DEFAULT_DOSSIER_SORT,
+  buildDossierRows,
+  buildOpenDossiersDelta,
   buildWeeklyEvolution,
   computeConversionRate,
-  filterDossiersForTable,
+  getDefaultSortDirection,
   getOldestOverdueDays,
   getOverviewPeriodDays,
+  hasEnoughEvolutionPoints,
+  selectDossierRows,
   type DossierChannelFilter,
+  type DossierRow,
+  type DossierScopeFilter,
+  type DossierSort,
+  type DossierSortKey,
+  type OpenDossiersDelta,
   type OverviewPeriodKey,
-  type TopClientEntry,
   type WeeklyEvolutionPoint
 } from '@/utils/dashboard/dashboardOverview';
 import {
@@ -101,6 +109,8 @@ export const useDashboardState = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [overviewPeriod, setOverviewPeriod] = useState<OverviewPeriodKey>('30d');
   const [channelFilter, setChannelFilter] = useState<DossierChannelFilter>('all');
+  const [scopeFilter, setScopeFilter] = useState<DossierScopeFilter>('open');
+  const [sort, setSort] = useState<DossierSort>(DEFAULT_DOSSIER_SORT);
   const [selectedInteraction, setSelectedInteraction] = useState<Interaction | null>(null);
   const [interactionToDelete, setInteractionToDelete] = useState<Interaction | null>(null);
 
@@ -138,11 +148,6 @@ export const useDashboardState = ({
     [interactions, isStatusDone, isStatusTodo]
   );
 
-  const myDayView = useMemo<MyDayView>(
-    () => buildMyDayView(searchedInteractions, { isStatusDone, isStatusTodo }),
-    [isStatusDone, isStatusTodo, searchedInteractions]
-  );
-
   const kpis = useMemo<DashboardOverviewKpis>(() => {
     return {
       overdueCount: globalMyDay.kpis.overdueCount,
@@ -169,20 +174,37 @@ export const useDashboardState = ({
 
   const periodDays = getOverviewPeriodDays(overviewPeriod);
 
-  const topClients = useMemo<TopClientEntry[]>(
-    () => buildTopClients({ interactions, periodDays }),
-    [interactions, periodDays]
+  const showEvolutionChart = useMemo(() => hasEnoughEvolutionPoints(evolution), [evolution]);
+  const openDossiersDelta = useMemo<OpenDossiersDelta | null>(
+    () => buildOpenDossiersDelta(evolution),
+    [evolution]
   );
 
-  const tableRows = useMemo(
-    () =>
-      filterDossiersForTable({
-        interactions: searchedInteractions,
-        periodDays,
-        channel: channelFilter
-      }),
-    [channelFilter, periodDays, searchedInteractions]
+  const dossierRows = useMemo<DossierRow[]>(
+    () => buildDossierRows({ interactions: searchedInteractions, isStatusDone }),
+    [isStatusDone, searchedInteractions]
   );
+
+  const tableRows = useMemo<DossierRow[]>(
+    () =>
+      selectDossierRows({
+        rows: dossierRows,
+        scope: scopeFilter,
+        channel: channelFilter,
+        periodDays,
+        sort
+      }),
+    [channelFilter, dossierRows, periodDays, scopeFilter, sort]
+  );
+
+  // Un clic sur une colonne deja active inverse le sens, sinon on repart du sens naturel.
+  const toggleSort = useCallback((key: DossierSortKey) => {
+    setSort((previous) =>
+      previous.key === key
+        ? { key, direction: previous.direction === 'asc' ? 'desc' : 'asc' }
+        : { key, direction: getDefaultSortDirection(key) }
+    );
+  }, []);
 
   const handleConvertRequest = useCallback(
     (interaction: Interaction) => {
@@ -352,13 +374,17 @@ export const useDashboardState = ({
     setOverviewPeriod,
     channelFilter,
     setChannelFilter,
+    scopeFilter,
+    setScopeFilter,
+    sort,
+    toggleSort,
     selectedInteraction,
     setSelectedInteraction,
     kpis,
-    myDayView,
     pipelineBoard,
     evolution,
-    topClients,
+    showEvolutionChart,
+    openDossiersDelta,
     tableRows,
     getStatusMeta,
     getStatusBadgeClass,

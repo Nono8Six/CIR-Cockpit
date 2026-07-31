@@ -2,12 +2,17 @@ import { describe, expect, it } from 'vitest';
 
 import { Channel, type Interaction } from '@/types';
 import {
-  buildTopClients,
+  DEFAULT_DOSSIER_SORT,
+  buildDossierRows,
+  buildOpenDossiersDelta,
   buildWeeklyEvolution,
   computeConversionRate,
-  filterDossiersForTable,
   formatCompactEuro,
-  sumClosedAmounts
+  hasEnoughEvolutionPoints,
+  selectDossierRows,
+  shortenBadgeLabel,
+  sumClosedAmounts,
+  type WeeklyEvolutionPoint
 } from '@/utils/dashboard/dashboardOverview';
 
 const buildInteraction = (overrides: Partial<Interaction> = {}): Interaction => ({
@@ -112,57 +117,75 @@ describe('buildWeeklyEvolution', () => {
   });
 });
 
-describe('buildTopClients', () => {
-  it('classe les clients par montant cumule sur la periode', () => {
-    const first = buildInteraction({
-      id: 'a',
-      company_name: 'Michelin',
-      entity_id: 'entity-michelin',
-      stage: 'quote_sent',
-      amount: 4000,
-      last_action_at: '2026-07-18T09:00:00.000Z',
-      timeline: []
-    });
-    const second = buildInteraction({
-      id: 'b',
-      company_name: 'Michelin',
-      entity_id: 'entity-michelin',
-      stage: 'won',
-      amount: 2000,
-      last_action_at: '2026-07-15T09:00:00.000Z'
-    });
-    const third = buildInteraction({
-      id: 'c',
-      company_name: 'Solvay',
-      entity_id: 'entity-solvay',
-      stage: 'negotiation',
-      amount: 1500,
-      last_action_at: '2026-07-10T09:00:00.000Z'
-    });
-    const outOfPeriod = buildInteraction({
-      id: 'd',
-      company_name: 'Vicat',
-      entity_id: 'entity-vicat',
-      stage: 'won',
-      amount: 9000,
-      last_action_at: '2026-01-01T09:00:00.000Z'
-    });
+const buildEvolutionPoints = (
+  openCounts: number[],
+  pipelineAmounts: number[] = []
+): WeeklyEvolutionPoint[] =>
+  openCounts.map((openDossiersCount, index) => ({
+    weekStart: index,
+    label: `S${index}`,
+    openPipelineAmount: pipelineAmounts[index] ?? 0,
+    openPipelineCount: 0,
+    wonCumulativeAmount: 0,
+    openDossiersCount
+  }));
 
-    const top = buildTopClients({
-      interactions: [first, second, third, outOfPeriod],
-      periodDays: 30,
-      now
-    });
-
-    expect(top.map((entry) => entry.name)).toEqual(['Michelin', 'Solvay']);
-    expect(top[0].amount).toBe(6000);
-    expect(top[0].ratio).toBe(1);
-    expect(top[1].ratio).toBe(0.25);
+describe('hasEnoughEvolutionPoints', () => {
+  it('ne compte pas un stock de dossiers sans montant comme une courbe tracable', () => {
+    const points = buildEvolutionPoints([2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7]);
+    expect(hasEnoughEvolutionPoints(points)).toBe(false);
   });
 
-  it('ignore les dossiers sans montant', () => {
-    const noAmount = buildInteraction({ id: 'a', stage: 'qualification', amount: null });
-    expect(buildTopClients({ interactions: [noAmount], periodDays: 30, now })).toEqual([]);
+  it('refuse une serie dont moins de 8 semaines portent un montant', () => {
+    const amounts = [0, 0, 0, 0, 0, 0, 0, 0, 100, 200, 200, 200];
+    expect(hasEnoughEvolutionPoints(buildEvolutionPoints(amounts.map(() => 1), amounts))).toBe(false);
+  });
+
+  it('refuse une serie plate : douze fois le meme montant reste un seul fait', () => {
+    const amounts = Array.from({ length: 12 }, () => 4800);
+    expect(hasEnoughEvolutionPoints(buildEvolutionPoints(amounts.map(() => 1), amounts))).toBe(false);
+  });
+
+  it('accepte une serie de 8 semaines chiffrees et variables', () => {
+    const amounts = [0, 0, 0, 0, 100, 100, 200, 200, 300, 300, 400, 400];
+    expect(hasEnoughEvolutionPoints(buildEvolutionPoints(amounts.map(() => 1), amounts))).toBe(true);
+  });
+});
+
+describe('buildOpenDossiersDelta', () => {
+  it('chiffre la variation du stock ouvert sur la fenetre demandee', () => {
+    const points = buildEvolutionPoints([1, 1, 2, 2, 3]);
+    expect(buildOpenDossiersDelta(points, 4)).toEqual({
+      value: 2,
+      label: '+2 dossiers sur 4 sem.'
+    });
+  });
+
+  it('annonce un stock stable plutot qu un zero muet', () => {
+    const points = buildEvolutionPoints([3, 4, 5, 4, 3]);
+    expect(buildOpenDossiersDelta(points, 4)?.label).toBe('stable sur 4 sem.');
+  });
+
+  it('retourne null quand l historique est trop court', () => {
+    expect(buildOpenDossiersDelta(buildEvolutionPoints([1, 2]), 4)).toBeNull();
+  });
+});
+
+describe('shortenBadgeLabel', () => {
+  it('laisse intact un libelle qui tient', () => {
+    expect(shortenBadgeLabel('En cours', 20)).toBe('En cours');
+  });
+
+  it('coupe sur une frontiere de mot et jamais en plein mot', () => {
+    expect(shortenBadgeLabel('Attente éléments du client', 24)).toBe('Attente éléments…');
+  });
+
+  it('ne termine pas un libelle raccourci sur un mot-outil', () => {
+    expect(shortenBadgeLabel('Relance à faire par le commercial', 24)).toBe('Relance à faire…');
+  });
+
+  it('coupe net un mot unique trop long', () => {
+    expect(shortenBadgeLabel('Incontestablementlong', 10)).toBe('Incontesta…');
   });
 });
 
@@ -185,39 +208,101 @@ describe('formatCompactEuro', () => {
   });
 });
 
-describe('filterDossiersForTable', () => {
-  it('filtre par periode et canal puis trie par derniere activite', () => {
-    const recentPhone = buildInteraction({
-      id: 'recent-phone',
-      channel: Channel.PHONE,
-      last_action_at: '2026-07-20T09:00:00.000Z'
-    });
-    const recentMail = buildInteraction({
-      id: 'recent-mail',
-      channel: Channel.EMAIL,
-      last_action_at: '2026-07-19T09:00:00.000Z'
-    });
-    const oldPhone = buildInteraction({
-      id: 'old-phone',
-      channel: Channel.PHONE,
-      last_action_at: '2026-01-01T09:00:00.000Z'
+describe('buildDossierRows', () => {
+  const overdue = buildInteraction({ id: 'overdue', reminder_at: '2026-07-18T09:00:00.000Z' });
+  const today = buildInteraction({ id: 'today', reminder_at: '2026-07-21T16:00:00.000Z' });
+  const upcoming = buildInteraction({ id: 'upcoming', reminder_at: '2026-07-28T09:00:00.000Z' });
+  const unplanned = buildInteraction({ id: 'unplanned', reminder_at: null });
+  const closed = buildInteraction({ id: 'closed', stage: 'won', amount: 900 });
+
+  it('produit exactement une ligne par dossier et qualifie son urgence', () => {
+    const rows = buildDossierRows({
+      interactions: [overdue, today, upcoming, unplanned, closed],
+      isStatusDone,
+      now
     });
 
-    const all = filterDossiersForTable({
-      interactions: [oldPhone, recentMail, recentPhone],
-      periodDays: 30,
+    expect(rows).toHaveLength(5);
+    expect(rows.map((row) => row.urgency)).toEqual([
+      'overdue',
+      'today',
+      'upcoming',
+      'unplanned',
+      'closed'
+    ]);
+    expect(rows[0].lateDays).toBe(3);
+    expect(rows.filter((row) => row.isOpen)).toHaveLength(4);
+  });
+
+  it('classe un statut terminal comme clos meme sans etape pipeline', () => {
+    const terminal = buildInteraction({ id: 'terminal', status_is_terminal: true });
+    const [row] = buildDossierRows({ interactions: [terminal], isStatusDone, now });
+    expect(row.urgency).toBe('closed');
+    expect(row.isOpen).toBe(false);
+  });
+});
+
+describe('selectDossierRows', () => {
+  const overdue = buildInteraction({
+    id: 'overdue',
+    channel: Channel.PHONE,
+    reminder_at: '2026-07-18T09:00:00.000Z',
+    amount: 1000
+  });
+  const upcoming = buildInteraction({
+    id: 'upcoming',
+    channel: Channel.EMAIL,
+    reminder_at: '2026-07-28T09:00:00.000Z',
+    amount: 5000
+  });
+  const recentClosed = buildInteraction({
+    id: 'recent-closed',
+    channel: Channel.PHONE,
+    stage: 'won',
+    amount: 200,
+    last_action_at: '2026-07-19T09:00:00.000Z'
+  });
+  const oldClosed = buildInteraction({
+    id: 'old-closed',
+    channel: Channel.PHONE,
+    stage: 'lost',
+    last_action_at: '2026-01-01T09:00:00.000Z'
+  });
+
+  const rows = buildDossierRows({
+    interactions: [oldClosed, recentClosed, upcoming, overdue],
+    isStatusDone,
+    now
+  });
+
+  const select = (overrides: Partial<Parameters<typeof selectDossierRows>[0]> = {}) =>
+    selectDossierRows({
+      rows,
+      scope: 'open',
       channel: 'all',
-      now
-    });
-    expect(all.map((row) => row.id)).toEqual(['recent-phone', 'recent-mail']);
-
-    const phoneOnly = filterDossiersForTable({
-      interactions: [oldPhone, recentMail, recentPhone],
       periodDays: 30,
-      channel: Channel.PHONE,
-      now
-    });
-    expect(phoneOnly.map((row) => row.id)).toEqual(['recent-phone']);
+      sort: DEFAULT_DOSSIER_SORT,
+      now,
+      ...overrides
+    }).map((row) => row.interaction.id);
+
+  it('ne garde que les dossiers ouverts, du plus urgent au moins urgent', () => {
+    expect(select()).toEqual(['overdue', 'upcoming']);
+  });
+
+  it('ajoute les dossiers clos de la periode sans jamais dupliquer une ligne', () => {
+    const ids = select({ scope: 'period' });
+    expect(ids).toEqual(['overdue', 'upcoming', 'recent-closed']);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('filtre par canal', () => {
+    expect(select({ scope: 'period', channel: Channel.EMAIL })).toEqual(['upcoming']);
+  });
+
+  it('trie par montant decroissant puis inverse le sens sur demande', () => {
+    expect(select({ sort: { key: 'amount', direction: 'desc' } })).toEqual(['upcoming', 'overdue']);
+    expect(select({ sort: { key: 'amount', direction: 'asc' } })).toEqual(['overdue', 'upcoming']);
   });
 });
 

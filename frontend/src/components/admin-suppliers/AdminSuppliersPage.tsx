@@ -142,11 +142,19 @@ const AdminSuppliersPage = () => {
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2.5">
             <h1 className="text-base font-semibold text-foreground sm:text-lg">Fournisseurs</h1>
-            <div className="inline-flex items-center rounded-full border border-border/50 bg-muted/30 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-              <span className="tabular-nums">{typeof totalResults === 'number' ? totalResults : '…'}</span>
-              <span className="ml-1 hidden sm:inline">
-                {typeof totalResults === 'number' ? `résultat${totalResults > 1 ? 's' : ''}` : 'résultats'}
-              </span>
+            <div
+              className="inline-flex items-center gap-1 rounded-full border border-border/50 bg-muted/30 px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
+              aria-busy={typeof totalResults !== 'number'}
+              aria-label={typeof totalResults === 'number' ? undefined : 'Nombre de résultats en cours de chargement'}
+            >
+              {typeof totalResults === 'number' ? (
+                <>
+                  <span className="tabular-nums">{totalResults}</span>
+                  <span className="hidden sm:inline">{`résultat${totalResults > 1 ? 's' : ''}`}</span>
+                </>
+              ) : (
+                <span className="skeleton-shimmer my-0.5 block h-3 w-6 rounded-sm sm:w-16" aria-hidden="true" />
+              )}
             </div>
           </div>
 

@@ -36,9 +36,6 @@ const CockpitShortcutLegend = ({
     >
       <div className="mx-auto flex max-w-[1180px] flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div data-testid="cockpit-shortcut-legend-actions" className="flex min-w-0 flex-wrap items-center gap-2">
-          <span className="rounded border border-border bg-surface-1 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground">
-            Validation
-          </span>
           <span className="inline-flex min-h-7 items-center gap-1.5 rounded-md border border-border bg-card px-2 text-[11px] font-medium text-muted-foreground">
             <Kbd>?</Kbd>
             Aide
@@ -59,7 +56,10 @@ const CockpitShortcutLegend = ({
             type="submit"
             form={formId}
             disabled={!canSave}
-            className="min-h-9 w-full gap-1.5 px-3 text-xs shadow-sm sm:w-auto"
+            variant={canSave ? 'default' : 'secondary'}
+            className={canSave
+              ? 'min-h-9 w-full gap-1.5 px-3 text-xs shadow-sm sm:w-auto'
+              : 'min-h-9 w-full gap-1.5 border border-border px-3 text-xs text-muted-foreground shadow-none disabled:opacity-100 sm:w-auto'}
             title={canSave ? 'Prêt à enregistrer' : gateMessage ?? undefined}
           >
             <Save size={12} />

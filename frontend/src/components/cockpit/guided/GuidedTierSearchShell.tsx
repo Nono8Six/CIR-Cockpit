@@ -48,7 +48,7 @@ const GuidedTierSearchShell = ({
         </div>
         {showArchiveToggle ? (
           <div className="flex shrink-0 items-center gap-2.5">
-            <label htmlFor="guided-tier-archived-toggle" className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground cursor-pointer hover:text-foreground transition-colors duration-150">
+            <label htmlFor="guided-tier-archived-toggle" className="text-[11px] font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors duration-150">
               Inclure archivés
             </label>
             <Switch

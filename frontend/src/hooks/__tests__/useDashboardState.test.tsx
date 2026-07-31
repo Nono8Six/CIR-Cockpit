@@ -118,7 +118,7 @@ describe('useDashboardState', () => {
     );
   });
 
-  it('garde un dossier termine visible dans la table selon sa derniere activite', () => {
+  it('sort un dossier termine du perimetre "à traiter" et le rend sur la periode', () => {
     const doneInteraction = buildInteraction({
       status: 'Offre de prix envoyé',
       status_id: 'status-done',
@@ -136,10 +136,16 @@ describe('useDashboardState', () => {
       { wrapper: buildWrapper() }
     );
 
+    expect(result.current.tableRows).toHaveLength(0);
+
+    act(() => {
+      result.current.setScopeFilter('period');
+    });
+
     expect(result.current.tableRows).toHaveLength(1);
   });
 
-  it('exclut de la table les dossiers hors periode et filtre par canal', () => {
+  it('filtre la table par canal et n y laisse aucun doublon', () => {
     const recentPhone = buildInteraction({ id: 'recent-phone', channel: Channel.PHONE });
     const recentMail = buildInteraction({ id: 'recent-mail', channel: Channel.EMAIL, timeline: [] });
     const outOfPeriod = buildInteraction({
@@ -159,13 +165,61 @@ describe('useDashboardState', () => {
       { wrapper: buildWrapper() }
     );
 
-    expect(result.current.tableRows.map((row) => row.id)).toEqual(['recent-phone', 'recent-mail']);
+    // Perimetre "à traiter" : tout dossier ouvert est present, hors periode compris,
+    // et une seule fois.
+    const ids = result.current.tableRows.map((row) => row.interaction.id);
+    expect(ids).toHaveLength(3);
+    expect(new Set(ids).size).toBe(3);
 
     act(() => {
       result.current.setChannelFilter(Channel.EMAIL);
     });
 
-    expect(result.current.tableRows.map((row) => row.id)).toEqual(['recent-mail']);
+    expect(result.current.tableRows.map((row) => row.interaction.id)).toEqual(['recent-mail']);
+  });
+
+  it('inverse le tri au second clic sur la meme colonne', () => {
+    const small = buildInteraction({ id: 'small', amount: 100, stage: 'qualification' });
+    const large = buildInteraction({ id: 'large', amount: 9000, stage: 'qualification' });
+
+    const { result } = renderHook(
+      () =>
+        useDashboardState({
+          interactions: [small, large],
+          statuses: [],
+          agencyId: 'agency-1',
+          onRequestConvert: vi.fn()
+        }),
+      { wrapper: buildWrapper() }
+    );
+
+    act(() => {
+      result.current.toggleSort('amount');
+    });
+    expect(result.current.sort).toEqual({ key: 'amount', direction: 'desc' });
+    expect(result.current.tableRows.map((row) => row.interaction.id)).toEqual(['large', 'small']);
+
+    act(() => {
+      result.current.toggleSort('amount');
+    });
+    expect(result.current.sort).toEqual({ key: 'amount', direction: 'asc' });
+    expect(result.current.tableRows.map((row) => row.interaction.id)).toEqual(['small', 'large']);
+  });
+
+  it('masque la courbe tant que la serie hebdomadaire est trop courte', () => {
+    const { result } = renderHook(
+      () =>
+        useDashboardState({
+          interactions: [buildInteraction()],
+          statuses: [],
+          agencyId: 'agency-1',
+          onRequestConvert: vi.fn()
+        }),
+      { wrapper: buildWrapper() }
+    );
+
+    expect(result.current.showEvolutionChart).toBe(false);
+    expect(result.current.openDossiersDelta).not.toBeNull();
   });
 
   it('calcule les KPI de la vue d ensemble sur tout le perimetre', () => {
@@ -222,8 +276,7 @@ describe('useDashboardState', () => {
       result.current.setSearchTerm('alpha');
     });
 
-    expect(result.current.tableRows.map((row) => row.id)).toEqual(['alpha']);
-    expect(result.current.myDayView.groups.overdue.map((row) => row.id)).toEqual(['alpha']);
+    expect(result.current.tableRows.map((row) => row.interaction.id)).toEqual(['alpha']);
     expect(result.current.kpis.overdueCount).toBe(2);
   });
 

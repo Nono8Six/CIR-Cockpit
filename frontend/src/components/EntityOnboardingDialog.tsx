@@ -211,15 +211,6 @@ const EntityOnboardingDialog = ({
         ? "Créer le client"
         : "Créer le prospect"
     : "Continuer";
-  const footerMessage =
-    stepError ??
-    (stepper.flow.is("company")
-      ? "Sélection et doublons visibles avant création."
-      : stepper.flow.is("details")
-        ? "Champs obligatoires vérifiés en ligne."
-        : stepper.flow.is("review")
-          ? "Résumé final exactement conforme aux données sauvegardées."
-          : "Le type choisi ajuste tout le reste du parcours.");
   const stepMotionProps = reducedMotion
     ? {}
     : {
@@ -499,7 +490,6 @@ const EntityOnboardingDialog = ({
           duplicateMatches={duplicateMatches}
           stepError={stepError}
           missingChecklist={missingChecklist}
-          footerMessage={footerMessage}
           isDetailsStep={stepper.flow.is("details")}
           isReviewStep={stepper.flow.is("review")}
           onOpenDuplicate={onOpenDuplicate}

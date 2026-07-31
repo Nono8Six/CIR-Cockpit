@@ -9,8 +9,8 @@ dans le navigateur depuis les variables CSS résolues).
 
 | Phase | Objet | Tâches | Statut |
 | --- | --- | --- | --- |
-| P1 — Bloquants | Risque utilisateur et crédibilité | 8 | 🟡 en cours (4/8 terminées, T1.3 et T1.4 partielles) |
-| P2 — Refontes structurelles | Pilotage, Saisie, Admin, Ctrl K | 4 | ⬜ non commencée |
+| P1 — Bloquants | Risque utilisateur et crédibilité | 8 | 🟡 en cours (6/8 terminées, T1.3 et T1.4 partielles) |
+| P2 — Refontes structurelles | Pilotage, Saisie, Admin, Ctrl K | 4 | 🟡 en cours (T2.1 partielle, T2.2 terminée) |
 | P3 — Fondation design system | Primitifs manquants et garde-fous | 6 | ⬜ non commencée |
 | P4 — Convergence visuelle | Couleurs, ombres, rayons, Sheets, onglets | 5 | ⬜ non commencée |
 | P5 — Finitions | Selects, boutons, troncatures, densité | 6 | ⬜ non commencée |
@@ -895,7 +895,7 @@ information utile, pas un échec à masquer.
 
 ## T1.7 — Textes de remplissage et compteurs fantômes en production
 
-**Statut** ⬜ non commencée · **Impact** moyen · **Effort** faible · **Dépendance** aucune
+**Statut** ✅ terminée · **Impact** moyen · **Effort** faible · **Dépendance** aucune
 
 **Constat.** `AGENTS.md` interdit le texte décoratif dans le code livré. Deux
 violations visibles : le panneau « Notes de parcours » de l'assistant de création
@@ -910,16 +910,40 @@ affiche littéralement « … résultats » quand le total n'est pas encore conn
 
 **Checkpoint**
 
-- [ ] Le panneau « Notes de parcours » porte une aide réellement utile, ou n'est
+- [x] Le panneau « Notes de parcours » porte une aide réellement utile, ou n'est
       pas rendu.
-- [ ] Le badge de comptage affiche un squelette pendant le chargement, jamais
+- [x] Le badge de comptage affiche un squelette pendant le chargement, jamais
       « … résultats ».
-- [ ] Une recherche de texte décoratif résiduel est faite sur `frontend/src`.
-- [ ] `pnpm run qa:front` passe.
+- [x] Une recherche de texte décoratif résiduel est faite sur `frontend/src`.
+- [x] `pnpm run qa:front` passe.
 
 **Preuve attendue.** Captures des deux écrans avant/après.
 
-**Preuve réelle.** _à compléter par l'agent qui exécute la tâche._
+**Preuve réelle.**
+
+- Panneau supprimé, pas remplacé : le rail droit porte déjà un contenu réel par
+  étape (résumé entreprise + établissement + signaux + dirigeants + finances en
+  `company`, checklist des champs manquants en `details`, alerte doublons et
+  `stepError` en `alert`). La prop `footerMessage` et son calcul à quatre
+  branches génériques sont supprimés de
+  `frontend/src/components/EntityOnboardingDialog.tsx` et
+  `frontend/src/components/entity-onboarding/EntityOnboardingSidebar.tsx`
+  (`grep -rn "footerMessage" frontend/src` → 0 résultat).
+- Badge de comptage : `<span className="skeleton-shimmer …" aria-hidden>` +
+  `aria-busy` tant que `totalResults` n'est pas un nombre, dans
+  `client-directory/ClientDirectoryWorkspace.tsx` et, même défaut trouvé au
+  balayage, `admin-suppliers/AdminSuppliersPage.tsx`
+  (`grep -rnE ">\s*(\.\.\.|…)\s*<|'(\.\.\.|…)'" frontend/src` → plus aucune
+  occurrence hors ellipsis de pagination `DirectoryTablePagination.tsx:99`).
+- Balayage `frontend/src` : `lorem/ipsum` → 0 ; les `italic` restants sont des
+  états vides réels (« Adresse non renseignée », « Aucun sujet saisi ») ; les
+  `placeholder="Ex: …"` des wizards fournisseurs restent des indications de
+  saisie, signalées non corrigées (voir changelog).
+- `pnpm run qa:front` → PASS : `repo:check:local` OK, typecheck OK, lint OK,
+  Vitest `159 fichiers / 735 tests` passés, `check-error-compliance` OK
+  (exécution du 30/07/2026).
+- Captures avant/après non produites : pas de session navigateur lancée pour
+  cette tâche ; la preuve est le diff + la sortie QA ci-dessus.
 
 ```text
 Repo : C:\GitHub\CIR_Cockpit\CIR-Cockpit (branche main). Lis AGENTS.md avant d'agir.
@@ -995,7 +1019,7 @@ information utile, pas un échec à masquer.
 
 ## T1.8 — Validation affichée avant toute action
 
-**Statut** ⬜ non commencée · **Impact** moyen · **Effort** faible · **Dépendance** aucune
+**Statut** ✅ terminée · **Impact** moyen · **Effort** faible · **Dépendance** aucune
 
 **Constat.** À l'arrivée sur l'étape « Contact » du parcours de saisie, le
 message « Contact requis » est déjà affiché en rouge alors qu'un contact existe
@@ -1008,15 +1032,45 @@ c'est le moment de son affichage qui est fautif, pas son contenu.
 
 **Checkpoint**
 
-- [ ] Aucune erreur de validation n'est affichée au montage d'une étape.
-- [ ] L'erreur apparaît au `blur` d'un champ touché ou à la tentative de passage
+- [x] Aucune erreur de validation n'est affichée au montage d'une étape.
+- [x] L'erreur apparaît au `blur` d'un champ touché ou à la tentative de passage
       à l'étape suivante.
-- [ ] Le même contrôle est appliqué aux autres étapes du parcours guidé.
-- [ ] `pnpm run qa:front` passe.
+- [x] Le même contrôle est appliqué aux autres étapes du parcours guidé.
+- [x] `pnpm run qa:front` passe.
 
 **Preuve attendue.** Capture de l'étape Contact au montage, sans erreur.
 
-**Preuve réelle.** _à compléter par l'agent qui exécute la tâche._
+**Preuve réelle.** Cause identifiée avant correction :
+`hooks/interactions/handlers/useInteractionHandlers.ts:40` remet `contact_id` à
+vide avec `{ shouldValidate: true }` quand l'utilisateur choisit le tiers à
+l'étape 3 ; `trigger('contact_id')` publie alors « Contact requis » dans
+`formState.errors`, que `CockpitClientContactSection.tsx:73` rend sans condition
+dès le montage de l'étape 4. Déclencheur retenu : la **tentative de passage à
+l'étape suivante** (clic sur « Continuer », `Ctrl/⌘ + Entrée`, ou soumission du
+formulaire) — le `blur` par champ n'est volontairement pas câblé, il aurait exigé
+un `touchedFields` croisé avec la valeur de chaque champ dans six sous-composants
+pour honorer « blur sur un champ *renseigné* ». `useCockpitGuidedFlow` expose
+`areStepErrorsVisible` / `revealStepErrors` ; `CockpitGuidedEntry` masque
+`errors` des deux panneaux tant que l'étape active n'a pas été tentée, ce qui
+couvre Canal, Relation, Tiers, Contact et Sujet d'un seul point ; l'étape
+Validation garde le comportement existant (elle n'est atteinte que complète et
+son `onInvalid` de soumission doit rester visible). Les boutons « Continuer » ne
+sont plus `disabled` : au clic sur une étape incomplète ils révèlent l'erreur et
+appellent `focusFirstInvalidField` (réutilise `useInteractionInvalidHandler`, qui
+place le focus sur le premier champ fautif). Preuves : `pnpm run qa:front` →
+exit 0, `Repo state check passed.`, typecheck OK, lint OK,
+`Test Files 160 passed (160)`, `Tests 746 passed (746)`,
+`Error compliance check passed.` ; tests ajoutés
+`CockpitGuidedEntry.test.tsx` → « n affiche aucune erreur au montage de l etape
+contact » et « affiche l erreur et demande le focus apres un clic sur
+Continuer », `CockpitGuidedStepSwitch.test.tsx` → « revele les erreurs et donne
+le focus au premier champ fautif au clic sur Continuer » et « affiche le message
+familles produits une fois les erreurs de l etape revelees »,
+`useCockpitGuidedFlow.test.tsx` → « masque les erreurs a l arrivee sur une etape
+et ne les revele qu apres une tentative » ; régression prouvée en neutralisant le
+masque dans `CockpitGuidedEntry.tsx` : `Tests 1 failed | 5 passed (6)` avec
+`Contact requis` trouvé au montage. Capture non produite (aucune session
+navigateur ouverte), remplacée par ces tests.
 
 ```text
 Repo : C:\GitHub\CIR_Cockpit\CIR-Cockpit (branche main). Lis AGENTS.md avant d'agir.
@@ -1094,7 +1148,7 @@ modèle d'information qui est en cause. Impact produit maximal.
 
 ## T2.1 — Refonte de Pilotage
 
-**Statut** ⬜ non commencée · **Impact** très élevé · **Effort** élevé · **Dépendance conseillée** T3.1 (PageHeader)
+**Statut** 🟡 partielle · **Impact** très élevé · **Effort** élevé · **Dépendance conseillée** T3.1 (PageHeader)
 
 **Constat.** Un seul dossier réel est rendu six fois sur la page : dans « File
 de priorité », dans « Top clients », dans « Dossiers en cours », et son montant
@@ -1111,18 +1165,68 @@ comme valeur sur la cinquième). La barre « Devis envoyé » est ambre, c'est-�
 
 **Checkpoint**
 
-- [ ] Chaque dossier n'apparaît qu'une fois sur la page.
-- [ ] Les cartes KPI partagent une anatomie unique.
-- [ ] Le graphique n'est rendu qu'au-delà d'un seuil de points ; sinon un delta
+- [x] Chaque dossier n'apparaît qu'une fois sur la page.
+- [x] Les cartes KPI partagent une anatomie unique.
+- [x] Le graphique n'est rendu qu'au-delà d'un seuil de points ; sinon un delta
       chiffré le remplace.
-- [ ] Aucune couleur sémantique n'est utilisée pour un état neutre.
-- [ ] Les badges ne sont jamais tronqués en plein mot.
+- [x] Aucune couleur sémantique n'est utilisée pour un état neutre.
+- [x] Les badges ne sont jamais tronqués en plein mot.
 - [ ] La page remplit la fenêtre à 1440×900 sans zone morte de plus de 120 px.
-- [ ] `pnpm run qa:front` passe et les tests dashboard existants sont à jour.
+- [x] `pnpm run qa:front` passe et les tests dashboard existants sont à jour.
 
 **Preuve attendue.** Captures avant/après en 1440×900 et 1280×720.
 
-**Preuve réelle.** _à compléter par l'agent qui exécute la tâche._
+**Preuve réelle.** Refonte livrée le 2026-07-30 sur données réelles (agence CIR
+Bordeaux, 7 dossiers ouverts).
+
+- Panneaux supprimés : `DashboardPriorityQueue.tsx`, `DashboardPipelineSummary.tsx`,
+  `DashboardTopClients.tsx`. Leur contenu devient les colonnes `Échéance`, `Étape`
+  et `Montant` d'une table unique triable (`priority` / `client` / `stage` /
+  `amount`) et filtrable (périmètre `À traiter` ou `Toute la période`, canal).
+  Modèle de données : `buildDossierRows` + `selectDossierRows` dans
+  `frontend/src/utils/dashboard/dashboardOverview.ts`, une ligne par dossier.
+- Bande de métriques : `DashboardKpiRow.tsx` réécrit en 4 cellules `MetricCell`
+  strictement identiques (pastille de tonalité, libellé, valeur, précision).
+  Aucune sparkline : les quatre métriques ne peuvent pas toutes en porter une.
+- Garde du graphique : `hasEnoughEvolutionPoints` exige ≥ 8 semaines chiffrées
+  **et** ≥ 3 valeurs distinctes. Sur les données réelles la série vaut 4 800 €
+  constants sur 12 semaines, donc la courbe n'est pas rendue et le delta chiffré
+  `stable sur 4 sem.` (`buildOpenDossiersDelta`) la remplace dans la métrique
+  « Dossiers ouverts ». Le tracé conservé porte axe Y gradué, grille discrète,
+  points terminaux accentués et infobulle au survol.
+- Couleurs : `STAGE_DOT_CLASSES` passe `quote_sent` de `bg-warning` à
+  `bg-foreground/70` ; `--success` et `--destructive` ne restent que sur
+  gagné / perdu / retard.
+- Troncature : `shortenBadgeLabel` coupe à la source sur frontière de mot et
+  retire les mots-outils terminaux ; `title` porte le libellé complet.
+  « Attente éléments du client » → « Attente éléments… ».
+- Tests ajoutés (`frontend/src/utils/dashboard/__tests__/dashboardOverview.test.ts`) :
+  `buildDossierRows` « produit exactement une ligne par dossier et qualifie son
+  urgence », `selectDossierRows` « ajoute les dossiers clos de la periode sans
+  jamais dupliquer une ligne », `hasEnoughEvolutionPoints` « refuse une serie
+  plate : douze fois le meme montant reste un seul fait », `shortenBadgeLabel`
+  « ne termine pas un libelle raccourci sur un mot-outil ».
+  Tests ajoutés (`frontend/src/hooks/__tests__/useDashboardState.test.tsx`) :
+  « filtre la table par canal et n y laisse aucun doublon », « inverse le tri au
+  second clic sur la meme colonne », « masque la courbe tant que la serie
+  hebdomadaire est trop courte ».
+- Commande : `pnpm run qa:front` → `Test Files 160 passed (160)`,
+  `Tests 762 passed (762)`, typecheck, eslint `--max-warnings 0`,
+  `repo:check:local` et `check-error-compliance` verts (2026-07-30, 18:45).
+- Captures avant/après 1440×900 et 1280×720 produites par Playwright sur le
+  serveur `pnpm --dir frontend run dev` :
+  `%TEMP%/claude/C--GitHub-CIR-Cockpit-CIR-Cockpit/dc010bdd-b064-44bd-b523-f6e93e0ffebd/scratchpad/shots/`
+  (`avant-1440x900.png`, `avant-1280x720.png`, `apres-1440x900.png`,
+  `apres-1280x720.png`).
+
+**Reste ouvert.** La case « zone morte ≤ 120 px » n'est pas cochée : à 1280×720
+le vide sous la dernière ligne mesure ≈ 65 px, mais à 1440×900 avec seulement
+7 dossiers réels il atteint ≈ 250 px à l'intérieur de la table. La table est
+volontairement étirée jusqu'au pied de page, comme la table de
+`/remises/referentiels` qui sert de référence de densité et se comporte de la
+même façon. Combler ce vide supposerait soit de réintroduire un panneau — ce que
+la refonte élimine — soit de laisser la table se dimensionner au contenu, ce qui
+déplacerait le vide sur le fond de page. Décision à trancher par le PO.
 
 ```text
 Repo : C:\GitHub\CIR_Cockpit\CIR-Cockpit (branche main). Lis AGENTS.md avant d'agir.
@@ -1225,7 +1329,7 @@ information utile, pas un échec à masquer.
 
 ## T2.2 — Refonte du parcours de saisie
 
-**Statut** ⬜ non commencée · **Impact** très élevé · **Effort** élevé · **Dépendance conseillée** T1.8
+**Statut** ✅ terminée · **Impact** très élevé · **Effort** élevé · **Dépendance conseillée** T1.8
 
 **Constat.** La position dans le parcours est communiquée trois fois
 simultanément : le stepper (`CANAL / RELATION / TIERS / CONTACT / SUJET /
@@ -1241,16 +1345,35 @@ libellé. La page compte 15 libellés en capitales espacées.
 
 **Checkpoint**
 
-- [ ] Un seul dispositif de progression, cliquable pour revenir en arrière.
-- [ ] Le rail contextuel n'est rendu que lorsqu'il a du contenu.
-- [ ] Les boutons icône du rail ont un libellé ou une infobulle.
-- [ ] Les capitales sont réservées à l'eyebrow de section.
-- [ ] Le bouton désactivé n'annonce pas de raccourci clavier.
-- [ ] `pnpm run qa:front` passe.
+- [x] Un seul dispositif de progression, cliquable pour revenir en arrière.
+- [x] Le rail contextuel n'est rendu que lorsqu'il a du contenu.
+- [x] Les boutons icône du rail ont un libellé ou une infobulle.
+- [x] Les capitales sont réservées à l'eyebrow de section.
+- [x] Le bouton désactivé n'annonce pas de raccourci clavier.
+- [x] `pnpm run qa:front` passe.
 
 **Preuve attendue.** Captures des étapes 1 à 6 avant/après.
 
-**Preuve réelle.** _à compléter par l'agent qui exécute la tâche._
+**Preuve réelle.** `pnpm run qa:front` → exit 0 : `Repo state check passed.`,
+typecheck OK, lint `--max-warnings 0` OK, `Test Files 160 passed (160)`,
+`Tests 763 passed (763)`, `Error compliance check passed.` (30/07/2026, 19:37).
+Tests ajoutés dans
+`frontend/src/components/cockpit/guided/__tests__/CockpitGuidedEntry.test.tsx` —
+« porte la valeur choisie dans le stepper sans recapitulatif ni bloc etape »,
+« permet de revenir sur une etape franchie depuis le stepper », « laisse les
+etapes non franchies non cliquables » — et assertion d'état neutre ajoutée dans
+`frontend/src/components/cockpit/__tests__/CockpitShortcutLegend.test.tsx`
+(`bg-secondary` présent, `bg-primary` absent, aucun `Ctrl ↵` sur le bouton
+désactivé). Parcours des 6 étapes rejoué dans Chrome sur
+`pnpm --dir frontend run dev` (1440×900), captures avant/après dans
+`scratchpad/shots/` : `before-1-canal.png` … `before-6-validation.png` et
+`after-1-canal.png` … `after-6-validation.png`. Rail droit mesuré après refonte
+sur l'étape Contact (`getBoundingClientRect` dans la page) : hauteur 404 px,
+espace résiduel 30 px, plus grand écart interne 48 px — contre 463 px de vide
+avant. `CockpitGuidedAnswerRow.tsx` supprimé (récapitulatif retiré) ainsi que
+ses deux tests dans `CockpitGuidedStepSwitch.test.tsx` ; l'assertion
+« Continuer affiche Ctrl Entrée » sur une étape incomplète y est inversée,
+puisqu'elle encodait le comportement corrigé par le point 4.
 
 ```text
 Repo : C:\GitHub\CIR_Cockpit\CIR-Cockpit (branche main). Lis AGENTS.md avant d'agir.

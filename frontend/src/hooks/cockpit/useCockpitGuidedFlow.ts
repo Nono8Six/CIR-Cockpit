@@ -70,6 +70,7 @@ export const useCockpitGuidedFlow = ({
   const [isRelationConfirmed, setIsRelationConfirmed] = useState(hasText(entityType));
   const [isSupplierContactConfirmed, setIsSupplierContactConfirmed] = useState(false);
   const [editingStep, setEditingStep] = useState<CockpitGuidedStep | null>(null);
+  const [revealedErrorStep, setRevealedErrorStep] = useState<CockpitGuidedStep | null>(null);
 
   const hasContactMethod = hasText(contactPhone) || hasText(contactEmail);
 
@@ -134,6 +135,14 @@ export const useCockpitGuidedFlow = ({
 
   const activeStep = editingStep ?? firstIncompleteStep;
 
+  // Les erreurs de validation ne repondent qu'a une action: elles restent masquees
+  // tant que l'utilisateur n'a pas tente de quitter l'etape en cours.
+  const areStepErrorsVisible = activeStep === 'details' || revealedErrorStep === activeStep;
+
+  const revealStepErrors = useCallback((step: CockpitGuidedStep) => {
+    setRevealedErrorStep(step);
+  }, []);
+
   const completeStep = useCallback((step: CockpitGuidedStep) => {
     if (step === 'channel') {
       setIsChannelConfirmed(true);
@@ -145,10 +154,12 @@ export const useCockpitGuidedFlow = ({
       setIsSupplierContactConfirmed(true);
     }
     setEditingStep(null);
+    setRevealedErrorStep(null);
   }, [relationMode]);
 
   const editStep = useCallback((step: CockpitGuidedStep) => {
     setEditingStep(step);
+    setRevealedErrorStep(null);
   }, []);
 
   const resetFlow = useCallback(() => {
@@ -156,6 +167,7 @@ export const useCockpitGuidedFlow = ({
     setIsRelationConfirmed(false);
     setIsSupplierContactConfirmed(false);
     setEditingStep(null);
+    setRevealedErrorStep(null);
   }, []);
 
   return {
@@ -163,6 +175,8 @@ export const useCockpitGuidedFlow = ({
     completeStep,
     editStep,
     resetFlow,
+    areStepErrorsVisible,
+    revealStepErrors,
     isChannelConfirmed,
     isRelationConfirmed,
     identityComplete,

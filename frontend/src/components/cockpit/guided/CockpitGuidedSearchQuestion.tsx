@@ -10,15 +10,17 @@ import CockpitSupplierLookup from './CockpitSupplierLookup';
 type CockpitGuidedSearchQuestionProps = {
   leftPaneProps: CockpitFormLeftPaneProps;
   entityProps: CockpitLeftEntitySectionsProps;
-  identityComplete: boolean;
   onComplete: () => void;
+  onRequestComplete?: () => void;
+  isIdentityComplete?: boolean;
 };
 
 const CockpitGuidedSearchQuestion = ({
   leftPaneProps,
   entityProps,
-  identityComplete,
-  onComplete
+  onComplete,
+  onRequestComplete,
+  isIdentityComplete = true
 }: CockpitGuidedSearchQuestionProps) => {
   const renderLookup = () => {
     if (leftPaneProps.relationMode === 'internal') {
@@ -71,11 +73,20 @@ const CockpitGuidedSearchQuestion = ({
 
   return (
     <CockpitGuidedQuestionFrame
-      eyebrow="Étape 3"
       title="Rechercher ou créer le tiers"
       actions={leftPaneProps.relationMode === 'solicitation' || leftPaneProps.relationMode === 'supplier'
         ? null
-        : <Button type="button" size="sm" onClick={onComplete} disabled={!identityComplete}>Continuer</Button>}
+        : (
+          <Button
+            type="button"
+            size="sm"
+            variant={isIdentityComplete ? 'default' : 'secondary'}
+            className={isIdentityComplete ? undefined : 'text-muted-foreground'}
+            onClick={onRequestComplete ?? onComplete}
+          >
+            Continuer
+          </Button>
+        )}
     >
       {renderLookup()}
     </CockpitGuidedQuestionFrame>

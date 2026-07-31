@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 
 type CockpitGuidedQuestionFrameProps = {
   title?: string;
-  eyebrow: string;
+  eyebrow?: string;
   description?: string;
   children: ReactNode;
   actions?: ReactNode;
@@ -21,9 +21,11 @@ const CockpitGuidedQuestionFrame = ({
 }: CockpitGuidedQuestionFrameProps) => (
   <section className={cn(density === 'compact' ? 'space-y-3' : 'space-y-5')}>
     <div className={cn(density === 'compact' ? 'space-y-1' : 'space-y-1.5')}>
-      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-        {eyebrow}
-      </p>
+      {eyebrow ? (
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          {eyebrow}
+        </p>
+      ) : null}
       {title ? (
         <h2 className={cn(
           'font-semibold leading-snug tracking-tight text-foreground text-pretty',

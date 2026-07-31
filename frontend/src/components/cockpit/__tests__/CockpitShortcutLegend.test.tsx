@@ -54,6 +54,12 @@ describe('CockpitShortcutLegend', () => {
     );
 
     expect(screen.getByRole('button', { name: 'Sujet obligatoire' })).toBeInTheDocument();
-    expect(screen.getByTestId('cockpit-submit-button')).toBeDisabled();
+
+    const submitButton = screen.getByTestId('cockpit-submit-button');
+    expect(submitButton).toBeDisabled();
+    // Etat desactive a part entiere: fond neutre, pas de primaire delave ni de raccourci.
+    expect(submitButton.className).toContain('bg-secondary');
+    expect(submitButton.className).not.toContain('bg-primary');
+    expect(submitButton).not.toHaveTextContent(/(Ctrl|⌘) ↵/);
   });
 });

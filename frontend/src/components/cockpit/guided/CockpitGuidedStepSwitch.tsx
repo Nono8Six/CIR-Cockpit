@@ -2,9 +2,10 @@ import { useCallback, useEffect } from 'react';
 import { ArrowRight } from 'lucide-react';
 
 import { isApplePlatform } from '@/app/appConstants';
+import { cn } from '@/lib/utils';
 import { Button } from '../../ui/inputs/basic/Button';
 import { Kbd } from '../../ui/data-display/Kbd';
-import type { useCockpitGuidedFlow } from '../../../hooks/cockpit/useCockpitGuidedFlow';
+import type { CockpitGuidedStep, useCockpitGuidedFlow } from '../../../hooks/cockpit/useCockpitGuidedFlow';
 import type { CockpitFormLeftPaneProps, CockpitFormRightPaneProps } from '../CockpitPaneTypes';
 import type { CockpitLeftEntitySectionsProps } from '../CockpitLeftEntitySectionsProps';
 import CockpitContactSection from '../left/CockpitContactSection';
@@ -24,6 +25,7 @@ type CockpitGuidedStepSwitchProps = {
   rightPaneProps: CockpitFormRightPaneProps;
   entityProps: CockpitLeftEntitySectionsProps;
   onReset: () => void;
+  focusFirstInvalidField?: () => void;
 };
 
 const CockpitGuidedStepSwitch = ({
@@ -31,7 +33,8 @@ const CockpitGuidedStepSwitch = ({
   leftPaneProps,
   rightPaneProps,
   entityProps,
-  onReset
+  onReset,
+  focusFirstInvalidField
 }: CockpitGuidedStepSwitchProps) => {
   const continueShortcutLabel = `${isApplePlatform() ? '⌘' : 'Ctrl'} Entrée`;
   const isSolicitationRelation = leftPaneProps.relationMode === 'solicitation';
@@ -56,37 +59,58 @@ const CockpitGuidedStepSwitch = ({
     flow.completeStep('subject');
   }, [flow, isDescriptionOnlyRelation, isInternalRelation, isSupplierRelation, leftPaneProps, rightPaneProps.notes]);
 
+  // Une erreur repond a une action: tant que l'utilisateur n'a pas tente de quitter
+  // l'etape, rien n'est affiche. La tentative revele les erreurs et donne le focus
+  // au premier champ fautif.
+  const requestStepCompletion = useCallback((
+    step: CockpitGuidedStep,
+    isStepComplete: boolean,
+    completeStep: () => void
+  ) => {
+    if (isStepComplete) {
+      completeStep();
+      return;
+    }
+    flow.revealStepErrors(step);
+    focusFirstInvalidField?.();
+  }, [flow, focusFirstInvalidField]);
+
+  const requestContactCompletion = useCallback(() => {
+    requestStepCompletion('contact', flow.contactComplete, () => flow.completeStep('contact'));
+  }, [flow, requestStepCompletion]);
+
+  const requestSubjectCompletion = useCallback(() => {
+    requestStepCompletion('subject', isDescriptionOnlyRelation || flow.subjectComplete, completeSubjectStep);
+  }, [completeSubjectStep, flow.subjectComplete, isDescriptionOnlyRelation, requestStepCompletion]);
+
   useEffect(() => {
-    const canCompleteWithShortcut =
-      (flow.activeStep === 'contact' && flow.contactComplete)
-      || (flow.activeStep === 'subject' && (flow.subjectComplete || isDescriptionOnlyRelation));
-    if (!canCompleteWithShortcut) return undefined;
+    if (flow.activeStep !== 'contact' && flow.activeStep !== 'subject') return undefined;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey || event.key !== 'Enter') return;
       event.preventDefault();
       event.stopPropagation();
       if (flow.activeStep === 'subject') {
-        completeSubjectStep();
+        requestSubjectCompletion();
         return;
       }
-      flow.completeStep(flow.activeStep);
+      requestContactCompletion();
     };
 
     window.addEventListener('keydown', handleKeyDown, { capture: true });
     return () => window.removeEventListener('keydown', handleKeyDown, { capture: true });
-  }, [completeSubjectStep, flow, isDescriptionOnlyRelation]);
+  }, [flow.activeStep, requestContactCompletion, requestSubjectCompletion]);
 
   if (flow.activeStep === 'channel') {
     return (
-      <CockpitGuidedQuestionFrame eyebrow="Canal">
+      <CockpitGuidedQuestionFrame title="Par quel canal avez-vous échangé ?">
         <CockpitGuidedChannelQuestion {...leftPaneProps} onComplete={() => flow.completeStep('channel')} />
       </CockpitGuidedQuestionFrame>
     );
   }
   if (flow.activeStep === 'relation') {
     return (
-      <CockpitGuidedQuestionFrame eyebrow="Relation">
+      <CockpitGuidedQuestionFrame title="Quelle relation avec ce tiers ?">
         <CockpitGuidedRelationQuestion {...leftPaneProps} onComplete={() => flow.completeStep('relation')} />
       </CockpitGuidedQuestionFrame>
     );
@@ -96,15 +120,15 @@ const CockpitGuidedStepSwitch = ({
       <CockpitGuidedSearchQuestion
         leftPaneProps={leftPaneProps}
         entityProps={entityProps}
-        identityComplete={flow.identityComplete}
         onComplete={() => flow.completeStep('search')}
+        onRequestComplete={() => requestStepCompletion('search', flow.identityComplete, () => flow.completeStep('search'))}
+        isIdentityComplete={flow.identityComplete}
       />
     );
   }
   if (flow.activeStep === 'contact') {
     return (
       <CockpitGuidedQuestionFrame
-        eyebrow="Contact"
         title={isInternalRelation ? 'Contact interne' : isSupplierRelation ? 'Contact fournisseur' : 'Avec qui avez-vous échangé ?'}
         description={isInternalRelation
           ? 'Membre CIR existant ou contact ponctuel.'
@@ -116,17 +140,16 @@ const CockpitGuidedStepSwitch = ({
           <Button
             type="button"
             size="sm"
-            onClick={() => flow.completeStep('contact')}
-            disabled={!flow.contactComplete}
-            className="gap-1.5 shadow-sm"
+            variant={flow.contactComplete ? 'default' : 'secondary'}
+            onClick={requestContactCompletion}
+            className={cn('gap-1.5', flow.contactComplete ? 'shadow-sm' : 'text-muted-foreground')}
           >
             Continuer
-            <Kbd className={flow.contactComplete
-              ? 'ml-1 border-primary-foreground/30 bg-primary-foreground/15 text-primary-foreground'
-              : 'ml-1 border-muted-foreground/20 bg-muted text-muted-foreground'}
-            >
+            {flow.contactComplete ? (
+              <Kbd className="ml-1 border-primary-foreground/30 bg-primary-foreground/15 text-primary-foreground">
                 {continueShortcutLabel}
-            </Kbd>
+              </Kbd>
+            ) : null}
             <ArrowRight size={14} aria-hidden="true" />
           </Button>
         )}
@@ -173,8 +196,9 @@ const CockpitGuidedStepSwitch = ({
         leftPaneProps={leftPaneProps}
         rightPaneProps={rightPaneProps}
         onReset={onReset}
-        onComplete={completeSubjectStep}
+        onComplete={requestSubjectCompletion}
         canComplete={isDescriptionOnlyRelation || flow.subjectComplete}
+        showValidationErrors={flow.areStepErrorsVisible}
         onEditContact={() => flow.editStep('contact')}
         continueShortcutLabel={continueShortcutLabel}
       />

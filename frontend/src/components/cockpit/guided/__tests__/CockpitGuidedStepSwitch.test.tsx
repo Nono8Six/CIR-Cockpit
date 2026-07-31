@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { okAsync } from 'neverthrow';
 
-import CockpitGuidedAnswerRow from '@/components/cockpit/guided/CockpitGuidedAnswerRow';
 import CockpitGuidedStepSwitch from '@/components/cockpit/guided/CockpitGuidedStepSwitch';
 import type { CockpitLeftEntitySectionsProps } from '@/components/cockpit/CockpitLeftEntitySectionsProps';
 import type { CockpitFormLeftPaneProps, CockpitFormRightPaneProps } from '@/components/cockpit/CockpitPaneTypes';
@@ -69,6 +68,8 @@ const buildFlow = (
   completeStep: vi.fn(),
   editStep: vi.fn(),
   resetFlow: vi.fn(),
+  areStepErrorsVisible: false,
+  revealStepErrors: vi.fn(),
   isChannelConfirmed: true,
   isRelationConfirmed: true,
   identityComplete: true,
@@ -210,19 +211,31 @@ const buildSubjectRightPaneProps = (
 } as CockpitFormRightPaneProps);
 
 describe('CockpitGuidedStepSwitch', () => {
-  it('keeps Continue disabled until the contact step is complete', () => {
+  it('revele les erreurs et donne le focus au premier champ fautif au clic sur Continuer', async () => {
+    const user = userEvent.setup();
+    const flow = buildFlow(false);
+    const focusFirstInvalidField = vi.fn();
+
     render(
       <CockpitGuidedStepSwitch
-        flow={buildFlow(false)}
+        flow={flow}
         leftPaneProps={{} as CockpitFormLeftPaneProps}
         rightPaneProps={{} as CockpitFormRightPaneProps}
         entityProps={entityProps}
         onReset={vi.fn()}
+        focusFirstInvalidField={focusFirstInvalidField}
       />
     );
 
-    expect(screen.getByRole('button', { name: /continuer/i })).toBeDisabled();
-    expect(screen.getByRole('button', { name: /continuer/i })).toHaveTextContent('Ctrl Entrée');
+    expect(screen.getByRole('button', { name: /continuer/i })).toBeEnabled();
+    // Etape incomplete: le raccourci n'est pas annonce tant qu'il ne valide rien.
+    expect(screen.getByRole('button', { name: /continuer/i })).not.toHaveTextContent('Ctrl Entrée');
+
+    await user.click(screen.getByRole('button', { name: /continuer/i }));
+
+    expect(flow.revealStepErrors).toHaveBeenCalledWith('contact');
+    expect(focusFirstInvalidField).toHaveBeenCalledTimes(1);
+    expect(flow.completeStep).not.toHaveBeenCalled();
   });
 
   it('continues once a contact is selected', async () => {
@@ -339,7 +352,7 @@ describe('CockpitGuidedStepSwitch', () => {
     expect(screen.queryByRole('button', { name: /motorisation/i })).not.toBeInTheDocument();
   });
 
-  it('affiche les familles produits et le message obligatoire quand le type les exige', () => {
+  it('affiche les familles produits sans message obligatoire tant que rien n a ete tente', () => {
     render(
       <CockpitGuidedStepSwitch
         flow={buildFlow(true, {
@@ -375,8 +388,38 @@ describe('CockpitGuidedStepSwitch', () => {
 
     expect(screen.getByText(/familles produits/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /motorisation/i })).toBeInTheDocument();
+    expect(screen.queryByText(/au moins une famille produit est requise/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /continuer/i })).toBeEnabled();
+  });
+
+  it('affiche le message familles produits une fois les erreurs de l etape revelees', () => {
+    render(
+      <CockpitGuidedStepSwitch
+        flow={buildFlow(true, {
+          activeStep: 'subject',
+          subjectComplete: false,
+          areStepErrorsVisible: true
+        })}
+        leftPaneProps={{
+          relationMode: 'client',
+          interactionType: 'Demande de devis',
+          hasInteractionTypes: true,
+          interactionTypes: ['Demande de devis'],
+          interactionTypeRef: { current: null },
+          setValue: vi.fn(),
+          errors: {}
+        } as unknown as CockpitFormLeftPaneProps}
+        rightPaneProps={buildSubjectRightPaneProps({
+          requiresProductFamilies: true,
+          families: ['MOTORISATION'],
+          megaFamilies: []
+        })}
+        entityProps={entityProps}
+        onReset={vi.fn()}
+      />
+    );
+
     expect(screen.getByText(/au moins une famille produit est requise/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /continuer/i })).toBeDisabled();
   });
 
   it('limite l etape sujet sollicitation a la description et genere le sujet technique', async () => {
@@ -671,46 +714,5 @@ describe('CockpitGuidedStepSwitch', () => {
       id: 'contact-2',
       first_name: 'Marc'
     }), expect.objectContaining({ id: 'supplier-1' }));
-  });
-});
-
-describe('CockpitGuidedAnswerRow', () => {
-  it('garde les lignes confirmees editables en mode compact', async () => {
-    const user = userEvent.setup();
-    const onEdit = vi.fn();
-
-    render(
-      <CockpitGuidedAnswerRow
-        index={1}
-        label="Canal"
-        value="Téléphone"
-        active={false}
-        complete
-        onEdit={onEdit}
-      />
-    );
-
-    await user.click(screen.getByRole('button', { name: /téléphone/i }));
-
-    expect(onEdit).toHaveBeenCalledTimes(1);
-  });
-
-  it('bloque l edition d une ligne non editable comme Tiers CIR', () => {
-    const onEdit = vi.fn();
-
-    render(
-      <CockpitGuidedAnswerRow
-        index={3}
-        label="Tiers"
-        value="CIR"
-        active={false}
-        complete
-        editable={false}
-        onEdit={onEdit}
-      />
-    );
-
-    expect(screen.getByRole('button', { name: /cir/i })).toBeDisabled();
-    expect(onEdit).not.toHaveBeenCalled();
   });
 });

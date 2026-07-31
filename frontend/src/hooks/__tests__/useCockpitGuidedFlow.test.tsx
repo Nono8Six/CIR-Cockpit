@@ -121,6 +121,35 @@ describe('useCockpitGuidedFlow', () => {
     expect(result.current.identityComplete).toBe(false);
   });
 
+  it('masque les erreurs a l arrivee sur une etape et ne les revele qu apres une tentative', () => {
+    const { result, rerender } = renderHook((params) => useCockpitGuidedFlow(params), {
+      initialProps: buildParams({
+        relationMode: 'client',
+        entityType: 'Client',
+        selectedEntity: { id: 'entity-1' } as never
+      })
+    });
+
+    expect(result.current.activeStep).toBe('contact');
+    expect(result.current.areStepErrorsVisible).toBe(false);
+
+    act(() => result.current.revealStepErrors('contact'));
+    expect(result.current.areStepErrorsVisible).toBe(true);
+
+    // Un retour en arriere ou un changement d etape remasque les erreurs.
+    act(() => result.current.editStep('search'));
+    expect(result.current.areStepErrorsVisible).toBe(false);
+
+    act(() => result.current.completeStep('search'));
+    rerender(buildParams({
+      relationMode: 'client',
+      entityType: 'Client',
+      selectedEntity: { id: 'entity-1' } as never
+    }));
+    expect(result.current.activeStep).toBe('contact');
+    expect(result.current.areStepErrorsVisible).toBe(false);
+  });
+
   it('allows editing and resetting the guided state without clearing form values', () => {
     const { result } = renderHook((params) => useCockpitGuidedFlow(params), {
       initialProps: buildParams({ entityType: 'Client' })

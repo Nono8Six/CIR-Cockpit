@@ -1,13 +1,15 @@
+import { useMemo } from 'react';
 import { RotateCcw } from 'lucide-react';
+import type { FieldErrors } from 'react-hook-form';
 
 import type { CockpitFormLeftPaneProps, CockpitFormRightPaneProps } from '../CockpitPaneTypes';
+import type { InteractionFormValues } from '../../../../../shared/schemas/interaction/interaction.schema';
 import type { Interaction } from '@/types';
 import { Button } from '../../ui/inputs/basic/Button';
 import { buildCockpitLeftEntitySectionsProps } from '../buildCockpitLeftEntitySectionsProps';
 import { GUIDED_STEP_ORDER, type CockpitGuidedStep, useCockpitGuidedFlow } from '../../../hooks/cockpit/useCockpitGuidedFlow';
 import { cn } from '@/lib/utils';
 import CockpitShortcutLegend from '../CockpitShortcutLegend';
-import CockpitGuidedAnswerRow from './CockpitGuidedAnswerRow';
 import CockpitGuidedContextPanel from './CockpitGuidedContextPanel';
 import CockpitGuidedStepSwitch from './CockpitGuidedStepSwitch';
 
@@ -16,6 +18,7 @@ type CockpitGuidedEntryProps = {
   canSave: boolean;
   gateMessage: string | null;
   focusCurrentStep: () => void;
+  focusFirstInvalidField: () => void;
   leftPaneProps: CockpitFormLeftPaneProps;
   rightPaneProps: CockpitFormRightPaneProps;
   clientContextInteractions: Interaction[];
@@ -24,7 +27,7 @@ type CockpitGuidedEntryProps = {
   hasClientContextInteractionsError: boolean;
 };
 
-const getStepIndex = (step: CockpitGuidedStep): number => GUIDED_STEP_ORDER.indexOf(step) + 1;
+const NO_VISIBLE_ERRORS: FieldErrors<InteractionFormValues> = {};
 
 const STEP_PROGRESS_LABELS: Record<CockpitGuidedStep, string> = {
   channel: 'Canal',
@@ -35,37 +38,69 @@ const STEP_PROGRESS_LABELS: Record<CockpitGuidedStep, string> = {
   details: 'Validation'
 };
 
-const CockpitGuidedProgress = ({ activeStep }: { activeStep: CockpitGuidedStep }) => {
+type GuidedProgressStep = {
+  step: CockpitGuidedStep;
+  label: string;
+  value: string;
+  isEditable: boolean;
+};
+
+// Seul dispositif de progression de l'ecran: il porte la position courante,
+// la valeur deja choisie et le retour en arriere sur une etape franchie.
+const CockpitGuidedProgress = ({
+  steps,
+  activeStep,
+  onEditStep
+}: {
+  steps: GuidedProgressStep[];
+  activeStep: CockpitGuidedStep;
+  onEditStep: (step: CockpitGuidedStep) => void;
+}) => {
   const activeIndex = GUIDED_STEP_ORDER.indexOf(activeStep);
 
   return (
     <nav aria-label="Progression de la saisie">
       <ol className="grid grid-cols-3 gap-x-2 gap-y-3 sm:grid-cols-6">
-        {GUIDED_STEP_ORDER.map((step, index) => {
+        {steps.map(({ step, label, value, isEditable }) => {
           const isActive = step === activeStep;
-          const isComplete = index < activeIndex;
+          const isComplete = GUIDED_STEP_ORDER.indexOf(step) < activeIndex;
 
           return (
             <li key={step} aria-current={isActive ? 'step' : undefined} className="min-w-0">
-              <span
-                aria-hidden="true"
+              <button
+                type="button"
+                onClick={() => onEditStep(step)}
+                disabled={!isEditable}
+                title={isEditable ? `Revenir à l’étape ${label}` : undefined}
                 className={cn(
-                  'block h-[2px] w-full rounded-full transition-colors',
-                  isActive && 'bg-primary',
-                  isComplete && 'bg-primary/55',
-                  !isActive && !isComplete && 'bg-[hsl(var(--border-subtle))]'
-                )}
-              />
-              <span
-                className={cn(
-                  'mt-1.5 block truncate text-[10px] uppercase tracking-[0.16em] transition-colors',
-                  isActive && 'font-semibold text-foreground',
-                  isComplete && 'font-medium text-muted-foreground',
-                  !isActive && !isComplete && 'font-medium text-muted-foreground/65'
+                  'group block w-full min-w-0 rounded-sm text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                  isEditable ? 'cursor-pointer' : 'cursor-default'
                 )}
               >
-                {STEP_PROGRESS_LABELS[step]}
-              </span>
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    'block h-[2px] w-full rounded-full transition-colors',
+                    isActive && 'bg-primary',
+                    isComplete && 'bg-primary/55',
+                    !isActive && !isComplete && 'bg-[hsl(var(--border-subtle))]',
+                    isEditable && 'group-hover:bg-primary'
+                  )}
+                />
+                <span
+                  className={cn(
+                    'mt-1.5 block truncate text-[11px] tracking-wide transition-colors',
+                    isActive && 'font-semibold text-foreground',
+                    !isActive && isComplete && 'font-medium text-muted-foreground group-hover:text-foreground',
+                    !isActive && !isComplete && 'font-medium text-muted-foreground/65'
+                  )}
+                >
+                  {label}
+                </span>
+                <span className="mt-0.5 block h-4 truncate text-[11px] font-semibold leading-4 text-foreground/85">
+                  {value}
+                </span>
+              </button>
             </li>
           );
         })}
@@ -140,6 +175,7 @@ const CockpitGuidedEntry = ({
   canSave,
   gateMessage,
   focusCurrentStep,
+  focusFirstInvalidField,
   leftPaneProps,
   rightPaneProps,
   clientContextInteractions,
@@ -147,7 +183,6 @@ const CockpitGuidedEntry = ({
   isClientContextInteractionsLoading,
   hasClientContextInteractionsError
 }: CockpitGuidedEntryProps) => {
-  const entityProps = buildCockpitLeftEntitySectionsProps(leftPaneProps);
   const flow = useCockpitGuidedFlow({
     relationMode: leftPaneProps.relationMode,
     entityType: leftPaneProps.entityType,
@@ -169,17 +204,45 @@ const CockpitGuidedEntry = ({
     requiresProductFamilies: rightPaneProps.requiresProductFamilies
   });
 
+  const stepLeftPaneProps = useMemo(
+    () => (flow.areStepErrorsVisible ? leftPaneProps : { ...leftPaneProps, errors: NO_VISIBLE_ERRORS }),
+    [flow.areStepErrorsVisible, leftPaneProps]
+  );
+  const stepRightPaneProps = useMemo(
+    () => (flow.areStepErrorsVisible ? rightPaneProps : { ...rightPaneProps, errors: NO_VISIBLE_ERRORS }),
+    [flow.areStepErrorsVisible, rightPaneProps]
+  );
+  const entityProps = buildCockpitLeftEntitySectionsProps(stepLeftPaneProps);
+
   const handleReset = () => {
     flow.resetFlow();
     rightPaneProps.onReset();
   };
-  const showContextPanel = Boolean(
-    leftPaneProps.selectedEntity
-      || leftPaneProps.selectedContact
-      || leftPaneProps.selectedEntityMeta
-      || leftPaneProps.selectedContactMeta
-  );
+  // Le rail droit n'existe que s'il a une fiche a montrer: un simple libelle
+  // de contexte ne suffit pas a justifier une colonne.
+  const showContextPanel = Boolean(leftPaneProps.selectedEntity || leftPaneProps.selectedContact);
   const visibleAnswerSteps = getVisibleGuidedAnswerSteps(flow, leftPaneProps);
+  const stepValues: Record<CockpitGuidedStep, string> = {
+    channel: leftPaneProps.channel,
+    relation: buildRelationLabel(leftPaneProps.entityType, flow.isRelationConfirmed),
+    search: buildIdentityLabel(leftPaneProps),
+    contact: buildContactLabel(leftPaneProps),
+    subject: rightPaneProps.subject,
+    details: ''
+  };
+  const progressSteps: GuidedProgressStep[] = GUIDED_STEP_ORDER.map((step) => {
+    const isAnswered = step !== 'details' && visibleAnswerSteps.includes(step as GuidedAnswerStep);
+    const isLockedIdentity = step === 'search' && leftPaneProps.relationMode === 'internal';
+
+    return {
+      step,
+      label: step === 'search' && leftPaneProps.relationMode === 'solicitation'
+        ? 'Appelant'
+        : STEP_PROGRESS_LABELS[step],
+      value: isAnswered ? stepValues[step] : '',
+      isEditable: isAnswered && !isLockedIdentity
+    };
+  });
 
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-background">
@@ -198,52 +261,32 @@ const CockpitGuidedEntry = ({
         >
           <div className="mx-auto flex w-full max-w-[900px] flex-col gap-3">
             <div className="flex items-center gap-3">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Nouvelle interaction</span>
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Nouvelle interaction</span>
               <span className="h-px flex-1 bg-[hsl(var(--border-subtle))]" />
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
                 onClick={handleReset}
-                className="h-7 gap-1.5 px-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+                className="h-7 gap-1.5 px-2 text-[11px] font-medium text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
                 aria-label="Réinitialiser la saisie en cours"
               >
                 <RotateCcw size={12} aria-hidden="true" />
                 Recommencer
               </Button>
             </div>
-            <CockpitGuidedProgress activeStep={flow.activeStep} />
-            <div className="flex flex-col divide-y divide-[hsl(var(--border-subtle))]">
-              {visibleAnswerSteps.includes('channel') ? (
-                <CockpitGuidedAnswerRow index={getStepIndex('channel')} label="Canal" value={leftPaneProps.channel} active={false} complete onEdit={() => flow.editStep('channel')} />
-              ) : null}
-              {visibleAnswerSteps.includes('relation') ? (
-                <CockpitGuidedAnswerRow index={getStepIndex('relation')} label="Relation" value={buildRelationLabel(leftPaneProps.entityType, flow.isRelationConfirmed)} active={false} complete onEdit={() => flow.editStep('relation')} />
-              ) : null}
-              {visibleAnswerSteps.includes('search') ? (
-                <CockpitGuidedAnswerRow
-                  index={getStepIndex('search')}
-                  label={leftPaneProps.relationMode === 'solicitation' ? 'Appelant' : 'Tiers'}
-                  value={buildIdentityLabel(leftPaneProps)}
-                  active={false}
-                  complete
-                  editable={leftPaneProps.relationMode !== 'internal'}
-                  onEdit={() => flow.editStep('search')}
-                />
-              ) : null}
-              {visibleAnswerSteps.includes('contact') ? (
-                <CockpitGuidedAnswerRow index={getStepIndex('contact')} label="Contact" value={buildContactLabel(leftPaneProps)} active={false} complete onEdit={() => flow.editStep('contact')} />
-              ) : null}
-              {visibleAnswerSteps.includes('subject') ? (
-                <CockpitGuidedAnswerRow index={getStepIndex('subject')} label="Sujet" value={rightPaneProps.subject || 'À renseigner'} active={false} complete onEdit={() => flow.editStep('subject')} />
-              ) : null}
-            </div>
+            <CockpitGuidedProgress
+              steps={progressSteps}
+              activeStep={flow.activeStep}
+              onEditStep={flow.editStep}
+            />
             <CockpitGuidedStepSwitch
               flow={flow}
-              leftPaneProps={leftPaneProps}
-              rightPaneProps={rightPaneProps}
+              leftPaneProps={stepLeftPaneProps}
+              rightPaneProps={stepRightPaneProps}
               entityProps={entityProps}
               onReset={handleReset}
+              focusFirstInvalidField={focusFirstInvalidField}
             />
           </div>
         </main>

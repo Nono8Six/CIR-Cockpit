@@ -26,6 +26,7 @@ const CockpitForm = ({
     formRef,
     handleFormSubmit,
     focusCurrentStep,
+    focusFirstInvalidField,
     leftPaneProps,
     rightPaneProps,
     draftStatus,
@@ -80,6 +81,7 @@ const CockpitForm = ({
             canSave={canSave}
             gateMessage={gateMessage}
             focusCurrentStep={focusCurrentStep}
+            focusFirstInvalidField={focusFirstInvalidField}
             leftPaneProps={leftPaneProps}
             rightPaneProps={rightPaneProps}
             clientContextInteractions={clientContextInteractions}

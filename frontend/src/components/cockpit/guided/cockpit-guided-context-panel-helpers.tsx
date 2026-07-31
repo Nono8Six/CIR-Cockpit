@@ -4,6 +4,7 @@ import type { LucideIcon } from 'lucide-react';
 import type { Entity, EntityContact, Interaction } from '@/types';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/utils/date/formatDate';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../ui/feedback/Tooltip';
 
 type InfoItem = {
   label: string;
@@ -54,10 +55,10 @@ export const renderInfoItems = (items: InfoItem[]) => {
     <dl className="grid grid-cols-2 gap-x-3 gap-y-2">
       {visibleItems.map((item) => (
         <div key={item.label} className="min-w-0 border-t border-[hsl(var(--border-subtle))] pt-2">
-          <dt className="text-[11px] font-semibold uppercase tracking-[0.04em] text-muted-foreground/80">
+          <dt className="text-[11px] font-medium text-muted-foreground/80">
             {item.label}
           </dt>
-          <dd className="mt-0.5 truncate text-[11px] font-medium text-foreground">{item.value}</dd>
+          <dd className="mt-0.5 truncate text-[11px] font-semibold text-foreground">{item.value}</dd>
         </div>
       ))}
     </dl>
@@ -81,12 +82,54 @@ export const renderClientInteraction = (interaction: Interaction) => {
       </span>
       <div className="min-w-0">
         <p className="truncate text-xs font-semibold text-foreground">{interaction.subject}</p>
-        <p className="truncate font-mono text-[10.5px] text-muted-foreground">
-          {interaction.contact_name || interaction.interaction_type || interaction.channel} - {formatDate(interaction.last_action_at)}
+        <p className="truncate text-[11px] text-muted-foreground">
+          {interaction.contact_name || interaction.interaction_type || interaction.channel}
+          {' · '}
+          <span className="font-mono tabular-nums">{formatDate(interaction.last_action_at)}</span>
         </p>
       </div>
     </div>
   );
 };
 
-export const contextActionClassName = 'inline-flex h-9 min-w-0 items-center justify-center rounded-md border border-border bg-background px-0 text-foreground transition-[color,background-color,border-color,box-shadow,transform] hover:border-primary/35 hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:translate-y-px disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:border-border disabled:hover:bg-background';
+export const contextActionClassName = 'inline-flex h-8 w-full min-w-0 items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2 text-[11px] font-medium text-foreground transition-[color,background-color,border-color,box-shadow,transform] hover:border-primary/35 hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:translate-y-px disabled:cursor-not-allowed disabled:text-muted-foreground/70 disabled:hover:border-border disabled:hover:bg-background';
+
+type ContextAction = {
+  icon: LucideIcon;
+  label: string;
+  href: string | null;
+  availableTooltip: string;
+  unavailableTooltip: string;
+};
+
+/**
+ * Action de contexte du rail droit: libelle visible plus infobulle, et etat
+ * indisponible explicite au lieu d'une icone muette.
+ */
+export const renderContextAction = ({
+  icon: Icon,
+  label,
+  href,
+  availableTooltip,
+  unavailableTooltip
+}: ContextAction) => (
+  <Tooltip key={label}>
+    <TooltipTrigger asChild>
+      {href ? (
+        <a href={href} className={contextActionClassName}>
+          <Icon size={13} aria-hidden="true" />
+          {label}
+        </a>
+      ) : (
+        // Un bouton desactive n'emet pas d'evenement de survol: le wrapper porte l'infobulle.
+        <span className="inline-flex w-full min-w-0">
+          <button type="button" disabled className={contextActionClassName}>
+            <Icon size={13} aria-hidden="true" />
+            {label}
+          </button>
+        </span>
+      )}
+    </TooltipTrigger>
+    <TooltipContent>{href ? availableTooltip : unavailableTooltip}</TooltipContent>
+  </Tooltip>
+);

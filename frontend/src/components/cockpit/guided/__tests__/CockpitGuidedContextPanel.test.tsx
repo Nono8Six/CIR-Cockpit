@@ -127,7 +127,7 @@ describe('CockpitGuidedContextPanel', () => {
       selectedContact: { ...buildContact(), phone: null, email: null }
     });
 
-    expect(screen.getByRole('button', { name: 'Téléphone' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Email' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Appeler' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Écrire' })).toBeDisabled();
   });
 });
