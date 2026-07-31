@@ -29,12 +29,17 @@ Command.displayName = CommandPrimitive.displayName
 type CommandDialogProps = DialogProps & {
   className?: string
   overlayClassName?: string
+  onCloseAutoFocus?: (event: Event) => void
 }
 
-const CommandDialog = ({ children, className, overlayClassName, ...props }: CommandDialogProps) => {
+const CommandDialog = ({ children, className, overlayClassName, onCloseAutoFocus, ...props }: CommandDialogProps) => {
   return (
     <Dialog {...props}>
-      <DialogContent className={cn("overflow-hidden p-0", className)} overlayClassName={overlayClassName}>
+      <DialogContent
+        className={cn("overflow-hidden p-0", className)}
+        overlayClassName={overlayClassName}
+        onCloseAutoFocus={onCloseAutoFocus}
+      >
         <DialogTitle className="sr-only">Palette de commandes</DialogTitle>
         <DialogDescription className="sr-only">
           Rechercher rapidement des éléments et exécuter une action.

@@ -268,6 +268,7 @@ import {
   withAuthedHandler,
   withSuperAdminHandler,
 } from "./procedureHelpers.ts";
+import { configuratorMotorRouter } from "./configuratorMotor.ts";
 
 const isServiceRoleDataEntitiesAction = (
   payload: Pick<DataEntitiesPayload, "action">,
@@ -288,6 +289,9 @@ const rejectDeferredTierV1Contract = (): Promise<never> => {
 };
 
 export const appRouter = router({
+  configurator: router({
+    motor: configuratorMotorRouter,
+  }),
   data: router({
     entities: authedProcedure
       .input(dataEntitiesPayloadSchema)

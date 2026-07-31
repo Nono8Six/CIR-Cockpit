@@ -30,7 +30,9 @@ describe('AdminPanel', () => {
     expect(screen.getByTestId('admin-panel')).toHaveClass('h-full', 'min-h-0', 'overflow-hidden');
     expect(screen.getByTestId('admin-tabs-root')).toHaveClass('min-h-0', 'flex-1', 'flex-col');
     expect(screen.getByTestId('admin-tabs-list')).toHaveClass('shrink-0');
-    expect(screen.getByTestId('admin-tab-panel-users')).toHaveClass('min-h-0', 'flex-1', 'overflow-y-auto');
+    // Onglet Utilisateurs : le scroll est descendu dans la table, qui s'etire
+    // jusqu'au bas de la fenetre ; le panneau reste une colonne flex bornee.
+    expect(screen.getByTestId('admin-tab-panel-users')).toHaveClass('min-h-0', 'flex-1', 'flex-col', 'overflow-hidden');
     expect(screen.getByTestId('admin-tab-panel-agencies')).toHaveClass('min-h-0', 'flex-1', 'overflow-y-auto');
     expect(screen.getByTestId('admin-tab-panel-audit')).toHaveClass('min-h-0', 'flex-1', 'overflow-y-auto');
   });

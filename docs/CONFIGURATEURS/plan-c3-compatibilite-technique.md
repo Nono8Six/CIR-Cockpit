@@ -36,8 +36,8 @@ preuves de chaque correction.
 
 - Branche cible : `main`.
 - C0, C1 et C2/C2d : terminés avec **GO pour démarrer C3**.
-- C3-1 à C3-6 : terminés et prouvés ; décision courante **GO C3-7**.
-  C3 reste globalement en cours et C3-7 n'est pas commencé.
+- C3/C4 : terminés et prouvés jusqu'au runtime distant ; décision courante
+  **GO C5**. C5 reste non commencé.
 - Snapshot moteur actif unique :
   `6fbf4046-be74-4422-9fe8-2d2d8a8d9157`, statut `active`, gate `passed`.
 - Lot actif : `cc5689ac-cbf1-45e8-a079-62df8f77dfd8`, empreinte
@@ -622,13 +622,13 @@ Décision de sortie : **GO C3-7**. C3-7 n'est pas commencé dans ce checkpoint.
 
 Procédures authentifiées, en query, avec validation entrée/sortie :
 
-- [ ] `configurator.motor.catalog.list`
-- [ ] `configurator.motor.catalog.get`
-- [ ] `configurator.motor.equivalents.fromMotor`
-- [ ] `configurator.motor.equivalents.fromSpec`
-- [ ] `configurator.motor.advice.build`
-- [ ] `configurator.motor.energy.compute`
-- [ ] `configurator.motor.compare`
+- [x] `configurator.motor.catalog.list`
+- [x] `configurator.motor.catalog.get`
+- [x] `configurator.motor.equivalents.fromMotor`
+- [x] `configurator.motor.equivalents.fromSpec`
+- [x] `configurator.motor.advice.build`
+- [x] `configurator.motor.energy.compute`
+- [x] `configurator.motor.compare`
 
 ### Checkpoint C3-7
 
@@ -637,23 +637,121 @@ Procédures authentifiées, en query, avec validation entrée/sortie :
 - Zéro procédure non authentifiée.
 - Zéro mutation métier C3.
 
+Preuves du 31/07/2026 :
+
+- les sept chemins sont des queries `authedProcedure` et réutilisent directement
+  les schémas de `shared/schemas/configurator/motor.schema.ts` en entrée et en
+  sortie ;
+- le routeur de domaine appelle `motorCatalogService`,
+  `motorEquivalenceService`, `motorAdviceService`, `motorEnergyService` et
+  `motorComparisonService` sans réécrire leur logique ;
+- les erreurs Zod d'entrée sont publiées comme `INVALID_PAYLOAD` avec détails
+  français ; une sortie Zod invalide sous `configurator.motor.*` devient
+  `CONFIGURATOR_OUTPUT_INVALID`, sans stack ni diagnostic interne ;
+- tests ciblés : 11 tests Deno tRPC et 1 test Vitest de contrats partagés
+  portant 14 assertions de type, 0 échec ; check Deno et typecheck frontend
+  verts ;
+- `pnpm run qa:back` vert : 162 fichiers lintés, typecheck Deno vert,
+  600 tests backend réussis, 16 intégrations conditionnelles ignorées ;
+- `pnpm run qa:fast` vert : 162 fichiers / 784 tests frontend, conformité
+  erreurs, lint/typecheck front et backend, puis 600 tests backend réussis,
+  16 intégrations conditionnelles ignorées ;
+- aucune intégration distante, migration, mutation Supabase, fixture Auth,
+  Edge Function, modification frontend visible ou déploiement.
+
+Décision de sortie : **GO C3-8**. C3 reste globalement en cours et C3-8 n'est
+pas commencé.
+
 ## 12. Phase C3-8 — QA, performance et livraison distante
 
 ### Checklist
 
-- [ ] Tests métier ciblés.
-- [ ] `pnpm run qa:back`.
-- [ ] `pnpm run qa:fast`.
-- [ ] `pnpm run qa`.
-- [ ] Preuves RLS avec rollback sous `anon`, `tcs`, `agency_admin`,
+- [x] Tests métier ciblés.
+- [x] `pnpm run qa:back`.
+- [x] `pnpm run qa:fast`.
+- [x] `pnpm run qa`.
+- [x] Preuves RLS avec rollback sous `anon`, `tcs`, `agency_admin`,
   `super_admin`.
-- [ ] `EXPLAIN ANALYZE` sur les requêtes réelles.
-- [ ] Aucun index sans plan démontrant son besoin.
-- [ ] Déploiement Edge Function `api` via MCP.
-- [ ] Conserver `verify_jwt=false` seulement parce que l’authentification est
+- [x] `EXPLAIN ANALYZE` sur les requêtes réelles.
+- [x] Aucun index sans plan démontrant son besoin.
+- [x] Déploiement Edge Function `api` via MCP.
+- [x] Conserver `verify_jwt=false` seulement parce que l’authentification est
   traitée dans le code.
-- [ ] Probes authentifiées de toutes les procédures.
-- [ ] Vérifier logs, budgets, timeouts et erreurs publiques.
+- [x] Probes authentifiées de toutes les procédures.
+- [x] Vérifier logs, budgets, timeouts et erreurs publiques.
+
+### Checkpoint C3-8 du 31/07/2026
+
+- Préflight MCP : projet `rbjtrcorlezvocayluok` `ACTIVE_HEALTHY`, migrations
+  C0-C2d présentes, Edge Function `api` active en version 198 et
+  `verify_jwt=false`. Le bundle exact de v198 a été capturé en mémoire
+  d'exécution pour un rollback éventuel ; aucun fichier secret n'a été écrit.
+- Tests ciblés verts : 11 tests Deno tRPC et 1 test Vitest partagé portant
+  14 assertions de type. Lint/check Deno sur les cinq fichiers C3-7,
+  ESLint shared et typecheck frontend sont verts.
+- `qa:back` vert : parité dépôt/distant, 162 fichiers backend lintés,
+  600 tests backend réussis, 0 échec, 16 intégrations conditionnelles
+  ignorées.
+- `qa:fast` vert : 162 fichiers et 785 tests frontend, 600 tests backend,
+  0 échec.
+- `qa` vert : 785 tests frontend, couverture globale 60,98 % statements,
+  53,53 % branches, 55,38 % fonctions et 62,40 % lignes ; build vert malgré
+  l'avertissement de taille de chunk connu ; 600 tests backend ; 9
+  intégrations distantes réussies, 8 ignorées, 0 échec.
+- RLS MCP : `anon` est refusé sur le schéma `configurator` avec SQLSTATE
+  `42501`. Un profil humain actif `tcs` et le profil `super_admin` passent
+  tous deux sous rôle PostgreSQL `authenticated`, voient l'unique snapshot
+  actif et les 14 130 points historisés ; le service reste chargé de filtrer
+  les 2 355 points du snapshot actif. La tentative d'`UPDATE` sous transaction
+  read-only est refusée avec SQLSTATE `25006`.
+- RLS `agency_admin` : après autorisation PO, le profil `super_admin` déjà
+  rattaché à son agence a été requalifié uniquement dans une transaction de
+  preuve. Sous rôle PostgreSQL `authenticated`, il a vu 1 snapshot actif et
+  ses 2 355 points, puis une exception contrôlée `P0001` a forcé le rollback.
+  La relecture finale retrouve 1 `super_admin`, 2 `tcs` humains et 0
+  `agency_admin` persistant.
+- `EXPLAIN (ANALYZE, BUFFERS)` : résolution snapshot 0,140 ms ;
+  `catalog.list` 20,477 ms ; `catalog.get` 2,945 ms ; recherche
+  d'équivalents 20,820 ms ; chargement rendements 5,938 ms ; seuil énergie
+  3,148 ms ; comparaison de quatre points 6,982 ms. Tous les plans utilisent
+  les index attendus, sans `Seq Scan`, lecture disque ni spill temporaire.
+  Les advisors ne signalent aucun défaut sécurité `configurator` et seulement
+  des index non encore utilisés de niveau `INFO`, pas un index manquant.
+- Livraison MCP : bundle v198 capturé avant action, puis `api` déployée seule
+  de v198 vers v199. La relecture confirme `ACTIVE`, wrapper
+  `source/supabase/functions/api/index.ts`, import map `source/deno.json`,
+  `verify_jwt=false` et empreinte
+  `c22e3ac01f81880ec27a00807c6a796f73f9c1bb01e4ff95fa7926d60db6b07e`.
+  Les 122 modules runtime relus correspondent au bundle local ; deux fichiers
+  purement `type` sont normalement éliminés et `shared/errors/types.ts` est
+  conservé comme module vide par le bundler.
+- Probes runtime répétées deux fois sur le snapshot actif : les sept chemins
+  retournent 200 et passent leurs schémas partagés. Latences observées : liste
+  1,213-1,412 s ; détail 1,426-1,498 s ; équivalents depuis moteur
+  6,772-7,067 s ; équivalents depuis spécification 5,721-6,723 s ; conseil
+  0,991-1,015 s ; énergie 1,488-1,721 s ; comparaison de quatre moteurs
+  1,901-2,643 s. Chaque réponse expose un `x-request-id`.
+- Dernier passage, preuves corrélables : liste `612e6d48…`, détail
+  `8c2560b9…`, équivalents moteur `090d00c7…`, équivalents spécification
+  `3f93794b…`, conseil `c5b2e329…`, énergie `054f214f…`, comparaison
+  `adb90b4d…`.
+- Négatifs runtime : absence d'Authorization et
+  `x-client-authorization` seul retournent 401 `AUTH_REQUIRED`; entrée invalide
+  400 `INVALID_PAYLOAD`; point absent 404
+  `CONFIGURATOR_OPERATING_POINT_NOT_FOUND`; preflight autorisé 200 avec
+  `http://localhost:3000`; origine refusée 403. Aucun token, secret, SQL, stack
+  ou diagnostic interne n'est exposé.
+- Les timeouts DB restent `statement_timeout=5s` et `lock_timeout=1s`; aucune
+  requête n'a produit `CONFIGURATOR_DB_TIMEOUT`. Le flux MCP des logs Edge a
+  un retard d'indexation : les premières lignes v199 corrèlent le probe
+  diagnostique `catalog.list` 200 puis `catalog.get` 400 avant correction du
+  script. Elles ne contiennent que méthode, statut, URL, durée et version,
+  sans payload, token, SQL, stack ou secret. Ce décalage d'observabilité,
+  ainsi que les 5,7-7,1 s des équivalences, sont archivés comme risques non
+  bloquants pour C5.
+
+Décision de sortie : **GO C5**. C3/C4 est terminé. C5 est la prochaine tranche
+autorisée mais reste non commencé dans ce checkpoint.
 
 ### Checkpoint final C3/C4
 

@@ -95,9 +95,26 @@ const toAppCodeFromTrpcCode = (code: TRPCError['code']): ErrorCode => {
 
 const toFormattedErrorData = (
   error: TRPCError,
-  requestId: string | undefined
+  requestId: string | undefined,
+  path: string | undefined
 ): PublicTrpcErrorData => {
-  const cause = error.cause as HttpError | undefined;
+  const zodCause = error.cause instanceof ZodError ? error.cause : undefined;
+  const validationCause = zodCause && error.code === 'BAD_REQUEST'
+    ? httpError(
+      400,
+      'INVALID_PAYLOAD',
+      'Payload invalide.',
+      formatZodDetailsFr(zodCause.issues)
+    )
+    : zodCause && error.code === 'INTERNAL_SERVER_ERROR'
+      && path?.startsWith('configurator.motor.')
+    ? httpError(
+      500,
+      'CONFIGURATOR_OUTPUT_INVALID',
+      'Resultat technique invalide.'
+    )
+    : undefined;
+  const cause = validationCause ?? error.cause as HttpError | undefined;
   const status = typeof cause?.status === 'number'
     ? cause.status
     : toStatusFromTrpcCode(error.code);
@@ -127,13 +144,23 @@ const toFormattedErrorData = (
   };
 };
 
+export const formatPublicTrpcErrorData = (
+  error: TRPCError,
+  requestId: string | undefined,
+  path: string | undefined
+): PublicTrpcErrorData => toFormattedErrorData(error, requestId, path);
+
 const t = initTRPC.context<TrpcContext>().create({
-  errorFormatter({ error, shape, ctx }) {
+  errorFormatter({ error, shape, ctx, path }) {
+    const publicData = toFormattedErrorData(error, ctx?.requestId, path);
+    const publicMessage = getErrorCatalogEntry(publicData.appCode)?.message
+      ?? 'La requete a echoue.';
     return {
       ...shape,
+      message: publicMessage,
       data: {
         ...toPublicShapeData(shape.data),
-        ...toFormattedErrorData(error, ctx?.requestId)
+        ...publicData
       }
     };
   }

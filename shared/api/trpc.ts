@@ -168,11 +168,66 @@ import {
   aiAssistantAskResponseSchema,
   aiAssistantStatusResponseSchema,
 } from "../schemas/aiAssistant.schema.ts";
+import {
+  motorAdviceInputSchema,
+  motorAdviceResponseSchema,
+  motorCatalogGetInputSchema,
+  motorCatalogGetResponseSchema,
+  motorCatalogListInputSchema,
+  motorCatalogListResponseSchema,
+  motorCompareInputSchema,
+  motorComparisonResponseSchema,
+  motorEnergyComputeInputSchema,
+  motorEnergyComputeResponseSchema,
+  motorEquivalentFromMotorInputSchema,
+  motorEquivalentFromSpecInputSchema,
+  motorEquivalentFromSpecResponseSchema,
+} from "../schemas/configurator/motor.schema.ts";
 import { z } from "zod/v4";
 
 const t = initTRPC.create();
 
 const appRouterType = t.router({
+  configurator: t.router({
+    motor: t.router({
+      catalog: t.router({
+        list: t.procedure
+          .input(motorCatalogListInputSchema)
+          .output(motorCatalogListResponseSchema)
+          .query(() => undefined as never),
+        get: t.procedure
+          .input(motorCatalogGetInputSchema)
+          .output(motorCatalogGetResponseSchema)
+          .query(() => undefined as never),
+      }),
+      equivalents: t.router({
+        fromMotor: t.procedure
+          .input(motorEquivalentFromMotorInputSchema)
+          .output(motorEquivalentFromSpecResponseSchema)
+          .query(() => undefined as never),
+        fromSpec: t.procedure
+          .input(motorEquivalentFromSpecInputSchema)
+          .output(motorEquivalentFromSpecResponseSchema)
+          .query(() => undefined as never),
+      }),
+      advice: t.router({
+        build: t.procedure
+          .input(motorAdviceInputSchema)
+          .output(motorAdviceResponseSchema)
+          .query(() => undefined as never),
+      }),
+      energy: t.router({
+        compute: t.procedure
+          .input(motorEnergyComputeInputSchema)
+          .output(motorEnergyComputeResponseSchema)
+          .query(() => undefined as never),
+      }),
+      compare: t.procedure
+        .input(motorCompareInputSchema)
+        .output(motorComparisonResponseSchema)
+        .query(() => undefined as never),
+    }),
+  }),
   data: t.router({
     entities: t.procedure
       .input(dataEntitiesPayloadSchema)

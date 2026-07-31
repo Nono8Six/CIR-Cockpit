@@ -17,37 +17,35 @@ type UseAppSearchDataParams = {
   statuses: AgencyConfig['statuses'];
 };
 
-export type AppSearchScope = 'all' | 'clients' | 'contacts' | 'interactions';
+export type AppSearchScope = 'all' | 'clients' | 'contacts' | 'interactions' | 'commands';
 
-const APP_SEARCH_SCOPE_PREFIXES: Record<Exclude<AppSearchScope, 'all'>, string> = {
-  clients: '!',
+export type AppSearchScopePrefix = '>' | '@' | '#' | '&';
+
+// Aucun prefixe ne signale l'urgence ou la negation : « & » remplace l'ancien « ! » pour les clients.
+export const APP_SEARCH_SCOPE_PREFIXES: Record<Exclude<AppSearchScope, 'all'>, AppSearchScopePrefix> = {
+  commands: '>',
   contacts: '@',
-  interactions: '#'
+  interactions: '#',
+  clients: '&'
 };
+
+const SCOPES_BY_PREFIX = new Map<string, Exclude<AppSearchScope, 'all'>>(
+  Object.entries(APP_SEARCH_SCOPE_PREFIXES).map(([scope, prefix]) => [
+    prefix,
+    scope as Exclude<AppSearchScope, 'all'>
+  ])
+);
 
 export const parseAppSearchQuery = (query: string): {
   normalizedQuery: string;
   scope: AppSearchScope;
 } => {
   const trimmedQuery = query.trimStart();
+  const scopeFromPrefix = SCOPES_BY_PREFIX.get(trimmedQuery.slice(0, 1));
 
-  if (trimmedQuery.startsWith(APP_SEARCH_SCOPE_PREFIXES.contacts)) {
+  if (scopeFromPrefix) {
     return {
-      scope: 'contacts',
-      normalizedQuery: trimmedQuery.slice(1).trimStart()
-    };
-  }
-
-  if (trimmedQuery.startsWith(APP_SEARCH_SCOPE_PREFIXES.interactions)) {
-    return {
-      scope: 'interactions',
-      normalizedQuery: trimmedQuery.slice(1).trimStart()
-    };
-  }
-
-  if (trimmedQuery.startsWith(APP_SEARCH_SCOPE_PREFIXES.clients)) {
-    return {
-      scope: 'clients',
+      scope: scopeFromPrefix,
       normalizedQuery: trimmedQuery.slice(1).trimStart()
     };
   }

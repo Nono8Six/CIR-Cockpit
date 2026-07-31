@@ -119,7 +119,7 @@ const AdminPanel = ({ userRole }: AdminPanelProps) => {
             )}
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="users" className="mt-4 min-h-0 flex-1 overflow-y-auto pr-1" data-testid="admin-tab-panel-users">
+        <TabsContent value="users" className="mt-4 flex min-h-0 flex-1 flex-col overflow-hidden" data-testid="admin-tab-panel-users">
           <UsersManager />
         </TabsContent>
         <TabsContent value="agencies" className="mt-4 min-h-0 flex-1 overflow-y-auto pr-1" data-testid="admin-tab-panel-agencies">

@@ -5,25 +5,24 @@ Configurateurs. Il complète le plan directeur
 `C:\GitHub\CIR_Moteur\plan-brique-configurateurs.md` sans remplacer les preuves
 de chaque tranche.
 
-## Situation au 30/07/2026
+## Situation au 31/07/2026
 
 | Tranche | Statut | Décision | Preuve |
 | --- | --- | --- | --- |
 | C0 — Cadrage | ✅ terminée | GO C1 | `docs/CONFIGURATEURS/00-cadrage-c0.md` |
 | C1 — Schéma PostgreSQL | ✅ terminée | GO C2 | `docs/CONFIGURATEURS/01-schema-c1.md` |
 | C2 — Migration des données | ✅ terminée | **GO C3** | section C2 ci-dessous |
-| C3 — Compatibilité technique backend | 🟠 en cours | **GO C3-7** | checkpoints C3-1 à C3-6 ci-dessous |
+| C3 — Compatibilité technique backend | ✅ terminée | **GO C5** | checkpoint C3-8 ci-dessous |
 | C4 à C14 | ⬜ non commencées | non autorisées | plan directeur |
 
-**Verdict au 30/07/2026 :** C3-6 est terminé côté services backend. Les
-lectures `catalog.list/get`, la normalisation sourcée, les moteurs mécanique,
-électrique et applicatif, les équivalences, les conseils, l'énergie et la
-comparaison déterministes sont prouvés. La fonctionnalité Configurateurs n'est
-pas encore disponible dans l'application : la surface tRPC C3-7, le service
-frontend et les écrans restent absents.
+**Verdict au 31/07/2026 :** C3/C4 est terminé avec **GO C5**. Les gates
+locales, la matrice RLS `anon`/`tcs`/`agency_admin`/`super_admin`, le mode
+read-only, les plans d'exécution, le déploiement MCP de `api` v199 et les sept
+probes runtime sont prouvés. La fonctionnalité backend Configurateurs est
+disponible ; le service frontend et les écrans restent absents.
 
-**Prochaine action :** démarrer C3-7 seulement sur une nouvelle exécution
-autorisée. Le présent checkpoint s'arrête après C3-6. Le catalogue technique
+**Prochaine action :** démarrer C5 uniquement sur une nouvelle exécution
+autorisée. C5 reste non commencé dans ce checkpoint. Le catalogue technique
 moteur utilisé reste le snapshot actif
 `6fbf4046-be74-4422-9fe8-2d2d8a8d9157`, lot `cc5689ac…`, 1 665 modèles
 physiques, 2 355 points de fonctionnement, 5 699 rendements, 2 370 couples,
@@ -472,8 +471,8 @@ Checkpoint du 28/07/2026 : **terminé et activé**. La preuve détaillée est da
 
 ## C3 — Compatibilité technique backend
 
-Statut : **en cours depuis le 30/07/2026**. C4 reste absorbée par C3. C3-6 est
-terminé ; C3-7, le frontend et toute IA Configurateurs restent non commencés.
+Statut : **terminé le 31/07/2026 avec GO C5**. C4 est absorbée et close avec
+C3. Le frontend et toute IA Configurateurs restent non commencés.
 
 ### Checkpoint C3-1 — contrats et règles versionnées
 
@@ -738,6 +737,105 @@ aucune surface tRPC ou preuve runtime avant C3-7.
 Décision de sortie : **GO C3-7**. C3 reste globalement en cours ; C3-7 et C3-8
 ne sont pas commencés.
 
+### Checkpoint C3-7 — surface tRPC authentifiée
+
+- [x] Sept procédures exposées aux chemins exacts
+  `configurator.motor.catalog.list/get`,
+  `configurator.motor.equivalents.fromMotor/fromSpec`,
+  `configurator.motor.advice.build`, `configurator.motor.energy.compute` et
+  `configurator.motor.compare`.
+- [x] Sept queries `authedProcedure`, zéro procédure publique et zéro mutation
+  métier.
+- [x] Contrats `.input()` et `.output()` réutilisés depuis
+  `shared/schemas/configurator/motor.schema.ts`, avec surface typée partagée et
+  routeur backend alignés.
+- [x] Adaptation minimale vers les services C3 existants ; `db`,
+  `authContext` et `requestId` restent transmis par l'abstraction CIR.
+- [x] Seul `Authorization: Bearer ...` est accepté ;
+  `x-client-authorization` reste ignoré.
+- [x] Entrée invalide convertie en `INVALID_PAYLOAD` avec détails français ;
+  sortie Configurateurs invalide convertie en
+  `CONFIGURATOR_OUTPUT_INVALID`, sans erreur tRPC brute ni diagnostic interne.
+- [x] Tests ciblés : **11 tests Deno tRPC** et **1 test Vitest shared portant
+  14 assertions de type**, 0 échec ; check Deno et typecheck frontend verts.
+- [x] `qa:back` vert : parité dépôt, 162 fichiers backend lintés, typecheck
+  Deno et **600 tests backend réussis**, 16 intégrations conditionnelles
+  ignorées.
+- [x] `qa:fast` vert : parité dépôt, typecheck/lint frontend,
+  **162 fichiers / 784 tests frontend**, conformité erreurs, lint/typecheck
+  backend et **600 tests backend réussis**, 16 intégrations conditionnelles
+  ignorées.
+- [x] Aucune migration, mutation Supabase, fixture Auth, intégration distante,
+  modification frontend visible, Edge Function ou déploiement.
+
+Fichiers :
+`shared/api/trpc.ts`,
+`shared/api/__tests__/configurator-trpc-contracts.test.ts`,
+`backend/functions/api/trpc/configuratorMotor.ts`,
+`backend/functions/api/trpc/configuratorMotor_test.ts`,
+`backend/functions/api/trpc/router.ts`,
+`backend/functions/api/trpc/procedures.ts` et
+`backend/functions/api/trpc/appRoutes_test.ts`.
+
+Limites explicites : C3-7 est prouvé localement uniquement. Les probes
+authentifiées sur l'Edge Function distante, les preuves RLS par rôle,
+`EXPLAIN ANALYZE`, la performance et le déploiement restent réservés à C3-8.
+
+Décision de sortie : **GO C3-8**. C3 reste globalement en cours ; C3-8 n'est
+pas commencé.
+
+### Checkpoint C3-8 — QA, performance et livraison distante
+
+- [x] Préflight MCP : projet `rbjtrcorlezvocayluok` `ACTIVE_HEALTHY`,
+  migrations C0-C2d présentes, `api` v198 active, `verify_jwt=false` conservé
+  car l'authentification reste gérée par le backend.
+- [x] Tests ciblés : 11 Deno tRPC et 1 Vitest shared portant 14 assertions de
+  type, 0 échec ; lint/check Deno, ESLint shared et typecheck frontend verts.
+- [x] `qa:back` : parité dépôt/distant, 162 fichiers lintés, 600 tests backend
+  réussis, 16 intégrations conditionnelles ignorées, 0 échec.
+- [x] `qa:fast` : 162 fichiers / 785 tests frontend et 600 tests backend,
+  0 échec.
+- [x] `qa` : 785 frontend, build et couverture verts, 600 backend, 9
+  intégrations distantes réussies, 8 ignorées, 0 échec.
+- [x] Matrice RLS complète : `anon` refusé en `42501`, `tcs` et
+  `super_admin` actifs autorisés, écriture refusée par la transaction read-only
+  en `25006`. Pour `agency_admin`, le profil `super_admin` rattaché a été
+  requalifié uniquement dans une transaction de preuve, puis l'exception
+  contrôlée `P0001` a forcé le rollback : 1 snapshot et 2 355 points visibles,
+  0 `agency_admin` persistant après relecture.
+- [x] Plans réels mesurés : snapshot 0,140 ms ; liste 20,477 ms ; détail
+  2,945 ms ; équivalents 20,820 ms ; rendements 5,938 ms ; seuil énergie
+  3,148 ms ; comparaison de quatre points 6,982 ms. Aucun `Seq Scan`, bloc
+  disque ou spill temporaire ; aucun index manquant démontré.
+- [x] Déploiement MCP de la seule Edge Function `api` : v198 -> v199,
+  `ACTIVE`, wrapper et import map conformes, `verify_jwt=false`, empreinte
+  `c22e3ac01f81880ec27a00807c6a796f73f9c1bb01e4ff95fa7926d60db6b07e`.
+- [x] Sept probes authentifiées répétées deux fois, sorties validées par les
+  schémas partagés et snapshot actif résolu dynamiquement. Latences : liste
+  1,213-1,412 s ; détail 1,426-1,498 s ; équivalences depuis moteur
+  6,772-7,067 s ; depuis spécification 5,721-6,723 s ; conseil 0,991-1,015 s ;
+  énergie 1,488-1,721 s ; comparaison quatre moteurs 1,901-2,643 s.
+- [x] `request_id` du dernier passage : liste `612e6d48…`, détail
+  `8c2560b9…`, équivalents moteur `090d00c7…`, équivalents spécification
+  `3f93794b…`, conseil `c5b2e329…`, énergie `054f214f…`, comparaison
+  `adb90b4d…`.
+- [x] Négatifs : sans Authorization et header historique seul -> 401
+  `AUTH_REQUIRED`; invalide -> 400 `INVALID_PAYLOAD`; absent -> 404
+  `CONFIGURATOR_OPERATING_POINT_NOT_FOUND`; CORS autorisé -> 200, refusé ->
+  403. Tous portent un `x-request-id`, sans token, secret, SQL, stack ou
+  diagnostic interne.
+- [x] Timeouts conservés à 5 s/1 s et aucun timeout DB. Le flux MCP des logs
+  Edge est retardé mais les premières entrées v199 corrèlent le probe
+  diagnostique (`catalog.list` 200 puis `catalog.get` 400 avant correction du
+  script). Les lignes ne contiennent que méthode, statut, URL, durée et
+  version, sans payload, token, SQL, stack ou secret. Ce retard et les
+  5,7-7,1 s des équivalences sont des risques C5 non bloquants ; aucun index
+  ne les corrige.
+
+Décision de sortie : **GO C5**. C3/C4 est terminé ; `api` v199 est active.
+Aucune migration, donnée, RLS/ACL/index, autre Edge Function, frontend,
+commit, push ou C5 n'a été modifié/démarré.
+
 ### Rapatriement de `tools/extract`
 
 Depuis le 27/07/2026, les extracteurs et leurs sorties sont versionnés dans ce
@@ -781,10 +879,51 @@ Le plan de reprise détaillé, découpé par checkpoints, est
 - [ ] C8 — Configurations sauvegardées.
 - [ ] C9 — Fiche technique PDF.
 - [ ] C10 — Consultation.
-- [ ] C11 — Application.
+- [ ] C11 — Application process, incluant broyage et hydraulique industrielle
+  côté dimensionnement moteur et énergie.
 - [ ] C12 — Pas à pas.
-- [ ] C13 — Comparateur et simulateur énergétique.
+- [ ] C13 — Comparateur et étude énergétique complète, incluant la référence
+  terrain hors catalogue, les mesures réelles, les scénarios moteur/variateur/
+  process, les euros et le temps de retour fondé.
 - [ ] C14 — Recette transverse et portail QA.
+
+### Décision PO du 31/07/2026 — périmètre C11/C13
+
+Cette décision précise le périmètre futur sans démarrer C11 ou C13 et sans
+modifier la prochaine action autorisée, qui reste C3-7.
+
+- **C11 Application** part des données process et calcule une spécification
+  moteur sourcée. Convoyage, pompage, ventilation/soufflante,
+  mélange/agitation, levage et broyage sont nommés. L'hydraulique industrielle
+  est obligatoire : fluide et températures, pression-débit par phase, pointes,
+  cycle, pompe et rendements, transmission, régulation, marche à vide,
+  variation de vitesse et environnement doivent être représentables lorsqu'ils
+  influencent le moteur ou l'énergie.
+- **Frontière hydraulique** : C11 dimensionne le moteur d'une application ou
+  d'une centrale hydraulique et compare les scénarios énergétiques. Réservoir,
+  accumulateurs, distributeurs, filtration, refroidissement, sécurité,
+  tuyauterie et nomenclature complète relèvent d'un futur configurateur
+  hydraulique autonome ; le modèle de configuration ne doit pas bloquer cette
+  extension.
+- **C13 Référence terrain énergétique** doit accepter un moteur installé absent
+  du catalogue, construit depuis sa plaque libre, son installation, son profil
+  déclaré et/ou une campagne de mesures tracée. Cette référence ne devient ni
+  `motor_model`, ni donnée constructeur, ni référence commerciale.
+- **C13 Simulation** compare moteur en place, moteur candidat, variateur sur
+  l'existant si compatible, moteur neuf avec variateur et évolution de
+  régulation/process. Il restitue kWh, borne du gain, hypothèses, pertes,
+  économie en euros, investissement et temps de retour seulement quand toutes
+  les entrées nécessaires sont fondées.
+- **Langage obligatoire** : « économie simulée », « économie prévisionnelle
+  bornée », « économie constatée » uniquement après mesures avant/après
+  comparables, ou `indeterminate`. Aucun variateur n'est conseillé depuis le
+  seul libellé d'une application.
+- **Effort** : les anciennes estimations C11 = 6 j et C13 = 4 j sont invalidées
+  par ce périmètre et seront recalculées avec les experts métier CIR aux gates
+  d'entrée correspondantes.
+
+Le détail directeur est consigné dans
+`C:\GitHub\CIR_Moteur\plan-brique-configurateurs.md` §4.5, §4.6, §7, §8 et §9.
 
 ## Changelog
 
@@ -834,3 +973,6 @@ Le plan de reprise détaillé, découpé par checkpoints, est
 | 30/07/2026 | C3-4 | Moteur mécanique pur et déterministe pour pattes, arbre et brides ; faits absents préservés, preuves propagées, aucune donnée commerciale ni exposition tRPC. | Index C3-4 isolé : `qa` vert, 743 frontend, 501 backend, 9 intégrations standards ; suite ciblée 11 intégrations dont preuve B5 `tcs`, 0 échec — **GO C3-5** |
 | 30/07/2026 | C3-5 | Moteur électrique/applicatif pur : cinq blocages électriques, informations non bloquantes, sept exigences explicites, inconnues préservées et preuves canoniques. | Worktree isolé : 60 tests C3-5, 41 C3-4, 6 normalisation, 9 shared ; `qa` vert avec 744 frontend, 561 backend et 9 intégrations, 0 échec — **GO C3-6** |
 | 30/07/2026 | C3-6 | Équivalences, classement, conseils, énergie et comparaison déterministes livrés comme services backend read-only, sans tRPC, frontend, IA ni donnée commerciale. | Worktree isolé : 33 nouveaux tests Deno, 145 ciblés avec non-régression, 24 shared ; `qa:back`, `qa:fast` et `qa` verts, 748 frontend / 594 backend sur les gates non distantes, MCP Supabase read-only, 0 mutation — **GO C3-7** |
+| 31/07/2026 | C3-7 | Sept queries tRPC moteur authentifiées aux chemins contractuels, schémas partagés entrée/sortie, services C3 branchés et erreurs de validation CIR stabilisées. | 11 tests Deno tRPC + 1 test shared portant 14 assertions de type ; `qa:back` et `qa:fast` verts, 784 frontend / 600 backend, 0 échec, 16 intégrations conditionnelles ignorées, 0 distant — **GO C3-8** |
+| 31/07/2026 | C11/C13 | Périmètre futur précisé : hydraulique industrielle et centrales côté dimensionnement moteur en C11 ; référence terrain hors catalogue, mesures, scénarios, euros et temps de retour fondé en C13. C11/C13 restent non commencés. | Décision PO du 31/07/2026 ; plan directeur §4.5/§4.6 — prochaine action inchangée : **C3-7** |
+| 31/07/2026 | C3-8 | QA, matrice RLS rollbackée, performance, déploiement MCP `api` et runtime distant terminés. Les sept routes sont authentifiées, read-only, validées par leurs schémas et testées avec leurs négatifs Auth/CORS. | `qa` : 785 frontend, 600 backend, 9 intégrations réussies ; EXPLAIN 0,140 à 20,820 ms, aucun `Seq Scan` ; `api` v199 active ; 7/7 probes 200 — **GO C5** |

@@ -7,18 +7,22 @@ type UsersManagerSearchProps = {
 };
 
 const UsersManagerSearch = ({ searchTerm, onSearchTermChange }: UsersManagerSearchProps) => (
-  <div className="flex items-center gap-2" data-testid="admin-users-search">
-    <div className="relative flex-1">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70" size={15} />
+  <div className="flex shrink-0 items-center gap-2" data-testid="admin-users-search">
+    <div className="relative w-full max-w-72">
+      <Search
+        className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
+        aria-hidden="true"
+      />
       <Input
         id="admin-users-search-input"
         name="admin-users-search"
         type="text"
+        density="dense"
         value={searchTerm}
         onChange={(event) => onSearchTermChange(event.target.value)}
         aria-label="Rechercher un utilisateur"
-        placeholder="Rechercher un utilisateur par nom, prénom ou email..."
-        className="pl-9 h-10 rounded-xl bg-muted/10 border-border/60 focus-visible:ring-primary/20 hover:bg-background/50 hover:border-border/80 transition-all duration-200"
+        placeholder="Rechercher nom, prénom ou email…"
+        className="border-border pl-8 text-xs"
         data-testid="admin-users-search-input"
       />
     </div>

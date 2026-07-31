@@ -19,6 +19,15 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   tcs: 'TCS'
 };
 
+export const ROLE_PERMISSIONS: Record<UserRole, string> = {
+  super_admin:
+    "Administration complète : gestion des utilisateurs et des rôles, des agences, de l'assistant IA, et import des référentiels de tarification.",
+  agency_admin:
+    "Paramètres d'agence, fournisseurs et journaux d'audit, en plus des accès TCS. Ne gère ni les utilisateurs ni les agences.",
+  tcs:
+    "Saisie des interactions et annuaire des tiers de ses agences. Aucun accès aux paramètres, aux fournisseurs ni à l'administration."
+};
+
 export const ROLE_BADGE_STYLES: Record<UserRole, string> = {
   super_admin: 'bg-success/12 text-success border-success/35',
   agency_admin: 'bg-warning/15 text-warning-foreground border-warning/35',

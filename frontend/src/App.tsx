@@ -2,6 +2,7 @@ import { Suspense, lazy, useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useRouterState } from '@tanstack/react-router';
 
+import { buildAppCommands } from '@/app/appCommands';
 import {
   APP_SHELL_SECTION_LABELS,
   EMPTY_CONFIG,
@@ -18,7 +19,7 @@ import { useAppViewState } from './hooks/session/useAppViewState';
 import { useSaveInteraction } from './hooks/interactions/core/actions/useSaveInteraction';
 import type { UserProfile } from '@/services/auth/getProfile';
 import { notifySuccess } from '@/services/errors/notifySuccess';
-import type { InteractionDraft } from '@/types';
+import type { AppTab, InteractionDraft } from '@/types';
 import { DEFAULT_DIRECTORY_SEARCH } from '@/components/client-directory/clientDirectorySearch';
 
 const loadAppSearchOverlay = () => import('@/components/AppSearchOverlay');
@@ -101,7 +102,8 @@ const App = () => {
     canLoadData: sessionState.canLoadData,
     activeTab: viewState.activeTab,
     isSearchOpen: viewState.isSearchOpen,
-    searchQuery: viewState.searchQuery
+    searchQuery: viewState.searchQuery,
+    includeArchivedSearch: viewState.includeArchivedSearch
   });
 
   const saveInteractionMutation = useSaveInteraction(sessionState.activeAgencyId);
@@ -175,6 +177,24 @@ const App = () => {
   const shellSections = useMemo(
     () => buildShellNavigation(canAccessAdmin, queries.searchData.pendingCount),
     [canAccessAdmin, queries.searchData.pendingCount]
+  );
+  const { handleCreateEntity, handleCreateSupplier, handleSearchOpenChange, handleTabChange } = viewState;
+  const handleNavigateFromPalette = useCallback(
+    (tab: AppTab) => {
+      handleTabChange(tab);
+      handleSearchOpenChange(false);
+    },
+    [handleSearchOpenChange, handleTabChange]
+  );
+  const appCommands = useMemo(
+    () => buildAppCommands({
+      sections: shellSections,
+      canAccessAdmin,
+      onNavigateTab: handleNavigateFromPalette,
+      onCreateEntity: handleCreateEntity,
+      onCreateSupplier: handleCreateSupplier
+    }),
+    [canAccessAdmin, handleCreateEntity, handleCreateSupplier, handleNavigateFromPalette, shellSections]
   );
   const activeShellItem = useMemo(() => {
     const flattened = shellSections.flatMap((section) => section.items);
@@ -264,13 +284,18 @@ const App = () => {
         }
       }}
     >
-      {viewState.isSearchOpen ? (
+      {viewState.hasOpenedSearch ? (
         <Suspense fallback={null}>
           <AppSearchOverlay
             open={viewState.isSearchOpen}
             onOpenChange={viewState.handleSearchOpenChange}
             searchQuery={viewState.searchQuery}
             onSearchQueryChange={viewState.setSearchQuery}
+            commands={appCommands}
+            recentEntities={queries.searchData.recentEntities}
+            includeArchived={viewState.includeArchivedSearch}
+            onIncludeArchivedChange={viewState.setIncludeArchivedSearch}
+            onCreateEntity={viewState.handleCreateEntity}
             filteredInteractions={queries.searchData.filteredInteractions}
             filteredClients={queries.searchData.filteredClients}
             filteredProspects={queries.searchData.filteredProspects}

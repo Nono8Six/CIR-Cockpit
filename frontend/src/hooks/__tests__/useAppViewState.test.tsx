@@ -1,6 +1,6 @@
 import { QueryClient } from '@tanstack/react-query';
 import type { NavigateFn } from '@tanstack/react-router';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useAppViewState } from '../session/useAppViewState';
@@ -30,7 +30,7 @@ const renderViewState = ({
   };
   const queryClient = new QueryClient();
 
-  renderHook(() =>
+  const view = renderHook(() =>
     useAppViewState({
       pathname,
       navigate,
@@ -42,7 +42,7 @@ const renderViewState = ({
     })
   );
 
-  return { navigate: navigateSpy };
+  return { navigate: navigateSpy, result: view.result };
 };
 
 describe('useAppViewState', () => {
@@ -101,6 +101,58 @@ describe('useAppViewState', () => {
     await waitFor(() =>
       expect(navigate).toHaveBeenCalledWith({ to: '/cockpit', replace: true })
     );
+  });
+
+  it('garde la palette montee et repart a neuf a chaque fermeture', () => {
+    const { result } = renderViewState({
+      pathname: '/cockpit',
+      isAccessControlReady: true,
+      canAccessAdmin: true,
+      canAccessSettings: true
+    });
+
+    expect(result.current.hasOpenedSearch).toBe(false);
+
+    act(() => {
+      result.current.handleOpenSearch();
+    });
+    act(() => {
+      result.current.setSearchQuery('@alice');
+      result.current.setIncludeArchivedSearch(true);
+    });
+
+    expect(result.current.isSearchOpen).toBe(true);
+    expect(result.current.hasOpenedSearch).toBe(true);
+
+    act(() => {
+      result.current.handleSearchOpenChange(false);
+    });
+
+    expect(result.current.isSearchOpen).toBe(false);
+    // La palette reste montee pour que Radix rende le focus au declencheur.
+    expect(result.current.hasOpenedSearch).toBe(true);
+    expect(result.current.searchQuery).toBe('');
+    expect(result.current.includeArchivedSearch).toBe(false);
+  });
+
+  it('ouvre les parcours de creation existants depuis la palette', () => {
+    const { navigate, result } = renderViewState({
+      pathname: '/cockpit',
+      isAccessControlReady: true,
+      canAccessAdmin: true,
+      canAccessSettings: true
+    });
+
+    act(() => {
+      result.current.handleCreateEntity();
+    });
+    expect(navigate).toHaveBeenCalledWith(expect.objectContaining({ to: '/clients/new' }));
+
+    act(() => {
+      result.current.handleCreateSupplier();
+    });
+    expect(navigate).toHaveBeenCalledWith({ to: '/suppliers/new' });
+    expect(result.current.isSearchOpen).toBe(false);
   });
 
   it('redirige les vrais profils tcs hors fournisseurs', async () => {

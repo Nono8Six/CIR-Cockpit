@@ -27,6 +27,16 @@ const readErrorData = async (response: Response): Promise<Record<string, unknown
   return data;
 };
 
+const configuratorMotorPaths = [
+  'configurator.motor.catalog.list',
+  'configurator.motor.catalog.get',
+  'configurator.motor.equivalents.fromMotor',
+  'configurator.motor.equivalents.fromSpec',
+  'configurator.motor.advice.build',
+  'configurator.motor.energy.compute',
+  'configurator.motor.compare'
+] as const;
+
 Deno.test('tRPC unknown procedure returns NOT_FOUND with aligned appCode/httpStatus', async () => {
   const appModule = await import('../app.ts');
   const response = await appModule.default.request('/trpc/unknown.path', {
@@ -110,4 +120,41 @@ Deno.test('tRPC routes ignore x-client-authorization fallback header', async () 
   assertEquals(readString(data, 'code'), 'UNAUTHORIZED');
   assertEquals(readString(data, 'appCode'), 'AUTH_REQUIRED');
   assertEquals(readNumber(data, 'httpStatus'), 401);
+});
+
+Deno.test('C3-7 motor procedures all require Authorization', async () => {
+  const appModule = await import('../app.ts');
+
+  for (const procedure of configuratorMotorPaths) {
+    const response = await appModule.default.request(`/trpc/${procedure}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: '{}'
+    });
+    const data = await readErrorData(response);
+
+    assertEquals(response.status, 401);
+    assertEquals(readString(data, 'appCode'), 'AUTH_REQUIRED');
+    assertEquals(readNumber(data, 'httpStatus'), 401);
+  }
+});
+
+Deno.test('C3-7 motor procedures ignore x-client-authorization', async () => {
+  const appModule = await import('../app.ts');
+
+  for (const procedure of configuratorMotorPaths) {
+    const response = await appModule.default.request(`/trpc/${procedure}`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-client-authorization': 'Bearer fake-token'
+      },
+      body: '{}'
+    });
+    const data = await readErrorData(response);
+
+    assertEquals(response.status, 401);
+    assertEquals(readString(data, 'appCode'), 'AUTH_REQUIRED');
+    assertEquals(readNumber(data, 'httpStatus'), 401);
+  }
 });

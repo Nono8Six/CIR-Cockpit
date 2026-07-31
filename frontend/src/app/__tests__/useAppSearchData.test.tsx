@@ -91,8 +91,26 @@ describe('app search helpers', () => {
       normalizedQuery: 'appel'
     });
 
-    expect(applyAppSearchScope('clients', '#Alpha')).toBe('!Alpha');
+    expect(parseAppSearchQuery('&Alpha')).toEqual({
+      scope: 'clients',
+      normalizedQuery: 'Alpha'
+    });
+
+    expect(parseAppSearchQuery('>créer')).toEqual({
+      scope: 'commands',
+      normalizedQuery: 'créer'
+    });
+
+    expect(applyAppSearchScope('clients', '#Alpha')).toBe('&Alpha');
+    expect(applyAppSearchScope('commands', 'Alpha')).toBe('>Alpha');
     expect(applyAppSearchScope('all', '@Alpha')).toBe('Alpha');
+  });
+
+  it('ne traite plus le point d exclamation comme un filtre', () => {
+    expect(parseAppSearchQuery('!Alpha')).toEqual({
+      scope: 'all',
+      normalizedQuery: '!Alpha'
+    });
   });
 });
 
@@ -147,7 +165,7 @@ describe('useAppSearchData', () => {
   it('limits client-scoped queries to clients and excludes prospects', () => {
     const { result } = renderHook(() =>
       useAppSearchData({
-        searchQuery: '!Alpha',
+        searchQuery: '&Alpha',
         interactions: [interaction],
         entitySearchIndex,
         statuses: []

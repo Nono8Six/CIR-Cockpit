@@ -110,11 +110,44 @@ describe('useUsersManager', () => {
     });
     const { result } = renderHook(() => useUsersManager());
 
+    act(() => {
+      result.current.openRoleChangeDialog(createUser());
+    });
     await act(async () => {
-      await result.current.handleRoleChange('user-1', 'agency_admin');
+      await result.current.executeRoleChange('agency_admin');
     });
 
-    expect(notifySuccess).not.toHaveBeenCalledWith('Rôle mis à jour.');
+    expect(notifySuccess).not.toHaveBeenCalled();
+    expect(result.current.roleChangeUser).not.toBeNull();
+  });
+
+  it('ne change aucun role tant que le dialog de confirmation n a pas ete ouvert', async () => {
+    const mutateAsync = vi.fn().mockResolvedValue(undefined);
+    usersMocks.useSetUserRole.mockReturnValue({ mutateAsync });
+    const { result } = renderHook(() => useUsersManager());
+
+    await act(async () => {
+      await result.current.executeRoleChange('super_admin');
+    });
+
+    expect(mutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('applique l elevation de privilege et nomme les deux roles apres confirmation', async () => {
+    const mutateAsync = vi.fn().mockResolvedValue(undefined);
+    usersMocks.useSetUserRole.mockReturnValue({ mutateAsync });
+    const { result } = renderHook(() => useUsersManager());
+
+    act(() => {
+      result.current.openRoleChangeDialog(createUser({ role: 'tcs' }));
+    });
+    await act(async () => {
+      await result.current.executeRoleChange('super_admin');
+    });
+
+    expect(mutateAsync).toHaveBeenCalledWith({ userId: 'user-1', role: 'super_admin' });
+    expect(notifySuccess).toHaveBeenCalledWith('Rôle mis à jour : TCS → Super admin.');
+    expect(result.current.roleChangeUser).toBeNull();
   });
 
   it('reports anonymized interactions count on delete', async () => {

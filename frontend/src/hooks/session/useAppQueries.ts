@@ -16,6 +16,7 @@ type UseAppQueriesParams = {
   activeTab: AppTab;
   isSearchOpen: boolean;
   searchQuery: string;
+  includeArchivedSearch: boolean;
 };
 
 type SearchIndex = {
@@ -33,14 +34,15 @@ export const useAppQueries = ({
   canLoadData,
   activeTab,
   isSearchOpen,
-  searchQuery
+  searchQuery,
+  includeArchivedSearch
 }: UseAppQueriesParams) => {
   const configQuery = useAgencyConfig(activeAgencyId, canLoadData);
   const interactionsQuery = useInteractions(activeAgencyId, canLoadData);
   useRealtimeInteractions(activeAgencyId, canLoadData && isRealtimeInteractionTab(activeTab));
 
   const shouldLoadEntityIndex = isSearchOpen || activeTab === 'clients' || activeTab === 'cockpit';
-  const entitySearchQuery = useEntitySearchIndex(activeAgencyId, false, shouldLoadEntityIndex);
+  const entitySearchQuery = useEntitySearchIndex(activeAgencyId, includeArchivedSearch, shouldLoadEntityIndex);
 
   const config = useMemo<AgencyConfig>(() => configQuery.data ?? EMPTY_CONFIG, [configQuery.data]);
   const interactions = useMemo<Interaction[]>(

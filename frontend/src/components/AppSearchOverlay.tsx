@@ -1,11 +1,18 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 
-import { applyAppSearchScope, parseAppSearchQuery, type AppSearchScope } from '@/app/useAppSearchData';
+import { filterAppCommands, type AppCommand } from '@/app/appCommands';
+import {
+  APP_SEARCH_SCOPE_PREFIXES,
+  applyAppSearchScope,
+  parseAppSearchQuery,
+  type AppSearchScope
+} from '@/app/useAppSearchData';
 import type { Entity, EntityContact, Interaction } from '@/types';
 import { handleUiError } from '@/services/errors/handleUiError';
 import { Button } from './ui/inputs/basic/Button';
+import { Kbd } from './ui/data-display/Kbd';
 import {
   Command,
   CommandDialog,
@@ -17,25 +24,34 @@ import {
 import { cn } from '@/lib/utils';
 import type { ConvertClientEntity } from './ConvertClientDialog';
 import AppSearchResults from './app-search/AppSearchResults';
+import AppSearchCommandsSection from './app-search/AppSearchCommandsSection';
+import AppSearchEmptyState from './app-search/AppSearchEmptyState';
 import AppSearchFooter from './app-search/AppSearchFooter';
+import InteractionSearchRecents from './interaction-search/InteractionSearchRecents';
 
 type AppSearchViewState = 'loading' | 'error' | 'idle' | 'empty' | 'results';
 
 const SEARCH_SCOPE_CHIPS: Array<{
-  accent: '@' | '#' | '!';
   label: string;
   scope: Exclude<AppSearchScope, 'all'>;
 }> = [
-  { accent: '@', label: 'Contact', scope: 'contacts' },
-  { accent: '#', label: 'Interaction', scope: 'interactions' },
-  { accent: '!', label: 'Client', scope: 'clients' }
+  { label: 'Commandes', scope: 'commands' },
+  { label: 'Contacts', scope: 'contacts' },
+  { label: 'Interactions', scope: 'interactions' },
+  { label: 'Clients', scope: 'clients' }
 ];
+
+const CHIP_CLASSES = 'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background';
 
 type AppSearchOverlayProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   searchQuery: string;
   onSearchQueryChange: (value: string) => void;
+  commands: AppCommand[];
+  recentEntities: Entity[];
+  includeArchived: boolean;
+  onIncludeArchivedChange: (includeArchived: boolean) => void;
   filteredInteractions: Interaction[];
   filteredClients: Entity[];
   filteredProspects: Entity[];
@@ -48,6 +64,7 @@ type AppSearchOverlayProps = {
   onOpenInteraction: (interaction: Interaction) => void;
   onFocusClient: (clientId: string, contactId?: string | null, clientNumber?: string | null) => void;
   onRequestConvert: (entity: ConvertClientEntity) => void;
+  onCreateEntity: () => void;
   footerLeft?: ReactNode;
   footerRight?: ReactNode;
 };
@@ -75,6 +92,10 @@ const AppSearchOverlay = ({
   onOpenChange,
   searchQuery,
   onSearchQueryChange,
+  commands,
+  recentEntities,
+  includeArchived,
+  onIncludeArchivedChange,
   filteredInteractions,
   filteredClients,
   filteredProspects,
@@ -87,16 +108,33 @@ const AppSearchOverlay = ({
   onOpenInteraction,
   onFocusClient,
   onRequestConvert,
+  onCreateEntity,
   footerLeft,
   footerRight
 }: AppSearchOverlayProps) => {
   const isErrorState = Boolean(entitySearchError);
   const { normalizedQuery, scope } = parseAppSearchQuery(searchQuery);
+  // Les commandes et les recents restent affiches tant que rien n'est tape :
+  // l'index d'entites n'est charge qu'a l'ouverture et ne doit pas masquer l'etat initial.
+  const isEntityScope = scope !== 'commands' && normalizedQuery.trim().length > 0;
+  // La palette reste une recherche : a l'ouverture elle ne propose que les actions
+  // de creation. La navigation, qui double le menu de gauche, n'apparait que si
+  // l'utilisateur la demande (prefixe « > ») ou si sa frappe nomme une section.
+  const visibleCommands = useMemo(() => {
+    if (scope === 'commands') {
+      return filterAppCommands(commands, normalizedQuery);
+    }
+    if (scope !== 'all') return [];
+    if (normalizedQuery.trim().length === 0) {
+      return commands.filter((command) => command.group === 'creation');
+    }
+    return filterAppCommands(commands, normalizedQuery);
+  }, [commands, normalizedQuery, scope]);
   const viewState = getAppSearchViewState({
     query: normalizedQuery,
-    isLoading: isEntitySearchLoading,
-    hasError: isErrorState,
-    hasResults: hasSearchResults
+    isLoading: isEntitySearchLoading && isEntityScope,
+    hasError: isErrorState && isEntityScope,
+    hasResults: hasSearchResults || visibleCommands.length > 0
   });
 
   const statusMessage = viewState === 'loading'
@@ -104,7 +142,7 @@ const AppSearchOverlay = ({
     : viewState === 'error'
       ? 'Recherche indisponible.'
       : viewState === 'idle'
-        ? 'Commencez à taper pour rechercher.'
+        ? 'Commencez à taper pour rechercher, ou choisissez une commande.'
         : viewState === 'results'
           ? 'Résultats disponibles.'
           : 'Aucun résultat trouvé.';
@@ -128,6 +166,10 @@ const AppSearchOverlay = ({
     }
   }, [onFocusClient]);
 
+  const handleSelectRecent = useCallback((entity: Entity) => {
+    handleFocusClient(entity.id, null, entity.client_number);
+  }, [handleFocusClient]);
+
   const handleOpenInteraction = useCallback((interaction: Interaction) => {
     try {
       onOpenInteraction(interaction);
@@ -148,6 +190,46 @@ const AppSearchOverlay = ({
     }
   }, [onRequestConvert]);
 
+  const handleRunCommand = useCallback((command: AppCommand) => {
+    try {
+      command.run();
+    } catch (error) {
+      handleUiError(error, "Impossible d'exécuter cette commande.", {
+        source: 'AppSearchOverlay.runCommand'
+      });
+    }
+  }, []);
+
+  const handleCreateEntity = useCallback(() => {
+    try {
+      onCreateEntity();
+    } catch (error) {
+      handleUiError(error, 'Impossible d’ouvrir la création de fiche.', {
+        source: 'AppSearchOverlay.createEntity'
+      });
+    }
+  }, [onCreateEntity]);
+
+  // Le declencheur est memorise a l'ouverture puis refocalise a la fermeture :
+  // sans cela, Escape renvoie le focus sur le body et la navigation clavier repart de zero.
+  const triggerRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      const activeElement = document.activeElement;
+      triggerRef.current = activeElement instanceof HTMLElement && activeElement !== document.body
+        ? activeElement
+        : null;
+    }
+  }, [open]);
+
+  const handleCloseAutoFocus = useCallback((event: Event) => {
+    const trigger = triggerRef.current;
+    if (!trigger?.isConnected) return;
+    event.preventDefault();
+    trigger.focus();
+  }, []);
+
   const handleScopeChipClick = useCallback((nextScope: Exclude<AppSearchScope, 'all'>) => {
     onSearchQueryChange(
       scope === nextScope
@@ -156,10 +238,15 @@ const AppSearchOverlay = ({
     );
   }, [onSearchQueryChange, scope, searchQuery]);
 
+  const handleClearScope = useCallback(() => {
+    onSearchQueryChange(applyAppSearchScope('all', searchQuery));
+  }, [onSearchQueryChange, searchQuery]);
+
   return (
     <CommandDialog
       open={open}
       onOpenChange={onOpenChange}
+      onCloseAutoFocus={handleCloseAutoFocus}
       className="w-[calc(100vw-1rem)] max-w-3xl border-border p-0 shadow-xl sm:w-[min(100vw-2rem,48rem)]"
       overlayClassName="bg-foreground/30 backdrop-blur-[2px]"
     >
@@ -172,7 +259,7 @@ const AppSearchOverlay = ({
         <CommandInput
           value={searchQuery}
           onValueChange={onSearchQueryChange}
-          placeholder="Rechercher un client, une interaction, un contact…"
+          placeholder="Rechercher un client, une interaction, un contact, ou taper > pour les commandes…"
           autoComplete="off"
           name="global-search"
           aria-label="Rechercher globalement"
@@ -180,7 +267,7 @@ const AppSearchOverlay = ({
           className="text-sm sm:text-base"
         />
         <div className="flex items-center gap-2 px-4 py-2 border-b border-border/40 bg-muted/30 overflow-x-auto hide-scrollbar">
-          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest whitespace-nowrap mr-1">Filtres</span>
+          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap mr-1">Filtres</span>
           <div className="flex gap-2">
             {SEARCH_SCOPE_CHIPS.map((chip) => {
               const isActive = scope === chip.scope;
@@ -192,23 +279,39 @@ const AppSearchOverlay = ({
                   aria-pressed={isActive}
                   onClick={() => handleScopeChipClick(chip.scope)}
                   className={cn(
-                    'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium transition-colors',
-                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                    CHIP_CLASSES,
                     isActive
                       ? 'border-primary/30 bg-primary/10 text-foreground'
                       : 'border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground'
                   )}
                 >
-                  <span className="text-primary font-bold">{chip.accent}</span>
+                  <Kbd className="text-[11px]">{APP_SEARCH_SCOPE_PREFIXES[chip.scope]}</Kbd>
                   {chip.label}
                 </button>
               );
             })}
+            <button
+              type="button"
+              aria-pressed={includeArchived}
+              onClick={() => onIncludeArchivedChange(!includeArchived)}
+              data-testid="app-search-archived-toggle"
+              className={cn(
+                CHIP_CLASSES,
+                includeArchived
+                  ? 'border-primary/30 bg-primary/10 text-foreground'
+                  : 'border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground'
+              )}
+            >
+              Archivés inclus
+            </button>
           </div>
         </div>
         <span aria-live="polite" className="sr-only" data-testid="app-search-status-live">
           {statusMessage}
         </span>
+        {viewState === 'idle' && recentEntities.length > 0 ? (
+          <InteractionSearchRecents recents={recentEntities} onSelectEntity={handleSelectRecent} />
+        ) : null}
         <CommandList className="max-h-[min(66vh,30rem)] overflow-x-hidden px-1 py-2" data-testid="app-search-list">
           {viewState === 'loading' && (
             <CommandLoading className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
@@ -229,17 +332,20 @@ const AppSearchOverlay = ({
               )}
             </CommandEmpty>
           )}
-          {viewState === 'idle' && (
-            <CommandEmpty className="px-4 py-8 text-sm text-muted-foreground">
-              Commencez à taper pour rechercher…
-            </CommandEmpty>
+          {(viewState === 'idle' || viewState === 'results') && (
+            <AppSearchCommandsSection commands={visibleCommands} onRunCommand={handleRunCommand} />
           )}
           {viewState === 'empty' && (
-            <CommandEmpty className="px-4 py-8 text-sm text-muted-foreground">
-              Aucun résultat trouvé.
-            </CommandEmpty>
+            <AppSearchEmptyState
+              query={normalizedQuery}
+              isScoped={scope !== 'all'}
+              includeArchived={includeArchived}
+              onCreateEntity={handleCreateEntity}
+              onIncludeArchived={() => onIncludeArchivedChange(true)}
+              onClearScope={handleClearScope}
+            />
           )}
-          {viewState === 'results' && (
+          {viewState === 'results' && scope !== 'commands' && (
             <AppSearchResults
               filteredInteractions={filteredInteractions}
               filteredClients={filteredClients}

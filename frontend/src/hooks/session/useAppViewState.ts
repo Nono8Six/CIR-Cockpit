@@ -31,10 +31,14 @@ export const useAppViewState = ({
 }: UseAppViewStateParams) => {
   const activeTab = useMemo<AppTab>(() => getTabFromPathname(pathname), [pathname]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  // La palette reste montee une fois ouverte : la demonter a la fermeture
+  // empeche Radix de rendre le focus au declencheur.
+  const [hasOpenedSearch, setHasOpenedSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [focusedClientId, setFocusedClientId] = useState<string | null>(null);
   const [focusedContactId, setFocusedContactId] = useState<string | null>(null);
+  const [includeArchivedSearch, setIncludeArchivedSearch] = useState(false);
 
   const handleTabChange = useCallback(
     (tab: AppTab) => {
@@ -47,6 +51,13 @@ export const useAppViewState = ({
     (open: boolean) => {
       if (open) {
         onSearchOpen?.();
+        setHasOpenedSearch(true);
+      } else {
+        // L'elargissement aux archives est une sortie d'impasse ponctuelle,
+        // pas une preference : la palette repart toujours sur le perimetre actif.
+        setIncludeArchivedSearch(false);
+        // Sans remise a zero, la palette rouvre sur l'ancienne requete et les recents restent caches.
+        setSearchQuery('');
       }
       setIsSearchOpen(open);
     },
@@ -55,6 +66,7 @@ export const useAppViewState = ({
 
   const handleOpenSearch = useCallback(() => {
     onSearchOpen?.();
+    setHasOpenedSearch(true);
     setIsSearchOpen(true);
   }, [onSearchOpen]);
 
@@ -74,6 +86,16 @@ export const useAppViewState = ({
     },
     [navigate]
   );
+
+  const handleCreateEntity = useCallback(() => {
+    setIsSearchOpen(false);
+    void navigate({ to: '/clients/new', search: () => DEFAULT_DIRECTORY_SEARCH });
+  }, [navigate]);
+
+  const handleCreateSupplier = useCallback(() => {
+    setIsSearchOpen(false);
+    void navigate({ to: '/suppliers/new' });
+  }, [navigate]);
 
   useAppShortcuts({
     canAccessAdmin,
@@ -105,17 +127,22 @@ export const useAppViewState = ({
   return {
     activeTab,
     isSearchOpen,
+    hasOpenedSearch,
     searchQuery,
     isProfileMenuOpen,
     focusedClientId,
     focusedContactId,
+    includeArchivedSearch,
     setSearchQuery,
     setIsProfileMenuOpen,
     setFocusedClientId,
     setFocusedContactId,
+    setIncludeArchivedSearch,
     handleTabChange,
     handleSearchOpenChange,
     handleOpenSearch,
-    handleRequestConvert
+    handleRequestConvert,
+    handleCreateEntity,
+    handleCreateSupplier
   };
 };

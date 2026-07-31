@@ -3,6 +3,7 @@ import TemporaryPasswordDialog from '@/components/TemporaryPasswordDialog';
 import UserCreateDialog from '@/components/UserCreateDialog';
 import UserIdentityDialog from '@/components/UserIdentityDialog';
 import UserMembershipDialog from '@/components/UserMembershipDialog';
+import UserRoleChangeDialog from './UserRoleChangeDialog';
 import type { useUsersManager } from '../../hooks/admin/users/identity/useUsersManager';
 
 type UsersManagerState = ReturnType<typeof useUsersManager>;
@@ -26,6 +27,9 @@ const UsersManagerDialogs = ({ state }: UsersManagerDialogsProps) => {
     editIdentityOpen,
     editIdentityUser,
     confirmDeleteUser,
+    roleChangeUser,
+    executeRoleChange,
+    closeRoleChangeDialog,
     confirmBulkDelete,
     confirmBulkArchive,
     agencies,
@@ -64,6 +68,17 @@ const UsersManagerDialogs = ({ state }: UsersManagerDialogsProps) => {
         selectedIds={selectedUser?.memberships.map((membership) => membership.agency_id) ?? []}
         onSave={handleMembershipSave}
       />
+
+      {roleChangeUser ? (
+        <UserRoleChangeDialog
+          key={roleChangeUser.id}
+          user={roleChangeUser}
+          onCancel={closeRoleChangeDialog}
+          onConfirm={(role) => {
+            void executeRoleChange(role);
+          }}
+        />
+      ) : null}
 
       <UserIdentityDialog
         open={editIdentityOpen}

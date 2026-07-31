@@ -10,7 +10,7 @@ dans le navigateur depuis les variables CSS résolues).
 | Phase | Objet | Tâches | Statut |
 | --- | --- | --- | --- |
 | P1 — Bloquants | Risque utilisateur et crédibilité | 8 | 🟡 en cours (6/8 terminées, T1.3 et T1.4 partielles) |
-| P2 — Refontes structurelles | Pilotage, Saisie, Admin, Ctrl K | 4 | 🟡 en cours (T2.1 partielle, T2.2 terminée) |
+| P2 — Refontes structurelles | Pilotage, Saisie, Admin, Ctrl K | 4 | 🟡 en cours (T2.2 et T2.3 terminées, T2.1 et T2.4 partielles) |
 | P3 — Fondation design system | Primitifs manquants et garde-fous | 6 | ⬜ non commencée |
 | P4 — Convergence visuelle | Couleurs, ombres, rayons, Sheets, onglets | 5 | ⬜ non commencée |
 | P5 — Finitions | Selects, boutons, troncatures, densité | 6 | ⬜ non commencée |
@@ -1468,7 +1468,7 @@ information utile, pas un échec à masquer.
 
 ## T2.3 — Refonte de l'administration des utilisateurs
 
-**Statut** ⬜ non commencée · **Impact** élevé · **Effort** moyen · **Dépendance conseillée** T3.1, T3.3
+**Statut** ✅ terminée · **Impact** élevé · **Effort** moyen · **Dépendance conseillée** T3.1, T3.3
 
 **Constat.** Trois cartes KPI géantes affichent « 2 », « 2 » et « 0 » au-dessus
 d'un tableau de deux lignes, avec des pastilles d'icônes décoratives. Le rôle
@@ -1482,16 +1482,67 @@ n'ouvre aucune barre d'actions groupées.
 
 **Checkpoint**
 
-- [ ] Les cartes KPI sont supprimées ou remplacées par une ligne de métriques.
-- [ ] Le changement de rôle exige une confirmation explicite.
-- [ ] Une seule grammaire d'action par ligne.
-- [ ] La sélection multiple ouvre une barre d'actions groupées, ou la case à
+- [x] Les cartes KPI sont supprimées ou remplacées par une ligne de métriques.
+- [x] Le changement de rôle exige une confirmation explicite.
+- [x] Une seule grammaire d'action par ligne.
+- [x] La sélection multiple ouvre une barre d'actions groupées, ou la case à
       cocher est supprimée.
-- [ ] `pnpm run qa:front` passe.
+- [x] `pnpm run qa:front` passe.
 
 **Preuve attendue.** Captures avant/après + dialogue de changement de rôle.
 
-**Preuve réelle.** _à compléter par l'agent qui exécute la tâche._
+**Preuve réelle.** `pnpm run qa:front` → `exit=0` : `Repo state check passed.`,
+typecheck OK, lint `--max-warnings 0` OK, `Test Files 161 passed (161)`,
+`Tests 775 passed (775)`, `Error compliance check passed.` (31/07/2026).
+Captures pixel **non produites** : le volet navigateur ne composite pas de
+frames dans cette session (`screenshot failed: the Browser pane is not
+displayed`) et l'exécution de JS en page a été refusée par le classifieur, donc
+ni capture ni mesure `getBoundingClientRect`. Remplacées par des relevés d'arbre
+d'accessibilité `read_page` sur `http://localhost:3000/admin` en 1440×900,
+avant et après, sur les 3 utilisateurs réels :
+
+- **Avant**, par ligne : `checkbox "Sélectionner FERRON Arnaud"`,
+  `combobox` (sans nom accessible), `button "Modifier"`, `button "Actions"` —
+  soit les 4 affordances concurrentes du constat ; en-tête `TOTAL 3 / ACTIFS 3 /
+  ARCHIVÉS 0`.
+- **Après**, par ligne : `checkbox "Sélectionner FERRON Arnaud"` +
+  `button "Actions pour a.ferron-tcs@cir.fr"` — le `combobox` et le bouton
+  `Modifier` ont disparu de l'arbre ; en-tête `3 utilisateurs · 3 actifs ·
+  0 archivé`.
+- **Dialogue de rôle rejoué en direct** (menu ⋮ → « Modifier le rôle » sur
+  `a.ferron-tcs@cir.fr`, puis passage à Super admin) : `alertdialog` contenant
+  `heading "Modifier le rôle de FERRON Arnaud"`, `"FERRON Arnaud
+  (a.ferron-tcs@cir.fr) est actuellement TCS."`, `label "Nouveau rôle"`,
+  la transition `TCS` → `Super admin`, `"Ce que Super admin autorise :
+  Administration complète : gestion des utilisateurs et des rôles, des
+  agences…"`, un `alert` `"Élévation de privilège : FERRON Arnaud pourra gérer
+  les rôles de tous les utilisateurs, y compris le vôtre, sur toutes les
+  agences."`, puis `button "Annuler"` / `button "Confirmer le changement de
+  rôle"`. La confirmation n'a pas été cliquée : elle aurait réellement élevé un
+  compte de la base.
+- **Sélection multiple rejouée** : cocher une ligne fait apparaître
+  `"1 sélectionné"`, `button "Archiver"`, `button "Supprimer"`,
+  `button "Annuler la sélection"`.
+
+Tests ajoutés — `frontend/src/components/users/__tests__/UsersManagerList.test.tsx` :
+« ne laisse qu une seule voie d action par ligne » (assertion stricte
+`getAllByRole('button')` de longueur 1 dans la ligne), « passe le changement de
+role par le menu et jamais par la ligne », « traite les etats chargement, erreur
+et vide », « nomme l utilisateur, les deux roles et ce que le nouveau autorise ».
+`frontend/src/hooks/__tests__/useUsersManager.test.tsx` : « ne change aucun role
+tant que le dialog de confirmation n a pas ete ouvert » (la mutation
+`setUserRole` n'est jamais appelée hors dialog) et « applique l elevation de
+privilege et nomme les deux roles apres confirmation ».
+
+Étirement du tableau : le scroll descend de `TabsContent` vers la table.
+`AdminPanel.tsx` passe l'onglet Utilisateurs en `flex min-h-0 flex-1 flex-col
+overflow-hidden`, `UsersManager.tsx` en `flex h-full min-h-0 flex-col`,
+`UsersManagerContent` en `flex h-full min-h-0 flex-col gap-3` et le conteneur de
+`UsersManagerList` en `flex min-h-0 flex-1 flex-col overflow-hidden` avec zone
+de défilement interne `min-h-0 flex-1 overflow-y-auto` et en-tête `sticky`.
+Chaîne verrouillée par l'assertion mise à jour dans
+`frontend/src/components/__tests__/AdminPanel.test.tsx` (« keeps every admin tab
+in a bounded scrollable flex chain »).
 
 ```text
 Repo : C:\GitHub\CIR_Cockpit\CIR-Cockpit (branche main). Lis AGENTS.md avant d'agir.
@@ -1580,7 +1631,7 @@ information utile, pas un échec à masquer.
 
 ## T2.4 — Palette Ctrl K : de la recherche aux commandes
 
-**Statut** ⬜ non commencée · **Impact** élevé · **Effort** moyen · **Dépendance** aucune
+**Statut** 🟡 partielle · **Impact** élevé · **Effort** moyen · **Dépendance** aucune
 
 **Constat.** La règle projet dit que « le motif palette de commandes est l'entrée
 privilégiée pour la navigation et les actions globales ». En l'état, la palette
@@ -1595,18 +1646,58 @@ est une phrase grise avec une faute d'accent sur 90 px de haut.
 
 **Checkpoint**
 
-- [ ] La palette expose des actions (créer un client, nouvelle interaction) et
+- [x] La palette expose des actions (créer un client, nouvelle interaction) et
       la navigation vers les 7 sections.
-- [ ] Les éléments récents s'affichent à l'ouverture, avant toute frappe.
-- [ ] Les préfixes de filtre sont cohérents et découvrables.
-- [ ] L'état vide propose quelque chose plutôt que d'attendre.
-- [ ] Navigation clavier complète : flèches, Entrée, Escape, Tab.
-- [ ] `pnpm run qa:front` passe.
+- [x] Les éléments récents s'affichent à l'ouverture, avant toute frappe.
+- [x] Les préfixes de filtre sont cohérents et découvrables.
+- [x] L'état vide propose quelque chose plutôt que d'attendre.
+- [x] Navigation clavier complète : flèches, Entrée, Escape, Tab.
+- [x] `pnpm run qa:front` passe.
 
 **Preuve attendue.** Captures de la palette à l'ouverture, en recherche, en
 mode action.
 
-**Preuve réelle.** _à compléter par l'agent qui exécute la tâche._
+**Arbitrage PO du 31/07/2026.** La navigation ne s'affiche plus à l'ouverture :
+elle doublait visuellement le menu de gauche et faisait démarrer une barre de
+recherche sur un menu. L'écran initial se limite aux récents et au bloc
+« Créer » ; les 7 sections restent atteignables sans souris via le préfixe `>`
+(mode commande explicite) ou dès qu'une frappe libre les nomme (« pilot » →
+Pilotage). Le critère d'acceptation « Ctrl K permet d'atteindre n'importe quelle
+section sans souris » reste donc tenu.
+
+**Preuve réelle.** `pnpm -w run qa:front` → `EXIT=0` (31/07/2026, 11:01) :
+`Repo state check passed.`, typecheck OK, lint `--max-warnings 0` OK,
+`Test Files 162 passed (162)`, `Tests 785 passed (785)`,
+`Error compliance check passed.`. Tests ajoutés dans
+`frontend/src/components/__tests__/AppSearchOverlay.test.tsx` — « ouvre sur les
+recents et les creations, jamais sur un doublon du menu », « expose les 7
+sections derriere le prefixe > », « atteint une section au clavier
+sans souris », « reserve la liste aux commandes derriere le prefixe > », « propose
+une sortie quand la recherche ne donne rien », « explique chaque prefixe dans le
+pied de dialogue » — dans `frontend/src/app/__tests__/useAppSearchData.test.tsx`
+— « ne traite plus le point d exclamation comme un filtre » — et dans
+`frontend/src/hooks/__tests__/useAppViewState.test.tsx` — « garde la palette
+montee et repart a neuf a chaque fermeture », « ouvre les parcours de creation
+existants depuis la palette ». Parcours rejoué en direct sur
+`pnpm --dir frontend run dev` (`http://localhost:3000`, 1280×720, session super
+admin) : à l'ouverture, le dialogue ne contient que `RÉCENTS` + `Créer` et aucun
+item `Aller à` ; après frappe de `>`, les 7 sections apparaissent avec leur
+raccourci `F1`…`F8` ; `Ctrl+K` ouvre avec focus sur l'entrée ; `>pilot` + `↓` + `Entrée` →
+`{"url":"/dashboard","dialogOpen":false}` ; commande « Créer un client ou un
+prospect » → `{"url":"/clients/new?type=all&…","dialogOpen":false}` ; `Échap` →
+`{"dialogOpen":false,"active":"BUTTON|Ouvrir la recherche rapide"}` alors que le
+même relevé donnait `"active":"BODY|"` avant correction ; ordre de tabulation
+relevé dans le dialogue : entrée → 4 chips de filtre → « Archivés inclus » → 3
+récents → Fermer. Relevés `innerText` des quatre états (ouverture, recherche
+« sea », mode action `>cr`, état vide `@zzzzz`) conservés dans
+`scratchpad/palette-etats.txt`.
+
+**Captures pixel non produites** — le volet navigateur ne composite pas
+(`screenshot failed: the Browser pane is not displayed, so the page is not
+compositing frames`) et l'instance Chrome DevTools disponible n'a pas de session
+authentifiée. La preuve visuelle demandée est remplacée par les relevés DOM
+ci-dessus ; c'est le seul point du checkpoint dont la preuve attendue n'est pas
+honorée à la lettre, d'où le statut 🟡.
 
 ```text
 Repo : C:\GitHub\CIR_Cockpit\CIR-Cockpit (branche main). Lis AGENTS.md avant d'agir.

@@ -11,6 +11,7 @@ import { useSetUserMemberships } from '../access/useSetUserMemberships';
 import { useSetUserRole } from '../access/useSetUserRole';
 import { useUnarchiveUser } from '../access/useUnarchiveUser';
 import { useUpdateUserIdentity } from './useUpdateUserIdentity';
+import { ROLE_LABELS } from '@/app/appConstants';
 import { handleUiError } from '@/services/errors/handleUiError';
 import { notifySuccess } from '@/services/errors/notifySuccess';
 import type { CreateAdminUserPayload } from '@/services/admin/createAdminUser';
@@ -36,6 +37,7 @@ export const useUsersManager = () => {
   const [editIdentityOpen, setEditIdentityOpen] = useState(false);
   const [editIdentityUser, setEditIdentityUser] = useState<AdminUserSummary | null>(null);
   const [confirmDeleteUser, setConfirmDeleteUser] = useState<AdminUserSummary | null>(null);
+  const [roleChangeUser, setRoleChangeUser] = useState<AdminUserSummary | null>(null);
 
   // Multi-selection and bulk action states
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
@@ -80,10 +82,15 @@ export const useUsersManager = () => {
     }
   };
 
-  const handleRoleChange = async (userId: string, role: UserRole) => {
+  // Aucune elevation de privilege sans confirmation nommee : la mutation n'est
+  // jamais appelee depuis la ligne, seulement depuis le dialog de confirmation.
+  const executeRoleChange = async (role: UserRole) => {
+    if (!roleChangeUser) return;
+    const previousRole = roleChangeUser.role;
     try {
-      await setRoleMutation.mutateAsync({ userId, role });
-      notifySuccess('Rôle mis à jour.');
+      await setRoleMutation.mutateAsync({ userId: roleChangeUser.id, role });
+      notifySuccess(`Rôle mis à jour : ${ROLE_LABELS[previousRole]} → ${ROLE_LABELS[role]}.`);
+      setRoleChangeUser(null);
     } catch {
       return;
     }
@@ -276,6 +283,7 @@ export const useUsersManager = () => {
     editIdentityOpen,
     editIdentityUser,
     confirmDeleteUser,
+    roleChangeUser,
     selectedUserIds,
     confirmBulkDelete,
     confirmBulkArchive,
@@ -290,7 +298,9 @@ export const useUsersManager = () => {
     setPasswordDialogOpen,
     setConfirmDeleteUser,
     handleCreateUser,
-    handleRoleChange,
+    executeRoleChange,
+    openRoleChangeDialog: (user: AdminUserSummary) => setRoleChangeUser(user),
+    closeRoleChangeDialog: () => setRoleChangeUser(null),
     handleMembershipSave,
     handleIdentitySave,
     executeResetPassword,
