@@ -1657,6 +1657,13 @@ est une phrase grise avec une faute d'accent sur 90 px de haut.
 **Preuve attendue.** Captures de la palette à l'ouverture, en recherche, en
 mode action.
 
+**Refonte visuelle du 31/07/2026.** Après revue PO sur capture, la palette est
+redessinée : 5 bandes empilées → 3 (champ / liste / pied), le périmètre devient
+un jeton retirable dans le champ au lieu d'une rangée de chips, les récents
+passent de pastilles souris à des rangées de liste navigables aux flèches, et
+toutes les sections partagent une rangée unique (`AppSearchRow`). Mesuré :
+rangée 44 → 32 px, dialogue 427 → 360 px à l'ouverture, largeur 768 → 640 px.
+
 **Arbitrage PO du 31/07/2026.** La navigation ne s'affiche plus à l'ouverture :
 elle doublait visuellement le menu de gauche et faisait démarrer une barre de
 recherche sur un menu. L'écran initial se limite aux récents et au bloc
@@ -1665,7 +1672,7 @@ recherche sur un menu. L'écran initial se limite aux récents et au bloc
 Pilotage). Le critère d'acceptation « Ctrl K permet d'atteindre n'importe quelle
 section sans souris » reste donc tenu.
 
-**Preuve réelle.** `pnpm -w run qa:front` → `EXIT=0` (31/07/2026, 11:01) :
+**Preuve réelle.** `pnpm -w run qa:front` → `EXIT=0` (31/07/2026, 12:41) :
 `Repo state check passed.`, typecheck OK, lint `--max-warnings 0` OK,
 `Test Files 162 passed (162)`, `Tests 785 passed (785)`,
 `Error compliance check passed.`. Tests ajoutés dans
