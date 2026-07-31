@@ -53,9 +53,13 @@ const CommandDialog = ({
         <DialogDescription className="sr-only">
           Rechercher rapidement des éléments et exécuter une action.
         </DialogDescription>
-        <Command className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
-          {children}
-        </Command>
+        {/*
+          Pas de `Command` ici : l'appelant fournit sa propre racine cmdk. En
+          imbriquer une seconde donnait deux racines concurrentes, et la grappe
+          de surcharges shadcn qui l'accompagnait ecrasait la densite locale
+          (`py-3` sur chaque rangee, icones forcees a 20 px).
+        */}
+        {children}
       </DialogContent>
     </Dialog>
   )

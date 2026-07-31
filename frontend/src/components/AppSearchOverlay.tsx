@@ -22,7 +22,7 @@ import AppSearchCommandsSection from './app-search/AppSearchCommandsSection';
 import AppSearchEmptyState from './app-search/AppSearchEmptyState';
 import AppSearchFooter from './app-search/AppSearchFooter';
 import AppSearchRecentsSection from './app-search/AppSearchRecentsSection';
-import AppSearchScopeToken from './app-search/AppSearchScopeToken';
+import AppSearchScopeToken, { APP_SEARCH_SCOPE_LABELS } from './app-search/AppSearchScopeToken';
 
 type AppSearchViewState = 'loading' | 'error' | 'idle' | 'empty' | 'results';
 
@@ -303,6 +303,11 @@ const AppSearchOverlay = ({
           )}
           {viewState === 'idle' && scope === 'all' && (
             <AppSearchRecentsSection recents={recentEntities} onSelectEntity={handleSelectRecent} />
+          )}
+          {viewState === 'idle' && scope !== 'all' && scope !== 'commands' && (
+            <p className="px-3 py-6 text-center text-[13px] text-muted-foreground">
+              Saisissez un mot pour chercher dans {APP_SEARCH_SCOPE_LABELS[scope].toLowerCase()}.
+            </p>
           )}
           {(viewState === 'idle' || viewState === 'results') && (
             <AppSearchCommandsSection commands={visibleCommands} onRunCommand={handleRunCommand} />

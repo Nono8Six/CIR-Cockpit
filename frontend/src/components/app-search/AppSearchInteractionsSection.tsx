@@ -25,7 +25,11 @@ const AppSearchInteractionsSection = ({
           onSelect={() => onOpenInteraction(interaction)}
           icon={ClipboardList}
           label={interaction.subject || interaction.company_name}
-          detail={[interaction.company_name, interaction.contact_name].filter(Boolean).join(' · ')}
+          detail={[
+            interaction.company_name,
+            interaction.contact_name,
+            interaction.order_ref ? `#${interaction.order_ref}` : null
+          ].filter(Boolean).join(' · ')}
           meta={formatDate(interaction.created_at)}
           testId={`app-search-interaction-${interaction.id}`}
         />
