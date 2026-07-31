@@ -1,18 +1,12 @@
 import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
-import type { ReactNode } from 'react';
-import { AlertTriangle, Loader2 } from 'lucide-react';
+import type { KeyboardEvent, ReactNode } from 'react';
+import { AlertTriangle, Archive, Loader2 } from 'lucide-react';
 
 import { filterAppCommands, type AppCommand } from '@/app/appCommands';
-import {
-  APP_SEARCH_SCOPE_PREFIXES,
-  applyAppSearchScope,
-  parseAppSearchQuery,
-  type AppSearchScope
-} from '@/app/useAppSearchData';
+import { applyAppSearchScope, parseAppSearchQuery } from '@/app/useAppSearchData';
 import type { Entity, EntityContact, Interaction } from '@/types';
 import { handleUiError } from '@/services/errors/handleUiError';
 import { Button } from './ui/inputs/basic/Button';
-import { Kbd } from './ui/data-display/Kbd';
 import {
   Command,
   CommandDialog,
@@ -27,21 +21,10 @@ import AppSearchResults from './app-search/AppSearchResults';
 import AppSearchCommandsSection from './app-search/AppSearchCommandsSection';
 import AppSearchEmptyState from './app-search/AppSearchEmptyState';
 import AppSearchFooter from './app-search/AppSearchFooter';
-import InteractionSearchRecents from './interaction-search/InteractionSearchRecents';
+import AppSearchRecentsSection from './app-search/AppSearchRecentsSection';
+import AppSearchScopeToken from './app-search/AppSearchScopeToken';
 
 type AppSearchViewState = 'loading' | 'error' | 'idle' | 'empty' | 'results';
-
-const SEARCH_SCOPE_CHIPS: Array<{
-  label: string;
-  scope: Exclude<AppSearchScope, 'all'>;
-}> = [
-  { label: 'Commandes', scope: 'commands' },
-  { label: 'Contacts', scope: 'contacts' },
-  { label: 'Interactions', scope: 'interactions' },
-  { label: 'Clients', scope: 'clients' }
-];
-
-const CHIP_CLASSES = 'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background';
 
 type AppSearchOverlayProps = {
   open: boolean;
@@ -114,9 +97,10 @@ const AppSearchOverlay = ({
 }: AppSearchOverlayProps) => {
   const isErrorState = Boolean(entitySearchError);
   const { normalizedQuery, scope } = parseAppSearchQuery(searchQuery);
+  const hasQuery = normalizedQuery.trim().length > 0;
   // Les commandes et les recents restent affiches tant que rien n'est tape :
   // l'index d'entites n'est charge qu'a l'ouverture et ne doit pas masquer l'etat initial.
-  const isEntityScope = scope !== 'commands' && normalizedQuery.trim().length > 0;
+  const isEntityScope = scope !== 'commands' && hasQuery;
   // La palette reste une recherche : a l'ouverture elle ne propose que les actions
   // de creation. La navigation, qui double le menu de gauche, n'apparait que si
   // l'utilisateur la demande (prefixe « > ») ou si sa frappe nomme une section.
@@ -125,11 +109,11 @@ const AppSearchOverlay = ({
       return filterAppCommands(commands, normalizedQuery);
     }
     if (scope !== 'all') return [];
-    if (normalizedQuery.trim().length === 0) {
+    if (!hasQuery) {
       return commands.filter((command) => command.group === 'creation');
     }
     return filterAppCommands(commands, normalizedQuery);
-  }, [commands, normalizedQuery, scope]);
+  }, [commands, hasQuery, normalizedQuery, scope]);
   const viewState = getAppSearchViewState({
     query: normalizedQuery,
     isLoading: isEntitySearchLoading && isEntityScope,
@@ -204,7 +188,7 @@ const AppSearchOverlay = ({
     try {
       onCreateEntity();
     } catch (error) {
-      handleUiError(error, 'Impossible d’ouvrir la création de fiche.', {
+      handleUiError(error, "Impossible d'ouvrir la création de fiche.", {
         source: 'AppSearchOverlay.createEntity'
       });
     }
@@ -230,25 +214,29 @@ const AppSearchOverlay = ({
     trigger.focus();
   }, []);
 
-  const handleScopeChipClick = useCallback((nextScope: Exclude<AppSearchScope, 'all'>) => {
-    onSearchQueryChange(
-      scope === nextScope
-        ? applyAppSearchScope('all', searchQuery)
-        : applyAppSearchScope(nextScope, searchQuery)
-    );
-  }, [onSearchQueryChange, scope, searchQuery]);
-
   const handleClearScope = useCallback(() => {
     onSearchQueryChange(applyAppSearchScope('all', searchQuery));
   }, [onSearchQueryChange, searchQuery]);
+
+  // Le champ n'affiche jamais le prefixe : il est promu en jeton et reapplique ici.
+  const handleInputValueChange = useCallback((value: string) => {
+    onSearchQueryChange(scope === 'all' ? value : applyAppSearchScope(scope, value));
+  }, [onSearchQueryChange, scope]);
+
+  const handleInputKeyDown = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== 'Backspace' || scope === 'all' || normalizedQuery.length > 0) return;
+    event.preventDefault();
+    handleClearScope();
+  }, [handleClearScope, normalizedQuery.length, scope]);
 
   return (
     <CommandDialog
       open={open}
       onOpenChange={onOpenChange}
       onCloseAutoFocus={handleCloseAutoFocus}
-      className="w-[calc(100vw-1rem)] max-w-3xl border-border p-0 shadow-xl sm:w-[min(100vw-2rem,48rem)]"
-      overlayClassName="bg-foreground/30 backdrop-blur-[2px]"
+      showCloseButton={false}
+      className="w-[calc(100vw-1rem)] max-w-2xl gap-0 rounded-lg border-border p-0 shadow-soft sm:w-[min(100vw-2rem,40rem)]"
+      overlayClassName="bg-foreground/25 backdrop-blur-[2px]"
     >
       <Command
         shouldFilter={false}
@@ -257,71 +245,52 @@ const AppSearchOverlay = ({
         data-testid="app-search-command"
       >
         <CommandInput
-          value={searchQuery}
-          onValueChange={onSearchQueryChange}
-          placeholder="Rechercher un client, une interaction, un contact, ou taper > pour les commandes…"
+          value={normalizedQuery}
+          onValueChange={handleInputValueChange}
+          onKeyDown={handleInputKeyDown}
+          placeholder={scope === 'all' ? 'Rechercher ou lancer une action…' : 'Affiner la recherche…'}
           autoComplete="off"
           name="global-search"
           aria-label="Rechercher globalement"
           data-testid="app-search-input"
-          className="text-sm sm:text-base"
-        />
-        <div className="flex items-center gap-2 px-4 py-2 border-b border-border/40 bg-muted/30 overflow-x-auto hide-scrollbar">
-          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap mr-1">Filtres</span>
-          <div className="flex gap-2">
-            {SEARCH_SCOPE_CHIPS.map((chip) => {
-              const isActive = scope === chip.scope;
-
-              return (
-                <button
-                  key={chip.scope}
-                  type="button"
-                  aria-pressed={isActive}
-                  onClick={() => handleScopeChipClick(chip.scope)}
-                  className={cn(
-                    CHIP_CLASSES,
-                    isActive
-                      ? 'border-primary/30 bg-primary/10 text-foreground'
-                      : 'border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground'
-                  )}
-                >
-                  <Kbd className="text-[11px]">{APP_SEARCH_SCOPE_PREFIXES[chip.scope]}</Kbd>
-                  {chip.label}
-                </button>
-              );
-            })}
+          wrapperClassName="border-border px-3"
+          className="h-12 text-[15px]"
+          leading={scope !== 'all' ? (
+            <AppSearchScopeToken scope={scope} onClear={handleClearScope} />
+          ) : undefined}
+          trailing={(
             <button
               type="button"
               aria-pressed={includeArchived}
               onClick={() => onIncludeArchivedChange(!includeArchived)}
               data-testid="app-search-archived-toggle"
+              title="Inclure les fiches archivées dans la recherche"
               className={cn(
-                CHIP_CLASSES,
+                'inline-flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-medium transition-colors',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60',
                 includeArchived
-                  ? 'border-primary/30 bg-primary/10 text-foreground'
-                  : 'border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground'
+                  ? 'bg-primary/10 text-foreground'
+                  : 'text-muted-foreground hover:bg-surface-2 hover:text-foreground'
               )}
             >
-              Archivés inclus
+              <Archive className="size-3.5" aria-hidden="true" />
+              Archivés
             </button>
-          </div>
-        </div>
+          )}
+        />
         <span aria-live="polite" className="sr-only" data-testid="app-search-status-live">
           {statusMessage}
         </span>
-        {viewState === 'idle' && recentEntities.length > 0 ? (
-          <InteractionSearchRecents recents={recentEntities} onSelectEntity={handleSelectRecent} />
-        ) : null}
-        <CommandList className="max-h-[min(66vh,30rem)] overflow-x-hidden px-1 py-2" data-testid="app-search-list">
+        <CommandList className="max-h-[min(60vh,26rem)] overflow-x-hidden pb-2" data-testid="app-search-list">
           {viewState === 'loading' && (
-            <CommandLoading className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <CommandLoading className="flex items-center justify-center gap-2 py-8 text-[13px] text-muted-foreground">
               <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-              Chargement des résultats…
+              Recherche en cours…
             </CommandLoading>
           )}
           {viewState === 'error' && (
             <CommandEmpty className="space-y-3 px-4 py-8">
-              <div className="flex items-center justify-center gap-2 text-sm text-warning-foreground">
+              <div className="flex items-center justify-center gap-2 text-[13px] text-warning-foreground">
                 <AlertTriangle className="size-4" aria-hidden="true" />
                 Recherche indisponible. Veuillez réessayer.
               </div>
@@ -331,6 +300,9 @@ const AppSearchOverlay = ({
                 </Button>
               )}
             </CommandEmpty>
+          )}
+          {viewState === 'idle' && scope === 'all' && (
+            <AppSearchRecentsSection recents={recentEntities} onSelectEntity={handleSelectRecent} />
           )}
           {(viewState === 'idle' || viewState === 'results') && (
             <AppSearchCommandsSection commands={visibleCommands} onRunCommand={handleRunCommand} />
@@ -358,8 +330,12 @@ const AppSearchOverlay = ({
             />
           )}
         </CommandList>
-        <div className="border-t border-border/70 bg-surface-1/90">
-          <AppSearchFooter footerLeft={footerLeft} footerRight={footerRight} />
+        <div className="border-t border-border-subtle bg-surface-1">
+          <AppSearchFooter
+            showPrefixLegend={!hasQuery && scope === 'all'}
+            footerLeft={footerLeft}
+            footerRight={footerRight}
+          />
         </div>
       </Command>
     </CommandDialog>

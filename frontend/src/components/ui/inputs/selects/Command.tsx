@@ -30,15 +30,24 @@ type CommandDialogProps = DialogProps & {
   className?: string
   overlayClassName?: string
   onCloseAutoFocus?: (event: Event) => void
+  showCloseButton?: boolean
 }
 
-const CommandDialog = ({ children, className, overlayClassName, onCloseAutoFocus, ...props }: CommandDialogProps) => {
+const CommandDialog = ({
+  children,
+  className,
+  overlayClassName,
+  onCloseAutoFocus,
+  showCloseButton,
+  ...props
+}: CommandDialogProps) => {
   return (
     <Dialog {...props}>
       <DialogContent
         className={cn("overflow-hidden p-0", className)}
         overlayClassName={overlayClassName}
         onCloseAutoFocus={onCloseAutoFocus}
+        showCloseButton={showCloseButton}
       >
         <DialogTitle className="sr-only">Palette de commandes</DialogTitle>
         <DialogDescription className="sr-only">
@@ -52,20 +61,29 @@ const CommandDialog = ({ children, className, overlayClassName, onCloseAutoFocus
   )
 }
 
+type CommandInputProps = React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input> & {
+  /** Slots rendus dans la meme rangee que le champ (jeton de perimetre, bascule…). */
+  leading?: React.ReactNode
+  trailing?: React.ReactNode
+  wrapperClassName?: string
+}
+
 const CommandInput = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Input>,
-  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
->(({ className, ...props }, ref) => (
-  <div className="flex items-center border-b px-3" data-cmdk-input-wrapper="">
-    <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+  CommandInputProps
+>(({ className, leading, trailing, wrapperClassName, ...props }, ref) => (
+  <div className={cn("flex items-center gap-2 border-b px-3", wrapperClassName)} data-cmdk-input-wrapper="">
+    <Search className="h-4 w-4 shrink-0 opacity-50" />
+    {leading}
     <CommandPrimitive.Input
       ref={ref}
       className={cn(
-        "flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
+        "flex h-10 w-full min-w-0 rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
       {...props}
     />
+    {trailing}
   </div>
 ))
 

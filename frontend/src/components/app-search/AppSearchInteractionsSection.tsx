@@ -1,49 +1,36 @@
-import type { Interaction } from '@/types';
 import { ClipboardList } from 'lucide-react';
-import { CommandGroup, CommandItem } from '../ui/inputs/selects/Command';
+
+import type { Interaction } from '@/types';
 import { formatDate } from '@/utils/date/formatDate';
+import AppSearchGroup from './AppSearchGroup';
+import AppSearchRow from './AppSearchRow';
 
 type AppSearchInteractionsSectionProps = {
   interactions: Interaction[];
   onOpenInteraction: (interaction: Interaction) => void;
 };
 
-const AppSearchInteractionsSection = ({ interactions, onOpenInteraction }: AppSearchInteractionsSectionProps) => {
+const AppSearchInteractionsSection = ({
+  interactions,
+  onOpenInteraction
+}: AppSearchInteractionsSectionProps) => {
   if (interactions.length === 0) return null;
 
   return (
-    <CommandGroup heading="Interactions">
+    <AppSearchGroup heading="Interactions">
       {interactions.map((interaction) => (
-        <CommandItem
+        <AppSearchRow
           key={interaction.id}
-          value={`${interaction.company_name} ${interaction.subject ?? ''} ${interaction.contact_name ?? ''} ${interaction.order_ref ?? ''}`}
+          value={`interaction ${interaction.company_name} ${interaction.subject ?? ''} ${interaction.contact_name ?? ''} ${interaction.order_ref ?? ''}`}
           onSelect={() => onOpenInteraction(interaction)}
-          onClick={() => onOpenInteraction(interaction)}
-          className="gap-3 px-3 py-2"
-          data-testid={`app-search-interaction-${interaction.id}`}
-        >
-          <ClipboardList className="size-4 text-muted-foreground" aria-hidden="true" />
-          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <span className="truncate text-sm font-medium text-foreground">
-              {interaction.company_name}
-            </span>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="truncate">{interaction.subject}</span>
-              <span>•</span>
-              <span className="truncate">{interaction.contact_name}</span>
-            </div>
-          </div>
-          <div className="flex shrink-0 flex-col items-end gap-1 text-right">
-            <span className="text-xs text-muted-foreground/80">{formatDate(interaction.created_at)}</span>
-            {interaction.order_ref && (
-              <span className="rounded bg-muted px-1.5 text-xs font-mono text-muted-foreground">
-                #{interaction.order_ref}
-              </span>
-            )}
-          </div>
-        </CommandItem>
+          icon={ClipboardList}
+          label={interaction.subject || interaction.company_name}
+          detail={[interaction.company_name, interaction.contact_name].filter(Boolean).join(' · ')}
+          meta={formatDate(interaction.created_at)}
+          testId={`app-search-interaction-${interaction.id}`}
+        />
       ))}
-    </CommandGroup>
+    </AppSearchGroup>
   );
 };
 

@@ -106,8 +106,11 @@ describe('AppSearchOverlay', () => {
       />
     );
 
-    expect(screen.getByTestId('interaction-search-recents')).toBeInTheDocument();
-    expect(screen.getByText('P04_TEST_CLIENT')).toBeInTheDocument();
+    // Les recents sont des rangees de liste, donc atteignables aux fleches,
+    // et non des pastilles que seule la souris peut viser.
+    const recentRow = screen.getByTestId('app-search-recent-entity-1');
+    expect(recentRow).toHaveAttribute('role', 'option');
+    expect(recentRow).toHaveTextContent('P04_TEST_CLIENT');
     expect(screen.getByTestId('app-search-command-creation-entity')).toBeInTheDocument();
 
     for (const [tab] of NAVIGATION_SECTIONS) {
@@ -229,33 +232,35 @@ describe('AppSearchOverlay', () => {
     });
   });
 
-  it('explique chaque prefixe dans le pied de dialogue', () => {
-    render(<AppSearchOverlay {...baseProps} />);
+  it('explique les prefixes au moment de la decouverte, puis se tait', () => {
+    const { rerender } = render(<AppSearchOverlay {...baseProps} />);
 
     const legend = screen.getByTestId('app-search-prefix-legend');
-    expect(legend).toHaveTextContent('> commandes');
     expect(legend).toHaveTextContent('@ contacts');
     expect(legend).toHaveTextContent('# interactions');
     expect(legend).toHaveTextContent('& clients');
+    expect(legend).toHaveTextContent('> commandes');
     expect(legend).not.toHaveTextContent('!');
+
+    rerender(
+      <AppSearchOverlay
+        {...baseProps}
+        searchQuery="Alice"
+        hasSearchResults
+        filteredClients={[buildEntity()]}
+      />
+    );
+
+    // Une fois la frappe commencee, la legende cede la place a l'action utile.
+    expect(screen.getByTestId('app-search-prefix-legend')).toHaveTextContent('↵ ouvrir');
+    expect(screen.getByTestId('app-search-prefix-legend')).not.toHaveTextContent('contacts');
   });
 
-  it('toggles scoped filter chips through the query prefix', async () => {
+  it('promeut le prefixe en jeton retirable au lieu de le laisser dans le champ', async () => {
     const user = userEvent.setup();
     const onSearchQueryChange = vi.fn();
 
     const { rerender } = render(
-      <AppSearchOverlay
-        {...baseProps}
-        searchQuery="Alice"
-        onSearchQueryChange={onSearchQueryChange}
-      />
-    );
-
-    await user.click(screen.getByRole('button', { name: /contacts/i }));
-    expect(onSearchQueryChange).toHaveBeenCalledWith('@Alice');
-
-    rerender(
       <AppSearchOverlay
         {...baseProps}
         searchQuery="@Alice"
@@ -263,10 +268,28 @@ describe('AppSearchOverlay', () => {
       />
     );
 
-    const contactChip = screen.getByRole('button', { name: /contacts/i });
-    expect(contactChip).toHaveAttribute('aria-pressed', 'true');
+    // Le champ n'affiche jamais le prefixe brut : il est promu en jeton.
+    expect(screen.getByTestId('app-search-input')).toHaveValue('Alice');
+    expect(screen.getByTestId('app-search-scope-token')).toHaveTextContent('Contacts');
 
-    await user.click(contactChip);
+    await user.click(screen.getByRole('button', { name: /retirer le filtre contacts/i }));
     expect(onSearchQueryChange).toHaveBeenLastCalledWith('Alice');
+
+    // La frappe reste rattachee au perimetre actif.
+    await user.type(screen.getByTestId('app-search-input'), 'x');
+    expect(onSearchQueryChange).toHaveBeenLastCalledWith('@Alicex');
+
+    rerender(
+      <AppSearchOverlay
+        {...baseProps}
+        searchQuery="@"
+        onSearchQueryChange={onSearchQueryChange}
+      />
+    );
+
+    // Retour arriere sur un champ vide : le jeton saute, pas un caractere.
+    await user.click(screen.getByTestId('app-search-input'));
+    await user.keyboard('{Backspace}');
+    expect(onSearchQueryChange).toHaveBeenLastCalledWith('');
   });
 });

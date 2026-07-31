@@ -1,6 +1,8 @@
-import type { EntityContact } from '@/types';
 import { UserRound } from 'lucide-react';
-import { CommandGroup, CommandItem } from '../ui/inputs/selects/Command';
+
+import type { EntityContact } from '@/types';
+import AppSearchGroup from './AppSearchGroup';
+import AppSearchRow from './AppSearchRow';
 
 type AppSearchContactsSectionProps = {
   contacts: EntityContact[];
@@ -16,28 +18,25 @@ const AppSearchContactsSection = ({
   if (contacts.length === 0) return null;
 
   return (
-    <CommandGroup heading="Contacts">
-      {contacts.map((contact) => (
-        <CommandItem
-          key={contact.id}
-          value={`${contact.first_name ?? ''} ${contact.last_name ?? ''} ${contact.position ?? ''} ${contact.email ?? ''} ${contact.phone ?? ''} ${entityNameById.get(contact.entity_id) ?? ''}`}
-          onSelect={() => onFocusClient(contact.entity_id, contact.id)}
-          onClick={() => onFocusClient(contact.entity_id, contact.id)}
-          className="gap-3 px-3 py-2"
-          data-testid={`app-search-contact-${contact.id}`}
-        >
-          <UserRound className="size-4 text-muted-foreground" aria-hidden="true" />
-          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <span className="truncate text-sm font-medium text-foreground">
-              {(contact.first_name ?? '').trim()} {contact.last_name}
-            </span>
-            <span className="truncate text-xs text-muted-foreground">
-              {entityNameById.get(contact.entity_id) ?? 'Client'} • {contact.position ?? 'Contact'} • {contact.email ?? contact.phone ?? 'Coordonnées manquantes'}
-            </span>
-          </div>
-        </CommandItem>
-      ))}
-    </CommandGroup>
+    <AppSearchGroup heading="Contacts">
+      {contacts.map((contact) => {
+        const entityName = entityNameById.get(contact.entity_id);
+        const fullName = `${(contact.first_name ?? '').trim()} ${contact.last_name}`.trim();
+
+        return (
+          <AppSearchRow
+            key={contact.id}
+            value={`contact ${fullName} ${contact.position ?? ''} ${contact.email ?? ''} ${contact.phone ?? ''} ${entityName ?? ''}`}
+            onSelect={() => onFocusClient(contact.entity_id, contact.id)}
+            icon={UserRound}
+            label={fullName}
+            detail={[entityName, contact.position].filter(Boolean).join(' · ') || undefined}
+            meta={contact.phone ?? contact.email ?? undefined}
+            testId={`app-search-contact-${contact.id}`}
+          />
+        );
+      })}
+    </AppSearchGroup>
   );
 };
 

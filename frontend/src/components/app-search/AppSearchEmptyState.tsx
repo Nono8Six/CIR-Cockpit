@@ -1,6 +1,7 @@
-import { Archive, FilterX, Plus, SearchX } from 'lucide-react';
+import { Archive, FilterX, Plus } from 'lucide-react';
 
-import { CommandGroup, CommandItem } from '../ui/inputs/selects/Command';
+import AppSearchGroup from './AppSearchGroup';
+import AppSearchRow from './AppSearchRow';
 
 type AppSearchEmptyStateProps = {
   query: string;
@@ -20,52 +21,39 @@ const AppSearchEmptyState = ({
   onClearScope
 }: AppSearchEmptyStateProps) => (
   <div data-testid="app-search-empty">
-    <div className="flex items-start gap-3 px-4 py-4">
-      <SearchX className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-      <p className="text-sm text-muted-foreground">
-        Aucun résultat pour «&nbsp;<span className="font-medium text-foreground">{query}</span>&nbsp;».
-        Vous pouvez continuer autrement&nbsp;:
-      </p>
-    </div>
-    <CommandGroup heading="Suites possibles">
-      <CommandItem
+    <p className="px-3 pb-1 pt-3 text-[13px] text-muted-foreground">
+      Aucun résultat pour <span className="font-medium text-foreground">{query}</span>.
+    </p>
+    <AppSearchGroup heading="Suites possibles">
+      <AppSearchRow
         value="creer une fiche client prospect"
         onSelect={onCreateEntity}
-        className="gap-3 px-3 py-2"
-        data-testid="app-search-empty-create"
-      >
-        <Plus className="size-4 text-muted-foreground" aria-hidden="true" />
-        <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
-          Créer une fiche pour «&nbsp;{query}&nbsp;»
-        </span>
-      </CommandItem>
+        icon={Plus}
+        label={`Créer une fiche « ${query} »`}
+        detail="Annuaire des tiers"
+        testId="app-search-empty-create"
+      />
       {!includeArchived ? (
-        <CommandItem
+        <AppSearchRow
           value="elargir archives archivees"
           onSelect={onIncludeArchived}
-          className="gap-3 px-3 py-2"
-          data-testid="app-search-empty-archived"
-        >
-          <Archive className="size-4 text-muted-foreground" aria-hidden="true" />
-          <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
-            Élargir la recherche aux fiches archivées
-          </span>
-        </CommandItem>
+          icon={Archive}
+          label="Élargir aux fiches archivées"
+          detail="Relance la recherche"
+          testId="app-search-empty-archived"
+        />
       ) : null}
       {isScoped ? (
-        <CommandItem
-          value="effacer les filtres"
+        <AppSearchRow
+          value="effacer le filtre"
           onSelect={onClearScope}
-          className="gap-3 px-3 py-2"
-          data-testid="app-search-empty-clear-scope"
-        >
-          <FilterX className="size-4 text-muted-foreground" aria-hidden="true" />
-          <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
-            Effacer le filtre et chercher partout
-          </span>
-        </CommandItem>
+          icon={FilterX}
+          label="Chercher dans tout"
+          detail="Retire le filtre actif"
+          testId="app-search-empty-clear-scope"
+        />
       ) : null}
-    </CommandGroup>
+    </AppSearchGroup>
   </div>
 );
 
