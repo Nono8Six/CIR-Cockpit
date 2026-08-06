@@ -1,0 +1,2524 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="hsl(48 30% 99%)">
+  <meta name="description" content="Support interactif de validation PO du parcours C7-3 de remplacement moteur.">
+  <title>Validation C7-3 | Parcours Remplacement moteur</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --background: 48 30% 99%;
+      --foreground: 30 9% 17%;
+      --surface-1: 45 28% 98%;
+      --surface-2: 45 20% 96%;
+      --surface-3: 40 13% 92%;
+      --card: 42 36% 99%;
+      --border-subtle: 40 16% 94%;
+      --border: 36 12% 86%;
+      --muted: 44 24% 96%;
+      --muted-foreground: 31 7% 42%;
+      --primary: 6 72% 45%;
+      --primary-hover: 6 72% 39%;
+      --primary-soft: 7 58% 96%;
+      --primary-foreground: 0 0% 98%;
+      --success: 148 49% 33%;
+      --success-soft: 145 34% 94%;
+      --warning: 38 85% 31%;
+      --warning-soft: 39 60% 94%;
+      --info: 210 52% 38%;
+      --info-soft: 210 50% 95%;
+      --destructive: 0 72% 45%;
+      --destructive-soft: 0 65% 96%;
+      --ring: 6 72% 45%;
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 10px;
+      --shadow-soft: 0 1px 2px hsl(30 9% 17% / 0.04), 0 0 0 1px hsl(var(--border) / 0.42);
+      --sidebar-width: 292px;
+      --topbar-height: 64px;
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background: hsl(var(--background));
+    }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      overflow-x: hidden;
+      background: hsl(var(--background));
+      color: hsl(var(--foreground));
+      font-family: "Inter Tight", "Aptos", "Segoe UI", system-ui, sans-serif;
+      font-size: 13px;
+      font-feature-settings: "cv11", "ss01", "ss03";
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    button,
+    textarea,
+    input {
+      font: inherit;
+    }
+
+    button,
+    a,
+    label,
+    input[type="checkbox"],
+    input[type="radio"] {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: hsl(var(--primary) / 0.12);
+    }
+
+    button {
+      border: 0;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    svg {
+      display: block;
+      flex: 0 0 auto;
+    }
+
+    .skip-link {
+      position: fixed;
+      top: 8px;
+      left: 8px;
+      z-index: 100;
+      transform: translateY(-160%);
+      border-radius: var(--radius-md);
+      background: hsl(var(--foreground));
+      color: hsl(var(--primary-foreground));
+      padding: 10px 14px;
+      text-decoration: none;
+      transition: transform 160ms var(--ease-out);
+    }
+
+    .skip-link:focus {
+      transform: translateY(0);
+    }
+
+    :focus-visible {
+      outline: 3px solid hsl(var(--ring) / 0.28);
+      outline-offset: 2px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      display: flex;
+      min-height: var(--topbar-height);
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px solid hsl(var(--border));
+      background: hsl(var(--background) / 0.96);
+      padding: 10px 24px;
+    }
+
+    .brand {
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 38px;
+      height: 38px;
+      place-items: center;
+      border-radius: var(--radius-md);
+      background: hsl(var(--foreground));
+      color: hsl(var(--primary-foreground));
+    }
+
+    .brand-copy {
+      min-width: 0;
+    }
+
+    .brand-title {
+      margin: 0;
+      overflow: hidden;
+      font-size: 14px;
+      font-weight: 720;
+      letter-spacing: -0.01em;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .brand-subtitle {
+      margin: 2px 0 0;
+      color: hsl(var(--muted-foreground));
+      font-size: 11px;
+    }
+
+    .topbar-actions,
+    .button-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn {
+      display: inline-flex;
+      min-height: 40px;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius-md);
+      background: hsl(var(--card));
+      color: hsl(var(--foreground));
+      padding: 8px 12px;
+      font-weight: 650;
+      line-height: 1;
+      cursor: pointer;
+      transition: background-color 160ms var(--ease-out), border-color 160ms var(--ease-out), color 160ms var(--ease-out), transform 160ms var(--ease-out);
+    }
+
+    .btn:hover {
+      border-color: hsl(var(--foreground) / 0.28);
+      background: hsl(var(--surface-2));
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn-primary {
+      border-color: hsl(var(--primary));
+      background: hsl(var(--primary));
+      color: hsl(var(--primary-foreground));
+    }
+
+    .btn-primary:hover {
+      border-color: hsl(var(--primary-hover));
+      background: hsl(var(--primary-hover));
+    }
+
+    .btn-danger {
+      color: hsl(var(--destructive));
+    }
+
+    .btn-icon {
+      width: 40px;
+      padding: 0;
+    }
+
+    .save-status {
+      display: inline-flex;
+      min-width: 142px;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 7px;
+      color: hsl(var(--muted-foreground));
+      font-size: 11px;
+    }
+
+    .save-status::before {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: hsl(var(--success));
+      content: "";
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+      min-height: calc(100dvh - var(--topbar-height));
+    }
+
+    .sidebar {
+      position: sticky;
+      top: var(--topbar-height);
+      align-self: start;
+      height: calc(100dvh - var(--topbar-height));
+      overflow-y: auto;
+      border-right: 1px solid hsl(var(--border));
+      background: hsl(var(--surface-1));
+      padding: 20px 16px 28px;
+    }
+
+    .progress-panel {
+      display: grid;
+      grid-template-columns: 72px 1fr;
+      align-items: center;
+      gap: 14px;
+      border-bottom: 1px solid hsl(var(--border));
+      padding: 0 4px 20px;
+    }
+
+    .progress-ring {
+      position: relative;
+      width: 72px;
+      height: 72px;
+    }
+
+    .progress-ring svg {
+      width: 72px;
+      height: 72px;
+      transform: rotate(-90deg);
+    }
+
+    .progress-track,
+    .progress-value {
+      fill: none;
+      stroke-width: 6;
+    }
+
+    .progress-track {
+      stroke: hsl(var(--surface-3));
+    }
+
+    .progress-value {
+      stroke: hsl(var(--primary));
+      stroke-linecap: round;
+      transition: stroke-dashoffset 220ms var(--ease-out);
+    }
+
+    .progress-number {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 14px;
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+    }
+
+    .progress-copy strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 13px;
+    }
+
+    .progress-copy span {
+      color: hsl(var(--muted-foreground));
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .filter-group {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      margin: 16px 0;
+      padding: 3px;
+      border-radius: var(--radius-md);
+      background: hsl(var(--surface-2));
+    }
+
+    .filter-button {
+      min-height: 32px;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: hsl(var(--muted-foreground));
+      font-size: 11px;
+      font-weight: 650;
+      cursor: pointer;
+      transition: background-color 160ms var(--ease-out), color 160ms var(--ease-out);
+    }
+
+    .filter-button:hover,
+    .filter-button[aria-pressed="true"] {
+      background: hsl(var(--card));
+      color: hsl(var(--foreground));
+      box-shadow: 0 1px 1px hsl(var(--foreground) / 0.04);
+    }
+
+    .focus-note {
+      display: grid;
+      gap: 4px;
+      margin: 16px 0;
+      border-top: 1px solid hsl(var(--border));
+      border-bottom: 1px solid hsl(var(--border));
+      padding: 12px 4px;
+      font-size: 12px;
+      line-height: 1.42;
+    }
+
+    .focus-note span {
+      color: hsl(var(--muted-foreground));
+    }
+
+    .section-nav {
+      display: grid;
+      gap: 3px;
+    }
+
+    .section-nav a {
+      display: grid;
+      grid-template-columns: 30px minmax(0, 1fr) 16px;
+      min-height: 42px;
+      align-items: center;
+      gap: 8px;
+      border-radius: var(--radius-md);
+      padding: 5px 8px;
+      text-decoration: none;
+      transition: background-color 160ms var(--ease-out), color 160ms var(--ease-out);
+    }
+
+    .section-nav a:hover,
+    .section-nav a[aria-current="true"] {
+      background: hsl(var(--surface-2));
+    }
+
+    .nav-index {
+      display: grid;
+      width: 28px;
+      height: 28px;
+      place-items: center;
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius-sm);
+      background: hsl(var(--card));
+      color: hsl(var(--muted-foreground));
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .nav-label {
+      min-width: 0;
+      overflow: hidden;
+      font-size: 12px;
+      font-weight: 620;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .nav-status {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: hsl(var(--surface-3));
+    }
+
+    .nav-status.approved {
+      background: hsl(var(--success));
+    }
+
+    .nav-status.changes {
+      background: hsl(var(--destructive));
+    }
+
+    .nav-status.discussion {
+      background: hsl(var(--warning));
+    }
+
+    .main {
+      min-width: 0;
+      padding: 36px clamp(24px, 5vw, 76px) 120px;
+    }
+
+    .content-shell {
+      width: min(100%, 1080px);
+      margin: 0 auto;
+    }
+
+    .eyebrow {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 14px;
+      color: hsl(var(--muted-foreground));
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow .separator {
+      width: 20px;
+      height: 1px;
+      background: hsl(var(--border));
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      text-wrap: pretty;
+    }
+
+    h1 {
+      max-width: 820px;
+      margin: 0;
+      font-size: clamp(32px, 5vw, 54px);
+      font-weight: 730;
+      letter-spacing: -0.045em;
+      line-height: 0.98;
+    }
+
+    .hero-lead {
+      max-width: 74ch;
+      margin: 20px 0 0;
+      color: hsl(var(--muted-foreground));
+      font-size: 16px;
+      line-height: 1.62;
+    }
+
+    .quick-intro {
+      margin-bottom: 28px;
+    }
+
+    .quick-intro h1 {
+      font-size: clamp(28px, 4vw, 40px);
+      line-height: 1.05;
+    }
+
+    .quick-contract {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 12px;
+      margin-top: 20px;
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius-md);
+      background: hsl(var(--surface-1));
+      padding: 12px 14px;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .quick-contract span {
+      color: hsl(var(--muted-foreground));
+    }
+
+    .scope-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 1px;
+      margin: 32px 0 44px;
+      overflow: hidden;
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius-lg);
+      background: hsl(var(--border));
+    }
+
+    .scope-block {
+      min-width: 0;
+      background: hsl(var(--card));
+      padding: 22px 24px;
+    }
+
+    .scope-block.warning {
+      background: hsl(var(--warning-soft));
+    }
+
+    .scope-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 12px;
+      font-size: 12px;
+      font-weight: 720;
+    }
+
+    .scope-block ul {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding-left: 18px;
+      line-height: 1.48;
+    }
+
+    .flow-overview {
+      margin-bottom: 48px;
+      border-top: 1px solid hsl(var(--border));
+      border-bottom: 1px solid hsl(var(--border));
+      padding: 28px 0;
+    }
+
+    .flow-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 22px;
+    }
+
+    .flow-heading h2 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: -0.018em;
+    }
+
+    .flow-heading p {
+      max-width: 52ch;
+      margin: 0;
+      color: hsl(var(--muted-foreground));
+      line-height: 1.5;
+    }
+
+    .flow-strip {
+      display: grid;
+      grid-template-columns: repeat(9, auto);
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 2px 12px;
+    }
+
+    .flow-node {
+      display: grid;
+      min-width: 138px;
+      min-height: 92px;
+      align-content: space-between;
+      gap: 12px;
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius-md);
+      background: hsl(var(--card));
+      padding: 14px;
+    }
+
+    .flow-node strong {
+      font-size: 12px;
+      line-height: 1.25;
+    }
+
+    .flow-node span {
+      color: hsl(var(--muted-foreground));
+      font-size: 11px;
+      line-height: 1.3;
+    }
+
+    .flow-node.specialized {
+      border-color: hsl(var(--warning) / 0.45);
+      background: hsl(var(--warning-soft));
+    }
+
+    .flow-arrow {
+      color: hsl(var(--muted-foreground));
+    }
+
+    .reading-guide {
+      margin: 34px 0 28px;
+      border: 1px solid hsl(var(--primary) / 0.22);
+      border-radius: var(--radius-lg);
+      background: hsl(var(--primary) / 0.035);
+      padding: 24px;
+    }
+
+    .reading-guide h2 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: -0.02em;
+    }
+
+    .reading-guide > p {
+      max-width: 72ch;
+      margin: 9px 0 20px;
+      color: hsl(var(--muted-foreground));
+      line-height: 1.55;
+    }
+
+    .guide-steps,
+    .plain-glossary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .guide-step,
+    .glossary-item {
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius-md);
+      background: hsl(var(--card));
+      padding: 14px;
+    }
+
+    .guide-step strong,
+    .glossary-item strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 12px;
+    }
+
+    .guide-step span,
+    .glossary-item span {
+      color: hsl(var(--muted-foreground));
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .guide-number {
+      display: grid;
+      width: 26px;
+      height: 26px;
+      margin-bottom: 12px;
+      place-items: center;
+      border-radius: 50%;
+      background: hsl(var(--foreground));
+      color: hsl(var(--primary-foreground));
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .glossary-title {
+      margin: 20px 0 10px;
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .review-list {
+      display: grid;
+      gap: 24px;
+    }
+
+    .review-section {
+      scroll-margin-top: calc(var(--topbar-height) + 20px);
+      overflow: hidden;
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius-lg);
+      background: hsl(var(--card));
+      box-shadow: var(--shadow-soft);
+    }
+
+    .review-section[hidden] {
+      display: none;
+    }
+
+    .section-heading {
+      display: grid;
+      grid-template-columns: 52px minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: start;
+      border-bottom: 1px solid hsl(var(--border));
+      padding: 24px;
+    }
+
+    .step-number {
+      display: grid;
+      width: 52px;
+      height: 52px;
+      place-items: center;
+      border-radius: var(--radius-md);
+      background: hsl(var(--foreground));
+      color: hsl(var(--primary-foreground));
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 15px;
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+    }
+
+    .section-title-wrap {
+      min-width: 0;
+    }
+
+    .section-kicker {
+      margin: 0 0 6px;
+      color: hsl(var(--primary));
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .section-heading h2 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 720;
+      letter-spacing: -0.025em;
+      line-height: 1.1;
+    }
+
+    .section-summary {
+      max-width: 72ch;
+      margin: 9px 0 0;
+      color: hsl(var(--muted-foreground));
+      font-size: 14px;
+      line-height: 1.52;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      min-height: 28px;
+      align-items: center;
+      gap: 7px;
+      border: 1px solid hsl(var(--border));
+      border-radius: 999px;
+      background: hsl(var(--surface-1));
+      padding: 5px 9px;
+      color: hsl(var(--muted-foreground));
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .status-badge::before {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: hsl(var(--surface-3));
+      content: "";
+    }
+
+    .status-badge.approved {
+      border-color: hsl(var(--success) / 0.26);
+      background: hsl(var(--success-soft));
+      color: hsl(var(--success));
+    }
+
+    .status-badge.approved::before {
+      background: hsl(var(--success));
+    }
+
+    .status-badge.changes {
+      border-color: hsl(var(--destructive) / 0.25);
+      background: hsl(var(--destructive-soft));
+      color: hsl(var(--destructive));
+    }
+
+    .status-badge.changes::before {
+      background: hsl(var(--destructive));
+    }
+
+    .status-badge.discussion {
+      border-color: hsl(var(--warning) / 0.28);
+      background: hsl(var(--warning-soft));
+      color: hsl(var(--warning));
+    }
+
+    .status-badge.discussion::before {
+      background: hsl(var(--warning));
+    }
+
+    .section-body {
+      padding: 24px;
+    }
+
+    .context-note {
+      display: grid;
+      grid-template-columns: 32px minmax(0, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+      border: 1px solid hsl(var(--info) / 0.2);
+      border-radius: var(--radius-md);
+      background: hsl(var(--info-soft));
+      padding: 14px 16px;
+      color: hsl(var(--info));
+      line-height: 1.52;
+    }
+
+    .context-note .icon-box {
+      display: grid;
+      width: 32px;
+      height: 32px;
+      place-items: center;
+      border-radius: var(--radius-sm);
+      background: hsl(var(--card));
+    }
+
+    .body-copy {
+      color: hsl(var(--foreground));
+      line-height: 1.58;
+    }
+
+    .body-copy > :first-child {
+      margin-top: 0;
+    }
+
+    .body-copy > :last-child {
+      margin-bottom: 0;
+    }
+
+    .body-copy h3 {
+      margin: 28px 0 12px;
+      font-size: 15px;
+      letter-spacing: -0.012em;
+    }
+
+    .body-copy p {
+      max-width: 76ch;
+      margin: 0 0 14px;
+    }
+
+    .body-copy ul,
+    .body-copy ol {
+      display: grid;
+      max-width: 82ch;
+      gap: 7px;
+      margin: 12px 0 18px;
+      padding-left: 21px;
+    }
+
+    .body-copy li::marker {
+      color: hsl(var(--primary));
+      font-weight: 700;
+    }
+
+    .decision-question {
+      margin-bottom: 18px;
+      border: 1px solid hsl(var(--primary) / 0.22);
+      border-radius: var(--radius-md);
+      background: hsl(var(--primary) / 0.055);
+      padding: 15px 18px;
+    }
+
+    .decision-question span {
+      display: block;
+      margin-bottom: 5px;
+      color: hsl(var(--primary));
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .decision-question strong {
+      font-size: 16px;
+      line-height: 1.42;
+    }
+
+    .detail-panel {
+      margin-top: 18px;
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius-md);
+      background: hsl(var(--surface-1));
+    }
+
+    .detail-panel summary {
+      display: flex;
+      min-height: 46px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 15px;
+      font-size: 12px;
+      font-weight: 720;
+      cursor: pointer;
+      list-style: none;
+    }
+
+    .detail-panel summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .detail-panel summary::after {
+      color: hsl(var(--muted-foreground));
+      content: "+";
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 17px;
+      font-weight: 500;
+    }
+
+    .detail-panel[open] summary::after {
+      content: "−";
+    }
+
+    .detail-panel .body-copy {
+      border-top: 1px solid hsl(var(--border));
+      background: hsl(var(--card));
+      padding: 18px;
+    }
+
+    .fact-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 12px 0 20px;
+    }
+
+    .fact-chip {
+      display: inline-flex;
+      min-height: 28px;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid hsl(var(--border));
+      border-radius: 999px;
+      background: hsl(var(--surface-1));
+      padding: 4px 9px;
+      font-size: 11px;
+      font-weight: 650;
+    }
+
+    .state-stack,
+    .place-list,
+    .branch-list,
+    .scenario-list,
+    .breadboard {
+      display: grid;
+      gap: 1px;
+      overflow: hidden;
+      margin: 18px 0 24px;
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius-md);
+      background: hsl(var(--border));
+    }
+
+    .state-row,
+    .place-row,
+    .branch-row,
+    .scenario-row,
+    .breadboard-row {
+      display: grid;
+      min-width: 0;
+      background: hsl(var(--card));
+      padding: 15px 16px;
+    }
+
+    .state-row {
+      grid-template-columns: minmax(170px, 0.35fr) minmax(0, 1fr);
+      gap: 18px;
+    }
+
+    .state-name,
+    .place-name,
+    .branch-name,
+    .scenario-name {
+      font-weight: 720;
+      line-height: 1.3;
+    }
+
+    .state-description,
+    .place-description,
+    .branch-description,
+    .scenario-description {
+      min-width: 0;
+      color: hsl(var(--muted-foreground));
+      line-height: 1.48;
+      overflow-wrap: anywhere;
+    }
+
+    .place-row {
+      grid-template-columns: 42px minmax(160px, 0.34fr) minmax(0, 1fr);
+      align-items: start;
+      gap: 14px;
+    }
+
+    .place-index {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      border-radius: 50%;
+      background: hsl(var(--primary-soft));
+      color: hsl(var(--primary));
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-weight: 750;
+    }
+
+    .branch-row {
+      grid-template-columns: minmax(150px, 0.28fr) minmax(0, 1fr) minmax(180px, 0.42fr);
+      gap: 16px;
+    }
+
+    .branch-signal {
+      color: hsl(var(--foreground));
+      line-height: 1.44;
+    }
+
+    .branch-output {
+      color: hsl(var(--muted-foreground));
+      line-height: 1.44;
+    }
+
+    .scenario-row {
+      grid-template-columns: minmax(160px, 0.28fr) minmax(0, 1fr) minmax(190px, 0.34fr);
+      gap: 16px;
+    }
+
+    .breadboard-row {
+      grid-template-columns: minmax(170px, 0.36fr) 32px minmax(0, 1fr);
+      align-items: center;
+      gap: 10px;
+    }
+
+    .breadboard-action {
+      font-weight: 650;
+    }
+
+    .breadboard-destination {
+      color: hsl(var(--muted-foreground));
+      line-height: 1.45;
+    }
+
+    .mini-flow {
+      display: grid;
+      grid-template-columns: repeat(7, auto);
+      align-items: center;
+      justify-content: start;
+      gap: 8px;
+      overflow-x: auto;
+      margin: 18px 0 24px;
+      padding-bottom: 8px;
+    }
+
+    .mini-flow-node {
+      display: grid;
+      min-width: 144px;
+      min-height: 68px;
+      place-items: center;
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius-md);
+      background: hsl(var(--surface-1));
+      padding: 12px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 680;
+      line-height: 1.3;
+    }
+
+    .mini-flow-node.highlight {
+      border-color: hsl(var(--primary) / 0.35);
+      background: hsl(var(--primary-soft));
+      color: hsl(var(--primary));
+    }
+
+    .key-rule {
+      margin: 18px 0;
+      border: 1px solid hsl(var(--primary) / 0.22);
+      border-radius: var(--radius-md);
+      background: hsl(var(--primary-soft));
+      padding: 16px;
+      color: hsl(var(--primary-hover));
+      font-weight: 660;
+      line-height: 1.5;
+    }
+
+    .review-controls {
+      border-top: 1px solid hsl(var(--border));
+      background: hsl(var(--surface-1));
+      padding: 16px 24px 18px;
+    }
+
+    .control-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 13px;
+    }
+
+    .control-title h3 {
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .criterion-count {
+      color: hsl(var(--muted-foreground));
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .criteria-list {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .criterion {
+      display: grid;
+      grid-template-columns: 20px minmax(0, 1fr);
+      align-items: start;
+      gap: 10px;
+      min-height: 40px;
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius-md);
+      background: hsl(var(--card));
+      padding: 10px 12px;
+      line-height: 1.46;
+      cursor: pointer;
+      transition: border-color 160ms var(--ease-out), background-color 160ms var(--ease-out), transform 160ms var(--ease-out);
+    }
+
+    .criterion:hover {
+      border-color: hsl(var(--foreground) / 0.24);
+      background: hsl(var(--background));
+    }
+
+    .criterion:active {
+      transform: translateY(1px);
+    }
+
+    .criterion input,
+    .verdict-option input,
+    .final-option input {
+      width: 17px;
+      height: 17px;
+      margin: 1px 0 0;
+      accent-color: hsl(var(--primary));
+    }
+
+    .verdict-group {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 0;
+    }
+
+    .verdict-option,
+    .final-option {
+      display: grid;
+      grid-template-columns: 20px minmax(0, 1fr);
+      align-items: center;
+      gap: 8px;
+      min-height: 44px;
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius-md);
+      background: hsl(var(--card));
+      padding: 10px 12px;
+      font-weight: 650;
+      cursor: pointer;
+      transition: border-color 160ms var(--ease-out), background-color 160ms var(--ease-out);
+    }
+
+    .verdict-option:has(input:checked),
+    .final-option:has(input:checked) {
+      border-color: hsl(var(--primary) / 0.42);
+      background: hsl(var(--primary-soft));
+    }
+
+    .field-group {
+      display: grid;
+      gap: 7px;
+    }
+
+    .field-group label {
+      font-weight: 680;
+    }
+
+    .field-helper {
+      color: hsl(var(--muted-foreground));
+      font-size: 11px;
+      line-height: 1.42;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 88px;
+      resize: vertical;
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius-md);
+      background: hsl(var(--card));
+      color: hsl(var(--foreground));
+      padding: 12px 13px;
+      line-height: 1.5;
+      transition: border-color 160ms var(--ease-out), box-shadow 160ms var(--ease-out);
+    }
+
+    textarea::placeholder {
+      color: hsl(var(--muted-foreground) / 0.72);
+    }
+
+    textarea:focus-visible {
+      border-color: hsl(var(--ring));
+      box-shadow: 0 0 0 3px hsl(var(--ring) / 0.12);
+      outline: 0;
+    }
+
+    .review-footer {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 16px;
+      margin-top: 14px;
+    }
+
+    .comment-panel {
+      margin-top: 12px;
+      border-top: 1px solid hsl(var(--border));
+      padding-top: 10px;
+    }
+
+    .comment-panel summary {
+      width: fit-content;
+      color: hsl(var(--muted-foreground));
+      font-size: 12px;
+      font-weight: 650;
+      cursor: pointer;
+    }
+
+    .comment-panel .field-group {
+      margin-top: 12px;
+    }
+
+    .comment-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: hsl(var(--muted-foreground));
+      font-size: 11px;
+    }
+
+    .comment-indicator.has-comment {
+      color: hsl(var(--warning));
+      font-weight: 680;
+    }
+
+    .final-review {
+      scroll-margin-top: calc(var(--topbar-height) + 20px);
+      margin-top: 28px;
+      overflow: hidden;
+      border: 1px solid hsl(var(--foreground) / 0.22);
+      border-radius: var(--radius-lg);
+      background: hsl(var(--foreground));
+      color: hsl(var(--primary-foreground));
+    }
+
+    .final-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: start;
+      border-bottom: 1px solid hsl(var(--primary-foreground) / 0.14);
+      padding: 28px;
+    }
+
+    .final-header h2 {
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: -0.035em;
+    }
+
+    .final-header p {
+      max-width: 66ch;
+      margin: 10px 0 0;
+      color: hsl(var(--primary-foreground) / 0.68);
+      line-height: 1.55;
+    }
+
+    .final-body {
+      display: grid;
+      gap: 20px;
+      padding: 28px;
+    }
+
+    .final-options {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .final-option {
+      border-color: hsl(var(--primary-foreground) / 0.18);
+      background: hsl(var(--primary-foreground) / 0.07);
+      color: hsl(var(--primary-foreground));
+    }
+
+    .final-option:has(input:checked) {
+      border-color: hsl(var(--primary-foreground) / 0.55);
+      background: hsl(var(--primary-foreground) / 0.13);
+    }
+
+    .final-review textarea {
+      border-color: hsl(var(--primary-foreground) / 0.2);
+      background: hsl(var(--primary-foreground) / 0.07);
+      color: hsl(var(--primary-foreground));
+    }
+
+    .final-review textarea::placeholder {
+      color: hsl(var(--primary-foreground) / 0.48);
+    }
+
+    .final-review .field-helper,
+    .final-review .criterion-count {
+      color: hsl(var(--primary-foreground) / 0.62);
+    }
+
+    .final-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      border-top: 1px solid hsl(var(--primary-foreground) / 0.14);
+      padding-top: 20px;
+    }
+
+    .final-actions .btn {
+      border-color: hsl(var(--primary-foreground) / 0.2);
+      background: hsl(var(--primary-foreground) / 0.08);
+      color: hsl(var(--primary-foreground));
+    }
+
+    .final-actions .btn:hover {
+      border-color: hsl(var(--primary-foreground) / 0.42);
+      background: hsl(var(--primary-foreground) / 0.14);
+    }
+
+    .final-actions .btn-primary {
+      border-color: hsl(var(--primary));
+      background: hsl(var(--primary));
+    }
+
+    dialog {
+      width: min(92vw, 480px);
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius-lg);
+      background: hsl(var(--card));
+      color: hsl(var(--foreground));
+      padding: 0;
+      box-shadow: 0 24px 64px hsl(var(--foreground) / 0.18);
+    }
+
+    dialog::backdrop {
+      background: hsl(var(--foreground) / 0.42);
+    }
+
+    .dialog-body {
+      padding: 24px;
+    }
+
+    .dialog-body h2 {
+      margin: 0 0 10px;
+      font-size: 20px;
+    }
+
+    .dialog-body p {
+      margin: 0;
+      color: hsl(var(--muted-foreground));
+      line-height: 1.52;
+    }
+
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      border-top: 1px solid hsl(var(--border));
+      padding: 14px 24px;
+    }
+
+    .toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 50;
+      display: flex;
+      max-width: min(420px, calc(100vw - 40px));
+      align-items: center;
+      gap: 10px;
+      border: 1px solid hsl(var(--success) / 0.25);
+      border-radius: var(--radius-md);
+      background: hsl(var(--success-soft));
+      color: hsl(var(--success));
+      padding: 12px 14px;
+      font-weight: 680;
+      box-shadow: 0 12px 30px hsl(var(--foreground) / 0.12);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px);
+      transition: opacity 180ms var(--ease-out), transform 180ms var(--ease-out);
+    }
+
+    .toast.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .empty-filter {
+      display: none;
+      border: 1px dashed hsl(var(--border));
+      border-radius: var(--radius-lg);
+      padding: 40px 24px;
+      text-align: center;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .empty-filter.visible {
+      display: block;
+    }
+
+    .mobile-only {
+      display: none;
+    }
+
+    @media (max-width: 1040px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+        height: auto;
+        border-right: 0;
+        border-bottom: 1px solid hsl(var(--border));
+        padding: 16px 20px;
+      }
+
+      .progress-panel {
+        grid-template-columns: 62px minmax(0, 1fr);
+        max-width: 520px;
+      }
+
+      .progress-ring,
+      .progress-ring svg {
+        width: 62px;
+        height: 62px;
+      }
+
+      .section-nav {
+        grid-auto-columns: minmax(210px, 1fr);
+        grid-auto-flow: column;
+        overflow-x: auto;
+        padding-bottom: 8px;
+      }
+
+      .filter-group {
+        max-width: 360px;
+      }
+
+      .main {
+        padding-top: 28px;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .topbar {
+        align-items: flex-start;
+        padding: 10px 14px;
+      }
+
+      .brand-subtitle,
+      .save-status,
+      .topbar-actions .btn span {
+        display: none;
+      }
+
+      .main {
+        padding: 24px 14px 100px;
+      }
+
+      h1 {
+        font-size: 36px;
+      }
+
+      .hero-lead {
+        font-size: 15px;
+      }
+
+      .scope-grid,
+      .guide-steps,
+      .plain-glossary,
+      .final-options,
+      .verdict-group {
+        grid-template-columns: 1fr;
+      }
+
+      .reading-guide {
+        padding: 18px;
+      }
+
+      .flow-heading,
+      .review-footer,
+      .final-header {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .section-heading {
+        grid-template-columns: 44px minmax(0, 1fr);
+        padding: 18px;
+      }
+
+      .step-number {
+        width: 44px;
+        height: 44px;
+      }
+
+      .status-badge {
+        grid-column: 2;
+        justify-self: start;
+      }
+
+      .section-body,
+      .review-controls,
+      .final-body,
+      .final-header {
+        padding: 18px;
+      }
+
+      .state-row,
+      .place-row,
+      .branch-row,
+      .scenario-row,
+      .breadboard-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .place-index {
+        width: 30px;
+        height: 30px;
+      }
+
+      .breadboard-arrow {
+        transform: rotate(90deg);
+      }
+
+      .button-row,
+      .final-actions {
+        align-items: stretch;
+      }
+
+      .final-actions .btn {
+        flex: 1 1 180px;
+      }
+
+      .mobile-only {
+        display: inline-flex;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    @media print {
+      :root {
+        --background: 0 0% 100%;
+      }
+
+      body {
+        font-size: 10pt;
+      }
+
+      .topbar,
+      .sidebar,
+      .skip-link,
+      .toast,
+      .review-footer .button-row,
+      .final-actions,
+      dialog {
+        display: none !important;
+      }
+
+      .layout {
+        display: block;
+      }
+
+      .main {
+        padding: 0;
+      }
+
+      .content-shell {
+        width: 100%;
+      }
+
+      h1 {
+        font-size: 28pt;
+      }
+
+      .review-section,
+      .final-review {
+        break-inside: avoid;
+        box-shadow: none;
+      }
+
+      .review-section[hidden] {
+        display: block;
+      }
+
+      textarea {
+        min-height: 70px;
+      }
+
+      @page {
+        margin: 12mm;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Aller au contenu de validation</a>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="7.5" stroke="currentColor" stroke-width="1.7"/>
+          <circle cx="12" cy="12" r="2.4" stroke="currentColor" stroke-width="1.7"/>
+          <path d="M4.5 12H1.8M22.2 12h-2.7M12 4.5V1.8M12 22.2v-2.7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="brand-copy">
+        <p class="brand-title">CIR Cockpit · Validation du parcours</p>
+        <p class="brand-subtitle">5 décisions sur le parcours d’appel</p>
+      </div>
+    </div>
+
+    <div class="topbar-actions">
+      <span class="save-status" id="save-status" aria-live="polite">Sauvegardé localement</span>
+      <button class="btn btn-icon" type="button" id="print-button" aria-label="Imprimer la validation" title="Imprimer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M7 9V3h10v6M7 18H5a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M7 14h10v7H7v-7Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+          <path d="M17 12h.01" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <button class="btn btn-primary" type="button" id="top-export-button">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 3v12m0 0 4-4m-4 4-4-4M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Exporter la revue</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" aria-label="Progression de la validation">
+      <div class="progress-panel">
+        <div class="progress-ring" aria-hidden="true">
+          <svg viewBox="0 0 72 72">
+            <circle class="progress-track" cx="36" cy="36" r="29"/>
+            <circle class="progress-value" id="progress-circle" cx="36" cy="36" r="29" stroke-dasharray="182.21" stroke-dashoffset="182.21"/>
+          </svg>
+          <span class="progress-number" id="progress-number">0%</span>
+        </div>
+        <div class="progress-copy">
+          <strong id="progress-title">Validation à démarrer</strong>
+          <span id="progress-detail">0 décision sur 5</span>
+        </div>
+      </div>
+
+      <div class="focus-note">
+        <strong>Une décision à la fois.</strong>
+        <span>Utilisez « Étape suivante » ou choisissez un point ci-dessous.</span>
+      </div>
+
+      <nav class="section-nav" id="section-nav" aria-label="Étapes de validation"></nav>
+    </aside>
+
+    <main class="main" id="main-content">
+      <div class="content-shell">
+        <section class="quick-intro" aria-labelledby="page-title">
+          <p class="eyebrow"><span>Remplacement moteur</span><span class="separator"></span><span>Validation rapide</span></p>
+          <h1 id="page-title">5 décisions. Environ 3 minutes.</h1>
+          <p class="hero-lead">Pour chaque point, lisez la proposition puis répondez <strong>Oui</strong>, <strong>Non</strong> ou <strong>Je ne sais pas</strong>. Si vous répondez non, ajoutez votre correction. C’est tout.</p>
+          <div class="quick-contract">
+            <strong>Vous validez le déroulement de l’appel.</strong>
+            <span>Vous ne validez ni le futur écran, ni le code, ni les calculs techniques détaillés.</span>
+          </div>
+        </section>
+
+        <div class="review-list" id="review-list"></div>
+        <div class="empty-filter" id="empty-filter">
+          <strong>Aucune étape ne correspond à ce filtre.</strong>
+          <p>Revenez à « Toutes » pour afficher l’ensemble du dossier.</p>
+        </div>
+
+        <section class="final-review" id="decision-finale" aria-labelledby="final-title">
+          <div class="final-header">
+            <div>
+              <p class="section-kicker">Votre décision finale</p>
+              <h2 id="final-title">Est-ce bien ainsi que le TCS doit travailler ?</h2>
+              <p>Votre réponse porte uniquement sur le déroulement de l’appel. Elle ne lance pas la création du futur écran : cette étape demandera ensuite votre accord explicite.</p>
+            </div>
+            <span class="status-badge" id="final-status">Décision attendue</span>
+          </div>
+          <div class="final-body">
+            <div class="final-options" role="radiogroup" aria-label="Décision finale C7-3">
+              <label class="final-option">
+                <input type="radio" name="final-decision" value="approve" autocomplete="off">
+                <span>Oui, valider ce parcours</span>
+              </label>
+              <label class="final-option">
+                <input type="radio" name="final-decision" value="reserve" autocomplete="off">
+                <span>Oui, avec quelques réserves</span>
+              </label>
+              <label class="final-option">
+                <input type="radio" name="final-decision" value="revise" autocomplete="off">
+                <span>Non, revoir le parcours</span>
+              </label>
+            </div>
+
+            <div class="field-group">
+              <label for="final-comment">Commentaire de décision</label>
+              <span class="field-helper">Dites simplement ce qui vous gêne, ce qui manque ou ce que vous feriez autrement.</span>
+              <textarea id="final-comment" name="final-comment" autocomplete="off" placeholder="Exemple : je valide les questions, mais je veux que le TCS appelle le spécialiste plus tôt pour un moteur ATEX…"></textarea>
+            </div>
+
+            <div class="final-actions">
+              <button class="btn btn-primary" type="button" id="copy-report-button">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" stroke="currentColor" stroke-width="1.7"/></svg>
+                Copier le compte rendu
+              </button>
+              <button class="btn" type="button" id="export-markdown-button">Exporter en Markdown</button>
+              <button class="btn" type="button" id="export-json-button">Exporter en JSON</button>
+              <button class="btn btn-danger" type="button" id="reset-button">Réinitialiser</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <dialog id="reset-dialog" aria-labelledby="reset-title">
+    <div class="dialog-body">
+      <h2 id="reset-title">Réinitialiser la validation ?</h2>
+      <p>Les décisions et commentaires sauvegardés dans ce navigateur seront supprimés. Exportez votre revue avant de continuer si vous souhaitez la conserver.</p>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn" type="button" id="cancel-reset-button">Annuler</button>
+      <button class="btn btn-primary" type="button" id="confirm-reset-button">Réinitialiser</button>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const iconInfo = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M12 11v5m0-8h.01" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>';
+    const arrowIcon = '<svg class="breadboard-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+    const decisionQuestions = {
+      conversation: 'Le TCS doit-il suivre la conversation plutôt qu’un formulaire figé ?',
+      recherche: 'Le TCS doit-il lancer lui-même la recherche et annoncer clairement son niveau de confiance ?',
+      inconnues: 'Peut-on continuer l’appel avec des informations manquantes, puis revenir dessus sans tout recommencer ?',
+      assistance: 'Une photo ou un spécialiste doivent-ils intervenir uniquement pour résoudre un doute précis ?',
+      energie: 'Au-dessus de 11 kW, faut-il proposer une étude énergétique séparée, sans promettre de gain ?',
+      'job-story': 'Est-ce que ce résumé correspond au vrai problème du TCS au téléphone ?',
+      resultats: 'À la fin de l’appel, ces 4 conclusions suffisent-elles pour expliquer clairement la situation au client ?',
+      lieux: 'Le TCS peut-il travailler naturellement avec ces 5 moments, sans avoir l’impression de remplir un tunnel ?',
+      'flux-nominal': 'Est-ce bien l’ordre naturel d’un appel simple, sans photo ?',
+      breadboard: 'Après chaque action du TCS, la suite proposée est-elle logique ?',
+      photo: 'Le TCS demande-t-il une photo seulement quand elle résout un doute précis ?',
+      correction: 'Si une réponse change, le parcours revient-il assez clairement en arrière ?',
+      branches: 'Ces questions supplémentaires s’ouvrent-elles seulement quand le cas le justifie ?',
+      qualification: 'Le spécialiste reçoit-il assez d’informations pour reprendre sans refaire l’appel ?',
+      scenarios: 'Les 5 appels types finissent-ils avec la bonne conclusion ?'
+    };
+
+    const detailedSections = [
+      {
+        id: 'job-story',
+        title: 'Le but concret du parcours',
+        kicker: 'La situation de départ',
+        summary: 'Le client ne connaît pas toujours son moteur. Le TCS doit quand même faire avancer l’appel sans inventer les informations manquantes.',
+        context: 'Un bon appel ne se mesure pas au nombre de cases remplies. Il se termine quand le TCS peut expliquer clairement ce qu’il sait, ce qui manque et quelle est la prochaine action.',
+        body: `
+          <h3>La situation retenue</h3>
+          <p>Quand un client appelle sans savoir décrire techniquement son moteur, le TCS recueille les faits dans l’ordre naturel de l’échange, lance une recherche quand elle devient utile, comprend les contrôles qui s’ouvrent et reprend exactement après une interruption.</p>
+          <div class="key-rule">Le parcours recommande et explique. Il ne remplace ni le jugement du TCS, ni une qualification spécialisée, ni une règle métier encore non validée.</div>
+          <h3>Ce que couvre un dossier</h3>
+          <div class="fact-line">
+            <span class="fact-chip">1 moteur installé</span>
+            <span class="fact-chip">1 recherche distincte</span>
+            <span class="fact-chip">faits sourcés</span>
+            <span class="fact-chip">inconnues visibles</span>
+            <span class="fact-chip">zéro donnée commerciale</span>
+          </div>`,
+        checks: [
+          'Cette situation correspond au travail réel d’un TCS pendant un appel.',
+          'Un second moteur ouvre une seconde recherche.',
+          'Le parcours ne mesure pas le succès au nombre de champs remplis.',
+          'Prix, stock, délai, remise et devis restent hors de la décision technique.'
+        ]
+      },
+      {
+        id: 'resultats',
+        title: 'Les 4 façons de terminer l’appel',
+        kicker: 'Une conclusion claire pour le client',
+        summary: 'À la fin de l’échange, le TCS choisit une seule conclusion parmi quatre et explique ce qu’elle signifie.',
+        context: 'Si la recherche ne trouve rien, le TCS dit seulement qu’aucune référence n’a été trouvée avec les informations et le catalogue consultés. Il ne dit pas que la solution est impossible.',
+        body: `
+          <div class="state-stack">
+            <div class="state-row"><div class="state-name">Recherche préliminaire</div><div class="state-description">La recherche est amorcée. Aucun candidat n’est affirmé. Les faits manquants et leur moyen d’obtention sont nommés.</div></div>
+            <div class="state-row"><div class="state-name">Candidat technique</div><div class="state-description">Une référence mérite d’être poursuivie avec ses réserves, ses contrôles ouverts et le moyen de les lever.</div></div>
+            <div class="state-row"><div class="state-name">Solution techniquement validée</div><div class="state-description">Les compatibilités nécessaires sont fondées. Application et fonction sont connues. Aucune contradiction ou réserve bloquante ne reste ouverte.</div></div>
+            <div class="state-row"><div class="state-name">Qualification spécialisée requise</div><div class="state-description">Le parcours standard ne peut pas conclure. Le motif, les faits acquis, les documents attendus et le point de reprise sont préparés.</div></div>
+          </div>`,
+        checks: [
+          'Les 4 libellés sont compréhensibles et suffisants.',
+          'Si l’usage du moteur est inconnu, aucune référence n’est présentée comme candidate ou validée.',
+          'Un candidat expose toujours ses réserves.',
+          'Une qualification spécialisée ne signifie jamais « impossible ».',
+          'Un résultat vide reste expliqué dans le périmètre interrogé.'
+        ]
+      },
+      {
+        id: 'lieux',
+        title: 'Les 5 moments du parcours',
+        kicker: 'Le fil conducteur de l’appel',
+        summary: 'Le travail du TCS tient en cinq moments. Une attente, une erreur ou une correction ne crée pas une nouvelle étape.',
+        context: 'Le TCS reste toujours dans l’un de ces cinq moments. Il peut attendre une photo, corriger une réponse ou ne rien trouver sans perdre le point où reprendre.',
+        body: `
+          <div class="place-list">
+            <div class="place-row"><span class="place-index">1</span><span class="place-name">Début ou reprise</span><span class="place-description">Créer le contexte d’un moteur installé ou retrouver le point exact d’une recherche interrompue.</span></div>
+            <div class="place-row"><span class="place-index">2</span><span class="place-name">Relevé guidé</span><span class="place-description">Recueillir, grouper, laisser inconnus et corriger les faits dans l’ordre réel de la conversation.</span></div>
+            <div class="place-row"><span class="place-index">3</span><span class="place-name">Contrôles conditionnels</span><span class="place-description">Traiter uniquement les branches ouvertes par les faits déjà recueillis.</span></div>
+            <div class="place-row"><span class="place-index">4</span><span class="place-name">Recherche et évaluation</span><span class="place-description">Lancer la recherche, sélectionner une référence, lire ses verdicts et conclure.</span></div>
+            <div class="place-row"><span class="place-index">5</span><span class="place-name">Qualification spécialisée</span><span class="place-description">Préparer un transfert fondé et reprendre sans recommencer l’appel.</span></div>
+          </div>`,
+        checks: [
+          'Les 5 lieux correspondent à des responsabilités réellement différentes.',
+          'Le relevé reste le lieu continu de l’appel.',
+          'Résultats et réserves restent dans Recherche et évaluation.',
+          'L’attente conserve une destination de reprise au lieu de créer une impasse.'
+        ]
+      },
+      {
+        id: 'flux-nominal',
+        title: 'Le déroulé d’un appel simple',
+        kicker: 'Le cas le plus courant, sans photo',
+        summary: 'Le TCS suit la conversation, regroupe les réponses et lance lui-même la recherche quand les informations minimales sont réunies.',
+        context: 'Puissance, fréquence et alimentation permettent de lancer une première recherche. Tant que l’on ne sait pas à quoi sert le moteur, aucune référence ne doit être présentée comme une vraie candidate.',
+        body: `
+          <h3>6 groupes conversationnels, ordre adaptable</h3>
+          <div class="fact-line">
+            <span class="fact-chip">Plaque</span><span class="fact-chip">Usage</span><span class="fact-chip">Construction</span><span class="fact-chip">Position</span><span class="fact-chip">Transmission</span><span class="fact-chip">Tour rapide</span>
+          </div>
+          <div class="mini-flow" role="img" aria-label="Le TCS commence, recueille des faits groupés, ouvre les contrôles utiles, lance la recherche et conclut">
+            <div class="mini-flow-node">Commencer pour un moteur</div>${arrowIcon}<div class="mini-flow-node">Recueillir naturellement</div>${arrowIcon}<div class="mini-flow-node highlight">Rechercher explicitement</div>${arrowIcon}<div class="mini-flow-node">Évaluer et conclure</div>
+          </div>
+          <p>Le TCS peut demander puissance, vitesse, fixation et machine dans une même phrase. Les réponses deviennent des faits distincts. La question suivante vise seulement le groupe incomplet le plus utile.</p>
+          <div class="key-rule">La recherche ne part jamais à chaque saisie. Toute nouvelle recherche exige une action explicite du TCS.</div>`,
+        checks: [
+          'Le flux principal fonctionne intégralement sans photo.',
+          'Les 6 groupes sont courts et couvrent les oublis observés pendant les appels types.',
+          'Plusieurs réponses peuvent être consignées en une seule fois.',
+          '« Le client ne sait pas » conserve un fait inconnu explicite.',
+          'Position, transmission et particularités ne deviennent pas un questionnaire exhaustif.'
+        ]
+      },
+      {
+        id: 'breadboard',
+        title: 'Ce qui se passe après chaque action',
+        kicker: 'Ne jamais laisser le TCS dans une impasse',
+        summary: 'Après une réponse, une correction, une recherche ou une erreur, le TCS sait toujours où il arrive et quoi faire ensuite.',
+        context: 'Cette partie décrit seulement les enchaînements du travail. Elle ne décide pas encore du nombre d’écrans ni de leur apparence.',
+        body: `
+          <h3>Depuis le relevé</h3>
+          <div class="breadboard">
+            <div class="breadboard-row"><span class="breadboard-action">Répondre ou grouper des réponses</span>${arrowIcon}<span class="breadboard-destination">Prochaine information utile ou contrôle nouvellement ouvert</span></div>
+            <div class="breadboard-row"><span class="breadboard-action">Choisir une autre question</span>${arrowIcon}<span class="breadboard-destination">Question choisie dans le même relevé</span></div>
+            <div class="breadboard-row"><span class="breadboard-action">Corriger un fait</span>${arrowIcon}<span class="breadboard-destination">Révision d’impact puis dépendances rouvertes</span></div>
+            <div class="breadboard-row"><span class="breadboard-action">Demander une information</span>${arrowIcon}<span class="breadboard-destination">Attente ciblée avec destination exacte de reprise</span></div>
+            <div class="breadboard-row"><span class="breadboard-action">Lancer la recherche</span>${arrowIcon}<span class="breadboard-destination">Recherche en cours, puis résultats ou erreur explicite</span></div>
+          </div>
+          <h3>Depuis la recherche</h3>
+          <div class="breadboard">
+            <div class="breadboard-row"><span class="breadboard-action">Sélectionner une référence</span>${arrowIcon}<span class="breadboard-destination">Évaluation de cette référence</span></div>
+            <div class="breadboard-row"><span class="breadboard-action">Traiter une réserve</span>${arrowIcon}<span class="breadboard-destination">Fait manquant ou contrôle associé</span></div>
+            <div class="breadboard-row"><span class="breadboard-action">Résultat vide</span>${arrowIcon}<span class="breadboard-destination">Périmètre expliqué, faits vérifiables ou transfert spécialisé</span></div>
+            <div class="breadboard-row"><span class="breadboard-action">Cas non bornable</span>${arrowIcon}<span class="breadboard-destination">Qualification spécialisée préparée</span></div>
+          </div>`,
+        checks: [
+          'Chaque action importante possède une destination compréhensible.',
+          'Le TCS peut revenir à n’importe quelle question précédente.',
+          'L’erreur technique ne fabrique aucun verdict.',
+          'Un résultat vide propose une suite sans affirmer une impossibilité universelle.',
+          'Une réserve mène directement au fait ou contrôle capable de la lever.'
+        ]
+      },
+      {
+        id: 'photo',
+        title: 'Quand demander une photo',
+        kicker: 'Seulement pour lever un doute précis',
+        summary: 'Le TCS demande une photo seulement s’il sait ce qu’il veut voir et pourquoi. L’appel peut continuer pendant l’attente.',
+        context: 'La photo reste dans l’email du TCS. Le futur parcours note uniquement l’information réellement lue sur la photo, jamais une interprétation incertaine.',
+        body: `
+          <div class="branch-list">
+            <div class="branch-row"><span class="branch-name">Plaque illisible</span><span class="branch-signal">Photo nette de toute la plaque, de face, sans reflet.</span><span class="branch-output">Reprise sur la valeur illisible ou contradictoire.</span></div>
+            <div class="branch-row"><span class="branch-name">Bride non reconnue</span><span class="branch-signal">Face de la bride et côté montrant pattes et trous.</span><span class="branch-output">Reprise sur la reconnaissance ou la mesure discriminante.</span></div>
+            <div class="branch-row"><span class="branch-name">Montage incertain</span><span class="branch-signal">Vue large du moteur, du support et de la liaison machine.</span><span class="branch-output">Reprise sur position, transmission ou exposition.</span></div>
+            <div class="branch-row"><span class="branch-name">Auxiliaire non identifié</span><span class="branch-signal">Plaque propre et vue nette de la boîte ou des fils, sans manipulation.</span><span class="branch-output">Reprise sur l’auxiliaire précis.</span></div>
+            <div class="branch-row"><span class="branch-name">Marquage complet</span><span class="branch-signal">Marquage ou particularité nommée, lisible dans son contexte.</span><span class="branch-output">Reprise sur la confirmation finale ou ATEX.</span></div>
+          </div>
+          <h3>Si la photo n’arrive pas ou reste inutilisable</h3>
+          <p>Le TCS continue les questions indépendantes, reformule le cadrage, choisit un autre canal ou abandonne la demande en maintenant le fait inconnu. L’attente ne bloque jamais tout le parcours.</p>`,
+        checks: [
+          'Chaque demande nomme un objet, un cadrage et un but.',
+          'La photo est envoyée par email et ne rentre jamais dans C7.',
+          'Le TCS peut continuer tout travail indépendant pendant l’attente.',
+          'Une photo inutilisable ne produit aucun fait interprété.',
+          'L’abandon conserve le fait inconnu et ramène au point interrompu.'
+        ]
+      },
+      {
+        id: 'correction',
+        title: 'Que faire si une information change',
+        kicker: 'Revenir sur les conclusions concernées',
+        summary: 'Si le client corrige une réponse, les conclusions qui dépendaient de l’ancienne information doivent être vérifiées de nouveau.',
+        context: 'Nous décidons ici comment le TCS est averti et comment le parcours revient en arrière. La conservation technique de l’historique sera traitée plus tard.',
+        body: `
+          <div class="mini-flow" role="img" aria-label="Un fait est corrigé, ses dépendances sont identifiées, les conclusions retirées, les contrôles rouverts, puis l’état est recalculé">
+            <div class="mini-flow-node">Fait corrigé</div>${arrowIcon}<div class="mini-flow-node">Dépendances identifiées</div>${arrowIcon}<div class="mini-flow-node highlight">Conclusion retirée</div>${arrowIcon}<div class="mini-flow-node">État recalculé</div>
+          </div>
+          <ol>
+            <li>Identifier l’ancien fait et la nouvelle affirmation.</li>
+            <li>Consigner la nouvelle source et son canal.</li>
+            <li>Retirer les conclusions fondées sur l’ancien fait.</li>
+            <li>Rouvrir contrôles, exigences et évaluations dépendantes.</li>
+            <li>Expliquer pourquoi l’état a changé.</li>
+            <li>Relancer uniquement sur action explicite.</li>
+          </ol>
+          <div class="key-rule">Exemple : « La fixation a changé. Le contrôle de bride et l’évaluation de cette référence doivent donc être repris. »</div>`,
+        checks: [
+          'Une correction invalide les conclusions dépendantes avant réévaluation.',
+          'La source de la nouvelle information reste visible : client, plaque, photo ou mesure.',
+          'Une solution validée peut revenir à candidat ou recherche préliminaire.',
+          'Si l’usage du moteur devient inconnu ou contradictoire, la référence n’est plus présentée comme candidate.',
+          'Le TCS voit pourquoi une conclusion précédente a été retirée.'
+        ]
+      },
+      {
+        id: 'branches',
+        title: 'Les questions supplémentaires selon le cas',
+        kicker: 'Ne demander que ce qui est utile',
+        summary: 'Une courroie, un variateur, un montage vertical ou un environnement ATEX ouvrent des questions dédiées. Elles n’apparaissent que si le cas le justifie.',
+        context: 'Nous décidons ici quand ces questions apparaissent dans l’appel. Leur caractère obligatoire ou bloquant sera fixé dans une étape métier ultérieure.',
+        body: `
+          <div class="branch-list">
+            <div class="branch-row"><span class="branch-name">Identification de bride</span><span class="branch-signal">Bride présente, hésitation ou construction non fondée.</span><span class="branch-output">Reconnaître puis mesurer, sans déduire depuis la carcasse.</span></div>
+            <div class="branch-row"><span class="branch-name">Charge radiale</span><span class="branch-signal">Courroies, chaîne ou roue sur arbre.</span><span class="branch-output">Géométrie et limites à vérifier, aucun roulement prescrit.</span></div>
+            <div class="branch-row"><span class="branch-name">Charge axiale</span><span class="branch-signal">Montage vertical ou poussée possible.</span><span class="branch-output">Sens, valeur et organe de reprise à qualifier.</span></div>
+            <div class="branch-row"><span class="branch-name">Variateur et basse vitesse</span><span class="branch-signal">Alimentation par variateur.</span><span class="branch-output">Profil, refroidissement et aptitude documentaire.</span></div>
+            <div class="branch-row"><span class="branch-name">Auxiliaires</span><span class="branch-signal">Frein, ventilation forcée, codeur, fils ou plaque propre.</span><span class="branch-output">Équipement distinct, aucune donnée héritée du moteur.</span></div>
+            <div class="branch-row"><span class="branch-name">Environnement sensible</span><span class="branch-signal">Lavage, chaleur, extérieur, ruissellement ou corrosion.</span><span class="branch-output">Protection et limites documentées à vérifier.</span></div>
+            <div class="branch-row"><span class="branch-name">ATEX</span><span class="branch-signal">Marquage Ex, gaz, poussières ou doute déclaré.</span><span class="branch-output">Qualification spécialisée, jamais depuis IP seul.</span></div>
+            <div class="branch-row"><span class="branch-name">Cause de panne</span><span class="branch-signal">Bruit, vibrations, chauffe, arrêt ou intervention.</span><span class="branch-output">Hypothèse à vérifier, aucun diagnostic automatique.</span></div>
+          </div>`,
+        checks: [
+          'Les cas sensibles importants sont bien couverts.',
+          'Si une réponse écarte le risque, les questions supplémentaires s’arrêtent.',
+          'Le parcours ne choisit jamais automatiquement une bride, un roulement ou un variateur.',
+          'Un cas ATEX est clairement transmis à un spécialiste.',
+          'Plusieurs points sensibles peuvent rester à vérifier séparément.'
+        ]
+      },
+      {
+        id: 'energie',
+        title: 'Comment parler des économies d’énergie',
+        kicker: 'Une proposition séparée du remplacement',
+        summary: 'Au-dessus de 11 kW, le TCS peut proposer une étude énergétique. Le client peut accepter, reporter ou refuser sans changer la conclusion technique.',
+        context: 'À ce stade, le TCS ne promet aucun montant, aucune économie ni aucune technologie. Il note uniquement la réponse du client.',
+        body: `
+          <div class="mini-flow" role="img" aria-label="Pour une puissance supérieure à 11 kW, le client accepte, diffère ou refuse l’étude énergétique, puis revient au résultat technique">
+            <div class="mini-flow-node highlight">Puissance installée &gt; 11 kW</div>${arrowIcon}<div class="mini-flow-node">Accepter, différer ou refuser</div>${arrowIcon}<div class="mini-flow-node">Retour au remplacement</div>${arrowIcon}<div class="mini-flow-node">Étude détaillée plus tard</div>
+          </div>
+          <ul>
+            <li><strong>Accepte :</strong> l’accord est consigné, la continuité future est préparée.</li>
+            <li><strong>Diffère :</strong> aucune relance automatique n’est créée en C7.</li>
+            <li><strong>Refuse :</strong> aucune conséquence sur le résultat technique.</li>
+          </ul>
+          <div class="key-rule">L’invitation est déclenchée pour une puissance strictement supérieure à 11 kW, même si la classe IE est inconnue.</div>`,
+        checks: [
+          'Le seuil est strictement supérieur à 11 kW.',
+          'La proposition d’étude reste séparée de la conclusion sur le remplacement.',
+          'Le client peut accepter, différer ou refuser.',
+          'Aucun questionnaire ou calcul énergétique détaillé n’est lancé ici.',
+          'Aucun gain ou choix technologique n’est promis.'
+        ]
+      },
+      {
+        id: 'qualification',
+        title: 'Quand passer le dossier à un spécialiste',
+        kicker: 'Transmettre sans faire répéter le client',
+        summary: 'Quand le TCS ne peut pas conclure seul, il transmet une question précise avec les informations déjà obtenues et le point exact à vérifier.',
+        context: 'La réponse du spécialiste complète le dossier. Elle ne valide pas automatiquement une référence : les compatibilités concernées doivent être vérifiées de nouveau.',
+        body: `
+          <h3>Ce qui accompagne le transfert</h3>
+          <div class="fact-line">
+            <span class="fact-chip">motif exact</span><span class="fact-chip">faits acquis</span><span class="fact-chip">inconnues</span><span class="fact-chip">contradictions</span><span class="fact-chip">contrôles ouverts</span><span class="fact-chip">réserves</span><span class="fact-chip">question experte</span><span class="fact-chip">point de reprise</span>
+          </div>
+          <div class="mini-flow" role="img" aria-label="Le dossier est préparé, le spécialiste qualifie un fait ou un contrôle, puis la référence est réévaluée">
+            <div class="mini-flow-node">Préparer le dossier</div>${arrowIcon}<div class="mini-flow-node">Qualifier un point précis</div>${arrowIcon}<div class="mini-flow-node highlight">Reprendre au point concerné</div>${arrowIcon}<div class="mini-flow-node">Réévaluer</div>
+          </div>
+          <p>Selon la réponse obtenue, la recherche revient en préliminaire ou en candidat avec réserves. Une solution validée exige toujours une nouvelle évaluation de toutes les compatibilités nécessaires.</p>`,
+        checks: [
+          'Le spécialiste reçoit une question précise et le contexte utile.',
+          'Le TCS ne recommence pas l’appel après qualification.',
+          'Le retour vise d’abord le fait ou contrôle qualifié.',
+          'Une réponse partielle maintient les inconnues et réserves.',
+          'Aucun passage direct vers solution validée n’est autorisé.'
+        ]
+      },
+      {
+        id: 'scenarios',
+        title: 'Vérification avec 5 appels types',
+        kicker: 'Les cas concrets à relire',
+        summary: 'Cinq exemples, du moteur simple au cas ATEX, permettent de vérifier que le parcours mène à une conclusion prudente et utile.',
+        context: 'Ces exemples servent à valider le déroulement de l’appel. Ils ne valident pas encore toutes les règles techniques détaillées.',
+        body: `
+          <div class="scenario-list">
+            <div class="scenario-row"><span class="scenario-name">S1 · B3 2,2 kW</span><span class="scenario-description">Relevé groupé, recherche explicite, application inconnue.</span><span class="state-name">Recherche préliminaire</span></div>
+            <div class="scenario-row"><span class="scenario-name">S2 · B5 7,5 kW</span><span class="scenario-description">Relevé, contrôle bride, référence évaluée avec réserves.</span><span class="state-name">Candidat technique</span></div>
+            <div class="scenario-row"><span class="scenario-name">S3 · Ventilateur 15 kW</span><span class="scenario-description">Courroies, charge radiale et cause de panne à contrôler.</span><span class="state-name">Candidat technique</span></div>
+            <div class="scenario-row"><span class="scenario-name">S4 · Pompe verticale 18,5 kW</span><span class="scenario-description">Bride, axial, basse vitesse, auxiliaire et photo ciblée éventuelle.</span><span class="state-name">Candidat ou qualification</span></div>
+            <div class="scenario-row"><span class="scenario-name">S5 · Farine ATEX 22 kW</span><span class="scenario-description">Marquage conservé, zone et certificat attendus, transfert préparé.</span><span class="state-name">Qualification spécialisée</span></div>
+          </div>`,
+        checks: [
+          'Le cas simple reste une première recherche tant que l’usage du moteur est inconnu.',
+          'Le cas avec bride garde clairement les points de fixation et de transmission à confirmer.',
+          'Le cas avec courroies ne devine ni la cause de panne ni le roulement nécessaire.',
+          'Le cas de pompe verticale sépare bien le moteur, le montage, le variateur et la ventilation.',
+          'Le cas ATEX conserve les informations connues et passe au spécialiste sans validation prématurée.'
+        ]
+      }
+    ];
+
+    const sections = [
+      {
+        id: 'conversation',
+        title: 'La conduite de l’appel',
+        kicker: 'Décision 1 sur 5',
+        summary: 'Le TCS pose les questions dans l’ordre naturel de l’échange. Il peut regrouper plusieurs réponses et revenir en arrière.',
+        context: 'Proposition : l’outil guide le TCS, mais ne l’oblige pas à suivre un questionnaire écran par écran.',
+        body: '<p><strong>Exemple :</strong> le client donne en une phrase la puissance, la vitesse et la fixation. Le TCS saisit les trois informations ensemble, puis demande seulement ce qui manque.</p>',
+        checks: []
+      },
+      {
+        id: 'recherche',
+        title: 'La recherche et la conclusion',
+        kicker: 'Décision 2 sur 5',
+        summary: 'La recherche démarre seulement quand le TCS le décide. Le résultat dit clairement si la piste est préliminaire, à confirmer, validée ou à transmettre.',
+        context: 'Proposition : aucune recherche automatique pendant la saisie et aucune référence présentée comme certaine si l’usage du moteur reste inconnu.',
+        body: '<p><strong>Exemple :</strong> avec la puissance et la vitesse, le TCS peut explorer le catalogue. Sans connaître la machine entraînée, il présente les résultats comme des pistes, pas comme des solutions validées.</p>',
+        checks: []
+      },
+      {
+        id: 'inconnues',
+        title: 'Les informations manquantes ou corrigées',
+        kicker: 'Décision 3 sur 5',
+        summary: 'Une réponse inconnue reste visible sans bloquer tout l’appel. Si une information change, seules les conclusions concernées sont revérifiées.',
+        context: 'Proposition : le parcours garde le point exact où reprendre après une attente, une correction ou une interruption.',
+        body: '<p><strong>Exemple :</strong> le client ne connaît pas la bride. Le TCS poursuit les autres questions. Quand la bride est confirmée plus tard, il reprend uniquement ce contrôle.</p>',
+        checks: []
+      },
+      {
+        id: 'assistance',
+        title: 'La photo et le spécialiste',
+        kicker: 'Décision 4 sur 5',
+        summary: 'Le TCS demande une photo seulement s’il sait quoi regarder. Il transmet au spécialiste une question précise avec tout le contexte déjà recueilli.',
+        context: 'Proposition : ni photo systématique, ni transfert vague obligeant le client à recommencer son explication.',
+        body: '<p><strong>Exemple :</strong> une bride reste incertaine. Le TCS demande une vue précise de la face et du montage. Si le doute persiste, le spécialiste reçoit la photo, les mesures connues et la question à trancher.</p>',
+        checks: []
+      },
+      {
+        id: 'energie',
+        title: 'La proposition énergétique',
+        kicker: 'Décision 5 sur 5',
+        summary: 'Pour un moteur de plus de 11 kW, le TCS propose une étude énergétique séparée. Le client peut accepter, reporter ou refuser.',
+        context: 'Proposition : cette invitation ne change pas la conclusion sur le remplacement et ne promet ni économie, ni technologie.',
+        body: '<p><strong>Exemple :</strong> pour un moteur de 15 kW, le TCS demande si le client souhaite étudier la consommation. Il ne donne aucun gain avant le calcul détaillé.</p>',
+        checks: []
+      }
+    ];
+
+    const storageKey = 'cir-cockpit-c7-3-validation-v2';
+    const defaultState = () => ({
+      version: 1,
+      updatedAt: null,
+      sections: Object.fromEntries(sections.map(section => [section.id, {
+        checks: section.checks.map(() => false),
+        verdict: '',
+        comment: ''
+      }])),
+      finalDecision: '',
+      finalComment: ''
+    });
+
+    let reviewState = loadState();
+    let currentFilter = 'all';
+    let saveTimer = null;
+    let toastTimer = null;
+
+    function loadState() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(storageKey));
+        if (!saved || saved.version !== 1) return defaultState();
+        const clean = defaultState();
+        sections.forEach(section => {
+          const source = saved.sections?.[section.id];
+          if (!source) return;
+          clean.sections[section.id] = {
+            checks: section.checks.map((_, index) => Boolean(source.checks?.[index])),
+            verdict: ['approved', 'changes', 'discussion'].includes(source.verdict) ? source.verdict : '',
+            comment: typeof source.comment === 'string' ? source.comment : ''
+          };
+        });
+        clean.updatedAt = saved.updatedAt || null;
+        clean.finalDecision = ['approve', 'reserve', 'revise'].includes(saved.finalDecision) ? saved.finalDecision : '';
+        clean.finalComment = typeof saved.finalComment === 'string' ? saved.finalComment : '';
+        return clean;
+      } catch {
+        return defaultState();
+      }
+    }
+
+    function saveState() {
+      reviewState.updatedAt = new Date().toISOString();
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(reviewState));
+        const saveStatus = document.getElementById('save-status');
+        saveStatus.textContent = 'Sauvegardé localement';
+      } catch {
+        document.getElementById('save-status').textContent = 'Sauvegarde locale indisponible';
+      }
+    }
+
+    function scheduleSave() {
+      const saveStatus = document.getElementById('save-status');
+      saveStatus.textContent = 'Enregistrement…';
+      window.clearTimeout(saveTimer);
+      saveTimer = window.setTimeout(saveState, 220);
+    }
+
+    function verdictLabel(verdict) {
+      return {
+        approved: 'Validé',
+        changes: 'À corriger',
+        discussion: 'À discuter'
+      }[verdict] || 'À valider';
+    }
+
+    function finalDecisionLabel(decision) {
+      return {
+        approve: 'C7-3 validé',
+        reserve: 'Validé avec réserves',
+        revise: 'Révision demandée'
+      }[decision] || 'Décision attendue';
+    }
+
+    function statusClass(value) {
+      if (value === 'approved' || value === 'approve') return 'approved';
+      if (value === 'changes' || value === 'revise') return 'changes';
+      if (value === 'discussion' || value === 'reserve') return 'discussion';
+      return '';
+    }
+
+    function renderNavigation() {
+      const nav = document.getElementById('section-nav');
+      nav.innerHTML = sections.map((section, index) => {
+        const verdict = reviewState.sections[section.id].verdict;
+        return `
+          <a href="#${section.id}" data-nav-id="${section.id}">
+            <span class="nav-index">${String(index + 1).padStart(2, '0')}</span>
+            <span class="nav-label">${section.title}</span>
+            <span class="nav-status ${statusClass(verdict)}" aria-label="${verdictLabel(verdict)}"></span>
+          </a>`;
+      }).join('');
+    }
+
+    function renderSections() {
+      const list = document.getElementById('review-list');
+      list.innerHTML = sections.map((section, index) => {
+        const state = reviewState.sections[section.id];
+        return `
+          <article class="review-section" id="${section.id}" data-section-id="${section.id}">
+            <header class="section-heading">
+              <div class="step-number">${String(index + 1).padStart(2, '0')}</div>
+              <div class="section-title-wrap">
+                <p class="section-kicker">${section.kicker}</p>
+                <h2>${section.title}</h2>
+                <p class="section-summary">${section.summary}</p>
+              </div>
+              <span class="status-badge ${statusClass(state.verdict)}" data-status-for="${section.id}">${verdictLabel(state.verdict)}</span>
+            </header>
+            <div class="section-body">
+              <div class="decision-question">
+                <span>La question à trancher</span>
+                <strong>${decisionQuestions[section.id]}</strong>
+              </div>
+              <div class="context-note">
+                <span class="icon-box">${iconInfo}</span>
+                <span>${section.context}</span>
+              </div>
+              <details class="detail-panel">
+                <summary>Voir un exemple concret</summary>
+                <div class="body-copy">${section.body}</div>
+              </details>
+            </div>
+            <div class="review-controls">
+              <div class="verdict-group" role="radiogroup" aria-label="Verdict pour ${section.title}">
+                <label class="verdict-option"><input type="radio" name="verdict-${section.id}" value="approved" data-verdict-section="${section.id}" autocomplete="off" ${state.verdict === 'approved' ? 'checked' : ''}><span>Oui</span></label>
+                <label class="verdict-option"><input type="radio" name="verdict-${section.id}" value="changes" data-verdict-section="${section.id}" autocomplete="off" ${state.verdict === 'changes' ? 'checked' : ''}><span>Non</span></label>
+                <label class="verdict-option"><input type="radio" name="verdict-${section.id}" value="discussion" data-verdict-section="${section.id}" autocomplete="off" ${state.verdict === 'discussion' ? 'checked' : ''}><span>Je ne sais pas</span></label>
+              </div>
+              <details class="comment-panel" ${state.comment.trim() ? 'open' : ''}>
+                <summary>${state.comment.trim() ? 'Modifier votre remarque' : 'Ajouter une remarque'}</summary>
+                <div class="field-group">
+                  <label for="comment-${section.id}">Votre correction ou votre doute</label>
+                  <textarea id="comment-${section.id}" name="comment-${section.id}" data-comment-section="${section.id}" autocomplete="off" placeholder="Ce que vous feriez autrement…">${escapeHtml(state.comment)}</textarea>
+                </div>
+              </details>
+              <div class="review-footer">
+                <div class="button-row">
+                  ${index > 0 ? `<a class="btn" href="#${sections[index - 1].id}">Étape précédente</a>` : ''}
+                  ${index < sections.length - 1 ? `<a class="btn" href="#${sections[index + 1].id}">Étape suivante</a>` : `<a class="btn btn-primary" href="#decision-finale">Décision finale</a>`}
+                </div>
+              </div>
+            </div>
+          </article>`;
+      }).join('');
+    }
+
+    function restoreFinalDecision() {
+      document.querySelectorAll('input[name="final-decision"]').forEach(input => {
+        input.checked = false;
+      });
+      const radio = document.querySelector(`input[name="final-decision"][value="${reviewState.finalDecision}"]`);
+      if (radio) radio.checked = true;
+      document.getElementById('final-comment').value = reviewState.finalComment;
+      updateFinalStatus();
+    }
+
+    function escapeHtml(value) {
+      return value
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function updateSectionUi(sectionId) {
+      const state = reviewState.sections[sectionId];
+      const badge = document.querySelector(`[data-status-for="${sectionId}"]`);
+      const navStatus = document.querySelector(`[data-nav-id="${sectionId}"] .nav-status`);
+      const commentPanel = document.querySelector(`#${sectionId} .comment-panel`);
+
+      badge.textContent = verdictLabel(state.verdict);
+      badge.className = `status-badge ${statusClass(state.verdict)}`;
+      navStatus.className = `nav-status ${statusClass(state.verdict)}`;
+      navStatus.setAttribute('aria-label', verdictLabel(state.verdict));
+      commentPanel.querySelector('summary').textContent = state.comment.trim() ? 'Modifier votre remarque' : 'Ajouter une remarque';
+      updateProgress();
+      applyFilter();
+    }
+
+    function updateProgress() {
+      const approved = sections.filter(section => reviewState.sections[section.id].verdict === 'approved').length;
+      const decided = sections.filter(section => reviewState.sections[section.id].verdict).length;
+      const total = sections.length;
+      const percent = Math.round((decided / total) * 100);
+      const circumference = 182.21;
+      document.getElementById('progress-circle').style.strokeDashoffset = String(circumference - circumference * percent / 100);
+      document.getElementById('progress-number').textContent = `${percent}%`;
+      document.getElementById('progress-title').textContent = decided === total ? 'Revue complète' : decided ? 'Revue en cours' : 'Validation à démarrer';
+      document.getElementById('progress-detail').textContent = `${decided}/${total} décisions données · ${approved} oui`;
+    }
+
+    function updateFinalStatus() {
+      const badge = document.getElementById('final-status');
+      badge.textContent = finalDecisionLabel(reviewState.finalDecision);
+      badge.className = `status-badge ${statusClass(reviewState.finalDecision)}`;
+    }
+
+    function applyFilter() {
+      updateCurrentNav();
+    }
+
+    function setFilter(filter) {
+      currentFilter = filter;
+      document.querySelectorAll('[data-filter]').forEach(button => {
+        button.setAttribute('aria-pressed', String(button.dataset.filter === filter));
+      });
+      applyFilter();
+    }
+
+    function buildReport() {
+      const date = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeStyle: 'short' }).format(new Date());
+      const lines = [
+        '# Validation PO C7-3 · Parcours Remplacement moteur',
+        '',
+        `Date d’export : ${date}`,
+        '',
+        `Décision finale : **${finalDecisionLabel(reviewState.finalDecision)}**`,
+        '',
+        reviewState.finalComment.trim() ? `Commentaire final : ${reviewState.finalComment.trim()}` : 'Commentaire final : aucun.',
+        '',
+        '## Revue par étape',
+        ''
+      ];
+
+      sections.forEach((section, index) => {
+        const state = reviewState.sections[section.id];
+        lines.push(`### ${index + 1}. ${section.title}`);
+        lines.push('');
+        lines.push(`Verdict : **${verdictLabel(state.verdict)}**`);
+        lines.push('');
+        section.checks.forEach((check, checkIndex) => {
+          lines.push(`- [${state.checks[checkIndex] ? 'x' : ' '}] ${check}`);
+        });
+        lines.push('');
+        lines.push(state.comment.trim() ? `Commentaire : ${state.comment.trim()}` : 'Commentaire : aucun.');
+        lines.push('');
+      });
+
+      lines.push('## Rappel de gate');
+      lines.push('');
+      lines.push('Cette revue porte sur C7-3. Elle ne vaut pas automatiquement GO C7-4 et n’autorise aucun code produit, contrat, stockage ou migration.');
+      return lines.join('\n');
+    }
+
+    function downloadFile(filename, content, type) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportMarkdown() {
+      downloadFile('validation-c7-3.md', buildReport(), 'text/markdown;charset=utf-8');
+      showToast('Compte rendu Markdown exporté.');
+    }
+
+    function exportJson() {
+      const payload = {
+        ...reviewState,
+        exportedAt: new Date().toISOString(),
+        title: 'Validation PO C7-3 · Parcours Remplacement moteur'
+      };
+      downloadFile('validation-c7-3.json', JSON.stringify(payload, null, 2), 'application/json;charset=utf-8');
+      showToast('Données de validation exportées en JSON.');
+    }
+
+    async function copyReport() {
+      try {
+        await navigator.clipboard.writeText(buildReport());
+        showToast('Compte rendu copié dans le presse-papiers.');
+      } catch {
+        showToast('Copie impossible. Utilisez l’export Markdown.');
+      }
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('visible');
+      window.clearTimeout(toastTimer);
+      toastTimer = window.setTimeout(() => toast.classList.remove('visible'), 2600);
+    }
+
+    function updateCurrentNav() {
+      const requestedId = window.location.hash.slice(1);
+      const isFinal = requestedId === 'decision-finale';
+      const currentId = sections.some(section => section.id === requestedId)
+        ? requestedId
+        : (isFinal ? '' : sections[0].id);
+
+      document.querySelectorAll('[data-nav-id]').forEach(link => {
+        link.setAttribute('aria-current', String(link.dataset.navId === currentId));
+      });
+
+      sections.forEach(section => {
+        document.querySelector(`[data-section-id="${section.id}"]`).hidden = section.id !== currentId;
+      });
+
+      document.getElementById('decision-finale').hidden = !isFinal;
+      document.getElementById('empty-filter').classList.remove('visible');
+
+      const target = isFinal
+        ? document.getElementById('decision-finale')
+        : document.getElementById(currentId);
+      if (window.location.hash && target) {
+        window.requestAnimationFrame(() => target.scrollIntoView({ block: 'start', behavior: 'smooth' }));
+      }
+    }
+
+    function bindEvents() {
+      document.addEventListener('change', event => {
+        const check = event.target.closest('[data-check-section]');
+        if (check) {
+          const sectionId = check.dataset.checkSection;
+          reviewState.sections[sectionId].checks[Number(check.dataset.checkIndex)] = check.checked;
+          updateSectionUi(sectionId);
+          scheduleSave();
+          return;
+        }
+
+        const verdict = event.target.closest('[data-verdict-section]');
+        if (verdict) {
+          const sectionId = verdict.dataset.verdictSection;
+          reviewState.sections[sectionId].verdict = verdict.value;
+          updateSectionUi(sectionId);
+          if (verdict.value !== 'approved') {
+            document.querySelector(`#${sectionId} .comment-panel`).open = true;
+          }
+          scheduleSave();
+          return;
+        }
+
+        if (event.target.name === 'final-decision') {
+          reviewState.finalDecision = event.target.value;
+          updateFinalStatus();
+          scheduleSave();
+        }
+      });
+
+      document.addEventListener('input', event => {
+        const comment = event.target.closest('[data-comment-section]');
+        if (comment) {
+          const sectionId = comment.dataset.commentSection;
+          reviewState.sections[sectionId].comment = comment.value;
+          updateSectionUi(sectionId);
+          scheduleSave();
+          return;
+        }
+
+        if (event.target.id === 'final-comment') {
+          reviewState.finalComment = event.target.value;
+          scheduleSave();
+        }
+      });
+
+      document.querySelectorAll('[data-filter]').forEach(button => {
+        button.addEventListener('click', () => setFilter(button.dataset.filter));
+      });
+
+      document.getElementById('print-button').addEventListener('click', () => window.print());
+      document.getElementById('top-export-button').addEventListener('click', exportMarkdown);
+      document.getElementById('export-markdown-button').addEventListener('click', exportMarkdown);
+      document.getElementById('export-json-button').addEventListener('click', exportJson);
+      document.getElementById('copy-report-button').addEventListener('click', copyReport);
+
+      const resetDialog = document.getElementById('reset-dialog');
+      document.getElementById('reset-button').addEventListener('click', () => resetDialog.showModal());
+      document.getElementById('cancel-reset-button').addEventListener('click', () => resetDialog.close());
+      document.getElementById('confirm-reset-button').addEventListener('click', () => {
+        localStorage.removeItem(storageKey);
+        reviewState = defaultState();
+        renderNavigation();
+        renderSections();
+        restoreFinalDecision();
+        updateProgress();
+        applyFilter();
+        resetDialog.close();
+        showToast('Validation réinitialisée.');
+      });
+
+      window.addEventListener('hashchange', updateCurrentNav);
+    }
+
+    renderNavigation();
+    renderSections();
+    restoreFinalDecision();
+    updateProgress();
+    bindEvents();
+    updateCurrentNav();
+  </script>
+</body>
+</html>

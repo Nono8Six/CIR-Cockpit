@@ -2,6 +2,10 @@
 
 @AGENTS.md
 
+## Agent skills
+
+La configuration partagee des engineering skills se trouve dans la section `## Agent skills` de `AGENTS.md`, importee ci-dessus. Ne pas la dupliquer ici.
+
 ## Claude Code
 
 - `AGENTS.md` est la source partagee des regles projet. Ne pas dupliquer ces regles ici.

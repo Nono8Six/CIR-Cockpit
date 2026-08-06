@@ -24,7 +24,8 @@ export const useAppShortcuts = ({
       [APP_TAB_SHORTCUTS.admin, 'admin'],
       [APP_TAB_SHORTCUTS.clients, 'clients'],
       [APP_TAB_SHORTCUTS.suppliers, 'suppliers'],
-      [APP_TAB_SHORTCUTS.referentials, 'referentials']
+      [APP_TAB_SHORTCUTS.referentials, 'referentials'],
+      [APP_TAB_SHORTCUTS.configurators, 'configurators']
     ]);
 
     const handleKeyDown = (event: KeyboardEvent) => {

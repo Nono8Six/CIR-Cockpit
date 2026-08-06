@@ -24,6 +24,15 @@ import type {
   DirectoryScopeInput,
   DirectoryRouteRef
 } from '../../../../shared/schemas/system/directory.schema';
+import type {
+  MotorAdviceInput,
+  MotorCatalogGetInput,
+  MotorCatalogListInput,
+  MotorCompareInput,
+  MotorEnergyComputeInput,
+  MotorEquivalentFromMotorInput,
+  MotorEquivalentFromSpecInput
+} from '../../../../shared/schemas/configurator/motor.schema';
 import type { TierV1SearchInput } from '../../../../shared/schemas/interaction/tier-v1.schema';
 import type { ConfigIntegrityInteractionsInput } from '../../../../shared/schemas/system/config.schema';
 
@@ -56,6 +65,7 @@ export const QUERY_ROOTS = {
   adminUsers: 'admin-users',
   auditLogs: 'audit-logs',
   pricingReferences: 'pricing-references',
+  configuratorMotor: 'configurator-motor',
   ai: 'ai'
 } as const;
 
@@ -285,6 +295,45 @@ export const pricingReferenceDiffListKey = (input: PricingReferenceDiffsListInpu
   QUERY_ROOTS.pricingReferences,
   'diff-list',
   input
+] as const;
+
+/**
+ * Clefs Configurateurs moteur. Le snapshot actif est resolu par le backend :
+ * il n'entre donc pas dans la clef. Toute activation d'un nouveau snapshot doit
+ * invalider `configuratorMotorRootKey()` dans son ensemble.
+ */
+export const configuratorMotorRootKey = () => [QUERY_ROOTS.configuratorMotor] as const;
+export const configuratorMotorCatalogListKey = (input: MotorCatalogListInput) => [
+  QUERY_ROOTS.configuratorMotor,
+  'catalog-list',
+  input
+] as const;
+export const configuratorMotorCatalogGetKey = (input: MotorCatalogGetInput | null) => [
+  QUERY_ROOTS.configuratorMotor,
+  'catalog-get',
+  input
+] as const;
+export const configuratorMotorEquivalentsFromMotorKey = (
+  input: MotorEquivalentFromMotorInput | null
+) => [QUERY_ROOTS.configuratorMotor, 'equivalents-from-motor', input] as const;
+export const configuratorMotorEquivalentsFromSpecKey = (
+  input: MotorEquivalentFromSpecInput | null
+) => [QUERY_ROOTS.configuratorMotor, 'equivalents-from-spec', input] as const;
+export const configuratorMotorAdviceKey = (input: MotorAdviceInput | null) => [
+  QUERY_ROOTS.configuratorMotor,
+  'advice',
+  input?.candidate.candidate.operating_point_id ?? null,
+  input?.energy?.motor.operating_point_id ?? null
+] as const;
+export const configuratorMotorEnergyKey = (input: MotorEnergyComputeInput | null) => [
+  QUERY_ROOTS.configuratorMotor,
+  'energy',
+  input
+] as const;
+export const configuratorMotorCompareKey = (input: MotorCompareInput | null) => [
+  QUERY_ROOTS.configuratorMotor,
+  'compare',
+  input?.operating_point_ids ?? null
 ] as const;
 
 export const aiSettingsKey = () => [QUERY_ROOTS.ai, 'settings'] as const;

@@ -1,3 +1,4 @@
+import { Suspense, lazy } from 'react';
 import {
   Navigate,
   Outlet,
@@ -8,6 +9,7 @@ import {
 
 import App from '@/App';
 import { APP_TAB_PATHS } from '@/app/appRoutes';
+import { parseMotorJourneyId } from '@/components/configurator/parseMotorJourneyId';
 import ClientDirectoryConvertPage from '@/components/client-directory/ClientDirectoryConvertPage';
 import ClientDirectoryCreatePage from '@/components/client-directory/ClientDirectoryCreatePage';
 import ClientDirectoryDetailPage from '@/components/client-directory/ClientDirectoryDetailPage';
@@ -22,6 +24,29 @@ import {
 } from '@/components/admin-suppliers/supplierDirectorySearch';
 import { validateDashboardSearch } from '@/app/dashboardSearch';
 import { validatePricingReferentialsSearch } from '@/app/pricingReferentialsSearch';
+
+// Le domaine Configurateurs grandira de C6 a C13 : ses pages restent hors du
+// bundle principal, chargees a la premiere visite de la section.
+const MotorConfiguratorHomePage = lazy(
+  () => import('@/components/configurator/pages/MotorConfiguratorHomePage')
+);
+const MotorJourneyPage = lazy(
+  () => import('@/components/configurator/pages/MotorJourneyPage')
+);
+const MotorReplacementPage = lazy(
+  () => import('@/components/configurator/pages/MotorReplacementPage')
+);
+const SavedConfigurationsPage = lazy(
+  () => import('@/components/configurator/pages/SavedConfigurationsPage')
+);
+
+const CONFIGURATOR_ROUTE_FALLBACK = (
+  <div className="flex h-full min-h-0 flex-col gap-3 p-6">
+    <div className="skeleton-shimmer h-7 w-56 rounded-lg motion-reduce:animate-none" />
+    <div className="skeleton-shimmer h-9 w-full rounded-lg motion-reduce:animate-none" />
+    <div className="skeleton-shimmer mt-2 flex-1 rounded-xl motion-reduce:animate-none" />
+  </div>
+);
 
 const rootRoute = createRootRoute({
   component: App,
@@ -168,6 +193,67 @@ export const discountsIndexRoute = createRoute({
   component: () => <Navigate to="/remises/referentiels" replace />
 });
 
+export const configuratorsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'configurateurs',
+  component: () => <Outlet />
+});
+
+/**
+ * Un seul domaine de configurateur existe aujourd'hui : un selecteur a une
+ * option serait une friction inutile. La route racine redirige donc vers le
+ * configurateur moteur, et reste en place pour accueillir le selecteur des
+ * qu'un second domaine sera livre.
+ */
+export const configuratorsIndexRoute = createRoute({
+  getParentRoute: () => configuratorsRoute,
+  path: '/',
+  component: () => <Navigate to="/configurateurs/moteurs" replace />
+});
+
+export const motorConfiguratorRoute = createRoute({
+  getParentRoute: () => configuratorsRoute,
+  path: 'moteurs',
+  component: () => (
+    <Suspense fallback={CONFIGURATOR_ROUTE_FALLBACK}>
+      <MotorConfiguratorHomePage />
+    </Suspense>
+  )
+});
+
+export const motorConfiguratorJourneyRoute = createRoute({
+  getParentRoute: () => configuratorsRoute,
+  path: 'moteurs/$journeyId',
+  component: () => {
+    const { journeyId } = motorConfiguratorJourneyRoute.useParams();
+    const resolvedJourneyId = parseMotorJourneyId(journeyId);
+
+    if (!resolvedJourneyId) {
+      return <Navigate to="/configurateurs/moteurs" replace />;
+    }
+
+    return (
+      <Suspense fallback={CONFIGURATOR_ROUTE_FALLBACK}>
+        {resolvedJourneyId === 'remplacement' ? (
+          <MotorReplacementPage />
+        ) : (
+          <MotorJourneyPage journeyId={resolvedJourneyId} />
+        )}
+      </Suspense>
+    );
+  }
+});
+
+export const savedConfigurationsRoute = createRoute({
+  getParentRoute: () => configuratorsRoute,
+  path: 'mes-configurations',
+  component: () => (
+    <Suspense fallback={CONFIGURATOR_ROUTE_FALLBACK}>
+      <SavedConfigurationsPage />
+    </Suspense>
+  )
+});
+
 const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'admin',
@@ -221,6 +307,12 @@ const routeTree = rootRoute.addChildren([
   discountsRoute.addChildren([
     discountsIndexRoute,
     pricingReferentialsRoute
+  ]),
+  configuratorsRoute.addChildren([
+    configuratorsIndexRoute,
+    motorConfiguratorRoute,
+    savedConfigurationsRoute,
+    motorConfiguratorJourneyRoute
   ]),
   adminRoute.addChildren([
     adminIndexRoute,

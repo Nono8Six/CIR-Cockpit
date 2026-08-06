@@ -25,6 +25,10 @@ const buttonVariants = cva(
           "border border-input bg-background shadow-none hover:bg-accent hover:text-accent-foreground",
         secondary:
           "bg-secondary text-secondary-foreground shadow-none hover:bg-secondary/80",
+        // Action primaire neutre : libere le rouge CIR pour la seule semantique
+        // d'etat bloquant, dans les ecrans ou les deux se cotoieraient.
+        solid:
+          "bg-foreground text-background shadow-none hover:bg-foreground/85",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
       },

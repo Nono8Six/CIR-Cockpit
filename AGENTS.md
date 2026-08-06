@@ -17,6 +17,20 @@ Guide operationnel pour les agents autonomes dans CIR Cockpit.
 - Docs volumineux (`docs/architecture-cible-cir-cockpit.md`, `docs/ASSISTANT_IA/plan-mistral-assistant-transversal.md`): lire d'abord la structure (titres/sommaire) puis seulement les sections utiles. Pour une decision transverse ou une nouvelle brique, lire aussi les principes non negociables, le contexte metier concerne, le contrat IA et les decisions ouvertes associees.
 - `.mcp.json` est ignore par Git et local-only. Verifier les MCP reellement exposes par l'environnement actif avant de s'y fier.
 
+## Agent skills
+
+### Issue tracker
+
+Engineering skills track CIR Cockpit issues in GitHub Issues. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Engineering skills use the five default canonical triage labels. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Engineering skills use a single-context supplemental domain layout; `AGENTS.md` and the canonical CIR documents remain authoritative. See `docs/agents/domain.md`.
+
 ## Regles de travail
 
 - Lire d'abord les fichiers directement concernes, puis agir. Ne pas explorer tout le repo si le perimetre est clair.

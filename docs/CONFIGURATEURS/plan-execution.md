@@ -5,7 +5,7 @@ Configurateurs. Il complète le plan directeur
 `C:\GitHub\CIR_Moteur\plan-brique-configurateurs.md` sans remplacer les preuves
 de chaque tranche.
 
-## Situation au 31/07/2026
+## Situation au 06/08/2026
 
 | Tranche | Statut | Décision | Preuve |
 | --- | --- | --- | --- |
@@ -13,20 +13,23 @@ de chaque tranche.
 | C1 — Schéma PostgreSQL | ✅ terminée | GO C2 | `docs/CONFIGURATEURS/01-schema-c1.md` |
 | C2 — Migration des données | ✅ terminée | **GO C3** | section C2 ci-dessous |
 | C3 — Compatibilité technique backend | ✅ terminée | **GO C5** | checkpoint C3-8 ci-dessous |
-| C4 à C14 | ⬜ non commencées | non autorisées | plan directeur |
+| C5 — Socle frontend | ✅ terminée | **GO C6** | checkpoint C5 ci-dessous |
+| C6 — Première tranche verticale | ✅ technique / ❌ UX rejetée | ancien GO C7 retiré | checkpoint C6 ci-dessous |
+| C7 — Reprise du parcours Remplacement | ✅ C7-4 livrée sur GO PO du 06/08/2026 ; recette PO C7-5 à faire | **NO-GO C7-5 sans décision PO distincte** | `refonte-ux-remplacement/prototype-c7-4-remplacement-moteur.html` |
+| C8 à C14 | ⬜ non commencées | non autorisées | plan directeur |
 
-**Verdict au 31/07/2026 :** C3/C4 est terminé avec **GO C5**. Les gates
-locales, la matrice RLS `anon`/`tcs`/`agency_admin`/`super_admin`, le mode
-read-only, les plans d'exécution, le déploiement MCP de `api` v199 et les sept
-probes runtime sont prouvés. La fonctionnalité backend Configurateurs est
-disponible ; le service frontend et les écrans restent absents.
+**Verdict au 06/08/2026 :** C3/C4 et les fondations techniques C5/C6 sont
+livrées. L'interface C6 a toutefois été rejetée par le PO : elle ne constitue
+pas un parcours téléphonique compréhensible et son ancien `GO C7` est retiré.
+Aucun développement C7 n'est autorisé sans validation progressive de la
+reprise UX. C7-3 est validée avec un ordre déterministe et une autonomie guidée
+du TCS ; C7-4 a produit, sur GO PO du 06/08/2026, un prototype testable autonome
+hors du frontend applicatif.
 
-**Prochaine action :** démarrer C5 uniquement sur une nouvelle exécution
-autorisée. C5 reste non commencé dans ce checkpoint. Le catalogue technique
-moteur utilisé reste le snapshot actif
-`6fbf4046-be74-4422-9fe8-2d2d8a8d9157`, lot `cc5689ac…`, 1 665 modèles
-physiques, 2 355 points de fonctionnement, 5 699 rendements, 2 370 couples,
-45 568 cotes et 7 940 brides.
+**Prochaine décision possible :** prononcer ou non le GO C7-5, c'est-à-dire la
+recette PO du parcours testable. Cette décision n'est pas présumée. Aucun code
+produit, contrat API, stockage, migration, téléversement de photos, PDF, calcul
+process C11 ou référence énergétique C13 n'est autorisé à ce stade.
 
 Audit consolidé : `docs/CONFIGURATEURS/audit-etat-2026-07-30.md`.
 
@@ -836,6 +839,97 @@ Décision de sortie : **GO C5**. C3/C4 est terminé ; `api` v199 est active.
 Aucune migration, donnée, RLS/ACL/index, autre Edge Function, frontend,
 commit, push ou C5 n'a été modifié/démarré.
 
+## C5 — Socle frontend
+
+Statut : **terminé le 31/07/2026 avec GO C6**. Décision PO du 31/07/2026 : C5 et
+C6 sont livrés ensemble, un socle sans écran métier ne pouvant pas être jugé.
+
+- [x] Entrée `Configurateurs` dans la navigation, section dédiée, raccourci `F6`,
+  reprise automatique dans la palette `Ctrl+K`.
+- [x] Routes TanStack `/configurateurs`, `/configurateurs/moteurs`,
+  `/configurateurs/moteurs/$journeyId` et `/configurateurs/mes-configurations`,
+  chargées en `lazy` hors bundle principal. `/configurateurs` redirige vers le
+  configurateur moteur tant qu'un seul domaine existe ; un segment de parcours
+  inconnu renvoie à l'accueil moteurs sans page d'erreur.
+- [x] Couche tRPC frontend des **sept** routes, chaque réponse revalidée par le
+  schéma partagé ; une sortie hors contrat devient `CONFIGURATOR_OUTPUT_INVALID`
+  et jamais un rendu partiel.
+- [x] Hooks et clés de cache sous une racine unique `configurator-motor`,
+  invalidable en une fois à l'activation d'un snapshot. Le snapshot n'entre pas
+  dans la clé : il est résolu par le backend.
+- [x] Composants transverses : verdict (quatre états), mosaïque critère par
+  critère, jauge de couverture `n/N`, provenance, grade documentaire, preuves en
+  dialog et en citation inline, faits manquants, adaptations, contrôles,
+  anomalies, identité et conflit de catalogue.
+- [x] États livrés : chargement, attente longue avec temps réellement écoulé,
+  vide, partiel, erreur avec reprise, conflit de snapshot.
+- [x] Support `prefers-reduced-motion` ajouté au dépôt, qui n'en avait aucun.
+- [x] Quatre états métier couverts exactement par le contrat partagé ; test
+  garantissant qu'aucune formulation n'emploie le mot « garantie ».
+
+## C6 — Première tranche verticale
+
+Statut technique : **livré le 31/07/2026**. Décision PO du 04/08/2026 :
+**UX rejetée, ancien GO C7 d'implémentation retiré**. Les fondations techniques
+restent réutilisables ; seule la découverte C7-1 est autorisée.
+
+- [x] Parcours Remplacement ouvert sur `/configurateurs/moteurs/remplacement`.
+- [x] **Entrée par défaut : saisie libre de plaque signalétique**, conformément
+  au plan directeur §4.4 — le moteur en place du client est le plus souvent hors
+  catalogue CIR. Trois champs contractuels seulement ; tout le reste facultatif.
+- [x] Entrée secondaire conservée : référence déjà présente au catalogue
+  technique, via `equivalents.fromMotor`.
+- [x] Aucune valeur fabriquée : un champ vide reste vide et devient un fait
+  manquant. Une valeur dictée est `origin=nameplate`,
+  `confirmation=unconfirmed`, avec sa preuve de relevé.
+- [x] Panneau « À demander au client » : les faits manquants renvoyés par le
+  backend, classés par le nombre de candidats qu'ils permettraient de trancher.
+  Aucun recalcul de règle, seulement un décompte d'affichage.
+- [x] Verdict explicable en dialog centré : phrase du backend, adaptations,
+  contrôles, faits manquants, détail critère par critère, anomalies.
+- [x] Attente réelle de 5,7 à 7,1 s rendue par un compteur du temps écoulé, sans
+  progression fictive.
+- [x] Reprise UI/UX du 31/07/2026 : relevé et résultats séparés, lancement de la
+  recherche explicitement déclenché (jamais à chaque frappe), questions
+  restantes actionnables, résultats en cartes sur mobile et panneau de questions
+  prioritaire sur petit écran.
+- [x] Fréquence préremplie à 50 Hz et alimentation préremplie à `vfd` sur décision
+  PO. Les valeurs restent visibles et modifiables avant la recherche.
+- [x] Provenance corrigée : une cote saisie est une `user_measurement` confirmée
+  avec preuve de mesure client, jamais une valeur `nameplate`. En B14/B34, `S`
+  est saisi comme filetage (`S_thread`, par exemple M8), sans diamètre inventé.
+- [x] Aide visuelle à deux niveaux : moteur générique photoréaliste consultable
+  sous quatre angles pour orienter le client, et schéma déterministe surligné
+  pour indiquer où poser le mètre. La vue réaliste est explicitement non
+  contractuelle et n'est jamais utilisée comme preuve catalogue.
+
+### Preuves
+
+- `pnpm run qa:front` vert : parité dépôt locale, typecheck, lint,
+  **169 fichiers / 887 tests frontend**, conformité erreurs.
+- Accessibilité : `vitest-axe` sur l'accueil moteurs et sur l'écran de résultats,
+  **0 violation**. Deux violations `definition-list`/`dlitem` détectées puis
+  corrigées.
+- Parcours Playwright réel rejoué après la reprise UI/UX : recherche explicite,
+  vue réaliste côté bride, résultats desktop et mobile, dialog candidat — 1/1
+  scénario vert. Captures actualisées dans `frontend/e2e-proof-configurator-c5/`.
+- Validation navigateur réelle sous Playwright, fixture `tcs`, Edge Function
+  `api` v199 : `frontend/e2e/configurator-c5-visual.spec.ts`, captures dans
+  `frontend/e2e-proof-configurator-c5/`. Parcours complet joué de bout en bout —
+  25 candidats retournés pour 11 kW / 4 pôles / 50 Hz / réseau / B35, tous
+  `indéterminé` faute de cotes, ce qui est le verdict correct.
+- Un bug runtime réel a été trouvé par cette validation et corrigé : les tooltips
+  du domaine n'avaient pas de `TooltipProvider`, l'écran de résultats plantait.
+  Les assertions E2E ont été durcies pour qu'une page en erreur ne puisse plus
+  faire passer le test.
+
+### Limites explicites
+
+- Les trois autres parcours (Consultation C10, Application C11, Pas à pas C12)
+  et les configurations sauvegardées (C8) déclarent leur tranche d'ouverture et
+  restent non commencés.
+- Aucune migration, mutation Supabase, Edge Function, déploiement ni IA.
+
 ### Rapatriement de `tools/extract`
 
 Depuis le 27/07/2026, les extracteurs et leurs sorties sont versionnés dans ce
@@ -865,6 +959,130 @@ Le plan de reprise détaillé, découpé par checkpoints, est
 | Rejouer le lot | Le pipeline est déterministe : la même empreinte `5db53991…` est reproductible depuis les sources CIR Moteur. |
 | Annuler les migrations correctives | Nouvelle migration additive inverse. Une migration appliquée n'est jamais modifiée. |
 
+## C7 — Reprise du parcours Remplacement
+
+Statut : **C7-0 à C7-4 terminés — C7-4 livrée le 06/08/2026 sur GO PO distinct /
+NO-GO C7-5, contrats, code produit, stockage et migration sans décision distincte**.
+
+- [x] **C7-0 — Recadrage.** Le rejet de l'UX C6 est acté ; le dossier v6 est
+  reclassé comme hypothèse de travail ; les frontières C7/C8/C9/C11/C13 sont
+  explicites.
+- [x] **C7-1 — Découverte et validation PO du parcours.** Cinq simulations de co-conception ont
+  produit le breadboard v2 : application obligatoire avant solution techniquement
+  validée, photo conditionnelle, brides entièrement guidées, candidat technique et
+  solution techniquement validée distincts. Le cas courroies ajoute la cause de panne, l'ancienneté et
+  le contrôle radial ; le cas vertical sépare moteur, ventilation forcée et auxiliaires ;
+  le cas ATEX ouvre une qualification spécialisée et bloque toute validation standard.
+  Le PO, seul porteur du projet et connaissant le travail du TCS, accepte ces cinq rejeux
+  comme preuve de sortie C7-1. L'échantillon à participant unique reste documenté sans
+  constituer un blocage artificiel.
+- [x] **C7-2 — Modèle conceptuel.** Moteur installé, installation, montage,
+  application et fonction, faits/source/preuve, contrôles, références évaluées,
+  réserves et quatre états définis. Les relations et cycles de vie sont nommés ;
+  S1 à S5 passent sans invention ni donnée commerciale.
+- [x] **C7-3 — Structure du parcours.** Cinq lieux logiques, flux nominal sans photo,
+  arbre déterministe question après question, conservation des faits spontanés, aide pour
+  trouver chaque information, demande photo ciblée, attente et reprise exactes, corrections
+  avec réouverture des dépendances, branches conditionnelles, énergie sans démarrer C11/C13
+  et qualification spécialisée en dernier recours sont documentés. Le PO a validé le
+  livrable après ces deux corrections ; cette validation n'autorise pas C7-4.
+- [x] **C7-4 — Prototype testable.** Prototype HTML autonome
+  `refonte-ux-remplacement/prototype-c7-4-remplacement-moteur.html` : une seule
+  étape active à la fois, ordre imposé par l'arbre déterministe, contrôles ouverts
+  uniquement par les réponses, recherche déclenchée explicitement, quatre états
+  exacts et scénarios S1 à S5 rejouables. Aucun code produit, aucun contrat, aucun
+  stockage et aucun faux calcul métier.
+- [ ] **C7-5 — Recette PO du parcours.** Rejouer les scénarios sur le parcours testable et
+  mesurer la compréhension, les retours arrière et les blocages.
+- [ ] **C7-6 — Validation métier.** Faire valider séparément alertes, règles de
+  déduction, seuils et limites d'expertise.
+- [ ] **C7-7 — Décisions de contrats.** N'ouvrir les changements de schémas/API
+  qu'après validation du besoin et de la provenance attendue.
+- [ ] **C7-8 — Implémentation.** Construire uniquement le parcours validé sur les
+  fondations réutilisables de C6.
+- [ ] **C7-9 — QA et recette.** Vérifier les scénarios, l'accessibilité, les
+  contrats et le rendu réel avant décision de sortie.
+
+**Décision de sortie C7-0 :** GO C7-1 découverte uniquement. Aucun composant de
+production, contrat partagé, règle métier, stockage, PDF ou calcul énergétique
+n'est autorisé par cette décision.
+
+**Décision de sortie C7-2 :** GO C7-3 structure du parcours uniquement. Le modèle
+conceptuel, ses quatre états, ses relations, le cycle du fait et les cinq rejeux sont
+documentés dans `refonte-ux-remplacement/05-modele-conceptuel.md`. Cette décision
+n'autorise toujours ni design, prototype, contrat, code, stockage ou migration.
+
+**Checkpoint C7-3 :** le livrable `refonte-ux-remplacement/06-structure-parcours.md`
+est validé par le PO depuis le 06/08/2026 après intégration des deux corrections sur
+l'ordre déterministe et l'autonomie guidée du TCS. Cette validation ne prononce aucun
+GO C7-4 : design, prototype, contrat, code, stockage et migration restent interdits
+jusqu'à une décision de sortie distincte. Le support autonome
+`refonte-ux-remplacement/validation-c7-3.html` a servi à cette revue en 5 décisions ;
+il ne constitue pas le prototype produit C7-4.
+
+**Checkpoint C7-4 :** le prototype testable est
+`refonte-ux-remplacement/prototype-c7-4-remplacement-moteur.html`, fichier autonome
+sans réseau, sans dépendance et sans stockage. Correction PO appliquée au préalable
+dans `02-specification-parcours-cible.md` et `06-structure-parcours.md` : le
+configurateur présente des questions et des choix courts, il n'impose aucune
+formulation à réciter, et l'aide contextuelle facultative sert à comprendre,
+reconnaître, localiser ou mesurer une information.
+
+Ce que le prototype rend testable :
+
+- [x] Démarrage d'un nouveau remplacement et reprise d'un parcours interrompu au
+  point exact de l'interruption, pas au début ni au premier fait manquant.
+- [x] Arbre déterministe en six groupes, une seule question active, raison de
+  l'étape affichée, aucune question déjà satisfaite reposée.
+- [x] Enregistrement de faits donnés spontanément et saut automatique des étapes
+  correspondantes, sans rendre l'ordre libre.
+- [x] Contrôles conditionnels ouverts par les seules réponses : bride, charge
+  radiale, charge axiale, variateur, auxiliaire, environnement, ATEX, cause.
+- [x] Mesures guidées avec repère visuel et procédure : diamètre extérieur de
+  bride et diamètre de la poulie moteur.
+- [x] Demande de photo ciblée nommant objet, cadrage et but, attente non
+  bloquante, poursuite sur un nœud indépendant, reprise exacte, photo inutilisable
+  et abandon conservant l'inconnue.
+- [x] Correction d'un fait avec liste préalable des dépendances rouvertes, retrait
+  des conclusions et recul d'état.
+- [x] Recherche déclenchée explicitement, périmètre interrogé affiché, résultat
+  vide expliqué sans affirmer d'impossibilité universelle.
+- [x] Candidat technique avec réserves nommées, solution techniquement validée
+  bornée au périmètre, qualification spécialisée justifiée et dossier de transfert.
+- [x] Invitation énergétique séparée de l'état technique, sans montant ni promesse.
+- [x] Aucune référence catalogue, cote, limite constructeur ou économie fabriquée :
+  un bandeau permanent indique que les verdicts proviennent du relevé saisi.
+
+Preuves de validation, rejouées dans le navigateur in-app le 06/08/2026 sur
+`http://localhost:8777` (serveur statique temporaire, arrêté depuis) :
+
+- Parcours nominal sans photo joué depuis le démarrage : puissance, vitesse,
+  tension, fréquence, alimentation, machine, fonction, carcasse, galerie des
+  constructions, puis contrôle de bride.
+- Faits spontanés consignés et étapes sautées sur les cinq scénarios : 4 (S1),
+  12 (S3), 9 (S4) et 11 (S5) faits d'entrée.
+- Correction de la transmission après une solution validée : contrôle « Charge
+  radiale » rouvert, résultat retiré, retour en recherche préliminaire.
+- Attente de photo sur la mesure de poulie, poursuite sur l'étape indépendante,
+  puis reprise exacte du parcours interrompu sur l'alimentation de l'auxiliaire.
+- Candidat technique sous réserve radiale (S3), puis solution techniquement
+  validée après clôture du contrôle.
+- ATEX (S5) : état qualification dès le signal, dossier de transfert complet avec
+  motif, question experte, documents attendus et point de reprise.
+- Résultat vide expliqué sur moteur intégré ou non-IEC.
+- Rendu desktop 1440x900, mobile 375x812 et 320x720 : aucun débordement
+  horizontal (`scrollWidth` = `clientWidth`), aucune erreur console.
+- Clavier : chiffres pour choisir, Entrée pour valider une saisie ou une grille,
+  `A` pour l'aide, Échap pour fermer un dialog, tabulation complète avec anneau de
+  focus visible.
+- `pnpm run qa:docs` vert.
+
+Cette livraison ne prononce aucun GO C7-5 : la recette PO du parcours testable
+reste une décision distincte.
+
+Le dossier de travail est
+`docs/CONFIGURATEURS/refonte-ux-remplacement/README.md`.
+
 ## Tranches suivantes
 
 - [x] C2c — Correctif d’extraction K/K' et H/HA/Y Innomotics activé et prouvé
@@ -873,9 +1091,13 @@ Le plan de reprise détaillé, découpé par checkpoints, est
   incertitudes résiduelles structurées activés et prouvés le 28/07/2026.
 - [ ] C3 — Compatibilité technique backend Deno/tRPC, incluant l’ancien C4.
 - [ ] C4 — Absorbée par C3, aucune tranche indépendante.
-- [ ] C5 — Socle frontend.
-- [ ] C6 — Première tranche verticale.
-- [ ] C7 — Parcours Remplacement complet.
+- [x] C5 — Socle frontend livré le 31/07/2026.
+- [x] C6 — Fondations techniques de la première tranche livrées le 31/07/2026 ;
+  UX rejetée le 04/08/2026 et ancien GO C7 retiré.
+- [ ] C7 — Reprise du parcours Remplacement : C7-0 à C7-4 terminés ; cinq simulations de
+  co-conception, modèle conceptuel, structure d'interaction déterministe et prototype
+  testable autonome livrés. C7-5 attend une décision PO distincte ; contrats, code
+  produit, stockage et migration restent non autorisés.
 - [ ] C8 — Configurations sauvegardées.
 - [ ] C9 — Fiche technique PDF.
 - [ ] C10 — Consultation.
@@ -887,10 +1109,10 @@ Le plan de reprise détaillé, découpé par checkpoints, est
   process, les euros et le temps de retour fondé.
 - [ ] C14 — Recette transverse et portail QA.
 
-### Décision PO du 31/07/2026 — périmètre C11/C13
+### Décisions PO des 31/07 et 04/08/2026 — périmètre C11/C13
 
-Cette décision précise le périmètre futur sans démarrer C11 ou C13 et sans
-modifier la prochaine action autorisée, qui reste C3-7.
+Ces décisions précisent le périmètre futur sans démarrer C11 ou C13. Elles ne valent
+pas autorisation de C7-4, qui nécessite une décision PO distincte.
 
 - **C11 Application** part des données process et calcule une spécification
   moteur sourcée. Convoyage, pompage, ventilation/soufflante,
@@ -899,6 +1121,12 @@ modifier la prochaine action autorisée, qui reste C3-7.
   cycle, pompe et rendements, transmission, régulation, marche à vide,
   variation de vitesse et environnement doivent être représentables lorsqu'ils
   influencent le moteur ou l'énergie.
+- **C11 Détection d'opportunité** représente aussi la variabilité du besoin,
+  le mode de régulation actuel (variateur, vanne/registre, bypass,
+  marche/arrêt), les heures de fonctionnement et l'absence éventuelle de
+  variateur. Pour P > 11 kW, C7 affiche une invitation énergétique majeure ;
+  une application à besoin variable sans variateur devient un « fort potentiel
+  à étudier », jamais une économie acquise.
 - **Frontière hydraulique** : C11 dimensionne le moteur d'une application ou
   d'une centrale hydraulique et compare les scénarios énergétiques. Réservoir,
   accumulateurs, distributeurs, filtration, refroidissement, sécurité,
@@ -914,6 +1142,14 @@ modifier la prochaine action autorisée, qui reste C3-7.
   régulation/process. Il restitue kWh, borne du gain, hypothèses, pertes,
   économie en euros, investissement et temps de retour seulement quand toutes
   les entrées nécessaires sont fondées.
+- **Neutralité technologique et fournisseur** : Dyneo+, moteur asynchrone ou
+  toute autre technologie catalogue sont des solutions candidates, jamais le
+  point de départ de la règle. Le classement retient les systèmes techniquement
+  compatibles d'après leur consommation annuelle au profil réel, moteur et
+  variateur compris, et non la marque ou le seul rendement nominal maximal.
+- **Consentement** : l'alerte P > 11 kW est automatique et visible même si la
+  classe IE est inconnue ; la simulation avancée ne commence qu'après accord
+  du client. Sous ce seuil, elle reste accessible sur demande.
 - **Langage obligatoire** : « économie simulée », « économie prévisionnelle
   bornée », « économie constatée » uniquement après mesures avant/après
   comparables, ou `indeterminate`. Aucun variateur n'est conseillé depuis le
@@ -975,4 +1211,23 @@ Le détail directeur est consigné dans
 | 30/07/2026 | C3-6 | Équivalences, classement, conseils, énergie et comparaison déterministes livrés comme services backend read-only, sans tRPC, frontend, IA ni donnée commerciale. | Worktree isolé : 33 nouveaux tests Deno, 145 ciblés avec non-régression, 24 shared ; `qa:back`, `qa:fast` et `qa` verts, 748 frontend / 594 backend sur les gates non distantes, MCP Supabase read-only, 0 mutation — **GO C3-7** |
 | 31/07/2026 | C3-7 | Sept queries tRPC moteur authentifiées aux chemins contractuels, schémas partagés entrée/sortie, services C3 branchés et erreurs de validation CIR stabilisées. | 11 tests Deno tRPC + 1 test shared portant 14 assertions de type ; `qa:back` et `qa:fast` verts, 784 frontend / 600 backend, 0 échec, 16 intégrations conditionnelles ignorées, 0 distant — **GO C3-8** |
 | 31/07/2026 | C11/C13 | Périmètre futur précisé : hydraulique industrielle et centrales côté dimensionnement moteur en C11 ; référence terrain hors catalogue, mesures, scénarios, euros et temps de retour fondé en C13. C11/C13 restent non commencés. | Décision PO du 31/07/2026 ; plan directeur §4.5/§4.6 — prochaine action inchangée : **C3-7** |
+| 31/07/2026 | C5 + C6 | Socle frontend et première tranche verticale livrés ensemble sur décision PO. Onglet Configurateurs, routes TanStack, couche tRPC des sept routes, hooks et clés de cache, composants transverses des quatre verdicts, provenance, preuves, faits manquants et anomalies, six états dont attente longue et conflit de snapshot. Parcours Remplacement ouvert avec **saisie libre de plaque en entrée par défaut** (§4.4), recherche explicite, écrans relevé/résultats séparés, questions actionnables, provenance des mesures corrigée, `S_thread` pour B14/B34 et vue moteur réaliste sous quatre angles couplée au guide de mesure. | `qa:front` vert : 169 fichiers / 887 tests ; `vitest-axe` 0 violation ; validation Playwright réelle sur `api` v199, captures desktop/mobile actualisées dans `frontend/e2e-proof-configurator-c5/` — **GO C7** |
 | 31/07/2026 | C3-8 | QA, matrice RLS rollbackée, performance, déploiement MCP `api` et runtime distant terminés. Les sept routes sont authentifiées, read-only, validées par leurs schémas et testées avec leurs négatifs Auth/CORS. | `qa` : 785 frontend, 600 backend, 9 intégrations réussies ; EXPLAIN 0,140 à 20,820 ms, aucun `Seq Scan` ; `api` v199 active ; 7/7 probes 200 — **GO C5** |
+| 04/08/2026 | C6 → C7-1 | **UI C6 rejetée par le PO** (« fouillis, pas compréhensible par un TCS »). Le brainstorm v6 a été audité et reclassé comme hypothèse : C7-0 terminé, cinq scénarios d'appel préparés pour C7-1, frontières C7/C8/C9/C11/C13 fixées et règles métier non validées isolées. Le harnais de 42 contrôles annoncé pendant la séance n'est ni versionné ni reproductible et ne vaut pas recette. Aucun code applicatif modifié. | `docs/CONFIGURATEURS/refonte-ux-remplacement/` — **GO C7-1 découverte uniquement / NO-GO implémentation** |
+| 04/08/2026 | C11/C13 | **Décision PO énergie complétée.** Pour un moteur installé de puissance strictement supérieure à 11 kW, C7 affiche une invitation énergétique majeure même sans classe IE ; la simulation reste soumise à l'accord du client. C11 qualifie application, besoin variable, régulation actuelle et absence de variateur. C13 compare sans préférence de marque les systèmes compatibles — Dyneo+, asynchrone ou autre — sur la consommation annuelle au profil réel, moteur et variateur compris. | `plan-execution.md` § C11/C13 et dossier `refonte-ux-remplacement/` — cadrage uniquement, C11/C13 non démarrés |
+| 04/08/2026 | C7-1 v2 | Deux simulations de co-conception ont remplacé l'ancien parcours v6 : application et fonction obligatoires avant proposition finale, photo conditionnelle, identification intégralement visuelle des brides, contrôle de l'arbre et des particularités, séparation recherche préliminaire/proposition rapide/remplacement sécurisé, disponibilité commerciale séparée. Le prototype v6 est archivé comme obsolète. | `refonte-ux-remplacement/02-specification-parcours-cible.md` — **GO trois simulations restantes / NO-GO prototype et code** |
+| 04/08/2026 | C7-1 scénario 3 | Ventilateur B3 15 kW sans variateur, entraîné par deux poulies et trois courroies. Le TCS a annoncé le stock avant de qualifier la transmission, puis a recherché cause de panne et ancienneté. Le parcours doit ouvrir la question direct/courroies depuis l'application et déclencher un contrôle radial explicite, sans diagnostiquer automatiquement le roulement. | `refonte-ux-remplacement/02-specification-parcours-cible.md` — **3 simulations consignées / 2 restantes** |
+| 04/08/2026 | C7-1 scénario 4 | Pompe verticale 18,5 kW sur variateur, grande bride sans pattes, arbre vers le bas et ventilation forcée 230/400 V séparée. Le TCS identifie naturellement l'option, mais carcasse, bride, alimentation réelle de l'auxiliaire, fils non identifiés et aptitude verticale/basse vitesse restent à confirmer. La photo finale devient ciblée et justifiée. | `refonte-ux-remplacement/02-specification-parcours-cible.md` — **4 simulations consignées / ATEX restant** |
+| 04/08/2026 | C7-1 vertical — revue métier | Deux omissions fréquentes ajoutées après le scénario 4 : effort axial pouvant remonter vers le moteur et nécessiter une construction spécifique selon la charge publiée ; capot pare-pluie à confirmer sur montage vertical exposé. Aucun roulement n'est déduit du seul code IM. | `02-specification-parcours-cible.md`, `03-regles-metier-et-calculs.md` — hypothèses à valider en C7-6 |
+| 04/08/2026 | C7-1 scénario 5 | Convoyage de farine, B3 22 kW, accouplement élastique vers réducteur, marquage poussières `Ex tb IIIC T125 °C Db`. Le TCS peut préparer un devis, mais le parcours sort du remplacement standard et exige marquage complet, classification du site, certificat et validation ATEX avant confirmation. | `refonte-ux-remplacement/02-specification-parcours-cible.md` — **5 simulations terminées / validation TCS restante** |
+| 05/08/2026 | C7-1 cadrage | **Correction PO du vocabulaire C7.** Les prix, remises, stocks, délais et devis sont extérieurs à la décision technique. Les quatre niveaux deviennent recherche préliminaire, candidat technique, solution techniquement validée et qualification spécialisée requise. ATEX conserve les faits et exige une qualification fondée ; il ne prépare aucun devis. Les cinq simulations restent de la co-conception et ne valent pas validation utilisateur. | dossier `refonte-ux-remplacement/` — **NO-GO C7-2 maintenu jusqu'aux observations de TCS distincts** |
+| 05/08/2026 | C7-1 corpus roulements | Guide constructeur SKF *Rolling bearings and seals in electric motors and generators* ajouté au corpus lié. Il fonde les questions sur charges, transmission, montage vertical, charge minimale et architecture fixe/libre, sans autoriser une prescription de roulement depuis la seule application. | `refonte-ux-remplacement/03-regles-metier-et-calculs.md` §8 — source SKF `PUB 54/P7 13459 EN`, août 2013 |
+| 05/08/2026 | C7-1 rejeu PO | Les cinq cas ont été rejoués par le PO en posture de TCS. Le noyau puissance/vitesse/alimentation/fixation est naturel, mais le TCS conclut vite et oublie facilement position, transmission, options, charges et ATEX. Le parcours devient un arbre adaptatif : six groupes courts sur le standard, puis modules ciblés bride, radial, axial, variateur/auxiliaires, ATEX et énergie uniquement lorsqu'un signal les ouvre. | `refonte-ux-remplacement/02-specification-parcours-cible.md` — co-conception consolidée, **NO-GO C7-2 inchangé** |
+| 05/08/2026 | C7-1 matrice applications | Les 8 familles et 28 cas d'application disposent désormais de deux à quatre questions contextuelles, des modules susceptibles de s'ouvrir et des déductions explicitement interdites. Une réponse standard ferme la branche ; les marqueurs `axial`, `radial`, `shock`, `inertia`, `brake` et `ATEX` restent des contrôles, jamais des conclusions. | `refonte-ux-remplacement/03-regles-metier-et-calculs.md` §1 — matière de co-conception, validation métier C7-6 toujours requise |
+| 05/08/2026 | C7-1 décision de sortie PO | Le PO confirme qu'il est le seul porteur du projet et accepte les cinq simulations jouées en posture de TCS comme preuve suffisante pour cette phase de découverte. Le protocole fictif de cinq TCS, deux rôles et dix séances est retiré. La limite d'un participant unique reste explicite, sans bloquer la décision. | **C7-1 terminé — GO C7-2 modèle conceptuel uniquement / NO-GO design, prototype, contrats et code** |
+| 05/08/2026 | C7-2 modèle conceptuel | Objets et frontières, modèle du fait et de la preuve, relations métier, quatre états techniques, contrôles sans prescription, vocabulaire et rejeu S1–S5 définis. S1 reste préliminaire, S2–S4 candidats sous réserves et S5 en qualification spécialisée ; aucune valeur ni donnée commerciale n'est inventée. | `refonte-ux-remplacement/05-modele-conceptuel.md`, `qa:docs` vert — **GO C7-3 structure uniquement / NO-GO design, prototype, contrats et code** |
+| 05/08/2026 | C7-3 structure initiale du parcours | Cinq lieux logiques et breadboard complet définis dans une première version : ordre adaptable, regroupement naturel, recherche explicite, flux nominal sans photo, attente et reprise exactes, correction avec recul d'état, branches sans prescription, énergie sans démarrer C11/C13 et qualification spécialisée préparée puis reprise. Cette version est ensuite corrigée par la décision PO du 06/08/2026. | `refonte-ux-remplacement/06-structure-parcours.md` — **livrable soumis à validation PO / NO-GO C7-4, design, prototype, contrats et code** |
+| 06/08/2026 | C7-3 support de validation | Support HTML autonome ramené à 5 décisions PO, une seule affichée à la fois, avec réponses oui/non/incertain, exemple facultatif, commentaire et export Markdown/JSON. Les réponses restent dans le stockage local du navigateur ; aucun contrat, stockage produit ou code applicatif n'est ajouté. | `refonte-ux-remplacement/validation-c7-3.html` — **outil de revue C7-3 / NO-GO C7-4 inchangé** |
+| 06/08/2026 | C7-4 correction PO | Le configurateur est un outil technique étape par étape, pas un script téléphonique : la « phrase exacte à dire au client » est remplacée par des questions et des choix courts, plus une aide contextuelle facultative pour comprendre, reconnaître, localiser ou mesurer une information. Correction appliquée sans rouvrir les autres décisions validées. | `02-specification-parcours-cible.md` §Principes et §Identification guidée, `06-structure-parcours.md` §1.2, §3, §4.2 et §4.3 |
+| 06/08/2026 | C7-4 prototype testable | Prototype HTML autonome livré sur GO PO distinct : une étape active à la fois, arbre déterministe en six groupes, faits spontanés conservés et étapes sautées, contrôles conditionnels, mesures guidées, photo ciblée avec attente non bloquante et reprise exacte, correction rouvrant les dépendances, recherche explicite, résultat vide expliqué, quatre états exacts, invitation énergétique séparée. Aucune référence catalogue, cote, économie ou règle métier inventée ; aucun code produit, contrat, stockage ou migration. | `refonte-ux-remplacement/prototype-c7-4-remplacement-moteur.html` ; parcours rejoués dans le navigateur in-app, desktop 1440x900 et mobile 375x812/320x720, 0 débordement, 0 erreur console ; `qa:docs` vert — **C7-4 terminée / NO-GO C7-5 sans décision PO distincte** |
+| 06/08/2026 | C7-3 décision de sortie PO | Le PO valide le parcours avec trois décisions acceptées et deux corrections intégrées : l'appel suit un arbre déterministe étape par étape ; le configurateur amène le TCS à poser les bonnes questions et lui indique où trouver l'information. Une photo reste un canal d'information guidé ; la qualification spécialisée n'intervient qu'après épuisement des moyens accessibles au TCS ou pour un cas explicitement réservé à l'expertise. | `refonte-ux-remplacement/06-structure-parcours.md`, `qa:docs` — **C7-3 terminée / NO-GO C7-4 sans décision PO distincte** |

@@ -1,12 +1,12 @@
 # Stack Technique - CIR Cockpit
 
 > Reference documentaire de la stack du projet.
-> Derniere mise a jour: 2026-07-17
+> Derniere mise a jour: 2026-08-06
 > Etat verifie contre les manifests et configs du repo.
 
 ## Resume executif
 
-- Frontend: React 19, Vite 7, TypeScript 5.9, Tailwind CSS 4, shadcn/ui + Radix UI, TanStack Router, TanStack Query, React Hook Form + Zod, TanStack Table/Virtual, Motion, Sonner, Supabase JS.
+- Frontend: React 19, Vite 7, TypeScript 5.9, Tailwind CSS 4, shadcn/ui + Radix UI, TanStack Router, TanStack Query, React Hook Form + Zod, TanStack Table, Motion, Sonner, Supabase JS.
 - Backend: Supabase (Postgres + Auth + Realtime), Edge Function Deno unique `api`, Hono + tRPC, Drizzle ORM + `postgres`, `jose` pour la verification JWT.
 - Qualite: `pnpm` workspace, ESLint 9, Vitest 4, Playwright, Husky, lint-staged, gates locales par impact (`qa:docs`, `qa:front`, `qa:back`, `qa:fast`, `qa`), gate CI dediee `qa:ci`, workflow GitHub Actions `qa.yml`.
 
@@ -43,7 +43,8 @@ Cette page doit suivre en priorite:
 | Gate CI sans Supabase CLI lie | `pnpm run qa:ci` | `package.json`, `.github/workflows/qa.yml` |
 | Audit deps reseau | `pnpm run qa:audit` | `package.json` |
 | CLI Supabase locale | `2.98.1` | `supabase --version` |
-| Overrides securite pnpm | `ajv@6.14.0`, `rollup@4.59.0`, `flatted@3.4.2`, `picomatch@2.3.2/4.0.4`, `brace-expansion@1.1.13/5.0.6`, `yaml@2.9.0`, `ws@8.21.0`, `minimatch@3.1.4/9.0.7`, `lodash-es@4.18.1` | `package.json` |
+| Overrides securite pnpm | `ajv@6.14.0`, `rollup@4.59.0`, `flatted@3.4.2`, `picomatch@2.3.2/4.0.4`, `yaml@2.9.0`, `ws@8.21.0`, `minimatch@3.1.4/9.0.7`, `lodash-es@4.18.1` | `package.json` |
+| Transitives securite resolues | `seroval@1.6.2`, `brace-expansion@1.1.18/5.0.9`, `postcss@8.5.25`, `form-data@4.0.6`, `js-yaml@4.3.1` | `pnpm-lock.yaml` |
 
 ## Frontend
 
@@ -53,7 +54,7 @@ Cette page doit suivre en priorite:
 |-------------|---------|------|
 | React | `19.2.4` | UI runtime |
 | React DOM | `19.2.4` | rendu DOM |
-| Vite | `7.3.2` | dev server + build |
+| Vite | `7.3.6` | dev server + build |
 | TypeScript | `5.9.3` | typage strict |
 | Tailwind CSS | `4.1.18` | styling utilitaire |
 | `@tailwindcss/vite` | `4.1.18` | integration Vite |
@@ -62,7 +63,7 @@ Cette page doit suivre en priorite:
 
 | Technologie | Version | Role |
 |-------------|---------|------|
-| TanStack Router | `1.162.9` | routing SPA |
+| TanStack Router | `1.170.20` | routing SPA |
 | TanStack Query | `5.90.21` | cache, queries, mutations |
 | Zustand | `5.0.11` | store d'erreurs |
 | Supabase JS frontend | `2.97.0` résolu (`^2.95.3` déclaré) | auth, realtime, acces donnees et API |
@@ -82,7 +83,6 @@ Cette page doit suivre en priorite:
 | shadcn/ui | config repo | primitives UI |
 | Radix UI | packages `@radix-ui/react-*` | accessibilite / primitives headless |
 | TanStack Table | `8.21.3` | tables riches |
-| TanStack Virtual | `3.13.18` | virtualisation |
 | Motion | `12.35.2` | animations UI |
 | Sonner | `2.0.7` | notifications |
 | Lucide React | `0.564.0` | icones |

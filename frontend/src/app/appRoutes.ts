@@ -8,8 +8,12 @@ export const APP_TAB_PATHS: Record<AppTab, string> = {
   clients: '/clients',
   suppliers: '/suppliers',
   referentials: '/remises/referentiels',
+  configurators: '/configurateurs/moteurs',
   admin: '/admin'
 };
+
+/** Racine du domaine Configurateurs, tous configurateurs confondus. */
+export const CONFIGURATORS_ROOT_PATH = '/configurateurs';
 
 const ROUTE_TO_TAB = new Map<string, AppTab>(
   Object.entries(APP_TAB_PATHS).map(([tab, path]) => [path, tab as AppTab])
@@ -44,6 +48,13 @@ export const isShellNavItemActive = (
     return normalizePathname(pathname) === APP_TAB_PATHS.admin;
   }
 
+  // L'entree Configurateurs pointe sur le configurateur moteur, mais reste
+  // active sur toute la racine, y compris les configurations sauvegardees qui
+  // sont transverses aux domaines.
+  if (item.id === 'configurators') {
+    return activeTab === item.id && isPathWithin(pathname, CONFIGURATORS_ROOT_PATH);
+  }
+
   return activeTab === item.id && isPathWithin(pathname, getPathForTab(item.id));
 };
 
@@ -59,6 +70,12 @@ export const getTabFromPathname = (pathname: string): AppTab => {
   }
   if (normalizedPath === '/remises' || normalizedPath === APP_TAB_PATHS.referentials || normalizedPath.startsWith(`${APP_TAB_PATHS.referentials}/`)) {
     return 'referentials';
+  }
+  if (
+    normalizedPath === CONFIGURATORS_ROOT_PATH
+    || normalizedPath.startsWith(`${CONFIGURATORS_ROOT_PATH}/`)
+  ) {
+    return 'configurators';
   }
   if (normalizedPath === APP_TAB_PATHS.admin || normalizedPath.startsWith(`${APP_TAB_PATHS.admin}/`)) {
     return 'admin';

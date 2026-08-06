@@ -1,0 +1,390 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-05T00:00:00.000Z",
+  "title": "Design System: CIR Cockpit",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Rouge Repère",
+        "canonical": "hsl(6 72% 45%)",
+        "tonalRamp": ["#42100b", "#741d13", "#a6291b", "#d83523", "#e36153", "#eb8f85", "#f3bdb7", "#fbebe9"]
+      },
+      "accent-foreground": {
+        "role": "primary",
+        "displayName": "Rouge Repère Profond",
+        "canonical": "hsl(6 72% 30%)",
+        "tonalRamp": ["#42100b", "#741d13", "#a6291b", "#d83523", "#e36153", "#eb8f85", "#f3bdb7", "#fbebe9"]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Voile Repère",
+        "canonical": "hsl(7 58% 96%)",
+        "tonalRamp": ["#3c1510", "#6a251c", "#993629", "#c74635", "#d56e61", "#e1988f", "#edc2bd", "#faedeb"]
+      },
+      "secondary": {
+        "role": "secondary",
+        "displayName": "Papier Sable",
+        "canonical": "hsl(44 24% 96%)",
+        "tonalRamp": ["#2f2b1d", "#544b33", "#786b49", "#9c8c60", "#b3a683", "#c9c0a7", "#dfdacb", "#f5f4ef"]
+      },
+      "muted": {
+        "role": "secondary",
+        "displayName": "Papier Sable (atténué)",
+        "canonical": "hsl(44 24% 96%)",
+        "tonalRamp": ["#2f2b1d", "#544b33", "#786b49", "#9c8c60", "#b3a683", "#c9c0a7", "#dfdacb", "#f5f4ef"]
+      },
+      "warning": {
+        "role": "tertiary",
+        "displayName": "Ambre Avertissement",
+        "canonical": "hsl(39 78% 49%)",
+        "tonalRamp": ["#442f08", "#78530f", "#ac7715", "#e09b1c", "#e9b24d", "#efc981", "#f6dfb4", "#fcf5e8"]
+      },
+      "warning-strong": {
+        "role": "tertiary",
+        "displayName": "Ambre Lisible",
+        "canonical": "hsl(38 85% 31%)",
+        "tonalRamp": ["#472f06", "#7d530a", "#b3760e", "#e99a13", "#f0b246", "#f4c87c", "#f9dfb1", "#fdf5e7"]
+      },
+      "warning-foreground": {
+        "role": "tertiary",
+        "displayName": "Brun Avertissement",
+        "canonical": "hsl(36 62% 17%)",
+        "tonalRamp": ["#3e2b0f", "#6d4c1a", "#9c6d25", "#cc8d30", "#d9a75d", "#e4c18c", "#efdabb", "#faf4ea"]
+      },
+      "success": {
+        "role": "tertiary",
+        "displayName": "Vert Sourd",
+        "canonical": "hsl(148 49% 33%)",
+        "tonalRamp": ["#143925", "#226441", "#31905d", "#40bb7a", "#6acc98", "#95dbb6", "#c1ead4", "#ecf8f2"]
+      },
+      "destructive": {
+        "role": "tertiary",
+        "displayName": "Rouge Destructif",
+        "canonical": "hsl(0 84.2% 47%)",
+        "tonalRamp": ["#460606", "#7c0b0b", "#b20f0f", "#e71414", "#ef4646", "#f47c7c", "#f8b2b2", "#fde8e8"]
+      },
+      "background": {
+        "role": "neutral",
+        "displayName": "Crème Plan",
+        "canonical": "hsl(48 30% 99%)",
+        "tonalRamp": ["#322d1b", "#58502f", "#7d7244", "#a39458", "#b9ad7d", "#cdc5a3", "#e2ddc9", "#f6f5ee"]
+      },
+      "foreground": {
+        "role": "neutral",
+        "displayName": "Encre Graphite",
+        "canonical": "hsl(30 9% 17%)",
+        "tonalRamp": ["#2a2623", "#49433d", "#696158", "#897e72", "#a49b92", "#beb8b2", "#d9d5d1", "#f3f2f1"]
+      },
+      "surface-1": {
+        "role": "neutral",
+        "displayName": "Papier 1",
+        "canonical": "hsl(45 28% 98%)",
+        "tonalRamp": ["#312c1c", "#564d31", "#7c6e46", "#a18f5a", "#b7a97f", "#ccc2a4", "#e1dbc9", "#f6f4ef"]
+      },
+      "surface-2": {
+        "role": "neutral",
+        "displayName": "Papier 2",
+        "canonical": "hsl(45 20% 96%)",
+        "tonalRamp": ["#2e2a1f", "#514a36", "#746a4d", "#978a65", "#afa587", "#c6bfaa", "#ddd9cd", "#f5f4f0"]
+      },
+      "surface-3": {
+        "role": "neutral",
+        "displayName": "Papier 3",
+        "canonical": "hsl(40 13% 92%)",
+        "tonalRamp": ["#2b2821", "#4c463b", "#6d6554", "#8e836d", "#a89f8e", "#c1bbaf", "#dbd7d0", "#f4f3f1"]
+      },
+      "card": {
+        "role": "neutral",
+        "displayName": "Blanc Fiche",
+        "canonical": "hsl(0 0% 100%)",
+        "tonalRamp": ["#262626", "#434343", "#616161", "#7e7e7e", "#9b9b9b", "#b8b8b8", "#d5d5d5", "#f2f2f2"]
+      },
+      "muted-foreground": {
+        "role": "neutral",
+        "displayName": "Mine Atténuée",
+        "canonical": "hsl(31 7% 43%)",
+        "tonalRamp": ["#292624", "#48443f", "#67615a", "#867e75", "#a29b94", "#bdb8b3", "#d8d5d2", "#f3f2f1"]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Filet",
+        "canonical": "hsl(36 12% 88%)",
+        "tonalRamp": ["#2b2722", "#4b453b", "#6c6355", "#8d816f", "#a79d8f", "#c0baaf", "#dad6d0", "#f4f3f1"]
+      },
+      "border-subtle": {
+        "role": "neutral",
+        "displayName": "Filet Discret",
+        "canonical": "hsl(40 16% 95%)",
+        "tonalRamp": ["#2c2820", "#4e4739", "#706651", "#92846a", "#aba08b", "#c3bcad", "#dcd7ce", "#f4f3f0"]
+      },
+      "primary-foreground": {
+        "role": "neutral",
+        "displayName": "Blanc Cassé",
+        "canonical": "hsl(0 0% 98%)",
+        "tonalRamp": ["#262626", "#434343", "#616161", "#7e7e7e", "#9b9b9b", "#b8b8b8", "#d5d5d5", "#f2f2f2"]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Titres de page uniquement. Volontairement rare : 11 occurrences dans tout le frontend."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Titres de section, de carte et de dialog. CardTitle applique font-semibold leading-none tracking-tight."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Base de <body> à 13px, champs de saisie confortables, prose."
+      },
+      "body-dense": {
+        "displayName": "Body dense",
+        "purpose": "Le vrai corps de texte de l'application : tables, listes, boutons, contrôles. 560 occurrences."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Micro-labels, badges, chips, en-têtes de colonne. Plancher absolu à 11px."
+      },
+      "data": {
+        "displayName": "Data",
+        "purpose": "Identifiants, références, codes et colonnes numériques. tabular-nums obligatoire en colonne comparée."
+      }
+    },
+    "shadows": [
+      {
+        "name": "soft",
+        "value": "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+        "purpose": "La seule ombre déclarée dans tailwind.config.cjs. Réservée aux éléments réellement détachés du flux : popover, menu déroulant, tooltip."
+      },
+      {
+        "name": "tech-raised",
+        "value": "0 1px 2px hsl(30 9% 17% / 0.04), 0 0 0 1px hsl(36 12% 88% / 0.7)",
+        "purpose": "Un pixel d'ombre plus un filet. Détache une surface blanche du fond chaud sans peser."
+      },
+      {
+        "name": "tech-raised-hover",
+        "value": "0 2px 8px hsl(30 9% 17% / 0.06), 0 0 0 1px hsl(36 12% 88%)",
+        "purpose": "Réponse au survol d'une surface technique. Transition de 150ms sur box-shadow et transform."
+      },
+      {
+        "name": "kbd-key",
+        "value": "0 1px 0 rgba(0, 0, 0, 0.05)",
+        "purpose": "Relief d'une touche de clavier sur le composant Kbd."
+      }
+    ],
+    "textures": [
+      {
+        "name": "tech-dots",
+        "value": "radial-gradient(hsl(30 9% 17% / 0.085) 1px, transparent 1px); background-size: 16px 16px; background-position: -1px -1px",
+        "purpose": "Trame de fond des surfaces techniques. Le décalage de -1px fait tomber les points sur les intersections."
+      },
+      {
+        "name": "tech-hatch",
+        "value": "repeating-linear-gradient(-45deg, hsl(30 9% 17% / 0.14) 0 1px, transparent 1px 5px)",
+        "purpose": "Absence de donnée. Jamais une case vide, jamais un zéro."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-transition",
+        "value": "150ms ease",
+        "purpose": "Durée unique des changements d'état : couleur, fond, bordure, ombre, transform."
+      },
+      {
+        "name": "press-feedback",
+        "value": "transform: scale(0.98)",
+        "purpose": "Retour tactile à l'appui sur un bouton. Annulé quand le bouton est désactivé."
+      },
+      {
+        "name": "shimmer",
+        "value": "1.4s ease-in-out infinite, background-size 800px 100%",
+        "purpose": "Balayage des squelettes de chargement. Figé sous prefers-reduced-motion, sans disparaître."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" },
+      { "name": "2xl", "value": "1536px" }
+    ],
+    "notes": [
+      "Les breakpoints sont les valeurs Tailwind par défaut : tailwind.config.cjs ne surcharge pas theme.screens.",
+      "Dérive connue : Inter Tight et JetBrains Mono sont déclarées dans index.css mais jamais chargées (aucun @font-face, aucun lien de police). Le rendu réel tombe sur la pile système.",
+      "Dérive connue : frontend/index.html porte encore bg-slate-50 text-slate-900 et selection:bg-red-100 sur le <body>, ce qui contredit les tokens chauds.",
+      "tailwind.config.cjs définit un cir.red #c92b1f distinct de --primary hsl(6 72% 45%) (#c53120). Le token --primary fait foi pour l'interface."
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Action primaire identitaire. Rouge Repère, sous 10% de l'écran, réservé à l'action primaire et à l'état bloquant.",
+      "html": "<button class=\"ds-btn-primary\">Enregistrer</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; padding: 0 12px; border: none; border-radius: 0.625rem; background: hsl(var(--primary, 6 72% 45%)); color: hsl(var(--primary-foreground, 0 0% 98%)); font-family: \"Inter Tight\", Inter, system-ui, sans-serif; font-size: 12px; font-weight: 500; white-space: nowrap; cursor: pointer; transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease; } .ds-btn-primary:hover { background: hsl(var(--primary, 6 72% 45%) / 0.9); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px hsl(var(--ring-offset, 0 0% 100%)), 0 0 0 4px hsl(var(--ring, 6 72% 45%) / 0.45); } .ds-btn-primary:active { transform: scale(0.98); }"
+    },
+    {
+      "name": "Solid Button (action primaire neutre)",
+      "kind": "button",
+      "refersTo": "button-solid",
+      "description": "Action primaire neutre en Encre Graphite. À préférer dès qu'un écran porte déjà du rouge sémantique, pour libérer le Rouge Repère.",
+      "html": "<button class=\"ds-btn-solid\">Valider l'import</button>",
+      "css": ".ds-btn-solid { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; padding: 0 12px; border: none; border-radius: 0.625rem; background: hsl(var(--foreground, 30 9% 17%)); color: hsl(var(--background, 48 30% 99%)); font-family: \"Inter Tight\", Inter, system-ui, sans-serif; font-size: 12px; font-weight: 500; cursor: pointer; transition: background-color 150ms ease, transform 150ms ease; } .ds-btn-solid:hover { background: hsl(var(--foreground, 30 9% 17%) / 0.85); } .ds-btn-solid:focus-visible { outline: none; box-shadow: 0 0 0 2px hsl(var(--ring-offset, 0 0% 100%)), 0 0 0 4px hsl(var(--ring, 6 72% 45%) / 0.45); } .ds-btn-solid:active { transform: scale(0.98); }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Action secondaire. Filet d'1px sur fond de page, bascule sur le Voile Repère au survol.",
+      "html": "<button class=\"ds-btn-outline\">Annuler</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; padding: 0 12px; border: 1px solid hsl(var(--input, 36 12% 88%)); border-radius: 0.625rem; background: hsl(var(--background, 48 30% 99%)); color: hsl(var(--foreground, 30 9% 17%)); font-family: \"Inter Tight\", Inter, system-ui, sans-serif; font-size: 12px; font-weight: 500; cursor: pointer; transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease, transform 150ms ease; } .ds-btn-outline:hover { background: hsl(var(--accent, 7 58% 96%)); color: hsl(var(--accent-foreground, 6 72% 30%)); } .ds-btn-outline:focus-visible { outline: none; box-shadow: 0 0 0 2px hsl(var(--ring-offset, 0 0% 100%)), 0 0 0 4px hsl(var(--ring, 6 72% 45%) / 0.45); } .ds-btn-outline:active { transform: scale(0.98); }"
+    },
+    {
+      "name": "Dense Input",
+      "kind": "input",
+      "refersTo": "input-dense",
+      "description": "Champ de saisie à densité de table (32px). L'état d'erreur est piloté par aria-invalid, pas par une prop.",
+      "html": "<input class=\"ds-input-dense\" type=\"text\" placeholder=\"Saisissez une référence\" />",
+      "css": ".ds-input-dense { display: flex; width: 100%; height: 32px; padding: 0 10px; border: 1px solid hsl(var(--input, 36 12% 88%)); border-radius: 0.625rem; background: hsl(var(--background, 48 30% 99%)); color: hsl(var(--foreground, 30 9% 17%)); font-family: \"Inter Tight\", Inter, system-ui, sans-serif; font-size: 12px; transition: color 150ms ease, box-shadow 150ms ease, border-color 150ms ease, background-color 150ms ease; } .ds-input-dense::placeholder { color: hsl(var(--muted-foreground, 31 7% 43%)); } .ds-input-dense:hover { border-color: hsl(var(--border, 36 12% 88%) / 0.9); } .ds-input-dense:focus-visible { outline: none; box-shadow: 0 0 0 2px hsl(var(--ring-offset, 0 0% 100%)), 0 0 0 4px hsl(var(--ring, 6 72% 45%) / 0.45); } .ds-input-dense[aria-invalid=\"true\"] { border-color: hsl(var(--destructive, 0 84.2% 47%) / 0.6); } .ds-input-dense[aria-invalid=\"true\"]:focus-visible { box-shadow: 0 0 0 2px hsl(var(--ring-offset, 0 0% 100%)), 0 0 0 4px hsl(var(--destructive, 0 84.2% 47%) / 0.3); }"
+    },
+    {
+      "name": "Ghost Badge",
+      "kind": "chip",
+      "refersTo": "badge-ghost",
+      "description": "Badge sans poids visuel, pour une métadonnée qui doit rester lisible sans attirer l'œil.",
+      "html": "<div class=\"ds-badge-ghost\">Archivé</div>",
+      "css": ".ds-badge-ghost { display: inline-flex; align-items: center; padding: 2px 8px; border: 1px solid transparent; border-radius: 0.375rem; background: transparent; color: hsl(var(--muted-foreground, 31 7% 43%)); font-family: \"Inter Tight\", Inter, system-ui, sans-serif; font-size: 12px; font-weight: 600; transition: background-color 150ms ease, color 150ms ease; }"
+    },
+    {
+      "name": "Warning Badge",
+      "kind": "chip",
+      "refersTo": "badge-default",
+      "description": "Badge d'avertissement. Le fond utilise l'Ambre Avertissement, le texte le brun lisible : jamais l'inverse.",
+      "html": "<div class=\"ds-badge-warning\">Tarif expiré</div>",
+      "css": ".ds-badge-warning { display: inline-flex; align-items: center; padding: 2px 8px; border: 1px solid transparent; border-radius: 0.375rem; background: hsl(var(--warning, 39 78% 49%)); color: hsl(var(--warning-foreground, 36 62% 17%)); font-family: \"Inter Tight\", Inter, system-ui, sans-serif; font-size: 12px; font-weight: 600; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card-default",
+      "description": "Fiche de premier plan. Blanc pur sur fond crème, filet d'1px, aucune ombre. CardSection découpe en bandes séparées par un filet.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-header\"><div class=\"ds-card-title\">Conditions d'achat</div><div class=\"ds-card-desc\">Fabricant, palier et date d'effet.</div></div><div class=\"ds-card-section\">Palier 1 : 250 unités</div><div class=\"ds-card-section\">Palier 2 : 1 000 unités</div></div>",
+      "css": ".ds-card { border: 1px solid hsl(var(--border, 36 12% 88%)); border-radius: 0.625rem; background: hsl(var(--card, 0 0% 100%)); color: hsl(var(--card-foreground, 30 9% 17%)); box-shadow: none; font-family: \"Inter Tight\", Inter, system-ui, sans-serif; } .ds-card-header { display: flex; flex-direction: column; gap: 6px; padding: 24px; } .ds-card-title { font-size: 16px; font-weight: 600; line-height: 1; letter-spacing: -0.01em; } .ds-card-desc { font-size: 12px; color: hsl(var(--muted-foreground, 31 7% 43%)); } .ds-card-section { border-top: 1px solid hsl(var(--border, 36 12% 88%)); padding: 16px 24px; font-size: 12px; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Kbd",
+      "kind": "nav",
+      "refersTo": "kbd",
+      "description": "Touche de clavier affichée dans la palette de commandes (Ctrl+K), entrée de navigation privilégiée. Le text-[10px] du code viole le plancher à 11px : ce snippet corrige à 11px.",
+      "html": "<kbd class=\"ds-kbd\">Ctrl</kbd> <kbd class=\"ds-kbd\">K</kbd>",
+      "css": ".ds-kbd { display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 18px; padding: 0 6px; border: 1px solid hsl(var(--border, 36 12% 88%)); border-radius: 3px; background: hsl(var(--surface-2, 45 20% 96%)); color: hsl(var(--muted-foreground, 31 7% 43%)); font-family: \"JetBrains Mono\", ui-monospace, \"SF Mono\", Menlo, Consolas, monospace; font-size: 11px; font-weight: 600; line-height: 1; user-select: none; pointer-events: none; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05); }"
+    },
+    {
+      "name": "Empty Data Cell (tech-hatch)",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Absence de donnée dans une table. Composant signature du système : une trame hachurée, jamais une case vide ni un zéro.",
+      "html": "<table class=\"ds-table\"><tr><td>Remise palier 2</td><td class=\"ds-cell-num\">12,50 %</td></tr><tr><td>Remise palier 3</td><td class=\"ds-cell-empty\" aria-label=\"Non renseigné\"></td></tr></table>",
+      "css": ".ds-table { border-collapse: collapse; font-family: \"Inter Tight\", Inter, system-ui, sans-serif; font-size: 12px; } .ds-table td { height: 28px; padding: 0 10px; border-bottom: 1px solid hsl(var(--border-subtle, 40 16% 95%)); } .ds-cell-num { text-align: right; font-family: \"JetBrains Mono\", ui-monospace, Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; } .ds-cell-empty { min-width: 72px; background-image: repeating-linear-gradient(-45deg, hsl(var(--foreground, 30 9% 17%) / 0.14) 0 1px, transparent 1px 5px); }"
+    },
+    {
+      "name": "Skeleton (shimmer)",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "État de chargement. Modèle de dégradation du système : sous prefers-reduced-motion le balayage s'arrête mais le squelette reste visible et lisible.",
+      "html": "<div class=\"ds-skeleton\"></div>",
+      "css": ".ds-skeleton { height: 12px; width: 180px; border-radius: 0.25rem; background: linear-gradient(90deg, hsl(var(--muted, 44 24% 96%)) 0%, hsl(var(--muted, 44 24% 96%) / 0.6) 40%, hsl(var(--muted, 44 24% 96%)) 80%); background-size: 800px 100%; animation: ds-shimmer 1.4s ease-in-out infinite; } @keyframes ds-shimmer { 0% { background-position: -800px 0; } 100% { background-position: 800px 0; } } @media (prefers-reduced-motion: reduce) { .ds-skeleton { animation: none; background-position: 0 0; } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Le Plan Coté",
+    "overview": "L'écran est traité comme un plan coté, pas comme une page marketing. Cette phrase n'est pas une intention rétrospective : elle est déjà écrite en commentaire dans frontend/src/index.css, au-dessus des surfaces techniques de la brique Configurateurs. Le système entier en découle. Un plan coté ne décore pas, il mesure. Il utilise des filets de 1 px, des croix aux intersections, des trames imprimées. Sa profondeur vient de la trame et du filet, jamais de l'ombre portée. Une case vide n'existe pas : l'absence de donnée est hachurée, parce qu'un blanc sur un plan est une erreur de lecture et pas une information.\n\nLa densité est la fonctionnalité principale, pas un effet secondaire. Le corps de texte est à 13 px, le vrai cheval de bataille des tables est à 12 px, et le plancher absolu est 11 px. Les contrôles font 32 px de haut, les lignes de données 28 px. Un technico-commercial passe huit heures par jour dans cet outil sur un poste fixe : chaque ligne gagnée à l'écran est une recherche évitée. Le thème est clair uniquement, et c'est une décision, pas un oubli.\n\nCe système rejette explicitement quatre familles nommées dans PRODUCT.md : l'ERP legacy (SAP, Sage) et sa densité subie, le SaaS IA générique avec ses dégradés violets et son gabarit hero-metric, le CRM grand public (HubSpot, Salesforce) et ses illustrations mascottes, et le dashboard Material ou Bootstrap avec ses ombres portées lourdes. La ligne de partage est simple : CIR Cockpit est dense par décision, jamais par abandon.",
+    "keyCharacteristics": [
+      "Palette neutre chaude (teintes 30 à 48), fond crème et non blanc, aucun gris froid.",
+      "Élévation par surface et non par ombre : background, puis surface-1/2/3, puis card blanc.",
+      "Une seule ombre autorisée dans tout le système (shadow-soft), plus le filet d'1 px de tech-raised.",
+      "Rouge CIR rare et sémantique, jamais décoratif.",
+      "Grille de 4 px, alignement vérifié sur les cellules, labels et icônes.",
+      "Français, vouvoiement systématique, aucune chaîne décorative ni donnée factice."
+    ],
+    "rules": [
+      {
+        "name": "The Single Marker Rule",
+        "body": "Le Rouge Repère occupe 10 % au maximum d'un écran donné. Sa rareté est ce qui le rend lisible. Si deux éléments rouges sont visibles simultanément sans être l'action primaire et une alerte, un des deux est faux.",
+        "section": "colors"
+      },
+      {
+        "name": "The Warm Paper Rule",
+        "body": "Aucun #000, aucun #fff en texte ou en fond de page, et aucun gris froid. Toute neutre est teintée entre 30 et 48 de teinte. Les classes slate-*, gray-*, zinc-* de Tailwind sont interdites : elles cassent la chaleur de la palette. Test d'audit : si un aplat posé à côté du fond paraît bleuté, il vient de la mauvaise famille.",
+        "section": "colors"
+      },
+      {
+        "name": "The Token-Only Rule",
+        "body": "Aucun littéral hexadécimal dans un composant. Les couleurs passent par les variables CSS et les classes Tailwind qui les exposent.",
+        "section": "colors"
+      },
+      {
+        "name": "The 11px Floor Rule",
+        "body": "Aucune chaîne visible ne descend sous 11 px, badges, chips, kbd et micro-labels compris. Quand un label doit peser moins, compenser par une graisse plus basse et un tracking-wide, jamais en réduisant la taille. Les 239 text-[10px] encore présents dans le code sont une dette identifiée, pas une permission.",
+        "section": "typography"
+      },
+      {
+        "name": "The Aligned Figures Rule",
+        "body": "Toute colonne numérique comparée verticalement (montants, quantités, remises, paliers) passe en tabular-nums. Un chiffre qui danse d'une ligne à l'autre rend une table illisible pour la seule tâche qui compte : repérer l'écart.",
+        "section": "typography"
+      },
+      {
+        "name": "The Weight-Before-Size Rule",
+        "body": "La hiérarchie se construit par contraste de graisse à échelle constante. Monter d'un cran de taille est le dernier recours, parce que chaque pixel de hauteur est une ligne perdue.",
+        "section": "typography"
+      },
+      {
+        "name": "The Layer-Before-Shadow Rule",
+        "body": "Pour détacher un bloc, monter d'une surface. Si le contraste ne suffit pas, ajouter un filet. Si le filet ne suffit pas encore, alors seulement envisager tech-raised. Test d'audit : si un écran comporte plus de deux valeurs de box-shadow distinctes, l'élévation a été traitée à l'ombre au lieu de la strate.",
+        "section": "elevation"
+      },
+      {
+        "name": "The White-Is-Foreground Rule",
+        "body": "Le blanc pur (card) signifie « ceci est au premier plan ». L'utiliser comme fond de page ou de section détruit tout le vocabulaire d'élévation.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Hatch-Not-Blank Rule",
+        "body": "Une donnée absente est hachurée (tech-hatch), pas remplacée par une case vide ni par un zéro. Un zéro affiché est une valeur mesurée ; un vide est une question sans réponse. Les deux ne se confondent pas.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do passer par les tokens (hsl(var(--token)) ou les classes Tailwind qui les exposent) pour toute couleur.",
+      "Do monter d'une strate de surface (background vers surface-1/2/3 vers card) pour détacher un bloc, avant même de penser à une ombre.",
+      "Do réserver le Rouge Repère (#c53120) à l'action primaire et à l'état bloquant, sous 10 % de l'écran. Utiliser le variant solid (Encre Graphite) dès qu'un écran porte déjà du rouge sémantique.",
+      "Do utiliser --warning-strong pour le texte d'avertissement et --warning pour les fonds.",
+      "Do appliquer tabular-nums à toute colonne numérique comparée verticalement.",
+      "Do tenir le plancher de 11 px, en compensant par la graisse et le tracking plutôt qu'en descendant.",
+      "Do hachurer l'absence de donnée avec .tech-hatch, jamais laisser une case vide ni afficher un zéro à la place.",
+      "Do concevoir les six états avant de livrer : survol, focus-visible, désactivé, chargement (skeleton-shimmer), vide, erreur.",
+      "Do écrire en français, au vouvoiement, en phrases courtes (« Saisissez un numéro », « Avec qui avez-vous échangé ? »).",
+      "Do ouvrir tout détail ou toute édition dans un Dialog centré.",
+      "Do aligner sur la grille de 4 px et vérifier qu'aucune marge orpheline ne se bat avec un gap de flex ou de grid."
+    ],
+    "donts": [
+      "Don't ressembler à un ERP legacy (SAP, Sage) : grilles grises indifférenciées, icônes de 2008, densité subie sans hiérarchie visuelle. La densité ici est choisie, donc elle doit être hiérarchisée.",
+      "Don't ressembler à un SaaS IA générique : pas de dark mode, pas de dégradés violets, pas d'accents néon, pas de glassmorphism, et surtout pas le gabarit hero-metric (gros chiffre, petit label, stats de soutien, accent en dégradé).",
+      "Don't ressembler à un CRM grand public (HubSpot, Salesforce) : pas de chrome coloré, pas d'illustrations mascottes, pas de cartes identiques répétées à l'infini, pas de ton commercial enjoué.",
+      "Don't ressembler à un dashboard Material ou Bootstrap : pas d'ombres portées lourdes, pas de cartes empilées, pas de boutons pleine largeur, pas de palette bleu par défaut.",
+      "Don't utiliser #000, #fff en texte ou fond de page, ni aucun gris froid (slate-*, gray-*, zinc-*). Test d'audit : un aplat qui paraît bleuté à côté du fond crème vient de la mauvaise famille.",
+      "Don't écrire un littéral hexadécimal dans un composant.",
+      "Don't ouvrir un Sheet ou un drawer latéral droit. Décision produit non négociable : tout détail s'ouvre en Dialog centré.",
+      "Don't utiliser un border-left ou border-right de plus d'1 px comme accent coloré sur une carte, une ligne ou une alerte. Remplacer par un filet complet, un fond teinté, ou rien.",
+      "Don't appliquer un dégradé sur du texte (background-clip: text).",
+      "Don't empiler une carte dans une carte. Utiliser CardSection pour découper, ou une strate de surface.",
+      "Don't descendre sous 11 px. Les 239 text-[10px] restants sont une dette, pas un précédent.",
+      "Don't ajouter une deuxième ombre à un écran qui en a déjà une. Si l'élévation ne se lit pas, c'est la strate qui est fausse.",
+      "Don't animer une propriété de mise en page, ni utiliser un bounce ou un elastic. Transitions de 150 ms, sorties en exponentielle.",
+      "Don't livrer du texte décoratif, un faux libellé ou une donnée factice.",
+      "Don't tutoyer l'utilisateur."
+    ]
+  }
+}

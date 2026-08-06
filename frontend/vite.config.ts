@@ -74,9 +74,7 @@ export default defineConfig(({ mode }) => {
               }
               if (
                 normalizedId.includes('/node_modules/@tanstack/react-table/') ||
-                normalizedId.includes('/node_modules/@tanstack/table-core/') ||
-                normalizedId.includes('/node_modules/@tanstack/react-virtual/') ||
-                normalizedId.includes('/node_modules/@tanstack/virtual-core/')
+                normalizedId.includes('/node_modules/@tanstack/table-core/')
               ) {
                 return 'data-grid';
               }

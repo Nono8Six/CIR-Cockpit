@@ -97,3 +97,66 @@ pre,
   background-size: 800px 100%;
   animation: shimmer 1.4s ease-in-out infinite;
 }
+
+/*
+  Surfaces techniques de la brique Configurateurs.
+
+  L'ecran est traite comme un plan cote, pas comme une page marketing : filets
+  de 1 px, croix aux intersections, trames imprimees. Aucun degrade, aucune
+  ombre portee — la profondeur vient de la trame et du filet.
+*/
+.tech-dots {
+  background-image: radial-gradient(hsl(var(--foreground) / 0.085) 1px, transparent 1px);
+  background-size: 16px 16px;
+  background-position: -1px -1px;
+}
+
+/* Absence de donnee : une trame hachuree, jamais une case vide ni un zero. */
+.tech-hatch {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    hsl(var(--foreground) / 0.14) 0 1px,
+    transparent 1px 5px
+  );
+}
+
+/*
+  Elevation de la brique : une bordure tres claire et une ombre d'un seul pixel.
+  Suffit a detacher une surface blanche du fond chaud sans jamais peser.
+*/
+.tech-raised {
+  box-shadow:
+    0 1px 2px hsl(30 9% 17% / 0.04),
+    0 0 0 1px hsl(var(--border) / 0.7);
+}
+
+.tech-raised-hover {
+  transition: box-shadow 150ms ease, transform 150ms ease;
+}
+
+.tech-raised-hover:hover {
+  box-shadow:
+    0 2px 8px hsl(30 9% 17% / 0.06),
+    0 0 0 1px hsl(var(--border));
+}
+
+/*
+  Mouvement reduit : les etats de chargement restent visibles et lisibles, mais
+  cessent de defiler. Les transitions Radix sont neutralisees sans etre
+  supprimees, pour que les changements d'etat restent perceptibles.
+*/
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-shimmer {
+    animation: none;
+    background-position: 0 0;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

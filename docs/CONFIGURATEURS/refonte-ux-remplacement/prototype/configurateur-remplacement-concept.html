@@ -1,0 +1,1935 @@
+<title>Archive obsolète — prototype v6 remplacement moteur</title>
+<style>
+  /* ============ Tokens — miroir de frontend/src/index.css (thème clair unique du produit) ============ */
+  :root {
+    color-scheme: light;
+    --bg: hsl(48 30% 99%);
+    --fg: hsl(30 9% 17%);
+    --muted-fg: hsl(30 6% 44%);
+    --card: hsl(0 0% 100%);
+    --s1: hsl(45 28% 98%);
+    --s2: hsl(45 20% 96%);
+    --s3: hsl(40 13% 92%);
+    --border: hsl(36 12% 88%);
+    --border-subtle: hsl(38 14% 92%);
+    --primary: hsl(6 72% 45%);
+    --primary-soft: hsl(7 58% 96%);
+    --success: hsl(148 49% 33%);
+    --success-soft: hsl(148 40% 95%);
+    --warning: hsl(39 78% 40%);
+    --warning-soft: hsl(42 80% 94%);
+    --radius-sm: 0.25rem;
+    --radius-md: 0.375rem;
+    --radius-lg: 0.625rem;
+    --font-sans: "Inter Tight", "Inter", -apple-system, "Segoe UI", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--fg); font-family: var(--font-sans);
+    font-size: 13px; line-height: 1.45; -webkit-font-smoothing: antialiased;
+  }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  input { font: inherit; color: inherit; }
+  .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+  .concept-note {
+    display: flex; align-items: center; gap: 10px;
+    max-width: 1120px; margin: 16px auto 0; padding: 8px 14px;
+    border: 1px dashed var(--border); border-radius: var(--radius-lg);
+    background: var(--card); color: var(--muted-fg); font-size: 12px;
+  }
+  .concept-note strong { color: var(--fg); font-weight: 600; }
+  .concept-badge {
+    flex-shrink: 0; padding: 2px 8px; border-radius: 999px;
+    background: var(--primary-soft); color: var(--primary);
+    font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase;
+  }
+
+  .shell { max-width: 1120px; margin: 0 auto; padding: 20px 20px 56px; }
+  .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin: 18px 0 14px; flex-wrap: wrap; }
+  .page-head h1 { margin: 0; font-size: 21px; font-weight: 650; letter-spacing: -0.015em; text-wrap: balance; }
+  .page-head h1 .cont { color: var(--muted-fg); font-weight: 450; }
+  .crumbs { font-size: 11px; color: var(--muted-fg); margin-bottom: 6px; }
+  .crumbs span::after { content: " / "; color: var(--border); margin: 0 2px; }
+  .crumbs span:last-child::after { content: ""; }
+
+  .chapters { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+  .chapter {
+    display: flex; align-items: center; gap: 5px;
+    padding: 4px 9px; border-radius: 999px; border: 1px solid var(--border);
+    background: var(--card); font-size: 11px; font-weight: 550; color: var(--muted-fg);
+  }
+  .chapter.active { border-color: var(--fg); background: var(--fg); color: var(--bg); }
+  .chapter.done { color: var(--success); border-color: hsl(148 30% 78%); background: var(--success-soft); }
+  .chapter .n {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 15px; height: 15px; border-radius: 999px; font-size: 11px; font-weight: 650;
+    background: var(--s3); color: var(--muted-fg);
+  }
+  .chapter.active .n { background: hsl(0 0% 100% / 0.22); color: var(--bg); }
+  .chapter.done .n { background: var(--success); color: #fff; }
+
+  .mode-banner {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+    margin: 12px 0 0; padding: 7px 12px; border-radius: var(--radius-lg); font-size: 12px;
+  }
+  .mode-banner.light-mode { border: 1px solid var(--border); background: var(--s1); color: var(--muted-fg); }
+  .mode-banner.deep-mode { border: 1px solid hsl(148 30% 78%); background: var(--success-soft); color: var(--success); }
+  .mode-banner strong { font-weight: 650; }
+  .mode-banner .switch {
+    background: none; border: 1px solid var(--border); border-radius: 999px;
+    padding: 2px 10px; font-size: 11px; font-weight: 600; color: var(--fg);
+  }
+  .mode-banner .switch:hover { background: var(--s2); }
+
+  .facts {
+    display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+    min-height: 34px; margin: 10px 0 16px; padding: 6px 10px;
+    border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); background: var(--s1);
+  }
+  .facts .facts-label { font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-fg); margin-right: 4px; }
+  .facts .empty-hint { font-size: 12px; color: var(--muted-fg); }
+  .fact {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border);
+    background: var(--card); font-size: 12px; cursor: pointer; animation: pop 160ms ease-out;
+  }
+  .fact:hover { background: var(--s2); }
+  .fact .v { font-family: var(--font-mono); font-weight: 600; font-size: 12px; }
+  .fact .p { font-size: 11px; color: var(--muted-fg); }
+  .fact.photo .p, .fact.mesure .p { color: var(--success); }
+  .fact.dicte .p { color: hsl(39 78% 38%); }
+  .fact.deduit .p { color: var(--muted-fg); }
+  .fact.manquant { border-color: hsl(42 60% 75%); background: var(--warning-soft); }
+  .fact.manquant .p { color: var(--warning); font-weight: 600; }
+  @keyframes pop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .fact, .opt-detail { animation: none; } }
+
+  .stage { display: grid; grid-template-columns: minmax(0, 11fr) minmax(0, 9fr); gap: 16px; align-items: stretch; }
+  @media (max-width: 860px) { .stage { grid-template-columns: 1fr; } }
+
+  .visual-panel {
+    border: 1px solid var(--border); border-radius: var(--radius-lg);
+    background: var(--card); padding: 18px;
+    display: flex; flex-direction: column; gap: 10px; min-height: 380px;
+  }
+  .visual-panel .panel-title {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-fg);
+  }
+  .visual-panel .panel-title .tag { font-family: var(--font-mono); text-transform: none; letter-spacing: 0; font-weight: 500; }
+  .visual-holder { flex: 1; display: flex; align-items: center; justify-content: center; }
+  .visual-holder svg { width: 100%; max-width: 480px; height: auto; display: block; }
+  .visual-caption { font-size: 12px; color: var(--muted-fg); text-align: center; min-height: 2.6em; text-wrap: balance; }
+  .visual-caption strong { color: var(--fg); font-weight: 600; }
+
+  .question-panel {
+    border: 1px solid var(--border); border-radius: var(--radius-lg);
+    background: var(--card); padding: 20px 20px 16px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .q-eyebrow { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .q-eyebrow .where { font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-fg); }
+  .q-eyebrow .count { font-family: var(--font-mono); font-size: 11px; color: var(--muted-fg); }
+  .q-ask {
+    margin: 0; font-size: 18px; font-weight: 640; letter-spacing: -0.012em; line-height: 1.32;
+    text-wrap: balance; border-left: 3px solid var(--primary); padding-left: 12px;
+  }
+  .q-ask .say { color: var(--muted-fg); display: block; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 5px; }
+  .q-ask.self { border-left-color: var(--success); }
+  .q-helper { margin: 0; font-size: 12px; color: var(--muted-fg); }
+  .q-helper strong { color: var(--fg); font-weight: 600; }
+
+  .quickfills { display: flex; gap: 6px; flex-wrap: wrap; }
+  .quickfills button { padding: 4px 11px; border-radius: 999px; border: 1px solid var(--border); background: var(--card); font-size: 12px; font-weight: 600; }
+  .quickfills button:hover { background: var(--s1); border-color: var(--fg); }
+  .quickfills button .sub { font-family: var(--font-mono); font-weight: 500; font-size: 11px; color: var(--muted-fg); margin-left: 5px; }
+
+  .q-input-row { display: flex; gap: 8px; align-items: center; }
+  .q-input-row input {
+    flex: 1; min-width: 0; height: 44px; padding: 0 14px;
+    border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg);
+    font-family: var(--font-mono); font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums;
+  }
+  .q-input-row input:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; border-color: transparent; }
+  .q-input-row .unit { font-family: var(--font-mono); font-size: 14px; color: var(--muted-fg); flex-shrink: 0; }
+
+  .pair-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  @media (max-width: 560px) { .pair-grid { grid-template-columns: 1fr; } }
+  .pair-grid label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted-fg); }
+  .pair-grid input {
+    height: 40px; padding: 0 12px; border: 1px solid var(--border); border-radius: var(--radius-lg);
+    background: var(--bg); font-family: var(--font-mono); font-size: 14px; font-weight: 600;
+  }
+  .pair-grid input:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; border-color: transparent; }
+
+  .choice-grid { display: grid; gap: 8px; }
+  .choice-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  .choice-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .choice-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 620px) { .choice-grid.cols-3, .choice-grid.cols-4 { grid-template-columns: 1fr 1fr; } }
+  .choice {
+    position: relative; display: flex; align-items: center; gap: 12px; text-align: left;
+    padding: 11px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--card);
+    transition: background 120ms ease, border-color 120ms ease;
+  }
+  .choice:hover { background: var(--s1); }
+  .choice:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+  .choice.selected { border-color: var(--fg); background: var(--s1); box-shadow: inset 0 0 0 1px var(--fg); }
+  .choice .pic { flex-shrink: 0; width: 84px; }
+  .choice .pic svg { width: 100%; height: auto; display: block; }
+  .choice.stacked { flex-direction: column; align-items: stretch; gap: 8px; }
+  .choice.stacked .pic { width: 100%; max-width: 116px; margin: 0 auto; }
+  .choice.none { grid-column: 1 / -1; justify-content: center; text-align: center; background: var(--s1); }
+  .choice.none .t .d { display: inline; margin-left: 6px; }
+  .choice .t { min-width: 0; }
+  .choice .t .code { font-family: var(--font-mono); font-size: 13px; font-weight: 650; margin-right: 6px; }
+  .choice .t .name { font-size: 13px; font-weight: 600; }
+  .choice .t .d { display: block; font-size: 12px; color: var(--muted-fg); margin-top: 2px; }
+  .choice .hintbadge {
+    position: absolute; top: -7px; right: 8px; padding: 1px 7px; border-radius: 999px;
+    background: var(--success-soft); color: var(--success); border: 1px solid hsl(148 30% 80%);
+    font-size: 11px; font-weight: 600;
+  }
+
+  .opt-list { display: flex; flex-direction: column; gap: 6px; }
+  .opt-item { display: flex; flex-direction: column; gap: 4px; }
+  .opt-row {
+    display: flex; align-items: baseline; gap: 10px; text-align: left;
+    padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--card);
+    transition: background 100ms ease, border-color 100ms ease;
+  }
+  .opt-row:hover { background: var(--s1); }
+  .opt-row:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+  .opt-row.selected { border-color: var(--fg); box-shadow: inset 0 0 0 1px var(--fg); background: var(--s1); }
+  .opt-row.selected.warn { border-color: var(--warning); box-shadow: inset 0 0 0 1px var(--warning); background: var(--warning-soft); }
+  .opt-box {
+    flex-shrink: 0; width: 15px; height: 15px; align-self: center;
+    border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--bg);
+    display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: transparent;
+  }
+  .opt-row.selected .opt-box { background: var(--fg); border-color: var(--fg); color: var(--bg); }
+  .opt-row.selected.warn .opt-box { background: var(--warning); border-color: var(--warning); color: #fff; }
+  .opt-name { font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .opt-impact { flex: 1; font-size: 12px; color: var(--muted-fg); }
+  .opt-row.none-row { justify-content: center; background: var(--s1); }
+  .opt-row.none-row .opt-name { white-space: normal; }
+  .opt-detail { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 6px 10px 8px 34px; animation: pop 140ms ease-out; }
+  .opt-detail-label { font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted-fg); margin-right: 4px; }
+  .dchip { padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border); background: var(--card); font-size: 12px; font-weight: 600; }
+  .dchip:hover { background: var(--s1); }
+  .dchip.on { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+  .dinput {
+    height: 32px; padding: 0 10px; width: 210px; max-width: 100%;
+    border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg);
+    font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+  }
+  .dinput:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; border-color: transparent; }
+
+  .inference { display: flex; align-items: flex-start; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--s2); font-size: 12px; }
+  .inference .mono { font-weight: 650; }
+  .inference.ok { background: var(--success-soft); color: var(--success); }
+  .inference-list { display: flex; flex-direction: column; gap: 5px; padding: 9px 12px; border-radius: var(--radius-md); background: var(--success-soft); border: 1px solid hsl(148 30% 82%); }
+  .inference-list .head { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--success); }
+  .inference-list .line { font-size: 12px; color: var(--fg); }
+  .inference-list .line strong { color: var(--success); font-weight: 650; }
+  .inference-list .line .cause { color: var(--muted-fg); }
+
+  .q-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; padding-top: 8px; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px; height: 38px; padding: 0 16px;
+    border-radius: var(--radius-lg); border: 1px solid transparent; font-size: 13px; font-weight: 600;
+    transition: filter 120ms ease, background 120ms ease;
+  }
+  .btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  .btn-primary { background: var(--fg); color: var(--bg); }
+  .btn-primary:hover { filter: brightness(1.25); }
+  .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; filter: none; }
+  .btn-ghost { background: transparent; border-color: var(--border); color: var(--fg); }
+  .btn-ghost:hover { background: var(--s2); }
+  .btn-skip { background: transparent; border: none; color: var(--warning); font-weight: 600; font-size: 12px; padding: 0; height: auto; text-decoration: underline dotted; text-underline-offset: 3px; }
+  .btn-back { background: none; border: none; padding: 0; height: auto; color: var(--muted-fg); font-size: 12px; }
+  .btn-back:hover { color: var(--fg); }
+  .kbd-hint { font-size: 11px; color: var(--muted-fg); }
+  .kbd-hint kbd { font-family: var(--font-mono); font-size: 11px; padding: 1px 5px; border: 1px solid var(--border); border-bottom-width: 2px; border-radius: var(--radius-sm); background: var(--s1); }
+
+  /* Écran d'entrée : demande de photos */
+  .photo-ask { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+  .photo-ask > h2 { margin: 0; font-size: 18px; font-weight: 650; letter-spacing: -0.012em; text-wrap: balance; }
+  .photo-say {
+    border-left: 3px solid var(--primary); padding: 8px 0 8px 12px;
+    font-size: 15px; font-weight: 600; text-wrap: balance;
+  }
+  .photo-say .say { display: block; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-fg); margin-bottom: 4px; }
+  .photo-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 700px) { .photo-cards { grid-template-columns: 1fr; } }
+  .photo-card { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--card); padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .photo-card svg { width: 100%; max-width: 260px; margin: 0 auto; height: auto; display: block; }
+  .photo-card h3 { margin: 0; font-size: 13px; font-weight: 650; }
+  .photo-card p { margin: 0; font-size: 12px; color: var(--muted-fg); }
+  .photo-card .serves { font-size: 11px; color: var(--success); font-weight: 600; }
+  .photo-choices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  @media (max-width: 700px) { .photo-choices { grid-template-columns: 1fr; } }
+  .photo-choice { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--card); padding: 12px 14px; text-align: left; }
+  .photo-choice:hover { background: var(--s1); border-color: var(--fg); }
+  .photo-choice:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  .photo-choice .n { display: block; font-size: 13px; font-weight: 650; }
+  .photo-choice .d { display: block; font-size: 12px; color: var(--muted-fg); margin-top: 2px; }
+  .photo-choice.reco { border-color: hsl(148 30% 74%); background: var(--success-soft); }
+  .photo-choice.reco .n { color: var(--success); }
+  .photo-foot { font-size: 12px; color: var(--muted-fg); }
+
+  .recap { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--card); overflow: hidden; }
+  .recap-head { padding: 14px 18px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .recap-head h2 { margin: 0; font-size: 16px; font-weight: 650; letter-spacing: -0.01em; }
+  .recap-head .sub { font-size: 12px; color: var(--muted-fg); }
+  .recap-group-label { padding: 10px 18px 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-fg); }
+  .recap-group-label.hl { color: var(--success); }
+  .recap-row { display: flex; align-items: center; gap: 12px; padding: 8px 18px; border-top: 1px solid var(--border-subtle); }
+  .recap-row .lbl { flex: 1; font-size: 13px; }
+  .recap-row .val { font-family: var(--font-mono); font-size: 13px; font-weight: 650; font-variant-numeric: tabular-nums; }
+  .recap-row .val.missing { color: var(--warning); font-weight: 600; font-family: var(--font-sans); font-size: 12px; }
+  .recap-row .val.neutral { color: var(--muted-fg); font-weight: 500; font-family: var(--font-sans); font-size: 12px; }
+  .recap-row .prov { flex-shrink: 0; width: 118px; text-align: right; font-size: 11px; font-weight: 600; }
+  .recap-row .prov.photo, .recap-row .prov.mesure { color: var(--success); }
+  .recap-row .prov.dicte { color: hsl(39 78% 38%); }
+  .recap-row .prov.deduit { color: var(--muted-fg); }
+  .recap-row .prov.manquant { color: var(--warning); }
+  .recap-row .prov.neutral { color: var(--muted-fg); font-weight: 500; }
+  .recap-row .edit { background: none; border: none; padding: 2px 4px; color: var(--muted-fg); font-size: 11px; border-radius: var(--radius-sm); }
+  .recap-row .edit:hover { color: var(--fg); background: var(--s2); }
+  .recap-foot { padding: 14px 18px; border-top: 1px solid var(--border); background: var(--s1); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .recap-foot .note { font-size: 12px; color: var(--muted-fg); max-width: 52ch; }
+  .btn-search { background: var(--primary); color: #fff; height: 42px; padding: 0 20px; }
+  .btn-search:hover { filter: brightness(1.08); }
+
+  .report { max-width: 860px; margin: 0 auto; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--card); overflow: hidden; }
+  .report-head { padding: 18px 24px 14px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .report-head h2 { margin: 0; font-size: 17px; font-weight: 650; letter-spacing: -0.01em; }
+  .report-head .date { font-family: var(--font-mono); font-size: 12px; color: var(--muted-fg); }
+  .report-section { padding: 12px 24px 16px; border-bottom: 1px solid var(--border-subtle); }
+  .report-section h3 { margin: 0 0 8px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted-fg); }
+  .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 28px; }
+  @media (max-width: 640px) { .report-grid { grid-template-columns: 1fr; } }
+  .report-fact { display: flex; justify-content: space-between; gap: 10px; font-size: 12.5px; padding: 4px 0; border-bottom: 1px dashed var(--border-subtle); }
+  .report-fact .k { color: var(--muted-fg); }
+  .report-fact .w { font-family: var(--font-mono); font-weight: 600; text-align: right; }
+  .report-fact .w.miss { color: var(--warning); font-family: var(--font-sans); }
+  .report-reco { display: flex; gap: 8px; font-size: 12.5px; padding: 5px 0; }
+  .report-reco .b { color: var(--success); font-weight: 700; }
+  .sim-line { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; padding: 6px 0; border-bottom: 1px dashed var(--border-subtle); }
+  .sim-line .w { font-family: var(--font-mono); font-weight: 650; }
+  .sim-line .w.gain { color: var(--success); }
+  .report-note { font-size: 11px; color: var(--muted-fg); margin: 8px 0 0; }
+  .demo-tag { display: inline-block; padding: 1px 7px; border-radius: 999px; background: var(--warning-soft); color: var(--warning); font-size: 11px; font-weight: 600; margin-left: 6px; vertical-align: 1px; }
+  .report-actions { padding: 14px 24px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; background: var(--s1); }
+  .report-actions .hint { font-size: 12px; color: var(--muted-fg); max-width: 56ch; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%);
+    background: var(--fg); color: var(--bg); padding: 10px 18px; border-radius: var(--radius-lg);
+    font-size: 13px; max-width: 90vw; text-align: center; opacity: 0; pointer-events: none; transition: opacity 180ms ease;
+  }
+  .toast.show { opacity: 1; }
+
+  .plate-zone { transition: opacity 160ms ease; }
+  .plate-dimmed .plate-zone { opacity: 0.28; }
+  .plate-dimmed .plate-zone.zone-active { opacity: 1; }
+  .zone-ring { fill: none; stroke: var(--primary); stroke-width: 2.5; opacity: 0; transition: opacity 160ms ease; }
+  .zone-ring.on { opacity: 1; animation: ringpulse 1.6s ease-in-out infinite; }
+  @keyframes ringpulse { 0%, 100% { stroke-opacity: 1; } 50% { stroke-opacity: 0.45; } }
+  @media (prefers-reduced-motion: reduce) { .zone-ring.on { animation: none; } }
+
+  .decisions { max-width: 1120px; margin: 40px auto 0; padding: 0 20px 60px; }
+  .decisions h2 { font-size: 15px; font-weight: 650; letter-spacing: -0.01em; margin: 0 0 10px; }
+  .decisions .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 860px) { .decisions .cols { grid-template-columns: 1fr; } }
+  .decisions .box { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--card); padding: 14px 16px; }
+  .decisions .box h3 { margin: 0 0 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .decisions .box.settled h3 { color: var(--success); }
+  .decisions .box.open h3 { color: var(--warning); }
+  .decisions .box.full { grid-column: 1 / -1; }
+  .decisions ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; color: var(--fg); }
+  .decisions li strong { font-weight: 600; }
+  .decisions table { border-collapse: collapse; font-size: 12px; width: 100%; }
+  .decisions th, .decisions td { padding: 5px 10px; text-align: left; border-bottom: 1px solid var(--border-subtle); font-variant-numeric: tabular-nums; vertical-align: top; }
+  .decisions th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted-fg); }
+  .decisions .num td:not(:first-child), .decisions .num th:not(:first-child) { text-align: right; font-family: var(--font-mono); }
+  .decisions .tbl-note { font-size: 11px; color: var(--muted-fg); margin-top: 6px; }
+</style>
+
+<div class="concept-note">
+  <span class="concept-badge">Archive obsolète</span>
+  <span><strong>Ne pas utiliser comme cible produit.</strong> Cette v6 est conservée comme
+  trace du brainstorm. Elle contredit C7-1 v2 sur les photos obligatoires, l'ordre des
+  questions, les prescriptions de roulement et la simulation énergétique.</span>
+</div>
+
+<div class="shell">
+  <div class="page-head">
+    <div>
+      <div class="crumbs"><span>Configurateurs</span><span>Moteurs</span><span>Remplacement</span></div>
+      <h1 id="page-title">Prototype v6 archivé.<br><span class="cont">Le parcours courant est défini dans la spécification C7-1 v2.</span></h1>
+    </div>
+    <div class="chapters" id="chapters" aria-label="Progression"></div>
+  </div>
+
+  <div id="mode-banner"></div>
+
+  <div class="facts" id="facts" aria-live="polite">
+    <span class="facts-label">Relevé</span>
+    <span class="empty-hint" id="facts-empty">Chaque réponse s'ajoute ici, avec son origine : lue sur photo, dictée, mesurée, déduite ou à demander.</span>
+  </div>
+
+  <div id="screen"></div>
+</div>
+
+<div class="decisions">
+  <h2>Ce que ce prototype propose — et ce qui reste à décider</h2>
+  <div class="cols">
+    <div class="box settled">
+      <h3>Hypothèses proposées par la v6</h3>
+      <ul>
+        <li><strong>Deux photos demandées à chaque appel, en ouverture</strong> : la plaque cadrée et le moteur entier vu de loin. La seconde donne la position réelle, l'accouplement et les options que le client ne sait pas nommer.</li>
+        <li><strong>La photo est un canal de preuve</strong> : les faits lus sur photo sont distingués des faits déclarés au téléphone, sans confondre ce canal avec la source sémantique « plaque ».</li>
+        <li><strong>Le parcours commence par l'application</strong>, en deux temps : famille de machine (8 cas) puis cas précis (2 à 5 par famille) — pompe monobloc et pompe accouplée ne posent pas les mêmes contraintes.</li>
+        <li><strong>Puis l'accouplement</strong>, huit types dessinés : élastique, rigide, réducteur bridé, courroie trapézoïdale, courroie crantée, pignon-chaîne, roue montée sur l'arbre, cardan. Les types fréquents sur la machine choisie portent un repère.</li>
+        <li><strong>Une alerte roulement pourrait être proposée</strong> à partir de l'application et de l'accouplement, uniquement après validation métier ; le prototype ne démontre pas cette règle.</li>
+        <li><strong>La ligne roulements de la plaque n'est lue que sur photo</strong>, jamais dictée : gratuit pour le client, et c'est le TCS qui lit.</li>
+        <li>Le seuil de profondeur à 11 kW, les options fermées, les positions IM par icônes et le rapport client sont des hypothèses à éprouver ou à traiter dans leur tranche propriétaire.</li>
+      </ul>
+    </div>
+    <div class="box open">
+      <h3>Décisions PO ouvertes</h3>
+      <ul>
+        <li><strong>Taxonomie d'applications</strong> : 8 familles / 28 cas proposés ici — à valider et compléter avec les experts métier CIR.</li>
+        <li><strong>Règles de déduction roulement</strong> : celles du tableau ci-dessous sont une première formalisation à valider ; elles devront devenir des règles versionnées comme le ruleset `motor.compatibility.cir`.</li>
+        <li><strong>Statut contractuel de la photo</strong> : preuve attachée au dossier (stockage Supabase ?), et provenance `nameplate_photo` à ajouter aux contrats — aujourd'hui seuls `nameplate` dicté et `user_measurement` existent.</li>
+        <li><strong>Reconnaissance automatique</strong> : lecture assistée de la plaque par IA sur la photo — tentante, mais hors périmètre tant que le happy path n'est pas livré.</li>
+        <li><strong>Seuil 11 kW</strong> pour les questions énergie, et prix du kWh à paramétrer (0,18 €/kWh ici).</li>
+      </ul>
+    </div>
+    <div class="box full">
+      <h3>Règles de déduction du roulement — application × accouplement</h3>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr><th>Constat</th><th>Exigence déduite</th><th>Pourquoi</th></tr></thead>
+          <tbody>
+            <tr><td>Courroie trapézoïdale, crantée, pignon-chaîne ou engrenage direct</td><td>Roulement à rouleaux (NU) côté accouplement</td><td>Charge radiale permanente sur le bout d'arbre.</td></tr>
+            <tr><td>Roue, hélice ou turbine montée directement sur l'arbre moteur</td><td>Tenue axiale et porte-à-faux à vérifier</td><td>Le moteur porte la charge de la machine.</td></tr>
+            <tr><td>Broyeur, concasseur, compresseur à piston, malaxeur</td><td>Roulements renforcés, jeu C3</td><td>Chocs et couple pulsé.</td></tr>
+            <tr><td>Centrifugeuse, grand ventilateur, tambour rotatif</td><td>Inertie admissible au démarrage à vérifier</td><td>Masse tournante élevée.</td></tr>
+            <tr><td>Position verticale (V1, V3, V5, V6…)</td><td>Graissage et tenue axiale adaptés</td><td>La charge ne repose plus sur les mêmes pistes.</td></tr>
+            <tr><td>Alimentation par variateur</td><td>Roulement isolé côté ventilateur (NDE)</td><td>Courants de palier induits par la commutation.</td></tr>
+            <tr><td>Câble variateur au-delà d'environ 50 m</td><td>Selfs ou filtre dU/dt, en plus du roulement isolé</td><td>Réflexions d'onde et fronts de tension.</td></tr>
+            <tr><td>Levage, palan, treuil</td><td>Frein obligatoire, service intermittent à déclarer</td><td>Charge suspendue et cycles courts.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="tbl-note">Chaque règle est déterministe et porte sa cause : aucune n'invente une valeur, toutes se justifient au client dans le rapport. Une règle non applicable reste absente plutôt que neutre.</p>
+    </div>
+    <div class="box full">
+      <h3>Seuil énergie — gain annuel d'un passage IE2 → IE3 (4 pôles, 0,18 €/kWh)</h3>
+      <div style="overflow-x:auto;">
+        <table class="num">
+          <thead><tr><th>Moteur</th><th>2 000 h/an</th><th>4 000 h/an</th><th>6 000 h/an</th><th>8 760 h/an</th></tr></thead>
+          <tbody>
+            <tr><td>2,2 kW</td><td>26 €</td><td>52 €</td><td>78 €</td><td>114 €</td></tr>
+            <tr><td>5,5 kW</td><td>48 €</td><td>96 €</td><td>144 €</td><td>210 €</td></tr>
+            <tr><td>11 kW</td><td>77 €</td><td>155 €</td><td>232 €</td><td>339 €</td></tr>
+            <tr><td>22 kW</td><td>130 €</td><td>260 €</td><td>390 €</td><td>569 €</td></tr>
+            <tr><td>11 kW depuis IE1</td><td>188 €</td><td>376 €</td><td>565 €</td><td>824 €</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="tbl-note">Ce tableau illustratif ne démontre aucun seuil de gain. Au-dessus de 11 kW, l'interface propose fortement une étude ; à 11 kW ou moins, elle reste accessible sur demande. La simulation ne commence qu'avec l'accord du client.</p>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ============================================================
+   Visuels SVG
+   ============================================================ */
+
+function plateSVG(activeZone) {
+  const dim = activeZone ? 'plate-dimmed' : '';
+  const ring = (zone, x, y, w, h) =>
+    `<rect class="zone-ring ${activeZone === zone ? 'on' : ''}" x="${x}" y="${y}" width="${w}" height="${h}" rx="7"/>`;
+  const z = (zone, inner) =>
+    `<g class="plate-zone ${activeZone === zone ? 'zone-active' : ''}" data-zone="${zone}">${inner}</g>`;
+  return `
+  <svg viewBox="0 0 480 300" role="img" aria-label="Plaque signalétique générique, zone à lire mise en évidence" class="${dim}">
+    <rect x="6" y="6" width="468" height="288" rx="12" fill="hsl(40 8% 87%)" stroke="hsl(36 10% 72%)"/>
+    <rect x="14" y="14" width="452" height="272" rx="8" fill="none" stroke="hsl(36 10% 78%)"/>
+    ${[[24,24],[456,24],[24,276],[456,276]].map(([cx,cy]) =>
+      `<g><circle cx="${cx}" cy="${cy}" r="7" fill="hsl(40 6% 78%)" stroke="hsl(36 10% 62%)"/>
+       <line x1="${cx-4}" y1="${cy}" x2="${cx+4}" y2="${cy}" stroke="hsl(36 10% 55%)" stroke-width="1.6"/></g>`).join('')}
+    <g class="plate-zone" data-zone="brand">
+      <text x="240" y="40" text-anchor="middle" font-family="var(--font-sans)" font-size="14" font-weight="700" fill="hsl(30 9% 25%)" letter-spacing="2">MOTEUR ASYNCHRONE TRIPHASÉ</text>
+      <text x="240" y="55" text-anchor="middle" font-family="var(--font-sans)" font-size="9" fill="hsl(30 6% 45%)" letter-spacing="1">IEC 60034-1</text>
+    </g>
+    ${z('type', `
+      <text x="42" y="82" font-family="var(--font-mono)" font-size="11" fill="hsl(30 6% 40%)">Type</text>
+      <text x="88" y="82" font-family="var(--font-mono)" font-size="12" font-weight="700" fill="hsl(30 9% 20%)">LSF 132 M</text>
+      <text x="270" y="82" font-family="var(--font-mono)" font-size="11" fill="hsl(30 6% 40%)">N°</text>
+      <text x="300" y="82" font-family="var(--font-mono)" font-size="12" font-weight="700" fill="hsl(30 9% 20%)">736 912 035</text>`)}
+    <line x1="30" y1="94" x2="450" y2="94" stroke="hsl(36 10% 74%)"/>
+    <g font-family="var(--font-mono)" font-size="11" fill="hsl(30 6% 40%)">
+      <text x="86" y="114" text-anchor="middle">V</text>
+      <text x="156" y="114" text-anchor="middle">Hz</text>
+      <text x="230" y="114" text-anchor="middle">tr/min</text>
+      <text x="306" y="114" text-anchor="middle">kW</text>
+      <text x="372" y="114" text-anchor="middle">A</text>
+      <text x="432" y="114" text-anchor="middle">cos φ</text>
+    </g>
+    <line x1="30" y1="122" x2="450" y2="122" stroke="hsl(36 10% 80%)"/>
+    <g font-family="var(--font-mono)" font-size="12" font-weight="600" fill="hsl(30 9% 22%)">
+      <text x="42" y="142">Δ</text>
+      ${z('volts', `<text x="86" y="142" text-anchor="middle">230</text>`)}
+      ${z('hz', `<text x="156" y="142" text-anchor="middle">50</text>`)}
+      ${z('rpm', `<text x="230" y="142" text-anchor="middle">1440</text>`)}
+      ${z('kw', `<text x="306" y="142" text-anchor="middle">7,5</text>`)}
+      ${z('amps', `<text x="372" y="142" text-anchor="middle">26,4</text>`)}
+      <text x="432" y="142" text-anchor="middle">0,84</text>
+    </g>
+    <g font-family="var(--font-mono)" font-size="12" font-weight="600" fill="hsl(30 9% 22%)">
+      <text x="42" y="166">Y</text>
+      ${z('volts', `<text x="86" y="166" text-anchor="middle">400</text>`)}
+      ${z('hz', `<text x="156" y="166" text-anchor="middle">50</text>`)}
+      ${z('rpm', `<text x="230" y="166" text-anchor="middle">1440</text>`)}
+      ${z('kw', `<text x="306" y="166" text-anchor="middle">7,5</text>`)}
+      ${z('amps', `<text x="372" y="166" text-anchor="middle">15,2</text>`)}
+      <text x="432" y="166" text-anchor="middle">0,84</text>
+    </g>
+    <line x1="30" y1="182" x2="450" y2="182" stroke="hsl(36 10% 74%)"/>
+    <g font-family="var(--font-mono)" font-size="11" fill="hsl(30 9% 25%)">
+      ${z('ip', `<text x="42" y="206">IP 55</text>`)}
+      ${z('icl', `<text x="106" y="206">Icl F</text>`)}
+      ${z('ie', `<text x="168" y="206" font-weight="700">IE3</text><text x="204" y="206">η 91,7 %</text>`)}
+      <text x="290" y="206">68 kg</text>
+      ${z('icl', `<text x="360" y="206">Ta 40 °C</text>`)}
+    </g>
+    <line x1="30" y1="220" x2="450" y2="220" stroke="hsl(36 10% 80%)"/>
+    ${z('bearings', `
+      <text x="42" y="242" font-family="var(--font-mono)" font-size="10" fill="hsl(30 6% 48%)">Roulements DE 6308 ZZ C3</text>
+      <text x="260" y="242" font-family="var(--font-mono)" font-size="10" fill="hsl(30 6% 48%)">NDE 6206 ZZ C3</text>`)}
+    <g font-family="var(--font-mono)" font-size="10" fill="hsl(30 6% 48%)">
+      <text x="42" y="262">S1 · 3~ · Made in France</text>
+      <text x="260" y="262">Graisse : LGMT 2</text>
+    </g>
+    ${ring('kw', 280, 124, 52, 52)}
+    ${ring('rpm', 198, 124, 64, 52)}
+    ${ring('hz', 134, 124, 44, 52)}
+    ${ring('volts', 60, 124, 52, 52)}
+    ${ring('amps', 346, 124, 52, 52)}
+    ${ring('ip', 34, 190, 62, 24)}
+    ${ring('icl', 98, 190, 56, 24)}
+    ${ring('ie', 158, 190, 96, 24)}
+    ${ring('type', 34, 66, 300, 24)}
+    ${ring('bearings', 34, 226, 380, 24)}
+  </svg>`;
+}
+
+function motorProfileSVG({ feet = true, flange = false, flangeSmall = false, dimH = false, brake = false, vent = false, encoder = false, shaft2 = false } = {}) {
+  const fins = Array.from({ length: 11 }, (_, i) =>
+    `<line x1="${96 + i * 12}" y1="52" x2="${96 + i * 12}" y2="128" stroke="hsl(30 8% 62%)" stroke-width="1.4"/>`).join('');
+  return `
+  <svg viewBox="0 0 300 180" role="img" aria-label="Moteur électrique vue de profil">
+    ${brake ? `
+      <rect x="16" y="58" width="30" height="64" rx="4" fill="hsl(42 80% 94%)" stroke="hsl(39 78% 40%)" stroke-width="1.6"/>
+      <line x1="20" y1="112" x2="42" y2="66" stroke="hsl(39 78% 40%)" stroke-width="1"/>
+      <text x="31" y="140" text-anchor="middle" font-family="var(--font-mono)" font-size="10" font-weight="700" fill="hsl(39 78% 40%)">frein</text>` : ''}
+    ${encoder ? `
+      <rect x="28" y="76" width="18" height="28" rx="3" fill="hsl(42 80% 94%)" stroke="hsl(39 78% 40%)" stroke-width="1.6"/>
+      <circle cx="37" cy="90" r="5.5" fill="none" stroke="hsl(39 78% 40%)" stroke-width="1.3"/>` : ''}
+    ${shaft2 ? `<rect x="16" y="84" width="30" height="12" rx="2" fill="hsl(42 80% 94%)" stroke="hsl(39 78% 40%)" stroke-width="1.5"/>` : ''}
+    <rect x="46" y="56" width="44" height="68" rx="8" fill="hsl(45 20% 96%)" stroke="hsl(30 8% 55%)"/>
+    <line x1="56" y1="66" x2="56" y2="114" stroke="hsl(30 8% 70%)"/>
+    <line x1="66" y1="62" x2="66" y2="118" stroke="hsl(30 8% 70%)"/>
+    <rect x="88" y="48" width="140" height="84" rx="6" fill="hsl(45 20% 96%)" stroke="hsl(30 9% 40%)" stroke-width="1.5"/>
+    ${fins}
+    ${vent ? `
+      <rect x="90" y="10" width="38" height="34" rx="4" fill="hsl(42 80% 94%)" stroke="hsl(39 78% 40%)" stroke-width="1.6"/>
+      <circle cx="109" cy="24" r="8" fill="none" stroke="hsl(39 78% 40%)" stroke-width="1.4"/>
+      <path d="M104 44 l0 6 M114 44 l0 6" stroke="hsl(39 78% 40%)" stroke-width="1.6"/>` : `
+      <rect x="130" y="26" width="52" height="24" rx="3" fill="hsl(45 20% 96%)" stroke="hsl(30 8% 55%)"/>`}
+    <rect x="228" y="54" width="14" height="72" rx="3" fill="hsl(45 20% 96%)" stroke="hsl(30 9% 40%)"/>
+    ${flange ? `<rect x="242" y="${flangeSmall ? 54 : 42}" width="10" height="${flangeSmall ? 72 : 96}" rx="2" fill="hsl(45 20% 96%)" stroke="hsl(30 9% 35%)" stroke-width="1.5"/>` : ''}
+    <rect x="${flange ? 252 : 242}" y="83" width="30" height="14" rx="2" fill="hsl(40 13% 88%)" stroke="hsl(30 9% 40%)"/>
+    <line x1="40" y1="90" x2="290" y2="90" stroke="hsl(30 8% 60%)" stroke-dasharray="5 4" stroke-width="0.8"/>
+    ${feet ? `
+      <path d="M104 132 L100 148 L140 148 L136 132 Z" fill="hsl(45 20% 96%)" stroke="hsl(30 9% 40%)" stroke-width="1.5"/>
+      <path d="M186 132 L182 148 L222 148 L218 132 Z" fill="hsl(45 20% 96%)" stroke="hsl(30 9% 40%)" stroke-width="1.5"/>
+      <line x1="72" y1="148" x2="286" y2="148" stroke="hsl(30 9% 30%)" stroke-width="2"/>` : ''}
+    ${dimH ? `
+      <g stroke="hsl(6 72% 45%)" stroke-width="2">
+        <line x1="272" y1="148" x2="272" y2="90"/><line x1="266" y1="148" x2="278" y2="148"/><line x1="266" y1="90" x2="278" y2="90"/>
+      </g>
+      <circle cx="272" cy="90" r="3.4" fill="hsl(6 72% 45%)"/>
+      <text x="284" y="122" font-family="var(--font-mono)" font-size="15" font-weight="700" fill="hsl(6 72% 45%)">H</text>` : ''}
+  </svg>`;
+}
+
+function imIconSVG(code) {
+  const S = 'hsl(30 9% 38%)', F = 'hsl(45 20% 96%)';
+  const fins = Array.from({ length: 4 }, (_, i) =>
+    `<line x1="${22 + (i + 1) * 46 / 5}" y1="40" x2="${22 + (i + 1) * 46 / 5}" y2="70" stroke="hsl(30 8% 65%)"/>`).join('');
+  const motor = ({ feet = false, flange = false, small = false } = {}) => `
+    <rect x="22" y="40" width="46" height="30" rx="4" fill="${F}" stroke="${S}" stroke-width="1.4"/>
+    ${fins}
+    ${feet ? `<rect x="26" y="70" width="10" height="6" fill="${F}" stroke="${S}"/><rect x="52" y="70" width="10" height="6" fill="${F}" stroke="${S}"/>` : ''}
+    ${flange ? `<rect x="68" y="${small ? 37 : 31}" width="5" height="${small ? 36 : 48}" rx="1.5" fill="${F}" stroke="${S}" stroke-width="1.4"/>` : ''}
+    <rect x="${flange ? 73 : 68}" y="51" width="15" height="8" rx="1.5" fill="hsl(40 13% 86%)" stroke="${S}"/>`;
+  const surf = {
+    h: (y) => `<line x1="12" y1="${y}" x2="98" y2="${y}" stroke="${S}" stroke-width="2.2"/>`,
+    v: (x) => `<line x1="${x}" y1="12" x2="${x}" y2="98" stroke="${S}" stroke-width="2.2"/>`
+  };
+  const endView = (side) => `
+    ${surf.v(side === 'left' ? 26 : 84)}
+    <rect x="${side === 'left' ? 26 : 78}" y="47" width="6" height="16" fill="${F}" stroke="${S}"/>
+    <circle cx="55" cy="55" r="24" fill="${F}" stroke="${S}" stroke-width="1.4"/>
+    <circle cx="55" cy="55" r="7" fill="hsl(40 13% 86%)" stroke="${S}"/>
+    <circle cx="55" cy="55" r="1.6" fill="${S}"/>`;
+  const defs = {
+    B3: { rot: 0, opts: { feet: true }, ground: surf.h(78) },
+    B6: { end: 'left' }, B7: { end: 'right' },
+    B8: { rot: 180, opts: { feet: true }, ground: surf.h(32) },
+    V5: { rot: 90, opts: { feet: true }, ground: surf.v(32) },
+    V6: { rot: -90, opts: { feet: true }, ground: surf.v(78) },
+    B5: { rot: 0, opts: { flange: true }, ground: surf.v(74) },
+    V1: { rot: 90, opts: { flange: true }, ground: surf.h(74) },
+    V3: { rot: -90, opts: { flange: true }, ground: surf.h(36) },
+    B14: { rot: 0, opts: { flange: true, small: true }, ground: surf.v(74) },
+    V18: { rot: 90, opts: { flange: true, small: true }, ground: surf.h(74) },
+    V19: { rot: -90, opts: { flange: true, small: true }, ground: surf.h(36) },
+    B35: { rot: 0, opts: { feet: true, flange: true }, ground: surf.h(78) },
+    V15: { rot: 90, opts: { feet: true, flange: true }, ground: surf.h(74) },
+    V36: { rot: -90, opts: { feet: true, flange: true }, ground: surf.h(36) },
+    B34: { rot: 0, opts: { feet: true, flange: true, small: true }, ground: surf.h(78) },
+    B34VD: { rot: 90, opts: { feet: true, flange: true, small: true }, ground: surf.h(74) },
+    B34VU: { rot: -90, opts: { feet: true, flange: true, small: true }, ground: surf.h(36) }
+  };
+  const d = defs[code] ?? defs.B3;
+  const inner = d.end ? endView(d.end)
+    : `${d.ground}<g${d.rot ? ` transform="rotate(${d.rot} 55 55)"` : ''}>${motor(d.opts)}</g>`;
+  return `<svg viewBox="0 0 110 110" role="img" aria-label="Position ${code}">${inner}</svg>`;
+}
+
+function flangeFaceSVG(small = false, dimM = false) {
+  const outer = small ? 56 : 74, bolt = small ? 42 : 56;
+  const holes = [45, 135, 225, 315].map((a) => {
+    const x = 90 + bolt * Math.cos(a * Math.PI / 180), y = 90 + bolt * Math.sin(a * Math.PI / 180);
+    const tap = small
+      ? `<line x1="${x - 3.4}" y1="${y}" x2="${x + 3.4}" y2="${y}" stroke="hsl(30 9% 40%)" stroke-width="1"/>
+         <line x1="${x}" y1="${y - 3.4}" x2="${x}" y2="${y + 3.4}" stroke="hsl(30 9% 40%)" stroke-width="1"/>` : '';
+    return `<circle cx="${x}" cy="${y}" r="${small ? 5 : 6.5}" fill="hsl(0 0% 100%)" stroke="hsl(30 9% 40%)" stroke-width="1.3"/>${tap}`;
+  }).join('');
+  const p = (a) => [90 + bolt * Math.cos(a * Math.PI / 180), 90 + bolt * Math.sin(a * Math.PI / 180)];
+  const [mx1, my1] = p(225), [mx2, my2] = p(45);
+  return `
+  <svg viewBox="0 0 180 180" role="img" aria-label="Bride vue de face">
+    <circle cx="90" cy="90" r="${outer}" fill="hsl(45 20% 96%)" stroke="hsl(30 9% 35%)" stroke-width="1.6"/>
+    <circle cx="90" cy="90" r="${bolt}" fill="none" stroke="hsl(30 8% 60%)" stroke-dasharray="4 4"/>
+    <circle cx="90" cy="90" r="${small ? 26 : 34}" fill="hsl(40 13% 90%)" stroke="hsl(30 9% 40%)"/>
+    <circle cx="90" cy="90" r="12" fill="hsl(0 0% 100%)" stroke="hsl(30 9% 35%)" stroke-width="1.4"/>
+    ${holes}
+    ${dimM ? `
+      <line x1="${mx1}" y1="${my1}" x2="${mx2}" y2="${my2}" stroke="hsl(6 72% 45%)" stroke-width="2"/>
+      <circle cx="${mx1}" cy="${my1}" r="3.2" fill="hsl(6 72% 45%)"/><circle cx="${mx2}" cy="${my2}" r="3.2" fill="hsl(6 72% 45%)"/>
+      <text x="104" y="80" font-family="var(--font-mono)" font-size="15" font-weight="700" fill="hsl(6 72% 45%)">M</text>` : ''}
+  </svg>`;
+}
+
+function supplySVG(kind) {
+  const motor = (x) => `
+    <circle cx="${x}" cy="60" r="26" fill="hsl(45 20% 96%)" stroke="hsl(30 9% 40%)" stroke-width="1.5"/>
+    <text x="${x}" y="65" text-anchor="middle" font-family="var(--font-mono)" font-size="13" font-weight="700" fill="hsl(30 9% 25%)">M</text>`;
+  if (kind === 'mains') {
+    return `<svg viewBox="0 0 220 120" role="img" aria-label="Alimentation directe réseau">
+      <line x1="14" y1="40" x2="14" y2="80" stroke="hsl(30 9% 35%)" stroke-width="2"/>
+      <line x1="22" y1="40" x2="22" y2="80" stroke="hsl(30 9% 35%)" stroke-width="2"/>
+      <line x1="30" y1="60" x2="128" y2="60" stroke="hsl(30 9% 35%)" stroke-width="2"/>
+      <text x="66" y="48" text-anchor="middle" font-family="var(--font-sans)" font-size="10" fill="hsl(30 6% 45%)">400 V · 50 Hz</text>
+      ${motor(160)}</svg>`;
+  }
+  return `<svg viewBox="0 0 220 120" role="img" aria-label="Alimentation par variateur">
+    <line x1="14" y1="40" x2="14" y2="80" stroke="hsl(30 9% 35%)" stroke-width="2"/>
+    <line x1="22" y1="40" x2="22" y2="80" stroke="hsl(30 9% 35%)" stroke-width="2"/>
+    <line x1="30" y1="60" x2="58" y2="60" stroke="hsl(30 9% 35%)" stroke-width="2"/>
+    <rect x="58" y="38" width="46" height="44" rx="5" fill="hsl(45 20% 96%)" stroke="hsl(6 72% 45%)" stroke-width="1.8"/>
+    <text x="81" y="56" text-anchor="middle" font-family="var(--font-mono)" font-size="9" font-weight="700" fill="hsl(6 72% 45%)">VFD</text>
+    <line x1="104" y1="60" x2="128" y2="60" stroke="hsl(30 9% 35%)" stroke-width="2"/>
+    ${motor(160)}</svg>`;
+}
+
+/** Les deux photos demandées au client. */
+function photoRequestSVG(kind) {
+  const frame = (inner) => `
+    <svg viewBox="0 0 260 170" role="img" aria-label="Cadrage de photo attendu">
+      <rect x="4" y="4" width="252" height="162" rx="10" fill="hsl(45 20% 96%)" stroke="hsl(36 10% 78%)"/>
+      ${inner}
+      <g stroke="hsl(6 72% 45%)" stroke-width="2.4" fill="none">
+        <path d="M22 40 L22 24 L38 24"/><path d="M222 24 L238 24 L238 40"/>
+        <path d="M238 130 L238 146 L222 146"/><path d="M38 146 L22 146 L22 130"/>
+      </g>
+    </svg>`;
+  if (kind === 'plate') {
+    return frame(`
+      <g transform="translate(52 44) scale(0.32)">
+        <rect x="0" y="0" width="480" height="300" rx="12" fill="hsl(40 8% 87%)" stroke="hsl(36 10% 68%)" stroke-width="2"/>
+        <text x="240" y="52" text-anchor="middle" font-family="var(--font-sans)" font-size="30" font-weight="700" fill="hsl(30 9% 30%)">PLAQUE</text>
+        ${[100, 140, 180, 220, 260].map((y) =>
+          `<line x1="40" y1="${y}" x2="440" y2="${y}" stroke="hsl(36 10% 62%)" stroke-width="6" stroke-dasharray="${y % 80 ? '70 26' : '46 30'}"/>`).join('')}
+      </g>`);
+  }
+  return frame(`
+    <g transform="translate(28 34) scale(0.68)">
+      <line x1="6" y1="150" x2="290" y2="150" stroke="hsl(30 9% 35%)" stroke-width="2.4"/>
+      <g transform="translate(0 -6) scale(0.9)">
+        <rect x="46" y="56" width="44" height="68" rx="8" fill="hsl(0 0% 100%)" stroke="hsl(30 8% 55%)"/>
+        <rect x="88" y="48" width="140" height="84" rx="6" fill="hsl(0 0% 100%)" stroke="hsl(30 9% 40%)" stroke-width="1.5"/>
+        ${Array.from({ length: 9 }, (_, i) => `<line x1="${100 + i * 14}" y1="52" x2="${100 + i * 14}" y2="128" stroke="hsl(30 8% 68%)"/>`).join('')}
+        <rect x="130" y="26" width="52" height="24" rx="3" fill="hsl(0 0% 100%)" stroke="hsl(30 8% 55%)"/>
+        <rect x="228" y="54" width="14" height="72" rx="3" fill="hsl(0 0% 100%)" stroke="hsl(30 9% 40%)"/>
+        <rect x="242" y="83" width="26" height="14" rx="2" fill="hsl(40 13% 88%)" stroke="hsl(30 9% 40%)"/>
+        <path d="M104 132 L100 150 L140 150 L136 132 Z" fill="hsl(0 0% 100%)" stroke="hsl(30 9% 40%)" stroke-width="1.5"/>
+        <path d="M186 132 L182 150 L222 150 L218 132 Z" fill="hsl(0 0% 100%)" stroke="hsl(30 9% 40%)" stroke-width="1.5"/>
+        <circle cx="286" cy="90" r="26" fill="none" stroke="hsl(6 72% 45%)" stroke-width="2" stroke-dasharray="5 4"/>
+      </g>
+    </g>`);
+}
+
+/** Accouplements. */
+function couplingSVG(kind) {
+  const S = 'hsl(30 9% 38%)', F = 'hsl(45 20% 96%)', R = 'hsl(6 72% 45%)';
+  const shaft = `<rect x="4" y="34" width="34" height="12" rx="2" fill="hsl(40 13% 88%)" stroke="${S}"/>`;
+  const wrap = (inner) => `<svg viewBox="0 0 130 80" role="img" aria-label="Type d'accouplement">${inner}</svg>`;
+  const maps = {
+    elastic: `${shaft}
+      <rect x="38" y="22" width="20" height="36" rx="3" fill="${F}" stroke="${S}" stroke-width="1.5"/>
+      <rect x="72" y="22" width="20" height="36" rx="3" fill="${F}" stroke="${S}" stroke-width="1.5"/>
+      <rect x="58" y="26" width="14" height="28" rx="2" fill="hsl(7 58% 92%)" stroke="${R}" stroke-width="1.4"/>
+      <rect x="92" y="34" width="34" height="12" rx="2" fill="hsl(40 13% 88%)" stroke="${S}"/>`,
+    rigid: `${shaft}
+      <rect x="38" y="24" width="54" height="32" rx="3" fill="${F}" stroke="${S}" stroke-width="1.6"/>
+      <line x1="65" y1="26" x2="65" y2="54" stroke="${S}" stroke-dasharray="3 3"/>
+      <circle cx="50" cy="30" r="2" fill="${S}"/><circle cx="80" cy="30" r="2" fill="${S}"/>
+      <circle cx="50" cy="50" r="2" fill="${S}"/><circle cx="80" cy="50" r="2" fill="${S}"/>
+      <rect x="92" y="34" width="34" height="12" rx="2" fill="hsl(40 13% 88%)" stroke="${S}"/>`,
+    gearbox: `${shaft}
+      <rect x="38" y="14" width="12" height="52" rx="2" fill="${F}" stroke="${S}" stroke-width="1.5"/>
+      <rect x="50" y="18" width="56" height="44" rx="5" fill="${F}" stroke="${S}" stroke-width="1.6"/>
+      <circle cx="78" cy="40" r="13" fill="none" stroke="${S}" stroke-dasharray="3 3"/>
+      <rect x="106" y="34" width="20" height="12" rx="2" fill="hsl(40 13% 88%)" stroke="${S}"/>`,
+    vbelt: `<circle cx="34" cy="40" r="24" fill="${F}" stroke="${S}" stroke-width="1.5"/>
+      <circle cx="34" cy="40" r="5" fill="hsl(40 13% 88%)" stroke="${S}"/>
+      <circle cx="100" cy="26" r="14" fill="${F}" stroke="${S}" stroke-width="1.5"/>
+      <circle cx="100" cy="26" r="4" fill="hsl(40 13% 88%)" stroke="${S}"/>
+      <line x1="29" y1="16" x2="96" y2="12" stroke="${R}" stroke-width="2.4"/>
+      <line x1="41" y1="63" x2="107" y2="39" stroke="${R}" stroke-width="2.4"/>`,
+    timing: `<circle cx="34" cy="40" r="24" fill="${F}" stroke="${S}" stroke-width="1.5"/>
+      <circle cx="34" cy="40" r="5" fill="hsl(40 13% 88%)" stroke="${S}"/>
+      <circle cx="100" cy="30" r="15" fill="${F}" stroke="${S}" stroke-width="1.5"/>
+      <line x1="30" y1="16" x2="97" y2="15" stroke="${R}" stroke-width="3"/>
+      <line x1="38" y1="64" x2="105" y2="44" stroke="${R}" stroke-width="3"/>
+      ${Array.from({ length: 6 }, (_, i) => `<line x1="${34 + i * 12}" y1="17" x2="${34 + i * 12}" y2="22" stroke="${R}" stroke-width="1.4"/>`).join('')}`,
+    chain: `<circle cx="34" cy="40" r="22" fill="${F}" stroke="${S}" stroke-width="1.5"/>
+      ${Array.from({ length: 10 }, (_, i) => {
+        const a = i * 36 * Math.PI / 180;
+        return `<line x1="${34 + 22 * Math.cos(a)}" y1="${40 + 22 * Math.sin(a)}" x2="${34 + 26 * Math.cos(a)}" y2="${40 + 26 * Math.sin(a)}" stroke="${S}" stroke-width="1.6"/>`;
+      }).join('')}
+      <circle cx="34" cy="40" r="5" fill="hsl(40 13% 88%)" stroke="${S}"/>
+      <circle cx="102" cy="32" r="12" fill="${F}" stroke="${S}" stroke-width="1.5"/>
+      <line x1="32" y1="14" x2="100" y2="19" stroke="${R}" stroke-width="2.6" stroke-dasharray="4 3"/>
+      <line x1="38" y1="62" x2="106" y2="44" stroke="${R}" stroke-width="2.6" stroke-dasharray="4 3"/>`,
+    overhung: `${shaft}
+      <rect x="38" y="18" width="10" height="44" rx="2" fill="${F}" stroke="${S}" stroke-width="1.5"/>
+      <path d="M48 40 C64 12, 92 18, 104 24 C92 34, 70 40, 48 40 Z" fill="hsl(7 58% 92%)" stroke="${R}" stroke-width="1.5"/>
+      <path d="M48 40 C64 68, 92 62, 104 56 C92 46, 70 40, 48 40 Z" fill="hsl(7 58% 92%)" stroke="${R}" stroke-width="1.5"/>
+      <circle cx="48" cy="40" r="5" fill="hsl(40 13% 88%)" stroke="${S}"/>`,
+    cardan: `${shaft}
+      <rect x="38" y="28" width="14" height="24" rx="2" fill="${F}" stroke="${S}" stroke-width="1.5"/>
+      <circle cx="58" cy="40" r="7" fill="hsl(7 58% 92%)" stroke="${R}" stroke-width="1.5"/>
+      <line x1="52" y1="40" x2="64" y2="40" stroke="${R}" stroke-width="1.4"/>
+      <line x1="58" y1="34" x2="58" y2="46" stroke="${R}" stroke-width="1.4"/>
+      <rect x="64" y="42" width="40" height="10" rx="2" transform="rotate(12 64 42)" fill="hsl(40 13% 88%)" stroke="${S}"/>`
+  };
+  return wrap(maps[kind] ?? maps.elastic);
+}
+
+/** Glyphes de familles d'application. */
+function appFamilySVG(kind) {
+  const S = 'hsl(30 9% 38%)', F = 'hsl(45 20% 96%)', R = 'hsl(6 72% 45%)';
+  const wrap = (inner) => `<svg viewBox="0 0 110 80" role="img" aria-label="Famille d'application">${inner}</svg>`;
+  const maps = {
+    pompage: `<path d="M20 62 h70" stroke="${S}" stroke-width="2"/>
+      <circle cx="46" cy="38" r="20" fill="${F}" stroke="${S}" stroke-width="1.6"/>
+      <path d="M46 18 a20 20 0 0 1 18 12" fill="none" stroke="${R}" stroke-width="2"/>
+      <rect x="64" y="34" width="26" height="9" rx="2" fill="${F}" stroke="${S}"/>
+      <rect x="40" y="58" width="12" height="6" fill="${F}" stroke="${S}"/>`,
+    ventilation: `<circle cx="55" cy="38" r="24" fill="none" stroke="${S}" stroke-width="1.6"/>
+      ${[0, 120, 240].map((a) => `<path d="M55 38 C${55 + 22 * Math.cos((a - 22) * Math.PI / 180)} ${38 + 22 * Math.sin((a - 22) * Math.PI / 180)}, ${55 + 22 * Math.cos((a + 22) * Math.PI / 180)} ${38 + 22 * Math.sin((a + 22) * Math.PI / 180)}, 55 38 Z" fill="hsl(7 58% 92%)" stroke="${R}" stroke-width="1.3"/>`).join('')}
+      <circle cx="55" cy="38" r="5" fill="${F}" stroke="${S}"/>
+      <path d="M22 70 h66" stroke="${S}" stroke-width="2"/>`,
+    compression: `<rect x="24" y="26" width="34" height="34" rx="3" fill="${F}" stroke="${S}" stroke-width="1.6"/>
+      <rect x="34" y="14" width="14" height="14" rx="2" fill="hsl(7 58% 92%)" stroke="${R}" stroke-width="1.4"/>
+      <path d="M58 43 h14 a8 8 0 0 1 8 8 v10" fill="none" stroke="${S}" stroke-width="1.6"/>
+      <ellipse cx="80" cy="64" rx="12" ry="6" fill="${F}" stroke="${S}"/>
+      <path d="M20 66 h68" stroke="${S}" stroke-width="2"/>`,
+    manutention: `<circle cx="30" cy="44" r="12" fill="${F}" stroke="${S}" stroke-width="1.5"/>
+      <circle cx="82" cy="44" r="12" fill="${F}" stroke="${S}" stroke-width="1.5"/>
+      <line x1="30" y1="32" x2="82" y2="32" stroke="${R}" stroke-width="2.6"/>
+      <line x1="30" y1="56" x2="82" y2="56" stroke="${R}" stroke-width="2.6"/>
+      <rect x="46" y="18" width="20" height="13" rx="2" fill="hsl(7 58% 92%)" stroke="${R}" stroke-width="1.3"/>`,
+    broyage: `<path d="M28 24 h54 l-8 34 h-38 z" fill="${F}" stroke="${S}" stroke-width="1.6"/>
+      <circle cx="46" cy="40" r="7" fill="hsl(7 58% 92%)" stroke="${R}" stroke-width="1.4"/>
+      <circle cx="64" cy="40" r="7" fill="hsl(7 58% 92%)" stroke="${R}" stroke-width="1.4"/>
+      <path d="M48 62 l4 8 M62 62 l-4 8" stroke="${S}" stroke-width="1.4"/>
+      <path d="M38 14 l6 8 M55 12 l0 10 M72 14 l-6 8" stroke="${S}" stroke-width="1.3"/>`,
+    levage: `<path d="M22 12 h58" stroke="${S}" stroke-width="2.4"/>
+      <rect x="44" y="12" width="20" height="14" rx="2" fill="${F}" stroke="${S}" stroke-width="1.5"/>
+      <line x1="54" y1="26" x2="54" y2="46" stroke="${R}" stroke-width="1.8"/>
+      <path d="M48 46 h12 l-2 6 h-8 z" fill="hsl(7 58% 92%)" stroke="${R}" stroke-width="1.4"/>
+      <rect x="42" y="54" width="24" height="16" rx="2" fill="${F}" stroke="${S}" stroke-width="1.5"/>`,
+    agitation: `<path d="M28 18 v46 a26 12 0 0 0 54 0 v-46" fill="${F}" stroke="${S}" stroke-width="1.6"/>
+      <line x1="55" y1="10" x2="55" y2="58" stroke="${S}" stroke-width="1.8"/>
+      <path d="M42 52 h26" stroke="${R}" stroke-width="2.4"/>
+      <path d="M44 44 h22" stroke="${R}" stroke-width="2"/>
+      <path d="M30 26 q25 8 52 0" fill="none" stroke="hsl(30 8% 66%)" stroke-width="1.3"/>`,
+    machine: `<rect x="22" y="30" width="66" height="34" rx="4" fill="${F}" stroke="${S}" stroke-width="1.6"/>
+      <circle cx="42" cy="47" r="9" fill="none" stroke="${R}" stroke-width="1.6"/>
+      ${Array.from({ length: 8 }, (_, i) => { const a = i * 45 * Math.PI / 180; return `<line x1="${42 + 9 * Math.cos(a)}" y1="${47 + 9 * Math.sin(a)}" x2="${42 + 12 * Math.cos(a)}" y2="${47 + 12 * Math.sin(a)}" stroke="${R}" stroke-width="1.4"/>`; }).join('')}
+      <rect x="62" y="38" width="18" height="18" rx="2" fill="hsl(40 13% 88%)" stroke="${S}"/>
+      <path d="M18 68 h74" stroke="${S}" stroke-width="2"/>`
+  };
+  return wrap(maps[kind] ?? maps.machine);
+}
+
+/* ============================================================
+   Taxonomie applications et accouplements
+   ============================================================ */
+
+const APP_FAMILIES = [
+  { value: 'pompage', name: 'Pompage', d: 'Pompes de toutes technologies.' },
+  { value: 'ventilation', name: 'Ventilation, soufflage', d: 'Ventilateurs, extracteurs, tours.' },
+  { value: 'compression', name: 'Compression', d: 'Compresseurs et surpresseurs.' },
+  { value: 'manutention', name: 'Manutention, convoyage', d: 'Bandes, rouleaux, vis, godets.' },
+  { value: 'broyage', name: 'Broyage, malaxage', d: 'Broyeurs, concasseurs, pétrins.' },
+  { value: 'levage', name: 'Levage, translation', d: 'Palans, treuils, ponts roulants.' },
+  { value: 'agitation', name: 'Agitation, mélange', d: 'Cuves, mélangeurs, racleurs.' },
+  { value: 'machine', name: 'Machine, autre', d: 'Machines-outils, centrifugeuses, tambours.' }
+];
+
+/**
+ * Cas précis par famille. `severity` porte les causes de déduction :
+ * shock (chocs/couple pulsé), inertia (masse tournante), axial (charge axiale),
+ * brake (frein attendu). `suggest` marque les accouplements fréquents.
+ */
+const APP_CASES = {
+  pompage: [
+    { value: 'pompe_centrifuge', name: 'Pompe centrifuge accouplée', d: 'Pompe sur socle, accouplée au moteur.', suggest: ['elastic'] },
+    { value: 'pompe_monobloc', name: 'Pompe monobloc', d: 'La roue est montée sur l\'arbre du moteur.', severity: ['axial'], suggest: ['overhung'] },
+    { value: 'pompe_volumetrique', name: 'Pompe volumétrique', d: 'À engrenages, lobes, vis, péristaltique.', severity: ['shock'], suggest: ['elastic', 'gearbox'] },
+    { value: 'centrale_hydraulique', name: 'Centrale hydraulique', d: 'Groupe hydraulique, pompe à pistons.', severity: ['shock'], suggest: ['elastic'] }
+  ],
+  ventilation: [
+    { value: 'ventilo_direct', name: 'Ventilateur hélicoïde en direct', d: 'Hélice sur l\'arbre moteur.', severity: ['axial', 'inertia'], suggest: ['overhung'] },
+    { value: 'ventilo_courroie', name: 'Ventilateur centrifuge à courroie', d: 'Turbine entraînée par poulies.', severity: ['inertia'], suggest: ['vbelt'] },
+    { value: 'tour_aero', name: 'Tour aéroréfrigérante', d: 'Ventilateur en extérieur, souvent vertical.', severity: ['inertia'], suggest: ['gearbox', 'vbelt'] },
+    { value: 'extracteur', name: 'Extracteur, dépoussiéreur', d: 'Aspiration, filtration, transport pneumatique.', severity: ['inertia'], suggest: ['vbelt', 'overhung'] }
+  ],
+  compression: [
+    { value: 'compresseur_vis', name: 'Compresseur à vis', d: 'Rotatif, couple régulier.', suggest: ['elastic', 'vbelt'] },
+    { value: 'compresseur_piston', name: 'Compresseur à piston', d: 'Couple pulsé à chaque tour.', severity: ['shock'], suggest: ['vbelt'] },
+    { value: 'surpresseur', name: 'Soufflante, surpresseur', d: 'Roots, canal latéral.', suggest: ['vbelt', 'elastic'] }
+  ],
+  manutention: [
+    { value: 'convoyeur_bande', name: 'Convoyeur à bande', d: 'Tapis, souvent via réducteur.', suggest: ['gearbox', 'chain'] },
+    { value: 'convoyeur_rouleaux', name: 'Rouleaux motorisés', d: 'Table à rouleaux, chaîne ou courroie.', suggest: ['chain', 'gearbox'] },
+    { value: 'vis_transport', name: 'Vis transporteuse', d: 'Vis d\'Archimède, produit en vrac.', severity: ['shock'], suggest: ['gearbox'] },
+    { value: 'elevateur_godets', name: 'Élévateur à godets', d: 'Reprise de charge au démarrage.', severity: ['shock', 'inertia'], suggest: ['gearbox', 'chain'] }
+  ],
+  broyage: [
+    { value: 'broyeur', name: 'Broyeur à marteaux ou couteaux', d: 'Chocs répétés, forte inertie.', severity: ['shock', 'inertia'], suggest: ['vbelt'] },
+    { value: 'concasseur', name: 'Concasseur', d: 'Charges de rupture.', severity: ['shock', 'inertia'], suggest: ['vbelt'] },
+    { value: 'malaxeur', name: 'Malaxeur, pétrin', d: 'Couple variable et élevé.', severity: ['shock'], suggest: ['gearbox', 'chain'] }
+  ],
+  levage: [
+    { value: 'palan', name: 'Palan, treuil', d: 'Charge suspendue, cycles courts.', severity: ['brake', 'shock'], suggest: ['gearbox'] },
+    { value: 'translation', name: 'Translation de pont roulant', d: 'Démarrages et arrêts fréquents.', severity: ['brake'], suggest: ['gearbox'] },
+    { value: 'enrouleur', name: 'Enrouleur, dérouleur', d: 'Couple asservi à la tension.', suggest: ['gearbox', 'elastic'] }
+  ],
+  agitation: [
+    { value: 'agitateur_vertical', name: 'Agitateur vertical de cuve', d: 'Arbre long, moteur en haut.', severity: ['axial'], suggest: ['gearbox'] },
+    { value: 'melangeur_horizontal', name: 'Mélangeur horizontal', d: 'Ruban, pales, produit dense.', severity: ['shock'], suggest: ['gearbox', 'chain'] },
+    { value: 'racleur', name: 'Racleur, décanteur', d: 'Très basse vitesse, couple élevé.', suggest: ['gearbox'] }
+  ],
+  machine: [
+    { value: 'machine_outil', name: 'Machine-outil, scie', d: 'Vitesse élevée, arrêts fréquents.', severity: ['inertia'], suggest: ['vbelt', 'timing'] },
+    { value: 'centrifugeuse', name: 'Centrifugeuse, essoreuse', d: 'Inertie très élevée au lancement.', severity: ['inertia'], suggest: ['vbelt'] },
+    { value: 'tambour', name: 'Tambour rotatif, sécheur', d: 'Grande masse tournante.', severity: ['inertia', 'shock'], suggest: ['gearbox', 'chain'] },
+    { value: 'autre_machine', name: 'Autre machine', d: 'Précisée au dossier — aucun critère inventé.', suggest: [] }
+  ]
+};
+
+const COUPLINGS = [
+  { value: 'elastic', name: 'Accouplement élastique', d: 'Manchon, broches, pneu — pas de charge radiale.' },
+  { value: 'rigid', name: 'Accouplement rigide', d: 'Alignement strict exigé.' },
+  { value: 'gearbox', name: 'Réducteur bridé sur le moteur', d: 'Lanterne ou bride — le réducteur porte la charge.' },
+  { value: 'vbelt', name: 'Courroie trapézoïdale', d: 'Charge radiale permanente.', radial: true },
+  { value: 'timing', name: 'Courroie crantée', d: 'Charge radiale, sans glissement.', radial: true },
+  { value: 'chain', name: 'Pignon-chaîne', d: 'Charge radiale et à-coups.', radial: true },
+  { value: 'overhung', name: 'Roue montée sur l\'arbre moteur', d: 'Hélice, turbine, roue de pompe en porte-à-faux.', overhung: true },
+  { value: 'cardan', name: 'Cardan, arbre de transmission', d: 'Désalignement admis, charge modérée.' }
+];
+
+/* ============================================================
+   État
+   ============================================================ */
+
+const state = {
+  screen: 'entry',
+  stepIndex: 0,
+  answers: {},
+  photoMode: null,          // 'both' | 'plate' | 'none'
+  inferredPoles: null,
+  inferredH: null,
+  forceDeep: false
+};
+
+function numAnswer(id) {
+  const a = state.answers[id];
+  if (!a || a.missing) return null;
+  const n = Number(String(a.value).replace(',', '.').replace(/\s/g, ''));
+  return Number.isFinite(n) ? n : null;
+}
+function valueOf(id) {
+  const a = state.answers[id];
+  return a && !a.missing ? a.value : null;
+}
+function multiValues(id) {
+  const a = state.answers[id];
+  return a && !a.missing && !a.neutral ? (a.values ?? []) : [];
+}
+
+function gateInfo() {
+  const p = numAnswer('power');
+  const h = numAnswer('hours');
+  const kwh = p !== null && h !== null ? Math.round(p * h) : null;
+  const computed = p !== null && p >= 11;
+  return { p, h, kwh, deep: state.forceDeep || computed, computed };
+}
+
+const hasPlatePhoto = () => state.photoMode === 'both' || state.photoMode === 'plate';
+const hasWidePhoto = () => state.photoMode === 'both';
+const isFlangeOnly = () => ['B5', 'B14'].includes(valueOf('mounting'));
+const hasFeet = () => {
+  const m = valueOf('mounting');
+  return m === null || ['B3', 'B35', 'B34'].includes(m);
+};
+
+function currentCase() {
+  const fam = valueOf('appFamily');
+  const cs = valueOf('appCase');
+  if (!fam || !cs) return null;
+  return (APP_CASES[fam] ?? []).find((c) => c.value === cs) ?? null;
+}
+
+/** Exigences déduites — chaque entrée porte sa cause. */
+function derivedRequirements() {
+  const out = [];
+  const cas = currentCase();
+  const sev = cas?.severity ?? [];
+  const coupling = COUPLINGS.find((c) => c.value === valueOf('coupling')) ?? null;
+
+  if (coupling?.radial) {
+    out.push(['Roulement à rouleaux (NU) côté accouplement', `${coupling.name.toLowerCase()} — charge radiale permanente`]);
+  }
+  if (coupling?.overhung) {
+    out.push(['Tenue axiale et porte-à-faux à vérifier', 'roue montée directement sur l\'arbre moteur']);
+  }
+  if (sev.includes('shock')) {
+    out.push(['Roulements renforcés, jeu C3', `${cas.name.toLowerCase()} — chocs ou couple pulsé`]);
+  }
+  if (sev.includes('inertia')) {
+    out.push(['Inertie admissible au démarrage à vérifier', `${cas.name.toLowerCase()} — masse tournante élevée`]);
+  }
+  if (sev.includes('axial') && !coupling?.overhung) {
+    out.push(['Tenue à la charge axiale à vérifier', `${cas.name.toLowerCase()}`]);
+  }
+  if (sev.includes('brake') && !multiValues('options').includes('brake')) {
+    out.push(['Frein et service intermittent à confirmer', `${cas.name.toLowerCase()} — charge suspendue`]);
+  }
+  const pos = valueOf('position');
+  if (pos && /^(V|B34V)/.test(pos)) {
+    out.push(['Graissage et tenue axiale adaptés à la verticale', `position ${pos.startsWith('B34V') ? 'B34 verticale' : 'IM ' + pos}`]);
+  }
+  if (valueOf('supply') === 'vfd') {
+    out.push(['Roulement isolé côté ventilateur (NDE)', 'alimentation par variateur — courants de palier']);
+  }
+  const dist = numAnswer('vfdDistance');
+  if (dist !== null && dist > 50) {
+    out.push(['Selfs ou filtre dU/dt', `câble variateur ≈ ${dist} m`]);
+  }
+  if (multiValues('env').includes('washdown')) {
+    out.push(['Étanchéité renforcée exigée', 'lavage haute pression']);
+  }
+  if (multiValues('env').includes('hot')) {
+    out.push(['Déclassement thermique à appliquer', 'ambiante au-delà de 40 °C']);
+  }
+  return out;
+}
+
+/* ============================================================
+   Parcours
+   ============================================================ */
+
+const CHAPTERS = ['Photos', 'Application', 'Plaque', 'Montage', 'Options', 'Énergie', 'Vérification'];
+const IEC_FRAMES = [56, 63, 71, 80, 90, 100, 112, 132, 160, 180, 200, 225, 250, 280, 315, 355, 400];
+
+const STEPS = [
+  /* ---------- Application d'abord ---------- */
+  {
+    id: 'appFamily', chapter: 'Application',
+    ask: 'Ce moteur entraîne quoi ? Commençons par le type de machine.',
+    helper: 'L\'application est la <strong>première</strong> question : elle qualifie le couple, le service et — avec l\'accouplement — décide du roulement. Le cas précis vient juste après.',
+    caption: 'Huit familles de machines ; la photo d\'ensemble aide à confirmer ce que décrit le client.',
+    visual: () => motorProfileSVG({ feet: true }),
+    choiceCols: 4, stackedPic: true,
+    choices: APP_FAMILIES.map((f) => ({ ...f, pic: () => appFamilySVG(f.value) })),
+    skip: 'Le client ne sait pas',
+    factLabel: 'Famille', prov: 'lu',
+    display: (v) => APP_FAMILIES.find((f) => f.value === v)?.name ?? v
+  },
+  {
+    id: 'appCase', chapter: 'Application',
+    when: () => valueOf('appFamily') !== null,
+    ask: 'Plus précisément, de quelle machine s\'agit-il ?',
+    helper: 'Le cas précis change tout : une <strong>pompe monobloc</strong> porte sa roue sur l\'arbre du moteur, une pompe accouplée non. Un broyeur encaisse des chocs, un compresseur à vis non.',
+    caption: 'Les cas proposés suivent la famille choisie.',
+    visual: () => appFamilySVG(valueOf('appFamily') ?? 'machine'),
+    choiceCols: 2,
+    getChoices: () => APP_CASES[valueOf('appFamily')] ?? APP_CASES.machine,
+    skip: 'Le client ne sait pas',
+    factLabel: 'Machine', prov: 'lu',
+    display: (v) => {
+      for (const list of Object.values(APP_CASES)) {
+        const found = list.find((c) => c.value === v);
+        if (found) return found.name;
+      }
+      return v;
+    }
+  },
+  {
+    id: 'coupling', chapter: 'Application',
+    ask: 'Comment le moteur est-il relié à cette machine ?',
+    helper: 'Avec l\'application, l\'accouplement <strong>détermine le roulement</strong> — vous n\'aurez pas à le demander au client. Sur la photo d\'ensemble, poulies et courroies se voient immédiatement.',
+    caption: 'Huit liaisons possibles ; celles fréquentes sur la machine choisie portent un repère.',
+    visual: () => couplingSVG(valueOf('coupling') ?? 'elastic'),
+    choiceCols: 4, stackedPic: true,
+    getChoices: () => {
+      const suggest = currentCase()?.suggest ?? [];
+      return COUPLINGS.map((c) => ({
+        ...c,
+        hint: suggest.includes(c.value) ? 'fréquent ici' : null,
+        pic: () => couplingSVG(c.value)
+      }));
+    },
+    skip: 'Le client ne sait pas',
+    factLabel: 'Accouplement', prov: 'lu',
+    display: (v) => COUPLINGS.find((c) => c.value === v)?.name ?? v,
+    showDerived: true
+  },
+  /* ---------- Plaque ---------- */
+  {
+    id: 'power', chapter: 'Plaque', zone: 'kw', fromPlate: true,
+    ask: 'Quelle puissance est inscrite, en kW ?',
+    selfAsk: 'Relevez la puissance en kW sur la photo de plaque.',
+    helper: 'Au centre de la plaque. Si elle indique <strong>CV</strong> ou <strong>HP</strong>, notez la valeur telle quelle. Cette valeur décide aussi de la profondeur du parcours.',
+    caption: 'La zone <strong>kW</strong> est entourée, dans le tableau électrique.',
+    input: { kind: 'number', unit: 'kW', placeholder: '7,5' },
+    skip: 'Illisible', factLabel: 'Puissance', factUnit: 'kW', prov: 'lu'
+  },
+  {
+    id: 'type', chapter: 'Plaque', zone: 'type', fromPlate: true,
+    ask: 'Lisez-moi la ligne « Type », exactement comme elle est écrite.',
+    selfAsk: 'Recopiez la ligne « Type » telle qu\'elle apparaît sur la photo.',
+    helper: 'Le <strong>nombre</strong> est la carcasse → hauteur d\'axe, extraite automatiquement. La série (« LSF ») sert au rapprochement constructeur, la lettre (« M ») distingue un 132 S d\'un 132 M.',
+    caption: 'Ligne <strong>Type</strong>, en haut de la plaque.',
+    input: { kind: 'text', unit: '', placeholder: 'LSF 132 M' },
+    skip: 'Illisible', factLabel: 'Désignation', prov: 'lu', display: (v) => v
+  },
+  {
+    id: 'speed', chapter: 'Plaque', zone: 'rpm', fromPlate: true,
+    ask: 'Quelle vitesse est inscrite, en tr/min ?',
+    selfAsk: 'Relevez la vitesse en tr/min sur la photo.',
+    helper: 'La vitesse trahit le nombre de pôles : <span class="mono">1440</span> ⇒ 4 pôles. La déduction s\'affiche pour confirmation, jamais en silence.',
+    caption: 'Colonne <strong>tr/min</strong>, même ligne que la puissance.',
+    input: { kind: 'number', unit: 'tr/min', placeholder: '1440' },
+    skip: 'Illisible', factLabel: 'Vitesse', factUnit: 'tr/min', prov: 'lu'
+  },
+  {
+    id: 'ip', chapter: 'Plaque', zone: 'ip', fromPlate: true,
+    ask: 'Que lisez-vous après « IP » ?',
+    selfAsk: 'Relevez l\'indice IP sur la photo.',
+    helper: 'L\'indice de protection est une <strong>exigence</strong> : un IP 55 ne se remplace pas par un IP 23.',
+    caption: 'Zone <strong>IP</strong> entourée, en bas de la plaque.',
+    input: { kind: 'text', unit: 'IP', placeholder: '55' },
+    skip: 'Illisible', factLabel: 'Indice IP', prov: 'lu', display: (v) => `IP ${v}`
+  },
+  {
+    id: 'bearingsRead', chapter: 'Plaque', zone: 'bearings', fromPlate: true,
+    when: () => hasPlatePhoto(),
+    ask: '', // jamais dicté : lecture par le TCS
+    selfAsk: 'La photo montre-t-elle la ligne « Roulements » ? Recopiez-la.',
+    helper: 'Cette ligne n\'est <strong>jamais demandée au client</strong> : trop pénible au téléphone, et l\'exigence est de toute façon déduite de l\'application et de l\'accouplement. Sur photo, c\'est gratuit — donc on la prend.',
+    caption: 'Ligne <strong>Roulements</strong> entourée : DE côté accouplement, NDE côté ventilateur.',
+    input: {
+      kind: 'pair',
+      fields: [
+        { key: 'de', label: 'Côté accouplement (DE)', placeholder: '6308 ZZ C3' },
+        { key: 'nde', label: 'Côté ventilateur (NDE)', placeholder: '6206 ZZ C3' }
+      ]
+    },
+    skip: 'Non visible sur la photo',
+    factLabel: 'Roulements en place', prov: 'lu', display: (v) => v
+  },
+  /* ---------- Montage ---------- */
+  {
+    id: 'mounting', chapter: 'Montage',
+    ask: 'Comment le moteur est-il fixé ? Des pattes, une bride, ou les deux ?',
+    selfAsk: 'Sur la photo d\'ensemble : pattes, bride, ou les deux ?',
+    helper: 'B5 : grande bride, les boulons la traversent. B14 : petite bride, les vis se vissent dedans. Le montage décide des cotes à relever.',
+    caption: 'Les cinq constructions du catalogue — la position exacte vient ensuite.',
+    choiceCols: 2,
+    choices: [
+      { value: 'B3', code: 'B3', name: 'Pattes', d: 'Posé et boulonné sur un châssis.', pic: () => motorProfileSVG({ feet: true }) },
+      { value: 'B5', code: 'B5', name: 'Grande bride à trous lisses', d: 'Les boulons traversent la bride.', pic: () => flangeFaceSVG() },
+      { value: 'B14', code: 'B14', name: 'Petite bride taraudée', d: 'Les vis se vissent dans la bride.', pic: () => flangeFaceSVG(true) },
+      { value: 'B35', code: 'B35', name: 'Pattes + grande bride', d: 'Les deux fixations, bride à trous lisses.', pic: () => motorProfileSVG({ feet: true, flange: true }) },
+      { value: 'B34', code: 'B34', name: 'Pattes + bride taraudée', d: 'Les deux fixations, petite bride.', pic: () => motorProfileSVG({ feet: true, flange: true, flangeSmall: true }) }
+    ],
+    skip: 'À vérifier', factLabel: 'Montage', prov: 'lu', display: (v) => v
+  },
+  {
+    id: 'position', chapter: 'Montage',
+    ask: 'Dans quelle position exacte travaille-t-il ? Choisissez l\'image qui correspond.',
+    selfAsk: 'La photo d\'ensemble donne la position : choisissez l\'image qui correspond.',
+    helper: 'La position normalisée <strong>IM (IEC 60034-7)</strong> se choisit en voyant, jamais de tête. C\'est exactement ce que la photo d\'ensemble permet de trancher sans faire décrire le client.',
+    caption: 'Les positions suivent la fixation choisie — le trait épais est la surface d\'appui.',
+    visual: () => motorProfileSVG({ feet: true }),
+    choiceCols: 3, stackedPic: true,
+    getChoices: () => {
+      const sets = {
+        B3: [
+          { value: 'B3', code: 'IM B3', name: 'Au sol', d: 'Pattes sur châssis horizontal.' },
+          { value: 'B6', code: 'IM B6', name: 'Au mur, pattes à gauche', d: 'Vu du côté accouplement.' },
+          { value: 'B7', code: 'IM B7', name: 'Au mur, pattes à droite', d: 'Vu du côté accouplement.' },
+          { value: 'B8', code: 'IM B8', name: 'Au plafond', d: 'Pattes vers le haut.' },
+          { value: 'V5', code: 'IM V5', name: 'Vertical, arbre en bas', d: 'Pattes sur support vertical.' },
+          { value: 'V6', code: 'IM V6', name: 'Vertical, arbre en haut', d: 'Pattes sur support vertical.' }
+        ],
+        B5: [
+          { value: 'B5', code: 'IM B5', name: 'Horizontal', d: 'Bride contre la machine.' },
+          { value: 'V1', code: 'IM V1', name: 'Vertical, arbre en bas', d: 'Roulements souvent spécifiques.' },
+          { value: 'V3', code: 'IM V3', name: 'Vertical, arbre en haut', d: 'Moins fréquent.' }
+        ],
+        B14: [
+          { value: 'B14', code: 'IM B14', name: 'Horizontal', d: 'Bride taraudée contre la machine.' },
+          { value: 'V18', code: 'IM V18', name: 'Vertical, arbre en bas', d: 'Bride taraudée, arbre en bas.' },
+          { value: 'V19', code: 'IM V19', name: 'Vertical, arbre en haut', d: 'Bride taraudée, arbre en haut.' }
+        ],
+        B35: [
+          { value: 'B35', code: 'IM B35', name: 'Horizontal', d: 'Pattes au sol, bride en service.' },
+          { value: 'V15', code: 'IM V15', name: 'Vertical, arbre en bas', d: 'Pattes et bride, arbre en bas.' },
+          { value: 'V36', code: 'IM V36', name: 'Vertical, arbre en haut', d: 'Pattes et bride, arbre en haut.' }
+        ],
+        B34: [
+          { value: 'B34', code: 'IM B34', name: 'Horizontal', d: 'Pattes au sol, bride taraudée.' },
+          { value: 'B34VD', code: 'IM —', name: 'Vertical, arbre en bas', d: 'Code composé — consigné tel quel.' },
+          { value: 'B34VU', code: 'IM —', name: 'Vertical, arbre en haut', d: 'Code composé — consigné tel quel.' }
+        ]
+      };
+      const list = sets[valueOf('mounting')] ?? sets.B3;
+      return list.map((c) => ({ ...c, pic: () => imIconSVG(c.value) }));
+    },
+    skip: 'À vérifier', factLabel: 'Position (IM)', prov: 'lu',
+    display: (v) => v === 'B34VD' ? 'B34 vertical, arbre bas' : v === 'B34VU' ? 'B34 vertical, arbre haut' : `IM ${v}`
+  },
+  {
+    id: 'dimH', chapter: 'Montage',
+    when: () => hasFeet() && state.inferredH === null,
+    ask: 'Avec un mètre : du plan d\'appui des pattes au centre de l\'arbre, combien mesurez-vous ?',
+    helper: 'La désignation n\'a pas livré la carcasse : cette mesure de la <strong>hauteur d\'axe H</strong> devient la cote qui élimine le plus de candidats. Enregistrée comme mesurée.',
+    caption: 'La cote <strong>H</strong> est tracée en rouge.',
+    visual: () => motorProfileSVG({ feet: true, flange: true, dimH: true }),
+    input: { kind: 'number', unit: 'mm', placeholder: '132' },
+    skip: 'Pas de mètre', factLabel: 'Hauteur d\'axe H', factUnit: 'mm', prov: 'mesure'
+  },
+  {
+    id: 'dimM', chapter: 'Montage',
+    when: () => isFlangeOnly(),
+    ask: 'Sur la bride : d\'un trou à son opposé, centre à centre, combien mesurez-vous ?',
+    helper: 'C\'est l\'<strong>entraxe M</strong>, la cote décisive d\'une bride — pas la hauteur d\'axe, qui n\'existe pas sans pattes.',
+    caption: 'L\'entraxe <strong>M</strong> est tracé en rouge, d\'un trou à son opposé.',
+    visual: () => flangeFaceSVG(valueOf('mounting') === 'B14', true),
+    input: { kind: 'number', unit: 'mm', placeholder: '215' },
+    skip: 'Pas de mètre', factLabel: 'Entraxe bride M', factUnit: 'mm', prov: 'mesure'
+  },
+  /* ---------- Options ---------- */
+  {
+    id: 'options', chapter: 'Options', multi: true, compact: true,
+    ask: 'Y a-t-il des options particulières ? Frein, ventilation séparée, codeur… Je vous les liste.',
+    selfAsk: 'Options visibles sur la photo, complétées avec le client : cochez et précisez.',
+    helper: 'Questionnaire rapide : cochez ce qui est confirmé, et le détail s\'ouvre. La photo d\'ensemble tranche souvent ce que le client ne sait pas nommer.',
+    caption: 'Le tour du moteur en une liste : l\'arrière, le raccordement, la commande.',
+    visual: () => motorProfileSVG({ feet: true, brake: true, vent: true }),
+    choices: [
+      { value: 'brake', name: 'Frein', chip: 'Frein', d: 'Bloc supplémentaire à l\'arrière — précisez la tension.',
+        detail: { type: 'chips', label: 'Tension du frein', options: ['24 V DC', '103 V DC', '180 V DC', '230/400 V', 'Non lue'] } },
+      { value: 'vent', name: 'Ventilation forcée', chip: 'Vent. forcée', d: 'Moto-ventilateur séparé avec son câble.',
+        detail: { type: 'chips', label: 'Alimentation du ventilateur', options: ['230 V mono', '400 V tri', 'Non lue'] } },
+      { value: 'encoder', name: 'Codeur / tachy', chip: 'Codeur', d: 'Boîtier dans l\'axe arrière — retour vitesse.',
+        detail: { type: 'chips', label: 'Type', options: ['Incrémental', 'Absolu', 'Tachy DC', 'Non identifié'] } },
+      { value: 'shaft2', name: 'Deuxième bout d\'arbre', chip: '2e bout d\'arbre', d: 'Un arbre dépasse aussi à l\'arrière.',
+        detail: { type: 'chips', label: 'Usage', options: ['Libre', 'Accessoire entraîné', 'Non identifié'] } },
+      { value: 'twospeed', name: 'Deux vitesses', chip: '2 vitesses', d: 'Deux lignes tr/min — Dahlander ou double bobinage.',
+        detail: { type: 'input', label: 'Les deux vitesses lues', ph: '1500 / 3000 tr/min' } },
+      { value: 'tbox', name: 'Boîte à bornes déportée', chip: 'BàB déportée', d: 'Le câble doit atteindre — précisez la position.',
+        detail: { type: 'chips', label: 'Position (vu côté accouplement)', options: ['Dessus', 'À gauche', 'À droite', 'À l\'arrière'] } },
+      { value: 'rotation', name: 'Sens de rotation imposé', chip: 'Sens imposé', d: 'Flèche sur la carcasse.',
+        detail: { type: 'chips', label: 'Sens (vu bout d\'arbre)', options: ['Horaire', 'Antihoraire'] } },
+      { value: 'probes', name: 'Sondes thermiques', chip: 'Sondes', d: 'Protection à recâbler sur le remplaçant.',
+        detail: { type: 'chips', label: 'Type de sonde', options: ['CTP', 'PT100', 'Thermostat', 'Non identifié'] } },
+      { value: 'heater', name: 'Résistance de réchauffage', chip: 'Réchauffage', d: 'Ambiance humide — anticondensation.',
+        detail: { type: 'chips', label: 'Tension', options: ['230 V', '400 V', 'Non lue'] } },
+      { value: 'none', name: 'Aucune option particulière', d: 'Moteur nu, silhouette standard.' }
+    ],
+    skip: 'Le client ne sait pas', factLabel: 'Options', prov: 'lu'
+  },
+  {
+    id: 'env', chapter: 'Options', multi: true, compact: true,
+    ask: 'Et son environnement : lavage, atmosphère explosive, extérieur, forte chaleur ?',
+    helper: 'L\'environnement est une <strong>exigence</strong>. Une <strong>zone ATEX</strong> sort du remplacement standard — dossier expert obligatoire.',
+    caption: 'Ce que le remplaçant devra supporter — jamais l\'inverse.',
+    visual: () => motorProfileSVG({ feet: true }),
+    choices: [
+      { value: 'washdown', name: 'Lavage haute pression', chip: 'Lavage HP', d: 'Agroalimentaire — étanchéité renforcée, voire inox.' },
+      { value: 'atex', name: 'Zone ATEX', chip: 'ATEX', warn: true, d: 'Atmosphère explosive — parcours standard interrompu.',
+        detail: { type: 'chips', label: 'Zone déclarée', options: ['1 (gaz)', '2 (gaz)', '21 (poussière)', '22 (poussière)', 'Non connue'] } },
+      { value: 'outdoor', name: 'Extérieur ou corrosif', chip: 'Extérieur/corrosif', d: 'Intempéries, embruns, produits chimiques.' },
+      { value: 'hot', name: 'Ambiante au-delà de 40 °C', chip: 'Ta > 40 °C', d: 'Local chaud — déclassement à prévoir.',
+        detail: { type: 'input', label: 'Température estimée', ph: '55 °C' } },
+      { value: 'none', name: 'Rien de particulier', d: 'Atelier standard, ambiance tempérée.' }
+    ],
+    skip: 'Le client ne sait pas', factLabel: 'Environnement', prov: 'lu'
+  },
+  /* ---------- Énergie ---------- */
+  {
+    id: 'supply', chapter: 'Énergie',
+    ask: 'Le moteur est-il piloté par un variateur, ou branché directement au réseau ?',
+    helper: 'Nécessaire pour chercher au bon point de fonctionnement. Un variateur est un boîtier électronique en armoire, souvent avec un afficheur.',
+    caption: 'Deux situations possibles — montrez celle que décrit le client.',
+    choiceCols: 2,
+    choices: [
+      { value: 'vfd', name: 'Variateur', d: 'Un boîtier électronique pilote la vitesse.', pic: () => supplySVG('vfd') },
+      { value: 'mains', name: 'Réseau direct', d: 'Démarrage direct ou étoile-triangle.', pic: () => supplySVG('mains') }
+    ],
+    skip: 'Le client ne sait pas', factLabel: 'Alimentation', prov: 'lu',
+    display: (v) => v === 'vfd' ? 'Variateur' : 'Réseau'
+  },
+  {
+    id: 'vfdDistance', chapter: 'Énergie',
+    when: () => gateInfo().deep && valueOf('supply') === 'vfd',
+    ask: 'Quelle distance environ entre le variateur et le moteur ?',
+    helper: 'Au-delà d\'environ <strong>50 m</strong>, les fronts de tension imposent selfs ou filtre dU/dt et un roulement isolé côté NDE.',
+    caption: 'La longueur de câble est un fait d\'installation : elle se demande, elle ne se devine pas.',
+    visual: () => supplySVG('vfd'),
+    input: { kind: 'number', unit: 'm', placeholder: '15' },
+    skip: 'Le client ne sait pas', factLabel: 'Câble variateur', factUnit: 'm', prov: 'lu'
+  },
+  {
+    id: 'hours', chapter: 'Énergie',
+    when: () => gateInfo().deep,
+    ask: 'Combien d\'heures par an tourne-t-il, le plus précisément possible ?',
+    helper: 'Un chiffre précis vaut mieux qu\'un ordre de grandeur : <span class="mono">10 h/jour × 250 jours ≈ 2 500 h/an</span>. C\'est la base de la simulation d\'économie du rapport client.',
+    caption: 'À cette puissance, chaque point de rendement se chiffre en centaines d\'euros par an.',
+    visual: () => motorProfileSVG({ feet: true }),
+    input: { kind: 'number', unit: 'h/an', placeholder: '4000' },
+    quickFills: [
+      { label: '24/7', sub: '8 760 h', value: '8760' },
+      { label: '3×8', sub: '≈ 6 000 h', value: '6000' },
+      { label: '2×8', sub: '≈ 4 000 h', value: '4000' },
+      { label: 'Journée', sub: '≈ 2 000 h', value: '2000' }
+    ],
+    skip: 'Le client ne sait pas', factLabel: 'Fonctionnement', prov: 'lu',
+    display: (v) => `≈ ${Number(String(v).replace(',', '.')).toLocaleString('fr-FR')} h/an`
+  },
+  {
+    id: 'ie', chapter: 'Énergie', zone: 'ie', fromPlate: true,
+    when: () => gateInfo().deep,
+    ask: 'Quelle classe « IE » est inscrite sur la plaque ?',
+    selfAsk: 'Relevez la classe IE sur la photo de plaque.',
+    helper: 'Un <strong>IE1 ou IE2</strong> est le gisement d\'économie maximal : la réglementation impose IE3 minimum au remplacement.',
+    caption: 'Zone <strong>IE</strong> entourée. Une plaque ancienne peut ne rien indiquer : c\'est une information en soi.',
+    choiceCols: 4,
+    choices: [
+      { value: 'IE1', name: 'IE1', d: 'Ancien — gisement maximal.' },
+      { value: 'IE2', name: 'IE2', d: 'Gisement réel.' },
+      { value: 'IE3', name: 'IE3', d: 'Standard actuel.' },
+      { value: 'IE4', name: 'IE4', d: 'Déjà très efficient.' }
+    ],
+    skip: 'Aucune classe inscrite', factLabel: 'Classe IE', prov: 'lu', display: (v) => v
+  },
+  {
+    id: 'eta', chapter: 'Énergie', zone: 'ie', fromPlate: true,
+    when: () => gateInfo().deep,
+    ask: 'Et le rendement « η », juste à côté, en pourcent ?',
+    selfAsk: 'Relevez le rendement η sur la photo.',
+    helper: 'Le rendement lu est la <strong>base de la simulation</strong> : consommation = puissance × heures ÷ η. Sans lui, la comparaison part de la classe IE seule, avec une borne prudente.',
+    caption: 'Le <strong>η</strong> est sur la même ligne que la classe IE.',
+    input: { kind: 'number', unit: '%', placeholder: '91,7' },
+    skip: 'Non inscrit', factLabel: 'Rendement η', factUnit: '%', prov: 'lu'
+  }
+];
+
+function activeSteps() {
+  return STEPS.filter((s) => !s.when || s.when());
+}
+
+/* ============================================================
+   Rendu
+   ============================================================ */
+
+const $screen = document.getElementById('screen');
+const $chapters = document.getElementById('chapters');
+const $facts = document.getElementById('facts');
+const $factsEmpty = document.getElementById('facts-empty');
+const $mode = document.getElementById('mode-banner');
+const $toast = document.getElementById('toast');
+let toastTimer = null;
+
+function showToast(msg) {
+  $toast.textContent = msg;
+  $toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $toast.classList.remove('show'), 3400);
+}
+
+function polesFromRpm(rpm) {
+  if (!rpm || rpm <= 0) return null;
+  for (const [poles, sync] of [[2, 3000], [4, 1500], [6, 1000], [8, 750]]) {
+    if (rpm <= sync && rpm >= sync * 0.9) return poles;
+  }
+  return null;
+}
+function frameFromDesignation(text) {
+  for (const n of (text.match(/\d{2,3}/g) ?? []).map(Number)) {
+    if (IEC_FRAMES.includes(n)) return n;
+  }
+  return null;
+}
+
+/** Provenance affichée : une photo est une preuve, un dire ne l'est pas. */
+function provKind(step) {
+  if (step.prov === 'mesure') return 'mesure';
+  if (step.fromPlate) return hasPlatePhoto() ? 'photo' : 'dicte';
+  return hasWidePhoto() ? 'photo' : 'dicte';
+}
+const PROV_SHORT = { photo: 'lu sur photo', dicte: 'dicté', mesure: 'mesuré', deduit: 'déduit' };
+const PROV_LONG = { photo: 'lu sur photo', dicte: 'dicté au téléphone', mesure: 'mesuré par le client', deduit: 'déduit' };
+
+function renderModeBanner() {
+  if (state.screen === 'entry') { $mode.innerHTML = ''; return; }
+  const g = gateInfo();
+  if (g.p === null) { $mode.innerHTML = ''; return; }
+  if (g.deep) {
+    const detail = g.kwh !== null ? `≈ ${g.kwh.toLocaleString('fr-FR')} kWh/an en jeu` : `${String(g.p).replace('.', ',')} kW`;
+    $mode.innerHTML = `<div class="mode-banner deep-mode">
+      <span><strong>Parcours complet</strong> — ${detail} : questions énergie et variateur ouvertes.</span>
+      ${state.forceDeep && !g.computed ? '<button class="switch" id="mode-switch">Revenir au parcours allégé</button>' : ''}
+    </div>`;
+  } else {
+    $mode.innerHTML = `<div class="mode-banner light-mode">
+      <span><strong>Parcours allégé</strong> — ${String(g.p).replace('.', ',')} kW : les questions énergie ne sont pas posées.</span>
+      <button class="switch" id="mode-switch">Ouvrir quand même le parcours complet</button>
+    </div>`;
+  }
+  const btn = document.getElementById('mode-switch');
+  if (btn) btn.addEventListener('click', () => { state.forceDeep = !state.forceDeep; render(); });
+}
+
+function renderChapters() {
+  const active = activeSteps();
+  const currentChapter = state.screen === 'recap' || state.screen === 'report'
+    ? 'Vérification'
+    : state.screen === 'entry' ? 'Photos' : active[state.stepIndex]?.chapter;
+  const done = {};
+  for (const c of CHAPTERS) done[c] = true;
+  done['Photos'] = state.screen !== 'entry';
+  active.forEach((s, i) => {
+    const passed = state.screen === 'recap' || state.screen === 'report' || (state.screen === 'step' && i < state.stepIndex);
+    if (!passed) done[s.chapter] = false;
+  });
+  $chapters.innerHTML = CHAPTERS.map((c, i) => {
+    const isDone = c !== currentChapter && done[c] && c !== 'Vérification';
+    const cls = c === currentChapter ? 'active' : (isDone ? 'done' : '');
+    return `<span class="chapter ${cls}"><span class="n">${cls === 'done' ? '✓' : i + 1}</span>${c}</span>`;
+  }).join('');
+}
+
+function renderFacts() {
+  const chips = [];
+  if (state.photoMode) {
+    const label = { both: 'Plaque + ensemble', plate: 'Plaque seule', none: 'Aucune photo' }[state.photoMode];
+    chips.push(`<button class="fact ${state.photoMode === 'none' ? 'manquant' : 'photo'}" data-goto="__photos" title="Modifier">
+      <span class="v">${label}</span><span class="p">${state.photoMode === 'none' ? 'tout dicté' : 'photos'}</span></button>`);
+  }
+  const measuredH = state.answers.dimH && !state.answers.dimH.missing;
+  for (const step of STEPS) {
+    const a = state.answers[step.id];
+    if (!a) continue;
+    if (a.missing) {
+      chips.push(`<button class="fact manquant" data-goto="${step.id}" title="Revenir">
+        <span class="v">${step.factLabel}</span><span class="p">à demander</span></button>`);
+    } else if (step.multi) {
+      if (a.neutral) continue;
+      for (const v of a.values ?? []) {
+        const c = step.choices.find((x) => x.value === v);
+        if (!c) continue;
+        const det = a.details?.[v];
+        chips.push(`<button class="fact ${c.warn ? 'manquant' : provKind(step)}" data-goto="${step.id}" title="Modifier">
+          <span class="v">${c.chip ?? c.name}${det ? ` ${det}` : ''}</span><span class="p">${c.warn ? 'exigence' : PROV_SHORT[provKind(step)]}</span></button>`);
+      }
+    } else {
+      const shown = step.display ? step.display(a.value) : `${a.value}${step.factUnit ? ' ' + step.factUnit : ''}`;
+      const k = provKind(step);
+      chips.push(`<button class="fact ${k}" data-goto="${step.id}" title="Modifier">
+        <span class="v">${shown}</span><span class="p">${PROV_SHORT[k]}</span></button>`);
+    }
+    if (step.id === 'speed' && !a.missing && state.inferredPoles !== null) {
+      chips.push(`<span class="fact deduit"><span class="v">${state.inferredPoles} pôles</span><span class="p">déduit</span></span>`);
+    }
+    if (step.id === 'type' && !a.missing && state.inferredH !== null && !measuredH) {
+      chips.push(`<span class="fact deduit"><span class="v">H ≈ ${state.inferredH} mm</span><span class="p">déduit</span></span>`);
+    }
+  }
+  $factsEmpty.style.display = chips.length ? 'none' : '';
+  [...$facts.querySelectorAll('.fact')].forEach((el) => el.remove());
+  $facts.insertAdjacentHTML('beforeend', chips.join(''));
+  [...$facts.querySelectorAll('[data-goto]')].forEach((el) => {
+    el.addEventListener('click', () => {
+      if (el.dataset.goto === '__photos') { state.screen = 'entry'; render(); return; }
+      const idx = activeSteps().findIndex((s) => s.id === el.dataset.goto);
+      if (idx >= 0) { state.screen = 'step'; state.stepIndex = idx; render(); }
+    });
+  });
+}
+
+/* -------- Écran d'entrée : demande des deux photos -------- */
+function renderEntry() {
+  $screen.innerHTML = `
+    <div class="photo-ask">
+      <h2>Avant tout : demandez les deux photos.</h2>
+      <p class="photo-say"><span class="say">À dire au client</span>
+        « Avant qu'on aille plus loin, envoyez-moi deux photos : la plaque du moteur bien cadrée,
+        et le moteur entier pris d'un peu plus loin. Pendant qu'elles arrivent, je vous pose déjà les questions. »</p>
+      <div class="photo-cards">
+        <div class="photo-card">
+          ${photoRequestSVG('plate')}
+          <h3>1 — La plaque, bien cadrée</h3>
+          <p>À plat, sans reflet, toute la plaque dans le cadre. C'est le TCS qui lira les valeurs, pas le client.</p>
+          <span class="serves">Sert à : puissance, désignation, vitesse, IP, IE, rendement, roulements</span>
+        </div>
+        <div class="photo-card">
+          ${photoRequestSVG('wide')}
+          <h3>2 — Le moteur entier, vu de loin</h3>
+          <p>Deux ou trois pas de recul, avec la machine entraînée et l'environnement visibles.</p>
+          <span class="serves">Sert à : position réelle, accouplement, options non nommées, ambiance</span>
+        </div>
+      </div>
+      <div class="photo-choices">
+        <button class="photo-choice reco" data-mode="both">
+          <span class="n">Les deux photos sont arrivées</span>
+          <span class="d">Le relevé devient une lecture : provenance « lu sur photo », donc une preuve.</span>
+        </button>
+        <button class="photo-choice" data-mode="plate">
+          <span class="n">Seule la plaque est arrivée</span>
+          <span class="d">Position, accouplement et options restent décrits par le client.</span>
+        </button>
+        <button class="photo-choice" data-mode="none">
+          <span class="n">Aucune photo pour l'instant</span>
+          <span class="d">Tout est dicté au téléphone — provenance plus faible, à confirmer ensuite.</span>
+        </button>
+      </div>
+      <p class="photo-foot">Le parcours ne bloque jamais sur l'absence de photo : il change seulement la façon de poser
+      les questions et la force des preuves. Une photo qui arrive en cours d'appel peut être signalée ici à tout moment.</p>
+    </div>`;
+  [...$screen.querySelectorAll('[data-mode]')].forEach((el) => {
+    el.addEventListener('click', () => {
+      state.photoMode = el.dataset.mode;
+      state.screen = 'step';
+      state.stepIndex = 0;
+      render();
+    });
+  });
+}
+
+/* -------- Écran question -------- */
+function renderStep() {
+  const active = activeSteps();
+  if (state.stepIndex >= active.length) { state.screen = 'recap'; renderRecap(); return; }
+  const step = active[state.stepIndex];
+  const answer = state.answers[step.id];
+  const visual = step.visual ? step.visual() : plateSVG(step.zone);
+  const total = active.length;
+  const choices = step.getChoices ? step.getChoices() : step.choices;
+  const stacked = step.stackedPic === true;
+
+  const readSelf = (step.fromPlate && hasPlatePhoto()) || (!step.fromPlate && hasWidePhoto() && step.selfAsk);
+  const useSelf = readSelf && step.selfAsk;
+  const askText = useSelf ? step.selfAsk : (step.ask || step.selfAsk);
+
+  const isSelected = (c) => {
+    if (!answer || answer.missing) return false;
+    if (step.multi) return c.value === 'none' ? !!answer.neutral : (answer.values ?? []).includes(c.value);
+    return answer.value === c.value;
+  };
+  const hasChoiceAnswer = answer && !answer.missing
+    && (step.multi ? (answer.neutral || (answer.values ?? []).length > 0) : answer.value !== undefined);
+
+  let inputBlock;
+  if (choices && step.compact) {
+    const detailBlock = (c) => {
+      if (!c.detail || !isSelected(c)) return '';
+      const current = answer?.details?.[c.value] ?? '';
+      if (c.detail.type === 'chips') {
+        return `<div class="opt-detail"><span class="opt-detail-label">${c.detail.label}</span>
+          ${c.detail.options.map((o) => `<button type="button" class="dchip ${current === o ? 'on' : ''}" data-dchip="${c.value}" data-opt="${o.replace(/"/g, '&quot;')}">${o}</button>`).join('')}</div>`;
+      }
+      return `<div class="opt-detail"><span class="opt-detail-label">${c.detail.label}</span>
+        <input class="dinput" data-dinput="${c.value}" autocomplete="off" placeholder="${c.detail.ph}" value="${String(current).replace(/"/g, '&quot;')}"></div>`;
+    };
+    inputBlock = `<div class="opt-list" role="group" aria-label="${step.factLabel}">
+      ${choices.map((c) => `<div class="opt-item">
+        <button class="opt-row ${c.warn ? 'warn' : ''} ${c.value === 'none' ? 'none-row' : ''} ${isSelected(c) ? 'selected' : ''}" data-choice="${c.value}" aria-pressed="${isSelected(c)}">
+          <span class="opt-box">✓</span><span class="opt-name">${c.name}</span><span class="opt-impact">${c.d}</span>
+        </button>${detailBlock(c)}</div>`).join('')}
+    </div>`;
+  } else if (choices) {
+    const cols = step.choiceCols === 4 ? 'cols-4' : step.choiceCols === 3 ? 'cols-3'
+      : (step.choiceCols === 2 || step.multi || choices.length === 2) ? 'cols-2' : '';
+    inputBlock = `<div class="choice-grid ${cols}" role="group" aria-label="${step.factLabel}">
+      ${choices.map((c) => `
+        <button class="choice ${stacked ? 'stacked' : ''} ${c.value === 'none' ? 'none' : ''} ${isSelected(c) ? 'selected' : ''}" data-choice="${c.value}" aria-pressed="${isSelected(c)}">
+          ${c.hint ? `<span class="hintbadge">${c.hint}</span>` : ''}
+          ${c.pic ? `<span class="pic">${c.pic()}</span>` : ''}
+          <span class="t">${c.code ? `<span class="code">${c.code}</span>` : ''}<span class="name">${c.name}</span><span class="d">${c.d}</span></span>
+        </button>`).join('')}
+    </div>`;
+  } else if (step.input.kind === 'pair') {
+    inputBlock = `<div class="pair-grid">
+      ${step.input.fields.map((f) => `<label>${f.label}
+        <input data-pair="${f.key}" autocomplete="off" placeholder="${f.placeholder}"
+          value="${answer && !answer.missing && answer.parts ? String(answer.parts[f.key] ?? '').replace(/"/g, '&quot;') : ''}"></label>`).join('')}
+    </div>`;
+  } else {
+    inputBlock = `
+      ${step.quickFills ? `<div class="quickfills">${step.quickFills.map((q) =>
+        `<button type="button" data-fill="${q.value}">${q.label}<span class="sub">${q.sub}</span></button>`).join('')}</div>` : ''}
+      <div class="q-input-row">
+        ${step.input.unit === 'IP' ? '<span class="unit">IP</span>' : ''}
+        <input id="q-input" inputmode="${step.input.kind === 'number' ? 'decimal' : 'text'}" autocomplete="off"
+          placeholder="${step.input.placeholder}" aria-label="${step.factLabel}"
+          value="${answer && !answer.missing ? String(answer.value).replace(/"/g, '&quot;') : ''}">
+        ${step.input.unit && step.input.unit !== 'IP' ? `<span class="unit">${step.input.unit}</span>` : ''}
+      </div>
+      <div id="inference-slot"></div>`;
+  }
+
+  const derived = step.showDerived ? derivedRequirements() : [];
+  const derivedBlock = derived.length ? `<div class="inference-list">
+    <span class="head">Exigences déduites — sans rien demander de plus</span>
+    ${derived.map(([lbl, cause]) => `<span class="line"><strong>${lbl}</strong> <span class="cause">— ${cause}</span></span>`).join('')}
+  </div>` : '';
+
+  $screen.innerHTML = `
+    <div class="stage">
+      <section class="visual-panel" aria-label="Repère visuel">
+        <div class="panel-title"><span>Ce que vous avez sous les yeux</span><span class="tag">visuel non contractuel</span></div>
+        <div class="visual-holder">${visual}</div>
+        <p class="visual-caption">${step.caption}</p>
+      </section>
+      <section class="question-panel" aria-label="Question en cours">
+        <div class="q-eyebrow"><span class="where">${step.chapter}</span><span class="count">${state.stepIndex + 1} / ${total}</span></div>
+        <p class="q-ask ${useSelf ? 'self' : ''}"><span class="say">${useSelf ? 'À faire vous-même, sur la photo' : 'À dire au client'}</span>${useSelf ? askText : `« ${askText} »`}</p>
+        <p class="q-helper">${step.helper}</p>
+        ${inputBlock}
+        ${derivedBlock}
+        <div class="q-actions">
+          <div style="display:flex; align-items:center; gap:14px;">
+            <button class="btn-back" id="btn-back">← Précédent</button>
+            <button class="btn-skip" id="btn-skip">${step.skip} — passer</button>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span class="kbd-hint"><kbd>Entrée</kbd> pour continuer</span>
+            <button class="btn btn-primary" id="btn-next" ${choices && !hasChoiceAnswer ? 'disabled' : ''}>Continuer</button>
+          </div>
+        </div>
+      </section>
+    </div>`;
+
+  const goNext = () => {
+    const list = activeSteps();
+    if (state.stepIndex < list.length - 1) state.stepIndex += 1;
+    else state.screen = 'recap';
+    render();
+  };
+
+  document.getElementById('btn-back').addEventListener('click', () => {
+    if (state.stepIndex === 0) state.screen = 'entry'; else state.stepIndex -= 1;
+    render();
+  });
+  document.getElementById('btn-skip').addEventListener('click', () => {
+    state.answers[step.id] = { missing: true };
+    if (step.id === 'speed') state.inferredPoles = null;
+    if (step.id === 'type') state.inferredH = null;
+    renderFacts(); goNext();
+  });
+
+  const btnNext = document.getElementById('btn-next');
+
+  if (choices) {
+    [...$screen.querySelectorAll('[data-choice]')].forEach((el) => {
+      el.addEventListener('click', () => {
+        const v = el.dataset.choice;
+        if (step.multi) {
+          const current = state.answers[step.id];
+          if (v === 'none') {
+            state.answers[step.id] = { neutral: true, values: [] };
+          } else {
+            const values = new Set(current && !current.neutral ? (current.values ?? []) : []);
+            const details = { ...(current && !current.neutral ? current.details : undefined) };
+            if (values.has(v)) { values.delete(v); delete details[v]; } else values.add(v);
+            if (values.size > 0) state.answers[step.id] = { values: [...values], details, prov: step.prov };
+            else delete state.answers[step.id];
+          }
+          renderFacts(); renderStep();
+          return;
+        }
+        const previous = state.answers[step.id]?.value;
+        state.answers[step.id] = { value: v, prov: step.prov };
+        // Changer de famille invalide le cas précis choisi.
+        if (step.id === 'appFamily' && previous !== v) delete state.answers.appCase;
+        // Changer de fixation invalide la position IM.
+        if (step.id === 'mounting' && previous !== v) delete state.answers.position;
+        renderFacts();
+        if (step.showDerived) { renderStep(); return; }
+        setTimeout(goNext, 200);
+      });
+    });
+    [...$screen.querySelectorAll('[data-dchip]')].forEach((el) => {
+      el.addEventListener('click', () => {
+        const a = state.answers[step.id];
+        if (!a || a.neutral) return;
+        a.details = a.details ?? {};
+        const key = el.dataset.dchip, opt = el.dataset.opt;
+        if (a.details[key] === opt) delete a.details[key]; else a.details[key] = opt;
+        renderFacts(); renderStep();
+      });
+    });
+    [...$screen.querySelectorAll('[data-dinput]')].forEach((el) => {
+      el.addEventListener('input', () => {
+        const a = state.answers[step.id];
+        if (!a || a.neutral) return;
+        a.details = a.details ?? {};
+        const raw = el.value.trim();
+        if (raw) a.details[el.dataset.dinput] = raw; else delete a.details[el.dataset.dinput];
+      });
+      el.addEventListener('change', () => { renderFacts(); });
+    });
+    btnNext.addEventListener('click', goNext);
+  } else if (step.input.kind === 'pair') {
+    const inputs = [...$screen.querySelectorAll('[data-pair]')];
+    const commit = () => {
+      const parts = {};
+      let any = false;
+      for (const el of inputs) {
+        const raw = el.value.trim();
+        parts[el.dataset.pair] = raw;
+        if (raw) any = true;
+      }
+      if (!any) { inputs[0].focus(); return; }
+      const shown = step.input.fields.filter((f) => parts[f.key]).map((f) => `${f.key.toUpperCase()} ${parts[f.key]}`).join(' · ');
+      state.answers[step.id] = { value: shown, parts, prov: step.prov };
+      renderFacts(); goNext();
+    };
+    inputs.forEach((el) => el.addEventListener('keydown', (e) => { if (e.key === 'Enter') commit(); }));
+    btnNext.addEventListener('click', commit);
+    inputs[0].focus();
+  } else {
+    const input = document.getElementById('q-input');
+    const slot = document.getElementById('inference-slot');
+    const refreshInference = () => {
+      if (!slot) return;
+      if (step.id === 'speed') {
+        const poles = polesFromRpm(Number(String(input.value).replace(',', '.')));
+        state.inferredPoles = poles;
+        slot.innerHTML = poles
+          ? `<div class="inference ok">Cette vitesse correspond à un moteur <span class="mono">&nbsp;${poles} pôles</span>&nbsp;(~${{2:3000,4:1500,6:1000,8:750}[poles]} tr/min à 50 Hz). Déduction affichée, jamais silencieuse.</div>`
+          : (input.value.trim() ? `<div class="inference">Vitesse inhabituelle à 50 Hz — enregistrée telle quelle.</div>` : '');
+      }
+      if (step.id === 'type') {
+        const frame = frameFromDesignation(input.value);
+        state.inferredH = frame;
+        slot.innerHTML = frame
+          ? `<div class="inference ok">Carcasse <span class="mono">&nbsp;${frame}</span>&nbsp;détectée → hauteur d'axe <span class="mono">&nbsp;${frame} mm</span>. Elle ne sera pas re-demandée.</div>`
+          : (input.value.trim() ? `<div class="inference">Aucune carcasse IEC reconnue — la hauteur d'axe sera à mesurer.</div>` : '');
+      }
+      if (step.id === 'hours') {
+        const h = Number(String(input.value).replace(',', '.'));
+        const p = numAnswer('power');
+        slot.innerHTML = (h > 0 && p !== null)
+          ? `<div class="inference ok">≈ <span class="mono">&nbsp;${Math.round(p * h).toLocaleString('fr-FR')} kWh/an</span>&nbsp;consommés — base de la simulation d'économie.</div>`
+          : '';
+      }
+      if (step.id === 'power') {
+        const p = Number(String(input.value).replace(',', '.'));
+        slot.innerHTML = p > 0
+          ? `<div class="inference ${p > 11 ? 'ok' : ''}">${p > 11
+              ? 'Puissance supérieure à 11 kW : proposer une étude énergétique au client.'
+              : 'Étude énergétique disponible sur demande, sans allonger automatiquement le remplacement.'}</div>`
+          : '';
+      }
+    };
+    if (step.quickFills) {
+      [...$screen.querySelectorAll('[data-fill]')].forEach((el) => {
+        el.addEventListener('click', () => { input.value = el.dataset.fill; refreshInference(); input.focus(); });
+      });
+    }
+    input.addEventListener('input', refreshInference);
+    refreshInference();
+    const commit = () => {
+      const raw = input.value.trim();
+      if (!raw) { input.focus(); return; }
+      state.answers[step.id] = { value: step.input.kind === 'number' ? raw.replace('.', ',') : raw, prov: step.prov };
+      renderFacts(); goNext();
+    };
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') commit(); });
+    btnNext.addEventListener('click', commit);
+    input.focus();
+  }
+}
+
+/* -------- Récapitulatif -------- */
+function renderRecap() {
+  const active = activeSteps();
+  const g = gateInfo();
+
+  const row = (step) => {
+    const a = state.answers[step.id];
+    let val, provCls, provTxt;
+    if (!a || a.missing) {
+      if (step.id === 'dimH' && state.inferredH !== null) {
+        val = `<span class="val">≈ ${state.inferredH} mm</span>`; provCls = 'deduit'; provTxt = 'déduit';
+      } else {
+        val = '<span class="val missing">à demander au client</span>'; provCls = 'manquant'; provTxt = 'manquant';
+      }
+    } else if (step.multi) {
+      if (a.neutral) {
+        val = '<span class="val neutral">Rien de particulier</span>'; provCls = 'neutral'; provTxt = '—';
+      } else {
+        const names = (a.values ?? []).map((v) => {
+          const c = step.choices.find((x) => x.value === v);
+          const det = a.details?.[v];
+          return `${c?.chip ?? v}${det ? ` (${det})` : ''}`;
+        });
+        val = `<span class="val">${names.join(' · ')}</span>`;
+        const hasWarn = (a.values ?? []).some((v) => step.choices.find((x) => x.value === v)?.warn);
+        provCls = hasWarn ? 'manquant' : provKind(step);
+        provTxt = hasWarn ? 'exigence forte' : PROV_LONG[provKind(step)];
+      }
+    } else {
+      const shown = step.display ? step.display(a.value) : `${a.value}${step.factUnit ? ' ' + step.factUnit : ''}`;
+      val = `<span class="val">${shown}</span>`;
+      provCls = provKind(step); provTxt = PROV_LONG[provCls];
+    }
+    return `<div class="recap-row"><span class="lbl">${step.factLabel}</span>${val}
+      <span class="prov ${provCls}">${provTxt}</span>
+      <button class="edit" data-goto="${step.id}">Modifier</button></div>`;
+  };
+
+  const polesRow = state.inferredPoles !== null
+    ? `<div class="recap-row"><span class="lbl">Nombre de pôles</span><span class="val">${state.inferredPoles}</span><span class="prov deduit">déduit</span><span style="width:44px"></span></div>` : '';
+  const hRow = state.inferredH !== null && !active.some((s) => s.id === 'dimH')
+    ? `<div class="recap-row"><span class="lbl">Hauteur d'axe H</span><span class="val">≈ ${state.inferredH} mm</span><span class="prov deduit">déduit de la désignation</span><span style="width:44px"></span></div>` : '';
+
+  const photoRow = `<div class="recap-row"><span class="lbl">Photos reçues</span>
+    <span class="val ${state.photoMode === 'none' ? 'missing' : ''}">${{ both: 'Plaque + vue d\'ensemble', plate: 'Plaque seule', none: 'Aucune' }[state.photoMode] ?? '—'}</span>
+    <span class="prov ${state.photoMode === 'none' ? 'manquant' : 'photo'}">${state.photoMode === 'none' ? 'à réclamer' : 'preuve au dossier'}</span>
+    <button class="edit" data-goto="__photos">Modifier</button></div>`;
+
+  const groups = CHAPTERS.slice(1, CHAPTERS.length - 1).map((chapter) => {
+    const steps = active.filter((s) => s.chapter === chapter);
+    if (steps.length === 0 && !(chapter === 'Montage' && hRow)) return '';
+    const rows = steps.map((s) => row(s) + (s.id === 'speed' ? polesRow : '')).join('');
+    return `<div class="recap-group-label">${chapter}</div>${rows}${chapter === 'Montage' ? hRow : ''}`;
+  }).join('');
+
+  const derived = derivedRequirements();
+  const derivedBlock = derived.length
+    ? `<div class="recap-group-label hl">Exigences déduites — aucune question posée au client</div>
+       ${derived.map(([lbl, cause]) => `<div class="recap-row"><span class="lbl">${lbl}</span>
+         <span class="val neutral">${cause}</span><span class="prov deduit">déduit</span><span style="width:44px"></span></div>`).join('')}`
+    : '';
+
+  const missingCount = active.filter((s) => {
+    const a = state.answers[s.id];
+    if (s.id === 'dimH' && (!a || a.missing) && state.inferredH !== null) return false;
+    return !a || a.missing;
+  }).length;
+
+  const modeNote = g.deep
+    ? `Parcours complet joué${g.kwh !== null ? ` — ≈ ${g.kwh.toLocaleString('fr-FR')} kWh/an en jeu` : ''} : la recherche comparera aussi les candidats en kWh/an.`
+    : 'Parcours allégé joué — questions énergie non posées : l\'enjeu est marginal à cette puissance.';
+
+  $screen.innerHTML = `
+    <div class="recap">
+      <div class="recap-head">
+        <h2>Relisez le relevé au client avant de lancer la recherche.</h2>
+        <span class="sub">${missingCount === 0 ? 'Tous les faits du parcours sont renseignés.' : `${missingCount} fait${missingCount > 1 ? 's' : ''} restera${missingCount > 1 ? 'ont' : ''} « à demander ».`}</span>
+      </div>
+      <div class="recap-group-label">Preuves</div>
+      ${photoRow}
+      ${groups}
+      ${derivedBlock}
+      <div class="recap-foot">
+        <p class="note">${modeNote} Elle dure réellement quelques secondes, affichées telles quelles — jamais de progression fictive.</p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn btn-ghost" id="btn-report">Aperçu du rapport client</button>
+          <button class="btn btn-search" id="btn-search">Rechercher les équivalents</button>
+        </div>
+      </div>
+    </div>`;
+  [...$screen.querySelectorAll('[data-goto]')].forEach((el) => {
+    el.addEventListener('click', () => {
+      if (el.dataset.goto === '__photos') { state.screen = 'entry'; render(); return; }
+      const idx = activeSteps().findIndex((s) => s.id === el.dataset.goto);
+      if (idx >= 0) { state.screen = 'step'; state.stepIndex = idx; render(); }
+    });
+  });
+  document.getElementById('btn-search').addEventListener('click', () =>
+    showToast('Fin du prototype — l\'écran résultats existe déjà et sera restylé dans un second temps.'));
+  document.getElementById('btn-report').addEventListener('click', () => { state.screen = 'report'; render(); });
+}
+
+/* -------- Rapport client -------- */
+function renderReport() {
+  const active = activeSteps();
+  const g = gateInfo();
+
+  const lines = [];
+  for (const s of active) {
+    const a = state.answers[s.id];
+    if (!a || a.missing) {
+      if (s.id === 'dimH' && state.inferredH !== null) lines.push([s.factLabel, `≈ ${state.inferredH} mm`, false]);
+      else lines.push([s.factLabel, 'À confirmer ensemble', true]);
+    } else if (s.multi) {
+      if (a.neutral) lines.push([s.factLabel, 'Rien de particulier', false]);
+      else lines.push([s.factLabel, (a.values ?? []).map((v) => {
+        const c = s.choices.find((x) => x.value === v);
+        const det = a.details?.[v];
+        return `${c?.chip ?? v}${det ? ` (${det})` : ''}`;
+      }).join(' · '), false]);
+    } else {
+      lines.push([s.factLabel, s.display ? s.display(a.value) : `${a.value}${s.factUnit ? ' ' + s.factUnit : ''}`, false]);
+    }
+    if (s.id === 'speed' && a && !a.missing && state.inferredPoles !== null) {
+      lines.push(['Nombre de pôles', `${state.inferredPoles} (déduit)`, false]);
+    }
+    if (s.id === 'type' && a && !a.missing && state.inferredH !== null && !active.some((x) => x.id === 'dimH')) {
+      lines.push(['Hauteur d\'axe H', `≈ ${state.inferredH} mm (déduite)`, false]);
+    }
+  }
+
+  const derived = derivedRequirements();
+  const p = numAnswer('power'), h = numAnswer('hours'), eta = numAnswer('eta');
+  let simBlock;
+  if (g.deep && p !== null && h !== null && eta !== null && eta > 0 && eta < 100) {
+    const kwhOld = Math.round(p * h / (eta / 100));
+    const kwhNew = Math.round(p * h / 0.936);
+    const gain = kwhOld - kwhNew;
+    simBlock = `
+      <div class="sim-line"><span>Consommation actuelle (η ${String(eta).replace('.', ',')} % lu sur la plaque)</span><span class="w">≈ ${kwhOld.toLocaleString('fr-FR')} kWh/an</span></div>
+      <div class="sim-line"><span>Consommation du moteur proposé (η 93,6 %<span class="demo-tag">démonstration</span>)</span><span class="w">≈ ${kwhNew.toLocaleString('fr-FR')} kWh/an</span></div>
+      <div class="sim-line"><span>Économie simulée</span><span class="w gain">≈ ${gain.toLocaleString('fr-FR')} kWh/an, soit ≈ ${Math.round(gain * 0.18).toLocaleString('fr-FR')} €/an à 0,18 €/kWh</span></div>
+      <p class="report-note">Économie <strong>simulée</strong> depuis les rendements publiés et votre usage déclaré (${h.toLocaleString('fr-FR')} h/an) — non contractuelle.</p>`;
+  } else if (g.deep) {
+    const miss = [];
+    if (h === null) miss.push('les heures de fonctionnement');
+    if (eta === null) miss.push('le rendement lu sur la plaque');
+    simBlock = `<p class="report-note">Simulation indisponible : il manque ${miss.join(' et ')}. Ces faits sont listés « à confirmer ensemble » ci-dessus.</p>`;
+  } else {
+    simBlock = `<p class="report-note">Pas de simulation d'économie : à cette puissance le gain énergétique serait marginal. Nous restons concentrés sur la conformité mécanique et électrique du remplacement.</p>`;
+  }
+
+  $screen.innerHTML = `
+    <div class="report">
+      <div class="report-head">
+        <h2>Compte rendu d'appel — remplacement moteur</h2>
+        <span class="date">${new Date().toLocaleDateString('fr-FR')}</span>
+      </div>
+      <div class="report-section">
+        <h3>Pièces reçues</h3>
+        <p style="margin:0;font-size:12.5px;">${state.photoMode === 'both' ? 'Photo de la plaque signalétique et photo d\'ensemble du moteur, jointes au dossier.'
+          : state.photoMode === 'plate' ? 'Photo de la plaque signalétique jointe au dossier ; la vue d\'ensemble reste à envoyer.'
+          : 'Aucune photo reçue : les valeurs ci-dessous sont celles dictées au téléphone, à confirmer.'}</p>
+      </div>
+      <div class="report-section">
+        <h3>Le moteur en place et son installation</h3>
+        <div class="report-grid">
+          ${lines.map(([k, w, miss]) => `<div class="report-fact"><span class="k">${k}</span><span class="w ${miss ? 'miss' : ''}">${w}</span></div>`).join('')}
+        </div>
+      </div>
+      <div class="report-section">
+        <h3>Ce que votre installation impose au moteur de remplacement</h3>
+        ${derived.length
+          ? derived.map(([lbl, cause]) => `<div class="report-reco"><span class="b">▸</span><span><strong>${lbl}</strong> — ${cause}.</span></div>`).join('')
+          : '<p class="report-note">Aucune exigence particulière déduite : un moteur standard équivalent convient sur les critères relevés.</p>'}
+      </div>
+      <div class="report-section">
+        <h3>Moteur proposé</h3>
+        <p style="margin:0;font-size:13px;">Renseigné par la recherche d'équivalents : désignation, verdict critère par critère, adaptations éventuelles.
+        <span class="demo-tag">emplacement — rempli après la recherche</span></p>
+      </div>
+      <div class="report-section">
+        <h3>Simulation d'économie d'énergie</h3>
+        ${simBlock}
+      </div>
+      <div class="report-actions">
+        <p class="hint">Livrable cible : PDF envoyé au client après l'appel — recoupe la fiche technique (C9) et la simulation énergétique (C13). Aucune valeur inventée : les faits manquants restent listés comme « à confirmer ».</p>
+        <button class="btn btn-ghost" id="btn-report-back">← Retour à la vérification</button>
+      </div>
+    </div>`;
+  document.getElementById('btn-report-back').addEventListener('click', () => { state.screen = 'recap'; render(); });
+}
+
+function render() {
+  renderChapters();
+  renderModeBanner();
+  renderFacts();
+  if (state.screen === 'entry') renderEntry();
+  else if (state.screen === 'step') renderStep();
+  else if (state.screen === 'report') renderReport();
+  else renderRecap();
+  window.scrollTo({ top: 0, behavior: 'auto' });
+}
+
+render();
+</script>

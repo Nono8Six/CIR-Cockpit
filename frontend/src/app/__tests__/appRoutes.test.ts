@@ -17,6 +17,7 @@ describe('appRoutes', () => {
     expect(getPathForTab('clients')).toBe('/clients');
     expect(getPathForTab('suppliers')).toBe('/suppliers');
     expect(getPathForTab('referentials')).toBe('/remises/referentiels');
+    expect(getPathForTab('configurators')).toBe('/configurateurs/moteurs');
     expect(getPathForTab('admin')).toBe('/admin');
     expect(getPathForTab('settings')).toBe('/settings');
   });
@@ -34,6 +35,40 @@ describe('appRoutes', () => {
     expect(getTabFromPathname('/unknown')).toBe('cockpit');
   });
 
+  it('rattache toute la racine Configurateurs au même onglet', () => {
+    expect(getTabFromPathname('/configurateurs')).toBe('configurators');
+    expect(getTabFromPathname('/configurateurs/')).toBe('configurators');
+    expect(getTabFromPathname('/configurateurs/moteurs')).toBe('configurators');
+    expect(getTabFromPathname('/configurateurs/moteurs/remplacement')).toBe('configurators');
+    expect(getTabFromPathname('/configurateurs/mes-configurations')).toBe('configurators');
+  });
+
+  it('garde l’entrée Configurateurs active sur les configurations transverses', () => {
+    const items = buildShellNavigation(true, 0).flatMap((section) => section.items);
+    const configuratorsItem = items.find((item) => item.id === 'configurators');
+
+    expect(configuratorsItem).toBeDefined();
+    expect(
+      isShellNavItemActive(configuratorsItem!, 'configurators', '/configurateurs/moteurs')
+    ).toBe(true);
+    expect(
+      isShellNavItemActive(
+        configuratorsItem!,
+        'configurators',
+        '/configurateurs/mes-configurations'
+      )
+    ).toBe(true);
+    expect(isShellNavItemActive(configuratorsItem!, 'clients', '/clients')).toBe(false);
+  });
+
+  it('expose Configurateurs à tous les rôles, sans droit d’administration', () => {
+    const sectionsForTcs = buildShellNavigation(false, 0);
+    const configuratorsSection = sectionsForTcs.find((section) => section.id === 'configurators');
+
+    expect(configuratorsSection).toBeDefined();
+    expect(configuratorsSection?.items.map((item) => item.id)).toEqual(['configurators']);
+  });
+
   it('flags interaction tabs used by state view gate', () => {
     expect(isInteractionTab('cockpit')).toBe(true);
     expect(isInteractionTab('dashboard')).toBe(true);
@@ -41,6 +76,7 @@ describe('appRoutes', () => {
     expect(isInteractionTab('clients')).toBe(false);
     expect(isInteractionTab('suppliers')).toBe(false);
     expect(isInteractionTab('referentials')).toBe(false);
+    expect(isInteractionTab('configurators')).toBe(false);
     expect(isInteractionTab('admin')).toBe(false);
   });
 
@@ -51,6 +87,7 @@ describe('appRoutes', () => {
     expect(isRealtimeInteractionTab('clients')).toBe(false);
     expect(isRealtimeInteractionTab('suppliers')).toBe(false);
     expect(isRealtimeInteractionTab('referentials')).toBe(false);
+    expect(isRealtimeInteractionTab('configurators')).toBe(false);
     expect(isRealtimeInteractionTab('admin')).toBe(false);
   });
 
