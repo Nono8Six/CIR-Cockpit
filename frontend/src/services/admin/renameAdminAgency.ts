@@ -1,24 +1,11 @@
+import { withInvalidTrpcResponse } from '@/services/api/invokeTrpc';
 import {
   adminAgenciesAgencyResponseSchema,
   type AdminAgenciesAgencyResponse
 } from '../../../../shared/schemas/system/api-responses';
 import { safeTrpc } from '@/services/api/safeTrpc';
-import { createAppError } from '@/services/errors/AppError';
 
-export type AdminAgencyResponse = AdminAgenciesAgencyResponse;
-
-const parseAdminAgencyResponse = (payload: unknown): AdminAgencyResponse => {
-  const parsed = adminAgenciesAgencyResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'EDGE_INVALID_RESPONSE',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-  return parsed.data;
-};
+export type AdminAgencyResponse = AdminAgenciesAgencyResponse;;
 
 export const renameAdminAgency = (agencyId: string, name: string) =>
   safeTrpc(
@@ -27,6 +14,6 @@ export const renameAdminAgency = (agencyId: string, name: string) =>
       agency_id: agencyId,
       name
       }, options),
-    parseAdminAgencyResponse,
+    withInvalidTrpcResponse(adminAgenciesAgencyResponseSchema, { code: 'EDGE_INVALID_RESPONSE' }),
     "Impossible de renommer l'agence."
   );

@@ -7,8 +7,10 @@ import type {
   ConfigUsageSnapshot
 } from '../../../../shared/schemas/system/config.schema';
 
-import { createAppError } from '@/services/errors/AppError';
-import { invokeTrpc } from '@/services/api/invokeTrpc';
+import {
+  createTrpcResponseParser,
+  invokeTrpc
+} from '@/services/api/invokeTrpc';
 import { isRecord } from '@/utils/recordNarrowing/isRecord';
 
 const normalizeUsageRowPayload = (value: unknown): unknown => {
@@ -40,18 +42,15 @@ export const normalizeConfigUsagePayload = (payload: unknown): unknown => {
 };
 
 export const parseConfigUsageResponse = (payload: unknown): ConfigUsageResponse => {
-  const parsed = configUsageResponseSchema.safeParse(normalizeConfigUsagePayload(payload));
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'REQUEST_FAILED',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-
-  return parsed.data;
+  return parseConfigUsageContract(payload);
 };
+
+const parseConfigUsageContract = createTrpcResponseParser(
+  configUsageResponseSchema,
+  (response) => response,
+  undefined,
+  normalizeConfigUsagePayload
+);
 
 export const getConfigUsage = async (
   agencyId: string
@@ -59,7 +58,7 @@ export const getConfigUsage = async (
   const input: ConfigUsageInput = { agency_id: agencyId };
   const response = await invokeTrpc(
     (api, options) => api.config.usage.query(input, options),
-    parseConfigUsageResponse,
+    parseConfigUsageContract,
     "Impossible de charger l'impact des paramètres."
   );
 

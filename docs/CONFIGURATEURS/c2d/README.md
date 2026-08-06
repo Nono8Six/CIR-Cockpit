@@ -93,3 +93,20 @@ Preuves runtime :
 - `node --check`, `deno check`, 13 tests d'extraction, `qa:docs` et `qa:back`
   passent ; `qa:back` couvre 449 tests backend réussis, 14 intégrations
   conditionnelles ignorées et zéro échec.
+
+Preuves locales durables du lot C2d actif :
+
+- `lot-manifest.json` : provenance et empreinte `5db53991…` ;
+- `controles.json` : décision `GO_TECHNIQUE`, volumes et contrôles locaux ;
+- `anomalies.json` : registre détaillé produit par les validateurs ;
+- `diff-activation.json` : compteurs avant/après et empreinte du diff activé.
+
+Le payload de chargement et les itérations de travail ne sont pas versionnés.
+Ils sont régénérables depuis les extracteurs validés et les sources fabricant :
+
+```powershell
+node scripts/configurator-c2-import.mjs --source-root=C:\GitHub\CIR_Moteur `
+  --out=docs/CONFIGURATEURS/c2d --emit-payload=.c2-payload
+```
+
+Le dossier `.c2-payload/` reste ignoré et doit être supprimé après usage.

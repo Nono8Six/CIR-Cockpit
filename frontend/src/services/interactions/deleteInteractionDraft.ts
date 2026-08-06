@@ -1,7 +1,7 @@
+import { createTrpcResponseParser } from '@/services/api/invokeTrpc';
 import { dataInteractionDraftResponseSchema } from '../../../../shared/schemas/system/api-responses';
 
 import { invokeTrpc } from '@/services/api/invokeTrpc';
-import { createAppError } from '@/services/errors/AppError';
 
 type DeleteInteractionDraftInput = {
   userId: string;
@@ -9,17 +9,11 @@ type DeleteInteractionDraftInput = {
   formType?: string;
 };
 
-const parseDeleteDraftResponse = (payload: unknown): void => {
-  const parsed = dataInteractionDraftResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'REQUEST_FAILED',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-};
+const parseDeleteDraftResponse = createTrpcResponseParser(
+  dataInteractionDraftResponseSchema,
+  (): void => undefined,
+  { code: 'REQUEST_FAILED', message: 'Réponse serveur invalide.' }
+);
 
 export const deleteInteractionDraft = async ({
   userId,

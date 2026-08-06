@@ -20,8 +20,10 @@ import {
   type MotorEquivalentFromSpecResponse
 } from 'shared/schemas/configurator/motor.schema';
 
-import { invokeTrpc } from '@/services/api/invokeTrpc';
-import { createAppError } from '@/services/errors/AppError';
+import {
+  invokeTrpc,
+  withInvalidTrpcResponse
+} from '@/services/api/invokeTrpc';
 
 /**
  * Frontiere frontend des sept routes Configurateurs moteur exposees par
@@ -29,35 +31,17 @@ import { createAppError } from '@/services/errors/AppError';
  * une reponse hors contrat devient une erreur CIR, jamais un rendu partiel.
  */
 
-type SafeParser<TResponse> = {
-  safeParse: (
-    payload: unknown
-  ) => { success: true; data: TResponse } | { success: false; error: { message: string } };
-};
-
-const parseConfiguratorResponse = <TResponse>(
-  schema: SafeParser<TResponse>,
-  payload: unknown
-): TResponse => {
-  const parsed = schema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'CONFIGURATOR_OUTPUT_INVALID',
-      message: 'Réponse Configurateurs invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-
-  return parsed.data;
-};
+const configuratorInvalidResponse = {
+  code: 'CONFIGURATOR_OUTPUT_INVALID',
+  message: 'Réponse Configurateurs invalide.'
+} as const;
 
 export const listMotorCatalog = (
   input: MotorCatalogListInput
 ): Promise<MotorCatalogListResponse> =>
   invokeTrpc(
     (api, options) => api.configurator.motor.catalog.list.query(input, options),
-    (payload) => parseConfiguratorResponse(motorCatalogListResponseSchema, payload),
+    withInvalidTrpcResponse(motorCatalogListResponseSchema, configuratorInvalidResponse),
     'Impossible de charger le catalogue technique moteur.'
   );
 
@@ -66,7 +50,7 @@ export const getMotorCatalogEntry = (
 ): Promise<MotorCatalogGetResponse> =>
   invokeTrpc(
     (api, options) => api.configurator.motor.catalog.get.query(input, options),
-    (payload) => parseConfiguratorResponse(motorCatalogGetResponseSchema, payload),
+    withInvalidTrpcResponse(motorCatalogGetResponseSchema, configuratorInvalidResponse),
     'Impossible de charger la fiche technique de ce moteur.'
   );
 
@@ -75,7 +59,7 @@ export const findMotorEquivalentsFromMotor = (
 ): Promise<MotorEquivalentFromSpecResponse> =>
   invokeTrpc(
     (api, options) => api.configurator.motor.equivalents.fromMotor.query(input, options),
-    (payload) => parseConfiguratorResponse(motorEquivalentFromSpecResponseSchema, payload),
+    withInvalidTrpcResponse(motorEquivalentFromSpecResponseSchema, configuratorInvalidResponse),
     'Impossible de rechercher les équivalents depuis ce moteur.'
   );
 
@@ -84,14 +68,14 @@ export const findMotorEquivalentsFromSpec = (
 ): Promise<MotorEquivalentFromSpecResponse> =>
   invokeTrpc(
     (api, options) => api.configurator.motor.equivalents.fromSpec.query(input, options),
-    (payload) => parseConfiguratorResponse(motorEquivalentFromSpecResponseSchema, payload),
+    withInvalidTrpcResponse(motorEquivalentFromSpecResponseSchema, configuratorInvalidResponse),
     'Impossible de rechercher les équivalents depuis cette spécification.'
   );
 
 export const buildMotorAdvice = (input: MotorAdviceInput): Promise<MotorAdviceResponse> =>
   invokeTrpc(
     (api, options) => api.configurator.motor.advice.build.query(input, options),
-    (payload) => parseConfiguratorResponse(motorAdviceResponseSchema, payload),
+    withInvalidTrpcResponse(motorAdviceResponseSchema, configuratorInvalidResponse),
     'Impossible de construire les conseils pour ce candidat.'
   );
 
@@ -100,13 +84,13 @@ export const computeMotorEnergy = (
 ): Promise<MotorEnergyComputeResponse> =>
   invokeTrpc(
     (api, options) => api.configurator.motor.energy.compute.query(input, options),
-    (payload) => parseConfiguratorResponse(motorEnergyComputeResponseSchema, payload),
+    withInvalidTrpcResponse(motorEnergyComputeResponseSchema, configuratorInvalidResponse),
     'Impossible de calculer la consommation annuelle.'
   );
 
 export const compareMotors = (input: MotorCompareInput): Promise<MotorComparisonResponse> =>
   invokeTrpc(
     (api, options) => api.configurator.motor.compare.query(input, options),
-    (payload) => parseConfiguratorResponse(motorComparisonResponseSchema, payload),
+    withInvalidTrpcResponse(motorComparisonResponseSchema, configuratorInvalidResponse),
     'Impossible de comparer ces moteurs.'
   );

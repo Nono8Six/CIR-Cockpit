@@ -18,7 +18,7 @@ import { invalidateEntityContactMutationQueries } from '@/services/query/queryIn
 import { stripClientNumber } from '@/utils/clients/formatClientNumber';
 
 const optionalCommercialIdSchema = z
-  .union([uuidSchema, z.literal(''), z.null(), z.undefined()])
+  .union([uuidSchema, z.literal(''), z.null()])
   .transform((value) => {
     if (typeof value !== 'string') {
       return null;
@@ -54,7 +54,7 @@ export const clientCompanyFormUiSchema = z.strictObject({
   naf_code: z.string().trim().optional().nullable(),
   official_name: z.string().trim().optional().nullable(),
   official_data_source: z
-    .union([z.literal('api-recherche-entreprises'), z.null(), z.undefined()])
+    .union([z.literal('api-recherche-entreprises'), z.null()])
     .transform((value) => value ?? null)
     .optional(),
   official_data_synced_at: z.string().trim().optional().nullable(),

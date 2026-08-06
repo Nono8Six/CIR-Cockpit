@@ -1,22 +1,16 @@
+import { createTrpcResponseParser } from '@/services/api/invokeTrpc';
 import { dataEntityContactsListResponseSchema } from '../../../../shared/schemas/system/api-responses';
 
 import { EntityContact } from '@/types';
 import { safeTrpc } from '@/services/api/safeTrpc';
-import { createAppError } from '@/services/errors/AppError';
 
-const parseContactsResponse = (payload: unknown): EntityContact[] => {
-  const parsed = dataEntityContactsListResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'REQUEST_FAILED',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-
-  return parsed.data.contacts;
-};
+const parseContactsResponse = createTrpcResponseParser(
+  dataEntityContactsListResponseSchema,
+  (response): EntityContact[] => {
+  return response.contacts;
+},
+  { code: 'REQUEST_FAILED', message: 'Réponse serveur invalide.' }
+);
 
 export const getEntityContacts = async (
   entityId: string,

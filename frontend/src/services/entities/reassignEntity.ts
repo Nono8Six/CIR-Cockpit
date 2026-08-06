@@ -1,3 +1,4 @@
+import { createTrpcResponseParser } from '@/services/api/invokeTrpc';
 import { ResultAsync } from 'neverthrow';
 
 import {
@@ -5,7 +6,7 @@ import {
   type DataEntitiesReassignResponse
 } from '../../../../shared/schemas/system/api-responses';
 import { Entity } from '@/types';
-import { createAppError, type AppError } from '@/services/errors/AppError';
+import { type AppError } from '@/services/errors/AppError';
 import { safeTrpc } from '@/services/api/safeTrpc';
 
 export type ReassignEntityPayload = {
@@ -18,19 +19,17 @@ export type ReassignEntityResponse = {
   propagated_interactions_count: number;
 };
 
-const parseReassignEntityResponse = (payload: unknown): ReassignEntityResponse => {
-  const parsed = dataEntitiesReassignResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'REQUEST_FAILED',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-  const response: DataEntitiesReassignResponse = parsed.data;
-  return { entity: response.entity, propagated_interactions_count: response.propagated_interactions_count };
-};
+const parseReassignEntityResponse = createTrpcResponseParser(
+  dataEntitiesReassignResponseSchema,
+  (response): ReassignEntityResponse => {
+    const reassignResponse: DataEntitiesReassignResponse = response;
+    return {
+      entity: reassignResponse.entity,
+      propagated_interactions_count: reassignResponse.propagated_interactions_count
+    };
+  },
+  { code: 'REQUEST_FAILED', message: 'Réponse serveur invalide.' }
+);
 
 export const reassignEntity = (
   payload: ReassignEntityPayload

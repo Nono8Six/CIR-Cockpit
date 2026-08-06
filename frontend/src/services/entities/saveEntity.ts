@@ -1,3 +1,4 @@
+import { createTrpcResponseParser } from '@/services/api/invokeTrpc';
 import { ResultAsync } from 'neverthrow';
 
 import { dataEntitiesResponseSchema } from '../../../../shared/schemas/system/api-responses';
@@ -39,18 +40,13 @@ export type SupplierEntityPayload = EntityPayloadBase & {
 
 export type EntityPayload = ProspectEntityPayload | SupplierEntityPayload;
 
-const parseEntityResponse = (payload: unknown): Entity => {
-  const parsed = dataEntitiesResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'REQUEST_FAILED',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-  return parsed.data.entity;
-};
+const parseEntityResponse = createTrpcResponseParser(
+  dataEntitiesResponseSchema,
+  (response): Entity => {
+  return response.entity;
+},
+  { code: 'REQUEST_FAILED', message: 'Réponse serveur invalide.' }
+);
 
 const requireEntityText = (value: string | null | undefined, message: string): string => {
   const trimmed = value?.trim() ?? '';

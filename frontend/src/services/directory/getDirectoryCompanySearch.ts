@@ -24,9 +24,8 @@ const enterpriseApiBooleanLikeSchema = z.union([
   z.boolean(),
   z.string(),
   z.number(),
-  z.null(),
-  z.undefined()
-]);
+  z.null()
+]).optional();
 
 const enterpriseApiEstablishmentSchema = z.looseObject({
   siret: z.string().trim().min(1).nullable().optional(),
@@ -45,10 +44,10 @@ const enterpriseApiEstablishmentSchema = z.looseObject({
   ancien_siege: enterpriseApiBooleanLikeSchema,
   nom_commercial: z.string().trim().nullable().optional(),
   tranche_effectif_salarie: z.string().trim().nullable().optional(),
-  annee_tranche_effectif_salarie: z.union([z.number(), z.string(), z.null(), z.undefined()]),
+  annee_tranche_effectif_salarie: z.union([z.number(), z.string(), z.null()]).optional(),
   caractere_employeur: enterpriseApiBooleanLikeSchema,
   statut_diffusion_etablissement: z.string().trim().nullable().optional(),
-  liste_enseignes: z.union([z.array(z.string().nullable()), z.string(), z.null(), z.undefined()])
+  liste_enseignes: z.union([z.array(z.string().nullable()), z.string(), z.null()]).optional()
 });
 
 const enterpriseApiCompanySchema = z.looseObject({
@@ -58,10 +57,11 @@ const enterpriseApiCompanySchema = z.looseObject({
   sigle: z.string().trim().nullable().optional(),
   activite_principale: z.string().trim().nullable().optional(),
   activite_principale_naf25: z.string().trim().nullable().optional(),
-  nombre_etablissements: z.union([z.number(), z.string(), z.null(), z.undefined()]),
-  nombre_etablissements_ouverts: z.union([z.number(), z.string(), z.null(), z.undefined()]),
+  nombre_etablissements: z.union([z.number(), z.string(), z.null()]).optional(),
+  nombre_etablissements_ouverts: z.union([z.number(), z.string(), z.null()]).optional(),
   siege: enterpriseApiEstablishmentSchema.nullable().optional(),
-  matching_etablissements: z.union([z.array(enterpriseApiEstablishmentSchema), z.null(), z.undefined()])
+  matching_etablissements: z.union([z.array(enterpriseApiEstablishmentSchema), z.null()])
+    .optional()
     .transform((value) => value ?? [])
 });
 
@@ -70,21 +70,7 @@ const enterpriseApiSearchResponseSchema = z.looseObject({
 });
 
 type EnterpriseApiCompany = z.infer<typeof enterpriseApiCompanySchema>;
-type EnterpriseApiEstablishment = z.infer<typeof enterpriseApiEstablishmentSchema>;
-
-const parseDirectoryCompanySearchResponse = (payload: unknown): DirectoryCompanySearchResponse => {
-  const parsed = directoryCompanySearchResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'REQUEST_FAILED',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-
-  return parsed.data;
-};
+type EnterpriseApiEstablishment = z.infer<typeof enterpriseApiEstablishmentSchema>;;
 
 const normalizeNullableText = (value: unknown): string | null => {
   const normalized = typeof value === 'string' ? value.trim() : '';
@@ -258,7 +244,7 @@ export const getDirectoryCompanySearch = async (
 
   return invokeTrpc(
     (api, options) => api.directory['company-search'].query(input, options),
-    parseDirectoryCompanySearchResponse,
+    directoryCompanySearchResponseSchema,
     "Impossible de rechercher l'entreprise."
   );
 };

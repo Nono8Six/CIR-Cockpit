@@ -40,6 +40,16 @@ const REQUIRED_LEGACY_MIGRATIONS = [
   "202601231550_sync_status_label_on_update.sql",
   "202601231560_interactions_status_terminal_flag.sql",
 ];
+const FORBIDDEN_TRACKED_ARTIFACT_PATHS = [
+  "tmp/c2-audit-full/",
+  "tmp/c2-review/",
+  "tmp/c2-review-after-alias/",
+  "tmp/c2-review-after-user/",
+  "tmp/c2-review-final/",
+  "tmp/c2d-corrections/",
+  "tmp/c2d2-corrections/",
+  "tmp/c2d3-corrections/",
+];
 // Only migrations whose local filename version differs from the remote version need an entry here.
 // When a local file starts with the remote version (modern workflow), the mapping is derived automatically.
 const REMOTE_TO_LOCAL_MODERN_MIGRATION_COMPATIBILITY = {
@@ -140,6 +150,20 @@ function git(args) {
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
   }).trim();
+}
+
+const trackedFiles = git(["ls-files", "--"])
+  .split(/\r?\n/)
+  .filter(Boolean);
+
+for (const forbiddenPath of FORBIDDEN_TRACKED_ARTIFACT_PATHS) {
+  const trackedArtifact = trackedFiles.find((trackedFile) => trackedFile.startsWith(forbiddenPath));
+  if (trackedArtifact) {
+    fail(
+      `Regenerable artifact ${trackedArtifact} is tracked by Git. `
+        + `Remove ${forbiddenPath} from the index and keep its narrow .gitignore rule.`,
+    );
+  }
 }
 
 function fail(message) {
@@ -347,17 +371,36 @@ for (const requiredRouterFragment of [
   }
 }
 
-const sharedTrpcSource = readText("shared/api/trpc.ts");
+if (existsSync(path.join(repoRoot, "shared/api/trpc.ts"))) {
+  fail(
+    "shared/api/trpc.ts must not rebuild the tRPC router. "
+      + "Infer public types from backend/functions/api/trpc/router.ts instead.",
+  );
+}
+
 for (const requiredTrpcFragment of [
-  "export type AppRouter",
-  "inferRouterInputs<AppRouter>",
-  "inferRouterOutputs<AppRouter>",
-  "usage: t.procedure",
-  "reference: t.procedure",
+  "export type AppRouter = typeof appRouter",
+  "export type RouterInputs = inferRouterInputs<AppRouter>",
+  "export type RouterOutputs = inferRouterOutputs<AppRouter>",
 ]) {
-  if (!sharedTrpcSource.includes(requiredTrpcFragment)) {
-    fail(`shared/api/trpc.ts is missing typed tRPC fragment ${JSON.stringify(requiredTrpcFragment)}.`);
+  if (!routerSource.includes(requiredTrpcFragment)) {
+    fail(`backend/functions/api/trpc/router.ts is missing canonical tRPC fragment ${JSON.stringify(requiredTrpcFragment)}.`);
   }
+}
+
+const frontendTrpcClientSource = readText("frontend/src/services/api/trpcClient.ts");
+const canonicalAppRouterImport =
+  "import type { AppRouter } from 'shared/api/trpc.generated'";
+if (!frontendTrpcClientSource.includes(canonicalAppRouterImport)) {
+  fail(
+    "frontend/src/services/api/trpcClient.ts must import AppRouter type-only from the generated canonical contract.",
+  );
+}
+if (
+  frontendTrpcClientSource.includes("from 'shared/api/trpc'")
+  || frontendTrpcClientSource.includes('from "shared/api/trpc"')
+) {
+  fail("frontend/src/services/api/trpcClient.ts must not import the removed shared tRPC adapter.");
 }
 
 const supabaseTypesSource = readText("shared/supabase.types.ts");

@@ -1,25 +1,12 @@
+import { withInvalidTrpcResponse } from '@/services/api/invokeTrpc';
 import {
   adminUsersSetRoleResponseSchema,
   type AdminUsersSetRoleResponse
 } from '../../../../shared/schemas/system/api-responses';
 import { safeTrpc } from '@/services/api/safeTrpc';
-import { createAppError } from '@/services/errors/AppError';
 import { UserRole } from '@/types';
 
-export type SetUserRoleResponse = AdminUsersSetRoleResponse;
-
-const parseSetUserRoleResponse = (payload: unknown): SetUserRoleResponse => {
-  const parsed = adminUsersSetRoleResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'EDGE_INVALID_RESPONSE',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-  return parsed.data;
-};
+export type SetUserRoleResponse = AdminUsersSetRoleResponse;;
 
 export const setAdminUserRole = (userId: string, role: UserRole) =>
   safeTrpc(
@@ -28,6 +15,6 @@ export const setAdminUserRole = (userId: string, role: UserRole) =>
       user_id: userId,
       role
       }, options),
-    parseSetUserRoleResponse,
+    withInvalidTrpcResponse(adminUsersSetRoleResponseSchema, { code: 'EDGE_INVALID_RESPONSE' }),
     'Impossible de mettre à jour le rôle.'
   );

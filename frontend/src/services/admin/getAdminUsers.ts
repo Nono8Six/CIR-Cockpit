@@ -1,3 +1,4 @@
+import { createTrpcResponseParser } from '@/services/api/invokeTrpc';
 import {
   adminUsersListResponseSchema,
   type AdminUserMembership,
@@ -5,23 +6,16 @@ import {
 } from '../../../../shared/schemas/system/api-responses';
 
 import { invokeTrpc } from '@/services/api/invokeTrpc';
-import { createAppError } from '@/services/errors/AppError';
 
 export type { AdminUserMembership, AdminUserSummary };
 
-const parseAdminUsersResponse = (payload: unknown): AdminUserSummary[] => {
-  const parsed = adminUsersListResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'EDGE_INVALID_RESPONSE',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-
-  return parsed.data.users;
-};
+const parseAdminUsersResponse = createTrpcResponseParser(
+  adminUsersListResponseSchema,
+  (response): AdminUserSummary[] => {
+  return response.users;
+},
+  { code: 'EDGE_INVALID_RESPONSE', message: 'Réponse serveur invalide.' }
+);
 
 export const getAdminUsers = (): Promise<AdminUserSummary[]> =>
   invokeTrpc(

@@ -7,28 +7,14 @@ import {
   type ConfigReferenceActionResponse
 } from '../../../../shared/schemas/system/api-responses';
 
-import { type AppError, createAppError } from '@/services/errors/AppError';
-import { safeTrpc } from '@/services/api/safeTrpc';
-
-const parseConfigReferenceActionResponse = (payload: unknown): ConfigReferenceActionResponse => {
-  const parsed = configReferenceActionResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'REQUEST_FAILED',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-
-  return parsed.data;
-};
+import { type AppError } from '@/services/errors/AppError';
+import { safeTrpc } from '@/services/api/safeTrpc';;
 
 export const saveConfigReferenceAction = (
   input: ConfigReferenceActionInput
 ): ResultAsync<ConfigReferenceActionResponse, AppError> =>
   safeTrpc(
     async (api, options) => api.config.reference.mutate(input, options),
-    parseConfigReferenceActionResponse,
+    configReferenceActionResponseSchema,
     'Impossible de mettre à jour le référentiel.'
   );

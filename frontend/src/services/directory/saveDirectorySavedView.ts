@@ -4,29 +4,13 @@ import {
 } from '../../../../shared/schemas/system/api-responses';
 import { type DirectorySavedViewSaveInput } from '../../../../shared/schemas/system/directory.schema';
 
-import { invokeTrpc } from '@/services/api/invokeTrpc';
-
-import { createAppError } from '@/services/errors/AppError';
-
-const parseDirectorySavedViewResponse = (payload: unknown): DirectorySavedViewResponse => {
-  const parsed = directorySavedViewResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'REQUEST_FAILED',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-
-  return parsed.data;
-};
+import { invokeTrpc } from '@/services/api/invokeTrpc';;
 
 export const saveDirectorySavedView = (
   input: DirectorySavedViewSaveInput
 ): Promise<DirectorySavedViewResponse> =>
   invokeTrpc(
     (api, options) => api.directory['saved-views'].save.mutate(input, options),
-    parseDirectorySavedViewResponse,
+    directorySavedViewResponseSchema,
     'Impossible de sauvegarder la vue.'
   );

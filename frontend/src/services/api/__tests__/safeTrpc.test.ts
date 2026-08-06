@@ -2,8 +2,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createAppError } from '@/services/errors/AppError';
 import { safeTrpc } from '@/services/api/safeTrpc';
-import { invokeTrpc } from '@/services/api/invokeTrpc';
+import {
+  createTrpcResponseParser,
+  invokeTrpc,
+  withInvalidTrpcResponse
+} from '@/services/api/invokeTrpc';
 import { buildRpcRequestInit, createTrpcCallOptions, getTrpcClient } from '@/services/api/trpcClient';
+import { z } from 'zod';
 
 const mockTrpcClient = {
   data: {},
@@ -36,7 +41,10 @@ describe('safeTrpc', () => {
         ok: true,
         payload: { id: 'item-1' }
       }),
-      (payload: unknown) => payload,
+      z.object({
+        ok: z.literal(true),
+        payload: z.object({ id: z.string() })
+      }).strict(),
       'Fallback'
     );
 
@@ -53,7 +61,7 @@ describe('safeTrpc', () => {
     await expect(
       invokeTrpc(
         async () => null,
-        (payload: unknown) => payload,
+        z.object({ ok: z.boolean() }),
         'Fallback'
       )
     ).rejects.toMatchObject({ code: 'EDGE_FUNCTION_ERROR' });
@@ -64,10 +72,39 @@ describe('safeTrpc', () => {
           ok: false,
           error: 'Erreur serveur'
         }),
-        (payload: unknown) => payload,
+        z.object({ ok: z.literal(true) }),
         'Fallback'
       )
     ).rejects.toMatchObject({ code: 'EDGE_FUNCTION_ERROR' });
+  });
+
+  it('centralizes schema errors while preserving domain-specific metadata and transformations', async () => {
+    const responseSchema = z.object({
+      ok: z.literal(true),
+      value: z.number()
+    }).strict();
+
+    await expect(
+      invokeTrpc(
+        async () => ({ ok: true, value: 'invalid' }),
+        withInvalidTrpcResponse(responseSchema, {
+          code: 'CONFIGURATOR_OUTPUT_INVALID',
+          message: 'Réponse configurateur invalide.'
+        }),
+        'Fallback'
+      )
+    ).rejects.toMatchObject({
+      code: 'CONFIGURATOR_OUTPUT_INVALID',
+      message: 'Réponse configurateur invalide.'
+    });
+
+    const value = await invokeTrpc(
+      async () => ({ ok: true, value: 21 }),
+      createTrpcResponseParser(responseSchema, (response) => response.value * 2),
+      'Fallback'
+    );
+
+    expect(value).toBe(42);
   });
 
   it('maps thrown network errors and keeps AppError untouched', async () => {
@@ -76,7 +113,7 @@ describe('safeTrpc', () => {
         async () => {
           throw new Error('fetch failed');
         },
-        (payload: unknown) => payload,
+        z.object({ ok: z.literal(true) }),
         'Fallback'
       )
     ).rejects.toMatchObject({ code: 'NETWORK_ERROR' });
@@ -91,7 +128,7 @@ describe('safeTrpc', () => {
         async () => {
           throw appError;
         },
-        (payload: unknown) => payload,
+        z.object({ ok: z.literal(true) }),
         'Fallback'
       )
     ).rejects.toBe(appError);
@@ -100,7 +137,7 @@ describe('safeTrpc', () => {
   it('returns ResultAsync success and failure for safeTrpc', async () => {
     const success = await safeTrpc(
       async () => ({ ok: true, value: 42 }),
-      (payload: unknown) => (typeof payload === 'object' && payload ? Reflect.get(payload, 'value') : null),
+      z.object({ ok: z.literal(true), value: z.number() }).transform(({ value }) => value),
       'Fallback'
     ).match(
       (result) => result,
@@ -111,7 +148,7 @@ describe('safeTrpc', () => {
       async () => {
         throw new Error('network down');
       },
-      (payload: unknown) => payload,
+      z.object({ ok: z.literal(true) }),
       'Fallback'
     ).match(
       () => '',

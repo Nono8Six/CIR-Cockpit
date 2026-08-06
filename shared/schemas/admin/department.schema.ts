@@ -8,7 +8,8 @@ export const entityDepartmentCodeSchema = z
   .regex(entityDepartmentCodePattern, 'Departement invalide');
 
 export const optionalEntityDepartmentCodeSchema = z
-  .union([z.string(), z.null(), z.undefined()])
+  .union([z.string(), z.null()])
+  .optional()
   .transform((value) => value?.trim() ?? '')
   .refine(
     (value) => value.length === 0 || entityDepartmentCodePattern.test(value),

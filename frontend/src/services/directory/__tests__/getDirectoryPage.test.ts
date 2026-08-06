@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DirectoryListInput } from '../../../../../shared/schemas/system/directory.schema';
 
-import { invokeTrpc } from '@/services/api/invokeTrpc';
+import { invokeTrpc, parseTrpcContract } from '@/services/api/invokeTrpc';
 
-vi.mock('@/services/api/invokeTrpc', () => ({
+vi.mock('@/services/api/invokeTrpc', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/services/api/invokeTrpc')>()),
   invokeTrpc: vi.fn()
 }));
 
@@ -49,7 +50,7 @@ describe('getDirectoryPage', () => {
   });
 
   it('coerces a missing client_kind from the edge payload to null', async () => {
-    mockInvokeTrpc.mockImplementation(async (_runner, parser) => parser(mockDirectoryResponse));
+    mockInvokeTrpc.mockImplementation(async (_runner, parser) => parseTrpcContract(parser, mockDirectoryResponse));
     mockDirectoryResponse = {
       request_id: 'req-1',
       ok: true,
@@ -67,7 +68,7 @@ describe('getDirectoryPage', () => {
   });
 
   it('coerces an unknown client_kind from the edge payload to null', async () => {
-    mockInvokeTrpc.mockImplementation(async (_runner, parser) => parser(mockDirectoryResponse));
+    mockInvokeTrpc.mockImplementation(async (_runner, parser) => parseTrpcContract(parser, mockDirectoryResponse));
     mockDirectoryResponse = {
       request_id: 'req-2',
       ok: true,

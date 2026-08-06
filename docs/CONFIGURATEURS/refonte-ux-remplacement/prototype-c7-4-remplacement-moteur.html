@@ -1,0 +1,2118 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#fdfdfc">
+<meta name="description" content="Prototype testable C7-4 du configurateur technique de remplacement moteur : parcours guidé, une étape à la fois.">
+<title>Prototype C7-4 | Configurateur Remplacement moteur</title>
+<style>
+:root{
+  color-scheme: light;
+  --background:48 30% 99%;
+  --foreground:30 9% 17%;
+  --surface-1:45 28% 98%;
+  --surface-2:45 20% 96%;
+  --surface-3:40 13% 92%;
+  --card:0 0% 100%;
+  --border:36 12% 86%;
+  --border-subtle:40 16% 94%;
+  --muted:44 24% 96%;
+  --muted-foreground:31 7% 42%;
+  --primary:6 72% 45%;
+  --primary-hover:6 72% 38%;
+  --primary-soft:7 58% 96%;
+  --primary-foreground:0 0% 98%;
+  --success:148 49% 33%;
+  --success-soft:145 34% 94%;
+  --warning:38 85% 31%;
+  --warning-soft:39 60% 94%;
+  --info:210 52% 38%;
+  --info-soft:210 50% 95%;
+  --destructive:0 72% 45%;
+  --destructive-soft:0 65% 96%;
+  --ring:6 72% 45%;
+  --r-sm:4px; --r-md:6px; --r-lg:10px;
+  --shadow:0 1px 2px hsl(30 9% 17% / .04), 0 0 0 1px hsl(var(--border) / .55);
+  --shadow-lift:0 4px 16px hsl(30 9% 17% / .08), 0 0 0 1px hsl(var(--border));
+  --ease:cubic-bezier(.16,1,.3,1);
+  --rail:340px;
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html{background:hsl(var(--background))}
+body{
+  margin:0;min-width:320px;overflow-x:hidden;
+  background:hsl(var(--background));color:hsl(var(--foreground));
+  font-family:"Inter Tight","Inter","Aptos","Segoe UI",system-ui,sans-serif;
+  font-size:13px;line-height:1.5;font-feature-settings:"cv11","ss01","ss03";
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3,h4,p,ul,ol,dl,dd,dt,figure{margin:0}
+ul,ol{padding:0;list-style:none}
+a{color:hsl(var(--primary));text-underline-offset:2px}
+.mono{font-family:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid hsl(var(--ring));outline-offset:2px;border-radius:var(--r-sm)}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* ---------- topbar ---------- */
+.topbar{
+  position:sticky;top:0;z-index:30;
+  display:flex;align-items:center;gap:12px;
+  height:56px;padding:0 16px;
+  background:hsl(var(--background)/.92);backdrop-filter:blur(8px);
+  border-bottom:1px solid hsl(var(--border));
+}
+.brand{display:flex;align-items:center;gap:9px;min-width:0}
+.brand-mark{
+  width:24px;height:24px;flex:none;border-radius:var(--r-sm);
+  background:hsl(var(--primary));color:hsl(var(--primary-foreground));
+  display:grid;place-items:center;font-size:11px;font-weight:700;letter-spacing:.02em
+}
+.brand-txt{font-size:13px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand-sub{font-size:11px;color:hsl(var(--muted-foreground));white-space:nowrap}
+.topbar-spacer{flex:1}
+.topbar-actions{display:flex;align-items:center;gap:6px}
+
+/* ---------- primitives ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  height:32px;padding:0 12px;border-radius:var(--r-md);
+  border:1px solid hsl(var(--border));background:hsl(var(--card));
+  font-size:12.5px;font-weight:500;cursor:pointer;
+  transition:background 120ms var(--ease),border-color 120ms var(--ease),box-shadow 120ms var(--ease);
+}
+.btn:hover{background:hsl(var(--surface-2))}
+.btn:active{transform:translateY(.5px)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn-primary{background:hsl(var(--primary));border-color:hsl(var(--primary));color:hsl(var(--primary-foreground));font-weight:600}
+.btn-primary:hover{background:hsl(var(--primary-hover));border-color:hsl(var(--primary-hover))}
+.btn-ghost{background:transparent;border-color:transparent;color:hsl(var(--muted-foreground))}
+.btn-ghost:hover{background:hsl(var(--surface-2));color:hsl(var(--foreground))}
+.btn-lg{height:40px;padding:0 18px;font-size:13.5px}
+.btn-sm{height:26px;padding:0 9px;font-size:11.5px;border-radius:var(--r-sm)}
+kbd{
+  display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 4px;
+  border:1px solid hsl(var(--border));border-bottom-width:2px;border-radius:var(--r-sm);
+  background:hsl(var(--surface-2));font-family:inherit;font-size:11px;font-weight:600;
+  color:hsl(var(--muted-foreground));line-height:1
+}
+.chip{
+  display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;
+  border-radius:999px;border:1px solid hsl(var(--border));background:hsl(var(--surface-2));
+  font-size:11px;font-weight:600;letter-spacing:.01em;white-space:nowrap
+}
+.chip .dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+.chip[data-tone=prelim]{background:hsl(var(--info-soft));border-color:hsl(var(--info)/.28);color:hsl(var(--info))}
+.chip[data-tone=candidat]{background:hsl(var(--warning-soft));border-color:hsl(var(--warning)/.3);color:hsl(var(--warning))}
+.chip[data-tone=valide]{background:hsl(var(--success-soft));border-color:hsl(var(--success)/.3);color:hsl(var(--success))}
+.chip[data-tone=qualif]{background:hsl(var(--primary-soft));border-color:hsl(var(--primary)/.3);color:hsl(var(--primary))}
+.chip[data-tone=neutral]{color:hsl(var(--muted-foreground))}
+.label{font-size:11px;font-weight:600;letter-spacing:.025em;text-transform:uppercase;color:hsl(var(--muted-foreground))}
+.card{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--r-lg);box-shadow:var(--shadow)}
+.muted{color:hsl(var(--muted-foreground))}
+.hr{height:1px;background:hsl(var(--border-subtle));margin:14px 0}
+
+/* ---------- layout ---------- */
+.wrap{max-width:1240px;margin:0 auto;padding:20px 16px 96px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) var(--rail);gap:20px;align-items:start}
+.rail{position:sticky;top:76px;display:flex;flex-direction:column;gap:12px}
+@media (max-width:1060px){
+  .grid{grid-template-columns:minmax(0,1fr)}
+  .rail{position:static;order:2}
+  .wrap{padding-bottom:76px}
+}
+
+/* ---------- accueil ---------- */
+.hero{padding:22px;margin-bottom:16px}
+.hero h1{font-size:24px;font-weight:600;letter-spacing:-.02em;line-height:1.2}
+.hero p{margin-top:8px;max-width:64ch;color:hsl(var(--muted-foreground))}
+.hero-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.notice{
+  display:flex;gap:9px;padding:10px 12px;border-radius:var(--r-md);
+  background:hsl(var(--info-soft));border:1px solid hsl(var(--info)/.22);color:hsl(var(--info));
+  font-size:12px;line-height:1.45
+}
+.notice strong{font-weight:600}
+.notice[data-tone=warn]{background:hsl(var(--warning-soft));border-color:hsl(var(--warning)/.24);color:hsl(var(--warning))}
+.notice[data-tone=neutral]{background:hsl(var(--surface-2));border-color:hsl(var(--border));color:hsl(var(--muted-foreground))}
+.sec-title{display:flex;align-items:center;gap:8px;margin:22px 0 10px}
+.sec-title h2{font-size:13px;font-weight:600}
+.sec-title .rule{flex:1;height:1px;background:hsl(var(--border-subtle))}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:10px}
+.pick{
+  display:flex;flex-direction:column;gap:6px;text-align:left;
+  padding:13px 14px;border-radius:var(--r-lg);border:1px solid hsl(var(--border));
+  background:hsl(var(--card));cursor:pointer;box-shadow:var(--shadow);
+  transition:box-shadow 140ms var(--ease),transform 140ms var(--ease),border-color 140ms var(--ease)
+}
+.pick:hover{box-shadow:var(--shadow-lift);transform:translateY(-1px)}
+.pick-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.pick-name{font-size:13px;font-weight:600;letter-spacing:-.005em}
+.pick-desc{font-size:12px;color:hsl(var(--muted-foreground));line-height:1.45}
+.pick-facts{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
+.tag{
+  display:inline-flex;align-items:center;height:19px;padding:0 6px;border-radius:var(--r-sm);
+  background:hsl(var(--surface-2));border:1px solid hsl(var(--border-subtle));
+  font-size:11px;font-weight:500;color:hsl(var(--muted-foreground))
+}
+
+/* ---------- progression ---------- */
+.progress{display:flex;align-items:center;gap:6px;padding:11px 14px;margin-bottom:12px}
+.pstep{display:flex;align-items:center;gap:6px;min-width:0}
+.pdot{
+  width:20px;height:20px;flex:none;border-radius:50%;display:grid;place-items:center;
+  border:1px solid hsl(var(--border));background:hsl(var(--card));
+  font-size:11px;font-weight:600;color:hsl(var(--muted-foreground))
+}
+.pstep[data-st=done] .pdot{background:hsl(var(--success-soft));border-color:hsl(var(--success)/.35);color:hsl(var(--success))}
+.pstep[data-st=now] .pdot{background:hsl(var(--primary));border-color:hsl(var(--primary));color:hsl(var(--primary-foreground))}
+.pstep .pname{font-size:11.5px;font-weight:500;color:hsl(var(--muted-foreground));white-space:nowrap}
+.pstep[data-st=now] .pname{color:hsl(var(--foreground));font-weight:600}
+.pbar{flex:1;height:1px;background:hsl(var(--border));min-width:6px}
+@media (max-width:860px){.pstep .pname{display:none}}
+@media (max-width:700px){
+  .topbar{gap:8px;padding:0 12px}
+  #topState{display:none}
+  .brand-sub{display:none}
+  .brand-txt{max-width:44vw}
+  .step-head{padding:16px 14px 0}
+  .step-body{padding:14px 14px 0}
+  .step-foot{padding:10px 14px}
+  .res-head{padding:16px 14px}
+  .crit{padding:9px 14px}
+  .wrap{padding:14px 12px 84px}
+}
+
+/* ---------- étape ---------- */
+.step{padding:0;overflow:hidden}
+.step-head{padding:18px 20px 0}
+.kicker{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-bottom:9px}
+.q{font-size:19px;font-weight:600;letter-spacing:-.018em;line-height:1.28;max-width:34ch}
+.q:focus-visible{outline:2px solid hsl(var(--ring) / .32);outline-offset:7px}
+.why{margin-top:7px;font-size:12px;color:hsl(var(--muted-foreground));max-width:62ch}
+.step-body{padding:16px 20px 0;display:flex;flex-direction:column;gap:8px}
+.step-note{margin-top:2px;font-size:11.5px;line-height:1.45;color:hsl(var(--muted-foreground));max-width:74ch}
+.step-foot{
+  display:flex;flex-wrap:wrap;align-items:center;gap:6px;
+  margin-top:16px;padding:11px 20px;border-top:1px solid hsl(var(--border-subtle));
+  background:hsl(var(--surface-1))
+}
+.step-foot .spacer{flex:1}
+.opt{
+  display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+  padding:11px 13px;border-radius:var(--r-md);border:1px solid hsl(var(--border));
+  background:hsl(var(--card));cursor:pointer;
+  transition:border-color 120ms var(--ease),background 120ms var(--ease),box-shadow 120ms var(--ease)
+}
+.opt:hover{border-color:hsl(var(--primary)/.5);background:hsl(var(--primary-soft)/.5)}
+.opt[aria-pressed=true]{border-color:hsl(var(--primary));background:hsl(var(--primary-soft));box-shadow:inset 0 0 0 1px hsl(var(--primary)/.35)}
+.opt-k{flex:none}
+.opt-txt{min-width:0}
+.opt-name{display:block;font-size:13px;font-weight:500}
+.opt-hint{display:block;font-size:11.5px;color:hsl(var(--muted-foreground));margin-top:1px}
+.opt-check{margin-left:auto;color:hsl(var(--primary));opacity:0;flex:none}
+.opt[aria-pressed=true] .opt-check{opacity:1}
+.opt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:8px}
+.opt-grid-compact{grid-template-columns:repeat(auto-fill,minmax(118px,1fr))}
+.opt-grid-wide{grid-template-columns:repeat(auto-fill,minmax(262px,1fr))}
+.opt-mini{padding:9px 10px;gap:8px}
+.opt-mini .opt-name{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.opt-mini .opt-hint{font-size:11px}
+.opt-vis{flex-direction:column;align-items:stretch;gap:8px;padding:11px}
+.opt-vis .fig{
+  background:hsl(var(--surface-1));border:1px solid hsl(var(--border-subtle));border-radius:var(--r-sm);
+  display:grid;place-items:center;padding:6px
+}
+.opt-vis svg{width:100%;height:auto;display:block;color:hsl(var(--foreground)/.78)}
+.opt-vis[aria-pressed=true] svg{color:hsl(var(--primary))}
+.opt-vis .row{display:flex;align-items:center;gap:7px}
+.num-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.field{
+  display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;
+  border:1px solid hsl(var(--border));border-radius:var(--r-md);background:hsl(var(--card));
+  transition:border-color 120ms var(--ease),box-shadow 120ms var(--ease)
+}
+.field:focus-within{border-color:hsl(var(--primary));box-shadow:0 0 0 3px hsl(var(--primary)/.12)}
+.field input{border:0;outline:0;background:transparent;width:130px;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+.field .unit{font-size:12px;font-weight:600;color:hsl(var(--muted-foreground))}
+.chk{display:flex;align-items:flex-start;gap:9px;padding:10px 12px;border-radius:var(--r-md);border:1px solid hsl(var(--border));background:hsl(var(--card));cursor:pointer}
+.chk:hover{background:hsl(var(--surface-2))}
+.chk input{margin:2px 0 0;accent-color:hsl(var(--primary));width:15px;height:15px;flex:none}
+.chk[data-on=true]{border-color:hsl(var(--primary));background:hsl(var(--primary-soft))}
+.fields{display:flex;flex-direction:column;gap:10px}
+.fld{padding:10px 12px;border:1px solid hsl(var(--border-subtle));border-radius:var(--r-md);background:hsl(var(--surface-1))}
+.fld-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:7px}
+.fld-l{font-size:12px;font-weight:600}
+.fld-v{font-size:11px;font-weight:600;color:hsl(var(--primary))}
+.fld-v[data-unknown=true]{color:hsl(var(--warning))}
+.pills{display:flex;flex-wrap:wrap;gap:5px}
+.pill{
+  height:26px;padding:0 9px;border-radius:999px;border:1px solid hsl(var(--border));
+  background:hsl(var(--card));font-size:11.5px;font-weight:500;cursor:pointer;
+  transition:border-color 110ms var(--ease),background 110ms var(--ease)
+}
+.pill:hover{border-color:hsl(var(--primary)/.55);background:hsl(var(--primary-soft)/.6)}
+.pill[aria-pressed=true]{border-color:hsl(var(--primary));background:hsl(var(--primary-soft));color:hsl(var(--primary));font-weight:600}
+.pill[data-unknown][aria-pressed=true]{border-color:hsl(var(--warning));background:hsl(var(--warning-soft));color:hsl(var(--warning))}
+.fld .field{height:34px}
+.fld .field input{width:96px;font-size:13.5px}
+.chk-name{display:block;font-size:12.5px;font-weight:500}
+.chk-hint{display:block;font-size:11.5px;color:hsl(var(--muted-foreground));margin-top:1px}
+
+/* ---------- aide ---------- */
+.aide{margin-top:12px;border:1px solid hsl(var(--border-subtle));border-radius:var(--r-md);overflow:hidden;background:hsl(var(--surface-1))}
+.aide-btn{
+  display:flex;align-items:center;gap:8px;width:100%;padding:9px 12px;
+  background:transparent;border:0;cursor:pointer;text-align:left;font-size:12px;font-weight:600;color:hsl(var(--muted-foreground))
+}
+.aide-btn:hover{color:hsl(var(--foreground));background:hsl(var(--surface-2))}
+.aide-btn .caret{margin-left:auto;transition:transform 160ms var(--ease)}
+.aide[data-open=true] .aide-btn .caret{transform:rotate(90deg)}
+.aide-body{padding:2px 12px 12px;display:grid;gap:9px;border-top:1px solid hsl(var(--border-subtle))}
+.aide-item{display:grid;grid-template-columns:104px minmax(0,1fr);gap:10px;font-size:12px;line-height:1.45}
+.aide-item dt{font-size:11px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:hsl(var(--muted-foreground));padding-top:1px}
+.aide-fig{margin-top:2px;background:hsl(var(--card));border:1px solid hsl(var(--border-subtle));border-radius:var(--r-sm);padding:10px;display:grid;place-items:center}
+.aide-fig svg{width:100%;max-width:340px;height:auto;color:hsl(var(--foreground)/.8)}
+@media (max-width:520px){.aide-item{grid-template-columns:minmax(0,1fr);gap:2px}}
+
+/* ---------- relevé ---------- */
+.rail-card{padding:12px 14px}
+.rail-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
+.rail-head h3{font-size:11px;font-weight:600;letter-spacing:.025em;text-transform:uppercase;color:hsl(var(--muted-foreground))}
+.count{
+  display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;
+  background:hsl(var(--surface-3));font-size:11px;font-weight:600;color:hsl(var(--muted-foreground))
+}
+.facts{display:flex;flex-direction:column;gap:1px}
+.fact{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;width:100%;
+  padding:6px 8px;border-radius:var(--r-sm);border:0;background:transparent;text-align:left;cursor:pointer
+}
+.fact:hover{background:hsl(var(--surface-2))}
+.fact-k{font-size:11.5px;color:hsl(var(--muted-foreground));overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fact-v{font-size:12px;font-weight:600;justify-self:end;text-align:right;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fact-v.unknown{font-weight:500;color:hsl(var(--warning));display:inline-flex;align-items:center;gap:5px}
+.fact-v.unknown::before{content:"";width:14px;height:9px;border-radius:2px;border:1px solid hsl(var(--warning)/.4)}
+.fact-src{display:block;font-size:10.5px;font-weight:400;color:hsl(var(--muted-foreground));letter-spacing:.01em}
+.empty{padding:9px 8px;font-size:11.5px;color:hsl(var(--muted-foreground))}
+.ctrl{display:flex;align-items:flex-start;gap:8px;padding:7px 8px;border-radius:var(--r-sm)}
+.ctrl+.ctrl{border-top:1px solid hsl(var(--border-subtle))}
+.ctrl-dot{width:7px;height:7px;border-radius:50%;margin-top:5px;flex:none;background:hsl(var(--muted-foreground))}
+.ctrl[data-st=ouvert] .ctrl-dot{background:hsl(var(--warning))}
+.ctrl[data-st=clos] .ctrl-dot{background:hsl(var(--success))}
+.ctrl[data-st=reserve] .ctrl-dot{background:hsl(var(--warning))}
+.ctrl[data-st=expert] .ctrl-dot{background:hsl(var(--primary))}
+.ctrl-n{display:block;font-size:12px;font-weight:500}
+.ctrl-s{display:block;font-size:11px;color:hsl(var(--muted-foreground));line-height:1.4;margin-top:1px}
+.state-card{padding:13px 14px}
+.state-line{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.state-why{font-size:11.5px;color:hsl(var(--muted-foreground));line-height:1.45}
+
+/* ---------- bandeaux ---------- */
+.banner{
+  display:flex;flex-wrap:wrap;align-items:flex-start;gap:10px;padding:12px 14px;margin-bottom:12px;
+  border-radius:var(--r-lg);border:1px solid hsl(var(--warning)/.3);background:hsl(var(--warning-soft))
+}
+.banner .bi{flex:none;color:hsl(var(--warning));margin-top:1px}
+.banner .bt{min-width:220px;flex:1}
+.banner h4{font-size:12.5px;font-weight:600;color:hsl(var(--warning))}
+.banner p{font-size:12px;color:hsl(var(--warning));opacity:.92;margin-top:3px;line-height:1.45}
+.banner .ba{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.banner[data-tone=info]{border-color:hsl(var(--info)/.28);background:hsl(var(--info-soft))}
+.banner[data-tone=info] .bi,.banner[data-tone=info] h4,.banner[data-tone=info] p{color:hsl(var(--info))}
+.banner[data-tone=rev]{border-color:hsl(var(--primary)/.28);background:hsl(var(--primary-soft))}
+.banner[data-tone=rev] .bi,.banner[data-tone=rev] h4,.banner[data-tone=rev] p{color:hsl(var(--primary))}
+
+/* ---------- résultats ---------- */
+.res-head{padding:18px 20px}
+.res-head h2{font-size:18px;font-weight:600;letter-spacing:-.015em}
+.perimeter{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.crit{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;padding:9px 20px;border-top:1px solid hsl(var(--border-subtle))}
+.crit-n{display:block;font-size:12.5px;font-weight:500}
+.crit-d{display:block;font-size:11.5px;color:hsl(var(--muted-foreground));margin-top:1px;line-height:1.4}
+.v{display:inline-flex;align-items:center;gap:5px;height:21px;padding:0 8px;border-radius:999px;font-size:11px;font-weight:600;border:1px solid}
+.v[data-v=satisfied]{background:hsl(var(--success-soft));border-color:hsl(var(--success)/.3);color:hsl(var(--success))}
+.v[data-v=reserve]{background:hsl(var(--warning-soft));border-color:hsl(var(--warning)/.3);color:hsl(var(--warning))}
+.v[data-v=indeterminate]{background:hsl(var(--surface-2));border-color:hsl(var(--border));color:hsl(var(--muted-foreground))}
+.v[data-v=not_satisfied]{background:hsl(var(--destructive-soft));border-color:hsl(var(--destructive)/.3);color:hsl(var(--destructive))}
+.reserve{display:flex;gap:10px;padding:11px 14px;border-radius:var(--r-md);border:1px solid hsl(var(--warning)/.28);background:hsl(var(--warning-soft)/.55)}
+.reserve h4{font-size:12.5px;font-weight:600}
+.reserve p{font-size:11.5px;color:hsl(var(--muted-foreground));margin-top:2px;line-height:1.45}
+.energy{padding:14px 16px;border:1px dashed hsl(var(--info)/.45);background:hsl(var(--info-soft)/.55);border-radius:var(--r-lg)}
+.spin{width:14px;height:14px;border-radius:50%;border:2px solid hsl(var(--primary)/.25);border-top-color:hsl(var(--primary));animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ---------- dialog ---------- */
+dialog{
+  padding:0;border:0;border-radius:var(--r-lg);background:hsl(var(--card));color:inherit;
+  width:min(560px,calc(100vw - 24px));max-height:min(84vh,720px);box-shadow:0 16px 48px hsl(30 9% 17% / .18),0 0 0 1px hsl(var(--border));
+}
+dialog::backdrop{background:hsl(30 9% 17% / .32);backdrop-filter:blur(2px)}
+.dlg-h{display:flex;align-items:flex-start;gap:12px;padding:16px 18px 12px;border-bottom:1px solid hsl(var(--border-subtle))}
+.dlg-h h3{font-size:15px;font-weight:600;letter-spacing:-.01em}
+.dlg-h p{font-size:12px;color:hsl(var(--muted-foreground));margin-top:3px;line-height:1.45}
+.dlg-b{padding:14px 18px;overflow:auto;max-height:min(56vh,460px);display:flex;flex-direction:column;gap:10px}
+.dlg-f{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid hsl(var(--border-subtle));background:hsl(var(--surface-1))}
+.dlg-x{margin-left:auto;flex:none}
+.imp{border:1px solid hsl(var(--warning)/.3);background:hsl(var(--warning-soft)/.5);border-radius:var(--r-md);padding:10px 12px}
+.imp li{font-size:12px;padding:3px 0;display:flex;gap:7px}
+.imp li::before{content:"";width:5px;height:5px;border-radius:50%;background:hsl(var(--warning));margin-top:6px;flex:none}
+
+/* ---------- barre mobile ---------- */
+.mbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:25;display:none;align-items:center;gap:8px;
+  padding:8px 12px;background:hsl(var(--card)/.96);backdrop-filter:blur(8px);border-top:1px solid hsl(var(--border))
+}
+@media (max-width:1060px){.mbar[data-show=true]{display:flex}}
+.mbar .spacer{flex:1}
+.toast{
+  position:fixed;left:50%;bottom:22px;transform:translate(-50%,12px);z-index:60;
+  max-width:min(420px,calc(100vw - 24px));padding:9px 13px;border-radius:var(--r-md);
+  background:hsl(var(--foreground));color:hsl(var(--background));font-size:12px;font-weight:500;
+  box-shadow:0 8px 24px hsl(30 9% 17% / .22);opacity:0;pointer-events:none;transition:opacity 200ms var(--ease),transform 200ms var(--ease)
+}
+.toast[data-show=true]{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">CIR</span>
+    <span>
+      <span class="brand-txt">Remplacement moteur</span>
+      <span class="brand-sub" id="crumb">Prototype C7-4 — non contractuel</span>
+    </span>
+  </div>
+  <span class="topbar-spacer"></span>
+  <div class="topbar-actions">
+    <span class="chip" id="topState" data-tone="neutral" hidden><span class="dot"></span><span id="topStateTxt"></span></span>
+    <button class="btn btn-sm" id="btnGuide" type="button">Guide</button>
+    <button class="btn btn-sm" id="btnHome" type="button" hidden>Accueil</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <p class="sr" id="live" aria-live="polite"></p>
+
+  <section id="view-home">
+    <div class="card hero">
+      <h1>Configurateur technique de remplacement</h1>
+      <p>Le parcours avance étape par étape&nbsp;: une seule question active, l'ordre décidé par l'arbre de décision, et une aide facultative pour trouver, reconnaître ou mesurer l'information. Aucune valeur n'est supposée&nbsp;: une inconnue reste une inconnue.</p>
+      <div class="hero-actions">
+        <button class="btn btn-primary btn-lg" id="btnNew" type="button">Commencer un nouveau remplacement</button>
+        <button class="btn btn-lg" id="btnResume" type="button">Reprendre le parcours interrompu</button>
+      </div>
+      <div style="margin-top:14px" class="notice" data-tone="neutral">
+        <span>Prototype de parcours&nbsp;: aucun catalogue n'est interrogé, aucune donnée n'est enregistrée et rien n'est envoyé. Les verdicts affichés sont calculés à partir du relevé saisi, jamais depuis une référence catalogue simulée.</span>
+      </div>
+    </div>
+
+    <div class="sec-title"><h2>Reprendre exactement où l'appel s'est arrêté</h2><span class="rule"></span></div>
+    <div class="card" style="padding:14px 16px" id="resumeCard"></div>
+
+    <div class="sec-title"><h2>Scénarios documentés S1 à S5</h2><span class="rule"></span></div>
+    <p class="muted" style="margin-bottom:10px;max-width:78ch">Chaque scénario démarre un parcours neuf en consignant d'emblée les faits que le client a donnés spontanément, exactement comme ils sont consignés dans les documents C7-1 et C7-2. Les étapes correspondantes sont ensuite sautées automatiquement.</p>
+    <div class="cards" id="scenarioCards"></div>
+  </section>
+
+  <section id="view-run" hidden>
+    <div class="grid">
+      <div>
+        <div class="card progress" id="progress"></div>
+        <div id="banners"></div>
+        <div class="card step" id="step"></div>
+        <div id="afterStep"></div>
+      </div>
+      <aside class="rail" id="rail"></aside>
+    </div>
+  </section>
+
+  <section id="view-search" hidden>
+    <div class="grid">
+      <div id="searchMain"></div>
+      <aside class="rail" id="rail2"></aside>
+    </div>
+  </section>
+
+  <section id="view-qual" hidden>
+    <div class="grid">
+      <div id="qualMain"></div>
+      <aside class="rail" id="rail3"></aside>
+    </div>
+  </section>
+</main>
+
+<div class="mbar" id="mbar" data-show="false">
+  <span class="chip" id="mState" data-tone="neutral"><span class="dot"></span><span id="mStateTxt"></span></span>
+  <span class="spacer"></span>
+  <button class="btn btn-sm" id="mRelev" type="button">Relevé</button>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<dialog id="dlg"><form method="dialog" id="dlgForm">
+  <div class="dlg-h">
+    <div style="min-width:0">
+      <h3 id="dlgTitle"></h3>
+      <p id="dlgSub"></p>
+    </div>
+    <button class="btn btn-sm dlg-x" value="cancel" type="submit" aria-label="Fermer">Échap</button>
+  </div>
+  <div class="dlg-b" id="dlgBody"></div>
+  <div class="dlg-f" id="dlgFoot"></div>
+</form></dialog>
+
+<script>
+"use strict";
+/* =======================================================================
+   Prototype C7-4 — configurateur technique de remplacement moteur.
+   Toute la logique est locale : aucun réseau, aucun stockage, aucun contrat.
+   ======================================================================= */
+
+const $ = (s, r) => (r || document).querySelector(s);
+const fmtNum = (n) => Number(n).toLocaleString("fr-FR");
+const esc = (s) => String(s).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
+
+/* ---------------------- visuels techniques ---------------------- */
+const SVG = {
+  b3: `<svg viewBox="0 0 120 78" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="26" y="16" width="60" height="38" rx="5"/><path d="M32 16v38M44 16v38M56 16v38M68 16v38"/><rect x="86" y="30" width="20" height="10" rx="2"/><path d="M106 35h8"/><path d="M26 54h12v8H26zM74 54h12v8H74z"/><path d="M20 62h76" stroke-dasharray="2 3"/><circle cx="32" cy="62" r="1.6" fill="currentColor"/><circle cx="80" cy="62" r="1.6" fill="currentColor"/></svg>`,
+  b5: `<svg viewBox="0 0 120 78" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="18" y="18" width="58" height="36" rx="5"/><path d="M24 18v36M36 18v36M48 18v36M60 18v36"/><rect x="76" y="8" width="8" height="56" rx="2"/><rect x="84" y="30" width="18" height="10" rx="2"/><path d="M102 35h10"/><circle cx="80" cy="15" r="2.2"/><circle cx="80" cy="57" r="2.2"/><circle cx="80" cy="24" r="2.2"/><circle cx="80" cy="48" r="2.2"/></svg>`,
+  b14: `<svg viewBox="0 0 120 78" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="18" y="18" width="58" height="36" rx="5"/><path d="M24 18v36M36 18v36M48 18v36M60 18v36"/><rect x="76" y="22" width="7" height="28" rx="2"/><rect x="83" y="30" width="18" height="10" rx="2"/><path d="M101 35h11"/><path d="M77.5 26h4M77.5 29h4M77.5 43h4M77.5 46h4" stroke-width="1.1"/></svg>`,
+  b34: `<svg viewBox="0 0 120 78" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="18" y="14" width="58" height="36" rx="5"/><path d="M24 14v36M36 14v36M48 14v36M60 14v36"/><rect x="76" y="18" width="7" height="28" rx="2"/><rect x="83" y="26" width="18" height="10" rx="2"/><path d="M101 31h11"/><path d="M77.5 22h4M77.5 25h4M77.5 39h4M77.5 42h4" stroke-width="1.1"/><path d="M18 50h12v8H18zM64 50h12v8H64z"/><path d="M12 58h70" stroke-dasharray="2 3"/></svg>`,
+  b35: `<svg viewBox="0 0 120 78" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="18" y="14" width="58" height="36" rx="5"/><path d="M24 14v36M36 14v36M48 14v36M60 14v36"/><rect x="76" y="6" width="8" height="52" rx="2"/><rect x="84" y="26" width="18" height="10" rx="2"/><path d="M102 31h10"/><circle cx="80" cy="12" r="2.2"/><circle cx="80" cy="52" r="2.2"/><circle cx="80" cy="21" r="2.2"/><circle cx="80" cy="43" r="2.2"/><path d="M18 50h12v8H18zM64 50h12v8H64z"/><path d="M12 58h70" stroke-dasharray="2 3"/></svg>`,
+  unknown: `<svg viewBox="0 0 120 78" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="22" y="16" width="76" height="46" rx="6" stroke-dasharray="4 4"/><path d="M52 34a8 8 0 1 1 10 8v5" stroke-width="2"/><circle cx="62" cy="53" r="1.6" fill="currentColor"/></svg>`,
+  plaque: `<svg viewBox="0 0 340 132" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><rect x="8" y="8" width="324" height="116" rx="5"/><circle cx="18" cy="18" r="2.4"/><circle cx="322" cy="18" r="2.4"/><circle cx="18" cy="114" r="2.4"/><circle cx="322" cy="114" r="2.4"/><path d="M8 34h324"/><text x="20" y="28" font-size="9" fill="currentColor" stroke="none" font-family="monospace">3~ MOT.  IEC 60034-1</text><text x="20" y="52" font-size="9" fill="currentColor" stroke="none" font-family="monospace">Type</text><text x="20" y="70" font-size="9" fill="currentColor" stroke="none" font-family="monospace">V         Hz</text><text x="20" y="88" font-size="9" fill="currentColor" stroke="none" font-family="monospace">kW        A</text><text x="20" y="106" font-size="9" fill="currentColor" stroke="none" font-family="monospace">tr/min    cos φ</text><rect x="16" y="78" width="30" height="14" rx="3" stroke="hsl(6 72% 45%)" stroke-width="1.8"/><path d="M46 85h26" stroke="hsl(6 72% 45%)" stroke-width="1.2" stroke-dasharray="2 2"/></svg>`,
+  brideMesure: `<svg viewBox="0 0 340 168" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><circle cx="120" cy="84" r="66" stroke="hsl(6 72% 45%)" stroke-width="2"/><circle cx="120" cy="84" r="48" stroke-dasharray="4 4"/><circle cx="120" cy="84" r="24"/><circle cx="120" cy="84" r="9"/><circle cx="120" cy="36" r="5"/><circle cx="120" cy="132" r="5"/><circle cx="72" cy="84" r="5"/><circle cx="168" cy="84" r="5"/><path d="M54 84h132" stroke="hsl(6 72% 45%)" stroke-width="1.4"/><path d="M54 78v12M186 78v12" stroke="hsl(6 72% 45%)" stroke-width="1.4"/><text x="200" y="60" font-size="11" fill="currentColor" stroke="none">Diamètre extérieur</text><text x="200" y="76" font-size="11" fill="currentColor" stroke="none">de la bride</text><text x="200" y="100" font-size="10" fill="currentColor" stroke="none" opacity=".65">Cercle de perçage et</text><text x="200" y="114" font-size="10" fill="currentColor" stroke="none" opacity=".65">centrage : mesurés plus tard</text><path d="M186 84h10" stroke="hsl(6 72% 45%)"/></svg>`,
+  poulie: `<svg viewBox="0 0 340 150" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><rect x="12" y="46" width="86" height="52" rx="6"/><path d="M18 46v52M30 46v52M42 46v52"/><path d="M98 68h14"/><circle cx="132" cy="72" r="22" stroke="hsl(6 72% 45%)" stroke-width="2"/><circle cx="132" cy="72" r="5"/><circle cx="262" cy="72" r="46"/><circle cx="262" cy="72" r="6"/><path d="M132 50h130M132 94h130" stroke-dasharray="3 3"/><path d="M110 72h-6" /><path d="M132 94v18M132 112h-14" stroke="hsl(6 72% 45%)"/><text x="12" y="132" font-size="10" fill="currentColor" stroke="none" opacity=".7">Poulie montée sur l'arbre moteur</text></svg>`,
+  vertical: `<svg viewBox="0 0 340 168" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><rect x="118" y="16" width="60" height="72" rx="6"/><path d="M126 16v72M138 16v72M150 16v72M162 16v72"/><rect x="112" y="88" width="72" height="9" rx="2" stroke="hsl(6 72% 45%)" stroke-width="1.8"/><path d="M148 97v26" stroke-width="2"/><rect x="120" y="123" width="56" height="30" rx="4" stroke-dasharray="4 3"/><path d="M148 140v14" stroke="hsl(6 72% 45%)" stroke-width="1.6"/><path d="M143 149l5 6 5-6" stroke="hsl(6 72% 45%)" stroke-width="1.6"/><text x="196" y="94" font-size="11" fill="currentColor" stroke="none">Bride d'appui</text><text x="196" y="146" font-size="11" fill="currentColor" stroke="none">Effort axial : sens à</text><text x="196" y="160" font-size="11" fill="currentColor" stroke="none">établir, jamais déduit</text><text x="196" y="34" font-size="10" fill="currentColor" stroke="none" opacity=".7">Arbre vers le bas</text></svg>`,
+  boite: `<svg viewBox="0 0 340 150" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><rect x="16" y="52" width="120" height="60" rx="6"/><path d="M24 52v60M38 52v60M52 52v60"/><rect x="86" y="20" width="52" height="32" rx="4" stroke="hsl(6 72% 45%)" stroke-width="1.8"/><path d="M96 30h32M96 38h22M96 46h28" stroke="hsl(6 72% 45%)" stroke-width="1"/><rect x="176" y="34" width="130" height="76" rx="5" stroke-dasharray="4 3"/><circle cx="204" cy="60" r="4"/><circle cx="228" cy="60" r="4"/><circle cx="252" cy="60" r="4"/><circle cx="204" cy="86" r="4"/><circle cx="228" cy="86" r="4"/><circle cx="252" cy="86" r="4"/><path d="M276 56c8 6 8 24 0 30" stroke="hsl(6 72% 45%)"/><text x="176" y="128" font-size="10" fill="currentColor" stroke="none" opacity=".7">Boîte à bornes : ne rien débrancher</text><text x="86" y="14" font-size="10" fill="currentColor" stroke="none" opacity=".7">Plaque propre de l'auxiliaire</text></svg>`,
+  reducteur: `<svg viewBox="0 0 340 150" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><rect x="14" y="44" width="96" height="56" rx="6"/><path d="M22 44v56M36 44v56M50 44v56"/><rect x="110" y="52" width="14" height="40" rx="2" stroke="hsl(6 72% 45%)" stroke-width="1.8"/><rect x="124" y="34" width="86" height="76" rx="8"/><circle cx="167" cy="72" r="22" stroke-dasharray="3 3"/><path d="M210 72h20"/><text x="126" y="128" font-size="10" fill="currentColor" stroke="none" opacity=".7">Montage intégré : pas d'interface IEC</text><text x="14" y="34" font-size="10" fill="currentColor" stroke="none" opacity=".7">Moteur</text><text x="176" y="26" font-size="10" fill="currentColor" stroke="none" opacity=".7">Réducteur</text></svg>`,
+  marquage: `<svg viewBox="0 0 340 120" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><rect x="10" y="12" width="320" height="96" rx="5"/><path d="M10 44h320"/><text x="22" y="34" font-size="11" fill="currentColor" stroke="none" font-family="monospace">Ex   II 2D</text><text x="22" y="66" font-size="11" fill="currentColor" stroke="none" font-family="monospace">Ex tb IIIC T125 °C Db</text><text x="22" y="90" font-size="11" fill="currentColor" stroke="none" font-family="monospace">IP65    Certificat n°</text><rect x="16" y="52" width="196" height="20" rx="3" stroke="hsl(6 72% 45%)" stroke-width="1.8"/><text x="228" y="34" font-size="10" fill="currentColor" stroke="none" opacity=".7">Recopier</text><text x="228" y="47" font-size="10" fill="currentColor" stroke="none" opacity=".7">sans interpréter</text></svg>`,
+  brideFace: `<svg viewBox="0 0 372 226" fill="none" stroke="currentColor" stroke-width="1.1" aria-hidden="true">
+<circle cx="118" cy="106" r="88" stroke="hsl(6 72% 45%)" stroke-width="2"/>
+<circle cx="118" cy="106" r="66" stroke-dasharray="5 4"/><circle cx="118" cy="106" r="34"/><circle cx="118" cy="106" r="15"/>
+<circle cx="118" cy="40" r="9"/><circle cx="118" cy="172" r="9"/><circle cx="52" cy="106" r="9"/><circle cx="184" cy="106" r="9"/>
+<path d="M118 30v-14M118 182v14" stroke-width=".8"/>
+<path d="M30 210h176" stroke="hsl(6 72% 45%)" stroke-width="1.3"/><path d="M30 200v20M206 200v20" stroke="hsl(6 72% 45%)" stroke-width="1.3"/>
+<text x="108" y="205" font-size="12" fill="hsl(6 72% 45%)" stroke="none" font-weight="600">P</text>
+<path d="M52 106h132" stroke-dasharray="4 3" stroke-width=".9"/><text x="122" y="100" font-size="12" fill="currentColor" stroke="none" font-weight="600">M</text>
+<path d="M84 106h68"/><text x="112" y="130" font-size="12" fill="currentColor" stroke="none" font-weight="600">N</text>
+<path d="M184 106l38-34" stroke-width=".8"/><text x="226" y="70" font-size="12" fill="currentColor" stroke="none" font-weight="600">S</text>
+<text x="240" y="106" font-size="11" fill="currentColor" stroke="none" opacity=".75">P diamètre extérieur</text>
+<text x="240" y="124" font-size="11" fill="currentColor" stroke="none" opacity=".75">M cercle de perçage</text>
+<text x="240" y="142" font-size="11" fill="currentColor" stroke="none" opacity=".75">N centrage</text>
+<text x="240" y="160" font-size="11" fill="currentColor" stroke="none" opacity=".75">S trou de fixation</text></svg>`,
+  brideProfil: `<svg viewBox="0 0 360 200" fill="none" stroke="currentColor" stroke-width="1.1" aria-hidden="true">
+<rect x="40" y="46" width="120" height="108" rx="6"/><path d="M52 46v108M68 46v108M84 46v108M100 46v108"/>
+<rect x="160" y="24" width="16" height="152" rx="2" stroke="hsl(6 72% 45%)" stroke-width="1.8"/>
+<rect x="176" y="86" width="60" height="28" rx="2"/><path d="M236 100h26"/>
+<path d="M160 190h16" stroke="hsl(6 72% 45%)" stroke-width="1.3"/><path d="M160 182v16M176 182v16" stroke="hsl(6 72% 45%)" stroke-width="1.3"/>
+<text x="186" y="194" font-size="12" fill="hsl(6 72% 45%)" stroke="none" font-weight="600">T</text>
+<text x="200" y="194" font-size="11" fill="currentColor" stroke="none" opacity=".75">épaisseur du plateau</text>
+<path d="M176 68h86" stroke-dasharray="4 3" stroke-width=".8"/><text x="266" y="72" font-size="11" fill="currentColor" stroke="none" opacity=".75">face d'appui</text>
+<text x="40" y="36" font-size="11" fill="currentColor" stroke="none" opacity=".75">Coupe : bride vue de côté</text></svg>`,
+  pattesCotes: `<svg viewBox="0 0 380 236" fill="none" stroke="currentColor" stroke-width="1.1" aria-hidden="true">
+<rect x="58" y="34" width="130" height="94" rx="8"/><path d="M70 34v94M86 34v94M102 34v94M118 34v94M134 34v94"/>
+<rect x="188" y="70" width="40" height="22" rx="2"/><path d="M228 81h34"/>
+<path d="M58 128h26v20H58zM162 128h26v20h-26z"/><path d="M40 148h166" stroke-width=".9"/>
+<circle cx="71" cy="138" r="5" stroke="hsl(6 72% 45%)" stroke-width="1.5"/><circle cx="175" cy="138" r="5" stroke="hsl(6 72% 45%)" stroke-width="1.5"/>
+<path d="M28 81h-0M22 81v67" stroke="hsl(6 72% 45%)" stroke-width="1.3"/><path d="M14 81h16M14 148h16" stroke="hsl(6 72% 45%)" stroke-width="1.3"/>
+<text x="0" y="118" font-size="12" fill="hsl(6 72% 45%)" stroke="none" font-weight="600">H</text>
+<path d="M71 176h104" stroke="hsl(6 72% 45%)" stroke-width="1.3"/><path d="M71 168v16M175 168v16" stroke="hsl(6 72% 45%)" stroke-width="1.3"/>
+<text x="118" y="196" font-size="12" fill="hsl(6 72% 45%)" stroke="none" font-weight="600">A</text>
+<path d="M71 138l-22 32" stroke-width=".8"/><text x="34" y="182" font-size="12" fill="currentColor" stroke="none" font-weight="600">K</text>
+<text x="206" y="140" font-size="11" fill="currentColor" stroke="none" opacity=".75">H hauteur d'axe</text>
+<text x="206" y="158" font-size="11" fill="currentColor" stroke="none" opacity=".75">A entraxe transversal</text>
+<text x="206" y="176" font-size="11" fill="currentColor" stroke="none" opacity=".75">K diamètre du trou de patte</text>
+<text x="206" y="194" font-size="11" fill="currentColor" stroke="none" opacity=".75">B entraxe longitudinal, vu de dessus</text></svg>`,
+  arbreCotes: `<svg viewBox="0 0 360 180" fill="none" stroke="currentColor" stroke-width="1.1" aria-hidden="true">
+<rect x="24" y="46" width="90" height="88" rx="6"/><path d="M36 46v88M50 46v88M64 46v88"/>
+<rect x="114" y="72" width="126" height="36" rx="2" stroke="hsl(6 72% 45%)" stroke-width="1.8"/>
+<rect x="140" y="66" width="62" height="8" rx="1"/>
+<path d="M114 150h126" stroke="hsl(6 72% 45%)" stroke-width="1.3"/><path d="M114 142v16M240 142v16" stroke="hsl(6 72% 45%)" stroke-width="1.3"/>
+<text x="172" y="170" font-size="12" fill="hsl(6 72% 45%)" stroke="none" font-weight="600">E</text>
+<path d="M262 72v36" stroke="hsl(6 72% 45%)" stroke-width="1.3"/><path d="M254 72h16M254 108h16" stroke="hsl(6 72% 45%)" stroke-width="1.3"/>
+<text x="276" y="96" font-size="12" fill="hsl(6 72% 45%)" stroke="none" font-weight="600">D</text>
+<path d="M140 52h62" stroke-width=".9"/><path d="M140 46v12M202 46v12" stroke-width=".9"/>
+<text x="166" y="42" font-size="12" fill="currentColor" stroke="none" font-weight="600">F</text>
+<text x="276" y="128" font-size="11" fill="currentColor" stroke="none" opacity=".75">D diamètre</text>
+<text x="276" y="146" font-size="11" fill="currentColor" stroke="none" opacity=".75">E longueur utile</text>
+<text x="276" y="164" font-size="11" fill="currentColor" stroke="none" opacity=".75">F largeur de clavette</text></svg>`,
+  porteAFaux: `<svg viewBox="0 0 380 200" fill="none" stroke="currentColor" stroke-width="1.1" aria-hidden="true">
+<rect x="16" y="52" width="86" height="86" rx="6"/><path d="M28 52v86M42 52v86M56 52v86"/>
+<rect x="102" y="82" width="126" height="26" rx="2"/>
+<path d="M102 74v42" stroke-width=".9" stroke-dasharray="3 3"/>
+<ellipse cx="188" cy="95" rx="10" ry="46" stroke="hsl(6 72% 45%)" stroke-width="1.8"/>
+<path d="M178 74h20M178 116h20" stroke="hsl(6 72% 45%)" stroke-width="1.2"/>
+<path d="M102 168h86" stroke="hsl(6 72% 45%)" stroke-width="1.3"/><path d="M102 160v16M188 160v16" stroke="hsl(6 72% 45%)" stroke-width="1.3"/>
+<text x="132" y="188" font-size="12" fill="hsl(6 72% 45%)" stroke="none" font-weight="600">porte-à-faux</text>
+<path d="M188 49v-26" stroke-width="1.6"/><path d="M182 30l6-8 6 8" stroke-width="1.6"/>
+<text x="200" y="30" font-size="11" fill="currentColor" stroke="none" opacity=".8">effort radial appliqué ici</text>
+<text x="240" y="100" font-size="11" fill="currentColor" stroke="none" opacity=".75">Mesure de l'épaulement</text>
+<text x="240" y="118" font-size="11" fill="currentColor" stroke="none" opacity=".75">au milieu de la gorge</text></svg>`,
+  positionsIM: `<svg viewBox="0 0 372 200" fill="none" stroke="currentColor" stroke-width="1.1" aria-hidden="true">
+<g><rect x="14" y="28" width="52" height="30" rx="4"/><path d="M14 58h10v8H14zM56 58h10v8H56z"/><path d="M66 40h10"/><path d="M8 70h64" stroke-dasharray="2 3"/><text x="24" y="88" font-size="10" fill="currentColor" stroke="none" opacity=".8">IM B3</text></g>
+<g><rect x="104" y="28" width="46" height="30" rx="4"/><rect x="150" y="20" width="6" height="46" rx="1" stroke="hsl(6 72% 45%)" stroke-width="1.6"/><path d="M156 40h10"/><text x="112" y="88" font-size="10" fill="currentColor" stroke="none" opacity=".8">IM B5</text></g>
+<g><rect x="194" y="28" width="46" height="30" rx="4"/><rect x="240" y="28" width="5" height="30" rx="1"/><path d="M245 40h10"/><text x="200" y="88" font-size="10" fill="currentColor" stroke="none" opacity=".8">IM B14</text></g>
+<g><rect x="288" y="28" width="46" height="30" rx="4"/><rect x="334" y="20" width="6" height="46" rx="1"/><path d="M288 58h10v8h-10zM324 58h10v8h-10z"/><text x="296" y="88" font-size="10" fill="currentColor" stroke="none" opacity=".8">IM B35</text></g>
+<g><rect x="24" y="112" width="30" height="42" rx="4"/><rect x="18" y="154" width="42" height="6" rx="1" stroke="hsl(6 72% 45%)" stroke-width="1.6"/><path d="M39 160v14"/><path d="M34 168l5 6 5-6"/><text x="14" y="192" font-size="10" fill="currentColor" stroke="none" opacity=".8">IM V1</text></g>
+<g><rect x="114" y="118" width="30" height="42" rx="4"/><rect x="108" y="112" width="42" height="6" rx="1"/><path d="M129 112V98"/><path d="M124 104l5-6 5 6"/><text x="104" y="192" font-size="10" fill="currentColor" stroke="none" opacity=".8">IM V3</text></g>
+<g><rect x="204" y="112" width="52" height="30" rx="4"/><path d="M204 142h10v8h-10zM246 142h10v8h-10z"/><path d="M256 126h10"/><path d="M198 160h64" stroke-width="2"/><path d="M204 160v6M226 160v6M248 160v6"/><text x="196" y="192" font-size="10" fill="currentColor" stroke="none" opacity=".8">Mur ou plafond</text></g>
+<g><g transform="rotate(-28 320 130)"><rect x="296" y="114" width="48" height="28" rx="4"/><path d="M344 128h10"/><path d="M296 142h9v7h-9zM335 142h9v7h-9z"/></g><text x="300" y="192" font-size="10" fill="currentColor" stroke="none" opacity=".8">Incliné</text></g></svg>`,
+  ok: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5"/></svg>`,
+  caret: `<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5"/></svg>`,
+  clock: `<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="8" cy="8" r="6.3"/><path d="M8 4.6V8l2.4 1.6" stroke-linecap="round"/></svg>`,
+  alert: `<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M8 2.6l6 10.8H2L8 2.6z" stroke-linejoin="round"/><path d="M8 6.6v3.2" stroke-linecap="round"/><circle cx="8" cy="11.6" r=".8" fill="currentColor" stroke="none"/></svg>`,
+  back: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 3.5L5 8l4.5 4.5"/></svg>`
+};
+
+/* ---------------------- taxonomies fermées ---------------------- */
+const MACHINES = [
+  { v: "pompe", l: "Pompe" }, { v: "ventilateur", l: "Ventilateur" },
+  { v: "convoyeur", l: "Convoyeur ou vis" }, { v: "broyeur", l: "Broyeur ou concasseur" },
+  { v: "agitateur", l: "Agitateur ou mélangeur" }, { v: "levage", l: "Levage" },
+  { v: "compresseur", l: "Compresseur" }, { v: "reducteur", l: "Réducteur seul" },
+  { v: "autre", l: "Autre machine — non reconnue" }
+];
+const FONCTIONS = {
+  pompe: ["Faire circuler un fluide", "Maintenir une pression", "Vidanger ou transférer"],
+  ventilateur: ["Extraire de l'air", "Souffler ou refroidir", "Ventiler un local"],
+  convoyeur: ["Convoyer une matière", "Doser ou extraire une matière"],
+  broyeur: ["Broyer une matière", "Concasser"],
+  agitateur: ["Mélanger", "Maintenir une matière en suspension"],
+  levage: ["Lever une charge", "Déplacer une charge suspendue"],
+  compresseur: ["Comprimer de l'air", "Comprimer un gaz"],
+  reducteur: ["Entraîner une machine par l'intermédiaire d'un réducteur"],
+  autre: ["Fonction identifiée, machine non reconnue", "Fonction non identifiable par le client"]
+};
+const FRAMES_ALL = ["63", "71", "80", "90", "100", "112", "132", "160", "180", "200", "225", "250", "280", "315", "355"];
+/* Carcasses proposées en premier selon la puissance. Hypothèse d'affichage
+   destinée à raccourcir le choix du TCS : elle ne déduit jamais la hauteur
+   d'axe, la liste complète reste à un clic et la valeur consignée est celle
+   que le client lit. À valider en C7-6. */
+const FRAMES_BY_POWER = [
+  { max: 0.37, f: ["63", "71", "80"] }, { max: 0.75, f: ["71", "80", "90"] },
+  { max: 1.5, f: ["80", "90", "100"] }, { max: 3, f: ["90", "100", "112"] },
+  { max: 5.5, f: ["100", "112", "132"] }, { max: 7.5, f: ["112", "132", "160"] },
+  { max: 11, f: ["132", "160", "180"] }, { max: 18.5, f: ["160", "180", "200"] },
+  { max: 30, f: ["180", "200", "225"] }, { max: 45, f: ["200", "225", "250"] },
+  { max: 75, f: ["225", "250", "280"] }, { max: 132, f: ["280", "315"] },
+  { max: 1e9, f: ["315", "355"] }
+];
+const CAUSES = [
+  { v: "Bruit, vibrations et échauffement, puis arrêt", s: 1 },
+  { v: "Roulements bruyants ou grippés", s: 1 },
+  { v: "Vibrations anormales", s: 1 },
+  { v: "Échauffement anormal", s: 1 },
+  { v: "Moteur brûlé, odeur ou fumée", s: 1 },
+  { v: "Court-circuit ou déclenchement de la protection", s: 1 },
+  { v: "Ne démarre plus", s: 1 },
+  { v: "Baisse de performance ou de vitesse", s: 1 },
+  { v: "Arbre ou bout d'arbre endommagé", s: 1 },
+  { v: "Choc mécanique ou blocage de la machine", s: 1 },
+  { v: "Moteur noyé, inondé ou lavé", s: 1 },
+  { v: "Usure ou fin de vie, sans panne particulière" },
+  { v: "Remplacement préventif ou stock de sécurité" },
+  { v: "Modification de l'installation : puissance, vitesse ou régulation" },
+  { v: "Cause inconnue du client" }
+];
+const PARTICULARITES = [
+  { v: "frein", l: "Frein", h: "Un frein visible sur le moteur" },
+  { v: "ventilation", l: "Ventilation forcée", h: "Un ventilateur séparé avec sa propre plaque" },
+  { v: "codeur", l: "Codeur, tachymètre ou sondes", h: "Un capteur monté en bout de moteur" },
+  { v: "arbre2", l: "Deuxième bout d'arbre", h: "Un arbre sortant des deux côtés" },
+  { v: "deuxvitesses", l: "Deux vitesses", h: "Deux vitesses inscrites sur la plaque" },
+  { v: "capot", l: "Capot pare-pluie", h: "Un capot au-dessus du moteur" },
+  { v: "variateur", l: "Alimentation par variateur", h: "Le moteur n'est pas branché directement sur le réseau" },
+  { v: "atex", l: "Marquage Ex ou matière inflammable", h: "Marquage Ex, poussières, gaz ou produit inflammable" },
+  { v: "env", l: "Environnement sensible", h: "Lavage, forte chaleur, extérieur ou corrosion" },
+  { v: "nonIec", l: "Moteur intégré ou non-IEC", h: "Motoréducteur monobloc, carcasse non normalisée" }
+];
+
+/* ---------------------- contrôles conditionnels ---------------------- */
+const CONTROLS = {
+  bride: { name: "Confirmation des cotes de bride", signal: "La construction reconnue comporte une bride" },
+  axial: { name: "Charge axiale", signal: "Montage vertical ou incliné : une poussée peut remonter vers le moteur" },
+  montage: { name: "Support et exposition", signal: "Position non standard : mur, plafond, incliné ou vertical" },
+  vfd: { name: "Variateur et basse vitesse", signal: "Le moteur est alimenté par un variateur" },
+  aux: { name: "Ventilation forcée et auxiliaires", signal: "Un auxiliaire distinct est visible ou déclaré" },
+  options: { name: "Détail des options présentes", signal: "Une option est visible ou déclarée sur le moteur" },
+  env: { name: "Environnement sensible", signal: "Une condition d'ambiance particulière est déclarée" },
+  atex: { name: "Dépistage ATEX", signal: "Marquage Ex, poussières, gaz ou matière inflammable" },
+  cause: { name: "Cause de panne", signal: "Des symptômes ont été décrits avant l'arrêt", reserveLabel: "Hypothèse plausible, non démontrée" }
+};
+const GROUPS = [
+  { id: "plaque", n: "Plaque" }, { id: "usage", n: "Usage" }, { id: "construction", n: "Construction" },
+  { id: "position", n: "Position" }, { id: "transmission", n: "Transmission" }, { id: "tour", n: "Tour rapide" }
+];
+
+/* ---------------------- prédicats ---------------------- */
+const val = (k) => (S.facts[k] ? S.facts[k].value : null);
+const known = (k) => !!S.facts[k];
+const parts = () => (S.facts.particularites && S.facts.particularites.keys ? S.facts.particularites.keys : []);
+const hasPart = (p) => parts().indexOf(p) >= 0;
+const hasBride = () => ["B5", "B14", "B34", "B35"].indexOf(val("fixation")) >= 0;
+const opensAxial = () => { const v = String(val("position") || ""); return v.indexOf("Vertical") === 0 || v.indexOf("Incliné") === 0; };
+const opensSupport = () => { const v = String(val("position") || ""); return opensAxial() || v.indexOf("Horizontal, fixé") === 0; };
+const isIntegrated = () => val("transmission") === "Moteur monté directement sur un réducteur" || hasPart("nonIec");
+const hasTwoSpeeds = () => hasPart("deuxvitesses");
+const hasOptions = () => ["frein", "codeur", "arbre2", "deuxvitesses", "capot"].some((k) => hasPart(k));
+const hasVfd = () => val("mode_alim") === "Variateur de vitesse" || hasPart("variateur");
+const hasAux = () => hasPart("ventilation");
+const hasAtex = () => hasPart("atex");
+const hasEnv = () => hasPart("env");
+const hasSymptomes = () => { const c = CAUSES.find((x) => x.v === val("cause")); return !!(c && c.s); };
+
+/* ---------------------- arbre déterministe ---------------------- */
+const NODES = [
+  /* ---- groupe 1 : plaque ---- */
+  {
+    id: "puissance", group: "plaque", kind: "number", unit: "kW", min: 0.06, max: 2000, source: "Plaque",
+    q: "Quelle puissance est inscrite sur la plaque ?",
+    why: "Fixe le périmètre de recherche, restreint les carcasses proposées à l'étape Construction et déclenche l'invitation énergétique au-dessus de 11 kW.",
+    aide: {
+      pourquoi: "Sans puissance, aucune recherche n'est exécutable et aucun périmètre n'est explicite.",
+      ou: "Plaque signalétique vissée sur le flanc du moteur, ligne « kW ».",
+      reconnaitre: "Un nombre suivi de « kW ». Le nombre suivi de « A » est un courant, celui suivi de « V » une tension.",
+      inconnu: "Sans puissance, le parcours continue mais aucune recherche n'est exécutable.",
+      fig: "plaque"
+    },
+    photo: { need: "Plaque illisible ou valeur contradictoire", ask: "Une photo nette de toute la plaque, prise de face, sans reflet, avec les quatre bords visibles." }
+  },
+  {
+    id: "vitesse", group: "plaque", kind: "number", unit: "tr/min", min: 100, max: 9000, source: "Plaque",
+    q: "Quelle vitesse nominale est inscrite ?",
+    why: "Entre dans le périmètre de recherche et permet de suggérer un nombre de pôles, affiché comme déduction. Inconnue, elle laisse le périmètre plus large.",
+    aide: {
+      pourquoi: "La vitesse nominale sélectionne le point de fonctionnement comparé.",
+      ou: "Même plaque, ligne « tr/min », « min-1 » ou « rpm ».",
+      reconnaitre: "Environ 2900 pour 2 pôles, 1450 pour 4 pôles, 960 pour 6 pôles en 50 Hz.",
+      inconnu: "Le périmètre reste plus large et la solution validée devient impossible.",
+      fig: "plaque"
+    },
+    photo: { need: "Plaque illisible", ask: "Une photo nette de toute la plaque, prise de face, sans reflet." }
+  },
+  {
+    id: "phases", group: "plaque", kind: "choice", compact: true, source: "Plaque",
+    q: "Le moteur est-il monophasé ou triphasé ?",
+    why: "Détermine les tensions proposées à l'étape suivante. La corriger plus tard invalide la tension déjà lue.",
+    options: [{ v: "Triphasé", h: "Trois fils de puissance" }, { v: "Monophasé", h: "Deux fils de puissance" }],
+    aide: {
+      pourquoi: "« 230 V » ne désigne pas le même moteur en monophasé et en triphasé.",
+      ou: "Sur la plaque, symbole 3~ ou 1~, ou mention 3 PH.",
+      reconnaitre: "Un triphasé porte deux tensions séparées par une barre ; un monophasé porte une seule tension et souvent un condensateur visible.",
+      inconnu: "La tension lue reste ambiguë et le périmètre reste large.",
+      fig: "plaque"
+    }
+  },
+  {
+    id: "tension", group: "plaque", kind: "choice", compact: true, source: "Plaque",
+    q: "Quelle tension est inscrite sur la plaque ?",
+    why: "Entre dans le périmètre de recherche. N'ouvre aucun contrôle.",
+    optionsFrom: () => {
+      const ph = val("phases");
+      if (ph === "Monophasé") return [{ v: "230 V" }, { v: "110 V" }, { v: "Autre tension inscrite" }];
+      if (ph === "Triphasé") return [{ v: "230/400 V" }, { v: "400/690 V" }, { v: "400 V" }, { v: "690 V" }, { v: "Autre tension inscrite" }];
+      return [{ v: "230/400 V" }, { v: "400/690 V" }, { v: "400 V" }, { v: "230 V" }, { v: "Autre tension inscrite" }];
+    },
+    aide: {
+      pourquoi: "La tension de plaque décrit l'ancien moteur ; le réseau réellement disponible reste un fait distinct.",
+      ou: "Ligne « V » de la plaque, avec les symboles Δ et Y.",
+      reconnaitre: "Deux valeurs séparées par une barre correspondent aux deux couplages possibles.",
+      inconnu: "Le critère de tension reste indéterminé."
+    }
+  },
+  {
+    id: "frequence", group: "plaque", kind: "choice", compact: true, source: "Installation observée",
+    q: "Confirmez la fréquence du réseau",
+    why: "Complète le minimum qui rend la recherche exécutable. Aucune autre branche n'en dépend.",
+    note: "N'interrogez le client que si l'installation sort du réseau standard : machine importée, export ou groupe électrogène.",
+    options: [{ v: "50 Hz", h: "Réseau standard" }, { v: "60 Hz", h: "Export ou machine importée" }, { v: "50/60 Hz", h: "Les deux valeurs sont inscrites" }],
+    aide: {
+      pourquoi: "La fréquence fait partie du minimum contractuel de la recherche.",
+      ou: "Ligne « Hz » de la plaque, seulement en cas de doute.",
+      reconnaitre: "50 Hz en réseau européen ; 60 Hz sur certaines installations exportées.",
+      inconnu: "Sans fréquence, la recherche ne peut pas être lancée."
+    }
+  },
+  {
+    id: "mode_alim", group: "plaque", kind: "choice", source: "Installation observée",
+    q: "Comment le moteur est-il réellement alimenté ?",
+    why: "Complète le minimum de recherche, et « variateur » ouvre le contrôle vitesse variable et basse vitesse.",
+    options: [
+      { v: "Réseau direct", h: "Branché sur le réseau, éventuellement via un démarreur" },
+      { v: "Variateur de vitesse", h: "Ouvre le contrôle vitesse variable et basse vitesse" }
+    ],
+    aide: {
+      pourquoi: "Un moteur alimenté par variateur n'a pas les mêmes contraintes thermiques ni électriques.",
+      ou: "Dans l'armoire électrique, ou en demandant si la vitesse de la machine change en marche.",
+      reconnaitre: "Un variateur est un boîtier avec afficheur ou potentiomètre placé avant le moteur.",
+      inconnu: "Sans mode d'alimentation, la recherche ne peut pas être lancée."
+    }
+  },
+  /* ---- groupe 2 : usage ---- */
+  {
+    id: "machine", group: "usage", kind: "choice", grid: true, source: "Déclaration du client", options: MACHINES.map((m) => ({ v: m.l, key: m.v })),
+    q: "Quelle machine ce moteur entraîne-t-il ?",
+    why: "Ouvre la liste des fonctions process correspondantes et conditionne, avec elle, le passage au niveau candidat technique.",
+    aide: {
+      pourquoi: "Sans machine entraînée ni fonction, aucune référence ne peut recevoir le rôle de candidat technique.",
+      ou: "Le client la nomme : c'est l'équipement que le moteur fait tourner.",
+      reconnaitre: "Suivre le bout d'arbre : ce qui est entraîné derrière l'accouplement ou la poulie.",
+      inconnu: "L'application inconnue bloque candidat technique et solution validée, jamais la recherche préliminaire."
+    }
+  },
+  {
+    id: "fonction", group: "usage", kind: "choice", source: "Déclaration du client",
+    optionsFrom: () => (FONCTIONS[(MACHINES.find((m) => m.l === val("machine")) || {}).v] || FONCTIONS.autre).map((x) => ({ v: x })),
+    when: () => known("machine"),
+    q: "Que fait exactement cette machine dans le process ?",
+    why: "Débloque le niveau candidat technique. Aucune prescription n'en est tirée : ni bride, ni roulement, ni variateur, ni puissance.",
+    aide: {
+      pourquoi: "Deux pompes identiques n'ont pas les mêmes contraintes selon ce qu'elles font réellement.",
+      ou: "Le client décrit le résultat obtenu par la machine.",
+      reconnaitre: "La fonction répond à « à quoi ça sert », pas à « qu'est-ce que c'est ».",
+      inconnu: "La recherche reste en état préliminaire."
+    }
+  },
+  /* ---- groupe 3 : construction ---- */
+  {
+    id: "carcasse", group: "construction", kind: "choice", compact: true, source: "Plaque",
+    q: "Que lisez-vous sur la ligne Type ou Carcasse ?",
+    why: "Donne la hauteur d'axe et restreint les constructions possibles. Elle ne prouve jamais la bride réellement montée : la construction se reconnaît à l'étape suivante.",
+    optionsFrom: () => {
+      const full = FRAMES_ALL.map((f) => ({ v: f, h: f + " mm d'axe" })).concat([{ v: "Ligne illisible ou absente" }]);
+      if (S.allFrames || !known("puissance")) return full;
+      const kw = Number(val("puissance"));
+      const set = (FRAMES_BY_POWER.find((r) => kw <= r.max) || { f: FRAMES_ALL }).f;
+      return set.map((f) => ({ v: f, h: f + " mm d'axe" }))
+        .concat([{ v: "__all", n: "Autre carcasse", h: "Afficher toute la liste" }, { v: "Ligne illisible ou absente" }]);
+    },
+    note: () => (S.allFrames || !known("puissance")
+      ? "Liste complète des hauteurs d'axe normalisées."
+      : "Carcasses les plus fréquentes pour " + S.facts.puissance.label + ". Un ancien moteur IE1 peut porter une carcasse plus petite qu'un IE3 de même puissance : si la plaque indique autre chose, ouvrez toute la liste. Rien n'est déduit, seule la valeur lue est consignée. Restriction d'affichage à valider en C7-6."),
+    aide: {
+      pourquoi: "La carcasse donne la hauteur d'axe et sert à proposer les constructions possibles, à faire reconnaître ensuite.",
+      ou: "Ligne « Type » ou « Frame » de la plaque, exemple 132 M ou 180 M.",
+      reconnaitre: "Deux ou trois chiffres suivis d'une lettre. Le nombre seul est la hauteur d'axe en millimètres.",
+      mesurer: "En dernier recours, du plan d'appui des pattes jusqu'à l'axe de l'arbre.",
+      inconnu: "La hauteur d'axe reste indéterminée et devra être confirmée si elle devient décisive.",
+      fig: "pattesCotes"
+    },
+    photo: { need: "Ligne Type illisible", ask: "Une photo nette de toute la plaque, prise de face, sans reflet." }
+  },
+  {
+    id: "fixation", group: "construction", kind: "gallery", source: "Installation observée",
+    q: "Comment le moteur est-il fixé ?",
+    why: "Une bride ouvre la confirmation des cotes de bride. Les pattes seules n'ouvrent rien. « Aucune ne correspond » bloque toute conclusion mécanique fondée.",
+    options: [
+      { v: "B3", n: "Pattes seules", h: "Quatre points de fixation sous le moteur", svg: "b3" },
+      { v: "B5", n: "Grande bride sans pattes", h: "Trous traversants : les boulons passent dans la bride", svg: "b5" },
+      { v: "B14", n: "Petite bride sans pattes", h: "Trous taraudés : les vis se vissent dans la bride", svg: "b14" },
+      { v: "B35", n: "Pattes et grande bride", h: "Pattes plus bride à trous traversants", svg: "b35" },
+      { v: "B34", n: "Pattes et petite bride", h: "Pattes plus bride taraudée", svg: "b34" },
+      { v: "Aucune image ne correspond", n: "Aucune ne correspond", h: "Ouvre une confirmation guidée, une photo ciblée, puis une qualification si le cas reste non borné", svg: "unknown" }
+    ],
+    aide: {
+      pourquoi: "La construction détermine l'interface mécanique à respecter.",
+      ou: "En regardant le moteur de côté puis de face, du côté de la machine entraînée.",
+      reconnaitre: "Les pattes sont sous le moteur. La bride est le plateau circulaire à l'avant. Grande ou petite bride se distinguent au passage des boulons : traversants ou taraudés.",
+      inconnu: "Une construction non reconnue empêche toute conclusion mécanique fondée.",
+      fig: "positionsIM"
+    },
+    photo: { need: "Construction non reconnue", ask: "Une photo de face de la bride et une photo de côté montrant les pattes éventuelles et le passage ou le taraudage des trous." }
+  },
+  {
+    id: "bride_trous", control: "bride", group: "construction", kind: "choice", source: "Installation observée",
+    when: () => hasBride(),
+    q: "Les trous de la bride sont-ils traversants ou taraudés ?",
+    why: "Première moitié de la confirmation de bride. Non renseignée, l'interface reste sous réserve sur tout candidat.",
+    options: [
+      { v: "Trous traversants", h: "Le boulon passe au travers et se visse dans la machine" },
+      { v: "Trous taraudés", h: "La vis se visse dans l'épaisseur de la bride" }
+    ],
+    aide: {
+      pourquoi: "Traversant ou taraudé départage les constructions bien plus sûrement qu'un code annoncé.",
+      ou: "Sur la face avant de la bride, autour du centrage.",
+      reconnaitre: "Voir le jour au travers du trou, ou un filetage visible à l'intérieur.",
+      mesurer: "Si la machine est en place, passer une pointe : un trou traversant ne s'arrête pas.",
+      inconnu: "L'interface de bride reste sous réserve sur tout candidat.",
+      fig: "brideProfil"
+    },
+    photo: { need: "Trous non identifiés", ask: "Une photo de face de la bride, prise perpendiculairement, montrant l'intérieur des trous." }
+  },
+  {
+    id: "bride_diametre", control: "bride", group: "construction", kind: "measure", unit: "mm", min: 40, max: 800, source: "Mesure terrain",
+    when: () => hasBride(),
+    q: "Confirmons le diamètre extérieur de la bride",
+    why: "Ferme la confirmation de bride avec la seule cote qui départage réellement les candidats. Sans elle, la bride reste une réserve explicite.",
+    steps: [
+      "Arrêter et consigner l'installation avant toute mesure.",
+      "Placer le mètre sur la face avant de la bride, en passant par son centre.",
+      "Lire le diamètre au bord extérieur du plateau, pas au cercle des trous."
+    ],
+    aide: {
+      pourquoi: "Les autres cotes de bride sont normalisées et publiées ; le diamètre extérieur est celui que le TCS fait confirmer.",
+      ou: "Sur la face avant du plateau circulaire, du côté de l'arbre.",
+      reconnaitre: "Le bord extérieur du plateau, au-delà des trous de fixation.",
+      mesurer: "D'un bord à l'autre en passant par le centre. Une mesure prise entre deux trous est fausse.",
+      inconnu: "La bride reste une réserve explicite sur tout candidat.",
+      fig: "brideFace"
+    },
+    photo: { need: "Confirmation impossible pour le client", ask: "Une photo de face de la bride avec un mètre ou un réglet posé en travers, la graduation lisible." }
+  },
+  /* ---- groupe 4 : position ---- */
+  {
+    id: "position", group: "position", kind: "choice", source: "Installation observée",
+    soft: ["Bridé sur la machine, orientation non identifiée"],
+    q: "Dans quelle position le moteur est-il monté ?",
+    why: "Vertical ou incliné ouvre le contrôle de charge axiale ; mur, plafond, incliné ou vertical ouvre le contrôle support et exposition. Horizontal posé au sol n'ouvre rien.",
+    options: [
+      { v: "Horizontal, posé au sol ou sur châssis", h: "Position standard, aucune branche ouverte" },
+      { v: "Horizontal, fixé au mur ou au plafond", h: "Ouvre le contrôle support et exposition" },
+      { v: "Vertical, arbre vers le bas", h: "Ouvre le contrôle de charge axiale" },
+      { v: "Vertical, arbre vers le haut", h: "Ouvre le contrôle de charge axiale" },
+      { v: "Incliné", h: "Ouvre les contrôles de charge axiale et d'exposition" },
+      { v: "Bridé sur la machine, orientation non identifiée", h: "L'orientation reste une inconnue explicite" }
+    ],
+    aide: {
+      pourquoi: "Un montage vertical, incliné, mural ou en plafond peut transmettre une poussée au moteur ou changer son exposition. Ces effets s'établissent, ils ne se supposent jamais.",
+      ou: "En regardant l'orientation de l'arbre par rapport au sol, puis la surface de fixation.",
+      reconnaitre: "L'arbre sort horizontalement, vers le bas, vers le haut ou selon un angle.",
+      inconnu: "Une position inconnue empêche de savoir si le contrôle axial doit être ouvert.",
+      fig: "vertical"
+    },
+    photo: { need: "Position ou support non identifiés", ask: "Une vue assez large pour voir le moteur entier, son support, l'arbre et la liaison avec la machine." }
+  },
+  {
+    id: "axial_reprise", control: "axial", group: "position", kind: "choice", source: "Déclaration du client",
+    soft: ["Les roulements du moteur reprennent l'effort"],
+    when: () => opensAxial(),
+    q: "Qui reprend l'effort axial de la machine ?",
+    why: "Ferme le contrôle axial si l'effort est repris par la machine. « Les roulements du moteur » ou « personne ne sait » le laissent en réserve explicite.",
+    options: [
+      { v: "La machine possède sa propre butée", h: "L'effort ne remonte pas vers le moteur" },
+      { v: "Les roulements du moteur reprennent l'effort", h: "Une construction spécifique peut être nécessaire ; l'effort reste à borner" },
+      { v: "Personne ne sait le dire", h: "Le contrôle reste ouvert et devient une réserve" }
+    ],
+    aide: {
+      pourquoi: "Une charge axiale remontant vers le moteur peut imposer une construction spécifique ; la décision dépend de l'effort réel et des limites publiées.",
+      ou: "Sur la documentation de la machine, ou auprès du service maintenance du site.",
+      reconnaitre: "Une pompe verticale possède souvent une butée intégrée ; son absence renvoie l'effort au moteur.",
+      inconnu: "Le contrôle axial reste ouvert et devient une réserve explicite.",
+      fig: "vertical"
+    },
+    photo: { need: "Interface machine non identifiée", ask: "Une vue assez large pour voir le moteur entier, son support, l'arbre et la liaison avec la machine." }
+  },
+  {
+    id: "expo", control: "montage", group: "position", kind: "choice", source: "Installation observée",
+    soft: ["Le client ne peut pas le dire"],
+    when: () => opensSupport(),
+    q: "Le moteur est-il exposé aux ruissellements ?",
+    why: "Ferme le contrôle support et exposition. Une exposition inconnue le laisse en réserve.",
+    options: [{ v: "Intérieur, à l'abri" }, { v: "Extérieur ou exposé aux ruissellements" }, { v: "Le client ne peut pas le dire" }],
+    aide: {
+      pourquoi: "Sur un montage exposé, l'absence ou l'oubli d'un capot pare-pluie reste une réserve explicite.",
+      ou: "En regardant l'implantation : local fermé, extérieur, sous une machine qui coule.",
+      reconnaitre: "Le capot pare-pluie est une pièce montée au-dessus du moteur, distincte du capot de ventilation.",
+      inconnu: "La protection reste une réserve."
+    }
+  },
+  /* ---- groupe 5 : transmission ---- */
+  {
+    id: "transmission", group: "transmission", kind: "choice", source: "Installation observée",
+    q: "Comment le moteur est-il relié à la machine ?",
+    why: "Le montage direct sur réducteur bascule en qualification spécialisée : ce n'est pas un moteur IEC. Les autres liaisons n'ouvrent aucun contrôle.",
+    options: [
+      { v: "Accouplement direct", h: "Aucune branche ouverte" },
+      { v: "Réducteur accouplé par un accouplement", h: "Moteur IEC normalisé, aucune branche ouverte" },
+      { v: "Moteur monté directement sur un réducteur", h: "Motoréducteur à montage intégré : construction spécifique hors IEC, ouvre une qualification spécialisée" },
+      { v: "Poulies et courroies", h: "Liaison consignée, aucun contrôle ouvert" },
+      { v: "Chaîne", h: "Liaison consignée, aucun contrôle ouvert" },
+      { v: "Roue montée directement sur l'arbre", h: "Liaison consignée, aucun contrôle ouvert" }
+    ],
+    aide: {
+      pourquoi: "Un moteur monté directement sur un réducteur n'a pas d'interface IEC : il ne se remplace pas par un moteur normalisé.",
+      ou: "Entre le moteur et la machine, sous le carter de protection s'il existe.",
+      reconnaitre: "Un accouplement est un manchon court entre deux arbres alignés ; des courroies relient deux poulies écartées. Un montage intégré n'a ni pattes ni bride IEC entre les deux : le carter du réducteur porte le moteur.",
+      inconnu: "La liaison reste une inconnue explicite.",
+      fig: "reducteur"
+    },
+    photo: { need: "Liaison moteur-machine non identifiée", ask: "Une vue montrant le moteur, la liaison et le début de la machine entraînée, carter en place." }
+  },
+  /* ---- groupe 6 : remplacement et tour rapide ---- */
+  {
+    id: "cause", group: "tour", kind: "choice", grid: true, source: "Déclaration du client",
+    q: "Pourquoi ce moteur doit-il être remplacé ?",
+    why: "Les causes marquées d'un symptôme ouvrent la question d'ancienneté. Aucune n'affecte la compatibilité : une cause reste une hypothèse.",
+    note: "Les causes accompagnées d'un symptôme ouvrent une hypothèse de cause à vérifier. Une hypothèse ne devient jamais un diagnostic.",
+    options: CAUSES.map((c) => ({ v: c.v })),
+    aide: {
+      pourquoi: "Les symptômes orientent les contrôles sans rien prouver.",
+      ou: "Auprès de l'exploitant ou de la maintenance.",
+      reconnaitre: "Distinguer ce qui a été observé de ce qui est supposé par le client.",
+      inconnu: "Une cause inconnue n'empêche aucun candidat."
+    }
+  },
+  {
+    id: "anciennete", control: "cause", group: "tour", kind: "choice", compact: true, source: "Déclaration du client",
+    when: () => hasSymptomes(),
+    q: "Depuis combien de temps ce moteur était-il installé ?",
+    why: "Complète la chronologie de l'hypothèse de cause. Sans effet sur la compatibilité.",
+    options: [{ v: "Moins de 2 ans" }, { v: "Entre 2 et 10 ans" }, { v: "Plus de 10 ans" }, { v: "Le client ne sait pas" }],
+    aide: {
+      pourquoi: "L'ancienneté replace les symptômes dans une chronologie.",
+      ou: "Auprès de la maintenance, ou d'après l'année inscrite sur la plaque.",
+      reconnaitre: "Une année de fabrication n'est pas une date de mise en service.",
+      inconnu: "L'hypothèse reste plausible et non démontrée."
+    }
+  },
+  {
+    id: "particularites", group: "tour", kind: "multi", source: "Installation observée", options: PARTICULARITES.map((p) => ({ v: p.l, h: p.h, key: p.v })),
+    q: "Voyez-vous une de ces particularités sur le moteur ou son installation ?",
+    why: "Chaque case cochée ouvre ses propres questions. Marquage Ex, deux vitesses et moteur intégré basculent en qualification spécialisée. « Rien de tout cela » ferme toutes ces branches d'un coup.",
+    noneLabel: "Rien de tout cela",
+    aide: {
+      pourquoi: "Cette grille remplace un long questionnaire : seules les particularités cochées ouvrent des contrôles.",
+      ou: "En faisant décrire au client le tour du moteur, puis la boîte à bornes sans rien démonter.",
+      reconnaitre: "Un frein et une ventilation forcée sont montés à l'arrière ; un marquage Ex figure sur la plaque ou sur une plaque additionnelle.",
+      inconnu: "Une particularité non vue n'est pas une particularité absente : le doute reste consignable."
+    }
+  },
+  {
+    id: "opt_frein", control: "options", group: "tour", kind: "fields", source: "Plaque",
+    when: () => hasPart("frein"),
+    q: "Qualifions le frein",
+    why: "Ferme la part « frein » du contrôle des options. Chaque champ non lisible laisse une réserve nommée.",
+    fields: [
+      { id: "frein_type", label: "Type de frein", options: ["À manque de courant", "À appel de courant"], source: "Plaque" },
+      { id: "frein_couple", label: "Couple de freinage lu", kind: "number", unit: "N·m", source: "Plaque" },
+      { id: "frein_tension", label: "Tension du frein", options: ["24 V CC", "180 V CC", "230 V CA", "400 V CA", "Autre tension lue"], source: "Plaque" },
+      { id: "frein_alim", label: "Alimentation réelle", options: ["Départ séparé confirmé", "Prise sur le moteur, confirmée"], source: "Installation observée" },
+      { id: "frein_deblocage", label: "Déblocage manuel", options: ["Présent", "Absent"], source: "Installation observée" }
+    ],
+    aide: {
+      pourquoi: "Un frein à manque de courant serre à l'arrêt, un frein à appel de courant serre sous tension : les deux ne se remplacent pas l'un par l'autre.",
+      ou: "Plaque propre du frein, à l'arrière du moteur, et départ dédié dans l'armoire.",
+      reconnaitre: "Un levier ou une tirette sur le carter arrière indique un déblocage manuel.",
+      inconnu: "Chaque champ non lu reste une réserve explicite sur le candidat."
+    },
+    photo: { need: "Frein non qualifié", ask: "La plaque du frein et une vue de son carter arrière montrant un éventuel levier de déblocage, sans rien démonter." }
+  },
+  {
+    id: "opt_codeur", control: "options", group: "tour", kind: "fields", source: "Installation observée",
+    when: () => hasPart("codeur"),
+    q: "Qualifions le retour de vitesse ou les sondes",
+    why: "Ferme la part « accessoire arrière » du contrôle des options. Un accessoire non identifié laisse une réserve explicite.",
+    fields: [
+      { id: "cod_nature", label: "Nature de l'accessoire", options: ["Codeur incrémental", "Codeur absolu", "Tachymètre", "Sondes de température", "Résistance de réchauffage", "Non identifié"], source: "Installation observée" },
+      { id: "cod_marquage", label: "Marquage lu sur l'accessoire", options: ["Marque et type lisibles", "Marquage partiel", "Aucun marquage"], source: "Plaque" },
+      { id: "cod_raccord", label: "Raccordement", options: ["Connecteur", "Bornier ou fils libres"], source: "Installation observée" }
+    ],
+    aide: {
+      pourquoi: "Chaque accessoire a sa propre interface et sa propre alimentation ; aucune n'est héritée du moteur.",
+      ou: "En bout arrière du moteur, sous le capot de ventilation, et dans la boîte à bornes.",
+      reconnaitre: "Un codeur porte un connecteur multibroche ; des sondes sortent en fils fins vers le bornier.",
+      inconnu: "L'accessoire reste une réserve explicite ; rien n'est qualifié d'office de sonde thermique.",
+      fig: "boite"
+    },
+    photo: { need: "Accessoire non identifié", ask: "Une vue nette de l'accessoire monté à l'arrière du moteur et de sa plaque, sans rien débrancher." }
+  },
+  {
+    id: "opt_arbre2", control: "options", group: "tour", kind: "choice", source: "Installation observée",
+    soft: ["Oui, il entraîne un équipement", "Le client ne sait pas"],
+    when: () => hasPart("arbre2"),
+    q: "Le deuxième bout d'arbre est-il utilisé ?",
+    why: "Ferme la part « deuxième bout d'arbre ». Un arbre utilisé impose une construction spécifique et reste une réserve tant qu'il n'est pas décrit.",
+    options: [
+      { v: "Oui, il entraîne un équipement", h: "La construction du remplacement doit reprendre cette sortie" },
+      { v: "Non, il est libre" },
+      { v: "Le client ne sait pas" }
+    ],
+    aide: {
+      pourquoi: "Un deuxième bout d'arbre n'est pas une option ajoutée après coup : il change la construction du moteur.",
+      ou: "À l'arrière du moteur, du côté opposé à la machine entraînée.",
+      reconnaitre: "Un arbre qui dépasse du capot arrière.",
+      inconnu: "La construction reste une réserve explicite."
+    }
+  },
+  {
+    id: "opt_capot", control: "options", group: "tour", kind: "choice", source: "Installation observée",
+    soft: ["À confirmer avec le client"],
+    when: () => hasPart("capot"),
+    q: "Le capot pare-pluie doit-il être repris sur le remplacement ?",
+    why: "Ferme la part « capot pare-pluie ». « À confirmer » laisse une réserve explicite.",
+    options: [{ v: "Oui, à reprendre" }, { v: "Non nécessaire" }, { v: "À confirmer avec le client" }],
+    aide: {
+      pourquoi: "Le capot pare-pluie est une option de remplacement distincte du capot de ventilation.",
+      ou: "Au-dessus du moteur, sur les montages exposés.",
+      reconnaitre: "Une tôle ajoutée par-dessus le capot de ventilation.",
+      inconnu: "La protection reste une réserve explicite."
+    }
+  },
+  {
+    id: "opt_2v", control: "options", group: "tour", kind: "choice", source: "Plaque",
+    when: () => hasTwoSpeeds(),
+    q: "Que lisez-vous pour les deux vitesses ?",
+    why: "N'ouvre ni ne ferme rien dans le parcours standard : le moteur est déjà en qualification spécialisée. Ces valeurs partent au spécialiste.",
+    options: [{ v: "Les deux vitesses sont lisibles" }, { v: "Plaque partiellement lisible" }, { v: "Plaque illisible" }],
+    aide: {
+      pourquoi: "Deux vitesses signifient deux puissances et un couplage particulier : le cas est réservé à une expertise.",
+      ou: "Sur la plaque, deux lignes de valeurs distinctes.",
+      reconnaitre: "Deux vitesses en tr/min et deux puissances sur la même plaque.",
+      inconnu: "Le dossier de qualification part avec cette information manquante nommée.",
+      fig: "plaque"
+    },
+    photo: { need: "Plaque à deux vitesses", ask: "Une photo nette de toute la plaque, prise de face, les deux lignes de vitesses lisibles." }
+  },
+  {
+    id: "vfd_profil", control: "vfd", group: "tour", kind: "choice", source: "Déclaration du client",
+    soft: ["Longues durées à basse vitesse"],
+    when: () => hasVfd(),
+    q: "Le moteur tourne-t-il longtemps à basse vitesse ?",
+    why: "Ferme le contrôle basse vitesse si la vitesse est quasi constante. De longues durées à basse vitesse le laissent en réserve : l'aptitude thermique doit être confirmée.",
+    options: [
+      { v: "Vitesse quasiment constante" },
+      { v: "Longues durées à basse vitesse", h: "Le refroidissement devient un contrôle explicite" },
+      { v: "Le client ne connaît pas le profil" }
+    ],
+    aide: {
+      pourquoi: "Un moteur autoventilé refroidit moins à basse vitesse ; l'aptitude doit être confirmée avant de conclure.",
+      ou: "Auprès de l'exploitant, ou sur l'écran du variateur qui affiche la fréquence de marche.",
+      reconnaitre: "Une fréquence affichée durablement sous 25 Hz correspond à une marche lente prolongée.",
+      inconnu: "Le contrôle reste ouvert : candidat sous réserve possible, solution validée impossible."
+    }
+  },
+  {
+    id: "aux_plaque", control: "aux", group: "tour", kind: "choice", source: "Plaque",
+    when: () => hasAux(),
+    q: "Que lisez-vous sur la plaque propre de la ventilation forcée ?",
+    why: "Alimente le contrôle auxiliaire. Une plaque illisible le laisse en réserve.",
+    options: [{ v: "230/400 V, 50 Hz, 0,12 kW" }, { v: "Une autre plaque, lisible" }, { v: "Plaque absente ou illisible" }],
+    aide: {
+      pourquoi: "La ventilation forcée est un équipement distinct : sa tension et sa puissance ne se déduisent jamais du moteur.",
+      ou: "Sur le capot arrière du moteur, sur le groupe de ventilation lui-même.",
+      reconnaitre: "Une petite plaque séparée, avec une puissance de quelques centaines de watts.",
+      inconnu: "L'auxiliaire reste non qualifié et devient une réserve explicite.",
+      fig: "boite"
+    },
+    photo: { need: "Plaque de l'auxiliaire non lisible", ask: "La plaque propre de l'auxiliaire et une vue nette de la boîte ou des fils, sans les déplacer ni les débrancher." }
+  },
+  {
+    id: "aux_alim", control: "aux", group: "tour", kind: "choice", source: "Installation observée",
+    soft: ["Branchement réel inconnu"],
+    when: () => hasAux(),
+    q: "Comment la ventilation forcée est-elle réellement alimentée ?",
+    why: "Ferme le contrôle auxiliaire si le branchement réel est confirmé. Inconnu, il reste une réserve explicite.",
+    options: [
+      { v: "Alimentation séparée confirmée" },
+      { v: "Branchement réel inconnu", h: "Reste une inconnue explicite, jamais une hypothèse" }
+    ],
+    aide: {
+      pourquoi: "Une plaque bitension ne dit pas comment l'auxiliaire est effectivement couplé sur le site.",
+      ou: "Dans l'armoire, sur le départ dédié à la ventilation forcée.",
+      reconnaitre: "Un départ séparé alimente la ventilation même quand le moteur est arrêté.",
+      inconnu: "Le contrôle auxiliaire reste ouvert et devient une réserve.",
+      fig: "boite"
+    },
+    photo: { need: "Branchement non identifié", ask: "Une vue nette de la boîte à bornes ouverte et du schéma collé sur le couvercle, sans rien déplacer ni débrancher." }
+  },
+  {
+    id: "aux_fils", control: "aux", group: "tour", kind: "choice", source: "Installation observée",
+    soft: ["Oui, des fils non identifiés", "Le client ne peut pas regarder"],
+    when: () => hasAux(),
+    q: "Des fils supplémentaires non identifiés sont-ils visibles dans la boîte à bornes ?",
+    why: "Des fils non identifiés maintiennent le contrôle auxiliaire en réserve : ils ne sont jamais qualifiés d'office de sondes.",
+    options: [{ v: "Oui, des fils non identifiés" }, { v: "Non, tout est identifié" }, { v: "Le client ne peut pas regarder" }],
+    aide: {
+      pourquoi: "Des fils supplémentaires peuvent correspondre à des sondes, un frein ou une résistance ; rien ne se déduit sans preuve.",
+      ou: "Dans la boîte à bornes, sans rien démonter ni débrancher.",
+      reconnaitre: "Des conducteurs de faible section, souvent hors du bornier principal.",
+      inconnu: "Le contrôle auxiliaire reste ouvert.",
+      fig: "boite"
+    },
+    photo: { need: "Fils non identifiés", ask: "Une vue nette de la boîte à bornes et des fils en place, sans les déplacer ni les débrancher." }
+  },
+  {
+    id: "env_condition", control: "env", group: "tour", kind: "choice", source: "Installation observée",
+    when: () => hasEnv(),
+    q: "Quelle est la condition d'ambiance réelle ?",
+    why: "Fonde l'exigence d'ambiance et ferme le contrôle environnement. Sans condition réelle, aucune exigence n'est fondée.",
+    options: [{ v: "Lavage haute pression" }, { v: "Forte chaleur" }, { v: "Extérieur exposé" }, { v: "Ambiance corrosive" }],
+    aide: {
+      pourquoi: "L'indice de protection nécessaire découle de la condition réelle, pas de celui de l'ancien moteur.",
+      ou: "En faisant décrire l'ambiance du local et les opérations de nettoyage.",
+      reconnaitre: "Le lavage direct au jet est très différent d'une simple humidité ambiante.",
+      inconnu: "L'exigence d'ambiance reste une réserve explicite."
+    }
+  },
+  {
+    id: "atex_marquage", control: "atex", group: "tour", kind: "fields", source: "Plaque",
+    when: () => hasAtex(),
+    q: "Éléments ATEX à transmettre au spécialiste",
+    why: "Alimente le dossier de qualification ATEX, obligatoire dans tous les cas. Ne peut jamais fermer le contrôle.",
+    fields: [
+      { id: "atex_mark", label: "Marquage Ex recopié", options: ["Marquage complet recopié", "Marquage partiel", "Marquage illisible"], source: "Plaque" },
+      { id: "atex_zone", label: "Zone déclarée par le site", options: ["Zone 20", "Zone 21", "Zone 22", "Zone gaz déclarée", "Aucune zone déclarée"], source: "Déclaration du site" },
+      { id: "atex_matiere", label: "Matière dangereuse", options: ["Poussière organique", "Autre poussière", "Gaz ou vapeur", "Non précisée"], source: "Déclaration du site" },
+      { id: "atex_certificat", label: "Certificat disponible", options: ["Oui", "Non", "Le site doit vérifier"], source: "Document" }
+    ],
+    aide: {
+      pourquoi: "La directive impose un marquage lisible du groupe, de la catégorie et de l'usage gaz ou poussières. Un IP seul n'est jamais une qualification ATEX.",
+      ou: "Plaque signalétique ou plaque additionnelle dédiée, et document de zonage du site.",
+      reconnaitre: "Groupe, catégorie, mode de protection, groupe de gaz ou poussières, température et niveau de protection.",
+      inconnu: "Le dossier part avec les informations manquantes nommées.",
+      fig: "marquage"
+    },
+    photo: { need: "Marquage complet à documenter", ask: "Le marquage complet, net et lisible dans son contexte, ainsi que le certificat s'il est disponible sur site." }
+  }
+];
+
+/* ---------------------- état ---------------------- */
+let S = null;
+function blank() {
+  return {
+    facts: {}, unknowns: {}, guidance: {}, skipped: 0, allFrames: false,
+    pending: null, pendingNode: null, revision: null, search: null, selected: false,
+    energy: null, qualification: null, expert: {}, forced: null, started: false, scenario: null, view: "home"
+  };
+}
+const FACT_LABEL = {
+  puissance: "Puissance", vitesse: "Vitesse", phases: "Phases", tension: "Tension de plaque",
+  frequence: "Fréquence réseau", mode_alim: "Alimentation réelle", machine: "Machine entraînée",
+  fonction: "Fonction process", carcasse: "Carcasse", fixation: "Construction",
+  bride_trous: "Trous de bride", bride_diametre: "Diamètre de bride", position: "Position",
+  axial_reprise: "Reprise de l'effort axial", expo: "Exposition", transmission: "Transmission",
+  cause: "Cause déclarée", anciennete: "Ancienneté", particularites: "Particularités",
+  opt_arbre2: "Deuxième bout d'arbre", opt_capot: "Capot pare-pluie", opt_2v: "Plaque deux vitesses",
+  vfd_profil: "Profil de vitesse", aux_plaque: "Plaque auxiliaire", aux_alim: "Alimentation auxiliaire",
+  aux_fils: "Fils non identifiés", env_condition: "Ambiance"
+};
+NODES.forEach((n) => { if (n.kind === "fields") n.fields.forEach((f) => { FACT_LABEL[f.id] = f.label; }); });
+const node = (id) => NODES.find((n) => n.id === id);
+const SOFT_WORDS = ["ne sait", "ne sais", "inconnu", "ne peut pas", "non identifi", "illisible", "à confirmer", "Aucune zone", "Non précisée", "pas regarder"];
+const isSoftValue = (v, list) => {
+  if (typeof v !== "string") return false;
+  if (list && list.indexOf(v) >= 0) return true;
+  return SOFT_WORDS.some((w) => v.indexOf(w) >= 0);
+};
+const answered = (n) => (n.kind === "fields"
+  ? n.fields.every((f) => S.facts[f.id] || S.unknowns[f.id])
+  : (!!S.facts[n.id] || !!S.unknowns[n.id]));
+const nodeMissing = (n) => (n.kind === "fields" ? n.fields.some((f) => !S.facts[f.id]) : !S.facts[n.id]);
+const nodeSoft = (n) => (n.kind === "fields"
+  ? n.fields.some((f) => isSoftValue(S.facts[f.id] && S.facts[f.id].value, f.soft))
+  : isSoftValue(S.facts[n.id] && S.facts[n.id].value, n.soft));
+const visible = (n) => (n.when ? !!n.when() : true);
+
+function nextNode() {
+  if (S.forced) { const f = node(S.forced); if (f && visible(f)) return f; S.forced = null; }
+  for (let i = 0; i < NODES.length; i++) {
+    const n = NODES[i];
+    if (!visible(n)) continue;
+    if (n.id === S.pendingNode) continue;
+    if (answered(n)) continue;
+    return n;
+  }
+  return null;
+}
+function setFact(id, value, opts) {
+  const o = opts || {};
+  const n = node(id) || {};
+  S.facts[id] = {
+    value: value,
+    label: o.label || (Array.isArray(value) ? (value.length ? value.join(", ") : "Rien de tout cela") : String(value)),
+    source: o.source || n.source || "Déclaration du client",
+    channel: o.channel || "Déclaration orale"
+  };
+  delete S.unknowns[id];
+}
+function setUnknown(id, reason) { delete S.facts[id]; S.unknowns[id] = reason || "Le client ne sait pas"; }
+
+/* ---------------------- contrôles ---------------------- */
+function controlStatus(cid) {
+  const ns = NODES.filter((n) => n.control === cid && visible(n));
+  if (!ns.length) return null;
+  if (S.expert && S.expert[cid]) return "expert";
+  const untouched = ns.filter((n) => !answered(n));
+  if (untouched.length) return "ouvert";
+  if (ns.some(nodeMissing)) return "reserve";
+  if (cid === "atex") return "expert";
+  if (cid === "cause") return "reserve";
+  return ns.some(nodeSoft) ? "reserve" : "clos";
+}
+function openControls() {
+  return Object.keys(CONTROLS).map((cid) => ({ id: cid, st: controlStatus(cid) })).filter((c) => c.st);
+}
+
+/* ---------------------- état technique ---------------------- */
+function techState() {
+  if (isIntegrated()) return { k: "qualif", n: "Qualification spécialisée requise", why: "Moteur à montage intégré ou non-IEC : la construction sort du périmètre standard et ne peut pas être conclue par le parcours normal." };
+  if (hasTwoSpeeds()) return { k: "qualif", n: "Qualification spécialisée requise", why: "Moteur à deux vitesses : deux puissances et un couplage particulier sortent du parcours standard." };
+  if (hasAtex()) return { k: "qualif", n: "Qualification spécialisée requise", why: "Un marquage Ex ou une matière inflammable est déclaré : l'expertise ATEX est explicitement réservée et aucune validation standard n'est possible." };
+  if (S.expert && Object.keys(S.expert).length) {
+    const first = Object.keys(S.expert)[0];
+    return { k: "qualif", n: "Qualification spécialisée requise", why: "Le contrôle « " + CONTROLS[first].name + " » a été déclaré non bornable après épuisement des moyens accessibles au TCS." };
+  }
+  const appOk = known("machine") && known("fonction") && val("fonction") !== "Fonction non identifiable par le client";
+  if (!appOk) return { k: "prelim", n: "Recherche préliminaire", why: "L'application métier n'est pas encore fondée : aucune référence ne peut recevoir le rôle de candidat technique." };
+  if (!S.search || !S.search.done || S.search.empty) return { k: "prelim", n: "Recherche préliminaire", why: S.search && S.search.empty ? "Aucune référence n'a été retenue dans le périmètre interrogé ; ce résultat ne prouve aucune impossibilité." : "Aucune référence n'a encore été évaluée : lancez la recherche pour l'atteindre." };
+  if (!S.selected) return { k: "prelim", n: "Recherche préliminaire", why: "La recherche a répondu, mais aucune référence n'a encore été étudiée." };
+  const r = reserves();
+  if (r.length) return { k: "candidat", n: "Candidat technique", why: r.length + (r.length > 1 ? " réserves affectent" : " réserve affecte") + " encore la compatibilité nécessaire." };
+  return { k: "valide", n: "Solution techniquement validée", why: "Les compatibilités nécessaires sont fondées dans le périmètre évalué ; aucune réserve n'affecte plus la compatibilité." };
+}
+
+/* ---------------------- évaluation ---------------------- */
+function criteria() {
+  const c = [];
+  const kv = (k) => (known(k) ? S.facts[k].label : null);
+  const st = (cid) => controlStatus(cid);
+  const verdict = (x) => (x === "clos" ? "satisfied" : x === "ouvert" ? "indeterminate" : "reserve");
+  const minOk = known("puissance") && known("frequence") && known("mode_alim");
+  c.push({ n: "Puissance, fréquence et mode d'alimentation", d: minOk ? kv("puissance") + " · " + kv("frequence") + " · " + kv("mode_alim") : "Minimum de recherche incomplet", v: minOk ? "satisfied" : "indeterminate" });
+  const appOk = known("machine") && known("fonction") && val("fonction") !== "Fonction non identifiable par le client";
+  c.push({ n: "Application métier et fonction process", d: appOk ? kv("machine") + " · " + kv("fonction") : "Non fondée : bloque candidat technique et solution validée", v: appOk ? "satisfied" : "indeterminate" });
+  c.push({ n: "Alimentation lue", d: known("phases") && known("tension") ? kv("phases") + " · " + kv("tension") : "Phases ou tension de plaque non fondées", v: known("phases") && known("tension") ? "satisfied" : "indeterminate" });
+  c.push({ n: "Vitesse nominale", d: known("vitesse") ? kv("vitesse") + " — les pôles restent une déduction affichée" : "Inconnue : le périmètre reste large", v: known("vitesse") ? "satisfied" : "indeterminate" });
+  if (known("fixation")) {
+    if (val("fixation") === "Aucune image ne correspond") c.push({ n: "Construction et interface mécanique", d: "Construction non reconnue : aucune conclusion mécanique fondée", v: "not_satisfied" });
+    else if (hasBride()) c.push({ n: "Confirmation des cotes de bride", d: st("bride") === "clos" ? "Trous et diamètre extérieur confirmés : " + (kv("bride_diametre") || "") + ", " + (kv("bride_trous") || "").toLowerCase() : "Confirmation de bride " + (st("bride") === "ouvert" ? "ouverte" : "sous réserve") + " : la cote qui départage n'est pas confirmée", v: verdict(st("bride")) });
+    else c.push({ n: "Construction et interface mécanique", d: "Fixation " + kv("fixation") + " reconnue visuellement" + (known("carcasse") && val("carcasse") !== "Ligne illisible ou absente" ? ", hauteur d'axe " + kv("carcasse") + " mm" : ""), v: "satisfied" });
+  } else c.push({ n: "Construction et interface mécanique", d: "Construction non renseignée", v: "indeterminate" });
+  if (opensAxial()) c.push({ n: "Charge axiale", d: st("axial") === "clos" ? "Reprise d'effort établie : " + kv("axial_reprise") : "Contrôle axial " + (st("axial") === "ouvert" ? "ouvert" : "sous réserve") + " : l'effort n'est pas borné", v: verdict(st("axial")) });
+  if (opensSupport()) c.push({ n: "Support et exposition", d: st("montage") === "clos" ? "Exposition établie : " + kv("expo") : "Contrôle support et exposition " + (st("montage") === "ouvert" ? "ouvert" : "sous réserve"), v: verdict(st("montage")) });
+  if (hasVfd()) c.push({ n: "Aptitude à vitesse variable", d: st("vfd") === "clos" ? "Profil de vitesse établi : " + kv("vfd_profil") : "Contrôle thermique basse vitesse " + (st("vfd") === "ouvert" ? "ouvert" : "sous réserve"), v: verdict(st("vfd")) });
+  if (hasAux()) c.push({ n: "Auxiliaire distinct", d: st("aux") === "clos" ? "Auxiliaire qualifié séparément ; rien n'est hérité du moteur principal" : "Contrôle auxiliaire " + (st("aux") === "ouvert" ? "ouvert" : "sous réserve"), v: verdict(st("aux")) });
+  if (hasOptions()) c.push({ n: "Options et accessoires", d: st("options") === "clos" ? "Chaque option présente est qualifiée séparément" : "Contrôle des options " + (st("options") === "ouvert" ? "ouvert" : "sous réserve") + " : rien n'est hérité du moteur principal", v: verdict(st("options")) });
+  if (hasEnv()) c.push({ n: "Environnement sensible", d: st("env") === "clos" ? "Condition réelle déclarée : " + kv("env_condition") : "Contrôle d'ambiance " + (st("env") === "ouvert" ? "ouvert" : "sous réserve"), v: verdict(st("env")) });
+  if (isIntegrated() || hasTwoSpeeds()) c.push({ n: "Construction dans le périmètre standard", d: isIntegrated() ? "Montage intégré ou non-IEC : hors périmètre standard" : "Deux vitesses : hors périmètre standard", v: "not_satisfied" });
+  return c;
+}
+function reserves() { return criteria().filter((c) => c.v !== "satisfied"); }
+
+/* ---------------------- rendu : utilitaires ---------------------- */
+function toast(msg) {
+  const t = $("#toast"); t.textContent = msg; t.dataset.show = "true";
+  clearTimeout(toast._t); toast._t = setTimeout(() => { t.dataset.show = "false"; }, 3200);
+}
+function say(msg) { $("#live").textContent = msg; }
+function view(v) {
+  ["home", "run", "search", "qual"].forEach((x) => { $("#view-" + x).hidden = x !== v; });
+  S.view = v;
+  $("#btnHome").hidden = v === "home";
+  $("#mbar").dataset.show = String(v !== "home");
+  window.scrollTo({ top: 0 });
+}
+
+/* ---------------------- rendu : relevé ---------------------- */
+function railHTML() {
+  const st = techState();
+  let h = "";
+  h += '<div class="card state-card"><div class="state-line"><span class="chip" data-tone="' + st.k + '"><span class="dot"></span>' + esc(st.n) + "</span></div>";
+  h += '<p class="state-why">' + esc(st.why) + "</p></div>";
+
+  const fk = Object.keys(S.facts);
+  h += '<div class="card rail-card"><div class="rail-head"><h3>Relevé acquis</h3><span class="count">' + fk.length + "</span></div>";
+  if (!fk.length) h += '<p class="empty">Aucun fait consigné pour l\'instant.</p>';
+  else {
+    h += '<div class="facts">';
+    fk.forEach((k) => {
+      const f = S.facts[k];
+      h += '<button class="fact" type="button" data-correct="' + k + '" title="Corriger ce fait"><span><span class="fact-k">' + esc(FACT_LABEL[k] || k) + '</span><span class="fact-src">' + esc(f.source) + " · " + esc(f.channel) + '</span></span><span class="fact-v">' + esc(f.label) + "</span></button>";
+    });
+    h += "</div>";
+  }
+  h += "</div>";
+
+  const uk = Object.keys(S.unknowns);
+  h += '<div class="card rail-card"><div class="rail-head"><h3>Inconnues</h3><span class="count">' + uk.length + "</span></div>";
+  if (!uk.length) h += '<p class="empty">Aucune inconnue déclarée.</p>';
+  else {
+    h += '<div class="facts">';
+    uk.forEach((k) => {
+      h += '<button class="fact" type="button" data-fill="' + k + '" title="Renseigner cette information"><span><span class="fact-k">' + esc(FACT_LABEL[k] || k) + '</span><span class="fact-src">' + esc(S.unknowns[k]) + '</span></span><span class="fact-v unknown">Inconnue</span></button>';
+    });
+    h += "</div>";
+  }
+  h += "</div>";
+
+  const ctrls = openControls();
+  h += '<div class="card rail-card"><div class="rail-head"><h3>Contrôles</h3><span class="count">' + ctrls.length + "</span></div>";
+  if (!ctrls.length) h += '<p class="empty">Aucun contrôle ouvert par les faits recueillis.</p>';
+  else ctrls.forEach((c) => {
+    const lab = c.st === "reserve" && CONTROLS[c.id].reserveLabel ? CONTROLS[c.id].reserveLabel : { ouvert: "Ouvert", clos: "Clos", reserve: "Réserve explicite", expert: "Qualification requise" }[c.st];
+    h += '<div class="ctrl" data-st="' + c.st + '"><span class="ctrl-dot"></span><span><span class="ctrl-n">' + esc(CONTROLS[c.id].name) + '</span><span class="ctrl-s">' + lab + " — " + esc(CONTROLS[c.id].signal) + "</span></span></div>";
+  });
+  h += "</div>";
+  return h;
+}
+
+/* ---------------------- rendu : progression ---------------------- */
+function progressHTML(active) {
+  const gi = active ? GROUPS.findIndex((g) => g.id === active.group) : GROUPS.length;
+  let h = "";
+  GROUPS.forEach((g, i) => {
+    const done = NODES.filter((n) => n.group === g.id && visible(n)).every((n) => answered(n));
+    const st = i === gi ? "now" : (done ? "done" : "todo");
+    if (i) h += '<span class="pbar"></span>';
+    h += '<span class="pstep" data-st="' + st + '"><span class="pdot">' + (st === "done" ? SVG.ok : String(i + 1)) + '</span><span class="pname">' + esc(g.n) + "</span></span>";
+  });
+  return h;
+}
+
+/* ---------------------- rendu : étape ---------------------- */
+function renderStep() {
+  const n = nextNode();
+  $("#progress").innerHTML = progressHTML(n);
+  renderBanners();
+  $("#rail").innerHTML = railHTML();
+  const mt = techState();
+  $("#mState").dataset.tone = mt.k; $("#mStateTxt").textContent = mt.n;
+  $("#topState").hidden = false; $("#topState").dataset.tone = mt.k; $("#topStateTxt").textContent = mt.n;
+
+  if (!n) { renderDone(); return; }
+  const box = $("#step");
+  const gname = (GROUPS.find((g) => g.id === n.group) || {}).n || "";
+  const gidx = GROUPS.findIndex((g) => g.id === n.group) + 1;
+
+  let h = '<div class="step-head"><div class="kicker">';
+  h += '<span class="chip" data-tone="neutral">Groupe ' + gidx + " sur 6 · " + esc(gname) + "</span>";
+  if (n.control) h += '<span class="chip" data-tone="candidat"><span class="dot"></span>Contrôle · ' + esc(CONTROLS[n.control].name) + "</span>";
+  if (n.kind === "measure") h += '<span class="chip" data-tone="neutral">Mesure guidée</span>';
+  h += "</div>";
+  h += '<h2 class="q" id="qh" tabindex="-1">' + esc(n.q) + "</h2>";
+  h += '<p class="why"><strong>Ce que votre réponse ouvre ou ferme&nbsp;:</strong> ' + esc(n.why) + "</p>";
+  if (S.skipped) h += '<p class="why" style="color:hsl(var(--success))">' + S.skipped + (S.skipped > 1 ? " étapes déjà satisfaites ont été sautées." : " étape déjà satisfaite a été sautée.") + "</p>";
+  h += "</div>";
+
+  h += '<div class="step-body">';
+  if (n.kind === "choice") {
+    const opts = n.optionsFrom ? n.optionsFrom() : n.options;
+    if (n.compact) h += '<div class="opt-grid opt-grid-compact">';
+    else if (n.grid) h += '<div class="opt-grid opt-grid-wide">';
+    opts.forEach((o, i) => {
+      const nm = o.n || o.v;
+      const k = i < 9 ? (i + 1) : "·";
+      if (n.compact) { h += '<button class="opt opt-mini" type="button" data-choose="' + esc(o.v) + '" aria-pressed="false"><kbd class="opt-k">' + k + '</kbd><span class="opt-txt"><span class="opt-name">' + esc(nm) + "</span>" + (o.h ? '<span class="opt-hint">' + esc(o.h) + "</span>" : "") + "</span></button>"; return; }
+      h += '<button class="opt" type="button" data-choose="' + esc(o.v) + '" aria-pressed="false"><kbd class="opt-k">' + k + '</kbd><span class="opt-txt"><span class="opt-name">' + esc(nm) + "</span>" + (o.h ? '<span class="opt-hint">' + esc(o.h) + "</span>" : "") + '</span><span class="opt-check">' + SVG.ok + "</span></button>";
+    });
+    if (n.compact || n.grid) h += "</div>";
+  } else if (n.kind === "gallery") {
+    h += '<div class="opt-grid">';
+    n.options.forEach((o, i) => {
+      h += '<button class="opt opt-vis" type="button" data-choose="' + esc(o.v) + '" aria-pressed="false"><span class="fig">' + SVG[o.svg] + '</span><span class="row"><kbd class="opt-k">' + (i + 1) + '</kbd><span class="opt-txt"><span class="opt-name">' + esc(o.n) + "</span>" + (o.h ? '<span class="opt-hint">' + esc(o.h) + "</span>" : "") + "</span></span></button>";
+    });
+    h += "</div>";
+  } else if (n.kind === "fields") {
+    h += '<div class="fields">';
+    n.fields.forEach((f) => {
+      const cur = S.facts[f.id], unk = S.unknowns[f.id];
+      h += '<div class="fld" data-fid="' + f.id + '"><div class="fld-h"><span class="fld-l">' + esc(f.label) + '</span><span class="fld-v" data-unknown="' + String(!!unk) + '">' + (cur ? esc(cur.label) : (unk ? "Non lisible" : "")) + "</span></div>";
+      h += '<div class="pills">';
+      if (f.kind === "number") {
+        h += '<span class="field"><input type="number" step="any" data-fnum="' + f.id + '" value="' + (cur ? esc(cur.value) : "") + '" aria-label="' + esc(f.label) + '"><span class="unit">' + esc(f.unit) + "</span></span>";
+      } else {
+        f.options.forEach((o) => {
+          h += '<button class="pill" type="button" data-fset="' + f.id + '" data-fval="' + esc(o) + '" aria-pressed="' + String(!!cur && cur.value === o) + '">' + esc(o) + "</button>";
+        });
+      }
+      h += '<button class="pill" type="button" data-funk="' + f.id + '" data-unknown="1" aria-pressed="' + String(!!unk) + '">Non lisible</button>';
+      h += "</div></div>";
+    });
+    h += "</div>";
+    h += '<div class="num-row" style="margin-top:4px"><button class="btn btn-primary" type="button" id="fieldsOk">Consigner ces informations <kbd style="background:transparent;border-color:hsl(var(--primary-foreground)/.4);color:inherit">Entrée</kbd></button></div>';
+  } else if (n.kind === "multi") {
+    n.options.forEach((o) => {
+      h += '<label class="chk" data-on="false"><input type="checkbox" value="' + esc(o.v) + '"><span><span class="chk-name">' + esc(o.v) + '</span><span class="chk-hint">' + esc(o.h || "") + "</span></span></label>";
+    });
+    h += '<label class="chk" data-on="false" data-none="1"><input type="checkbox" value="__none"><span><span class="chk-name">' + esc(n.noneLabel) + '</span><span class="chk-hint">Ferme toutes ces branches sans ouvrir de contrôle</span></span></label>';
+    h += '<div class="num-row" style="margin-top:4px"><button class="btn btn-primary" type="button" id="multiOk">Valider ces réponses <kbd style="background:transparent;border-color:hsl(var(--primary-foreground)/.4);color:inherit">Entrée</kbd></button></div>';
+  } else {
+    if (n.kind === "measure" && n.steps) {
+      h += '<ol class="imp" style="margin-bottom:2px">';
+      n.steps.forEach((s) => { h += "<li>" + esc(s) + "</li>"; });
+      h += "</ol>";
+    }
+    h += '<div class="num-row"><span class="field"><input type="number" id="numIn" inputmode="decimal" step="any" min="' + (n.min || 0) + '" max="' + (n.max || 99999) + '" aria-label="' + esc(n.q) + '" autocomplete="off"><span class="unit">' + esc(n.unit) + '</span></span><button class="btn btn-primary" type="button" id="numOk">Consigner <kbd style="background:transparent;border-color:hsl(var(--primary-foreground)/.4);color:inherit">Entrée</kbd></button></div>';
+  }
+
+  if (n.note) h += '<p class="step-note">' + esc(typeof n.note === "function" ? n.note() : n.note) + "</p>";
+
+  const a = n.aide;
+  h += '<div class="aide" data-open="false" id="aide"><button class="aide-btn" type="button" id="aideBtn" aria-expanded="false" aria-controls="aideBody">Aide — trouver, reconnaître ou mesurer cette information <kbd>A</kbd><span class="caret">' + SVG.caret + '</span></button><div class="aide-body" id="aideBody" hidden>';
+  const row = (k, v) => v ? '<div class="aide-item"><dt>' + k + "</dt><dd>" + esc(v) + "</dd></div>" : "";
+  h += row("Pourquoi", a.pourquoi) + row("Où la trouver", a.ou) + row("La reconnaître", a.reconnaitre) + row("La mesurer", a.mesurer) + row("Si inconnue", a.inconnu);
+  if (a.fig) h += '<div class="aide-fig">' + SVG[a.fig] + "</div>";
+  h += "</div></div>";
+  h += "</div>";
+
+  h += '<div class="step-foot">';
+  h += '<button class="btn btn-sm" type="button" id="btnUnknown">Le client ne sait pas</button>';
+  if (n.photo) h += '<button class="btn btn-sm" type="button" id="btnPhoto">Demander une photo ciblée</button>';
+  h += '<button class="btn btn-sm" type="button" id="btnSpont">Autres informations données</button>';
+  if (n.control) {
+    const g = S.guidance[n.id] || {};
+    const ready = g.help && g.attempt;
+    h += '<button class="btn btn-sm" type="button" id="btnExpert"' + (ready ? "" : " disabled") + ' title="' + (ready ? "Transférer ce contrôle à un spécialiste" : "Disponible après avoir consulté l\'aide et tenté un moyen d\'obtention : mesure, document ou photo") + '">Non bornable — qualification</button>';
+  }
+  h += '<span class="spacer"></span>';
+  if (techState().k === "qualif") h += '<button class="btn btn-sm" type="button" id="btnQual">Préparer la qualification spécialisée</button>';
+  const cs = canSearch();
+  h += '<button class="btn btn-sm btn-primary" type="button" id="btnSearch"' + (cs ? "" : " disabled") + ' title="' + (cs ? "Lancer explicitement la recherche" : "Puissance, fréquence et mode d\'alimentation sont nécessaires") + '">Lancer la recherche</button>';
+  h += "</div>";
+
+  box.innerHTML = h;
+  $("#afterStep").innerHTML = "";
+  wireStep(n);
+  const qh = $("#qh"); if (qh && S.started) qh.focus({ preventScroll: true });
+  S.started = true;
+  say(n.q);
+}
+
+function renderDone() {
+  const box = $("#step");
+  let h = '<div class="step-head"><div class="kicker"><span class="chip" data-tone="valide"><span class="dot"></span>Relevé complet</span></div>';
+  h += '<h2 class="q" id="qh" tabindex="-1">Toutes les étapes ouvertes par vos réponses sont traitées.</h2>';
+  h += '<p class="why">L\'arbre n\'a plus de question nécessaire. La suite est une action explicite : lancer la recherche, corriger un fait du relevé, ou préparer une qualification si un contrôle reste non bornable.</p></div>';
+  h += '<div class="step-foot"><button class="btn btn-sm" type="button" id="btnSpont">Autres informations données</button><span class="spacer"></span>'
+    + (techState().k === "qualif" ? '<button class="btn btn-sm" type="button" id="btnQual">Préparer la qualification spécialisée</button>' : "")
+    + '<button class="btn btn-sm btn-primary" type="button" id="btnSearch"' + (canSearch() ? "" : " disabled") + ">Lancer la recherche</button></div>";
+  box.innerHTML = h;
+  const b = $("#btnSearch"); if (b) b.addEventListener("click", runSearch);
+  const s = $("#btnSpont"); if (s) s.addEventListener("click", dlgSpontaneous);
+  const bq = $("#btnQual"); if (bq) bq.addEventListener("click", () => openQual(techState().why));
+  wireRail();
+  $("#qh").focus({ preventScroll: true });
+}
+
+/* ---------------------- bandeaux ---------------------- */
+function renderBanners() {
+  let h = "";
+  if (S.pending) {
+    const p = S.pending;
+    h += '<div class="banner"><span class="bi">' + SVG.clock + '</span><span class="bt"><h4>Information attendue — ' + esc(p.need) + "</h4><p><strong>Demande&nbsp;:</strong> " + esc(p.ask) + '</p><p><strong>Canal&nbsp;:</strong> photo reçue par email, jamais téléversée ici. <strong>Retour&nbsp;:</strong> ' + esc(FACT_LABEL[p.returnTo] || p.returnTo) + ".</p></span>";
+    h += '<span class="ba"><button class="btn btn-sm btn-primary" type="button" id="pbRead">Consigner ce que je lis</button><button class="btn btn-sm" type="button" id="pbBad">Photo inutilisable</button><button class="btn btn-sm btn-ghost" type="button" id="pbGive">Abandonner</button></span></div>';
+  }
+  if (S.revision) {
+    h += '<div class="banner" data-tone="rev"><span class="bi">' + SVG.back + '</span><span class="bt"><h4>Retour en arrière appliqué</h4><p>' + esc(S.revision) + '</p></span><span class="ba"><button class="btn btn-sm" type="button" id="revOk">Compris</button></span></div>';
+  }
+  $("#banners").innerHTML = h;
+  if (S.pending) {
+    $("#pbRead").addEventListener("click", () => { S.forced = S.pending.returnTo; S.pendingNode = null; S.pending = null; toast("Retour exact à l'information interrompue."); renderStep(); });
+    $("#pbBad").addEventListener("click", () => { dlgPhotoBad(); });
+    $("#pbGive").addEventListener("click", () => { const id = S.pending.returnTo; setUnknown(id, "Photo abandonnée — information non obtenue"); S.pending = null; S.pendingNode = null; toast("Le fait reste inconnu et visible comme tel."); renderStep(); });
+  }
+  if (S.revision) $("#revOk").addEventListener("click", () => { S.revision = null; renderBanners(); });
+}
+
+/* ---------------------- interactions d'étape ---------------------- */
+function wireStep(n) {
+  const aide = $("#aide"), ab = $("#aideBtn");
+  if (ab) ab.addEventListener("click", () => toggleAide(n));
+  document.querySelectorAll("#step [data-choose]").forEach((b) => {
+    b.addEventListener("click", () => { answerChoice(n, b.dataset.choose); });
+  });
+  const numOk = $("#numOk");
+  if (numOk) numOk.addEventListener("click", () => submitNumber(n));
+  const numIn = $("#numIn");
+  if (numIn) { numIn.focus({ preventScroll: true }); numIn.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); submitNumber(n); } }); }
+  const mo = $("#multiOk"); if (mo) mo.addEventListener("click", () => submitMulti(n));
+  document.querySelectorAll("#step [data-fset]").forEach((b) => b.addEventListener("click", () => {
+    const f = n.fields.find((x) => x.id === b.dataset.fset);
+    setFact(f.id, b.dataset.fval, { source: f.source || n.source });
+    renderFieldsState(n);
+  }));
+  document.querySelectorAll("#step [data-funk]").forEach((b) => b.addEventListener("click", () => {
+    setUnknown(b.dataset.funk, "Non lisible ou non identifiable sur place");
+    renderFieldsState(n);
+  }));
+  document.querySelectorAll("#step [data-fnum]").forEach((i) => i.addEventListener("change", () => {
+    const f = n.fields.find((x) => x.id === i.dataset.fnum);
+    const num = Number((i.value || "").replace(",", "."));
+    if (!i.value || !isFinite(num) || num <= 0) return;
+    setFact(f.id, num, { label: fmtNum(num) + " " + f.unit, source: f.source || n.source, channel: "Déclaration orale" });
+    renderFieldsState(n);
+  }));
+  const fo = $("#fieldsOk"); if (fo) fo.addEventListener("click", () => submitFields(n));
+  document.querySelectorAll("#step .chk input").forEach((i) => {
+    i.addEventListener("change", () => {
+      const lab = i.closest(".chk"); lab.dataset.on = String(i.checked);
+      if (i.value === "__none" && i.checked) document.querySelectorAll('#step .chk input:not([value="__none"])').forEach((o) => { o.checked = false; o.closest(".chk").dataset.on = "false"; });
+      if (i.value !== "__none" && i.checked) { const none = document.querySelector('#step .chk input[value="__none"]'); none.checked = false; none.closest(".chk").dataset.on = "false"; }
+    });
+  });
+  const bu = $("#btnUnknown"); if (bu) bu.addEventListener("click", () => { markGuidance(n, "attempt"); setUnknown(n.id); toast("Inconnue consignée : elle reste visible et n'est jamais remplacée."); renderStep(); });
+  const bp = $("#btnPhoto"); if (bp) bp.addEventListener("click", () => dlgPhoto(n));
+  const bs = $("#btnSpont"); if (bs) bs.addEventListener("click", dlgSpontaneous);
+  const be = $("#btnExpert"); if (be) be.addEventListener("click", () => dlgExpert(n));
+  const bsr = $("#btnSearch"); if (bsr) bsr.addEventListener("click", runSearch);
+  const bq = $("#btnQual"); if (bq) bq.addEventListener("click", () => openQual(techState().why));
+  wireRail();
+  if (aide) aide.dataset.open = "false";
+}
+function wireRail() {
+  document.querySelectorAll("[data-correct]").forEach((b) => b.addEventListener("click", () => dlgCorrect(b.dataset.correct)));
+  document.querySelectorAll("[data-fill]").forEach((b) => b.addEventListener("click", () => { S.forced = b.dataset.fill; view("run"); renderStep(); toast("Retour à l'information inconnue."); }));
+}
+function toggleAide(n) {
+  const a = $("#aide"), b = $("#aideBtn"), body = $("#aideBody");
+  const open = a.dataset.open !== "true";
+  a.dataset.open = String(open); b.setAttribute("aria-expanded", String(open)); body.hidden = !open;
+  if (open) markGuidance(n, "help");
+}
+function markGuidance(n, k) { if (!n) return; S.guidance[n.id] = S.guidance[n.id] || {}; S.guidance[n.id][k] = true; }
+
+function answerChoice(n, v) {
+  if (v === "__all") { S.allFrames = true; renderStep(); return; }
+  setFact(n.id, v);
+  if (n.id === "machine" && S.facts.fonction) { const list = (FONCTIONS[(MACHINES.find((m) => m.l === v) || {}).v] || []); if (list.indexOf(S.facts.fonction.value) < 0) delete S.facts.fonction; }
+  if (n.id === "phases" && S.facts.tension) delete S.facts.tension;
+  afterAnswer(n);
+}
+function submitNumber(n) {
+  const i = $("#numIn"); const raw = (i.value || "").replace(",", ".");
+  const num = Number(raw);
+  if (!raw || !isFinite(num) || num <= 0) { toast("Saisissez une valeur numérique, ou indiquez que le client ne sait pas."); i.focus(); return; }
+  if ((n.min && num < n.min) || (n.max && num > n.max)) { toast("Valeur hors de la plage attendue (" + n.min + " à " + n.max + " " + n.unit + ")."); i.focus(); return; }
+  setFact(n.id, num, { label: fmtNum(num) + " " + n.unit, channel: n.kind === "measure" ? "Mesure dictée" : "Déclaration orale" });
+  if (n.id === "puissance") S.allFrames = false;
+  afterAnswer(n);
+}
+function submitMulti(n) {
+  const on = Array.prototype.slice.call(document.querySelectorAll("#step .chk input:checked")).map((i) => i.value);
+  if (!on.length) { toast("Cochez au moins une réponse, ou « Rien de tout cela »."); return; }
+  const none = on.indexOf("__none") >= 0;
+  const labels = on.filter((x) => x !== "__none");
+  const keys = none ? [] : labels.map((lab) => (PARTICULARITES.find((p) => p.l === lab) || {}).v).filter(Boolean);
+  setFact(n.id, none ? [] : labels, { label: none ? n.noneLabel : labels.join(", ") });
+  S.facts[n.id].keys = keys;
+  afterAnswer(n);
+}
+function renderFieldsState(n) {
+  n.fields.forEach((f) => {
+    const box = document.querySelector('#step [data-fid="' + f.id + '"]'); if (!box) return;
+    const cur = S.facts[f.id], unk = S.unknowns[f.id];
+    const out = box.querySelector(".fld-v");
+    out.textContent = cur ? cur.label : (unk ? "Non lisible" : "");
+    out.dataset.unknown = String(!!unk);
+    box.querySelectorAll("[data-fval]").forEach((b) => b.setAttribute("aria-pressed", String(!!cur && cur.value === b.dataset.fval)));
+    const u = box.querySelector("[data-funk]"); if (u) u.setAttribute("aria-pressed", String(!!unk));
+  });
+  $("#rail").innerHTML = railHTML(); wireRail();
+}
+function submitFields(n) {
+  const reste = n.fields.filter((f) => !S.facts[f.id] && !S.unknowns[f.id]);
+  if (reste.length) { toast("Renseignez ou marquez « non lisible » : " + reste.map((f) => f.label).join(", ") + "."); return; }
+  afterAnswer(n);
+}
+function afterAnswer(n) {
+  if (S.pendingNode === n.id) { S.pendingNode = null; S.pending = null; }
+  if (S.forced === n.id) S.forced = null;
+  if (S.search && S.search.done) { S.search = null; S.selected = false; S.revision = "Un fait a changé après la recherche : le résultat précédent n'est plus fondé et une nouvelle recherche doit être lancée explicitement."; }
+  S.skipped = 0;
+  renderStep();
+}
+
+/* ---------------------- recherche ---------------------- */
+function canSearch() { return known("puissance") && known("frequence") && known("mode_alim"); }
+function runSearch() {
+  if (!canSearch()) { toast("Puissance, fréquence et mode d'alimentation sont nécessaires pour lancer une recherche."); return; }
+  view("search");
+  S.search = { done: false };
+  renderSearch();
+  setTimeout(() => {
+    const empty = isIntegrated() || hasTwoSpeeds();
+    S.search = { done: true, empty: empty, perimeter: perimeter() };
+    S.selected = false;
+    renderSearch();
+    say(empty ? "Aucune référence retenue dans le périmètre interrogé." : "Recherche terminée.");
+  }, 900);
+}
+function perimeter() {
+  const p = [];
+  p.push(S.facts.puissance.label);
+  if (known("vitesse")) p.push(S.facts.vitesse.label);
+  if (known("phases")) p.push(S.facts.phases.label);
+  if (known("tension")) p.push(S.facts.tension.label);
+  p.push(S.facts.frequence.label);
+  p.push(S.facts.mode_alim.label);
+  if (known("fixation") && val("fixation") !== "Aucune image ne correspond") p.push("Construction " + S.facts.fixation.label);
+  if (known("carcasse") && val("carcasse") !== "Ligne illisible ou absente") p.push("H " + S.facts.carcasse.label);
+  return p;
+}
+function renderSearch() {
+  $("#rail2").innerHTML = railHTML();
+  const m = $("#searchMain");
+  const st = techState();
+  $("#topState").dataset.tone = st.k; $("#topStateTxt").textContent = st.n;
+  $("#mState").dataset.tone = st.k; $("#mStateTxt").textContent = st.n;
+  let h = "";
+
+  if (!S.search || !S.search.done) {
+    h += '<div class="card res-head"><h2>Recherche en cours</h2><p class="muted" style="margin-top:6px">Le périmètre envoyé reste identifiable. Aucune progression fictive n\'est affichée et aucun verdict n\'est anticipé.</p>';
+    h += '<div class="perimeter">' + perimeter().map((x) => '<span class="tag">' + esc(x) + "</span>").join("") + "</div>";
+    h += '<div style="display:flex;align-items:center;gap:9px;margin-top:14px"><span class="spin"></span><span class="muted">Interrogation du périmètre…</span></div>';
+    h += '<div style="margin-top:14px"><button class="btn btn-sm" type="button" id="sCancel">Annuler et revenir au relevé</button></div></div>';
+    m.innerHTML = h;
+    $("#sCancel").addEventListener("click", () => { S.search = null; view("run"); renderStep(); });
+    wireRail();
+    return;
+  }
+
+  h += '<div class="notice" data-tone="neutral" style="margin-bottom:12px"><span><strong>Simulation de parcours.</strong> Aucun catalogue n\'est interrogé par ce prototype. Les verdicts ci-dessous sont calculés à partir du relevé saisi, jamais depuis une référence catalogue simulée. Le repère « Référence évaluée A » n\'est pas une référence réelle.</span></div>';
+
+  if (S.search.empty) {
+    h += '<div class="card res-head"><h2>Aucune référence retenue dans le périmètre interrogé</h2>';
+    h += '<p class="muted" style="margin-top:8px;max-width:70ch">Ce résultat décrit le périmètre interrogé. Il ne prouve pas qu\'aucune solution n\'existe universellement.</p>';
+    h += '<div class="perimeter">' + S.search.perimeter.map((x) => '<span class="tag">' + esc(x) + "</span>").join("") + "</div>";
+    h += '<div style="padding:0 0 4px"><p class="label" style="margin:14px 0 6px">Critères qui ont écarté le périmètre standard</p><ul class="imp"><li>' + (isIntegrated() ? "Moteur à montage intégré ou non-IEC déclaré : le périmètre standard ne contient aucune construction correspondante." : "Moteur à deux vitesses déclaré : le périmètre standard ne contient aucune construction correspondante.") + "</li></ul>";
+    h += '<p class="label" style="margin:14px 0 6px">Faits susceptibles de modifier ce résultat</p><ul class="imp">';
+    if (!known("carcasse") || val("carcasse") === "Ligne illisible ou absente") h += "<li>Carcasse non confirmée.</li>";
+    if (!known("fixation") || val("fixation") === "Aucune image ne correspond") h += "<li>Construction non reconnue.</li>";
+    h += "<li>Documentation constructeur du moteur en place, si le site peut la fournir.</li></ul></div>";
+    h += '<div class="step-foot" style="margin-top:16px"><button class="btn btn-sm" type="button" id="rBack">Vérifier les faits utilisés</button><span class="spacer"></span><button class="btn btn-sm btn-primary" type="button" id="rQual">Préparer une qualification spécialisée</button></div></div>';
+    m.innerHTML = h;
+    $("#rBack").addEventListener("click", () => { view("run"); renderStep(); });
+    $("#rQual").addEventListener("click", () => openQual("Aucun candidat standard fondé dans ce périmètre : construction intégrée, non-IEC ou à deux vitesses déclarée."));
+    wireRail();
+    return;
+  }
+
+  if (!S.selected) {
+    h += '<div class="card res-head"><h2>Résultat de la recherche</h2>';
+    h += '<p class="muted" style="margin-top:8px;max-width:70ch">Périmètre interrogé, tel qu\'il a été construit à partir du relevé&nbsp;:</p>';
+    h += '<div class="perimeter">' + S.search.perimeter.map((x) => '<span class="tag">' + esc(x) + "</span>").join("") + "</div></div>";
+    h += '<div class="card" style="margin-top:12px;padding:16px 20px"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px"><span class="mono" style="font-size:13px;font-weight:600">Référence évaluée A</span><span class="chip" data-tone="neutral">Repère de prototype</span><span style="flex:1"></span><button class="btn btn-sm btn-primary" type="button" id="rPick">Étudier cette référence</button></div>';
+    h += '<p class="muted" style="margin-top:9px;max-width:70ch">L\'évaluation portera sur les faits de votre relevé et sur les contrôles ouverts. En production, cette liste vient du snapshot catalogue actif ; le prototype ne fabrique aucune référence, aucune cote et aucune limite constructeur.</p></div>';
+    h += energyHTML();
+    m.innerHTML = h;
+    $("#rPick").addEventListener("click", () => { S.selected = true; renderSearch(); });
+    wireEnergy(); wireRail();
+    return;
+  }
+
+  const st2 = techState();
+  const crits = criteria();
+  h += '<div class="card"><div class="res-head" style="padding-bottom:12px"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:9px"><h2>Référence évaluée A</h2><span class="chip" data-tone="' + st2.k + '"><span class="dot"></span>' + esc(st2.n) + "</span></div>";
+  h += '<p class="muted" style="margin-top:7px;max-width:70ch">' + esc(st2.why) + "</p></div>";
+  crits.forEach((c) => {
+    h += '<div class="crit"><span><span class="crit-n">' + esc(c.n) + '</span><span class="crit-d">' + esc(c.d) + '</span></span><span class="v" data-v="' + c.v + '">' + { satisfied: "Satisfait", reserve: "Sous réserve", indeterminate: "Indéterminé", not_satisfied: "Non satisfait" }[c.v] + "</span></div>";
+  });
+  h += "</div>";
+
+  const rs = crits.filter((c) => c.v !== "satisfied");
+  if (rs.length) {
+    h += '<div class="card" style="margin-top:12px;padding:16px 20px"><p class="label" style="margin-bottom:9px">Réserves et moyens de les lever</p><div style="display:flex;flex-direction:column;gap:8px">';
+    rs.forEach((c) => {
+      h += '<div class="reserve"><span style="color:hsl(var(--warning));flex:none;margin-top:1px">' + SVG.alert + '</span><span><h4>' + esc(c.n) + "</h4><p>" + esc(c.d) + '</p></span><span style="margin-left:auto"><button class="btn btn-sm" type="button" data-lift="1">Traiter</button></span></div>';
+    });
+    h += "</div></div>";
+  } else {
+    h += '<div class="card" style="margin-top:12px;padding:16px 20px"><div class="notice" style="background:hsl(var(--success-soft));border-color:hsl(var(--success)/.28);color:hsl(var(--success))"><span><strong>Aucune réserve n\'affecte la compatibilité nécessaire</strong> dans le périmètre évalué. La validation reste bornée à ce périmètre : elle n\'affirme ni garantie universelle, ni disponibilité, ni économie.</span></div></div>';
+  }
+
+  h += energyHTML();
+  h += '<div class="card step-foot" style="margin-top:12px;border-radius:var(--r-lg)"><button class="btn btn-sm" type="button" id="rBack2">Revenir compléter ou corriger le relevé</button><button class="btn btn-sm" type="button" id="rDrop">Écarter cette référence</button><span class="spacer"></span><button class="btn btn-sm" type="button" id="rQual2">Transférer en qualification spécialisée</button></div>';
+  m.innerHTML = h;
+  $("#rBack2").addEventListener("click", () => { view("run"); renderStep(); });
+  $("#rDrop").addEventListener("click", () => { S.selected = false; toast("Référence écartée. Le prototype n'en simule aucune autre."); renderSearch(); });
+  $("#rQual2").addEventListener("click", () => openQual("Le parcours standard ne peut pas conclure de façon fondée sur cette référence."));
+  document.querySelectorAll("[data-lift]").forEach((b) => b.addEventListener("click", () => { view("run"); S.forced = firstOpenNode(); renderStep(); toast("Retour au fait ou au contrôle qui porte cette réserve."); }));
+  wireEnergy(); wireRail();
+}
+function firstOpenNode() {
+  for (let i = 0; i < NODES.length; i++) { const n = NODES[i]; if (visible(n) && !S.facts[n.id]) return n.id; }
+  return null;
+}
+function energyHTML() {
+  if (!known("puissance") || Number(val("puissance")) <= 11) return "";
+  let h = '<div class="energy" style="margin-top:12px">';
+  h += '<p class="label" style="color:hsl(var(--info))">Décision annexe — sans effet sur l\'état technique</p>';
+  h += '<h3 style="font-size:14px;font-weight:600;margin-top:6px">Invitation énergétique</h3>';
+  h += '<p class="muted" style="margin-top:6px;max-width:70ch">La puissance installée est supérieure à 11 kW. Une étude peut être proposée au client. Aucune économie, aucun gain et aucune technologie ne sont affirmés ici&nbsp;: l\'étude process et la référence terrain ne sont pas démarrées.</p>';
+  if (S.energy) h += '<p style="margin-top:9px"><span class="chip" data-tone="prelim"><span class="dot"></span>Décision consignée : ' + esc(S.energy) + "</span></p>";
+  else h += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px"><button class="btn btn-sm" type="button" data-nrg="accord">Le client accepte</button><button class="btn btn-sm" type="button" data-nrg="différé">Le client préfère plus tard</button><button class="btn btn-sm" type="button" data-nrg="refus">Le client refuse</button></div>';
+  h += "</div>";
+  return h;
+}
+function wireEnergy() {
+  document.querySelectorAll("[data-nrg]").forEach((b) => b.addEventListener("click", () => { S.energy = b.dataset.nrg; toast("Décision énergétique consignée. L'état technique est inchangé."); renderSearch(); }));
+}
+
+/* ---------------------- qualification ---------------------- */
+function openQual(motive) {
+  S.qualification = { motive: motive, at: S.forced || firstOpenNode() };
+  view("qual"); renderQual();
+}
+function renderQual() {
+  $("#rail3").innerHTML = railHTML();
+  const q = S.qualification;
+  const ctrls = openControls().filter((c) => c.st !== "clos");
+  let h = '<div class="card res-head"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:9px"><h2>Qualification spécialisée requise</h2><span class="chip" data-tone="qualif"><span class="dot"></span>Parcours standard suspendu</span></div>';
+  h += '<p class="muted" style="margin-top:8px;max-width:72ch">Aucune impossibilité technique n\'est affirmée. Le raisonnement, les faits et le point de reprise sont conservés.</p></div>';
+
+  h += '<div class="card" style="margin-top:12px;padding:16px 20px"><p class="label">Motif exact du transfert</p><p style="margin-top:6px">' + esc(q.motive) + "</p>";
+  h += '<div class="hr"></div><p class="label">Question précise soumise au spécialiste</p><p style="margin-top:6px">' + esc(expertQuestion()) + "</p>";
+  h += '<div class="hr"></div><p class="label">Documents, mesures ou confirmations attendus</p><ul class="imp" style="margin-top:6px">' + expected().map((x) => "<li>" + esc(x) + "</li>").join("") + "</ul>";
+  h += '<div class="hr"></div><p class="label">Point exact de reprise</p><p style="margin-top:6px">' + esc(q.at ? (FACT_LABEL[q.at] || q.at) : "Dernière étape traitée du relevé") + "</p></div>";
+
+  h += '<div class="card" style="margin-top:12px;padding:16px 20px"><p class="label">Faits acquis transmis</p><div class="facts" style="margin-top:6px">';
+  Object.keys(S.facts).forEach((k) => { const f = S.facts[k]; h += '<div class="fact" style="cursor:default"><span><span class="fact-k">' + esc(FACT_LABEL[k] || k) + '</span><span class="fact-src">' + esc(f.source) + " · " + esc(f.channel) + '</span></span><span class="fact-v">' + esc(f.label) + "</span></div>"; });
+  Object.keys(S.unknowns).forEach((k) => { h += '<div class="fact" style="cursor:default"><span><span class="fact-k">' + esc(FACT_LABEL[k] || k) + '</span><span class="fact-src">' + esc(S.unknowns[k]) + '</span></span><span class="fact-v unknown">Inconnue</span></div>'; });
+  h += "</div>";
+  if (ctrls.length) { h += '<div class="hr"></div><p class="label">Contrôles ouverts</p><ul class="imp" style="margin-top:6px">' + ctrls.map((c) => "<li>" + esc(CONTROLS[c.id].name) + " — " + esc(CONTROLS[c.id].signal) + "</li>").join("") + "</ul>"; }
+  h += "</div>";
+
+  h += energyHTML();
+
+  h += '<div class="card step-foot" style="margin-top:12px;border-radius:var(--r-lg)"><span class="label" style="margin-right:4px">Retour du spécialiste</span><button class="btn btn-sm" type="button" id="qSolved">Le motif est résolu</button><button class="btn btn-sm" type="button" id="qReserve">Qualifié avec réserves</button><button class="btn btn-sm" type="button" id="qNo">Informations encore insuffisantes</button><span class="spacer"></span><button class="btn btn-sm" type="button" id="qBack">Compléter un fait accessible pendant l\'appel</button></div>';
+  $("#qualMain").innerHTML = h;
+  const st = techState(); $("#topState").dataset.tone = st.k; $("#topStateTxt").textContent = st.n;
+  $("#mState").dataset.tone = st.k; $("#mStateTxt").textContent = st.n;
+
+  wireRail(); wireEnergy();
+  $("#qBack").addEventListener("click", () => { S.forced = q.at; view("run"); renderStep(); });
+  $("#qSolved").addEventListener("click", () => {
+    if (hasAtex() || isIntegrated() || hasTwoSpeeds()) toast("Ce cas reste réservé à l'expertise : la réponse alimente un fait, elle ne rétablit pas seule une validation standard.");
+    S.expert = {}; S.qualification = null; S.forced = q.at;
+    S.revision = "La qualification a résolu le motif. L'évaluation de la référence doit être rejouée avant de rétablir un état technique : aucun passage direct vers solution validée.";
+    S.search = null; S.selected = false;
+    view("run"); renderStep();
+  });
+  $("#qReserve").addEventListener("click", () => {
+    S.expert = {}; S.qualification = null;
+    S.revision = "Qualification obtenue avec réserves expertes : la référence revient au niveau candidat technique après réévaluation explicite.";
+    S.search = null; S.selected = false; view("run"); renderStep();
+  });
+  $("#qNo").addEventListener("click", () => { S.qualification = null; S.search = null; S.selected = false; S.revision = "Les informations restent insuffisantes : la recherche revient en état préliminaire."; view("run"); renderStep(); });
+}
+function expertQuestion() {
+  if (hasAtex()) return "La construction de remplacement peut-elle être qualifiée pour la zone déclarée par le site et la matière concernée, au vu du marquage complet et du certificat ?";
+  if (isIntegrated()) return "Quelle construction correspond à ce moteur à montage intégré ou non-IEC, et quelles données constructeur sont nécessaires pour la caractériser ?";
+  if (hasTwoSpeeds()) return "Quelle construction à deux vitesses correspond aux valeurs relevées, et quel couplage doit être respecté ?";
+  if (S.expert && S.expert.axial) return "L'effort axial réel peut-il être borné, et quelle construction le reprend selon les limites publiées ?";
+  if (S.expert && S.expert.radial) return "La charge radiale au bout d'arbre reste-t-elle dans les limites publiées pour la géométrie de transmission relevée ?";
+  return "Le parcours standard peut-il conclure sur les faits acquis, ou quelle information supplémentaire est indispensable ?";
+}
+function expected() {
+  const out = [];
+  if (hasAtex()) {
+    out.push("Marquage Ex complet, recopié ou photographié sans interprétation.");
+    out.push("Classification de zone fournie par le site, distincte du marquage de l'ancien moteur.");
+    out.push("Matière et caractéristiques de poussière ou de gaz concernées.");
+    out.push("Certificat et conditions particulières éventuelles.");
+  }
+  if (isIntegrated()) out.push("Référence complète du motoréducteur et documentation constructeur de l'ensemble.");
+  if (hasTwoSpeeds()) out.push("Les deux lignes de plaque et le schéma de couplage des deux vitesses.");
+  Object.keys(S.unknowns).forEach((k) => out.push("Information encore inconnue : " + (FACT_LABEL[k] || k) + "."));
+  openControls().forEach((c) => { if (c.st === "ouvert" || c.st === "reserve") out.push("Clôture du contrôle « " + CONTROLS[c.id].name + " »."); });
+  if (!out.length) out.push("Confirmation experte du point nommé dans le motif.");
+  return out;
+}
+
+/* ---------------------- dialogues ---------------------- */
+function dialog(title, sub, bodyHTML, footHTML, onOpen) {
+  $("#dlgTitle").textContent = title;
+  $("#dlgSub").textContent = sub || "";
+  $("#dlgBody").innerHTML = bodyHTML;
+  $("#dlgFoot").innerHTML = footHTML || '<button class="btn" value="cancel" type="submit">Fermer</button>';
+  const d = $("#dlg");
+  d.showModal();
+  if (onOpen) onOpen(d);
+}
+function closeDlg() { $("#dlg").close(); }
+
+function dlgPhoto(n) {
+  const p = n.photo;
+  const b = '<div class="notice" data-tone="neutral"><span>La photo est un canal d\'information guidé, jamais une expertise. Aucun fichier n\'entre dans le configurateur&nbsp;: le client l\'envoie par email et le TCS consigne uniquement ce qu\'il lit.</span></div>'
+    + '<div><p class="label">Besoin nommé</p><p style="margin-top:4px">' + esc(p.need) + "</p></div>"
+    + '<div><p class="label">Demande précise adressée au client</p><p style="margin-top:4px">' + esc(p.ask) + "</p></div>"
+    + '<div><p class="label">Retour exact après réception</p><p style="margin-top:4px">' + esc(n.q) + "</p></div>"
+    + '<div class="notice"><span>Pendant l\'attente, le parcours continue vers la prochaine étape qui ne dépend pas de cette information. L\'attente ne bloque pas l\'appel.</span></div>';
+  dialog("Demander une photo ciblée", "Un objet, un cadrage, un but.", b,
+    '<button class="btn" value="cancel" type="submit">Annuler</button><button class="btn btn-primary" type="button" id="okPhoto">Consigner la demande et continuer</button>',
+    () => {
+      $("#okPhoto").addEventListener("click", () => {
+        markGuidance(n, "attempt");
+        S.pending = { need: p.need, ask: p.ask, returnTo: n.id };
+        S.pendingNode = n.id;
+        closeDlg(); toast("Demande consignée. Le parcours continue sur une étape indépendante."); renderStep();
+      });
+    });
+}
+function dlgPhotoBad() {
+  const p = S.pending;
+  const b = '<p>La photo reçue ne permet pas de lire l\'information attendue&nbsp;: <strong>' + esc(p.need) + "</strong>. Aucune valeur n'est interprétée.</p>";
+  dialog("Photo inutilisable", "Trois suites possibles, aucune n'invente de valeur.", b,
+    '<button class="btn" type="button" id="pbAgain">Reformuler le cadrage</button><button class="btn" type="button" id="pbOther">Obtenir autrement</button><button class="btn btn-primary" type="button" id="pbUnk">Conserver l\'inconnue</button>',
+    () => {
+      $("#pbAgain").addEventListener("click", () => { closeDlg(); toast("Nouvelle consigne : " + p.ask); renderStep(); });
+      $("#pbOther").addEventListener("click", () => { closeDlg(); S.forced = p.returnTo; S.pending = null; S.pendingNode = null; toast("Retour à l'étape pour une déclaration, une mesure ou un document."); renderStep(); });
+      $("#pbUnk").addEventListener("click", () => { setUnknown(p.returnTo, "Photo inutilisable — information non obtenue"); S.pending = null; S.pendingNode = null; closeDlg(); renderStep(); });
+    });
+}
+function dlgSpontaneous() {
+  const open = NODES.filter((n) => visible(n) && !answered(n) && n.kind !== "multi" && n.kind !== "gallery").slice(0, 8);
+  if (!open.length) { toast("Toutes les étapes ouvertes sont déjà satisfaites."); return; }
+  let b = '<div class="notice" data-tone="neutral"><span>Le client donne parfois plusieurs informations d\'un coup. Consignez-les ici&nbsp;: elles sont qualifiées séparément et les étapes correspondantes seront sautées. L\'ordre de décision de l\'arbre ne change pas.</span></div>';
+  open.forEach((n) => {
+    b += '<div><p class="label">' + esc(FACT_LABEL[n.id] || n.id) + "</p>";
+    if (n.kind === "number" || n.kind === "measure") b += '<div class="field" style="margin-top:5px"><input type="number" step="any" data-sp="' + n.id + '" placeholder="—"><span class="unit">' + esc(n.unit) + "</span></div>";
+    else {
+      const opts = n.optionsFrom ? n.optionsFrom() : n.options;
+      b += '<select data-sp="' + n.id + '" style="margin-top:5px;width:100%;height:36px;border:1px solid hsl(var(--border));border-radius:var(--r-md);background:hsl(var(--card));padding:0 9px"><option value="">—</option>' + opts.filter((o) => o.v !== "__all").map((o) => '<option value="' + esc(o.v) + '">' + esc(o.n || o.v) + "</option>").join("") + "</select>";
+    }
+    b += "</div>";
+  });
+  dialog("Autres informations données spontanément", "Chaque fait est consigné avec sa source ; aucune valeur n'est supposée.", b,
+    '<button class="btn" value="cancel" type="submit">Annuler</button><button class="btn btn-primary" type="button" id="spOk">Consigner</button>',
+    () => {
+      $("#spOk").addEventListener("click", () => {
+        let c = 0;
+        document.querySelectorAll("[data-sp]").forEach((i) => {
+          const v = (i.value || "").trim(); if (!v) return;
+          const n = node(i.dataset.sp);
+          if (n.kind === "number" || n.kind === "measure") { const num = Number(v.replace(",", ".")); if (!isFinite(num) || num <= 0) return; setFact(n.id, num, { label: fmtNum(num) + " " + n.unit, channel: n.kind === "measure" ? "Mesure dictée" : "Déclaration orale" }); }
+          else setFact(n.id, v);
+          c++;
+        });
+        closeDlg();
+        if (c) { S.skipped = c; toast(c + (c > 1 ? " faits consignés : les étapes correspondantes sont sautées." : " fait consigné : l'étape correspondante est sautée.")); }
+        renderStep();
+      });
+    });
+}
+function fieldOwner(id) { return NODES.find((n) => n.kind === "fields" && n.fields.some((f) => f.id === id)); }
+function dlgCorrect(id) {
+  const owner = fieldOwner(id);
+  if (owner) { const fd = owner.fields.find((f) => f.id === id); dlgCorrectField(owner, fd); return; }
+  const n = node(id); const f = S.facts[id];
+  const deps = dependents(id);
+  let b = '<div><p class="label">Fait actuel</p><p style="margin-top:4px"><strong>' + esc(FACT_LABEL[id] || id) + "</strong> — " + esc(f.label) + '<br><span class="muted">' + esc(f.source) + " · " + esc(f.channel) + "</span></p></div>";
+  b += '<div><p class="label">Nouvelle affirmation</p>';
+  if (n.kind === "number" || n.kind === "measure") b += '<div class="field" style="margin-top:5px"><input type="number" step="any" id="cIn" value="' + esc(f.value) + '"><span class="unit">' + esc(n.unit) + "</span></div>";
+  else if (n.kind === "multi") b += '<p class="muted" style="margin-top:4px">Reprenez la grille des particularités depuis l\'étape dédiée.</p>';
+  else {
+    const opts = (n.optionsFrom ? n.optionsFrom() : n.options).filter((o) => o.v !== "__all");
+    b += '<select id="cIn" style="margin-top:5px;width:100%;height:36px;border:1px solid hsl(var(--border));border-radius:var(--r-md);background:hsl(var(--card));padding:0 9px">' + opts.map((o) => '<option value="' + esc(o.v) + '"' + (o.v === f.value ? " selected" : "") + ">" + esc(o.n || o.v) + "</option>").join("") + "</select>";
+  }
+  b += "</div>";
+  b += '<div><p class="label">Ce qui sera rouvert avant toute nouvelle évaluation</p><ul class="imp" style="margin-top:5px">' + deps.map((d) => "<li>" + esc(d) + "</li>").join("") + "</ul></div>";
+  dialog("Corriger « " + (FACT_LABEL[id] || id) + " »", "La correction rouvre les dépendances avant de recalculer l'état technique.", b,
+    '<button class="btn" value="cancel" type="submit">Annuler la correction</button><button class="btn btn-primary" type="button" id="cOk">Appliquer et rouvrir</button>',
+    () => {
+      const ok = $("#cOk"); if (!ok) return;
+      ok.addEventListener("click", () => {
+        const i = $("#cIn");
+        if (i) {
+          const raw = (i.value || "").trim();
+          if (!raw) { toast("Saisissez une nouvelle valeur."); return; }
+          if (n.kind === "number" || n.kind === "measure") { const num = Number(raw.replace(",", ".")); setFact(id, num, { label: fmtNum(num) + " " + n.unit, channel: n.kind === "measure" ? "Mesure dictée" : "Déclaration orale" }); }
+          else setFact(id, raw);
+        }
+        applyRevision(id, deps);
+        closeDlg();
+      });
+    });
+}
+function dlgCorrectField(owner, fd) {
+  const f = S.facts[fd.id];
+  let b = '<div><p class="label">Fait actuel</p><p style="margin-top:4px"><strong>' + esc(fd.label) + "</strong> — " + esc(f.label) + '<br><span class="muted">' + esc(f.source) + " · " + esc(f.channel) + "</span></p></div>";
+  b += '<div><p class="label">Nouvelle affirmation</p>';
+  if (fd.kind === "number") b += '<div class="field" style="margin-top:5px"><input type="number" step="any" id="cIn" value="' + esc(f.value) + '"><span class="unit">' + esc(fd.unit) + "</span></div>";
+  else b += '<select id="cIn" style="margin-top:5px;width:100%;height:36px;border:1px solid hsl(var(--border));border-radius:var(--r-md);background:hsl(var(--card));padding:0 9px">' + fd.options.map((o) => '<option value="' + esc(o) + '"' + (o === f.value ? " selected" : "") + ">" + esc(o) + "</option>").join("") + "</select>";
+  b += "</div>";
+  b += '<div><p class="label">Ce qui sera rouvert avant toute nouvelle évaluation</p><ul class="imp" style="margin-top:5px"><li>Contrôle « ' + esc(CONTROLS[owner.control].name) + ' » : réévalué avec la nouvelle valeur.</li>'
+    + (S.search && S.search.done ? "<li>Résultat et verdicts précédents retirés : aucune nouvelle recherche sans action explicite.</li>" : "") + "</ul></div>";
+  dialog("Corriger « " + fd.label + " »", "La correction rouvre le contrôle qui utilisait ce fait.", b,
+    '<button class="btn" value="cancel" type="submit">Annuler la correction</button><button class="btn btn-primary" type="button" id="cOk">Appliquer et rouvrir</button>',
+    () => {
+      $("#cOk").addEventListener("click", () => {
+        const i = $("#cIn"); const raw = (i.value || "").trim();
+        if (!raw) { toast("Saisissez une nouvelle valeur."); return; }
+        if (fd.kind === "number") { const num = Number(raw.replace(",", ".")); setFact(fd.id, num, { label: fmtNum(num) + " " + fd.unit, source: fd.source || owner.source }); }
+        else setFact(fd.id, raw, { source: fd.source || owner.source });
+        S.search = null; S.selected = false; S.qualification = null;
+        S.revision = "« " + fd.label + " » a changé, donc le contrôle « " + CONTROLS[owner.control].name + " » est réévalué et le résultat précédent est retiré.";
+        closeDlg(); view("run"); renderStep();
+      });
+    });
+}
+const DEP_MAP = { fixation: ["bride"], position: ["axial", "montage"], transmission: [], mode_alim: ["vfd"], particularites: ["aux", "atex", "env", "vfd", "options"], cause: ["cause"] };
+function dependents(id) {
+  const out = [];
+  (DEP_MAP[id] || []).forEach((c) => { if (CONTROLS[c] && controlStatus(c)) out.push("Contrôle « " + CONTROLS[c].name + " » : rouvert et ses réponses invalidées."); });
+  if (["machine", "fonction"].indexOf(id) >= 0) out.push("État technique ramené à recherche préliminaire : l'application n'est plus celle qui a fondé la conclusion.");
+  if (["puissance", "frequence", "mode_alim", "phases", "vitesse", "tension"].indexOf(id) >= 0) out.push("Recherche précédente retirée : le périmètre interrogé n'est plus le bon.");
+  if (id === "puissance") out.push("Carcasses proposées recalculées : la liste repart des plus fréquentes pour la nouvelle puissance.");
+  if (id === "phases") out.push("Tension de plaque invalidée : les valeurs possibles dépendent du nombre de phases.");
+  if (S.search && S.search.done) out.push("Résultat et verdicts précédents retirés : aucune nouvelle recherche n'est lancée sans action explicite.");
+  if (S.selected) out.push("Référence évaluée déclassée : elle devra être réévaluée explicitement.");
+  if (!out.length) out.push("Aucun contrôle ni verdict ne dépendait de ce fait ; seule la valeur change.");
+  return out;
+}
+function applyRevision(id, deps) {
+  (DEP_MAP[id] || []).forEach((c) => {
+    NODES.filter((n) => n.control === c).forEach((n) => {
+      if (n.kind === "fields") n.fields.forEach((f) => { delete S.facts[f.id]; delete S.unknowns[f.id]; });
+      delete S.facts[n.id]; delete S.unknowns[n.id]; delete S.guidance[n.id];
+    });
+    if (S.expert) delete S.expert[c];
+  });
+  if (id === "phases") delete S.facts.tension;
+
+  if (id === "puissance") S.allFrames = false;
+  S.search = null; S.selected = false; S.qualification = null;
+  S.revision = "« " + (FACT_LABEL[id] || id) + " » a changé, donc " + deps[0].charAt(0).toLowerCase() + deps[0].slice(1);
+  view("run"); renderStep();
+  toast("Correction appliquée : les dépendances sont rouvertes.");
+}
+function dlgExpert(n) {
+  const b = '<div class="notice" data-tone="warn"><span>Le transfert n\'est proposé qu\'après épuisement des moyens accessibles au TCS&nbsp;: question posée, aide consultée, repère de localisation, mesure, document ou photo ciblée. Le manque de connaissance spontanée du TCS ne suffit jamais.</span></div>'
+    + '<div><p class="label">Contrôle concerné</p><p style="margin-top:4px">' + esc(CONTROLS[n.control].name) + " — " + esc(CONTROLS[n.control].signal) + "</p></div>"
+    + '<div><p class="label">Moyens déjà utilisés</p><ul class="imp" style="margin-top:5px"><li>Aide contextuelle consultée sur cette étape.</li><li>Un moyen d\'obtention a été tenté : inconnue déclarée ou photo demandée.</li></ul></div>';
+  dialog("Déclarer ce contrôle non bornable", "Aucune impossibilité technique n'est affirmée.", b,
+    '<button class="btn" value="cancel" type="submit">Rester dans le parcours standard</button><button class="btn btn-primary" type="button" id="exOk">Préparer la qualification</button>',
+    () => {
+      $("#exOk").addEventListener("click", () => {
+        S.expert = S.expert || {}; S.expert[n.control] = true;
+        closeDlg();
+        openQual("Le contrôle « " + CONTROLS[n.control].name + " » n'est pas bornable dans le parcours standard, après épuisement des moyens accessibles au TCS.");
+      });
+    });
+}
+function dlgGuide() {
+  const b = '<div><p class="label">Ce que ce prototype teste</p><p style="margin-top:5px">Un configurateur technique étape par étape&nbsp;: une seule question active, un ordre décidé par l\'arbre de décision, des contrôles ouverts uniquement par les réponses, une recherche déclenchée explicitement et quatre états techniques exacts.</p></div>'
+    + '<div><p class="label">Les quatre états, sans cinquième</p><ul class="imp" style="margin-top:5px"><li>Recherche préliminaire</li><li>Candidat technique</li><li>Solution techniquement validée</li><li>Qualification spécialisée requise</li></ul></div>'
+    + '<div><p class="label">Règles visibles à l\'écran</p><ul class="imp" style="margin-top:5px"><li>Une information inconnue reste inconnue&nbsp;: aucune valeur par défaut, aucun zéro de remplacement.</li><li>Une photo est un canal d\'information guidé, reçu par email et jamais téléversé ici.</li><li>Une correction rouvre les contrôles et conclusions qui dépendaient de l\'ancien fait.</li><li>Prix, remises, stocks, délais et devis restent extérieurs à la décision technique.</li></ul></div>'
+    + '<div><p class="label">Raccourcis clavier</p><ul class="imp" style="margin-top:5px"><li>1 à 9 : choisir une réponse de l\'étape active.</li><li>Entrée : valider une saisie ou une grille.</li><li>A : ouvrir ou fermer l\'aide contextuelle.</li><li>Échap : fermer une fenêtre.</li><li>Tab : parcourir toutes les actions, y compris le relevé.</li></ul></div>'
+    + '<div class="notice" data-tone="neutral"><span>Aucun catalogue n\'est interrogé, aucune donnée n\'est enregistrée et rien n\'est envoyé. Les verdicts proviennent du relevé saisi. Aucune référence, cote, limite constructeur ou économie n\'est fabriquée.</span></div>';
+  dialog("Guide du prototype C7-4", "Configurateur technique de remplacement moteur.", b, '<button class="btn btn-primary" value="cancel" type="submit">Fermer</button>');
+}
+
+/* ---------------------- scénarios ---------------------- */
+const SCENARIOS = [
+  {
+    id: "S1", n: "S1 — B3 standard 2,2 kW", d: "Le client donne d'emblée la puissance, l'alimentation et la fixation. L'application reste inconnue : le parcours doit rester en recherche préliminaire.",
+    tags: ["2,2 kW", "400 V", "Pattes B3"],
+    seed: { puissance: [2.2, "2,2 kW"], phases: "Triphasé", tension: "230/400 V", frequence: "50 Hz", fixation: "B3" }
+  },
+  {
+    id: "S2", n: "S2 — Grande bride 7,5 kW", d: "Moteur à grande bride sans pattes. Le TCS ne sait pas spontanément quelle cote faire confirmer : le contrôle de bride le guide.",
+    tags: ["7,5 kW", "Bride B5", "Cote confirmée"],
+    seed: { puissance: [7.5, "7,5 kW"], frequence: "50 Hz", mode_alim: "Réseau direct", fixation: "B5" }
+  },
+  {
+    id: "S3", n: "S3 — Ventilateur 15 kW par courroies", d: "Trois courroies, huit ans d'installation, bruit puis arrêt après retension. La cause reste une hypothèse, jamais un diagnostic.",
+    tags: ["15 kW", "1 470 tr/min", "Courroies"],
+    seed: { puissance: [15, "15 kW"], vitesse: [1470, "1 470 tr/min"], phases: "Triphasé", tension: "230/400 V", frequence: "50 Hz", mode_alim: "Réseau direct", machine: "Ventilateur", fixation: "B3", transmission: "Poulies et courroies", cause: "Bruit, vibrations et échauffement, puis arrêt", anciennete: "Entre 2 et 10 ans" }
+  },
+  {
+    id: "S4", n: "S4 — Pompe verticale 18,5 kW sur variateur", d: "Grande bride sans pattes, arbre vers le bas, variateur et ventilation forcée séparée. Contrôles bride, axial, basse vitesse et auxiliaire, plus l'invitation énergétique.",
+    tags: ["18,5 kW", "Variateur", "Vertical"],
+    seed: { puissance: [18.5, "18,5 kW"], vitesse: [1475, "1 475 tr/min"], phases: "Triphasé", tension: "400/690 V", frequence: "50 Hz", mode_alim: "Variateur de vitesse", machine: "Pompe", fonction: "Faire circuler un fluide", fixation: "B5", position: "Vertical, arbre vers le bas" }
+  },
+  {
+    id: "S5", n: "S5 — Convoyage de farine ATEX 22 kW", d: "Vis de convoyage de farine, accouplement élastique et réducteur, marquage Ex recopié. Sortie obligatoire en qualification spécialisée.",
+    tags: ["22 kW", "Carcasse 180", "Ex tb IIIC"],
+    seed: { puissance: [22, "22 kW"], vitesse: [1470, "1 470 tr/min"], phases: "Triphasé", tension: "230/400 V", frequence: "50 Hz", mode_alim: "Réseau direct", machine: "Convoyeur ou vis", fonction: "Convoyer une matière", carcasse: "180", fixation: "B3", position: "Horizontal, posé au sol ou sur châssis", transmission: "Réducteur accouplé par un accouplement" }
+  }
+];
+function seedInto(seed) {
+  let c = 0;
+  Object.keys(seed).forEach((k) => {
+    const v = seed[k];
+    if (Array.isArray(v)) setFact(k, v[0], { label: v[1] }); else setFact(k, v);
+    c++;
+  });
+  return c;
+}
+function startScenario(sc) {
+  S = blank(); S.scenario = sc.id;
+  const c = seedInto(sc.seed);
+  S.skipped = c;
+  $("#crumb").textContent = sc.n;
+  view("run"); S.started = false; renderStep(); S.started = true;
+  toast(c + " faits donnés spontanément ont été consignés : autant d'étapes sautées.");
+}
+
+/* ---------------------- reprise ---------------------- */
+function doResume() {
+  S = blank();
+  seedInto({
+    puissance: [18.5, "18,5 kW"], vitesse: [1475, "1 475 tr/min"], phases: "Triphasé", tension: "400/690 V",
+    frequence: "50 Hz", mode_alim: "Variateur de vitesse", machine: "Pompe", fonction: "Faire circuler un fluide",
+    carcasse: "180", fixation: "B5", bride_trous: "Trous traversants", bride_diametre: [300, "300 mm"],
+    position: "Vertical, arbre vers le bas", axial_reprise: "La machine possède sa propre butée",
+    expo: "Intérieur, à l'abri", transmission: "Accouplement direct", cause: "Usure ou fin de vie, sans panne particulière"
+  });
+  setFact("particularites", ["Ventilation forcée", "Alimentation par variateur"], { label: "Ventilation forcée, Alimentation par variateur" });
+  S.facts.particularites.keys = ["ventilation", "variateur"];
+  setFact("vfd_profil", "Longues durées à basse vitesse");
+  setFact("aux_plaque", "230/400 V, 50 Hz, 0,12 kW");
+  S.pending = { need: "Boîte à bornes ou auxiliaire non identifié", ask: "La plaque propre de l'auxiliaire et une vue nette de la boîte ou des fils, sans les déplacer ni les débrancher.", returnTo: "aux_alim" };
+  S.pendingNode = "aux_alim";
+  S.guidance.aux_alim = { help: true, attempt: true };
+  $("#crumb").textContent = "Parcours repris — pompe verticale 18,5 kW";
+  view("run"); S.started = false; renderStep(); S.started = true;
+  toast("Parcours repris à l'élément exact qui a causé l'interruption.");
+}
+function renderResumeCard() {
+  const h = '<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start">'
+    + '<div style="min-width:240px;flex:1"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="chip" data-tone="prelim"><span class="dot"></span>Recherche préliminaire</span><span class="chip" data-tone="candidat"><span class="dot"></span>Information attendue</span></div>'
+    + '<p style="margin-top:9px;font-weight:600">Pompe de circulation — 18,5 kW sur variateur, montage vertical</p>'
+    + '<p class="muted" style="margin-top:4px;max-width:64ch">Interruption sur le contrôle auxiliaire, en attente d\'une photo de la boîte à bornes demandée par email. La reprise ne revient ni au début, ni au premier fait manquant&nbsp;: elle revient exactement à l\'élément qui a causé l\'interruption.</p>'
+    + '<div class="pick-facts" style="margin-top:9px"><span class="tag">20 faits acquis</span><span class="tag">Contrôle auxiliaire ouvert</span><span class="tag">Retour : Alimentation auxiliaire</span></div></div>'
+    + '<button class="btn btn-primary" type="button" id="doResume">Reprendre exactement ici</button></div>';
+  $("#resumeCard").innerHTML = h;
+  $("#doResume").addEventListener("click", doResume);
+}
+
+/* ---------------------- accueil ---------------------- */
+function renderHome() {
+  let h = "";
+  SCENARIOS.forEach((sc) => {
+    h += '<button class="pick" type="button" data-sc="' + sc.id + '"><span class="pick-top"><span class="pick-name">' + esc(sc.n) + '</span><span class="chip" data-tone="neutral">' + sc.id + "</span></span>";
+    h += '<span class="pick-desc">' + esc(sc.d) + '</span><span class="pick-facts">' + sc.tags.map((t) => '<span class="tag">' + esc(t) + "</span>").join("") + "</span></button>";
+  });
+  $("#scenarioCards").innerHTML = h;
+  document.querySelectorAll("[data-sc]").forEach((b) => b.addEventListener("click", () => startScenario(SCENARIOS.find((s) => s.id === b.dataset.sc))));
+  renderResumeCard();
+}
+
+/* ---------------------- clavier global ---------------------- */
+document.addEventListener("keydown", (e) => {
+  const t = e.target;
+  if ($("#dlg").open) { if (e.key === "Escape") { e.preventDefault(); closeDlg(); } return; }
+  const typing = t && ((t.tagName === "INPUT" && t.type !== "checkbox") || t.tagName === "TEXTAREA" || t.tagName === "SELECT");
+  if (typing) return;
+  if (S && S.view === "run") {
+    if (/^[1-9]$/.test(e.key)) {
+      const opts = document.querySelectorAll("#step [data-choose]");
+      const i = Number(e.key) - 1;
+      if (opts[i]) { e.preventDefault(); opts[i].click(); return; }
+      const chks = document.querySelectorAll("#step .chk input");
+      if (chks[i]) { e.preventDefault(); chks[i].checked = !chks[i].checked; chks[i].dispatchEvent(new Event("change")); return; }
+    }
+    if (e.key === "Enter") { const b = $("#multiOk") || $("#fieldsOk"); if (b) { e.preventDefault(); b.click(); } }
+    if (e.key === "a" || e.key === "A") { const ab = $("#aideBtn"); if (ab) { e.preventDefault(); ab.click(); } }
+  }
+});
+
+/* ---------------------- amorçage ---------------------- */
+S = blank();
+renderHome();
+$("#btnGuide").addEventListener("click", dlgGuide);
+$("#btnHome").addEventListener("click", () => { view("home"); $("#crumb").textContent = "Prototype C7-4 — non contractuel"; $("#topState").hidden = true; });
+$("#btnNew").addEventListener("click", () => { S = blank(); $("#crumb").textContent = "Nouveau remplacement"; view("run"); S.started = false; renderStep(); S.started = true; });
+$("#btnResume").addEventListener("click", doResume);
+$("#mRelev").addEventListener("click", () => { const r = !$("#view-run").hidden ? $("#rail") : (!$("#view-search").hidden ? $("#rail2") : $("#rail3")); if (r) r.scrollIntoView({ behavior: "smooth", block: "start" }); });
+$("#dlg").addEventListener("close", () => { $("#dlgBody").innerHTML = ""; });
+</script>
+</body>
+</html>

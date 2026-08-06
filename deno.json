@@ -1,20 +1,19 @@
 {
   "imports": {
-    "@hono/hono": "npm:hono@4.12.4",
-    "@hono/hono/validator": "npm:hono@4.12.4/validator",
-    "@hono/trpc-server": "npm:@hono/trpc-server@0.4.0",
-    "@trpc/server": "npm:@trpc/server@11.10.0",
+    "@hono/hono": "npm:hono@4.13.0",
+    "@hono/hono/validator": "npm:hono@4.13.0/validator",
+    "@hono/trpc-server": "npm:@hono/trpc-server@0.4.2",
+    "@trpc/server": "npm:@trpc/server@11.18.0",
     "@supabase/functions-js/edge-runtime.d.ts": "jsr:@supabase/functions-js@2.92.0/edge-runtime.d.ts",
-    "@supabase/supabase-js": "npm:@supabase/supabase-js@2.95.3",
-    "drizzle-orm": "npm:drizzle-orm@0.45.1",
-    "drizzle-orm/": "npm:/drizzle-orm@0.45.1/",
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@2.112.0",
+    "drizzle-orm": "npm:drizzle-orm@0.45.2",
+    "drizzle-orm/": "npm:/drizzle-orm@0.45.2/",
     "fflate": "npm:fflate@0.8.2",
     "postgres": "npm:postgres@3.4.8",
     "std/assert": "jsr:@std/assert@1.0.19",
     "xlsx": "npm:xlsx@0.18.5",
     "jose": "npm:jose@5.9.6",
-    "zod": "npm:zod@4.3.6",
-    "zod/v4": "npm:zod@4.3.6/v4",
-    "zod/": "npm:zod@4.3.6/"
+    "zod": "npm:zod@4.4.3",
+    "zod/v4": "npm:zod@4.4.3/v4"
   }
 }

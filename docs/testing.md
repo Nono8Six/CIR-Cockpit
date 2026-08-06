@@ -92,7 +92,7 @@ La coverage est une gate finale ou de risque eleve, pas une boucle systematique 
 
 ## CI
 
-`.github/workflows/qa.yml` installe pnpm 10.33.0, Node 24.14.0 et Deno 2.5.6, prépare `backend/.env` depuis l'exemple si nécessaire, puis lance :
+`.github/workflows/qa.yml` installe pnpm 10.33.0, Node 24.14.0 et Deno 2.9.4, prépare `backend/.env` depuis l'exemple si nécessaire, puis lance :
 
 ```bash
 pnpm run qa:ci

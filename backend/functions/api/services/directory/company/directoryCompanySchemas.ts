@@ -1,7 +1,8 @@
 import { z } from "zod/v4";
 
 const enterpriseApiNullableYearSchema = z
-  .union([z.number(), z.string(), z.null(), z.undefined()])
+  .union([z.number(), z.string(), z.null()])
+  .optional()
   .transform((value) => {
     if (typeof value === "number" && Number.isInteger(value) && value >= 0) {
       return value;
@@ -18,7 +19,8 @@ const enterpriseApiNullableYearSchema = z
   });
 
 const enterpriseApiNumericValueSchema = z
-  .union([z.number(), z.string(), z.null(), z.undefined()])
+  .union([z.number(), z.string(), z.null()])
+  .optional()
   .transform((value) => {
     if (typeof value === "number" && Number.isFinite(value)) {
       return value;
@@ -33,7 +35,8 @@ const enterpriseApiNumericValueSchema = z
   });
 
 const enterpriseApiNullableCountSchema = z
-  .union([z.number(), z.string(), z.null(), z.undefined()])
+  .union([z.number(), z.string(), z.null()])
+  .optional()
   .transform((value) => {
     if (typeof value === "number" && Number.isInteger(value) && value >= 0) {
       return value;
@@ -54,8 +57,7 @@ const enterpriseApiBooleanLikeSchema = z.union([
   z.string(),
   z.number(),
   z.null(),
-  z.undefined(),
-]);
+]).optional();
 
 export const enterpriseApiEstablishmentSchema = z.looseObject({
   siret: z.string().trim().min(1, "SIRET requis").nullable().optional(),
@@ -81,8 +83,7 @@ export const enterpriseApiEstablishmentSchema = z.looseObject({
     z.array(z.string().nullable()),
     z.string(),
     z.null(),
-    z.undefined(),
-  ]).transform((value) =>
+  ]).optional().transform((value) =>
     Array.isArray(value)
       ? value.filter((entry): entry is string => typeof entry === "string")
       : value
@@ -135,13 +136,11 @@ export const enterpriseApiCompanySchema = z.looseObject({
   matching_etablissements: z.union([
     z.array(enterpriseApiEstablishmentSchema),
     z.null(),
-    z.undefined(),
-  ]).transform((value) => value ?? []),
+  ]).optional().transform((value) => value ?? []),
   dirigeants: z.union([
     z.array(enterpriseApiDirectorSchema),
     z.null(),
-    z.undefined(),
-  ]).transform((value) => value ?? []),
+  ]).optional().transform((value) => value ?? []),
   finances: z.record(z.string(), enterpriseApiFinancialYearSchema).nullable()
     .optional(),
   complements: enterpriseApiComplementsSchema.nullable().optional(),

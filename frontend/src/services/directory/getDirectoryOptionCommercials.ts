@@ -4,28 +4,13 @@ import {
 } from '../../../../shared/schemas/system/api-responses';
 import type { DirectoryOptionsFacetInput } from '../../../../shared/schemas/system/directory.schema';
 
-import { invokeTrpc } from '@/services/api/invokeTrpc';
-import { createAppError } from '@/services/errors/AppError';
-
-const parseDirectoryOptionCommercialsResponse = (payload: unknown): DirectoryOptionsCommercialsResponse => {
-  const parsed = directoryOptionsCommercialsResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'REQUEST_FAILED',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-
-  return parsed.data;
-};
+import { invokeTrpc } from '@/services/api/invokeTrpc';;
 
 export const getDirectoryOptionCommercials = (
   input: DirectoryOptionsFacetInput
 ): Promise<DirectoryOptionsCommercialsResponse> =>
   invokeTrpc(
     (api, options) => api.directory.options.commercials.query(input, options),
-    parseDirectoryOptionCommercialsResponse,
+    directoryOptionsCommercialsResponseSchema,
     "Impossible de charger les commerciaux de l'annuaire."
   );

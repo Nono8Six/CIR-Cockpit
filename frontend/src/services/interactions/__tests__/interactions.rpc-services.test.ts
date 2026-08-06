@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Channel, type InteractionRow } from '@/types';
 import { getActiveAgencyId } from '@/services/agency/getActiveAgencyId';
-import { invokeTrpc } from '@/services/api/invokeTrpc';
+import { invokeTrpc, parseTrpcContract } from '@/services/api/invokeTrpc';
 import { deleteInteractionDraft } from '@/services/interactions/deleteInteractionDraft';
 import { getInteractionDraft } from '@/services/interactions/getInteractionDraft';
 import { getInteractions } from '@/services/interactions/getInteractions';
@@ -13,7 +13,8 @@ vi.mock('@/services/agency/getActiveAgencyId', () => ({
   getActiveAgencyId: vi.fn()
 }));
 
-vi.mock('@/services/api/invokeTrpc', () => ({
+vi.mock('@/services/api/invokeTrpc', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/services/api/invokeTrpc')>()),
   invokeTrpc: vi.fn()
 }));
 
@@ -94,7 +95,7 @@ describe('interactions RPC services', () => {
         agency_id: 'agency-1'
       }, {});
 
-      return parseResponse(payload);
+      return parseTrpcContract(parseResponse, payload);
     });
 
     const interactions = await getInteractions('agency-1');
@@ -127,7 +128,7 @@ describe('interactions RPC services', () => {
         agency_id: 'agency-1'
       }, {});
 
-      return parseResponse(payload);
+      return parseTrpcContract(parseResponse, payload);
     });
 
     await expect(getKnownCompanies()).resolves.toEqual(['Alpha', 'Beta']);
@@ -161,7 +162,7 @@ describe('interactions RPC services', () => {
         form_type: 'interaction'
       }, {});
 
-      return parseResponse(payload);
+      return parseTrpcContract(parseResponse, payload);
     });
 
     await expect(getInteractionDraft({
@@ -192,7 +193,7 @@ describe('interactions RPC services', () => {
         {}
       );
 
-      return parseResponse(payload);
+      return parseTrpcContract(parseResponse, payload);
     });
 
     await expect(getInteractionDraft({
@@ -236,7 +237,7 @@ describe('interactions RPC services', () => {
         }
       }, {});
 
-      return parseResponse(payload);
+      return parseTrpcContract(parseResponse, payload);
     });
 
     await expect(saveInteractionDraft({
@@ -280,7 +281,7 @@ describe('interactions RPC services', () => {
         form_type: 'interaction'
       }, {});
 
-      return parseResponse(payload);
+      return parseTrpcContract(parseResponse, payload);
     });
 
     await expect(deleteInteractionDraft({

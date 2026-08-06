@@ -5,7 +5,7 @@ import { mapPostgrestError } from '@/services/errors/mapPostgrestError';
 import { mapSupabaseAuthError } from '@/services/errors/mapSupabaseAuthError';
 import { reportError } from '@/services/errors/reportError';
 import { requireSupabaseClient } from '@/services/supabase/requireSupabaseClient';
-import { invokeTrpc } from '@/services/api/invokeTrpc';
+import { invokeTrpc, parseTrpcContract } from '@/services/api/invokeTrpc';
 import { getCurrentUserId } from '@/services/auth/getCurrentUserId';
 import { getCurrentUserLabel } from '@/services/auth/getCurrentUserLabel';
 import { getProfile } from '@/services/auth/getProfile';
@@ -18,7 +18,10 @@ vi.mock('../../supabase/requireSupabaseClient');
 vi.mock('../../errors/mapSupabaseAuthError');
 vi.mock('../../errors/mapPostgrestError');
 vi.mock('../../errors/reportError');
-vi.mock('../../api/invokeTrpc');
+vi.mock('@/services/api/invokeTrpc', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/services/api/invokeTrpc')>()),
+  invokeTrpc: vi.fn()
+}));
 
 const mockRequireSupabase = vi.mocked(requireSupabaseClient);
 const mockMapSupabaseAuthError = vi.mocked(mapSupabaseAuthError);
@@ -268,7 +271,7 @@ describe('auth core services', () => {
     await expect(setProfilePasswordChanged()).resolves.toBeUndefined();
     const [call, parser] = mockInvokeRpc.mock.calls[0];
     expect(typeof call).toBe('function');
-    expect(parser({ anything: true })).toBeUndefined();
+    expect(parseTrpcContract(parser, { ok: true })).toBeUndefined();
 
     mockRequireSupabase.mockReturnValue(
       asSupabaseClient({

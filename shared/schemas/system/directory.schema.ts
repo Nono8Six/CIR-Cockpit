@@ -20,20 +20,24 @@ const normalizeOptionalTextArray = (value: unknown): string[] => {
 };
 
 const optionalTextFilterSchema = z
-  .union([z.string(), z.null(), z.undefined()])
+  .union([z.string(), z.null()])
+  .optional()
   .transform((value) => normalizeOptionalText(value));
 
 const optionalTextArrayFilterSchema = z
-  .union([z.string(), z.array(z.string()), z.null(), z.undefined()])
+  .union([z.string(), z.array(z.string()), z.null()])
+  .optional()
   .transform((value) => normalizeOptionalTextArray(value));
 
 const optionalUuidArrayFilterSchema = z
-  .union([z.string(), z.array(z.string()), z.null(), z.undefined()])
+  .union([z.string(), z.array(z.string()), z.null()])
+  .optional()
   .transform((value) => normalizeOptionalTextArray(value))
   .pipe(z.array(uuidSchema));
 
 const booleanLikeSchema = z
-  .union([z.boolean(), z.string(), z.null(), z.undefined()])
+  .union([z.boolean(), z.string(), z.null()])
+  .optional()
   .transform((value) => {
     if (typeof value === 'boolean') {
       return value;
@@ -46,7 +50,8 @@ const booleanLikeSchema = z
 export const directoryEntityTypeSchema = z.enum(['all', 'client', 'prospect', 'supplier']);
 export const directoryClientKindSchema = z.enum(['company', 'individual']);
 const directoryNullableClientKindSchema = z
-  .union([directoryClientKindSchema, z.string(), z.null(), z.undefined()])
+  .union([directoryClientKindSchema, z.string(), z.null()])
+  .optional()
   .transform((value) => value === 'company' || value === 'individual' ? value : null);
 export const directorySortBySchema = z.enum([
   'entity_type',
@@ -191,13 +196,16 @@ export const directoryRouteRefSchema = z.discriminatedUnion('kind', [
 
 const directoryNullableTextSchema = z.string().nullable();
 const optionalOfficialTextSchema = z
-  .union([z.string(), z.null(), z.undefined()])
+  .union([z.string(), z.null()])
+  .optional()
   .transform((value) => normalizeOptionalText(value) ?? null);
 const optionalOfficialYearSchema = z
-  .union([z.number().int().nonnegative(), z.null(), z.undefined()])
+  .union([z.number().int().nonnegative(), z.null()])
+  .optional()
   .transform((value) => typeof value === 'number' ? value : null);
 const optionalOfficialBooleanSchema = z
-  .union([z.boolean(), z.null(), z.undefined()])
+  .union([z.boolean(), z.null()])
+  .optional()
   .transform((value) => typeof value === 'boolean' ? value : null);
 const officialTextArraySchema = z
   .array(z.string().trim().min(1, 'Valeur requise'))
@@ -212,7 +220,7 @@ export const officialCompanyFieldsSchema = z.strictObject({
   naf_code: optionalOfficialTextSchema.optional(),
   official_name: optionalOfficialTextSchema.optional(),
   official_data_source: z
-    .union([officialDataSourceSchema, z.null(), z.undefined()])
+    .union([officialDataSourceSchema, z.null()])
     .transform((value) => value ?? null)
     .optional(),
   official_data_synced_at: optionalOfficialTextSchema.optional()
@@ -397,11 +405,13 @@ export const directoryCompanyDetailsInputSchema = z.strictObject({
 });
 
 const directoryOptionalEmailSchema = z
-  .union([z.string().trim().email('Email invalide'), z.literal(''), z.null(), z.undefined()])
+  .union([z.string().trim().email('Email invalide'), z.literal(''), z.null()])
+  .optional()
   .transform((value) => normalizeOptionalText(value) ?? null);
 
 const directoryOptionalPhoneSchema = z
-  .union([z.string(), z.null(), z.undefined()])
+  .union([z.string(), z.null()])
+  .optional()
   .transform((value) => normalizeOptionalText(value) ?? null);
 
 export const directoryCompanyDuplicateInputSchema = z.strictObject({

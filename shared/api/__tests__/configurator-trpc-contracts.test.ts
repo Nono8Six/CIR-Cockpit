@@ -1,6 +1,9 @@
 import { describe, expectTypeOf, it } from 'vitest';
 
-import type { RouterInputs, RouterOutputs } from '../trpc.ts';
+import type {
+  RouterInputs,
+  RouterOutputs
+} from '../trpc.generated.ts';
 import type {
   MotorAdviceInput,
   MotorAdviceResponse,

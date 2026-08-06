@@ -4,29 +4,13 @@ import {
 } from '../../../../shared/schemas/system/api-responses';
 import { type DirectorySavedViewSetDefaultInput } from '../../../../shared/schemas/system/directory.schema';
 
-import { invokeTrpc } from '@/services/api/invokeTrpc';
-
-import { createAppError } from '@/services/errors/AppError';
-
-const parseSetDefaultDirectorySavedViewResponse = (payload: unknown): DirectorySavedViewResponse => {
-  const parsed = directorySavedViewResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'REQUEST_FAILED',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-
-  return parsed.data;
-};
+import { invokeTrpc } from '@/services/api/invokeTrpc';;
 
 export const setDefaultDirectorySavedView = (
   input: DirectorySavedViewSetDefaultInput
 ): Promise<DirectorySavedViewResponse> =>
   invokeTrpc(
     (api, options) => api.directory['saved-views']['set-default'].mutate(input, options),
-    parseSetDefaultDirectorySavedViewResponse,
+    directorySavedViewResponseSchema,
     'Impossible de définir la vue par défaut.'
   );

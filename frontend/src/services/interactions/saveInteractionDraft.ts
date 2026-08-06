@@ -1,3 +1,4 @@
+import { createTrpcResponseParser } from '@/services/api/invokeTrpc';
 import { dataInteractionDraftResponseSchema } from '../../../../shared/schemas/system/api-responses';
 
 import { invokeTrpc } from '@/services/api/invokeTrpc';
@@ -25,27 +26,21 @@ const toDraftRecord = (value: unknown): InteractionDraftRecord | null => {
   return { id, updated_at: updatedAt, payload: parsedPayload };
 };
 
-const parseDraftResponse = (payload: unknown): InteractionDraftRecord => {
-  const parsed = dataInteractionDraftResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'REQUEST_FAILED',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-
-  const draft = parsed.data.draft ? toDraftRecord(parsed.data.draft) : null;
+const parseDraftResponse = createTrpcResponseParser(
+  dataInteractionDraftResponseSchema,
+  (response): InteractionDraftRecord => {
+  const draft = response.draft ? toDraftRecord(response.draft) : null;
   if (!draft) {
-    throw createAppError({
-      code: 'DRAFT_SAVE_FAILED',
-      message: 'Impossible de sauvegarder le brouillon.',
-      source: 'edge'
-    });
-  }
+      throw createAppError({
+        code: 'DRAFT_SAVE_FAILED',
+        message: 'Impossible de sauvegarder le brouillon.',
+        source: 'edge'
+      });
+    }
   return draft;
-};
+},
+  { code: 'REQUEST_FAILED', message: 'Réponse serveur invalide.' }
+);
 
 export const saveInteractionDraft = async ({ userId, agencyId, payload, formType = 'interaction' }: SaveInteractionDraftInput): Promise<InteractionDraftRecord> =>
   invokeTrpc(

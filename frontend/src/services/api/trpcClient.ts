@@ -1,6 +1,6 @@
 import { createTRPCClient, httpLink } from '@trpc/client';
 
-import type { AppRouter } from 'shared/api/trpc';
+import type { AppRouter } from 'shared/api/trpc.generated';
 
 import { createAppError } from '@/services/errors/AppError';
 import { requireSupabaseClient } from '@/services/supabase/requireSupabaseClient';

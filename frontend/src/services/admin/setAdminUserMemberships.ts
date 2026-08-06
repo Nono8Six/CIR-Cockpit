@@ -1,26 +1,13 @@
+import { withInvalidTrpcResponse } from '@/services/api/invokeTrpc';
 import {
   adminUsersSetMembershipsResponseSchema,
   type AdminUsersSetMembershipsResponse
 } from '../../../../shared/schemas/system/api-responses';
 import { safeTrpc } from '@/services/api/safeTrpc';
-import { createAppError } from '@/services/errors/AppError';
 
 export type MembershipMode = 'replace' | 'add' | 'remove';
 
-export type SetUserMembershipsResponse = AdminUsersSetMembershipsResponse;
-
-const parseSetUserMembershipsResponse = (payload: unknown): SetUserMembershipsResponse => {
-  const parsed = adminUsersSetMembershipsResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'EDGE_INVALID_RESPONSE',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-  return parsed.data;
-};
+export type SetUserMembershipsResponse = AdminUsersSetMembershipsResponse;;
 
 export const setAdminUserMemberships = (
   userId: string,
@@ -34,6 +21,6 @@ export const setAdminUserMemberships = (
       agency_ids: agencyIds,
       mode
       }, options),
-    parseSetUserMembershipsResponse,
+    withInvalidTrpcResponse(adminUsersSetMembershipsResponseSchema, { code: 'EDGE_INVALID_RESPONSE' }),
     "Impossible de mettre à jour les agences."
   );

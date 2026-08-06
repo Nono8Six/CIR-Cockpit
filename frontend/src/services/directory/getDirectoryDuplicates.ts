@@ -4,29 +4,13 @@ import {
 } from '../../../../shared/schemas/system/api-responses';
 import { type DirectoryDuplicatesInput } from '../../../../shared/schemas/system/directory.schema';
 
-import { invokeTrpc } from '@/services/api/invokeTrpc';
-
-import { createAppError } from '@/services/errors/AppError';
-
-const parseDirectoryDuplicatesResponse = (payload: unknown): DirectoryDuplicatesResponse => {
-  const parsed = directoryDuplicatesResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'REQUEST_FAILED',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-
-  return parsed.data;
-};
+import { invokeTrpc } from '@/services/api/invokeTrpc';;
 
 export const getDirectoryDuplicates = async (
   input: DirectoryDuplicatesInput
 ): Promise<DirectoryDuplicatesResponse> =>
   invokeTrpc(
     (api, options) => api.directory.duplicates.query(input, options),
-    parseDirectoryDuplicatesResponse,
+    directoryDuplicatesResponseSchema,
     'Impossible de vérifier les doublons.'
   );

@@ -1,24 +1,11 @@
+import { withInvalidTrpcResponse } from '@/services/api/invokeTrpc';
 import {
   adminUsersResetPasswordResponseSchema,
   type AdminUsersResetPasswordResponse
 } from '../../../../shared/schemas/system/api-responses';
 import { safeTrpc } from '@/services/api/safeTrpc';
-import { createAppError } from '@/services/errors/AppError';
 
-export type ResetPasswordResponse = AdminUsersResetPasswordResponse;
-
-const parseResetPasswordResponse = (payload: unknown): ResetPasswordResponse => {
-  const parsed = adminUsersResetPasswordResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'EDGE_INVALID_RESPONSE',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-  return parsed.data;
-};
+export type ResetPasswordResponse = AdminUsersResetPasswordResponse;;
 
 export const resetAdminUserPassword = (userId: string, password?: string) =>
   safeTrpc(
@@ -27,6 +14,6 @@ export const resetAdminUserPassword = (userId: string, password?: string) =>
       user_id: userId,
       password
       }, options),
-    parseResetPasswordResponse,
+    withInvalidTrpcResponse(adminUsersResetPasswordResponseSchema, { code: 'EDGE_INVALID_RESPONSE' }),
     'Impossible de réinitialiser le mot de passe.'
   );

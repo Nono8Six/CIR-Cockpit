@@ -1,11 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { type Interaction, Channel } from '@/types';
-import { invokeTrpc } from '@/services/api/invokeTrpc';
+import { invokeTrpc, parseTrpcContract } from '@/services/api/invokeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 import { getInteractionsByEntity } from '@/services/interactions/getInteractionsByEntity';
 
-vi.mock('@/services/api/invokeTrpc', () => ({
+vi.mock('@/services/api/invokeTrpc', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/services/api/invokeTrpc')>()),
   invokeTrpc: vi.fn()
 }));
 
@@ -56,7 +57,7 @@ describe('getInteractionsByEntity', () => {
 
   it('returns the paginated payload from RPC when action is supported', async () => {
     mockInvokeRpc.mockImplementationOnce(async (_call, parseResponse) =>
-      parseResponse({
+      parseTrpcContract(parseResponse, {
         ok: true,
         interactions: [buildInteraction('interaction-1', 'entity-1', '2026-02-10T09:00:00.000Z')],
         page: 1,
@@ -80,7 +81,7 @@ describe('getInteractionsByEntity', () => {
     const mutate = vi.fn().mockResolvedValue({});
     mockInvokeRpc.mockImplementationOnce(async (call, parseResponse) => {
       await call({ data: { interactions: { mutate } } } as never, undefined as never);
-      return parseResponse({
+      return parseTrpcContract(parseResponse, {
         ok: true,
         interactions: [],
         page: 2,

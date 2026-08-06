@@ -1,24 +1,11 @@
+import { withInvalidTrpcResponse } from '@/services/api/invokeTrpc';
 import {
   adminUsersDeleteResponseSchema,
   type AdminUsersDeleteResponse
 } from '../../../../shared/schemas/system/api-responses';
 import { safeTrpc } from '@/services/api/safeTrpc';
-import { createAppError } from '@/services/errors/AppError';
 
-export type DeleteUserResponse = AdminUsersDeleteResponse;
-
-const parseDeleteUserResponse = (payload: unknown): DeleteUserResponse => {
-  const parsed = adminUsersDeleteResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'EDGE_INVALID_RESPONSE',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-  return parsed.data;
-};
+export type DeleteUserResponse = AdminUsersDeleteResponse;;
 
 export const deleteAdminUser = (userId: string) =>
   safeTrpc(
@@ -26,6 +13,6 @@ export const deleteAdminUser = (userId: string) =>
       action: 'delete',
       user_id: userId
       }, options),
-    parseDeleteUserResponse,
+    withInvalidTrpcResponse(adminUsersDeleteResponseSchema, { code: 'EDGE_INVALID_RESPONSE' }),
     "Impossible de supprimer l'utilisateur."
   );

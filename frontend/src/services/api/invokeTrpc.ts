@@ -1,4 +1,8 @@
-import { createAppError, isAppError } from '@/services/errors/AppError';
+import {
+  createAppError,
+  isAppError,
+  type ErrorCode
+} from '@/services/errors/AppError';
 import { mapEdgeError } from '@/services/errors/mapEdgeError';
 import { mapTrpcError } from '@/services/errors/mapTrpcError';
 import { isRecord } from '@/utils/recordNarrowing/isRecord';
@@ -10,9 +14,82 @@ import {
   getTrpcClient
 } from './trpcClient';
 
-export type ParseTrpcResponse<TResponse> = (payload: unknown) => TResponse;
 export type TrpcCallOptions = ReturnType<typeof createTrpcCallOptions>;
-export type TrpcCall = (client: TrpcClient, options: TrpcCallOptions) => Promise<unknown>;
+export type TrpcCall<TPayload> = (
+  client: TrpcClient,
+  options: TrpcCallOptions
+) => Promise<TPayload>;
+
+export type TrpcResponseSchema<TResponse> = {
+  safeParse: (
+    payload: unknown
+  ) =>
+    | { success: true; data: TResponse }
+    | { success: false; error: { message: string } };
+  invalidResponse?: InvalidTrpcResponse;
+};
+
+export type InvalidTrpcResponse = {
+  code?: ErrorCode;
+  message?: string;
+};
+
+export const withInvalidTrpcResponse = <TResponse>(
+  responseSchema: TrpcResponseSchema<TResponse>,
+  invalidResponse: InvalidTrpcResponse
+): TrpcResponseSchema<TResponse> => ({
+  safeParse: responseSchema.safeParse.bind(responseSchema),
+  invalidResponse
+});
+
+export type TrpcResponseParser<TPayload, TResponse> = (
+  payload: TPayload
+) => TResponse;
+
+export type TrpcResponseContract<TPayload, TResponse> =
+  | TrpcResponseSchema<TResponse>
+  | TrpcResponseParser<TPayload, TResponse>;
+
+export const parseTrpcResponse = <TResponse>(
+  responseSchema: TrpcResponseSchema<TResponse>,
+  payload: unknown,
+  invalidResponse: InvalidTrpcResponse = {}
+): TResponse => {
+  const resolvedInvalidResponse = {
+    ...responseSchema.invalidResponse,
+    ...invalidResponse
+  };
+  const parsed = responseSchema.safeParse(payload);
+  if (!parsed.success) {
+    throw createAppError({
+      code: resolvedInvalidResponse.code ?? 'REQUEST_FAILED',
+      message: resolvedInvalidResponse.message ?? 'Réponse serveur invalide.',
+      source: 'edge',
+      details: parsed.error.message
+    });
+  }
+
+  return parsed.data;
+};
+
+export const createTrpcResponseParser = <TParsed, TResponse>(
+  responseSchema: TrpcResponseSchema<TParsed>,
+  transform: (response: TParsed) => TResponse,
+  invalidResponse?: InvalidTrpcResponse,
+  preprocess: (payload: unknown) => unknown = (payload) => payload
+): TrpcResponseParser<unknown, TResponse> =>
+  (payload) => transform(
+    parseTrpcResponse(responseSchema, preprocess(payload), invalidResponse)
+  );
+
+export const parseTrpcContract = <TPayload, TResponse>(
+  responseContract: TrpcResponseContract<TPayload, TResponse>,
+  payload: TPayload,
+  invalidResponse?: InvalidTrpcResponse
+): TResponse =>
+  typeof responseContract === 'function'
+    ? responseContract(payload)
+    : parseTrpcResponse(responseContract, payload, invalidResponse);
 
 const describeInvalidPayload = (payload: unknown): string => {
   if (payload === null) {
@@ -28,12 +105,12 @@ const describeInvalidPayload = (payload: unknown): string => {
  * @description Runs a tRPC call safely by wrapping it in try-catch and mapping any thrown error to an AppError.
  * @param {TrpcCall} call - The tRPC call to execute.
  * @param {string} fallbackMessage - Message to use if mapping fails or error is unknown.
- * @returns {Promise<unknown>} The raw payload returned by the tRPC call.
+ * @returns {Promise<TPayload>} The payload inferred from the tRPC procedure.
  */
-const runTrpcCall = async (
-  call: TrpcCall,
+const runTrpcCall = async <TPayload>(
+  call: TrpcCall<TPayload>,
   fallbackMessage: string
-): Promise<unknown> => {
+): Promise<TPayload> => {
   const requestInit = await buildRpcRequestInit();
 
   try {
@@ -49,14 +126,15 @@ const runTrpcCall = async (
 /**
  * @description Invokes a tRPC call, validates the shape of the response, and parses it.
  * @param {TrpcCall} call - The tRPC call to execute.
- * @param {ParseTrpcResponse<TResponse>} parseResponse - Function to parse the raw payload into TResponse.
+ * @param {TrpcResponseContract<TPayload, TResponse>} responseContract - Runtime contract and optional domain transformation for the external response.
  * @param {string} fallbackMessage - Fallback error message.
  * @returns {Promise<TResponse>} The parsed response.
  */
-export const invokeTrpc = async <TResponse>(
-  call: TrpcCall,
-  parseResponse: ParseTrpcResponse<TResponse>,
-  fallbackMessage: string
+export const invokeTrpc = async <TPayload, TResponse>(
+  call: TrpcCall<TPayload>,
+  responseContract: TrpcResponseContract<TPayload, TResponse>,
+  fallbackMessage: string,
+  invalidResponse: InvalidTrpcResponse = {}
 ): Promise<TResponse> => {
   const payload = await runTrpcCall(call, fallbackMessage);
   if (!isRecord(payload)) {
@@ -70,5 +148,6 @@ export const invokeTrpc = async <TResponse>(
   if (readBoolean(payload, 'ok') === false) {
     throw mapEdgeError(payload, fallbackMessage);
   }
-  return parseResponse(payload);
+
+  return parseTrpcContract(responseContract, payload, invalidResponse);
 };

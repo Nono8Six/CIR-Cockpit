@@ -1,23 +1,18 @@
+import { createTrpcResponseParser } from '@/services/api/invokeTrpc';
 import type { ResultAsync } from 'neverthrow';
 
 import { dataProfileResponseSchema } from '../../../../shared/schemas/system/api-responses';
 
 import { safeAsync } from '@/lib/result';
 import { invokeTrpc } from '@/services/api/invokeTrpc';
-import { createAppError, type AppError } from '@/services/errors/AppError';
+import { type AppError } from '@/services/errors/AppError';
 import { normalizeError } from '@/services/errors/normalizeError';
 
-const parseProfileResponse = (payload: unknown): void => {
-  const parsed = dataProfileResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'REQUEST_FAILED',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-};
+const parseProfileResponse = createTrpcResponseParser(
+  dataProfileResponseSchema,
+  (): void => undefined,
+  { code: 'REQUEST_FAILED', message: 'Réponse serveur invalide.' }
+);
 
 export const setProfileActiveAgencyId = (agencyId: string | null): ResultAsync<void, AppError> =>
   safeAsync(

@@ -1,30 +1,24 @@
+import { createTrpcResponseParser } from '@/services/api/invokeTrpc';
 import { dataEntitiesSearchIndexResponseSchema } from '../../../../shared/schemas/system/api-responses';
 
 import { Entity, EntityContact } from '@/types';
 import { safeTrpc } from '@/services/api/safeTrpc';
-import { createAppError } from '@/services/errors/AppError';
 
 export type EntitySearchIndex = {
   entities: Entity[];
   contacts: EntityContact[];
 };
 
-const parseSearchIndexResponse = (payload: unknown): EntitySearchIndex => {
-  const parsed = dataEntitiesSearchIndexResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'REQUEST_FAILED',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-
+const parseSearchIndexResponse = createTrpcResponseParser(
+  dataEntitiesSearchIndexResponseSchema,
+  (response): EntitySearchIndex => {
   return {
-    entities: parsed.data.entities,
-    contacts: parsed.data.contacts
-  };
-};
+      entities: response.entities,
+      contacts: response.contacts
+    };
+},
+  { code: 'REQUEST_FAILED', message: 'Réponse serveur invalide.' }
+);
 
 export const getEntitySearchIndex = async (
   agencyId: string | null,

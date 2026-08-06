@@ -1,24 +1,11 @@
+import { withInvalidTrpcResponse } from '@/services/api/invokeTrpc';
 import {
   adminUsersArchiveResponseSchema,
   type AdminUsersArchiveResponse
 } from '../../../../shared/schemas/system/api-responses';
 import { safeTrpc } from '@/services/api/safeTrpc';
-import { createAppError } from '@/services/errors/AppError';
 
-export type UnarchiveUserResponse = AdminUsersArchiveResponse;
-
-const parseUnarchiveUserResponse = (payload: unknown): UnarchiveUserResponse => {
-  const parsed = adminUsersArchiveResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'EDGE_INVALID_RESPONSE',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-  return parsed.data;
-};
+export type UnarchiveUserResponse = AdminUsersArchiveResponse;;
 
 export const unarchiveAdminUser = (userId: string) =>
   safeTrpc(
@@ -26,6 +13,6 @@ export const unarchiveAdminUser = (userId: string) =>
       action: 'unarchive',
       user_id: userId
       }, options),
-    parseUnarchiveUserResponse,
+    withInvalidTrpcResponse(adminUsersArchiveResponseSchema, { code: 'EDGE_INVALID_RESPONSE' }),
     "Impossible de réactiver l'utilisateur."
   );

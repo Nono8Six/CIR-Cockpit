@@ -1,24 +1,11 @@
+import { withInvalidTrpcResponse } from '@/services/api/invokeTrpc';
 import {
   adminUsersBulkDeleteResponseSchema,
   type AdminUsersBulkDeleteResponse
 } from '../../../../shared/schemas/system/api-responses';
 import { safeTrpc } from '@/services/api/safeTrpc';
-import { createAppError } from '@/services/errors/AppError';
 
-export type BulkDeleteUsersResponse = AdminUsersBulkDeleteResponse;
-
-const parseBulkDeleteUsersResponse = (payload: unknown): BulkDeleteUsersResponse => {
-  const parsed = adminUsersBulkDeleteResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'EDGE_INVALID_RESPONSE',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-  return parsed.data;
-};
+export type BulkDeleteUsersResponse = AdminUsersBulkDeleteResponse;;
 
 export const bulkDeleteAdminUsers = (userIds: string[]) =>
   safeTrpc(
@@ -26,6 +13,6 @@ export const bulkDeleteAdminUsers = (userIds: string[]) =>
       action: 'bulk_delete',
       user_ids: userIds
     }, options),
-    parseBulkDeleteUsersResponse,
+    withInvalidTrpcResponse(adminUsersBulkDeleteResponseSchema, { code: 'EDGE_INVALID_RESPONSE' }),
     'Impossible de supprimer les utilisateurs sélectionnés.'
   );

@@ -51,3 +51,13 @@ tools/extract/__pycache__/
 # Payload de chargement configurateur : artefact de travail ~44 Mo, supprime
 # apres chargement et regenerable par configurator-c2-import.mjs
 .c2-payload/
+
+# Configurateur C2 : iterations de rapports et payloads regenerables
+/tmp/c2-audit-full/
+/tmp/c2-review/
+/tmp/c2-review-after-alias/
+/tmp/c2-review-after-user/
+/tmp/c2-review-final/
+/tmp/c2d-corrections/
+/tmp/c2d2-corrections/
+/tmp/c2d3-corrections/

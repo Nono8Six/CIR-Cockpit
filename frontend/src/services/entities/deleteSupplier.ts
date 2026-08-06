@@ -1,21 +1,17 @@
+import { createTrpcResponseParser } from '@/services/api/invokeTrpc';
 import { ResultAsync } from 'neverthrow';
 import { safeTrpc } from '@/services/api/safeTrpc';
-import { createAppError, type AppError } from '@/services/errors/AppError';
+import { type AppError } from '@/services/errors/AppError';
 import { dataEntitiesResponseSchema } from '../../../../shared/schemas/system/api-responses';
 import { Entity } from '@/types';
 
-const parseEntityResponse = (payload: unknown): Entity => {
-  const parsed = dataEntitiesResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'REQUEST_FAILED',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-  return parsed.data.entity;
-};
+const parseEntityResponse = createTrpcResponseParser(
+  dataEntitiesResponseSchema,
+  (response): Entity => {
+  return response.entity;
+},
+  { code: 'REQUEST_FAILED', message: 'Réponse serveur invalide.' }
+);
 
 /**
  * Destructively deletes a supplier.

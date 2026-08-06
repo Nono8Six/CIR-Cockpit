@@ -1,9 +1,9 @@
+import { withInvalidTrpcResponse } from '@/services/api/invokeTrpc';
 import {
   adminUsersCreateResponseSchema,
   type AdminUsersCreateResponse
 } from '../../../../shared/schemas/system/api-responses';
 import { safeTrpc } from '@/services/api/safeTrpc';
-import { createAppError } from '@/services/errors/AppError';
 import { UserRole } from '@/types';
 
 export type CreateAdminUserPayload = {
@@ -15,20 +15,7 @@ export type CreateAdminUserPayload = {
   password?: string;
 };
 
-export type CreateAdminUserResponse = AdminUsersCreateResponse;
-
-const parseCreateAdminUserResponse = (payload: unknown): CreateAdminUserResponse => {
-  const parsed = adminUsersCreateResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'EDGE_INVALID_RESPONSE',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-  return parsed.data;
-};
+export type CreateAdminUserResponse = AdminUsersCreateResponse;;
 
 export const createAdminUser = (payload: CreateAdminUserPayload) =>
   safeTrpc(
@@ -36,6 +23,6 @@ export const createAdminUser = (payload: CreateAdminUserPayload) =>
       action: 'create',
       ...payload
       }, options),
-    parseCreateAdminUserResponse,
+    withInvalidTrpcResponse(adminUsersCreateResponseSchema, { code: 'EDGE_INVALID_RESPONSE' }),
     "Impossible de créer l'utilisateur."
   );

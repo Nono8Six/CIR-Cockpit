@@ -1,7 +1,7 @@
+import { createTrpcResponseParser } from '@/services/api/invokeTrpc';
 import { dataInteractionsListResponseSchema } from '../../../../shared/schemas/system/api-responses';
 
 import type { Interaction } from '@/types';
-import { createAppError } from '@/services/errors/AppError';
 import { invokeTrpc } from '@/services/api/invokeTrpc';
 import { hydrateTimeline } from './hydrateTimeline';
 
@@ -15,30 +15,23 @@ export type EntityInteractionsPage = {
 
 export type EntityInteractionsScope = 'open' | 'closed' | 'all';
 
-const parseListResponse = (payload: unknown): EntityInteractionsPage => {
-  const parsed = dataInteractionsListResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'REQUEST_FAILED',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-
-  const interactions = parsed.data.interactions.map(hydrateTimeline);
-  const page = parsed.data.page;
-  const pageSize = parsed.data.page_size;
-  const total = parsed.data.total;
-
+const parseListResponse = createTrpcResponseParser(
+  dataInteractionsListResponseSchema,
+  (response): EntityInteractionsPage => {
+  const interactions = response.interactions.map(hydrateTimeline);
+  const page = response.page;
+  const pageSize = response.page_size;
+  const total = response.total;
   return {
-    interactions,
-    page,
-    pageSize,
-    total,
-    totalPages: Math.max(1, Math.ceil(total / pageSize))
-  };
-};
+      interactions,
+      page,
+      pageSize,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / pageSize))
+    };
+},
+  { code: 'REQUEST_FAILED', message: 'Réponse serveur invalide.' }
+);
 
 export const getInteractionsByEntity = async (
   entityId: string,

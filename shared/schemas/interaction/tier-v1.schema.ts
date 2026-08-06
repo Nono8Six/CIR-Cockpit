@@ -10,39 +10,45 @@ const MAX_QUERY_LENGTH = 120;
 
 const requiredTextSchema = z.string().trim().min(1, 'Valeur requise').max(MAX_SHORT_TEXT_LENGTH, 'Texte trop long');
 const optionalTextSchema = z
-  .union([z.string(), z.null(), z.undefined()])
+  .union([z.string(), z.null()])
+  .optional()
   .transform((value) => {
     const trimmed = value?.trim() ?? '';
     return trimmed.length > 0 ? trimmed : null;
   });
 const optionalPhoneSchema = z
-  .union([z.string().trim().max(32, 'Numero de telephone trop long'), z.literal(''), z.null(), z.undefined()])
+  .union([z.string().trim().max(32, 'Numero de telephone trop long'), z.literal(''), z.null()])
+  .optional()
   .transform((value) => {
     const trimmed = typeof value === 'string' ? value.trim() : '';
     return trimmed.length > 0 ? trimmed : null;
   });
 const requiredPhoneSchema = z.string().trim().min(1, 'Telephone requis').max(32, 'Numero de telephone trop long');
 const optionalEmailSchema = z
-  .union([z.string().trim().email('Email invalide'), z.literal(''), z.null(), z.undefined()])
+  .union([z.string().trim().email('Email invalide'), z.literal(''), z.null()])
+  .optional()
   .transform((value) => {
     const trimmed = typeof value === 'string' ? value.trim().toLowerCase() : '';
     return trimmed.length > 0 ? trimmed : null;
   });
 const postalCodeSchema = z.string().trim().regex(/^\d{5}$/, 'Code postal invalide');
 const optionalPostalCodeSchema = z
-  .union([z.string(), z.null(), z.undefined()])
+  .union([z.string(), z.null()])
+  .optional()
   .transform((value) => value?.trim() ?? '')
   .refine((value) => value.length === 0 || /^\d{5}$/.test(value), 'Code postal invalide')
   .transform((value) => value.length > 0 ? value : null);
 const supplierCodeSchema = z
-  .union([z.string(), z.null(), z.undefined()])
+  .union([z.string(), z.null()])
+  .optional()
   .transform((value) => {
     const trimmed = value?.trim().toUpperCase() ?? '';
     return trimmed.length > 0 ? trimmed : null;
   })
   .refine((value) => value === null || /^[A-Z0-9]{1,4}$/.test(value), 'Code fournisseur invalide');
 const supplierNumberSchema = z
-  .union([z.string(), z.null(), z.undefined()])
+  .union([z.string(), z.null()])
+  .optional()
   .transform((value) => {
     const trimmed = value?.trim() ?? '';
     return trimmed.length > 0 ? trimmed : null;

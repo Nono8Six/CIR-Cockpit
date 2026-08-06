@@ -30,7 +30,7 @@ Cette page doit suivre en priorite:
 | Element | Version / etat | Source |
 |---------|-----------------|--------|
 | Node.js local + CI | `24.14.0` | runtime local, `.github/workflows/qa.yml` |
-| Deno local + CI | `2.5.6` | runtime local, `.github/workflows/qa.yml` |
+| Deno local + CI | `2.9.4` | runtime local, `.github/workflows/qa.yml` |
 | Package manager | `pnpm@10.33.0` | `package.json` |
 | Workspace | `frontend`, `shared` | `pnpm-workspace.yaml` |
 | Git hooks | Husky `9.1.7` | `package.json` |
@@ -74,7 +74,7 @@ Cette page doit suivre en priorite:
 |-------------|---------|------|
 | React Hook Form | `7.71.1` | formulaires |
 | `@hookform/resolvers` | `5.2.2` | bridge RHF + Zod |
-| Zod | `4.3.6` | validation partagee front/back |
+| Zod | `4.4.3` | validation partagee front/back |
 
 ### UI, composants et UX
 
@@ -146,19 +146,19 @@ Autrement dit: le frontend ne repose pas sur une couche API unique. Le repo comb
 
 | Technologie | Version | Role |
 |-------------|---------|------|
-| Hono | `4.12.4` en local | serveur HTTP de l'Edge Function |
-| `@hono/trpc-server` | `0.4.0` | bridge Hono <-> tRPC |
-| `@trpc/server` | `11.10.0` | procedures backend |
-| `@trpc/client` | `11.10.0` cote frontend | client HTTP batche |
+| Hono | `4.13.0` en local | serveur HTTP de l'Edge Function |
+| `@hono/trpc-server` | `0.4.2` | bridge Hono <-> tRPC |
+| `@trpc/server` | `11.18.0` | procedures backend |
+| `@trpc/client` | `11.18.0` cote frontend | client HTTP batche |
 
 ### Data access backend
 
 | Technologie | Version | Role |
 |-------------|---------|------|
-| Drizzle ORM | `0.45.1` | queries SQL typees |
+| Drizzle ORM | `0.45.2` | queries SQL typees |
 | `postgres` | `3.4.8` | driver SQL |
-| Supabase JS backend | `2.95.3` épinglé | auth/admin clients et contexte utilisateur via import map Deno |
-| Zod | `4.3.6` | validation input/output |
+| Supabase JS backend | `2.112.0` épinglé | auth/admin clients et contexte utilisateur via import map Deno |
+| Zod | `4.4.3` | validation input/output |
 | `jose` | `5.9.6` | verification JWT via JWKS |
 
 ### Architecture backend actuelle
@@ -178,10 +178,12 @@ Le repo maintient la meme version Hono pour:
 
 | Fichier | Hono |
 |---------|------|
-| `backend/deno.json` | `4.12.4` |
-| `deno.json` | `4.12.4` |
+| `backend/deno.json` | `4.13.0` |
+| `deno.json` | `4.13.0` |
 
 Cet alignement est verifie par `pnpm run repo:check`.
+
+Zod est epingle en `4.4.3` dans les manifests pnpm et dans les deux import maps Deno. Les entrees `zod` et `zod/v4` doivent rester alignees: Deno resout explicitement le sous-chemin `zod/v4`, utilise par Zod et tRPC, sans deduire sa version depuis l'entree `zod`.
 
 ## Shared layer
 
@@ -190,6 +192,11 @@ Cet alignement est verifie par `pnpm run repo:check`.
 | `shared/schemas/` | schemas Zod partages front/back |
 | `shared/errors/` | catalog, types, fingerprint AppError |
 | `shared/supabase.types.ts` | types Supabase generes |
+| `shared/api/trpc.generated.d.ts` | projection cliente generee du routeur tRPC canonique |
+
+Le routeur runtime reste defini dans `backend/functions/api/trpc/router.ts`. `pnpm run contract:trpc:generate` en extrait automatiquement les procedures et leurs types publics; la projection n'embarque pas les schemas Zod ni les types internes des parsers. `pnpm run contract:trpc:check`, inclus dans les controles du repo, interdit qu'un contrat genere obsolete soit livre.
+
+Cote frontend, `frontend/src/services/api/invokeTrpc.ts` est le seam unique d'invocation: il preserve les sorties inferees du client tRPC, valide chaque reponse externe avec le schema Zod partage et centralise la conversion des echecs en `AppError`. Les services ne conservent un adaptateur local que lorsqu'une transformation metier ou une compatibilite de payload est reellement necessaire.
 
 ## Tests, lint et QA
 

@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createAppError } from '@/services/errors/AppError';
-import { invokeTrpc } from '@/services/api/invokeTrpc';
+import { invokeTrpc, parseTrpcContract } from '@/services/api/invokeTrpc';
 
-vi.mock('@/services/api/invokeTrpc', () => ({
+vi.mock('@/services/api/invokeTrpc', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/services/api/invokeTrpc')>()),
   invokeTrpc: vi.fn()
 }));
 
@@ -51,7 +52,7 @@ describe('getDirectoryCompanySearch', () => {
   });
 
   it('delegates the request to the tRPC directory.company-search route', async () => {
-    mockInvokeTrpc.mockImplementation(async (_runner, parser) => parser(mockDirectoryResponse));
+    mockInvokeTrpc.mockImplementation(async (_runner, parser) => parseTrpcContract(parser, mockDirectoryResponse));
     mockDirectoryResponse = {
       request_id: 'req-1',
       ok: true,
@@ -73,7 +74,7 @@ describe('getDirectoryCompanySearch', () => {
   });
 
   it('validates the server payload before returning it', async () => {
-    mockInvokeTrpc.mockImplementation(async (_runner, parser) => parser(mockDirectoryResponse));
+    mockInvokeTrpc.mockImplementation(async (_runner, parser) => parseTrpcContract(parser, mockDirectoryResponse));
     mockDirectoryResponse = {
       request_id: 'req-2',
       ok: true,

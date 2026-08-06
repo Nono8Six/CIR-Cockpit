@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getCurrentUserId } from '@/services/auth/getCurrentUserId';
-import { invokeTrpc } from '@/services/api/invokeTrpc';
+import { invokeTrpc, parseTrpcContract } from '@/services/api/invokeTrpc';
 import { createAppError } from '@/services/errors/AppError';
 import { mapPostgrestError } from '@/services/errors/mapPostgrestError';
 import { getAgencies } from '@/services/agency/getAgencies';
@@ -10,7 +10,10 @@ import { setProfileActiveAgencyId } from '@/services/agency/setProfileActiveAgen
 import { requireSupabaseClient } from '@/services/supabase/requireSupabaseClient';
 
 vi.mock('../../auth/getCurrentUserId');
-vi.mock('../../api/invokeTrpc');
+vi.mock('@/services/api/invokeTrpc', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/services/api/invokeTrpc')>()),
+  invokeTrpc: vi.fn()
+}));
 vi.mock('../../errors/mapPostgrestError');
 vi.mock('../../supabase/requireSupabaseClient');
 
@@ -118,7 +121,7 @@ describe('agency supabase services', () => {
         agency_id: 'agency-1'
       }, {});
 
-      return parseResponse(payload);
+      return parseTrpcContract(parseResponse, payload);
     });
 
     const successOutcome = await setProfileActiveAgencyId('agency-1').match(

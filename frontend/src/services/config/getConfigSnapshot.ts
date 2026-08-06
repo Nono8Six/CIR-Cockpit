@@ -4,8 +4,10 @@ import {
 } from '../../../../shared/schemas/system/api-responses';
 import type { ConfigGetInput, ResolvedConfigSnapshot } from '../../../../shared/schemas/system/config.schema';
 
-import { createAppError } from '@/services/errors/AppError';
-import { invokeTrpc } from '@/services/api/invokeTrpc';
+import {
+  createTrpcResponseParser,
+  invokeTrpc
+} from '@/services/api/invokeTrpc';
 import { isRecord } from '@/utils/recordNarrowing/isRecord';
 
 import { getActiveAgencyId } from '@/services/agency/getActiveAgencyId';
@@ -44,18 +46,15 @@ export const normalizeConfigGetPayload = (payload: unknown): unknown => {
 };
 
 export const parseConfigGetResponse = (payload: unknown): ConfigGetResponse => {
-  const parsed = configGetResponseSchema.safeParse(normalizeConfigGetPayload(payload));
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'REQUEST_FAILED',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-
-  return parsed.data;
+  return parseConfigGetContract(payload);
 };
+
+const parseConfigGetContract = createTrpcResponseParser(
+  configGetResponseSchema,
+  (response) => response,
+  undefined,
+  normalizeConfigGetPayload
+);
 
 const resolveConfigGetInput = async (
   agencyIdOverride?: string
@@ -69,7 +68,7 @@ export const getConfigSnapshot = async (
   const input = await resolveConfigGetInput(agencyIdOverride);
   const response = await invokeTrpc(
     (api, options) => api.config.get.query(input, options),
-    parseConfigGetResponse,
+    parseConfigGetContract,
     'Impossible de charger la configuration.'
   );
 

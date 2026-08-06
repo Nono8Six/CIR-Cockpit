@@ -4,13 +4,14 @@ import { accountTypeSchema, clientKindSchema, clientNumberSchema } from '../../.
 import { optionalEntityDepartmentCodeSchema } from '../../../../shared/schemas/admin/department.schema';
 import { officialDataSourceSchema } from '../../../../shared/schemas/system/directory.schema';
 
-const optionalTextSchema = z.union([z.string(), z.null(), z.undefined()]).transform((value) => value?.trim() ?? '');
+const optionalTextSchema = z.union([z.string(), z.null()]).optional().transform((value) => value?.trim() ?? '');
 const optionalPostalCodeSchema = optionalTextSchema.refine((value) => value.length === 0 || /^\d{5}$/.test(value), {
   message: 'Code postal invalide'
 });
-const optionalUuidSchema = z.union([z.string().uuid(), z.literal(''), z.null(), z.undefined()]).transform((value) => typeof value === 'string' ? value.trim() : '');
+const optionalUuidSchema = z.union([z.string().uuid(), z.literal(''), z.null()]).optional().transform((value) => typeof value === 'string' ? value.trim() : '');
 const optionalEmailSchema = z
-  .union([z.string().trim().email('Email invalide'), z.literal(''), z.null(), z.undefined()])
+  .union([z.string().trim().email('Email invalide'), z.literal(''), z.null()])
+  .optional()
   .transform((value) => typeof value === 'string' ? value.trim() : '');
 
 export const onboardingFormSchema = z.strictObject({
@@ -29,7 +30,7 @@ export const onboardingFormSchema = z.strictObject({
   siren: optionalTextSchema,
   naf_code: optionalTextSchema,
   official_name: optionalTextSchema,
-  official_data_source: z.union([officialDataSourceSchema, z.null(), z.undefined()]).transform((value) => value ?? null),
+  official_data_source: z.union([officialDataSourceSchema, z.null()]).optional().transform((value) => value ?? null),
   official_data_synced_at: optionalTextSchema,
   notes: optionalTextSchema,
   agency_id: z.string().trim().min(1, 'Agence requise'),

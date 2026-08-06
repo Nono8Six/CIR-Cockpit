@@ -1,10 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { TrpcClient } from '@/services/api/trpcClient';
-import { invokeTrpc } from '@/services/api/invokeTrpc';
+import { invokeTrpc, parseTrpcContract } from '@/services/api/invokeTrpc';
 import { getAdminUsers } from '@/services/admin/getAdminUsers';
 
-vi.mock('../../api/invokeTrpc');
+vi.mock('@/services/api/invokeTrpc', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/services/api/invokeTrpc')>()),
+  invokeTrpc: vi.fn()
+}));
 
 const mockInvokeTrpc = vi.mocked(invokeTrpc);
 
@@ -21,7 +24,7 @@ describe('getAdminUsers', () => {
       await call(client, { context: { headers: { 'x-request-id': 'users-test' } } });
       expect(query).toHaveBeenCalledWith({}, { context: { headers: { 'x-request-id': 'users-test' } } });
 
-      return parser({
+      return parseTrpcContract(parser, {
         ok: true,
         users: [
           {
@@ -65,7 +68,7 @@ describe('getAdminUsers', () => {
   });
 
   it('rejects invalid response payloads', async () => {
-    mockInvokeTrpc.mockImplementationOnce(async (_call, parser) => parser({ ok: true, users: [{ id: '' }] }));
+    mockInvokeTrpc.mockImplementationOnce(async (_call, parser) => parseTrpcContract(parser, { ok: true, users: [{ id: '' }] }));
 
     await expect(getAdminUsers()).rejects.toMatchObject({
       code: 'EDGE_INVALID_RESPONSE',

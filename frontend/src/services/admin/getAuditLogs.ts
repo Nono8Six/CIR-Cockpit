@@ -1,3 +1,4 @@
+import { createTrpcResponseParser } from '@/services/api/invokeTrpc';
 import {
   adminAuditLogsResponseSchema,
   type AdminAuditLogEntry
@@ -5,7 +6,6 @@ import {
 import type { AdminAuditLogsInput } from '../../../../shared/schemas/admin/user.schema';
 
 import { invokeTrpc } from '@/services/api/invokeTrpc';
-import { createAppError } from '@/services/errors/AppError';
 
 export type AuditLogEntry = AdminAuditLogEntry;
 export type AuditLogFilters = {
@@ -18,19 +18,13 @@ export type AuditLogFilters = {
   limit?: number;
 };
 
-const parseAuditLogsResponse = (payload: unknown): AuditLogEntry[] => {
-  const parsed = adminAuditLogsResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'EDGE_INVALID_RESPONSE',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-
-  return parsed.data.logs;
-};
+const parseAuditLogsResponse = createTrpcResponseParser(
+  adminAuditLogsResponseSchema,
+  (response): AuditLogEntry[] => {
+  return response.logs;
+},
+  { code: 'EDGE_INVALID_RESPONSE', message: 'Réponse serveur invalide.' }
+);
 
 const toAuditLogsInput = (filters: AuditLogFilters): AdminAuditLogsInput => ({
   agency_id: filters.agencyId ?? null,

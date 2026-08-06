@@ -4,29 +4,13 @@ import {
 } from '../../../../shared/schemas/system/api-responses';
 import type { DirectorySavedViewsListInput } from '../../../../shared/schemas/system/directory.schema';
 
-import { invokeTrpc } from '@/services/api/invokeTrpc';
-
-import { createAppError } from '@/services/errors/AppError';
-
-const parseDirectorySavedViewsListResponse = (payload: unknown): DirectorySavedViewsListResponse => {
-  const parsed = directorySavedViewsListResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'REQUEST_FAILED',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-
-  return parsed.data;
-};
+import { invokeTrpc } from '@/services/api/invokeTrpc';;
 
 export const getDirectorySavedViews = (
   input: DirectorySavedViewsListInput = { viewType: 'clients' }
 ): Promise<DirectorySavedViewsListResponse> =>
   invokeTrpc(
     (api, options) => api.directory['saved-views'].list.query(input, options),
-    parseDirectorySavedViewsListResponse,
+    directorySavedViewsListResponseSchema,
     'Impossible de charger les vues sauvegardées.'
   );

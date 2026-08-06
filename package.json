@@ -4,8 +4,10 @@
   "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319",
   "scripts": {
     "prepare": "husky",
-    "repo:check": "node ./scripts/check-repo-state.mjs",
-    "repo:check:local": "node ./scripts/check-repo-state.mjs --skip-remote",
+    "contract:trpc:generate": "node ./scripts/generate-trpc-contract.mjs --write",
+    "contract:trpc:check": "node ./scripts/generate-trpc-contract.mjs --check",
+    "repo:check": "pnpm run contract:trpc:check && node ./scripts/check-repo-state.mjs",
+    "repo:check:local": "pnpm run contract:trpc:check && node ./scripts/check-repo-state.mjs --skip-remote",
     "typecheck": "pnpm run frontend:typecheck && pnpm run backend:typecheck",
     "lint": "pnpm run frontend:lint && pnpm run backend:lint",
     "test": "pnpm run frontend:test && pnpm run backend:test",
@@ -29,8 +31,11 @@
     "qa:audit": "pnpm --dir frontend exec pnpm audit --audit-level=high"
   },
   "devDependencies": {
+    "@trpc/server": "11.18.0",
     "husky": "^9.1.7",
-    "lint-staged": "^15.5.2"
+    "lint-staged": "^15.5.2",
+    "typescript": "5.9.3",
+    "zod": "4.4.3"
   },
   "pnpm": {
     "overrides": {

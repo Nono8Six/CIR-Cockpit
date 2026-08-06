@@ -45,7 +45,6 @@ import {
 } from "../../../../shared/schemas/system/config.schema.ts";
 import {
   dataConfigPayloadSchema,
-  type DataEntitiesPayload,
   dataEntitiesPayloadSchema,
   dataEntityContactsPayloadSchema,
   dataInteractionsPayloadSchema,
@@ -260,25 +259,18 @@ import {
   listAiFeatureGrants,
   saveAiFeatureGrant,
 } from "../services/ai/aiAccess.ts";
-import type { DbClient } from "../types.ts";
 import { httpError } from "../middleware/errorHandler.ts";
 import { authedProcedure, router, superAdminProcedure } from "./procedures.ts";
+import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
+import { z } from "zod/v4";
+import { selectDataEntitiesDb } from "./dataEntitiesDbSelection.ts";
+
 import {
   withAuthedDualDbHandler,
   withAuthedHandler,
   withSuperAdminHandler,
 } from "./procedureHelpers.ts";
 import { configuratorMotorRouter } from "./configuratorMotor.ts";
-
-const isServiceRoleDataEntitiesAction = (
-  payload: Pick<DataEntitiesPayload, "action">,
-): boolean => payload.action === "reassign" || payload.action === "delete";
-
-export const selectDataEntitiesDb = (
-  payload: Pick<DataEntitiesPayload, "action">,
-  db: DbClient,
-  userDb: DbClient,
-): DbClient => (isServiceRoleDataEntitiesAction(payload) ? db : userDb);
 
 const rejectDeferredTierV1Contract = (): Promise<never> => {
   return Promise.reject(httpError(
@@ -767,4 +759,5 @@ export const appRouter = router({
 });
 
 export type AppRouter = typeof appRouter;
-import { z } from "zod/v4";
+export type RouterInputs = inferRouterInputs<AppRouter>;
+export type RouterOutputs = inferRouterOutputs<AppRouter>;

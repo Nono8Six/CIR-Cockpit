@@ -1,22 +1,16 @@
+import { createTrpcResponseParser } from '@/services/api/invokeTrpc';
 import { dataInteractionsKnownCompaniesResponseSchema } from '../../../../shared/schemas/system/api-responses';
 
 import { getActiveAgencyId } from '@/services/agency/getActiveAgencyId';
 import { invokeTrpc } from '@/services/api/invokeTrpc';
-import { createAppError } from '@/services/errors/AppError';
 
-const parseKnownCompaniesResponse = (payload: unknown): string[] => {
-  const parsed = dataInteractionsKnownCompaniesResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'REQUEST_FAILED',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-
-  return parsed.data.companies;
-};
+const parseKnownCompaniesResponse = createTrpcResponseParser(
+  dataInteractionsKnownCompaniesResponseSchema,
+  (response): string[] => {
+  return response.companies;
+},
+  { code: 'REQUEST_FAILED', message: 'Réponse serveur invalide.' }
+);
 
 export const getKnownCompanies = async (): Promise<string[]> => {
   const agencyId = await getActiveAgencyId();

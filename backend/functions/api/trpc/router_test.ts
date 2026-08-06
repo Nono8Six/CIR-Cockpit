@@ -10,7 +10,7 @@ import {
   adminUsersListInputSchema
 } from '../../../../shared/schemas/admin/user.schema.ts';
 import type { DbClient } from '../types.ts';
-import { selectDataEntitiesDb } from './router.ts';
+import { selectDataEntitiesDb } from './dataEntitiesDbSelection.ts';
 
 Deno.test('selectDataEntitiesDb uses userDb for regular data actions', () => {
   const serviceRoleDb = { marker: 'service-role' } as unknown as DbClient;

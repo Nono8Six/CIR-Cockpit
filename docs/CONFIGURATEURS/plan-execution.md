@@ -1053,6 +1053,117 @@ Ce que le prototype rend testable :
 - [x] Aucune référence catalogue, cote, limite constructeur ou économie fabriquée :
   un bandeau permanent indique que les verdicts proviennent du relevé saisi.
 
+Corrections PO du 06/08/2026 intégrées après première revue du prototype :
+
+- [x] **Détail des options.** Frein, codeur ou sondes, deuxième bout d'arbre, deux
+  vitesses et capot pare-pluie ouvrent chacun leurs propres questions au lieu de
+  rester une simple case cochée. Rien n'est hérité du moteur principal.
+- [x] **Phases avant tension.** Le nombre de phases est demandé avant la tension ;
+  les tensions proposées suivent ensuite monophasé ou triphasé, et corriger les
+  phases invalide la tension lue.
+- [x] **Fréquence sans semer le doute.** L'étape devient une confirmation adressée
+  au TCS, avec la mention explicite de n'interroger le client que hors réseau
+  standard. Le fait reste consigné, jamais présupposé.
+- [x] **Motoréducteur à montage intégré.** La transmission distingue le réducteur
+  accouplé, qui reste IEC, du moteur monté directement sur un réducteur, qui sort
+  du périmètre standard et ouvre une qualification spécialisée.
+- [x] **Carcasses restreintes par la puissance.** Trois hauteurs d'axe fréquentes
+  sont proposées d'abord, toute la liste reste à un clic, et la note rappelle qu'un
+  ancien IE1 peut porter une carcasse plus petite qu'un IE3 de même puissance.
+  Cette restriction est un affichage, jamais une déduction : elle reste à valider
+  en C7-6.
+- [x] **Positions de montage complétées.** Horizontal au sol, horizontal fixé au mur
+  ou au plafond, vertical arbre vers le bas, vertical arbre vers le haut, incliné et
+  orientation non identifiée. Un nouveau contrôle « support et exposition » s'ouvre
+  sur mur, plafond, incliné ou vertical.
+- [x] **Causes de remplacement élargies.** Quinze causes déclarables au lieu de
+  quatre, dont onze ouvrent l'hypothèse de cause sans jamais devenir un diagnostic.
+
+Revue PO n°2 du 06/08/2026 — trois corrections de fond :
+
+- [x] **Chaque étape annonce son effet.** « Pourquoi maintenant » devient « Ce que
+  votre réponse ouvre ou ferme », renseigné sur les 37 nœuds. L'aveu est explicite
+  quand l'effet est faible : la tension de plaque n'ouvre aucun contrôle, la
+  carcasse non plus, et la fonction process ne fait pour l'instant que débloquer le
+  niveau candidat.
+- [x] **Contrôle radial refondu et honnête.** Le nombre de courroies est supprimé :
+  seul, il ne détermine aucun effort. Restent les deux entrées décisives — diamètre
+  de la poulie moteur et **porte-à-faux**, nouveau et mesuré depuis l'épaulement —
+  plus un fait explicite sur la disponibilité de la **charge radiale admissible
+  publiée**. Sans cette limite, le contrôle ne peut plus se clore : il reste une
+  réserve nommée. La retension récente est déplacée vers l'hypothèse de cause, où
+  elle n'affecte pas la compatibilité. C7 ne calcule aucun effort ; la comparaison
+  effort/limite appartient au dimensionnement process.
+- [x] **Options refondues en écrans de détail.** Frein, accessoire arrière, deuxième
+  bout d'arbre, capot et deux vitesses ouvrent chacun un écran de champs courts,
+  avec « non lisible » champ par champ. Le frein demande type à manque ou à appel de
+  courant, couple, tension, alimentation réelle et déblocage manuel ; l'accessoire
+  arrière demande sa nature, son marquage, son raccordement et son nombre de fils ;
+  les deux vitesses relèvent les deux vitesses et les deux puissances. Chaque champ
+  est un fait distinct avec sa propre source, corrigible séparément.
+- [x] **Schémas cotés ajoutés** au vocabulaire réel du catalogue : bride vue de face
+  cotée P/M/N/S, bride en coupe cotée T, pattes cotées H/A/K, bout d'arbre coté
+  D/E/F, porte-à-faux de poulie et planche des positions de montage IM B3, B5, B14,
+  B35, V1, V3, mur/plafond et incliné.
+
+Revue PO n°3 du 06/08/2026 — **règle du tout factuel**. Décision : une question
+n'existe que si sa réponse alimente un fait réellement comparé par le contrat de
+compatibilité. Collecter un fait sans calcul derrière ne sert à rien.
+
+**Revue PO n°4, même jour — correction de trajectoire.** La lecture stricte du
+contrat avait conduit à demander au client le couplage, le courant, le couple, la
+classe IE et l'ensemble des cotes A/B/C/K, M/N/P/S/T/Z et D/E/F. Le PO a rejeté
+cette version : au téléphone, personne ne fait mesurer six cotes à un client, et
+ces cotes sont normalisées et publiées au catalogue. L'erreur était de confondre
+« le contrat compare ce champ » avec « il faut le demander au client » : dans le
+contrat, `field_overrides` est optionnel et exige des mesures confirmées et
+prouvées — ce sont des exceptions, pas des saisies de parcours. Le chemin normal
+reste `fromMotor`, où les cotes arrivent du catalogue avec leur provenance.
+
+Arbre rétabli dans son état antérieur, avec deux différences seulement :
+
+- le détail du contrôle radial reste supprimé, conformément à la revue n°3 :
+  nombre de courroies, diamètre de poulie, porte-à-faux et charge radiale
+  admissible ne produisaient aucun calcul dans C7 ;
+- la bride conserve sa **confirmation** : nature des trous puis diamètre extérieur,
+  seule cote que le TCS fait confirmer parce qu'elle départage réellement.
+
+Écartés définitivement : couplage, courant nominal, couple nominal, classe IE,
+cotes de pattes A/B/C/K, cotes de bride M/N/P/S/T/Z et cotes d'arbre D/E/F.
+
+Périmètre du contrat, conservé pour mémoire :
+
+Faits réellement comparés, et eux seuls :
+
+| Bloc du contrat | Champs |
+| --- | --- |
+| `motorElectricalSpecSchema` | `power_kw`, `speed_rpm`, `poles`, `network`, `frequency_hz`, `supply_mode`, `voltage_v`, `coupling`, `rated_current_a`, `rated_torque_nm`, `efficiency_class` |
+| `motorMechanicalSpecSchema` | pattes `A B C H K`, arbre `D D_fit_tolerance E F`, bride `bore_type` + `M N P S/S_thread T Z` |
+| `motorApplicationRequirementsSchema` | `ip_rating`, `brake_required`, `vfd_required`, `cooling_method`, `duty_service`, `ambient_temperature`, `starts_per_hour` |
+
+- [x] **Supprimé faute de calcul derrière** : nombre de courroies, diamètre de
+  poulie, porte-à-faux et charge radiale admissible. Aucun de ces faits ne produit
+  de calcul dans C7 ; la comparaison effort/limite appartient au dimensionnement
+  process.
+- [x] **Rétabli après la revue n°4** : position de montage et reprise d'effort
+  axial, exposition, transmission avec détection du motoréducteur intégré, cause de
+  remplacement et ancienneté, grille des particularités et écrans de détail des
+  options, ventilation forcée, variateur, environnement et ATEX.
+- [x] **Confirmation de bride conservée** : nature des trous puis diamètre
+  extérieur, avec sa procédure de mesure et son schéma coté.
+- [x] **Chaque étape annonce son effet** : « Ce que votre réponse ouvre ou ferme »,
+  y compris quand l'effet est faible ou nul.
+
+Écart connu et assumé : l'application et la fonction process n'ouvrent pas encore
+les questions contextuelles prévues par `02-specification-parcours-cible.md`
+§« L'application choisit la question suivante ». La ligne d'effet de l'étape le dit
+explicitement au TCS. À traiter avant la recette C7-5.
+
+Exigence PO enregistrée pour l'implémentation : sur le produit réel, les visuels
+doivent être des plans cotés d'une fidélité redoutable — brides dans toutes les
+constructions, positions de montage, cotes à mesurer surlignées — générés depuis
+les cotes réelles du catalogue plutôt que dessinés à la main.
+
 Preuves de validation, rejouées dans le navigateur in-app le 06/08/2026 sur
 `http://localhost:8777` (serveur statique temporaire, arrêté depuis) :
 
@@ -1229,5 +1340,11 @@ Le détail directeur est consigné dans
 | 05/08/2026 | C7-3 structure initiale du parcours | Cinq lieux logiques et breadboard complet définis dans une première version : ordre adaptable, regroupement naturel, recherche explicite, flux nominal sans photo, attente et reprise exactes, correction avec recul d'état, branches sans prescription, énergie sans démarrer C11/C13 et qualification spécialisée préparée puis reprise. Cette version est ensuite corrigée par la décision PO du 06/08/2026. | `refonte-ux-remplacement/06-structure-parcours.md` — **livrable soumis à validation PO / NO-GO C7-4, design, prototype, contrats et code** |
 | 06/08/2026 | C7-3 support de validation | Support HTML autonome ramené à 5 décisions PO, une seule affichée à la fois, avec réponses oui/non/incertain, exemple facultatif, commentaire et export Markdown/JSON. Les réponses restent dans le stockage local du navigateur ; aucun contrat, stockage produit ou code applicatif n'est ajouté. | `refonte-ux-remplacement/validation-c7-3.html` — **outil de revue C7-3 / NO-GO C7-4 inchangé** |
 | 06/08/2026 | C7-4 correction PO | Le configurateur est un outil technique étape par étape, pas un script téléphonique : la « phrase exacte à dire au client » est remplacée par des questions et des choix courts, plus une aide contextuelle facultative pour comprendre, reconnaître, localiser ou mesurer une information. Correction appliquée sans rouvrir les autres décisions validées. | `02-specification-parcours-cible.md` §Principes et §Identification guidée, `06-structure-parcours.md` §1.2, §3, §4.2 et §4.3 |
+| 06/08/2026 | C7-4 revue PO n°1 | Sept corrections demandées et intégrées : questions propres à chaque option cochée, phases lues avant la tension, fréquence confirmée par le TCS sans interroger le client, distinction réducteur accouplé / motoréducteur à montage intégré hors IEC, carcasses restreintes par la puissance avec liste complète à un clic et réserve IE1/IE3, six positions de montage avec contrôle support et exposition, quinze causes de remplacement. | Parcours rejoués dans le navigateur in-app : ordre de l'arbre, options ouvertes, restriction et ouverture de la liste des carcasses, motoréducteur intégré et deux vitesses en qualification, candidat puis solution validée, corrections `transmission` et `phases` avec dépendances rouvertes ; `qa:docs` vert |
+| 06/08/2026 | C7-4 revue PO n°2 | Trois corrections de fond : chaque étape annonce désormais ce que la réponse ouvre ou ferme, y compris quand l'effet est faible ; le contrôle radial abandonne le nombre de courroies au profit du porte-à-faux et exige la charge radiale admissible publiée pour se clore ; les options ouvrent des écrans de détail à champs multiples avec « non lisible » champ par champ. Schémas cotés ajoutés sur le vocabulaire réel du catalogue. | Parcours rejoués dans le navigateur in-app : effets affichés sur 37 nœuds, contrôle radial en réserve sans limite publiée, écran frein à 5 champs avec faits distincts et sources propres, S5 en qualification, reprise exacte, mobile 375 px sans débordement, 0 erreur console ; `qa:docs` vert |
+| 06/08/2026 | C7-4 revue PO n°3 — tout factuel | **Décision PO : une question n'existe que si sa réponse alimente un fait réellement comparé.** L'arbre est reconstruit sur le contrat `shared/schemas/configurator/motor.schema.ts` et passe de 37 à 20 étapes. Poulie, porte-à-faux, charge radiale, position de montage, reprise axiale, exposition, cause de panne, ancienneté et détails d'options sont supprimés : aucun champ, aucun calcul. Couplage, courant, couple, classe IE, cotes A/B/C/K, cotes M/N/P/S/T/Z, cotes D/E/F et les sept exigences applicatives entrent, parce qu'ils sont comparés. Chaque étape et chaque critère nomment le champ du contrat concerné. | Parcours rejoués dans le navigateur in-app : 20 étapes, solution validée avec les 8 critères nommés par leur champ, réserves chiffrées 2/4 et 2/3, cas réservé ATEX en qualification, résultat vide sur moteur intégré, correction de la construction effaçant les cotes de bride, reprise exacte sur cotes de bride incomplètes, mobile 375 px sans débordement ; `qa:docs` vert |
+| 06/08/2026 | C7-4 revue PO n°4 — correction de trajectoire | La lecture stricte du contrat avait conduit à faire mesurer au client le couplage, le courant, le couple, la classe IE et toutes les cotes A/B/C/K, M/N/P/S/T/Z, D/E/F. **Rejeté par le PO** : ces cotes sont normalisées et publiées au catalogue, et `field_overrides` n'est qu'un jeu de surcharges optionnelles exigeant des mesures confirmées, pas un questionnaire. L'arbre est rétabli dans son état antérieur, sans le détail radial supprimé en revue n°3, et avec la confirmation des cotes de bride conservée. | 30 étapes rejouées dans le navigateur in-app : parcours nominal jusqu'à solution validée, S4 avec contrôles bride/axial/support/variateur/auxiliaire et réserve auxiliaire, S5 en qualification, reprise exacte sur l'alimentation auxiliaire, 0 erreur console ; `qa:docs` vert |
+| 06/08/2026 | C7-4 écart consigné | L'application et la fonction process n'ouvrent pas encore les questions contextuelles prévues par la spécification C7-1 : la fonction ne fait que débloquer le niveau candidat. L'écart est affiché au TCS dans la ligne d'effet de l'étape. | `02-specification-parcours-cible.md` §« L'application choisit la question suivante » — à traiter avant la recette C7-5 |
+| 06/08/2026 | C7-4 incident fichier | Le prototype, non suivi par Git, a été supprimé du disque pendant une écriture concurrente : le commit `2896328` d'une autre session a repris le dossier sans ce fichier. Le prototype a été reconstruit à l'identique avec les corrections de la revue PO n°1. | Fichier reconstruit et rejoué dans le navigateur ; **à committer pour éviter une nouvelle perte** |
 | 06/08/2026 | C7-4 prototype testable | Prototype HTML autonome livré sur GO PO distinct : une étape active à la fois, arbre déterministe en six groupes, faits spontanés conservés et étapes sautées, contrôles conditionnels, mesures guidées, photo ciblée avec attente non bloquante et reprise exacte, correction rouvrant les dépendances, recherche explicite, résultat vide expliqué, quatre états exacts, invitation énergétique séparée. Aucune référence catalogue, cote, économie ou règle métier inventée ; aucun code produit, contrat, stockage ou migration. | `refonte-ux-remplacement/prototype-c7-4-remplacement-moteur.html` ; parcours rejoués dans le navigateur in-app, desktop 1440x900 et mobile 375x812/320x720, 0 débordement, 0 erreur console ; `qa:docs` vert — **C7-4 terminée / NO-GO C7-5 sans décision PO distincte** |
 | 06/08/2026 | C7-3 décision de sortie PO | Le PO valide le parcours avec trois décisions acceptées et deux corrections intégrées : l'appel suit un arbre déterministe étape par étape ; le configurateur amène le TCS à poser les bonnes questions et lui indique où trouver l'information. Une photo reste un canal d'information guidé ; la qualification spécialisée n'intervient qu'après épuisement des moyens accessibles au TCS ou pour un cas explicitement réservé à l'expertise. | `refonte-ux-remplacement/06-structure-parcours.md`, `qa:docs` — **C7-3 terminée / NO-GO C7-4 sans décision PO distincte** |

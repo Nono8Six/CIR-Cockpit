@@ -1,24 +1,11 @@
+import { withInvalidTrpcResponse } from '@/services/api/invokeTrpc';
 import {
   adminUsersArchiveResponseSchema,
   type AdminUsersArchiveResponse
 } from '../../../../shared/schemas/system/api-responses';
 import { safeTrpc } from '@/services/api/safeTrpc';
-import { createAppError } from '@/services/errors/AppError';
 
-export type ArchiveUserResponse = AdminUsersArchiveResponse;
-
-const parseArchiveUserResponse = (payload: unknown): ArchiveUserResponse => {
-  const parsed = adminUsersArchiveResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'EDGE_INVALID_RESPONSE',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-  return parsed.data;
-};
+export type ArchiveUserResponse = AdminUsersArchiveResponse;;
 
 export const archiveAdminUser = (userId: string) =>
   safeTrpc(
@@ -26,6 +13,6 @@ export const archiveAdminUser = (userId: string) =>
       action: 'archive',
       user_id: userId
       }, options),
-    parseArchiveUserResponse,
+    withInvalidTrpcResponse(adminUsersArchiveResponseSchema, { code: 'EDGE_INVALID_RESPONSE' }),
     "Impossible d'archiver l'utilisateur."
   );

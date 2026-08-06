@@ -17,11 +17,13 @@ export const accountTypeSchema = z.enum(['term', 'cash']);
 export const clientKindSchema = z.enum(['company', 'individual']);
 
 const optionalTextSchema = z
-  .union([z.string(), z.null(), z.undefined()])
+  .union([z.string(), z.null()])
+  .optional()
   .transform((value) => value?.trim() ?? '');
 
 export const optionalCommercialIdSchema = z
-  .union([uuidSchema, z.literal(''), z.null(), z.undefined()])
+  .union([uuidSchema, z.literal(''), z.null()])
+  .optional()
   .transform((value) => {
     if (typeof value !== 'string') {
       return null;

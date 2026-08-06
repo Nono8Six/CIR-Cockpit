@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createAppError } from '@/services/errors/AppError';
-import { invokeTrpc } from '@/services/api/invokeTrpc';
+import { invokeTrpc, parseTrpcContract } from '@/services/api/invokeTrpc';
 
-vi.mock('@/services/api/invokeTrpc', () => ({
+vi.mock('@/services/api/invokeTrpc', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/services/api/invokeTrpc')>()),
   invokeTrpc: vi.fn()
 }));
 
@@ -19,7 +20,7 @@ describe('getDirectoryDuplicates', () => {
   });
 
   it('delegates the request to the tRPC directory.duplicates route', async () => {
-    mockInvokeTrpc.mockImplementation(async (_runner, parser) => parser(mockDirectoryResponse));
+    mockInvokeTrpc.mockImplementation(async (_runner, parser) => parseTrpcContract(parser, mockDirectoryResponse));
     mockDirectoryResponse = {
       request_id: 'req-duplicates',
       ok: true,
@@ -44,7 +45,7 @@ describe('getDirectoryDuplicates', () => {
   });
 
   it('validates the server payload before returning it', async () => {
-    mockInvokeTrpc.mockImplementation(async (_runner, parser) => parser(mockDirectoryResponse));
+    mockInvokeTrpc.mockImplementation(async (_runner, parser) => parseTrpcContract(parser, mockDirectoryResponse));
     mockDirectoryResponse = {
       request_id: 'req-duplicates-invalid',
       ok: true,

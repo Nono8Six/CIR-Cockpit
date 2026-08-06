@@ -1,21 +1,17 @@
+import { createTrpcResponseParser } from '@/services/api/invokeTrpc';
 import { ResultAsync } from 'neverthrow';
 
 import { dataInteractionsDeleteResponseSchema } from '../../../../shared/schemas/system/api-responses';
-import { type AppError, createAppError } from '@/services/errors/AppError';
+import { type AppError } from '@/services/errors/AppError';
 import { safeTrpc } from '@/services/api/safeTrpc';
 
-const parseDeleteResponse = (payload: unknown): string => {
-  const parsed = dataInteractionsDeleteResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'REQUEST_FAILED',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-  return parsed.data.interaction_id;
-};
+const parseDeleteResponse = createTrpcResponseParser(
+  dataInteractionsDeleteResponseSchema,
+  (response): string => {
+  return response.interaction_id;
+},
+  { code: 'REQUEST_FAILED', message: 'Réponse serveur invalide.' }
+);
 
 export const deleteInteraction = (interactionId: string): ResultAsync<string, AppError> =>
   safeTrpc(

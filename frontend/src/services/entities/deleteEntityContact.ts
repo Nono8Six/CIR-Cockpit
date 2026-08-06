@@ -1,9 +1,14 @@
 import { ResultAsync } from 'neverthrow';
 
+import { dataEntityContactsResponseSchema } from 'shared/schemas/system/api-responses';
+import { createTrpcResponseParser } from '@/services/api/invokeTrpc';
 import { type AppError } from '@/services/errors/AppError';
 import { safeTrpc } from '@/services/api/safeTrpc';
 
-const parseVoidResponse = (): void => undefined;
+const parseDeleteContactResponse = createTrpcResponseParser(
+  dataEntityContactsResponseSchema,
+  (): void => undefined
+);
 
 export const deleteEntityContact = (contactId: string): ResultAsync<void, AppError> =>
   safeTrpc(
@@ -11,6 +16,6 @@ export const deleteEntityContact = (contactId: string): ResultAsync<void, AppErr
         action: 'delete',
         contact_id: contactId
       }, options),
-    parseVoidResponse,
+    parseDeleteContactResponse,
     'Impossible de supprimer le contact.'
   );

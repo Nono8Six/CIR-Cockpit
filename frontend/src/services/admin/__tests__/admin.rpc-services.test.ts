@@ -1,3 +1,4 @@
+import { parseTrpcContract } from '@/services/api/invokeTrpc';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { TrpcClient } from '@/services/api/trpcClient';
@@ -245,7 +246,7 @@ describe('admin RPC wrappers', () => {
     );
     expect(fallback).toBe(scenario.fallbackMessage);
 
-    expect(parser(scenario.validResponse)).toEqual(scenario.validResponse);
-    expect(() => parser(null)).toThrowError();
+    expect(parseTrpcContract(parser, scenario.validResponse)).toEqual(scenario.validResponse);
+    expect(() => parseTrpcContract(parser, null)).toThrowError();
   });
 });

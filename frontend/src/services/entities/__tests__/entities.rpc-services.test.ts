@@ -1,3 +1,4 @@
+import { parseTrpcContract } from '@/services/api/invokeTrpc';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { TrpcClient } from '@/services/api/trpcClient';
@@ -98,7 +99,7 @@ const createTrpcClientFixture = () => {
 
 const expectRequestFailedError = (parser: SafeRpcParser) => {
   try {
-    parser({});
+    parseTrpcContract(parser, {});
   } catch (error) {
     expect(error).toMatchObject({ code: 'REQUEST_FAILED' });
     return;
@@ -141,7 +142,7 @@ describe('entities RPC services', () => {
       entityRow({ id: 'client-1', name: 'Client 1' }),
       entityRow({ id: 'client-2', name: 'Client 2' })
     ];
-    expect(parser({ ok: true, entities: clients })).toEqual(clients);
+    expect(parseTrpcContract(parser, { ok: true, entities: clients })).toEqual(clients);
     expectRequestFailedError(parser);
   });
 
@@ -197,7 +198,7 @@ describe('entities RPC services', () => {
     );
 
     const prospects = [entityRow({ id: 'prospect-1', entity_type: 'Prospect', name: 'Prospect 1' })];
-    expect(parser({ ok: true, entities: prospects })).toEqual(prospects);
+    expect(parseTrpcContract(parser, { ok: true, entities: prospects })).toEqual(prospects);
     expectRequestFailedError(parser);
   });
 
@@ -226,7 +227,7 @@ describe('entities RPC services', () => {
     );
 
     const contacts = [contactRow({ id: 'contact-1' })];
-    expect(parser({ ok: true, contacts })).toEqual(contacts);
+    expect(parseTrpcContract(parser, { ok: true, contacts })).toEqual(contacts);
     expectRequestFailedError(parser);
   });
 
@@ -272,7 +273,7 @@ describe('entities RPC services', () => {
 
     const entities = [entityRow({ id: 'entity-1' })];
     const contacts = [contactRow({ id: 'contact-1', entity_id: 'entity-1' })];
-    expect(parser({ ok: true, entities, contacts })).toEqual({ entities, contacts });
+    expect(parseTrpcContract(parser, { ok: true, entities, contacts })).toEqual({ entities, contacts });
     expectRequestFailedError(parser);
   });
 
@@ -292,7 +293,7 @@ describe('entities RPC services', () => {
 
     expect(mockSafeRpc).toHaveBeenCalledWith(
       expect.any(Function),
-      expect.any(Function),
+      expect.objectContaining({ safeParse: expect.any(Function) }),
       'Impossible de rechercher les tiers.'
     );
 
@@ -326,7 +327,7 @@ describe('entities RPC services', () => {
       updated_at: '2026-01-01T10:00:00.000Z',
       archived_at: null
     };
-    expect(parser({ ok: true, results: [row] })).toEqual({ ok: true, results: [row] });
+    expect(parseTrpcContract(parser, { ok: true, results: [row] })).toEqual({ ok: true, results: [row] });
     expectRequestFailedError(parser);
   });
 
@@ -364,7 +365,7 @@ describe('entities RPC services', () => {
       { context: { headers: { 'x-request-id': 'req-2' } } }
     );
 
-    expect(parser({ any: 'value' })).toBeUndefined();
+    expect(parseTrpcContract(parser, { ok: true, contact_id: 'contact-1' })).toBeUndefined();
   });
 
   it('builds deleteSupplier RPC payload and parses deleted entity response', async () => {
@@ -385,7 +386,7 @@ describe('entities RPC services', () => {
     );
 
     const entity = entityRow({ id: 'supplier-1', entity_type: 'Fournisseur', agency_id: null });
-    expect(parser({ ok: true, entity })).toEqual(entity);
+    expect(parseTrpcContract(parser, { ok: true, entity })).toEqual(entity);
     expectRequestFailedError(parser);
   });
 
@@ -412,7 +413,7 @@ describe('entities RPC services', () => {
       agency_id: null,
       archived_at: '2026-05-19T10:00:00.000Z'
     });
-    expect(parser({ ok: true, entity })).toEqual(entity);
+    expect(parseTrpcContract(parser, { ok: true, entity })).toEqual(entity);
     expectRequestFailedError(parser);
   });
 
@@ -437,7 +438,7 @@ describe('entities RPC services', () => {
     );
 
     const entity = entityRow({ id: 'entity-1', agency_id: 'agency-target' });
-    expect(parser({
+    expect(parseTrpcContract(parser, {
       ok: true,
       entity,
       propagated_interactions_count: 3
@@ -523,7 +524,7 @@ describe('entities RPC services', () => {
     );
 
     const entity = entityRow({ id: 'entity-3', entity_type: 'Fournisseur', agency_id: null });
-    expect(parser({ ok: true, entity })).toEqual(entity);
+    expect(parseTrpcContract(parser, { ok: true, entity })).toEqual(entity);
     expectRequestFailedError(parser);
   });
 
@@ -563,7 +564,7 @@ describe('entities RPC services', () => {
     );
 
     const contact = contactRow({ id: 'contact-2', entity_id: 'entity-2' });
-    expect(parser({ ok: true, contact })).toEqual(contact);
+    expect(parseTrpcContract(parser, { ok: true, contact })).toEqual(contact);
     expectRequestFailedError(parser);
   });
 });

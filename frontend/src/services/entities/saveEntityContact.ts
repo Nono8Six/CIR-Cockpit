@@ -1,3 +1,4 @@
+import { createTrpcResponseParser } from '@/services/api/invokeTrpc';
 import { ResultAsync } from 'neverthrow';
 
 import { dataEntityContactsResponseSchema } from '../../../../shared/schemas/system/api-responses';
@@ -20,18 +21,20 @@ export type EntityContactPayload = {
 const normalizeOptionalField = (value: string | null | undefined): string =>
   value?.trim() ?? '';
 
-const parseContactResponse = (payload: unknown): EntityContact => {
-  const parsed = dataEntityContactsResponseSchema.safeParse(payload);
-  if (!parsed.success || !('contact' in parsed.data)) {
-    throw createAppError({
-      code: 'REQUEST_FAILED',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.success ? undefined : parsed.error.message
-    });
-  }
-  return parsed.data.contact;
-};
+const parseContactResponse = createTrpcResponseParser(
+  dataEntityContactsResponseSchema,
+  (response): EntityContact => {
+    if (!('contact' in response)) {
+      throw createAppError({
+        code: 'REQUEST_FAILED',
+        message: 'Réponse serveur invalide.',
+        source: 'edge'
+      });
+    }
+    return response.contact;
+  },
+  { code: 'REQUEST_FAILED', message: 'Réponse serveur invalide.' }
+);
 
 export const saveEntityContact = (payload: EntityContactPayload): ResultAsync<EntityContact, AppError> =>
   safeTrpc(

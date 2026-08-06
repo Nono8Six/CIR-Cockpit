@@ -1,24 +1,18 @@
+import { createTrpcResponseParser } from '@/services/api/invokeTrpc';
 import { dataInteractionsListResponseSchema } from '../../../../shared/schemas/system/api-responses';
 
 import type { Interaction } from '@/types';
 import { getActiveAgencyId } from '@/services/agency/getActiveAgencyId';
 import { invokeTrpc } from '@/services/api/invokeTrpc';
-import { createAppError } from '@/services/errors/AppError';
 import { hydrateTimeline } from './hydrateTimeline';
 
-const parseInteractionsResponse = (payload: unknown): Interaction[] => {
-  const parsed = dataInteractionsListResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'REQUEST_FAILED',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-
-  return parsed.data.interactions.map(hydrateTimeline);
-};
+const parseInteractionsResponse = createTrpcResponseParser(
+  dataInteractionsListResponseSchema,
+  (response): Interaction[] => {
+  return response.interactions.map(hydrateTimeline);
+},
+  { code: 'REQUEST_FAILED', message: 'Réponse serveur invalide.' }
+);
 
 export const getInteractions = async (agencyIdOverride?: string): Promise<Interaction[]> => {
   const agencyId = agencyIdOverride ?? (await getActiveAgencyId());

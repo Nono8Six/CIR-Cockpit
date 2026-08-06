@@ -1,21 +1,16 @@
+import { createTrpcResponseParser } from '@/services/api/invokeTrpc';
 import { dataInteractionsMutationResponseSchema } from '../../../../shared/schemas/system/api-responses';
 import { Interaction, InteractionUpdate, TimelineEvent } from '@/types';
 import { invokeTrpc } from '@/services/api/invokeTrpc';
-import { createAppError } from '@/services/errors/AppError';
 import { hydrateTimeline } from './hydrateTimeline';
 
-const parseInteractionResponse = (payload: unknown): Interaction => {
-  const parsed = dataInteractionsMutationResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'REQUEST_FAILED',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-  return hydrateTimeline(parsed.data.interaction);
-};
+const parseInteractionResponse = createTrpcResponseParser(
+  dataInteractionsMutationResponseSchema,
+  (response): Interaction => {
+  return hydrateTimeline(response.interaction);
+},
+  { code: 'REQUEST_FAILED', message: 'Réponse serveur invalide.' }
+);
 
 export const updateInteractionOptimistic = async (
   interactionId: string,

@@ -1,6 +1,6 @@
+import { createTrpcResponseParser } from '@/services/api/invokeTrpc';
 import { dataEntitiesListResponseSchema } from '../../../../shared/schemas/system/api-responses';
 import { Client } from '@/types';
-import { createAppError } from '@/services/errors/AppError';
 import { safeTrpc } from '@/services/api/safeTrpc';
 
 export type GetClientsOptions = {
@@ -9,18 +9,13 @@ export type GetClientsOptions = {
   orphansOnly?: boolean;
 };
 
-const parseClientsResponse = (payload: unknown): Client[] => {
-  const parsed = dataEntitiesListResponseSchema.safeParse(payload);
-  if (!parsed.success) {
-    throw createAppError({
-      code: 'REQUEST_FAILED',
-      message: 'Réponse serveur invalide.',
-      source: 'edge',
-      details: parsed.error.message
-    });
-  }
-  return parsed.data.entities;
-};
+const parseClientsResponse = createTrpcResponseParser(
+  dataEntitiesListResponseSchema,
+  (response): Client[] => {
+  return response.entities;
+},
+  { code: 'REQUEST_FAILED', message: 'Réponse serveur invalide.' }
+);
 
 export const getClients = async (options: GetClientsOptions = {}): Promise<Client[]> => {
   const { agencyId, includeArchived = false, orphansOnly = false } = options;

@@ -28,7 +28,8 @@ const LEGACY_SOURCE_ALLOWLIST = new Set([
 const SOURCE_PATTERN = /^[A-Za-z][A-Za-z0-9]*(\.[A-Za-z][A-Za-z0-9]*)+$/;
 const SINGLE_TOKEN_SOURCE_PATTERN = /^[A-Za-z][A-Za-z0-9]*$/;
 
-const shouldScanFile = (filePath) => /\.(ts|tsx|js|jsx)$/.test(filePath);
+const shouldScanFile = (filePath) =>
+  !filePath.endsWith('.d.ts') && /\.(ts|tsx|js|jsx)$/.test(filePath);
 
 const isTestFile = (filePath) =>
   /__tests__|\.test\.(ts|tsx|js|jsx)$|_test\.ts$/.test(filePath);
