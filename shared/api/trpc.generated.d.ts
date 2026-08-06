@@ -1,3 +1,5 @@
+// Source fingerprint: sha256:6985f9a258ab3bbcd9c23a977b3197dc2b5e1240a3c08288f96a138cd9735b08
+// Contract fingerprint: sha256:565f7cc15a2164b04ca93e7726076dd556e74ad72cc22dc0751f635ae585ae73
 // Generated from backend/functions/api/trpc/router.ts. Do not edit manually.
 // Client projection: 83 procedures with public input/output types only.
 // Run `pnpm run contract:trpc:generate` after changing the canonical router.
