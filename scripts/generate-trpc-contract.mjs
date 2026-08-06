@@ -1,4 +1,4 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, readdir, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -15,6 +15,10 @@ const sourceFingerprintFiles = [
   "deno.json",
   "backend/deno.json",
   "scripts/generate-trpc-contract.mjs",
+];
+const sourceFingerprintRoots = [
+  "backend/functions/api",
+  "shared",
 ];
 
 if (mode !== "--check" && mode !== "--write") {
@@ -69,27 +73,43 @@ const renderType = (type) => checker.typeToString(type, routerSource, typeFormat
 const normalizeText = (value) => value.replaceAll("\r\n", "\n");
 const sha256 = (value) => createHash("sha256").update(value).digest("hex");
 
-const sourceEntries = program.getSourceFiles()
-  .map((sourceFile) => ({
-    path: path.relative(repoRoot, sourceFile.fileName).replaceAll("\\", "/"),
-    content: sourceFile.text,
-  }))
-  .filter(({ path: sourcePath }) =>
-    !sourcePath.startsWith("../")
-    && !sourcePath.startsWith("node_modules/")
-    && sourcePath !== "shared/api/trpc.generated.d.ts"
-  );
-
-for (const sourcePath of sourceFingerprintFiles) {
-  sourceEntries.push({
-    path: sourcePath,
-    content: await readFile(path.join(repoRoot, sourcePath), "utf8"),
+const listTypeScriptSources = async (relativeDirectory) => {
+  const entries = await readdir(path.join(repoRoot, relativeDirectory), {
+    withFileTypes: true,
   });
-}
+  const sourcePaths = [];
+
+  for (const entry of entries.sort((left, right) =>
+    left.name < right.name ? -1 : left.name > right.name ? 1 : 0
+  )) {
+    const relativePath = path.posix.join(relativeDirectory, entry.name);
+    if (entry.isDirectory()) {
+      sourcePaths.push(...await listTypeScriptSources(relativePath));
+    } else if (
+      /\.(?:[cm]?ts|tsx)$/.test(entry.name)
+      && relativePath !== "shared/api/trpc.generated.d.ts"
+    ) {
+      sourcePaths.push(relativePath);
+    }
+  }
+
+  return sourcePaths;
+};
+
+const discoveredSourcePaths = (
+  await Promise.all(sourceFingerprintRoots.map(listTypeScriptSources))
+).flat();
+const fingerprintPaths = [...new Set([
+  ...sourceFingerprintFiles,
+  ...discoveredSourcePaths,
+])].sort((left, right) => left < right ? -1 : left > right ? 1 : 0);
+const sourceEntries = await Promise.all(fingerprintPaths.map(async (sourcePath) => ({
+  path: sourcePath,
+  content: await readFile(path.join(repoRoot, sourcePath), "utf8"),
+})));
 
 const sourceFingerprint = sha256(
   sourceEntries
-    .sort((left, right) => left.path < right.path ? -1 : left.path > right.path ? 1 : 0)
     .map(({ path: sourcePath, content }) => `${sourcePath}\0${normalizeText(content)}\0`)
     .join(""),
 );
