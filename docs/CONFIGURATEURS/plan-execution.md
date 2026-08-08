@@ -15,7 +15,7 @@ de chaque tranche.
 | C3 — Compatibilité technique backend | ✅ terminée | **GO C5** | checkpoint C3-8 ci-dessous |
 | C5 — Socle frontend | ✅ terminée | **GO C6** | checkpoint C5 ci-dessous |
 | C6 — Première tranche verticale | ✅ technique / ❌ UX rejetée | ancien GO C7 retiré | checkpoint C6 ci-dessous |
-| C7 — Reprise du parcours Remplacement | ✅ C7-4 livrée sur GO PO du 06/08/2026 ; recette PO C7-5 à faire | **NO-GO C7-5 sans décision PO distincte** | `refonte-ux-remplacement/prototype-c7-4-remplacement-moteur.html` |
+| C7 — Reprise du parcours Remplacement | ✅ C7-4 livrée sur GO PO du 06/08/2026, reprise visuelle et UX comprise, trois écrans repris à la revue PO n°8 du 07/08/2026 ; recette PO C7-5 à faire | **NO-GO C7-5 sans décision PO distincte** | `refonte-ux-remplacement/prototype-c7-4-remplacement-moteur.html` |
 | C8 à C14 | ⬜ non commencées | non autorisées | plan directeur |
 
 **Verdict au 06/08/2026 :** C3/C4 et les fondations techniques C5/C6 sont
@@ -961,8 +961,9 @@ Le plan de reprise détaillé, découpé par checkpoints, est
 
 ## C7 — Reprise du parcours Remplacement
 
-Statut : **C7-0 à C7-4 terminés — C7-4 livrée le 06/08/2026 sur GO PO distinct /
-NO-GO C7-5, contrats, code produit, stockage et migration sans décision distincte**.
+Statut : **C7-0 à C7-4 terminés — C7-4 livrée le 06/08/2026 sur GO PO distinct,
+trois écrans repris le 07/08/2026 à la revue PO n°8 / NO-GO C7-5, contrats, code
+produit, stockage et migration sans décision distincte**.
 
 - [x] **C7-0 — Recadrage.** Le rejet de l'UX C6 est acté ; le dossier v6 est
   reclassé comme hypothèse de travail ; les frontières C7/C8/C9/C11/C13 sont
@@ -1150,7 +1151,10 @@ Faits réellement comparés, et eux seuls :
   remplacement et ancienneté, grille des particularités et écrans de détail des
   options, ventilation forcée, variateur, environnement et ATEX.
 - [x] **Confirmation de bride conservée** : nature des trous puis diamètre
-  extérieur, avec sa procédure de mesure et son schéma coté.
+  extérieur, avec sa procédure de mesure et son schéma coté. *Révisé le
+  06/08/2026 : la nature des trous n'est plus une question, elle se déduit de la
+  construction reconnue ; seul le diamètre reste confirmé. Voir « Clôture des
+  écarts » plus bas.*
 - [x] **Chaque étape annonce son effet** : « Ce que votre réponse ouvre ou ferme »,
   y compris quand l'effet est faible ou nul.
 
@@ -1163,6 +1167,54 @@ Exigence PO enregistrée pour l'implémentation : sur le produit réel, les visu
 doivent être des plans cotés d'une fidélité redoutable — brides dans toutes les
 constructions, positions de montage, cotes à mesurer surlignées — générés depuis
 les cotes réelles du catalogue plutôt que dessinés à la main.
+
+### Reprise visuelle et UX du 06/08/2026
+
+Demande PO : approfondir l'UI/UX, améliorer les questions des écrans d'options et
+surtout les visuels — 2D détaillés, plaque signalétique reproduite fidèlement, et
+à chaque fois l'information demandée entourée en rouge.
+
+- [x] **Bibliothèque de dessin technique** intégrée au prototype : primitives de
+  texte et de forme, lignes de cote avec traits d'attache et flèches pleines,
+  hachures de coupe, axes en trait mixte, familles de nervures, et un anneau
+  d'annotation rouge animé. Aucun fichier externe, aucune image bitmap, aucun appel
+  réseau : tout est du SVG construit à l'exécution.
+- [x] **Règle de couleur unique** : le rouge n'entoure que l'information exactement
+  demandée par l'étape en cours. Aucun autre usage décoratif du rouge dans les
+  figures.
+- [x] **Plaque signalétique fidèle et paramétrable** : plaque rivetée au format
+  IEC 60034-1 avec bandeau constructeur et marquage CE, ligne Type / N° de série /
+  IP, tableau des deux couplages en V, Hz, kW, tr/min, A et cos φ, pictogramme de
+  couplage triangle-étoile, bande de service Cl./S1/IE/Ta/masse/année et
+  code-barres. Onze zones surlignables : `ph`, `type`, `ip`, `v`, `hz`, `kw`,
+  `rpm`, `courant`, `couplage`, `annee` et la variante deux vitesses. Trois plaques
+  rapportées dérivées : auxiliaire de ventilation forcée, frein, marquage Ex.
+- [x] **Vingt et un schémas 2D** : élévation complète du moteur — capot et grille,
+  ailettes, flasques et boulonnerie, boîte à bornes et presse-étoupe, anneau de
+  levage, pattes fendues, bout d'arbre clavetté, plaque sur le flanc ; bride vue de
+  face cotée P/M/N/S ; **coupe comparée trou traversant / trou taraudé**, qui rend
+  visible la seule différence que le TCS fait constater ; cotes de pattes H/A/B/K ;
+  cotes de bout d'arbre D/E/F ; planche des huit positions de montage ; chaîne
+  moteur → liaison → machine → process ; armoire et variateur avec fréquence
+  affichée ; montage vertical et chemin de la poussée axiale ; frein, ventilation
+  forcée, codeur, deuxième bout d'arbre, capot pare-pluie, motoréducteur intégré,
+  boîte à bornes ouverte ; vignettes de galerie des six constructions et des trois
+  liaisons.
+- [x] **Repère visuel de premier plan** : la figure n'est plus enfouie dans l'aide
+  repliée. Elle occupe une surface dédiée sous la question, avec une légende qui
+  nomme en toutes lettres ce qui est entouré en rouge. Repliable au clavier par
+  `V`, agrandissable en dialog centré — le clic sur la figure suffit, ce qui rend
+  la lecture possible sur mobile.
+- [x] **Écrans d'options repris** : la grille des particularités et celle des
+  conditions d'environnement deviennent des grilles à pictogrammes ; chaque champ
+  des écrans de détail — frein, ventilation forcée, capteur, ATEX — reçoit un
+  repère de terrain qui dit où regarder et comment reconnaître, sans ajouter aucun
+  fait au relevé. Les vignettes de construction distinguent désormais à l'œil les
+  trous traversants, dessinés ouverts, des trous taraudés, dessinés filetés.
+- [x] **Aucun fait ajouté au relevé.** La revue n°4 avait corrigé la confusion
+  entre « le contrat compare ce champ » et « il faut le demander au client » : la
+  reprise visuelle ne rouvre pas cette porte. Elle n'améliore que la formulation,
+  les repères de lecture et les figures.
 
 Preuves de validation, rejouées dans le navigateur in-app le 06/08/2026 sur
 `http://localhost:8777` (serveur statique temporaire, arrêté depuis) :
@@ -1184,9 +1236,200 @@ Preuves de validation, rejouées dans le navigateur in-app le 06/08/2026 sur
 - Rendu desktop 1440x900, mobile 375x812 et 320x720 : aucun débordement
   horizontal (`scrollWidth` = `clientWidth`), aucune erreur console.
 - Clavier : chiffres pour choisir, Entrée pour valider une saisie ou une grille,
-  `A` pour l'aide, Échap pour fermer un dialog, tabulation complète avec anneau de
-  focus visible.
+  `A` pour l'aide, `V` pour replier le repère visuel, Échap pour fermer un dialog,
+  tabulation complète avec anneau de focus visible.
 - `pnpm run qa:docs` vert.
+
+Preuves de la reprise visuelle, rejouées le 06/08/2026 sur un serveur statique
+temporaire `http://localhost:8777`, arrêté depuis :
+
+- **Les figures ont cette fois été revues à l'œil**, une par une, dans une planche
+  de contrôle affichant les vingt-six couples figure/surlignage. Six défauts de
+  composition ont été corrigés à cette occasion : mention « Made in EU » sous un
+  rivet, libellé de boîte à bornes mordu par son anneau, texte du bornier recouvert
+  par l'annotation, texte ATEX recouvert par l'annotation, libellé de plaque de
+  frein pris dans l'anneau, et surface au sol dessinée sous le montage plafond
+  au lieu d'un plafond.
+- Position de montage V1 arbre vers le bas et V3 arbre vers le haut vérifiées
+  distinctes ; l'anneau des positions couvre bien les verticales **et** l'incliné,
+  conformément à la légende.
+- Parcours complet rejoué en 320 × 720 avec relevé de `scrollWidth` contre
+  `clientWidth` à chaque étape : aucun débordement horizontal, y compris sur les
+  grilles à pictogrammes et les écrans de détail d'options.
+- Agrandissement de la figure en dialog centré vérifié en 375 × 812 : la plaque
+  redevient lisible là où la vignette en ligne ne suffit pas.
+- Rendu 1440 × 900 avec le relevé latéral : question, repère visuel, saisie et
+  actions tiennent au-dessus de la ligne de flottaison.
+- Recherche lancée depuis ce parcours : périmètre correct, état technique correct,
+  aucun débordement.
+- Aucune erreur console sur l'ensemble du parcours.
+
+### Vérification profonde du 06/08/2026 — écarts relevés
+
+Contrôle du prototype contre le backend réel (Supabase MCP, lecture seule, projet
+`CIR_Cockpit`, Edge Function `api` v199) et contre les documents C7-1 à C7-3.
+Les sept routes tRPC du configurateur sont bien en place et le catalogue est
+peuplé : 10 158 modèles, 14 130 points de fonctionnement, 47 598 options de bride
+et 253 764 cotes sur le snapshot actif.
+
+Corrigé dans le prototype, parce que le catalogue prouve l'erreur :
+
+- [x] **Liste des carcasses incomplète.** Les hauteurs d'axe 56, 400 et 450
+  existent au catalogue et manquaient à la liste fermée : un moteur de carcasse
+  400 ne pouvait pas être consigné autrement qu'en « ligne illisible », ce qui est
+  une fausse déclaration. Liste complétée.
+- [x] **Raccourci des carcasses par puissance infirmé.** L'hypothèse d'affichage
+  se trompait sur dix des douze tranches testées : elle proposait des carcasses
+  inexistantes à cette puissance — 100 à 5,5 kW, 112 à 7,5 kW — et en omettait
+  systématiquement d'autres qui existent. Les ensembles sont désormais relevés sur
+  le catalogue. Réserve ouverte : au-delà de 30 kW la tranche compte sept à neuf
+  carcasses réelles, donc le raccourci n'en est plus un ; le garder ou le retirer
+  est une décision PO de C7-6.
+- [x] **Bornes de diamètre de bride fausses.** Le prototype rejetait toute valeur
+  au-dessus de 800 mm alors que les brides B5/B35 vont jusqu'à 1 150 mm, et
+  acceptait des valeurs sous 80 mm qui n'existent nulle part. Bornes reprises sur
+  la plage réelle du catalogue, avec marge de mesure dictée.
+
+Traité le 06/08/2026 après arbitrage PO :
+
+- [x] **La nature des trous n'est plus une question, c'est une déduction.** Le PO a
+  corrigé la prémisse : B14 est taraudé et B5 est lisse, c'est factuel. Il n'y
+  avait donc pas une contradiction à policer mais **un fait demandé deux fois**,
+  contre la règle posée à la revue n°6. L'étape « trous traversants ou taraudés »
+  est supprimée ; la nature des trous est consignée comme déduction sourcée
+  « Règle technique · Déduction depuis la construction reconnue », exactement comme
+  la polarité déduite d'une vitesse lue. L'observation des trous devient ce qu'elle
+  est vraiment : le moyen de départager grande et petite bride **dans** l'étape de
+  fixation, portée par sa note, son aide et sa figure en coupe. L'arbre passe de 29
+  à 28 nœuds et le contrôle de bride ne porte plus que la confirmation du diamètre.
+- [x] **Cotes A et B : libellés corrigés au catalogue.** Migration additive
+  `20260807094550_configurator_c7_fix_canonical_ab_labels` appliquée par
+  `apply_migration` sur autorisation PO explicite, avec bloc de vérification qui
+  échoue bruyamment si l'état final n'est pas celui attendu. A redevient « entraxe
+  transversal des pieds », B « entraxe longitudinal ». Les valeurs mesurées n'ont
+  pas été touchées : elles suivaient déjà la convention IEC, A valant 140, 216, 279
+  et 406 mm pour les carcasses 90, 132, 180 et 250.
+- [x] **Documents remis en cohérence.** `02` §« Tronc commun » porte les six
+  groupes réels — Plaque, Usage, Construction, Installation, Équipements,
+  Environnement — avec la mention de la revue n°6 qui les a décidés ; `02`
+  §« Branches » et `06` §7 marquent la branche de charge radiale comme supprimée à
+  la revue n°3, motif inclus, plutôt que de la décrire comme active ; `04` §2.2
+  remplace le type d'accouplement à huit valeurs par la liaison à trois valeurs.
+- [x] **Vocabulaire de verdict aligné.** Le prototype écrit désormais
+  `under_reservation` comme `overall_status` du contrat tRPC, jetons et sélecteur
+  CSS compris, pour qu'aucune traduction implicite ne s'installe.
+- [x] **Raccourci des carcasses conservé.** Décision PO : le mécanisme reste actif
+  partout, y compris dans le haut de gamme où la tranche compte sept à neuf
+  carcasses réelles. Les ensembles sont ceux du catalogue.
+- [x] **Deux vitesses : sortie et motif inchangés.** Décision PO : le parcours
+  continue d'envoyer les moteurs à deux vitesses en qualification spécialisée avec
+  le motif actuel. Les 240 modèles Dahlander du catalogue restent consignés ici
+  comme donnée connue, sans effet sur le parcours.
+
+### Revue PO n°7 du 06/08/2026 — cinq écrans repris sur captures
+
+Le PO a relu le parcours écran par écran et relevé cinq défauts. Un d'entre eux
+était un **défaut fonctionnel**, pas seulement visuel.
+
+- [x] **Un moteur à bride IEC sur réducteur partait à tort en qualification.**
+  « Monté sur le réducteur » confondait deux cas que rien ne rapprochait : un
+  moteur boulonné sur une lanterne IEC, qui se démonte seul et se remplace
+  normalement, et un moteur intégré dont l'arbre est le pignon d'entrée. La
+  liaison passe à quatre valeurs et seule la seconde bascule en qualification.
+  Le premier cas redevient un remplacement standard.
+- [x] **Les positions prennent leur désignation normalisée CEI 60034-7** — IM B3,
+  B6, B7, B8, V1, V3, V5, V6, V15, V18, V19, V36 — et la liste est filtrée par la
+  construction reconnue : un moteur à pattes seules ne se voit plus proposer un
+  code de bride. Une position déjà consignée qui n'existe pas pour une nouvelle
+  construction est retirée plutôt que conservée à tort.
+- [x] **La coupe des trous quitte l'étape de fixation.** Le PO ne veut plus voir
+  traversant ou taraudé à cette étape. Le repère visuel montre désormais les deux
+  endroits où regarder — le dessous et l'avant du moteur — et ce sont les
+  vignettes qui départagent, par la taille du plateau.
+- [x] **Les vignettes de construction deviennent des vues réelles.** Chaque
+  construction porte une vue de côté complète — capot et grille, ailettes, boîte
+  à bornes, flasque, bout d'arbre clavetté, pattes fendues — et une vue de face.
+  C'est la vue de face qui rend immédiate la différence entre grande et petite
+  bride : le rapport du plateau au corps du moteur.
+- [x] **L'alimentation devient une galerie.** Le départ direct et le variateur ont
+  chacun leur vignette : disjoncteur et contacteur sans afficheur d'un côté,
+  boîtier à afficheur et potentiomètre de l'autre.
+- [x] **L'étape des équipements devient une comparaison.** Deux vignettes —
+  moteur nu contre moteur portant un frein et une ventilation forcée — remplacent
+  un schéma qui se contentait d'entourer deux pièces. La question et ses deux
+  réponses sont reformulées : « Le moteur porte-t-il une pièce rapportée ? ».
+
+### Revue PO n°8 du 07/08/2026 — trois écrans repris sur captures
+
+Le PO a rejeté trois écrans après relecture. Les trois refus visaient la même
+faiblesse : l'écran montrait au lieu de servir.
+
+- [x] **Les six vignettes de fixation sont tracées à l'échelle.** Les dessins se
+  ressemblaient parce qu'ils venaient de coordonnées écrites à la main. Ils sont
+  désormais calculés depuis un jeu de cotes réel de la carcasse 132, relevé en
+  lecture seule sur le snapshot actif : pattes `A 216 · B 178 · C 89 · H 132 ·
+  K 12`, arbre `D 38 · E 80 · F 10`, grande bride `P 300 · M 265 · N 230 ·
+  S 14,5 traversant · T 4`, petite bride `P 200 · M 165 · N 130 · S M10
+  taraudé · T 3,5`, plus l'enveloppe publiée `AC 281 · AB 256 · AD 214,5 ·
+  BB 218 · AA 53 · HA 15 · LB 413`. Une seule fonction reçoit ce jeu et rend le
+  SVG : changer de carcasse revient à changer cet objet, ce qui est le chemin
+  direct vers la génération depuis le catalogue prévue en C7-8.
+- [x] **Les silhouettes diffèrent réellement.** Le rapport du plateau à la
+  hauteur d'axe vaut 2,27 en grande bride et 1,52 en petite ; rapporté au corps
+  du moteur, il vaut 1,07 contre 0,71. La grande bride déborde donc le corps et
+  la petite reste nettement à l'intérieur, sans qu'un mot soit nécessaire. Sur
+  cette carcasse le corps (Ø 281) est plus large que deux fois la hauteur
+  d'axe : le contour est arasé au plan de pose, comme sur un plan constructeur,
+  au lieu de traverser les pattes.
+- [x] **Le code de construction est lisible dans le choix.** Chaque libellé
+  s'ouvre sur `B3`, `B5`, `B14`, `B34` ou `B35`, la valeur réellement consignée,
+  et le repère porte la cote en clair : « Plateau Ø 300 mm pour une hauteur
+  d'axe de 132 ».
+- [x] **La planche des positions est devenue le sélecteur.** Chaque case est un
+  bouton portant son propre dessin, sa surface d'appui hachurée — sol, mur,
+  plafond ou face de la machine — et son code CEI 60034-7. La planche est
+  redessinée entièrement et filtrée par la construction reconnue : six cases
+  pour B3, trois pour B5, B14, B35 et B34, plus l'incliné et la position non
+  identifiée. IM B6 et IM B7, symétriques l'un de l'autre, sont pris dans l'axe
+  de l'arbre : c'est la seule vue qui les distingue.
+- [x] **Le chemin clavier et lecteur d'écran est conservé.** Les cases sont des
+  boutons dans l'ordre du document, avec anneau de focus, nom accessible complet
+  et raccourci chiffré ; la liste sous la planche reprend les mêmes valeurs avec
+  leur libellé entier. `opensAxial()` et `prunePosition()` sont inchangés : une
+  position verticale ouvre toujours le contrôle axial, et une position devenue
+  impossible après correction de la construction est retirée.
+- [x] **L'étape des équipements accompagne au lieu d'illustrer.** La question
+  binaire posée à froid devient un balayage guidé en quatre zones — l'arrière et
+  son capot, le dessus, le bout d'arbre, la plaque — chacune avec la question à
+  poser au client, ce qui compte comme « oui » et ce qui permet de passer. Le
+  dessin n'est plus qu'un repère de zone. Les sept éléments de la liste détaillée
+  et leurs écrans de détail sont inchangés.
+- [x] **Aucun fait ajouté au relevé.** Le balayage prépare la réponse à la seule
+  question de l'étape ; il n'en consigne aucune de son côté. La règle du tout
+  factuel de la revue n°3 et la correction de trajectoire de la revue n°4 ne sont
+  pas rouvertes.
+
+Écart assumé et sa raison : le catalogue ne porte **aucune** donnée de position
+de montage — les colonnes `mounting` valent B3/B5/B14/B34/B35, c'est-à-dire la
+construction et jamais l'orientation. La planche des positions ne prétend donc
+rien tirer du catalogue et l'affectation des codes reste à confirmer en C7-6,
+comme déjà consigné dans `04-ecarts-backend-et-questions-ouvertes.md` §2.2.
+
+Une seule entorse à l'échelle subsiste, écrite dans le code : le trou de bride
+est grossi 1,7 fois, sinon il disparaît à la taille d'une vignette. Le plateau
+P, le cercle de perçage M, le centrage N et la position des quatre trous restent
+exacts.
+
+Ouvert, tranches ultérieures :
+
+- [ ] **Le composant de production fait déjà ce travail, en moins fidèle.**
+  `frontend/src/components/configurator/MotorSchematic.tsx` porte déjà le
+  surlignage de cote, en 224 × 160 et sur une décision explicite « schématique et
+  non figuratif ». Le prototype va nettement plus loin. C7-8 devra trancher :
+  soit ce composant absorbe la nouvelle fidélité, soit celle-ci reste une ambition
+  de maquette. Les 14 cotes canoniques nécessaires — A, B, C, D, E, F, H, K, M, N,
+  P, S, T, Z — existent et sont peuplées, donc l'exigence PO de plans générés
+  depuis les cotes réelles est techniquement atteignable dès aujourd'hui.
 
 Cette livraison ne prononce aucun GO C7-5 : la recette PO du parcours testable
 reste une décision distincte.
@@ -1344,7 +1587,14 @@ Le détail directeur est consigné dans
 | 06/08/2026 | C7-4 revue PO n°2 | Trois corrections de fond : chaque étape annonce désormais ce que la réponse ouvre ou ferme, y compris quand l'effet est faible ; le contrôle radial abandonne le nombre de courroies au profit du porte-à-faux et exige la charge radiale admissible publiée pour se clore ; les options ouvrent des écrans de détail à champs multiples avec « non lisible » champ par champ. Schémas cotés ajoutés sur le vocabulaire réel du catalogue. | Parcours rejoués dans le navigateur in-app : effets affichés sur 37 nœuds, contrôle radial en réserve sans limite publiée, écran frein à 5 champs avec faits distincts et sources propres, S5 en qualification, reprise exacte, mobile 375 px sans débordement, 0 erreur console ; `qa:docs` vert |
 | 06/08/2026 | C7-4 revue PO n°3 — tout factuel | **Décision PO : une question n'existe que si sa réponse alimente un fait réellement comparé.** L'arbre est reconstruit sur le contrat `shared/schemas/configurator/motor.schema.ts` et passe de 37 à 20 étapes. Poulie, porte-à-faux, charge radiale, position de montage, reprise axiale, exposition, cause de panne, ancienneté et détails d'options sont supprimés : aucun champ, aucun calcul. Couplage, courant, couple, classe IE, cotes A/B/C/K, cotes M/N/P/S/T/Z, cotes D/E/F et les sept exigences applicatives entrent, parce qu'ils sont comparés. Chaque étape et chaque critère nomment le champ du contrat concerné. | Parcours rejoués dans le navigateur in-app : 20 étapes, solution validée avec les 8 critères nommés par leur champ, réserves chiffrées 2/4 et 2/3, cas réservé ATEX en qualification, résultat vide sur moteur intégré, correction de la construction effaçant les cotes de bride, reprise exacte sur cotes de bride incomplètes, mobile 375 px sans débordement ; `qa:docs` vert |
 | 06/08/2026 | C7-4 revue PO n°4 — correction de trajectoire | La lecture stricte du contrat avait conduit à faire mesurer au client le couplage, le courant, le couple, la classe IE et toutes les cotes A/B/C/K, M/N/P/S/T/Z, D/E/F. **Rejeté par le PO** : ces cotes sont normalisées et publiées au catalogue, et `field_overrides` n'est qu'un jeu de surcharges optionnelles exigeant des mesures confirmées, pas un questionnaire. L'arbre est rétabli dans son état antérieur, sans le détail radial supprimé en revue n°3, et avec la confirmation des cotes de bride conservée. | 30 étapes rejouées dans le navigateur in-app : parcours nominal jusqu'à solution validée, S4 avec contrôles bride/axial/support/variateur/auxiliaire et réserve auxiliaire, S5 en qualification, reprise exacte sur l'alimentation auxiliaire, 0 erreur console ; `qa:docs` vert |
+| 06/08/2026 | C7-4 revue PO n°5 — allègement UX | **Décision PO : ne rien retirer du parcours, améliorer sa présentation.** La vitesse accepte désormais quatre raccourcis de polarité — 2, 4, 6 ou 8 pôles — ou la saisie de la vitesse lue, avec provenances distinctes : polarité choisie = déclaration, polarité déduite d'une vitesse saisie = règle technique. La transmission passe de six libellés à trois vignettes visuelles, courroies, chaîne et roue sur l'arbre étant regroupées comme une seule problématique, et le montage intégré sur réducteur nettement distingué du montage IEC. Les particularités deviennent une question binaire « Ce moteur a-t-il quelque chose d'inhabituel ? » ; « non » ferme tout, « oui » ouvre trois familles de trois à quatre cases : ce qui est monté, l'alimentation et le refroidissement, l'environnement. | Parcours rejoués dans le navigateur in-app : raccourci 4 pôles et saisie 1 470 tr/min avec déduction sourcée, galerie transmission à trois vignettes, chemin standard réduit à quatre étapes après les faits spontanés, chemin complet ouvrant frein puis ATEX jusqu'à la qualification, reprise exacte ; 0 erreur console, `qa:docs` vert |
+| 06/08/2026 | C7-4 revue PO n°6 — arbre revu en profondeur | Trois défauts relevés par le PO : le schéma de transmission par courroies était faux, la question « alimenté et refroidi » mélangeait trois natures de faits, et le variateur était demandé deux fois. **L'arbre est réorganisé en six groupes sans recouvrement** : Plaque, Usage, Construction, Installation, Équipements, Environnement. Chaque fait n'est demandé qu'une fois, dans le groupe auquel il appartient réellement. Le mode d'alimentation quitte la plaque pour l'installation et n'est plus reposé ; la ventilation forcée rejoint les équipements montés ; l'exposition aux intempéries quitte la position pour l'environnement. L'environnement devient une vraie question — extérieur, lavage au jet, chaleur, poussières, corrosion, atmosphère explosive — suivie de l'indice de protection lu sur la plaque, l'ATEX ouvrant sa qualification réservée. La cause de remplacement passe en fin de relevé. Schéma de courroies refait : deux poulies rondes et deux brins tangents. | Parcours rejoués dans le navigateur in-app : 29 nœuds sans doublon, 16 étapes pour un moteur nu, S3 terminé en 4 étapes après faits spontanés puis solution validée, chemin variateur + frein + ventilation + ATEX ouvrant ses 4 contrôles jusqu'à la qualification, reprise exacte sur la ventilation forcée ; 0 erreur console, `qa:docs` vert |
+| 06/08/2026 | C7-4 reprise visuelle et UX | **Demande PO : approfondir l'UI/UX, améliorer les questions des écrans d'options et surtout les visuels — 2D détaillés, plaque signalétique reproduite fidèlement, information demandée entourée en rouge à chaque fois.** Une bibliothèque de dessin technique est intégrée au prototype : lignes de cote avec flèches pleines, hachures de coupe, axes en trait mixte, anneau d'annotation rouge animé, le tout en SVG construit à l'exécution, sans fichier externe ni image bitmap. La plaque signalétique devient une reproduction fidèle d'une plaque IEC 60034-1 rivetée — bandeau constructeur, marquage CE, ligne Type / N° / IP, tableau des deux couplages en V, Hz, kW, tr/min, A et cos φ, pictogramme triangle-étoile, bande de service et code-barres — avec onze zones surlignables et trois plaques rapportées dérivées : auxiliaire, frein, marquage Ex. Vingt et un schémas 2D sont dessinés, dont la coupe comparée trou traversant / trou taraudé qui rend visible la seule différence que le TCS fait constater. La figure quitte l'aide repliée pour occuper une surface dédiée sous la question, avec une légende qui nomme ce qui est entouré, un repli au clavier par `V` et un agrandissement en dialog centré au clic. Les grilles des particularités et de l'environnement passent en grilles à pictogrammes ; chaque champ des écrans de détail reçoit un repère de terrain. **Aucun fait n'est ajouté au relevé** : la correction de trajectoire de la revue n°4 n'est pas rouverte. | Vingt-six couples figure/surlignage revus à l'œil en planche de contrôle — six défauts de composition corrigés ; V1 et V3 vérifiés distincts ; parcours complet rejoué en 320 × 720 avec relevé `scrollWidth`/`clientWidth` à chaque étape, aucun débordement ; agrandissement vérifié en 375 × 812 ; rendu 1440 × 900 avec relevé latéral au-dessus de la ligne de flottaison ; recherche lancée, périmètre et état corrects ; 0 erreur console, `qa:docs` vert |
+| 06/08/2026 | C7-4 vérification profonde backend et docs | Contrôle du prototype contre le runtime Supabase en lecture seule et contre C7-1 à C7-3. Backend confirmé : Edge Function `api` v199, sept routes tRPC du configurateur présentes, catalogue peuplé — 10 158 modèles, 14 130 points de fonctionnement, 47 598 options de bride, 253 764 cotes, 14 cotes canoniques A à Z. **Trois erreurs du prototype corrigées sur preuve catalogue** : liste des carcasses amputée de 56, 400 et 450, raccourci carcasse/puissance faux sur dix tranches sur douze, bornes de diamètre de bride rejetant les brides réelles au-delà de 800 mm. **Six écarts ouverts consignés** : contradiction construction/nature des trous non détectée alors que `bore_type` est totalement déterminé par la construction sur 47 598 lignes et que `06` §6 l'exige ; 240 moteurs Dahlander présents au catalogue contre une sortie en qualification ; libellés des cotes A et B permutés entre le catalogue et le frontend, valeurs correctes ; sections périmées de `02`, `04` et `06` après les revues n°3 et n°6 ; `reserve` contre `under_reservation` ; arbitrage C7-8 entre `MotorSchematic.tsx` et la fidélité du prototype. | Requêtes MCP en lecture seule sur le projet `CIR_Cockpit` ; `node --check` sur le script du prototype ; `qa:docs` vert |
+| 06/08/2026 | C7-4 clôture des écarts | Arbitrage PO sur les six écarts de la vérification profonde. **Le PO corrige la prémisse du plus gros d'entre eux** : B14 est taraudé, B5 est lisse, c'est factuel — il n'y avait donc pas une contradiction à détecter mais un fait demandé deux fois. L'étape « trous traversants ou taraudés » est supprimée et la nature des trous devient une déduction sourcée depuis la construction, l'observation des trous restant le moyen de départager grande et petite bride dans l'étape de fixation ; l'arbre passe de 29 à 28 nœuds. Migration `20260807094550_configurator_c7_fix_canonical_ab_labels` appliquée sur autorisation PO : les libellés des cotes A et B sont remis dans le bon sens, valeurs intactes. Jetons de verdict alignés sur `under_reservation`. Sections périmées de `02`, `04` et `06` corrigées avec le motif et la date de la revue qui les a rendues fausses. Décisions PO enregistrées : raccourci des carcasses conservé partout, sortie deux vitesses et son motif inchangés. | Parcours rejoué : B5 puis B14 donnent la déduction attendue avec sa provenance visible au relevé ; correction B5 → B14 depuis le relevé bascule la déduction, rouvre le contrôle de bride et redemande le diamètre ; reprise et scénario S5 sans bride vérifiés ; parcours complet en 320 px sans débordement ; badge `under_reservation` stylé ; 0 erreur console ; parité de migration vérifiée par empreinte normalisée identique, 1 734 octets, `72a20e9c…` ; advisors sans nouvelle alerte ; `repo:check` et `qa:docs` verts |
+| 06/08/2026 | C7-4 revue PO n°7 — cinq écrans repris | Relecture écran par écran sur captures. **Un défaut fonctionnel corrigé** : « monté sur le réducteur » confondait le moteur à bride IEC, remplaçable normalement, et le moteur intégré dont l'arbre est le pignon d'entrée ; la liaison passe à quatre valeurs et seule la seconde bascule en qualification. Les positions prennent leur désignation normalisée CEI 60034-7 et sont filtrées par la construction reconnue, une position devenue impossible étant retirée. La coupe traversant/taraudé quitte l'étape de fixation, dont le repère visuel montre maintenant le dessous et l'avant du moteur. Les six vignettes de construction deviennent des vues réelles côté et face, la vue de face rendant immédiate la différence entre grande et petite bride. L'alimentation et les équipements deviennent des galeries à deux vignettes, avec leurs libellés reformulés. | Parcours complet rejoué en 320 × 720 sans débordement ; positions filtrées vérifiées pour B3, B14, B5 et B35 ; réducteur à bride IEC vérifié sans effet sur l'état, moteur intégré vérifié en qualification ; 35 figures contrôlées par bbox contre leur viewBox, trois débordements corrigés ; 0 erreur console ; `repo:check` et `qa:docs` verts |
 | 06/08/2026 | C7-4 écart consigné | L'application et la fonction process n'ouvrent pas encore les questions contextuelles prévues par la spécification C7-1 : la fonction ne fait que débloquer le niveau candidat. L'écart est affiché au TCS dans la ligne d'effet de l'étape. | `02-specification-parcours-cible.md` §« L'application choisit la question suivante » — à traiter avant la recette C7-5 |
 | 06/08/2026 | C7-4 incident fichier | Le prototype, non suivi par Git, a été supprimé du disque pendant une écriture concurrente : le commit `2896328` d'une autre session a repris le dossier sans ce fichier. Le prototype a été reconstruit à l'identique avec les corrections de la revue PO n°1. | Fichier reconstruit et rejoué dans le navigateur ; **à committer pour éviter une nouvelle perte** |
 | 06/08/2026 | C7-4 prototype testable | Prototype HTML autonome livré sur GO PO distinct : une étape active à la fois, arbre déterministe en six groupes, faits spontanés conservés et étapes sautées, contrôles conditionnels, mesures guidées, photo ciblée avec attente non bloquante et reprise exacte, correction rouvrant les dépendances, recherche explicite, résultat vide expliqué, quatre états exacts, invitation énergétique séparée. Aucune référence catalogue, cote, économie ou règle métier inventée ; aucun code produit, contrat, stockage ou migration. | `refonte-ux-remplacement/prototype-c7-4-remplacement-moteur.html` ; parcours rejoués dans le navigateur in-app, desktop 1440x900 et mobile 375x812/320x720, 0 débordement, 0 erreur console ; `qa:docs` vert — **C7-4 terminée / NO-GO C7-5 sans décision PO distincte** |
 | 06/08/2026 | C7-3 décision de sortie PO | Le PO valide le parcours avec trois décisions acceptées et deux corrections intégrées : l'appel suit un arbre déterministe étape par étape ; le configurateur amène le TCS à poser les bonnes questions et lui indique où trouver l'information. Une photo reste un canal d'information guidé ; la qualification spécialisée n'intervient qu'après épuisement des moyens accessibles au TCS ou pour un cas explicitement réservé à l'expertise. | `refonte-ux-remplacement/06-structure-parcours.md`, `qa:docs` — **C7-3 terminée / NO-GO C7-4 sans décision PO distincte** |
+| 07/08/2026 | C7-4 revue PO n°8 — trois écrans repris | Relecture sur captures : trois écrans montraient au lieu de servir. **Les six vignettes de construction sont désormais générées depuis un jeu de cotes réel** relevé en lecture seule sur le snapshot actif pour la carcasse 132 — pattes, arbre, deux brides et enveloppe publiée — au lieu de coordonnées écrites à la main ; les silhouettes diffèrent donc pour de vrai, le corps est arasé au plan de pose puisqu'il est plus large que deux fois la hauteur d'axe, et le code `B3`/`B5`/`B14`/`B34`/`B35` ouvre chaque libellé. **La planche des positions devient le sélecteur** : chaque case est un bouton avec son dessin, sa surface d'appui hachurée et son code CEI 60034-7, la planche est filtrée par la construction reconnue, et IM B6 / IM B7 sont pris dans l'axe de l'arbre, seule vue qui les distingue ; la liste sous la planche garde les mêmes valeurs avec leur libellé entier. **L'étape des équipements devient un balayage guidé** en quatre zones — arrière, dessus, bout d'arbre, plaque — avec pour chacune la question à poser, ce qui compte comme « oui » et ce qui permet de passer. `opensAxial()`, `prunePosition()` et la déduction sourcée de la nature des trous sont inchangés ; aucun fait n'est ajouté au relevé. | Vignettes vérifiées à l'œil, une par une, en planche de contrôle ; diamètres dessinés confrontés au catalogue : 300/265/230 en grande bride, 200/165/130 en petite, 281 pour le corps, 38 pour l'arbre, 12 pour le trou de patte, rapports P/H de 2,273 et 1,515 identiques au catalogue. Planche rejouée pour B3 (8 cases), B5, B14 et B35 (5 cases) : positions conformes à la construction, planche et liste identiques, sélection souris et raccourci chiffré consignant le fait, `IM V5` ouvrant le contrôle axial, correction B3 → B5 retirant la position devenue impossible. Balayage rejoué sur moteur nu — quatre zones passées, groupe fermé — et sur moteur équipé — liste des sept éléments puis écran de détail du frein. **103 figures contrôlées par `getBBox()` contre leur `viewBox`, un débordement corrigé** (pictogramme frein). Parcours complet en 1440 × 900 et 320 × 720 avec relevé `scrollWidth`/`clientWidth` sur 25 écrans : aucun débordement horizontal. 0 erreur console ; `qa:docs` vert |

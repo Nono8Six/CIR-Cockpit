@@ -76,10 +76,10 @@ source et le canal.
 
 | Fait du parcours cible | Existe ? | Où il devrait aller |
 | --- | --- | --- |
-| **Position IM** (B3, B6, B7, B8, V1, V3, V5, V6, V15, V18, V19, V36…) | **Non** | Nouveau champ ; `mounting` ne porte que la construction, pas l'orientation |
+| **Position IM** (B3, B6, B7, B8, V1, V3, V5, V6, V15, V18, V19, V36…) | **Non** | Nouveau champ ; `mounting` ne porte que la construction, pas l'orientation. Depuis la revue PO n°7 du 06/08/2026, le parcours propose ces désignations normalisées CEI 60034-7 et les filtre par la construction reconnue : un moteur à pattes seules ne peut pas prendre un code de bride. L'affectation de chaque code à sa construction reste à confirmer en C7-6. |
 | **Effort axial et organe qui le reprend** | **Non** | C11 : sens, valeur, machine ou roulements moteur ; nécessaire au contrôle vertical |
 | **Machine entraînée + fonction réelle** | **Non** | Obligatoire avant solution techniquement validée ; `application` ne contient que des exigences, pas ce que fait le moteur |
-| **Type d'accouplement** (8 types) | **Non** | Nouveau champ — c'est l'entrée des règles R1/R2 |
+| **Liaison à la machine** (4 valeurs depuis la revue PO n°7 du 06/08/2026 : accouplement direct, effort en bout d'arbre, réducteur à bride IEC, moteur intégré au réducteur) | **Non** | Nouveau champ. Les huit types d'accouplement du brainstorm ont été ramenés à quatre : seule la distinction entre moteur IEC normalisé et moteur intégré au réducteur change une conclusion, et un réducteur peut se trouver des deux côtés de cette frontière. Les règles R1/R2 qui motivaient les huit types relèvent de C11. |
 | **Besoin constant ou variable** | **Non** | C11 ; nécessaire à la détection d'opportunité énergétique |
 | **Mode de régulation actuel** | **Non** | C11 : variateur, vanne/registre, bypass, marche/arrêt ou autre |
 | **Alerte roulement à vérifier** | **Non** | Éventuelle sortie explicable, seulement si C7-6 valide son périmètre ; aucune prescription automatique n'est acquise |

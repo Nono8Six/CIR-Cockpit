@@ -106,14 +106,20 @@ bride, un roulement, un variateur, une qualification ATEX ou une solution techni
 
 ### Tronc commun — six groupes ordonnés maximum
 
+> **Révisé le 06/08/2026, revue PO n°6.** Les six groupes ci-dessous remplacent la
+> répartition Position / Transmission / Remplacement de la version initiale, qui
+> mélangeait des natures de faits différentes et demandait le variateur deux fois.
+> La règle qui a présidé au redécoupage : chaque fait n'est demandé qu'une seule
+> fois, dans le groupe auquel il appartient réellement.
+
 | Groupe | Question à porter | Réponse standard qui n'ouvre rien |
 | --- | --- | --- |
-| Plaque | Puissance, vitesse, tension/fréquence et alimentation réelle | Valeurs lisibles et cohérentes |
+| Plaque | Puissance, vitesse ou polarité, phases, tension et fréquence | Valeurs lisibles et cohérentes |
 | Usage | Machine entraînée **et** fonction réelle dans le process | Usage compris, sans particularité signalée |
-| Construction | Carcasse ou hauteur d'axe, pattes/bride et forme physique | Construction reconnue et dimensions disponibles |
-| Position | Horizontal, vertical, arbre vers le haut ou vers le bas | Horizontal |
-| Transmission | Direct, accouplement, courroies, chaîne, réducteur ou roue sur arbre | Accouplement direct documenté |
-| Remplacement et tour rapide | Cause du remplacement + frein, ventilation séparée, variateur, fils, deuxième arbre, deux vitesses, ATEX ou environnement particulier | Remplacement standard, aucune particularité |
+| Construction | Carcasse ou hauteur d'axe, puis fixation reconnue en galerie ; une bride ouvre la confirmation de son diamètre | Construction reconnue et diamètre confirmé |
+| Installation | Alimentation réelle, position de montage et liaison à la machine | Réseau direct, horizontal, accouplement direct |
+| Équipements | Une question binaire, puis la liste de ce qui est monté, puis le détail de chaque élément | Moteur nu |
+| Environnement | Conditions réelles de travail, indice de protection lu sur la plaque, puis cause du remplacement | Intérieur sec, remplacement standard |
 
 Le configurateur présente un groupe puis une question active à la fois. Si le client donne
 plusieurs faits dans la même réponse, le TCS les consigne immédiatement et l'arbre saute
@@ -125,7 +131,7 @@ ensuite les nœuds déjà satisfaits. Cela évite les répétitions sans rendre 
 | --- | --- | --- | --- |
 | Bride | **Identification de bride** | Grande/petite, avec/sans pattes, trous traversants/taraudés, mesures réellement discriminantes | Candidat avec réserves tant que la bride n'est pas fondée |
 | Carcasse IEC confirmée + bride | **Tailles standard possibles** | Montrer les brides constructeur possibles pour cette carcasse, sans en présélectionner une ; faire reconnaître puis mesurer | Aucune bride inventée depuis la carcasse |
-| Courroies, chaîne ou roue sur arbre | **Charge radiale** | Poulie moteur, diamètre, nombre de courroies, porte-à-faux, tension, retension récente, limites constructeur | Contrôle radial ; aucun roulement prescrit automatiquement |
+| ~~Courroies, chaîne ou roue sur arbre~~ | ~~**Charge radiale**~~ | **Branche supprimée le 06/08/2026, revue PO n°3.** Poulie, diamètre, nombre de courroies, porte-à-faux et tension ne produisaient aucun calcul dans C7 : la comparaison effort/limite appartient au dimensionnement process, en C11. Les trois formes — courroies, chaîne, roue sur l'arbre — sont désormais une seule réponse de l'étape Liaison, sans contrôle ouvert. | — |
 | Panne avec bruit, vibrations ou chauffe | **Cause de panne** | Ancienneté, chronologie, intervention récente et constat terrain | Cause plausible seulement, jamais diagnostic automatique |
 | Montage vertical ou application pouvant transmettre une poussée | **Charge axiale** | Sens, valeur, organe qui reprend l'effort, butée de la machine, roulements existants et documentation | Qualification spécialisée si la reprise reste inconnue |
 | Variateur | **Fonctionnement à vitesse variable** | Profil de vitesse, longues durées à basse vitesse, câble et aptitude constructeur selon le cas | Contrôle thermique/électrique ciblé |
