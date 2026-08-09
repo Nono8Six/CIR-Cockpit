@@ -5,6 +5,10 @@ import { describe, expect, it, vi } from 'vitest';
 import DashboardDetailsOverlay from '@/components/dashboard/DashboardDetailsOverlay';
 import { Channel, type Interaction } from '@/types';
 
+vi.mock('@/components/interactions/ActivityCanonicalDetails', () => ({
+  default: () => <div>Détail canonique</div>
+}));
+
 const buildInteraction = (overrides: Partial<Interaction> = {}): Interaction => ({
   id: 'interaction-overlay-1',
   agency_id: 'agency-1',
@@ -66,7 +70,7 @@ describe('DashboardDetailsOverlay', () => {
     const dialog = screen.getByTestId('dashboard-details-dialog');
     expect(dialog).toBeInTheDocument();
     expect(dialog).toHaveAttribute('role', 'dialog');
-    expect(screen.getByText(/détails de l'interaction/i)).toBeInTheDocument();
+    expect(screen.getByText(/détails de l'activité/i)).toBeInTheDocument();
     expect(screen.getByTestId('interaction-details-status-select')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^close$/i })).not.toBeInTheDocument();
 

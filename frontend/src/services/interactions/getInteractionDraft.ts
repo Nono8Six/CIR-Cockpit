@@ -41,7 +41,7 @@ const parseDraftResponse = createTrpcResponseParser(
   { code: 'REQUEST_FAILED', message: 'Réponse serveur invalide.' }
 );
 
-export const getInteractionDraft = async ({ userId, agencyId, formType = 'interaction' }: GetInteractionDraftInput): Promise<InteractionDraftRecord | null> =>
+export const getInteractionDraft = async ({ userId, agencyId, formType = 'activity-v2' }: GetInteractionDraftInput): Promise<InteractionDraftRecord | null> =>
   invokeTrpc(
     (api, options) => api.data.interactions.mutate({
       action: 'draft_get',

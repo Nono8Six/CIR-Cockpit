@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import type { DirectoryRecord } from '../../../../shared/schemas/system/directory.schema';
+import type { TierOrganizationRead } from '../../../../shared/schemas/entity/tier-foundation.schema';
 import { formatDate } from '@/utils/date/formatDate';
 import { formatRelativeTime } from '@/utils/date/formatRelativeTime';
 import { formatClientNumber } from '@/utils/clients/formatClientNumber';
@@ -10,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/navigation/Tabs'
 
 export interface ClientDirectoryRecordInfoGridProps {
   record: DirectoryRecord;
+  tier: TierOrganizationRead;
   contactsSection: ReactNode;
   interactionsSection: ReactNode;
   historySection: ReactNode;
@@ -29,6 +31,7 @@ export interface ClientDirectoryRecordInfoGridProps {
  */
 const ClientDirectoryRecordInfoGrid = ({
   record,
+  tier,
   contactsSection,
   interactionsSection,
   historySection,
@@ -115,10 +118,23 @@ const ClientDirectoryRecordInfoGrid = ({
             <div className="flex justify-between items-center py-2 px-2 -mx-2 rounded hover:bg-neutral-50/80 transition-all cursor-pointer group">
               <span className="text-neutral-500 font-semibold group-hover:text-neutral-700">Commercial</span>
               <span className="font-bold text-neutral-900 group-hover:text-neutral-950">
-                {record.cir_commercial_name ?? 'Non affecté'}
+                {tier.primary_commercial_state === 'missing'
+                  ? 'Non affecté'
+                  : record.cir_commercial_name ?? 'Non applicable'}
               </span>
             </div>
           ) : null}
+
+          <div className="flex justify-between items-center py-2 px-2 -mx-2 rounded hover:bg-neutral-50/80 transition-colors group">
+            <span className="text-neutral-500 font-semibold group-hover:text-neutral-700">Profil métier</span>
+            <span className="max-w-[180px] text-right font-bold text-neutral-900 group-hover:text-neutral-950">
+              {tier.business_profiles.state === 'reference_data_missing'
+                ? 'Référentiel indisponible'
+                : tier.business_profiles.state === 'assignment_missing'
+                  ? 'Non renseigné'
+                  : tier.business_profiles.primary?.label ?? 'Non renseigné'}
+            </span>
+          </div>
 
           {record.department && (
             <div className="flex justify-between items-center py-2 px-2 -mx-2 rounded hover:bg-neutral-50/80 transition-all cursor-pointer group">

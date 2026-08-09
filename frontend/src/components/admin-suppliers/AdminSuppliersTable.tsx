@@ -34,9 +34,10 @@ import DataTableColumnHeader from '@/components/client-directory/data-table/Data
 import DirectoryTablePagination from '@/components/client-directory/data-table/DirectoryTablePagination';
 
 import { SUPPLIER_COLUMN_LABELS, SUPPLIER_COLUMN_ORDER } from './supplierGridConfig';
+import type { CanonicalDirectoryListRow } from '@/services/directory/getDirectoryPage';
 
 interface AdminSuppliersTableProps {
-  rows: DirectoryListRow[];
+  rows: CanonicalDirectoryListRow[];
   sorting: DirectorySortingRule[];
   page: number;
   pageSize: number;

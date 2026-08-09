@@ -6,6 +6,7 @@ import InteractionDetailsFooter from './interactions/InteractionDetailsFooter';
 import InteractionDetailsHeader from './interactions/InteractionDetailsHeader';
 import InteractionDetailsSubjectCard from './interactions/InteractionDetailsSubjectCard';
 import InteractionDetailsTimeline from './interactions/InteractionDetailsTimeline';
+import ActivityCanonicalDetails from './interactions/ActivityCanonicalDetails';
 
 interface Props {
   interaction: Interaction;
@@ -62,6 +63,7 @@ const InteractionDetails = ({
         onClose={onClose}
       />
       {quickActions}
+      <ActivityCanonicalDetails legacyInteractionId={interaction.id} />
       <div className="flex-1 overflow-y-auto bg-card px-4 py-4 sm:px-5" ref={scrollRef}>
         <InteractionDetailsSubjectCard interaction={interaction} />
         <InteractionDetailsTimeline timeline={interaction.timeline} />

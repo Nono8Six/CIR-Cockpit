@@ -286,9 +286,9 @@ const Dashboard = ({
             setInteractionToDelete(null);
           }
         }}
-        title="Supprimer cette interaction"
-        description={`L'interaction "${interactionToDelete?.subject ?? ''}" sera définitivement supprimée.`}
-        confirmLabel={isDeleteInteractionPending ? 'Suppression…' : 'Supprimer'}
+        title="Archiver cette activité"
+        description={`L'activité "${interactionToDelete?.subject ?? ''}" restera consultable dans l'historique de compatibilité.`}
+        confirmLabel={isDeleteInteractionPending ? 'Archivage…' : 'Archiver'}
         variant="destructive"
         onConfirm={() => {
           void handleConfirmDeleteInteraction();

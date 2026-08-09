@@ -1,4 +1,4 @@
-import { Trash2, UserRound, X } from 'lucide-react';
+import { Archive, UserRound, X } from 'lucide-react';
 
 import { Badge } from '../ui/data-display/Badge';
 import { Button } from '../ui/inputs/basic/Button';
@@ -84,8 +84,8 @@ const InteractionDetailsHeader = ({
         onClick={() => onDeleteInteraction(interaction)}
         className="h-7 border-destructive/35 text-[11px] text-destructive hover:bg-destructive/10 hover:text-destructive"
       >
-        <Trash2 size={12} />
-        Supprimer
+        <Archive size={12} />
+        Archiver
       </Button>
     </div>
   </header>

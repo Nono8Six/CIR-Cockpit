@@ -1,20 +1,52 @@
 import { createTrpcResponseParser } from '@/services/api/invokeTrpc';
 import { dataEntitiesSearchIndexResponseSchema } from '../../../../shared/schemas/system/api-responses';
 
-import { Entity, EntityContact } from '@/types';
+import type { TierContactRead, TierOrganizationRead } from '../../../../shared/schemas/entity/tier-foundation.schema';
+import type { Entity, EntityContact } from '@/types';
 import { safeTrpc } from '@/services/api/safeTrpc';
+import { createAppError } from '@/services/errors/AppError';
 
 export type EntitySearchIndex = {
   entities: Entity[];
   contacts: EntityContact[];
+  tiers: TierOrganizationRead[];
+  tierContacts: TierContactRead[];
 };
 
 const parseSearchIndexResponse = createTrpcResponseParser(
   dataEntitiesSearchIndexResponseSchema,
   (response): EntitySearchIndex => {
-  return {
-      entities: response.entities,
-      contacts: response.contacts
+    const tiersById = new Map(response.tiers.map((tier) => [tier.id, tier]));
+    const tierContactsById = new Map(response.tier_contacts.map((contact) => [contact.id, contact]));
+    const entities = response.entities.map((entity) => {
+      const canonicalTier = tiersById.get(entity.id);
+      if (!canonicalTier) {
+        throw createAppError({
+          code: 'REQUEST_FAILED',
+          message: 'Contrat Tiers incomplet pour la recherche.',
+          source: 'edge',
+          details: `Organisation canonique absente pour ${entity.id}.`
+        });
+      }
+      return { ...entity, canonical_tier: canonicalTier };
+    });
+    const contacts = response.contacts.map((contact) => {
+      const canonicalContact = tierContactsById.get(contact.id);
+      if (!canonicalContact) {
+        throw createAppError({
+          code: 'REQUEST_FAILED',
+          message: 'Contrat Tiers incomplet pour la recherche.',
+          source: 'edge',
+          details: `Contact canonique absent pour ${contact.id}.`
+        });
+      }
+      return { ...contact, canonical_contact: canonicalContact };
+    });
+    return {
+      entities,
+      contacts,
+      tiers: response.tiers,
+      tierContacts: response.tier_contacts
     };
 },
   { code: 'REQUEST_FAILED', message: 'Réponse serveur invalide.' }
@@ -25,7 +57,7 @@ export const getEntitySearchIndex = async (
   includeArchived = false
 ): Promise<EntitySearchIndex> => {
   if (!agencyId) {
-    return { entities: [], contacts: [] };
+    return { entities: [], contacts: [], tiers: [], tierContacts: [] };
   }
 
   return safeTrpc(

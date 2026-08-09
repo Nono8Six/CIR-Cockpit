@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DirectoryRecord } from '../../../../../shared/schemas/system/directory.schema';
 import { Channel, type Interaction } from '@/types';
 
-import { renderWithProviders } from '@/__tests__/test-utils';
+import { buildTierOrganizationRead, renderWithProviders } from '@/__tests__/test-utils';
 import { deleteEntityContact } from '@/services/entities/deleteEntityContact';
 import { saveEntityContact } from '@/services/entities/saveEntityContact';
 import ClientDirectoryDetailPage from '../ClientDirectoryDetailPage';
@@ -197,6 +197,29 @@ const supplierRecord: DirectoryRecord = {
   cir_commercial_name: null
 };
 
+const clientTier = buildTierOrganizationRead(['client'], {
+  id: baseRecord.id,
+  legacy_entity_id: baseRecord.id,
+  name: baseRecord.name
+});
+const prospectTier = buildTierOrganizationRead(['prospect'], {
+  id: prospectRecord.id,
+  legacy_entity_id: prospectRecord.id,
+  name: prospectRecord.name,
+  customer_account_state: 'not_applicable',
+  customer_account: null,
+  primary_commercial_state: 'not_applicable'
+});
+const supplierTier = buildTierOrganizationRead(['supplier'], {
+  id: supplierRecord.id,
+  legacy_entity_id: supplierRecord.id,
+  name: supplierRecord.name,
+  responsible_agency: null,
+  customer_account_state: 'not_applicable',
+  customer_account: null,
+  primary_commercial_state: 'not_applicable'
+});
+
 const openInteraction = {
   id: 'interaction-open-1',
   agency_id: 'agency-1',
@@ -320,7 +343,7 @@ describe('ClientDirectoryDetailPage', () => {
     } as never);
     mockedDirectoryRecord.mockReturnValue({
       isLoading: false,
-      data: { record: baseRecord }
+      data: { record: baseRecord, tier: clientTier }
     } as never);
   });
 
@@ -506,7 +529,7 @@ describe('ClientDirectoryDetailPage', () => {
     const user = userEvent.setup();
     mockedDirectoryRecord.mockReturnValue({
       isLoading: false,
-      data: { record: prospectRecord }
+      data: { record: prospectRecord, tier: prospectTier }
     } as never);
 
     renderWithProviders(<ClientDirectoryDetailPage routeRef={{ kind: 'prospect', id: 'prospect-1' }} />);
@@ -537,7 +560,7 @@ describe('ClientDirectoryDetailPage', () => {
     const user = userEvent.setup();
     mockedDirectoryRecord.mockReturnValue({
       isLoading: false,
-      data: { record: prospectRecord }
+      data: { record: prospectRecord, tier: prospectTier }
     } as never);
 
     renderWithProviders(<ClientDirectoryDetailPage routeRef={{ kind: 'prospect', id: 'prospect-1' }} />);
@@ -553,7 +576,7 @@ describe('ClientDirectoryDetailPage', () => {
   it('renders the supplier detail view with supplier-specific labels', () => {
     mockedDirectoryRecord.mockReturnValue({
       isLoading: false,
-      data: { record: supplierRecord }
+      data: { record: supplierRecord, tier: supplierTier }
     } as never);
 
     renderWithProviders(<ClientDirectoryDetailPage routeRef={{ kind: 'supplier', id: 'supplier-1' }} />);
@@ -575,7 +598,7 @@ describe('ClientDirectoryDetailPage', () => {
     const user = userEvent.setup();
     mockedDirectoryRecord.mockReturnValue({
       isLoading: false,
-      data: { record: supplierRecord }
+      data: { record: supplierRecord, tier: supplierTier }
     } as never);
 
     renderWithProviders(<ClientDirectoryDetailPage routeRef={{ kind: 'supplier', id: 'supplier-1' }} />);
@@ -593,7 +616,7 @@ describe('ClientDirectoryDetailPage', () => {
     mockUseCanGoBack.mockReturnValue(false);
     mockedDirectoryRecord.mockReturnValue({
       isLoading: false,
-      data: { record: supplierRecord }
+      data: { record: supplierRecord, tier: supplierTier }
     } as never);
 
     renderWithProviders(<ClientDirectoryDetailPage routeRef={{ kind: 'supplier', id: 'supplier-1' }} />);
@@ -625,7 +648,7 @@ describe('ClientDirectoryDetailPage', () => {
     const user = userEvent.setup();
     mockedDirectoryRecord.mockReturnValue({
       isLoading: false,
-      data: { record: supplierRecord }
+      data: { record: supplierRecord, tier: supplierTier }
     } as never);
 
     renderWithProviders(<ClientDirectoryDetailPage routeRef={{ kind: 'supplier', id: 'supplier-1' }} isEditOpen />);
@@ -762,7 +785,7 @@ describe('ClientDirectoryDetailPage', () => {
 
     await user.click(screen.getByRole('tab', { name: 'Interactions' }));
     await user.click(screen.getByRole('button', { name: /ouvrir demande de devis/i }));
-    await user.click(screen.getByRole('button', { name: /supprimer demande de devis/i }));
+    await user.click(screen.getByRole('button', { name: /archiver demande de devis/i }));
 
     expect(mockSetSelectedInteraction).toHaveBeenCalledWith(openInteraction);
     expect(mockSetInteractionToDelete).toHaveBeenCalledWith(openInteraction);

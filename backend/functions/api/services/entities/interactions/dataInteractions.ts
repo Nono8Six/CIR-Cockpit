@@ -1,6 +1,6 @@
-import { and, desc, eq, isNotNull, ne, sql } from 'drizzle-orm';
+import { and, desc, eq, isNotNull, ne, or, sql } from 'drizzle-orm';
 
-import { agency_interaction_types, interaction_drafts, interactions } from '../../../../../drizzle/schema.ts';
+import { activities, agency_interaction_types, interaction_drafts, interactions } from '../../../../../drizzle/schema.ts';
 import type { Database } from '../../../../../../shared/supabase.types.ts';
 import type { DataInteractionsResponse } from '../../../../../../shared/schemas/system/api-responses.ts';
 import type { DataInteractionsPayload } from '../../../../../../shared/schemas/system/data.schema.ts';
@@ -35,6 +35,21 @@ const DEFAULT_AGENCY_INTERACTIONS_LIMIT = 200;
 const DEFAULT_KNOWN_COMPANIES_LIMIT = 2000;
 const INTERACTION_ACTION_RATE_LIMIT_MAX = 60;
 const INTERACTION_READ_RATE_LIMIT_MAX = 120;
+
+const readCanonicalInteractionProjection = async (
+  db: DbClient,
+  interactionId: string
+): Promise<InteractionRow> => {
+  const [row] = await db.select({ interaction: interactions, activity: activities })
+    .from(activities)
+    .innerJoin(interactions, eq(interactions.id, activities.legacy_interaction_id))
+    .where(eq(activities.legacy_interaction_id, interactionId))
+    .limit(1);
+  if (!row) {
+    throw httpError(500, 'DB_WRITE_FAILED', "L'activité enregistrée n'a pas pu être relue.");
+  }
+  return projectCanonicalActivity(row.interaction, row.activity);
+};
 
 const toNullableString = (value: unknown): string | null | undefined => {
   if (value === null) return null;
@@ -218,7 +233,7 @@ export const saveInteraction = async (
       .returning();
     const saved = savedRows[0];
     if (!saved) throw httpError(500, 'DB_WRITE_FAILED', "Impossible d'enregistrer l'interaction.");
-    return saved;
+    return await readCanonicalInteractionProjection(db, saved.id);
   } catch (error) {
     if (
       typeof error === 'object'
@@ -285,7 +300,7 @@ export const addTimelineEvent = async (
     if (rows.length === 0) {
       throw httpError(409, 'CONFLICT', 'Ce dossier a ete modifie par un autre utilisateur. Rechargez pour continuer.');
     }
-    return rows[0];
+    return await readCanonicalInteractionProjection(db, rows[0].id);
   } catch (error) {
     if (
       typeof error === 'object'
@@ -334,6 +349,20 @@ const buildListByEntityWhereClause = (payload: Pick<ListByEntityPayload, 'entity
 const resolveLimit = (limit: number | undefined, defaultLimit: number): number =>
   limit ?? defaultLimit;
 
+const projectCanonicalActivity = (
+  interaction: InteractionRow,
+  activity: typeof activities.$inferSelect
+): InteractionRow => ({
+  ...interaction,
+  channel: activity.channel,
+  interaction_type: activity.activity_type,
+  subject: activity.subject,
+  notes: activity.report,
+  entity_id: activity.organization_id,
+  contact_id: activity.contact_id,
+  created_at: activity.occurred_at
+});
+
 export const resolveDraftFormType = (formType: string | undefined): string =>
   formType?.trim() || 'interaction';
 
@@ -381,6 +410,30 @@ export const listInteractionsByAgency = async (
   const limit = resolveLimit(payload.limit, DEFAULT_AGENCY_INTERACTIONS_LIMIT);
 
   try {
+    if (payload.read_model === 'activity_v2') {
+      const canonicalWhere = and(
+        eq(activities.agency_id, agencyId),
+        ne(activities.lifecycle_status, 'archived')
+      );
+      const [joinedRows, countRows] = await Promise.all([
+        db.select({ interaction: interactions, activity: activities })
+          .from(activities)
+          .innerJoin(interactions, eq(interactions.id, activities.legacy_interaction_id))
+          .where(canonicalWhere)
+          .orderBy(desc(activities.occurred_at))
+          .limit(limit),
+        db.select({ count: sql<number>`count(*)::int` })
+          .from(activities)
+          .where(canonicalWhere)
+      ]);
+      return {
+        interactions: joinedRows.map(({ interaction, activity }) => projectCanonicalActivity(interaction, activity)),
+        page: 1,
+        page_size: limit,
+        total: Number(countRows[0]?.count ?? 0)
+      };
+    }
+
     const [rows, countRows] = await Promise.all([
       db
         .select()
@@ -426,6 +479,39 @@ export const listInteractionsByEntity = async (
   const whereClause = buildListByEntityWhereClause(payload);
 
   try {
+    if (payload.read_model === 'activity_v2') {
+      const scope = resolveEntityInteractionsScope(payload.scope);
+      const scopeCondition = scope === 'open'
+        ? eq(interactions.status_is_terminal, false)
+        : scope === 'closed'
+          ? eq(interactions.status_is_terminal, true)
+          : undefined;
+      const canonicalWhere = and(
+        eq(activities.organization_id, payload.entity_id),
+        ne(activities.lifecycle_status, 'archived'),
+        scopeCondition
+      );
+      const [joinedRows, countRows] = await Promise.all([
+        db.select({ interaction: interactions, activity: activities })
+          .from(activities)
+          .innerJoin(interactions, eq(interactions.id, activities.legacy_interaction_id))
+          .where(canonicalWhere)
+          .orderBy(desc(interactions.last_action_at), desc(activities.occurred_at))
+          .limit(pageSize)
+          .offset(offset),
+        db.select({ count: sql<number>`count(*)::int` })
+          .from(activities)
+          .innerJoin(interactions, eq(interactions.id, activities.legacy_interaction_id))
+          .where(canonicalWhere)
+      ]);
+      return {
+        interactions: joinedRows.map(({ interaction, activity }) => projectCanonicalActivity(interaction, activity)),
+        page,
+        page_size: pageSize,
+        total: Number(countRows[0]?.count ?? 0)
+      };
+    }
+
     const [rows, countRows] = await Promise.all([
       db
         .select()
@@ -497,8 +583,14 @@ export const getInteractionDraft = async (
       .where(and(
         eq(interaction_drafts.user_id, payload.user_id),
         eq(interaction_drafts.agency_id, agencyId),
-        eq(interaction_drafts.form_type, formType)
+        formType === 'activity-v2'
+          ? or(
+            eq(interaction_drafts.form_type, 'activity-v2'),
+            eq(interaction_drafts.form_type, 'interaction')
+          )
+          : eq(interaction_drafts.form_type, formType)
       ))
+      .orderBy(sql`case when ${interaction_drafts.form_type} = ${formType} then 0 else 1 end`)
       .limit(1);
 
     const draft = rows[0];
@@ -524,35 +616,41 @@ export const saveInteractionDraft = async (
   };
 
   try {
-    const rows = await db
-      .insert(interaction_drafts)
-      .values(row)
-      .onConflictDoUpdate({
-        target: [
-          interaction_drafts.user_id,
-          interaction_drafts.agency_id,
-          interaction_drafts.form_type
-        ],
-        set: {
-          payload: payload.payload
-        }
-      })
-      .returning({
+    const selection = {
         id: interaction_drafts.id,
         payload: interaction_drafts.payload,
         updated_at: interaction_drafts.updated_at
-      });
+      };
+    const rows = payload.expected_updated_at
+      ? await db.update(interaction_drafts)
+        .set({ payload: payload.payload, form_type: formType })
+        .where(and(
+          eq(interaction_drafts.user_id, payload.user_id),
+          eq(interaction_drafts.agency_id, agencyId),
+          formType === 'activity-v2'
+            ? or(
+              eq(interaction_drafts.form_type, 'activity-v2'),
+              eq(interaction_drafts.form_type, 'interaction')
+            )
+            : eq(interaction_drafts.form_type, formType),
+          eq(interaction_drafts.updated_at, payload.expected_updated_at)
+        ))
+        .returning(selection)
+      : await db.insert(interaction_drafts)
+        .values(row)
+        .onConflictDoNothing()
+        .returning(selection);
 
     const draft = rows[0];
     if (!draft) {
-      throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de sauvegarder le brouillon.');
+      throw httpError(409, 'CONFLICT', 'Ce brouillon a été modifié. Rechargez-le avant de continuer.');
     }
     return toDraftResponseRow(draft);
   } catch (error) {
     if (
       typeof error === 'object'
       && error !== null
-      && Reflect.get(error, 'code') === 'DB_WRITE_FAILED'
+      && ['DB_WRITE_FAILED', 'CONFLICT'].includes(String(Reflect.get(error, 'code')))
     ) {
       throw error;
     }
@@ -575,7 +673,12 @@ export const deleteInteractionDraft = async (
       .where(and(
         eq(interaction_drafts.user_id, payload.user_id),
         eq(interaction_drafts.agency_id, agencyId),
-        eq(interaction_drafts.form_type, formType)
+        formType === 'activity-v2'
+          ? or(
+            eq(interaction_drafts.form_type, 'activity-v2'),
+            eq(interaction_drafts.form_type, 'interaction')
+          )
+          : eq(interaction_drafts.form_type, formType)
       ));
   } catch {
     throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de supprimer le brouillon.');
@@ -621,15 +724,22 @@ export const deleteInteraction = async (
   }
 
   try {
-    const rows = await db
-      .delete(interactions)
-      .where(eq(interactions.id, payload.interaction_id))
-      .returning({ id: interactions.id });
-    const deleted = rows[0];
-    if (!deleted) {
+    const rows = await db.update(activities)
+      .set({
+        lifecycle_status: 'archived',
+        version: sql`${activities.version} + 1`,
+        updated_by: authContext.userId
+      })
+      .where(and(
+        eq(activities.legacy_interaction_id, payload.interaction_id),
+        ne(activities.lifecycle_status, 'archived')
+      ))
+      .returning({ legacy_interaction_id: activities.legacy_interaction_id });
+    const archived = rows[0];
+    if (!archived?.legacy_interaction_id) {
       throw httpError(404, 'NOT_FOUND', 'Interaction introuvable.');
     }
-    return deleted.id;
+    return archived.legacy_interaction_id;
   } catch (error) {
     if (
       typeof error === 'object'
@@ -638,7 +748,7 @@ export const deleteInteraction = async (
     ) {
       throw error;
     }
-    throw httpError(500, 'DB_WRITE_FAILED', "Impossible de supprimer l'interaction.");
+    throw httpError(500, 'DB_WRITE_FAILED', "Impossible d'archiver l'activité.");
   }
 };
 

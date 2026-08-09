@@ -9,6 +9,7 @@ import { useDirectoryOptionDepartments } from '../../../hooks/directory/options/
 import { useDirectoryPage } from '../../../hooks/directory/core/useDirectoryPage';
 
 import ClientDirectoryPage from '../ClientDirectoryPage';
+import { buildTierOrganizationRead } from '@/__tests__/test-utils';
 
 const mockNavigate = vi.fn();
 const defaultSearchState: DirectorySearchState = {
@@ -42,7 +43,12 @@ const clientRow = {
   cir_commercial_id: null,
   cir_commercial_name: null,
   archived_at: null,
-  updated_at: '2026-03-07T10:00:00.000Z'
+  updated_at: '2026-03-07T10:00:00.000Z',
+  canonical_tier: buildTierOrganizationRead(['client'], {
+    id: 'entity-1',
+    legacy_entity_id: 'entity-1',
+    name: 'Test comptant'
+  })
 };
 
 const prospectRow = {
@@ -51,7 +57,15 @@ const prospectRow = {
   entity_type: 'Prospect',
   client_number: null,
   name: 'Prospect Test',
-  account_type: null
+  account_type: null,
+  canonical_tier: buildTierOrganizationRead(['prospect'], {
+    id: 'prospect-1',
+    legacy_entity_id: 'prospect-1',
+    name: 'Prospect Test',
+    customer_account_state: 'not_applicable',
+    customer_account: null,
+    primary_commercial_state: 'not_applicable'
+  })
 };
 
 const mockMatchMedia = () => {

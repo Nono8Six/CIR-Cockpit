@@ -261,7 +261,7 @@ const CockpitGuidedEntry = ({
         >
           <div className="mx-auto flex w-full max-w-[900px] flex-col gap-3">
             <div className="flex items-center gap-3">
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Nouvelle interaction</span>
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Nouvelle activité</span>
               <span className="h-px flex-1 bg-[hsl(var(--border-subtle))]" />
               <Button
                 type="button"

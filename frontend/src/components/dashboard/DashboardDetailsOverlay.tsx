@@ -55,10 +55,10 @@ const DashboardDetailsOverlay = ({
       data-testid="dashboard-details-dialog"
     >
       <DialogTitle className="sr-only">
-        {`Détails de l'interaction ${getInteractionDisplayName(interaction)}`}
+        {`Détails de l'activité ${getInteractionDisplayName(interaction)}`}
       </DialogTitle>
       <DialogDescription className="sr-only">
-        Consulter le dossier, mettre à jour le statut et ajouter des notes.
+        Consulter l’activité, sa provenance et son historique.
       </DialogDescription>
       <InteractionDetails
         interaction={interaction}

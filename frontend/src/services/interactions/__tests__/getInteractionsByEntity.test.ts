@@ -98,7 +98,8 @@ describe('getInteractionsByEntity', () => {
         entity_id: 'entity-1',
         scope: 'open',
         page: 2,
-        page_size: 10
+        page_size: 10,
+        read_model: 'activity_v2'
       },
       undefined
     );

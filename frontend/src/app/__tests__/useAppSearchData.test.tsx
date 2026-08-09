@@ -7,6 +7,7 @@ import {
   useAppSearchData
 } from '@/app/useAppSearchData';
 import { Channel, type Entity, type EntityContact, type Interaction } from '@/types';
+import { buildTierOrganizationRead } from '@/__tests__/test-utils';
 
 const buildEntity = (overrides: Partial<Entity> = {}): Entity => ({
   id: 'entity-1',
@@ -115,12 +116,27 @@ describe('app search helpers', () => {
 });
 
 describe('useAppSearchData', () => {
-  const client = buildEntity();
+  const client = buildEntity({
+    entity_type: 'Prospect',
+    canonical_tier: buildTierOrganizationRead(['client'], {
+      id: 'entity-1',
+      legacy_entity_id: 'entity-1',
+      name: 'Client Alpha'
+    })
+  });
   const prospect = buildEntity({
     id: 'entity-2',
     client_number: null,
-    entity_type: 'Prospect',
-    name: 'Prospect Alpha'
+    entity_type: 'Client',
+    name: 'Prospect Alpha',
+    canonical_tier: buildTierOrganizationRead(['prospect'], {
+      id: 'entity-2',
+      legacy_entity_id: 'entity-2',
+      name: 'Prospect Alpha',
+      customer_account_state: 'not_applicable',
+      customer_account: null,
+      primary_commercial_state: 'not_applicable'
+    })
   });
   const contact = buildContact();
   const interaction = buildInteraction();
@@ -176,5 +192,29 @@ describe('useAppSearchData', () => {
     expect(result.current.filteredProspects).toHaveLength(0);
     expect(result.current.filteredContacts).toHaveLength(0);
     expect(result.current.filteredInteractions).toHaveLength(0);
+  });
+
+  it('derives multi-role organizations from canonical active roles', () => {
+    const multiRole = buildEntity({
+      id: 'entity-3',
+      entity_type: 'Fournisseur',
+      name: 'Alpha multi-role',
+      canonical_tier: buildTierOrganizationRead(['client', 'prospect', 'supplier'], {
+        id: 'entity-3',
+        legacy_entity_id: 'entity-3',
+        name: 'Alpha multi-role'
+      })
+    });
+    const { result } = renderHook(() =>
+      useAppSearchData({
+        searchQuery: 'Alpha',
+        interactions: [],
+        entitySearchIndex: { entities: [multiRole], contacts: [] },
+        statuses: []
+      })
+    );
+
+    expect(result.current.filteredClients).toHaveLength(1);
+    expect(result.current.filteredProspects).toHaveLength(1);
   });
 });

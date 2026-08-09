@@ -91,11 +91,27 @@ const createDbMock = (
 };
 
 Deno.test('handleDataEntityContactsAction lists contacts by entity', async () => {
+  const entityId = '11111111-1111-4111-8111-111111111111';
+  const contact = (id: string, firstName: string, lastName: string, isPrimary: boolean, createdAt: string): ContactRow => ({
+    id,
+    entity_id: entityId,
+    first_name: firstName,
+    last_name: lastName,
+    email: null,
+    phone: null,
+    position: null,
+    service_label: null,
+    is_primary: isPrimary,
+    notes: null,
+    archived_at: null,
+    created_at: createdAt,
+    updated_at: createdAt
+  });
   const contactRows = [
-    { id: 'contact-2', first_name: 'Zoé', last_name: 'Martin', is_primary: true, created_at: '2026-02-02T00:00:00Z' },
-    { id: 'contact-1', first_name: 'Alice', last_name: 'Martin', is_primary: false, created_at: '2026-02-01T00:00:00Z' },
-    { id: 'contact-3', first_name: 'Bruno', last_name: 'Durand', is_primary: false, created_at: '2026-02-03T00:00:00Z' }
-  ] as ContactRow[];
+    contact('22222222-2222-4222-8222-222222222222', 'Zoé', 'Martin', true, '2026-02-02T00:00:00Z'),
+    contact('33333333-3333-4333-8333-333333333333', 'Alice', 'Martin', false, '2026-02-01T00:00:00Z'),
+    contact('44444444-4444-4444-8444-444444444444', 'Bruno', 'Durand', false, '2026-02-03T00:00:00Z')
+  ];
   const mock = createDbMock(contactRows);
 
   const response = await handleDataEntityContactsAction(
@@ -104,7 +120,7 @@ Deno.test('handleDataEntityContactsAction lists contacts by entity', async () =>
     'req-list',
     {
       action: 'list_by_entity',
-      entity_id: 'entity-1',
+      entity_id: entityId,
       include_archived: false
     },
     {
@@ -119,7 +135,12 @@ Deno.test('handleDataEntityContactsAction lists contacts by entity', async () =>
   assertEquals('contacts' in response, true);
   assertEquals(mock.getListOrderArgsCount(), 4);
   if ('contacts' in response) {
-    assertEquals(response.contacts.map((contact) => contact.id), ['contact-2', 'contact-3', 'contact-1']);
+    assertEquals(response.contacts.map((row) => row.id), [
+      '22222222-2222-4222-8222-222222222222',
+      '44444444-4444-4444-8444-444444444444',
+      '33333333-3333-4333-8333-333333333333'
+    ]);
+    assertEquals(response.tier_contacts.map((row) => row.legacy_entity_id), [entityId, entityId, entityId]);
   }
 });
 

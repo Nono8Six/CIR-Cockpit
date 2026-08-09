@@ -12,6 +12,7 @@ import {
   getContactEntityId,
   getEntityAgencyId
 } from '../../data/dataAccess.ts';
+import { toTierContactReads } from '../core/tierReadModel.ts';
 
 type ContactRow = Database['public']['Tables']['entity_contacts']['Row'];
 
@@ -30,6 +31,13 @@ const defaultDependencies: DataEntityContactsDependencies = {
   getEntityAgencyId,
   getContactEntityId,
   ensureAgencyAccess: ensureOptionalAgencyAccess
+};
+
+const readDbErrorCode = (error: unknown): string | undefined => {
+  if (typeof error !== 'object' || error === null) return undefined;
+  const code = Reflect.get(error, 'code');
+  if (typeof code === 'string') return code;
+  return readDbErrorCode(Reflect.get(error, 'cause'));
 };
 
 const withAuditActor = async <T>(
@@ -121,6 +129,17 @@ const deleteContact = async (db: DbClient, contactId: string): Promise<void> => 
     ) {
       throw error;
     }
+    if (
+      typeof error === 'object'
+      && error !== null
+      && readDbErrorCode(error) === '23503'
+    ) {
+      throw httpError(
+        409,
+        'CONFLICT',
+        "Ce contact est référencé par l'historique d'une activité. Archivez ou supprimez le tiers avec ses activités.",
+      );
+    }
     throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de supprimer le contact.');
   }
 };
@@ -180,7 +199,12 @@ export const handleDataEntityContactsAction = async (
       const agencyId = await dependencies.getEntityAgencyId(db, data.entity_id);
       dependencies.ensureAgencyAccess(authContext, agencyId);
       const contacts = await listContactsByEntity(db, data);
-      return { request_id: requestId, ok: true, contacts };
+      return {
+        request_id: requestId,
+        ok: true,
+        contacts,
+        tier_contacts: toTierContactReads(contacts)
+      };
     }
     case 'save': {
       const agencyId = await dependencies.getEntityAgencyId(db, data.entity_id);

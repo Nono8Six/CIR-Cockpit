@@ -172,6 +172,18 @@ describe('useInteractionDraft', () => {
 
     rerender({
       ...context,
+      entities: [],
+      contacts: [],
+      entitySearchLoading: false,
+      contactsLoading: false
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(context.setSelectedEntity).not.toHaveBeenCalledWith(expect.objectContaining({ id: 'entity-1' }));
+
+    rerender({
+      ...context,
       entities: [createEntity({ id: 'entity-1' })],
       contacts: [createContact({ id: 'contact-1', entity_id: 'entity-1' })]
     });
@@ -180,6 +192,29 @@ describe('useInteractionDraft', () => {
       expect(context.setSelectedEntity).toHaveBeenCalled();
       expect(context.setSelectedContact).toHaveBeenCalled();
     });
+  });
+
+  it('ignore une lecture de brouillon devenue périmée après un reset utilisateur', async () => {
+    let resolveDraft: (draft: Awaited<ReturnType<typeof getInteractionDraft>>) => void = () => undefined;
+    vi.mocked(getInteractionDraft).mockReturnValue(new Promise((resolve) => {
+      resolveDraft = resolve;
+    }));
+    vi.mocked(deleteInteractionDraft).mockResolvedValue(undefined);
+    const context = buildContext();
+    const { result } = renderHook(() => useInteractionDraft(context));
+
+    act(() => result.current.handleReset());
+    await act(async () => {
+      resolveDraft({
+        id: 'draft-late',
+        updated_at: '2026-08-09T10:00:00.000Z',
+        payload: { values: { ...DEFAULT_VALUES, entity_id: 'entity-1', subject: 'Ancien brouillon' } }
+      });
+      await Promise.resolve();
+    });
+
+    expect(context.reset).toHaveBeenCalledTimes(1);
+    expect(context.setSelectedEntity).not.toHaveBeenCalledWith(expect.objectContaining({ id: 'entity-1' }));
   });
 
   it('uses handleUiError once, then reportError on repeated autosave failures', async () => {
@@ -302,6 +337,67 @@ describe('useInteractionDraft', () => {
     });
   });
 
+  it('serialise les sauvegardes et reutilise la version retournee par la precedente', async () => {
+    vi.useFakeTimers();
+    vi.mocked(getInteractionDraft).mockResolvedValue(null);
+    let resolveFirstSave: (draft: Awaited<ReturnType<typeof saveInteractionDraft>>) => void = () => undefined;
+    vi.mocked(saveInteractionDraft)
+      .mockReturnValueOnce(new Promise((resolve) => {
+        resolveFirstSave = resolve;
+      }))
+      .mockResolvedValueOnce({
+        id: 'draft-serial',
+        updated_at: '2026-08-09T12:00:02.000Z',
+        payload: { values: { ...DEFAULT_VALUES, subject: 'Sujet 2' } }
+      });
+
+    const initialContext = buildContext({ hasDraftContent: false });
+    const { rerender } = renderHook(
+      (props: ReturnType<typeof buildContext>) => useInteractionDraft(props),
+      { initialProps: initialContext }
+    );
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    rerender({
+      ...initialContext,
+      hasDraftContent: true,
+      draftPayload: { values: { ...DEFAULT_VALUES, subject: 'Sujet 1' } }
+    });
+    await act(async () => {
+      vi.advanceTimersByTime(900);
+      await Promise.resolve();
+    });
+
+    rerender({
+      ...initialContext,
+      hasDraftContent: true,
+      draftPayload: { values: { ...DEFAULT_VALUES, subject: 'Sujet 2' } }
+    });
+    await act(async () => {
+      vi.advanceTimersByTime(900);
+      await Promise.resolve();
+    });
+    expect(saveInteractionDraft).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      resolveFirstSave({
+        id: 'draft-serial',
+        updated_at: '2026-08-09T12:00:01.000Z',
+        payload: { values: { ...DEFAULT_VALUES, subject: 'Sujet 1' } }
+      });
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(saveInteractionDraft).toHaveBeenCalledTimes(2);
+    expect(saveInteractionDraft).toHaveBeenLastCalledWith(expect.objectContaining({
+      expectedUpdatedAt: '2026-08-09T12:00:01.000Z',
+      payload: { values: { ...DEFAULT_VALUES, subject: 'Sujet 2' } }
+    }));
+  });
+
   it('debounces autosave updates and clears the saved draft when content becomes empty', async () => {
     vi.useFakeTimers();
     vi.mocked(getInteractionDraft).mockResolvedValue(null);
@@ -354,6 +450,7 @@ describe('useInteractionDraft', () => {
     expect(saveInteractionDraft).toHaveBeenCalledWith({
       userId: 'user-1',
       agencyId: 'agency-1',
+      expectedUpdatedAt: null,
       payload: {
         values: {
           ...DEFAULT_VALUES,

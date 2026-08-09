@@ -37,6 +37,11 @@ import {
   cockpitPhoneLookupResponseSchema,
 } from "../../../../shared/schemas/interaction/cockpit.schema.ts";
 import {
+  activityV2ByLegacyInteractionInputSchema,
+  activityV2ByLegacyInteractionResponseSchema,
+  activityV2CorrectionInputSchema,
+} from "../../../../shared/schemas/interaction/activity-v2.schema.ts";
+import {
   configGetInputSchema,
   configIntegrityInteractionsInputSchema,
   configIntegrityInteractionUpdateInputSchema,
@@ -59,16 +64,16 @@ import {
   directoryOptionsAgenciesInputSchema,
   directoryOptionsCitiesInputSchema,
   directoryOptionsFacetInputSchema,
-  directoryRouteRefSchema,
+  directoryRecordInputSchema,
   directorySavedViewDeleteInputSchema,
   directorySavedViewSaveInputSchema,
   directorySavedViewSetDefaultInputSchema,
   directorySavedViewsListInputSchema,
 } from "../../../../shared/schemas/system/directory.schema.ts";
 import {
-  tierV1DirectoryListInputSchema,
   tierV1SearchInputSchema,
 } from "../../../../shared/schemas/interaction/tier-v1.schema.ts";
+import { tierDirectoryListInputSchema } from "../../../../shared/schemas/entity/tier-foundation.schema.ts";
 import {
   pricingReferenceAnomaliesExportInputSchema,
   pricingReferenceAnomaliesExportResponseSchema,
@@ -181,8 +186,10 @@ import { handleDataConfigAction } from "../services/data/dataConfig.ts";
 import { handleDataEntitiesAction } from "../services/entities/core/dataEntities.ts";
 import { handleDataEntityContactsAction } from "../services/entities/contacts/dataEntityContacts.ts";
 import { handleDataInteractionsAction } from "../services/entities/interactions/dataInteractions.ts";
+import { correctActivityV2, getActivityV2ByLegacyInteraction } from "../services/entities/activities/dataActivitiesV2.ts";
 import { handleDataProfileAction } from "../services/data/dataProfile.ts";
 import { searchEntitiesUnified } from "../services/search/dataSearchEntitiesUnified.ts";
+import { listTierDirectory } from "../services/entities/core/tierReadModel.ts";
 import {
   listCockpitAgencyMembers,
   lookupCockpitPhone,
@@ -259,7 +266,6 @@ import {
   listAiFeatureGrants,
   saveAiFeatureGrant,
 } from "../services/ai/aiAccess.ts";
-import { httpError } from "../middleware/errorHandler.ts";
 import { authedProcedure, router, superAdminProcedure } from "./procedures.ts";
 import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 import { z } from "zod/v4";
@@ -271,14 +277,6 @@ import {
   withSuperAdminHandler,
 } from "./procedureHelpers.ts";
 import { configuratorMotorRouter } from "./configuratorMotor.ts";
-
-const rejectDeferredTierV1Contract = (): Promise<never> => {
-  return Promise.reject(httpError(
-    501,
-    "REQUEST_FAILED",
-    "Contrat V1 disponible. Implementation prevue dans la tranche suivante.",
-  ));
-};
 
 export const appRouter = router({
   configurator: router({
@@ -299,6 +297,16 @@ export const appRouter = router({
       .input(dataInteractionsPayloadSchema)
       .output(dataInteractionsResponseSchema)
       .mutation(withAuthedHandler(handleDataInteractionsAction)),
+    "activity-v2": router({
+      "by-legacy-interaction": authedProcedure
+        .input(activityV2ByLegacyInteractionInputSchema)
+        .output(activityV2ByLegacyInteractionResponseSchema)
+        .query(withAuthedHandler(getActivityV2ByLegacyInteraction)),
+      correct: authedProcedure
+        .input(activityV2CorrectionInputSchema)
+        .output(activityV2ByLegacyInteractionResponseSchema)
+        .mutation(withAuthedHandler(correctActivityV2)),
+    }),
     config: authedProcedure
       .input(dataConfigPayloadSchema)
       .output(dataConfigResponseSchema)
@@ -730,13 +738,13 @@ export const appRouter = router({
       .output(directoryDuplicatesResponseSchema)
       .query(withAuthedHandler(getDirectoryDuplicates)),
     record: authedProcedure
-      .input(directoryRouteRefSchema)
+      .input(directoryRecordInputSchema)
       .output(directoryRecordResponseSchema)
       .query(withAuthedHandler(getDirectoryRecord)),
     "tiers-list": authedProcedure
-      .input(tierV1DirectoryListInputSchema)
+      .input(tierDirectoryListInputSchema)
       .output(tierV1DirectoryListResponseSchema)
-      .query(withAuthedHandler(rejectDeferredTierV1Contract)),
+      .query(withAuthedHandler(listTierDirectory)),
     "saved-views": router({
       list: authedProcedure
         .input(directorySavedViewsListInputSchema)

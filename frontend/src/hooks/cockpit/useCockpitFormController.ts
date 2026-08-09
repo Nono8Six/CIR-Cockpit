@@ -261,12 +261,6 @@ export const useCockpitFormController = ({
     setSelectedContact: dialogs.setSelectedContact,
     entities: formState.entities,
     contacts: formState.contacts,
-    entitySearchLoading,
-    contactsLoading: formState.contactsQuery.isLoading,
-    entityId: formState.entityId,
-    contactId: formState.contactId,
-    selectedEntity: dialogs.selectedEntity,
-    selectedContact: dialogs.selectedContact,
     draftPayload: derived.draftPayload,
     hasDraftContent: derived.hasDraftContent
   });

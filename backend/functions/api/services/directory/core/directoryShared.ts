@@ -1,4 +1,4 @@
-import { and, asc, desc, inArray, isNull, sql } from 'drizzle-orm';
+import { and, asc, desc, isNull, sql } from 'drizzle-orm';
 
 import { agencies, entities, profiles } from '../../../../../drizzle/schema.ts';
 import type {
@@ -35,20 +35,18 @@ type DirectoryScopedBaseInput = {
   filters?: Pick<DirectoryListInput['filters'], 'includeArchived'>;
 };
 
-export const PROSPECT_ENTITY_TYPE_WHERE = sql<boolean>`
-  (
-    lower(${entities.entity_type}) like '%prospect%'
-    or lower(${entities.entity_type}) like '%particulier%'
-  )
-`;
+const activeTierRoleCondition = (roleCode: 'client' | 'prospect' | 'supplier'): SqlCondition =>
+  sql<boolean>`exists (
+    select 1
+    from public.tier_roles role
+    where role.entity_id = ${entities.id}
+      and role.role_code = ${roleCode}
+      and role.valid_to is null
+  )`;
 
-export const CLIENT_ENTITY_TYPE_WHERE = sql<boolean>`
-  lower(${entities.entity_type}) = 'client'
-`;
-
-export const SUPPLIER_ENTITY_TYPE_WHERE = sql<boolean>`
-  ${entities.entity_type} = 'Fournisseur'
-`;
+export const PROSPECT_ENTITY_TYPE_WHERE = activeTierRoleCondition('prospect');
+export const CLIENT_ENTITY_TYPE_WHERE = activeTierRoleCondition('client');
+export const SUPPLIER_ENTITY_TYPE_WHERE = activeTierRoleCondition('supplier');
 
 export const commercialDisplayNameSql = sql<string>`
   coalesce(
@@ -199,11 +197,25 @@ export const toDirectoryScopeCondition = (
     return sql<boolean>`false`;
   }
 
-  if (resolvedScope.agencyIds.length === 1) {
-    return sql<boolean>`${entities.agency_id} = ${resolvedScope.agencyIds[0]}`;
-  }
-
-  return inArray(entities.agency_id, resolvedScope.agencyIds);
+  const agencyValues = sql.join(
+    resolvedScope.agencyIds.map((agencyId) => sql`${agencyId}`),
+    sql`, `
+  );
+  return sql<boolean>`(
+    exists (
+      select 1
+      from public.customer_accounts account
+      where account.entity_id = ${entities.id}
+        and account.agency_id in (${agencyValues})
+    )
+    or (
+      not exists (
+        select 1 from public.customer_accounts account
+        where account.entity_id = ${entities.id}
+      )
+      and ${entities.agency_id} in (${agencyValues})
+    )
+  )`;
 };
 
 export const toDirectoryResponseMeta = (
@@ -244,11 +256,11 @@ export const toAccessibleAgencyCondition = (
   const resolvedAgencyIds = resolveAccessibleAgencyIds(authContext, agencyIds);
 
   if (resolvedAgencyIds.length > 0) {
-    if (resolvedAgencyIds.length === 1) {
-      return sql<boolean>`${entities.agency_id} = ${resolvedAgencyIds[0]}`;
-    }
-
-    return inArray(entities.agency_id, resolvedAgencyIds);
+    return toDirectoryScopeCondition({
+      mode: resolvedAgencyIds.length === 1 ? 'single_agency' : 'multi_agency',
+      agencyIds: resolvedAgencyIds,
+      isGlobal: false
+    });
   }
 
   if (authContext.isSuperAdmin) {
@@ -259,11 +271,11 @@ export const toAccessibleAgencyCondition = (
     return sql<boolean>`false`;
   }
 
-  if (authContext.agencyIds.length === 1) {
-    return sql<boolean>`${entities.agency_id} = ${authContext.agencyIds[0]}`;
-  }
-
-  return inArray(entities.agency_id, authContext.agencyIds);
+  return toDirectoryScopeCondition({
+    mode: authContext.agencyIds.length === 1 ? 'single_agency' : 'multi_agency',
+    agencyIds: authContext.agencyIds,
+    isGlobal: false
+  });
 };
 
 // Role-scoped variant (no listing-style "explicit choice required" semantic).
@@ -283,15 +295,19 @@ export const toRoleScopedAgencyCondition = (
     return sql<boolean>`false`;
   }
 
-  if (authContext.agencyIds.length === 1) {
-    return sql<boolean>`${entities.agency_id} = ${authContext.agencyIds[0]}`;
-  }
-
-  return inArray(entities.agency_id, authContext.agencyIds);
+  return toDirectoryScopeCondition({
+    mode: authContext.agencyIds.length === 1 ? 'single_agency' : 'multi_agency',
+    agencyIds: authContext.agencyIds,
+    isGlobal: false
+  });
 };
 
 export const escapeLikePattern = (value: string): string =>
-  value.toLowerCase().replaceAll('%', '').replaceAll('_', '');
+  value
+    .toLowerCase()
+    .replaceAll('\\', '\\\\')
+    .replaceAll('%', '\\%')
+    .replaceAll('_', '\\_');
 
 const buildSearchCondition = (query: string | undefined): SqlCondition | undefined => {
   if (!query) {
@@ -370,12 +386,17 @@ export const buildListWhereClause = (
     conditions.push(sql<boolean>`${normalizedCitySql} = ${input.filters.city.toLowerCase()}`);
   }
 
-  if (input.filters.cirCommercialIds.length === 1) {
-    conditions.push(sql<boolean>`${entities.cir_commercial_id} = ${input.filters.cirCommercialIds[0]}`);
-  }
-
-  if (input.filters.cirCommercialIds.length > 1) {
-    conditions.push(inArray(entities.cir_commercial_id, input.filters.cirCommercialIds));
+  if (input.filters.cirCommercialIds.length > 0) {
+    const commercialValues = sql.join(
+      input.filters.cirCommercialIds.map((commercialId) => sql`${commercialId}`),
+      sql`, `
+    );
+    conditions.push(sql<boolean>`exists (
+      select 1
+      from public.customer_accounts account
+      where account.entity_id = ${entities.id}
+        and account.primary_commercial_id in (${commercialValues})
+    )`);
   }
 
   return and(...conditions) ?? sql<boolean>`true`;

@@ -43,7 +43,7 @@ export const useDeleteInteraction = ({ agencyId, entityId }: UseDeleteInteractio
       void invalidateEntityInteractionsQueries(queryClient, entityId ?? null);
     },
     onError: (error) => {
-      handleUiError(error, "Impossible de supprimer l'interaction.", {
+      handleUiError(error, "Impossible d'archiver l'activité.", {
         source: 'useDeleteInteraction.onError'
       });
     }

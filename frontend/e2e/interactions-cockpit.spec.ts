@@ -36,8 +36,14 @@ const openCockpitTab = async (page: Page): Promise<void> => {
 const resetCockpitForm = async (page: Page): Promise<void> => {
   const resetButton = page.getByRole('button', { name: /réinitialiser la saisie en cours|recommencer/i });
   if (!(await resetButton.isVisible().catch(() => false))) return;
+  const draftDeleted = page.waitForResponse(
+    (response) => response.request().method() === 'POST'
+      && response.request().postData()?.includes('"action":"draft_delete"') === true,
+    { timeout: 20000 }
+  );
   await resetButton.click();
-  await expect(page.getByRole('button', { name: /téléphone/i })).toBeVisible({ timeout: 10000 });
+  expect((await draftDeleted).status()).toBe(200);
+  await expect(page.getByRole('heading', { name: /par quel canal avez-vous échangé/i })).toBeVisible({ timeout: 10000 });
 };
 
 const selectClientAndContact = async (
@@ -63,24 +69,17 @@ const selectClientAndContact = async (
     await expect(searchInput).toBeVisible({ timeout: 10000 });
   }
   await searchInput.fill('SEA');
-  const searchResult = page.getByText(/^SEA$/).first();
+  const searchResult = page
+    .getByRole('region', { name: /rechercher ou créer le tiers/i })
+    .getByRole('option', { name: /SEA.*116277/i })
+    .first();
   await expect(searchResult).toBeVisible({ timeout: 20000 });
   await searchResult.click();
-  await expect(page.getByRole('heading', { name: /avec qui as-tu échangé/i })).toBeVisible({ timeout: 20000 });
-  const contact = page.getByRole('button', { name: /sélectionner/i }).first();
-  if (await contact.isVisible({ timeout: 5000 }).catch(() => false)) {
-    await contact.click();
-  } else {
-    await page.getByRole('button', { name: /ajouter un nouveau contact/i }).click();
-    const dialog = page.getByRole('dialog', { name: /nouveau contact/i });
-    await expect(dialog).toBeVisible();
-    await dialog.getByLabel(/prenom/i).fill(`E2E_${payload.firstName}`);
-    await dialog.getByLabel(/^nom$/i).fill(payload.lastName);
-    await dialog.getByRole('textbox', { name: /^email$/i }).fill(payload.email);
-    await dialog.getByRole('textbox', { name: /telephone/i }).fill('06 12 34 56 78');
-    await dialog.getByRole('button', { name: /^ajouter$/i }).click();
-    await expect(dialog).toBeHidden({ timeout: 20000 });
-  }
+  await expect(page.getByRole('button', { name: /tiers SEA/i })).toBeVisible({ timeout: 20000 });
+  await expect(page.getByRole('heading', { name: /avec qui avez-vous échangé/i })).toBeVisible({ timeout: 20000 });
+  const contact = page.getByRole('button').filter({ hasText: /Kévin CHAUCHET|E2E_Prenom/ }).first();
+  await expect(contact).toBeVisible({ timeout: 20000 });
+  await contact.click();
   await expect(page.getByRole('heading', { name: /résumer la demande/i })).toBeVisible({ timeout: 20000 });
 };
 
@@ -152,6 +151,7 @@ test('creer une interaction depuis le cockpit (formulaire completable)', async (
   });
 
   await expect(validationButton(page)).toBeEnabled();
+  await resetCockpitForm(page);
 });
 
 test('sauvegarde de brouillon restauree apres rechargement', async ({ page }) => {
@@ -165,6 +165,35 @@ test('sauvegarde de brouillon restauree apres rechargement', async ({ page }) =>
   });
 
   await expect(page.getByLabel(/titre/i)).toHaveValue(subject);
+  const resumedSubject = `${subject} repris`;
+  const draftSaved = page.waitForRequest(
+    (request) => request.method() === 'POST'
+      && request.postData()?.includes(resumedSubject) === true,
+    { timeout: 20000 }
+  );
+  await page.getByLabel(/titre/i).fill(resumedSubject);
+  const draftRequest = await draftSaved;
+  expect((await draftRequest.response())?.status()).toBe(200);
+  await page.reload();
+  await expect(page.getByTestId('cockpit-form-shell')).toBeVisible({ timeout: 20000 });
+  await expect(page.getByRole('button', { name: /tiers SEA/i })).toBeVisible({ timeout: 20000 });
+  await expect(page.getByLabel(/titre/i)).toHaveValue(resumedSubject, { timeout: 20000 });
+  await resetCockpitForm(page);
+});
+
+test('detail canonique Activity v2 visible depuis le pilotage', async ({ page }) => {
+  await ensureLoggedIn(page);
+  await page.goto('/dashboard');
+  await expect(page.getByRole('heading', { name: /vue d'ensemble/i })).toBeVisible({ timeout: 20000 });
+
+  await page
+    .getByRole('region', { name: /dossiers à traiter/i })
+    .getByRole('button', { name: /^ouvrir /i })
+    .first()
+    .click();
+  await expect(page.getByTestId('dashboard-details-dialog')).toBeVisible({ timeout: 20000 });
+  await expect(page.getByRole('region', { name: /données canoniques de l’activité/i })).toBeVisible({ timeout: 20000 });
+  await expect(page.getByText(/événement\(s\).*correction\(s\).*pièce\(s\) jointe\(s\)/i)).toBeVisible();
 });
 
 test.skip("soumettre l'interaction depuis le cockpit", async ({ page }) => {

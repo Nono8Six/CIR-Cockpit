@@ -23,9 +23,10 @@ export const getInteractions = async (agencyIdOverride?: string): Promise<Intera
   return invokeTrpc(
     (api, options) => api.data.interactions.mutate({
       action: 'list_by_agency',
-      agency_id: agencyId
+      agency_id: agencyId,
+      read_model: 'activity_v2'
     }, options),
     parseInteractionsResponse,
-    'Impossible de charger les interactions.'
+    'Impossible de charger les activités.'
   );
 };

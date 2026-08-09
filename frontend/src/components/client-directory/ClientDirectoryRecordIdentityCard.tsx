@@ -1,15 +1,17 @@
 import { Mail, MapPin, Phone } from 'lucide-react';
 
 import type { DirectoryRecord } from '../../../../shared/schemas/system/directory.schema';
+import type { TierOrganizationRead } from '../../../../shared/schemas/entity/tier-foundation.schema';
 
 import { Badge } from '../ui/data-display/Badge';
 import StatusDot from '../ui/data-display/StatusDot';
 import type { EntityContact } from '@/types';
 import { formatClientNumber } from '@/utils/clients/formatClientNumber';
-import { getDirectoryTypeLabel } from './clientDirectorySearch';
+import { getTierBusinessProfileLabel, getTierRoleLabels } from '@/services/entities/tierSurfaceRead';
 
 export interface ClientDirectoryRecordIdentityCardProps {
   record: DirectoryRecord;
+  tier: TierOrganizationRead;
   isProspect: boolean;
   isSupplier: boolean;
   addressLine: string;
@@ -30,6 +32,7 @@ export interface ClientDirectoryRecordIdentityCardProps {
  */
 const ClientDirectoryRecordIdentityCard = ({
   record,
+  tier,
   isProspect,
   isSupplier,
   addressLine,
@@ -43,6 +46,7 @@ const ClientDirectoryRecordIdentityCard = ({
   const supplierIdentifier = record.supplier_code
     ? `Code ${record.supplier_code}`
     : record.supplier_number ? `N° fournisseur ${record.supplier_number}` : 'Fiche fournisseur';
+  const roleLabels = getTierRoleLabels(tier);
 
   return (
     <div className="min-w-0 flex-1 space-y-2.5">
@@ -80,9 +84,11 @@ const ClientDirectoryRecordIdentityCard = ({
             {record.name}
           </h1>
           <div className="flex flex-wrap items-center gap-1 ml-1.5">
-            <Badge variant="outline" className="border-neutral-200 text-neutral-600 bg-neutral-50/50 rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide">
-              {getDirectoryTypeLabel(record.entity_type)}
-            </Badge>
+            {roleLabels.map((label) => (
+              <Badge key={label} variant="outline" density="dense">
+                {label}
+              </Badge>
+            ))}
             {record.client_kind === 'individual' ? (
               <Badge variant="outline" className="border-neutral-200 text-neutral-600 bg-neutral-50/50 rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide">
                 Particulier
@@ -121,6 +127,9 @@ const ClientDirectoryRecordIdentityCard = ({
           </span>
         ) : null}
       </div>
+      <p className="text-[11px] font-medium text-muted-foreground">
+        {getTierBusinessProfileLabel(tier)}
+      </p>
     </div>
   );
 };

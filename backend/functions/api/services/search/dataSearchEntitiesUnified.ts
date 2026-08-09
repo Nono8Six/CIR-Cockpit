@@ -25,6 +25,7 @@ import {
   type UnifiedSupplierContactSearchRow
 } from './dataSearchEntitiesUnifiedMapping.ts';
 import { escapeLikePattern, normalizePhoneDigits } from '../directory/core/directoryShared.ts';
+import { loadTierOrganizationsByIds } from '../entities/core/tierReadModel.ts';
 
 export { resolveUnifiedSearchAgencyIds } from './dataSearchEntitiesUnifiedConditions.ts';
 
@@ -191,11 +192,17 @@ export const searchEntitiesUnified = async (
         .filter((row) => matchesUnifiedProfileSearch(row, input.query))
         .map(toUnifiedProfileResult)
     ], input.query).slice(0, input.limit);
+    const entityIds = Array.from(new Set(results.flatMap((result) => {
+      if (result.source !== 'entity') return [];
+      return [result.entity_id ?? result.id];
+    })));
+    const tiers = await loadTierOrganizationsByIds(db, entityIds);
 
     return {
       request_id: requestId,
       ok: true,
-      results
+      results,
+      tiers
     };
   } catch (error) {
     throw httpError(

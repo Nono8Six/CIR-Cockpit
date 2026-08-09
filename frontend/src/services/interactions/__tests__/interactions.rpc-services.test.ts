@@ -92,7 +92,8 @@ describe('interactions RPC services', () => {
       expect(payload).toMatchObject({ ok: true });
       expect(mutate).toHaveBeenCalledWith({
         action: 'list_by_agency',
-        agency_id: 'agency-1'
+        agency_id: 'agency-1',
+        read_model: 'activity_v2'
       }, {});
 
       return parseTrpcContract(parseResponse, payload);
@@ -159,7 +160,7 @@ describe('interactions RPC services', () => {
         action: 'draft_get',
         user_id: 'user-1',
         agency_id: 'agency-1',
-        form_type: 'interaction'
+        form_type: 'activity-v2'
       }, {});
 
       return parseTrpcContract(parseResponse, payload);
@@ -227,7 +228,8 @@ describe('interactions RPC services', () => {
         action: 'draft_save',
         user_id: 'user-1',
         agency_id: 'agency-1',
-        form_type: 'interaction',
+        form_type: 'activity-v2',
+        expected_updated_at: null,
         payload: {
           values: {
             channel: Channel.EMAIL,
@@ -278,7 +280,7 @@ describe('interactions RPC services', () => {
         action: 'draft_delete',
         user_id: 'user-1',
         agency_id: 'agency-1',
-        form_type: 'interaction'
+        form_type: 'activity-v2'
       }, {});
 
       return parseTrpcContract(parseResponse, payload);

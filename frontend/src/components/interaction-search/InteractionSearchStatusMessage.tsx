@@ -51,7 +51,7 @@ const InteractionSearchStatusMessage = ({
   if (status === 'empty') {
     return (
       <CommandEmpty className="px-5 py-5 text-center text-xs text-muted-foreground/80" aria-live="polite">
-        Aucun tiers trouvé. Créez une entrée pour cette interaction.
+        Aucun tiers trouvé. Créez une entrée pour cette activité.
       </CommandEmpty>
     );
   }

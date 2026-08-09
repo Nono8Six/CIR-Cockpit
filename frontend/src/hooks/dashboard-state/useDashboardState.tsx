@@ -361,7 +361,7 @@ export const useDashboardState = ({
         setSelectedInteraction(null);
       }
       setInteractionToDelete(null);
-      notifySuccess('Interaction supprimée.');
+      notifySuccess('Activité archivée.');
     } catch {
       return;
     }

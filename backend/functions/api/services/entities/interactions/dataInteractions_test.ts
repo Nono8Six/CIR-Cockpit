@@ -210,6 +210,19 @@ const createInteractionRow = (overrides: Partial<InteractionRow> = {}): Interact
   stage_changed_at: overrides.stage_changed_at ?? null
 });
 
+const createCanonicalJoinRow = (interaction: InteractionRow): MockRow => ({
+  interaction,
+  activity: {
+    channel: interaction.channel,
+    activity_type: interaction.interaction_type,
+    subject: interaction.subject,
+    report: interaction.notes,
+    organization_id: interaction.entity_id,
+    contact_id: interaction.contact_id,
+    occurred_at: interaction.created_at
+  }
+});
+
 // Mock DB Thenable universel permettant de chaîner n'importe quelle requête Drizzle à l'infini
 type MockRow = Record<string, unknown>;
 type MockCall = Record<string, unknown>;
@@ -244,6 +257,10 @@ const createMockDb = (config: MockConfig = {}) => {
       const builder = {
         from: (table: unknown) => {
           call.table = table;
+          return builder;
+        },
+        innerJoin: (...join: unknown[]) => {
+          call.innerJoin = join;
           return builder;
         },
         where: (condition: unknown) => {
@@ -345,7 +362,10 @@ const createMockDb = (config: MockConfig = {}) => {
 
 Deno.test('saveInteraction allows member user to save in allowed agency', async () => {
   const row = createInteractionRow({ id: 'int-1', agency_id: 'agency-1', subject: 'Sujet test' });
-  const { db, insertCalls } = createMockDb({ insertRows: [row] });
+  const { db, insertCalls } = createMockDb({
+    selectRowsQueue: [[], [createCanonicalJoinRow(row)]],
+    insertRows: [row]
+  });
   const auth = createAuthContext();
 
   const result = await saveInteraction(db, auth, {
@@ -423,7 +443,10 @@ Deno.test('saveInteraction rejects member user trying to save in non-member agen
 
 Deno.test('saveInteraction allows super_admin to save in any agency', async () => {
   const row = createInteractionRow({ id: 'int-1', agency_id: 'agency-any', subject: 'Sujet test' });
-  const { db, insertCalls } = createMockDb({ insertRows: [row] });
+  const { db, insertCalls } = createMockDb({
+    selectRowsQueue: [[], [createCanonicalJoinRow(row)]],
+    insertRows: [row]
+  });
   const auth = createAuthContext({ role: 'super_admin', isSuperAdmin: true, agencyIds: [] });
 
   const result = await saveInteraction(db, auth, {
@@ -458,6 +481,26 @@ Deno.test('listInteractionsByAgency allows member to fetch allowed agency', asyn
 
   assertEquals(result.interactions, rows);
   assertEquals(selectCalls.length, 2); // 1 for rows, 1 for count
+});
+
+Deno.test('listInteractionsByAgency projects the canonical Activity v2 fields', async () => {
+  const legacy = createInteractionRow({ id: 'int-1', subject: 'Objet historique', notes: 'Ancienne note' });
+  const canonical = createCanonicalJoinRow(legacy);
+  const activity = canonical.activity as Record<string, unknown>;
+  activity.subject = 'Objet canonique';
+  activity.report = 'Compte rendu canonique';
+  const { db } = createMockDb({
+    selectRowsQueue: [[canonical], [{ count: 1 }]]
+  });
+
+  const result = await listInteractionsByAgency(db, createAuthContext(), {
+    action: 'list_by_agency',
+    agency_id: 'agency-1',
+    read_model: 'activity_v2'
+  });
+
+  assertEquals(result.interactions[0].subject, 'Objet canonique');
+  assertEquals(result.interactions[0].notes, 'Compte rendu canonique');
 });
 
 Deno.test('listInteractionsByAgency rejects member trying to fetch non-member agency', async () => {
@@ -590,6 +633,27 @@ Deno.test('draft operations verify allowed agency_id', async () => {
   assertEquals(readRecordField(errorGet, 'code'), 'AUTH_FORBIDDEN');
 });
 
+Deno.test('activity-v2 draft save promotes a compatible legacy draft row', async () => {
+  const updatedAt = '2026-08-09T12:00:00.000Z';
+  const payload = { values: { subject: 'Brouillon repris' } };
+  const { db, updateCalls } = createMockDb({
+    updateRows: [{ id: 'draft-1', payload, updated_at: updatedAt }]
+  });
+
+  const result = await saveInteractionDraft(db, createAuthContext(), {
+    action: 'draft_save',
+    user_id: 'user-1',
+    agency_id: 'agency-1',
+    form_type: 'activity-v2',
+    expected_updated_at: '2026-08-09T11:59:00.000Z',
+    payload
+  });
+
+  assertEquals(result, { id: 'draft-1', payload, updated_at: updatedAt });
+  assertEquals(updateCalls.length, 1);
+  assertEquals(updateCalls[0]?.set, { payload, form_type: 'activity-v2' });
+});
+
 // --- Tests sur addTimelineEvent ---
 
 Deno.test('addTimelineEvent allows action when interaction belongs to member agency', async () => {
@@ -603,7 +667,7 @@ Deno.test('addTimelineEvent allows action when interaction belongs to member age
   };
   const updated = [createInteractionRow({ id: 'int-1', agency_id: 'agency-1', timeline: [event] })];
   const { db, selectCalls, updateCalls } = createMockDb({
-    selectRows: existing,
+    selectRowsQueue: [existing, [createCanonicalJoinRow(updated[0])]],
     updateRows: updated
   });
   const auth = createAuthContext();
@@ -617,7 +681,7 @@ Deno.test('addTimelineEvent allows action when interaction belongs to member age
   });
 
   assertEquals(result, updated[0]);
-  assertEquals(selectCalls.length, 1);
+  assertEquals(selectCalls.length, 2);
   assertEquals(updateCalls.length, 1);
 });
 
@@ -648,12 +712,12 @@ Deno.test('addTimelineEvent rejects action when interaction belongs to non-membe
 
 // --- Tests sur deleteInteraction ---
 
-Deno.test('deleteInteraction allows delete for member of the agency', async () => {
+Deno.test('deleteInteraction archives the canonical activity for an agency member', async () => {
   const existing = [{ id: 'int-1', agency_id: 'agency-1', entity_id: null }];
-  const deleted = [{ id: 'int-1' }];
-  const { db, selectCalls, deleteCalls } = createMockDb({
+  const archived = [{ legacy_interaction_id: 'int-1' }];
+  const { db, selectCalls, updateCalls, deleteCalls } = createMockDb({
     selectRows: existing,
-    deleteRows: deleted
+    updateRows: archived
   });
   const auth = createAuthContext();
 
@@ -664,7 +728,8 @@ Deno.test('deleteInteraction allows delete for member of the agency', async () =
 
   assertEquals(result, 'int-1');
   assertEquals(selectCalls.length, 1);
-  assertEquals(deleteCalls.length, 1);
+  assertEquals(updateCalls.length, 1);
+  assertEquals(deleteCalls.length, 0);
 });
 
 Deno.test('deleteInteraction rejects delete for non-member of the agency', async () => {

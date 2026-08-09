@@ -20,5 +20,5 @@ export const deleteInteraction = (interactionId: string): ResultAsync<string, Ap
         interaction_id: interactionId
       }, options),
     parseDeleteResponse,
-    "Impossible de supprimer l'interaction."
+    "Impossible d'archiver l'activité."
   );

@@ -9,6 +9,7 @@ import type { DirectoryListResponse } from '../../../../../../shared/schemas/sys
 import type { AuthContext, DbClient } from '../../../types.ts';
 import { httpError } from '../../../middleware/errorHandler.ts';
 import { ensureDataRateLimit } from '../../data/dataAccess.ts';
+import { loadTierOrganizationsByIds } from '../../entities/core/tierReadModel.ts';
 import {
   buildListWhereClause,
   commercialDisplayNameSql,
@@ -121,6 +122,7 @@ export const listDirectory = async (
       client_kind: normalizeClientKind(row.client_kind),
       official_data_source: normalizeOfficialDataSource(row.official_data_source),
     }));
+    const tiers = await loadTierOrganizationsByIds(db, normalizedRows.map((row) => row.id));
 
     const total = input.pagination.includeTotal ? Number(countRows[0]?.count ?? 0) : undefined;
 
@@ -128,6 +130,7 @@ export const listDirectory = async (
       request_id: requestId,
       ok: true,
       rows: normalizedRows,
+      tiers,
       ...(typeof total === "number" ? { total } : {}),
       page: input.pagination.page,
       page_size: input.pagination.pageSize,

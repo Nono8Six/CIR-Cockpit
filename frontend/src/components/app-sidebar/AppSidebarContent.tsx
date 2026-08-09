@@ -169,7 +169,7 @@ const AppSidebarContent = ({
               className={cn(APP_SHELL_CLASSES.sidebarCta, 'justify-start gap-2 px-2.5')}
             >
               <Plus size={14} aria-hidden="true" />
-              Nouvelle interaction
+              Nouvelle activité
               <Kbd className="ml-auto border-white/25 bg-white/15 text-white">Ctrl N</Kbd>
             </Link>
           </div>
@@ -177,7 +177,7 @@ const AppSidebarContent = ({
           <div className="px-1.5 py-2">
             <Link
               to={getPathForTab('cockpit')}
-              aria-label="Nouvelle interaction"
+              aria-label="Nouvelle activité"
               className={cn(APP_SHELL_CLASSES.sidebarCta, 'justify-center')}
             >
               <Plus size={15} aria-hidden="true" />

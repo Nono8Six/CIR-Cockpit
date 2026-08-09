@@ -119,7 +119,7 @@ export const useClientDetailInteractions = ({
         setPage((current) => Math.max(1, current - 1));
       }
       setInteractionToDelete(null);
-      notifySuccess('Interaction supprimée.');
+      notifySuccess('Activité archivée.');
     } catch {
       return;
     }

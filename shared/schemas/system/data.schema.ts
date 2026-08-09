@@ -250,13 +250,15 @@ const listByEntitySchema = z.strictObject({
   entity_id: uuidSchema,
   scope: listByEntityScopeSchema.optional(),
   page: z.number().int().min(1, 'Page invalide').optional(),
-  page_size: z.number().int().min(1, 'Taille de page invalide').max(50, 'Taille de page trop grande').optional()
+  page_size: z.number().int().min(1, 'Taille de page invalide').max(50, 'Taille de page trop grande').optional(),
+  read_model: z.enum(['activity_v2', 'legacy']).optional()
 });
 
 const listByAgencySchema = z.strictObject({
   action: z.literal('list_by_agency'),
   agency_id: uuidSchema,
-  limit: z.number().int().min(1, 'Limite invalide').max(500, 'Limite trop grande').optional()
+  limit: z.number().int().min(1, 'Limite invalide').max(500, 'Limite trop grande').optional(),
+  read_model: z.enum(['activity_v2', 'legacy']).optional()
 });
 
 const knownCompaniesSchema = z.strictObject({
@@ -282,6 +284,7 @@ const draftSaveSchema = z.strictObject({
   user_id: uuidSchema,
   agency_id: uuidSchema,
   form_type: draftFormTypeSchema.optional(),
+  expected_updated_at: z.string().trim().min(1, 'Version du brouillon requise').nullable().optional(),
   payload: jsonValueSchema
 });
 

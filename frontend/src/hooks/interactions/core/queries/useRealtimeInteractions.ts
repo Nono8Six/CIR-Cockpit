@@ -90,6 +90,7 @@ export const useRealtimeInteractions = (agencyId: string | null, enabled: boolea
     };
 
     channel.on('postgres_changes', { event: '*', schema: 'public', table: 'interactions', filter: `agency_id=eq.${agencyId}` }, handlePayload);
+    channel.on('postgres_changes', { event: '*', schema: 'public', table: 'activities', filter: `agency_id=eq.${agencyId}` }, refreshInteractions);
     orphanChannel.on('postgres_changes', { event: '*', schema: 'public', table: 'interactions', filter: 'agency_id=is.null' }, handlePayload);
     subscribeWithFallback(channel);
     subscribeWithFallback(orphanChannel);

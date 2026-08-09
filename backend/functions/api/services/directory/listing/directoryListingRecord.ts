@@ -1,14 +1,15 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 import { agencies, entities, profiles } from '../../../../../drizzle/schema.ts';
 import type {
   DirectoryRecord,
-  DirectoryRouteRef,
+  DirectoryRecordInput,
 } from '../../../../../../shared/schemas/system/directory.schema.ts';
 import type { DirectoryRecordResponse } from '../../../../../../shared/schemas/system/api-responses.ts';
 import type { AuthContext, DbClient } from '../../../types.ts';
 import { httpError } from '../../../middleware/errorHandler.ts';
 import { ensureDataRateLimit } from '../../data/dataAccess.ts';
+import { loadTierOrganizationsByIds } from '../../entities/core/tierReadModel.ts';
 import {
   CLIENT_ENTITY_TYPE_WHERE,
   commercialDisplayNameSql,
@@ -111,14 +112,20 @@ export const getDirectoryRecord = async (
   db: DbClient,
   authContext: AuthContext,
   requestId: string,
-  route: DirectoryRouteRef,
+  route: DirectoryRecordInput,
 ): Promise<DirectoryRecordResponse> => {
   await ensureDataRateLimit("directory:record", authContext.userId);
 
   const routeCondition = route.kind === "client"
     ? and(
       CLIENT_ENTITY_TYPE_WHERE,
-      eq(entities.client_number, route.clientNumber),
+      sql<boolean>`exists (
+        select 1
+        from public.customer_accounts account
+        where account.entity_id = ${entities.id}
+          and account.client_number = ${route.clientNumber}
+          and account.archived_at is null
+      )`,
     )
     : route.kind === "prospect"
       ? and(PROSPECT_ENTITY_TYPE_WHERE, eq(entities.id, route.id))
@@ -150,10 +157,18 @@ export const getDirectoryRecord = async (
       );
     }
 
+    const tier = route.includeCanonicalTier
+      ? (await loadTierOrganizationsByIds(db, [record.id]))[0]
+      : undefined;
+    if (route.includeCanonicalTier && !tier) {
+      throw httpError(500, "DB_READ_FAILED", "Contrat de lecture Tiers indisponible.");
+    }
+
     return {
       request_id: requestId,
       ok: true,
       record: toDirectoryRecord(record),
+      ...(tier ? { tier } : {}),
     };
   } catch (error) {
     if (

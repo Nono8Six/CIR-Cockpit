@@ -12,6 +12,7 @@ import {
   getEntityAgencyId
 } from '../../data/dataAccess.ts';
 import { getEntitySearchIndex, listEntities } from './dataEntitiesList.ts';
+import { loadTierOrganizationsByIds, toTierContactReads } from './tierReadModel.ts';
 import { archiveEntity, convertToClient } from '../actions/dataEntitiesMutations.ts';
 import {
   deleteEntity,
@@ -74,11 +75,19 @@ export const handleDataEntitiesAction = async (
   switch (data.action) {
     case 'list': {
       const rows = await listEntities(db, authContext, data);
-      return { request_id: requestId, ok: true, entities: rows };
+      const tiers = await loadTierOrganizationsByIds(db, rows.map((row) => row.id));
+      return { request_id: requestId, ok: true, entities: rows, tiers };
     }
     case 'search_index': {
       const index = await getEntitySearchIndex(db, authContext, data);
-      return { request_id: requestId, ok: true, ...index };
+      const tiers = await loadTierOrganizationsByIds(db, index.entities.map((row) => row.id));
+      return {
+        request_id: requestId,
+        ok: true,
+        ...index,
+        tiers,
+        tier_contacts: toTierContactReads(index.contacts)
+      };
     }
     case 'save': {
       if (data.entity_type === 'Fournisseur') {

@@ -1,12 +1,12 @@
 import type { AgencyStatus, Interaction, InteractionUpdate, TimelineEvent } from '@/types';
 import InteractionDetails from '@/components/InteractionDetails';
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle
-} from '../ui/feedback/Sheet';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle
+} from '../ui/feedback/Dialog';
 
 export interface ClientDirectoryInteractionDetailsSheetProps {
   historicalStatuses: AgencyStatus[];
@@ -31,7 +31,7 @@ const ClientDirectoryInteractionDetailsSheet = ({
   onRequestConvert,
   onUpdate
 }: ClientDirectoryInteractionDetailsSheetProps) => (
-  <Sheet
+  <Dialog
     open
     onOpenChange={(open) => {
       if (!open) {
@@ -39,18 +39,17 @@ const ClientDirectoryInteractionDetailsSheet = ({
       }
     }}
   >
-    <SheetContent
-      side="right"
+    <DialogContent
       showCloseButton={false}
-      className="w-full border-l border-border p-0 sm:max-w-2xl"
+      className="h-[90dvh] w-[min(96vw,72rem)] max-w-none overflow-hidden border-border p-0"
       data-testid="client-interaction-details-sheet"
     >
-      <SheetHeader className="sr-only">
-        <SheetTitle>Détail interaction {interaction.company_name}</SheetTitle>
-        <SheetDescription>
-          Consulter le dossier, mettre à jour le statut et ajouter des notes.
-        </SheetDescription>
-      </SheetHeader>
+      <DialogHeader className="sr-only">
+        <DialogTitle>Détail de l’activité {interaction.company_name}</DialogTitle>
+        <DialogDescription>
+          Consulter l’activité, son origine, ses participants et son historique.
+        </DialogDescription>
+      </DialogHeader>
       <InteractionDetails
         interaction={interaction}
         historicalStatuses={historicalStatuses}
@@ -60,8 +59,8 @@ const ClientDirectoryInteractionDetailsSheet = ({
         onRequestConvert={onRequestConvert}
         onUpdate={onUpdate}
       />
-    </SheetContent>
-  </Sheet>
+    </DialogContent>
+  </Dialog>
 );
 
 export default ClientDirectoryInteractionDetailsSheet;

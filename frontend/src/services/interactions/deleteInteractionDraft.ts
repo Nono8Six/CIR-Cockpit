@@ -18,7 +18,7 @@ const parseDeleteDraftResponse = createTrpcResponseParser(
 export const deleteInteractionDraft = async ({
   userId,
   agencyId,
-  formType = 'interaction'
+  formType = 'activity-v2'
 }: DeleteInteractionDraftInput): Promise<void> =>
   invokeTrpc(
     (api, options) => api.data.interactions.mutate({

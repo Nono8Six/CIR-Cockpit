@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
 
-import { entities, interactions } from '../../../../../drizzle/schema.ts';
+import { activities, entities, interactions } from '../../../../../drizzle/schema.ts';
 import type { AuthContext, DbClient } from '../../../types.ts';
 import { httpError } from '../../../middleware/errorHandler.ts';
 import {
@@ -23,6 +23,9 @@ export const deleteEntity = async (
 
   if (payload.delete_related_interactions === true) {
     try {
+      await db
+        .delete(activities)
+        .where(eq(activities.organization_id, payload.entity_id));
       const deletedRows = await db
         .delete(interactions)
         .where(eq(interactions.entity_id, payload.entity_id))

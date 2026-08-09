@@ -5,9 +5,10 @@ import type { TierV1DirectoryRow, TierV1SearchInput } from '../../../../shared/s
 import { useInteractionSearch } from '../interactions/core/queries/useInteractionSearch';
 import { useUnifiedEntitySearch } from '../directory/core/useUnifiedEntitySearch';
 import type { Entity, EntityContact } from '@/types';
+import { buildTierOrganizationRead } from '@/__tests__/test-utils';
 
 type SearchHookReturn = {
-  data?: { ok: true; results: TierV1DirectoryRow[] };
+  data?: ReturnType<typeof useUnifiedEntitySearch>['data'];
   isFetching: boolean;
   isError: boolean;
 };
@@ -23,6 +24,7 @@ const createEntity = (overrides?: Partial<Entity>): Entity => ({
   agency_id: overrides?.agency_id ?? 'agency-1',
   archived_at: overrides?.archived_at ?? null,
   city: overrides?.city ?? 'Paris',
+  canonical_tier: overrides?.canonical_tier,
   client_number: overrides?.client_number ?? 'C-001',
   country: overrides?.country ?? 'France',
   created_at: overrides?.created_at ?? '2026-01-01T10:00:00.000Z',
@@ -75,7 +77,7 @@ describe('useInteractionSearch', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUnifiedSearch(() => ({
-      data: { ok: true, results: [] },
+      data: { ok: true, results: [], tiers: [] },
       isFetching: false,
       isError: false
     }));
@@ -85,7 +87,15 @@ describe('useInteractionSearch', () => {
     const onSelectSearchResult = vi.fn();
     const resultRow = createResult();
     mockUnifiedSearch(() => ({
-      data: { ok: true, results: [resultRow] },
+      data: {
+        ok: true,
+        results: [resultRow],
+        tiers: [buildTierOrganizationRead(['client'], {
+          id: resultRow.id,
+          legacy_entity_id: resultRow.id,
+          name: resultRow.label
+        })]
+      },
       isFetching: false,
       isError: false
     }));
@@ -154,7 +164,7 @@ describe('useInteractionSearch', () => {
 
   it('exposes error panel state when unified search query fails', async () => {
     mockUnifiedSearch(() => ({
-      data: { ok: true, results: [] },
+      data: { ok: true, results: [], tiers: [] },
       isFetching: false,
       isError: true
     }));
@@ -188,7 +198,7 @@ describe('useInteractionSearch', () => {
     });
 
     mockUnifiedSearch((input) => ({
-      data: { ok: true, results: input.include_archived ? [archivedResult] : [] },
+      data: { ok: true, results: input.include_archived ? [archivedResult] : [], tiers: [] },
       isFetching: false,
       isError: false
     }));
@@ -200,8 +210,29 @@ describe('useInteractionSearch', () => {
         entities: [],
         contacts: [createContact()],
         recentEntities: [
-          createEntity({ id: 'recent-client', name: 'Recent Client', entity_type: 'Client' }),
-          createEntity({ id: 'recent-prospect', name: 'Recent Prospect', entity_type: 'Prospect' })
+          createEntity({
+            id: 'recent-client',
+            name: 'Recent Client',
+            entity_type: 'Prospect',
+            canonical_tier: buildTierOrganizationRead(['client'], {
+              id: 'recent-client',
+              legacy_entity_id: 'recent-client',
+              name: 'Recent Client'
+            })
+          }),
+          createEntity({
+            id: 'recent-prospect',
+            name: 'Recent Prospect',
+            entity_type: 'Client',
+            canonical_tier: buildTierOrganizationRead(['prospect'], {
+              id: 'recent-prospect',
+              legacy_entity_id: 'recent-prospect',
+              name: 'Recent Prospect',
+              customer_account_state: 'not_applicable',
+              customer_account: null,
+              primary_commercial_state: 'not_applicable'
+            })
+          })
         ],
         onSelectEntity: vi.fn(),
         onSelectContact: vi.fn(),
@@ -220,5 +251,114 @@ describe('useInteractionSearch', () => {
     await waitFor(() => {
       expect(result.current.limitedResults[0]?.id).toBe('entity-archived');
     });
+  });
+
+  it('accepts a canonical multi-role result without cross-type confirmation', () => {
+    const onSelectSearchResult = vi.fn();
+    const resultRow = createResult({ id: 'entity-multi', type: 'client_cash' });
+    mockUnifiedSearch(() => ({
+      data: {
+        ok: true,
+        results: [resultRow],
+        tiers: [buildTierOrganizationRead(['client', 'prospect'], {
+          id: 'entity-multi',
+          legacy_entity_id: 'entity-multi',
+          name: 'Organisation multi-role'
+        })]
+      },
+      isFetching: false,
+      isError: false
+    }));
+
+    const { result } = renderHook(() =>
+      useInteractionSearch({
+        agencyId: 'agency-1',
+        entityType: 'Prospect',
+        entities: [],
+        contacts: [],
+        onSelectEntity: vi.fn(),
+        onSelectContact: vi.fn(),
+        onSelectSearchResult
+      })
+    );
+
+    act(() => result.current.handleSelectSearchResult(resultRow));
+
+    expect(result.current.pendingResult).toBeNull();
+    expect(onSelectSearchResult).toHaveBeenCalledWith(resultRow);
+  });
+
+  it('uses the canonical supplier role for recents and preserves entity/contact selections', () => {
+    const supplier = createEntity({
+      id: 'supplier-1',
+      entity_type: 'Client',
+      canonical_tier: buildTierOrganizationRead(['supplier'], {
+        id: 'supplier-1',
+        legacy_entity_id: 'supplier-1',
+        name: 'Fournisseur canonique'
+      })
+    });
+    const contact = createContact({ entity_id: supplier.id });
+    const onSelectEntity = vi.fn();
+    const onSelectContact = vi.fn();
+    const onOpenGlobalSearch = vi.fn();
+
+    const { result } = renderHook(() =>
+      useInteractionSearch({
+        agencyId: 'agency-1',
+        entityType: 'Fournisseur',
+        entities: [],
+        contacts: [contact],
+        recentEntities: [supplier],
+        onSelectEntity,
+        onSelectContact,
+        onSelectSearchResult: vi.fn(),
+        onOpenGlobalSearch
+      })
+    );
+
+    expect(result.current.filteredRecents).toEqual([supplier]);
+
+    act(() => result.current.handleSelectEntity(supplier));
+    expect(onSelectEntity).toHaveBeenCalledWith(supplier);
+
+    act(() => result.current.handleSelectContact(contact));
+    expect(onSelectContact).toHaveBeenCalledWith(contact, supplier);
+
+    act(() => result.current.handleOpenGlobalSearch());
+    expect(onOpenGlobalSearch).toHaveBeenCalledOnce();
+  });
+
+  it('keeps the historical relation fallback and can cancel a cross-type result', () => {
+    const legacyEntity = createEntity({ entity_type: 'Partenaire' });
+    const resultRow = createResult({ type: 'supplier' });
+    const onSelectSearchResult = vi.fn();
+
+    const { result } = renderHook(() =>
+      useInteractionSearch({
+        agencyId: 'agency-1',
+        entityType: 'Partenaire',
+        entities: [],
+        contacts: [],
+        recentEntities: [legacyEntity],
+        onSelectEntity: vi.fn(),
+        onSelectContact: vi.fn(),
+        onSelectSearchResult
+      })
+    );
+
+    expect(result.current.filteredRecents).toEqual([legacyEntity]);
+
+    act(() => result.current.handleSelectSearchResult(resultRow));
+    expect(result.current.pendingResult).toEqual(resultRow);
+
+    act(() => result.current.handleCancelPendingResult());
+    expect(result.current.pendingResult).toBeNull();
+
+    act(() => {
+      result.current.handleConfirmPendingResult();
+      result.current.handleOpenGlobalSearch();
+    });
+    expect(onSelectSearchResult).not.toHaveBeenCalled();
   });
 });

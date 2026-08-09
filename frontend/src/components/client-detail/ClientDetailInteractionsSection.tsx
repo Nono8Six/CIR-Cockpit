@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, RefreshCcw, Trash2 } from 'lucide-react';
+import { Archive, ChevronLeft, ChevronRight, RefreshCcw } from 'lucide-react';
 
 import { Button } from '../ui/inputs/basic/Button';
 import { formatDate } from '@/utils/date/formatDate';
@@ -95,9 +95,9 @@ const ClientDetailInteractionsSection = ({
                   size="icon"
                   className="size-8 text-destructive hover:text-destructive"
                   onClick={() => onDeleteInteraction(interaction)}
-                  aria-label={`Supprimer ${interaction.subject}`}
+                  aria-label={`Archiver ${interaction.subject}`}
                 >
-                  <Trash2 size={14} />
+                  <Archive size={14} />
                 </Button>
               </div>
             </div>

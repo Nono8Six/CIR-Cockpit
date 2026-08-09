@@ -5,12 +5,12 @@ import type { ComponentProps } from 'react';
 
 import type { TierV1DirectoryRow, TierV1SearchInput } from '../../../../shared/schemas/interaction/tier-v1.schema';
 import InteractionSearchBar from '../InteractionSearchBar';
-import { renderWithProviders } from '@/__tests__/test-utils';
+import { buildTierOrganizationRead, renderWithProviders } from '@/__tests__/test-utils';
 import type { Entity, EntityContact } from '@/types';
 import { useUnifiedEntitySearch } from '../../hooks/directory/core/useUnifiedEntitySearch';
 
 type SearchHookReturn = {
-  data?: { ok: true; results: TierV1DirectoryRow[] };
+  data?: ReturnType<typeof useUnifiedEntitySearch>['data'];
   isFetching: boolean;
   isError: boolean;
 };
@@ -73,7 +73,7 @@ describe('InteractionSearchBar', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUnifiedSearch((): SearchHookReturn => ({
-      data: { ok: true, results: [] },
+      data: { ok: true, results: [], tiers: [] },
       isFetching: false,
       isError: false
     }));
@@ -82,7 +82,15 @@ describe('InteractionSearchBar', () => {
   it('affiche les resultats backend unifies et selectionne un type coherent', async () => {
     const result = buildResult();
     mockUnifiedSearch((): SearchHookReturn => ({
-      data: { ok: true, results: [result] },
+      data: {
+        ok: true,
+        results: [result],
+        tiers: [buildTierOrganizationRead(['client'], {
+          id: result.id,
+          legacy_entity_id: result.id,
+          name: result.label
+        })]
+      },
       isFetching: false,
       isError: false
     }));
@@ -107,7 +115,15 @@ describe('InteractionSearchBar', () => {
       label: 'Client Comptant'
     });
     mockUnifiedSearch((): SearchHookReturn => ({
-      data: { ok: true, results: [crossTypeResult] },
+      data: {
+        ok: true,
+        results: [crossTypeResult],
+        tiers: [buildTierOrganizationRead(['client'], {
+          id: crossTypeResult.id,
+          legacy_entity_id: crossTypeResult.id,
+          name: crossTypeResult.label
+        })]
+      },
       isFetching: false,
       isError: false
     }));
@@ -133,7 +149,16 @@ describe('InteractionSearchBar', () => {
       archived_at: '2025-01-01T00:00:00Z'
     });
     mockUnifiedSearch((input): SearchHookReturn => ({
-      data: { ok: true, results: input.include_archived ? [archivedResult] : [] },
+      data: {
+        ok: true,
+        results: input.include_archived ? [archivedResult] : [],
+        tiers: input.include_archived ? [buildTierOrganizationRead(['client'], {
+          id: archivedResult.id,
+          legacy_entity_id: archivedResult.id,
+          name: archivedResult.label,
+          archived_at: archivedResult.archived_at
+        })] : []
+      },
       isFetching: false,
       isError: false
     }));

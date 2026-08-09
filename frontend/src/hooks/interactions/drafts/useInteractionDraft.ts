@@ -32,12 +32,6 @@ type DraftContext = {
   setSelectedContact: (contact: EntityContact | null) => void;
   entities: Entity[];
   contacts: EntityContact[];
-  entitySearchLoading: boolean;
-  contactsLoading: boolean;
-  entityId: string;
-  contactId: string;
-  selectedEntity: Entity | null;
-  selectedContact: EntityContact | null;
   draftPayload: InteractionDraftPayload;
   hasDraftContent: boolean;
 };
@@ -54,22 +48,20 @@ export const useInteractionDraft = ({
   setSelectedContact,
   entities,
   contacts,
-  entitySearchLoading,
-  contactsLoading,
-  entityId,
-  contactId,
-  selectedEntity,
-  selectedContact,
   draftPayload,
   hasDraftContent,
 }: DraftContext) => {
   const [draftId, setDraftId] = useState<string | null>(null);
+  const [draftVersion, setDraftVersion] = useState<string | null>(null);
   const [pendingDraftEntityId, setPendingDraftEntityId] = useState<string | null>(null);
   const [pendingDraftContactId, setPendingDraftContactId] = useState<string | null>(null);
   const [draftStatus, setDraftStatus] = useState<DraftStatus>('idle');
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const draftReadyRef = useRef(false);
   const draftApplyRef = useRef(false);
+  const draftLoadGenerationRef = useRef(0);
+  const draftVersionRef = useRef<string | null>(null);
+  const draftSaveQueueRef = useRef<Promise<void>>(Promise.resolve());
   const draftSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const draftNotifiedRef = useRef(false);
   const lastDraftRef = useRef<string | null>(null);
@@ -124,15 +116,20 @@ export const useInteractionDraft = ({
 
   const clearDraft = useCallback(
     async (source: 'submit' | 'reset' | 'empty') => {
-      if (!activeAgencyId || !userId || !draftId) {
+      if (!activeAgencyId || !userId) {
         setDraftId(null);
+        setDraftVersion(null);
+        draftVersionRef.current = null;
         lastDraftRef.current = null;
         return;
       }
 
       try {
+        await draftSaveQueueRef.current.catch(() => undefined);
         await deleteInteractionDraft({ userId, agencyId: activeAgencyId });
         setDraftId(null);
+        setDraftVersion(null);
+        draftVersionRef.current = null;
         lastDraftRef.current = null;
         setDraftStatus('idle');
         setLastSavedAt(null);
@@ -143,42 +140,56 @@ export const useInteractionDraft = ({
         });
       }
     },
-    [activeAgencyId, draftId, handleDraftError, userId],
+    [activeAgencyId, handleDraftError, userId],
   );
 
   const handleReset = useCallback(() => {
+    draftLoadGenerationRef.current += 1;
+    draftReadyRef.current = false;
     reset(buildResetValues());
     setSelectedEntity(null);
     setSelectedContact(null);
-    void clearDraft('reset');
+    void clearDraft('reset').finally(() => {
+      draftReadyRef.current = true;
+    });
   }, [buildResetValues, clearDraft, reset, setSelectedContact, setSelectedEntity]);
 
   useEffect(() => {
     if (!activeAgencyId || !userId) {
       draftReadyRef.current = false;
       setDraftId(null);
+      setDraftVersion(null);
       lastDraftRef.current = null;
       return;
     }
 
     let mounted = true;
+    const loadGeneration = draftLoadGenerationRef.current + 1;
+    draftLoadGenerationRef.current = loadGeneration;
     draftReadyRef.current = false;
 
     (async () => {
       try {
         const draft = await getInteractionDraft({ userId, agencyId: activeAgencyId });
-        if (!mounted) return;
+        if (!mounted || draftLoadGenerationRef.current !== loadGeneration) return;
 
         if (draft) {
           setDraftId(draft.id);
+          setDraftVersion(draft.updated_at);
+          draftVersionRef.current = draft.updated_at;
           lastDraftRef.current = JSON.stringify(applyDraft(draft.payload));
         } else {
           setDraftId(null);
+          setDraftVersion(null);
+          draftVersionRef.current = null;
           lastDraftRef.current = null;
         }
       } catch (error) {
+        if (!mounted || draftLoadGenerationRef.current !== loadGeneration) return;
         if (isAppError(error) && error.code === 'DRAFT_NOT_FOUND') {
           setDraftId(null);
+          setDraftVersion(null);
+          draftVersionRef.current = null;
           lastDraftRef.current = null;
 
           try {
@@ -196,7 +207,7 @@ export const useInteractionDraft = ({
           source: 'CockpitForm.getDraft',
         });
       } finally {
-        if (mounted) draftReadyRef.current = true;
+        if (mounted && draftLoadGenerationRef.current === loadGeneration) draftReadyRef.current = true;
       }
     })();
 
@@ -211,10 +222,8 @@ export const useInteractionDraft = ({
     if (match) {
       setSelectedEntity(match);
       setPendingDraftEntityId(null);
-    } else if (!entitySearchLoading) {
-      setPendingDraftEntityId(null);
     }
-  }, [entities, entitySearchLoading, pendingDraftEntityId, setSelectedEntity]);
+  }, [entities, pendingDraftEntityId, setSelectedEntity]);
 
   useEffect(() => {
     if (!pendingDraftContactId || contacts.length === 0) return;
@@ -222,42 +231,8 @@ export const useInteractionDraft = ({
     if (match) {
       setSelectedContact(match);
       setPendingDraftContactId(null);
-    } else if (!contactsLoading) {
-      setPendingDraftContactId(null);
     }
-  }, [contacts, contactsLoading, pendingDraftContactId, setSelectedContact]);
-
-  useEffect(() => {
-    if (!entityId) {
-      if (selectedEntity) setSelectedEntity(null);
-      return;
-    }
-
-    if (selectedEntity?.id === entityId) return;
-    const match = entities.find((entity) => entity.id === entityId);
-
-    if (match) {
-      setSelectedEntity(match);
-    } else if (!entitySearchLoading) {
-      setSelectedEntity(null);
-    }
-  }, [entities, entityId, entitySearchLoading, selectedEntity, setSelectedEntity]);
-
-  useEffect(() => {
-    if (!contactId) {
-      if (selectedContact) setSelectedContact(null);
-      return;
-    }
-
-    if (selectedContact?.id === contactId) return;
-    const match = contacts.find((contact) => contact.id === contactId);
-
-    if (match) {
-      setSelectedContact(match);
-    } else if (!contactsLoading) {
-      setSelectedContact(null);
-    }
-  }, [contactId, contacts, contactsLoading, selectedContact, setSelectedContact]);
+  }, [contacts, pendingDraftContactId, setSelectedContact]);
 
   useEffect(() => {
     if (!activeAgencyId || !userId || !draftReadyRef.current || draftApplyRef.current) return;
@@ -279,16 +254,23 @@ export const useInteractionDraft = ({
       clearTimeout(draftSaveTimeoutRef.current);
     }
 
+    const saveGeneration = draftLoadGenerationRef.current;
     draftSaveTimeoutRef.current = setTimeout(() => {
-      void Promise.resolve().then(async () => {
+      draftSaveQueueRef.current = draftSaveQueueRef.current.then(async () => {
+        if (draftLoadGenerationRef.current !== saveGeneration) return;
+
         try {
           const saved = await saveInteractionDraft({
             userId,
             agencyId: activeAgencyId,
             payload: draftPayload,
+            expectedUpdatedAt: draftVersionRef.current,
           });
+          if (draftLoadGenerationRef.current !== saveGeneration) return;
+          draftVersionRef.current = saved.updated_at;
           startTransition(() => {
             setDraftId((previous) => (previous === saved.id ? previous : saved.id));
+            setDraftVersion(saved.updated_at);
             setDraftStatus('saved');
             setLastSavedAt(new Date());
           });
@@ -300,7 +282,7 @@ export const useInteractionDraft = ({
         }
       });
     }, 800);
-  }, [activeAgencyId, clearDraft, draftId, draftPayload, handleDraftError, hasDraftContent, userId]);
+  }, [activeAgencyId, clearDraft, draftId, draftPayload, draftVersion, handleDraftError, hasDraftContent, userId]);
 
   useEffect(
     () => () => {

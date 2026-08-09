@@ -2,9 +2,11 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import type { DirectoryListRow, DirectorySortingRule } from '../../../../../shared/schemas/system/directory.schema';
+import type { DirectorySortingRule } from '../../../../../shared/schemas/system/directory.schema';
 
 import ClientDirectoryTable from '../ClientDirectoryTable';
+import type { CanonicalDirectoryListRow } from '@/services/directory/getDirectoryPage';
+import { buildTierOrganizationRead } from '@/__tests__/test-utils';
 
 type MockLinkProps = {
   'aria-label'?: string;
@@ -30,7 +32,7 @@ vi.mock('@tanstack/react-router', () => ({
   )
 }));
 
-const baseRow: DirectoryListRow = {
+const baseRow: CanonicalDirectoryListRow = {
   id: '11111111-1111-1111-1111-111111111111',
   entity_type: 'Client',
   client_kind: 'company',
@@ -44,13 +46,14 @@ const baseRow: DirectoryListRow = {
   cir_commercial_id: null,
   cir_commercial_name: null,
   archived_at: null,
-  updated_at: '2026-03-07T10:00:00.000Z'
+  updated_at: '2026-03-07T10:00:00.000Z',
+  canonical_tier: buildTierOrganizationRead(['client'])
 };
 
 interface RenderTableOptions {
   sorting?: DirectorySortingRule[];
   onSortChange?: (sorting: DirectorySortingRule[]) => void;
-  rows?: DirectoryListRow[];
+  rows?: CanonicalDirectoryListRow[];
 }
 
 const renderTable = ({
@@ -126,7 +129,11 @@ describe('ClientDirectoryTable', () => {
       rows: [{
         ...baseRow,
         entity_type: 'Prospect',
-        client_number: null
+        client_number: null,
+        canonical_tier: buildTierOrganizationRead(['prospect'], {
+          customer_account_state: 'not_applicable',
+          customer_account: null
+        })
       }]
     });
 
@@ -158,7 +165,11 @@ describe('ClientDirectoryTable', () => {
       rows: [{
         ...baseRow,
         entity_type: 'Particulier prospect',
-        client_number: null
+        client_number: null,
+        canonical_tier: buildTierOrganizationRead(['prospect'], {
+          customer_account_state: 'not_applicable',
+          customer_account: null
+        })
       }]
     });
 

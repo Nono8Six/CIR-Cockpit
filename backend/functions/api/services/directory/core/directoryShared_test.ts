@@ -5,11 +5,16 @@ import type { AuthContext } from '../../../types.ts';
 import {
   buildBaseWhereClause,
   buildListWhereClause,
+  escapeLikePattern,
   toAccessibleAgencyCondition,
   resolveDirectoryScope,
   toRoleScopedAgencyCondition,
   type SqlCondition
 } from './directoryShared.ts';
+
+Deno.test('escapeLikePattern preserves literal search characters without opening wildcards', () => {
+  assertEquals(escapeLikePattern('AUDIT_100%\\TEST'), 'audit\\_100\\%\\\\test');
+});
 
 const dialect = new PgDialect();
 
@@ -80,8 +85,12 @@ Deno.test('toRoleScopedAgencyCondition denies access when the user has no agenci
 Deno.test('toRoleScopedAgencyCondition restricts to the single accessible agency', () => {
   const rendered = renderCondition(toRoleScopedAgencyCondition(memberOneAgencyContext));
   assert(rendered, 'expected a SQL condition for single-agency member');
-  assertStringIncludes(rendered.sql, '"agency_id"');
-  assertEquals(rendered.params, ['11111111-1111-1111-1111-111111111111']);
+  assertStringIncludes(rendered.sql, 'customer_accounts');
+  assertStringIncludes(rendered.sql, 'account.agency_id');
+  assertEquals(rendered.params, [
+    '11111111-1111-1111-1111-111111111111',
+    '11111111-1111-1111-1111-111111111111'
+  ]);
 });
 
 Deno.test('toRoleScopedAgencyCondition restricts to all accessible agencies when the user has many', () => {
@@ -89,6 +98,8 @@ Deno.test('toRoleScopedAgencyCondition restricts to all accessible agencies when
   assert(rendered, 'expected a SQL condition for multi-agency member');
   assertStringIncludes(rendered.sql.toLowerCase(), ' in ');
   assertEquals(rendered.params, [
+    '11111111-1111-1111-1111-111111111111',
+    '22222222-2222-2222-2222-222222222222',
     '11111111-1111-1111-1111-111111111111',
     '22222222-2222-2222-2222-222222222222'
   ]);
@@ -107,13 +118,21 @@ Deno.test('toAccessibleAgencyCondition narrows super admin to the requested agen
     toAccessibleAgencyCondition(superAdminContext, ['33333333-3333-3333-3333-333333333333'])
   );
   assert(rendered, 'expected a SQL condition');
-  assertEquals(rendered.params, ['33333333-3333-3333-3333-333333333333']);
+  assertStringIncludes(rendered.sql, 'customer_accounts');
+  assertEquals(rendered.params, [
+    '33333333-3333-3333-3333-333333333333',
+    '33333333-3333-3333-3333-333333333333'
+  ]);
 });
 
 Deno.test('toAccessibleAgencyCondition falls back to membership for members without explicit agencyIds', () => {
   const rendered = renderCondition(toAccessibleAgencyCondition(memberOneAgencyContext, []));
   assert(rendered, 'expected a SQL condition');
-  assertEquals(rendered.params, ['11111111-1111-1111-1111-111111111111']);
+  assertStringIncludes(rendered.sql, 'customer_accounts');
+  assertEquals(rendered.params, [
+    '11111111-1111-1111-1111-111111111111',
+    '11111111-1111-1111-1111-111111111111'
+  ]);
 });
 
 Deno.test('toAccessibleAgencyCondition rejects cross-agency reads requested by a member', () => {
@@ -169,7 +188,7 @@ Deno.test('directory list and option where clauses reject all_accessible_agencie
   );
 });
 
-Deno.test('directory client filters normalize entity_type casing', () => {
+Deno.test('directory client filters use the canonical active temporal role', () => {
   const rendered = renderCondition(buildBaseWhereClause(memberOneAgencyContext, {
     scope: { mode: 'active_agency' },
     type: 'client',
@@ -177,8 +196,9 @@ Deno.test('directory client filters normalize entity_type casing', () => {
   }));
 
   assert(rendered, 'expected a SQL condition for client directory');
-  assertStringIncludes(rendered.sql, 'lower');
-  assertStringIncludes(rendered.sql, '= \'client\'');
+  assertStringIncludes(rendered.sql, 'tier_roles');
+  assertStringIncludes(rendered.sql, 'role.valid_to is null');
+  assertEquals(rendered.params.includes('client'), true);
 });
 
 Deno.test('supplier directory where clause is global CIR and does not require agency scope', () => {
@@ -199,8 +219,9 @@ Deno.test('supplier directory where clause is global CIR and does not require ag
   }));
 
   assert(rendered, 'expected a SQL condition for supplier directory');
-  assertStringIncludes(rendered.sql, '"entity_type" = \'Fournisseur\'');
-  assertEquals(rendered.sql.includes('"agency_id"'), false);
+  assertStringIncludes(rendered.sql, 'tier_roles');
+  assertEquals(rendered.params.includes('supplier'), true);
+  assertEquals(rendered.sql.includes('customer_accounts'), false);
 });
 
 Deno.test('resolveDirectoryScope rejects selected agencies outside membership with AUTH_FORBIDDEN', () => {

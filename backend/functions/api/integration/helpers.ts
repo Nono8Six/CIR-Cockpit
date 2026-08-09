@@ -11,8 +11,13 @@ export type ProcedurePath =
   | 'admin.agencies'
   | 'data.entities'
   | 'data.searchEntitiesUnified'
+  | 'directory.list'
+  | 'directory.record'
+  | 'directory.tiers-list'
   | 'data.entity-contacts'
   | 'data.interactions'
+  | 'data.activity-v2.by-legacy-interaction'
+  | 'data.activity-v2.correct'
   | 'data.config'
   | 'data.profile'
   | 'ai.assistant.ask';
@@ -37,9 +42,11 @@ type StatusRow = {
 export type IntegrationContext = {
   adminToken: string;
   userToken: string;
+  userId: string;
   agencyId: string;
   statusId: string;
   interactionType: string;
+  activityLegacyInteractionId: string;
   configStatuses: Array<Pick<StatusRow, 'id' | 'label' | 'category'>>;
   configServices: string[];
   configFamilies: string[];
@@ -74,7 +81,13 @@ export const DATA_ROUTES: ProcedurePath[] = [
   'data.profile',
 ];
 
-export const QUERY_ROUTES: ProcedurePath[] = ['data.searchEntitiesUnified'];
+export const QUERY_ROUTES: ProcedurePath[] = [
+  'data.searchEntitiesUnified',
+  'data.activity-v2.by-legacy-interaction',
+  'directory.list',
+  'directory.record',
+  'directory.tiers-list',
+];
 export const ADMIN_ROUTES: ProcedurePath[] = ['admin.users', 'admin.agencies'];
 export const ALL_ROUTES: ProcedurePath[] = [
   ...ADMIN_ROUTES,
@@ -333,13 +346,26 @@ const buildContext = async (): Promise<IntegrationContext> => {
     `/agency_families?select=label&agency_id=eq.${agencyId}&order=sort_order.asc`,
     userSession.accessToken,
   );
+  const activityRows = await fetchRows(
+    `/activities?select=legacy_interaction_id&agency_id=eq.${agencyId}&legacy_interaction_id=not.is.null&limit=1`,
+    userSession.accessToken,
+  );
+  const activityLegacyInteractionId = activityRows
+    .map((row) => readString(row, 'legacy_interaction_id').trim())
+    .find((value) => value.length > 0) ?? '';
+  assert(
+    activityLegacyInteractionId.length > 0,
+    `Aucune activité v2 corrélée trouvée pour l agence ${agencyId}.`,
+  );
 
   return {
     adminToken: adminSession.accessToken,
     userToken: userSession.accessToken,
+    userId: userSession.userId,
     agencyId,
     statusId: statuses[0]?.id ?? '',
     interactionType,
+    activityLegacyInteractionId,
     configStatuses: statuses.map((status) => ({
       id: status.id,
       label: status.label,

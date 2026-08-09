@@ -14,7 +14,6 @@ import { SearchX } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
 import type {
   DirectoryDensity,
-  DirectoryListRow,
   DirectorySortBy,
   DirectorySortingRule
 } from '../../../../shared/schemas/system/directory.schema';
@@ -23,14 +22,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { cn } from '@/lib/utils';
 import { formatClientNumber } from '@/utils/clients/formatClientNumber';
 import { formatRelativeTime } from '@/utils/date/formatRelativeTime';
-import { isProspectEntityType, validateDirectorySearch } from './clientDirectorySearch';
+import { validateDirectorySearch } from './clientDirectorySearch';
 import DataTableColumnHeader from './data-table/DataTableColumnHeader';
 import DirectoryTablePagination from './data-table/DirectoryTablePagination';
 import { DIRECTORY_COLUMN_LABELS, DIRECTORY_COLUMN_ORDER } from './directoryGridConfig';
 import { getDirectoryRouteRefFromRow } from './directoryRouting';
+import type { CanonicalDirectoryListRow } from '@/services/directory/getDirectoryPage';
+import { getTierRoleLabels } from '@/services/entities/tierSurfaceRead';
 
 type ClientDirectoryTableProps = {
-  rows: DirectoryListRow[];
+  rows: CanonicalDirectoryListRow[];
   sorting: DirectorySortingRule[];
   page: number;
   pageSize: number;
@@ -47,12 +48,12 @@ type ClientDirectoryTableProps = {
 const toDirectorySortBy = (value: string): DirectorySortBy =>
   DIRECTORY_COLUMN_ORDER.find((candidate) => candidate === value) ?? 'name';
 
-const columnHelper = createColumnHelper<DirectoryListRow>();
+const columnHelper = createColumnHelper<CanonicalDirectoryListRow>();
 const recordLinkClassName =
   'inline-flex min-w-0 max-w-full items-center rounded-md font-semibold text-foreground transition-colors duration-150 hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background';
 
 interface DirectoryRecordNameLinkProps {
-  row: DirectoryListRow;
+  row: CanonicalDirectoryListRow;
 }
 
 const DirectoryRecordNameLink = ({ row }: DirectoryRecordNameLinkProps) => {
@@ -101,7 +102,7 @@ const DirectoryRecordNameLink = ({ row }: DirectoryRecordNameLinkProps) => {
 };
 
 const renderHeader = (
-  column: Column<DirectoryListRow, unknown>,
+  column: Column<CanonicalDirectoryListRow, unknown>,
   title: string,
   sorting: DirectorySortingRule[]
 ) => (
@@ -136,8 +137,7 @@ const ClientDirectoryTable = ({
       id: 'entity_type',
       header: ({ column }) => renderHeader(column, DIRECTORY_COLUMN_LABELS.entity_type, sorting),
       cell: ({ row }) => {
-        const isSupplier = row.original.entity_type === 'Fournisseur';
-        const isProspect = !isSupplier && isProspectEntityType(row.original.entity_type ?? '');
+        const activeRoleLabels = getTierRoleLabels(row.original.canonical_tier);
         const isArchived = Boolean(row.original.archived_at);
 
         if (isArchived) {
@@ -148,26 +148,14 @@ const ClientDirectoryTable = ({
           );
         }
 
-        if (isProspect) {
-          return (
-            <span className="inline-flex items-center rounded-full border border-blue-500/20 bg-blue-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-600">
-              Prospect
-            </span>
-          );
-        }
-
-        if (isSupplier) {
-          return (
-            <span className="inline-flex items-center rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sky-600">
-              Fournisseur
-            </span>
-          );
-        }
-
         return (
-          <span className="inline-flex items-center rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600">
-            Client
-          </span>
+          <div className="flex flex-wrap gap-1">
+            {activeRoleLabels.map((label) => (
+              <span key={label} className="inline-flex items-center rounded-md border border-border bg-muted px-2 py-0.5 text-[11px] font-semibold text-foreground">
+                {label}
+              </span>
+            ))}
+          </div>
         );
       }
     }),

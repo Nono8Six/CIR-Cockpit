@@ -1,8 +1,8 @@
 import { useDeferredValue, useMemo } from 'react';
 
-import { isProspectRelationValue } from '@/constants/relations';
 import type { AgencyConfig } from '@/services/config';
 import type { Entity, EntityContact, Interaction } from '@/types';
+import { entityHasActiveRole } from '@/services/entities/tierSurfaceRead';
 import { countWorkQueueInteractions } from '@/utils/dashboard/dashboardAggregates';
 
 type SearchIndex = {
@@ -76,8 +76,14 @@ export const useAppSearchData = ({ searchQuery, interactions, entitySearchIndex,
   const rawQuery = normalizedQuery.replace(/\s/g, '');
   const hasSearchQuery = normalizedQuery.length > 0;
 
-  const clientEntities = useMemo(() => entitySearchIndex.entities.filter(entity => entity.entity_type === 'Client'), [entitySearchIndex.entities]);
-  const prospectEntities = useMemo(() => entitySearchIndex.entities.filter(entity => isProspectRelationValue(entity.entity_type)), [entitySearchIndex.entities]);
+  const clientEntities = useMemo(
+    () => entitySearchIndex.entities.filter((entity) => entityHasActiveRole(entity, 'client')),
+    [entitySearchIndex.entities]
+  );
+  const prospectEntities = useMemo(
+    () => entitySearchIndex.entities.filter((entity) => entityHasActiveRole(entity, 'prospect')),
+    [entitySearchIndex.entities]
+  );
   const entitiesById = useMemo(() => new Map(entitySearchIndex.entities.map(entity => [entity.id, entity])), [entitySearchIndex.entities]);
   const entityNameById = useMemo(() => new Map(entitySearchIndex.entities.map(entity => [entity.id, entity.name])), [entitySearchIndex.entities]);
 
@@ -117,7 +123,7 @@ export const useAppSearchData = ({ searchQuery, interactions, entitySearchIndex,
     if (!hasSearchQuery || (scope !== 'all' && scope !== 'contacts')) return [];
     return entitySearchIndex.contacts.filter(contact => {
       const entity = entitiesById.get(contact.entity_id);
-      if (!entity || entity.entity_type !== 'Client') return false;
+      if (!entity || !entityHasActiveRole(entity, 'client')) return false;
       return (
         `${contact.first_name ?? ''} ${contact.last_name}`.toLowerCase().includes(lowerQuery)
         || (contact.email ?? '').toLowerCase().includes(lowerQuery)

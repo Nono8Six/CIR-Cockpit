@@ -10,16 +10,17 @@ import {
   directoryDuplicatesInputSchema,
   directoryListInputSchema,
   directoryOptionsFacetInputSchema,
+  directoryRecordInputSchema,
   directoryRouteRefSchema,
   directorySavedViewsListInputSchema,
   directorySavedViewStateSchema
 } from '../../../../shared/schemas/system/directory.schema.ts';
 import {
-  tierV1DirectoryListInputSchema,
   tierV1DirectoryRowSchema,
   tierV1PayloadSchema,
   tierV1SearchInputSchema
 } from '../../../../shared/schemas/interaction/tier-v1.schema.ts';
+import { tierDirectoryListInputSchema } from '../../../../shared/schemas/entity/tier-foundation.schema.ts';
 import { configIntegrityInteractionUpdateInputSchema } from '../../../../shared/schemas/system/config.schema.ts';
 import {
   aiSettingsCreateQuotaInputSchema,
@@ -532,6 +533,15 @@ Deno.test('directory contracts accept scoped payloads and reject legacy shortcut
     kind: 'supplier',
     id: '11111111-1111-4111-8111-111111111111'
   }).success, true);
+  assertEquals(directoryRecordInputSchema.safeParse({
+    kind: 'client',
+    clientNumber: '116277'
+  }).data?.includeCanonicalTier, false);
+  assertEquals(directoryRecordInputSchema.safeParse({
+    kind: 'client',
+    clientNumber: '116277',
+    includeCanonicalTier: true
+  }).data?.includeCanonicalTier, true);
 });
 
 Deno.test('directory contracts parse all_accessible_agencies only as explicit scope value', () => {
@@ -621,7 +631,7 @@ Deno.test('tier V1 solicitation contract remains interaction-only', () => {
   }).success, false);
 });
 
-Deno.test('tier V1 unified search and directory contracts are strict', () => {
+Deno.test('tier V1 unified search and canonical tier directory contracts are strict', () => {
   const searchPayload = {
     query: 'acme',
     family: 'clients',
@@ -631,18 +641,22 @@ Deno.test('tier V1 unified search and directory contracts are strict', () => {
     limit: 20
   };
   const directoryPayload = {
+    scope: { mode: 'active_agency' },
     query: 'acme',
-    family: 'prospects',
-    prospect_filter: 'company',
+    role_codes: ['client', 'supplier'],
+    business_profile_codes: [],
+    primary_commercial: 'all',
     include_archived: false,
+    include_historical_roles: true,
     page: 1,
     page_size: 50
   };
 
   assertEquals(tierV1SearchInputSchema.safeParse(searchPayload).success, true);
   assertEquals(tierV1SearchInputSchema.safeParse({ ...searchPayload, type: 'Client' }).success, false);
-  assertEquals(tierV1DirectoryListInputSchema.safeParse(directoryPayload).success, true);
-  assertEquals(tierV1DirectoryListInputSchema.safeParse({ ...directoryPayload, agencyIds: [] }).success, false);
+  assertEquals(tierDirectoryListInputSchema.safeParse(directoryPayload).success, true);
+  assertEquals(tierDirectoryListInputSchema.safeParse({ ...directoryPayload, agencyIds: [] }).success, false);
+  assertEquals(tierDirectoryListInputSchema.safeParse({ ...directoryPayload, page_size: 500 }).success, false);
 });
 
 Deno.test('tier V1 directory rows cover multi-source annuaire results', () => {

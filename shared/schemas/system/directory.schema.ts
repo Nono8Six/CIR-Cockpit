@@ -194,6 +194,16 @@ export const directoryRouteRefSchema = z.discriminatedUnion('kind', [
   directorySupplierRouteRefSchema
 ]);
 
+const canonicalTierReadFlagSchema = {
+  includeCanonicalTier: z.boolean().optional().default(false)
+};
+
+export const directoryRecordInputSchema = z.discriminatedUnion('kind', [
+  directoryClientRouteRefSchema.extend(canonicalTierReadFlagSchema),
+  directoryProspectRouteRefSchema.extend(canonicalTierReadFlagSchema),
+  directorySupplierRouteRefSchema.extend(canonicalTierReadFlagSchema)
+]);
+
 const directoryNullableTextSchema = z.string().nullable();
 const optionalOfficialTextSchema = z
   .union([z.string(), z.null()])
@@ -546,6 +556,7 @@ export type DirectoryOptionsFacetInput = z.infer<typeof directoryOptionsFacetInp
 export type DirectoryOptionsCitiesInput = z.infer<typeof directoryOptionsCitiesInputSchema>;
 export type DirectoryCitySuggestionsInput = z.infer<typeof directoryCitySuggestionsInputSchema>;
 export type DirectoryRouteRef = z.infer<typeof directoryRouteRefSchema>;
+export type DirectoryRecordInput = z.infer<typeof directoryRecordInputSchema>;
 export type DirectoryCommercialOption = z.infer<typeof directoryCommercialOptionSchema>;
 export type DirectoryAgencyOption = z.infer<typeof directoryAgencyOptionSchema>;
 export type DirectorySuggestionOption = z.infer<typeof directorySuggestionOptionSchema>;

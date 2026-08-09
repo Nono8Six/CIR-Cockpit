@@ -1,5 +1,6 @@
 import { Enums, Json, Tables, TablesInsert, TablesUpdate } from './types/supabase';
 import type { InteractionStage } from '../../shared/schemas/interaction/stages.schema';
+import type { TierContactRead, TierOrganizationRead } from '../../shared/schemas/entity/tier-foundation.schema';
 
 export const Channel = {
   PHONE: 'Téléphone',
@@ -63,6 +64,7 @@ export type Entity = Omit<
   | 'cir_commercial_id'
   | 'first_name'
   | 'last_name'
+  | 'legal_form_code'
   | 'primary_email'
   | 'primary_phone'
   | 'siren'
@@ -73,11 +75,13 @@ export type Entity = Omit<
   | 'supplier_code'
   | 'supplier_number'
 > & {
+  canonical_tier?: TierOrganizationRead;
   client_kind?: Tables<'entities'>['client_kind'];
   cir_agency_id?: Tables<'entities'>['cir_agency_id'];
   cir_commercial_id?: Tables<'entities'>['cir_commercial_id'];
   first_name?: Tables<'entities'>['first_name'];
   last_name?: Tables<'entities'>['last_name'];
+  legal_form_code?: Tables<'entities'>['legal_form_code'];
   primary_email?: Tables<'entities'>['primary_email'];
   primary_phone?: Tables<'entities'>['primary_phone'];
   siren?: Tables<'entities'>['siren'];
@@ -89,6 +93,7 @@ export type Entity = Omit<
   supplier_number?: Tables<'entities'>['supplier_number'];
 };
 export type EntityContact = Omit<Tables<'entity_contacts'>, 'service_label' | 'is_primary'> & {
+  canonical_contact?: TierContactRead;
   service_label?: Tables<'entity_contacts'>['service_label'];
   is_primary?: Tables<'entity_contacts'>['is_primary'];
 };

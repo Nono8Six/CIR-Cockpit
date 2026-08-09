@@ -4,9 +4,15 @@ import type { TierV1DirectoryRow } from '../../../../../../shared/schemas/intera
 import type { Entity, EntityContact } from '@/types';
 import {
   getRelationLabelForTierType,
+  getRelationMode,
   relationValuesMatch
 } from '@/constants/relations';
 import { useUnifiedEntitySearch } from '../../../directory/core/useUnifiedEntitySearch';
+import {
+  entityHasActiveRole,
+  tierHasActiveRole,
+  type CanonicalTierRole
+} from '@/services/entities/tierSurfaceRead';
 
 type InteractionSearchInput = {
   agencyId?: string | null;
@@ -24,6 +30,13 @@ type InteractionSearchInput = {
 type InteractionSearchStatus = 'loading' | 'error' | 'idle' | 'empty' | 'results';
 
 const normalizeQuery = (value: string) => value.trim().toLowerCase();
+const toCanonicalRole = (relation: string): CanonicalTierRole | null => {
+  const mode = getRelationMode(relation);
+  if (mode === 'client') return 'client';
+  if (mode === 'prospect' || mode === 'individual') return 'prospect';
+  if (mode === 'supplier') return 'supplier';
+  return null;
+};
 
 export const useInteractionSearch = ({
   agencyId,
@@ -57,7 +70,10 @@ export const useInteractionSearch = ({
   const filteredRecents = useMemo(() => {
     if (!recentEntities?.length) return [];
     if (!normalizedRelation) return recentEntities;
-    return recentEntities.filter((entity) => relationValuesMatch(entity.entity_type, normalizedRelation));
+    const canonicalRole = toCanonicalRole(normalizedRelation);
+    return recentEntities.filter((entity) => canonicalRole
+      ? entityHasActiveRole(entity, canonicalRole)
+      : relationValuesMatch(entity.entity_type, normalizedRelation));
   }, [normalizedRelation, recentEntities]);
 
   const entitiesById = useMemo(() => {
@@ -107,12 +123,17 @@ export const useInteractionSearch = ({
   const handleSelectSearchResult = useCallback((result: TierV1DirectoryRow) => {
     const selectedRelation = entityType.trim();
     const resultRelation = getRelationLabelForTierType(result.type);
-    if (selectedRelation && selectedRelation !== resultRelation) {
+    const resultTier = unifiedSearch.data?.tiers.find((tier) => tier.id === (result.entity_id ?? result.id));
+    const selectedRole = toCanonicalRole(selectedRelation);
+    const relationMatches = selectedRole
+      ? tierHasActiveRole(resultTier, selectedRole)
+      : selectedRelation === resultRelation;
+    if (selectedRelation && !relationMatches) {
       setPendingResult(result);
       return;
     }
     commitSearchResult(result);
-  }, [commitSearchResult, entityType]);
+  }, [commitSearchResult, entityType, unifiedSearch.data?.tiers]);
 
   const handleConfirmPendingResult = useCallback(() => {
     if (!pendingResult) return;

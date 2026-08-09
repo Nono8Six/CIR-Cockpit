@@ -13,6 +13,30 @@ import {
 } from './helpers.ts';
 
 Deno.test({
+  name: 'GET data.activity-v2 returns the converted relational activity',
+  ignore: !CAN_RUN_NETWORK_INTEGRATION,
+  fn: async () => {
+    const context = await getContext();
+    const response = await getApi(
+      'data.activity-v2.by-legacy-interaction',
+      context.userToken,
+      { legacy_interaction_id: context.activityLegacyInteractionId },
+    );
+
+    assertEquals(response.status, 200);
+    assertEquals(readBoolean(response.payload, 'ok'), true);
+    const activity = readValue(response.payload, 'activity');
+    assertEquals(
+      readString(activity, 'legacy_interaction_id'),
+      context.activityLegacyInteractionId,
+    );
+    assertEquals(Array.isArray(readValue(activity, 'participants')), true);
+    assertEquals(Array.isArray(readValue(activity, 'sources')), true);
+    assertEquals(Array.isArray(readValue(activity, 'history')), true);
+  },
+});
+
+Deno.test({
   name: 'POST data routes forbid cross-agency mutations for non super-admin users',
   ignore: !CAN_RUN_NETWORK_INTEGRATION,
   fn: async () => {
@@ -57,6 +81,7 @@ Deno.test({
     let entityId = '';
     let contactId = '';
     let interactionId = '';
+    const draftFormType = `activity-v2-integration-${Date.now()}`;
 
     try {
       const profileUpdate = await postApi('data.profile', context.userToken, {
@@ -112,6 +137,8 @@ Deno.test({
       });
       assertEquals(convertedEntity.status, 200);
       assertEquals(readBoolean(convertedEntity.payload, 'ok'), true);
+      const convertedClientNumber = readString(readValue(convertedEntity.payload, 'entity'), 'client_number');
+      assertEquals(Boolean(convertedClientNumber), true);
 
       const unifiedSearch = await getApi('data.searchEntitiesUnified', context.userToken, {
         query: entityName,
@@ -123,6 +150,114 @@ Deno.test({
       assertEquals(unifiedSearch.status, 200);
       assertEquals(readBoolean(unifiedSearch.payload, 'ok'), true);
       assertEquals(Array.isArray(readValue(unifiedSearch.payload, 'results')), true);
+      const searchedTiers = readValue(unifiedSearch.payload, 'tiers');
+      assertEquals(Array.isArray(searchedTiers), true);
+
+      const tierDirectory = await getApi('directory.tiers-list', context.userToken, {
+        scope: { mode: 'selected_agencies', agencyIds: [context.agencyId] },
+        query: entityName,
+        role_codes: ['client'],
+        primary_commercial: 'missing',
+        include_archived: false,
+        page: 1,
+        page_size: 25
+      });
+      assertEquals(tierDirectory.status, 200);
+      assertEquals(readBoolean(tierDirectory.payload, 'ok'), true);
+      const tierRows = readValue(tierDirectory.payload, 'rows');
+      assertEquals(Array.isArray(tierRows), true);
+      assertEquals(
+        readString(Array.isArray(tierRows) ? tierRows[0] : null, 'id'),
+        entityId,
+        JSON.stringify(tierDirectory.payload)
+      );
+
+      const compatibilityDirectory = await getApi('directory.list', context.userToken, {
+        scope: { mode: 'selected_agencies', agencyIds: [context.agencyId] },
+        type: 'client',
+        filters: {
+          q: entityName,
+          departments: [],
+          cirCommercialIds: [],
+          includeArchived: false
+        },
+        pagination: { page: 1, pageSize: 25, includeTotal: true },
+        sorting: [{ id: 'name', desc: false }]
+      });
+      assertEquals(compatibilityDirectory.status, 200);
+      assertEquals(readBoolean(compatibilityDirectory.payload, 'ok'), true);
+      const compatibilityRows = readValue(compatibilityDirectory.payload, 'rows');
+      const compatibilityTiers = readValue(compatibilityDirectory.payload, 'tiers');
+      assertEquals(
+        readString(Array.isArray(compatibilityRows) ? compatibilityRows[0] : null, 'id'),
+        entityId,
+        JSON.stringify(compatibilityDirectory.payload)
+      );
+      assertEquals(
+        readString(Array.isArray(compatibilityTiers) ? compatibilityTiers[0] : null, 'id'),
+        entityId,
+        JSON.stringify(compatibilityDirectory.payload)
+      );
+
+      const foreignCompatibilityDirectory = await getApi('directory.list', context.userToken, {
+        scope: { mode: 'selected_agencies', agencyIds: [crypto.randomUUID()] },
+        type: 'client',
+        filters: { departments: [], cirCommercialIds: [], includeArchived: false },
+        pagination: { page: 1, pageSize: 25, includeTotal: false },
+        sorting: [{ id: 'name', desc: false }]
+      });
+      assertEquals(foreignCompatibilityDirectory.status, 403);
+      assertEquals(readString(foreignCompatibilityDirectory.payload, 'code'), 'AUTH_FORBIDDEN');
+
+      const superAdminCompatibilityDirectory = await getApi('directory.list', context.adminToken, {
+        scope: { mode: 'selected_agencies', agencyIds: [context.agencyId] },
+        type: 'client',
+        filters: {
+          q: entityName,
+          departments: [],
+          cirCommercialIds: [],
+          includeArchived: false
+        },
+        pagination: { page: 1, pageSize: 25, includeTotal: false },
+        sorting: [{ id: 'name', desc: false }]
+      });
+      assertEquals(superAdminCompatibilityDirectory.status, 200);
+      assertEquals(readBoolean(superAdminCompatibilityDirectory.payload, 'ok'), true);
+
+      const legacyRecord = await getApi('directory.record', context.userToken, {
+        kind: 'client',
+        clientNumber: convertedClientNumber
+      });
+      assertEquals(legacyRecord.status, 200);
+      assertEquals(readBoolean(legacyRecord.payload, 'ok'), true);
+      assertEquals(JSON.stringify(legacyRecord.payload).includes('"tier"'), false);
+
+      const canonicalRecord = await getApi('directory.record', context.userToken, {
+        kind: 'client',
+        clientNumber: convertedClientNumber,
+        includeCanonicalTier: true
+      });
+      assertEquals(canonicalRecord.status, 200);
+      assertEquals(readBoolean(canonicalRecord.payload, 'ok'), true);
+      assertEquals(readString(readValue(canonicalRecord.payload, 'tier'), 'id'), entityId);
+
+      const foreignTierDirectory = await getApi('directory.tiers-list', context.userToken, {
+        scope: { mode: 'selected_agencies', agencyIds: [crypto.randomUUID()] },
+        query: entityName,
+        page: 1,
+        page_size: 25
+      });
+      assertEquals(foreignTierDirectory.status, 403);
+      assertEquals(readString(foreignTierDirectory.payload, 'code'), 'AUTH_FORBIDDEN');
+
+      const superAdminTierDirectory = await getApi('directory.tiers-list', context.adminToken, {
+        scope: { mode: 'all_accessible_agencies' },
+        query: entityName,
+        page: 1,
+        page_size: 25
+      });
+      assertEquals(superAdminTierDirectory.status, 200);
+      assertEquals(readBoolean(superAdminTierDirectory.payload, 'ok'), true);
 
       const createdContact = await postApi('data.entity-contacts', context.userToken, {
         action: 'save',
@@ -140,6 +275,57 @@ Deno.test({
       const contact = readContactFromPayload(createdContact.payload);
       contactId = readString(contact, 'id');
       assertEquals(Boolean(contactId), true);
+
+      const listedContacts = await postApi('data.entity-contacts', context.userToken, {
+        action: 'list_by_entity',
+        entity_id: entityId,
+        include_archived: false
+      });
+      assertEquals(listedContacts.status, 200);
+      assertEquals(Array.isArray(readValue(listedContacts.payload, 'tier_contacts')), true);
+
+      const createdDraft = await postApi('data.interactions', context.userToken, {
+        action: 'draft_save',
+        user_id: context.userId,
+        agency_id: context.agencyId,
+        form_type: draftFormType,
+        expected_updated_at: null,
+        payload: { values: { subject: 'Brouillon TA-5' } }
+      });
+      assertEquals(createdDraft.status, 200);
+      const initialDraft = readValue(createdDraft.payload, 'draft');
+      const initialDraftVersion = readString(initialDraft, 'updated_at');
+      assertEquals(Boolean(initialDraftVersion), true);
+
+      const resumedDraft = await postApi('data.interactions', context.userToken, {
+        action: 'draft_get',
+        user_id: context.userId,
+        agency_id: context.agencyId,
+        form_type: draftFormType
+      });
+      assertEquals(resumedDraft.status, 200);
+      assertEquals(readString(readValue(resumedDraft.payload, 'draft'), 'updated_at'), initialDraftVersion);
+
+      const modifiedDraft = await postApi('data.interactions', context.userToken, {
+        action: 'draft_save',
+        user_id: context.userId,
+        agency_id: context.agencyId,
+        form_type: draftFormType,
+        expected_updated_at: initialDraftVersion,
+        payload: { values: { subject: 'Brouillon TA-5 modifié' } }
+      });
+      assertEquals(modifiedDraft.status, 200);
+
+      const staleDraft = await postApi('data.interactions', context.userToken, {
+        action: 'draft_save',
+        user_id: context.userId,
+        agency_id: context.agencyId,
+        form_type: draftFormType,
+        expected_updated_at: initialDraftVersion,
+        payload: { values: { subject: 'Version périmée' } }
+      });
+      assertEquals(staleDraft.status, 409);
+      assertEquals(readString(staleDraft.payload, 'code'), 'CONFLICT');
 
       const savedInteraction = await postApi('data.interactions', context.userToken, {
         action: 'save',
@@ -190,16 +376,75 @@ Deno.test({
       assertEquals(updatedInteraction.status, 200);
       assertEquals(readBoolean(updatedInteraction.payload, 'ok'), true);
 
+      const activityBeforeCorrection = await getApi(
+        'data.activity-v2.by-legacy-interaction',
+        context.userToken,
+        { legacy_interaction_id: interactionId }
+      );
+      assertEquals(activityBeforeCorrection.status, 200);
+      const activityBefore = readValue(activityBeforeCorrection.payload, 'activity');
+      const activityVersion = readValue(activityBefore, 'version');
+      assertEquals(typeof activityVersion, 'number');
+
+      const correctedActivity = await postApi('data.activity-v2.correct', context.userToken, {
+        legacy_interaction_id: interactionId,
+        expected_version: activityVersion,
+        reason: 'Correction integration TA-5',
+        changes: { subject: 'AUDIT_20260604 integration corrigée' }
+      });
+      assertEquals(correctedActivity.status, 200);
+      assertEquals(readBoolean(correctedActivity.payload, 'ok'), true);
+      const corrected = readValue(correctedActivity.payload, 'activity');
+      const corrections = readValue(corrected, 'corrections');
+      assertEquals(Array.isArray(corrections), true);
+      assertEquals(
+        Array.isArray(corrections) && corrections.some((item) =>
+          readString(item, 'reason') === 'Correction integration TA-5'
+        ),
+        true
+      );
+
+      const staleCorrection = await postApi('data.activity-v2.correct', context.userToken, {
+        legacy_interaction_id: interactionId,
+        expected_version: activityVersion,
+        reason: 'Version périmée',
+        changes: { subject: 'Ne doit pas être écrit' }
+      });
+      assertEquals(staleCorrection.status, 409);
+      assertEquals(readString(staleCorrection.payload, 'code'), 'CONFLICT');
+
       const listedInteractions = await postApi('data.interactions', context.userToken, {
         action: 'list_by_entity',
         entity_id: entityId,
         page: 1,
-        page_size: 20
+        page_size: 20,
+        read_model: 'activity_v2'
       });
       assertEquals(listedInteractions.status, 200);
       assertEquals(readBoolean(listedInteractions.payload, 'ok'), true);
       const listedPayload = readValue(listedInteractions.payload, 'interactions');
       assertEquals(Array.isArray(listedPayload), true);
+
+      const legacyInteractions = await postApi('data.interactions', context.userToken, {
+        action: 'list_by_entity',
+        entity_id: entityId,
+        page: 1,
+        page_size: 20,
+        read_model: 'legacy'
+      });
+      assertEquals(legacyInteractions.status, 200);
+      assertEquals(
+        Array.isArray(readValue(legacyInteractions.payload, 'interactions')),
+        true
+      );
+
+      const abandonedDraft = await postApi('data.interactions', context.userToken, {
+        action: 'draft_delete',
+        user_id: context.userId,
+        agency_id: context.agencyId,
+        form_type: draftFormType
+      });
+      assertEquals(abandonedDraft.status, 200);
 
       const deletedInteraction = await postApi('data.interactions', context.userToken, {
         action: 'delete',
@@ -214,9 +459,8 @@ Deno.test({
         action: 'delete',
         contact_id: contactId
       });
-      assertEquals(deletedContact.status, 200);
-      assertEquals(readBoolean(deletedContact.payload, 'ok'), true);
-      contactId = '';
+      assertEquals(deletedContact.status, 409);
+      assertEquals(readString(deletedContact.payload, 'code'), 'CONFLICT');
 
       const savedConfig = await postApi('data.config', context.adminToken, {
         agency_id: context.agencyId,
@@ -238,6 +482,12 @@ Deno.test({
       assertEquals(invalidConfig.status, 400);
       assertEquals(readString(invalidConfig.payload, 'code'), 'CONFIG_INVALID');
     } finally {
+      await postApi('data.interactions', context.userToken, {
+        action: 'draft_delete',
+        user_id: context.userId,
+        agency_id: context.agencyId,
+        form_type: draftFormType
+      });
       if (interactionId) {
         await postApi('data.interactions', context.userToken, {
           action: 'delete',

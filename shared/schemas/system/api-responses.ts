@@ -19,6 +19,10 @@ import {
 } from './directory.schema.ts';
 import { membershipModeSchema, userRoleSchema } from '../admin/user.schema.ts';
 import { tierV1DirectoryRowSchema } from '../interaction/tier-v1.schema.ts';
+import {
+  tierContactReadSchema,
+  tierOrganizationReadSchema
+} from '../entity/tier-foundation.schema.ts';
 
 type EntityRow = Database['public']['Tables']['entities']['Row'];
 type EntityContactRow = Database['public']['Tables']['entity_contacts']['Row'];
@@ -60,6 +64,7 @@ const entityRowSchema: z.ZodType<EntityRow> = z.strictObject({
   first_name: nullableStringSchema,
   id: nonEmptyStringSchema('Identifiant entite requis'),
   last_name: nullableStringSchema,
+  legal_form_code: nullableStringSchema.default(null),
   naf_code: nullableStringSchema,
   name: nonEmptyStringSchema('Nom requis'),
   notes: nullableStringSchema,
@@ -197,12 +202,15 @@ export const dataEntitiesResponseSchema = apiSuccessSchema.extend({
 });
 
 export const dataEntitiesListResponseSchema = apiSuccessSchema.extend({
-  entities: z.array(entityRowSchema)
+  entities: z.array(entityRowSchema),
+  tiers: z.array(tierOrganizationReadSchema)
 });
 
 export const dataEntitiesSearchIndexResponseSchema = apiSuccessSchema.extend({
   entities: z.array(entityRowSchema),
-  contacts: z.array(entityContactRowSchema)
+  contacts: z.array(entityContactRowSchema),
+  tiers: z.array(tierOrganizationReadSchema),
+  tier_contacts: z.array(tierContactReadSchema)
 });
 
 export const dataEntitiesRouteResponseSchema = z.union([
@@ -224,7 +232,8 @@ const dataEntityContactsDeleteResponseSchema = apiSuccessSchema.extend({
 });
 
 export const dataEntityContactsListResponseSchema = apiSuccessSchema.extend({
-  contacts: z.array(entityContactRowSchema)
+  contacts: z.array(entityContactRowSchema),
+  tier_contacts: z.array(tierContactReadSchema)
 });
 
 export const dataEntityContactsResponseSchema = z.union([
@@ -288,6 +297,7 @@ export const configIntegrityInteractionUpdateResponseSchema = apiSuccessSchema.e
 });
 export const directoryListResponseSchema = apiSuccessSchema.extend({
   rows: z.array(directoryListRowSchema),
+  tiers: z.array(tierOrganizationReadSchema),
   total: z.number().int().nonnegative().optional(),
   page: z.number().int().positive(),
   page_size: z.number().int().positive(),
@@ -338,7 +348,8 @@ export const directoryCitySuggestionsResponseSchema = apiSuccessSchema.extend({
 });
 
 export const directoryRecordResponseSchema = apiSuccessSchema.extend({
-  record: directoryRecordSchema
+  record: directoryRecordSchema,
+  tier: tierOrganizationReadSchema.optional()
 });
 
 export const directoryCompanySearchResponseSchema = apiSuccessSchema.extend({
@@ -354,14 +365,21 @@ export const directoryDuplicatesResponseSchema = apiSuccessSchema.extend({
 });
 
 export const tierV1SearchResponseSchema = apiSuccessSchema.extend({
-  results: z.array(tierV1DirectoryRowSchema)
+  results: z.array(tierV1DirectoryRowSchema),
+  tiers: z.array(tierOrganizationReadSchema)
 });
 
 export const tierV1DirectoryListResponseSchema = apiSuccessSchema.extend({
-  rows: z.array(tierV1DirectoryRowSchema),
+  rows: z.array(tierOrganizationReadSchema),
   page: z.number().int().positive(),
   page_size: z.number().int().positive(),
-  total: z.number().int().nonnegative().optional()
+  total: z.number().int().nonnegative(),
+  meta: z.strictObject({
+    scope: z.strictObject({
+      mode: z.enum(['single_agency', 'multi_agency', 'global_read']),
+      agencyIds: z.array(z.string().trim().min(1, 'Identifiant agence requis'))
+    })
+  })
 });
 
 export const directorySavedViewsListResponseSchema = apiSuccessSchema.extend({

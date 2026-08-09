@@ -64,7 +64,7 @@ export const buildAppCommands = ({
     {
       id: 'creation-interaction',
       group: 'creation',
-      label: 'Nouvelle interaction',
+      label: 'Nouvelle activité',
       hint: 'Saisie guidée',
       icon: PenLine,
       keywords: 'nouvelle interaction saisie appel echange creer',

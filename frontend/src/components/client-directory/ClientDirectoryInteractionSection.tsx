@@ -1,4 +1,4 @@
-import { RefreshCcw, Trash2, Phone, Mail, Layers, MapPin } from 'lucide-react';
+import { Archive, RefreshCcw, Phone, Mail, Layers, MapPin } from 'lucide-react';
 
 import { Badge } from '../ui/data-display/Badge';
 import { Button } from '../ui/inputs/basic/Button';
@@ -160,10 +160,10 @@ const ClientDirectoryInteractionRows = ({
                 variant="ghost"
                 size="icon"
                 className="h-7 w-7 text-neutral-400 hover:text-red-600 hover:bg-red-50/50 rounded-md transition-all"
-                aria-label={`Supprimer ${interaction.subject || 'cette interaction'}`}
+                aria-label={`Archiver ${interaction.subject || 'cette activité'}`}
                 onClick={() => onDeleteInteraction(interaction)}
               >
-                <Trash2 size={13} strokeWidth={1.5} />
+                <Archive size={13} strokeWidth={1.5} />
               </Button>
             </div>
           </div>
@@ -235,4 +235,3 @@ const ClientDirectoryInteractionSection = ({
 };
 
 export default ClientDirectoryInteractionSection;
-

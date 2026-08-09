@@ -153,6 +153,7 @@ export const entities = pgTable("entities", {
   siret: text("siret").$type<string | null>(),
   siren: text("siren").$type<string | null>(),
   naf_code: text("naf_code").$type<string | null>(),
+  legal_form_code: text("legal_form_code").$type<string | null>(),
   official_name: text("official_name").$type<string | null>(),
   official_data_source: text("official_data_source").$type<string | null>(),
   official_data_synced_at: timestamp("official_data_synced_at", timestamptz)
@@ -173,6 +174,99 @@ export const entities = pgTable("entities", {
   updated_at: timestamp("updated_at", timestamptz).$type<string>().defaultNow()
     .notNull(),
 });
+
+export const tier_role_types = pgTable("tier_role_types", {
+  code: text("code").$type<string>().primaryKey(),
+  label: text("label").$type<string>().notNull(),
+  description: text("description").$type<string | null>(),
+  is_active: boolean("is_active").$type<boolean>().default(true).notNull(),
+  sort_order: integer("sort_order").$type<number>().default(0).notNull(),
+  created_at: timestamp("created_at", timestamptz).$type<string>().defaultNow()
+    .notNull(),
+  updated_at: timestamp("updated_at", timestamptz).$type<string>().defaultNow()
+    .notNull(),
+});
+
+export const tier_roles = pgTable("tier_roles", {
+  id: uuid("id").$type<string>().defaultRandom().primaryKey(),
+  entity_id: uuid("entity_id").$type<string>().notNull(),
+  role_code: text("role_code").$type<string>().notNull(),
+  valid_from: timestamp("valid_from", timestamptz).$type<string>().defaultNow()
+    .notNull(),
+  valid_to: timestamp("valid_to", timestamptz).$type<string | null>(),
+  source_system: text("source_system").$type<string>().notNull(),
+  source_record_id: text("source_record_id").$type<string>().notNull(),
+  created_by: uuid("created_by").$type<string | null>(),
+  created_at: timestamp("created_at", timestamptz).$type<string>().defaultNow()
+    .notNull(),
+  updated_at: timestamp("updated_at", timestamptz).$type<string>().defaultNow()
+    .notNull(),
+});
+
+export const customer_accounts = pgTable("customer_accounts", {
+  id: uuid("id").$type<string>().defaultRandom().primaryKey(),
+  entity_id: uuid("entity_id").$type<string>().notNull(),
+  client_number: text("client_number").$type<string>().notNull(),
+  account_type: text("account_type").$type<AccountType>().notNull(),
+  account_status: text("account_status").$type<string | null>(),
+  agency_id: uuid("agency_id").$type<string>().notNull(),
+  primary_commercial_id: uuid("primary_commercial_id").$type<string | null>(),
+  number_authority: text("number_authority").$type<"erp_as400">().notNull(),
+  status_authority: text("status_authority").$type<"erp_as400">().notNull(),
+  source_system: text("source_system").$type<string>().notNull(),
+  source_record_id: text("source_record_id").$type<string>().notNull(),
+  source_synced_at: timestamp("source_synced_at", timestamptz).$type<string | null>(),
+  archived_at: timestamp("archived_at", timestamptz).$type<string | null>(),
+  created_by: uuid("created_by").$type<string | null>(),
+  created_at: timestamp("created_at", timestamptz).$type<string>().defaultNow()
+    .notNull(),
+  updated_at: timestamp("updated_at", timestamptz).$type<string>().defaultNow()
+    .notNull(),
+});
+
+export const customer_account_secondary_commercials = pgTable(
+  "customer_account_secondary_commercials",
+  {
+    id: uuid("id").$type<string>().defaultRandom().primaryKey(),
+    customer_account_id: uuid("customer_account_id").$type<string>().notNull(),
+    commercial_id: uuid("commercial_id").$type<string>().notNull(),
+    created_by: uuid("created_by").$type<string | null>(),
+    created_at: timestamp("created_at", timestamptz).$type<string>().defaultNow()
+      .notNull(),
+  },
+);
+
+export const business_profile_types = pgTable("business_profile_types", {
+  code: text("code").$type<string>().primaryKey(),
+  label: text("label").$type<string>().notNull(),
+  description: text("description").$type<string | null>(),
+  is_active: boolean("is_active").$type<boolean>().default(true).notNull(),
+  sort_order: integer("sort_order").$type<number>().default(0).notNull(),
+  created_at: timestamp("created_at", timestamptz).$type<string>().defaultNow()
+    .notNull(),
+  updated_at: timestamp("updated_at", timestamptz).$type<string>().defaultNow()
+    .notNull(),
+});
+
+export const organization_business_profiles = pgTable(
+  "organization_business_profiles",
+  {
+    id: uuid("id").$type<string>().defaultRandom().primaryKey(),
+    entity_id: uuid("entity_id").$type<string>().notNull(),
+    profile_code: text("profile_code").$type<string>().notNull(),
+    is_primary: boolean("is_primary").$type<boolean>().default(false).notNull(),
+    valid_from: timestamp("valid_from", timestamptz).$type<string>().defaultNow()
+      .notNull(),
+    valid_to: timestamp("valid_to", timestamptz).$type<string | null>(),
+    source_system: text("source_system").$type<string>().notNull(),
+    source_record_id: text("source_record_id").$type<string>().notNull(),
+    created_by: uuid("created_by").$type<string | null>(),
+    created_at: timestamp("created_at", timestamptz).$type<string>().defaultNow()
+      .notNull(),
+    updated_at: timestamp("updated_at", timestamptz).$type<string>().defaultNow()
+      .notNull(),
+  },
+);
 
 export const entity_contacts = pgTable("entity_contacts", {
   id: uuid("id").$type<string>().defaultRandom().primaryKey(),
@@ -782,6 +876,111 @@ export const interactions = pgTable("interactions", {
     .notNull(),
   updated_at: timestamp("updated_at", timestamptz).$type<string>().defaultNow()
     .notNull(),
+});
+
+export const activities = pgTable("activities", {
+  id: uuid("id").$type<string>().defaultRandom().primaryKey(),
+  legacy_interaction_id: text("legacy_interaction_id").$type<string | null>(),
+  agency_id: uuid("agency_id").$type<string>().notNull(),
+  author_id: uuid("author_id").$type<string>().notNull(),
+  created_by: uuid("created_by").$type<string>().notNull(),
+  updated_by: uuid("updated_by").$type<string | null>(),
+  legacy_updated_by_raw: text("legacy_updated_by_raw").$type<string | null>(),
+  occurred_at: timestamp("occurred_at", timestamptz).$type<string>().notNull(),
+  channel: text("channel").$type<string>().notNull(),
+  activity_type: text("activity_type").$type<string>().notNull(),
+  subject: text("subject").$type<string>().notNull(),
+  report: text("report").$type<string | null>(),
+  organization_id: uuid("organization_id").$type<string | null>(),
+  contact_id: uuid("contact_id").$type<string | null>(),
+  lifecycle_status: text("lifecycle_status").$type<
+    "draft" | "recorded" | "corrected" | "archived"
+  >().notNull(),
+  version: integer("version").$type<number>().notNull(),
+  corrected_at: timestamp("corrected_at", timestamptz).$type<string | null>(),
+  archived_at: timestamp("archived_at", timestamptz).$type<string | null>(),
+  created_at: timestamp("created_at", timestamptz).$type<string>().defaultNow()
+    .notNull(),
+  updated_at: timestamp("updated_at", timestamptz).$type<string>().defaultNow()
+    .notNull(),
+});
+
+export const activity_participants = pgTable("activity_participants", {
+  id: uuid("id").$type<string>().defaultRandom().primaryKey(),
+  activity_id: uuid("activity_id").$type<string>().notNull(),
+  agency_id: uuid("agency_id").$type<string>().notNull(),
+  participant_kind: text("participant_kind").$type<"internal" | "external">()
+    .notNull(),
+  internal_profile_id: uuid("internal_profile_id").$type<string | null>(),
+  external_contact_id: uuid("external_contact_id").$type<string | null>(),
+  organization_id: uuid("organization_id").$type<string | null>(),
+  participant_role: text("participant_role").$type<string>().notNull(),
+  created_by: uuid("created_by").$type<string>().notNull(),
+  created_at: timestamp("created_at", timestamptz).$type<string>().defaultNow()
+    .notNull(),
+});
+
+export const activity_sources = pgTable("activity_sources", {
+  id: uuid("id").$type<string>().defaultRandom().primaryKey(),
+  activity_id: uuid("activity_id").$type<string>().notNull(),
+  agency_id: uuid("agency_id").$type<string>().notNull(),
+  source_type: text("source_type").$type<
+    "legacy_interaction" | "manual" | "import" | "email" | "document"
+  >().notNull(),
+  source_reference: text("source_reference").$type<string>().notNull(),
+  source_label: text("source_label").$type<string | null>(),
+  captured_at: timestamp("captured_at", timestamptz).$type<string>().notNull(),
+  created_by: uuid("created_by").$type<string>().notNull(),
+  created_at: timestamp("created_at", timestamptz).$type<string>().defaultNow()
+    .notNull(),
+});
+
+export const activity_attachments = pgTable("activity_attachments", {
+  id: uuid("id").$type<string>().defaultRandom().primaryKey(),
+  activity_id: uuid("activity_id").$type<string>().notNull(),
+  agency_id: uuid("agency_id").$type<string>().notNull(),
+  source_id: uuid("source_id").$type<string | null>(),
+  file_name: text("file_name").$type<string>().notNull(),
+  mime_type: text("mime_type").$type<string | null>(),
+  byte_size: bigint("byte_size", { mode: "number" }).$type<number | null>(),
+  checksum_sha256: text("checksum_sha256").$type<string | null>(),
+  storage_bucket: text("storage_bucket").$type<string | null>(),
+  storage_object_path: text("storage_object_path").$type<string | null>(),
+  created_by: uuid("created_by").$type<string>().notNull(),
+  created_at: timestamp("created_at", timestamptz).$type<string>().defaultNow()
+    .notNull(),
+});
+
+export const activity_history_events = pgTable("activity_history_events", {
+  id: uuid("id").$type<string>().defaultRandom().primaryKey(),
+  activity_id: uuid("activity_id").$type<string>().notNull(),
+  agency_id: uuid("agency_id").$type<string>().notNull(),
+  event_order: integer("event_order").$type<number>().notNull(),
+  legacy_event_id: text("legacy_event_id").$type<string | null>(),
+  event_type: text("event_type").$type<string>().notNull(),
+  event_domain: text("event_domain").$type<
+    "activity" | "task" | "opportunity" | "quote_order" | "compatibility"
+  >().notNull(),
+  occurred_at: timestamp("occurred_at", timestamptz).$type<string | null>(),
+  author_id: uuid("author_id").$type<string | null>(),
+  author_label_raw: text("author_label_raw").$type<string | null>(),
+  content: text("content").$type<string>().notNull(),
+  raw_event: jsonb("raw_event").$type<Record<string, unknown> | null>(),
+  created_at: timestamp("created_at", timestamptz).$type<string>().defaultNow()
+    .notNull(),
+});
+
+export const activity_corrections = pgTable("activity_corrections", {
+  id: uuid("id").$type<string>().defaultRandom().primaryKey(),
+  activity_id: uuid("activity_id").$type<string>().notNull(),
+  agency_id: uuid("agency_id").$type<string>().notNull(),
+  activity_version: integer("activity_version").$type<number>().notNull(),
+  field_name: text("field_name").$type<string>().notNull(),
+  previous_value: text("previous_value").$type<string | null>(),
+  new_value: text("new_value").$type<string | null>(),
+  corrected_by: uuid("corrected_by").$type<string>().notNull(),
+  corrected_at: timestamp("corrected_at", timestamptz).$type<string>().notNull(),
+  reason: text("reason").$type<string | null>(),
 });
 
 export const interaction_drafts = pgTable("interaction_drafts", {

@@ -12,7 +12,7 @@ import {
   type InteractionDraftRecord
 } from './interactionDraftPayload';
 
-type SaveInteractionDraftInput = { userId: string; agencyId: string; payload: InteractionDraftPayload; formType?: string };
+type SaveInteractionDraftInput = { userId: string; agencyId: string; payload: InteractionDraftPayload; formType?: string; expectedUpdatedAt?: string | null };
 
 const toDraftRecord = (value: unknown): InteractionDraftRecord | null => {
   const row = readObject({ row: value }, 'row');
@@ -42,13 +42,14 @@ const parseDraftResponse = createTrpcResponseParser(
   { code: 'REQUEST_FAILED', message: 'Réponse serveur invalide.' }
 );
 
-export const saveInteractionDraft = async ({ userId, agencyId, payload, formType = 'interaction' }: SaveInteractionDraftInput): Promise<InteractionDraftRecord> =>
+export const saveInteractionDraft = async ({ userId, agencyId, payload, formType = 'activity-v2', expectedUpdatedAt = null }: SaveInteractionDraftInput): Promise<InteractionDraftRecord> =>
   invokeTrpc(
     (api, options) => api.data.interactions.mutate({
       action: 'draft_save',
       user_id: userId,
       agency_id: agencyId,
       form_type: formType,
+      expected_updated_at: expectedUpdatedAt,
       payload: toJsonValue(payload)
     }, options),
     parseDraftResponse,

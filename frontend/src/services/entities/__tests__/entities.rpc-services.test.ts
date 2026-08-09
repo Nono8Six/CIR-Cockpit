@@ -14,6 +14,7 @@ import { saveEntity } from '@/services/entities/saveEntity';
 import { saveEntityContact } from '@/services/entities/saveEntityContact';
 import { searchEntitiesUnified } from '@/services/entities/searchEntitiesUnified';
 import { setSupplierArchived } from '@/services/entities/setSupplierArchived';
+import { buildTierOrganizationRead } from '@/__tests__/test-utils';
 
 vi.mock('../../api/safeTrpc');
 
@@ -40,6 +41,7 @@ const entityRow = (overrides: Record<string, unknown> = {}) => ({
   first_name: null,
   id: 'entity-1',
   last_name: null,
+  legal_form_code: null,
   naf_code: null,
   name: 'Entite test',
   notes: null,
@@ -142,7 +144,7 @@ describe('entities RPC services', () => {
       entityRow({ id: 'client-1', name: 'Client 1' }),
       entityRow({ id: 'client-2', name: 'Client 2' })
     ];
-    expect(parseTrpcContract(parser, { ok: true, entities: clients })).toEqual(clients);
+    expect(parseTrpcContract(parser, { ok: true, entities: clients, tiers: [] })).toEqual(clients);
     expectRequestFailedError(parser);
   });
 
@@ -198,7 +200,7 @@ describe('entities RPC services', () => {
     );
 
     const prospects = [entityRow({ id: 'prospect-1', entity_type: 'Prospect', name: 'Prospect 1' })];
-    expect(parseTrpcContract(parser, { ok: true, entities: prospects })).toEqual(prospects);
+    expect(parseTrpcContract(parser, { ok: true, entities: prospects, tiers: [] })).toEqual(prospects);
     expectRequestFailedError(parser);
   });
 
@@ -227,7 +229,7 @@ describe('entities RPC services', () => {
     );
 
     const contacts = [contactRow({ id: 'contact-1' })];
-    expect(parseTrpcContract(parser, { ok: true, contacts })).toEqual(contacts);
+    expect(parseTrpcContract(parser, { ok: true, contacts, tier_contacts: [] })).toEqual(contacts);
     expectRequestFailedError(parser);
   });
 
@@ -243,7 +245,7 @@ describe('entities RPC services', () => {
   it('returns an empty search index without agency id', async () => {
     const result = await getEntitySearchIndex(null);
 
-    expect(result).toEqual({ entities: [], contacts: [] });
+    expect(result).toEqual({ entities: [], contacts: [], tiers: [], tierContacts: [] });
     expect(mockSafeRpc).not.toHaveBeenCalled();
   });
 
@@ -271,10 +273,65 @@ describe('entities RPC services', () => {
       {}
     );
 
-    const entities = [entityRow({ id: 'entity-1' })];
-    const contacts = [contactRow({ id: 'contact-1', entity_id: 'entity-1' })];
-    expect(parseTrpcContract(parser, { ok: true, entities, contacts })).toEqual({ entities, contacts });
+    const entityId = '11111111-1111-4111-8111-111111111111';
+    const contactId = '55555555-5555-4555-8555-555555555555';
+    const entities = [entityRow({ id: entityId })];
+    const contacts = [contactRow({ id: contactId, entity_id: entityId })];
+    const tiers = [buildTierOrganizationRead(['client'], {
+      id: entityId,
+      legacy_entity_id: entityId,
+      name: 'Entite test'
+    })];
+    const tierContacts = [{
+      id: contactId,
+      organization_id: entityId,
+      legacy_entity_id: entityId,
+      first_name: 'Jean',
+      last_name: 'Dupont',
+      email: null,
+      phone: null,
+      position: null,
+      service_label: null,
+      is_primary: false,
+      notes: null,
+      archived_at: null,
+      created_at: '2026-06-01T10:00:00.000Z',
+      updated_at: '2026-06-01T10:00:00.000Z',
+      provenance: {
+        source_system: 'entity_contacts',
+        source_record_id: contactId,
+        authority: 'cir_cockpit' as const,
+        synced_at: null
+      }
+    }];
+    expect(parseTrpcContract(parser, {
+      ok: true,
+      entities,
+      contacts,
+      tiers,
+      tier_contacts: tierContacts
+    })).toEqual({
+      entities: [{ ...entities[0], canonical_tier: tiers[0] }],
+      contacts: [{ ...contacts[0], canonical_contact: tierContacts[0] }],
+      tiers,
+      tierContacts
+    });
     expectRequestFailedError(parser);
+  });
+
+  it('rejects a search index that omits a canonical tier', async () => {
+    const match = vi.fn();
+    mockSafeRpc.mockReturnValue({ match } as never);
+    await getEntitySearchIndex('agency-1', false);
+    const [, parser] = mockSafeRpc.mock.calls[0] as [SafeRpcCall, SafeRpcParser, string];
+
+    expect(() => parseTrpcContract(parser, {
+      ok: true,
+      entities: [entityRow({ id: 'entity-1' })],
+      contacts: [],
+      tiers: [],
+      tier_contacts: []
+    })).toThrow('Contrat Tiers incomplet pour la recherche.');
   });
 
   it('builds searchEntitiesUnified query payload and parses V1 rows', async () => {
@@ -327,7 +384,11 @@ describe('entities RPC services', () => {
       updated_at: '2026-01-01T10:00:00.000Z',
       archived_at: null
     };
-    expect(parseTrpcContract(parser, { ok: true, results: [row] })).toEqual({ ok: true, results: [row] });
+    expect(parseTrpcContract(parser, { ok: true, results: [row], tiers: [] })).toEqual({
+      ok: true,
+      results: [row],
+      tiers: []
+    });
     expectRequestFailedError(parser);
   });
 

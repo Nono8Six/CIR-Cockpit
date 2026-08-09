@@ -340,6 +340,7 @@ const ClientDirectoryRecordDetails = ({
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between pb-6 border-b border-neutral-200 shrink-0">
           <ClientDirectoryRecordIdentityCard
             record={record}
+            tier={recordQuery.data!.tier}
             isProspect={isProspect}
             isSupplier={isSupplier}
             addressLine={addressLine}
@@ -365,6 +366,7 @@ const ClientDirectoryRecordDetails = ({
           {/* Main Info Grid */}
           <ClientDirectoryRecordInfoGrid
             record={record}
+            tier={recordQuery.data!.tier}
             contactsSection={
               <EntityContactsPanelSection
                 contacts={contactsQuery.data ?? []}
@@ -471,13 +473,13 @@ const ClientDirectoryRecordDetails = ({
                 interactionsState.setInteractionToDelete(null);
               }
             }}
-            title="Supprimer cette interaction"
+            title="Archiver cette activité"
             description={
               interactionsState.interactionToDelete
-                ? `L'interaction « ${interactionsState.interactionToDelete.subject || 'Sans objet'} » sera supprimée de cette fiche.`
-                : 'Cette interaction sera supprimée de cette fiche.'
+                ? `L'activité « ${interactionsState.interactionToDelete.subject || 'Sans objet'} » sera retirée des listes actives sans perdre son historique.`
+                : "Cette activité sera retirée des listes actives sans perdre son historique."
             }
-            confirmLabel={interactionsState.isDeletePending ? 'Suppression...' : 'Supprimer'}
+            confirmLabel={interactionsState.isDeletePending ? 'Archivage...' : 'Archiver'}
             variant="destructive"
             onConfirm={() => {
               void interactionsState.handleConfirmDeleteInteraction();

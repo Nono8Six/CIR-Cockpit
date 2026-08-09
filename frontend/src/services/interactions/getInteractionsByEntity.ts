@@ -45,9 +45,10 @@ export const getInteractionsByEntity = async (
       entity_id: entityId,
       scope,
       page,
-      page_size: pageSize
+      page_size: pageSize,
+      read_model: 'activity_v2'
     }, options),
     parseListResponse,
-    'Impossible de charger les interactions.'
+    'Impossible de charger les activités.'
   );
 };

@@ -199,7 +199,7 @@ Chaque contexte possède ses objets et ses règles. Il peut lire les autres cont
 
 | Contexte | Responsabilité | Objets principaux | Ne doit pas absorber |
 | --- | --- | --- | --- |
-| Identités et tiers | Décrire qui existe et dans quels rôles | Organisation, personne, contact, rôle, compte d’agence | Activités, opportunités, prix |
+| Identités et tiers | Décrire qui existe, ce que fait l'organisation et dans quels rôles elle agit | Organisation, personne, contact, profil métier, rôle, compte d’agence | Activités, opportunités, prix |
 | Activités | Enregistrer ce qui s’est réellement passé | Activité, participant, canal, compte rendu, pièce jointe | Travail futur, étape de vente, commande |
 | Travail collaboratif | Organiser ce qui reste à faire | Tâche, assignation, échéance, suivi | Historique d’un échange terminé |
 | Développement commercial | Suivre un besoin ou potentiel | Opportunité, étape, participant, produit concerné, décision | Devis/commande comme simples champs |
@@ -220,6 +220,7 @@ Chaque contexte possède ses objets et ses règles. Il peut lire les autres cont
 | --- | --- |
 | **Organisation** | Identité stable d’une entreprise, administration ou structure externe. |
 | **Rôle d’organisation** | Qualité temporelle d’une organisation : client, prospect, fournisseur, fabricant ou autre rôle futur. |
+| **Profil métier d’organisation** | Activité ou position de l’organisation dans la chaîne de valeur industrielle, par exemple intégrateur ou constructeur de machines. Il est distinct du rôle envers CIR, de la forme juridique et du code NAF. |
 | **Compte commercial** | Relation d’une organisation avec CIR ou une agence : numéro, type de compte, responsable, statut et conditions locales. |
 | **Contact** | Personne rattachée à une organisation, avec fonction et moyens de contact. |
 | **Activité** | Fait daté déjà réalisé : appel, email, visite, passage comptoir, réunion, note interne ou autre échange. |
@@ -296,10 +297,14 @@ Exemples :
 
 - une entreprise peut être prospect puis cliente sans changer d’identité ;
 - une organisation peut être à la fois fournisseur et fabricant ;
-- un client peut être rattaché à plusieurs agences avec des responsables ou statuts différents ;
+- un compte client est global CIR et relève d'une seule agence responsable ;
+- un client possède un commercial principal et peut avoir plusieurs commerciaux secondaires ;
 - le passage prospect → client crée un changement de rôle ou d’état, pas une nouvelle organisation.
 
-**À VALIDER — portée des comptes :** confirmer si les numéros client, conditions de paiement, commerciaux et statuts sont globaux CIR ou spécifiques à une agence.
+Le numéro et le statut du compte client sont autoritaires dans l'ERP/AS400. CIR
+Cockpit fait foi pour les contacts, notes et activités CRM. Une donnée de
+responsable absente reste absente pendant la reprise de compatibilité : elle
+n'est jamais inférée silencieusement.
 
 ### 8.2 Activité
 
@@ -809,6 +814,7 @@ Les filières commerciales et produit peuvent avancer à des rythmes différents
 | Document | Rôle actuel |
 | --- | --- |
 | `docs/architecture-cible-cir-cockpit.md` | **Source de vérité globale** pour le produit, le métier, les données et l’architecture cible. |
+| `docs/PLAN/plan-consolidation-tiers-activites.md` | **Plan d'exécution phase-gated** de la consolidation pré-import Tiers et Activités. |
 | `docs/ASSISTANT_IA/plan-mistral-assistant-transversal.md` | **Unique plan d’exécution actif** pour la correction Mistral et l’assistant transversal. |
 | `docs/LOGIQUE_REMISE_CIR/cahier-des-charges/00-sommaire.md` | Index des besoins métier Tarification conservés ; non normatif pour le schéma ou la stack. |
 | `docs/stack.md` | État vérifié de la stack réelle. |
@@ -821,11 +827,11 @@ Les anciens plans Assistant IA, Pilotage V3, Socle Référentiels, calendriers t
 
 ### 15.1 Tiers et commercial
 
-1. Les comptes et numéros clients sont-ils globaux CIR ou spécifiques par agence ?
-2. Une organisation peut-elle avoir plusieurs commerciaux ou agences responsables simultanément ?
-3. Le terme visible doit-il devenir « Activité » ou rester « Interaction » ?
-4. Quelles activités peuvent être internes sans organisation externe ?
-5. Quels systèmes font autorité pour clients, devis, commandes, prix et stocks ?
+1. **VALIDÉ 2026-08-08 —** les comptes et numéros clients sont globaux CIR.
+2. **VALIDÉ 2026-08-08 —** un client relève d'une seule agence et possède un commercial principal ; plusieurs commerciaux secondaires peuvent lui être assignés.
+3. **VALIDÉ 2026-08-08 —** le terme visible devient « Activité » ; « Interaction » reste temporairement un nom technique de compatibilité.
+4. **VALIDÉ 2026-08-08 —** une activité interne peut exister sans organisation externe, avec agence et participant interne obligatoires.
+5. **PARTIELLEMENT VALIDÉ 2026-08-08 —** pour les clients, l'ERP/AS400 fait foi sur le numéro et le statut du compte, CIR Cockpit sur les contacts, notes et activités CRM. Les systèmes autoritaires pour devis, commandes, prix et stocks seront décidés avant leurs briques.
 6. Les statuts de devis et commandes sont-ils saisis dans CIR Cockpit ou uniquement synchronisés ?
 
 ### 15.2 Produits et prix
@@ -891,20 +897,86 @@ Les décisions ouvertes sont traitées juste avant la brique concernée. Elles n
 - Les diagnostics internes sont séparés du contrat public ; le `request_id` reste la clé de support exposée.
 - Les retries, circuits et reprises sont bornés, idempotents et mesurables ; ils ne doivent jamais doubler une mutation ou un appel IA payant.
 
+### 2026-08-08 — Plan de consolidation pré-import Tiers et Activités
+
+- Le PO autorise la production du plan phase-gated `docs/PLAN/plan-consolidation-tiers-activites.md`.
+- Le plan est fondé sur le code, les contrats et le backend Supabase distant réels ; il inventorie les dépendances à `entities`, `entity_contacts` et `interactions`.
+- Lors de la production initiale, les décisions métier sur la portée des comptes, les rattachements multiples, le système source, le vocabulaire Activité, les activités internes et l'exposition IA restent explicitement ouvertes.
+- Aucune migration ni implémentation de `directory.tiers-list` n'est autorisée par cette production documentaire.
+- TA-D1 et TA-D2 sont ensuite validées par le PO : compte et numéro client globaux CIR ; une agence et un commercial principal par client, avec des commerciaux secondaires optionnels.
+- TA-D3 à TA-D6 sont validées par le PO : autorité ERP/AS400 pour numéro et statut client, autorité CIR Cockpit pour le CRM, terme visible « Activité », activités internes encadrées et contrat IA vide pour les deux premières briques.
+- Le contrat de compatibilité conserve les identifiants actuels, maintient l'ancien chemin jusqu'à chaque bascule prouvée et interdit tout rollback destructif.
+- Le PO valide les principes de migration progressive, briques verticales, projection Affaires, ordre des briques et recherche structurée avant embeddings. Le principe de vocabulaire est rouvert uniquement pour intégrer le profil métier d'organisation demandé par le PO.
+- TA-D7 est ensuite validée : une organisation possède un profil métier principal et peut porter plusieurs profils secondaires, tous issus d'un référentiel gouverné sans texte libre comme source de vérité.
+- TA-1 est autorisée puis exécutée par migration MCP-first
+  `20260808080632_ta1_tiers_roles_foundation` : rôles temporels, comptes clients,
+  commerciaux secondaires et profils métier sont ajoutés sans retirer
+  `entities`; la sortie est **GO TA-2**, sans démarrage de TA-2.
+- TA-2 est exécutée sans nouvelle migration : un contrat de lecture canonique
+  strict expose l'identité stable, les rôles temporels, le compte client, les
+  responsabilités commerciales, les profils métier, la provenance et les
+  absences de données explicites. Une même projection backend alimente
+  `data.entities`, `data.entity-contacts`, `data.searchEntitiesUnified`,
+  `directory.list` et la nouvelle lecture `directory.tiers-list`, sans retirer
+  les champs historiques encore consommés. L'Edge Function `api` v202 et les
+  permissions runtime sont prouvées ; la sortie est **GO TA-3**, sans démarrage
+  de TA-3.
+- TA-3 bascule progressivement Clients, Prospects, Fournisseurs, recherche
+  globale et Cockpit sur les rôles temporels et comptes canoniques. Les champs
+  historiques et les identifiants `entities.id` / `entity_contacts.id` restent
+  servis. La fiche canonique est opt-in afin que `directory.record` puisse
+  encore rendre son contrat historique strict sans migration ni suppression de
+  données. L'Edge Function `api` v205, les permissions agence/super-admin, le
+  rendu navigateur, la FK Configurateur vers `entities.id` et la gate QA
+  complète sont prouvés ; la sortie est **GO TA-4**, sans démarrage de TA-4.
+- TA-4 crée le modèle relationnel additif Activités v2 par les migrations
+  `20260809033113_ta4_activities_v2_foundation` et
+  `20260809035041_ta4_activity_fk_indexes`, sans retirer `interactions`. Les
+  8 interactions et 24 événements historiques sont corrélés sans divergence ;
+  participants, sources, métadonnées de pièces jointes, corrections,
+  concurrence, audit, RLS/ACL et index de FK sont prouvés. La lecture stricte
+  `data.activity-v2.by-legacy-interaction` est active sur l'Edge Function
+  `api` v207 ; la sortie est **GO TA-5**, sans démarrage de TA-5.
+- TA-5 rend `activities` canonique pour la saisie, la recherche, les listes, le
+  détail et les corrections. Les migrations
+  `20260809042946_ta5_activity_compatibility_bridge` et
+  `20260809043926_ta5_activity_correction_reason` maintiennent
+  `interactions` comme projection transactionnelle bidirectionnelle, avec
+  garde de parité différée, motif de correction et identifiant historique
+  stable. Les brouillons Activity v2 restent isolés dans `interaction_drafts`
+  jusqu'à leur validation. `reminder_at`, les champs d'opportunité et les
+  références devis/commande restent explicitement propriétaires de la couche
+  compatible jusqu'aux Briques 3, 4 et 5. L'API v211, la parité 8/8, les ACL,
+  la concurrence, le rollback et les parcours réels sont prouvés ; la sortie
+  est **GO Brique 3**, sans démarrage de la Brique 3.
+
 ## 17. Checkpoint de validation PO
 
 Avant d’autoriser la première migration de consolidation, le PO valide au minimum :
 
-- [ ] la décision de ne pas réécrire globalement backend et frontend ;
-- [ ] le principe de briques verticales complètes ;
-- [ ] le vocabulaire Organisation / Rôle / Activité / Tâche / Opportunité ;
-- [ ] « Affaires » comme projection et non table fourre-tout ;
-- [ ] l’ordre Tiers → Activités → Tâches → Opportunités → Devis/Commandes → Pilotage ;
-- [ ] la décision IA explicite par brique, avec contrat possiblement vide ;
-- [ ] le principe de recherche structurée avant embeddings ;
+- [x] la décision de ne pas réécrire globalement backend et frontend ;
+- [x] le principe de briques verticales complètes ;
+- [x] le vocabulaire Organisation / Profil métier / Rôle / Activité / Tâche / Opportunité — un profil métier principal et plusieurs secondaires possibles ;
+- [x] « Affaires » comme projection et non table fourre-tout ;
+- [x] l’ordre Tiers → Activités → Tâches → Opportunités → Devis/Commandes → Pilotage ;
+- [x] la décision IA explicite par brique, avec contrat possiblement vide — Briques 1 et 2 : contrat vide jusqu'à une tranche PO distincte ;
+- [x] le principe de recherche structurée avant embeddings ;
 - [x] la gestion d’erreurs comme contrat transversal, avec diagnostics privés, récupération actionnable et retries idempotents ;
 - [x] la suppression et la consolidation des anciens plans incompatibles ;
-- [ ] la cartographie Tiers → Activités traite le modèle pré-import, les identifiants, les rôles, les RLS, l’idempotence de l’import et le rollback comme son cœur ;
-- [ ] les décisions ouvertes nécessaires à la seule première brique.
+- [x] la cartographie Tiers → Activités traite le modèle pré-import, les identifiants, les rôles, les RLS, l’idempotence de l’import et le rollback comme son cœur — preuve : `docs/PLAN/plan-consolidation-tiers-activites.md` ;
+- [x] les décisions ouvertes nécessaires à la seule première brique — preuve : TA-D1 à TA-D7 et contrat de compatibilité dans `docs/PLAN/plan-consolidation-tiers-activites.md`.
 
-Une fois ce checkpoint validé, la prochaine production attendue est un **plan de consolidation pré-import Tiers et Activités**, fondé sur le code et le backend réels, sans implémentation des briques futures ni import des clients.
+Le plan de consolidation pré-import Tiers et Activités est désormais établi dans
+`docs/PLAN/plan-consolidation-tiers-activites.md` sur autorisation PO distincte.
+Les décisions TA-D1 à TA-D7 nécessaires aux deux premières briques et les
+principes globaux sont désormais validés. TA-1 est exécutée et prouvée par la
+migration MCP/local `20260808080632_ta1_tiers_roles_foundation`. TA-2 est
+exécutée et prouvée par le contrat canonique partagé et les lectures
+compatibles. TA-3 est exécutée et prouvée sur les cinq surfaces Tiers, le
+rollback de lecture, les permissions, le navigateur, le Configurateur et
+l'Edge Function `api` v205. TA-4 est exécutée et prouvée par ses deux migrations
+additives, la conversion 8/8 et 24/24, les permissions, l'audit, la concurrence,
+le contrat strict et l'Edge Function `api` v207. TA-5 est exécutée et prouvée
+par son pont transactionnel, ses contrats, l'interface Activity v2, la parité,
+le rollback et l'Edge Function `api` v211. La prochaine tranche exacte est la
+Brique 3 — Tâches et relances — sans l'exécuter dans TA-5.
