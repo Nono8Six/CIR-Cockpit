@@ -75,6 +75,24 @@ import {
 } from "../../../../shared/schemas/interaction/tier-v1.schema.ts";
 import { tierDirectoryListInputSchema } from "../../../../shared/schemas/entity/tier-foundation.schema.ts";
 import {
+  taskCreateInputSchema,
+  taskCreateResponseSchema,
+  taskAssignmentInputSchema,
+  taskDetailSchema,
+  taskGetInputSchema,
+  taskListInputSchema,
+  taskListResponseSchema,
+  taskNoteInputSchema,
+  taskPriorityChangeInputSchema,
+  taskRescheduleInputSchema,
+  taskStatusChangeInputSchema,
+  taskTypeAdminInputSchema,
+  taskTypeListInputSchema,
+  taskTypesResponseSchema,
+  taskUpdateContentInputSchema,
+} from "../../../../shared/schemas/task/task-api.schema.ts";
+import { taskTypeSchema } from "../../../../shared/schemas/task/task-foundation.schema.ts";
+import {
   pricingReferenceAnomaliesExportInputSchema,
   pricingReferenceAnomaliesExportResponseSchema,
   pricingReferenceAnomaliesListInputSchema,
@@ -191,6 +209,19 @@ import { handleDataProfileAction } from "../services/data/dataProfile.ts";
 import { searchEntitiesUnified } from "../services/search/dataSearchEntitiesUnified.ts";
 import { listTierDirectory } from "../services/entities/core/tierReadModel.ts";
 import {
+  administerTaskTypes,
+  addTaskNote,
+  changeTaskPriority,
+  changeTaskStatus,
+  createTask,
+  getTask,
+  listTasks,
+  listTaskTypes,
+  rescheduleTask,
+  updateTaskAssignment,
+  updateTaskContent,
+} from "../services/tasks/taskService.ts";
+import {
   listCockpitAgencyMembers,
   lookupCockpitPhone,
 } from "../services/config/cockpit.ts";
@@ -279,6 +310,54 @@ import {
 import { configuratorMotorRouter } from "./configuratorMotor.ts";
 
 export const appRouter = router({
+  "task-types": router({
+    list: authedProcedure
+      .input(taskTypeListInputSchema)
+      .output(taskTypesResponseSchema)
+      .query(withAuthedDualDbHandler(listTaskTypes, (_input, db) => db)),
+    admin: superAdminProcedure
+      .input(taskTypeAdminInputSchema)
+      .output(taskTypeSchema)
+      .mutation(withSuperAdminHandler(administerTaskTypes)),
+  }),
+  tasks: router({
+    create: authedProcedure
+      .input(taskCreateInputSchema)
+      .output(taskCreateResponseSchema)
+      .mutation(withAuthedDualDbHandler(createTask, (_input, db) => db)),
+    get: authedProcedure
+      .input(taskGetInputSchema)
+      .output(taskDetailSchema)
+      .query(withAuthedDualDbHandler(getTask, (_input, db) => db)),
+    "update-content": authedProcedure
+      .input(taskUpdateContentInputSchema)
+      .output(taskDetailSchema)
+      .mutation(withAuthedDualDbHandler(updateTaskContent, (_input, db) => db)),
+    "update-assignment": authedProcedure
+      .input(taskAssignmentInputSchema)
+      .output(taskDetailSchema)
+      .mutation(withAuthedDualDbHandler(updateTaskAssignment, (_input, db) => db)),
+    reschedule: authedProcedure
+      .input(taskRescheduleInputSchema)
+      .output(taskDetailSchema)
+      .mutation(withAuthedDualDbHandler(rescheduleTask, (_input, db) => db)),
+    "change-priority": authedProcedure
+      .input(taskPriorityChangeInputSchema)
+      .output(taskDetailSchema)
+      .mutation(withAuthedDualDbHandler(changeTaskPriority, (_input, db) => db)),
+    "change-status": authedProcedure
+      .input(taskStatusChangeInputSchema)
+      .output(taskDetailSchema)
+      .mutation(withAuthedDualDbHandler(changeTaskStatus, (_input, db) => db)),
+    "add-note": authedProcedure
+      .input(taskNoteInputSchema)
+      .output(taskDetailSchema)
+      .mutation(withAuthedDualDbHandler(addTaskNote, (_input, db) => db)),
+    list: authedProcedure
+      .input(taskListInputSchema)
+      .output(taskListResponseSchema)
+      .query(withAuthedDualDbHandler(listTasks, (_input, db) => db)),
+  }),
   configurator: router({
     motor: configuratorMotorRouter,
   }),

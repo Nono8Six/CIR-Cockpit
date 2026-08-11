@@ -477,6 +477,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          timezone: string
           updated_at: string
         }
         Insert: {
@@ -484,6 +485,7 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
+          timezone?: string
           updated_at?: string
         }
         Update: {
@@ -491,6 +493,7 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          timezone?: string
           updated_at?: string
         }
         Relationships: []
@@ -3318,6 +3321,475 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      task_events: {
+        Row: {
+          actor_id: string | null
+          actor_kind: string
+          agency_id: string
+          event_order: number
+          event_type: string
+          id: string
+          metadata: Json
+          new_value: Json | null
+          note: string | null
+          occurred_at: string
+          previous_value: Json | null
+          task_id: string
+          task_version: number
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_kind: string
+          agency_id: string
+          event_order: number
+          event_type: string
+          id?: string
+          metadata?: Json
+          new_value?: Json | null
+          note?: string | null
+          occurred_at?: string
+          previous_value?: Json | null
+          task_id: string
+          task_version: number
+        }
+        Update: {
+          actor_id?: string | null
+          actor_kind?: string
+          agency_id?: string
+          event_order?: number
+          event_type?: string
+          id?: string
+          metadata?: Json
+          new_value?: Json | null
+          note?: string | null
+          occurred_at?: string
+          previous_value?: Json | null
+          task_id?: string
+          task_version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_events_task_agency_fkey"
+            columns: ["task_id", "agency_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id", "agency_id"]
+          },
+        ]
+      }
+      task_participants: {
+        Row: {
+          added_by: string
+          agency_id: string
+          created_at: string
+          participant_role: string
+          profile_id: string
+          task_id: string
+        }
+        Insert: {
+          added_by: string
+          agency_id: string
+          created_at?: string
+          participant_role: string
+          profile_id: string
+          task_id: string
+        }
+        Update: {
+          added_by?: string
+          agency_id?: string
+          created_at?: string
+          participant_role?: string
+          profile_id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_participants_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_participants_profile_agency_fkey"
+            columns: ["agency_id", "profile_id"]
+            isOneToOne: false
+            referencedRelation: "agency_members"
+            referencedColumns: ["agency_id", "user_id"]
+          },
+          {
+            foreignKeyName: "task_participants_task_agency_fkey"
+            columns: ["task_id", "agency_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id", "agency_id"]
+          },
+        ]
+      }
+      task_series: {
+        Row: {
+          agency_id: string
+          contact_id: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          due_time: string | null
+          due_timezone: string
+          id: string
+          interval_unit: string
+          interval_value: number
+          is_active: boolean
+          organization_id: string | null
+          planned_channel: string | null
+          priority: string
+          responsible_id: string | null
+          scope: string
+          stopped_at: string | null
+          stopped_by: string | null
+          task_type_id: string
+          title: string
+          visibility: string
+        }
+        Insert: {
+          agency_id: string
+          contact_id?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          due_time?: string | null
+          due_timezone: string
+          id?: string
+          interval_unit: string
+          interval_value: number
+          is_active?: boolean
+          organization_id?: string | null
+          planned_channel?: string | null
+          priority?: string
+          responsible_id?: string | null
+          scope: string
+          stopped_at?: string | null
+          stopped_by?: string | null
+          task_type_id: string
+          title: string
+          visibility: string
+        }
+        Update: {
+          agency_id?: string
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          due_time?: string | null
+          due_timezone?: string
+          id?: string
+          interval_unit?: string
+          interval_value?: number
+          is_active?: boolean
+          organization_id?: string | null
+          planned_channel?: string | null
+          priority?: string
+          responsible_id?: string | null
+          scope?: string
+          stopped_at?: string | null
+          stopped_by?: string | null
+          task_type_id?: string
+          title?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_series_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_series_contact_organization_fkey"
+            columns: ["contact_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "entity_contacts"
+            referencedColumns: ["id", "entity_id"]
+          },
+          {
+            foreignKeyName: "task_series_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_series_organization_agency_fkey"
+            columns: ["organization_id", "agency_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id", "agency_id"]
+          },
+          {
+            foreignKeyName: "task_series_responsible_agency_fkey"
+            columns: ["agency_id", "responsible_id"]
+            isOneToOne: false
+            referencedRelation: "agency_members"
+            referencedColumns: ["agency_id", "user_id"]
+          },
+          {
+            foreignKeyName: "task_series_stopped_by_fkey"
+            columns: ["stopped_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_series_task_type_id_fkey"
+            columns: ["task_type_id"]
+            isOneToOne: false
+            referencedRelation: "task_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_types: {
+        Row: {
+          archived_at: string | null
+          code: string
+          created_at: string
+          created_by: string
+          id: string
+          is_active: boolean
+          label: string
+          sort_order: number
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          archived_at?: string | null
+          code: string
+          created_at?: string
+          created_by: string
+          id?: string
+          is_active?: boolean
+          label: string
+          sort_order?: number
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          archived_at?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_types_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_types_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          agency_id: string
+          cancel_reason: string | null
+          canceled_at: string | null
+          canceled_by: string | null
+          completed_at: string | null
+          completed_by: string | null
+          completion_activity_id: string | null
+          contact_id: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          due_date: string
+          due_time: string | null
+          due_timezone: string
+          id: string
+          organization_id: string | null
+          planned_channel: string | null
+          previous_task_id: string | null
+          priority: string
+          responsible_id: string | null
+          scope: string
+          series_id: string | null
+          source_activity_id: string | null
+          status: string
+          task_type_id: string
+          title: string
+          updated_at: string
+          version: number
+          visibility: string
+        }
+        Insert: {
+          agency_id: string
+          cancel_reason?: string | null
+          canceled_at?: string | null
+          canceled_by?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          completion_activity_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          due_date: string
+          due_time?: string | null
+          due_timezone: string
+          id?: string
+          organization_id?: string | null
+          planned_channel?: string | null
+          previous_task_id?: string | null
+          priority?: string
+          responsible_id?: string | null
+          scope: string
+          series_id?: string | null
+          source_activity_id?: string | null
+          status?: string
+          task_type_id: string
+          title: string
+          updated_at?: string
+          version?: number
+          visibility: string
+        }
+        Update: {
+          agency_id?: string
+          cancel_reason?: string | null
+          canceled_at?: string | null
+          canceled_by?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          completion_activity_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          due_date?: string
+          due_time?: string | null
+          due_timezone?: string
+          id?: string
+          organization_id?: string | null
+          planned_channel?: string | null
+          previous_task_id?: string | null
+          priority?: string
+          responsible_id?: string | null
+          scope?: string
+          series_id?: string | null
+          source_activity_id?: string | null
+          status?: string
+          task_type_id?: string
+          title?: string
+          updated_at?: string
+          version?: number
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_canceled_by_fkey"
+            columns: ["canceled_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_completion_activity_scope_fkey"
+            columns: ["completion_activity_id", "agency_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id", "agency_id", "organization_id"]
+          },
+          {
+            foreignKeyName: "tasks_contact_organization_fkey"
+            columns: ["contact_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "entity_contacts"
+            referencedColumns: ["id", "entity_id"]
+          },
+          {
+            foreignKeyName: "tasks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_organization_agency_fkey"
+            columns: ["organization_id", "agency_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id", "agency_id"]
+          },
+          {
+            foreignKeyName: "tasks_previous_agency_fkey"
+            columns: ["previous_task_id", "agency_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id", "agency_id"]
+          },
+          {
+            foreignKeyName: "tasks_responsible_agency_fkey"
+            columns: ["agency_id", "responsible_id"]
+            isOneToOne: false
+            referencedRelation: "agency_members"
+            referencedColumns: ["agency_id", "user_id"]
+          },
+          {
+            foreignKeyName: "tasks_series_agency_fkey"
+            columns: ["series_id", "agency_id"]
+            isOneToOne: false
+            referencedRelation: "task_series"
+            referencedColumns: ["id", "agency_id"]
+          },
+          {
+            foreignKeyName: "tasks_source_activity_scope_fkey"
+            columns: ["source_activity_id", "agency_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id", "agency_id", "organization_id"]
+          },
+          {
+            foreignKeyName: "tasks_task_type_id_fkey"
+            columns: ["task_type_id"]
+            isOneToOne: false
+            referencedRelation: "task_types"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tier_role_types: {
         Row: {

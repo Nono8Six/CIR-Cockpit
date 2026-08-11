@@ -94,7 +94,8 @@ const TEST_AGENCIES = [{
   name: 'CIR Bordeaux',
   archived_at: null,
   created_at: '2026-03-09T00:00:00.000Z',
-  updated_at: '2026-03-09T00:00:00.000Z'
+  updated_at: '2026-03-09T00:00:00.000Z',
+  timezone: 'Europe/Paris'
 }];
 
 const renderOnboardingDialog = (
@@ -190,7 +191,8 @@ describe('EntityOnboardingDialog', () => {
           name: 'CIR Bordeaux',
           archived_at: null,
           created_at: '2026-03-09T00:00:00.000Z',
-          updated_at: '2026-03-09T00:00:00.000Z'
+          updated_at: '2026-03-09T00:00:00.000Z',
+          timezone: 'Europe/Paris'
         }]}
         userRole="super_admin"
         activeAgencyId="agency-1"
@@ -221,7 +223,8 @@ describe('EntityOnboardingDialog', () => {
           name: 'CIR Bordeaux',
           archived_at: null,
           created_at: '2026-03-09T00:00:00.000Z',
-          updated_at: '2026-03-09T00:00:00.000Z'
+          updated_at: '2026-03-09T00:00:00.000Z',
+          timezone: 'Europe/Paris'
         }]}
         userRole="super_admin"
         activeAgencyId="agency-1"
@@ -310,7 +313,8 @@ describe('EntityOnboardingDialog', () => {
           name: 'CIR Bordeaux',
           archived_at: null,
           created_at: '2026-03-09T00:00:00.000Z',
-          updated_at: '2026-03-09T00:00:00.000Z'
+          updated_at: '2026-03-09T00:00:00.000Z',
+          timezone: 'Europe/Paris'
         }]}
         userRole="super_admin"
         activeAgencyId="agency-1"
@@ -425,7 +429,8 @@ describe('EntityOnboardingDialog', () => {
           name: 'CIR Bordeaux',
           archived_at: null,
           created_at: '2026-03-09T00:00:00.000Z',
-          updated_at: '2026-03-09T00:00:00.000Z'
+          updated_at: '2026-03-09T00:00:00.000Z',
+          timezone: 'Europe/Paris'
         }]}
         userRole="super_admin"
         activeAgencyId="agency-1"
@@ -522,7 +527,8 @@ describe('EntityOnboardingDialog', () => {
           name: 'CIR Bordeaux',
           archived_at: null,
           created_at: '2026-03-09T00:00:00.000Z',
-          updated_at: '2026-03-09T00:00:00.000Z'
+          updated_at: '2026-03-09T00:00:00.000Z',
+          timezone: 'Europe/Paris'
         }]}
         userRole="super_admin"
         activeAgencyId="agency-1"
@@ -635,7 +641,8 @@ describe('EntityOnboardingDialog', () => {
           name: 'CIR Bordeaux',
           archived_at: null,
           created_at: '2026-03-09T00:00:00.000Z',
-          updated_at: '2026-03-09T00:00:00.000Z'
+          updated_at: '2026-03-09T00:00:00.000Z',
+          timezone: 'Europe/Paris'
         }]}
         userRole="super_admin"
         activeAgencyId="agency-1"
@@ -706,7 +713,8 @@ describe('EntityOnboardingDialog', () => {
           name: 'CIR Bordeaux',
           archived_at: null,
           created_at: '2026-03-09T00:00:00.000Z',
-          updated_at: '2026-03-09T00:00:00.000Z'
+          updated_at: '2026-03-09T00:00:00.000Z',
+          timezone: 'Europe/Paris'
         }]}
         userRole="super_admin"
         activeAgencyId="agency-1"
@@ -862,7 +870,8 @@ describe('EntityOnboardingDialog', () => {
           name: 'CIR Bordeaux',
           archived_at: null,
           created_at: '2026-03-09T00:00:00.000Z',
-          updated_at: '2026-03-09T00:00:00.000Z'
+          updated_at: '2026-03-09T00:00:00.000Z',
+          timezone: 'Europe/Paris'
         }]}
         userRole="super_admin"
         activeAgencyId="agency-1"
@@ -901,7 +910,8 @@ describe('EntityOnboardingDialog', () => {
           name: 'CIR Bordeaux',
           archived_at: null,
           created_at: '2026-03-09T00:00:00.000Z',
-          updated_at: '2026-03-09T00:00:00.000Z'
+          updated_at: '2026-03-09T00:00:00.000Z',
+          timezone: 'Europe/Paris'
         }]}
         userRole="super_admin"
         activeAgencyId="agency-1"
@@ -934,7 +944,8 @@ describe('EntityOnboardingDialog', () => {
           name: 'CIR Bordeaux',
           archived_at: null,
           created_at: '2026-03-09T00:00:00.000Z',
-          updated_at: '2026-03-09T00:00:00.000Z'
+          updated_at: '2026-03-09T00:00:00.000Z',
+          timezone: 'Europe/Paris'
         }]}
         userRole="super_admin"
         activeAgencyId="agency-1"

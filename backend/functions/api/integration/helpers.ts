@@ -1,26 +1,37 @@
-import { assert } from 'std/assert';
+import { assert } from "std/assert";
 
-import { integrationEnv, missingIntegrationEnv } from './env.ts';
+import { integrationEnv, missingIntegrationEnv } from "./env.ts";
 
 export const RUN_FLAG = integrationEnv.runFlag;
-const NET_PERMISSION = await Deno.permissions.query({ name: 'net' });
-const HAS_NET_PERMISSION = NET_PERMISSION.state === 'granted';
+const NET_PERMISSION = await Deno.permissions.query({ name: "net" });
+const HAS_NET_PERMISSION = NET_PERMISSION.state === "granted";
 
 export type ProcedurePath =
-  | 'admin.users'
-  | 'admin.agencies'
-  | 'data.entities'
-  | 'data.searchEntitiesUnified'
-  | 'directory.list'
-  | 'directory.record'
-  | 'directory.tiers-list'
-  | 'data.entity-contacts'
-  | 'data.interactions'
-  | 'data.activity-v2.by-legacy-interaction'
-  | 'data.activity-v2.correct'
-  | 'data.config'
-  | 'data.profile'
-  | 'ai.assistant.ask';
+  | "admin.users"
+  | "admin.agencies"
+  | "data.entities"
+  | "data.searchEntitiesUnified"
+  | "directory.list"
+  | "directory.record"
+  | "directory.tiers-list"
+  | "data.entity-contacts"
+  | "data.interactions"
+  | "data.activity-v2.by-legacy-interaction"
+  | "data.activity-v2.correct"
+  | "data.config"
+  | "data.profile"
+  | "ai.assistant.ask"
+  | "task-types.list"
+  | "task-types.admin"
+  | "tasks.create"
+  | "tasks.get"
+  | "tasks.update-content"
+  | "tasks.update-assignment"
+  | "tasks.reschedule"
+  | "tasks.change-priority"
+  | "tasks.change-status"
+  | "tasks.add-note"
+  | "tasks.list";
 
 type ApiPayload = Record<string, unknown>;
 
@@ -47,7 +58,7 @@ export type IntegrationContext = {
   statusId: string;
   interactionType: string;
   activityLegacyInteractionId: string;
-  configStatuses: Array<Pick<StatusRow, 'id' | 'label' | 'category'>>;
+  configStatuses: Array<Pick<StatusRow, "id" | "label" | "category">>;
   configServices: string[];
   configFamilies: string[];
   configInteractionTypes: Array<{
@@ -74,21 +85,21 @@ const restBaseUrl = `${baseUrl}/rest/v1`;
 const authBaseUrl = `${baseUrl}/auth/v1`;
 
 export const DATA_ROUTES: ProcedurePath[] = [
-  'data.entities',
-  'data.entity-contacts',
-  'data.interactions',
-  'data.config',
-  'data.profile',
+  "data.entities",
+  "data.entity-contacts",
+  "data.interactions",
+  "data.config",
+  "data.profile",
 ];
 
 export const QUERY_ROUTES: ProcedurePath[] = [
-  'data.searchEntitiesUnified',
-  'data.activity-v2.by-legacy-interaction',
-  'directory.list',
-  'directory.record',
-  'directory.tiers-list',
+  "data.searchEntitiesUnified",
+  "data.activity-v2.by-legacy-interaction",
+  "directory.list",
+  "directory.record",
+  "directory.tiers-list",
 ];
-export const ADMIN_ROUTES: ProcedurePath[] = ['admin.users', 'admin.agencies'];
+export const ADMIN_ROUTES: ProcedurePath[] = ["admin.users", "admin.agencies"];
 export const ALL_ROUTES: ProcedurePath[] = [
   ...ADMIN_ROUTES,
   ...DATA_ROUTES,
@@ -96,19 +107,19 @@ export const ALL_ROUTES: ProcedurePath[] = [
 ];
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
+  typeof value === "object" && value !== null && !Array.isArray(value);
 
 const readRecordField = (value: unknown, key: string): unknown =>
   isRecord(value) ? value[key] ?? null : null;
 
 export const readString = (value: unknown, key: string): string => {
   const candidate = readRecordField(value, key);
-  return typeof candidate === 'string' ? candidate : '';
+  return typeof candidate === "string" ? candidate : "";
 };
 
 export const readBoolean = (value: unknown, key: string): boolean | null => {
   const candidate = readRecordField(value, key);
-  return typeof candidate === 'boolean' ? candidate : null;
+  return typeof candidate === "boolean" ? candidate : null;
 };
 
 const readObject = (
@@ -135,9 +146,9 @@ const parseTrpcPayload = (payload: unknown): unknown | null => {
     return payload;
   }
 
-  const result = readObject(payload, 'result');
-  const resultData = result ? readObject(result, 'data') : null;
-  const jsonData = resultData ? readValue(resultData, 'json') : null;
+  const result = readObject(payload, "result");
+  const resultData = result ? readObject(result, "data") : null;
+  const jsonData = resultData ? readValue(resultData, "json") : null;
   if (jsonData !== null && jsonData !== undefined) {
     return jsonData;
   }
@@ -145,17 +156,17 @@ const parseTrpcPayload = (payload: unknown): unknown | null => {
     return resultData;
   }
 
-  const error = readObject(payload, 'error');
+  const error = readObject(payload, "error");
   if (!error) {
     return payload;
   }
 
-  const errorData = readObject(error, 'data');
+  const errorData = readObject(error, "data");
   return {
-    code: readString(errorData, 'appCode') || readString(errorData, 'code'),
-    error: readString(error, 'message'),
-    details: readString(errorData, 'details'),
-    request_id: readString(errorData, 'requestId'),
+    code: readString(errorData, "appCode") || readString(errorData, "code"),
+    error: readString(error, "message"),
+    details: readString(errorData, "details"),
+    request_id: readString(errorData, "requestId"),
   };
 };
 
@@ -166,7 +177,7 @@ export const postApi = async (
   extraHeaders?: Record<string, string>,
 ): Promise<{ status: number; payload: unknown | null }> => {
   const headers: HeadersInit = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
     apikey: anonKey,
   };
 
@@ -180,7 +191,7 @@ export const postApi = async (
   }
 
   const response = await fetch(`${apiBaseUrl}/trpc/${path}`, {
-    method: 'POST',
+    method: "POST",
     headers,
     body: JSON.stringify(body),
   });
@@ -213,7 +224,7 @@ export const getApi = async (
   const response = await fetch(
     `${apiBaseUrl}/trpc/${path}?input=${encodedInput}`,
     {
-      method: 'GET',
+      method: "GET",
       headers,
     },
   );
@@ -230,7 +241,7 @@ const fetchRows = async (
   token: string,
 ): Promise<unknown[]> => {
   const response = await fetch(`${restBaseUrl}${pathAndQuery}`, {
-    method: 'GET',
+    method: "GET",
     headers: {
       apikey: anonKey,
       Authorization: `Bearer ${token}`,
@@ -258,20 +269,20 @@ const requireString = (
 };
 
 const toStatusRow = (value: unknown, index: number): StatusRow => ({
-  id: requireString(value, 'id', `agency_statuses[${index}]`),
-  label: requireString(value, 'label', `agency_statuses[${index}]`),
-  category: requireString(value, 'category', `agency_statuses[${index}]`),
+  id: requireString(value, "id", `agency_statuses[${index}]`),
+  label: requireString(value, "label", `agency_statuses[${index}]`),
+  category: requireString(value, "category", `agency_statuses[${index}]`),
 });
 
 const toLabel = (value: unknown, resource: string, index: number): string =>
-  requireString(value, 'label', `${resource}[${index}]`);
+  requireString(value, "label", `${resource}[${index}]`);
 
 const toInteractionTypeConfig = (
   value: unknown,
   index: number,
-): IntegrationContext['configInteractionTypes'][number] => ({
-  label: requireString(value, 'label', `agency_interaction_types[${index}]`),
-  requires_product_families: readBoolean(value, 'requires_product_families') ??
+): IntegrationContext["configInteractionTypes"][number] => ({
+  label: requireString(value, "label", `agency_interaction_types[${index}]`),
+  requires_product_families: readBoolean(value, "requires_product_families") ??
     false,
 });
 
@@ -280,9 +291,9 @@ const signIn = async (
   password: string,
 ): Promise<AuthSession> => {
   const response = await fetch(`${authBaseUrl}/token?grant_type=password`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       apikey: anonKey,
     },
     body: JSON.stringify({ email, password }),
@@ -294,9 +305,9 @@ const signIn = async (
     `Unable to sign in ${email} (status ${response.status}).`,
   );
 
-  const accessToken = readString(payload, 'access_token');
-  const user = readObject(payload, 'user');
-  const userId = readString(user, 'id');
+  const accessToken = readString(payload, "access_token");
+  const user = readObject(payload, "user");
+  const userId = readString(user, "id");
 
   assert(accessToken.length > 0, `Access token missing for ${email}.`);
   assert(userId.length > 0, `User id missing for ${email}.`);
@@ -313,11 +324,11 @@ const buildContext = async (): Promise<IntegrationContext> => {
     userSession.accessToken,
   );
   const agencyId = memberships
-    .map((value) => readString(value, 'agency_id').trim())
-    .find((value) => value.length > 0) ?? '';
+    .map((value) => readString(value, "agency_id").trim())
+    .find((value) => value.length > 0) ?? "";
   assert(
     agencyId.length > 0,
-    'No agency membership found for API_INT_USER_EMAIL.',
+    "No agency membership found for API_INT_USER_EMAIL.",
   );
 
   const statuses = (await fetchRows(
@@ -331,8 +342,8 @@ const buildContext = async (): Promise<IntegrationContext> => {
     userSession.accessToken,
   );
   const interactionType = interactionTypeRows
-    .map((row, index) => toLabel(row, 'agency_interaction_types', index))
-    .find((value) => value.length > 0) ?? '';
+    .map((row, index) => toLabel(row, "agency_interaction_types", index))
+    .find((value) => value.length > 0) ?? "";
   assert(
     interactionType.length > 0,
     `No interaction type found for agency ${agencyId}.`,
@@ -351,8 +362,8 @@ const buildContext = async (): Promise<IntegrationContext> => {
     userSession.accessToken,
   );
   const activityLegacyInteractionId = activityRows
-    .map((row) => readString(row, 'legacy_interaction_id').trim())
-    .find((value) => value.length > 0) ?? '';
+    .map((row) => readString(row, "legacy_interaction_id").trim())
+    .find((value) => value.length > 0) ?? "";
   assert(
     activityLegacyInteractionId.length > 0,
     `Aucune activité v2 corrélée trouvée pour l agence ${agencyId}.`,
@@ -363,7 +374,7 @@ const buildContext = async (): Promise<IntegrationContext> => {
     userToken: userSession.accessToken,
     userId: userSession.userId,
     agencyId,
-    statusId: statuses[0]?.id ?? '',
+    statusId: statuses[0]?.id ?? "",
     interactionType,
     activityLegacyInteractionId,
     configStatuses: statuses.map((status) => ({
@@ -372,10 +383,10 @@ const buildContext = async (): Promise<IntegrationContext> => {
       category: status.category,
     })),
     configServices: serviceRows.map((row, index) =>
-      toLabel(row, 'agency_services', index)
+      toLabel(row, "agency_services", index)
     ),
     configFamilies: familyRows.map((row, index) =>
-      toLabel(row, 'agency_families', index)
+      toLabel(row, "agency_families", index)
     ),
     configInteractionTypes: interactionTypeRows.map(toInteractionTypeConfig),
   };
@@ -391,9 +402,9 @@ const identityFor = async (
     session.accessToken,
   );
   const agencyId = memberships
-    .map((value) => readString(value, 'agency_id').trim())
-    .find((value) => value.length > 0) ?? '';
-  assert(agencyId.length > 0, 'Agence du compte d integration introuvable.');
+    .map((value) => readString(value, "agency_id").trim())
+    .find((value) => value.length > 0) ?? "";
+  assert(agencyId.length > 0, "Agence du compte d integration introuvable.");
   return { ...session, agencyId };
 };
 
@@ -424,11 +435,11 @@ export const getContext = (): Promise<IntegrationContext> => {
 };
 
 export const readEntityFromPayload = (payload: unknown): ApiPayload | null => {
-  const candidate = readValue(payload, 'entity');
+  const candidate = readValue(payload, "entity");
   return isRecord(candidate) ? candidate : null;
 };
 
 export const readContactFromPayload = (payload: unknown): ApiPayload | null => {
-  const candidate = readValue(payload, 'contact');
+  const candidate = readValue(payload, "contact");
   return isRecord(candidate) ? candidate : null;
 };
