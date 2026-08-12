@@ -12,6 +12,7 @@ const AGENCY_ID = '11111111-1111-1111-1111-111111111111';
 const agency = {
   id: AGENCY_ID,
   name: 'Agence A',
+  timezone: 'Europe/Paris',
   created_at: '2026-01-01T00:00:00.000Z',
   updated_at: '2026-01-01T00:00:00.000Z',
   archived_at: null

@@ -8,6 +8,7 @@ import {
   numeric,
   pgTable,
   text,
+  time,
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
@@ -34,6 +35,12 @@ import type {
   AiUsageStatus,
 } from "../../shared/schemas/ai.schema.ts";
 import type { AiAssistantAskResponse } from "../../shared/schemas/aiAssistant.schema.ts";
+import type {
+  Task,
+  TaskEvent,
+  TaskParticipant,
+  TaskSeries,
+} from "../../shared/schemas/task/task-foundation.schema.ts";
 
 type AccountType = Database["public"]["Enums"]["account_type"];
 type UserRole = Database["public"]["Enums"]["user_role"];
@@ -47,6 +54,7 @@ const timestamptz = { withTimezone: true, mode: "string" } as const;
 export const agencies = pgTable("agencies", {
   id: uuid("id").$type<string>().defaultRandom().primaryKey(),
   name: text("name").notNull(),
+  timezone: text("timezone").$type<string>().default("Europe/Paris").notNull(),
   archived_at: timestamp("archived_at", timestamptz).$type<string | null>(),
   created_at: timestamp("created_at", timestamptz).$type<string>().defaultNow()
     .notNull(),
@@ -981,6 +989,113 @@ export const activity_corrections = pgTable("activity_corrections", {
   corrected_by: uuid("corrected_by").$type<string>().notNull(),
   corrected_at: timestamp("corrected_at", timestamptz).$type<string>().notNull(),
   reason: text("reason").$type<string | null>(),
+});
+
+export const task_types = pgTable("task_types", {
+  id: uuid("id").$type<string>().defaultRandom().primaryKey(),
+  code: text("code").$type<string>().notNull(),
+  label: text("label").$type<string>().notNull(),
+  sort_order: integer("sort_order").$type<number>().default(0).notNull(),
+  is_active: boolean("is_active").$type<boolean>().default(true).notNull(),
+  created_by: uuid("created_by").$type<string>().notNull(),
+  updated_by: uuid("updated_by").$type<string>().notNull(),
+  created_at: timestamp("created_at", timestamptz).$type<string>().defaultNow()
+    .notNull(),
+  updated_at: timestamp("updated_at", timestamptz).$type<string>().defaultNow()
+    .notNull(),
+  archived_at: timestamp("archived_at", timestamptz).$type<string | null>(),
+});
+
+export const task_series = pgTable("task_series", {
+  id: uuid("id").$type<string>().defaultRandom().primaryKey(),
+  agency_id: uuid("agency_id").$type<string>().notNull(),
+  interval_value: integer("interval_value").$type<number>().notNull(),
+  interval_unit: text("interval_unit").$type<TaskSeries["interval_unit"]>()
+    .notNull(),
+  is_active: boolean("is_active").$type<boolean>().default(true).notNull(),
+  task_type_id: uuid("task_type_id").$type<string>().notNull(),
+  title: text("title").$type<string>().notNull(),
+  description: text("description").$type<string | null>(),
+  planned_channel: text("planned_channel").$type<string | null>(),
+  scope: text("scope").$type<TaskSeries["scope"]>().notNull(),
+  organization_id: uuid("organization_id").$type<string | null>(),
+  contact_id: uuid("contact_id").$type<string | null>(),
+  responsible_id: uuid("responsible_id").$type<string | null>(),
+  priority: text("priority").$type<TaskSeries["priority"]>().default("normal")
+    .notNull(),
+  due_time: time("due_time").$type<string | null>(),
+  due_timezone: text("due_timezone").$type<string>().notNull(),
+  visibility: text("visibility").$type<TaskSeries["visibility"]>().notNull(),
+  created_by: uuid("created_by").$type<string>().notNull(),
+  stopped_by: uuid("stopped_by").$type<string | null>(),
+  created_at: timestamp("created_at", timestamptz).$type<string>().defaultNow()
+    .notNull(),
+  stopped_at: timestamp("stopped_at", timestamptz).$type<string | null>(),
+});
+
+export const tasks = pgTable("tasks", {
+  id: uuid("id").$type<string>().defaultRandom().primaryKey(),
+  agency_id: uuid("agency_id").$type<string>().notNull(),
+  version: integer("version").$type<number>().default(1).notNull(),
+  title: text("title").$type<string>().notNull(),
+  description: text("description").$type<string | null>(),
+  task_type_id: uuid("task_type_id").$type<string>().notNull(),
+  planned_channel: text("planned_channel").$type<string | null>(),
+  scope: text("scope").$type<Task["scope"]>().notNull(),
+  organization_id: uuid("organization_id").$type<string | null>(),
+  contact_id: uuid("contact_id").$type<string | null>(),
+  source_activity_id: uuid("source_activity_id").$type<string | null>(),
+  completion_activity_id: uuid("completion_activity_id").$type<string | null>(),
+  created_by: uuid("created_by").$type<string>().notNull(),
+  responsible_id: uuid("responsible_id").$type<string | null>(),
+  status: text("status").$type<Task["status"]>().default("todo").notNull(),
+  priority: text("priority").$type<Task["priority"]>().default("normal")
+    .notNull(),
+  due_date: date("due_date").$type<string>().notNull(),
+  due_time: time("due_time").$type<string | null>(),
+  due_timezone: text("due_timezone").$type<string>().notNull(),
+  visibility: text("visibility").$type<Task["visibility"]>().notNull(),
+  completed_at: timestamp("completed_at", timestamptz).$type<string | null>(),
+  completed_by: uuid("completed_by").$type<string | null>(),
+  canceled_at: timestamp("canceled_at", timestamptz).$type<string | null>(),
+  canceled_by: uuid("canceled_by").$type<string | null>(),
+  cancel_reason: text("cancel_reason").$type<string | null>(),
+  series_id: uuid("series_id").$type<string | null>(),
+  previous_task_id: uuid("previous_task_id").$type<string | null>(),
+  created_at: timestamp("created_at", timestamptz).$type<string>().defaultNow()
+    .notNull(),
+  updated_at: timestamp("updated_at", timestamptz).$type<string>().defaultNow()
+    .notNull(),
+});
+
+export const task_participants = pgTable("task_participants", {
+  task_id: uuid("task_id").$type<string>().notNull(),
+  agency_id: uuid("agency_id").$type<string>().notNull(),
+  profile_id: uuid("profile_id").$type<string>().notNull(),
+  participant_role: text("participant_role").$type<
+    TaskParticipant["participant_role"]
+  >().notNull(),
+  added_by: uuid("added_by").$type<string>().notNull(),
+  created_at: timestamp("created_at", timestamptz).$type<string>().defaultNow()
+    .notNull(),
+});
+
+export const task_events = pgTable("task_events", {
+  id: uuid("id").$type<string>().defaultRandom().primaryKey(),
+  task_id: uuid("task_id").$type<string>().notNull(),
+  agency_id: uuid("agency_id").$type<string>().notNull(),
+  event_order: integer("event_order").$type<number>().notNull(),
+  event_type: text("event_type").$type<TaskEvent["event_type"]>().notNull(),
+  actor_kind: text("actor_kind").$type<TaskEvent["actor_kind"]>().notNull(),
+  actor_id: uuid("actor_id").$type<string | null>(),
+  occurred_at: timestamp("occurred_at", timestamptz).$type<string>()
+    .defaultNow().notNull(),
+  task_version: integer("task_version").$type<number>().notNull(),
+  previous_value: jsonb("previous_value").$type<unknown | null>(),
+  new_value: jsonb("new_value").$type<unknown | null>(),
+  metadata: jsonb("metadata").$type<TaskEvent["metadata"]>().default({})
+    .notNull(),
+  note: text("note").$type<string | null>(),
 });
 
 export const interaction_drafts = pgTable("interaction_drafts", {

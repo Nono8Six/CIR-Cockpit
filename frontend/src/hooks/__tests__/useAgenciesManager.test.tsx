@@ -38,6 +38,7 @@ vi.mock('@/services/errors/notifySuccess', () => ({ notifySuccess: vi.fn() }));
 const createAgency = (overrides?: Partial<Agency>): Agency => ({
   id: overrides?.id ?? 'agency-1',
   name: overrides?.name ?? 'Agence A',
+  timezone: overrides?.timezone ?? 'Europe/Paris',
   archived_at: overrides?.archived_at ?? null,
   created_at: overrides?.created_at ?? '2026-01-01T10:00:00.000Z',
   updated_at: overrides?.updated_at ?? '2026-01-01T10:00:00.000Z'

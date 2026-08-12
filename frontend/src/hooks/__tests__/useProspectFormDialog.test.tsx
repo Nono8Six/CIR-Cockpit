@@ -49,6 +49,7 @@ const AGENCIES: Agency[] = [
   {
     id: AGENCY_ONE,
     name: 'Agence Paris',
+    timezone: 'Europe/Paris',
     created_at: '2026-01-01T00:00:00.000Z',
     updated_at: '2026-01-01T00:00:00.000Z',
     archived_at: null,
@@ -56,6 +57,7 @@ const AGENCIES: Agency[] = [
   {
     id: AGENCY_TWO,
     name: 'Agence Lyon',
+    timezone: 'Europe/Paris',
     created_at: '2026-01-01T00:00:00.000Z',
     updated_at: '2026-01-01T00:00:00.000Z',
     archived_at: null,
