@@ -2,8 +2,9 @@ import { assertEquals, assertThrows } from "std/assert";
 
 import {
   assertIdempotentCreateMatches,
-  canAssignTaskInAgency,
+  calculateNextTaskDueDate,
   canAddTaskNote,
+  canAssignTaskInAgency,
   canChangeTaskAssignment,
   canChangeTaskExecution,
   canCreateTaskInAgency,
@@ -11,6 +12,7 @@ import {
   getTaskStatusTransition,
   nextTaskEventOrder,
   normalizeDatabaseDates,
+  readTaskDbErrorCode,
   requireExpectedVersion,
 } from "./taskService.ts";
 
@@ -112,8 +114,16 @@ Deno.test("B3-3 lifecycle only permits documented transitions and records reopen
   assertEquals(getTaskStatusTransition("todo", "completed"), "status_changed");
   assertEquals(getTaskStatusTransition("completed", "todo"), "reopened");
   assertEquals(getTaskStatusTransition("canceled", "todo"), "reopened");
-  assertThrows(() => getTaskStatusTransition("todo", "todo"), Error, "transition");
-  assertThrows(() => getTaskStatusTransition("completed", "in_progress"), Error, "transition");
+  assertThrows(
+    () => getTaskStatusTransition("todo", "todo"),
+    Error,
+    "transition",
+  );
+  assertThrows(
+    () => getTaskStatusTransition("completed", "in_progress"),
+    Error,
+    "transition",
+  );
 });
 
 Deno.test("B3-3 field rights distinguish creator, responsible, contributor and follower", () => {
@@ -130,16 +140,38 @@ Deno.test("B3-3 field rights distinguish creator, responsible, contributor and f
   assertEquals(canChangeTaskExecution(follower, assignedTask), false);
   assertEquals(canChangeTaskAssignment(auth, assignedTask), true);
   assertEquals(canChangeTaskAssignment(responsible, assignedTask), false);
-  assertEquals(canAddTaskNote(contributor, assignedTask, [
-    { profile_id: contributorId },
-  ]), true);
-  assertEquals(canAddTaskNote(follower, assignedTask, [
-    { profile_id: followerId },
-  ]), true);
-  assertEquals(canAddTaskNote({ ...auth, userId: "35d1bfd0-dd2b-45de-8ac3-555555555555" }, assignedTask, []), false);
+  assertEquals(
+    canAddTaskNote(contributor, assignedTask, [
+      { profile_id: contributorId },
+    ]),
+    true,
+  );
+  assertEquals(
+    canAddTaskNote(follower, assignedTask, [
+      { profile_id: followerId },
+    ]),
+    true,
+  );
+  assertEquals(
+    canAddTaskNote(
+      { ...auth, userId: "35d1bfd0-dd2b-45de-8ac3-555555555555" },
+      assignedTask,
+      [],
+    ),
+    false,
+  );
 
-  const agencyAdmin = { ...auth, userId: "35d1bfd0-dd2b-45de-8ac3-666666666666", role: "agency_admin" as const };
-  const superAdmin = { ...auth, userId: "35d1bfd0-dd2b-45de-8ac3-777777777777", agencyIds: [], isSuperAdmin: true };
+  const agencyAdmin = {
+    ...auth,
+    userId: "35d1bfd0-dd2b-45de-8ac3-666666666666",
+    role: "agency_admin" as const,
+  };
+  const superAdmin = {
+    ...auth,
+    userId: "35d1bfd0-dd2b-45de-8ac3-777777777777",
+    agencyIds: [],
+    isSuperAdmin: true,
+  };
   assertEquals(canChangeTaskAssignment(agencyAdmin, assignedTask), true);
   assertEquals(canChangeTaskExecution(agencyAdmin, assignedTask), true);
   assertEquals(canChangeTaskExecution(superAdmin, assignedTask), true);
@@ -150,4 +182,42 @@ Deno.test("B3-3 increments event order and rejects an obsolete task version", ()
   assertEquals(nextTaskEventOrder(7), 8);
   requireExpectedVersion(task, 1);
   assertThrows(() => requireExpectedVersion(task, 2), Error, "Rechargez-la");
+});
+
+Deno.test("B3-4 calculates recurrence from the local completion date without month overflow", () => {
+  assertEquals(
+    calculateNextTaskDueDate(
+      "2026-01-31T22:30:00.000Z",
+      "Europe/Paris",
+      1,
+      "month",
+    ),
+    "2026-02-28",
+  );
+  assertEquals(
+    calculateNextTaskDueDate(
+      "2026-03-28T23:30:00.000Z",
+      "Europe/Paris",
+      2,
+      "week",
+    ),
+    "2026-04-12",
+  );
+  assertEquals(
+    calculateNextTaskDueDate(
+      "2028-02-28T23:30:00.000Z",
+      "Europe/Paris",
+      1,
+      "day",
+    ),
+    "2028-03-01",
+  );
+});
+
+Deno.test("B3-4 reads a PostgreSQL code wrapped by the Drizzle transaction error", () => {
+  assertEquals(
+    readTaskDbErrorCode({ cause: { cause: { code: "23505" } } }),
+    "23505",
+  );
+  assertEquals(readTaskDbErrorCode({ cause: new Error("échec") }), undefined);
 });

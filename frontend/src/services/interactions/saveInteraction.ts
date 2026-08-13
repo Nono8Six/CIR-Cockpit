@@ -72,7 +72,6 @@ export const saveInteraction = (interaction: InteractionDraft): ResultAsync<Inte
         contact_phone: interaction.contact_phone ?? undefined,
         contact_email: interaction.contact_email ?? undefined,
         order_ref: interaction.order_ref ?? undefined,
-        reminder_at: interaction.reminder_at ?? undefined,
         notes: interaction.notes ?? undefined,
         entity_id: interaction.entity_id ?? undefined,
         contact_id: interaction.contact_id ?? undefined,

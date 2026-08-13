@@ -23,7 +23,6 @@ const buildInteraction = (overrides: Partial<Interaction>): Interaction => ({
   mega_families: overrides.mega_families ?? [],
   notes: overrides.notes ?? null,
   order_ref: overrides.order_ref ?? null,
-  reminder_at: overrides.reminder_at ?? null,
   stage: overrides.stage ?? null,
   stage_changed_at: overrides.stage_changed_at ?? null,
   amount: overrides.amount ?? null,

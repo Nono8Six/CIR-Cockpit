@@ -39,7 +39,6 @@ const interaction: InteractionDraft = {
   mega_families: undefined,
   subject: 'Demande de devis',
   order_ref: '',
-  reminder_at: undefined,
   notes: '',
   timeline: [],
   status_id: 'status-1'
@@ -70,8 +69,7 @@ describe('CockpitReadonlyView', () => {
           contact_name: 'Test pub',
           contact_phone: '05 58 96 52 12',
           subject: 'Appel publicitaire',
-          notes: 'Appel publicitaire pour proposer une offre fournisseur.',
-          reminder_at: '2026-05-15T08:00:00Z'
+          notes: 'Appel publicitaire pour proposer une offre fournisseur.'
         }}
         config={config}
         onStartNew={vi.fn()}
@@ -100,8 +98,7 @@ describe('CockpitReadonlyView', () => {
           contact_name: 'Arnaud FERRON',
           contact_phone: '05 58 36 96 19',
           subject: 'Synchronisation atelier',
-          notes: 'Point rapide avec l’agence sur le dossier.',
-          reminder_at: '2026-05-15T08:00:00Z'
+          notes: 'Point rapide avec l’agence sur le dossier.'
         }}
         config={config}
         onStartNew={vi.fn()}

@@ -12,6 +12,7 @@ interface EntityContactsPanelSectionProps {
   onAddContact: () => void;
   onEditContact: (contact: ClientContact) => void;
   onDeleteContact: (contact: ClientContact) => void;
+  onOpenContactTasks?: (contact: ClientContact) => void;
 }
 
 const EntityContactsPanelSection = ({
@@ -22,6 +23,7 @@ const EntityContactsPanelSection = ({
   onAddContact,
   onEditContact,
   onDeleteContact
+  ,onOpenContactTasks
 }: EntityContactsPanelSectionProps) => (
   <section className="flex min-h-0 flex-col gap-3">
     <div className="flex items-center justify-between gap-3">
@@ -54,6 +56,7 @@ const EntityContactsPanelSection = ({
           focusedContactId={focusedContactId}
           onEdit={onEditContact}
           onDelete={onDeleteContact}
+          onOpenTasks={onOpenContactTasks}
           emptyLabel={emptyLabel}
         />
       )}

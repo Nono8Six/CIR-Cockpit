@@ -32,7 +32,6 @@ const interactionDraftValuesSnapshotSchema = z.strictObject({
   mega_families: z.array(z.string()).optional(),
   status_id: z.string().optional(),
   order_ref: z.string().optional(),
-  reminder_at: z.string().optional(),
   notes: z.string().optional(),
   entity_id: z.string().optional(),
   contact_id: z.string().optional()

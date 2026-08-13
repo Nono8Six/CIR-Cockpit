@@ -21,7 +21,6 @@ const buildParams = (overrides: Partial<Parameters<typeof useCockpitDerivedState
   megaFamilies: [],
   statusId: 'status-default',
   orderRef: '',
-  reminderAt: '',
   notes: '',
   entityId: '',
   contactId: '',

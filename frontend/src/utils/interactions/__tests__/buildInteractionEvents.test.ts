@@ -26,7 +26,6 @@ const buildInteraction = (): Interaction => ({
   mega_families: ['Freinage'],
   notes: null,
   order_ref: null,
-  reminder_at: null,
   stage: null,
   stage_changed_at: null,
   amount: null,
@@ -69,7 +68,6 @@ describe('buildInteractionEvents', () => {
     const { events, updates } = buildInteractionEvents({
       interaction,
       statusId: 'status-done',
-      reminder: interaction.reminder_at || '',
       amount: interaction.amount === null ? '' : String(interaction.amount),
       orderRef: interaction.order_ref || '',
       note: '',
@@ -92,7 +90,6 @@ describe('buildInteractionEvents', () => {
     const { events, updates } = buildInteractionEvents({
       interaction,
       statusId: interaction.status_id ?? '',
-      reminder: interaction.reminder_at || '',
       amount: interaction.amount === null ? '' : String(interaction.amount),
       orderRef: interaction.order_ref || '',
       note: 'Client rappele',
@@ -110,7 +107,6 @@ describe('buildInteractionEvents', () => {
     const { events, updates } = buildInteractionEvents({
       interaction,
       statusId: interaction.status_id ?? '',
-      reminder: interaction.reminder_at || '',
       amount: interaction.amount === null ? '' : String(interaction.amount),
       orderRef: interaction.order_ref || '',
       note: '   ',
@@ -128,7 +124,6 @@ describe('buildInteractionEvents', () => {
     const { events, updates } = buildInteractionEvents({
       interaction,
       statusId: interaction.status_id ?? '',
-      reminder: interaction.reminder_at || '',
       amount: '12400.5',
       orderRef: interaction.order_ref || '',
       note: '',
@@ -150,7 +145,6 @@ describe('buildInteractionEvents', () => {
     const { events, updates } = buildInteractionEvents({
       interaction,
       statusId: interaction.status_id ?? '',
-      reminder: interaction.reminder_at || '',
       amount: '-3',
       orderRef: interaction.order_ref || '',
       note: '',

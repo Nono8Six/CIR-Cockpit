@@ -2153,7 +2153,6 @@ export type Database = {
           notes: string | null
           order_ref: string | null
           quote_sent_at: string | null
-          reminder_at: string | null
           stage: string | null
           stage_changed_at: string | null
           status: string
@@ -2186,7 +2185,6 @@ export type Database = {
           notes?: string | null
           order_ref?: string | null
           quote_sent_at?: string | null
-          reminder_at?: string | null
           stage?: string | null
           stage_changed_at?: string | null
           status: string
@@ -2219,7 +2217,6 @@ export type Database = {
           notes?: string | null
           order_ref?: string | null
           quote_sent_at?: string | null
-          reminder_at?: string | null
           stage?: string | null
           stage_changed_at?: string | null
           status?: string

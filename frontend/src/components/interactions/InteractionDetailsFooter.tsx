@@ -5,8 +5,6 @@ type InteractionDetailsFooterProps = {
   statusOptions: { id: string; label: string; isHistorical?: boolean }[];
   statusId: string;
   onStatusChange: (value: string) => void;
-  reminder: string;
-  onReminderChange: (value: string) => void;
   amount: string;
   onAmountChange: (value: string) => void;
   orderRef: string;
@@ -22,8 +20,6 @@ const InteractionDetailsFooter = ({
   statusOptions,
   statusId,
   onStatusChange,
-  reminder,
-  onReminderChange,
   amount,
   onAmountChange,
   orderRef,
@@ -39,8 +35,6 @@ const InteractionDetailsFooter = ({
       statusOptions={statusOptions}
       statusId={statusId}
       onStatusChange={onStatusChange}
-      reminder={reminder}
-      onReminderChange={onReminderChange}
       amount={amount}
       onAmountChange={onAmountChange}
       orderRef={orderRef}

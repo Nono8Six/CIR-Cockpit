@@ -1,8 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { Channel, type AgencyStatus, type Interaction } from '@/types';
 import {
-  buildMyDayView,
   countWorkQueueInteractions,
   createInteractionStatusPredicates,
   inferStatusCategoryFromLabel,
@@ -28,7 +27,6 @@ const buildInteraction = (overrides: Partial<Interaction> = {}): Interaction => 
   mega_families: ['Freinage'],
   notes: null,
   order_ref: null,
-  reminder_at: null,
   status: 'Nouveau',
   status_id: null,
   status_is_terminal: false,
@@ -60,15 +58,6 @@ describe('createInteractionStatusPredicates', () => {
     ...overrides
   });
 
-  beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-02-15T12:00:00.000Z'));
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
   it('resolves status meta by id, then by resolved label', () => {
     const status = buildStatus();
     const { getStatusMeta } = createInteractionStatusPredicates(
@@ -80,99 +69,23 @@ describe('createInteractionStatusPredicates', () => {
     expect(getStatusMeta(buildInteraction({ status: 'Ancien', status_id: null }))).toBe(status);
   });
 
-  it('flags overdue reminders only on open interactions', () => {
-    const doneStatus = buildStatus({ id: 'status-done', category: 'done', is_terminal: true, is_default: false });
-    const { isReminderOverdue } = createInteractionStatusPredicates([buildStatus(), doneStatus]);
-
-    const overdueOpen = buildInteraction({
-      status_id: 'status-1',
-      reminder_at: '2026-02-10T09:00:00.000Z'
-    });
-    const overdueDone = buildInteraction({
-      status_id: 'status-done',
-      reminder_at: '2026-02-10T09:00:00.000Z'
-    });
-    const futureReminder = buildInteraction({
-      status_id: 'status-1',
-      reminder_at: '2026-02-20T09:00:00.000Z'
-    });
-
-    expect(isReminderOverdue(overdueOpen)).toBe(true);
-    expect(isReminderOverdue(overdueDone)).toBe(false);
-    expect(isReminderOverdue(futureReminder)).toBe(false);
-  });
-
-  it('counts the work queue as todo or overdue interactions, excluding done', () => {
+  it('counts the work queue from todo statuses and excludes in-progress or done interactions', () => {
     const todoStatus = buildStatus();
     const inProgressStatus = buildStatus({ id: 'status-progress', label: 'En cours', category: 'in_progress', is_default: false });
     const doneStatus = buildStatus({ id: 'status-done', label: 'Terminé', category: 'done', is_terminal: true, is_default: false });
     const statuses = [todoStatus, inProgressStatus, doneStatus];
 
     const todo = buildInteraction({ id: 'todo', status_id: 'status-1' });
-    const overdueInProgress = buildInteraction({
-      id: 'overdue',
-      status_id: 'status-progress',
-      reminder_at: '2026-02-10T09:00:00.000Z'
-    });
+    const inProgress = buildInteraction({ id: 'progress', status_id: 'status-progress' });
     const quietInProgress = buildInteraction({ id: 'quiet', status_id: 'status-progress' });
     const done = buildInteraction({ id: 'done', status_id: 'status-done' });
 
     const predicates = createInteractionStatusPredicates(statuses);
     expect(isInteractionInWorkQueue(todo, predicates)).toBe(true);
-    expect(isInteractionInWorkQueue(overdueInProgress, predicates)).toBe(true);
+    expect(isInteractionInWorkQueue(inProgress, predicates)).toBe(false);
     expect(isInteractionInWorkQueue(quietInProgress, predicates)).toBe(false);
     expect(isInteractionInWorkQueue(done, predicates)).toBe(false);
 
-    expect(countWorkQueueInteractions([todo, overdueInProgress, quietInProgress, done], statuses)).toBe(2);
-  });
-});
-
-describe('buildMyDayView', () => {
-  const isStatusDone = (interaction: Interaction) => Boolean(interaction.status_is_terminal);
-  const isStatusTodo = (interaction: Interaction) => interaction.status === 'A traiter';
-  const now = new Date('2026-02-15T12:00:00.000Z');
-
-  it('classe les dossiers ouverts en quatre groupes par echeance', () => {
-    const overdue = buildInteraction({ id: 'overdue', reminder_at: '2026-02-10T09:00:00.000Z' });
-    const dueToday = buildInteraction({ id: 'due-today', reminder_at: '2026-02-15T18:00:00.000Z' });
-    const upcoming = buildInteraction({ id: 'upcoming', reminder_at: '2026-02-25T09:00:00.000Z' });
-    const toPlan = buildInteraction({ id: 'to-plan', status: 'A traiter', reminder_at: null });
-    const quietNoReminder = buildInteraction({ id: 'quiet', status: 'En cours', reminder_at: null });
-    const done = buildInteraction({ id: 'done', status_is_terminal: true });
-
-    const view = buildMyDayView(
-      [dueToday, overdue, toPlan, done, upcoming, quietNoReminder],
-      { isStatusDone, isStatusTodo },
-      now
-    );
-
-    expect(view.groups.overdue.map((row) => row.id)).toEqual(['overdue']);
-    expect(view.groups.dueToday.map((row) => row.id)).toEqual(['due-today']);
-    expect(view.groups.upcoming.map((row) => row.id)).toEqual(['upcoming']);
-    expect(view.groups.toPlan.map((row) => row.id)).toEqual(['to-plan']);
-
-    // Un dossier en cours sans rappel n'est ni a planifier ni ailleurs (pas d'action requise).
-    const allGroupIds = [
-      ...view.groups.overdue,
-      ...view.groups.dueToday,
-      ...view.groups.upcoming,
-      ...view.groups.toPlan
-    ].map((row) => row.id);
-    expect(allGroupIds).toEqual(['overdue', 'due-today', 'upcoming', 'to-plan']);
-  });
-
-  it('calcule les indicateurs sur les dossiers ouverts', () => {
-    const overdue = buildInteraction({ id: 'overdue', reminder_at: '2026-02-10T09:00:00.000Z' });
-    const dueToday = buildInteraction({ id: 'due-today', reminder_at: '2026-02-15T18:00:00.000Z' });
-    const quiet = buildInteraction({ id: 'quiet', status: 'En cours' });
-    const done = buildInteraction({ id: 'done', status_is_terminal: true });
-
-    const view = buildMyDayView([overdue, dueToday, quiet, done], { isStatusDone, isStatusTodo }, now);
-
-    expect(view.kpis.overdueCount).toBe(1);
-    expect(view.kpis.dueTodayCount).toBe(1);
-    expect(view.kpis.openCount).toBe(3);
-    // created_at fixe au 2026-02-01T09:00Z pour toutes les fixtures -> ~14 jours.
-    expect(view.kpis.averageOpenAgeDays).toBe(14);
+    expect(countWorkQueueInteractions([todo, inProgress, quietInProgress, done], statuses)).toBe(1);
   });
 });

@@ -21,6 +21,7 @@ interface SettingsProps {
   config: AgencyConfig;
   canEditAgencySettings: boolean;
   agencyId: string | null;
+  canManageTaskTypes?: boolean;
 }
 
 /**
@@ -36,7 +37,8 @@ interface SettingsProps {
 const Settings = ({
   config,
   canEditAgencySettings,
-  agencyId
+  agencyId,
+  canManageTaskTypes = false
 }: SettingsProps) => {
   const snapshotQuery = useConfigSnapshot(agencyId, Boolean(agencyId));
   const usageQuery = useQuery<ConfigUsageSnapshot>({
@@ -139,11 +141,13 @@ const Settings = ({
             isDirty={isDirty}
             onSectionChange={setActiveSection}
             unresolvedCount={usage?.totals.unresolved ?? 0}
+            canManageTaskTypes={canManageTaskTypes}
           />
         </div>
         <div className="overflow-auto bg-background p-2 sm:p-3">
           <SettingsSections
             readOnly={readOnly}
+            canManageTaskTypes={canManageTaskTypes}
             activeSection={activeSection}
             canEditAgencySettings={canEditAgencySettings}
             usage={usage}

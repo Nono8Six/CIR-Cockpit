@@ -4,6 +4,7 @@ import type { AppShellNavItem } from '@/app/appConstants';
 export const APP_TAB_PATHS: Record<AppTab, string> = {
   cockpit: '/cockpit',
   dashboard: '/dashboard',
+  tasks: '/tasks',
   settings: '/settings',
   clients: '/clients',
   suppliers: '/suppliers',
@@ -85,6 +86,9 @@ export const getTabFromPathname = (pathname: string): AppTab => {
   }
   if (normalizedPath === APP_TAB_PATHS.dashboard || normalizedPath.startsWith(`${APP_TAB_PATHS.dashboard}/`)) {
     return 'dashboard';
+  }
+  if (normalizedPath === APP_TAB_PATHS.tasks || normalizedPath.startsWith(`${APP_TAB_PATHS.tasks}/`)) {
+    return 'tasks';
   }
   if (normalizedPath === APP_TAB_PATHS.cockpit || normalizedPath.startsWith(`${APP_TAB_PATHS.cockpit}/`)) {
     return 'cockpit';

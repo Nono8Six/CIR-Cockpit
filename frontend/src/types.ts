@@ -15,6 +15,7 @@ export type StatusCategory = 'todo' | 'in_progress' | 'done';
 export type AppTab =
   | 'cockpit'
   | 'dashboard'
+  | 'tasks'
   | 'settings'
   | 'clients'
   | 'suppliers'

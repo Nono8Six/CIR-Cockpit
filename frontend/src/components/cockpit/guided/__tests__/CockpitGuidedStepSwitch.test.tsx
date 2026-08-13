@@ -183,7 +183,6 @@ const buildSubjectRightPaneProps = (
   subjectField: buildField('subject'),
   notesField: buildField('notes'),
   orderRefField: buildField('order_ref'),
-  reminderField: buildField('reminder_at'),
   errors: {},
   labelStyle: '',
   footerLabelStyle: '',
@@ -200,8 +199,6 @@ const buildSubjectRightPaneProps = (
   },
   hasStatuses: true,
   statusHelpId: 'status-help',
-  reminderAt: '',
-  onSetReminder: vi.fn(),
   onReset: vi.fn(),
   families: ['MOTORISATION', 'AUTOMATISME'],
   megaFamilies: [],
@@ -282,7 +279,6 @@ describe('CockpitGuidedStepSwitch', () => {
           subjectField: buildField('subject'),
           notesField: buildField('notes'),
           orderRefField: buildField('order_ref'),
-          reminderField: buildField('reminder_at'),
           errors: {},
           labelStyle: '',
           footerLabelStyle: '',
@@ -299,8 +295,6 @@ describe('CockpitGuidedStepSwitch', () => {
           },
           hasStatuses: true,
           statusHelpId: 'status-help',
-          reminderAt: '',
-          onSetReminder: vi.fn(),
           onReset: vi.fn()
         } as unknown as CockpitFormRightPaneProps}
         entityProps={entityProps}
@@ -447,7 +441,6 @@ describe('CockpitGuidedStepSwitch', () => {
           subjectField: buildField('subject'),
           notesField: buildField('notes'),
           orderRefField: buildField('order_ref'),
-          reminderField: buildField('reminder_at'),
           errors: {},
           labelStyle: '',
           footerLabelStyle: ''
@@ -493,7 +486,6 @@ describe('CockpitGuidedStepSwitch', () => {
           subjectField: buildField('subject'),
           notesField: buildField('notes'),
           orderRefField: buildField('order_ref'),
-          reminderField: buildField('reminder_at'),
           errors: {},
           labelStyle: '',
           footerLabelStyle: ''
@@ -540,7 +532,6 @@ describe('CockpitGuidedStepSwitch', () => {
           subjectField: buildField('subject'),
           notesField: buildField('notes'),
           orderRefField: buildField('order_ref'),
-          reminderField: buildField('reminder_at'),
           errors: {},
           labelStyle: '',
           footerLabelStyle: ''

@@ -47,7 +47,6 @@ const buildInteraction = (overrides: Partial<Interaction> = {}): Interaction => 
   mega_families: ['Freinage'],
   notes: null,
   order_ref: null,
-  reminder_at: null,
   status: 'Nouveau',
   status_id: null,
   status_is_terminal: false,
@@ -223,7 +222,7 @@ describe('useDashboardState', () => {
   });
 
   it('calcule les KPI de la vue d ensemble sur tout le perimetre', () => {
-    const overdue = buildInteraction({ id: 'overdue', reminder_at: daysAgo(3) });
+    const open = buildInteraction({ id: 'open' });
     const won = buildInteraction({
       id: 'won',
       stage: 'won',
@@ -241,7 +240,7 @@ describe('useDashboardState', () => {
     const { result } = renderHook(
       () =>
         useDashboardState({
-          interactions: [overdue, won, lost, openDeal],
+          interactions: [open, won, lost, openDeal],
           statuses: [],
           agencyId: 'agency-1',
           onRequestConvert: vi.fn()
@@ -249,8 +248,7 @@ describe('useDashboardState', () => {
       { wrapper: buildWrapper() }
     );
 
-    expect(result.current.kpis.overdueCount).toBe(1);
-    expect(result.current.kpis.oldestOverdueDays).toBe(3);
+    expect(result.current.kpis.openCount).toBe(4);
     expect(result.current.kpis.wonCount30d).toBe(1);
     expect(result.current.kpis.lostCount30d).toBe(1);
     expect(result.current.kpis.conversionRate).toBe(50);
@@ -258,8 +256,8 @@ describe('useDashboardState', () => {
   });
 
   it('la recherche filtre la table et la file mais pas les KPI', () => {
-    const alpha = buildInteraction({ id: 'alpha', company_name: 'Garage Alpha', reminder_at: daysAgo(1) });
-    const beta = buildInteraction({ id: 'beta', company_name: 'Atelier Beta', reminder_at: daysAgo(2) });
+    const alpha = buildInteraction({ id: 'alpha', company_name: 'Garage Alpha' });
+    const beta = buildInteraction({ id: 'beta', company_name: 'Atelier Beta' });
 
     const { result } = renderHook(
       () =>
@@ -277,7 +275,7 @@ describe('useDashboardState', () => {
     });
 
     expect(result.current.tableRows.map((row) => row.interaction.id)).toEqual(['alpha']);
-    expect(result.current.kpis.overdueCount).toBe(2);
+    expect(result.current.kpis.openCount).toBe(2);
   });
 
   it('classe un ancien statut selon son rattachement historique', () => {

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import type { DirectoryRecord, DirectoryRouteRef } from '../../../../shared/schemas/system/directory.schema';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
@@ -28,6 +28,9 @@ import { useAuditLogs } from '../../hooks/admin/audit/useAuditLogs';
 import { normalizeError } from '@/services/errors/normalizeError';
 import { notifySuccess } from '@/services/errors/notifySuccess';
 import type { Interaction } from '@/types';
+import TaskContextPanel from '@/components/tasks/TaskContextPanel';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/feedback/Dialog';
+import type { ClientContact } from '@/types';
 
 import ClientDirectoryInteractionDetailsSheet from './ClientDirectoryInteractionDetailsSheet';
 import ClientDirectoryRecordActionsBar from './ClientDirectoryRecordActionsBar';
@@ -85,6 +88,7 @@ const ClientDirectoryRecordDetails = ({
   onDeleteSuccess,
 }: ClientDirectoryRecordDetailsProps) => {
   const sessionState = useAppSessionStateContext();
+  const [taskContact, setTaskContact] = useState<ClientContact | null>(null);
   const navigate = useNavigate();
   const directorySearch = validateDirectorySearch(Object.fromEntries(new URLSearchParams(globalThis.location.search)));
   const reducedMotion = useReducedMotion();
@@ -380,6 +384,7 @@ const ClientDirectoryRecordDetails = ({
                 onAddContact={contactActions.requestAddContact}
                 onEditContact={contactActions.requestEditContact}
                 onDeleteContact={contactActions.requestDeleteContact}
+                onOpenContactTasks={setTaskContact}
               />
             }
             interactionsSection={
@@ -399,6 +404,15 @@ const ClientDirectoryRecordDetails = ({
                   void auditLogsQuery.refetch();
                 }}
               />
+            }
+            tasksSection={
+              sessionState.session ? <TaskContextPanel
+                agencyId={recordAgencyId!}
+                userId={sessionState.session.user.id}
+                userRole={userRole}
+                organizationId={record.id}
+                context={{ organizationId: record.id, contextLabel: record.name }}
+              /> : null
             }
           />
 
@@ -445,6 +459,13 @@ const ClientDirectoryRecordDetails = ({
             entityId={record.id}
             onSave={contactActions.saveContact}
           />
+
+          <Dialog open={Boolean(taskContact)} onOpenChange={(open) => { if (!open) setTaskContact(null); }}>
+            <DialogContent className="w-[min(94vw,700px)] max-w-none">
+              <DialogHeader><DialogTitle>Tâches du contact</DialogTitle><DialogDescription>Consultez ou planifiez les actions liées à ce contact.</DialogDescription></DialogHeader>
+              {taskContact && sessionState.session ? <TaskContextPanel agencyId={recordAgencyId!} userId={sessionState.session.user.id} userRole={userRole} organizationId={record.id} contactId={taskContact.id} context={{ organizationId: record.id, contactId: taskContact.id, contextLabel: [taskContact.first_name, taskContact.last_name].filter(Boolean).join(' ') || record.name }} /> : null}
+            </DialogContent>
+          </Dialog>
 
           <ConfirmDialog
             open={Boolean(contactActions.contactToDelete)}

@@ -1,12 +1,10 @@
 import type { AgencyStatus, Interaction, InteractionUpdate, TimelineEvent } from '@/types';
 import { formatPipelineAmount } from '@/utils/dashboard/dashboardPipeline';
-import { formatDateTime } from '@/utils/date/formatDateTime';
 import { getNowIsoString } from '@/utils/date/getNowIsoString';
 
 type BuildInteractionEventsInput = {
   interaction: Interaction;
   statusId: string;
-  reminder: string;
   amount: string;
   orderRef: string;
   note: string;
@@ -31,13 +29,11 @@ export const parseAmountInput = (value: string): number | null | undefined => {
 export const buildInteractionEvents = ({
   interaction,
   statusId,
-  reminder,
   amount,
   orderRef,
   note,
   statusById
 }: BuildInteractionEventsInput) => {
-  const safeReminder = interaction.reminder_at || '';
   const safeOrderRef = interaction.order_ref || '';
   const safeAmount = interaction.amount ?? null;
   const nextAmount = parseAmountInput(amount);
@@ -45,7 +41,6 @@ export const buildInteractionEvents = ({
 
   if (!note.trim()
     && statusId === (interaction.status_id ?? '')
-    && reminder === safeReminder
     && !amountChanged
     && orderRef === safeOrderRef) {
     return { events: [], updates: null };
@@ -80,17 +75,6 @@ export const buildInteractionEvents = ({
     if (nextStatus) {
       updates.status_is_terminal = nextStatus.is_terminal || nextStatus.category === 'done';
     }
-  }
-
-  if (reminder !== safeReminder) {
-    const prettyDate = reminder ? formatDateTime(reminder) : 'Aucun';
-    events.push({
-      id: `${Date.now()}rm`,
-      date: now,
-      type: 'reminder_change',
-      content: `Rappel mis à jour : ${prettyDate}`
-    });
-    updates.reminder_at = reminder;
   }
 
   if (amountChanged) {

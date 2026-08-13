@@ -36,6 +36,10 @@ const openCockpitTab = async (page: Page): Promise<void> => {
 const resetCockpitForm = async (page: Page): Promise<void> => {
   const resetButton = page.getByRole('button', { name: /réinitialiser la saisie en cours|recommencer/i });
   if (!(await resetButton.isVisible().catch(() => false))) return;
+  const currentSubject = await page.getByLabel(/titre/i).inputValue().catch(() => '');
+  if (currentSubject && !currentSubject.startsWith('E2E cockpit')) {
+    throw new Error(`Le compte E2E porte déjà un brouillon non isolé: ${currentSubject}`);
+  }
   const draftDeleted = page.waitForResponse(
     (response) => response.request().method() === 'POST'
       && response.request().postData()?.includes('"action":"draft_delete"') === true,

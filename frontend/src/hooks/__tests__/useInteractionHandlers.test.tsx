@@ -27,7 +27,6 @@ const DEFAULT_VALUES: InteractionFormValues = {
   status_id: '',
   interaction_type: '',
   order_ref: '',
-  reminder_at: '',
   notes: '',
   entity_id: '',
   contact_id: ''

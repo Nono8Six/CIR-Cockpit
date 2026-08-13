@@ -8,7 +8,6 @@ import { Input } from '../../ui/inputs/basic/Input';
 import { Kbd } from '../../ui/data-display/Kbd';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/inputs/selects/Select';
 import { cn } from '@/lib/utils';
-import CockpitReminderControl from '../right/CockpitReminderControl';
 import CockpitStatusControl from '../right/CockpitStatusControl';
 import CockpitGuidedQuestionFrame from './CockpitGuidedQuestionFrame';
 
@@ -301,16 +300,6 @@ const CockpitGuidedDetailsQuestion = ({
             ) : null}
           </div>
 
-          <div className="px-5 py-4 bg-card focus-within:bg-surface-1/30 transition-all duration-150 flex flex-col justify-center min-h-[85px]">
-            <CockpitReminderControl
-              footerLabelStyle={refinedLabelStyle}
-              reminderField={rightPaneProps.reminderField}
-              reminderAt={rightPaneProps.reminderAt}
-              onSetReminder={rightPaneProps.onSetReminder}
-              layout="stacked"
-              variant="fused"
-            />
-          </div>
         </div>
 
         {showProductFamilies ? (

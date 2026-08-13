@@ -65,7 +65,6 @@ const setupDashboardFixture = async (page: Page) => {
           mega_families: ['Freinage', 'Pneumatique'],
           notes: null,
           order_ref: 'P06-001',
-          reminder_at: null,
           status: 'Nouveau',
           status_id: null,
           status_is_terminal: false,

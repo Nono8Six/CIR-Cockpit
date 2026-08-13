@@ -30,7 +30,7 @@ export const useDashboardStatusHelpers = (
     [resolutions, statuses],
   );
 
-  const { getStatusMeta, isStatusDone, isStatusTodo, isReminderOverdue } = predicates;
+  const { getStatusMeta, isStatusDone, isStatusTodo } = predicates;
 
   const getStatusBadgeClass = useCallback(
     (interaction: Interaction) => {
@@ -62,6 +62,5 @@ export const useDashboardStatusHelpers = (
     isStatusDone,
     isStatusTodo,
     getStatusBadgeClass,
-    isReminderOverdue,
   };
 };

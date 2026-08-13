@@ -58,7 +58,6 @@ const BASE_VALUES: InteractionFormValues = {
   status_id: 'status-1',
   interaction_type: 'Devis',
   order_ref: '',
-  reminder_at: '',
   notes: 'Note',
   entity_id: '',
   contact_id: ''
@@ -217,7 +216,6 @@ describe('useInteractionSubmit', () => {
         mega_families: [],
         order_ref: '',
         status_id: null,
-        reminder_at: undefined
       })
     );
   });
@@ -297,7 +295,6 @@ describe('useInteractionSubmit', () => {
         mega_families: [],
         order_ref: '',
         status_id: null,
-        reminder_at: undefined,
         entity_id: undefined,
         contact_id: undefined
       })
@@ -371,7 +368,6 @@ describe('useInteractionSubmit', () => {
         mega_families: [],
         order_ref: '',
         status_id: null,
-        reminder_at: undefined,
         entity_id: 'supplier-1',
         contact_id: undefined
       })

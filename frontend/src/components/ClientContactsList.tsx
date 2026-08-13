@@ -1,4 +1,4 @@
-import { Pencil, Trash2 } from 'lucide-react';
+import { ListChecks, Pencil, Trash2 } from 'lucide-react';
 
 import EntityContactRow from '@/components/entity-contact/EntityContactRow';
 import { getEntityContactName } from '@/components/entity-contact/entityContactRow.utils';
@@ -10,6 +10,7 @@ interface ClientContactsListProps {
   focusedContactId: string | null;
   onEdit: (contact: ClientContact) => void;
   onDelete: (contact: ClientContact) => void;
+  onOpenTasks?: (contact: ClientContact) => void;
   emptyLabel?: string;
 }
 
@@ -18,6 +19,7 @@ const ClientContactsList = ({
   focusedContactId,
   onEdit,
   onDelete,
+  onOpenTasks,
   emptyLabel
 }: ClientContactsListProps) => {
   if (contacts.length === 0) {
@@ -40,6 +42,7 @@ const ClientContactsList = ({
             variant={isFocused ? 'focused' : 'default'}
             actions={(
               <>
+                {onOpenTasks ? <Button type="button" variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-foreground" onClick={() => onOpenTasks(contact)} aria-label={`Voir les tâches de ${label}`} title="Tâches"><ListChecks size={13} aria-hidden="true" /></Button> : null}
                 <Button
                   type="button"
                   variant="ghost"

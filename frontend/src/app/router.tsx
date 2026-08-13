@@ -72,6 +72,12 @@ export const dashboardRoute = createRoute({
   component: () => null
 });
 
+export const tasksRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'tasks',
+  component: () => null
+});
+
 export const clientsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'clients',
@@ -289,6 +295,7 @@ const routeTree = rootRoute.addChildren([
   indexRoute,
   cockpitRoute,
   dashboardRoute,
+  tasksRoute,
   clientsRoute.addChildren([
     clientsIndexRoute,
     clientsCreateRoute,

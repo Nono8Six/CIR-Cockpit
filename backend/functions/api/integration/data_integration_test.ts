@@ -13,30 +13,6 @@ import {
 } from './helpers.ts';
 
 Deno.test({
-  name: 'GET data.activity-v2 returns the converted relational activity',
-  ignore: !CAN_RUN_NETWORK_INTEGRATION,
-  fn: async () => {
-    const context = await getContext();
-    const response = await getApi(
-      'data.activity-v2.by-legacy-interaction',
-      context.userToken,
-      { legacy_interaction_id: context.activityLegacyInteractionId },
-    );
-
-    assertEquals(response.status, 200);
-    assertEquals(readBoolean(response.payload, 'ok'), true);
-    const activity = readValue(response.payload, 'activity');
-    assertEquals(
-      readString(activity, 'legacy_interaction_id'),
-      context.activityLegacyInteractionId,
-    );
-    assertEquals(Array.isArray(readValue(activity, 'participants')), true);
-    assertEquals(Array.isArray(readValue(activity, 'sources')), true);
-    assertEquals(Array.isArray(readValue(activity, 'history')), true);
-  },
-});
-
-Deno.test({
   name: 'POST data routes forbid cross-agency mutations for non super-admin users',
   ignore: !CAN_RUN_NETWORK_INTEGRATION,
   fn: async () => {
@@ -344,7 +320,6 @@ Deno.test({
           status_id: context.statusId,
           interaction_type: context.interactionType,
           order_ref: '',
-          reminder_at: new Date().toISOString(),
           notes: '',
           entity_id: entityId,
           contact_id: contactId
@@ -383,6 +358,10 @@ Deno.test({
       );
       assertEquals(activityBeforeCorrection.status, 200);
       const activityBefore = readValue(activityBeforeCorrection.payload, 'activity');
+      assertEquals(readString(activityBefore, 'legacy_interaction_id'), interactionId);
+      assertEquals(Array.isArray(readValue(activityBefore, 'participants')), true);
+      assertEquals(Array.isArray(readValue(activityBefore, 'sources')), true);
+      assertEquals(Array.isArray(readValue(activityBefore, 'history')), true);
       const activityVersion = readValue(activityBefore, 'version');
       assertEquals(typeof activityVersion, 'number');
 

@@ -1,4 +1,4 @@
-import { Check, ChevronDown, ThumbsDown, Trophy } from 'lucide-react';
+import { ChevronDown, ThumbsDown, Trophy } from 'lucide-react';
 
 import {
   DropdownMenu,
@@ -19,18 +19,14 @@ const secondaryButtonClass =
 type DashboardDetailsActionsProps = {
   interaction: Interaction;
   isPending: boolean;
-  onCompleteReminder: (interaction: Interaction) => void;
-  onPostponeReminder: (interaction: Interaction, daysAhead: number) => void;
   onStageChange: (interaction: Interaction, stage: InteractionStage) => void;
   onRequestLost: (interaction: Interaction) => void;
 };
 
-// Actions rapides du dossier depuis le pilotage : relance et etape pipeline.
+// Actions rapides du dossier depuis le pilotage. Les échéances sont gérées dans Tâches.
 const DashboardDetailsActions = ({
   interaction,
   isPending,
-  onCompleteReminder,
-  onPostponeReminder,
   onStageChange,
   onRequestLost
 }: DashboardDetailsActionsProps) => {
@@ -41,39 +37,6 @@ const DashboardDetailsActions = ({
       className="flex flex-wrap items-center gap-1.5 border-b border-border-subtle bg-surface-1 px-4 py-2.5 sm:px-5"
       data-testid="dashboard-details-actions"
     >
-      {interaction.reminder_at ? (
-        <button
-          type="button"
-          disabled={isPending}
-          title="Relance faite : efface le rappel et journalise l'action"
-          onClick={() => onCompleteReminder(interaction)}
-          className="inline-flex h-8 items-center gap-1.5 rounded-md border border-success/30 bg-success/10 px-3 text-xs font-semibold text-success transition-colors hover:bg-success/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:pointer-events-none disabled:opacity-50"
-        >
-          <Check size={13} strokeWidth={3} aria-hidden="true" />
-          Relance faite
-        </button>
-      ) : null}
-      <button
-        type="button"
-        disabled={isPending}
-        title="Rappel dans 2 jours à 09:00"
-        onClick={() => onPostponeReminder(interaction, 2)}
-        className={secondaryButtonClass}
-      >
-        {interaction.reminder_at ? 'Reporter +2 j' : 'Planifier +2 j'}
-      </button>
-      <button
-        type="button"
-        disabled={isPending}
-        title="Rappel dans 1 semaine à 09:00"
-        onClick={() => onPostponeReminder(interaction, 7)}
-        className={secondaryButtonClass}
-      >
-        +1 sem
-      </button>
-
-      <span className="mx-1 hidden h-5 w-px bg-border sm:block" aria-hidden="true" />
-
       <DropdownMenu>
         <DropdownMenuTrigger
           disabled={isPending}

@@ -1,6 +1,5 @@
 import { useCallback, type ChangeEvent } from 'react';
 
-import { buildReminderDateTime } from '@/utils/date/buildReminderDateTime';
 import { formatFrenchPhone } from '@/utils/formatFrenchPhone';
 import { isSupplierRelationValue, relationValuesMatch } from '@/constants/relations';
 import { handleUiError } from '@/services/errors/handleUiError';
@@ -74,12 +73,11 @@ export const useInteractionHandlers = ({ setValue, clearErrors, normalizedRelati
   }, [activeAgencyId, handleSelectEntity, onConvertComplete, queryClient, saveClientMutation]);
 
   const toggleFamily = useCallback((family: string) => setFamiliesField((megaFamilies ?? []).includes(family) ? megaFamilies.filter(item => item !== family) : [...megaFamilies, family]), [megaFamilies, setFamiliesField]);
-  const setReminder = useCallback((type: '1h' | 'tomorrow' | '3days' | 'nextWeek') => setStringField('reminder_at', buildReminderDateTime(type)), [setStringField]);
 
   const handleSelectRecent = useCallback((interaction: Interaction, entity: Entity | null) => {
     setValue('channel', interaction.channel, { shouldDirty: true, shouldValidate: true });
     handleSelectEntity(entity);
   }, [handleSelectEntity, setValue]);
 
-  return { handlePhoneChange, handleContactFirstNameChange, handleContactLastNameChange, handleSelectEntity, handleSelectContact, handleContactSelect, handleSelectEntityFromSearch, handleSelectContactFromSearch, handleSaveClient, handleSaveProspect, handleSaveContact, handleConvertClient, handleSelectRecent, toggleFamily, setReminder };
+  return { handlePhoneChange, handleContactFirstNameChange, handleContactLastNameChange, handleSelectEntity, handleSelectContact, handleContactSelect, handleSelectEntityFromSearch, handleSelectContactFromSearch, handleSaveClient, handleSaveProspect, handleSaveContact, handleConvertClient, handleSelectRecent, toggleFamily };
 };

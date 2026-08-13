@@ -75,8 +75,6 @@ const Dashboard = ({
     getStatusBadgeClass,
     handleConvertRequest,
     handleInteractionUpdate,
-    handleCompleteReminder,
-    handlePostponeReminder,
     handleStageChange,
     isInteractionUpdatePending,
     interactionToDelete,
@@ -206,10 +204,6 @@ const Dashboard = ({
 
       <div className="flex min-h-0 flex-1 flex-col gap-2.5 pb-3 pt-2.5">
         <DashboardKpiRow
-          overdueCount={kpis.overdueCount}
-          oldestOverdueDays={kpis.oldestOverdueDays}
-          dueTodayCount={kpis.dueTodayCount}
-          toPlanCount={kpis.toPlanCount}
           openCount={kpis.openCount}
           openDossiersDelta={openDossiersDelta}
           pipelineOpenAmount={kpis.pipelineOpenAmount}
@@ -230,13 +224,6 @@ const Dashboard = ({
           onToggleSort={toggleSort}
           getStatusBadgeClass={getStatusBadgeClass}
           onSelectInteraction={handleSelectInteraction}
-          onCompleteReminder={(interaction) => {
-            void handleCompleteReminder(interaction);
-          }}
-          onPostponeReminder={(interaction, daysAhead) => {
-            void handlePostponeReminder(interaction, daysAhead);
-          }}
-          isUpdatePending={isInteractionUpdatePending}
           activeInteractionId={displayedActiveInteractionId}
         />
       </div>
@@ -257,12 +244,6 @@ const Dashboard = ({
             <DashboardDetailsActions
               interaction={displayedInteraction}
               isPending={isInteractionUpdatePending}
-              onCompleteReminder={(interaction) => {
-                void handleCompleteReminder(interaction);
-              }}
-              onPostponeReminder={(interaction, daysAhead) => {
-                void handlePostponeReminder(interaction, daysAhead);
-              }}
               onStageChange={(interaction, stage) => {
                 void handleStageChange(interaction, stage);
               }}

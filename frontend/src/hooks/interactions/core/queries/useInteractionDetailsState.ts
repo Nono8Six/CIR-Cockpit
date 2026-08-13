@@ -21,7 +21,6 @@ type InteractionDetailsStateInput = {
 const interactionDetailsFormSchema = z.strictObject({
   note: z.string().max(5000, 'Note trop longue'),
   statusId: z.string().trim().min(1, 'Statut requis'),
-  reminder: z.string(),
   amount: z
     .string()
     .refine((value) => parseAmountInput(value) !== undefined, 'Montant invalide'),
@@ -43,7 +42,6 @@ export const useInteractionDetailsState = ({
     defaultValues: {
       note: '',
       statusId: interaction.status_id ?? '',
-      reminder: interaction.reminder_at || '',
       amount: interaction.amount === null || interaction.amount === undefined ? '' : String(interaction.amount),
       orderRef: interaction.order_ref || ''
     },
@@ -53,7 +51,6 @@ export const useInteractionDetailsState = ({
   const { control, setValue, reset, handleSubmit } = form;
   const note = useWatch({ control, name: 'note' }) ?? '';
   const statusId = useWatch({ control, name: 'statusId' }) ?? '';
-  const reminder = useWatch({ control, name: 'reminder' }) ?? '';
   const amount = useWatch({ control, name: 'amount' }) ?? '';
   const orderRef = useWatch({ control, name: 'orderRef' }) ?? '';
 
@@ -96,21 +93,19 @@ export const useInteractionDetailsState = ({
     const amountUnchanged = parsedAmount === undefined || parsedAmount === (interaction.amount ?? null);
     return !note.trim()
       && statusId === (interaction.status_id ?? '')
-      && reminder === (interaction.reminder_at || '')
       && amountUnchanged
       && orderRef === (interaction.order_ref || '');
-  }, [amount, interaction.amount, interaction.order_ref, interaction.reminder_at, interaction.status_id, note, orderRef, reminder, statusId]);
+  }, [amount, interaction.amount, interaction.order_ref, interaction.status_id, note, orderRef, statusId]);
 
   useEffect(() => {
     reset({
       note: '',
       statusId: resolvedStatusId,
-      reminder: interaction.reminder_at || '',
       amount: interaction.amount === null || interaction.amount === undefined ? '' : String(interaction.amount),
       orderRef: interaction.order_ref || ''
     });
     setErrorMessage(null);
-  }, [interaction.amount, interaction.id, interaction.order_ref, interaction.reminder_at, reset, resolvedStatusId]);
+  }, [interaction.amount, interaction.id, interaction.order_ref, reset, resolvedStatusId]);
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [interaction.timeline]);
 
   const submitUpdates = handleSubmit((values) => {
@@ -118,7 +113,6 @@ export const useInteractionDetailsState = ({
     const { events, updates } = buildInteractionEvents({
       interaction,
       statusId: values.statusId,
-      reminder: values.reminder,
       amount: values.amount,
       orderRef: values.orderRef,
       note: values.note,
@@ -131,7 +125,6 @@ export const useInteractionDetailsState = ({
     const firstError = form.formState.errors.statusId?.message
       ?? form.formState.errors.note?.message
       ?? form.formState.errors.orderRef?.message
-      ?? form.formState.errors.reminder?.message
       ?? form.formState.errors.amount?.message
       ?? 'Vérification du formulaire impossible.';
     setErrorMessage(firstError);
@@ -143,9 +136,6 @@ export const useInteractionDetailsState = ({
   const setStatusId = useCallback((value: string) => {
     setValue('statusId', value, { shouldDirty: true, shouldValidate: true });
   }, [setValue]);
-  const setReminder = useCallback((value: string) => {
-    setValue('reminder', value, { shouldDirty: true, shouldValidate: true });
-  }, [setValue]);
   const setAmount = useCallback((value: string) => {
     setValue('amount', value, { shouldDirty: true, shouldValidate: true });
   }, [setValue]);
@@ -156,5 +146,5 @@ export const useInteractionDetailsState = ({
     void submitUpdates();
   }, [submitUpdates]);
 
-  return { note, setNote, statusId, setStatusId, reminder, setReminder, amount, setAmount, orderRef, setOrderRef, statusOptions, canConvert, scrollRef, isSubmitDisabled, handleSubmit: handleInteractionSubmit, errorMessage };
+  return { note, setNote, statusId, setStatusId, amount, setAmount, orderRef, setOrderRef, statusOptions, canConvert, scrollRef, isSubmitDisabled, handleSubmit: handleInteractionSubmit, errorMessage };
 };

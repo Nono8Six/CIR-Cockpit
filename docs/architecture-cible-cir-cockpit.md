@@ -775,6 +775,9 @@ Sont explicitement exclus de cette brique : pipeline d’opportunité, devis, co
 
 Objectif : séparer le travail futur des activités terminées, avec assignation, échéance et suivi.
 
+Statut au 2026-08-13 : **terminée**. La suite autorisée est la planification de
+la Brique 4 ; aucune implémentation Opportunités n'est ouverte par ce statut.
+
 ### Brique 4 — Opportunités
 
 Objectif : suivre les potentiels commerciaux qui le nécessitent, sans rendre l’opportunité obligatoire.
@@ -815,6 +818,7 @@ Les filières commerciales et produit peuvent avancer à des rythmes différents
 | --- | --- |
 | `docs/architecture-cible-cir-cockpit.md` | **Source de vérité globale** pour le produit, le métier, les données et l’architecture cible. |
 | `docs/PLAN/plan-consolidation-tiers-activites.md` | **Plan d'exécution phase-gated** de la consolidation pré-import Tiers et Activités. |
+| `docs/PLAN/plan-brique-3-taches-relances.md` | **Plan exécuté et journal final** de la Brique 3 Tâches et relances. |
 | `docs/ASSISTANT_IA/plan-mistral-assistant-transversal.md` | **Unique plan d’exécution actif** pour la correction Mistral et l’assistant transversal. |
 | `docs/LOGIQUE_REMISE_CIR/cahier-des-charges/00-sommaire.md` | Index des besoins métier Tarification conservés ; non normatif pour le schéma ou la stack. |
 | `docs/stack.md` | État vérifié de la stack réelle. |
@@ -949,6 +953,26 @@ Les décisions ouvertes sont traitées juste avant la brique concernée. Elles n
   compatible jusqu'aux Briques 3, 4 et 5. L'API v211, la parité 8/8, les ACL,
   la concurrence, le rollback et les parcours réels sont prouvés ; la sortie
   est **GO Brique 3**, sans démarrage de la Brique 3.
+
+### 2026-08-13 — Clôture de la Brique 3 Tâches et relances
+
+- Les tâches futures sont portées par `tasks`, `task_events`,
+  `task_participants`, `task_types` et `task_series`, avec ACL/RLS par agence,
+  visibilité Tier ou restreinte, concurrence par version et audit append-only.
+- L'exécution d'une tâche Tier crée l'Activity v2 liée atomiquement ; une tâche
+  interne se clôt sans Activity ; la récurrence produit au plus une occurrence
+  suivante à la clôture.
+- `interactions.reminder_at` et ses consommateurs actifs ont été retirés par la
+  migration `20260813074141_b3_6_reminder_cutover_and_test_cleanup`. Le pont
+  Activity v2 conserve uniquement les responsabilités de compatibilité encore
+  nécessaires aux briques ultérieures.
+- La recette R1-R25, la QA complète, les parcours E2E Tâches, la parité de
+  migration et le runtime Edge `api` v225 sont prouvés. Les données de recette
+  sont revenues à zéro et les données hors périmètre ont été préservées.
+- Le contrat IA de la Brique 3 reste vide. Opportunités, Devis/Commandes,
+  Pilotage et IA n'ont reçu aucun objet ni parcours de leur chantier suivant.
+- Décision PO : **Brique 3 TERMINÉE / GO PLANIFICATION Brique 4**. Cette décision
+  n'autorise aucune implémentation de la Brique 4.
 
 ## 17. Checkpoint de validation PO
 

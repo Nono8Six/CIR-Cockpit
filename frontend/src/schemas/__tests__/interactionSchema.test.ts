@@ -21,7 +21,6 @@ const base = {
   status_id: 'status-1',
   interaction_type: 'Devis',
   order_ref: '',
-  reminder_at: '',
   notes: '',
   entity_id: '',
   contact_id: ''

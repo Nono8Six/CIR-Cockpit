@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, Car, Check, ChevronRight, Mail, Phone, Store, type LucideIcon } from 'lucide-react';
+import { ArrowDown, ArrowUp, Car, ChevronRight, Mail, Phone, Store, type LucideIcon } from 'lucide-react';
 
 import { getInteractionChannelIcon } from '@/components/interaction-card/InteractionChannelIcon';
 import { cn } from '@/lib/utils';
@@ -11,11 +11,9 @@ import {
   type DossierRow,
   type DossierScopeFilter,
   type DossierSort,
-  type DossierSortKey,
-  type DossierUrgency
+  type DossierSortKey
 } from '@/utils/dashboard/dashboardOverview';
 import { formatPipelineAmount, getPipelineStageLabel } from '@/utils/dashboard/dashboardPipeline';
-import { formatTime } from '@/utils/date/formatTime';
 
 const CHANNEL_FILTER_ICONS: Partial<Record<DossierChannelFilter, LucideIcon>> = {
   [Channel.PHONE]: Phone,
@@ -35,51 +33,8 @@ const STAGE_DOT_CLASSES: Record<string, string> = {
   lost: 'bg-destructive'
 };
 
-const shortDateFormatter = new Intl.DateTimeFormat('fr-FR', {
-  weekday: 'short',
-  day: 'numeric',
-  month: 'short'
-});
-
-const URGENCY_TEXT_CLASSES: Record<DossierUrgency, string> = {
-  overdue: 'font-semibold text-destructive',
-  today: 'font-semibold text-warning-foreground',
-  upcoming: 'text-foreground/80',
-  unplanned: 'text-muted-foreground/70',
-  closed: 'text-muted-foreground'
-};
-
-const buildDueLabel = (row: DossierRow): string => {
-  if (row.urgency === 'closed') {
-    const stage = row.interaction.stage;
-    if (stage === 'won') {
-      return 'Commande signée';
-    }
-    if (stage === 'lost') {
-      return row.interaction.lost_reason
-        ? `Perdu · ${row.interaction.lost_reason}`
-        : 'Perdu';
-    }
-    return 'Clôturé';
-  }
-
-  if (row.urgency === 'unplanned' || row.dueTime === null) {
-    return 'Aucun rappel';
-  }
-
-  if (row.urgency === 'overdue') {
-    return row.lateDays && row.lateDays >= 1 ? `Retard ${row.lateDays} j` : 'En retard';
-  }
-
-  if (row.urgency === 'today') {
-    return `Aujourd'hui ${formatTime(new Date(row.dueTime))}`;
-  }
-
-  return shortDateFormatter.format(new Date(row.dueTime));
-};
-
 const GRID_TEMPLATE =
-  'grid-cols-[32px_minmax(0,2.2fr)_148px_156px_172px_100px_78px_16px]';
+  'grid-cols-[32px_minmax(0,2.5fr)_156px_172px_100px_16px]';
 
 type SortableHeaderProps = {
   label: string;
@@ -130,9 +85,6 @@ type DashboardDossiersTableProps = {
   onToggleSort: (key: DossierSortKey) => void;
   getStatusBadgeClass: (interaction: Interaction) => string;
   onSelectInteraction: (interaction: Interaction) => void;
-  onCompleteReminder: (interaction: Interaction) => void;
-  onPostponeReminder: (interaction: Interaction, daysAhead: number) => void;
-  isUpdatePending: boolean;
   activeInteractionId?: string | null;
 };
 
@@ -148,9 +100,6 @@ const DashboardDossiersTable = ({
   onToggleSort,
   getStatusBadgeClass,
   onSelectInteraction,
-  onCompleteReminder,
-  onPostponeReminder,
-  isUpdatePending,
   activeInteractionId
 }: DashboardDossiersTableProps) => (
   <section
@@ -208,7 +157,7 @@ const DashboardDossiersTable = ({
     </div>
 
     <div className="min-h-0 flex-1 overflow-auto">
-      <div className="min-w-[960px]">
+      <div className="min-w-[760px]">
         <div
           className={cn(
             'sticky top-0 z-10 grid items-center gap-x-2 border-b border-border-subtle bg-surface-1 px-4 py-1.5 text-[11px] font-semibold text-muted-foreground',
@@ -217,7 +166,6 @@ const DashboardDossiersTable = ({
         >
           <span aria-hidden="true" />
           <SortableHeader label="Client · sujet" sortKey="client" sort={sort} onToggleSort={onToggleSort} />
-          <SortableHeader label="Échéance" sortKey="priority" sort={sort} onToggleSort={onToggleSort} />
           <SortableHeader label="Étape" sortKey="stage" sort={sort} onToggleSort={onToggleSort} />
           <span className="truncate">Statut</span>
           <SortableHeader
@@ -227,7 +175,6 @@ const DashboardDossiersTable = ({
             onToggleSort={onToggleSort}
             className="justify-end"
           />
-          <span aria-hidden="true" />
           <span aria-hidden="true" />
         </div>
 
@@ -249,7 +196,6 @@ const DashboardDossiersTable = ({
             const stageClass =
               STAGE_DOT_CLASSES[interaction.stage ?? 'unqualified'] ?? STAGE_DOT_CLASSES.unqualified;
             const isActive = activeInteractionId === interaction.id;
-            const dueLabel = buildDueLabel(row);
             const statusLabel = shortenBadgeLabel(interaction.status);
 
             return (
@@ -290,16 +236,6 @@ const DashboardDossiersTable = ({
                   </p>
                 </div>
 
-                <span
-                  className={cn('flex min-w-0 items-center gap-1.5 text-[11.5px]', URGENCY_TEXT_CLASSES[row.urgency])}
-                  title={dueLabel}
-                >
-                  {row.urgency === 'overdue' ? (
-                    <span className="size-[6px] shrink-0 rounded-full bg-destructive" aria-hidden="true" />
-                  ) : null}
-                  <span className="truncate">{dueLabel}</span>
-                </span>
-
                 <span className="flex min-w-0 items-center gap-1.5 text-[11.5px] text-foreground/80">
                   <span className={cn('size-[7px] shrink-0 rounded-full', stageClass)} aria-hidden="true" />
                   <span className="truncate">{stageLabel}</span>
@@ -325,39 +261,6 @@ const DashboardDossiersTable = ({
                   )}
                 </span>
 
-                <span className="flex justify-end gap-1 opacity-0 transition-opacity duration-100 group-hover/row:opacity-100 group-focus-within/row:opacity-100">
-                  {row.isOpen && row.dueTime !== null ? (
-                    <button
-                      type="button"
-                      disabled={isUpdatePending}
-                      aria-label={`Marquer la relance de ${row.displayName} comme faite`}
-                      title="Relance faite : efface le rappel et journalise l'action"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        onCompleteReminder(interaction);
-                      }}
-                      className="inline-flex size-6 items-center justify-center rounded-md border border-success/30 bg-success/10 text-success transition-colors hover:bg-success/20 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
-                    >
-                      <Check size={11} strokeWidth={3} aria-hidden="true" />
-                    </button>
-                  ) : null}
-                  {row.isOpen ? (
-                    <button
-                      type="button"
-                      disabled={isUpdatePending}
-                      aria-label={`${row.dueTime === null ? 'Planifier' : 'Reporter'} la relance de ${row.displayName} à dans 2 jours`}
-                      title="Rappel dans 2 jours à 09:00"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        onPostponeReminder(interaction, 2);
-                      }}
-                      className="inline-flex h-6 items-center rounded-md border border-border bg-card px-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:border-primary/35 hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
-                    >
-                      +2 j
-                    </button>
-                  ) : null}
-                </span>
-
                 <ChevronRight
                   size={14}
                   className="justify-self-end text-muted-foreground/50"
@@ -381,7 +284,7 @@ const DashboardDossiersTable = ({
       </span>
       <span className="flex items-center gap-1.5">
         <span className="size-[7px] rounded-full bg-destructive" aria-hidden="true" />
-        perdu ou en retard
+        perdu
       </span>
       <span className="ml-auto flex items-center gap-2">
         <kbd className="rounded border border-border bg-card px-1 font-mono text-[11px]">↑↓</kbd>

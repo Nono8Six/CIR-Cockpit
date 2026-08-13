@@ -48,7 +48,6 @@ export const normalizeInteractionDraftValues = (
     interaction_type: values.interaction_type ?? defaults.interaction_type ?? '',
     subject: values.subject ?? '',
     order_ref: values.order_ref ?? '',
-    reminder_at: values.reminder_at ?? '',
     notes: values.notes ?? '',
     mega_families: values.mega_families ?? defaults.mega_families ?? [],
     entity_id: values.entity_id ?? '',

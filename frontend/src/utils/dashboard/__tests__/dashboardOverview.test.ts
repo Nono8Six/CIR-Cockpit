@@ -34,7 +34,6 @@ const buildInteraction = (overrides: Partial<Interaction> = {}): Interaction => 
   mega_families: ['Freinage'],
   notes: null,
   order_ref: null,
-  reminder_at: null,
   stage: null,
   stage_changed_at: null,
   amount: null,
@@ -209,50 +208,40 @@ describe('formatCompactEuro', () => {
 });
 
 describe('buildDossierRows', () => {
-  const overdue = buildInteraction({ id: 'overdue', reminder_at: '2026-07-18T09:00:00.000Z' });
-  const today = buildInteraction({ id: 'today', reminder_at: '2026-07-21T16:00:00.000Z' });
-  const upcoming = buildInteraction({ id: 'upcoming', reminder_at: '2026-07-28T09:00:00.000Z' });
-  const unplanned = buildInteraction({ id: 'unplanned', reminder_at: null });
+  const oldestOpen = buildInteraction({ id: 'oldest-open', last_action_at: '2026-07-10T09:00:00.000Z' });
+  const recentOpen = buildInteraction({ id: 'recent-open', last_action_at: '2026-07-20T09:00:00.000Z' });
   const closed = buildInteraction({ id: 'closed', stage: 'won', amount: 900 });
 
-  it('produit exactement une ligne par dossier et qualifie son urgence', () => {
+  it('produit exactement une ligne par dossier et distingue les dossiers ouverts des clos', () => {
     const rows = buildDossierRows({
-      interactions: [overdue, today, upcoming, unplanned, closed],
-      isStatusDone,
-      now
+      interactions: [oldestOpen, recentOpen, closed],
+      isStatusDone
     });
 
-    expect(rows).toHaveLength(5);
-    expect(rows.map((row) => row.urgency)).toEqual([
-      'overdue',
-      'today',
-      'upcoming',
-      'unplanned',
-      'closed'
-    ]);
-    expect(rows[0].lateDays).toBe(3);
-    expect(rows.filter((row) => row.isOpen)).toHaveLength(4);
+    expect(rows).toHaveLength(3);
+    expect(rows.map((row) => row.urgency)).toEqual(['open', 'open', 'closed']);
+    expect(rows.filter((row) => row.isOpen)).toHaveLength(2);
   });
 
   it('classe un statut terminal comme clos meme sans etape pipeline', () => {
     const terminal = buildInteraction({ id: 'terminal', status_is_terminal: true });
-    const [row] = buildDossierRows({ interactions: [terminal], isStatusDone, now });
+    const [row] = buildDossierRows({ interactions: [terminal], isStatusDone });
     expect(row.urgency).toBe('closed');
     expect(row.isOpen).toBe(false);
   });
 });
 
 describe('selectDossierRows', () => {
-  const overdue = buildInteraction({
-    id: 'overdue',
+  const oldestOpen = buildInteraction({
+    id: 'oldest-open',
     channel: Channel.PHONE,
-    reminder_at: '2026-07-18T09:00:00.000Z',
+    last_action_at: '2026-07-18T09:00:00.000Z',
     amount: 1000
   });
-  const upcoming = buildInteraction({
-    id: 'upcoming',
+  const recentOpen = buildInteraction({
+    id: 'recent-open',
     channel: Channel.EMAIL,
-    reminder_at: '2026-07-28T09:00:00.000Z',
+    last_action_at: '2026-07-20T09:00:00.000Z',
     amount: 5000
   });
   const recentClosed = buildInteraction({
@@ -270,9 +259,8 @@ describe('selectDossierRows', () => {
   });
 
   const rows = buildDossierRows({
-    interactions: [oldClosed, recentClosed, upcoming, overdue],
-    isStatusDone,
-    now
+    interactions: [oldClosed, recentClosed, recentOpen, oldestOpen],
+    isStatusDone
   });
 
   const select = (overrides: Partial<Parameters<typeof selectDossierRows>[0]> = {}) =>
@@ -286,23 +274,23 @@ describe('selectDossierRows', () => {
       ...overrides
     }).map((row) => row.interaction.id);
 
-  it('ne garde que les dossiers ouverts, du plus urgent au moins urgent', () => {
-    expect(select()).toEqual(['overdue', 'upcoming']);
+  it('ne garde que les dossiers ouverts, de la plus ancienne activité à la plus récente', () => {
+    expect(select()).toEqual(['oldest-open', 'recent-open']);
   });
 
   it('ajoute les dossiers clos de la periode sans jamais dupliquer une ligne', () => {
     const ids = select({ scope: 'period' });
-    expect(ids).toEqual(['overdue', 'upcoming', 'recent-closed']);
+    expect(ids).toEqual(['oldest-open', 'recent-open', 'recent-closed']);
     expect(new Set(ids).size).toBe(ids.length);
   });
 
   it('filtre par canal', () => {
-    expect(select({ scope: 'period', channel: Channel.EMAIL })).toEqual(['upcoming']);
+    expect(select({ scope: 'period', channel: Channel.EMAIL })).toEqual(['recent-open']);
   });
 
   it('trie par montant decroissant puis inverse le sens sur demande', () => {
-    expect(select({ sort: { key: 'amount', direction: 'desc' } })).toEqual(['upcoming', 'overdue']);
-    expect(select({ sort: { key: 'amount', direction: 'asc' } })).toEqual(['overdue', 'upcoming']);
+    expect(select({ sort: { key: 'amount', direction: 'desc' } })).toEqual(['recent-open', 'oldest-open']);
+    expect(select({ sort: { key: 'amount', direction: 'asc' } })).toEqual(['oldest-open', 'recent-open']);
   });
 });
 

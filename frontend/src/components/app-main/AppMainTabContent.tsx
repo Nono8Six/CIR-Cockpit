@@ -14,11 +14,13 @@ const loadCockpitForm = () => import('@/components/CockpitForm');
 const loadDashboard = () => import('@/components/Dashboard');
 const loadPricingReferencesPage = () => import('@/components/pricing-references/PricingReferencesPage');
 const loadSettings = () => import('@/components/Settings');
+const loadTasksPage = () => import('@/components/tasks/TasksPage');
 
 const CockpitForm = lazy(loadCockpitForm);
 const Dashboard = lazy(loadDashboard);
 const PricingReferencesPage = lazy(loadPricingReferencesPage);
 const Settings = lazy(loadSettings);
+const TasksPage = lazy(loadTasksPage);
 
 const ROUTE_LOADING_FALLBACK = (
   <div className="flex h-full min-h-0 flex-col gap-3 p-6">
@@ -60,6 +62,7 @@ type AppMainTabContentProps = {
 const KEEP_ALIVE_TABS: AppTab[] = [
   'cockpit',
   'dashboard',
+  'tasks',
   'clients',
   'suppliers',
   'referentials',
@@ -113,6 +116,7 @@ const AppMainTabContent = (props: AppMainTabContentProps) => {
   const visitedTabsRef = useRef<Record<AppTab, boolean>>({
     cockpit: activeTab === 'cockpit',
     dashboard: activeTab === 'dashboard',
+    tasks: activeTab === 'tasks',
     clients: activeTab === 'clients',
     suppliers: activeTab === 'suppliers' && canAccessAdmin,
     referentials: activeTab === 'referentials',
@@ -187,6 +191,14 @@ const AppMainTabContent = (props: AppMainTabContentProps) => {
               </div>
             ) : null}
 
+            {tab === 'tasks' && activeAgencyId && userId ? (
+              <div className="min-h-0 flex-1">
+                <Suspense fallback={ROUTE_LOADING_FALLBACK}>
+                  <TasksPage agencyId={activeAgencyId} userId={userId} userRole={userRole} />
+                </Suspense>
+              </div>
+            ) : null}
+
             {tab === 'settings' ? (
               <div className="min-h-0 flex-1">
                 <Suspense fallback={ROUTE_LOADING_FALLBACK}>
@@ -194,6 +206,7 @@ const AppMainTabContent = (props: AppMainTabContentProps) => {
                     config={config}
                     canEditAgencySettings={canEditAgencySettings}
                     agencyId={activeAgencyId}
+                    canManageTaskTypes={userRole === 'super_admin'}
                   />
                 </Suspense>
               </div>

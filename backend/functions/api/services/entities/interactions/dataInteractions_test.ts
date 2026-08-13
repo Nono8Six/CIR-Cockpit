@@ -26,7 +26,6 @@ Deno.test('normalizeInteractionUpdates keeps only whitelisted keys', () => {
     status: '  En cours  ',
     status_id: 'a6a8c6d2-5adf-4d56-b4aa-f6854699886a',
     order_ref: '  DOS-12 ',
-    reminder_at: '2026-02-16T10:00:00.000Z',
     notes: '  note interne  ',
     entity_id: 'b6a8c6d2-5adf-4d56-b4aa-f6854699886a',
     contact_id: null,
@@ -40,7 +39,6 @@ Deno.test('normalizeInteractionUpdates keeps only whitelisted keys', () => {
     status: 'En cours',
     status_id: 'a6a8c6d2-5adf-4d56-b4aa-f6854699886a',
     order_ref: 'DOS-12',
-    reminder_at: '2026-02-16T10:00:00.000Z',
     notes: 'note interne',
     entity_id: 'b6a8c6d2-5adf-4d56-b4aa-f6854699886a',
     contact_id: null,
@@ -96,7 +94,6 @@ Deno.test('normalizeInteractionUpdates drops invalid or empty values', () => {
   const normalized = normalizeInteractionUpdates({
     status: '   ',
     order_ref: '',
-    reminder_at: null,
     notes: '   ',
     entity_id: undefined,
     contact_id: '   ',
@@ -108,7 +105,6 @@ Deno.test('normalizeInteractionUpdates drops invalid or empty values', () => {
   assertEquals(normalized, {
     contact_id: null,
     order_ref: null,
-    reminder_at: null,
     notes: null
   });
 });
@@ -194,7 +190,6 @@ const createInteractionRow = (overrides: Partial<InteractionRow> = {}): Interact
   mega_families: [],
   notes: null,
   order_ref: null,
-  reminder_at: null,
   status: '',
   status_id: null,
   status_is_terminal: false,

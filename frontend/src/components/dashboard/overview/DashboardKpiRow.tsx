@@ -48,10 +48,6 @@ const MetricCell = ({ label, value, detail, tone, testId }: MetricCellProps) => 
 );
 
 type DashboardKpiRowProps = {
-  overdueCount: number;
-  oldestOverdueDays: number | null;
-  dueTodayCount: number;
-  toPlanCount: number;
   openCount: number;
   openDossiersDelta: OpenDossiersDelta | null;
   pipelineOpenAmount: number;
@@ -59,41 +55,15 @@ type DashboardKpiRowProps = {
 };
 
 const DashboardKpiRow = ({
-  overdueCount,
-  oldestOverdueDays,
-  dueTodayCount,
-  toPlanCount,
   openCount,
   openDossiersDelta,
   pipelineOpenAmount,
   pipelineOpenCount
 }: DashboardKpiRowProps) => (
   <div
-    className="grid grid-cols-2 divide-border-subtle overflow-hidden rounded-lg border border-border bg-card shadow-soft sm:grid-cols-4 sm:divide-x"
+    className="grid grid-cols-1 divide-border-subtle overflow-hidden rounded-lg border border-border bg-card shadow-soft sm:grid-cols-2 sm:divide-x"
     data-testid="dashboard-kpi-row"
   >
-    <MetricCell
-      testId="dashboard-kpi-overdue"
-      label="En retard"
-      value={String(overdueCount)}
-      detail={
-        overdueCount > 0 && oldestOverdueDays !== null
-          ? `la plus ancienne : ${oldestOverdueDays} j`
-          : 'aucune relance en retard'
-      }
-      tone={overdueCount > 0 ? 'alert' : 'neutral'}
-    />
-    <MetricCell
-      testId="dashboard-kpi-today"
-      label="Aujourd'hui"
-      value={String(dueTodayCount)}
-      detail={
-        toPlanCount > 0
-          ? `${toPlanCount} dossier${toPlanCount > 1 ? 's' : ''} sans rappel`
-          : 'tous les dossiers sont planifiés'
-      }
-      tone="neutral"
-    />
     <MetricCell
       testId="dashboard-kpi-open"
       label="Dossiers ouverts"

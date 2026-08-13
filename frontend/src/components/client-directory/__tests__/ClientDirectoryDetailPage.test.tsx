@@ -242,7 +242,6 @@ const openInteraction = {
   mega_families: [],
   notes: null,
   order_ref: null,
-  reminder_at: null,
   stage: null,
   stage_changed_at: null,
   amount: null,

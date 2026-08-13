@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Bell, Car, CheckCircle2, Clock, FileText, Mail, Phone, Store, Tag, User } from 'lucide-react';
+import { Car, CheckCircle2, Clock, FileText, Mail, Phone, Store, Tag, User } from 'lucide-react';
 
 import { getPlatformShortcutLabel } from '@/app/appConstants';
 import { Button } from '../ui/inputs/basic/Button';
@@ -19,13 +19,6 @@ const CHANNEL_ICON = {
   [Channel.COUNTER]: Store,
   [Channel.VISIT]: Car
 } as const;
-
-const formatReminder = (value: string | null | undefined): string | null => {
-  if (!value) return null;
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return value;
-  return parsed.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
-};
 
 const resolveStatusLabel = (statusId: string | null | undefined, config: AgencyConfig): string => {
   if (!statusId) return '';
@@ -68,7 +61,6 @@ const CockpitReadonlyView = ({ interaction, config, onStartNew }: CockpitReadonl
   }, []);
 
   const ChannelIcon = CHANNEL_ICON[interaction.channel as Channel] ?? Phone;
-  const reminderLabel = formatReminder(interaction.reminder_at);
   const statusLabel = resolveStatusLabel(interaction.status_id, config);
   const contactLabel = joinContactName(interaction);
   const tags = interaction.mega_families ?? [];
@@ -168,11 +160,6 @@ const CockpitReadonlyView = ({ interaction, config, onStartNew }: CockpitReadonl
         <AtomField label="Service" value={interaction.contact_service || '—'} />
         <AtomField label="Type" value={interaction.interaction_type || '—'} />
         <AtomField label="Statut" value={statusLabel || '—'} />
-        <AtomField
-          label="Rappel"
-          value={reminderLabel ?? '—'}
-          icon={reminderLabel ? Bell : undefined}
-        />
       </div>
 
       <div

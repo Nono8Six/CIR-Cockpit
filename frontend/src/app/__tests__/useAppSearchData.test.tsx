@@ -64,7 +64,6 @@ const buildInteraction = (overrides: Partial<Interaction> = {}): Interaction => 
   mega_families: [],
   notes: null,
   order_ref: 'CMD-001',
-  reminder_at: null,
   stage: null,
   stage_changed_at: null,
   amount: null,

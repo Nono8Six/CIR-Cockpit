@@ -27,7 +27,6 @@ export const useInteractionFormState = ({ control, config, activeAgencyId, entit
   const statusId = useWatch({ control, name: 'status_id' }) ?? '';
   const interactionType = useWatch({ control, name: 'interaction_type' }) ?? '';
   const orderRef = useWatch({ control, name: 'order_ref' }) ?? '';
-  const reminderAt = useWatch({ control, name: 'reminder_at' }) ?? '';
   const notes = useWatch({ control, name: 'notes' }) ?? '';
   const entityId = useWatch({ control, name: 'entity_id' }) ?? '';
   const contactId = useWatch({ control, name: 'contact_id' }) ?? '';
@@ -86,7 +85,6 @@ export const useInteractionFormState = ({ control, config, activeAgencyId, entit
     statusId,
     interactionType,
     orderRef,
-    reminderAt,
     notes,
     entityId,
     contactId,

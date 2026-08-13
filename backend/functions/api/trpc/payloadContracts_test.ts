@@ -363,7 +363,6 @@ Deno.test('dataInteractionsPayloadSchema supports save, add_timeline_event, agen
       status_id: '33333333-3333-4333-8333-333333333333',
       interaction_type: 'Demande',
       order_ref: '',
-      reminder_at: '',
       notes: '',
       entity_id: '44444444-4444-4444-8444-444444444444',
       contact_id: '55555555-5555-4555-8555-555555555555'
@@ -398,7 +397,6 @@ Deno.test('dataInteractionsPayloadSchema supports save, add_timeline_event, agen
       amount: 12400.5,
       quote_sent_at: '2026-03-01T00:00:00.000Z',
       lost_reason: null,
-      reminder_at: '2026-03-08T09:00',
       last_action_at: '2026-03-01T00:00:00.000Z'
     }
   };

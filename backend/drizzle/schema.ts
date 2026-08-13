@@ -869,7 +869,6 @@ export const interactions = pgTable("interactions", {
   >(),
   quote_sent_at: timestamp("quote_sent_at", timestamptz).$type<string | null>(),
   lost_reason: text("lost_reason").$type<string | null>(),
-  reminder_at: timestamp("reminder_at", timestamptz).$type<string | null>(),
   last_action_at: timestamp("last_action_at", timestamptz).$type<string>()
     .defaultNow().notNull(),
   notes: text("notes").$type<string | null>(),

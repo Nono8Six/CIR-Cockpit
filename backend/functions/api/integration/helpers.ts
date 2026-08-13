@@ -31,6 +31,8 @@ export type ProcedurePath =
   | "tasks.change-priority"
   | "tasks.change-status"
   | "tasks.add-note"
+  | "tasks.execute-with-activity"
+  | "tasks.recurrence"
   | "tasks.list";
 
 type ApiPayload = Record<string, unknown>;
@@ -57,7 +59,6 @@ export type IntegrationContext = {
   agencyId: string;
   statusId: string;
   interactionType: string;
-  activityLegacyInteractionId: string;
   configStatuses: Array<Pick<StatusRow, "id" | "label" | "category">>;
   configServices: string[];
   configFamilies: string[];
@@ -357,18 +358,6 @@ const buildContext = async (): Promise<IntegrationContext> => {
     `/agency_families?select=label&agency_id=eq.${agencyId}&order=sort_order.asc`,
     userSession.accessToken,
   );
-  const activityRows = await fetchRows(
-    `/activities?select=legacy_interaction_id&agency_id=eq.${agencyId}&legacy_interaction_id=not.is.null&limit=1`,
-    userSession.accessToken,
-  );
-  const activityLegacyInteractionId = activityRows
-    .map((row) => readString(row, "legacy_interaction_id").trim())
-    .find((value) => value.length > 0) ?? "";
-  assert(
-    activityLegacyInteractionId.length > 0,
-    `Aucune activité v2 corrélée trouvée pour l agence ${agencyId}.`,
-  );
-
   return {
     adminToken: adminSession.accessToken,
     userToken: userSession.accessToken,
@@ -376,7 +365,6 @@ const buildContext = async (): Promise<IntegrationContext> => {
     agencyId,
     statusId: statuses[0]?.id ?? "",
     interactionType,
-    activityLegacyInteractionId,
     configStatuses: statuses.map((status) => ({
       id: status.id,
       label: status.label,

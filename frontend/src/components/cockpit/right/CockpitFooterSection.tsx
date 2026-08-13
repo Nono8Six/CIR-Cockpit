@@ -6,13 +6,10 @@ import type { AgencyConfig } from '@/services/config';
 import type { AgencyStatus, StatusCategory } from '@/types';
 import { Input } from '../../ui/inputs/basic/Input';
 import CockpitStatusControl from './CockpitStatusControl';
-import CockpitReminderControl from './CockpitReminderControl';
 
 type CockpitFooterSectionProps = {
   footerLabelStyle: string;
   orderRefField: UseFormRegisterReturn;
-  reminderField: UseFormRegisterReturn;
-  reminderAt: string;
   statusMeta: AgencyStatus | null;
   statusCategoryLabel: string | null;
   statusCategoryBadges: Record<StatusCategory, string>;
@@ -22,15 +19,12 @@ type CockpitFooterSectionProps = {
   statusGroups: Record<StatusCategory, AgencyConfig['statuses']>;
   hasStatuses: boolean;
   statusHelpId: string;
-  onSetReminder: (type: '1h' | 'tomorrow' | '3days' | 'nextWeek') => void;
   onReset: () => void;
 };
 
 const CockpitFooterSection = ({
   footerLabelStyle,
   orderRefField,
-  reminderField,
-  reminderAt,
   statusMeta,
   statusCategoryLabel,
   statusCategoryBadges,
@@ -40,7 +34,6 @@ const CockpitFooterSection = ({
   statusGroups,
   hasStatuses,
   statusHelpId,
-  onSetReminder,
   onReset
 }: CockpitFooterSectionProps) => {
   return (
@@ -74,15 +67,7 @@ const CockpitFooterSection = ({
             />
           </div>
         </div>
-        <div className="flex min-w-0 items-start gap-2">
-          <div className="min-w-0 flex-1">
-            <CockpitReminderControl
-              footerLabelStyle={footerLabelStyle}
-              reminderField={reminderField}
-              reminderAt={reminderAt}
-              onSetReminder={onSetReminder}
-            />
-          </div>
+        <div className="flex min-w-0 items-start justify-end gap-2">
           <button
             type="button"
             onClick={onReset}

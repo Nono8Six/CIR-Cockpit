@@ -47,7 +47,6 @@ const InteractionDetails = ({ item }: { item: ConfigIntegrityInteractionRow }) =
     <Detail label="Statut brut" value={item.status || '<sans valeur>'} />
     <Detail label="Familles brutes" value={item.mega_families.join(', ')} />
     <Detail label="Référence commande" value={item.order_ref} />
-    <Detail label="Relance" value={formatDate(item.reminder_at)} />
     <Detail label="Dernière action" value={formatDate(item.last_action_at)} />
     <Detail label="Dernière mise à jour" value={formatDate(item.updated_at)} />
     <div className="sm:col-span-2"><Detail label="Notes" value={item.notes} /></div>

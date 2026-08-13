@@ -87,8 +87,6 @@ export const useCockpitPaneProps = (params: UseCockpitPanePropsParams) => {
     subjectField: params.subjectField,
     notesField: params.notesField,
     orderRefField: params.orderRefField,
-    reminderField: params.reminderField,
-    reminderAt: params.reminderAt,
     errors: params.errors,
     families: params.config.families,
     megaFamilies: params.megaFamilies,
@@ -103,7 +101,6 @@ export const useCockpitPaneProps = (params: UseCockpitPanePropsParams) => {
     statusGroups: params.statusGroups,
     hasStatuses: params.hasStatuses,
     statusHelpId: params.statusHelpId,
-    onSetReminder: params.onSetReminder,
     onReset: params.onReset
   };
 

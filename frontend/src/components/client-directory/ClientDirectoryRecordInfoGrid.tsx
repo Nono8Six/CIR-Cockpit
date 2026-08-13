@@ -15,6 +15,7 @@ export interface ClientDirectoryRecordInfoGridProps {
   contactsSection: ReactNode;
   interactionsSection: ReactNode;
   historySection: ReactNode;
+  tasksSection: ReactNode;
 }
 
 /**
@@ -35,6 +36,7 @@ const ClientDirectoryRecordInfoGrid = ({
   contactsSection,
   interactionsSection,
   historySection,
+  tasksSection,
 }: ClientDirectoryRecordInfoGridProps) => {
   const [activeTab, setActiveTab] = useState('summary');
   const isSupplier = record.entity_type === 'Fournisseur';
@@ -209,6 +211,12 @@ const ClientDirectoryRecordInfoGrid = ({
             Interactions
           </TabsTrigger>
           <TabsTrigger
+            value="tasks"
+            className="rounded-sm px-3 py-1.5 text-xs font-bold text-neutral-500 data-[state=active]:bg-white data-[state=active]:text-neutral-950 data-[state=active]:shadow-sm"
+          >
+            Tâches
+          </TabsTrigger>
+          <TabsTrigger
             value="history"
             className="rounded-sm px-3 py-1.5 text-xs font-bold text-neutral-500 data-[state=active]:bg-white data-[state=active]:text-neutral-950 data-[state=active]:shadow-sm"
           >
@@ -263,6 +271,7 @@ const ClientDirectoryRecordInfoGrid = ({
           {historySection}
         </div>
       </TabsContent>
+      <TabsContent value="tasks" className="mt-6"><div className="max-w-5xl">{tasksSection}</div></TabsContent>
     </Tabs>
   );
 };

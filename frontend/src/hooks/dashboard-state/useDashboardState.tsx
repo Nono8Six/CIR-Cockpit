@@ -9,10 +9,6 @@ import { notifySuccess } from '@/services/errors/notifySuccess';
 import { invalidateInteractionsQuery } from '@/services/query/queryInvalidation';
 import type { AgencyStatus, Interaction, InteractionUpdate, TimelineEvent } from '@/types';
 import type { AgencyConfig } from '@/services/config';
-import {
-  buildMyDayView,
-  type MyDayView
-} from '@/utils/dashboard/dashboardAggregates';
 import { filterInteractionsBySearch } from '@/utils/dashboard/dashboardFilters';
 import {
   DEFAULT_DOSSIER_SORT,
@@ -21,7 +17,6 @@ import {
   buildWeeklyEvolution,
   computeConversionRate,
   getDefaultSortDirection,
-  getOldestOverdueDays,
   getOverviewPeriodDays,
   hasEnoughEvolutionPoints,
   selectDossierRows,
@@ -40,10 +35,7 @@ import {
   type PipelineBoard,
   type PipelineMoveTarget
 } from '@/utils/dashboard/dashboardPipeline';
-import { buildReminderPresetValue } from '@/utils/date/buildReminderPresetValue';
-import { formatDateTime } from '@/utils/date/formatDateTime';
 import { getNowIsoString } from '@/utils/date/getNowIsoString';
-import { isBeforeNow } from '@/utils/date/isBeforeNow';
 
 import { useAddTimelineEvent } from '../interactions/timeline/useAddTimelineEvent';
 import { useDeleteInteraction } from '../interactions/core/actions/useDeleteInteraction';
@@ -51,10 +43,6 @@ import { getDashboardChannelIcon } from './getDashboardChannelIcon';
 import { useDashboardStatusHelpers } from './useDashboardStatusHelpers';
 
 export type DashboardOverviewKpis = {
-  overdueCount: number;
-  oldestOverdueDays: number | null;
-  dueTodayCount: number;
-  toPlanCount: number;
   openCount: number;
   pipelineOpenCount: number;
   pipelineOpenAmount: number;
@@ -118,7 +106,7 @@ export const useDashboardState = ({
   const addTimelineMutation = useAddTimelineEvent(agencyId);
   const deleteInteractionMutation = useDeleteInteraction({ agencyId });
 
-  const { statusById, getStatusMeta, isStatusDone, isStatusTodo, getStatusBadgeClass } =
+  const { statusById, getStatusMeta, isStatusDone, getStatusBadgeClass } =
     useDashboardStatusHelpers(statuses, resolutions);
 
   const deferredSearchTerm = useDeferredValue(searchTerm);
@@ -143,18 +131,9 @@ export const useDashboardState = ({
     [interactions, isStatusDone]
   );
 
-  const globalMyDay = useMemo<MyDayView>(
-    () => buildMyDayView(interactions, { isStatusDone, isStatusTodo }),
-    [interactions, isStatusDone, isStatusTodo]
-  );
-
   const kpis = useMemo<DashboardOverviewKpis>(() => {
     return {
-      overdueCount: globalMyDay.kpis.overdueCount,
-      oldestOverdueDays: getOldestOverdueDays(globalMyDay.groups.overdue),
-      dueTodayCount: globalMyDay.kpis.dueTodayCount,
-      toPlanCount: globalMyDay.groups.toPlan.length,
-      openCount: globalMyDay.kpis.openCount,
+      openCount: interactions.filter((interaction) => !isStatusDone(interaction)).length,
       pipelineOpenCount:
         pipelineBoard.unqualified.length
         + pipelineBoard.qualification.length
@@ -165,7 +144,7 @@ export const useDashboardState = ({
       lostCount30d: pipelineBoard.lostCount30d,
       conversionRate: computeConversionRate(pipelineBoard.wonCount30d, pipelineBoard.lostCount30d)
     };
-  }, [globalMyDay, pipelineBoard]);
+  }, [interactions, isStatusDone, pipelineBoard]);
 
   const evolution = useMemo<WeeklyEvolutionPoint[]>(
     () => buildWeeklyEvolution({ interactions, isStatusDone }),
@@ -252,43 +231,7 @@ export const useDashboardState = ({
     [addTimelineMutation, agencyId, queryClient, selectedInteraction, statusById],
   );
 
-  const handleCompleteReminder = useCallback(
-    async (interaction: Interaction) => {
-      const now = getNowIsoString();
-      await handleInteractionUpdate(
-        interaction,
-        {
-          id: `${Date.now()}rm`,
-          date: now,
-          type: 'reminder_change',
-          content: 'Relance effectuée'
-        },
-        { reminder_at: null, last_action_at: now }
-      );
-    },
-    [handleInteractionUpdate],
-  );
-
-  const handlePostponeReminder = useCallback(
-    async (interaction: Interaction, daysAhead: number) => {
-      const now = getNowIsoString();
-      const reminderValue = buildReminderPresetValue(daysAhead);
-      await handleInteractionUpdate(
-        interaction,
-        {
-          id: `${Date.now()}rm`,
-          date: now,
-          type: 'reminder_change',
-          content: `Rappel planifié : ${formatDateTime(reminderValue)}`
-        },
-        { reminder_at: reminderValue, last_action_at: now }
-      );
-    },
-    [handleInteractionUpdate],
-  );
-
-  // Deplacement d'etape pipeline. quote_sent pose la date d'envoi du devis et planifie
-  // une relance J+7 a 09:00 si aucun rappel futur n'existe ; won/lost effacent le rappel.
+  // Deplacement d'etape pipeline. Le travail futur est planifie exclusivement dans Tâches.
   const handleStageChange = useCallback(
     async (
       interaction: Interaction,
@@ -311,18 +254,6 @@ export const useDashboardState = ({
         if (!interaction.quote_sent_at) {
           updates.quote_sent_at = now;
         }
-        const hasUpcomingReminder = Boolean(
-          interaction.reminder_at && !isBeforeNow(interaction.reminder_at)
-        );
-        if (!hasUpcomingReminder) {
-          const reminderValue = buildReminderPresetValue(7);
-          updates.reminder_at = reminderValue;
-          content += ` · Relance planifiée : ${formatDateTime(reminderValue)}`;
-        }
-      }
-
-      if (nextStage === 'won' || nextStage === 'lost') {
-        updates.reminder_at = null;
       }
 
       if (nextStage === 'lost') {
@@ -391,8 +322,6 @@ export const useDashboardState = ({
     getChannelIcon: getDashboardChannelIcon,
     handleConvertRequest,
     handleInteractionUpdate,
-    handleCompleteReminder,
-    handlePostponeReminder,
     handleStageChange,
     isInteractionUpdatePending: addTimelineMutation.isPending,
     interactionToDelete,

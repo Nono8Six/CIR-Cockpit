@@ -1,4 +1,4 @@
-import { endOfDay, endOfISOWeek, getISOWeek, startOfISOWeek, subDays, subWeeks } from 'date-fns';
+import { endOfISOWeek, getISOWeek, startOfISOWeek, subDays, subWeeks } from 'date-fns';
 
 import { Channel, type Interaction } from '@/types';
 import { isCommercialInteraction } from '@/utils/dashboard/dashboardPipeline';
@@ -188,24 +188,6 @@ export const buildOpenDossiersDelta = (
   };
 };
 
-// Anciennete en jours de la relance en retard la plus ancienne (liste triee par rappel croissant).
-export const getOldestOverdueDays = (
-  overdue: Interaction[],
-  now: Date = new Date()
-): number | null => {
-  const oldest = overdue[0];
-  if (!oldest?.reminder_at) {
-    return null;
-  }
-
-  const reminderTime = toDate(oldest.reminder_at).getTime();
-  if (Number.isNaN(reminderTime)) {
-    return null;
-  }
-
-  return Math.max(0, Math.floor((now.getTime() - reminderTime) / (24 * 60 * 60 * 1000)));
-};
-
 export const computeConversionRate = (wonCount: number, lostCount: number): number | null => {
   const total = wonCount + lostCount;
   if (total === 0) {
@@ -254,14 +236,11 @@ export const DOSSIER_SCOPE_FILTERS: Array<{ key: DossierScopeFilter; label: stri
   { key: 'period', label: 'Toute la période' }
 ];
 
-export type DossierUrgency = 'overdue' | 'today' | 'upcoming' | 'unplanned' | 'closed';
+export type DossierUrgency = 'open' | 'closed';
 
 const URGENCY_RANK: Record<DossierUrgency, number> = {
-  overdue: 0,
-  today: 1,
-  upcoming: 2,
-  unplanned: 3,
-  closed: 4
+  open: 0,
+  closed: 1
 };
 
 const STAGE_RANK: Record<string, number> = {
@@ -277,8 +256,6 @@ export type DossierRow = {
   interaction: Interaction;
   displayName: string;
   urgency: DossierUrgency;
-  dueTime: number | null;
-  lateDays: number | null;
   isOpen: boolean;
   activityTime: number;
   amount: number | null;
@@ -300,12 +277,9 @@ export const DEFAULT_DOSSIER_SORT: DossierSort = { key: 'priority', direction: '
 export const getDefaultSortDirection = (key: DossierSortKey): DossierSortDirection =>
   key === 'priority' || key === 'client' ? 'asc' : 'desc';
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-
 type BuildDossierRowsParams = {
   interactions: Interaction[];
   isStatusDone: (interaction: Interaction) => boolean;
-  now?: Date;
 };
 
 // Modele unique de la page : un dossier produit une ligne et une seule, portant
@@ -313,40 +287,16 @@ type BuildDossierRowsParams = {
 // montant (ex-top clients).
 export const buildDossierRows = ({
   interactions,
-  isStatusDone,
-  now = new Date()
+  isStatusDone
 }: BuildDossierRowsParams): DossierRow[] => {
-  const nowTime = now.getTime();
-  const endOfTodayTime = endOfDay(now).getTime();
-
   return interactions.map((interaction) => {
     const stage = interaction.stage ?? null;
     const isClosed = stage === 'won' || stage === 'lost' || isStatusDone(interaction);
-    const reminderTime = interaction.reminder_at
-      ? toDate(interaction.reminder_at).getTime()
-      : Number.NaN;
-    const hasReminder = !Number.isNaN(reminderTime);
-
-    let urgency: DossierUrgency;
-    if (isClosed) {
-      urgency = 'closed';
-    } else if (!hasReminder) {
-      urgency = 'unplanned';
-    } else if (reminderTime < nowTime) {
-      urgency = 'overdue';
-    } else if (reminderTime <= endOfTodayTime) {
-      urgency = 'today';
-    } else {
-      urgency = 'upcoming';
-    }
 
     return {
       interaction,
       displayName: getInteractionDisplayName(interaction),
-      urgency,
-      dueTime: hasReminder ? reminderTime : null,
-      lateDays:
-        urgency === 'overdue' ? Math.floor((nowTime - reminderTime) / DAY_MS) : null,
+      urgency: isClosed ? 'closed' : 'open',
       isOpen: !isClosed,
       activityTime: resolveActivityTimestamp(interaction),
       amount: interaction.amount ?? null,
@@ -361,12 +311,8 @@ const compareByPriority = (first: DossierRow, second: DossierRow): number => {
     return rankDelta;
   }
 
-  if (first.dueTime !== null && second.dueTime !== null) {
-    return first.dueTime - second.dueTime;
-  }
-
-  // Sans echeance, le dossier laisse sans nouvelle depuis le plus longtemps passe devant ;
-  // les dossiers clos se lisent au contraire du plus recent au plus ancien.
+  // Les dossiers ouverts sans activité récente passent devant ; les dossiers clos
+  // se lisent du plus récent au plus ancien. Les échéances relèvent désormais de Tâches.
   return first.urgency === 'closed'
     ? second.activityTime - first.activityTime
     : first.activityTime - second.activityTime;

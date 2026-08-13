@@ -119,10 +119,6 @@ export const normalizeInteractionUpdates = (
     const orderRef = toNullableString(updates.order_ref);
     if (orderRef !== undefined) normalized.order_ref = orderRef;
   }
-  if (Object.hasOwn(updates, 'reminder_at')) {
-    const reminderAt = toNullableString(updates.reminder_at);
-    if (reminderAt !== undefined) normalized.reminder_at = reminderAt;
-  }
   if (Object.hasOwn(updates, 'stage')) {
     const stage = toNullableString(updates.stage);
     if (stage !== undefined) normalized.stage = stage;
@@ -210,7 +206,6 @@ export const saveInteraction = async (
     status_id: interaction.status_id?.trim() || null,
     interaction_type: interaction.interaction_type,
     order_ref: interaction.order_ref?.trim() || null,
-    reminder_at: interaction.reminder_at?.trim() || null,
     notes: interaction.notes?.trim() || null,
     entity_id: interaction.entity_id ?? null,
     contact_id: interaction.contact_id ?? null,

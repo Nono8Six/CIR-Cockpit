@@ -80,7 +80,6 @@ const interactionRow = {
   mega_families: ['Administratif'],
   notes: null,
   order_ref: null,
-  reminder_at: null,
   status: 'En cours',
   status_id: 'status-1',
   status_is_terminal: false,

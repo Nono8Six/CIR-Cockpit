@@ -3,6 +3,7 @@ import KanbanSection from './kanban/KanbanSection';
 import IntegritySection from './integrity/IntegritySection';
 import InputRulesSection from './input-rules/InputRulesSection';
 import type { SettingsSectionsProps } from './settings-sections.types';
+import TaskTypesSection from './tasks/TaskTypesSection';
 
 /**
  * Renders settings as focused internal subpages for workflow, form lists and rules.
@@ -12,6 +13,7 @@ import type { SettingsSectionsProps } from './settings-sections.types';
  */
 const SettingsSections = ({
   readOnly,
+  canManageTaskTypes = false,
   activeSection,
   canEditAgencySettings,
   usage,
@@ -100,6 +102,7 @@ const SettingsSections = ({
         />
       )}
       {activeSection === 'integrity' ? <IntegritySection agencyId={agencyId} readOnly={agencyReadOnly} usage={usage} canRunImmediateAction={canRunImmediateAction} /> : null}
+      {activeSection === 'task-types' && canManageTaskTypes ? <TaskTypesSection /> : null}
     </div>
   );
 };

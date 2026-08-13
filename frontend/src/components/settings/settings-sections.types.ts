@@ -7,6 +7,7 @@ import type {
 
 export type SettingsSectionsProps = {
   readOnly: boolean;
+  canManageTaskTypes?: boolean;
   activeSection: string;
   canEditAgencySettings: boolean;
   usage: ConfigUsageSnapshot | null;

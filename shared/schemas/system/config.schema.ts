@@ -227,7 +227,6 @@ export const configIntegrityInteractionRowSchema = z.strictObject({
   status_id: uuidSchema.nullable(),
   mega_families: z.array(z.string()),
   order_ref: z.string().nullable(),
-  reminder_at: z.string().nullable(),
   notes: z.string().nullable()
 });
 

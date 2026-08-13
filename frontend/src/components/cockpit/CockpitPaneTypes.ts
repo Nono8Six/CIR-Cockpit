@@ -95,8 +95,6 @@ export type CockpitFormRightPaneProps = {
   subjectField: UseFormRegisterReturn;
   notesField: UseFormRegisterReturn;
   orderRefField: UseFormRegisterReturn;
-  reminderField: UseFormRegisterReturn;
-  reminderAt: string;
   errors: FieldErrors<InteractionFormValues>;
   families: string[];
   megaFamilies: string[];
@@ -111,6 +109,5 @@ export type CockpitFormRightPaneProps = {
   statusGroups: Record<StatusCategory, AgencyConfig['statuses']>;
   hasStatuses: boolean;
   statusHelpId: string;
-  onSetReminder: (type: '1h' | 'tomorrow' | '3days' | 'nextWeek') => void;
   onReset: () => void;
 };

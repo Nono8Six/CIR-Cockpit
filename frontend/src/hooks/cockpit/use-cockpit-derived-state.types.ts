@@ -21,7 +21,6 @@ export type UseCockpitDerivedStateParams = {
   megaFamilies: string[];
   statusId: string;
   orderRef: string;
-  reminderAt: string;
   notes: string;
   entityId: string;
   contactId: string;

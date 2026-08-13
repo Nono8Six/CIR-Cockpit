@@ -87,8 +87,6 @@ export type UseCockpitPanePropsParams = {
   subjectField: CockpitFormRightPaneProps['subjectField'];
   notesField: CockpitFormRightPaneProps['notesField'];
   orderRefField: CockpitFormRightPaneProps['orderRefField'];
-  reminderField: CockpitFormRightPaneProps['reminderField'];
-  reminderAt: string;
   megaFamilies: string[];
   onToggleFamily: (family: string) => void;
   requiresProductFamilies: boolean;
@@ -101,6 +99,5 @@ export type UseCockpitPanePropsParams = {
   statusGroups: CockpitFormRightPaneProps['statusGroups'];
   hasStatuses: boolean;
   statusHelpId: string;
-  onSetReminder: CockpitFormRightPaneProps['onSetReminder'];
   onReset: () => void;
 };

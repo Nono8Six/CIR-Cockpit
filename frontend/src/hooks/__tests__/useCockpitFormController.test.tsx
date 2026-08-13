@@ -143,7 +143,6 @@ const buildInteraction = (overrides: Partial<Interaction> & { id: string }): Int
   mega_families: overrides.mega_families ?? [],
   notes: overrides.notes ?? null,
   order_ref: overrides.order_ref ?? null,
-  reminder_at: overrides.reminder_at ?? null,
   stage: overrides.stage ?? null,
   stage_changed_at: overrides.stage_changed_at ?? null,
   amount: overrides.amount ?? null,
@@ -253,7 +252,6 @@ describe('useCockpitFormController', () => {
       subject: '',
       megaFamilies: [],
       orderRef: '',
-      reminderAt: '',
       notes: '',
       isClientRelation: true,
       isProspectRelation: false,
@@ -321,7 +319,6 @@ describe('useCockpitFormController', () => {
           status_id: 'status-1',
           interaction_type: 'Devis',
           order_ref: '',
-          reminder_at: '',
           notes: '',
           entity_id: '',
           contact_id: ''

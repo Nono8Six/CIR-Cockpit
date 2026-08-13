@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { Boxes, ClipboardCheck, History, ListTodo } from 'lucide-react';
+import { Boxes, ClipboardCheck, History, ListTodo, Tags } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
@@ -17,6 +17,7 @@ type SettingsSidebarProps = {
   isDirty: boolean;
   onSectionChange: (sectionId: string) => void;
   unresolvedCount: number;
+  canManageTaskTypes?: boolean;
 };
 
 const SIDEBAR_ITEMS: SidebarItem[] = [
@@ -32,6 +33,7 @@ const SettingsSidebar = ({
   isDirty,
   onSectionChange,
   unresolvedCount,
+  canManageTaskTypes = false,
 }: SettingsSidebarProps) => {
   const handleClick = (id: string) => {
     onSectionChange(id);
@@ -51,7 +53,7 @@ const SettingsSidebar = ({
           )}
         </div>
         <nav className="grid min-w-0 flex-1 grid-cols-4 gap-1 sm:flex sm:overflow-x-auto" aria-label="Navigation des paramètres">
-          {SIDEBAR_ITEMS.map((item) => {
+          {[...SIDEBAR_ITEMS, ...(canManageTaskTypes ? [{ id: 'task-types', label: 'Types de tâche', shortLabel: 'Tâches', description: 'Administration', icon: Tags }] : [])].map((item) => {
             const Icon = item.icon;
             const isActive = activeSection === item.id;
 

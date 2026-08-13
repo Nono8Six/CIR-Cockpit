@@ -221,7 +221,6 @@ const timelineUpdatesSchema = z.strictObject({
   status: z.string().trim().optional(),
   status_id: z.union([uuidSchema, z.null()]).optional(),
   order_ref: z.union([z.string().trim(), z.null()]).optional(),
-  reminder_at: z.union([z.string().trim(), z.null()]).optional(),
   stage: z.union([interactionStageSchema, z.null()]).optional(),
   stage_changed_at: z.union([z.string().trim(), z.null()]).optional(),
   amount: z.union([z.number().min(0, 'Montant invalide'), z.null()]).optional(),

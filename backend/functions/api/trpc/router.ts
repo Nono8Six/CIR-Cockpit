@@ -75,15 +75,19 @@ import {
 } from "../../../../shared/schemas/interaction/tier-v1.schema.ts";
 import { tierDirectoryListInputSchema } from "../../../../shared/schemas/entity/tier-foundation.schema.ts";
 import {
+  taskAssignmentInputSchema,
   taskCreateInputSchema,
   taskCreateResponseSchema,
-  taskAssignmentInputSchema,
   taskDetailSchema,
+  taskExecuteWithActivityInputSchema,
+  taskExecutionResponseSchema,
   taskGetInputSchema,
   taskListInputSchema,
   taskListResponseSchema,
   taskNoteInputSchema,
   taskPriorityChangeInputSchema,
+  taskRecurrenceInputSchema,
+  taskRecurrenceResponseSchema,
   taskRescheduleInputSchema,
   taskStatusChangeInputSchema,
   taskTypeAdminInputSchema,
@@ -144,10 +148,10 @@ import {
   aiFeatureGrantsListResponseSchema,
   aiMembersAccessOverviewInputSchema,
   aiMembersAccessOverviewResponseSchema,
-  aiPromptsListInputSchema,
-  aiPromptsListResponseSchema,
   aiPromptsDeleteInputSchema,
   aiPromptsDeleteResponseSchema,
+  aiPromptsListInputSchema,
+  aiPromptsListResponseSchema,
   aiPromptsPublishInputSchema,
   aiPromptsPublishResponseSchema,
   aiPromptsRestoreInputSchema,
@@ -156,14 +160,14 @@ import {
   aiPromptsSaveDraftResponseSchema,
   aiPromptsSetArchivedInputSchema,
   aiPromptsSetArchivedResponseSchema,
-  aiSettingsGetInputSchema,
-  aiSettingsGetResponseSchema,
   aiSettingsCreateQuotaInputSchema,
   aiSettingsCreateQuotaResponseSchema,
   aiSettingsDeleteModelInputSchema,
   aiSettingsDeleteModelResponseSchema,
   aiSettingsDeleteQuotaInputSchema,
   aiSettingsDeleteQuotaResponseSchema,
+  aiSettingsGetInputSchema,
+  aiSettingsGetResponseSchema,
   aiSettingsSaveModelInputSchema,
   aiSettingsSaveModelResponseSchema,
   aiSettingsSaveProviderInputSchema,
@@ -204,22 +208,27 @@ import { handleDataConfigAction } from "../services/data/dataConfig.ts";
 import { handleDataEntitiesAction } from "../services/entities/core/dataEntities.ts";
 import { handleDataEntityContactsAction } from "../services/entities/contacts/dataEntityContacts.ts";
 import { handleDataInteractionsAction } from "../services/entities/interactions/dataInteractions.ts";
-import { correctActivityV2, getActivityV2ByLegacyInteraction } from "../services/entities/activities/dataActivitiesV2.ts";
+import {
+  correctActivityV2,
+  getActivityV2ByLegacyInteraction,
+} from "../services/entities/activities/dataActivitiesV2.ts";
 import { handleDataProfileAction } from "../services/data/dataProfile.ts";
 import { searchEntitiesUnified } from "../services/search/dataSearchEntitiesUnified.ts";
 import { listTierDirectory } from "../services/entities/core/tierReadModel.ts";
 import {
-  administerTaskTypes,
   addTaskNote,
+  administerTaskTypes,
   changeTaskPriority,
   changeTaskStatus,
   createTask,
+  executeTaskWithActivity,
   getTask,
   listTasks,
   listTaskTypes,
   rescheduleTask,
   updateTaskAssignment,
   updateTaskContent,
+  updateTaskRecurrence,
 } from "../services/tasks/taskService.ts";
 import {
   listCockpitAgencyMembers,
@@ -269,8 +278,8 @@ import { aggregatePricingReferenceDiffs } from "../services/pricing/references/r
 import { activatePricingReferenceSnapshot } from "../services/pricing/references/referenceActivation.ts";
 import {
   createAiQuota,
-  deleteAiPromptTemplate,
   deleteAiModel,
+  deleteAiPromptTemplate,
   deleteAiQuota,
   getAiSettings,
   getAiUsageSummary,
@@ -281,9 +290,9 @@ import {
   runPricingReferenceDiagnosis,
   saveAiModel,
   saveAiPromptDraft,
-  setAiPromptTemplateArchived,
   saveAiProvider,
   saveAiQuota,
+  setAiPromptTemplateArchived,
   testAiProvider,
 } from "../services/ai/aiGovernance.ts";
 import {
@@ -336,7 +345,9 @@ export const appRouter = router({
     "update-assignment": authedProcedure
       .input(taskAssignmentInputSchema)
       .output(taskDetailSchema)
-      .mutation(withAuthedDualDbHandler(updateTaskAssignment, (_input, db) => db)),
+      .mutation(
+        withAuthedDualDbHandler(updateTaskAssignment, (_input, db) => db),
+      ),
     reschedule: authedProcedure
       .input(taskRescheduleInputSchema)
       .output(taskDetailSchema)
@@ -344,7 +355,9 @@ export const appRouter = router({
     "change-priority": authedProcedure
       .input(taskPriorityChangeInputSchema)
       .output(taskDetailSchema)
-      .mutation(withAuthedDualDbHandler(changeTaskPriority, (_input, db) => db)),
+      .mutation(
+        withAuthedDualDbHandler(changeTaskPriority, (_input, db) => db),
+      ),
     "change-status": authedProcedure
       .input(taskStatusChangeInputSchema)
       .output(taskDetailSchema)
@@ -353,6 +366,18 @@ export const appRouter = router({
       .input(taskNoteInputSchema)
       .output(taskDetailSchema)
       .mutation(withAuthedDualDbHandler(addTaskNote, (_input, db) => db)),
+    "execute-with-activity": authedProcedure
+      .input(taskExecuteWithActivityInputSchema)
+      .output(taskExecutionResponseSchema)
+      .mutation(
+        withAuthedDualDbHandler(executeTaskWithActivity, (_input, db) => db),
+      ),
+    recurrence: authedProcedure
+      .input(taskRecurrenceInputSchema)
+      .output(taskRecurrenceResponseSchema)
+      .mutation(
+        withAuthedDualDbHandler(updateTaskRecurrence, (_input, db) => db),
+      ),
     list: authedProcedure
       .input(taskListInputSchema)
       .output(taskListResponseSchema)

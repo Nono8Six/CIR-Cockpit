@@ -121,7 +121,6 @@ const interactionRowSchema: z.ZodType<InteractionRow> = z.strictObject({
   notes: nullableStringSchema,
   order_ref: nullableStringSchema,
   quote_sent_at: nullableStringSchema.default(null),
-  reminder_at: nullableStringSchema,
   stage: nullableStringSchema.default(null),
   stage_changed_at: nullableStringSchema.default(null),
   status: z.string(),

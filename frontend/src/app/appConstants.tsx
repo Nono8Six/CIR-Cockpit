@@ -4,6 +4,7 @@ import {
   Building2,
   Factory,
   Gauge,
+  ListTodo,
   PenLine,
   Settings,
   Shield,
@@ -48,6 +49,7 @@ export const APP_TAB_SHORTCUTS: Record<AppTab, string> = {
   suppliers: 'F2',
   cockpit: 'F3',
   dashboard: 'F4',
+  tasks: 'F9',
   referentials: 'F5',
   configurators: 'F6',
   admin: 'F7',
@@ -81,6 +83,7 @@ export const isSidebarToggleShortcut = (event: SidebarToggleShortcutEvent): bool
 export type AppShellSectionId =
   | 'clients'
   | 'interactions'
+  | 'tasks'
   | 'pricing'
   | 'configurators'
   | 'admin';
@@ -109,6 +112,7 @@ export type AppShellNavSection = {
 export const APP_SHELL_SECTION_LABELS: Record<AppShellSectionId, string> = {
   clients: 'Tiers',
   interactions: 'Interactions',
+  tasks: 'Tâches',
   pricing: 'Remises',
   configurators: 'Configurateurs',
   admin: 'Admin'
@@ -178,6 +182,19 @@ export const buildShellNavigation = (
           shortcut: APP_TAB_SHORTCUTS.dashboard,
           metaLabel: formatPendingNavLabel(pendingCount),
           metaTitle: formatPendingNavTitle(pendingCount)
+        }
+      ]
+    },
+    {
+      id: 'tasks',
+      title: 'Tâches',
+      items: [
+        {
+          id: 'tasks',
+          sectionId: 'tasks',
+          label: 'Tâches',
+          icon: ListTodo,
+          shortcut: APP_TAB_SHORTCUTS.tasks
         }
       ]
     },

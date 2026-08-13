@@ -35,7 +35,7 @@ export const getConfigIntegrityInteractions = async (
         select i.id, i.subject, i.company_name, i.entity_type, i.created_at, i.updated_at,
           i.last_action_at, i.channel, i.contact_name, i.contact_phone, i.contact_email,
           i.contact_service, i.interaction_type, i.status, i.status_id, i.mega_families,
-          i.order_ref, i.reminder_at, i.notes
+          i.order_ref, i.notes
         from public.interactions i
         where i.agency_id = ${agencyId} and ${condition}
         order by i.created_at desc

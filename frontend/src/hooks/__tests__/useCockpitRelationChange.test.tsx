@@ -28,7 +28,6 @@ const filledClientValues: InteractionFormValues = {
   status_id: 'status-old',
   interaction_type: 'Rappel',
   order_ref: 'BC-42',
-  reminder_at: '2026-04-22T08:00',
   notes: 'Note interne',
   entity_id: 'client-1',
   contact_id: 'contact-1'
@@ -62,7 +61,6 @@ const clearedStringFields: Array<keyof InteractionFormValues> = [
   'contact_email',
   'subject',
   'order_ref',
-  'reminder_at',
   'notes',
   'entity_id',
   'contact_id'

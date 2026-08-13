@@ -17,7 +17,6 @@ export const useCockpitRegisterFields = ({ register }: UseCockpitRegisterFieldsP
   const contactEmailField = register('contact_email');
   const notesField = register('notes');
   const orderRefField = register('order_ref');
-  const reminderField = register('reminder_at');
   const subjectField = register('subject');
 
   return {
@@ -31,7 +30,6 @@ export const useCockpitRegisterFields = ({ register }: UseCockpitRegisterFieldsP
     contactEmailField,
     notesField,
     orderRefField,
-    reminderField,
     subjectField
   };
 };

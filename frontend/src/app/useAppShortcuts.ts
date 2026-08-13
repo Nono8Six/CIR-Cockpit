@@ -20,6 +20,7 @@ export const useAppShortcuts = ({
     const keyToTab = new Map<string, AppTab>([
       [APP_TAB_SHORTCUTS.cockpit, 'cockpit'],
       [APP_TAB_SHORTCUTS.dashboard, 'dashboard'],
+      [APP_TAB_SHORTCUTS.tasks, 'tasks'],
       [APP_TAB_SHORTCUTS.settings, 'settings'],
       [APP_TAB_SHORTCUTS.admin, 'admin'],
       [APP_TAB_SHORTCUTS.clients, 'clients'],

@@ -73,7 +73,6 @@ const interactionCoreSchema = z.strictObject({
   status_id: z.string().trim().min(1, 'Statut requis').nullish(),
   interaction_type: z.string().trim().min(1, "Type d'interaction requis").max(120, "Type d'interaction trop long"),
   order_ref: optionalOrderReference,
-  reminder_at: z.string().optional(),
   notes: z.string().max(MAX_NOTES_LENGTH, 'Notes trop longues').optional(),
   entity_id: optionalUuid,
   contact_id: optionalUuid

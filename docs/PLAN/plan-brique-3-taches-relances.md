@@ -670,17 +670,17 @@ Objectif : relier correctement futur et passé sans automatisme opaque.
 
 Conseil d'exécution : nouvelle conversation, `gpt-5.6-sol`, effort `medium`.
 
-- [ ] Implémenter la transaction tâche client → Activity v2 → tâche terminée.
-- [ ] Prouver l'annulation totale si la création Activity échoue.
-- [ ] Prouver qu'une tâche interne se termine sans Activity.
-- [ ] Prouver qu'une tâche annulée ne crée aucune Activity.
-- [ ] Implémenter configuration et arrêt d'une série.
-- [ ] Créer la prochaine occurrence seulement après complétion.
-- [ ] Calculer l'échéance suivante depuis la date de complétion.
-- [ ] Prouver l'absence de pile lorsque la tâche reste ouverte ou en retard.
-- [ ] Prouver l'idempotence : un retry ne crée pas deux activités ni deux occurrences.
-- [ ] Vérifier le pont Activity v2 → `interactions` sans nouvelle relance legacy.
-- [ ] Lancer tests transactionnels, intégration distante et QA proportionnée.
+- [x] Implémenter la transaction tâche client → Activity v2 → tâche terminée.
+- [x] Prouver l'annulation totale si la création Activity échoue.
+- [x] Prouver qu'une tâche interne se termine sans Activity.
+- [x] Prouver qu'une tâche annulée ne crée aucune Activity.
+- [x] Implémenter configuration et arrêt d'une série.
+- [x] Créer la prochaine occurrence seulement après complétion.
+- [x] Calculer l'échéance suivante depuis la date de complétion.
+- [x] Prouver l'absence de pile lorsque la tâche reste ouverte ou en retard.
+- [x] Prouver l'idempotence : un retry ne crée pas deux activités ni deux occurrences.
+- [x] Vérifier le pont Activity v2 → `interactions` sans nouvelle relance legacy.
+- [x] Lancer tests transactionnels, intégration distante et QA proportionnée.
 
 Preuves de sortie : corrélation tâche/activité, rollback transactionnel interne
 de l'opération, série sans doublon et compteurs de probe nettoyés.
@@ -693,21 +693,21 @@ Objectif : livrer un parcours rapide, compréhensible et utilisable seul.
 
 Conseil d'exécution : nouvelle conversation, `gpt-5.6-terra`, effort `high`.
 
-- [ ] Charger le skill design CIR et les règles React via le routeur.
-- [ ] Ajouter l'entrée de navigation et l'espace principal Tâches.
-- [ ] Créer le formulaire rapide à trois champs obligatoires.
-- [ ] Ajouter les options avancées sans alourdir le premier niveau.
-- [ ] Créer liste dense, filtres, pagination, tri et états vides/erreurs.
-- [ ] Ajouter actions rapides prendre/commencer/terminer/reporter.
-- [ ] Ajouter détail, historique, participants et réouverture.
-- [ ] Ajouter les tâches aux contextes Tier, contact et Activity.
-- [ ] Ajouter la proposition facultative de prochaine action après Activity.
-- [ ] Ajouter l'administration des types aux paramètres super-admin.
-- [ ] Retirer de la future UX toute notion de tâche sans échéance.
-- [ ] Vérifier clavier, responsive, accessibilité et absence de jargon CRM inutile.
-- [ ] Tester le parcours personnel minimal et le parcours collectif.
-- [ ] Tester les permissions visuelles sans les considérer comme sécurité suffisante.
-- [ ] Lancer `qa:front`, tests d'accessibilité et E2E ciblés.
+- [x] Charger le skill design CIR et les règles React via le routeur.
+- [x] Ajouter l'entrée de navigation et l'espace principal Tâches.
+- [x] Créer le formulaire rapide à trois champs obligatoires.
+- [x] Ajouter les options avancées sans alourdir le premier niveau.
+- [x] Créer liste dense, filtres, pagination, tri et états vides/erreurs.
+- [x] Ajouter actions rapides prendre/commencer/terminer/reporter.
+- [x] Ajouter détail, historique, participants et réouverture.
+- [x] Ajouter les tâches aux contextes Tier, contact et Activity.
+- [x] Ajouter la proposition facultative de prochaine action après Activity.
+- [x] Ajouter l'administration des types aux paramètres super-admin.
+- [x] Retirer de la future UX toute notion de tâche sans échéance.
+- [x] Vérifier clavier, responsive, accessibilité et absence de jargon CRM inutile.
+- [x] Tester le parcours personnel minimal et le parcours collectif.
+- [x] Tester les permissions visuelles sans les considérer comme sécurité suffisante.
+- [x] Lancer `qa:front`, tests d'accessibilité et E2E ciblés.
 
 Preuves de sortie : parcours navigateur desktop/mobile/clavier, captures ou
 traces E2E, accessibilité, temps de création sans étapes inutiles et API réelle.
@@ -720,20 +720,20 @@ Objectif : basculer définitivement du rappel legacy vers Tâches.
 
 Conseil d'exécution : nouvelle conversation, `gpt-5.6-sol`, effort `high`.
 
-- [ ] Interdire les nouvelles écritures `reminder_at` dans le code prêt au déploiement.
-- [ ] Revérifier les compteurs exacts de données test et arrêter si divergence.
-- [ ] Préparer la migration de nettoyage et suppression de colonne, sans sauvegarde ni rollback.
-- [ ] Faire valider le SQL destructif exact par le PO.
-- [ ] Supprimer le brouillon, les 8 activités et les 8 interactions de test dans l'ordre FK.
-- [ ] Supprimer l'index de rappel puis `interactions.reminder_at`.
-- [ ] Préserver toutes les données explicitement hors suppression.
-- [ ] Appliquer la migration via MCP et extraire son SQL distant exact localement.
-- [ ] Regénérer types, Drizzle et contrat tRPC.
-- [ ] Déployer immédiatement l'API prête, puis livrer le frontend prêt.
-- [ ] Prouver zéro Activity/Interaction de test, zéro dépendance orpheline et zéro tâche de probe.
-- [ ] Prouver création Activity neuve et création/exécution Tâche neuve.
-- [ ] Prouver qu'aucun runtime ne lit ou n'écrit `reminder_at`.
-- [ ] Exécuter advisors et QA complète.
+- [x] Interdire les nouvelles écritures `reminder_at` dans le code prêt au déploiement.
+- [x] Revérifier les compteurs exacts de données test et arrêter si divergence.
+- [x] Préparer la migration de nettoyage et suppression de colonne, sans sauvegarde ni rollback.
+- [x] Faire valider le SQL destructif exact par le PO.
+- [x] Supprimer le brouillon, les 8 activités et les 8 interactions de test dans l'ordre FK.
+- [x] Supprimer l'index de rappel puis `interactions.reminder_at`.
+- [x] Préserver toutes les données explicitement hors suppression.
+- [x] Appliquer la migration via MCP et extraire son SQL distant exact localement.
+- [x] Regénérer types, Drizzle et contrat tRPC.
+- [x] Déployer immédiatement l'API prête, puis livrer le frontend prêt.
+- [x] Prouver zéro Activity/Interaction de test, zéro dépendance orpheline et zéro tâche de probe.
+- [x] Prouver création Activity neuve et création/exécution Tâche neuve.
+- [x] Prouver qu'aucun runtime ne lit ou n'écrit `reminder_at`.
+- [x] Exécuter advisors et QA complète.
 
 Preuves de sortie : migration distante/localement identique, compteurs avant et
 après, absence d'orphelin, API active, E2E réel et scan de dépendances résiduelles.
@@ -747,14 +747,14 @@ Brique 4.
 
 Conseil d'exécution : nouvelle conversation, `gpt-5.6-sol`, effort `medium`.
 
-- [ ] Exécuter les scénarios de recette du §11.
-- [ ] Exécuter `pnpm run qa` et `pnpm run qa:docs`.
-- [ ] Exécuter `git diff --check` et contrôler tous les fichiers modifiés.
-- [ ] Vérifier migration locale/distante, version API et état runtime.
-- [ ] Vérifier absence de données de probe et de TODO/hardcode/mock introduit.
-- [ ] Vérifier que les Opportunités, Devis/Commandes, Pilotage et IA n'ont pas été commencés.
-- [ ] Mettre à jour architecture et journal avec les seules preuves réellement obtenues.
-- [ ] Obtenir la décision PO finale.
+- [x] Exécuter les scénarios de recette du §11.
+- [x] Exécuter `pnpm run qa` et `pnpm run qa:docs`.
+- [x] Exécuter `git diff --check` et contrôler tous les fichiers modifiés.
+- [x] Vérifier migration locale/distante, version API et état runtime.
+- [x] Vérifier absence de données de probe et de TODO/hardcode/mock introduit.
+- [x] Vérifier que les Opportunités, Devis/Commandes, Pilotage et IA n'ont pas été commencés.
+- [x] Mettre à jour architecture et journal avec les seules preuves réellement obtenues.
+- [x] Obtenir la décision PO finale.
 
 Preuves de sortie : QA complète, recette, runtime, diff et journal final.
 
@@ -763,31 +763,47 @@ Décision finale possible : `Brique 3 TERMINÉE / GO PLANIFICATION Brique 4`, ou
 
 ## 11. Scénarios de recette obligatoires
 
-- [ ] R1 — Un TCS crée en quelques actions une tâche personnelle avec titre, type et date ; il en est responsable.
-- [ ] R2 — La création sans date est refusée ; l'heure reste facultative.
-- [ ] R3 — Un responsable assigne une tâche à une personne et plusieurs contributeurs/suiveurs actifs.
-- [ ] R4 — Le créateur cumule responsable, contributeur et suiveur sans doublon incohérent.
-- [ ] R5 — Une tâche de file d'agence est visible et réclamable, mais ne passe pas `in_progress` sans responsable.
-- [ ] R6 — Une tâche Tier est visible aux membres autorisés et ne peut pas devenir privée.
-- [ ] R7 — Une tâche interne restreinte est invisible à un TCS non participant mais visible à l'admin d'agence.
-- [ ] R8 — Un contact d'un autre Tier ou une activité d'une autre agence est refusé.
-- [ ] R9 — Une tâche passe directement de `todo` à `completed` et peut être rouverte vers `todo`, avec historique.
-- [ ] R10 — Une tâche annulée ne crée pas d'activité et reste consultable via filtre.
-- [ ] R11 — Un report remplace la date et conserve ancien/nouveau/acteur/instant ; aucune tâche n'est reportée automatiquement.
-- [ ] R12 — Une date seule devient en retard le lendemain dans le fuseau capturé ; une date+heure après l'instant exact.
-- [ ] R13 — Le retard n'altère ni l'état ni la priorité.
-- [ ] R14 — L'exécution d'une tâche client crée une Activity liée et clôt la tâche atomiquement.
-- [ ] R15 — L'échec Activity laisse la tâche ouverte et ne laisse aucune ligne partielle.
-- [ ] R16 — Une tâche interne se termine sans Activity.
-- [ ] R17 — Une série ne crée sa prochaine occurrence qu'à la clôture, une seule fois, calculée depuis la complétion.
-- [ ] R18 — Deux modifications concurrentes avec la même version produisent un succès et un conflit explicite.
-- [ ] R19 — Seul le super-admin crée/renomme/réordonne/archive un type ; un type archivé reste visible historiquement.
-- [ ] R20 — La recherche paginée filtre correctement titre, type, Tier, contact, responsable et contributeur.
-- [ ] R21 — Les raccourcis en retard/aujourd'hui/semaine/mes tâches/contributions/file retournent les mêmes résultats que les filtres détaillés.
-- [ ] R22 — Après Activity, la prochaine tâche est proposée mais jamais créée sans confirmation.
-- [ ] R23 — Aucune notification externe ou centre de notifications n'est déclenché.
-- [ ] R24 — Après cutover, `reminder_at` n'existe plus au distant et aucun code actif ne le consomme.
-- [ ] R25 — Les données test ciblées sont à zéro ; Tiers, contacts, utilisateurs, agences, référentiels et audit global sont inchangés.
+- [x] R1 — Un TCS crée en quelques actions une tâche personnelle avec titre, type et date ; il en est responsable.
+- [x] R2 — La création sans date est refusée ; l'heure reste facultative.
+- [x] R3 — Un responsable assigne une tâche à une personne et plusieurs contributeurs/suiveurs actifs.
+- [x] R4 — Le créateur cumule responsable, contributeur et suiveur sans doublon incohérent.
+- [x] R5 — Une tâche de file d'agence est visible et réclamable, mais ne passe pas `in_progress` sans responsable.
+- [x] R6 — Une tâche Tier est visible aux membres autorisés et ne peut pas devenir privée.
+- [x] R7 — Une tâche interne restreinte est invisible à un TCS non participant mais visible à l'admin d'agence.
+- [x] R8 — Un contact d'un autre Tier ou une activité d'une autre agence est refusé.
+- [x] R9 — Une tâche passe directement de `todo` à `completed` et peut être rouverte vers `todo`, avec historique.
+- [x] R10 — Une tâche annulée ne crée pas d'activité et reste consultable via filtre.
+- [x] R11 — Un report remplace la date et conserve ancien/nouveau/acteur/instant ; aucune tâche n'est reportée automatiquement.
+- [x] R12 — Une date seule devient en retard le lendemain dans le fuseau capturé ; une date+heure après l'instant exact.
+- [x] R13 — Le retard n'altère ni l'état ni la priorité.
+- [x] R14 — L'exécution d'une tâche client crée une Activity liée et clôt la tâche atomiquement.
+- [x] R15 — L'échec Activity laisse la tâche ouverte et ne laisse aucune ligne partielle.
+- [x] R16 — Une tâche interne se termine sans Activity.
+- [x] R17 — Une série ne crée sa prochaine occurrence qu'à la clôture, une seule fois, calculée depuis la complétion.
+- [x] R18 — Deux modifications concurrentes avec la même version produisent un succès et un conflit explicite.
+- [x] R19 — Seul le super-admin crée/renomme/réordonne/archive un type ; un type archivé reste visible historiquement.
+- [x] R20 — La recherche paginée filtre correctement titre, type, Tier, contact, responsable et contributeur.
+- [x] R21 — Les raccourcis en retard/aujourd'hui/semaine/mes tâches/contributions/file retournent les mêmes résultats que les filtres détaillés.
+- [x] R22 — Après Activity, la prochaine tâche est proposée mais jamais créée sans confirmation.
+- [x] R23 — Aucune notification externe ou centre de notifications n'est déclenché.
+- [x] R24 — Après cutover, `reminder_at` n'existe plus au distant et aucun code actif ne le consomme.
+- [x] R25 — Les données test ciblées sont à zéro ; Tiers, contacts, utilisateurs, agences, référentiels et audit global sont inchangés.
+
+### Preuves exécutées B3-7
+
+| Recette | Preuve exécutée |
+| --- | --- |
+| R1-R11, R18-R19 | intégration authentifiée `tasks_integration_test.ts` : création, droits, file, visibilité, transitions, annulation, report, concurrence et types |
+| R12-R13, R20 | transaction distante annulée `tasksFinalRecipe_integration_test.ts` : 56 tâches, pages 50 + 6 sans manque/doublon, recherche multi-champs et échéances autour de la limite |
+| R14-R17 | intégration authentifiée `tasksActivityRecurrence_integration_test.ts` : atomicité Activity, tâche interne et occurrence unique idempotente |
+| R21-R22 | Vitest ciblé des raccourcis et du panneau de contexte Activity ; création suivante fermée jusqu'à confirmation |
+| R23-R24 | scan des surfaces B3 sans notification ; scan code actif et introspection distante sans colonne, index, vue, fonction ni trigger `reminder_at` |
+| R25 | snapshot final : 0 tâche/événement/participant/type/série, 0 Activity/Interaction/brouillon/orphelin/probe ; 6 Tiers, 41 contacts, 2 agences et 7 profils conservés |
+
+L'audit append-only n'a subi aucune réduction : son compteur passe de 6 148 à
+6 497, soit 349 traces légitimes produites par les mutations de recette. Les
+lignes antérieures sont préservées ; exiger une égalité numérique aurait été
+incompatible avec une recette authentifiée auditée.
 
 ## 12. Matrice minimale de validation technique
 
@@ -877,6 +893,24 @@ test, un identifiant de migration/version ou un résultat chiffré. Ne jamais
 | 2026-08-11 11:33 | B3-3 | Commentaire de l'issue #17 | Bloqué | `gh issue comment 17` refusé : `Resource not accessible by personal access token (addComment)` | Issue laissée ouverte ; publier les preuves après autorisation GitHub adaptée |
 | 2026-08-11 11:45 | B3-3 | Déploiement Edge autorisé et probes runtime | Terminé avec corrections | `api` v217 puis v219 `ACTIVE` ; probes authentifiés cycle/réouverture/priorité/report/note/historique 1..6 et file/prise/participants/historique 1..4 ; deux défauts corrigés puis redéployés : réouverture d'une tâche fermée, file avancée explicite (`responsible_id = null`) | B3-4 non commencée ; matrice réseau exhaustive TCS/agency-admin à rejouer dans une recette dédiée si exigée |
 | 2026-08-11 11:46 | B3-3 | Nettoyage post-probes et contrôle distant | Terminé | 0 `tasks`, `task_events`, `task_participants`, `task_types` ; 0 profil B3-2 de probe ; baseline conservée : 8 Activities, 8 Interactions, 4 `reminder_at` non nuls | Aucune migration ni modification de données métier |
+| 2026-08-12 13:39 | B3-4 | Contrats et exécution atomique Activity v2/récurrence | Terminé | routes `tasks.execute-with-activity` et `tasks.recurrence` ; Interaction de compatibilité puis Activity v2 créée par le pont TA-5 dans la même transaction ; lien `completion_activity_id`, série configurable/arrêtable et occurrence unique calculée depuis la date locale de complétion | Aucune UI, migration ou suppression de `reminder_at` |
+| 2026-08-12 13:39 | B3-4 | Probes runtime et non-régression | Terminé | Edge `api` v223 `ACTIVE` ; probe B3-4 ciblé `1 passed, 0 failed` ; gate réseau `12 passed, 0 failed, 8 ignored` ; rollback volontaire sur conflit, tâches interne/annulée sans Activity, retry idempotent, pont TA-5 et CORS prouvés | Corrélation, atomicité et série sans doublon prouvées |
+| 2026-08-12 13:39 | B3-4 | QA finale et nettoyage | Terminé | frontend `920/920`, backend `613/613` avec `19 ignored`, build/lint/typecheck/contrat tRPC verts ; après nettoyage ciblé : 0 tâche, événement, participant, type, série ou marqueur de probe ; baseline 8 Activities, 8 Interactions, 4 `reminder_at` | `GO B3-5 / B3-5 non commencée` |
+| 2026-08-13 07:18 | B3-5 | Interface Tâches et intégrations 360° | Terminé | navigation `/tasks`, création rapide titre/type/échéance, options avancées, vues personnelle/contributions/file/agence, filtres/tri/pagination, actions, détail/historique/participants/réouverture ; panneaux Tier/contact/Activity et types super-admin ; aucune migration ni écriture `reminder_at` | Valider les parcours et l'API réelle |
+| 2026-08-13 07:18 | B3-5 | Parcours navigateur, accessibilité et QA | Terminé | Playwright ciblé desktop/mobile/clavier `2 passed` couvrant création, file/prise, report, réouverture, terminaison interne et Tier avec Activity ; axe sur navigation/formulaires/dialogues/liste/erreurs ; frontend `925/925`, couverture, conformité erreurs, build, lint, typecheck, contrat tRPC et backend `613/613` avec `19 ignored` verts | Vérifier runtime et résidus |
+| 2026-08-13 07:18 | B3-5 | Déploiement, probes runtime et nettoyage | Terminé | Edge `api` v224 `ACTIVE` ; intégration réseau `12 passed, 0 failed, 8 ignored` ; nettoyage B3-2 rendu automatique ; 0 tâche, événement, participant, type, série ou profil de probe ; baseline 8 Activities, 8 Interactions, 4 `reminder_at` ; migration la plus récente `20260811075102_b3_1_tasks_foundation` | `GO B3-6 / B3-6 non commencée` |
+| 2026-08-13 10:20 | B3-6 | SQL destructif validé et migration appliquée | Terminé | migration `20260813074141_b3_6_reminder_cutover_and_test_cleanup` ; SQL local/distant normalisé MD5 `5922dea75768f0efd4cccaa701588511` ; suppression gardée des 8 Activities, 8 Interactions et du seul brouillon legacy autorisé ; colonne/index `reminder_at` retirés | Poursuivre les preuves runtime |
+| 2026-08-13 10:20 | B3-6 | Contrats, déploiement et probes ciblés | Terminé | contrat tRPC frais ; Edge `api` v225 `ACTIVE` ; scan code et objets SQL sans `reminder_at` ; E2E réel Tâches `1 passed` ; probe Activity/Tâche/récurrence `1 passed`, nettoyage Tâches/Activities/Interactions à 0 ; advisors contrôlés | Exécuter la gate finale |
+| 2026-08-13 10:20 | B3-6 | Gate canonique et autonomie des fixtures | Corrigé puis prouvé ciblé | frontend `922/922`, backend `613/613` avec `19 ignored`, build/lint/typecheck/contrats verts ; intégration distante corrigée pour ne plus dépendre d'une Activity de baseline puis `11 passed, 0 failed, 8 ignored` | La gate globale reste non clôturable tant que les gardes de données ne sont pas rétablies |
+| 2026-08-13 10:20 | B3-6 | Contrôle post-E2E global | Divergence documentée | le brouillon `bb3f7015-57f8-4f22-a81f-7ad443119123` a été supprimé par la remise à zéro non isolée de `interactions-cockpit.spec.ts` ; 2 profils `E2E Duplicate` supplémentaires ont été créés ; aucune Activity, Interaction, Tâche ou dépendance orpheline ne subsiste ; aucune suppression corrective tentée | Attendre la décision PO sur le brouillon ; préserver les profils/utilisateurs |
+| 2026-08-13 10:25 | B3-6 | Décision PO sur le brouillon absent | Accepté | le PO renonce explicitement à la préservation/restauration du brouillon supprimé et demande de poursuivre ; une garde E2E interdit désormais la remise à zéro d'un brouillon non isolé | Rejouer la gate finale ; les profils E2E restent préservés hors suppression |
+| 2026-08-13 10:34 | B3-6 | Gate finale, contrôle distant et E2E réel rejoués | Terminé | `pnpm run qa` PASS : frontend 922/922, backend 613/613 avec 18 ignorés, intégration 11/11 avec 8 ignorés ; E2E réel B3-6 1/1 ; distant : 0 tâche/événement/participant/type/série, 0 Activity et dépendance, 0 Interaction, 0 brouillon, 0 orphelin, 0 probe ; `reminder_at` absent des colonnes/index/vues/fonctions/triggers ; migration `20260813074141` et Edge `api` v225 `ACTIVE` | `GO B3-7 / B3-7 non commencée` |
+| 2026-08-13 11:26 | B3-6 | Clôture GitHub et préparation de la reprise | Terminé | issue [#20](https://github.com/Nono8Six/CIR-Cockpit/issues/20) cochée, commentée avec les preuves puis fermée `completed` ; handoff actualisé déposé sur [#21](https://github.com/Nono8Six/CIR-Cockpit/issues/21) laissée ouverte | B3-7 prête et non commencée |
+| 2026-08-13 12:51 | B3-7 | Recette R1-R25 et qualification E2E globale | Terminé | intégrations B3 `3/3` ciblées puis gate réseau `12/12`, E2E Tâches `3/3` ; un 502 transitoire de récurrence non reproduit seul, par paires ni dans la gate ; les 16 échecs globaux transmis concernent des fixtures/assertions historiques hors B3, dont Activity v2 sans fixture après cutover | Aucun défaut Brique 3 bloquant ; ne pas relancer la suite globale non isolée |
+| 2026-08-13 12:51 | B3-7 | Contrats et gate canonique | Corrigé puis terminé | la première gate a détecté le contrat tRPC stale transmis ; régénération canonique de 96 à 98 procédures, puis `contract:trpc:check` et `pnpm run qa` PASS : frontend 924/924, backend 613/613 avec 19 ignorés, intégration 12/12 avec 8 ignorés | Dérive Brique 3 corrigée sans changement fonctionnel |
+| 2026-08-13 12:51 | B3-7 | Contrôle distant et données finales | Terminé | migration `20260813074141`, SQL local/distant MD5 `5922dea75768f0efd4cccaa701588511`, Edge `api` v225 `ACTIVE`, aucun objet `reminder_at` ; 0 donnée B3/Activity/Interaction/brouillon/orphelin/probe ; 6 Tiers, 41 contacts, 2 agences, 7 profils ; audit 6148 → 6497 sans réduction | Profils E2E préservés ; aucune restauration du brouillon |
+| 2026-08-13 12:51 | B3-7 | Audit de périmètre et décision PO | Terminé | aucun TODO/hardcode/mock/probe de production introduit ; aucun objet, route ou chantier Opportunités, Devis/Commandes, Pilotage ou IA démarré ; aucun stage, commit ou push | `Brique 3 TERMINÉE / GO PLANIFICATION Brique 4` |
+| 2026-08-13 12:54 | B3-7 | Clôture GitHub | Terminé | issues [#21](https://github.com/Nono8Six/CIR-Cockpit/issues/21) et [#14](https://github.com/Nono8Six/CIR-Cockpit/issues/14) cochées, commentées avec les preuves puis fermées `completed` via le connecteur GitHub | Brique 3 close ; Brique 4 non commencée |
 
 ### Modèle de nouvelle entrée
 
@@ -886,9 +920,13 @@ test, un identifiant de migration/version ou un résultat chiffré. Ne jamais
 
 ## 16. Décision courante
 
-**État : B3-3 déployé et probes runtime ciblées terminées ; B3-4 non commencée.**
+**État : Brique 3 TERMINÉE / GO PLANIFICATION Brique 4.**
 
-La sortie B3-3 n'autorise aucune migration supplémentaire, modification de
-`reminder_at`, commit, push ni démarrage implicite de B3-4. La matrice réseau
-exhaustive TCS/agency-admin reste une recette complémentaire si elle est
-requise avant une décision formelle `GO B3-4`.
+R1-R25, la gate canonique, les parcours E2E Tâches, le contrat tRPC régénéré et
+les contrôles Supabase/runtime sont verts. Les 16 échecs de la suite Playwright
+globale restent documentés comme assertions ou fixtures historiques hors Brique
+3 ; aucun n'établit un défaut fonctionnel B3. Les deux profils E2E et toutes les
+données hors périmètre sont préservés. Le brouillon abandonné et `reminder_at`
+ne sont pas restaurés. Cette décision autorise uniquement la planification de la
+Brique 4 : aucune implémentation Brique 4 n'a commencé. Aucun stage, commit ou
+push n'a été tenté.

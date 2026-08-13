@@ -49,7 +49,6 @@ export const buildRelationChangeValues = ({
   status_id: defaultStatusId,
   interaction_type: getDefaultInteractionTypeForRelation(entityType, getInteractionTypeLabels(config.interactionTypes)),
   order_ref: '',
-  reminder_at: '',
   notes: '',
   entity_id: '',
   contact_id: ''

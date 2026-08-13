@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 
 import { Button } from '@/components/ui/inputs/basic/Button';
 import { Input } from '@/components/ui/inputs/basic/Input';
@@ -8,12 +8,15 @@ import { correctActivityV2 } from '@/services/interactions/correctActivityV2';
 import { getActivityV2 } from '@/services/interactions/getActivityV2';
 import { normalizeError } from '@/services/errors/normalizeError';
 import { interactionsRootKey } from '@/services/query/queryKeys';
+import TaskContextPanel from '@/components/tasks/TaskContextPanel';
+import { AppSessionStateContext } from '@/components/AppSessionProvider';
 
 const queryKey = (legacyId: string) => ['activity-v2', legacyId] as const;
 
 type Props = { legacyInteractionId: string };
 
 const ActivityCanonicalDetails = ({ legacyInteractionId }: Props) => {
+  const session = useContext(AppSessionStateContext);
   const queryClient = useQueryClient();
   const query = useQuery({
     queryKey: queryKey(legacyInteractionId),
@@ -119,6 +122,17 @@ const ActivityCanonicalDetails = ({ legacyInteractionId }: Props) => {
           </div>
         </div>
       </details>
+      {session?.activeAgencyId && session.session ? <div className="border-t border-border pt-3">
+        <TaskContextPanel
+          agencyId={activity.agency_id}
+          userId={session.session.user.id}
+          userRole={session.profile?.role ?? 'tcs'}
+          organizationId={activity.organization_id ?? undefined}
+          contactId={activity.contact_id ?? undefined}
+          activityId={activity.id}
+          context={{ organizationId: activity.organization_id ?? undefined, contactId: activity.contact_id ?? undefined, activityId: activity.id, contextLabel: activity.subject }}
+        />
+      </div> : null}
       <details className="text-xs">
         <summary className="cursor-pointer font-medium">Historique de l’activité</summary>
         <ol className="mt-2 space-y-1 text-muted-foreground">

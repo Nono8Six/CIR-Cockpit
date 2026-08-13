@@ -34,7 +34,6 @@ const buildInteraction = (overrides: Partial<Interaction> = {}): Interaction => 
   mega_families: [],
   notes: null,
   order_ref: null,
-  reminder_at: null,
   status: 'En cours',
   status_id: 'status-progress',
   status_is_terminal: false,
