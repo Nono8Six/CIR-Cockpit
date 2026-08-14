@@ -4,8 +4,8 @@
 
 | Métadonnée | Valeur |
 | --- | --- |
-| Statut | Référence directrice active v1.0 — décisions ouvertes conservées explicitement |
-| Date | 2026-07-17 |
+| Statut | Référence directrice active v1.3 — POC agentique simplifié |
+| Date | 2026-08-13 |
 | Périmètre | Produit, modèle métier, données, backend, frontend, imports, recherche et assistant IA |
 | Application | Application locale avec backend Supabase distant lié |
 | Autorité | Ce document fixe la cible et les règles de cohérence. Il ne décrit pas à lui seul l’état actuellement déployé. |
@@ -36,9 +36,10 @@ Ordre d’autorité documentaire :
 
 1. `AGENTS.md` fixe les règles opérationnelles des agents.
 2. Le présent document fixe la doctrine produit et l’architecture cible.
-3. `docs/ASSISTANT_IA/plan-mistral-assistant-transversal.md` est l’unique plan d’exécution IA actif.
-4. Les cahiers métier conservés décrivent des besoins et hypothèses à réconcilier avec cette architecture avant implémentation.
-5. Le code, les migrations et le backend distant décrivent l’état réel à un instant donné.
+3. `docs/ASSISTANT_IA/plan-mistral-assistant-transversal.md` gouverne l'assistant existant ; `docs/IA_AGENTIQUE/README.md` indexe le POC et la convergence agentique.
+4. Les ADR sous `docs/IA_AGENTIQUE/` expliquent les arbitrages difficiles sans remplacer cette architecture ni le plan phase-gated du même dossier.
+5. Les cahiers métier conservés décrivent des besoins et hypothèses à réconcilier avec cette architecture avant implémentation.
+6. Le code, les migrations et le backend distant décrivent l’état réel à un instant donné.
 
 En cas de conflit, il ne faut ni suivre aveuglément un ancien plan ni modifier automatiquement le code. Le conflit doit être nommé, l’état réel vérifié, puis une migration explicite doit être proposée.
 
@@ -63,9 +64,11 @@ procédure opérationnelle unique est définie dans `AGENTS.md` et
 
 ### 1.1 La prochaine étape
 
-La prochaine étape est de **valider ce socle directeur**, puis de réaliser une cartographie de consolidation pré-import du noyau `Tiers → Activités`.
-
-**Correctif autorisé immédiatement, hors séquence de briques —** bascule du provider de l’assistant Référentiels vers Mistral La Plateforme en contrat direct, conformément à la décision du 2026-07-16. Critère de fin : une première réponse sourcée est réellement affichée dans l’interface utilisateur. Ce correctif ne modifie ni `entities`, ni `interactions`, ni les frontières métier définies dans ce document et n’attend donc pas le Socle 1.
+Les Briques 1 à 3 sont livrées. La prochaine étape est de **valider la sortie
+documentaire SA-0 du Socle Agentique**, puis d'obtenir une autorisation
+distincte avant le tracer bullet SA-1. Le Socle Agentique précède la Brique 4
+afin que les futurs domaines publient leurs capacités sur un seam éprouvé au
+lieu d'ajouter un troisième chemin parallèle.
 
 La prochaine étape n’est pas :
 
@@ -75,6 +78,7 @@ La prochaine étape n’est pas :
 - d’ajouter Opportunités, Devis, Commandes et Catalogue dans `interactions` ;
 - de rendre l’IA capable d’interroger arbitrairement toutes les tables ;
 - de créer toutes les tables cibles en une seule migration.
+- de commencer SA-1 par la seule validation des documents.
 
 ### 1.2 Position retenue
 
@@ -547,6 +551,30 @@ Lorsqu’une brique expose effectivement une capacité IA, elle définit :
 
 Ce contrat, lorsqu’il existe, permet d’ajouter une brique à l’assistant sans réécrire l’orchestrateur global. Il doit être extrait d’un parcours réel qui fonctionne, puis généralisé au strict nécessaire ; il ne doit pas être conçu intégralement dans l’abstrait.
 
+**CIBLE — les services métier typés sont le seam entre le domaine et ses
+appelants.** Le premier parcours agentique les compose directement dans un
+module vertical. Un registre de capacités n'est extrait qu'après preuve de deux
+compositions réellement communes ou lorsqu'un nouvel adaptateur externe le
+justifie.
+
+Deux familles évitent un descripteur universel surchargé :
+
+- une **requête** retourne un résultat borné et sourcé sans effet métier ;
+- une **commande** ajoute explicitement clé d'idempotence, niveau de risque et
+  règle d'approbation.
+
+Les schémas Zod réellement consommés par plusieurs runtimes appartiennent au
+contrat partagé. La description destinée au modèle et la conversion en outil
+appartiennent à l'adaptateur IA. Les adaptateurs tRPC et IA restent minces et ne
+portent aucune règle métier. `shared/` ne devient ni un backend portable fictif
+ni un contrat universel de contexte futur. Un adaptateur MCP ou un transport
+inter-processus sera conçu uniquement lorsqu'un appelant réel le justifiera.
+
+**VERROUILLÉ — aucun modèle ne reçoit une capacité SQL générale.** Une
+implémentation de capacité peut interroger Supabase directement avec l'identité
+appropriée ; le modèle choisit une intention métier bornée, jamais une requête
+SQL arbitraire ni une clé qui contourne RLS.
+
 ### 10.3 Stratégie de recherche
 
 | Donnée | Mécanisme prioritaire | Exemple |
@@ -579,6 +607,19 @@ Garde-fous :
 - choix de modèle piloté par l’intention et mesuré par des évaluations ;
 - budget et coût réels enregistrés par appel.
 
+**CIBLE — le runtime agentique est multi-provider.** Le fournisseur et le
+modèle sont choisis par configuration derrière une petite interface stable.
+Mistral reste la configuration de référence de l'assistant existant, mais aucun
+contexte métier ni aucune capacité n'en dépend. Le premier vertical utilise une
+sortie structurée Mistral en un appel. AI SDK Core n'est spiké que si une boucle,
+un second provider ou du plumbing dupliqué apparaît ; la bibliothèque doit alors
+supprimer du code sans perdre gouvernance, tests ni portabilité CIR.
+
+Le POC personnel privilégie l'expérimentation : la politique de données du
+provider est affichée et tracée sans bloquer globalement le choix du modèle. Un
+passage à des données de production exigera un gate séparé par catégorie de
+données et par provider, fondé sur des garanties effectivement vérifiées.
+
 ### 10.5 Fiabilité
 
 Une réponse factuelle contient :
@@ -590,7 +631,10 @@ Une réponse factuelle contient :
 - les limites ou données manquantes ;
 - la preuve du calcul lorsque applicable.
 
-Le LLM n’invente pas une réponse lorsque l’outil renvoie zéro résultat ou une ambiguïté. Il demande une précision ou expose clairement l’absence de preuve.
+Le LLM n’invente pas une réponse lorsque l’outil renvoie zéro résultat ou une
+ambiguïté. Il demande une précision ou expose clairement l’absence de preuve.
+Il ne peut pas autoriser une action à partir d'un score de confiance qu'il
+s'attribue lui-même.
 
 ### 10.6 Confidentialité
 
@@ -603,7 +647,9 @@ Règles minimales :
 - le contexte envoyé est minimisé et journalisé sans réexposer les données sensibles ;
 - la confidentialité est gouvernée par le contrat, la classification des données et la minimisation, pas par une contrainte technique ZDR appliquée indistinctement à toutes les requêtes.
 
-**CIBLE — provider de référence de l’assistant :** Mistral La Plateforme payant, en contrat direct UE, sans entraînement sur les données, avec une rétention contractuelle de 30 jours et le ZDR activable en option. Cette décision est réversible par configuration via l’enum de provider et un adaptateur ; elle ne doit pas être recodée dans la logique métier.
+**EXISTANT — provider de référence de l’assistant actuel :** Mistral La
+Plateforme en contrat direct. Cette configuration reste réversible par
+l'adaptateur existant et ne fixe pas le provider du runtime agentique.
 
 Le ZDR peut être activé pour une catégorie ou un parcours qui l’exige, mais il n’est ni un gate global de routage ni un prérequis au branchement du provider. Le travail restant porte sur le traitement approprié de chaque catégorie sensible : transmission autorisée, minimisation, masquage, agrégation, exclusion ou ZDR optionnel.
 
@@ -623,6 +669,14 @@ La cible reste un monolithe modulaire :
 - des vues sémantiques et index de recherche ;
 - un assistant orchestrateur au-dessus des services de domaine.
 
+Le POC reste dans ce monolithe. Le vertical Deno compose les services métier en
+processus et termine chaque requête sans attente durable. Une approbation
+sépare deux requêtes : la première persiste les propositions utiles, puis chaque
+décision approuvée exécute une commande distincte. Une interruption rejoue l'étape
+incomplète avec la même clé d'idempotence. Cette proposition est un objet métier
+dédié ; elle ne détourne pas `ai_request_reservations`, qui reste un registre
+technique de quotas, coûts et appels idempotents.
+
 Les modules ne partagent pas des requêtes ad hoc dans leurs tables respectives. Ils publient des services de lecture ou événements utiles.
 
 ### 11.2 Événements et jobs
@@ -639,7 +693,27 @@ Les changements importants produisent des événements fiables, par exemple :
 
 Ces événements alimentent, selon les besoins : audit, notifications, indexation, read models, contrôles de qualité et contexte IA. Une outbox transactionnelle est préférée à un envoi réseau non garanti pendant la transaction.
 
-Les workers doivent revendiquer les jobs de manière concurrente sûre, enregistrer les tentatives et permettre une reprise. Le choix précis du runtime de worker est **À VALIDER** avant le premier import catalogue massif.
+Les workers doivent revendiquer les jobs de manière concurrente sûre,
+enregistrer les tentatives et permettre une reprise. La cible distingue trois
+classes d'exécution :
+
+| Classe | Runtime privilégié | Limite |
+| --- | --- | --- |
+| Interaction courte | requête HTTP Edge et boucle outil bornée | pas de sommeil ni d'attente durable |
+| Parcours POC supervisé | étapes Edge idempotentes séparées par un état métier persistant | l'étape incomplète est rejouée, pas reprise en mémoire |
+| Job périodique borné | `pg_cron` + `pg_net` vers Edge, secret Vault ; `pgmq` après besoin mesuré | chaque étape tient dans les limites Edge |
+| Workflow long multi-service | **À VALIDER après preuve du besoin** | moteur durable choisi sur mesures de production |
+
+**VALIDÉ POUR LE POC —** aucun moteur de workflow ni second runtime n'est
+introduit. Le déclenchement reste manuel jusqu'à preuve du parcours shadow et
+supervised. Le stockage existant est réutilisé avant toute nouvelle table ; un
+état supplémentaire représente une proposition ou transition métier précise,
+pas un ledger universel anticipé. Le premier déclenchement périodique n'ajoute
+pas `pgmq` sans perte ou besoin de reprise observé.
+
+Une outbox transactionnelle porte les faits métier qui déclenchent un travail.
+Le journal CIR conserve le statut métier utile à l'utilisateur ; il ne duplique
+pas l'intégralité du journal interne d'un moteur de workflow.
 
 ### 11.3 Performance PostgreSQL
 
@@ -747,17 +821,22 @@ Une brique est terminée lorsque :
 
 ### Socle 0 — Gouvernance d’architecture
 
-Objectif : appliquer ce document, trancher les décisions bloquantes de la première brique et maintenir un corpus documentaire sans anciens plans concurrents.
+Objectif : appliquer ce document, trancher les décisions bloquantes et maintenir
+un corpus documentaire sans plans concurrents. La consolidation Tiers,
+Activités et Tâches issue de ce socle est livrée ; son historique reste dans les
+plans exécutés.
 
-Livrable suivant : une cartographie `modèle actuel → modèle cible` limitée aux Tiers et Activités. Comme aucun client n’est encore importé, son cœur n’est pas un backfill de 12 000 lignes mais la conception correcte du modèle **avant import** : inventaire de toutes les dépendances qui référencent `entities`, RLS par agence, identité stable, rôles multiples, comptes d’agence, contacts, contraintes, index, contrats API/UI, stratégie d’import idempotente et critères de rollback. Toute donnée non cliente déjà présente devra être inventoriée et préservée. Ces sujets ne peuvent pas être relégués dans une annexe. Aucun écran Opportunité, Devis ou Commande n’est inclus.
+### Socle 1 — Vertical Référentiels et POC agentique
 
-### Socle 1 — Plateforme IA minimale et contrat de brique
+Objectif : exécuter `docs/IA_AGENTIQUE/plan-socle-agentique.md` par tracer
+bullets. Une projection `ReferenceWatchFacts` compose d'abord les services de
+diff existants, puis un appel Mistral structuré prouve `shadow` avant toute
+proposition persistée. La veille périodique commence par
+`pg_cron`/`pg_net` après preuve du parcours manuel ; `pgmq` reste conditionnel.
+L'assistant existant migre par parité prouvée.
 
-**Prérequis bloquant :** l’assistant Référentiels fonctionne réellement avec Mistral direct et une première réponse sourcée a été affichée dans l’interface.
-
-Objectif : observer ce parcours opérationnel, puis en extraire le plus petit format commun réellement utile pour les outils, preuves, permissions, budgets et évaluations. Ce format n’est pas conçu sur papier avant la preuve de fonctionnement et il n’est généralisé qu’à partir de besoins rencontrés. Il ne s’agit pas encore d’étendre l’assistant à toutes les données.
-
-Cette capacité transversale évolue ensuite avec chaque brique.
+Le POC est personnel, local et interruptible. Sa réussite ne vaut pas décision
+de runtime, de provider ou de conformité pour la production.
 
 ### Brique 1 — Tiers et rôles
 
@@ -819,7 +898,11 @@ Les filières commerciales et produit peuvent avancer à des rythmes différents
 | `docs/architecture-cible-cir-cockpit.md` | **Source de vérité globale** pour le produit, le métier, les données et l’architecture cible. |
 | `docs/PLAN/plan-consolidation-tiers-activites.md` | **Plan d'exécution phase-gated** de la consolidation pré-import Tiers et Activités. |
 | `docs/PLAN/plan-brique-3-taches-relances.md` | **Plan exécuté et journal final** de la Brique 3 Tâches et relances. |
-| `docs/ASSISTANT_IA/plan-mistral-assistant-transversal.md` | **Unique plan d’exécution actif** pour la correction Mistral et l’assistant transversal. |
+| `docs/ASSISTANT_IA/plan-mistral-assistant-transversal.md` | Plan de référence de l'assistant Mistral existant et de sa gouvernance. |
+| `docs/IA_AGENTIQUE/README.md` | **Index canonique** du POC et du socle agentique. |
+| `docs/IA_AGENTIQUE/plan-socle-agentique.md` | **Plan phase-gated actif** du POC et du socle agentique, sans autorisation implicite d'implémenter. |
+| `docs/IA_AGENTIQUE/audit-et-proposition-socle-agentique.md` | Audit contradictoire du 2026-08-14 et proposition de socle AF ; n'autorise aucun code et ne remplace le plan qu'après GO PO. |
+| `docs/IA_AGENTIQUE/0001-*` à `0004-*` | Arbitrages du socle agentique ; compléments explicatifs subordonnés à la présente architecture. |
 | `docs/LOGIQUE_REMISE_CIR/cahier-des-charges/00-sommaire.md` | Index des besoins métier Tarification conservés ; non normatif pour le schéma ou la stack. |
 | `docs/stack.md` | État vérifié de la stack réelle. |
 | `docs/testing.md` | Guide court de tests. |
@@ -852,11 +935,11 @@ Les anciens plans Assistant IA, Pilotage V3, Socle Référentiels, calendriers t
 
 ### 15.3 IA, confidentialité et exploitation
 
-16. Quelles catégories de données — notamment marges, BFA, données personnelles, documents commerciaux et conditions d’achat — exigent un traitement particulier ?
-17. Pour chacune de ces catégories, quelle politique appliquer : transmission minimale autorisée, masquage, agrégation, exclusion du contexte ou ZDR optionnel ?
-18. Quelles actions l’IA pourra-t-elle seulement préparer, et lesquelles pourra-t-elle exécuter après confirmation ?
-19. Quel runtime portera les imports et indexations longues ?
-20. Quelles durées de conservation s’appliquent aux documents, traces IA, historiques et audits ?
+16. **VALIDÉ POUR LE POC 2026-08-13 —** toutes les données du périmètre personnel peuvent être utilisées ; la classification et les garanties provider restent visibles. Toute réutilisation avec des données de production rouvre un gate de conformité explicite.
+17. **VALIDÉ POUR LE POC 2026-08-13 —** la politique provider est tracée mais ne bloque pas globalement l'expérimentation. En production, transmission, masquage, exclusion ou ZDR seront décidés par catégorie et preuve contractuelle actuelle.
+18. **VALIDÉ 2026-08-13 —** progression `shadow` → `supervised` → `autonomous`. Le socle initial se limite aux lectures, preuves, propositions et actions internes idempotentes ; toute action externe ou engageante reste soumise à une décision ultérieure.
+19. **VALIDÉ POUR LE POC 2026-08-13 —** le backend Deno existant porte des étapes courtes, idempotentes et séparées par les états métier utiles. Aucun Node adjacent ni moteur durable. Le besoin d'un runtime long est réévalué seulement au gate production.
+20. **VALIDÉ POUR LE POC 2026-08-13 —** prompts et réponses brutes au plus 7 jours ; traces techniques expurgées 30 jours ; preuves métier selon la rétention de leur objet. La politique de production sera revalidée avant déploiement permanent.
 
 Les décisions ouvertes sont traitées juste avant la brique concernée. Elles ne bloquent pas les briques indépendantes et ne doivent pas être résolues par spéculation.
 
@@ -973,6 +1056,44 @@ Les décisions ouvertes sont traitées juste avant la brique concernée. Elles n
   Pilotage et IA n'ont reçu aucun objet ni parcours de leur chantier suivant.
 - Décision PO : **Brique 3 TERMINÉE / GO PLANIFICATION Brique 4**. Cette décision
   n'autorise aucune implémentation de la Brique 4.
+
+### 2026-08-13–14 — Architecture du POC et du socle agentique
+
+- La planification du Socle Agentique précède toute implémentation ; elle
+  n'autorise ni code, ni migration, ni déploiement.
+- Après audits contradictoires, Node, Workflow SDK, Postgres World, le port HTTP
+  interne et les grants sont retirés du POC comme sur-ingénierie ; un moteur
+  durable ne sera reconsidéré qu'après preuve d'un workflow long réel.
+- Le premier vertical compose directement les services typés existants. Aucun
+  dispatcher `invokeCapability` n'est créé avant un second besoin réel commun.
+- Les implémentations restent dans le backend Deno et sont invoquées en
+  processus. `shared/` ne porte que les contrats réellement partagés.
+- Le Supabase MCP de développement est exclu du runtime du POC. Les services
+  peuvent accéder à Supabase sous une identité explicite et sans SQL arbitraire
+  offert au modèle.
+- Le POC est personnel, gratuit et interruptible dans l'Edge Function Deno
+  existante, sans Docker, second runtime ni moteur de workflow.
+- Les étapes sont courtes et rejouables. Une approbation termine la première
+  requête puis déclenche une commande distincte. La proposition métier est
+  séparée des réservations IA techniques.
+- Arbitrage PO du 2026-08-14 : une exécution peut produire zéro à plusieurs
+  propositions de tâches, internes ou liées à un Tier. Chaque proposition est
+  décidée séparément et crée au plus une tâche avec une clé stable.
+- En manuel, l'acteur et l'agence sont ceux de l'utilisateur connecté. L'identité
+  d'un déclenchement automatique est différée au gate de veille périodique.
+- Activités, mails, devis et commandes ne sont pas interdits comme cible ; leur
+  exécution exige le contrat IA de leur brique et un GO distinct.
+- Après preuve du parcours manuel, la veille utilise d'abord `pg_cron` +
+  `pg_net` + Vault. `pgmq` n'est ajouté qu'après besoin mesuré et ne constitue
+  jamais lui-même un déclencheur.
+- Le runtime reste multi-provider. Le POC laisse le choix du modèle ouvert et
+  trace sa politique ; les gates strictes de données reviennent avant toute
+  exposition de données de production.
+- L'autonomie progresse de `shadow` à `supervised`, puis à `autonomous` après
+  preuve de qualité, de reprise, d'idempotence et de refus des actions interdites.
+  La décision repose sur une politique déterministe, jamais sur la confiance
+  déclarée par le modèle.
+- MCP externe, actions sortantes, Temporal, A2A et multi-agent sont hors du POC.
 
 ## 17. Checkpoint de validation PO
 
