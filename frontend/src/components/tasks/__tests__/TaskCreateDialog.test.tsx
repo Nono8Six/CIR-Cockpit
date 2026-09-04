@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { axe } from 'vitest-axe';
 
 import TaskCreateDialog from '@/components/tasks/TaskCreateDialog';
@@ -12,6 +12,15 @@ vi.mock('@/hooks/tasks/useTasks', () => ({
 }));
 
 describe('TaskCreateDialog', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-08-13T12:00:00Z'));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('keeps title, type and due date mandatory and sends a real quick-create payload', async () => {
     render(<TaskCreateDialog open onOpenChange={vi.fn()} agencyId="33333333-3333-4333-8333-333333333333" userId="44444444-4444-4444-8444-444444444444" />);
     const create = screen.getByRole('button', { name: 'Créer' });

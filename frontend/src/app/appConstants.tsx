@@ -7,8 +7,7 @@ import {
   ListTodo,
   PenLine,
   Settings,
-  Shield,
-  SlidersHorizontal
+  Shield
 } from 'lucide-react';
 
 import type { AgencyConfig } from '@/services/config';
@@ -51,7 +50,6 @@ export const APP_TAB_SHORTCUTS: Record<AppTab, string> = {
   dashboard: 'F4',
   tasks: 'F9',
   referentials: 'F5',
-  configurators: 'F6',
   admin: 'F7',
   settings: 'F8'
 };
@@ -85,7 +83,6 @@ export type AppShellSectionId =
   | 'interactions'
   | 'tasks'
   | 'pricing'
-  | 'configurators'
   | 'admin';
 
 type AppShellNavItemBase = {
@@ -114,7 +111,6 @@ export const APP_SHELL_SECTION_LABELS: Record<AppShellSectionId, string> = {
   interactions: 'Interactions',
   tasks: 'Tâches',
   pricing: 'Remises',
-  configurators: 'Configurateurs',
   admin: 'Admin'
 };
 
@@ -208,19 +204,6 @@ export const buildShellNavigation = (
           label: 'Référentiels CIR',
           icon: BookOpenCheck,
           shortcut: APP_TAB_SHORTCUTS.referentials
-        }
-      ]
-    },
-    {
-      id: 'configurators',
-      title: 'Configurateurs',
-      items: [
-        {
-          id: 'configurators',
-          sectionId: 'configurators',
-          label: 'Moteurs',
-          icon: SlidersHorizontal,
-          shortcut: APP_TAB_SHORTCUTS.configurators
         }
       ]
     }

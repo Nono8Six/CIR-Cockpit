@@ -20,7 +20,6 @@ export type AppTab =
   | 'clients'
   | 'suppliers'
   | 'referentials'
-  | 'configurators'
   | 'admin';
 
 export type AgencyStatus = {

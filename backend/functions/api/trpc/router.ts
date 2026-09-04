@@ -316,7 +316,6 @@ import {
   withAuthedHandler,
   withSuperAdminHandler,
 } from "./procedureHelpers.ts";
-import { configuratorMotorRouter } from "./configuratorMotor.ts";
 
 export const appRouter = router({
   "task-types": router({
@@ -382,9 +381,6 @@ export const appRouter = router({
       .input(taskListInputSchema)
       .output(taskListResponseSchema)
       .query(withAuthedDualDbHandler(listTasks, (_input, db) => db)),
-  }),
-  configurator: router({
-    motor: configuratorMotorRouter,
   }),
   data: router({
     entities: authedProcedure

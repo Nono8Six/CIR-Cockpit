@@ -88,14 +88,14 @@ describe('safeTrpc', () => {
       invokeTrpc(
         async () => ({ ok: true, value: 'invalid' }),
         withInvalidTrpcResponse(responseSchema, {
-          code: 'CONFIGURATOR_OUTPUT_INVALID',
-          message: 'Réponse configurateur invalide.'
+          code: 'DB_READ_FAILED',
+          message: 'Réponse API invalide.'
         }),
         'Fallback'
       )
     ).rejects.toMatchObject({
-      code: 'CONFIGURATOR_OUTPUT_INVALID',
-      message: 'Réponse configurateur invalide.'
+      code: 'DB_READ_FAILED',
+      message: 'Réponse API invalide.'
     });
 
     const value = await invokeTrpc(

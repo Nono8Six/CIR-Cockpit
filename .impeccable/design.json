@@ -158,33 +158,12 @@
         "purpose": "La seule ombre déclarée dans tailwind.config.cjs. Réservée aux éléments réellement détachés du flux : popover, menu déroulant, tooltip."
       },
       {
-        "name": "tech-raised",
-        "value": "0 1px 2px hsl(30 9% 17% / 0.04), 0 0 0 1px hsl(36 12% 88% / 0.7)",
-        "purpose": "Un pixel d'ombre plus un filet. Détache une surface blanche du fond chaud sans peser."
-      },
-      {
-        "name": "tech-raised-hover",
-        "value": "0 2px 8px hsl(30 9% 17% / 0.06), 0 0 0 1px hsl(36 12% 88%)",
-        "purpose": "Réponse au survol d'une surface technique. Transition de 150ms sur box-shadow et transform."
-      },
-      {
         "name": "kbd-key",
         "value": "0 1px 0 rgba(0, 0, 0, 0.05)",
         "purpose": "Relief d'une touche de clavier sur le composant Kbd."
       }
     ],
-    "textures": [
-      {
-        "name": "tech-dots",
-        "value": "radial-gradient(hsl(30 9% 17% / 0.085) 1px, transparent 1px); background-size: 16px 16px; background-position: -1px -1px",
-        "purpose": "Trame de fond des surfaces techniques. Le décalage de -1px fait tomber les points sur les intersections."
-      },
-      {
-        "name": "tech-hatch",
-        "value": "repeating-linear-gradient(-45deg, hsl(30 9% 17% / 0.14) 0 1px, transparent 1px 5px)",
-        "purpose": "Absence de donnée. Jamais une case vide, jamais un zéro."
-      }
-    ],
+    "textures": [],
     "motion": [
       {
         "name": "state-transition",
@@ -282,14 +261,6 @@
       "css": ".ds-kbd { display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 18px; padding: 0 6px; border: 1px solid hsl(var(--border, 36 12% 88%)); border-radius: 3px; background: hsl(var(--surface-2, 45 20% 96%)); color: hsl(var(--muted-foreground, 31 7% 43%)); font-family: \"JetBrains Mono\", ui-monospace, \"SF Mono\", Menlo, Consolas, monospace; font-size: 11px; font-weight: 600; line-height: 1; user-select: none; pointer-events: none; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05); }"
     },
     {
-      "name": "Empty Data Cell (tech-hatch)",
-      "kind": "custom",
-      "refersTo": null,
-      "description": "Absence de donnée dans une table. Composant signature du système : une trame hachurée, jamais une case vide ni un zéro.",
-      "html": "<table class=\"ds-table\"><tr><td>Remise palier 2</td><td class=\"ds-cell-num\">12,50 %</td></tr><tr><td>Remise palier 3</td><td class=\"ds-cell-empty\" aria-label=\"Non renseigné\"></td></tr></table>",
-      "css": ".ds-table { border-collapse: collapse; font-family: \"Inter Tight\", Inter, system-ui, sans-serif; font-size: 12px; } .ds-table td { height: 28px; padding: 0 10px; border-bottom: 1px solid hsl(var(--border-subtle, 40 16% 95%)); } .ds-cell-num { text-align: right; font-family: \"JetBrains Mono\", ui-monospace, Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; } .ds-cell-empty { min-width: 72px; background-image: repeating-linear-gradient(-45deg, hsl(var(--foreground, 30 9% 17%) / 0.14) 0 1px, transparent 1px 5px); }"
-    },
-    {
       "name": "Skeleton (shimmer)",
       "kind": "custom",
       "refersTo": null,
@@ -300,11 +271,11 @@
   ],
   "narrative": {
     "northStar": "Le Plan Coté",
-    "overview": "L'écran est traité comme un plan coté, pas comme une page marketing. Cette phrase n'est pas une intention rétrospective : elle est déjà écrite en commentaire dans frontend/src/index.css, au-dessus des surfaces techniques de la brique Configurateurs. Le système entier en découle. Un plan coté ne décore pas, il mesure. Il utilise des filets de 1 px, des croix aux intersections, des trames imprimées. Sa profondeur vient de la trame et du filet, jamais de l'ombre portée. Une case vide n'existe pas : l'absence de donnée est hachurée, parce qu'un blanc sur un plan est une erreur de lecture et pas une information.\n\nLa densité est la fonctionnalité principale, pas un effet secondaire. Le corps de texte est à 13 px, le vrai cheval de bataille des tables est à 12 px, et le plancher absolu est 11 px. Les contrôles font 32 px de haut, les lignes de données 28 px. Un technico-commercial passe huit heures par jour dans cet outil sur un poste fixe : chaque ligne gagnée à l'écran est une recherche évitée. Le thème est clair uniquement, et c'est une décision, pas un oubli.\n\nCe système rejette explicitement quatre familles nommées dans PRODUCT.md : l'ERP legacy (SAP, Sage) et sa densité subie, le SaaS IA générique avec ses dégradés violets et son gabarit hero-metric, le CRM grand public (HubSpot, Salesforce) et ses illustrations mascottes, et le dashboard Material ou Bootstrap avec ses ombres portées lourdes. La ligne de partage est simple : CIR Cockpit est dense par décision, jamais par abandon.",
+    "overview": "L'écran est traité comme un plan coté, pas comme une page marketing. Un plan coté ne décore pas, il mesure. Il utilise des filets de 1 px et une hiérarchie de surfaces. Sa profondeur vient de la strate et du filet, jamais de l'ombre portée.\n\nLa densité est la fonctionnalité principale, pas un effet secondaire. Le corps de texte est à 13 px, le vrai cheval de bataille des tables est à 12 px, et le plancher absolu est 11 px. Les contrôles font 32 px de haut, les lignes de données 28 px. Un technico-commercial passe huit heures par jour dans cet outil sur un poste fixe : chaque ligne gagnée à l'écran est une recherche évitée. Le thème est clair uniquement, et c'est une décision, pas un oubli.\n\nCe système rejette explicitement quatre familles nommées dans PRODUCT.md : l'ERP legacy (SAP, Sage) et sa densité subie, le SaaS IA générique avec ses dégradés violets et son gabarit hero-metric, le CRM grand public (HubSpot, Salesforce) et ses illustrations mascottes, et le dashboard Material ou Bootstrap avec ses ombres portées lourdes. La ligne de partage est simple : CIR Cockpit est dense par décision, jamais par abandon.",
     "keyCharacteristics": [
       "Palette neutre chaude (teintes 30 à 48), fond crème et non blanc, aucun gris froid.",
       "Élévation par surface et non par ombre : background, puis surface-1/2/3, puis card blanc.",
-      "Une seule ombre autorisée dans tout le système (shadow-soft), plus le filet d'1 px de tech-raised.",
+      "Une seule ombre autorisée dans tout le système (shadow-soft).",
       "Rouge CIR rare et sémantique, jamais décoratif.",
       "Grille de 4 px, alignement vérifié sur les cellules, labels et icônes.",
       "Français, vouvoiement systématique, aucune chaîne décorative ni donnée factice."
@@ -342,17 +313,12 @@
       },
       {
         "name": "The Layer-Before-Shadow Rule",
-        "body": "Pour détacher un bloc, monter d'une surface. Si le contraste ne suffit pas, ajouter un filet. Si le filet ne suffit pas encore, alors seulement envisager tech-raised. Test d'audit : si un écran comporte plus de deux valeurs de box-shadow distinctes, l'élévation a été traitée à l'ombre au lieu de la strate.",
+        "body": "Pour détacher un bloc, monter d'une surface. Si le contraste ne suffit pas, ajouter un filet. Test d'audit : si un écran comporte plus de deux valeurs de box-shadow distinctes, l'élévation a été traitée à l'ombre au lieu de la strate.",
         "section": "elevation"
       },
       {
         "name": "The White-Is-Foreground Rule",
         "body": "Le blanc pur (card) signifie « ceci est au premier plan ». L'utiliser comme fond de page ou de section détruit tout le vocabulaire d'élévation.",
-        "section": "elevation"
-      },
-      {
-        "name": "The Hatch-Not-Blank Rule",
-        "body": "Une donnée absente est hachurée (tech-hatch), pas remplacée par une case vide ni par un zéro. Un zéro affiché est une valeur mesurée ; un vide est une question sans réponse. Les deux ne se confondent pas.",
         "section": "elevation"
       }
     ],
@@ -363,7 +329,6 @@
       "Do utiliser --warning-strong pour le texte d'avertissement et --warning pour les fonds.",
       "Do appliquer tabular-nums à toute colonne numérique comparée verticalement.",
       "Do tenir le plancher de 11 px, en compensant par la graisse et le tracking plutôt qu'en descendant.",
-      "Do hachurer l'absence de donnée avec .tech-hatch, jamais laisser une case vide ni afficher un zéro à la place.",
       "Do concevoir les six états avant de livrer : survol, focus-visible, désactivé, chargement (skeleton-shimmer), vide, erreur.",
       "Do écrire en français, au vouvoiement, en phrases courtes (« Saisissez un numéro », « Avec qui avez-vous échangé ? »).",
       "Do ouvrir tout détail ou toute édition dans un Dialog centré.",

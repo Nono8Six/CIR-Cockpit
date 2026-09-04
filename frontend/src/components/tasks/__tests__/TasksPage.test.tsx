@@ -1,6 +1,11 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vitest';
 import { axe } from 'vitest-axe';
+
+vi.hoisted(() => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date('2026-08-13T12:00:00Z'));
+});
 
 import TasksPage from '@/components/tasks/TasksPage';
 
@@ -17,6 +22,10 @@ vi.mock('@/components/tasks/TaskCreateDialog', () => ({ default: () => null }));
 vi.mock('@/components/tasks/TaskDetailDialog', () => ({ default: () => null }));
 
 describe('TasksPage', () => {
+  afterAll(() => {
+    vi.useRealTimers();
+  });
+
   it('renders the collective queue and only exposes valid quick actions', async () => {
     render(<TasksPage agencyId="agency-1" userId="user-1" userRole="tcs" />);
     fireEvent.click(screen.getByRole('button', { name: 'File d’agence' }));

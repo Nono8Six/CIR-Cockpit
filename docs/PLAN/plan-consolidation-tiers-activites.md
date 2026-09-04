@@ -12,7 +12,7 @@
 
 Préparer une consolidation progressive du noyau `Tiers → Activités` avant tout
 import de clients, sans réécriture globale et sans casser les écrans Clients,
-Prospects, Fournisseurs, Cockpit et Configurateurs déjà présents.
+Prospects, Fournisseurs et Cockpit déjà présents.
 
 La consolidation doit séparer :
 
@@ -29,7 +29,7 @@ La consolidation doit séparer :
 - Aucun écran Opportunité, Devis, Commande, Affaires ou Ma journée.
 - Aucun remplacement global de `entities` ou `interactions` en une migration.
 - Aucun accès SQL généraliste ou nouvel outil IA.
-- Aucun changement du Configurateur métier, de la Tarification ou du catalogue.
+- Aucun changement de la Tarification ou du catalogue.
 - Aucun déploiement, migration ou écriture distante sans autorisation PO distincte.
 
 ## 3. État réel de départ
@@ -56,8 +56,6 @@ directes à préserver sont notamment :
 - `entity_contacts.entity_id → entities.id` avec suppression en cascade ;
 - `interactions.entity_id → entities.id` et
   `interactions.contact_id → entity_contacts.id` avec `SET NULL` ;
-- `configurator.saved_configuration.client_entity_id → entities.id` avec
-  `SET NULL` ;
 - les fonctions privées d'audit, de suppression d'agence, de préparation d'une
   configuration et de synchronisation de statut ;
 - les politiques RLS de `entity_contacts` et `interactions`, qui dérivent la
@@ -74,7 +72,6 @@ directes à préserver sont notamment :
 | Contrat différé | `directory.tiers-list` est typé mais répond actuellement `501` |
 | Backend | services `entities`, `directory`, `search`, `config` et intégrations associées |
 | Frontend | annuaire Clients, Prospects, Fournisseurs, recherche globale, Cockpit, formulaires et détails |
-| Configurateur | une configuration sauvegardée peut référencer `entities.id` |
 
 Le schéma Tier V1 existant est une couche de compatibilité, pas le modèle cible :
 ses variantes `client_term`, `client_cash`, `prospect_*` et `supplier` traduisent
@@ -198,7 +195,6 @@ reste non commencée et requiert sa propre autorisation d'exécution.
 
 - basculer par surface Clients, Prospects, Fournisseurs, recherche puis Cockpit ;
 - conserver les parcours existants tant que leur remplacement n'est pas prouvé ;
-- vérifier la référence Configurateur vers l'identité stable ;
 - mesurer les requêtes principales et contrôler les invalidations de cache.
 
 **Cartographie exécutée :**
@@ -217,14 +213,12 @@ la fiche historique (paramètre absent) et la fiche canonique
 (`includeCanonicalTier: true`). Les permissions runtime prouvent membre dans
 son agence, agence étrangère refusée en `403` et super-admin sur agence
 sélectionnée. Le navigateur in-app prouve Clients, Prospects, Fournisseurs,
-recherche, Cockpit et Configurateur ; les états vide, chargement, erreur,
+recherche et Cockpit ; les états vide, chargement, erreur,
 commercial principal absent et référentiel métier absent restent explicites.
 Les clés de requête restent déterministes et les mutations invalident toujours
 les racines annuaire, index Tiers et recherche unifiée ; les tests
 `queryKeys` / `queryInvalidation` sont inclus dans les 903 tests frontend.
-Le Configurateur conserve la FK
-`configurator.saved_configuration.client_entity_id -> public.entities.id`, sans
-référence active ni orpheline. `pnpm run qa` est vert : frontend `903/903`,
+`pnpm run qa` est vert : frontend `903/903`,
 backend `603/603`, intégration distante `9/9`.
 
 **Rollback de lecture :** omettre `includeCanonicalTier` sur
@@ -351,7 +345,7 @@ artefact de probe. La gate `pnpm run qa` est verte : frontend 910/910, backend
 ## 8. Checkpoint du plan
 
 - [x] Code, contrats, migrations et Supabase distant réconciliés.
-- [x] Dépendances DB, API, frontend et Configurateur inventoriées.
+- [x] Dépendances DB, API et frontend inventoriées.
 - [x] Modèle actuel et cible cartographiés sans imposer de schéma prématuré.
 - [x] Import idempotent, RLS, compatibilité, provenance et rollback au cœur du plan.
 - [x] Séquence Tiers puis Activités respectée ; briques futures exclues.
@@ -394,8 +388,6 @@ artefact de probe. La gate `pnpm run qa` est verte : frontend 910/910, backend
   étrangère refusée en 403, super-admin autorisé sur une agence sélectionnée.
 - [x] États navigateur prouvés : données, navigation, vide, chargement, erreur,
   reprise, commercial principal absent et référentiel métier indisponible.
-- [x] Configurateur inchangé : FK vers `entities.id`, zéro référence active et
-  zéro orpheline ; aucun identifiant Tiers parallèle.
 - [x] Rollback non destructif prouvé par la réponse `directory.record` legacy
   sans paramètre et la réponse canonique opt-in sur `api` v205.
 - [x] `pnpm run qa` vert : frontend 903/903, backend 603/603, intégration
@@ -454,6 +446,6 @@ artefact de probe. La gate `pnpm run qa` est verte : frontend 910/910, backend
 | 2026-08-08 | Autorisation TA-1 | Le PO donne carte blanche pour exécuter la tranche préparée ; les interdictions de commit, push, déploiement et de démarrage de TA-2 restent appliquées |
 | 2026-08-08 | Sortie TA-1 | Migration MCP/local `20260808080632_ta1_tiers_roles_foundation` en parité (`3c36d608…`) ; 6 rôles et 4 comptes convertis, zéro divergence/orphelin, RLS multi-agence et écriture TCS bloquée, aucun nouveau WARN advisor ; `pnpm run qa` vert (frontend 892/892, backend 600/600, intégration 9/9) — **GO TA-2, non commencée** |
 | 2026-08-08 | Sortie TA-2 | Contrat canonique partagé et validé en sortie, lectures Tiers réutilisées sur les quatre surfaces avec compatibilité historique ; `directory.tiers-list` actif sur `api` v202, 6 organisations et 41 contacts conservés, auth/permissions/recherche littérale prouvées ; `pnpm run qa` vert (frontend 896/896, backend 602/602, intégration 9/9) — **GO TA-3, non commencée** |
-| 2026-08-08 | Sortie TA-3 | Clients, Prospects, Fournisseurs, recherche globale et Cockpit basculés sur les rôles canoniques ; champs historiques et identifiants conservés, rollback de lecture opt-in prouvé, Configurateur toujours relié à `entities.id`, permissions et parcours navigateur prouvés ; `api` v205, `pnpm run qa` vert (frontend 903/903, backend 603/603, intégration 9/9) — **GO TA-4, non commencée** |
+| 2026-08-08 | Sortie TA-3 | Clients, Prospects, Fournisseurs, recherche globale et Cockpit basculés sur les rôles canoniques ; champs historiques et identifiants conservés, rollback de lecture opt-in, permissions et parcours navigateur prouvés ; `api` v205, `pnpm run qa` vert (frontend 903/903, backend 603/603, intégration 9/9) — **GO TA-4, non commencée** |
 | 2026-08-09 | Sortie TA-4 | Modèle Activités v2 additif et index FK appliqués par migrations MCP/local ; 8/8 interactions et 24/24 événements convertis sans perte, RLS/ACL, participants réels, audit, concurrence et rollback transactionnel prouvés ; lecture stricte sur `api` v207, `pnpm run qa` vert (frontend 905/905, backend 603/603, intégration 10/10) — **GO TA-5, non commencée** |
 | 2026-08-09 | Sortie TA-5 | Pont transactionnel bidirectionnel, correction motivée, contrats tRPC/Zod, Cockpit, brouillons, recherche, listes et détail Activity v2 livrés sur `api` v211 ; parité 8/8, rollback, E2E ciblé 3/3 et `pnpm run qa` vert (frontend 910/910, backend 605/605, intégration 10/10) — **GO Brique 3, non commencée** |

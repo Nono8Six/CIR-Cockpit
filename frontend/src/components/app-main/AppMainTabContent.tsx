@@ -66,7 +66,6 @@ const KEEP_ALIVE_TABS: AppTab[] = [
   'clients',
   'suppliers',
   'referentials',
-  'configurators',
   'settings',
   'admin'
 ];
@@ -120,7 +119,6 @@ const AppMainTabContent = (props: AppMainTabContentProps) => {
     clients: activeTab === 'clients',
     suppliers: activeTab === 'suppliers' && canAccessAdmin,
     referentials: activeTab === 'referentials',
-    configurators: activeTab === 'configurators',
     settings: activeTab === 'settings' && canAccessSettings,
     admin: activeTab === 'admin' && canAccessAdmin
   });
@@ -233,12 +231,6 @@ const AppMainTabContent = (props: AppMainTabContentProps) => {
                     onRouteTabChange={handleReferentialsTabChange}
                   />
                 </Suspense>
-              </div>
-            ) : null}
-
-            {tab === 'configurators' ? (
-              <div className="min-h-0 flex-1">
-                {isActive ? <Outlet /> : null}
               </div>
             ) : null}
 

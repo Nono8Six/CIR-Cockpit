@@ -1014,8 +1014,8 @@ Les décisions ouvertes sont traitées juste avant la brique concernée. Elles n
   servis. La fiche canonique est opt-in afin que `directory.record` puisse
   encore rendre son contrat historique strict sans migration ni suppression de
   données. L'Edge Function `api` v205, les permissions agence/super-admin, le
-  rendu navigateur, la FK Configurateur vers `entities.id` et la gate QA
-  complète sont prouvés ; la sortie est **GO TA-4**, sans démarrage de TA-4.
+  rendu navigateur et la gate QA complète sont prouvés ; la sortie est
+  **GO TA-4**, sans démarrage de TA-4.
 - TA-4 crée le modèle relationnel additif Activités v2 par les migrations
   `20260809033113_ta4_activities_v2_foundation` et
   `20260809035041_ta4_activity_fk_indexes`, sans retirer `interactions`. Les
@@ -1118,8 +1118,8 @@ principes globaux sont désormais validés. TA-1 est exécutée et prouvée par 
 migration MCP/local `20260808080632_ta1_tiers_roles_foundation`. TA-2 est
 exécutée et prouvée par le contrat canonique partagé et les lectures
 compatibles. TA-3 est exécutée et prouvée sur les cinq surfaces Tiers, le
-rollback de lecture, les permissions, le navigateur, le Configurateur et
-l'Edge Function `api` v205. TA-4 est exécutée et prouvée par ses deux migrations
+rollback de lecture, les permissions, le navigateur et l'Edge Function `api`
+v205. TA-4 est exécutée et prouvée par ses deux migrations
 additives, la conversion 8/8 et 24/24, les permissions, l'audit, la concurrence,
 le contrat strict et l'Edge Function `api` v207. TA-5 est exécutée et prouvée
 par son pont transactionnel, ses contrats, l'interface Activity v2, la parité,

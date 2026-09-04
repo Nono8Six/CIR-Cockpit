@@ -163,7 +163,7 @@ components:
 
 **Creative North Star: "Le Plan Coté"**
 
-L'écran est traité comme un plan coté, pas comme une page marketing. Cette phrase n'est pas une intention rétrospective : elle est déjà écrite en commentaire dans `frontend/src/index.css`, au-dessus des surfaces techniques de la brique Configurateurs. Le système entier en découle. Un plan coté ne décore pas, il mesure. Il utilise des filets de 1 px, des croix aux intersections, des trames imprimées. Sa profondeur vient de la trame et du filet, jamais de l'ombre portée. Une case vide n'existe pas : l'absence de donnée est hachurée, parce qu'un blanc sur un plan est une erreur de lecture et pas une information.
+L'écran est traité comme un plan coté, pas comme une page marketing. Un plan coté ne décore pas, il mesure. Il utilise des filets de 1 px et une hiérarchie de surfaces. Sa profondeur vient de la strate et du filet, jamais de l'ombre portée.
 
 La densité est la fonctionnalité principale, pas un effet secondaire. Le corps de texte est à 13 px, le vrai cheval de bataille des tables est à 12 px, et le plancher absolu est 11 px. Les contrôles font 32 px de haut, les lignes de données 28 px. Un technico-commercial passe huit heures par jour dans cet outil sur un poste fixe : chaque ligne gagnée à l'écran est une recherche évitée. Le thème est clair uniquement, et c'est une décision, pas un oubli.
 
@@ -173,7 +173,7 @@ Ce système rejette explicitement quatre familles nommées dans `PRODUCT.md` : l
 
 - Palette neutre chaude (teintes 30 à 48), fond crème et non blanc, aucun gris froid.
 - Élévation par surface et non par ombre : `background`, puis `surface-1/2/3`, puis `card` blanc.
-- Une seule ombre autorisée dans tout le système (`shadow-soft`), plus le filet d'1 px de `tech-raised`.
+- Une seule ombre autorisée dans tout le système (`shadow-soft`).
 - Rouge CIR rare et sémantique, jamais décoratif.
 - Grille de 4 px, alignement vérifié sur les cellules, labels et icônes.
 - Français, vouvoiement systématique, aucune chaîne décorative ni donnée factice.
@@ -249,24 +249,13 @@ Ce système n'utilise pratiquement pas d'ombre. La profondeur vient de l'empilem
 ### Shadow Vocabulary
 
 - **shadow-soft** (`box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05)`): la seule ombre déclarée dans `tailwind.config.cjs`. Réservée aux éléments réellement détachés du flux (popover, menu déroulant, tooltip).
-- **tech-raised** (`box-shadow: 0 1px 2px hsl(30 9% 17% / 0.04), 0 0 0 1px hsl(36 12% 88% / 0.7)`): un pixel d'ombre plus un filet. Suffit à détacher une surface blanche du fond chaud sans jamais peser.
-- **tech-raised-hover** (`box-shadow: 0 2px 8px hsl(30 9% 17% / 0.06), 0 0 0 1px hsl(36 12% 88%)`): la réponse au survol, transition de 150 ms sur `box-shadow` et `transform`.
 - **kbd-key** (`box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05)`): le relief d'une touche de clavier sur le composant `Kbd`.
-
-### Texture Vocabulary
-
-Les trames remplacent l'ombre partout où il s'agit de qualifier une surface plutôt que de la soulever.
-
-- **tech-dots** (`radial-gradient(hsl(30 9% 17% / 0.085) 1px, transparent 1px)`, trame de 16 px): la trame de fond des surfaces techniques. Le décalage de `-1px -1px` fait tomber les points sur les intersections.
-- **tech-hatch** (`repeating-linear-gradient(-45deg, hsl(30 9% 17% / 0.14) 0 1px, transparent 1px 5px)`): l'absence de donnée. Jamais une case vide, jamais un zéro.
 
 ### Named Rules
 
-**The Layer-Before-Shadow Rule.** Pour détacher un bloc, monter d'une surface. Si le contraste ne suffit pas, ajouter un filet. Si le filet ne suffit pas encore, alors seulement envisager `tech-raised`. Test d'audit : si un écran comporte plus de deux valeurs de `box-shadow` distinctes, l'élévation a été traitée à l'ombre au lieu de la strate.
+**The Layer-Before-Shadow Rule.** Pour détacher un bloc, monter d'une surface. Si le contraste ne suffit pas, ajouter un filet. Test d'audit : si un écran comporte plus de deux valeurs de `box-shadow` distinctes, l'élévation a été traitée à l'ombre au lieu de la strate.
 
 **The White-Is-Foreground Rule.** Le blanc pur (`card`) signifie « ceci est au premier plan ». L'utiliser comme fond de page ou de section détruit tout le vocabulaire d'élévation.
-
-**The Hatch-Not-Blank Rule.** Une donnée absente est hachurée (`tech-hatch`), pas remplacée par une case vide ni par un zéro. Un zéro affiché est une valeur mesurée ; un vide est une question sans réponse. Les deux ne se confondent pas.
 
 ## 5. Components
 
@@ -327,7 +316,6 @@ Philosophie transverse : **sobres et exacts**. Rien ne bouge sans raison, tout s
 - **Do** utiliser `--warning-strong` pour le texte d'avertissement et `--warning` pour les fonds.
 - **Do** appliquer `tabular-nums` à toute colonne numérique comparée verticalement.
 - **Do** tenir le plancher de 11 px, en compensant par la graisse et le `tracking` plutôt qu'en descendant.
-- **Do** hachurer l'absence de donnée avec `.tech-hatch`, jamais laisser une case vide ni afficher un zéro à la place.
 - **Do** concevoir les six états avant de livrer : survol, `focus-visible`, désactivé, chargement (`skeleton-shimmer`), vide, erreur.
 - **Do** écrire en français, au vouvoiement, en phrases courtes (« Saisissez un numéro », « Avec qui avez-vous échangé ? »).
 - **Do** ouvrir tout détail ou toute édition dans un Dialog centré.
