@@ -12,6 +12,7 @@ import CockpitStatusControl from '../right/CockpitStatusControl';
 import CockpitGuidedQuestionFrame from './CockpitGuidedQuestionFrame';
 
 type CockpitGuidedDetailsQuestionProps = {
+  isActive: boolean;
   leftPaneProps: CockpitFormLeftPaneProps;
   rightPaneProps: CockpitFormRightPaneProps;
   onReset: () => void;
@@ -50,6 +51,7 @@ export const buildDescriptionOnlySubject = (
 };
 
 const CockpitGuidedDetailsQuestion = ({
+  isActive,
   leftPaneProps,
   rightPaneProps,
   onReset,
@@ -63,6 +65,11 @@ const CockpitGuidedDetailsQuestion = ({
   const [isShortcutPressed, setIsShortcutPressed] = useState(false);
 
   useEffect(() => {
+    if (!isActive) {
+      setIsShortcutPressed(false);
+      return undefined;
+    }
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && event.key === 'Enter') {
         setIsShortcutPressed(true);
@@ -73,13 +80,13 @@ const CockpitGuidedDetailsQuestion = ({
         setIsShortcutPressed(false);
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('keydown', handleKeyDown, { capture: true });
+    window.addEventListener('keyup', handleKeyUp, { capture: true });
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('keydown', handleKeyDown, { capture: true });
+      window.removeEventListener('keyup', handleKeyUp, { capture: true });
     };
-  }, []);
+  }, [isActive]);
 
   const handleOrderRefChange = (event: ChangeEvent<HTMLInputElement>) => {
     event.currentTarget.value = event.currentTarget.value.replace(/\D/g, '').slice(0, 6);

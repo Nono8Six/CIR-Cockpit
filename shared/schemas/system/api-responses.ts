@@ -443,32 +443,13 @@ export const adminUsersArchiveResponseSchema = apiSuccessSchema.extend({
   archived: z.boolean()
 });
 
-export const adminUsersDeleteResponseSchema = apiSuccessSchema.extend({
-  user_id: profileIdSchema,
-  deleted: z.literal(true),
-  anonymized_interactions: z.number().int().nonnegative().optional(),
-  anonymized_agency_ids: z.array(agencyIdSchema).optional(),
-  anonymized_orphan_interactions: z.number().int().nonnegative().optional()
-});
-
-export const adminUsersBulkDeleteResponseSchema = apiSuccessSchema.extend({
-  deleted: z.literal(true),
-  deleted_count: z.number().int().positive(),
-  user_ids: z.array(profileIdSchema),
-  anonymized_interactions: z.number().int().nonnegative(),
-  anonymized_agency_ids: z.array(agencyIdSchema),
-  anonymized_orphan_interactions: z.number().int().nonnegative()
-});
-
 export const adminUsersResponseSchema = z.union([
   adminUsersCreateResponseSchema,
   adminUsersSetRoleResponseSchema,
   adminUsersUpdateIdentityResponseSchema,
   adminUsersSetMembershipsResponseSchema,
   adminUsersResetPasswordResponseSchema,
-  adminUsersArchiveResponseSchema,
-  adminUsersDeleteResponseSchema,
-  adminUsersBulkDeleteResponseSchema
+  adminUsersArchiveResponseSchema
 ]);
 
 export const adminUsersListResponseSchema = apiSuccessSchema.extend({
@@ -530,8 +511,6 @@ export type AdminUsersUpdateIdentityResponse = z.infer<typeof adminUsersUpdateId
 export type AdminUsersSetMembershipsResponse = z.infer<typeof adminUsersSetMembershipsResponseSchema>;
 export type AdminUsersResetPasswordResponse = z.infer<typeof adminUsersResetPasswordResponseSchema>;
 export type AdminUsersArchiveResponse = z.infer<typeof adminUsersArchiveResponseSchema>;
-export type AdminUsersDeleteResponse = z.infer<typeof adminUsersDeleteResponseSchema>;
-export type AdminUsersBulkDeleteResponse = z.infer<typeof adminUsersBulkDeleteResponseSchema>;
 export type AdminUsersResponse = z.infer<typeof adminUsersResponseSchema>;
 export type MembershipMode = z.infer<typeof membershipModeSchema>;
 export type UserRole = z.infer<typeof userRoleSchema>;

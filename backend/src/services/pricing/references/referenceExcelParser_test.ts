@@ -1,5 +1,6 @@
 import { test } from "vitest";
 import { assertEquals, assertThrows } from "#test/assert";
+import { zipSync } from "fflate";
 import * as XLSX from "xlsx";
 
 import {
@@ -13,6 +14,7 @@ import {
   ensurePricingReferenceFileAccepted,
   inspectPricingReferenceWorkbook,
   listPricingReferenceCanonicalSourceRows,
+  PRICING_REFERENCE_MAX_EXPANSION_RATIO,
   SEGMENTS_EXPECTED_COLUMNS,
 } from "./referenceExcelParser.ts";
 import {
@@ -123,6 +125,21 @@ test("ensurePricingReferenceFileAccepted rejects invalid extension and size with
     "PRICING_REFERENCE_IMPORT_TOO_LARGE",
   );
   assertEquals(readErrorProperty(tooLarge, "status"), 413);
+});
+
+test("inspectPricingReferenceWorkbook rejects an archive above the expansion cap", () => {
+  const expandedBytes = new Uint8Array(2 * 1024 * 1024);
+  const archive = zipSync({ "xl/workbook.xml": expandedBytes }, { level: 9 });
+  assertEquals(expandedBytes.byteLength / archive.byteLength > PRICING_REFERENCE_MAX_EXPANSION_RATIO, true);
+
+  const error = assertThrows(() => inspectPricingReferenceWorkbook({
+    file_kind: "classification",
+    original_filename: "Classification.xlsx",
+    bytes: archive,
+  }));
+
+  assertEquals(readErrorProperty(error, "code"), "PRICING_REFERENCE_IMPORT_TOO_LARGE");
+  assertEquals(readErrorProperty(error, "status"), 413);
 });
 
 test("computeSha256 returns the expected metadata hash", async () => {

@@ -6,10 +6,6 @@ const PASSWORD_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 const PASSWORD_DEFAULT_LENGTH = 12;
 
 export const BANNED_UNTIL = '9999-12-31T00:00:00.000Z';
-export const SYSTEM_LAST_NAME = 'SYSTEME';
-export const SYSTEM_DEFAULT_FIRST_NAME = 'Agence';
-export const SYSTEM_ORPHAN_FIRST_NAME = 'Orpheline';
-export const SYSTEM_EMAIL_DOMAIN = 'cir.invalid';
 
 export const normalizePersonName = (value?: string): string | undefined => {
   if (value === undefined) return undefined;

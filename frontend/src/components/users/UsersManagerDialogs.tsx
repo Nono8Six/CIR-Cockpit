@@ -26,11 +26,9 @@ const UsersManagerDialogs = ({ state }: UsersManagerDialogsProps) => {
     confirmArchive,
     editIdentityOpen,
     editIdentityUser,
-    confirmDeleteUser,
     roleChangeUser,
     executeRoleChange,
     closeRoleChangeDialog,
-    confirmBulkDelete,
     confirmBulkArchive,
     agencies,
     handleCreateUser,
@@ -41,11 +39,7 @@ const UsersManagerDialogs = ({ state }: UsersManagerDialogsProps) => {
     closeArchiveConfirm,
     executeArchiveToggle,
     closeEditIdentityDialog,
-    closeDeleteConfirm,
-    executeDeleteUser,
-    closeBulkDeleteConfirm,
     closeBulkArchiveConfirm,
-    executeBulkDelete,
     executeBulkArchive
   } = state;
 
@@ -127,30 +121,6 @@ const UsersManagerDialogs = ({ state }: UsersManagerDialogsProps) => {
         confirmLabel={confirmArchive?.nextArchived ? 'Archiver' : 'Restaurer'}
         variant={confirmArchive?.nextArchived ? 'destructive' : 'default'}
         onConfirm={executeArchiveToggle}
-      />
-
-      <ConfirmDialog
-        open={confirmDeleteUser !== null}
-        onOpenChange={(open) => {
-          if (!open) closeDeleteConfirm();
-        }}
-        title="Supprimer l'utilisateur"
-        description={`L'utilisateur ${confirmDeleteUser?.email ?? ''} sera définitivement supprimé. Ses interactions resteront historisées et réattribuées à un compte système.`}
-        confirmLabel="Supprimer"
-        variant="destructive"
-        onConfirm={executeDeleteUser}
-      />
-
-      <ConfirmDialog
-        open={confirmBulkDelete !== null}
-        onOpenChange={(open) => {
-          if (!open) closeBulkDeleteConfirm();
-        }}
-        title="Supprimer les utilisateurs"
-        description={`Les ${confirmBulkDelete?.length ?? 0} utilisateurs sélectionnés seront définitivement supprimés. Leurs interactions resteront historisées et réattribuées à un compte système.`}
-        confirmLabel="Supprimer"
-        variant="destructive"
-        onConfirm={executeBulkDelete}
       />
 
       <ConfirmDialog

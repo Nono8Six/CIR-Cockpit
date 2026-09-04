@@ -350,6 +350,7 @@ export const getAiMembersAccessOverview = async (
       last_name: profiles.last_name,
       email: profiles.email,
       role: profiles.role,
+      must_change_password: profiles.must_change_password,
       agency_id: agency_members.agency_id,
       agency_name: agencies.name,
     }).from(agency_members)
@@ -377,6 +378,7 @@ export const getAiMembersAccessOverview = async (
       agencyIds: [member.agency_id],
       activeAgencyId: member.agency_id,
       isSuperAdmin: member.role === "super_admin",
+      mustChangePassword: member.must_change_password,
     }, grants);
     return {
       user_id: member.user_id,

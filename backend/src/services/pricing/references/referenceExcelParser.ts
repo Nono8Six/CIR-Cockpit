@@ -18,6 +18,29 @@ import {
 } from "../../../../../shared/schemas/pricing/references.schema.ts";
 import { httpError } from "../../../middleware/errorHandler.ts";
 
+export const PRICING_REFERENCE_MAX_ARCHIVE_ENTRIES = 128;
+export const PRICING_REFERENCE_MAX_UNCOMPRESSED_BYTES = 64 * 1024 * 1024;
+export const PRICING_REFERENCE_MAX_EXPANSION_RATIO = 100;
+
+const assertWorkbookArchiveLimits = (
+  entryCount: number,
+  totalUncompressedBytes: number,
+  totalCompressedBytes: number,
+): void => {
+  const expansionRatio = totalUncompressedBytes / Math.max(totalCompressedBytes, 1);
+  if (
+    entryCount > PRICING_REFERENCE_MAX_ARCHIVE_ENTRIES
+    || totalUncompressedBytes > PRICING_REFERENCE_MAX_UNCOMPRESSED_BYTES
+    || expansionRatio > PRICING_REFERENCE_MAX_EXPANSION_RATIO
+  ) {
+    throw httpError(
+      413,
+      "PRICING_REFERENCE_IMPORT_TOO_LARGE",
+      "L archive XLSX depasse les limites de securite autorisees.",
+    );
+  }
+};
+
 type WorkbookTable = {
   sheetName: string;
   headers: string[];
@@ -574,8 +597,36 @@ const openWorkbookSheet = (
 
   let entries: Record<string, Uint8Array>;
   try {
+    let entryCount = 0;
+    let totalCompressedBytes = 0;
+    let totalUncompressedBytes = 0;
+    unzipSync(input.bytes, {
+      filter: (file) => {
+        entryCount += 1;
+        totalCompressedBytes += file.size;
+        totalUncompressedBytes += file.originalSize;
+        return false;
+      },
+    });
+    assertWorkbookArchiveLimits(
+      entryCount,
+      totalUncompressedBytes,
+      totalCompressedBytes,
+    );
     entries = unzipSync(input.bytes);
-  } catch {
+    assertWorkbookArchiveLimits(
+      Object.keys(entries).length,
+      Object.values(entries).reduce((total, entry) => total + entry.byteLength, 0),
+      input.bytes.byteLength,
+    );
+  } catch (error) {
+    if (
+      typeof error === "object"
+      && error !== null
+      && Reflect.get(error, "code") === "PRICING_REFERENCE_IMPORT_TOO_LARGE"
+    ) {
+      throw error;
+    }
     throw httpError(
       400,
       "PRICING_REFERENCE_IMPORT_PARSE_FAILED",

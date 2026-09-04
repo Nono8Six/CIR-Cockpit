@@ -12,10 +12,12 @@ import DashboardOverviewHeader from './dashboard/overview/DashboardOverviewHeade
 import PipelineLostDialog from './dashboard/pipeline/PipelineLostDialog';
 import { useDashboardScope } from '@/hooks/dashboard-state/useDashboardScope';
 import { useDashboardState } from '@/hooks/dashboard-state/useDashboardState';
+import { useDashboardKeyboardShortcuts } from '@/hooks/dashboard-state/useDashboardKeyboardShortcuts';
 import { dashboardSearchStateSchema } from '@/app/dashboardSearch';
 import type { AgencyConfig } from '@/services/config';
 
 interface DashboardProps {
+  isActive: boolean;
   interactions: Interaction[];
   statuses: AgencyStatus[];
   historicalStatuses?: AgencyStatus[];
@@ -26,6 +28,7 @@ interface DashboardProps {
 }
 
 const Dashboard = ({
+  isActive,
   interactions,
   statuses,
   historicalStatuses = [],
@@ -121,64 +124,15 @@ const Dashboard = ({
   );
 
   // Raccourcis : "/" focalise la recherche, fleches + Entree naviguent la table.
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const activeEl = document.activeElement;
-
-      if (
-        activeEl instanceof HTMLInputElement ||
-        activeEl instanceof HTMLTextAreaElement ||
-        (activeEl as HTMLElement)?.isContentEditable ||
-        activeEl?.closest('[role="dialog"]') ||
-        activeEl?.closest('[role="menu"]')
-      ) {
-        return;
-      }
-
-      if (event.key === '/') {
-        event.preventDefault();
-        searchInputRef.current?.focus();
-        searchInputRef.current?.select();
-        return;
-      }
-
-      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-        if (tableRows.length === 0) return;
-        event.preventDefault();
-        const currentIndex = tableRows.findIndex((row) => row.interaction.id === activeInteractionId);
-        const nextIndex = event.key === 'ArrowDown'
-          ? currentIndex === -1 ? 0 : Math.min(currentIndex + 1, tableRows.length - 1)
-          : currentIndex === -1 ? 0 : Math.max(currentIndex - 1, 0);
-        setActiveInteractionId(tableRows[nextIndex]?.interaction.id ?? null);
-        return;
-      }
-
-      if (activeInteractionId && (event.key === 'Enter' || event.key.toLowerCase() === 'o')) {
-        event.preventDefault();
-        const activeRow = tableRows.find((row) => row.interaction.id === activeInteractionId);
-        if (activeRow) {
-          setSelectedInteraction(activeRow.interaction);
-        }
-        return;
-      }
-
-      if (activeInteractionId && (event.key === 'Backspace' || event.key === 'Delete')) {
-        event.preventDefault();
-        const activeRow = tableRows.find((row) => row.interaction.id === activeInteractionId);
-        if (activeRow) {
-          handleRequestDeleteInteraction(activeRow.interaction);
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [
+  useDashboardKeyboardShortcuts({
+    isActive,
+    searchInputRef,
     tableRows,
     activeInteractionId,
-    setSelectedInteraction,
-    handleRequestDeleteInteraction
-  ]);
+    setActiveInteractionId,
+    onOpenInteraction: setSelectedInteraction,
+    onRequestDeleteInteraction: handleRequestDeleteInteraction
+  });
 
   const chartCaption = `${scopeLabel} · 12 dernières semaines`;
 

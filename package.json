@@ -32,7 +32,7 @@
     "qa:fast": "pnpm run qa:front && pnpm run backend:lint && pnpm run backend:typecheck && pnpm run backend:test",
     "qa": "pwsh -NoLogo -File scripts/qa-gate.ps1",
     "qa:ci": "pnpm run repo:check:local && pnpm run frontend:typecheck && pnpm run frontend:lint && pnpm --dir frontend run test:coverage && pnpm run frontend:error-compliance && pnpm run frontend:build && pnpm run backend:lint && pnpm run backend:typecheck && pnpm run backend:test && pnpm run backend:test:integration",
-    "qa:audit": "pnpm --dir frontend exec pnpm audit --audit-level=high"
+    "qa:audit": "pnpm audit --prod --audit-level=moderate"
   },
   "devDependencies": {
     "@trpc/server": "11.18.0",

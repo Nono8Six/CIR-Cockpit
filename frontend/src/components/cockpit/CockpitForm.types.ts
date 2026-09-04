@@ -8,6 +8,7 @@ import type {
 } from '@/types';
 
 export type CockpitFormProps = {
+  isActive: boolean;
   onSave: (interaction: InteractionDraft) => Promise<boolean>;
   config: AgencyConfig;
   activeAgencyId: string | null;

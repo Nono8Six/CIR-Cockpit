@@ -11,7 +11,6 @@ import { getCurrentUserLabel } from '@/services/auth/getCurrentUserLabel';
 import { getProfile } from '@/services/auth/getProfile';
 import { getSession } from '@/services/auth/getSession';
 import { onAuthStateChange } from '@/services/auth/onAuthStateChange';
-import { setProfilePasswordChanged } from '@/services/auth/setProfilePasswordChanged';
 import { updateUserPassword } from '@/services/auth/updateUserPassword';
 
 vi.mock('../../supabase/requireSupabaseClient');
@@ -229,7 +228,7 @@ describe('auth core services', () => {
     await expect(getProfile()).rejects.toBe(mappedDbError);
   });
 
-  it('getSession, onAuthStateChange, updateUserPassword and setProfilePasswordChanged', async () => {
+  it('getSession, onAuthStateChange and the server-side password change procedure', async () => {
     const authError = createAppError({
       code: 'AUTH_ERROR',
       message: 'Erreur auth.',
@@ -250,8 +249,7 @@ describe('auth core services', () => {
             data: { session: { access_token: 'token' } },
             error: null
           }),
-          onAuthStateChange: onAuthStateChangeMock,
-          updateUser: vi.fn().mockResolvedValue({ error: null })
+          onAuthStateChange: onAuthStateChangeMock
         }
       })
     );
@@ -265,10 +263,8 @@ describe('auth core services', () => {
     expect(returnedSubscription).toBe(subscription);
     expect(events).toEqual([{ event: 'SIGNED_IN', hasSession: true }]);
 
-    await expect(updateUserPassword('Password#123')).resolves.toBeUndefined();
-
     mockInvokeRpc.mockResolvedValue(undefined);
-    await expect(setProfilePasswordChanged()).resolves.toBeUndefined();
+    await expect(updateUserPassword('Password#123')).resolves.toBeUndefined();
     const [call, parser] = mockInvokeRpc.mock.calls[0];
     expect(typeof call).toBe('function');
     expect(parseTrpcContract(parser, { ok: true })).toBeUndefined();

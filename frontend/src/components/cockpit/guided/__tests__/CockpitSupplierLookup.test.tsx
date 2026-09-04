@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -16,6 +16,7 @@ const renderLookup = (overrides = {}) => {
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } }
   });
   const props = {
+    isActive: true,
     activeAgencyId: 'agency-1',
     selectedEntity: null,
     companyName: '',
@@ -26,13 +27,17 @@ const renderLookup = (overrides = {}) => {
     ...overrides
   };
 
-  render(
+  const renderLookupView = (isActive: boolean) => (
     <QueryClientProvider client={queryClient}>
-      <CockpitSupplierLookup {...props} />
+      <CockpitSupplierLookup {...props} isActive={isActive} />
     </QueryClientProvider>
   );
+  const view = render(renderLookupView(props.isActive));
 
-  return props;
+  return {
+    ...props,
+    rerenderActive: (isActive: boolean) => view.rerender(renderLookupView(isActive))
+  };
 };
 
 describe('CockpitSupplierLookup', () => {
@@ -105,5 +110,31 @@ describe('CockpitSupplierLookup', () => {
     await user.click(screen.getByRole('button', { name: /continuer/i }));
 
     expect(onComplete).toHaveBeenCalled();
+  });
+
+  it('retire le raccourci de validation lors du passage actif vers inactif', () => {
+    const onComplete = vi.fn();
+    const lookup = renderLookup({
+      selectedEntity: {
+        id: 'supplier-1',
+        name: 'SIEMENS SAS',
+        entity_type: 'Fournisseur'
+      } as unknown as Entity,
+      onComplete
+    });
+
+    fireEvent.keyDown(window, { key: 'Enter', ctrlKey: true });
+    expect(onComplete).toHaveBeenCalledTimes(1);
+
+    lookup.rerenderActive(false);
+    const inactiveEvent = new KeyboardEvent('keydown', {
+      key: 'Enter',
+      ctrlKey: true,
+      cancelable: true
+    });
+    window.dispatchEvent(inactiveEvent);
+
+    expect(onComplete).toHaveBeenCalledTimes(1);
+    expect(inactiveEvent.defaultPrevented).toBe(false);
   });
 });

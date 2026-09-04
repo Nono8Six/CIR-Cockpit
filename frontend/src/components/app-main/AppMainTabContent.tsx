@@ -150,6 +150,7 @@ const AppMainTabContent = (props: AppMainTabContentProps) => {
           <section
             key={tab}
             hidden={!isActive}
+            inert={!isActive}
             className="flex h-full min-h-0 flex-col"
             data-state={isActive ? 'active' : 'inactive'}
             data-testid={`app-main-tab-${tab}`}
@@ -158,6 +159,7 @@ const AppMainTabContent = (props: AppMainTabContentProps) => {
               <div className="min-h-0 flex-1">
                 <Suspense fallback={ROUTE_LOADING_FALLBACK}>
                   <CockpitForm
+                    isActive={isActive}
                     onSave={onSaveInteraction}
                     config={config}
                     activeAgencyId={activeAgencyId}
@@ -177,6 +179,7 @@ const AppMainTabContent = (props: AppMainTabContentProps) => {
               <div className="min-h-0 flex-1">
                 <Suspense fallback={ROUTE_LOADING_FALLBACK}>
                   <Dashboard
+                    isActive={isActive}
                     interactions={interactions}
                     statuses={config.statuses}
                     historicalStatuses={config.historicalStatuses}

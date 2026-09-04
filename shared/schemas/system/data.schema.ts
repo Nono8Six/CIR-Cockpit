@@ -1,7 +1,7 @@
 import { z } from 'zod/v4';
 
 import type { Json } from '../../supabase.types.ts';
-import { uuidSchema } from '../admin/auth.schema.ts';
+import { passwordSchema, uuidSchema } from '../admin/auth.schema.ts';
 import { clientFormSchema } from '../entity/client.schema.ts';
 import { clientContactFormSchema } from '../entity/client-contact.schema.ts';
 import { convertClientSchema } from '../entity/convert-client.schema.ts';
@@ -333,18 +333,16 @@ export type DataConfigPayload = z.infer<typeof dataConfigPayloadSchema>;
 
 // --- Profile ---
 
-const passwordChangedSchema = z.strictObject({
-  action: z.literal('password_changed')
-});
-
 const setActiveAgencySchema = z.strictObject({
   action: z.literal('set_active_agency'),
   agency_id: z.union([uuidSchema, z.null()])
 });
 
-export const dataProfilePayloadSchema = z.discriminatedUnion('action', [
-  passwordChangedSchema,
-  setActiveAgencySchema
-]);
+export const dataProfilePayloadSchema = setActiveAgencySchema;
+
+export const changePasswordInputSchema = z.strictObject({
+  password: passwordSchema
+});
 
 export type DataProfilePayload = z.infer<typeof dataProfilePayloadSchema>;
+export type ChangePasswordInput = z.infer<typeof changePasswordInputSchema>;

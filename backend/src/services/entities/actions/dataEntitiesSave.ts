@@ -39,10 +39,15 @@ export const saveEntity = async (
       createdBy,
     );
   const officialDataResync = getOfficialDataResync(payload);
+  const expectedScope = {
+    agencyId,
+    entityType: payload.entity_type,
+  };
 
   if (!isIndividualClient && !hasPrimaryContactSelection(payload) && !officialDataResync) {
     return persistEntityRow(db, payload.id, updateRow, insertRow, {
       officialDataResync,
+      expectedScope,
     });
   }
 
@@ -55,6 +60,7 @@ export const saveEntity = async (
         insertRow,
         {
           officialDataResync,
+          expectedScope,
         },
       );
       if (isIndividualClient) {
@@ -72,7 +78,13 @@ export const saveEntity = async (
     if (
       typeof error === "object" &&
       error !== null &&
-      Reflect.get(error, "code") === "DB_WRITE_FAILED"
+      [
+        "AUTH_FORBIDDEN",
+        "CONFLICT",
+        "DB_WRITE_FAILED",
+        "NOT_FOUND",
+        "VALIDATION_ERROR",
+      ].includes(String(Reflect.get(error, "code")))
     ) {
       throw error;
     }

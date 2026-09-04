@@ -22,6 +22,27 @@ const Harness = ({
 };
 
 describe('useAppShortcuts', () => {
+  it('laisse F1 et F2 produire une seule navigation shell autorisee', () => {
+    const setActiveTab = vi.fn();
+    render(
+      <Harness
+        canAccessAdmin
+        canAccessSettings
+        setActiveTab={setActiveTab}
+        setIsSearchOpen={vi.fn()}
+      />
+    );
+    const f1Event = new KeyboardEvent('keydown', { key: 'F1', cancelable: true });
+    const f2Event = new KeyboardEvent('keydown', { key: 'F2', cancelable: true });
+
+    window.dispatchEvent(f1Event);
+    window.dispatchEvent(f2Event);
+
+    expect(setActiveTab.mock.calls).toEqual([['clients'], ['suppliers']]);
+    expect(f1Event.defaultPrevented).toBe(true);
+    expect(f2Event.defaultPrevented).toBe(true);
+  });
+
   it('maps keyboard shortcuts to route tabs and search open/close', () => {
     const setActiveTab = vi.fn();
     const setIsSearchOpen = vi.fn();

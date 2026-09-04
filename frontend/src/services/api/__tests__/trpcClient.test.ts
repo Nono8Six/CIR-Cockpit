@@ -54,8 +54,8 @@ describe('trpcClient', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     const module = await import('../trpcClient');
-    const result = await module.getTrpcClient().data.profile.mutate(
-      { action: 'password_changed' },
+    const result = await module.getTrpcClient().data.changePassword.mutate(
+      { password: 'Password123!' },
       module.createTrpcCallOptions({ headers: { 'x-request-id': 'req-1' } })
     );
 
@@ -63,7 +63,7 @@ describe('trpcClient', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(url).toContain('http://127.0.0.1:8787/trpc/data.profile');
+    expect(url).toContain('http://127.0.0.1:8787/trpc/data.changePassword');
     expect(url).not.toContain('batch=1');
 
     const headers = new Headers(init.headers);
@@ -96,7 +96,7 @@ describe('trpcClient', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     const module = await import('../trpcClient');
-    await module.getTrpcClient().data.profile.mutate({ action: 'password_changed' });
+    await module.getTrpcClient().data.profile.mutate({ action: 'set_active_agency', agency_id: null });
 
     expect(refreshSession).toHaveBeenCalledTimes(1);
     const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
@@ -123,7 +123,7 @@ describe('trpcClient', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     const module = await import('../trpcClient');
-    await module.getTrpcClient().data.profile.mutate({ action: 'password_changed' });
+    await module.getTrpcClient().data.profile.mutate({ action: 'set_active_agency', agency_id: null });
 
     const [url] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(url).toContain('http://api.cir.test/trpc/data.profile');
@@ -149,9 +149,9 @@ describe('trpcClient', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     const module = await import('../trpcClient');
-    await module.getTrpcClient().data.profile.mutate({ action: 'password_changed' });
+    await module.getTrpcClient().data.profile.mutate({ action: 'set_active_agency', agency_id: null });
     await module.getTrpcClient().data.profile.mutate(
-      { action: 'password_changed' },
+      { action: 'set_active_agency', agency_id: null },
       module.createTrpcCallOptions({ headers: new Headers([['x-request-id', 'req-cache']]) })
     );
 
@@ -193,7 +193,7 @@ describe('trpcClient', () => {
 
     const module = await import('../trpcClient');
     await module.getTrpcClient().data.profile.mutate(
-      { action: 'password_changed' },
+      { action: 'set_active_agency', agency_id: null },
       module.createTrpcCallOptions({ headers: [['x-request-id', 'req-array']] })
     );
 

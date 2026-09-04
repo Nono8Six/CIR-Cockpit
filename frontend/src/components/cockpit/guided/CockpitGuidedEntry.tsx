@@ -14,6 +14,7 @@ import CockpitGuidedContextPanel from './CockpitGuidedContextPanel';
 import CockpitGuidedStepSwitch from './CockpitGuidedStepSwitch';
 
 type CockpitGuidedEntryProps = {
+  isActive: boolean;
   formId: string;
   canSave: boolean;
   gateMessage: string | null;
@@ -171,6 +172,7 @@ export const getVisibleGuidedAnswerSteps = (
 };
 
 const CockpitGuidedEntry = ({
+  isActive,
   formId,
   canSave,
   gateMessage,
@@ -281,6 +283,7 @@ const CockpitGuidedEntry = ({
               onEditStep={flow.editStep}
             />
             <CockpitGuidedStepSwitch
+              isActive={isActive}
               flow={flow}
               leftPaneProps={stepLeftPaneProps}
               rightPaneProps={stepRightPaneProps}

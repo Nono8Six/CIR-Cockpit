@@ -1,16 +1,17 @@
 import { test } from "vitest";
 import { assertEquals, assertRejects } from '#test/assert';
 
-import { dataProfilePayloadSchema } from '../../../../shared/schemas/system/data.schema.ts';
+import { changePasswordInputSchema, dataProfilePayloadSchema } from '../../../../shared/schemas/system/data.schema.ts';
 import type { AuthContext, DbClient } from '../../types.ts';
-import { handleDataProfileAction } from './dataProfile.ts';
+import { changePassword, handleDataProfileAction } from './dataProfile.ts';
 
 const authContext: AuthContext = {
   userId: 'user-1',
   role: 'tcs',
   agencyIds: ['agency-1'],
   activeAgencyId: 'agency-1',
-  isSuperAdmin: false
+  isSuperAdmin: false,
+  mustChangePassword: true
 };
 
 const readCode = (value: unknown): string | undefined => {
@@ -21,32 +22,59 @@ const readCode = (value: unknown): string | undefined => {
   return typeof candidate === 'string' ? candidate : undefined;
 };
 
-test('handleDataProfileAction updates must_change_password on password_changed', async () => {
-  let whereCalled = 0;
+test('changePassword updates Supabase Auth before clearing must_change_password', async () => {
+  const calls: string[] = [];
 
   const db = {
     update: () => ({
       set: () => ({
-        where: () => {
-          whereCalled += 1;
-          return Promise.resolve();
-        }
+        where: () => ({
+          returning: () => {
+            calls.push('profile');
+            return Promise.resolve([{ id: 'user-1' }]);
+          }
+        })
       })
     })
   } as unknown as DbClient;
 
-  const response = await handleDataProfileAction(
+  const response = await changePassword(
     db,
     authContext,
     'req-1',
-    { action: 'password_changed' },
+    { password: 'Password123!' },
     {
-      ensureRateLimit: () => Promise.resolve()
+      updatePassword: (_userId, _password) => {
+        calls.push('auth');
+        return Promise.resolve();
+      }
     }
   );
 
   assertEquals(response.ok, true);
-  assertEquals(whereCalled, 1);
+  assertEquals(calls, ['auth', 'profile']);
+});
+
+test('changePassword fails closed when the profile flag cannot be cleared', async () => {
+  const db = {
+    update: () => ({
+      set: () => ({
+        where: () => ({
+          returning: () => Promise.resolve([])
+        })
+      })
+    })
+  } as unknown as DbClient;
+
+  const error = await assertRejects(() => changePassword(
+    db,
+    authContext,
+    'req-profile-failed',
+    { password: 'Password123!' },
+    { updatePassword: () => Promise.resolve() }
+  ));
+
+  assertEquals(readCode(error), 'PROFILE_UPDATE_FAILED');
 });
 
 test('handleDataProfileAction updates active agency when agency is accessible', async () => {
@@ -146,7 +174,7 @@ test('handleDataProfileAction throws PROFILE_UPDATE_FAILED on db errors', async 
         db,
         authContext,
         'req-2',
-        { action: 'password_changed' },
+        { action: 'set_active_agency', agency_id: 'agency-1' },
         {
           ensureRateLimit: () => Promise.resolve()
         }
@@ -161,7 +189,7 @@ test('handleDataProfileAction throws PROFILE_UPDATE_FAILED on db errors', async 
       db,
       authContext,
       'req-3',
-      { action: 'password_changed' },
+      { action: 'set_active_agency', agency_id: 'agency-1' },
       {
         ensureRateLimit: () => Promise.resolve()
       }
@@ -171,8 +199,9 @@ test('handleDataProfileAction throws PROFILE_UPDATE_FAILED on db errors', async 
   }
 });
 
-test('dataProfilePayloadSchema supports profile write actions and rejects unsupported get action', () => {
-  assertEquals(dataProfilePayloadSchema.safeParse({ action: 'password_changed' }).success, true);
+test('profile contracts reject the old client declaration and accept the dedicated password input', () => {
+  assertEquals(dataProfilePayloadSchema.safeParse({ action: 'password_changed' }).success, false);
+  assertEquals(changePasswordInputSchema.safeParse({ password: 'Password123!' }).success, true);
   assertEquals(dataProfilePayloadSchema.safeParse({
     action: 'set_active_agency',
     agency_id: '11111111-1111-4111-8111-111111111111'

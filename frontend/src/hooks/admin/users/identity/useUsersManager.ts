@@ -3,9 +3,7 @@ import { useMemo, useState } from 'react';
 import { useAdminUsers } from '../access/useAdminUsers';
 import { useAgencies } from '../../agencies/core/useAgencies';
 import { useArchiveUser } from '../access/useArchiveUser';
-import { useBulkDeleteUsers } from '../access/useBulkDeleteUsers';
 import { useCreateAdminUser } from './useCreateAdminUser';
-import { useDeleteUser } from '../access/useDeleteUser';
 import { useResetUserPassword } from '../access/useResetUserPassword';
 import { useSetUserMemberships } from '../access/useSetUserMemberships';
 import { useSetUserRole } from '../access/useSetUserRole';
@@ -36,12 +34,10 @@ export const useUsersManager = () => {
   const [confirmArchive, setConfirmArchive] = useState<ConfirmArchiveState | null>(null);
   const [editIdentityOpen, setEditIdentityOpen] = useState(false);
   const [editIdentityUser, setEditIdentityUser] = useState<AdminUserSummary | null>(null);
-  const [confirmDeleteUser, setConfirmDeleteUser] = useState<AdminUserSummary | null>(null);
   const [roleChangeUser, setRoleChangeUser] = useState<AdminUserSummary | null>(null);
 
   // Multi-selection and bulk action states
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
-  const [confirmBulkDelete, setConfirmBulkDelete] = useState<string[] | null>(null);
   const [confirmBulkArchive, setConfirmBulkArchive] = useState<{ userIds: string[]; nextArchived: boolean } | null>(null);
 
   const usersQuery = useAdminUsers(true);
@@ -55,8 +51,6 @@ export const useUsersManager = () => {
   const archiveMutation = useArchiveUser();
   const unarchiveMutation = useUnarchiveUser();
   const updateIdentityMutation = useUpdateUserIdentity();
-  const deleteUserMutation = useDeleteUser();
-  const bulkDeleteUsersMutation = useBulkDeleteUsers();
 
   const filteredUsers = useMemo(() => {
     const visibleUsers = showArchived ? users : users.filter((user) => !user.archived_at);
@@ -133,21 +127,6 @@ export const useUsersManager = () => {
     notifySuccess('Utilisateur mis à jour.');
   };
 
-  const executeDeleteUser = async () => {
-    if (!confirmDeleteUser) return;
-    try {
-      const response = await deleteUserMutation.mutateAsync(confirmDeleteUser.id);
-      const anonymizedCount = response.anonymized_interactions ?? 0;
-      if (anonymizedCount > 0) {
-        notifySuccess(`Utilisateur supprimé. ${anonymizedCount} interaction(s) reattribuee(s).`);
-      } else {
-        notifySuccess('Utilisateur supprimé.');
-      }
-    } catch {
-      return;
-    }
-  };
-
   /**
    * Toggles the selection state of a single user.
    * @param {string} userId - The ID of the user.
@@ -188,37 +167,6 @@ export const useUsersManager = () => {
    */
   const clearSelection = (): void => {
     setSelectedUserIds([]);
-  };
-
-  /**
-   * Prepares bulk user deletion and opens confirmation.
-   * @param {string[]} userIds - The IDs to delete.
-   * @returns {void}
-   */
-  const handleBulkDelete = (userIds: string[]): void => {
-    setConfirmBulkDelete(userIds);
-  };
-
-  /**
-   * Executes the deletion of multiple users in bulk.
-   * @returns {Promise<void>}
-   */
-  const executeBulkDelete = async (): Promise<void> => {
-    if (!confirmBulkDelete) return;
-    try {
-      const response = await bulkDeleteUsersMutation.mutateAsync(confirmBulkDelete);
-      if (response.anonymized_interactions > 0) {
-        notifySuccess(
-          `${response.deleted_count} utilisateur(s) supprimé(s). ${response.anonymized_interactions} interaction(s) réattribuée(s).`
-        );
-      } else {
-        notifySuccess(`${response.deleted_count} utilisateur(s) supprimé(s).`);
-      }
-      setSelectedUserIds([]);
-      setConfirmBulkDelete(null);
-    } catch {
-      return;
-    }
   };
 
   /**
@@ -282,10 +230,8 @@ export const useUsersManager = () => {
     confirmArchive,
     editIdentityOpen,
     editIdentityUser,
-    confirmDeleteUser,
     roleChangeUser,
     selectedUserIds,
-    confirmBulkDelete,
     confirmBulkArchive,
     usersQuery,
     agencies,
@@ -296,7 +242,6 @@ export const useUsersManager = () => {
     setConfirmResetUser,
     setConfirmArchive,
     setPasswordDialogOpen,
-    setConfirmDeleteUser,
     handleCreateUser,
     executeRoleChange,
     openRoleChangeDialog: (user: AdminUserSummary) => setRoleChangeUser(user),
@@ -305,18 +250,14 @@ export const useUsersManager = () => {
     handleIdentitySave,
     executeResetPassword,
     executeArchiveToggle,
-    executeDeleteUser,
     toggleSelectUser,
     toggleSelectAll,
     clearSelection,
-    handleBulkDelete,
-    executeBulkDelete,
     handleBulkArchive,
     executeBulkArchive,
     handleResetPassword: (user: AdminUserSummary) => setConfirmResetUser(user),
     handleArchiveToggle: (user: AdminUserSummary) =>
       setConfirmArchive({ user, nextArchived: !user.archived_at }),
-    handleDeleteUser: (user: AdminUserSummary) => setConfirmDeleteUser(user),
     openMembershipDialog: (user: AdminUserSummary) => {
       setSelectedUser(user);
       setMembershipOpen(true);
@@ -336,8 +277,6 @@ export const useUsersManager = () => {
     closePasswordDialog: () => setPasswordDialogOpen(false),
     closeResetConfirm: () => setConfirmResetUser(null),
     closeArchiveConfirm: () => setConfirmArchive(null),
-    closeDeleteConfirm: () => setConfirmDeleteUser(null),
-    closeBulkDeleteConfirm: () => setConfirmBulkDelete(null),
     closeBulkArchiveConfirm: () => setConfirmBulkArchive(null)
   };
 };

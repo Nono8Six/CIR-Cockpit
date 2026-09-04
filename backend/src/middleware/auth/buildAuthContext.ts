@@ -6,6 +6,7 @@ type ProfileAuthState = {
   active_agency_id: string | null;
   archived_at: string | null;
   is_system: boolean;
+  must_change_password: boolean;
 };
 
 type MembershipLookupRow = {
@@ -36,7 +37,7 @@ export const resolveAuthContext = async (
 ): Promise<AuthContext> => {
   const { data: profile, error: profileError } = await db
     .from('profiles')
-    .select('role, active_agency_id, archived_at, is_system, agency_members(agency_id)')
+    .select('role, active_agency_id, archived_at, is_system, must_change_password, agency_members(agency_id)')
     .eq('id', userId)
     .single<ProfileLookupRow>();
 
@@ -56,7 +57,8 @@ export const resolveAuthContext = async (
       role: profile.role,
       agencyIds: [],
       activeAgencyId: profile.active_agency_id,
-      isSuperAdmin: true
+      isSuperAdmin: true,
+      mustChangePassword: profile.must_change_password
     };
   }
 
@@ -70,6 +72,7 @@ export const resolveAuthContext = async (
     role: profile.role,
     agencyIds: toUniqueAgencyIds(memberships),
     activeAgencyId: profile.active_agency_id,
-    isSuperAdmin: false
+    isSuperAdmin: false,
+    mustChangePassword: profile.must_change_password
   };
 };

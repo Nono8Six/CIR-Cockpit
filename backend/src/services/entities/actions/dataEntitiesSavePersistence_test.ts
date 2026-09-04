@@ -131,6 +131,87 @@ test('persistSelectedPrimaryContact rejects missing or archived selected contact
   assertEquals(updates, [{ is_primary: false }]);
 });
 
+test('persistEntityRow rejects an existing UUID from another agency without writing', async () => {
+  let updateCalls = 0;
+  const db = {
+    select: () => ({
+      from: () => ({
+        where: () => ({
+          limit: () => Promise.resolve([{
+            agency_id: 'agency-b',
+            entity_type: 'Client',
+            siret: null,
+            siren: null,
+            naf_code: null,
+            official_name: null,
+            official_data_source: null,
+            official_data_synced_at: null,
+            address: null,
+            postal_code: null,
+            department: null,
+            city: null,
+          }])
+        })
+      })
+    }),
+    update: () => {
+      updateCalls += 1;
+      return {};
+    }
+  } as unknown as DbClient;
+
+  const error = await assertRejects(() => persistEntityRow(
+    db,
+    'entity-b',
+    { name: 'Tentative agence A' } as never,
+    { name: 'Tentative agence A', created_by: 'user-a' } as never,
+    { expectedScope: { agencyId: 'agency-a', entityType: 'Client' } }
+  ));
+
+  assertEquals(readCode(error), 'AUTH_FORBIDDEN');
+  assertEquals(updateCalls, 0);
+});
+
+test('persistEntityRow reports a conflict when the scoped update returns no row', async () => {
+  const db = {
+    select: () => ({
+      from: () => ({
+        where: () => ({
+          limit: () => Promise.resolve([{
+            agency_id: 'agency-a',
+            entity_type: 'Client',
+            siret: null,
+            siren: null,
+            naf_code: null,
+            official_name: null,
+            official_data_source: null,
+            official_data_synced_at: null,
+            address: null,
+            postal_code: null,
+            department: null,
+            city: null,
+          }])
+        })
+      })
+    }),
+    update: () => ({
+      set: () => ({
+        where: () => ({ returning: () => Promise.resolve([]) })
+      })
+    })
+  } as unknown as DbClient;
+
+  const error = await assertRejects(() => persistEntityRow(
+    db,
+    'entity-a',
+    { name: 'Version concurrente' } as never,
+    { name: 'Version concurrente', created_by: 'user-a' } as never,
+    { expectedScope: { agencyId: 'agency-a', entityType: 'Client' } }
+  ));
+
+  assertEquals(readCode(error), 'CONFLICT');
+});
+
 test('persistEntityRow preserves synced official fields without explicit resync', async () => {
   const mock = createEntityPersistDbMock();
 

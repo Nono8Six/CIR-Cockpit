@@ -46,6 +46,7 @@ import { useCockpitPaneProps } from '../cockpit-utils/useCockpitPaneProps';
 import { useCockpitRelationChange } from '../cockpit-utils/useCockpitRelationChange';
 
 type UseCockpitFormControllerParams = {
+  isActive: boolean;
   onSave: (interaction: InteractionDraft) => Promise<boolean>;
   config: AgencyConfig;
   activeAgencyId: string | null;
@@ -142,6 +143,7 @@ const toEntityFromUnifiedSearchResult = (
  * @returns The form controller state, submit handlers, pane props, and dialog controls.
  */
 export const useCockpitFormController = ({
+  isActive,
   onSave,
   config,
   activeAgencyId,
@@ -363,9 +365,8 @@ export const useCockpitFormController = ({
   const canStartNewEntryFromShortcut = Boolean(lastSavedInteraction);
 
   useInteractionHotkeys({
+    isActive,
     formRef: refs.formRef,
-    searchInputRef: refs.searchInputRef,
-    setFocus: form.setFocus,
     setValue: form.setValue,
     onReset: onStartNewEntry,
     canStartNewEntryFromShortcut

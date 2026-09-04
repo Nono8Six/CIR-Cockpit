@@ -1,4 +1,4 @@
-import { Archive, ArchiveRestore, Trash2, X } from 'lucide-react';
+import { Archive, ArchiveRestore, X } from 'lucide-react';
 import type { useUsersManager } from '../../hooks/admin/users/identity/useUsersManager';
 import { Button } from '../ui/inputs/basic/Button';
 import UsersManagerHeader from './UsersManagerHeader';
@@ -25,12 +25,10 @@ const UsersManagerContent = ({ state }: UsersManagerContentProps) => {
     openRoleChangeDialog,
     openMembershipDialog,
     openEditIdentityDialog,
-    handleDeleteUser,
     selectedUserIds,
     toggleSelectUser,
     toggleSelectAll,
     clearSelection,
-    handleBulkDelete,
     handleBulkArchive
   } = state;
 
@@ -62,7 +60,6 @@ const UsersManagerContent = ({ state }: UsersManagerContentProps) => {
         onChangeRole={openRoleChangeDialog}
         onEditMemberships={openMembershipDialog}
         onEditIdentity={openEditIdentityDialog}
-        onDeleteUser={handleDeleteUser}
         selectedUserIds={selectedUserIds}
         onSelectToggle={toggleSelectUser}
         onSelectAllToggle={toggleSelectAll}
@@ -89,17 +86,6 @@ const UsersManagerContent = ({ state }: UsersManagerContentProps) => {
               {showArchived ? <ArchiveRestore size={13} /> : <Archive size={13} />}
               {showArchived ? 'Restaurer' : 'Archiver'}
             </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              className="h-7 gap-1.5 rounded-md px-2.5 text-[11px]"
-              onClick={() => handleBulkDelete(selectedUserIds)}
-            >
-              <Trash2 size={13} />
-              Supprimer
-            </Button>
-            <span className="h-4 w-px bg-border-subtle" aria-hidden="true" />
             <Button
               type="button"
               variant="ghost"

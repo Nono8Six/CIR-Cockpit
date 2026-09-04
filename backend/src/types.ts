@@ -13,6 +13,7 @@ export type AuthContext = {
   agencyIds: string[];
   activeAgencyId: string | null;
   isSuperAdmin: boolean;
+  mustChangePassword: boolean;
 };
 
 export type AppEnv = {

@@ -55,6 +55,10 @@ import {
 import { getConfig } from "../../config.ts";
 import { httpError } from "../../middleware/errorHandler.ts";
 import type { DbClient } from "../../types.ts";
+import {
+  assertCanonicalProviderEndpoint,
+  providerBaseUrl,
+} from "./runtime/providerRegistry.ts";
 
 export type ProviderRow = typeof ai_provider_configs.$inferSelect;
 export type ModelRow = typeof ai_model_configs.$inferSelect;
@@ -435,6 +439,7 @@ export const saveAiProvider = async (
   requestId: string,
   input: AiSettingsSaveProviderInput,
 ) => {
+  assertCanonicalProviderEndpoint(input.provider, input.base_url);
   const existing = await getProviderRow(db, input.provider);
   const key = input.api_key?.trim();
   const encrypted_api_key = key
@@ -777,6 +782,10 @@ export const testAiProvider = async (
     throw httpError(404, "AI_CONFIG_MISSING", "Fournisseur IA introuvable.");
   }
 
+  const baseUrl = assertCanonicalProviderEndpoint(
+    provider.provider,
+    provider.base_url,
+  );
   const key = input.api_key?.trim() ||
     (provider.encrypted_api_key
       ? await decryptSecret(provider.encrypted_api_key)
@@ -792,7 +801,7 @@ export const testAiProvider = async (
   let status: "success" | "failed" = "success";
   let message = "Connexion fournisseur validee.";
   try {
-    await testProviderConnection(provider.provider, key, provider.base_url);
+    await testProviderConnection(provider.provider, key, baseUrl);
   } catch (error) {
     status = "failed";
     message = error instanceof Error
@@ -1375,17 +1384,16 @@ export const getProviderRow = async (
   return row ?? null;
 };
 
-const MISTRAL_API_BASE_URL = "https://api.mistral.ai/v1";
-
-const testProviderConnection = async (
+export const testProviderConnection = async (
   provider: AiProvider,
   key: string,
   baseUrl: string | null,
 ): Promise<void> => {
-  const url = `${baseUrl ?? providerBaseUrl(provider)}/models`;
+  const url = `${assertCanonicalProviderEndpoint(provider, baseUrl)}/models`;
   const response = await fetch(url, {
     method: "GET",
     headers: providerConnectionHeaders(key),
+    redirect: "error",
     signal: AbortSignal.timeout(10_000),
   });
   if (!response.ok) {
@@ -1395,15 +1403,6 @@ const testProviderConnection = async (
 
 const providerConnectionHeaders = (key: string): HeadersInit => {
   return { Authorization: `Bearer ${key}` };
-};
-
-export const providerBaseUrl = (provider: AiProvider): string => {
-  switch (provider) {
-    case "openrouter":
-      return "https://openrouter.ai/api/v1";
-    case "mistral":
-      return MISTRAL_API_BASE_URL;
-  }
 };
 
 const providerHttpError = (

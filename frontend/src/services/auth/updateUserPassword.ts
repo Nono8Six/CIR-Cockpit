@@ -1,12 +1,16 @@
-import { requireSupabaseClient } from '@/services/supabase/requireSupabaseClient';
-import { mapSupabaseAuthError } from '@/services/errors/mapSupabaseAuthError';
+import { dataProfileResponseSchema } from 'shared/schemas/system/api-responses';
+
+import { createTrpcResponseParser, invokeTrpc } from '@/services/api/invokeTrpc';
+
+const parseProfileResponse = createTrpcResponseParser(
+  dataProfileResponseSchema,
+  (): void => undefined
+);
 
 export async function updateUserPassword(newPassword: string): Promise<void> {
-  const supabase = requireSupabaseClient();
-
-  const { error } = await supabase.auth.updateUser({ password: newPassword });
-
-  if (error) {
-    throw mapSupabaseAuthError(error, 'Impossible de changer le mot de passe.');
-  }
+  await invokeTrpc(
+    (api, options) => api.data.changePassword.mutate({ password: newPassword }, options),
+    parseProfileResponse,
+    'Impossible de changer le mot de passe.'
+  );
 }

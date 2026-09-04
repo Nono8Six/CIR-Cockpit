@@ -47,7 +47,7 @@ test("a custom or gateway base URL is rejected before createMistral", () => {
     () =>
       assertDirectProviderEndpoint("mistral", "https://openrouter.ai/api/v1"),
     Error,
-    "API directe Mistral",
+    "exactement https://api.mistral.ai/v1",
   );
   assertEquals(Reflect.get(error, "code"), "AI_CONFIG_MISSING");
   const factoryError = assertThrows(
@@ -58,7 +58,7 @@ test("a custom or gateway base URL is rejected before createMistral", () => {
         "mistral-small-latest",
       ),
     Error,
-    "API directe Mistral",
+    "exactement https://api.mistral.ai/v1",
   );
   assertEquals(Reflect.get(factoryError, "code"), "AI_CONFIG_MISSING");
 });

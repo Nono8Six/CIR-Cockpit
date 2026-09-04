@@ -20,6 +20,7 @@ type CockpitSupplierLookupProps = Pick<
   | 'onClearSelectedEntity'
   | 'setValue'
 > & {
+  isActive: boolean;
   onComplete: () => void;
 };
 
@@ -31,6 +32,7 @@ const getMatchLabel = (result: TierV1DirectoryRow): string => {
 };
 
 const CockpitSupplierLookup = ({
+  isActive,
   activeAgencyId,
   selectedEntity,
   companyName,
@@ -56,6 +58,7 @@ const CockpitSupplierLookup = ({
   const canUseTemporary = temporaryName.trim().length > 0;
 
   useEffect(() => {
+    if (!isActive) return undefined;
     if (!canContinue) return undefined;
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey || event.key !== 'Enter') return;
@@ -64,7 +67,7 @@ const CockpitSupplierLookup = ({
     };
     window.addEventListener('keydown', handleKeyDown, { capture: true });
     return () => window.removeEventListener('keydown', handleKeyDown, { capture: true });
-  }, [canContinue, onComplete]);
+  }, [canContinue, isActive, onComplete]);
 
   const useTemporarySupplier = () => {
     const normalizedName = temporaryName.trim();

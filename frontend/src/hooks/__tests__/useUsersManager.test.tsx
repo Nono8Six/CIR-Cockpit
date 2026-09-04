@@ -13,10 +13,8 @@ const usersMocks = vi.hoisted(() => ({
   useSetUserMemberships: vi.fn(),
   useResetUserPassword: vi.fn(),
   useArchiveUser: vi.fn(),
-  useBulkDeleteUsers: vi.fn(),
   useUnarchiveUser: vi.fn(),
-  useUpdateUserIdentity: vi.fn(),
-  useDeleteUser: vi.fn()
+  useUpdateUserIdentity: vi.fn()
 }));
 
 vi.mock('@/hooks/admin/users/access/useAdminUsers', () => ({
@@ -40,17 +38,11 @@ vi.mock('@/hooks/admin/users/access/useResetUserPassword', () => ({
 vi.mock('@/hooks/admin/users/access/useArchiveUser', () => ({
   useArchiveUser: usersMocks.useArchiveUser
 }));
-vi.mock('@/hooks/admin/users/access/useBulkDeleteUsers', () => ({
-  useBulkDeleteUsers: usersMocks.useBulkDeleteUsers
-}));
 vi.mock('@/hooks/admin/users/access/useUnarchiveUser', () => ({
   useUnarchiveUser: usersMocks.useUnarchiveUser
 }));
 vi.mock('@/hooks/admin/users/identity/useUpdateUserIdentity', () => ({
   useUpdateUserIdentity: usersMocks.useUpdateUserIdentity
-}));
-vi.mock('@/hooks/admin/users/access/useDeleteUser', () => ({
-  useDeleteUser: usersMocks.useDeleteUser
 }));
 
 vi.mock('@/services/errors/notifySuccess', () => ({ notifySuccess: vi.fn() }));
@@ -80,10 +72,8 @@ describe('useUsersManager', () => {
     usersMocks.useSetUserMemberships.mockReturnValue({ mutateAsync: vi.fn().mockResolvedValue(undefined) });
     usersMocks.useResetUserPassword.mockReturnValue({ mutateAsync: vi.fn().mockResolvedValue({ temporary_password: 'Temp#123' }) });
     usersMocks.useArchiveUser.mockReturnValue({ mutateAsync: vi.fn().mockResolvedValue(undefined) });
-    usersMocks.useBulkDeleteUsers.mockReturnValue({ mutateAsync: vi.fn().mockResolvedValue({ deleted_count: 2, anonymized_interactions: 0 }) });
     usersMocks.useUnarchiveUser.mockReturnValue({ mutateAsync: vi.fn().mockResolvedValue(undefined) });
     usersMocks.useUpdateUserIdentity.mockReturnValue({ mutateAsync: vi.fn().mockResolvedValue(undefined) });
-    usersMocks.useDeleteUser.mockReturnValue({ mutateAsync: vi.fn().mockResolvedValue({ anonymized_interactions: 0 }) });
   });
 
   it('creates a user and exposes temporary password dialog state', async () => {
@@ -150,22 +140,21 @@ describe('useUsersManager', () => {
     expect(result.current.roleChangeUser).toBeNull();
   });
 
-  it('reports anonymized interactions count on delete', async () => {
-    usersMocks.useDeleteUser.mockReturnValue({
-      mutateAsync: vi.fn().mockResolvedValue({ anonymized_interactions: 3 })
-    });
-
+  it('archive un utilisateur apres confirmation', async () => {
+    const mutateAsync = vi.fn().mockResolvedValue(undefined);
+    usersMocks.useArchiveUser.mockReturnValue({ mutateAsync });
+    const user = createUser();
     const { result } = renderHook(() => useUsersManager());
+
     act(() => {
-      result.current.handleDeleteUser(createUser());
+      result.current.handleArchiveToggle(user);
     });
     await act(async () => {
-      await result.current.executeDeleteUser();
+      await result.current.executeArchiveToggle();
     });
 
-    expect(notifySuccess).toHaveBeenCalledWith(
-      'Utilisateur supprimé. 3 interaction(s) reattribuee(s).'
-    );
+    expect(mutateAsync).toHaveBeenCalledWith(user.id);
+    expect(notifySuccess).toHaveBeenCalledWith('Utilisateur archivé.');
   });
 
   describe('multi-selection and bulk actions', () => {
@@ -237,29 +226,5 @@ describe('useUsersManager', () => {
       expect(result.current.confirmBulkArchive).toBeNull();
     });
 
-    it('executes bulk deleting successfully', async () => {
-      const bulkDeleteMutateMock = vi.fn().mockResolvedValue({
-        deleted_count: 2,
-        anonymized_interactions: 4
-      });
-      usersMocks.useBulkDeleteUsers.mockReturnValue({ mutateAsync: bulkDeleteMutateMock });
-
-      const { result } = renderHook(() => useUsersManager());
-
-      act(() => {
-        result.current.handleBulkDelete(['user-1', 'user-2']);
-      });
-      expect(result.current.confirmBulkDelete).toEqual(['user-1', 'user-2']);
-
-      await act(async () => {
-        await result.current.executeBulkDelete();
-      });
-
-      expect(bulkDeleteMutateMock).toHaveBeenCalledTimes(1);
-      expect(bulkDeleteMutateMock).toHaveBeenCalledWith(['user-1', 'user-2']);
-      expect(notifySuccess).toHaveBeenCalledWith('2 utilisateur(s) supprimé(s). 4 interaction(s) réattribuée(s).');
-      expect(result.current.selectedUserIds).toEqual([]);
-      expect(result.current.confirmBulkDelete).toBeNull();
-    });
   });
 });

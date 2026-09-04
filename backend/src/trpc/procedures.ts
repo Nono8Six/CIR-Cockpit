@@ -161,7 +161,42 @@ export const router = t.router;
 
 export const publicProcedure = t.procedure;
 
+const ensurePasswordChangeCompleted = (mustChangePassword: boolean): void => {
+  if (mustChangePassword) {
+    throw httpError(
+      403,
+      'AUTH_FORBIDDEN',
+      "Changez votre mot de passe avant d'acceder a l'application."
+    );
+  }
+};
+
 export const authedProcedure = t.procedure.use(async ({ ctx, next }) => {
+  try {
+    const token = getAccessTokenFromHeaders(ctx.req.headers.get('Authorization'));
+    const authenticatedContext = await authenticateAccessToken(token);
+    ensurePasswordChangeCompleted(authenticatedContext.authContext.mustChangePassword);
+
+    return next({
+      ctx: {
+        ...ctx,
+        callerId: authenticatedContext.callerId,
+        authContext: authenticatedContext.authContext,
+        db: authenticatedContext.db,
+        userDb: authenticatedContext.userDb
+      }
+    });
+  } catch (error) {
+    const normalizedError = toHttpError(error);
+    throw new TRPCError({
+      code: toTrpcCode(normalizedError.status ?? 500),
+      message: normalizedError.message,
+      cause: normalizedError
+    });
+  }
+});
+
+export const passwordChangeProcedure = t.procedure.use(async ({ ctx, next }) => {
   try {
     const token = getAccessTokenFromHeaders(ctx.req.headers.get('Authorization'));
     const authenticatedContext = await authenticateAccessToken(token);
@@ -189,6 +224,7 @@ export const superAdminProcedure = t.procedure.use(async ({ ctx, next }) => {
   try {
     const token = getAccessTokenFromHeaders(ctx.req.headers.get('Authorization'));
     const authenticatedContext = await authenticateSuperAdminAccessToken(token);
+    ensurePasswordChangeCompleted(authenticatedContext.authContext.mustChangePassword);
 
     return next({
       ctx: {

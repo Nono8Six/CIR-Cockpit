@@ -23,6 +23,7 @@ import {
 } from '../../../shared/schemas/interaction/tier-v1.schema.ts';
 import { tierDirectoryListInputSchema } from '../../../shared/schemas/entity/tier-foundation.schema.ts';
 import { configIntegrityInteractionUpdateInputSchema } from '../../../shared/schemas/system/config.schema.ts';
+import { adminUsersPayloadSchema } from '../../../shared/schemas/admin/user.schema.ts';
 import {
   aiSettingsCreateQuotaInputSchema,
   aiSettingsDeleteModelInputSchema,
@@ -30,6 +31,13 @@ import {
 } from '../../../shared/schemas/ai.schema.ts';
 
 const OFFICIAL_RESYNC_SOURCE = 'api-recherche-entreprises';
+
+test('admin user contract rejects physical deletion actions', () => {
+  const userId = '11111111-1111-4111-8111-111111111111';
+  assertEquals(adminUsersPayloadSchema.safeParse({ action: 'delete', user_id: userId }).success, false);
+  assertEquals(adminUsersPayloadSchema.safeParse({ action: 'bulk_delete', user_ids: [userId] }).success, false);
+  assertEquals(adminUsersPayloadSchema.safeParse({ action: 'archive', user_id: userId }).success, true);
+});
 
 test('AI admin destructive and quota creation contracts are strict', () => {
   const id = '11111111-1111-4111-8111-111111111111';
@@ -327,8 +335,8 @@ test('dataEntityContactsPayloadSchema supports list_by_entity, save and delete a
   assertEquals(dataEntityContactsPayloadSchema.safeParse(deletePayload).success, true);
 });
 
-test('dataProfilePayloadSchema supports profile write actions', () => {
-  const supportedPayload = { action: 'password_changed' };
+test('dataProfilePayloadSchema keeps only active-agency writes', () => {
+  const removedPasswordDeclaration = { action: 'password_changed' };
   const activeAgencyPayload = {
     action: 'set_active_agency',
     agency_id: '11111111-1111-4111-8111-111111111111'
@@ -339,7 +347,7 @@ test('dataProfilePayloadSchema supports profile write actions', () => {
   };
   const unsupportedPayload = { action: 'get' };
 
-  assertEquals(dataProfilePayloadSchema.safeParse(supportedPayload).success, true);
+  assertEquals(dataProfilePayloadSchema.safeParse(removedPasswordDeclaration).success, false);
   assertEquals(dataProfilePayloadSchema.safeParse(activeAgencyPayload).success, true);
   assertEquals(dataProfilePayloadSchema.safeParse(clearAgencyPayload).success, true);
   assertEquals(dataProfilePayloadSchema.safeParse({ ...activeAgencyPayload, extra: true }).success, false);

@@ -20,6 +20,7 @@ import CockpitSupplierContactStep from './CockpitSupplierContactStep';
 type CockpitGuidedFlowState = ReturnType<typeof useCockpitGuidedFlow>;
 
 type CockpitGuidedStepSwitchProps = {
+  isActive: boolean;
   flow: CockpitGuidedFlowState;
   leftPaneProps: CockpitFormLeftPaneProps;
   rightPaneProps: CockpitFormRightPaneProps;
@@ -29,6 +30,7 @@ type CockpitGuidedStepSwitchProps = {
 };
 
 const CockpitGuidedStepSwitch = ({
+  isActive,
   flow,
   leftPaneProps,
   rightPaneProps,
@@ -84,6 +86,7 @@ const CockpitGuidedStepSwitch = ({
   }, [completeSubjectStep, flow.subjectComplete, isDescriptionOnlyRelation, requestStepCompletion]);
 
   useEffect(() => {
+    if (!isActive) return undefined;
     if (flow.activeStep !== 'contact' && flow.activeStep !== 'subject') return undefined;
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -99,7 +102,7 @@ const CockpitGuidedStepSwitch = ({
 
     window.addEventListener('keydown', handleKeyDown, { capture: true });
     return () => window.removeEventListener('keydown', handleKeyDown, { capture: true });
-  }, [flow.activeStep, requestContactCompletion, requestSubjectCompletion]);
+  }, [flow.activeStep, isActive, requestContactCompletion, requestSubjectCompletion]);
 
   if (flow.activeStep === 'channel') {
     return (
@@ -118,6 +121,7 @@ const CockpitGuidedStepSwitch = ({
   if (flow.activeStep === 'search') {
     return (
       <CockpitGuidedSearchQuestion
+        isActive={isActive}
         leftPaneProps={leftPaneProps}
         entityProps={entityProps}
         onComplete={() => flow.completeStep('search')}
@@ -193,6 +197,7 @@ const CockpitGuidedStepSwitch = ({
   if (flow.activeStep === 'subject') {
     return (
       <CockpitGuidedDetailsQuestion
+        isActive={isActive}
         leftPaneProps={leftPaneProps}
         rightPaneProps={rightPaneProps}
         onReset={onReset}
@@ -206,6 +211,7 @@ const CockpitGuidedStepSwitch = ({
   }
   return (
     <CockpitGuidedDetailsQuestion
+      isActive={isActive}
       leftPaneProps={leftPaneProps}
       rightPaneProps={rightPaneProps}
       onReset={onReset}

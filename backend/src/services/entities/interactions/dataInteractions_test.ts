@@ -165,6 +165,7 @@ const createAuthContext = (overrides: Partial<AuthContext> = {}): AuthContext =>
   agencyIds: ['agency-1'],
   activeAgencyId: 'agency-1',
   isSuperAdmin: false,
+  mustChangePassword: false,
   ...overrides
 });
 
@@ -297,6 +298,10 @@ const createMockDb = (config: MockConfig = {}) => {
           call.onConflict = updateConfig;
           return builder;
         },
+        onConflictDoNothing: (conflictConfig: unknown) => {
+          call.onConflict = conflictConfig;
+          return builder;
+        },
         returning: (_projection?: unknown) => {
           return builder;
         },
@@ -359,7 +364,7 @@ const createMockDb = (config: MockConfig = {}) => {
 test('saveInteraction allows member user to save in allowed agency', async () => {
   const row = createInteractionRow({ id: 'int-1', agency_id: 'agency-1', subject: 'Sujet test' });
   const { db, insertCalls } = createMockDb({
-    selectRowsQueue: [[], [createCanonicalJoinRow(row)]],
+    selectRowsQueue: [[], [], [createCanonicalJoinRow(row)]],
     insertRows: [row]
   });
   const auth = createAuthContext();
@@ -384,7 +389,7 @@ test('saveInteraction allows member user to save in allowed agency', async () =>
 
 test('saveInteraction rejects missing product family when interaction type requires it', async () => {
   const { db } = createMockDb({
-    selectRows: [{ requires_product_families: true }],
+    selectRowsQueue: [[], [{ requires_product_families: true }]],
     insertRows: [{ id: 'int-1' }]
   });
   const auth = createAuthContext();
@@ -437,10 +442,58 @@ test('saveInteraction rejects member user trying to save in non-member agency', 
   assertEquals(readRecordField(error, 'code'), 'AUTH_FORBIDDEN');
 });
 
+test('saveInteraction rejects an existing UUID from another agency without writing', async () => {
+  const { db, insertCalls, updateCalls } = createMockDb({
+    selectRowsQueue: [[{ agency_id: 'agency-b', entity_type: 'Client' }]]
+  });
+  const auth = createAuthContext({ agencyIds: ['agency-a'], activeAgencyId: 'agency-a' });
+
+  const error = await assertRejects(() => saveInteraction(db, auth, {
+    action: 'save',
+    agency_id: 'agency-a',
+    interaction: {
+      id: 'interaction-b',
+      channel: 'Email',
+      entity_type: 'Client',
+      contact_service: 'Atelier',
+      subject: 'Tentative agence A',
+      interaction_type: 'Note'
+    }
+  }));
+
+  assertEquals(readRecordField(error, 'code'), 'AUTH_FORBIDDEN');
+  assertEquals(insertCalls.length, 0);
+  assertEquals(updateCalls.length, 0);
+});
+
+test('saveInteraction reports a conflict when the scoped update returns no row', async () => {
+  const { db, insertCalls, updateCalls } = createMockDb({
+    selectRowsQueue: [[{ agency_id: 'agency-1', entity_type: 'Client' }], []],
+    updateRows: []
+  });
+
+  const error = await assertRejects(() => saveInteraction(db, createAuthContext(), {
+    action: 'save',
+    agency_id: 'agency-1',
+    interaction: {
+      id: 'interaction-1',
+      channel: 'Email',
+      entity_type: 'Client',
+      contact_service: 'Atelier',
+      subject: 'Version concurrente',
+      interaction_type: 'Note'
+    }
+  }));
+
+  assertEquals(readRecordField(error, 'code'), 'CONFLICT');
+  assertEquals(insertCalls.length, 0);
+  assertEquals(updateCalls.length, 1);
+});
+
 test('saveInteraction allows super_admin to save in any agency', async () => {
   const row = createInteractionRow({ id: 'int-1', agency_id: 'agency-any', subject: 'Sujet test' });
   const { db, insertCalls } = createMockDb({
-    selectRowsQueue: [[], [createCanonicalJoinRow(row)]],
+    selectRowsQueue: [[], [], [createCanonicalJoinRow(row)]],
     insertRows: [row]
   });
   const auth = createAuthContext({ role: 'super_admin', isSuperAdmin: true, agencyIds: [] });

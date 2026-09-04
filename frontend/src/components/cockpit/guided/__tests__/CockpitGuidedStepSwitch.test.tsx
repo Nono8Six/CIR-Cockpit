@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
@@ -106,9 +106,14 @@ const agencies = [
   }
 ];
 
-const renderInternalContactStep = (setValue = vi.fn(), flow = buildFlow(false)) => {
-  render(
+const renderInternalContactStep = (
+  setValue = vi.fn(),
+  flow = buildFlow(false),
+  isActive = true
+) => {
+  const renderStep = (active: boolean) => (
     <CockpitGuidedStepSwitch
+      isActive={active}
       flow={flow}
       leftPaneProps={{
         relationMode: 'internal',
@@ -127,6 +132,12 @@ const renderInternalContactStep = (setValue = vi.fn(), flow = buildFlow(false)) 
       onReset={vi.fn()}
     />
   );
+
+  const view = render(renderStep(isActive));
+  return {
+    ...view,
+    rerenderActive: (active: boolean) => view.rerender(renderStep(active))
+  };
 };
 
 const renderSupplierContactStep = (
@@ -140,6 +151,7 @@ const renderSupplierContactStep = (
   render(
     <QueryClientProvider client={queryClient}>
       <CockpitGuidedStepSwitch
+        isActive
         flow={flow}
         leftPaneProps={{
           relationMode: 'supplier',
@@ -215,6 +227,7 @@ describe('CockpitGuidedStepSwitch', () => {
 
     render(
       <CockpitGuidedStepSwitch
+        isActive
         flow={flow}
         leftPaneProps={{} as CockpitFormLeftPaneProps}
         rightPaneProps={{} as CockpitFormRightPaneProps}
@@ -241,6 +254,7 @@ describe('CockpitGuidedStepSwitch', () => {
 
     render(
       <CockpitGuidedStepSwitch
+        isActive
         flow={flow}
         leftPaneProps={{} as CockpitFormLeftPaneProps}
         rightPaneProps={{} as CockpitFormRightPaneProps}
@@ -263,6 +277,7 @@ describe('CockpitGuidedStepSwitch', () => {
 
     render(
       <CockpitGuidedStepSwitch
+        isActive
         flow={flow}
         leftPaneProps={{
           interactionType: 'Interne (CIR)',
@@ -309,9 +324,66 @@ describe('CockpitGuidedStepSwitch', () => {
     expect(flow.completeStep).toHaveBeenCalledWith('subject');
   });
 
+  it('n inscrit les listeners visuels du sujet que pendant l activation de la vue', async () => {
+    const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
+    const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
+    const flow = buildFlow(true, {
+      activeStep: 'subject',
+      subjectComplete: true
+    });
+    const leftPaneProps = {
+      relationMode: 'client',
+      interactionType: 'Demande de devis',
+      hasInteractionTypes: true,
+      interactionTypes: ['Demande de devis'],
+      interactionTypeRef: { current: null },
+      setValue: vi.fn(),
+      errors: {}
+    } as unknown as CockpitFormLeftPaneProps;
+    const rightPaneProps = buildSubjectRightPaneProps();
+    const renderStep = (isActive: boolean) => (
+      <CockpitGuidedStepSwitch
+        isActive={isActive}
+        flow={flow}
+        leftPaneProps={leftPaneProps}
+        rightPaneProps={rightPaneProps}
+        entityProps={entityProps}
+        onReset={vi.fn()}
+      />
+    );
+    const view = render(renderStep(false));
+
+    expect(addEventListenerSpy.mock.calls.some(([type]) => type === 'keyup')).toBe(false);
+    fireEvent.keyDown(window, { key: 'Enter', ctrlKey: true });
+    expect(flow.completeStep).not.toHaveBeenCalled();
+
+    view.rerender(renderStep(true));
+    const keyUpListener = addEventListenerSpy.mock.calls.find(([type]) => type === 'keyup')?.[1];
+    expect(keyUpListener).toBeTypeOf('function');
+
+    const continueButton = screen.getByRole('button', { name: /continuer/i });
+    fireEvent.keyDown(window, { key: 'Enter', ctrlKey: true });
+    expect(flow.completeStep).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(continueButton).toHaveClass('bg-primary/95'));
+
+    view.rerender(renderStep(false));
+    expect(removeEventListenerSpy).toHaveBeenCalledWith('keyup', keyUpListener, { capture: true });
+    await waitFor(() => expect(continueButton).not.toHaveClass('bg-primary/95'));
+
+    fireEvent.keyDown(window, { key: 'Enter', ctrlKey: true });
+    expect(flow.completeStep).toHaveBeenCalledTimes(1);
+
+    view.rerender(renderStep(true));
+    expect(screen.getByRole('button', { name: /continuer/i })).not.toHaveClass('bg-primary/95');
+
+    addEventListenerSpy.mockRestore();
+    removeEventListenerSpy.mockRestore();
+  });
+
   it('masque les familles produits quand le type d interaction ne les exige pas', () => {
     render(
       <CockpitGuidedStepSwitch
+        isActive
         flow={buildFlow(true, {
           activeStep: 'subject',
           subjectComplete: true
@@ -349,6 +421,7 @@ describe('CockpitGuidedStepSwitch', () => {
   it('affiche les familles produits sans message obligatoire tant que rien n a ete tente', () => {
     render(
       <CockpitGuidedStepSwitch
+        isActive
         flow={buildFlow(true, {
           activeStep: 'subject',
           subjectComplete: false
@@ -389,6 +462,7 @@ describe('CockpitGuidedStepSwitch', () => {
   it('affiche le message familles produits une fois les erreurs de l etape revelees', () => {
     render(
       <CockpitGuidedStepSwitch
+        isActive
         flow={buildFlow(true, {
           activeStep: 'subject',
           subjectComplete: false,
@@ -426,6 +500,7 @@ describe('CockpitGuidedStepSwitch', () => {
 
     render(
       <CockpitGuidedStepSwitch
+        isActive
         flow={flow}
         leftPaneProps={{
           relationMode: 'solicitation',
@@ -471,6 +546,7 @@ describe('CockpitGuidedStepSwitch', () => {
 
     render(
       <CockpitGuidedStepSwitch
+        isActive
         flow={flow}
         leftPaneProps={{
           relationMode: 'internal',
@@ -517,6 +593,7 @@ describe('CockpitGuidedStepSwitch', () => {
 
     render(
       <CockpitGuidedStepSwitch
+        isActive
         flow={flow}
         leftPaneProps={{
           relationMode: 'supplier',
@@ -561,6 +638,25 @@ describe('CockpitGuidedStepSwitch', () => {
     await user.keyboard('{Control>}{Enter}{/Control}');
 
     expect(flow.completeStep).toHaveBeenCalledWith('contact');
+  });
+
+  it('retire le raccourci guide lors du passage actif vers inactif', () => {
+    const flow = buildFlow(true);
+    const { rerenderActive } = renderInternalContactStep(vi.fn(), flow, true);
+
+    fireEvent.keyDown(window, { key: 'Enter', ctrlKey: true });
+    expect(flow.completeStep).toHaveBeenCalledTimes(1);
+
+    rerenderActive(false);
+    const inactiveEvent = new KeyboardEvent('keydown', {
+      key: 'Enter',
+      ctrlKey: true,
+      cancelable: true
+    });
+    window.dispatchEvent(inactiveEvent);
+
+    expect(flow.completeStep).toHaveBeenCalledTimes(1);
+    expect(inactiveEvent.defaultPrevented).toBe(false);
   });
 
   it('affiche une recherche interne compacte avec filtre agence et creation rapide repliee', () => {

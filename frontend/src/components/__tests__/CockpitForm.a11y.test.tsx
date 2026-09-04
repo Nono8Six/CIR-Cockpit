@@ -79,6 +79,7 @@ const config: AgencyConfig = {
 
 const renderCockpitForm = () => renderWithProviders(
   <CockpitForm
+    isActive
     onSave={async () => true}
     config={config}
     activeAgencyId="agency-1"

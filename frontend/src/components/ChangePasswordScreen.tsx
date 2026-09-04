@@ -28,13 +28,11 @@ const ChangePasswordScreen = ({
     isSubmitting,
     fieldError,
     error,
-    profileError,
     ruleResults,
     passwordsMatch,
     canSubmit,
     passwordInputRef,
-    handleSubmit,
-    handleRetryProfile
+    handleSubmit
   } = useChangePasswordState({ onComplete });
 
   return (
@@ -68,11 +66,8 @@ const ChangePasswordScreen = ({
           <ChangePasswordError message={fieldError} />
           <ChangePasswordError message={error} />
           <ChangePasswordActions
-            profileError={profileError}
             canSubmit={canSubmit}
             isSubmitting={isSubmitting}
-            onSubmit={handleSubmit}
-            onRetryProfile={handleRetryProfile}
             onSignOut={onSignOut}
           />
         </form>

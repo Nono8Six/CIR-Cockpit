@@ -53,6 +53,7 @@ import {
   dataEntitiesPayloadSchema,
   dataEntityContactsPayloadSchema,
   dataInteractionsPayloadSchema,
+  changePasswordInputSchema,
   dataProfilePayloadSchema,
 } from "../../../shared/schemas/system/data.schema.ts";
 import {
@@ -212,7 +213,7 @@ import {
   correctActivityV2,
   getActivityV2ByLegacyInteraction,
 } from "../services/entities/activities/dataActivitiesV2.ts";
-import { handleDataProfileAction } from "../services/data/dataProfile.ts";
+import { changePassword, handleDataProfileAction } from "../services/data/dataProfile.ts";
 import { searchEntitiesUnified } from "../services/search/dataSearchEntitiesUnified.ts";
 import { listTierDirectory } from "../services/entities/core/tierReadModel.ts";
 import {
@@ -304,7 +305,7 @@ import {
   saveAiFeatureGrant,
 } from "../services/ai/aiAccess.ts";
 import { summarizeReferenceWatch } from "../services/ai/watch/referenceWatchSummarize.ts";
-import { authedProcedure, router, superAdminProcedure } from "./procedures.ts";
+import { authedProcedure, passwordChangeProcedure, router, superAdminProcedure } from "./procedures.ts";
 import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 import { selectDataEntitiesDb } from "./dataEntitiesDbSelection.ts";
 
@@ -421,6 +422,10 @@ export const appRouter = router({
       .input(dataProfilePayloadSchema)
       .output(dataProfileResponseSchema)
       .mutation(withAuthedHandler(handleDataProfileAction)),
+    changePassword: passwordChangeProcedure
+      .input(changePasswordInputSchema)
+      .output(dataProfileResponseSchema)
+      .mutation(withAuthedHandler(changePassword)),
     searchEntitiesUnified: authedProcedure
       .input(tierV1SearchInputSchema)
       .output(tierV1SearchResponseSchema)

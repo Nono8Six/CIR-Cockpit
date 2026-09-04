@@ -16,6 +16,10 @@ type EntityPersistenceDb = Pick<DbClient, "insert" | "select" | "update">;
 
 type PersistEntityRowOptions = {
   officialDataResync?: SaveOfficialDataResyncPayload;
+  expectedScope?: {
+    agencyId: string | null;
+    entityType: string;
+  };
 };
 
 const OFFICIAL_RESYNC_FIELDS = [
@@ -33,6 +37,7 @@ const OFFICIAL_RESYNC_FIELDS = [
 
 type OfficialResyncField = typeof OFFICIAL_RESYNC_FIELDS[number];
 type CurrentOfficialRow = Pick<EntityRow, OfficialResyncField>;
+type CurrentEntityRow = CurrentOfficialRow & Pick<EntityRow, "agency_id" | "entity_type">;
 
 const isDbWriteFailed = (error: unknown): boolean =>
   typeof error === "object" &&
@@ -45,7 +50,27 @@ const isExpectedPersistenceError = (error: unknown): boolean => {
   }
 
   const code = Reflect.get(error, "code");
-  return code === "DB_WRITE_FAILED" || code === "CONFLICT" || code === "VALIDATION_ERROR";
+  return code === "DB_WRITE_FAILED"
+    || code === "CONFLICT"
+    || code === "VALIDATION_ERROR"
+    || code === "NOT_FOUND"
+    || code === "AUTH_FORBIDDEN";
+};
+
+const assertExpectedEntityScope = (
+  currentRow: CurrentEntityRow | undefined,
+  expectedScope: NonNullable<PersistEntityRowOptions["expectedScope"]>,
+): CurrentEntityRow => {
+  if (!currentRow) {
+    throw httpError(404, "NOT_FOUND", "Entite introuvable.");
+  }
+  if (
+    currentRow.agency_id !== expectedScope.agencyId
+    || currentRow.entity_type !== expectedScope.entityType
+  ) {
+    throw httpError(403, "AUTH_FORBIDDEN", "Acces interdit.");
+  }
+  return currentRow;
 };
 
 const normalizeIdentifierDigits = (value: string | null | undefined): string =>
@@ -155,22 +180,43 @@ export const persistEntityRow = async (
           postal_code: entities.postal_code,
           department: entities.department,
           city: entities.city,
+          agency_id: entities.agency_id,
+          entity_type: entities.entity_type,
         })
         .from(entities)
         .where(eq(entities.id, entityId))
         .limit(1);
+      const currentRow = rowsBeforeUpdate[0];
+      if (options.expectedScope) {
+        assertExpectedEntityScope(currentRow, options.expectedScope);
+      }
       const resolvedUpdateRow = resolveOfficialUpdateRow(
         updateRow,
-        rowsBeforeUpdate[0],
+        currentRow,
         options,
       );
+      const scopeCondition = options.expectedScope
+        ? and(
+          options.expectedScope.agencyId === null
+            ? isNull(entities.agency_id)
+            : eq(entities.agency_id, options.expectedScope.agencyId),
+          eq(entities.entity_type, options.expectedScope.entityType),
+        )
+        : undefined;
       const rows = await database
         .update(entities)
         .set(resolvedUpdateRow)
-        .where(eq(entities.id, entityId))
+        .where(scopeCondition ? and(eq(entities.id, entityId), scopeCondition) : eq(entities.id, entityId))
         .returning();
       const data = rows[0];
       if (!data) {
+        if (options.expectedScope) {
+          throw httpError(
+            409,
+            "CONFLICT",
+            "Cette entite a ete modifiee par un autre utilisateur. Rechargez pour continuer.",
+          );
+        }
         throw httpError(
           500,
           "DB_WRITE_FAILED",

@@ -37,7 +37,6 @@ const renderList = (
     onChangeRole: vi.fn(),
     onEditMemberships: vi.fn(),
     onEditIdentity: vi.fn(),
-    onDeleteUser: vi.fn(),
     onSelectToggle: vi.fn(),
     onSelectAllToggle: vi.fn()
   };
@@ -71,6 +70,8 @@ describe('UsersManagerList', () => {
 
     const row = screen.getByTestId('admin-user-row-user-1');
     await userEvent.click(within(row).getByLabelText('Actions pour a.ferron-tcs@cir.fr'));
+    expect(screen.getByText("Archiver l'utilisateur")).toBeInTheDocument();
+    expect(screen.queryByText("Supprimer l'utilisateur")).not.toBeInTheDocument();
     await userEvent.click(await screen.findByText('Modifier le rôle'));
 
     // Le menu ouvre la confirmation, il n'applique aucun role lui-meme.
@@ -89,7 +90,6 @@ describe('UsersManagerList', () => {
         onChangeRole={vi.fn()}
         onEditMemberships={vi.fn()}
         onEditIdentity={vi.fn()}
-        onDeleteUser={vi.fn()}
         onSelectToggle={vi.fn()}
         onSelectAllToggle={vi.fn()}
       />
@@ -105,7 +105,6 @@ describe('UsersManagerList', () => {
       onChangeRole: vi.fn(),
       onEditMemberships: vi.fn(),
       onEditIdentity: vi.fn(),
-      onDeleteUser: vi.fn(),
       onSelectToggle: vi.fn(),
       onSelectAllToggle: vi.fn()
     };

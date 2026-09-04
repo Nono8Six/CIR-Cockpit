@@ -1,13 +1,12 @@
 import { useEffect, type RefObject } from 'react';
-import type { UseFormSetFocus, UseFormSetValue } from 'react-hook-form';
+import type { UseFormSetValue } from 'react-hook-form';
 
 import { Channel } from '@/types';
 import type { InteractionFormValues } from '../../../../../shared/schemas/interaction/interaction.schema';
 
 type InteractionHotkeysInput = {
+  isActive: boolean;
   formRef: RefObject<HTMLFormElement | null>;
-  searchInputRef: RefObject<HTMLInputElement | null>;
-  setFocus: UseFormSetFocus<InteractionFormValues>;
   setValue: UseFormSetValue<InteractionFormValues>;
   onReset: () => void;
   canStartNewEntryFromShortcut: boolean;
@@ -30,14 +29,15 @@ const isEditableTarget = (target: EventTarget | null): boolean => {
 };
 
 export const useInteractionHotkeys = ({
+  isActive,
   formRef,
-  searchInputRef,
-  setFocus,
   setValue,
   onReset,
   canStartNewEntryFromShortcut
 }: InteractionHotkeysInput) => {
   useEffect(() => {
+    if (!isActive) return undefined;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey) {
         const key = e.key.toLowerCase();
@@ -54,17 +54,6 @@ export const useInteractionHotkeys = ({
         }
       }
 
-      if (e.key === 'F1') {
-        e.preventDefault();
-        searchInputRef.current?.focus();
-        return;
-      }
-      if (e.key === 'F2') {
-        e.preventDefault();
-        setFocus('subject');
-        return;
-      }
-
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       if (isEditableTarget(e.target)) return;
 
@@ -76,5 +65,5 @@ export const useInteractionHotkeys = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [canStartNewEntryFromShortcut, formRef, onReset, searchInputRef, setFocus, setValue]);
+  }, [canStartNewEntryFromShortcut, formRef, isActive, onReset, setValue]);
 };

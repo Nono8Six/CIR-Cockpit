@@ -16,6 +16,12 @@ export {
   isCirDirectProviderId,
 };
 export const MISTRAL_DIRECT_API_BASE_URL = "https://api.mistral.ai/v1";
+export const OPENROUTER_API_BASE_URL = "https://openrouter.ai/api/v1";
+
+const PROVIDER_BASE_URLS: Record<AiProvider, string> = {
+  mistral: MISTRAL_DIRECT_API_BASE_URL,
+  openrouter: OPENROUTER_API_BASE_URL,
+};
 
 export type CirDirectProviderFactory = (
   credentials: AgentRuntimeCredentials,
@@ -44,25 +50,49 @@ const requireApiKey = (credentials: AgentRuntimeCredentials): string => {
   return apiKey;
 };
 
-const normalizeEndpoint = (value: string): string =>
-  value.trim().replace(/\/+$/, "").toLowerCase();
+export const providerBaseUrl = (provider: AiProvider): string =>
+  PROVIDER_BASE_URLS[provider];
+
+export const assertCanonicalProviderEndpoint = (
+  provider: AiProvider,
+  baseUrl?: string | null,
+): string => {
+  const expected = providerBaseUrl(provider);
+  if (baseUrl === null || baseUrl === undefined) return expected;
+
+  let parsed: URL;
+  try {
+    parsed = new URL(baseUrl);
+  } catch {
+    throw httpError(
+      400,
+      "AI_CONFIG_MISSING",
+      `L endpoint ${provider} doit etre exactement ${expected}.`,
+    );
+  }
+
+  if (
+    baseUrl !== expected
+    || parsed.protocol !== "https:"
+    || parsed.username !== ""
+    || parsed.password !== ""
+    || parsed.search !== ""
+    || parsed.hash !== ""
+  ) {
+    throw httpError(
+      400,
+      "AI_CONFIG_MISSING",
+      `L endpoint ${provider} doit etre exactement ${expected}.`,
+    );
+  }
+  return expected;
+};
 
 export const assertDirectProviderEndpoint = (
   provider: CirDirectProviderId,
   baseUrl?: string | null,
 ): void => {
-  if (!baseUrl) return;
-  if (
-    provider === "mistral" &&
-    normalizeEndpoint(baseUrl) !==
-      normalizeEndpoint(MISTRAL_DIRECT_API_BASE_URL)
-  ) {
-    throw httpError(
-      400,
-      "AI_CONFIG_MISSING",
-      "L endpoint configure n est pas l API directe Mistral.",
-    );
-  }
+  assertCanonicalProviderEndpoint(provider, baseUrl);
 };
 
 const createMistralModel: CirDirectProviderFactory = (credentials, modelId) => {

@@ -182,6 +182,29 @@ export const saveInteraction = async (
 ): Promise<InteractionRow> => {
   const { interaction } = payload;
   const resolvedAgencyId = ensureAgencyAccess(authContext, payload.agency_id);
+  let currentScope: { agency_id: string | null; entity_type: string } | undefined;
+  try {
+    const rows = await db
+      .select({
+        agency_id: interactions.agency_id,
+        entity_type: interactions.entity_type
+      })
+      .from(interactions)
+      .where(eq(interactions.id, interaction.id))
+      .limit(1);
+    currentScope = rows[0];
+  } catch {
+    throw httpError(500, 'DB_READ_FAILED', "Impossible de charger l'interaction.");
+  }
+  if (currentScope) {
+    ensureOptionalAgencyAccess(authContext, currentScope.agency_id);
+    if (
+      currentScope.agency_id !== resolvedAgencyId
+      || currentScope.entity_type !== interaction.entity_type
+    ) {
+      throw httpError(403, 'AUTH_FORBIDDEN', 'Acces interdit.');
+    }
+  }
   const megaFamilies = interaction.mega_families ?? [];
   await requireConfiguredProductFamilies(
     db,
@@ -218,22 +241,35 @@ export const saveInteraction = async (
   } = row;
 
   try {
-    const savedRows = await db
-      .insert(interactions)
-      .values(row)
-      .onConflictDoUpdate({
-        target: interactions.id,
-        set: rowForUpdate
-      })
-      .returning();
+    const savedRows = currentScope
+      ? await db
+        .update(interactions)
+        .set(rowForUpdate)
+        .where(and(
+          eq(interactions.id, interaction.id),
+          eq(interactions.agency_id, resolvedAgencyId),
+          eq(interactions.entity_type, interaction.entity_type)
+        ))
+        .returning()
+      : await db
+        .insert(interactions)
+        .values(row)
+        .onConflictDoNothing({ target: interactions.id })
+        .returning();
     const saved = savedRows[0];
-    if (!saved) throw httpError(500, 'DB_WRITE_FAILED', "Impossible d'enregistrer l'interaction.");
+    if (!saved) {
+      throw httpError(
+        409,
+        'CONFLICT',
+        'Cette interaction a ete modifiee par un autre utilisateur. Rechargez pour continuer.'
+      );
+    }
     return await readCanonicalInteractionProjection(db, saved.id);
   } catch (error) {
     if (
       typeof error === 'object'
       && error !== null
-      && Reflect.get(error, 'code') === 'DB_WRITE_FAILED'
+      && ['CONFLICT', 'DB_WRITE_FAILED'].includes(String(Reflect.get(error, 'code')))
     ) {
       throw error;
     }

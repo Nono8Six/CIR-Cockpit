@@ -4,13 +4,9 @@ import userEvent from '@testing-library/user-event';
 
 import ChangePasswordScreen from '@/components/ChangePasswordScreen';
 import { updateUserPassword } from '@/services/auth/updateUserPassword';
-import { setProfilePasswordChanged } from '@/services/auth/setProfilePasswordChanged';
 
 vi.mock('@/services/auth/updateUserPassword', () => ({
   updateUserPassword: vi.fn()
-}));
-vi.mock('@/services/auth/setProfilePasswordChanged', () => ({
-  setProfilePasswordChanged: vi.fn()
 }));
 vi.mock('@/services/errors/handleUiError', () => ({
   handleUiError: vi.fn(() => ({
@@ -21,13 +17,11 @@ vi.mock('@/services/errors/handleUiError', () => ({
 }));
 
 const mockUpdate = vi.mocked(updateUserPassword);
-const mockSetProfile = vi.mocked(setProfilePasswordChanged);
 
 describe('ChangePasswordScreen', () => {
   it('enables submit only when rules pass and passwords match', async () => {
     const user = userEvent.setup();
     mockUpdate.mockResolvedValue(undefined);
-    mockSetProfile.mockResolvedValue(undefined);
 
     render(
       <ChangePasswordScreen

@@ -9,6 +9,7 @@ const EMPTY_ENTITIES: CockpitFormProps['recentEntities'] = [];
 const EMPTY_INTERACTIONS: NonNullable<CockpitFormProps['interactions']> = [];
 
 const CockpitForm = ({
+  isActive,
   onSave,
   config,
   activeAgencyId,
@@ -39,6 +40,7 @@ const CockpitForm = ({
     hasClientContextInteractionsError,
     dialogs
   } = useCockpitFormController({
+    isActive,
     onSave,
     config,
     activeAgencyId,
@@ -77,6 +79,7 @@ const CockpitForm = ({
           className="flex min-h-0 flex-1 flex-col"
         >
           <CockpitGuidedEntry
+            isActive={isActive}
             formId={formId}
             canSave={canSave}
             gateMessage={gateMessage}

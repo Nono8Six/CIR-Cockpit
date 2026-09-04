@@ -1,33 +1,43 @@
-import { createRef } from 'react';
+import type { RefObject } from 'react';
 import { renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import type { UseFormSetFocus, UseFormSetValue } from 'react-hook-form';
+import type { UseFormSetValue } from 'react-hook-form';
 
 import { useInteractionHotkeys } from '../interactions/handlers/useInteractionHotkeys';
 import type { InteractionFormValues } from '../../../../shared/schemas/interaction/interaction.schema';
+import { Channel } from '@/types';
 
-const setup = (canStartNewEntryFromShortcut: boolean) => {
+type HookProps = {
+  isActive: boolean;
+  canStartNewEntryFromShortcut: boolean;
+};
+
+const setup = (initialProps: HookProps) => {
   const onReset = vi.fn();
-  const setFocus: UseFormSetFocus<InteractionFormValues> = vi.fn();
+  const requestSubmit = vi.fn();
   const setValue: UseFormSetValue<InteractionFormValues> = vi.fn();
+  const form = document.createElement('form');
+  form.requestSubmit = requestSubmit;
+  const formRef = { current: form } as RefObject<HTMLFormElement>;
 
-  renderHook(() =>
-    useInteractionHotkeys({
-      formRef: createRef<HTMLFormElement>(),
-      searchInputRef: createRef<HTMLInputElement>(),
-      setFocus,
-      setValue,
-      onReset,
-      canStartNewEntryFromShortcut
-    })
+  const view = renderHook(
+    ({ isActive, canStartNewEntryFromShortcut }: HookProps) =>
+      useInteractionHotkeys({
+        isActive,
+        formRef,
+        setValue,
+        onReset,
+        canStartNewEntryFromShortcut
+      }),
+    { initialProps }
   );
 
-  return { onReset };
+  return { ...view, onReset, requestSubmit, setValue };
 };
 
 describe('useInteractionHotkeys', () => {
   it('ne bloque pas Ctrl+N et ne reset pas pendant une saisie active', () => {
-    const { onReset } = setup(false);
+    const { onReset } = setup({ isActive: true, canStartNewEntryFromShortcut: false });
     const event = new KeyboardEvent('keydown', {
       key: 'n',
       ctrlKey: true,
@@ -40,17 +50,97 @@ describe('useInteractionHotkeys', () => {
     expect(event.defaultPrevented).toBe(false);
   });
 
-  it('declenche une nouvelle saisie avec Ctrl+N uniquement quand le raccourci est autorise', () => {
-    const { onReset } = setup(true);
-    const event = new KeyboardEvent('keydown', {
+  it('conserve soumission, nouvelle saisie et changement de canal quand le Cockpit est actif', () => {
+    const { onReset, requestSubmit, setValue } = setup({
+      isActive: true,
+      canStartNewEntryFromShortcut: true
+    });
+    const submitEvents = [new KeyboardEvent('keydown', {
+      key: 'Enter',
+      ctrlKey: true,
+      cancelable: true
+    }), new KeyboardEvent('keydown', {
+      key: 'Enter',
+      metaKey: true,
+      cancelable: true
+    })];
+    const resetEvents = [new KeyboardEvent('keydown', {
       key: 'n',
       ctrlKey: true,
       cancelable: true
+    }), new KeyboardEvent('keydown', {
+      key: 'n',
+      metaKey: true,
+      cancelable: true
+    })];
+    const channelEvents = [
+      ['t', Channel.PHONE],
+      ['e', Channel.EMAIL],
+      ['c', Channel.COUNTER],
+      ['v', Channel.VISIT]
+    ] as const;
+
+    submitEvents.forEach((event) => window.dispatchEvent(event));
+    resetEvents.forEach((event) => window.dispatchEvent(event));
+    channelEvents.forEach(([key]) => window.dispatchEvent(
+      new KeyboardEvent('keydown', { key, cancelable: true })
+    ));
+
+    expect(requestSubmit).toHaveBeenCalledTimes(2);
+    expect(onReset).toHaveBeenCalledTimes(2);
+    expect(vi.mocked(setValue).mock.calls.map(([field, channel]) => [field, channel])).toEqual(
+      channelEvents.map(([, channel]) => ['channel', channel])
+    );
+    submitEvents.forEach((event) => expect(event.defaultPrevented).toBe(true));
+    resetEvents.forEach((event) => expect(event.defaultPrevented).toBe(true));
+  });
+
+  it('ne traite ni ne bloque les raccourcis metier quand le Cockpit est inactif', () => {
+    const { onReset, requestSubmit, setValue } = setup({
+      isActive: false,
+      canStartNewEntryFromShortcut: true
+    });
+    const events = [
+      new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true, cancelable: true }),
+      new KeyboardEvent('keydown', { key: 'n', ctrlKey: true, cancelable: true }),
+      ...['t', 'e', 'c', 'v'].map((key) => new KeyboardEvent('keydown', { key, cancelable: true }))
+    ];
+
+    events.forEach((event) => window.dispatchEvent(event));
+
+    expect(requestSubmit).not.toHaveBeenCalled();
+    expect(onReset).not.toHaveBeenCalled();
+    expect(setValue).not.toHaveBeenCalled();
+    events.forEach((event) => expect(event.defaultPrevented).toBe(false));
+  });
+
+  it('retire le traitement lors du rerender actif vers inactif', () => {
+    const { rerender, requestSubmit } = setup({
+      isActive: true,
+      canStartNewEntryFromShortcut: true
     });
 
-    window.dispatchEvent(event);
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true }));
+    expect(requestSubmit).toHaveBeenCalledTimes(1);
 
-    expect(onReset).toHaveBeenCalledTimes(1);
-    expect(event.defaultPrevented).toBe(true);
+    rerender({ isActive: false, canStartNewEntryFromShortcut: true });
+    const inactiveEvent = new KeyboardEvent('keydown', {
+      key: 'Enter',
+      ctrlKey: true,
+      cancelable: true
+    });
+    window.dispatchEvent(inactiveEvent);
+
+    expect(requestSubmit).toHaveBeenCalledTimes(1);
+    expect(inactiveEvent.defaultPrevented).toBe(false);
+  });
+
+  it('ne reserve jamais F1 ou F2 au Cockpit', () => {
+    setup({ isActive: true, canStartNewEntryFromShortcut: true });
+    const events = ['F1', 'F2'].map((key) => new KeyboardEvent('keydown', { key, cancelable: true }));
+
+    events.forEach((event) => window.dispatchEvent(event));
+
+    events.forEach((event) => expect(event.defaultPrevented).toBe(false));
   });
 });

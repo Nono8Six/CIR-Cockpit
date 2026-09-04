@@ -371,6 +371,7 @@ describe('useCockpitFormController', () => {
     const { result } = renderHook(
       () =>
         useCockpitFormController({
+          isActive: true,
           onSave,
           config: BASE_CONFIG,
           activeAgencyId: 'agency-1',
@@ -387,6 +388,9 @@ describe('useCockpitFormController', () => {
     expect(result.current.gateMessage).toBeNull();
     expect(result.current.leftPaneProps).toEqual({ title: 'left' });
     expect(result.current.rightPaneProps).toEqual({ title: 'right' });
+    expect(controllerMocks.useInteractionHotkeys).toHaveBeenCalledWith(
+      expect.objectContaining({ isActive: true })
+    );
   });
 
   it('surfaces gate message when saving is blocked', () => {
@@ -399,6 +403,7 @@ describe('useCockpitFormController', () => {
     const { result } = renderHook(
       () =>
         useCockpitFormController({
+          isActive: true,
           onSave: vi.fn().mockResolvedValue(true),
           config: BASE_CONFIG,
           activeAgencyId: 'agency-1',
@@ -419,6 +424,7 @@ describe('useCockpitFormController', () => {
     renderHook(
       () =>
         useCockpitFormController({
+          isActive: true,
           onSave: vi.fn().mockResolvedValue(true),
           config: BASE_CONFIG,
           activeAgencyId: 'agency-1',
@@ -439,6 +445,7 @@ describe('useCockpitFormController', () => {
     renderHook(
       () =>
         useCockpitFormController({
+          isActive: true,
           onSave: vi.fn().mockResolvedValue(true),
           config: BASE_CONFIG,
           activeAgencyId: 'agency-1',
@@ -473,6 +480,7 @@ describe('useCockpitFormController', () => {
     const { result } = renderHook(
       () =>
         useCockpitFormController({
+          isActive: true,
           onSave: vi.fn().mockResolvedValue(true),
           config: BASE_CONFIG,
           activeAgencyId: 'agency-1',
@@ -498,6 +506,7 @@ describe('useCockpitFormController', () => {
     const { result } = renderHook(
       () =>
         useCockpitFormController({
+          isActive: true,
           onSave: vi.fn().mockResolvedValue(true),
           config: BASE_CONFIG,
           activeAgencyId: 'agency-1',
@@ -523,6 +532,7 @@ describe('useCockpitFormController', () => {
     const { result } = renderHook(
       () =>
         useCockpitFormController({
+          isActive: true,
           onSave: vi.fn().mockResolvedValue(true),
           config: BASE_CONFIG,
           activeAgencyId: 'agency-1',
@@ -571,6 +581,7 @@ describe('useCockpitFormController', () => {
     const { result } = renderHook(
       () =>
         useCockpitFormController({
+          isActive: true,
           onSave: vi.fn().mockResolvedValue(true),
           config: BASE_CONFIG,
           activeAgencyId: 'agency-1',
@@ -610,6 +621,7 @@ describe('useCockpitFormController', () => {
     renderHook(
       () =>
         useCockpitFormController({
+          isActive: true,
           onSave: vi.fn().mockResolvedValue(true),
           config: BASE_CONFIG,
           activeAgencyId: 'agency-1',

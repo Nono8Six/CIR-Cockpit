@@ -47,6 +47,7 @@ const renderClientContactStep = (focusFirstInvalidField = vi.fn()) => {
 
   render(
     <CockpitGuidedEntry
+      isActive
       formId="interaction-form"
       canSave={false}
       gateMessage={null}

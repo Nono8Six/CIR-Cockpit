@@ -1,6 +1,6 @@
-import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 
-import { agencies, agency_members, interactions, profiles } from '../../../../drizzle/schema.ts';
+import { agencies, agency_members, profiles } from '../../../../drizzle/schema.ts';
 import type { Database } from '../../../../../shared/supabase.types.ts';
 import type { DbClient } from '../../../types.ts';
 import { httpError } from '../../../middleware/errorHandler.ts';
@@ -130,88 +130,4 @@ export const ensureUserExists = async (db: DbClient, userId: string): Promise<Pr
     throw httpError(404, 'USER_NOT_FOUND', 'Utilisateur introuvable.');
   }
   return profile;
-};
-
-export const loadAgencyNames = async (db: DbClient, agencyIds: string[]): Promise<Map<string, string>> => {
-  if (agencyIds.length === 0) return new Map();
-
-  let rows: Array<{ id: string; name: string }> = [];
-  try {
-    rows = await db
-      .select({ id: agencies.id, name: agencies.name })
-      .from(agencies)
-      .where(inArray(agencies.id, agencyIds));
-  } catch (error) {
-    throw httpError(
-      500,
-      'SYSTEM_USER_PROVISION_FAILED',
-      'Impossible de charger les agences pour la suppression utilisateur.',
-      getErrorDetails(error)
-    );
-  }
-
-  return new Map(rows.map((row) => [row.id, row.name]));
-};
-
-export const toUniqueAgencyIds = (rows: Array<{ agency_id: string | null }>): string[] => {
-  const uniqueIds = new Set<string>();
-  for (const row of rows) {
-    const agencyId = row.agency_id?.trim() ?? '';
-    if (agencyId) {
-      uniqueIds.add(agencyId);
-    }
-  }
-
-  return [...uniqueIds];
-};
-
-export const listUserInteractionOwnership = async (
-  db: DbClient,
-  userId: string
-): Promise<{ agencyIds: string[]; hasOrphanInteractions: boolean }> => {
-  let rows: Array<{ agency_id: string | null }> = [];
-  try {
-    rows = await db
-      .select({ agency_id: interactions.agency_id })
-      .from(interactions)
-      .where(eq(interactions.created_by, userId));
-  } catch (error) {
-    throw httpError(
-      500,
-      'USER_DELETE_ANONYMIZATION_FAILED',
-      "Impossible d'analyser les interactions de l'utilisateur.",
-      getErrorDetails(error)
-    );
-  }
-
-  return {
-    agencyIds: toUniqueAgencyIds(rows),
-    hasOrphanInteractions: rows.some((row) => row.agency_id === null)
-  };
-};
-
-export const countUserInteractions = async (
-  db: DbClient,
-  userId: string,
-  agencyId: string | null
-): Promise<number> => {
-  try {
-    const whereClause = agencyId
-      ? and(eq(interactions.created_by, userId), eq(interactions.agency_id, agencyId))
-      : and(eq(interactions.created_by, userId), isNull(interactions.agency_id));
-
-    const rows = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(interactions)
-      .where(whereClause);
-
-    return Number(rows[0]?.count ?? 0);
-  } catch (error) {
-    throw httpError(
-      500,
-      'USER_DELETE_ANONYMIZATION_FAILED',
-      "Impossible de compter les interactions a anonymiser.",
-      getErrorDetails(error)
-    );
-  }
 };

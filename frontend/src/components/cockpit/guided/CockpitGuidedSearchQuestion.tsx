@@ -8,6 +8,7 @@ import CockpitSolicitationLookup from './CockpitSolicitationLookup';
 import CockpitSupplierLookup from './CockpitSupplierLookup';
 
 type CockpitGuidedSearchQuestionProps = {
+  isActive: boolean;
   leftPaneProps: CockpitFormLeftPaneProps;
   entityProps: CockpitLeftEntitySectionsProps;
   onComplete: () => void;
@@ -16,6 +17,7 @@ type CockpitGuidedSearchQuestionProps = {
 };
 
 const CockpitGuidedSearchQuestion = ({
+  isActive,
   leftPaneProps,
   entityProps,
   onComplete,
@@ -53,6 +55,7 @@ const CockpitGuidedSearchQuestion = ({
     if (leftPaneProps.relationMode === 'supplier') {
       return (
         <CockpitSupplierLookup
+          isActive={isActive}
           activeAgencyId={leftPaneProps.activeAgencyId}
           selectedEntity={leftPaneProps.selectedEntity}
           companyName={leftPaneProps.companyName}

@@ -1,4 +1,4 @@
-import { Inbox, Loader2, TriangleAlert, MoreVertical, Pencil, KeyRound, Archive, ArchiveRestore, Trash2, UserCog, Shield } from 'lucide-react';
+import { Inbox, Loader2, TriangleAlert, MoreVertical, Pencil, KeyRound, Archive, ArchiveRestore, UserCog, Shield } from 'lucide-react';
 import type { UseQueryResult } from '@tanstack/react-query';
 
 import { ROLE_LABELS } from '@/app/appConstants';
@@ -19,7 +19,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuLabel
 } from '../ui/navigation/DropdownMenu';
 import AvatarInitials from '../ui/data-display/AvatarInitials';
@@ -33,7 +32,6 @@ type UsersManagerListProps = {
   onChangeRole: (user: AdminUserSummary) => void;
   onEditMemberships: (user: AdminUserSummary) => void;
   onEditIdentity: (user: AdminUserSummary) => void;
-  onDeleteUser: (user: AdminUserSummary) => void;
   selectedUserIds: string[];
   onSelectToggle: (userId: string) => void;
   onSelectAllToggle: (visibleUsers: AdminUserSummary[]) => void;
@@ -51,7 +49,6 @@ const UsersManagerList = ({
   onChangeRole,
   onEditMemberships,
   onEditIdentity,
-  onDeleteUser,
   selectedUserIds,
   onSelectToggle,
   onSelectAllToggle
@@ -120,15 +117,6 @@ const UsersManagerList = ({
               <span>Archiver l&apos;utilisateur</span>
             </>
           )}
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={() => onDeleteUser(user)}
-          className="text-destructive focus:bg-destructive/10 focus:text-destructive"
-          data-testid={`admin-user-delete-${user.id}`}
-        >
-          <Trash2 size={14} className="mr-2" />
-          <span>Supprimer l&apos;utilisateur</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -1,42 +1,24 @@
 import { LogOut } from 'lucide-react';
 
 type ChangePasswordActionsProps = {
-  profileError: boolean;
   canSubmit: boolean;
   isSubmitting: boolean;
-  onSubmit: () => void;
-  onRetryProfile: () => void;
   onSignOut: () => void;
 };
 
 const ChangePasswordActions = ({
-  profileError,
   canSubmit,
   isSubmitting,
-  onSubmit,
-  onRetryProfile,
   onSignOut
 }: ChangePasswordActionsProps) => (
   <div className="space-y-2 pt-2">
-    {profileError ? (
-      <button
-        type="button"
-        onClick={onRetryProfile}
-        disabled={isSubmitting}
-        className="w-full rounded-md bg-primary text-white text-sm font-semibold py-2.5 shadow-sm hover:bg-primary/90 disabled:opacity-60"
-      >
-        {isSubmitting ? 'Validation…' : 'Réessayer la validation'}
-      </button>
-    ) : (
-      <button
-        type="submit"
-        disabled={!canSubmit}
-        onClick={onSubmit}
-        className="w-full rounded-md bg-primary text-white text-sm font-semibold py-2.5 shadow-sm hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed"
-      >
-        {isSubmitting ? 'Mise à jour…' : 'Mettre à jour le mot de passe'}
-      </button>
-    )}
+    <button
+      type="submit"
+      disabled={!canSubmit}
+      className="w-full rounded-md bg-primary text-white text-sm font-semibold py-2.5 shadow-sm hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed"
+    >
+      {isSubmitting ? 'Mise à jour…' : 'Mettre à jour le mot de passe'}
+    </button>
 
     <button
       type="button"

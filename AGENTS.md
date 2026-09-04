@@ -21,13 +21,13 @@ Guide operationnel court pour CIR Cockpit. Les documents canoniques et les preuv
 
 ## Doctrine POC et refonte
 
-- CIR Cockpit est un POC personnel pré-production tant que le PO ne change pas explicitement ce statut. Optimiser pour une architecture finale simple et propre, pas pour une transition d'entreprise.
+- CIR Cockpit est un POC personnel pré-production, pas une organisation multi-équipe. Partir du besoin prouvé et choisir l'architecture finale la plus simple qui le couvre ; ne pas importer de mécanismes d'entreprise pour des consommateurs, volumes ou risques hypothétiques.
 - Lorsqu'une architecture est supersédée, arrêter de la perfectionner. Récupérer ses actifs métier prouvés, puis supprimer franchement le code, les dépendances et les documents remplacés.
 - Une refonte approuvée autorise la coupe franche : réorganiser, déplacer, réécrire et supprimer dans son périmètre. La taille minimale du diff n'est alors pas un objectif ; la simplicité du résultat final l'est.
 - Git constitue le filet de récupération du POC. Ne créer dual-run, dual-write, feature flag, shim de compatibilité ou mécanisme de rollback que si un consommateur actuel prouvé l'exige ou si le PO le demande.
 - Préférer une implémentation canonique unique. Éviter les runtimes, adapters et chemins temporaires conçus seulement pour faire cohabiter l'ancien et le nouveau.
 - Mettre à niveau les dépendances par ensembles cohérents et supprimer celles devenues inutiles ; ne pas conserver une ancienne version pour une compatibilité hypothétique.
-- Valider proportionnellement au risque réel : conserver les tests qui protègent les invariants métier et le chemin modifié, exécuter le plus petit gate défendable, puis avancer. En session, un test ciblé plus le typecheck de la couche suffisent ; pre-push et CI restent les filets larges. Ne pas multiplier les matrices, preuves ou répétitions d'un même gate sans risque identifié.
+- Validation POC : un test ciblé par invariant modifié, puis le typecheck de la couche, constitue la boucle normale. Ajouter un autre test uniquement pour un risque distinct directement voisin ; réserver suites complètes, matrices, builds et preuves répétées aux gates finales ou à un risque concret.
 
 ## Routage et validation
 

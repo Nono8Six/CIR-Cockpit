@@ -50,12 +50,6 @@ integrationTest({
     const draftFormType = `activity-v2-integration-${Date.now()}`;
 
     try {
-      const profileUpdate = await postApi('data.profile', context.userToken, {
-        action: 'password_changed'
-      });
-      assertEquals(profileUpdate.status, 200);
-      assertEquals(readBoolean(profileUpdate.payload, 'ok'), true);
-
       const entityName = `AUDIT_20260604_P2 integration prospect ${Date.now()}`;
       const createdEntity = await postApi('data.entities', context.userToken, {
         action: 'save',
