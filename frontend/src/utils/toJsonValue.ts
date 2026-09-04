@@ -1,4 +1,4 @@
-import type { Json } from '@/types/supabase';
+import type { Json } from 'shared/supabase.types';
 import { isRecord } from './recordNarrowing/isRecord';
 
 export const toJsonValue = (value: unknown): Json => {

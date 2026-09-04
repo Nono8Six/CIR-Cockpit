@@ -22,6 +22,9 @@ vi.mock('@/components/AgenciesManager', () => ({
     <AgenciesManagerSearch value="" onChange={() => undefined} />
   )
 }));
+vi.mock('@/components/admin-ai/AdminAiPanel', () => ({
+  default: () => <div data-testid="mock-admin-ai-panel">Gestion IA Panel</div>
+}));
 
 describe('AdminPanel', () => {
   it('keeps every admin tab in a bounded scrollable flex chain', () => {
@@ -61,5 +64,27 @@ describe('AdminPanel', () => {
     await user.click(screen.getByTestId('admin-tab-agencies'));
 
     expect(screen.getByLabelText('Rechercher une agence')).toHaveAttribute('name', 'admin-agencies-search');
+  });
+
+  it('expose l’onglet Gestion IA avec le bon nom accessible et supporte la navigation par panel', async () => {
+    const user = userEvent.setup();
+    const onNavigateAdmin = vi.fn();
+    render(<AdminPanel userRole="super_admin" panel="ai" onNavigateAdmin={onNavigateAdmin} />);
+
+    const aiTab = screen.getByRole('tab', { name: /gestion ia/i });
+    expect(aiTab).toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: /utilisateurs/i }));
+    expect(onNavigateAdmin).toHaveBeenCalledWith('users', undefined);
+  });
+
+  it('synchronise l’onglet actif lorsque la route change sans remontage', () => {
+    const { rerender } = render(<AdminPanel userRole="super_admin" panel="users" />);
+
+    expect(screen.getByRole('tab', { name: /utilisateurs/i })).toHaveAttribute('data-state', 'active');
+
+    rerender(<AdminPanel userRole="super_admin" panel="ai" />);
+
+    expect(screen.getByRole('tab', { name: /gestion ia/i })).toHaveAttribute('data-state', 'active');
   });
 });

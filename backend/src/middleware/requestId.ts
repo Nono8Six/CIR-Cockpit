@@ -1,0 +1,11 @@
+import type { MiddlewareHandler } from 'hono';
+
+import type { AppEnv } from '../types.ts';
+
+export const requestId: MiddlewareHandler<AppEnv> = async (c, next) => {
+  const incoming = c.req.header('x-request-id')?.trim();
+  const id = incoming && incoming.length > 0 ? incoming : crypto.randomUUID();
+  c.set('requestId', id);
+  c.header('x-request-id', id);
+  await next();
+};

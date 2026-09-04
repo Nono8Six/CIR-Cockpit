@@ -10,26 +10,23 @@ const TOKEN_REFRESH_SAFETY_WINDOW_SECONDS = 30;
 
 const getTrpcBaseUrl = (): string => {
   if (import.meta.env.DEV && import.meta.env.MODE !== 'test') {
-    return '/functions/v1/api/trpc';
+    return '/trpc';
   }
 
-  const baseUrl = import.meta.env.VITE_SUPABASE_URL;
-  if (!baseUrl) {
-    throw createAppError({
-      code: 'CONFIG_INVALID',
-      message: 'Configuration invalide.',
-      source: 'client'
-    });
+  const configuredApiUrl = import.meta.env.VITE_API_URL?.trim();
+  if (configuredApiUrl) {
+    return `${configuredApiUrl.replace(/\/+$/, '')}/trpc`;
   }
-  return `${baseUrl}/functions/v1/api/trpc`;
-};
 
-const getOptionalApiKeyHeader = (): string => {
-  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  if (!anonKey) {
-    return '';
+  if (import.meta.env.MODE === 'test') {
+    return 'http://127.0.0.1:8787/trpc';
   }
-  return anonKey.trim();
+
+  throw createAppError({
+    code: 'CONFIG_INVALID',
+    message: 'Configuration invalide.',
+    source: 'client'
+  });
 };
 
 const toBearerToken = (value: string): string =>
@@ -95,14 +92,7 @@ const readContextHeaders = (context: unknown): Headers => {
   return new Headers();
 };
 
-const createDefaultHeaders = (): Headers => {
-  const headers = new Headers();
-  const apiKey = getOptionalApiKeyHeader();
-  if (apiKey) {
-    headers.set('apikey', apiKey);
-  }
-  return headers;
-};
+const createDefaultHeaders = (): Headers => new Headers();
 
 export type TrpcClient = ReturnType<typeof createTRPCClient<AppRouter>>;
 

@@ -288,15 +288,30 @@ export const pricingReferenceDiffListKey = (input: PricingReferenceDiffsListInpu
 ] as const;
 
 export const aiSettingsKey = () => [QUERY_ROOTS.ai, 'settings'] as const;
-export const aiAssistantStatusKey = () => [QUERY_ROOTS.ai, 'assistant-status'] as const;
 export const aiPromptsKey = (feature?: string) => [QUERY_ROOTS.ai, 'prompts', feature ?? 'all'] as const;
 export const aiAccessKey = (feature: string) => [QUERY_ROOTS.ai, 'access', feature] as const;
 export const aiMembersAccessKey = (feature: string) => [QUERY_ROOTS.ai, 'members-access', feature] as const;
 export const aiUsageByMemberKey = (days: number, feature?: string) => [QUERY_ROOTS.ai, 'usage-by-member', days, feature ?? 'all'] as const;
 export const aiUsageSummaryKey = (days: number) => [QUERY_ROOTS.ai, 'usage-summary', days] as const;
-export const aiUsageEventsKey = (page: number, pageSize: number) => [
+export const aiUsageEventsKey = (
+  page: number,
+  pageSize: number,
+  filters?: {
+    feature?: string;
+    status?: string;
+    user_id?: string;
+    agency_id?: string;
+  },
+) =>
+  [
+    QUERY_ROOTS.ai,
+    'usage-events',
+    page,
+    pageSize,
+    ...(filters ? [filters] : []),
+  ] as const;
+export const aiUsageEventDetailKey = (id: string | null) => [
   QUERY_ROOTS.ai,
-  'usage-events',
-  page,
-  pageSize
+  'usage-event-detail',
+  id
 ] as const;

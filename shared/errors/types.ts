@@ -1,5 +1,6 @@
 export type ErrorDomain =
   | "auth"
+  | "api"
   | "db"
   | "edge"
   | "network"

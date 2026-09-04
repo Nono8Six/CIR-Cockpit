@@ -1,11 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import { afterAll, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { axe } from 'vitest-axe';
-
-vi.hoisted(() => {
-  vi.useFakeTimers({ toFake: ['Date'] });
-  vi.setSystemTime(new Date('2026-08-13T12:00:00Z'));
-});
 
 import TasksPage from '@/components/tasks/TasksPage';
 
@@ -22,10 +17,6 @@ vi.mock('@/components/tasks/TaskCreateDialog', () => ({ default: () => null }));
 vi.mock('@/components/tasks/TaskDetailDialog', () => ({ default: () => null }));
 
 describe('TasksPage', () => {
-  afterAll(() => {
-    vi.useRealTimers();
-  });
-
   it('renders the collective queue and only exposes valid quick actions', async () => {
     render(<TasksPage agencyId="agency-1" userId="user-1" userRole="tcs" />);
     fireEvent.click(screen.getByRole('button', { name: 'File d’agence' }));
@@ -50,8 +41,9 @@ describe('TasksPage', () => {
     expect(listSpy).toHaveBeenLastCalledWith(expect.objectContaining({ responsible_id: null }));
     fireEvent.click(screen.getByRole('button', { name: 'Mes tâches' }));
     expect(listSpy).toHaveBeenLastCalledWith(expect.objectContaining({ responsible_id: 'user-1' }));
+    const today = new Date().toISOString().slice(0, 10);
     fireEvent.click(screen.getByRole('combobox', { name: 'Filtrer par échéance' }));
     fireEvent.click(screen.getByRole('option', { name: 'Aujourd’hui' }));
-    expect(listSpy).toHaveBeenLastCalledWith(expect.objectContaining({ due_from: '2026-08-13', due_to: '2026-08-13' }));
+    expect(listSpy).toHaveBeenLastCalledWith(expect.objectContaining({ due_from: today, due_to: today }));
   });
 });

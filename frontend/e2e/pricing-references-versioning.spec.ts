@@ -222,7 +222,7 @@ const buildTrpcBody = (responses: unknown[]): string =>
   JSON.stringify(responses.length === 1 ? responses[0] : responses);
 
 const parseProcedures = (url: URL): string[] => {
-  const procedurePath = url.pathname.split('/functions/v1/api/trpc/')[1]
+  const procedurePath = url.pathname.split('/trpc/')[1]
     ?? url.pathname.split('/trpc/')[1]
     ?? '';
   return procedurePath.split(',').filter(Boolean);
@@ -258,7 +258,7 @@ const detailForImport = (importId: string) => {
 };
 
 const installPricingReferenceMocks = async (page: Page): Promise<void> => {
-  await page.route('**/functions/v1/api/trpc/**', async (route) => {
+  await page.route('**/trpc/**', async (route) => {
     const url = new URL(route.request().url());
     const procedures = parseProcedures(url);
     const rawInput = `${url.searchParams.get('input') ?? ''} ${route.request().postData() ?? ''}`;

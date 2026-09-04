@@ -9,10 +9,12 @@ import {
   aiSettingsCreateQuotaResponseSchema,
   aiSettingsDeleteModelResponseSchema,
   aiSettingsDeleteQuotaResponseSchema,
+  aiSettingsSaveFeatureAssignmentResponseSchema,
   aiSettingsSaveModelResponseSchema,
   aiSettingsSaveProviderResponseSchema,
   aiSettingsSaveQuotaResponseSchema,
   aiSettingsTestProviderResponseSchema,
+  aiUsageGetByIdResponseSchema,
   aiUsageListResponseSchema,
   aiUsageSummaryResponseSchema,
   type AiPromptsListInput,
@@ -21,6 +23,7 @@ import {
   type AiPromptsRestoreInput,
   type AiPromptsSaveDraftInput,
   type AiPromptsSetArchivedInput,
+  type AiSettingsSaveFeatureAssignmentInput,
   type AiSettingsSaveProviderInput,
   type AiSettingsCreateQuotaInput,
   type AiSettingsDeleteModelInput,
@@ -28,6 +31,7 @@ import {
   type AiSettingsSaveModelInput,
   type AiSettingsSaveQuotaInput,
   type AiSettingsTestProviderInput,
+  type AiUsageGetByIdInput,
   type AiUsageListInput,
   type AiUsageSummaryInput
   , aiFeatureGrantsListResponseSchema
@@ -40,11 +44,6 @@ import {
   , type AiMembersAccessOverviewInput
   , type AiUsageByMemberInput
 } from '../../../shared/schemas/ai.schema';
-import {
-  aiAssistantAskResponseSchema,
-  aiAssistantStatusResponseSchema,
-  type AiAssistantAskInput
-} from '../../../shared/schemas/aiAssistant.schema';
 
 import {
   invokeTrpc,
@@ -80,6 +79,18 @@ export const saveAiModel = (input: AiSettingsSaveModelInput) =>
 export const deleteAiModel = (input: AiSettingsDeleteModelInput) =>
   invokeTrpc((api, options) => api.ai.settings.deleteModel.mutate(input, options),
     withInvalidTrpcResponse(aiSettingsDeleteModelResponseSchema, aiInvalidResponse), 'Impossible de supprimer le modèle IA.');
+
+export const saveAiFeatureAssignment = (
+  input: AiSettingsSaveFeatureAssignmentInput,
+) =>
+  invokeTrpc(
+    (api, options) => api.ai.settings.saveFeatureAssignment.mutate(input, options),
+    withInvalidTrpcResponse(
+      aiSettingsSaveFeatureAssignmentResponseSchema,
+      aiInvalidResponse,
+    ),
+    'Impossible de sauvegarder l’affectation de modèle IA.',
+  );
 
 export const createAiQuota = (input: AiSettingsCreateQuotaInput) =>
   invokeTrpc((api, options) => api.ai.settings.createQuota.mutate(input, options),
@@ -177,16 +188,9 @@ export const listAiUsageEvents = (input: AiUsageListInput = { page: 1, page_size
     'Impossible de charger les evenements IA.'
   );
 
-export const askAiAssistant = (input: AiAssistantAskInput) =>
+export const getAiUsageEventById = (input: AiUsageGetByIdInput) =>
   invokeTrpc(
-    (api, options) => api.ai.assistant.ask.mutate(input, options),
-    withInvalidTrpcResponse(aiAssistantAskResponseSchema, aiInvalidResponse),
-    "Impossible d'interroger l'assistant IA."
-  );
-
-export const getAiAssistantStatus = () =>
-  invokeTrpc(
-    (api, options) => api.ai.assistant.status.query({}, options),
-    withInvalidTrpcResponse(aiAssistantStatusResponseSchema, aiInvalidResponse),
-    "Impossible de vérifier la disponibilité de l'assistant IA."
+    (api, options) => api.ai.usage.getById.query(input, options),
+    withInvalidTrpcResponse(aiUsageGetByIdResponseSchema, aiInvalidResponse),
+    'Impossible de charger le détail de l’événement IA.',
   );

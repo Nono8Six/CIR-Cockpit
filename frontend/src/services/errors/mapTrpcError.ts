@@ -49,7 +49,7 @@ export const mapTrpcError = (error: unknown, fallbackMessage: string): AppError 
       return createAppError({
         code: 'REQUEST_FAILED',
         message: fallbackMessage,
-        source: 'edge',
+        source: 'api',
         details: error.message,
         cause: error
       });
@@ -58,7 +58,7 @@ export const mapTrpcError = (error: unknown, fallbackMessage: string): AppError 
     return createAppError({
       code: 'REQUEST_FAILED',
       message: fallbackMessage,
-      source: 'edge',
+      source: 'api',
       cause: error
     });
   }
@@ -99,11 +99,13 @@ export const mapTrpcError = (error: unknown, fallbackMessage: string): AppError 
   const details = resolvedCode === 'INVALID_JSON' || resolvedCode === 'INVALID_PAYLOAD'
     ? rawDetails
     : null;
+  const catalogDomain = getErrorCatalogEntry(resolvedCode)?.domain;
 
   return createAppError({
     code: resolvedCode,
     message: resolvedMessage,
-    source: 'edge',
+    domain: catalogDomain,
+    source: 'api',
     status: resolvedStatus,
     retryable: retryable ?? undefined,
     retryAfterMs: retryAfterMs ?? undefined,

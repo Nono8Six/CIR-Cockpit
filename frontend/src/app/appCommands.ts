@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { Building2, Factory, PenLine } from 'lucide-react';
+import { Bot, Building2, Factory, PenLine } from 'lucide-react';
 
 import type { AppShellNavSection } from '@/app/appConstants';
 import type { AppTab } from '@/types';
@@ -26,6 +26,7 @@ type BuildAppCommandsParams = {
   sections: AppShellNavSection[];
   canAccessAdmin: boolean;
   onNavigateTab: (tab: AppTab) => void;
+  onNavigateAdminAi?: () => void;
   onCreateEntity: () => void;
   onCreateSupplier: () => void;
 };
@@ -44,6 +45,7 @@ export const buildAppCommands = ({
   sections,
   canAccessAdmin,
   onNavigateTab,
+  onNavigateAdminAi,
   onCreateEntity,
   onCreateSupplier
 }: BuildAppCommandsParams): AppCommand[] => {
@@ -59,6 +61,19 @@ export const buildAppCommands = ({
       run: () => onNavigateTab(item.id)
     }))
   );
+
+  if (canAccessAdmin) {
+    navigationCommands.push({
+      id: 'navigation-admin-ai',
+      group: 'navigation' as const,
+      label: 'Gestion IA',
+      hint: 'Admin',
+      icon: Bot,
+      shortcut: undefined,
+      keywords: 'gestion ia gouvernance prompts quotas modeles intelligence artificielle ia admin regles capacites situation',
+      run: () => (onNavigateAdminAi ? onNavigateAdminAi() : onNavigateTab('admin'))
+    });
+  }
 
   const creationCommands: AppCommand[] = [
     {

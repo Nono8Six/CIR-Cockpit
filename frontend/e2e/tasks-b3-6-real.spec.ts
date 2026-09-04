@@ -10,7 +10,7 @@ test('B3-6 réel : la surface Tâches lit le backend déployé sans rappel legac
   const taskResponses: Array<{ url: string; status: number }> = [];
   page.on('response', (response) => {
     const url = response.url();
-    if (url.includes('/functions/v1/api/trpc/tasks.') || url.includes('/functions/v1/api/trpc/task-types.')) {
+    if (url.includes('/trpc/tasks.') || url.includes('/trpc/task-types.')) {
       taskResponses.push({ url, status: response.status() });
     }
   });

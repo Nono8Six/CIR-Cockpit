@@ -1,0 +1,90 @@
+import { test } from "vitest";
+import { assertStrictEquals } from '#test/assert';
+
+import {
+  cockpitAgencyMembersInputSchema,
+  cockpitPhoneLookupInputSchema
+} from '../../../shared/schemas/interaction/cockpit.schema.ts';
+import { dataEntitiesPayloadSchema } from '../../../shared/schemas/system/data.schema.ts';
+import {
+  adminAuditLogsInputSchema,
+  adminUsersListInputSchema
+} from '../../../shared/schemas/admin/user.schema.ts';
+import type { DbClient } from '../types.ts';
+import { selectDataEntitiesDb } from './dataEntitiesDbSelection.ts';
+
+test('selectDataEntitiesDb uses userDb for regular data actions', () => {
+  const serviceRoleDb = { marker: 'service-role' } as unknown as DbClient;
+  const userScopedDb = { marker: 'user-scoped' } as unknown as DbClient;
+
+  const selectedDb = selectDataEntitiesDb({ action: 'save' }, serviceRoleDb, userScopedDb);
+
+  assertStrictEquals(selectedDb, userScopedDb);
+});
+
+test('selectDataEntitiesDb keeps service-role db for reassign', () => {
+  const serviceRoleDb = { marker: 'service-role' } as unknown as DbClient;
+  const userScopedDb = { marker: 'user-scoped' } as unknown as DbClient;
+
+  const selectedDb = selectDataEntitiesDb({ action: 'reassign' }, serviceRoleDb, userScopedDb);
+
+  assertStrictEquals(selectedDb, serviceRoleDb);
+});
+
+test('selectDataEntitiesDb keeps service-role db for delete', () => {
+  const serviceRoleDb = { marker: 'service-role' } as unknown as DbClient;
+  const userScopedDb = { marker: 'user-scoped' } as unknown as DbClient;
+
+  const selectedDb = selectDataEntitiesDb({ action: 'delete' }, serviceRoleDb, userScopedDb);
+
+  assertStrictEquals(selectedDb, serviceRoleDb);
+});
+
+test('dataEntitiesPayloadSchema rejects unknown keys', () => {
+  const payload = {
+    action: 'archive',
+    entity_id: '11111111-1111-1111-1111-111111111111',
+    archived: true,
+    unexpected: 'forbidden'
+  };
+
+  const parsed = dataEntitiesPayloadSchema.safeParse(payload);
+  assertStrictEquals(parsed.success, false);
+});
+
+test('cockpit schemas validate agency members and phone lookup inputs', () => {
+  const agencyId = '11111111-1111-4111-8111-111111111111';
+
+  assertStrictEquals(cockpitAgencyMembersInputSchema.safeParse({ agency_id: agencyId }).success, true);
+  assertStrictEquals(cockpitPhoneLookupInputSchema.safeParse({
+    agency_id: agencyId,
+    phone: '05 56 00 00 00',
+    limit: 5
+  }).success, true);
+  assertStrictEquals(cockpitPhoneLookupInputSchema.safeParse({
+    agency_id: agencyId,
+    phone: '',
+    limit: 5
+  }).success, false);
+});
+
+test('admin query schemas validate list users and audit log filters', () => {
+  const agencyId = '11111111-1111-4111-8111-111111111111';
+  const actorId = '22222222-2222-4222-8222-222222222222';
+
+  assertStrictEquals(adminUsersListInputSchema.safeParse({}).success, true);
+  assertStrictEquals(adminUsersListInputSchema.safeParse({ unexpected: true }).success, false);
+  assertStrictEquals(adminAuditLogsInputSchema.safeParse({
+    agency_id: agencyId,
+    actor_id: actorId,
+    entity_id: '33333333-3333-4333-8333-333333333333',
+    entity_table: 'profiles',
+    from: '2026-02-01T00:00:00.000Z',
+    to: '2026-02-28T23:59:59.999Z',
+    limit: 200
+  }).success, true);
+  assertStrictEquals(adminAuditLogsInputSchema.safeParse({
+    agency_id: agencyId,
+    limit: 501
+  }).success, false);
+});

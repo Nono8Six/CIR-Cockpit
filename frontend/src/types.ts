@@ -1,4 +1,4 @@
-import { Enums, Json, Tables, TablesInsert, TablesUpdate } from './types/supabase';
+import { Enums, Json, Tables, TablesInsert, TablesUpdate } from 'shared/supabase.types';
 import type { InteractionStage } from '../../shared/schemas/interaction/stages.schema';
 import type { TierContactRead, TierOrganizationRead } from '../../shared/schemas/entity/tier-foundation.schema';
 

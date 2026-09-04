@@ -4,10 +4,10 @@ import path from 'node:path';
 const ROOT = path.resolve(process.cwd(), '..');
 const TARGETS = [
   path.join(ROOT, 'frontend', 'src'),
-  path.join(ROOT, 'backend', 'functions'),
+  path.join(ROOT, 'backend', 'src'),
   path.join(ROOT, 'shared')
 ];
-const BACKEND_API_ROOT = path.join(ROOT, 'backend', 'functions', 'api');
+const BACKEND_API_ROOT = path.join(ROOT, 'backend', 'src');
 const ERROR_TYPES_FILE = path.join(ROOT, 'shared', 'errors', 'types.ts');
 const ERROR_CATALOG_FILE = path.join(ROOT, 'shared', 'errors', 'catalog.ts');
 
@@ -32,7 +32,7 @@ const shouldScanFile = (filePath) =>
   !filePath.endsWith('.d.ts') && /\.(ts|tsx|js|jsx)$/.test(filePath);
 
 const isTestFile = (filePath) =>
-  /__tests__|\.test\.(ts|tsx|js|jsx)$|_test\.ts$/.test(filePath);
+  /__tests__|\.test\.(ts|tsx|js|jsx)$|_test\.ts$|[\\/]src[\\/]test[\\/]/.test(filePath);
 
 const walk = (dirPath, acc = []) => {
   const entries = readdirSync(dirPath, { withFileTypes: true });

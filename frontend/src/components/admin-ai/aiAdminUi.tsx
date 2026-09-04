@@ -3,18 +3,17 @@ import type { AiFeature } from '../../../../shared/schemas/ai.schema';
 
 export const AI_DAYS = 30;
 export const featureLabels: Record<AiFeature, string> = {
-  'assistant.referentiels': 'Assistant référentiels',
-  'pricing.references.diagnose': 'Diagnostic global',
+  'pricing.references.diagnose': 'Veille des référentiels',
   'pricing.references.diagnose.classification': 'Diagnostic classification',
-  'pricing.references.diagnose.segments': 'Diagnostic segments'
+  'pricing.references.diagnose.segments': 'Diagnostic segments',
+  'assistant.referentiels': 'Chat référentiels'
 };
 export const featureSurfaces: Record<AiFeature, string> = {
-  'assistant.referentiels': 'Chat des référentiels tarifaires',
-  'pricing.references.diagnose': 'Aucun appel direct, clé globale historique',
-  'pricing.references.diagnose.classification': 'Diagnostic backend des classifications',
-  'pricing.references.diagnose.segments': 'Diagnostic backend des segments et grilles'
+  'pricing.references.diagnose': 'Synthèse sourcée d’un run de diff tarifaire',
+  'pricing.references.diagnose.classification': 'Template historique, archivé',
+  'pricing.references.diagnose.segments': 'Template historique, archivé',
+  'assistant.referentiels': 'Retiré à l’étape 3 ; revient à l’étape 6'
 };
-export const protectedPromptFeatures = new Set<AiFeature>(['assistant.referentiels']);
 export const features = Object.entries(featureLabels) as [AiFeature, string][];
 export const formatNumber = new Intl.NumberFormat('fr-FR');
 export const formatCost = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'USD', maximumFractionDigits: 4 });

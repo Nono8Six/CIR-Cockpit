@@ -1,0 +1,351 @@
+import { test } from "vitest";
+import { assertEquals, assertRejects } from '#test/assert';
+
+import type { Database } from '../../../../../shared/supabase.types.ts';
+import { dataEntityContactsPayloadSchema } from '../../../../../shared/schemas/system/data.schema.ts';
+import type { AuthContext, DbClient } from '../../../types.ts';
+import { handleDataEntityContactsAction } from './dataEntityContacts.ts';
+
+type ContactRow = Database['public']['Tables']['entity_contacts']['Row'];
+
+const authContext: AuthContext = {
+  userId: 'user-1',
+  role: 'tcs',
+  agencyIds: ['agency-1'],
+  activeAgencyId: 'agency-1',
+  isSuperAdmin: false
+};
+
+const readCode = (value: unknown): string | undefined => {
+  if (!value || typeof value !== 'object') {
+    return undefined;
+  }
+  const candidate = Reflect.get(value, 'code');
+  return typeof candidate === 'string' ? candidate : undefined;
+};
+
+const createDbMock = (
+  contactRows: ContactRow[],
+  options: { updateRows?: ContactRow[]; deleteRows?: Array<{ id: string }> } = {}
+): {
+  db: DbClient;
+  getInsertedEntityId: () => string | null;
+  getInsertedValues: () => Record<string, unknown> | null;
+  getDeletedCount: () => number;
+  getListOrderArgsCount: () => number;
+} => {
+  let insertedEntityId: string | null = null;
+  let insertedValues: Record<string, unknown> | null = null;
+  let deletedCount = 0;
+  let listOrderArgsCount = 0;
+
+  const db = {
+    select: () => ({
+      from: () => ({
+        where: () => ({
+          orderBy: (...args: unknown[]) => {
+            listOrderArgsCount = args.length;
+            return Promise.resolve(contactRows);
+          }
+        })
+      })
+    }),
+    insert: () => ({
+      values: (values: Record<string, unknown>) => {
+        insertedValues = values;
+        insertedEntityId = typeof values.entity_id === 'string' ? values.entity_id : null;
+        return {
+          returning: () => Promise.resolve(contactRows)
+        };
+      }
+    }),
+    update: () => ({
+      set: () => ({
+        where: () => ({
+          returning: () => Promise.resolve(options.updateRows ?? contactRows)
+        })
+      })
+    }),
+    delete: () => ({
+      where: () => ({
+        returning: () => {
+          const rows = options.deleteRows ?? contactRows.map((row) => ({ id: row.id }));
+          deletedCount += 1;
+          return Promise.resolve(rows);
+        }
+      })
+    }),
+    transaction: (callback: (tx: DbClient) => Promise<unknown>) =>
+      callback({
+        ...db,
+        execute: () => Promise.resolve([])
+      } as unknown as DbClient)
+  } as unknown as DbClient;
+
+  return {
+    db,
+    getInsertedEntityId: () => insertedEntityId,
+    getInsertedValues: () => insertedValues,
+    getDeletedCount: () => deletedCount,
+    getListOrderArgsCount: () => listOrderArgsCount
+  };
+};
+
+test('handleDataEntityContactsAction lists contacts by entity', async () => {
+  const entityId = '11111111-1111-4111-8111-111111111111';
+  const contact = (id: string, firstName: string, lastName: string, isPrimary: boolean, createdAt: string): ContactRow => ({
+    id,
+    entity_id: entityId,
+    first_name: firstName,
+    last_name: lastName,
+    email: null,
+    phone: null,
+    position: null,
+    service_label: null,
+    is_primary: isPrimary,
+    notes: null,
+    archived_at: null,
+    created_at: createdAt,
+    updated_at: createdAt
+  });
+  const contactRows = [
+    contact('22222222-2222-4222-8222-222222222222', 'Zoé', 'Martin', true, '2026-02-02T00:00:00Z'),
+    contact('33333333-3333-4333-8333-333333333333', 'Alice', 'Martin', false, '2026-02-01T00:00:00Z'),
+    contact('44444444-4444-4444-8444-444444444444', 'Bruno', 'Durand', false, '2026-02-03T00:00:00Z')
+  ];
+  const mock = createDbMock(contactRows);
+
+  const response = await handleDataEntityContactsAction(
+    mock.db,
+    authContext,
+    'req-list',
+    {
+      action: 'list_by_entity',
+      entity_id: entityId,
+      include_archived: false
+    },
+    {
+      ensureRateLimit: () => Promise.resolve(),
+      getEntityAgencyId: () => Promise.resolve('agency-1'),
+      getContactEntityId: () => Promise.resolve('entity-1'),
+      ensureAgencyAccess: () => 'agency-1'
+    }
+  );
+
+  assertEquals(response.ok, true);
+  assertEquals('contacts' in response, true);
+  assertEquals(mock.getListOrderArgsCount(), 4);
+  if ('contacts' in response) {
+    assertEquals(response.contacts.map((row) => row.id), [
+      '22222222-2222-4222-8222-222222222222',
+      '44444444-4444-4444-8444-444444444444',
+      '33333333-3333-4333-8333-333333333333'
+    ]);
+    assertEquals(response.tier_contacts.map((row) => row.legacy_entity_id), [entityId, entityId, entityId]);
+  }
+});
+
+test('handleDataEntityContactsAction saves contact', async () => {
+  const contactRow = { id: 'contact-1' } as ContactRow;
+  const mock = createDbMock([contactRow]);
+
+  const response = await handleDataEntityContactsAction(
+    mock.db,
+    authContext,
+    'req-1',
+    {
+      action: 'save',
+      entity_id: 'entity-1',
+      contact: {
+        first_name: 'Alice',
+        last_name: 'Martin',
+        email: '',
+        phone: '0102030405',
+        position: '',
+        service_label: 'Maintenance',
+        notes: ''
+      }
+    },
+    {
+      ensureRateLimit: () => Promise.resolve(),
+      getEntityAgencyId: () => Promise.resolve('agency-1'),
+      getContactEntityId: () => Promise.resolve('entity-1'),
+      ensureAgencyAccess: () => 'agency-1'
+    }
+  );
+
+  assertEquals(response.ok, true);
+  assertEquals('contact' in response, true);
+  assertEquals(mock.getInsertedEntityId(), 'entity-1');
+  assertEquals(mock.getInsertedValues()?.service_label, 'Maintenance');
+});
+
+test('handleDataEntityContactsAction deletes contact', async () => {
+  const contactRow = { id: 'contact-1' } as ContactRow;
+  const mock = createDbMock([contactRow]);
+
+  const response = await handleDataEntityContactsAction(
+    mock.db,
+    authContext,
+    'req-2',
+    {
+      action: 'delete',
+      contact_id: 'contact-1'
+    },
+    {
+      ensureRateLimit: () => Promise.resolve(),
+      getEntityAgencyId: () => Promise.resolve('agency-1'),
+      getContactEntityId: () => Promise.resolve('entity-1'),
+      ensureAgencyAccess: () => 'agency-1'
+    }
+  );
+
+  assertEquals(response.ok, true);
+  assertEquals('contact_id' in response, true);
+  assertEquals(mock.getDeletedCount(), 1);
+});
+
+test('handleDataEntityContactsAction rejects update outside requested entity scope', async () => {
+  const contactRow = { id: 'contact-1' } as ContactRow;
+  const mock = createDbMock([contactRow], { updateRows: [] });
+
+  await assertRejects(
+    async () => {
+      await handleDataEntityContactsAction(
+        mock.db,
+        authContext,
+        'req-cross-entity',
+        {
+          action: 'save',
+          entity_id: 'entity-2',
+          id: 'contact-1',
+          contact: {
+            first_name: 'Alice',
+            last_name: 'Martin',
+            email: '',
+            phone: '',
+            position: '',
+            notes: ''
+          }
+        },
+        {
+          ensureRateLimit: () => Promise.resolve(),
+          getEntityAgencyId: () => Promise.resolve('agency-1'),
+          getContactEntityId: () => Promise.resolve('entity-1'),
+          ensureAgencyAccess: () => 'agency-1'
+        }
+      );
+    },
+    Error,
+    'Contact introuvable pour ce tiers.'
+  );
+});
+
+test('handleDataEntityContactsAction rejects delete when contact is absent', async () => {
+  const contactRow = { id: 'contact-1' } as ContactRow;
+  const mock = createDbMock([contactRow], { deleteRows: [] });
+
+  await assertRejects(
+    async () => {
+      await handleDataEntityContactsAction(
+        mock.db,
+        authContext,
+        'req-delete-missing',
+        {
+          action: 'delete',
+          contact_id: 'contact-unknown'
+        },
+        {
+          ensureRateLimit: () => Promise.resolve(),
+          getEntityAgencyId: () => Promise.resolve('agency-1'),
+          getContactEntityId: () => Promise.resolve('entity-1'),
+          ensureAgencyAccess: () => 'agency-1'
+        }
+      );
+    },
+    Error,
+    'Contact introuvable.'
+  );
+});
+
+test('dataEntityContactsPayloadSchema rejects unsupported list action', () => {
+  const parsed = dataEntityContactsPayloadSchema.safeParse({ action: 'list' });
+  assertEquals(parsed.success, false);
+});
+
+test('handleDataEntityContactsAction throws DB_WRITE_FAILED when save returns empty row', async () => {
+  const db = {
+    insert: () => ({
+      values: () => ({
+        returning: () => Promise.resolve([])
+      })
+    }),
+    transaction: (callback: (tx: DbClient) => Promise<unknown>) =>
+      callback({
+        insert: () => ({
+          values: () => ({
+            returning: () => Promise.resolve([])
+          })
+        }),
+        execute: () => Promise.resolve([])
+      } as unknown as DbClient)
+  } as unknown as DbClient;
+
+  await assertRejects(
+    async () => {
+      await handleDataEntityContactsAction(
+        db,
+        authContext,
+        'req-3',
+        {
+          action: 'save',
+          entity_id: 'entity-1',
+          contact: {
+            first_name: 'Alice',
+            last_name: 'Martin',
+            email: '',
+            phone: '0102030405',
+            position: '',
+            notes: ''
+          }
+        },
+        {
+          ensureRateLimit: () => Promise.resolve(),
+          getEntityAgencyId: () => Promise.resolve('agency-1'),
+          getContactEntityId: () => Promise.resolve('entity-1'),
+          ensureAgencyAccess: () => 'agency-1'
+        }
+      );
+    },
+    Error,
+    'Impossible de creer le contact.'
+  );
+
+  try {
+    await handleDataEntityContactsAction(
+      db,
+      authContext,
+      'req-4',
+      {
+        action: 'save',
+        entity_id: 'entity-1',
+        contact: {
+          first_name: 'Alice',
+          last_name: 'Martin',
+          email: '',
+          phone: '0102030405',
+          position: '',
+          notes: ''
+        }
+      },
+      {
+        ensureRateLimit: () => Promise.resolve(),
+        getEntityAgencyId: () => Promise.resolve('agency-1'),
+        getContactEntityId: () => Promise.resolve('entity-1'),
+        ensureAgencyAccess: () => 'agency-1'
+      }
+    );
+  } catch (error) {
+    assertEquals(readCode(error), 'DB_WRITE_FAILED');
+  }
+});

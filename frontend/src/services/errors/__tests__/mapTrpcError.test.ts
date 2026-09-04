@@ -44,6 +44,8 @@ describe('mapTrpcError', () => {
     expect(mapped.code).toBe('AUTH_FORBIDDEN');
     expect(mapped.status).toBe(403);
     expect(mapped.requestId).toBe('req-1');
+    expect(mapped.domain).toBe('auth');
+    expect(mapped.source).toBe('api');
     expect(mapped.details).toBeUndefined();
     expect(mapped.retryable).toBe(false);
     expect(mapped.recoveryAction).toBe('contact_support');

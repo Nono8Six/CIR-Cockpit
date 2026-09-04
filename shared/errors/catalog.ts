@@ -141,7 +141,7 @@ export const ERROR_CATALOG: Record<string, ErrorCatalogEntry> = {
   EDGE_FUNCTION_ERROR: makeEntry(
     "EDGE_FUNCTION_ERROR",
     "Erreur serveur.",
-    "edge",
+    "api",
     "error",
     "retry",
     true,
@@ -521,7 +521,7 @@ export const ERROR_CATALOG: Record<string, ErrorCatalogEntry> = {
   REQUEST_FAILED: makeEntry(
     "REQUEST_FAILED",
     "La requête a échoué.",
-    "edge",
+    "api",
     "error",
     "retry",
     true,

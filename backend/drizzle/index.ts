@@ -1,6 +1,7 @@
 import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 
+import { getConfig } from '../src/config.ts';
 import { getSupabaseDbUrl } from './config.ts';
 import { drizzleSchema } from './schema.ts';
 
@@ -15,7 +16,7 @@ let drizzleDbKey = '';
 const buildSqlClient = (connectionString: string): DrizzleSqlClient => {
   return postgres(connectionString, {
     prepare: false,
-    max: 1,
+    max: getConfig().databasePoolMax,
     idle_timeout: 20,
     connect_timeout: 10,
     max_lifetime: 60 * 30

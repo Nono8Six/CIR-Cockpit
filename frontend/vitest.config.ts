@@ -13,6 +13,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     testTimeout: 10000,
+    maxWorkers: 4,
     setupFiles: ['./src/__tests__/setup.ts'],
     globals: true,
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx', '../shared/**/*.test.ts'],
@@ -21,8 +22,8 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
       include: [
-        'src/components/ui/StatusDot.tsx',
-        'src/components/ui/AvatarInitials.tsx',
+        'src/components/ui/data-display/StatusDot.tsx',
+        'src/components/ui/data-display/AvatarInitials.tsx',
         'src/services/admin/**/*.ts',
         'src/services/agency/**/*.ts',
         'src/services/api/**/*.ts',
@@ -100,7 +101,7 @@ export default defineConfig({
           functions: 0,
           lines: 0
         },
-        'src/hooks/{admin/agencies/core/useAgencies,admin/audit/useAuditLogsPanel,admin/users/identity/useCreateAdminUser,admin/users/identity/useUpdateUserIdentity,admin/users/identity/useAdminUserCreateDialog,cockpit/useCockpitDialogsState,cockpit/useCockpitFormRefs,cockpit-utils/useCockpitPaneProps,cockpit-utils/useCockpitRegisterFields,cockpit-utils/useCockpitConfigSnapshot,directory/company/useCitySuggestions,directory/company/useKnownCompanies,directory/company/useUnifiedCompanySearch,directory/core/useDirectoryPage,directory/core/useDirectoryRecord,directory/core/useDirectorySearchIndex,entities/clients/useClientContactDialogFields,entities/clients/useDeleteClient,entities/clients/useSaveClient,entities/clients/useClientArchived,entities/contacts/useEntityContacts,entities/contacts/useEntityContact,entities/core/useProductConfig,entities/prospects/useProspectDialogFields,entities/prospects/useSaveProspect,interactions/core/queries/useInteractionStepper,interactions/drafts/useInteractionFormEffects,interactions/drafts/useInteractionFormState,interactions/drafts/useInteractionGateState,interactions/handlers/useInteractionFocus,interactions/handlers/useInteractionIsValidHandler,session/useAppQueries,session/useAppSession,settings-state/useSettingsState.helpers}.ts': {
+        'src/hooks/{admin/agencies/core/useAgencies,admin/audit/useAuditLogsPanel,admin/users/identity/useCreateAdminUser,admin/users/identity/useUpdateUserIdentity,cockpit/useCockpitDialogsState,cockpit/useCockpitFormRefs,cockpit-utils/useCockpitPaneProps,cockpit-utils/useCockpitRegisterFields,directory/company/useKnownCompanies,directory/core/useDirectoryPage,directory/core/useDirectoryRecord,entities/clients/useDeleteClient,entities/clients/useSaveClient,entities/contacts/useEntityContacts,entities/prospects/useSaveProspect,interactions/core/queries/useInteractionStepper,interactions/drafts/useInteractionFormEffects,interactions/drafts/useInteractionFormState,interactions/drafts/useInteractionGateState,interactions/handlers/useInteractionFocus,interactions/handlers/useInteractionIsValidHandler,session/useAppQueries,session/useAppSession,settings-state/useSettingsState.helpers}.ts': {
           statements: 0,
           branches: 0,
           functions: 0,
@@ -234,13 +235,13 @@ export default defineConfig({
           functions: 80,
           lines: 60
         },
-        'src/components/ui/StatusDot.tsx': {
+        'src/components/ui/data-display/StatusDot.tsx': {
           statements: 100,
           branches: 100,
           functions: 100,
           lines: 100
         },
-        'src/components/ui/AvatarInitials.tsx': {
+        'src/components/ui/data-display/AvatarInitials.tsx': {
           statements: 100,
           branches: 100,
           functions: 100,

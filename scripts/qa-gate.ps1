@@ -1,4 +1,4 @@
-# IMPORTANT: ce script a un miroir dans qa-gate.sh -- les garder synchronises.
+# Gate locale finale unique. CI utilise `pnpm run qa:ci`.
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
@@ -36,9 +36,9 @@ if ($env:RUN_E2E -eq "1") {
   Invoke-Step "[opt] Frontend e2e..." { pnpm --dir frontend run test:e2e }
 }
 
-Invoke-Step "[6/9] Backend lint..." { deno lint backend/functions/api }
-Invoke-Step "[7/9] Backend typecheck..." { deno check --config backend/deno.json backend/functions/api/index.ts }
-Invoke-Step "[8/9] Backend tests..." { deno test --env-file=backend/.env --allow-env --config backend/deno.json backend/functions/api }
+Invoke-Step "[6/9] Backend lint..." { pnpm run backend:lint }
+Invoke-Step "[7/9] Backend typecheck..." { pnpm run backend:typecheck }
+Invoke-Step "[8/9] Backend tests..." { pnpm run backend:test }
 Invoke-Step "[9/9] Backend integration tests..." { pnpm run backend:test:integration }
 
 Write-Output ""

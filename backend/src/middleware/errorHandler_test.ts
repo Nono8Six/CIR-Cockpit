@@ -1,0 +1,276 @@
+import { test } from "vitest";
+import { assertEquals, assertMatch, assert } from '#test/assert';
+import { resetConfigForTests } from '../config.ts';
+
+import { handleError, httpError } from './errorHandler.ts';
+import { getErrorCatalogEntry } from '../../../shared/errors/catalog.ts';
+import { edgeErrorPayloadSchema } from '../../../shared/schemas/system/edge-error.schema.ts';
+
+type ContextLike = {
+  get: (key: string) => string | undefined;
+  json: (body: Record<string, unknown>, status?: number) => Response;
+};
+
+const makeContext = (requestId?: string): ContextLike =>
+  ({
+    get: (key: string) => (key === 'requestId' ? requestId : undefined),
+    json: (body: Record<string, unknown>, status?: number) =>
+      new Response(JSON.stringify(body), {
+        status: status ?? 200,
+        headers: { 'content-type': 'application/json' }
+      })
+  } as ContextLike);
+
+test('handleError uses catalog message when code is known', async () => {
+  const ctx = makeContext('req-1');
+  const err = httpError(400, 'INVALID_JSON', 'Invalid JSON body', 'bad_json');
+  const response = handleError(err, ctx) as Response;
+  const result = (await response.json()) as Record<string, unknown>;
+  const catalog = getErrorCatalogEntry('INVALID_JSON');
+  assertEquals(response.status, 400);
+  assertEquals(result.ok, false);
+  assertEquals(result.code, 'INVALID_JSON');
+  assertEquals(result.error, catalog?.message);
+  assertEquals(result.details, 'bad_json');
+  assertEquals(result.retryable, catalog?.retryable ?? false);
+  assertEquals(result.recovery_action, catalog?.recoveryAction ?? 'none');
+  assertEquals(result.request_id, 'req-1');
+  const parsed = edgeErrorPayloadSchema.safeParse(result);
+  assertEquals(parsed.success, true);
+});
+
+test('handleError redacts internal diagnostics and exposes bounded retry metadata', async () => {
+  const ctx = makeContext('req-redacted');
+  const err = httpError(
+    429,
+    'AI_PROVIDER_RATE_LIMITED',
+    'Provider body',
+    'provider_body_with_secret',
+    { retryAfterMs: 2_000 }
+  );
+  const response = handleError(err, ctx) as Response;
+  const result = (await response.json()) as Record<string, unknown>;
+  assertEquals(result.code, 'AI_PROVIDER_RATE_LIMITED');
+  assertEquals(result.details, undefined);
+  assertEquals(result.retryable, true);
+  assertEquals(result.recovery_action, 'retry');
+  assertEquals(result.retry_after_ms, 2_000);
+});
+
+test('provider authentication failures are public support errors, not CIR auth errors', async () => {
+  const ctx = makeContext('req-provider-auth');
+  const response = handleError(
+    httpError(502, 'AI_PROVIDER_AUTH_FAILED', 'External 401', 'provider response'),
+    ctx
+  ) as Response;
+  const result = (await response.json()) as Record<string, unknown>;
+  assertEquals(response.status, 502);
+  assertEquals(result.code, 'AI_PROVIDER_AUTH_FAILED');
+  assertEquals(result.details, undefined);
+  assertEquals(result.retryable, false);
+  assertEquals(result.recovery_action, 'contact_support');
+});
+
+test('new provider-neutral errors are catalogued and redact every diagnostic canary', async () => {
+  const canaries = [
+    'Bearer secret-token',
+    'sk-mistral-fake',
+    'raw-provider-body',
+    'private-stack',
+    '<html>private</html>',
+    'external-request-secret',
+    'sensitive-param'
+  ];
+  for (const [code, status, recoveryAction] of [
+    ['AI_PROVIDER_BILLING_REQUIRED', 502, 'contact_support'],
+    ['AI_PROVIDER_CONTRACT_INVALID', 502, 'contact_support'],
+    ['AI_TOOL_ARGUMENTS_INVALID', 400, 'none'],
+    ['AI_TIMEOUT', 504, 'none'],
+    ['AI_RESPONSE_INVALID', 502, 'none']
+  ] as const) {
+    const response = handleError(
+      httpError(status, code, canaries.join(' | '), canaries.join(' | ')),
+      makeContext('req-redaction-matrix')
+    ) as Response;
+    const payload = (await response.json()) as Record<string, unknown>;
+    const serialized = JSON.stringify(payload);
+    assertEquals(payload.code, code);
+    assertEquals(payload.details, undefined);
+    assertEquals(payload.request_id, 'req-redaction-matrix');
+    assertEquals(payload.retryable, false);
+    assertEquals(payload.recovery_action, recoveryAction);
+    for (const canary of canaries) assertEquals(serialized.includes(canary), false);
+  }
+});
+
+test('handleError falls back to catalog REQUEST_FAILED for unknown errors', async () => {
+  const ctx = makeContext('req-2');
+  const err = new Error('boom');
+  const response = handleError(err, ctx) as Response;
+  const result = (await response.json()) as Record<string, unknown>;
+  const catalog = getErrorCatalogEntry('REQUEST_FAILED');
+  assertEquals(response.status, 500);
+  assertEquals(result.ok, false);
+  assertEquals(result.code, 'REQUEST_FAILED');
+  assertEquals(result.error, catalog?.message);
+  assertEquals(result.request_id, 'req-2');
+});
+
+test('handleError generates request_id when absent', async () => {
+  const ctx = makeContext();
+  const err = httpError(403, 'AUTH_FORBIDDEN', 'Forbidden');
+  const response = handleError(err, ctx) as Response;
+  const result = (await response.json()) as Record<string, unknown>;
+  assertEquals(response.status, 403);
+  assertEquals(result.code, 'AUTH_FORBIDDEN');
+  assert(result.request_id);
+  assertMatch(String(result.request_id), /^[0-9a-fA-F-]{36}$/);
+});
+
+test('app.notFound returns JSON payload with CORS headers', async () => {
+  const previousOrigin = process.env['CORS_ALLOWED_ORIGIN'];
+  try {
+    process.env['CORS_ALLOWED_ORIGIN'] = 'https://app.cir.test';
+    resetConfigForTests();
+    const appModule = await import('../app.ts');
+    const response = await appModule.default.request('/unknown-route', {
+      method: 'POST',
+      headers: {
+        origin: 'https://app.cir.test',
+        'content-type': 'application/json'
+      },
+      body: '{}'
+    });
+
+    const payload = (await response.json()) as Record<string, unknown>;
+    assertEquals(response.status, 404);
+    assertEquals(payload.code, 'NOT_FOUND');
+    assertEquals(response.headers.get('access-control-allow-origin'), 'https://app.cir.test');
+  } finally {
+    if (previousOrigin === undefined) {
+      delete process.env['CORS_ALLOWED_ORIGIN'];
+    } else {
+      process.env['CORS_ALLOWED_ORIGIN'] = previousOrigin;
+    }
+    resetConfigForTests();
+  }
+});
+
+test('OPTIONS request returns CORS headers for allowed origin', async () => {
+  const previousOrigin = process.env['CORS_ALLOWED_ORIGIN'];
+  try {
+    process.env['CORS_ALLOWED_ORIGIN'] = 'https://app.cir.test';
+    resetConfigForTests();
+    const appModule = await import('../app.ts');
+    const response = await appModule.default.request('/trpc/data.entities', {
+      method: 'OPTIONS',
+      headers: {
+        origin: 'https://app.cir.test',
+        'access-control-request-method': 'POST'
+      }
+    });
+
+    assertEquals(response.status, 200);
+    assertEquals(response.headers.get('access-control-allow-origin'), 'https://app.cir.test');
+    assertEquals(response.headers.get('access-control-allow-methods')?.includes('GET'), true);
+    assertEquals(response.headers.get('access-control-allow-methods')?.includes('POST'), true);
+    assertEquals(response.headers.get('x-content-type-options'), 'nosniff');
+  } finally {
+    if (previousOrigin === undefined) {
+      delete process.env['CORS_ALLOWED_ORIGIN'];
+    } else {
+      process.env['CORS_ALLOWED_ORIGIN'] = previousOrigin;
+    }
+    resetConfigForTests();
+  }
+});
+
+test('POST request rejects oversized payload', async () => {
+  const previousOrigin = process.env['CORS_ALLOWED_ORIGIN'];
+  try {
+    process.env['CORS_ALLOWED_ORIGIN'] = 'https://app.cir.test';
+    resetConfigForTests();
+    const appModule = await import('../app.ts');
+    const response = await appModule.default.request('/trpc/data.entities', {
+      method: 'POST',
+      headers: {
+        origin: 'https://app.cir.test',
+        authorization: 'Bearer fake-token',
+        'content-type': 'application/json',
+        'content-length': '1000001'
+      },
+      body: '{}'
+    });
+
+    const payload = (await response.json()) as Record<string, unknown>;
+    assertEquals(response.status, 413);
+    assertEquals(payload.code, 'PAYLOAD_TOO_LARGE');
+    assertEquals(response.headers.get('access-control-allow-origin'), 'https://app.cir.test');
+  } finally {
+    if (previousOrigin === undefined) {
+      delete process.env['CORS_ALLOWED_ORIGIN'];
+    } else {
+      process.env['CORS_ALLOWED_ORIGIN'] = previousOrigin;
+    }
+    resetConfigForTests();
+  }
+});
+
+test('POST request rejects oversized chunked payload without Content-Length', async () => {
+  const previousOrigin = process.env['CORS_ALLOWED_ORIGIN'];
+  try {
+    process.env['CORS_ALLOWED_ORIGIN'] = 'https://app.cir.test';
+    resetConfigForTests();
+    const appModule = await import('../app.ts');
+    const response = await appModule.default.request('/trpc/data.entities', {
+      method: 'POST',
+      headers: {
+        origin: 'https://app.cir.test',
+        authorization: 'Bearer fake-token',
+        'content-type': 'application/json',
+        'transfer-encoding': 'chunked'
+      },
+      body: 'x'.repeat(1_000_001)
+    });
+
+    const payload = (await response.json()) as Record<string, unknown>;
+    assertEquals(response.status, 413);
+    assertEquals(payload.code, 'PAYLOAD_TOO_LARGE');
+  } finally {
+    if (previousOrigin === undefined) {
+      delete process.env['CORS_ALLOWED_ORIGIN'];
+    } else {
+      process.env['CORS_ALLOWED_ORIGIN'] = previousOrigin;
+    }
+    resetConfigForTests();
+  }
+});
+
+test('legacy REST routes return NOT_FOUND after consolidation', async () => {
+  const previousOrigin = process.env['CORS_ALLOWED_ORIGIN'];
+  try {
+    process.env['CORS_ALLOWED_ORIGIN'] = 'https://app.cir.test';
+    resetConfigForTests();
+    const appModule = await import('../app.ts');
+    const response = await appModule.default.request('/data/entities', {
+      method: 'POST',
+      headers: {
+        origin: 'https://app.cir.test',
+        'content-type': 'application/json'
+      },
+      body: '{}'
+    });
+
+    const payload = (await response.json()) as Record<string, unknown>;
+    assertEquals(response.status, 404);
+    assertEquals(payload.code, 'NOT_FOUND');
+    assertEquals(response.headers.get('access-control-allow-origin'), 'https://app.cir.test');
+  } finally {
+    if (previousOrigin === undefined) {
+      delete process.env['CORS_ALLOWED_ORIGIN'];
+    } else {
+      process.env['CORS_ALLOWED_ORIGIN'] = previousOrigin;
+    }
+    resetConfigForTests();
+  }
+});

@@ -1,7 +1,7 @@
 # Guide de tests
 
 Reference QA: `docs/qa-runbook.md`.
-Etat verifie contre les scripts et la CI le 2026-07-17.
+Etat verifie contre les scripts et la CI le 2026-08-15.
 
 ## Pyramide
 
@@ -24,9 +24,9 @@ Depuis la racine:
 ```bash
 pnpm run qa:docs   # docs/config/agents/QA
 pnpm run qa:front  # frontend sans coverage/build
-pnpm run qa:back   # backend sans integration distante
-pnpm run qa:fast   # gate intermediaire large
-pnpm run qa        # gate finale complete
+pnpm run qa:back   # backend unitaire, sans parite distante
+pnpm run qa:fast   # gate intermediaire large, locale
+pnpm run qa        # gate finale complete, avec parite distante
 ```
 
 Checks frontend:
@@ -35,6 +35,7 @@ Checks frontend:
 pnpm --dir frontend run typecheck
 pnpm --dir frontend run lint
 pnpm --dir frontend run test:run
+pnpm --dir frontend run test:changed
 pnpm --dir frontend run test:coverage
 pnpm --dir frontend run check:error-compliance
 pnpm --dir frontend run build
@@ -43,9 +44,11 @@ pnpm --dir frontend run build
 Checks backend:
 
 ```bash
-deno lint backend/functions/api
-deno check --config backend/deno.json backend/functions/api/index.ts
-deno test --env-file=backend/.env --allow-env --config backend/deno.json backend/functions/api
+pnpm run backend:lint
+pnpm run backend:typecheck
+pnpm run backend:test
+pnpm run backend:test:changed
+pnpm run backend:test:network
 pnpm run backend:test:integration
 ```
 
@@ -70,7 +73,7 @@ Patterns ajoutes pour les referentiels CIR:
 
 - Parcours versioning: couvrir Imports avec identite exacte des fichiers, onglet Changements, filtres de diff, dialog avant/apres et activation/rollback. Scenario de reference: `frontend/e2e/pricing-references-versioning.spec.ts`.
 - Les E2E referentiels peuvent intercepter `pricing.references.*` avec `page.route` et des payloads tRPC conformes aux schemas Zod pour eviter d'ecrire en base pendant la navigation; la session et le shell restent reels.
-- Les tests de diff SQL restent cote backend Deno: verifier au minimum premier import `initial_import`, skip SHA-256, cache/run, filtres `changed_columns`, contrats stricts et routes protegees.
+- Les tests de diff SQL restent cote backend Node/Vitest: verifier au minimum premier import `initial_import`, skip SHA-256, cache/run, filtres `changed_columns`, contrats stricts et routes protegees.
 
 ## Coverage
 
@@ -92,7 +95,7 @@ La coverage est une gate finale ou de risque eleve, pas une boucle systematique 
 
 ## CI
 
-`.github/workflows/qa.yml` installe pnpm 10.33.0, Node 24.14.0 et Deno 2.9.4, prépare `backend/.env` depuis l'exemple si nécessaire, puis lance :
+`.github/workflows/qa.yml` installe pnpm 10.33.0 et Node 24.14.0, prépare `backend/.env` depuis l'exemple si nécessaire, puis lance :
 
 ```bash
 pnpm run qa:ci

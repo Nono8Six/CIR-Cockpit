@@ -1,10 +1,4 @@
 import { z } from 'zod/v4';
-import {
-  aiDiagnosisCacheSchema,
-  aiDiagnosisCostSchema,
-  aiDiagnosisResultSchema,
-  aiDiagnosisUsageSchema,
-} from '../ai.schema.ts';
 
 export const PRICING_REFERENCE_STORAGE_BUCKET = 'pricing-reference-sources';
 export const PRICING_REFERENCE_ANOMALY_DEFAULT_MARQUE = 'Général';
@@ -1299,28 +1293,4 @@ export type PricingReferenceColumnMappingCandidate = z.infer<
 >;
 export type PricingReferenceColumnMappingProfile = z.infer<
   typeof pricingReferenceColumnMappingProfileSchema
->;
-
-export const pricingReferenceDiagnoseInputSchema = z.strictObject({
-  import_id: uuidSchema.optional(),
-  file_type: pricingReferenceFileKindSchema,
-  prompt_version_id: uuidSchema.optional(),
-  model_config_id: uuidSchema.optional(),
-});
-
-export const pricingReferenceDiagnoseResponseSchema = z.strictObject({
-  ok: z.literal(true),
-  ai_available: z.boolean(),
-  result: aiDiagnosisResultSchema.nullable(),
-  usage: aiDiagnosisUsageSchema.nullable(),
-  cost: aiDiagnosisCostSchema.nullable(),
-  cache: aiDiagnosisCacheSchema,
-  fallback_reason: z.string().trim().min(1).nullable().optional(),
-});
-
-export type PricingReferenceDiagnoseInput = z.infer<
-  typeof pricingReferenceDiagnoseInputSchema
->;
-export type PricingReferenceDiagnoseResponse = z.infer<
-  typeof pricingReferenceDiagnoseResponseSchema
 >;

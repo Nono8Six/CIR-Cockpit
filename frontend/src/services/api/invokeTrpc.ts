@@ -64,7 +64,7 @@ export const parseTrpcResponse = <TResponse>(
     throw createAppError({
       code: resolvedInvalidResponse.code ?? 'REQUEST_FAILED',
       message: resolvedInvalidResponse.message ?? 'Réponse serveur invalide.',
-      source: 'edge',
+      source: 'api',
       details: parsed.error.message
     });
   }
@@ -141,7 +141,7 @@ export const invokeTrpc = async <TPayload, TResponse>(
     throw createAppError({
       code: 'EDGE_FUNCTION_ERROR',
       message: 'Réponse serveur invalide.',
-      source: 'edge',
+      source: 'api',
       details: describeInvalidPayload(payload)
     });
   }

@@ -15,7 +15,7 @@ let tasks = [task('10000000-0000-4000-8000-000000000010', 'Tâche interne', 'int
 const envelope = (data: unknown) => ({ result: { data } });
 const procedures = (url: URL) => (url.pathname.split('/trpc/')[1] ?? '').split(',').filter(Boolean);
 
-const installTaskMocks = async (page: Page) => page.route('**/functions/v1/api/trpc/**', async (route) => {
+const installTaskMocks = async (page: Page) => page.route('**/trpc/**', async (route) => {
   const url = new URL(route.request().url()); const names = procedures(url);
   if (!names.every((name) => name === 'tasks.list' || name === 'tasks.get' || name === 'tasks.create' || name === 'tasks.update-assignment' || name === 'tasks.change-status' || name === 'tasks.reschedule' || name === 'tasks.execute-with-activity' || name === 'task-types.list')) return route.continue();
   const raw = decodeURIComponent(`${url.searchParams.get('input') ?? ''}${route.request().postData() ?? ''}`);

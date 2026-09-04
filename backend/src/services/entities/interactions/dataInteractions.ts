@@ -1,0 +1,811 @@
+import { and, desc, eq, isNotNull, ne, or, sql } from 'drizzle-orm';
+
+import { activities, agency_interaction_types, interaction_drafts, interactions } from '../../../../drizzle/schema.ts';
+import type { Database } from '../../../../../shared/supabase.types.ts';
+import type { DataInteractionsResponse } from '../../../../../shared/schemas/system/api-responses.ts';
+import type { DataInteractionsPayload } from '../../../../../shared/schemas/system/data.schema.ts';
+import type { AuthContext, DbClient } from '../../../types.ts';
+import { httpError } from '../../../middleware/errorHandler.ts';
+import {
+  ensureAgencyAccess,
+  ensureDataRateLimit,
+  ensureOptionalAgencyAccess,
+  getEntityAgencyId
+} from '../../data/dataAccess.ts';
+import { DRAFT_RATE_LIMIT_MAX, DRAFT_RATE_LIMIT_WINDOW_SECONDS } from '../../rate-limiting/rateLimit.ts';
+
+type InteractionRow = Database['public']['Tables']['interactions']['Row'];
+type InteractionDraftRow = Pick<Database['public']['Tables']['interaction_drafts']['Row'], 'id' | 'payload' | 'updated_at'>;
+type InteractionUpdate = Database['public']['Tables']['interactions']['Update'];
+type InteractionInsert = typeof interactions.$inferInsert;
+type InteractionDraftInsert = typeof interaction_drafts.$inferInsert;
+type SaveInteractionPayload = Extract<DataInteractionsPayload, { action: 'save' }>;
+type AddTimelineEventPayload = Extract<DataInteractionsPayload, { action: 'add_timeline_event' }>;
+type ListByEntityPayload = Extract<DataInteractionsPayload, { action: 'list_by_entity' }>;
+type ListByAgencyPayload = Extract<DataInteractionsPayload, { action: 'list_by_agency' }>;
+type KnownCompaniesPayload = Extract<DataInteractionsPayload, { action: 'known_companies' }>;
+type DraftGetPayload = Extract<DataInteractionsPayload, { action: 'draft_get' }>;
+type DraftSavePayload = Extract<DataInteractionsPayload, { action: 'draft_save' }>;
+type DraftDeletePayload = Extract<DataInteractionsPayload, { action: 'draft_delete' }>;
+type DeleteInteractionPayload = Extract<DataInteractionsPayload, { action: 'delete' }>;
+
+const DEFAULT_INTERACTIONS_PAGE = 1;
+const DEFAULT_INTERACTIONS_PAGE_SIZE = 20;
+const DEFAULT_AGENCY_INTERACTIONS_LIMIT = 200;
+const DEFAULT_KNOWN_COMPANIES_LIMIT = 2000;
+const INTERACTION_ACTION_RATE_LIMIT_MAX = 60;
+const INTERACTION_READ_RATE_LIMIT_MAX = 120;
+
+const readCanonicalInteractionProjection = async (
+  db: DbClient,
+  interactionId: string
+): Promise<InteractionRow> => {
+  const [row] = await db.select({ interaction: interactions, activity: activities })
+    .from(activities)
+    .innerJoin(interactions, eq(interactions.id, activities.legacy_interaction_id))
+    .where(eq(activities.legacy_interaction_id, interactionId))
+    .limit(1);
+  if (!row) {
+    throw httpError(500, 'DB_WRITE_FAILED', "L'activité enregistrée n'a pas pu être relue.");
+  }
+  return projectCanonicalActivity(row.interaction, row.activity);
+};
+
+const toNullableString = (value: unknown): string | null | undefined => {
+  if (value === null) return null;
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+};
+
+const isSpecialFamilyOptionalRelation = (value?: string | null): boolean => {
+  const normalized = (value ?? '').trim().toLowerCase();
+  return normalized === 'sollicitation'
+    || normalized === 'fournisseur'
+    || (normalized.startsWith('interne') && normalized.includes('cir'));
+};
+
+const requireConfiguredProductFamilies = async (
+  db: DbClient,
+  agencyId: string,
+  interactionType: string,
+  entityType: string,
+  families: string[]
+): Promise<void> => {
+  if (isSpecialFamilyOptionalRelation(entityType) || families.length > 0) return;
+
+  try {
+    const rows = await db
+      .select({ requires_product_families: agency_interaction_types.requires_product_families })
+      .from(agency_interaction_types)
+      .where(and(
+        eq(agency_interaction_types.agency_id, agencyId),
+        sql`lower(${agency_interaction_types.label}) = ${interactionType.trim().toLowerCase()}`,
+        sql`${agency_interaction_types.archived_at} is null`
+      ))
+      .limit(1);
+
+    if (rows[0]?.requires_product_families) {
+      throw httpError(400, 'VALIDATION_ERROR', 'Au moins une famille produit est requise pour ce type d\'interaction.');
+    }
+  } catch (error) {
+    if (
+      typeof error === 'object'
+      && error !== null
+      && Reflect.get(error, 'code') === 'VALIDATION_ERROR'
+    ) {
+      throw error;
+    }
+    throw httpError(500, 'DB_READ_FAILED', "Impossible de verifier l'obligation des familles produits.");
+  }
+};
+
+export const normalizeInteractionUpdates = (
+  updates: AddTimelineEventPayload['updates']
+): InteractionUpdate => {
+  if (!updates) return {};
+
+  const normalized: InteractionUpdate = {};
+
+  if (Object.hasOwn(updates, 'status')) {
+    const status = toNullableString(updates.status);
+    if (typeof status === 'string') normalized.status = status;
+  }
+  if (Object.hasOwn(updates, 'status_id')) {
+    const statusId = toNullableString(updates.status_id);
+    if (statusId !== undefined) normalized.status_id = statusId;
+  }
+  if (Object.hasOwn(updates, 'order_ref')) {
+    const orderRef = toNullableString(updates.order_ref);
+    if (orderRef !== undefined) normalized.order_ref = orderRef;
+  }
+  if (Object.hasOwn(updates, 'stage')) {
+    const stage = toNullableString(updates.stage);
+    if (stage !== undefined) normalized.stage = stage;
+  }
+  if (Object.hasOwn(updates, 'stage_changed_at')) {
+    const stageChangedAt = toNullableString(updates.stage_changed_at);
+    if (typeof stageChangedAt === 'string') normalized.stage_changed_at = stageChangedAt;
+  }
+  if (Object.hasOwn(updates, 'amount')) {
+    const amount = updates.amount;
+    if (amount === null || (typeof amount === 'number' && Number.isFinite(amount) && amount >= 0)) {
+      normalized.amount = amount;
+    }
+  }
+  if (Object.hasOwn(updates, 'quote_sent_at')) {
+    const quoteSentAt = toNullableString(updates.quote_sent_at);
+    if (quoteSentAt !== undefined) normalized.quote_sent_at = quoteSentAt;
+  }
+  if (Object.hasOwn(updates, 'lost_reason')) {
+    const lostReason = toNullableString(updates.lost_reason);
+    if (lostReason !== undefined) normalized.lost_reason = lostReason;
+  }
+  if (Object.hasOwn(updates, 'notes')) {
+    const notes = toNullableString(updates.notes);
+    if (notes !== undefined) normalized.notes = notes;
+  }
+  if (Object.hasOwn(updates, 'last_action_at')) {
+    const lastActionAt = updates.last_action_at;
+    if (typeof lastActionAt === 'string') {
+      const trimmed = lastActionAt.trim();
+      if (trimmed.length > 0) {
+        normalized.last_action_at = trimmed;
+      }
+    }
+  }
+  if (Object.hasOwn(updates, 'entity_id')) {
+    const entityId = toNullableString(updates.entity_id);
+    if (entityId !== undefined) normalized.entity_id = entityId;
+  }
+  if (Object.hasOwn(updates, 'contact_id')) {
+    const contactId = toNullableString(updates.contact_id);
+    if (contactId !== undefined) normalized.contact_id = contactId;
+  }
+  if (Object.hasOwn(updates, 'status_is_terminal') && typeof updates.status_is_terminal === 'boolean') {
+    normalized.status_is_terminal = updates.status_is_terminal;
+  }
+  if (Object.hasOwn(updates, 'mega_families')) {
+    const families = updates.mega_families;
+    if (Array.isArray(families) && families.every((item) => typeof item === 'string')) {
+      normalized.mega_families = families;
+    }
+  }
+
+  return normalized;
+};
+
+export const saveInteraction = async (
+  db: DbClient,
+  authContext: AuthContext,
+  payload: SaveInteractionPayload
+): Promise<InteractionRow> => {
+  const { interaction } = payload;
+  const resolvedAgencyId = ensureAgencyAccess(authContext, payload.agency_id);
+  const megaFamilies = interaction.mega_families ?? [];
+  await requireConfiguredProductFamilies(
+    db,
+    resolvedAgencyId,
+    interaction.interaction_type,
+    interaction.entity_type,
+    megaFamilies
+  );
+  const row: InteractionInsert = {
+    id: interaction.id,
+    agency_id: resolvedAgencyId,
+    channel: interaction.channel,
+    entity_type: interaction.entity_type,
+    contact_service: interaction.contact_service,
+    company_name: interaction.company_name?.trim() ?? '',
+    contact_name: interaction.contact_name?.trim() ?? '',
+    contact_phone: interaction.contact_phone?.trim() || null,
+    contact_email: interaction.contact_email?.trim() || null,
+    subject: interaction.subject,
+    mega_families: megaFamilies,
+    status: '',
+    status_id: interaction.status_id?.trim() || null,
+    interaction_type: interaction.interaction_type,
+    order_ref: interaction.order_ref?.trim() || null,
+    notes: interaction.notes?.trim() || null,
+    entity_id: interaction.entity_id ?? null,
+    contact_id: interaction.contact_id ?? null,
+    created_by: authContext.userId,
+    timeline: interaction.timeline ?? []
+  };
+  const {
+    id: _rowId,
+    ...rowForUpdate
+  } = row;
+
+  try {
+    const savedRows = await db
+      .insert(interactions)
+      .values(row)
+      .onConflictDoUpdate({
+        target: interactions.id,
+        set: rowForUpdate
+      })
+      .returning();
+    const saved = savedRows[0];
+    if (!saved) throw httpError(500, 'DB_WRITE_FAILED', "Impossible d'enregistrer l'interaction.");
+    return await readCanonicalInteractionProjection(db, saved.id);
+  } catch (error) {
+    if (
+      typeof error === 'object'
+      && error !== null
+      && Reflect.get(error, 'code') === 'DB_WRITE_FAILED'
+    ) {
+      throw error;
+    }
+    throw httpError(500, 'DB_WRITE_FAILED', "Impossible d'enregistrer l'interaction.");
+  }
+};
+
+export const addTimelineEvent = async (
+  db: DbClient,
+  authContext: AuthContext,
+  payload: AddTimelineEventPayload
+): Promise<InteractionRow> => {
+  const { interaction_id: interactionId, expected_updated_at: expectedUpdatedAt, event, updates } = payload;
+  let current:
+    | {
+      timeline: Database['public']['Tables']['interactions']['Row']['timeline'];
+      agency_id: string | null;
+    }
+    | undefined;
+  try {
+    const rows = await db
+      .select({
+        timeline: interactions.timeline,
+        agency_id: interactions.agency_id
+      })
+      .from(interactions)
+      .where(eq(interactions.id, interactionId))
+      .limit(1);
+    current = rows[0];
+  } catch {
+    throw httpError(500, 'DB_READ_FAILED', 'Impossible de charger l\'interaction.');
+  }
+
+  if (!current) throw httpError(404, 'NOT_FOUND', 'Interaction introuvable.');
+  ensureOptionalAgencyAccess(authContext, current.agency_id ?? null);
+
+  const currentTimeline = Array.isArray(current.timeline) ? current.timeline : [];
+  const updatedTimeline = [...currentTimeline, event];
+
+  const rowUpdates: InteractionUpdate = {
+    ...normalizeInteractionUpdates(updates),
+    timeline: updatedTimeline
+  };
+
+  const sanitizedUpdates = Object.fromEntries(
+    Object.entries(rowUpdates).filter(([, value]) => value !== undefined)
+  ) as InteractionUpdate;
+
+  try {
+    const rows = await db
+      .update(interactions)
+      .set(sanitizedUpdates)
+      .where(and(
+        eq(interactions.id, interactionId),
+        eq(interactions.updated_at, expectedUpdatedAt)
+      ))
+      .returning();
+
+    if (rows.length === 0) {
+      throw httpError(409, 'CONFLICT', 'Ce dossier a ete modifie par un autre utilisateur. Rechargez pour continuer.');
+    }
+    return await readCanonicalInteractionProjection(db, rows[0].id);
+  } catch (error) {
+    if (
+      typeof error === 'object'
+      && error !== null
+      && Reflect.get(error, 'code') === 'CONFLICT'
+    ) {
+      throw error;
+    }
+    throw httpError(500, 'DB_WRITE_FAILED', "Impossible de mettre a jour l'interaction.");
+  }
+};
+
+export const resolvePagination = (payload: Pick<ListByEntityPayload, 'page' | 'page_size'>): {
+  page: number;
+  pageSize: number;
+  offset: number;
+} => {
+  const page = payload.page ?? DEFAULT_INTERACTIONS_PAGE;
+  const pageSize = payload.page_size ?? DEFAULT_INTERACTIONS_PAGE_SIZE;
+  return {
+    page,
+    pageSize,
+    offset: (page - 1) * pageSize
+  };
+};
+
+export const resolveEntityInteractionsScope = (
+  scope: ListByEntityPayload['scope']
+): NonNullable<ListByEntityPayload['scope']> => scope ?? 'all';
+
+const buildListByEntityWhereClause = (payload: Pick<ListByEntityPayload, 'entity_id' | 'scope'>) => {
+  const entityCondition = eq(interactions.entity_id, payload.entity_id);
+  const scope = resolveEntityInteractionsScope(payload.scope);
+
+  if (scope === 'open') {
+    return and(entityCondition, eq(interactions.status_is_terminal, false));
+  }
+
+  if (scope === 'closed') {
+    return and(entityCondition, eq(interactions.status_is_terminal, true));
+  }
+
+  return entityCondition;
+};
+
+const resolveLimit = (limit: number | undefined, defaultLimit: number): number =>
+  limit ?? defaultLimit;
+
+const projectCanonicalActivity = (
+  interaction: InteractionRow,
+  activity: typeof activities.$inferSelect
+): InteractionRow => ({
+  ...interaction,
+  channel: activity.channel,
+  interaction_type: activity.activity_type,
+  subject: activity.subject,
+  notes: activity.report,
+  entity_id: activity.organization_id,
+  contact_id: activity.contact_id,
+  created_at: activity.occurred_at
+});
+
+export const resolveDraftFormType = (formType: string | undefined): string =>
+  formType?.trim() || 'interaction';
+
+const ensureDraftUserAccess = (authContext: AuthContext, userId: string): void => {
+  if (authContext.userId !== userId) {
+    throw httpError(403, 'AUTH_FORBIDDEN', 'Acces interdit.');
+  }
+};
+
+const toDraftResponseRow = (
+  row: Pick<Database['public']['Tables']['interaction_drafts']['Row'], 'id' | 'payload' | 'updated_at'>
+): InteractionDraftRow => ({
+  id: row.id,
+  payload: row.payload,
+  updated_at: row.updated_at
+});
+
+export const normalizeKnownCompanies = (rows: Array<{ company_name: string | null }>): string[] => {
+  const companies = new Map<string, string>();
+
+  for (const row of rows) {
+    const name = row.company_name?.trim();
+    if (!name) continue;
+
+    const key = name.toLocaleLowerCase('fr');
+    if (!companies.has(key)) {
+      companies.set(key, name);
+    }
+  }
+
+  return [...companies.values()].sort((left, right) => left.localeCompare(right, 'fr'));
+};
+
+export const listInteractionsByAgency = async (
+  db: DbClient,
+  authContext: AuthContext,
+  payload: ListByAgencyPayload
+): Promise<{
+  interactions: InteractionRow[];
+  page: number;
+  page_size: number;
+  total: number;
+}> => {
+  const agencyId = ensureAgencyAccess(authContext, payload.agency_id);
+  const limit = resolveLimit(payload.limit, DEFAULT_AGENCY_INTERACTIONS_LIMIT);
+
+  try {
+    if (payload.read_model === 'activity_v2') {
+      const canonicalWhere = and(
+        eq(activities.agency_id, agencyId),
+        ne(activities.lifecycle_status, 'archived')
+      );
+      const [joinedRows, countRows] = await Promise.all([
+        db.select({ interaction: interactions, activity: activities })
+          .from(activities)
+          .innerJoin(interactions, eq(interactions.id, activities.legacy_interaction_id))
+          .where(canonicalWhere)
+          .orderBy(desc(activities.occurred_at))
+          .limit(limit),
+        db.select({ count: sql<number>`count(*)::int` })
+          .from(activities)
+          .where(canonicalWhere)
+      ]);
+      return {
+        interactions: joinedRows.map(({ interaction, activity }) => projectCanonicalActivity(interaction, activity)),
+        page: 1,
+        page_size: limit,
+        total: Number(countRows[0]?.count ?? 0)
+      };
+    }
+
+    const [rows, countRows] = await Promise.all([
+      db
+        .select()
+        .from(interactions)
+        .where(eq(interactions.agency_id, agencyId))
+        .orderBy(desc(interactions.created_at))
+        .limit(limit),
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(interactions)
+        .where(eq(interactions.agency_id, agencyId))
+    ]);
+
+    return {
+      interactions: rows,
+      page: 1,
+      page_size: limit,
+      total: Number(countRows[0]?.count ?? 0)
+    };
+  } catch {
+    throw httpError(500, 'DB_READ_FAILED', 'Impossible de charger les interactions.');
+  }
+};
+
+export const listInteractionsByEntity = async (
+  db: DbClient,
+  authContext: AuthContext,
+  payload: ListByEntityPayload
+): Promise<{
+  interactions: InteractionRow[];
+  page: number;
+  page_size: number;
+  total: number;
+}> => {
+  const agencyId = await getEntityAgencyId(db, payload.entity_id);
+  ensureOptionalAgencyAccess(authContext, agencyId);
+
+  const {
+    page,
+    pageSize,
+    offset
+  } = resolvePagination(payload);
+  const whereClause = buildListByEntityWhereClause(payload);
+
+  try {
+    if (payload.read_model === 'activity_v2') {
+      const scope = resolveEntityInteractionsScope(payload.scope);
+      const scopeCondition = scope === 'open'
+        ? eq(interactions.status_is_terminal, false)
+        : scope === 'closed'
+          ? eq(interactions.status_is_terminal, true)
+          : undefined;
+      const canonicalWhere = and(
+        eq(activities.organization_id, payload.entity_id),
+        ne(activities.lifecycle_status, 'archived'),
+        scopeCondition
+      );
+      const [joinedRows, countRows] = await Promise.all([
+        db.select({ interaction: interactions, activity: activities })
+          .from(activities)
+          .innerJoin(interactions, eq(interactions.id, activities.legacy_interaction_id))
+          .where(canonicalWhere)
+          .orderBy(desc(interactions.last_action_at), desc(activities.occurred_at))
+          .limit(pageSize)
+          .offset(offset),
+        db.select({ count: sql<number>`count(*)::int` })
+          .from(activities)
+          .innerJoin(interactions, eq(interactions.id, activities.legacy_interaction_id))
+          .where(canonicalWhere)
+      ]);
+      return {
+        interactions: joinedRows.map(({ interaction, activity }) => projectCanonicalActivity(interaction, activity)),
+        page,
+        page_size: pageSize,
+        total: Number(countRows[0]?.count ?? 0)
+      };
+    }
+
+    const [rows, countRows] = await Promise.all([
+      db
+        .select()
+        .from(interactions)
+        .where(whereClause)
+        .orderBy(desc(interactions.last_action_at), desc(interactions.created_at))
+        .limit(pageSize)
+        .offset(offset),
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(interactions)
+        .where(whereClause)
+    ]);
+
+    return {
+      interactions: rows,
+      page,
+      page_size: pageSize,
+      total: Number(countRows[0]?.count ?? 0)
+    };
+  } catch {
+    throw httpError(500, 'DB_READ_FAILED', "Impossible de charger les interactions du client.");
+  }
+};
+
+export const listKnownCompanies = async (
+  db: DbClient,
+  authContext: AuthContext,
+  payload: KnownCompaniesPayload
+): Promise<string[]> => {
+  const agencyId = ensureAgencyAccess(authContext, payload.agency_id);
+  const limit = resolveLimit(payload.limit, DEFAULT_KNOWN_COMPANIES_LIMIT);
+
+  try {
+    const rows = await db
+      .select({ company_name: interactions.company_name })
+      .from(interactions)
+      .where(and(
+        eq(interactions.agency_id, agencyId),
+        isNotNull(interactions.company_name),
+        ne(interactions.company_name, '')
+      ))
+      .orderBy(interactions.company_name)
+      .limit(limit);
+
+    return normalizeKnownCompanies(rows);
+  } catch {
+    throw httpError(500, 'DB_READ_FAILED', 'Impossible de charger les entreprises connues.');
+  }
+};
+
+export const getInteractionDraft = async (
+  db: DbClient,
+  authContext: AuthContext,
+  payload: DraftGetPayload
+): Promise<InteractionDraftRow | null> => {
+  ensureDraftUserAccess(authContext, payload.user_id);
+  const agencyId = ensureAgencyAccess(authContext, payload.agency_id);
+  const formType = resolveDraftFormType(payload.form_type);
+
+  try {
+    const rows = await db
+      .select({
+        id: interaction_drafts.id,
+        payload: interaction_drafts.payload,
+        updated_at: interaction_drafts.updated_at
+      })
+      .from(interaction_drafts)
+      .where(and(
+        eq(interaction_drafts.user_id, payload.user_id),
+        eq(interaction_drafts.agency_id, agencyId),
+        formType === 'activity-v2'
+          ? or(
+            eq(interaction_drafts.form_type, 'activity-v2'),
+            eq(interaction_drafts.form_type, 'interaction')
+          )
+          : eq(interaction_drafts.form_type, formType)
+      ))
+      .orderBy(sql`case when ${interaction_drafts.form_type} = ${formType} then 0 else 1 end`)
+      .limit(1);
+
+    const draft = rows[0];
+    return draft ? toDraftResponseRow(draft) : null;
+  } catch {
+    throw httpError(500, 'DB_READ_FAILED', 'Impossible de charger le brouillon.');
+  }
+};
+
+export const saveInteractionDraft = async (
+  db: DbClient,
+  authContext: AuthContext,
+  payload: DraftSavePayload
+): Promise<InteractionDraftRow> => {
+  ensureDraftUserAccess(authContext, payload.user_id);
+  const agencyId = ensureAgencyAccess(authContext, payload.agency_id);
+  const formType = resolveDraftFormType(payload.form_type);
+  const row: InteractionDraftInsert = {
+    user_id: payload.user_id,
+    agency_id: agencyId,
+    form_type: formType,
+    payload: payload.payload
+  };
+
+  try {
+    const selection = {
+        id: interaction_drafts.id,
+        payload: interaction_drafts.payload,
+        updated_at: interaction_drafts.updated_at
+      };
+    const rows = payload.expected_updated_at
+      ? await db.update(interaction_drafts)
+        .set({ payload: payload.payload, form_type: formType })
+        .where(and(
+          eq(interaction_drafts.user_id, payload.user_id),
+          eq(interaction_drafts.agency_id, agencyId),
+          formType === 'activity-v2'
+            ? or(
+              eq(interaction_drafts.form_type, 'activity-v2'),
+              eq(interaction_drafts.form_type, 'interaction')
+            )
+            : eq(interaction_drafts.form_type, formType),
+          eq(interaction_drafts.updated_at, payload.expected_updated_at)
+        ))
+        .returning(selection)
+      : await db.insert(interaction_drafts)
+        .values(row)
+        .onConflictDoNothing()
+        .returning(selection);
+
+    const draft = rows[0];
+    if (!draft) {
+      throw httpError(409, 'CONFLICT', 'Ce brouillon a été modifié. Rechargez-le avant de continuer.');
+    }
+    return toDraftResponseRow(draft);
+  } catch (error) {
+    if (
+      typeof error === 'object'
+      && error !== null
+      && ['DB_WRITE_FAILED', 'CONFLICT'].includes(String(Reflect.get(error, 'code')))
+    ) {
+      throw error;
+    }
+    throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de sauvegarder le brouillon.');
+  }
+};
+
+export const deleteInteractionDraft = async (
+  db: DbClient,
+  authContext: AuthContext,
+  payload: DraftDeletePayload
+): Promise<void> => {
+  ensureDraftUserAccess(authContext, payload.user_id);
+  const agencyId = ensureAgencyAccess(authContext, payload.agency_id);
+  const formType = resolveDraftFormType(payload.form_type);
+
+  try {
+    await db
+      .delete(interaction_drafts)
+      .where(and(
+        eq(interaction_drafts.user_id, payload.user_id),
+        eq(interaction_drafts.agency_id, agencyId),
+        formType === 'activity-v2'
+          ? or(
+            eq(interaction_drafts.form_type, 'activity-v2'),
+            eq(interaction_drafts.form_type, 'interaction')
+          )
+          : eq(interaction_drafts.form_type, formType)
+      ));
+  } catch {
+    throw httpError(500, 'DB_WRITE_FAILED', 'Impossible de supprimer le brouillon.');
+  }
+};
+
+export const deleteInteraction = async (
+  db: DbClient,
+  authContext: AuthContext,
+  payload: DeleteInteractionPayload
+): Promise<string> => {
+  let current:
+    | {
+      id: string;
+      agency_id: string | null;
+      entity_id: string | null;
+    }
+    | undefined;
+  try {
+    const rows = await db
+      .select({
+        id: interactions.id,
+        agency_id: interactions.agency_id,
+        entity_id: interactions.entity_id
+      })
+      .from(interactions)
+      .where(eq(interactions.id, payload.interaction_id))
+      .limit(1);
+    current = rows[0];
+  } catch {
+    throw httpError(500, 'DB_READ_FAILED', "Impossible de charger l'interaction.");
+  }
+
+  if (!current) {
+    throw httpError(404, 'NOT_FOUND', 'Interaction introuvable.');
+  }
+
+  if (current.entity_id) {
+    const agencyId = await getEntityAgencyId(db, current.entity_id);
+    ensureOptionalAgencyAccess(authContext, agencyId);
+  } else {
+    ensureOptionalAgencyAccess(authContext, current.agency_id ?? null);
+  }
+
+  try {
+    const rows = await db.update(activities)
+      .set({
+        lifecycle_status: 'archived',
+        version: sql`${activities.version} + 1`,
+        updated_by: authContext.userId
+      })
+      .where(and(
+        eq(activities.legacy_interaction_id, payload.interaction_id),
+        ne(activities.lifecycle_status, 'archived')
+      ))
+      .returning({ legacy_interaction_id: activities.legacy_interaction_id });
+    const archived = rows[0];
+    if (!archived?.legacy_interaction_id) {
+      throw httpError(404, 'NOT_FOUND', 'Interaction introuvable.');
+    }
+    return archived.legacy_interaction_id;
+  } catch (error) {
+    if (
+      typeof error === 'object'
+      && error !== null
+      && Reflect.get(error, 'code') === 'NOT_FOUND'
+    ) {
+      throw error;
+    }
+    throw httpError(500, 'DB_WRITE_FAILED', "Impossible d'archiver l'activité.");
+  }
+};
+
+export const handleDataInteractionsAction = async (
+  db: DbClient,
+  authContext: AuthContext,
+  requestId: string | undefined,
+  data: DataInteractionsPayload
+): Promise<DataInteractionsResponse> => {
+  const isReadAction =
+    data.action === 'list_by_agency'
+    || data.action === 'list_by_entity'
+    || data.action === 'known_companies'
+    || data.action === 'draft_get';
+  await ensureDataRateLimit(
+    `data_interactions:${data.action}`,
+    authContext.userId,
+    data.action === 'draft_save'
+      ? { max: DRAFT_RATE_LIMIT_MAX, windowSeconds: DRAFT_RATE_LIMIT_WINDOW_SECONDS }
+      : isReadAction
+        ? { max: INTERACTION_READ_RATE_LIMIT_MAX }
+        : { max: INTERACTION_ACTION_RATE_LIMIT_MAX }
+  );
+
+  switch (data.action) {
+    case 'save': {
+      const interaction = await saveInteraction(db, authContext, data);
+      return { request_id: requestId, ok: true, interaction };
+    }
+    case 'add_timeline_event': {
+      const interaction = await addTimelineEvent(db, authContext, data);
+      return { request_id: requestId, ok: true, interaction };
+    }
+    case 'list_by_agency': {
+      const result = await listInteractionsByAgency(db, authContext, data);
+      return { request_id: requestId, ok: true, ...result };
+    }
+    case 'list_by_entity': {
+      const result = await listInteractionsByEntity(db, authContext, data);
+      return { request_id: requestId, ok: true, ...result };
+    }
+    case 'known_companies': {
+      const companies = await listKnownCompanies(db, authContext, data);
+      return { request_id: requestId, ok: true, companies };
+    }
+    case 'draft_get': {
+      const draft = await getInteractionDraft(db, authContext, data);
+      return { request_id: requestId, ok: true, draft };
+    }
+    case 'draft_save': {
+      const draft = await saveInteractionDraft(db, authContext, data);
+      return { request_id: requestId, ok: true, draft };
+    }
+    case 'draft_delete': {
+      await deleteInteractionDraft(db, authContext, data);
+      return { request_id: requestId, ok: true, draft: null };
+    }
+    case 'delete': {
+      const interactionId = await deleteInteraction(db, authContext, data);
+      return { request_id: requestId, ok: true, interaction_id: interactionId };
+    }
+    default:
+      throw httpError(400, 'ACTION_REQUIRED', 'Action requise.');
+  }
+};

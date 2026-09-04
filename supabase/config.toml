@@ -1,2 +1,2 @@
-[functions.api]
-verify_jwt = false
+# CIR Cockpit no longer deploys a Supabase Edge Function.
+# The API runs as a Node 24 process. Auth remains in the backend.

@@ -1,6 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-import { Database } from '@/types/supabase';
+import { Database } from 'shared/supabase.types';
 import { memoryStorage } from './memoryStorage';
 
 type SupabaseAuthStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;

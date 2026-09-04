@@ -155,4 +155,72 @@ describe('useDashboardStatusHelpers', () => {
       )
     ).toBe('border-warning/45 bg-warning/20 text-warning-foreground');
   });
+
+  it('infere le badge a traiter depuis le libelle quand le catalogue est vide', () => {
+    const { result } = renderHook(() => useDashboardStatusHelpers([]));
+    const urgent = buildInteraction({
+      status: 'Urgent',
+      status_id: null,
+      status_is_terminal: undefined,
+    });
+
+    expect(result.current.getStatusBadgeClass(urgent)).toBe(
+      'border-destructive/50 bg-destructive/15 text-destructive'
+    );
+    expect(result.current.isStatusTodo(urgent)).toBe(true);
+    expect(result.current.isStatusDone(urgent)).toBe(false);
+  });
+
+  it('traite un statut par defaut comme a traiter meme hors categorie todo', () => {
+    const defaultStatus = buildStatus({
+      id: 'status-default',
+      label: 'Nouveau dossier',
+      category: 'in_progress',
+      is_default: true,
+    });
+    const { result } = renderHook(() =>
+      useDashboardStatusHelpers([defaultStatus])
+    );
+    const interaction = buildInteraction({
+      status: defaultStatus.label,
+      status_id: defaultStatus.id,
+    });
+
+    expect(result.current.getStatusBadgeClass(interaction)).toBe(
+      'border-destructive/50 bg-destructive/15 text-destructive'
+    );
+    expect(result.current.isStatusTodo(interaction)).toBe(true);
+    expect(result.current.getStatusMeta(interaction)).toEqual(defaultStatus);
+  });
+
+  it('expose isStatusDone depuis le catalogue ou le marqueur terminal', () => {
+    const doneStatus = buildStatus({
+      id: 'status-done',
+      label: 'Clôturé',
+      category: 'done',
+      is_terminal: true,
+    });
+    const { result } = renderHook(() =>
+      useDashboardStatusHelpers([doneStatus])
+    );
+
+    expect(
+      result.current.isStatusDone(
+        buildInteraction({
+          status: doneStatus.label,
+          status_id: doneStatus.id,
+          status_is_terminal: false,
+        })
+      )
+    ).toBe(true);
+    expect(
+      result.current.isStatusDone(
+        buildInteraction({
+          status: 'Statut historique',
+          status_id: null,
+          status_is_terminal: true,
+        })
+      )
+    ).toBe(true);
+  });
 });

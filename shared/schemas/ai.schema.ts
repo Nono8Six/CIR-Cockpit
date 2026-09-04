@@ -1,6 +1,7 @@
 import { z } from "zod/v4";
 
 import { userRoleSchema } from "./admin/user.schema.ts";
+import { pricingReferenceDiffRunSelectorBaseSchema } from "./pricing/references.schema.ts";
 
 export const uuidSchema = z.uuid({ error: "Identifiant invalide." });
 export const nonEmptyStringSchema = (message: string) =>
@@ -165,6 +166,19 @@ export const aiBudgetAlertSchema = z.strictObject({
   currency: nonEmptyStringSchema("Devise requise."),
 });
 
+export const aiQuotaUsageSchema = z.strictObject({
+  quota_id: uuidSchema,
+  scope: z.enum(["global", "agency", "user"]),
+  feature: aiFeatureSchema.nullable(),
+  currency: nonEmptyStringSchema("Devise requise."),
+  daily_calls: z.number().int().nonnegative(),
+  monthly_calls: z.number().int().nonnegative(),
+  daily_tokens: z.number().int().nonnegative(),
+  monthly_tokens: z.number().int().nonnegative(),
+  daily_cost: z.number().nonnegative(),
+  monthly_cost: z.number().nonnegative(),
+});
+
 export const aiUsageEventSchema = z.strictObject({
   id: uuidSchema,
   request_id: nonEmptyStringSchema("Identifiant requete requis."),
@@ -203,6 +217,7 @@ export const aiUsageSummarySchema = z.strictObject({
   period_start: nonEmptyStringSchema("Debut de periode requis."),
   period_end: nonEmptyStringSchema("Fin de periode requise."),
   budget_alerts: z.array(aiBudgetAlertSchema),
+  quota_usages: z.array(aiQuotaUsageSchema),
   daily: z.array(aiUsageDailyPointSchema),
 });
 
@@ -212,6 +227,7 @@ export const aiSettingsGetResponseSchema = z.strictObject({
   request_id: z.string().trim().min(1).optional(),
   providers: z.array(aiProviderConfigSchema),
   models: z.array(aiModelConfigSchema),
+  assignments: z.array(aiFeatureModelAssignmentSchema),
   quotas: z.array(aiQuotaPolicySchema),
 });
 
@@ -271,6 +287,16 @@ export const aiSettingsDeleteModelResponseSchema = z.strictObject({
   ok: z.literal(true),
   request_id: z.string().trim().min(1).optional(),
   deleted_id: uuidSchema,
+});
+
+export const aiSettingsSaveFeatureAssignmentInputSchema = z.strictObject({
+  feature: aiFeatureSchema,
+  model_config_id: uuidSchema.nullable(),
+});
+export const aiSettingsSaveFeatureAssignmentResponseSchema = z.strictObject({
+  ok: z.literal(true),
+  request_id: z.string().trim().min(1).optional(),
+  assignment: aiFeatureModelAssignmentSchema.nullable(),
 });
 
 export const aiSettingsCreateQuotaInputSchema = aiQuotaPolicySchema.pick({
@@ -394,6 +420,9 @@ export const aiUsageSummaryResponseSchema = z.strictObject({
 
 export const aiUsageListInputSchema = z.strictObject({
   feature: aiFeatureSchema.optional(),
+  status: aiUsageStatusSchema.optional(),
+  user_id: uuidSchema.optional(),
+  agency_id: uuidSchema.optional(),
   page: z.number().int().positive().default(1),
   page_size: z.number().int().positive().max(100).default(50),
 });
@@ -404,6 +433,17 @@ export const aiUsageListResponseSchema = z.strictObject({
   page: z.number().int().positive(),
   page_size: z.number().int().positive(),
   total: z.number().int().nonnegative(),
+});
+
+export const aiUsageGetByIdInputSchema = z.strictObject({
+  id: uuidSchema,
+});
+export const aiUsageGetByIdResponseSchema = z.strictObject({
+  ok: z.literal(true),
+  request_id: z.string().trim().min(1).optional(),
+  event: aiUsageEventSchema.extend({
+    metadata: z.record(z.string(), z.unknown()).default({}),
+  }),
 });
 
 export const aiFeatureGrantScopeSchema = z.enum(["global", "agency", "user"], {
@@ -558,6 +598,70 @@ export const aiDiagnosisCacheSchema = z.strictObject({
   key: nonEmptyStringSchema("Cle cache requise.").optional(),
 });
 
+export const aiWatchFactIdSchema = nonEmptyStringSchema(
+  "Identifiant de fait requis.",
+);
+
+export const aiWatchSummarizeResultSchema = z.strictObject({
+  summary: nonEmptyStringSchema("Synthese IA requise."),
+  summary_fact_ids: z.array(aiWatchFactIdSchema).min(1, {
+    error: "Au moins une citation de fait est requise.",
+  }),
+  priority_anomalies: z.array(
+    z.strictObject({
+      title: nonEmptyStringSchema("Titre anomalie requis."),
+      severity: z.enum(["bloquante", "haute", "moyenne", "faible"]),
+      evidence: nonEmptyStringSchema("Preuve anomalie requise."),
+      evidence_fact_ids: z.array(aiWatchFactIdSchema).min(1, {
+        error: "Preuve sans fait source.",
+      }),
+      recommendation: nonEmptyStringSchema("Recommendation requise."),
+      recommendation_fact_ids: z.array(aiWatchFactIdSchema).min(1, {
+        error: "Recommendation sans fait source.",
+      }),
+    }),
+  ),
+  recommendations: z.array(
+    z.strictObject({
+      text: nonEmptyStringSchema("Recommendation requise."),
+      fact_ids: z.array(aiWatchFactIdSchema).min(1, {
+        error: "Recommendation sans fait source.",
+      }),
+    }),
+  ),
+  limits: z.array(nonEmptyStringSchema("Limite requise.")),
+  confidence: z.number().min(0).max(1),
+});
+
+const hasWatchRunSelector = (
+  value: { run_id?: string; target_snapshot_id?: string },
+) => Boolean(value.run_id) || Boolean(value.target_snapshot_id);
+
+export const pricingReferencesWatchSummarizeInputSchema =
+  pricingReferenceDiffRunSelectorBaseSchema.extend({
+    client_request_id: uuidSchema,
+  }).refine(hasWatchRunSelector, {
+    error: "Identifiant run ou snapshot cible requis.",
+  });
+
+export const pricingReferencesWatchSummarizeResponseSchema = z.strictObject({
+  ok: z.literal(true),
+  request_id: z.string().trim().min(1).optional(),
+  result: aiWatchSummarizeResultSchema,
+  usage: aiDiagnosisUsageSchema,
+  cost: aiDiagnosisCostSchema,
+  prompt_version_id: uuidSchema,
+  model_config_id: uuidSchema,
+  feature: z.literal("pricing.references.diagnose"),
+  run: z.strictObject({
+    run_id: uuidSchema,
+    base_snapshot_id: uuidSchema.nullable(),
+    target_snapshot_id: uuidSchema,
+    truncated: z.boolean(),
+    used_bytes: z.number().int().nonnegative(),
+  }),
+});
+
 export type AiProvider = z.infer<typeof aiProviderSchema>;
 export type AiFeatureModelAssignment = z.infer<
   typeof aiFeatureModelAssignmentSchema
@@ -565,10 +669,13 @@ export type AiFeatureModelAssignment = z.infer<
 export type AiFeature = z.infer<typeof aiFeatureSchema>;
 export type AiPromptStatus = z.infer<typeof aiPromptStatusSchema>;
 export type AiUsageStatus = z.infer<typeof aiUsageStatusSchema>;
+export type AiUsageEvent = z.infer<typeof aiUsageEventSchema>;
 export type AiProviderConfig = z.infer<typeof aiProviderConfigSchema>;
 export type AiModelConfig = z.infer<typeof aiModelConfigSchema>;
 export type AiQuotaPolicy = z.infer<typeof aiQuotaPolicySchema>;
 export type AiUsageDailyPoint = z.infer<typeof aiUsageDailyPointSchema>;
+export type AiBudgetAlert = z.infer<typeof aiBudgetAlertSchema>;
+export type AiQuotaUsage = z.infer<typeof aiQuotaUsageSchema>;
 export type AiPromptWithVersions = z.infer<typeof aiPromptWithVersionsSchema>;
 export type AiPromptVersion = z.infer<typeof aiPromptVersionSchema>;
 export type AiPromptUsage = z.infer<typeof aiPromptUsageSchema>;
@@ -576,6 +683,7 @@ export type AiDiagnosisResult = z.infer<typeof aiDiagnosisResultSchema>;
 export type AiDiagnosisUsage = z.infer<typeof aiDiagnosisUsageSchema>;
 export type AiDiagnosisCost = z.infer<typeof aiDiagnosisCostSchema>;
 export type AiDiagnosisCache = z.infer<typeof aiDiagnosisCacheSchema>;
+export type AiWatchSummarizeResult = z.infer<typeof aiWatchSummarizeResultSchema>;
 export type AiSettingsSaveProviderInput = z.infer<
   typeof aiSettingsSaveProviderInputSchema
 >;
@@ -586,6 +694,12 @@ export type AiSettingsSaveModelInput = z.infer<
   typeof aiSettingsSaveModelInputSchema
 >;
 export type AiSettingsDeleteModelInput = z.infer<typeof aiSettingsDeleteModelInputSchema>;
+export type AiSettingsSaveFeatureAssignmentInput = z.infer<
+  typeof aiSettingsSaveFeatureAssignmentInputSchema
+>;
+export type AiSettingsSaveFeatureAssignmentResponse = z.infer<
+  typeof aiSettingsSaveFeatureAssignmentResponseSchema
+>;
 export type AiSettingsCreateQuotaInput = z.infer<typeof aiSettingsCreateQuotaInputSchema>;
 export type AiSettingsSaveQuotaInput = z.infer<
   typeof aiSettingsSaveQuotaInputSchema
@@ -603,6 +717,8 @@ export type AiPromptsSetArchivedInput = z.infer<
 export type AiPromptsDeleteInput = z.infer<typeof aiPromptsDeleteInputSchema>;
 export type AiUsageSummaryInput = z.infer<typeof aiUsageSummaryInputSchema>;
 export type AiUsageListInput = z.infer<typeof aiUsageListInputSchema>;
+export type AiUsageGetByIdInput = z.infer<typeof aiUsageGetByIdInputSchema>;
+export type AiUsageGetByIdResponse = z.infer<typeof aiUsageGetByIdResponseSchema>;
 export type AiFeatureGrantScope = z.infer<typeof aiFeatureGrantScopeSchema>;
 export type AiFeatureGrantSaveInput = z.infer<
   typeof aiFeatureGrantSaveInputSchema
@@ -617,3 +733,9 @@ export type AiMembersAccessOverviewInput = z.infer<
   typeof aiMembersAccessOverviewInputSchema
 >;
 export type AiUsageByMemberInput = z.infer<typeof aiUsageByMemberInputSchema>;
+export type PricingReferencesWatchSummarizeInput = z.infer<
+  typeof pricingReferencesWatchSummarizeInputSchema
+>;
+export type PricingReferencesWatchSummarizeResponse = z.infer<
+  typeof pricingReferencesWatchSummarizeResponseSchema
+>;

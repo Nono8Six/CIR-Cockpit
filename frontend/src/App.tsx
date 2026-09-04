@@ -186,15 +186,23 @@ const App = () => {
     },
     [handleSearchOpenChange, handleTabChange]
   );
+  const handleNavigateAdminAi = useCallback(() => {
+    handleSearchOpenChange(false);
+    void navigate({
+      to: '/admin',
+      search: () => ({ panel: 'ai' as const, view: 'situation' as const })
+    });
+  }, [handleSearchOpenChange, navigate]);
   const appCommands = useMemo(
     () => buildAppCommands({
       sections: shellSections,
       canAccessAdmin,
       onNavigateTab: handleNavigateFromPalette,
+      onNavigateAdminAi: handleNavigateAdminAi,
       onCreateEntity: handleCreateEntity,
       onCreateSupplier: handleCreateSupplier
     }),
-    [canAccessAdmin, handleCreateEntity, handleCreateSupplier, handleNavigateFromPalette, shellSections]
+    [canAccessAdmin, handleCreateEntity, handleCreateSupplier, handleNavigateAdminAi, handleNavigateFromPalette, shellSections]
   );
   const activeShellItem = useMemo(() => {
     const flattened = shellSections.flatMap((section) => section.items);

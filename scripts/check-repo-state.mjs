@@ -213,14 +213,6 @@ function getMigrationVersionsFromSupabaseCli() {
   return versions;
 }
 
-function compareImportMaps(rootImports, backendImports, key) {
-  if (rootImports[key] !== backendImports[key]) {
-    fail(
-      `Import map drift for "${key}": root=${JSON.stringify(rootImports[key])} backend=${JSON.stringify(backendImports[key])}.`,
-    );
-  }
-}
-
 if (existsSync(path.join(repoRoot, "migration"))) {
   fail("Shadow repository directory 'migration/' must not exist at the repository root.");
 }
@@ -286,17 +278,38 @@ if (forbiddenFrontendEntityTableAccess) {
 }
 
 const qaGatePs1 = readText("scripts/qa-gate.ps1");
-const qaGateSh = readText("scripts/qa-gate.sh");
-for (const [filename, source] of [
-  ["scripts/qa-gate.ps1", qaGatePs1],
-  ["scripts/qa-gate.sh", qaGateSh],
-]) {
-  if (!source.includes("backend:test:integration")) {
-    fail(`${filename} must run backend:test:integration to match docs/qa-runbook.md.`);
-  }
+if (!qaGatePs1.includes("backend:test:integration")) {
+  fail("scripts/qa-gate.ps1 must run backend:test:integration to match docs/qa-runbook.md.");
+}
+if (!qaGatePs1.includes("pnpm run backend:test")) {
+  fail("scripts/qa-gate.ps1 must run backend:test so the unit suite ignore list stays shared.");
 }
 if (!rootPackage.scripts?.["backend:test:integration"]) {
   fail("package.json must expose backend:test:integration for local and CI QA gates.");
+}
+if (!rootPackage.scripts?.["backend:test:network"]) {
+  fail("package.json must expose backend:test:network for opt-in API integration tests.");
+}
+if (!rootPackage.scripts?.["frontend:test:changed"] || !rootPackage.scripts?.["backend:test:changed"]) {
+  fail("package.json must expose frontend:test:changed and backend:test:changed for session QA.");
+}
+const backendUnitTest = rootPackage.scripts?.["backend:test"] ?? "";
+if (!backendUnitTest.includes("pnpm --dir backend run test")) {
+  fail("package.json backend:test must run the backend Vitest unit suite.");
+}
+const frontendTestRun = readJson("frontend/package.json").scripts?.["test:run"] ?? "";
+if (!String(frontendTestRun).includes("--silent=passed-only")) {
+  fail("frontend test:run must hide passed-test console output.");
+}
+if (!String(rootPackage.scripts?.["qa:back"] ?? "").includes("repo:check:local")) {
+  fail("qa:back must use repo:check:local; remote parity stays on qa and pre-push when migrations change.");
+}
+if (/\brepo:check(?:\s|$)/.test(String(rootPackage.scripts?.["qa:fast"] ?? ""))) {
+  fail("qa:fast must not call remote repo:check.");
+}
+const prePushHook = readText(".husky/pre-push");
+if (!prePushHook.includes("has_remote") || !prePushHook.includes("backend/migrations/*")) {
+  fail(".husky/pre-push must run remote repo:check when migrations change.");
 }
 
 const configSchemaSource = readText("shared/schemas/system/config.schema.ts");
@@ -311,7 +324,7 @@ for (const requiredSymbol of [
   }
 }
 
-const routerSource = readText("backend/functions/api/trpc/router.ts");
+const routerSource = readText("backend/src/trpc/router.ts");
 for (const requiredRouterFragment of [
   "config: router({",
   "get: authedProcedure",
@@ -319,14 +332,14 @@ for (const requiredRouterFragment of [
   "reference: authedProcedure",
 ]) {
   if (!routerSource.includes(requiredRouterFragment)) {
-    fail(`backend/functions/api/trpc/router.ts is missing router fragment ${JSON.stringify(requiredRouterFragment)}.`);
+    fail(`backend/src/trpc/router.ts is missing router fragment ${JSON.stringify(requiredRouterFragment)}.`);
   }
 }
 
 if (existsSync(path.join(repoRoot, "shared/api/trpc.ts"))) {
   fail(
     "shared/api/trpc.ts must not rebuild the tRPC router. "
-      + "Infer public types from backend/functions/api/trpc/router.ts instead.",
+      + "Infer public types from backend/src/trpc/router.ts instead.",
   );
 }
 
@@ -336,7 +349,7 @@ for (const requiredTrpcFragment of [
   "export type RouterOutputs = inferRouterOutputs<AppRouter>",
 ]) {
   if (!routerSource.includes(requiredTrpcFragment)) {
-    fail(`backend/functions/api/trpc/router.ts is missing canonical tRPC fragment ${JSON.stringify(requiredTrpcFragment)}.`);
+    fail(`backend/src/trpc/router.ts is missing canonical tRPC fragment ${JSON.stringify(requiredTrpcFragment)}.`);
   }
 }
 
@@ -374,10 +387,10 @@ if (!/id:\s*text\((['"])id\1\)\.\$type<string>\(\)\.primaryKey\(\)/.test(interac
   fail("backend/drizzle/schema.ts must model interactions.id as text to match the live Supabase column.");
 }
 
-const rootDeno = readJson("deno.json");
-const backendDeno = readJson("backend/deno.json");
-const rootImports = rootDeno.imports ?? {};
-const backendImports = backendDeno.imports ?? {};
+if (existsSync(path.join(repoRoot, "deno.json")) || existsSync(path.join(repoRoot, "backend/deno.json"))) {
+  fail("Deno import maps must not remain after the Node cutover.");
+}
+
 const migrationFilenames = listFiles("backend/migrations").filter((filename) => filename.endsWith(".sql"));
 const privateStatusSyncFix = readText("backend/migrations/20260602100000_fix_private_sync_interaction_status.sql");
 if (
@@ -469,25 +482,6 @@ for (const migrationFilename of migrationFilenames) {
       `${migrationFilename} places pg_trgm in schema public. Install or keep pg_trgm in schema extensions only.`,
     );
   }
-}
-
-for (const key of [
-  "@hono/hono",
-  "@hono/hono/validator",
-  "@hono/trpc-server",
-  "@trpc/server",
-  "@supabase/functions-js/edge-runtime.d.ts",
-  "@supabase/supabase-js",
-  "drizzle-orm",
-  "drizzle-orm/",
-  "postgres",
-  "std/assert",
-  "jose",
-  "zod",
-  "zod/v4",
-  "zod/",
-]) {
-  compareImportMaps(rootImports, backendImports, key);
 }
 
 if (failures.length > 0) {

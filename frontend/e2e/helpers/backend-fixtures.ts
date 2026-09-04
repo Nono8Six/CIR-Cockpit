@@ -146,6 +146,8 @@ const extractError = (payload: unknown, status: number): E2eBackendFixtureError 
 
 const getSupabaseUrl = (): string => getRequiredConfig('E2E_SUPABASE_URL', 'VITE_SUPABASE_URL').replace(/\/+$/, '');
 const getAnonKey = (): string => getRequiredConfig('E2E_SUPABASE_ANON_KEY', 'VITE_SUPABASE_ANON_KEY');
+const getApiUrl = (): string =>
+  (process.env.E2E_API_URL ?? process.env.VITE_API_URL ?? 'http://127.0.0.1:8787').replace(/\/+$/, '');
 const getAdminEmail = (): string => getRequiredConfig('E2E_ADMIN_EMAIL');
 const getAdminPassword = (): string => getRequiredConfig('E2E_ADMIN_PASSWORD');
 
@@ -195,11 +197,10 @@ const fetchRestRows = async (pathAndQuery: string, token: string): Promise<unkno
 };
 
 const postTrpc = async (pathName: string, token: string, body: TrpcPayload): Promise<unknown> => {
-  const response = await fetch(`${getSupabaseUrl()}/functions/v1/api/trpc/${pathName}`, {
+  const response = await fetch(`${getApiUrl()}/trpc/${pathName}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      apikey: getAnonKey(),
       Authorization: `Bearer ${token}`
     },
     body: JSON.stringify(body)

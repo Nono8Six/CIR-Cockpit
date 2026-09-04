@@ -1,27 +1,34 @@
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-const envFile = "backend/.env.test";
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const envFile = existsSync(path.join(repoRoot, "backend/.env.test"))
+  ? path.join(repoRoot, "backend/.env.test")
+  : path.join(repoRoot, "backend/.env");
+
 const args = [
-  "test",
-  "--allow-env",
-  "--allow-net",
+  "--dir",
+  "backend",
+  "exec",
+  "vitest",
+  "run",
   "--config",
-  "backend/deno.json",
-  "backend/functions/api/integration",
+  "vitest.integration.config.ts",
+  "--reporter=dot",
+  "--silent=passed-only",
 ];
 
-if (existsSync(envFile)) {
-  args.splice(1, 0, `--env-file=${envFile}`);
-}
-
-const result = spawnSync("deno", args, {
+const result = spawnSync("pnpm", args, {
+  cwd: repoRoot,
   stdio: "inherit",
-  shell: process.platform === "win32",
+  env: {
+    ...process.env,
+    NODE_ENV: "test",
+    ...(existsSync(envFile) ? { VITEST_ENV_FILE: envFile } : {}),
+  },
+  shell: true,
 });
-
-if (result.error) {
-  throw result.error;
-}
 
 process.exit(result.status ?? 1);

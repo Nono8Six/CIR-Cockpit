@@ -35,6 +35,7 @@ const buildEntity = (overrides: Partial<Entity> = {}): Entity => ({
 
 const commandSpies = () => ({
   onNavigateTab: vi.fn(),
+  onNavigateAdminAi: vi.fn(),
   onCreateEntity: vi.fn(),
   onCreateSupplier: vi.fn()
 });
@@ -291,5 +292,26 @@ describe('AppSearchOverlay', () => {
     await user.click(screen.getByTestId('app-search-input'));
     await user.keyboard('{Backspace}');
     expect(onSearchQueryChange).toHaveBeenLastCalledWith('');
+  });
+
+  it('propose la commande Gestion IA lors de la frappe gestion', async () => {
+    const user = userEvent.setup();
+    const spies = commandSpies();
+    const commands = buildCommands(spies);
+
+    render(
+      <AppSearchOverlay
+        {...baseProps}
+        commands={commands}
+        searchQuery="gestion"
+      />
+    );
+
+    const commandRow = await screen.findByTestId('app-search-command-navigation-admin-ai');
+    expect(commandRow).toBeInTheDocument();
+    expect(screen.getByText('Gestion IA')).toBeInTheDocument();
+
+    await user.click(commandRow);
+    expect(spies.onNavigateAdminAi).toHaveBeenCalled();
   });
 });

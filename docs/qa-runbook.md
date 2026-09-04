@@ -1,13 +1,13 @@
 # QA Runbook Local + CI
 
-Date de reference: 2026-07-17
+Date de reference: 2026-08-15
 Portee: CIR Cockpit local + backend Supabase lie.
 
 ## 1. Principe
 
-La validation se choisit par impact. Ne pas lancer `qa:fast` ou `qa` par reflexe: ces gates sont utiles, mais couteuses en temps, contexte et bruit.
+La validation se choisit par impact. En session de travail, preferer les tests et le typecheck de la couche touchee. `qa:fast` et `qa` restent utiles, mais couteuses en temps, contexte et bruit.
 
-`pnpm run qa` reste la gate finale de livraison. Elle n'est obligatoire que pour une livraison/merge/deploiement/PR, une demande explicite de verification complete, ou un changement large qui touche plusieurs couches.
+`pnpm run qa` reste la gate finale de livraison. Elle n'est obligatoire que pour une livraison/merge/deploiement/PR, une demande explicite de verification complete, ou un changement large qui touche plusieurs couches. Pre-push choisit deja `qa:docs` / `qa:front` / `qa:back` / `qa:fast` selon les fichiers ; la CI lance `qa:ci`. Ces filets gardent lint, typecheck et suites unitaires meme si la session n'a execute que des tests cibles.
 
 ## 2. Matrice d'impact
 
@@ -16,11 +16,11 @@ La validation se choisit par impact. Ne pas lancer `qa:fast` ou `qa` par reflexe
 | Analyse, plan, audit sans edition | Aucune suite QA | Commandes read-only ciblees seulement |
 | Docs/config agents/QA | `pnpm run qa:docs` | AGENTS, CLAUDE, docs, scripts QA, hooks, configs |
 | Frontend pur | `pnpm run qa:front` | `frontend/src/**`, hooks, services front, composants |
-| Backend pur | `pnpm run qa:back` | `backend/functions/api/**`, Deno, services backend |
-| Shared/API/erreurs/transversal | checks front + back cibles, ou `pnpm run qa:fast` | `shared/**`, tRPC, schemas partages, pipeline erreurs |
+| Backend pur | `pnpm run qa:back` | `backend/src/**`, services backend Node |
+| Shared/API/erreurs/transversal | checks front + back cibles ; `pnpm run qa:fast` si la couche entiere est incertaine | `shared/**`, tRPC, schemas partages, pipeline erreurs |
 | Livraison finale/merge/deploy/PR | `pnpm run qa` | Gate complet local, puis CI si PR |
 
-Regle de prudence: si le perimetre est incertain ou large, utiliser `qa:fast` en validation intermediaire. Utiliser `qa` seulement en gate finale.
+Regle de prudence: un test cible plus le typecheck de la couche. `qa:front` / `qa:back` si la couche est incertaine. `qa:fast` seulement pour une livraison transversale hors PR, ou sur demande. `qa` seulement en gate finale.
 
 ## 3. Commandes
 
@@ -42,6 +42,7 @@ Frontend cible:
 pnpm --dir frontend run typecheck
 pnpm --dir frontend run lint
 pnpm --dir frontend run test:run
+pnpm --dir frontend run test:changed
 pnpm --dir frontend run test:coverage
 pnpm --dir frontend run check:error-compliance
 pnpm --dir frontend run build
@@ -50,9 +51,11 @@ pnpm --dir frontend run build
 Backend cible:
 
 ```bash
-deno lint backend/functions/api
-deno check --config backend/deno.json backend/functions/api/index.ts
-deno test --env-file=backend/.env --allow-env --config backend/deno.json backend/functions/api
+pnpm run backend:lint
+pnpm run backend:typecheck
+pnpm run backend:test
+pnpm run backend:test:changed
+pnpm run backend:test:network
 pnpm run backend:test:integration
 ```
 
@@ -91,22 +94,20 @@ Ne lance pas build, coverage, backend, E2E.
 
 Gate backend intermediaire:
 
-1. `repo:check`
-2. Deno lint.
-3. Deno check.
-4. Tests backend unitaires.
+1. `repo:check:local`
+2. Typecheck backend (`tsc --noEmit`).
+3. Tests backend unitaires Vitest (`backend:test`, hors `integration/`).
 
-Ne lance pas tests d'integration backend ni probes Supabase runtime.
+Ne lance pas tests d'integration reseau, runner SQL, ni probes Supabase runtime. La parite distante reste sur `qa` et sur pre-push si une migration change.
 
 ### `qa:fast`
 
 Gate intermediaire large:
 
-1. `repo:check`
-2. Frontend typecheck/lint/tests sans coverage, avec error compliance.
-3. Backend lint/check/tests.
+1. `qa:front` (donc `repo:check:local`).
+2. Backend lint/check/tests unitaires.
 
-Utiliser quand le changement traverse plusieurs couches ou quand les checks cibles ne suffisent plus.
+Utiliser quand le changement traverse plusieurs couches ou quand les checks cibles ne suffisent plus. Les reporters Vitest sont compacts (`dot`) ; un echec reste bloquant et imprime le detail.
 
 ### `qa`
 
@@ -131,6 +132,7 @@ Skips autorises si justifies dans le rapport final:
 - E2E saute si aucun parcours UI n'est impacte.
 - Probes runtime Supabase sautees si aucun backend/API/DB/Edge Function n'est impacte.
 - `backend:test:integration` peut ignorer ses tests si `backend/.env.test` ou les variables d'integration sont absents.
+- `backend:test:network` reste hors gates par defaut ; le lancer avec `RUN_API_INTEGRATION=1` seulement si une probe API reseau est demandee.
 - `qa:audit` est separe car il depend du reseau.
 
 ## 6. Relecture stricte
@@ -138,12 +140,12 @@ Skips autorises si justifies dans le rapport final:
 Pour code livre, verifier selon impact:
 
 ```bash
-rg -n "throw new Error\(" frontend/src backend/functions/api shared --glob "!**/*.test.*" --glob "!**/*_test.ts"
-rg -n "console\.error\(" frontend/src backend/functions/api shared --glob "!**/*.test.*" --glob "!**/*_test.ts"
+rg -n "throw new Error\(" frontend/src backend/src shared --glob "!**/*.test.*" --glob "!**/*_test.ts"
+rg -n "console\.error\(" frontend/src backend/src shared --glob "!**/*.test.*" --glob "!**/*_test.ts"
 rg -n "toast\.error\(" frontend/src
-rg -n "@ts-ignore|@ts-expect-error" frontend/src backend/functions/api shared
-rg -n "\bany\b" frontend/src backend/functions/api shared --glob "!**/*.test.*" --glob "!**/*_test.ts"
-rg -n "x-client-authorization" frontend/src/services/api backend/functions/api/middleware backend/functions/api/app.ts
+rg -n "@ts-ignore|@ts-expect-error" frontend/src backend/src shared
+rg -n "\bany\b" frontend/src backend/src shared --glob "!**/*.test.*" --glob "!**/*_test.ts"
+rg -n "x-client-authorization" frontend/src/services/api backend/src/middleware backend/src/app.ts
 ```
 
 Attendus:
@@ -155,95 +157,30 @@ Attendus:
 
 ## 7. Supabase runtime
 
-Obligatoire seulement si routes API, middleware auth, error handling backend, migrations DB, Edge Function ou contrat `/functions/v1/api/*` sont modifies.
+Obligatoire seulement si routes API, middleware auth, error handling backend, migrations DB ou contrat `/trpc/*` sont modifies.
 
-Avec Supabase MCP:
+Probes locales du backend Node:
 
-1. `list_edge_functions` sur le projet lie.
-2. Verifier `api` actif, version/hash attendu, entrypoint `source/supabase/functions/api/index.ts`, import map `source/deno.json`, `verify_jwt=false`.
-3. Prober les routes tRPC impactees: aucun `404`.
-4. Prober `OPTIONS` sur routes impactees: `200` + headers CORS attendus.
+1. Demarrer `pnpm run backend:dev`.
+2. Prober `GET /health`.
+3. Prober les routes tRPC impactees: aucun `404` inattendu.
+4. Prober `OPTIONS` sur `/trpc/*`: `200` + headers CORS attendus.
 5. Si DB/RLS impacte: verifier policies, grants, indexes, advisors et types generes selon les tables touchees.
 
-## 8. Assistant IA
+## 8. Gouvernance IA
 
-Source de vérité du chantier : `docs/ASSISTANT_IA/plan-mistral-assistant-transversal.md`. Aucun ancien plan IA ne doit être utilisé pour décider du provider, du modèle ou de l’ordre d’exécution.
+Le broker historique, les outils SQL et les adapters providers maison ont ete retires a l'etape 3.
+Les ecrans et procedures de gouvernance (providers, modeles, prompts, acces, quotas, usage)
+restent dans le backend Node. Le runtime modele revient a l'etape 4 avec AI SDK.
 
-Pour toute livraison modifiant le broker, un outil, un prompt, un modèle, le routage provider,
-les quotas ou les accès :
+Pour toute livraison de gouvernance:
 
 ```bash
-deno test --env-file=backend/.env --allow-env --config backend/deno.json \
-  backend/functions/api/services/ai/assistantPhase6Evaluations_test.ts \
-  backend/functions/api/services/ai/assistantSqlTools_test.ts \
-  backend/functions/api/services/ai/aiAssistantContracts_test.ts \
-  backend/functions/api/services/ai/aiAccess_test.ts
+pnpm --dir backend exec vitest run src/services/ai/aiAccess_test.ts src/services/ai/aiPromptGovernance_test.ts src/trpc/aiContracts_test.ts
 ```
 
-Seuils bloquants offline : zéro outil non autorisé, zéro fuite inter-agence, zéro chiffre
-inventé dans une attente déterministe, agrégats critiques exacts, citations limitées aux outils
-exécutés, plafonds tokens/lignes/octets respectés. Le provider simulé reste limité aux tests.
-Le cas de régression `FEST (FESTO)` doit router exclusivement vers `aggregate_segments`,
-normaliser la marque stockée en `FEST` et compter les `CAT_FAB` distincts du snapshot actif sans
-laisser le modèle construire le filtre SQL. Dans l'UI, vérifier que le diagnostic affiche la
-métrique et le filtre canoniques; une requête SQL générale doit rester consultable dans la trace
-temporaire, sans être persistée dans `ai_usage_events`.
-
-Probes DB conditionnelles :
-
-```powershell
-$env:RUN_AI_DB_EVALS='1'
-deno test --env-file=backend/.env --allow-env --allow-net --config backend/deno.json backend/functions/api/integration/assistantQuotaConcurrency_integration_test.ts
-```
-
-Cette probe crée un quota utilisateur éphémère, lance 20 admissions concurrentes et 20 retries
-idempotents, vérifie les bornes puis nettoie ses lignes. Vérifier aussi la migration
-`ai_feature_grants`, les RLS/ACL, le job `ai_data_retention_daily`, les index issus d'`EXPLAIN`
-et l'absence de clé en clair.
-
-Le runner live historique est OpenRouter-spécifique tant que la phase 1 ne l’a pas migré. Il ne constitue plus une preuve de livraison et ne doit pas être lancé contre Mistral avant adaptation de ses contrats, variables et assertions.
-
-### Checkpoints runtime Mistral de la phase 1
-
-Avant tout appel payant :
-
-1. vérifier que la clé Mistral est enregistrée par le flux admin chiffré, jamais dans la ligne de commande ;
-2. vérifier `/v1/models` et l’accès à `mistral-large-2512` ;
-3. vérifier en test le payload Mistral : température `0.2`, `parallel_tool_calls=false`, aucun champ OpenRouter ;
-4. conserver un snapshot et les questions de référence validées dans le journal P0/P1 ;
-5. borner tours, timeout, tokens, lignes, octets et coût avant le smoke UI.
-
-P1-C exige une preuve depuis l’interface réelle :
-
-- réponse Référentiels correcte et sourcée ;
-- provider `mistral` et modèle réellement servi consignés ;
-- outils et preuves enregistrés, sans donnée hors permissions ;
-- latence, tokens et coût enregistrés ;
-- aucun appel OpenRouter nécessaire au scénario.
-
-P1-B exige ensuite une question déterministe provider désactivé, avec provider/modèle nuls, zéro token et coût nul, puis le rejeu de P1-C sans régression.
-
-P1-D exige aussi la matrice de résilience du §4.8 du plan actif :
-
-- injection contrôlée de 401, 429 avec `Retry-After`, 502/503, timeout, JSON malformé, réponse vide, arguments outil invalides, outil refusé et boucle ;
-- code, statut, `request_id`, `recovery_action`, retry et éventuel délai conformes pour chaque cas ;
-- aucun secret, corps provider, stack ou diagnostic interne dans le payload client ;
-- aucun retry sur auth, permission, configuration ou contrat invalide ; au plus un retry provider transitoire dans le budget de phase 1 ;
-- aucune exécution concurrente ni double coût pour un même `client_request_id` ;
-- aucun nouvel appel provider si la finalisation d’usage doit être réconciliée ;
-- comportement UI vérifié : question préservée, action adaptée, `request_id` copiable et absence de double notification.
-
-Après migration du runner live, son déclenchement reste hors CI et utilise uniquement les secrets d’intégration valides :
-
-```powershell
-$env:RUN_API_INTEGRATION='1'
-$env:RUN_AI_LIVE_EVALS='1'
-deno test --env-file=backend/.env --allow-env --allow-net --config backend/deno.json backend/functions/api/integration/assistantLiveEvaluations_integration_test.ts
-```
-
-Une campagne rapporte modèle, provider, coût, latence et outils. Elle est bloquée si un agrégat critique est faux, si une citation ne correspond pas à un outil exécuté, si un outil non attendu apparaît ou si une donnée inter-agence est visible. Consigner p50/p95, tokens, coût, modèle et provider réellement servis dans le journal du checkpoint. Ne jamais fournir une clé provider en ligne de commande.
-
-Avant livraison, confirmer le payload de l’adaptateur actif, le modèle demandé et servi, les finish reasons, la journalisation normalisée et l’absence de retry aveugle après une réponse potentiellement facturée. Après la phase 2, la suite de conformité provider doit passer pour tout adaptateur activable.
+Les evaluations live du broker historique ne font plus partie de la gate. Le premier
+vertical modele revient a l'etape 4 (`ReferenceWatchFacts` + AI SDK).
 
 ## 9. CI
 

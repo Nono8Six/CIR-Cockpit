@@ -34,7 +34,6 @@ import type {
   AiProvider,
   AiUsageStatus,
 } from "../../shared/schemas/ai.schema.ts";
-import type { AiAssistantAskResponse } from "../../shared/schemas/aiAssistant.schema.ts";
 import type {
   Task,
   TaskEvent,
@@ -820,7 +819,9 @@ export const ai_response_cache = pgTable("ai_response_cache", {
 
 export const ai_request_reservations = pgTable("ai_request_reservations", {
   id: uuid("id").$type<string>().defaultRandom().primaryKey(),
-  feature: text("feature").$type<"assistant.referentiels">().notNull(),
+  feature: text("feature").$type<
+    "assistant.referentiels" | "pricing.references.diagnose"
+  >().notNull(),
   user_id: uuid("user_id").$type<string>().notNull(),
   agency_id: uuid("agency_id").$type<string | null>(),
   client_request_id: uuid("client_request_id").$type<string>().notNull(),
@@ -831,7 +832,7 @@ export const ai_request_reservations = pgTable("ai_request_reservations", {
     .notNull(),
   actual_tokens: integer("actual_tokens").$type<number | null>(),
   actual_cost_amount: numeric("actual_cost_amount").$type<string | null>(),
-  response: jsonb("response").$type<AiAssistantAskResponse | null>(),
+  response: jsonb("response").$type<Record<string, unknown> | null>(),
   error_code: text("error_code").$type<string | null>(),
   error_message: text("error_message").$type<string | null>(),
   expires_at: timestamp("expires_at", timestamptz).$type<string>().notNull(),

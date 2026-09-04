@@ -186,7 +186,7 @@ test('P07 - Admin/Settings mobile-first, actions, tabs, erreurs et anti-overflow
 });
 
 test('P07 - etat erreur utilisateur sur les audits admin', async ({ page }) => {
-  await page.route('**/functions/v1/api/trpc/admin.audit-logs*', async (route) => {
+  await page.route('**/trpc/admin.audit-logs*', async (route) => {
     await route.fulfill({
       status: 500,
       contentType: 'application/json',

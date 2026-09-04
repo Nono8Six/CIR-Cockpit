@@ -64,21 +64,23 @@ procédure opérationnelle unique est définie dans `AGENTS.md` et
 
 ### 1.1 La prochaine étape
 
-Les Briques 1 à 3 sont livrées. La prochaine étape est de **valider la sortie
-documentaire SA-0 du Socle Agentique**, puis d'obtenir une autorisation
-distincte avant le tracer bullet SA-1. Le Socle Agentique précède la Brique 4
-afin que les futurs domaines publient leurs capacités sur un seam éprouvé au
-lieu d'ajouter un troisième chemin parallèle.
+Les Briques 1 à 3 sont livrées. La prochaine étape est la **refonte Agentic
+First** décrite dans
+[`docs/IA_AGENTIQUE/plan-refonte-agentic-first.md`](./IA_AGENTIQUE/plan-refonte-agentic-first.md) :
+ménage du workspace, puis backend Node 24, AI SDK 7 et DBOS. Le Socle Agentique
+précède la Brique 4 afin que les futurs domaines publient leurs capacités sur un
+seam éprouvé au lieu d'ajouter un troisième chemin parallèle.
+
+La refonte du backend est donc désormais dans le périmètre, et elle est franche :
+le runtime Deno est remplacé, pas doublé.
 
 La prochaine étape n’est pas :
 
-- de refaire tout le backend ;
 - de refaire tout le frontend ;
 - de poursuivre immédiatement la refonte Pilotage actuelle ;
 - d’ajouter Opportunités, Devis, Commandes et Catalogue dans `interactions` ;
 - de rendre l’IA capable d’interroger arbitrairement toutes les tables ;
 - de créer toutes les tables cibles en une seule migration.
-- de commencer SA-1 par la seule validation des documents.
 
 ### 1.2 Position retenue
 
@@ -86,7 +88,7 @@ La prochaine étape n’est pas :
 
 Une brique est complète lorsqu’elle possède son vocabulaire, son modèle, ses données, ses contrats API, ses permissions, son interface, sa décision explicite d’exposition IA — qui peut être « aucune exposition pour l’instant » —, ses tests, sa télémétrie et sa stratégie de migration. Le backend et le frontend sont donc consolidés ensemble, à l’intérieur de chaque brique.
 
-**VERROUILLÉ — Il n’y aura pas de réécriture globale.** Les fondations fiables sont conservées ; les responsabilités ambiguës sont extraites progressivement derrière des contrats stables.
+**VERROUILLÉ — Il n’y aura pas de réécriture globale du produit.** Les fondations fiables — modèle de données, contrats Zod partagés, modules métier, frontend React — sont conservées ; les responsabilités ambiguës sont extraites derrière des contrats stables. Le remplacement du runtime backend Deno par Node 24, décidé le 2026-08-15, porte le transport et l'exécution, pas le métier.
 
 **VERROUILLÉ — L’IA est centrale dans l’expérience utilisateur, mais elle n’est jamais la source de vérité métier.** Elle comprend, recherche, synthétise, prépare et explique. Les droits, calculs, états, prix, activations et écritures sensibles restent déterministes.
 
@@ -610,10 +612,11 @@ Garde-fous :
 **CIBLE — le runtime agentique est multi-provider.** Le fournisseur et le
 modèle sont choisis par configuration derrière une petite interface stable.
 Mistral reste la configuration de référence de l'assistant existant, mais aucun
-contexte métier ni aucune capacité n'en dépend. Le premier vertical utilise une
-sortie structurée Mistral en un appel. AI SDK Core n'est spiké que si une boucle,
-un second provider ou du plumbing dupliqué apparaît ; la bibliothèque doit alors
-supprimer du code sans perdre gouvernance, tests ni portabilité CIR.
+contexte métier ni aucune capacité n'en dépend. **VALIDÉ 2026-08-15 —** AI SDK 7
+est le runtime modèles cible, avec providers directs et
+`generateText` + `Output.object` ; il remplace les adaptateurs et le parsing
+maison sans absorber la gouvernance CIR. Voir
+[`docs/IA_AGENTIQUE/stack-cible-agentique-et-comparatif-existant.md`](./IA_AGENTIQUE/stack-cible-agentique-et-comparatif-existant.md).
 
 Le POC personnel privilégie l'expérimentation : la politique de données du
 provider est affichée et tracée sans bloquer globalement le choix du modèle. Un
@@ -669,13 +672,15 @@ La cible reste un monolithe modulaire :
 - des vues sémantiques et index de recherche ;
 - un assistant orchestrateur au-dessus des services de domaine.
 
-Le POC reste dans ce monolithe. Le vertical Deno compose les services métier en
-processus et termine chaque requête sans attente durable. Une approbation
-sépare deux requêtes : la première persiste les propositions utiles, puis chaque
-décision approuvée exécute une commande distincte. Une interruption rejoue l'étape
-incomplète avec la même clé d'idempotence. Cette proposition est un objet métier
-dédié ; elle ne détourne pas `ai_request_reservations`, qui reste un registre
-technique de quotas, coûts et appels idempotents.
+Le POC reste dans ce monolithe. **VALIDÉ 2026-08-15 —** il s'exécute sur un
+runtime Node 24 unique, web/API et worker, et non plus dans une Edge Function
+Deno. Le vertical compose les services métier en processus. Une approbation
+reste une commande distincte de la requête qui a produit la proposition. Cette
+proposition est un objet métier dédié ; elle ne détourne pas
+`ai_request_reservations`, qui reste un registre technique de quotas, coûts et
+appels idempotents. Les workflows qui doivent survivre à un crash, attendre une
+approbation ou garantir une mutation exactement une fois passent par DBOS,
+introduit au premier effet durable.
 
 Les modules ne partagent pas des requêtes ad hoc dans leurs tables respectives. Ils publient des services de lecture ou événements utiles.
 
@@ -699,17 +704,17 @@ classes d'exécution :
 
 | Classe | Runtime privilégié | Limite |
 | --- | --- | --- |
-| Interaction courte | requête HTTP Edge et boucle outil bornée | pas de sommeil ni d'attente durable |
-| Parcours POC supervisé | étapes Edge idempotentes séparées par un état métier persistant | l'étape incomplète est rejouée, pas reprise en mémoire |
-| Job périodique borné | `pg_cron` + `pg_net` vers Edge, secret Vault ; `pgmq` après besoin mesuré | chaque étape tient dans les limites Edge |
-| Workflow long multi-service | **À VALIDER après preuve du besoin** | moteur durable choisi sur mesures de production |
+| Interaction courte | requête HTTP Node et boucle outil bornée | pas de sommeil ni d'attente durable |
+| Parcours supervisé | workflow DBOS avec transaction Drizzle | au plus un effet par proposition approuvée |
+| Job périodique borné | schedule DBOS ; `pg_cron` réservé aux jobs strictement internes à PostgreSQL | chaque étape reste bornée en temps et en coût |
+| Workflow long multi-service | DBOS | reprise prouvée par crash/retry avant autonomie |
 
-**VALIDÉ POUR LE POC —** aucun moteur de workflow ni second runtime n'est
-introduit. Le déclenchement reste manuel jusqu'à preuve du parcours shadow et
-supervised. Le stockage existant est réutilisé avant toute nouvelle table ; un
-état supplémentaire représente une proposition ou transition métier précise,
-pas un ledger universel anticipé. Le premier déclenchement périodique n'ajoute
-pas `pgmq` sans perte ou besoin de reprise observé.
+**VALIDÉ 2026-08-15 —** DBOS est le moteur durable retenu, introduit au premier
+effet durable autorisé et pas avant. Le stockage existant est réutilisé avant
+toute nouvelle table ; un état supplémentaire représente une proposition ou
+transition métier précise, pas un ledger universel anticipé. Le bootstrap du
+schéma DBOS et le mode de connexion PostgreSQL constituent un gate bloquant sur
+une base isolée, avant toute migration distante.
 
 Une outbox transactionnelle porte les faits métier qui déclenchent un travail.
 Le journal CIR conserve le statut métier utile à l'utilisateur ; il ne duplique
@@ -826,17 +831,17 @@ un corpus documentaire sans plans concurrents. La consolidation Tiers,
 Activités et Tâches issue de ce socle est livrée ; son historique reste dans les
 plans exécutés.
 
-### Socle 1 — Vertical Référentiels et POC agentique
+### Socle 1 — Refonte Agentic First
 
-Objectif : exécuter `docs/IA_AGENTIQUE/plan-socle-agentique.md` par tracer
-bullets. Une projection `ReferenceWatchFacts` compose d'abord les services de
-diff existants, puis un appel Mistral structuré prouve `shadow` avant toute
-proposition persistée. La veille périodique commence par
-`pg_cron`/`pg_net` après preuve du parcours manuel ; `pgmq` reste conditionnel.
-L'assistant existant migre par parité prouvée.
+Objectif : exécuter
+[`docs/IA_AGENTIQUE/plan-refonte-agentic-first.md`](./IA_AGENTIQUE/plan-refonte-agentic-first.md) —
+ménage du workspace, backend Node 24, AI SDK 7, puis DBOS. La projection
+`ReferenceWatchFacts` compose les services de diff existants et redevient le
+premier vertical dès que le runtime Node porte AI SDK. Les propositions
+supervisées et la veille périodique suivent, sur DBOS.
 
 Le POC est personnel, local et interruptible. Sa réussite ne vaut pas décision
-de runtime, de provider ou de conformité pour la production.
+de provider ou de conformité pour la production.
 
 ### Brique 1 — Tiers et rôles
 
@@ -899,10 +904,9 @@ Les filières commerciales et produit peuvent avancer à des rythmes différents
 | `docs/PLAN/plan-consolidation-tiers-activites.md` | **Plan d'exécution phase-gated** de la consolidation pré-import Tiers et Activités. |
 | `docs/PLAN/plan-brique-3-taches-relances.md` | **Plan exécuté et journal final** de la Brique 3 Tâches et relances. |
 | `docs/ASSISTANT_IA/plan-mistral-assistant-transversal.md` | Plan de référence de l'assistant Mistral existant et de sa gouvernance. |
-| `docs/IA_AGENTIQUE/README.md` | **Index canonique** du POC et du socle agentique. |
-| `docs/IA_AGENTIQUE/plan-socle-agentique.md` | **Plan phase-gated actif** du POC et du socle agentique, sans autorisation implicite d'implémenter. |
-| `docs/IA_AGENTIQUE/audit-et-proposition-socle-agentique.md` | Audit contradictoire du 2026-08-14 et proposition de socle AF ; n'autorise aucun code et ne remplace le plan qu'après GO PO. |
-| `docs/IA_AGENTIQUE/0001-*` à `0004-*` | Arbitrages du socle agentique ; compléments explicatifs subordonnés à la présente architecture. |
+| `docs/IA_AGENTIQUE/README.md` | **Index canonique** du socle agentique. |
+| `docs/IA_AGENTIQUE/stack-cible-agentique-et-comparatif-existant.md` | **Décision technique canonique** du socle agentique : Node 24, AI SDK 7, DBOS. |
+| `docs/IA_AGENTIQUE/plan-refonte-agentic-first.md` | **Plan d'exécution unique** de la refonte, sans autorisation implicite d'implémenter. |
 | `docs/LOGIQUE_REMISE_CIR/cahier-des-charges/00-sommaire.md` | Index des besoins métier Tarification conservés ; non normatif pour le schéma ou la stack. |
 | `docs/stack.md` | État vérifié de la stack réelle. |
 | `docs/testing.md` | Guide court de tests. |
@@ -938,7 +942,7 @@ Les anciens plans Assistant IA, Pilotage V3, Socle Référentiels, calendriers t
 16. **VALIDÉ POUR LE POC 2026-08-13 —** toutes les données du périmètre personnel peuvent être utilisées ; la classification et les garanties provider restent visibles. Toute réutilisation avec des données de production rouvre un gate de conformité explicite.
 17. **VALIDÉ POUR LE POC 2026-08-13 —** la politique provider est tracée mais ne bloque pas globalement l'expérimentation. En production, transmission, masquage, exclusion ou ZDR seront décidés par catégorie et preuve contractuelle actuelle.
 18. **VALIDÉ 2026-08-13 —** progression `shadow` → `supervised` → `autonomous`. Le socle initial se limite aux lectures, preuves, propositions et actions internes idempotentes ; toute action externe ou engageante reste soumise à une décision ultérieure.
-19. **VALIDÉ POUR LE POC 2026-08-13 —** le backend Deno existant porte des étapes courtes, idempotentes et séparées par les états métier utiles. Aucun Node adjacent ni moteur durable. Le besoin d'un runtime long est réévalué seulement au gate production.
+19. **RÉVISÉ 2026-08-15 —** le runtime backend cible est Node.js 24 LTS, en remplacement de l'Edge Function Deno, avec AI SDK 7 comme runtime modèles et DBOS comme moteur durable introduit au premier effet durable. La décision du 2026-08-13 — « backend Deno, aucun Node adjacent ni moteur durable » — est supersédée.
 20. **VALIDÉ POUR LE POC 2026-08-13 —** prompts et réponses brutes au plus 7 jours ; traces techniques expurgées 30 jours ; preuves métier selon la rétention de leur objet. La politique de production sera revalidée avant déploiement permanent.
 
 Les décisions ouvertes sont traitées juste avant la brique concernée. Elles ne bloquent pas les briques indépendantes et ne doivent pas être résolues par spéculation.
@@ -1094,6 +1098,40 @@ Les décisions ouvertes sont traitées juste avant la brique concernée. Elles n
   La décision repose sur une politique déterministe, jamais sur la confiance
   déclarée par le modèle.
 - MCP externe, actions sortantes, Temporal, A2A et multi-agent sont hors du POC.
+
+**Supersédé le 2026-08-15** sur ses points de runtime : le rejet de Node et d'un
+moteur durable, et l'ancrage des implémentations dans l'Edge Function Deno, ne
+sont plus la cible. Les décisions métier de cette entrée — composition verticale,
+propositions séparées des réservations, autonomie déterministe, exclusion du SQL
+général et du Supabase MCP — restent valides.
+
+### 2026-08-15 — Refonte Agentic First
+
+- Le runtime backend cible devient **Node.js 24 LTS**, en remplacement complet de
+  l'Edge Function Deno. Aucun dual-run, aucun routage partiel entre les deux.
+- **AI SDK 7** devient le runtime modèles, avec providers directs et
+  `generateText` + `Output.object`. `ToolLoopAgent` est réservé au chat
+  interactif réellement multi-étapes.
+- **DBOS** devient le moteur durable, introduit au premier effet durable
+  autorisé, initialement `approve → createTask`.
+- React 19, Vite, TanStack, PostgreSQL, Drizzle, Supabase Auth et les RLS sont
+  conservés. Next.js reste exclu.
+- L'ancien plan `SA-0…SA-7`, ses ADR et son audit sont supprimés ; le chantier
+  SA-2 est arrêté et son shadow one-shot retiré du code. La projection
+  `ReferenceWatchFacts` est conservée comme actif métier.
+- Preuves de version vérifiées le 2026-08-15 : Node 24 Active LTS jusqu'au
+  2026-10-20 puis maintenance jusqu'au 2028-04-30 ; `ai` publié en `7.0.66` ;
+  DBOS expose `@dbos-inc/drizzle-datasource`.
+- Décision PO : **GO refonte Agentic First**, exécution par
+  [`docs/IA_AGENTIQUE/plan-refonte-agentic-first.md`](./IA_AGENTIQUE/plan-refonte-agentic-first.md).
+  Cette décision n'autorise ni dépendance, migration ni déploiement.
+
+### 2026-08-15 — Cutover Node 24
+
+- Le backend Deno et le wrapper Edge Function sont retires.
+- L'API tourne sur Node 24 + Hono + tRPC dans `backend/src/`.
+- Le broker, les outils SQL et les adapters providers historiques sont retires.
+- La gouvernance IA et `ReferenceWatchFacts` sont conserves.
 
 ## 17. Checkpoint de validation PO
 

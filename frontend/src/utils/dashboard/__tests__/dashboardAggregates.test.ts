@@ -88,4 +88,31 @@ describe('createInteractionStatusPredicates', () => {
 
     expect(countWorkQueueInteractions([todo, inProgress, quietInProgress, done], statuses)).toBe(1);
   });
+
+  it('classifie sans meta via le marqueur terminal puis le libelle', () => {
+    const { isStatusDone, isStatusTodo, getStatusMeta } = createInteractionStatusPredicates([]);
+
+    const terminal = buildInteraction({
+      status: 'Libelle inconnu',
+      status_id: null,
+      status_is_terminal: true,
+    });
+    const inferredTodo = buildInteraction({
+      status: 'Nouveau',
+      status_id: null,
+      status_is_terminal: false,
+    });
+    const inferredDone = buildInteraction({
+      status: 'Résolu',
+      status_id: null,
+      status_is_terminal: undefined,
+    });
+
+    expect(getStatusMeta(terminal)).toBeUndefined();
+    expect(isStatusDone(terminal)).toBe(true);
+    expect(isStatusTodo(inferredTodo)).toBe(true);
+    expect(isStatusDone(inferredTodo)).toBe(false);
+    expect(isStatusDone(inferredDone)).toBe(true);
+    expect(isStatusTodo(inferredDone)).toBe(false);
+  });
 });

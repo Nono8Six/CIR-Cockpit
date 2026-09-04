@@ -7,13 +7,23 @@ import AuditLogsPanel from './AuditLogsPanel';
 import ErrorJournalExport from './ErrorJournalExport';
 import AdminAiPanel from './admin-ai/AdminAiPanel';
 import { UserRole } from '@/types';
+import type { AdminAiViewId, AdminPanelId } from '@/app/router';
 
 interface AdminPanelProps {
   userRole: UserRole;
+  panel?: AdminPanelId;
+  view?: AdminAiViewId;
+  onNavigateAdmin?: (panel: AdminPanelId, view?: AdminAiViewId) => void;
 }
 
-const AdminPanel = ({ userRole }: AdminPanelProps) => {
-  const [activeTab, setActiveTab] = useState('users');
+const AdminPanel = ({ userRole, panel, view, onNavigateAdmin }: AdminPanelProps) => {
+  const [internalTab, setInternalTab] = useState<string>('users');
+  const activeTab = panel ?? internalTab;
+
+  const handleTabChange = (nextTab: string) => {
+    setInternalTab(nextTab);
+    onNavigateAdmin?.(nextTab as AdminPanelId, nextTab === 'ai' ? (view ?? 'situation') : undefined);
+  };
 
   if (userRole !== 'super_admin') {
     return (
@@ -40,7 +50,7 @@ const AdminPanel = ({ userRole }: AdminPanelProps) => {
 
       <Tabs
         value={activeTab}
-        onValueChange={setActiveTab}
+        onValueChange={handleTabChange}
         className="flex min-h-0 flex-1 flex-col"
         data-testid="admin-tabs-root"
       >
@@ -92,10 +102,11 @@ const AdminPanel = ({ userRole }: AdminPanelProps) => {
           </TabsTrigger>
           <TabsTrigger
             value="ai"
+            aria-label="Gestion IA"
             className="relative h-11 rounded-none border-b-2 border-transparent bg-transparent px-1 pb-3 pt-2 text-sm font-semibold text-muted-foreground transition-all duration-200 hover:text-foreground data-[state=active]:border-transparent data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none active:scale-[0.98]"
             data-testid="admin-tab-ai"
           >
-            <span>IA</span>
+            <span>Gestion IA</span>
             {activeTab === 'ai' && (
               <motion.div
                 layoutId="admin-active-tab-line"
@@ -129,7 +140,10 @@ const AdminPanel = ({ userRole }: AdminPanelProps) => {
           <AuditLogsPanel userRole={userRole} />
         </TabsContent>
         <TabsContent value="ai" className="mt-4 min-h-0 flex-1 overflow-y-auto pr-1" data-testid="admin-tab-panel-ai">
-          <AdminAiPanel />
+          <AdminAiPanel
+            view={view}
+            onViewChange={(nextView) => onNavigateAdmin?.('ai', nextView)}
+          />
         </TabsContent>
         <TabsContent value="diagnostic" className="mt-4 min-h-0 flex-1 overflow-y-auto pr-1" data-testid="admin-tab-panel-diagnostic">
           <ErrorJournalExport />

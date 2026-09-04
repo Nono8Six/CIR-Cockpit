@@ -117,9 +117,9 @@ const installQuickSearchMocks = async (page: Page): Promise<void> => {
     });
   });
 
-  await page.route('**/functions/v1/api/trpc/**', async (route) => {
+  await page.route('**/trpc/**', async (route) => {
     const url = new URL(route.request().url());
-    const procedurePath = url.pathname.split('/functions/v1/api/trpc/')[1] ?? url.pathname.split('/trpc/')[1] ?? '';
+    const procedurePath = url.pathname.split('/trpc/')[1] ?? url.pathname.split('/trpc/')[1] ?? '';
     const procedures = procedurePath.split(',').filter(Boolean);
     const input = `${url.searchParams.get('input') ?? ''} ${route.request().postData() ?? ''}`;
 
@@ -313,7 +313,7 @@ test('global search opens a full-page client record and remains responsive', asy
 });
 
 test('global search exposes an explicit user error state when entity index fails', async ({ page }) => {
-  await page.route('**/functions/v1/api/trpc/data.entities*', async (route) => {
+  await page.route('**/trpc/data.entities*', async (route) => {
     await route.fulfill({
       status: 500,
       contentType: 'application/json',

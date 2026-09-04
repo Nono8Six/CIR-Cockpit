@@ -6,18 +6,17 @@ import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const routerPath = path.join(repoRoot, "backend/functions/api/trpc/router.ts");
+const routerPath = path.join(repoRoot, "backend/src/trpc/router.ts");
 const contractPath = path.join(repoRoot, "shared/api/trpc.generated.d.ts");
 const mode = process.argv[2] ?? "--check";
 const sourceFingerprintFiles = [
   "package.json",
   "pnpm-lock.yaml",
-  "deno.json",
-  "backend/deno.json",
+  "backend/package.json",
   "scripts/generate-trpc-contract.mjs",
 ];
 const sourceFingerprintRoots = [
-  "backend/functions/api",
+  "backend/src",
   "shared",
 ];
 
@@ -173,7 +172,7 @@ if (procedureCount === 0) {
 }
 
 const contractBody = [
-  "// Generated from backend/functions/api/trpc/router.ts. Do not edit manually.",
+  "// Generated from backend/src/trpc/router.ts. Do not edit manually.",
   `// Client projection: ${procedureCount} procedures with public input/output types only.`,
   "// Run `pnpm run contract:trpc:generate` after changing the canonical router.",
   "",

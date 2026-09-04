@@ -1,13 +1,18 @@
 # Stack Technique - CIR Cockpit
 
 > Reference documentaire de la stack du projet.
-> Derniere mise a jour: 2026-08-06
+> Derniere mise a jour: 2026-08-16
 > Etat verifie contre les manifests et configs du repo.
+
+Cette page decrit la stack **actuellement en place**, pas la cible. Le backend
+actif est Node.js 24 + Hono + tRPC + AI SDK 7 (`generateText` + `Output.object`).
+DBOS reste la prochaine etape : voir
+[`IA_AGENTIQUE/stack-cible-agentique-et-comparatif-existant.md`](./IA_AGENTIQUE/stack-cible-agentique-et-comparatif-existant.md).
 
 ## Resume executif
 
 - Frontend: React 19, Vite 7, TypeScript 5.9, Tailwind CSS 4, shadcn/ui + Radix UI, TanStack Router, TanStack Query, React Hook Form + Zod, TanStack Table, Motion, Sonner, Supabase JS.
-- Backend: Supabase (Postgres + Auth + Realtime), Edge Function Deno unique `api`, Hono + tRPC, Drizzle ORM + `postgres`, `jose` pour la verification JWT.
+- Backend: Node 24, Hono + tRPC, Drizzle ORM + `postgres`, Supabase (Postgres + Auth + Realtime), `jose` pour la verification JWT, AI SDK 7 (`ai@7.0.66`, `@ai-sdk/mistral@4.0.29`).
 - Qualite: `pnpm` workspace, ESLint 9, Vitest 4, Playwright, Husky, lint-staged, gates locales par impact (`qa:docs`, `qa:front`, `qa:back`, `qa:fast`, `qa`), gate CI dediee `qa:ci`, workflow GitHub Actions `qa.yml`.
 
 ## Sources de verite
@@ -16,10 +21,9 @@ Cette page doit suivre en priorite:
 
 1. `package.json`
 2. `frontend/package.json`
-3. `pnpm-lock.yaml`
-4. `backend/deno.json`
-5. `deno.json`
-6. `supabase/config.toml`
+3. `backend/package.json`
+4. `pnpm-lock.yaml`
+5. `supabase/config.toml`
 7. `frontend/vite.config.ts`
 8. `frontend/vitest.config.ts`
 9. `frontend/playwright.config.ts`
@@ -30,11 +34,10 @@ Cette page doit suivre en priorite:
 | Element | Version / etat | Source |
 |---------|-----------------|--------|
 | Node.js local + CI | `24.14.0` | runtime local, `.github/workflows/qa.yml` |
-| Deno local + CI | `2.9.4` | runtime local, `.github/workflows/qa.yml` |
 | Package manager | `pnpm@10.33.0` | `package.json` |
-| Workspace | `frontend`, `shared` | `pnpm-workspace.yaml` |
+| Workspace | `frontend`, `shared`, `backend` | `pnpm-workspace.yaml` |
 | Git hooks | Husky `9.1.7` | `package.json` |
-| Pre-commit cible | lint-staged `15.5.2` | `package.json` |
+| Pre-commit cible | lint-staged `17.3.0` | `package.json` |
 | Gate docs/config | `pnpm run qa:docs` | `package.json` |
 | Gate frontend | `pnpm run qa:front` | `package.json` |
 | Gate backend | `pnpm run qa:back` | `package.json` |
@@ -52,28 +55,28 @@ Cette page doit suivre en priorite:
 
 | Technologie | Version | Role |
 |-------------|---------|------|
-| React | `19.2.4` | UI runtime |
-| React DOM | `19.2.4` | rendu DOM |
+| React | `19.2.8` | UI runtime |
+| React DOM | `19.2.8` | rendu DOM |
 | Vite | `7.3.6` | dev server + build |
 | TypeScript | `5.9.3` | typage strict |
-| Tailwind CSS | `4.1.18` | styling utilitaire |
-| `@tailwindcss/vite` | `4.1.18` | integration Vite |
+| Tailwind CSS | `4.3.3` | styling utilitaire |
+| `@tailwindcss/vite` | `4.3.3` | integration Vite |
 
 ### Navigation, state et data fetching
 
 | Technologie | Version | Role |
 |-------------|---------|------|
-| TanStack Router | `1.170.20` | routing SPA |
-| TanStack Query | `5.90.21` | cache, queries, mutations |
-| Zustand | `5.0.11` | store d'erreurs |
-| Supabase JS frontend | `2.97.0` résolu (`^2.95.3` déclaré) | auth, realtime, acces donnees et API |
+| TanStack Router | `1.170.29` | routing SPA |
+| TanStack Query | `5.101.4` | cache, queries, mutations |
+| Zustand | `5.0.15` | store d'erreurs |
+| Supabase JS frontend | `2.112.3` épinglé | auth, realtime, acces donnees et API |
 
 ### Formulaires et validation
 
 | Technologie | Version | Role |
 |-------------|---------|------|
-| React Hook Form | `7.71.1` | formulaires |
-| `@hookform/resolvers` | `5.2.2` | bridge RHF + Zod |
+| React Hook Form | `7.85.0` | formulaires |
+| `@hookform/resolvers` | `5.9.0` | bridge RHF + Zod |
 | Zod | `4.4.3` | validation partagee front/back |
 
 ### UI, composants et UX
@@ -84,37 +87,36 @@ Cette page doit suivre en priorite:
 | Radix UI | packages `@radix-ui/react-*` | accessibilite / primitives headless |
 | TanStack Table | `8.21.3` | tables riches |
 | Motion | `12.35.2` | animations UI |
-| Sonner | `2.0.7` | notifications |
+| Sonner | `2.0.8` | notifications |
 | Lucide React | `0.564.0` | icones |
-| `react-error-boundary` | `6.1.1` résolu | error boundary |
-| `react-day-picker` | `9.13.2` résolu | calendrier |
+| `react-error-boundary` | `6.1.2` | error boundary |
 | `cmdk` | `1.1.1` | command palette / recherche |
 | `class-variance-authority` | `0.7.1` | variants Tailwind |
 | `clsx` | `2.1.1` | composition de classes |
-| `tailwind-merge` | `3.4.0` | merge de classes Tailwind |
+| `tailwind-merge` | `3.6.0` | merge de classes Tailwind |
 | `@stepperize/react` | `6.1.0` | stepper UI |
 
 ### Utilitaires metier
 
 | Technologie | Version | Role |
 |-------------|---------|------|
-| date-fns | `4.1.0` | dates |
+| date-fns | `4.4.0` | dates |
 | neverthrow | `8.2.0` | result/error ergonomics |
 
 ### Architecture frontend actuelle
 
 - Application SPA Vite servie en local sur le port `3000`.
 - Alias actifs: `@/*` vers `frontend/src/*`, `shared/*` vers `../shared/*`.
-- Le dev server proxy `/functions/v1` vers `VITE_SUPABASE_URL`.
+- Le dev server proxy `/trpc` vers le backend Node (`VITE_API_URL`, défaut `http://127.0.0.1:8787`).
 - Tailwind CSS 4 passe par le plugin Vite `@tailwindcss/vite` et l'import CSS `@import "tailwindcss";`; il n'y a plus de configuration PostCSS dediee.
-- Le build Vite segmente explicitement les chunks `react-core`, `tanstack-core`, `tanstack-query`, `supabase`, `forms`, `data-grid`, `calendar`, `ui-primitives`.
+- Le build Vite segmente explicitement les chunks `react-core`, `tanstack-core`, `tanstack-query`, `supabase`, `forms`, `data-grid`, `ui-primitives`.
 
 ### Pattern d'acces donnees frontend
 
 Le frontend est aujourd'hui hybride:
 
 1. `@supabase/supabase-js` est utilise directement pour l'auth, le realtime et une partie importante des services de donnees.
-2. Un client tRPC existe pour les endpoints exposes par l'Edge Function `api` via `/functions/v1/api/trpc`.
+2. Un client tRPC existe pour les endpoints exposes par le backend Node via `/trpc`.
 3. TanStack Query centralise cache, invalidation, retry et orchestration des appels.
 
 Autrement dit: le frontend ne repose pas sur une couche API unique. Le repo combine acces Supabase directs et appels tRPC selon les cas d'usage.
@@ -132,21 +134,22 @@ Autrement dit: le frontend ne repose pas sur une couche API unique. Le repo comb
 | Realtime | Supabase Realtime |
 | Migrations | SQL versionne dans `backend/migrations/` |
 
-### Runtime Edge Function
+### Runtime Node
 
 | Element | Version / etat |
 |---------|-----------------|
-| Runtime | Deno |
-| Fonction principale | `backend/functions/api/` |
-| Wrapper CLI Supabase | `supabase/functions/api/index.ts` |
-| Entrypoint runtime | `backend/functions/api/index.ts` |
-| `verify_jwt` dashboard/CLI | `false` dans `supabase/config.toml` |
+| Runtime | Node.js 24 LTS |
+| Package workspace | `backend/` (`@cir-cockpit/backend`) |
+| Entrypoint | `backend/src/index.ts` |
+| Serveur HTTP | Hono + `@hono/node-server` |
+| Tests | Vitest Node |
 
 ### HTTP / API layer
 
 | Technologie | Version | Role |
 |-------------|---------|------|
-| Hono | `4.13.0` en local | serveur HTTP de l'Edge Function |
+| Hono | `4.13.0` | serveur HTTP Node |
+| `@hono/node-server` | adapter Node officiel | |
 | `@hono/trpc-server` | `0.4.2` | bridge Hono <-> tRPC |
 | `@trpc/server` | `11.18.0` | procedures backend |
 | `@trpc/client` | `11.18.0` cote frontend | client HTTP batche |
@@ -157,33 +160,28 @@ Autrement dit: le frontend ne repose pas sur une couche API unique. Le repo comb
 |-------------|---------|------|
 | Drizzle ORM | `0.45.2` | queries SQL typees |
 | `postgres` | `3.4.8` | driver SQL |
-| Supabase JS backend | `2.112.0` épinglé | auth/admin clients et contexte utilisateur via import map Deno |
+| Supabase JS backend | `2.112.3` épinglé | auth/admin clients et contexte utilisateur |
 | Zod | `4.4.3` | validation input/output |
 | `jose` | `5.9.6` | verification JWT via JWKS |
+| `ai` | `7.0.66` | generateText, Output.object, erreurs structurees |
+| `@ai-sdk/mistral` | `4.0.29` | provider Mistral direct |
 
 ### Architecture backend actuelle
 
-- Edge Function unique `api`.
-- `backend/functions/api/index.ts` normalise les prefixes `/functions/v1/api` et `/api`, puis delegue a Hono.
-- `backend/functions/api/app.ts` monte tRPC sur `/trpc/*`.
+- Processus Node unique, package `backend/`.
+- `backend/src/index.ts` sert Hono via `@hono/node-server` et arrete le serveur proprement.
+- `backend/src/app.ts` monte tRPC sur `/trpc/*` et expose `/health`.
+- La configuration passe par `backend/src/config.ts` (Zod), pas par `process.env` disperse.
 - Les erreurs passent par le middleware partage `handleError()` / `httpError()`.
 - L'auth backend repose sur le header `Authorization: Bearer <token>`.
 - Le backend combine:
   - client Supabase pour auth, contexte utilisateur et operations admin,
-  - Drizzle ORM pour les queries metier PostgreSQL.
+  - Drizzle ORM pour les queries metier PostgreSQL,
+  - `AgentRuntime` + provider Mistral direct pour le vertical `pricing.references.watch.summarize`.
 
 ## Alignement runtime a maintenir
 
-Le repo maintient la meme version Hono pour:
-
-| Fichier | Hono |
-|---------|------|
-| `backend/deno.json` | `4.13.0` |
-| `deno.json` | `4.13.0` |
-
-Cet alignement est verifie par `pnpm run repo:check`.
-
-Zod est epingle en `4.4.3` dans les manifests pnpm et dans les deux import maps Deno. Les entrees `zod` et `zod/v4` doivent rester alignees: Deno resout explicitement le sous-chemin `zod/v4`, utilise par Zod et tRPC, sans deduire sa version depuis l'entree `zod`.
+Hono et Zod sont epingles dans `backend/package.json`. Zod `4.4.3` reste aligne entre frontend, backend et shared.
 
 ## Shared layer
 
@@ -194,7 +192,7 @@ Zod est epingle en `4.4.3` dans les manifests pnpm et dans les deux import maps 
 | `shared/supabase.types.ts` | types Supabase generes |
 | `shared/api/trpc.generated.d.ts` | projection cliente generee du routeur tRPC canonique |
 
-Le routeur runtime reste defini dans `backend/functions/api/trpc/router.ts`. `pnpm run contract:trpc:generate` en extrait automatiquement les procedures et leurs types publics; la projection n'embarque pas les schemas Zod ni les types internes des parsers. `pnpm run contract:trpc:check`, inclus dans les controles du repo, interdit qu'un contrat genere obsolete soit livre.
+Le routeur runtime reste defini dans `backend/src/trpc/router.ts`. `pnpm run contract:trpc:generate` en extrait automatiquement les procedures et leurs types publics; la projection n'embarque pas les schemas Zod ni les types internes des parsers. `pnpm run contract:trpc:check`, inclus dans les controles du repo, interdit qu'un contrat genere obsolete soit livre.
 
 Cote frontend, `frontend/src/services/api/invokeTrpc.ts` est le seam unique d'invocation: il preserve les sorties inferees du client tRPC, valide chaque reponse externe avec le schema Zod partage et centralise la conversion des echecs en `AppError`. Les services ne conservent un adaptateur local que lorsqu'une transformation metier ou une compatibilite de payload est reellement necessaire.
 
@@ -204,15 +202,15 @@ Cote frontend, `frontend/src/services/api/invokeTrpc.ts` est le seam unique d'in
 
 | Technologie | Version | Role |
 |-------------|---------|------|
-| Vitest | `4.1.8` | unit/integration tests |
-| `@vitest/coverage-v8` | `4.1.8` | couverture |
-| `@vitest/ui` | `4.1.8` | UI locale Vitest |
+| Vitest | `4.1.10` | unit/integration tests |
+| `@vitest/coverage-v8` | `4.1.10` | couverture |
+| `@vitest/ui` | `4.1.10` | UI locale Vitest |
 | Testing Library React | `16.3.2` résolu | tests composants |
-| Testing Library user-event | `14.6.1` | interactions utilisateur |
+| Testing Library user-event | `14.6.4` | interactions utilisateur |
 | `@testing-library/jest-dom` | `6.9.1` résolu | matchers DOM |
 | `vitest-axe` | `0.1.0` | assertions accessibilite |
 | jsdom | `25.0.1` | environnement DOM de test |
-| Playwright | `1.58.2` | E2E navigateur |
+| Playwright | `1.62.1` | E2E navigateur |
 
 ### Lint / typecheck
 
@@ -220,12 +218,12 @@ Cote frontend, `frontend/src/services/api/invokeTrpc.ts` est le seam unique d'in
 |-------------|---------|------|
 | ESLint | `9.39.2` | lint principal |
 | `@eslint/js` | `9.39.2` | base rules |
-| `typescript-eslint` | `8.53.1` | lint TypeScript |
+| `typescript-eslint` | `8.67.0` | lint TypeScript |
 | `eslint-plugin-react` | `7.37.5` | lint React |
 | `eslint-plugin-react-hooks` | `7.0.1` | lint hooks |
 | `eslint-plugin-jsx-a11y` | `6.10.2` | a11y lint |
-| Deno lint | runtime Deno | lint backend |
-| Deno check | runtime Deno | typecheck backend |
+| TypeScript backend | `5.9.3` | controle statique des sources Node |
+| Vitest backend | `4.1.10` | tests unitaires Node |
 
 ### Execution des gates
 
@@ -233,7 +231,7 @@ Cote frontend, `frontend/src/services/api/invokeTrpc.ts` est le seam unique d'in
 - Frontend: `pnpm run qa:front`
 - Backend: `pnpm run qa:back`
 - Intermediaire large: `pnpm run qa:fast`
-- Gate final local: `pnpm run qa`
+- Gate final local: `pnpm run qa` (parite distante ; aussi pre-push si une migration change)
 - Gate CI PR et push `main`: workflow GitHub Actions `qa.yml` via `pnpm run qa:ci`
 
 ## Ce que le repo n'utilise pas comme socle principal
@@ -265,11 +263,10 @@ shared/
   supabase.types.ts      # types generes
 
 backend/
-  functions/api/         # Edge Function Hono + tRPC
+  src/                   # API Node Hono + tRPC
+  drizzle/               # schema Drizzle
   migrations/            # SQL versionne
-
-supabase/
-  functions/api/         # wrapper CLI de deploy
+  tests/                 # probes SQL d invariants
 ```
 
 ## Regle de maintenance de cette page
@@ -279,4 +276,4 @@ Mettre a jour cette page a chaque changement de:
 1. version de dependance structurelle,
 2. outil de build ou de test,
 3. mode d'appel front <-> back,
-4. runtime Edge Function ou import map de deploiement.
+4. runtime backend Node ou contrat tRPC.

@@ -13,6 +13,7 @@ changed_files="$(
 has_front=0
 has_back=0
 has_other=0
+has_remote=0
 
 if [ -z "$changed_files" ]; then
   pnpm run qa:docs
@@ -23,10 +24,14 @@ while IFS= read -r file; do
   [ -z "$file" ] && continue
 
   case "$file" in
-    frontend/src/*|frontend/e2e/*|frontend/package.json|frontend/vite.config.ts|frontend/vitest.config.ts|frontend/playwright.config.ts|frontend/eslint.config.js|frontend/tsconfig.json|frontend/tailwind.config.cjs|frontend/postcss.config.cjs)
+    frontend/src/*|frontend/e2e/*|frontend/package.json|frontend/vite.config.ts|frontend/vitest.config.ts|frontend/playwright.config.ts|frontend/eslint.config.js|frontend/tsconfig.json|frontend/tailwind.config.cjs)
       has_front=1
       ;;
-    backend/*|supabase/*|deno.json)
+    backend/migrations/*|supabase/migrations/*)
+      has_back=1
+      has_remote=1
+      ;;
+    backend/*|supabase/*)
       has_back=1
       ;;
     shared/*)
@@ -51,4 +56,8 @@ elif [ "$has_back" -eq 1 ]; then
   pnpm run qa:back
 else
   pnpm run qa:docs
+fi
+
+if [ "$has_remote" -eq 1 ]; then
+  pnpm run repo:check
 fi

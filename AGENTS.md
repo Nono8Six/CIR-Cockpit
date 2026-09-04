@@ -13,11 +13,21 @@ Guide operationnel court pour CIR Cockpit. Les documents canoniques et les preuv
 ## Règles de travail
 
 - Préserver le worktree sale ; ne jamais revert, stash, reset, nettoyer, stage, commit, push, déployer, migrer ou publier hors autorisation courante.
-- Modifier le minimum utile, préférer un fichier existant et ne pas ajouter fonctionnalité, refactor, documentation ou fichier non demandé.
+- Hors refonte explicitement approuvée, modifier le minimum utile, préférer un fichier existant et ne pas ajouter fonctionnalité, refactor, documentation ou fichier non demandé.
 - Zéro donnée mockée ou hardcodée, TODO non résolu ou texte décoratif dans le code livré.
 - Pour Zod/API ou le système d'erreurs, charger le skill CIR correspondant et appliquer les implémentations canoniques existantes.
 - Frontend : imports via `@/*`, pas d'import circulaire.
 - Ne jamais exposer, copier, journaliser ou persister secrets, tokens, clés, mots de passe ou valeurs sensibles d'environnement.
+
+## Doctrine POC et refonte
+
+- CIR Cockpit est un POC personnel pré-production tant que le PO ne change pas explicitement ce statut. Optimiser pour une architecture finale simple et propre, pas pour une transition d'entreprise.
+- Lorsqu'une architecture est supersédée, arrêter de la perfectionner. Récupérer ses actifs métier prouvés, puis supprimer franchement le code, les dépendances et les documents remplacés.
+- Une refonte approuvée autorise la coupe franche : réorganiser, déplacer, réécrire et supprimer dans son périmètre. La taille minimale du diff n'est alors pas un objectif ; la simplicité du résultat final l'est.
+- Git constitue le filet de récupération du POC. Ne créer dual-run, dual-write, feature flag, shim de compatibilité ou mécanisme de rollback que si un consommateur actuel prouvé l'exige ou si le PO le demande.
+- Préférer une implémentation canonique unique. Éviter les runtimes, adapters et chemins temporaires conçus seulement pour faire cohabiter l'ancien et le nouveau.
+- Mettre à niveau les dépendances par ensembles cohérents et supprimer celles devenues inutiles ; ne pas conserver une ancienne version pour une compatibilité hypothétique.
+- Valider proportionnellement au risque réel : conserver les tests qui protègent les invariants métier et le chemin modifié, exécuter le plus petit gate défendable, puis avancer. En session, un test ciblé plus le typecheck de la couche suffisent ; pre-push et CI restent les filets larges. Ne pas multiplier les matrices, preuves ou répétitions d'un même gate sans risque identifié.
 
 ## Routage et validation
 

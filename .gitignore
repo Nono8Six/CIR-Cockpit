@@ -43,3 +43,11 @@ Thumbs.db
 
 # Test artifacts
 frontend/test-results/
+
+# Artefacts de travail locaux, jamais commites
+/tmp/
+/outputs/
+/scratch/
+
+# Journaux ecrits par le service Windows administre
+/backend/logs/

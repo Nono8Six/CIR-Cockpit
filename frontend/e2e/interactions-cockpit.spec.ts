@@ -132,7 +132,7 @@ const submitInteraction = async (page: Page): Promise<void> => {
   const [saveResponse] = await Promise.all([
     page.waitForResponse(
       (response) =>
-        response.url().includes('/functions/v1/api/trpc/data.interactions')
+        response.url().includes('/trpc/data.interactions')
         && response.request().method() === 'POST',
       { timeout: 60000 }
     ),

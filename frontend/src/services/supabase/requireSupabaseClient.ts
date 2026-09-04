@@ -1,7 +1,7 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 
 import { getSupabaseClient } from './getSupabaseClient';
-import { Database } from '@/types/supabase';
+import { Database } from 'shared/supabase.types';
 import { createAppError } from '@/services/errors/AppError';
 
 export const requireSupabaseClient = (): SupabaseClient<Database> => {

@@ -174,15 +174,34 @@ export const discountsIndexRoute = createRoute({
   component: () => <Navigate to="/remises/referentiels" replace />
 });
 
+export type AdminPanelId = 'users' | 'agencies' | 'audit' | 'ai' | 'diagnostic';
+export type AdminAiViewId = 'situation' | 'capacites' | 'prompts' | 'droits' | 'journal';
+
+export type AdminSearchState = {
+  panel?: AdminPanelId;
+  view?: AdminAiViewId;
+};
+
+export const validateAdminSearch = (search: Record<string, unknown>): AdminSearchState => {
+  const panel = typeof search.panel === 'string' && ['users', 'agencies', 'audit', 'ai', 'diagnostic'].includes(search.panel)
+    ? (search.panel as AdminPanelId)
+    : undefined;
+  const view = typeof search.view === 'string' && ['situation', 'capacites', 'prompts', 'droits', 'journal'].includes(search.view)
+    ? (search.view as AdminAiViewId)
+    : undefined;
+  return { panel, view };
+};
+
 const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'admin',
   component: () => <Outlet />
 });
 
-const adminIndexRoute = createRoute({
+export const adminIndexRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: '/',
+  validateSearch: validateAdminSearch,
   component: AdminIndexPage
 });
 

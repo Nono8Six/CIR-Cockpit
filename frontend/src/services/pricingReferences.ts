@@ -7,7 +7,6 @@ import {
   pricingReferenceAnomaliesSummaryResponseSchema,
   pricingReferenceClassificationListAllResponseSchema,
   pricingReferenceClassificationListResponseSchema,
-  pricingReferenceDiagnoseResponseSchema,
   pricingReferenceDiffsComputeResponseSchema,
   pricingReferenceDiffsListResponseSchema,
   pricingReferenceDiffsSummaryResponseSchema,
@@ -33,8 +32,6 @@ import {
   type PricingReferenceClassificationListAllResponse,
   type PricingReferenceClassificationListInput,
   type PricingReferenceClassificationListResponse,
-  type PricingReferenceDiagnoseInput,
-  type PricingReferenceDiagnoseResponse,
   type PricingReferenceDiffsComputeInput,
   type PricingReferenceDiffsComputeResponse,
   type PricingReferenceDiffsListInput,
@@ -301,16 +298,6 @@ export const listAllPricingReferenceClassification = (
     pricingReferenceClassificationListAllResponseSchema,
     'Impossible de charger la classification complète.'
   );
-
-export const diagnosePricingReference = (
-  input: PricingReferenceDiagnoseInput
-): Promise<PricingReferenceDiagnoseResponse> =>
-  invokeTrpc(
-    (api, options) => api.pricing.references.diagnose.mutate(input, options),
-    pricingReferenceDiagnoseResponseSchema,
-    "Impossible d'exécuter le diagnostic IA."
-  );
-
 
 export const preparePricingReferenceImport = (input: PricingReferenceImportsPrepareInput): Promise<PricingReferenceImportsPrepareResponse> =>
   invokeTrpc(

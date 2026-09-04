@@ -1,8 +1,6 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "experimentalDecorators": true,
-    "useDefineForClassFields": false,
     "module": "ESNext",
     "strict": true,
     "lib": [
@@ -47,6 +45,6 @@
   ],
   "exclude": [
     "../shared/**/__tests__/**",
-    "../backend/functions/api/**"
+    "../backend/src/**"
   ]
 }

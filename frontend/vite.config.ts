@@ -5,25 +5,19 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, __dirname, '');
-    const supabaseUrl = env.VITE_SUPABASE_URL?.trim();
+    const apiUrl = (env.VITE_API_URL ?? 'http://127.0.0.1:8787').trim();
 
     return {
       server: {
         port: 3000,
         strictPort: true,
         host: '0.0.0.0',
-        proxy: supabaseUrl ? {
-          '/functions/v1': {
-            target: supabaseUrl,
-            changeOrigin: true,
-            secure: true,
-            configure: (proxy) => {
-              proxy.on('proxyReq', (proxyReq) => {
-                proxyReq.removeHeader('origin');
-              });
-            }
+        proxy: {
+          '/trpc': {
+            target: apiUrl,
+            changeOrigin: true
           }
-        } : undefined,
+        },
         fs: {
           allow: [path.resolve(__dirname, '..')]
         }
@@ -84,7 +78,6 @@ export default defineConfig(({ mode }) => {
               ) {
                 return 'ui-primitives';
               }
-              if (normalizedId.includes('/node_modules/react-day-picker/')) return 'calendar';
               if (normalizedId.includes('/node_modules/lucide-react/')) return 'ui-primitives';
               if (
                 normalizedId.includes('/node_modules/@radix-ui/') ||

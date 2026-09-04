@@ -1,0 +1,122 @@
+import { assertEquals } from '#test/assert';
+
+import { ADMIN_ROUTES, ALL_ROUTES, CAN_RUN_NETWORK_INTEGRATION, DATA_ROUTES, RUN_FLAG, apiBaseUrl, corsOrigin, getApi, getContext, missingEnv, postApi, readString, integrationTest } from './helpers.ts';
+
+const POST_ROUTES = [...ADMIN_ROUTES, ...DATA_ROUTES];
+
+integrationTest({
+  name: 'integration env is configured when RUN_API_INTEGRATION=1',
+  ignore: !RUN_FLAG,
+  fn: () => {
+    assertEquals(
+      missingEnv.length,
+      0,
+      `Missing env variables: ${missingEnv.join(', ')}`
+    );
+  }
+});
+
+integrationTest({
+  name: 'OPTIONS returns 200 with CORS headers on all API routes',
+  ignore: !CAN_RUN_NETWORK_INTEGRATION,
+  fn: async () => {
+    for (const path of ALL_ROUTES) {
+      const response = await fetch(`${apiBaseUrl}/trpc/${path}`, {
+        method: 'OPTIONS',
+        headers: {
+          Origin: corsOrigin,
+          'Access-Control-Request-Method': 'POST',
+          'Access-Control-Request-Headers': 'authorization, content-type, apikey'
+        }
+      });
+
+      assertEquals(response.status, 200, `Unexpected OPTIONS status for ${path}`);
+      assertEquals(response.headers.get('Access-Control-Allow-Origin') !== null, true);
+      assertEquals(response.headers.get('Access-Control-Allow-Methods')?.includes('POST') ?? false, true);
+      const allowedHeaders = response.headers.get('Access-Control-Allow-Headers')?.toLowerCase() ?? '';
+      assertEquals(allowedHeaders.includes('authorization'), true);
+      assertEquals(allowedHeaders.includes('x-client-authorization'), false);
+      await response.text();
+    }
+  }
+});
+
+integrationTest({
+  name: 'POST without token returns 401 AUTH_REQUIRED on all API routes',
+  ignore: !CAN_RUN_NETWORK_INTEGRATION,
+  fn: async () => {
+    for (const path of POST_ROUTES) {
+      const { status, payload } = await postApi(path, '', {});
+      assertEquals(status, 401, `Unexpected unauth status for ${path}`);
+      assertEquals(readString(payload, 'code'), 'AUTH_REQUIRED');
+    }
+
+    const { status, payload } = await getApi('data.searchEntitiesUnified', '', {});
+    assertEquals(status, 401, 'Unexpected unauth status for data.searchEntitiesUnified GET');
+    assertEquals(readString(payload, 'code'), 'AUTH_REQUIRED');
+  }
+});
+
+integrationTest({
+  name: 'POST with x-client-authorization only returns 401 AUTH_REQUIRED on all API routes',
+  ignore: !CAN_RUN_NETWORK_INTEGRATION,
+  fn: async () => {
+    const context = await getContext();
+    const clientAuthHeader = `Bearer ${context.userToken}`;
+
+    for (const path of POST_ROUTES) {
+      const { status, payload } = await postApi(path, '', {}, {
+        'x-client-authorization': clientAuthHeader
+      });
+      assertEquals(status, 401, `Unexpected x-client-authorization status for ${path}`);
+      assertEquals(readString(payload, 'code'), 'AUTH_REQUIRED');
+    }
+
+    const { status, payload } = await getApi('data.searchEntitiesUnified', '', {}, {
+      'x-client-authorization': clientAuthHeader
+    });
+    assertEquals(
+      status,
+      401,
+      'Unexpected x-client-authorization status for data.searchEntitiesUnified GET'
+    );
+    assertEquals(readString(payload, 'code'), 'AUTH_REQUIRED');
+  }
+});
+
+integrationTest({
+  name: 'POST with user token on admin routes returns 403 AUTH_FORBIDDEN',
+  ignore: !CAN_RUN_NETWORK_INTEGRATION,
+  fn: async () => {
+    const context = await getContext();
+    for (const path of ADMIN_ROUTES) {
+      const { status, payload } = await postApi(path, context.userToken, {});
+      assertEquals(status, 403, `Unexpected admin forbidden status for ${path}`);
+      assertEquals(readString(payload, 'code'), 'AUTH_FORBIDDEN');
+    }
+  }
+});
+
+integrationTest({
+  name: 'POST with valid token and invalid payload returns 400 INVALID_PAYLOAD',
+  ignore: !CAN_RUN_NETWORK_INTEGRATION,
+  fn: async () => {
+    const context = await getContext();
+
+    for (const path of ADMIN_ROUTES) {
+      const { status, payload } = await postApi(path, context.adminToken, {});
+      assertEquals(status, 400, `Unexpected admin invalid payload status for ${path}`);
+      assertEquals(readString(payload, 'code'), 'INVALID_PAYLOAD');
+    }
+
+    for (const path of DATA_ROUTES) {
+      const { status, payload } = await postApi(path, context.userToken, {});
+      assertEquals(status, 400, `Unexpected data invalid payload status for ${path}`);
+      assertEquals(readString(payload, 'code'), 'INVALID_PAYLOAD');
+    }
+
+    const { status, payload } = await getApi('data.searchEntitiesUnified', context.userToken, {});
+    assertEquals(status, 400, 'Unexpected invalid payload status for data.searchEntitiesUnified GET');
+    assertEquals(readString(payload, 'code'), 'INVALID_PAYLOAD');
+  }
+});

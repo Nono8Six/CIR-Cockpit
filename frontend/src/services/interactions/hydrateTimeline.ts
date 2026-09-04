@@ -1,4 +1,4 @@
-import type { Json } from '@/types/supabase';
+import type { Json } from 'shared/supabase.types';
 import { Channel, type Interaction, type InteractionRow, type TimelineEvent } from '@/types';
 import { createAppError } from '@/services/errors/AppError';
 import { isRecord } from '@/utils/recordNarrowing/isRecord';
