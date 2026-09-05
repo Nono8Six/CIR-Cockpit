@@ -16,12 +16,19 @@ export type AuthContext = {
   mustChangePassword: boolean;
 };
 
+export type TransactionRunner = <T>(
+  action: (db: DbClient) => Promise<T>
+) => Promise<T>;
+
+export type AuthenticatedDbAccess = {
+  withUserTransaction: TransactionRunner;
+  withPrivilegedTransaction: TransactionRunner;
+};
+
 export type AppEnv = {
   Variables: {
     requestId: string;
     callerId?: string;
     authContext?: AuthContext;
-    db?: DbClient;
-    userDb?: DbClient;
   };
 };

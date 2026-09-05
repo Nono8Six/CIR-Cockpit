@@ -37,7 +37,7 @@ Une route inactive ne peut plus agir et les raccourcis globaux n’ont qu’un p
 
 Prompt autonome : [PROMPT_LOT_1.md](./PROMPT_LOT_1.md).
 
-- [x] **Lot 1 terminé — GO le 5 septembre 2026 pour le backend Node et la Data API Supabase.** Les cinq sous-tranches applicatives sont présentes et la migration `20260905041426_revoke_authenticated_profiles_update` retire le droit `UPDATE` de `authenticated` sur `public.profiles` tout en conservant `SELECT` et les accès de `service_role`.
+- [x] **Lot 1 terminé — GO le 5 septembre 2026 pour le backend Node et la Data API Supabase.** Les six sous-tranches applicatives sont présentes et la migration `20260905041426_revoke_authenticated_profiles_update` retire le droit `UPDATE` de `authenticated` sur `public.profiles` tout en conservant `SELECT` et les accès de `service_role`.
 
 ### Contenu
 
@@ -60,31 +60,33 @@ Prompt autonome : [PROMPT_LOT_1.md](./PROMPT_LOT_1.md).
 
 - la clôture visée couvre le backend Node et la Data API Supabase ;
 - l'Edge Function obsolète `api` a été retirée le 5 septembre 2026 sur autorisation explicite du PO ; l'ancien endpoint répond désormais `404` et ne peut plus exposer le contrat `password_changed` ;
-- la transaction RLS centrale reste au Lot 2 ;
-- la protection Supabase distante contre les mots de passe compromis reste ouverte ; aucune configuration distante n'a été modifiée ;
+- la transaction RLS centrale est désormais acquise par le Lot 2B ;
+- la protection Supabase distante contre les mots de passe compromis reste ouverte et sa configuration n'a pas été modifiée ; en revanche, la migration ACL `20260905041426_revoke_authenticated_profiles_update` a bien été appliquée ;
 - aucune décision de rétention, saga de suppression ou nouvelle architecture de sécurité ;
 - aucun PoC ZIP64 synchrone, benchmark général, E2E ou matrice de tests.
 
-## Lot 2 — Frontière données et runtime canonique
+## Lot 2 — Frontière données canonique
 
 **État runtime au 5 septembre 2026 :** l'Edge Function `api` v227 a été retirée après vérification des logs disponibles. Les appels observés provenaient des probes automatisés du 4 septembre ; le PO a explicitement accepté le risque résiduel d'un ancien consommateur absent de la fenêtre de 24 heures. `gestion-utilisateurs`, fonction distincte, reste active et devra être examinée séparément.
+
+- [x] **Lot 2B terminé — GO le 5 septembre 2026.** L'alias `userDb: db` a disparu ; les transactions utilisateur RLS, privilégiées avec acteur, sans DB et mixtes en phases courtes sont implémentées. La preuve distante A → B → A confirme l'absence de fuite inter-agence et la mutation imbriquée confirme `audit_logs.actor_id`. Aucun nouveau DDL n'est requis par l'état distant vérifié.
 
 ### Contenu
 
 1. une transaction de requête pose l’identité, les claims RLS et l’acteur d’audit ;
 2. le client privilégié devient explicite et réservé aux opérations système/super-admin ;
-3. inventaire Edge action → procédure tRPC → consommateur → statut de migration ;
-4. traitement du consommateur configurateur qui appelle déjà une route retirée ;
-5. choix d’un runtime unique et cutover prouvé, sans dual-write ni shim durable.
-
-### Décisions `À VALIDER`
-
-- rôle PostgreSQL non privilégié et mode exact avec Supavisor ;
+3. les handlers sans DB n'ouvrent aucune transaction métier ;
+4. les appels réseau sont séparés des transactions DB longues.
 
 ### Décisions closes le 5 septembre 2026
 
+- la frontière utilisateur utilise `SET LOCAL ROLE authenticated` et des claims locaux dans une transaction sur Supavisor Transaction `6543` ;
 - les appels observés sur l'Edge `api` provenaient des probes automatisés du 4 septembre ; le PO accepte le risque d'un ancien consommateur absent de la fenêtre de 24 heures ;
 - retrait immédiat de l'Edge `api` par suppression de la fonction distante ; tout ancien consommateur reçoit désormais `404` et doit rejoindre Node.
+
+### Sujet séparé — `gestion-utilisateurs`
+
+La fonction `gestion-utilisateurs`, distincte de l'ancienne Edge `api`, reste active. Son usage et son devenir devront être examinés séparément, sans préjuger ici de sa conservation ou de sa suppression.
 
 ### Sortie
 

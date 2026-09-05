@@ -245,6 +245,26 @@ export const getApi = async (
   };
 };
 
+export const attemptDirectPasswordFlagUpdate = async (
+  token: string,
+  userId: string,
+): Promise<{ status: number; payload: unknown | null }> => {
+  const response = await fetch(
+    `${restBaseUrl}/profiles?id=eq.${encodeURIComponent(userId)}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: anonKey,
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ must_change_password: false }),
+    },
+  );
+
+  return { status: response.status, payload: await parseJsonOrNull(response) };
+};
+
 const fetchRows = async (
   pathAndQuery: string,
   token: string,

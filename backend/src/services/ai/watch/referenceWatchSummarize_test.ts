@@ -16,7 +16,11 @@ import {
 import { createReferenceWatchSummarize } from "./referenceWatchSummarize.ts";
 import type { ReferenceWatchFacts } from "../../pricing/references/referenceWatchFacts.schema.ts";
 
-const unusedDb = { userDb: {} as DbClient, serviceDb: {} as DbClient };
+const unusedDbClient = {} as DbClient;
+const unusedDb = {
+  withUserTransaction: <T>(action: (db: DbClient) => Promise<T>) => action(unusedDbClient),
+  withPrivilegedTransaction: <T>(action: (db: DbClient) => Promise<T>) => action(unusedDbClient)
+};
 const REQUEST_ID = "req-watch-1";
 const RUN_ID = "450ea0d3-5dd4-4800-ac3a-e93fcb631cfb";
 const TARGET_ID = "4e216bc4-7d82-4eb7-aa20-2cc8316667cc";
@@ -200,6 +204,33 @@ test("watch summarize reserves before the model call and records success usage",
       fact_id: ["summary.total"],
     },
   );
+});
+
+test("watch summarize keeps no database transaction open during the model call", async () => {
+  let activeTransactions = 0;
+  const runInTransaction = async <T>(action: (db: DbClient) => Promise<T>) => {
+    activeTransactions += 1;
+    try {
+      return await action(unusedDbClient);
+    } finally {
+      activeTransactions -= 1;
+    }
+  };
+  const { summarize } = createHarness({
+    runtime: {
+      runStructured: async (runtimeInput) => {
+        assertEquals(activeTransactions, 0);
+        return createDeterministicAgentRuntime({ output: validOutput })
+          .runStructured(runtimeInput);
+      }
+    }
+  });
+
+  await summarize({
+    withUserTransaction: runInTransaction,
+    withPrivilegedTransaction: runInTransaction
+  }, auth(), REQUEST_ID, input);
+  assertEquals(activeTransactions, 0);
 });
 
 test("watch summarize rejects a client-supplied facts payload at the contract", () => {

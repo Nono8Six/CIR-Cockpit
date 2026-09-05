@@ -128,9 +128,6 @@ const isAgencyAdministrator = (auth: AuthContext, agencyId: string) =>
   auth.isSuperAdmin ||
   (auth.role === "agency_admin" && auth.agencyIds.includes(agencyId));
 
-const setAuditActor = (db: DbClient, actorId: string) =>
-  db.execute(sql`select private.set_audit_actor(${actorId}::uuid)`);
-
 export const canCreateTaskInAgency = (auth: AuthContext, agencyId: string) =>
   auth.isSuperAdmin || auth.agencyIds.includes(agencyId);
 
@@ -866,7 +863,6 @@ export const createTask = async (
   const taskId = input.idempotency_key;
   try {
     return await db.transaction(async (tx) => {
-      await setAuditActor(tx, auth.userId);
       const existing = await tx.select(taskFields).from(tasks).where(
         eq(tasks.id, taskId),
       ).limit(1);
@@ -998,7 +994,6 @@ export const updateTaskContent = async (
   }
   try {
     return await db.transaction(async (tx) => {
-      await setAuditActor(tx, auth.userId);
       const updated = await updateTaskVersion(
         tx,
         current,
@@ -1095,7 +1090,6 @@ export const updateTaskAssignment = async (
   }
   try {
     return await db.transaction(async (tx) => {
-      await setAuditActor(tx, auth.userId);
       if (input.action === "assign" || input.action === "claim") {
         const responsibleId = input.action === "claim"
           ? auth.userId
@@ -1203,7 +1197,6 @@ export const rescheduleTask = async (
   }
   try {
     return await db.transaction(async (tx) => {
-      await setAuditActor(tx, auth.userId);
       const updated = await updateTaskVersion(
         tx,
         current,
@@ -1247,7 +1240,6 @@ export const changeTaskPriority = async (
   }
   try {
     return await db.transaction(async (tx) => {
-      await setAuditActor(tx, auth.userId);
       const updated = await updateTaskVersion(
         tx,
         current,
@@ -1330,7 +1322,6 @@ export const changeTaskStatus = async (
     };
   try {
     return await db.transaction(async (tx) => {
-      await setAuditActor(tx, auth.userId);
       const updated = await updateTaskVersion(
         tx,
         current,
@@ -1381,7 +1372,6 @@ export const addTaskNote = async (
   }
   try {
     return await db.transaction(async (tx) => {
-      await setAuditActor(tx, auth.userId);
       const updated = await updateTaskVersion(
         tx,
         current,
@@ -1416,7 +1406,6 @@ export const executeTaskWithActivity = async (
 ): Promise<TaskExecutionResponse> => {
   try {
     return await db.transaction(async (tx) => {
-      await setAuditActor(tx, auth.userId);
       await tx.execute(sql`
         select id from public.tasks
         where id = ${input.task_id}::uuid and version = ${input.expected_version}
@@ -1546,7 +1535,6 @@ export const updateTaskRecurrence = async (
 ): Promise<TaskRecurrenceResponse> => {
   try {
     return await db.transaction(async (tx) => {
-      await setAuditActor(tx, auth.userId);
       await tx.execute(sql`
         select id from public.tasks
         where id = ${input.task_id}::uuid and version = ${input.expected_version}
@@ -1868,7 +1856,6 @@ export const administerTaskTypes = async (
   const timestamp = new Date().toISOString();
   try {
     return await db.transaction(async (tx) => {
-      await setAuditActor(tx, callerId);
       const rows = input.action === "create"
         ? await tx.insert(task_types).values({
           code: input.code,

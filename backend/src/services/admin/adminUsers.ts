@@ -1,7 +1,7 @@
 import type { Database } from '../../../../shared/supabase.types.ts';
 import type { AdminUsersResponse } from '../../../../shared/schemas/system/api-responses.ts';
 import type { AdminUsersPayload } from '../../../../shared/schemas/admin/user.schema.ts';
-import type { DbClient } from '../../types.ts';
+import type { AuthenticatedDbAccess } from '../../types.ts';
 import { httpError } from '../../middleware/errorHandler.ts';
 import { checkRateLimit } from '../rate-limiting/rateLimit.ts';
 import { createUserAccount } from '../adminUsers/core/createUser.ts';
@@ -32,7 +32,7 @@ type UserRole = Database['public']['Enums']['user_role'];
 const ADMIN_USERS_ACTION_RATE_LIMIT_MAX = 60;
 
 export const handleAdminUsersAction = async (
-  db: DbClient,
+  dbAccess: AuthenticatedDbAccess,
   callerId: string,
   requestId: string | undefined,
   data: AdminUsersPayload
@@ -58,10 +58,16 @@ export const handleAdminUsersAction = async (
       const { password, generated } = ensurePassword(data.password);
 
       if (agencyIds.length > 0) {
-        await ensureAgenciesExist(db, agencyIds);
+        await dbAccess.withPrivilegedTransaction((db) => ensureAgenciesExist(db, agencyIds));
       }
 
-      const { userId, state } = await createUserAccount(db, data.email, firstName, lastName, password);
+      const { userId, state } = await createUserAccount(
+        dbAccess,
+        data.email,
+        firstName,
+        lastName,
+        password
+      );
       if (state === 'existing') {
         throw httpError(409, 'CONFLICT', 'Cet email est deja utilise.');
       }
@@ -75,13 +81,13 @@ export const handleAdminUsersAction = async (
 
       updates.role = roleForCreate;
 
-      await updateProfile(db, userId, updates);
-
-      const memberships = agencyIds.length > 0
-        ? await applyMemberships(db, userId, agencyIds, 'add')
-        : await listMemberships(db, userId);
-
-      const currentProfile = await getProfileById(db, userId);
+      const { memberships, currentProfile } = await dbAccess.withPrivilegedTransaction(async (db) => {
+        await updateProfile(db, userId, updates);
+        const memberships = agencyIds.length > 0
+          ? await applyMemberships(db, userId, agencyIds, 'add')
+          : await listMemberships(db, userId);
+        return { memberships, currentProfile: await getProfileById(db, userId) };
+      });
 
       return {
         request_id: requestId,
@@ -94,8 +100,10 @@ export const handleAdminUsersAction = async (
       };
     }
     case 'set_role': {
-      await ensureUserExists(db, data.user_id);
-      await updateProfile(db, data.user_id, { role: data.role });
+      await dbAccess.withPrivilegedTransaction(async (db) => {
+        await ensureUserExists(db, data.user_id);
+        await updateProfile(db, data.user_id, { role: data.role });
+      });
       return { request_id: requestId, ok: true, user_id: data.user_id, role: data.role };
     }
     case 'update_identity': {
@@ -110,15 +118,19 @@ export const handleAdminUsersAction = async (
         throw httpError(400, 'INVALID_PAYLOAD', 'Nom et prenom requis.');
       }
 
-      await ensureUserExists(db, data.user_id);
-      await ensureEmailAvailableForUser(db, data.user_id, data.email);
-      await updateAuthIdentity(data.user_id, data.email, firstName, lastName);
-      await updateProfile(db, data.user_id, {
-        email: data.email,
-        first_name: firstName,
-        last_name: lastName,
-        display_name: displayName
+      await dbAccess.withPrivilegedTransaction(async (db) => {
+        await ensureUserExists(db, data.user_id);
+        await ensureEmailAvailableForUser(db, data.user_id, data.email);
       });
+      await updateAuthIdentity(data.user_id, data.email, firstName, lastName);
+      await dbAccess.withPrivilegedTransaction((db) =>
+        updateProfile(db, data.user_id, {
+          email: data.email,
+          first_name: firstName,
+          last_name: lastName,
+          display_name: displayName
+        })
+      );
 
       return {
         request_id: requestId,
@@ -132,11 +144,12 @@ export const handleAdminUsersAction = async (
     }
     case 'set_memberships': {
       const agencyIds = normalizeAgencyIds(data.agency_ids);
-      await ensureUserExists(db, data.user_id);
-      await ensureAgenciesExist(db, agencyIds);
-
       const mode = data.mode ?? 'replace';
-      const memberships = await applyMemberships(db, data.user_id, agencyIds, mode);
+      const memberships = await dbAccess.withPrivilegedTransaction(async (db) => {
+        await ensureUserExists(db, data.user_id);
+        await ensureAgenciesExist(db, agencyIds);
+        return await applyMemberships(db, data.user_id, agencyIds, mode);
+      });
       return {
         request_id: requestId,
         ok: true,
@@ -146,11 +159,13 @@ export const handleAdminUsersAction = async (
       };
     }
     case 'reset_password': {
-      await ensureUserExists(db, data.user_id);
+      await dbAccess.withPrivilegedTransaction((db) => ensureUserExists(db, data.user_id));
       const { password } = ensurePassword(data.password);
 
       await updateAuthPassword(data.user_id, password);
-      await updateProfile(db, data.user_id, { must_change_password: true });
+      await dbAccess.withPrivilegedTransaction((db) =>
+        updateProfile(db, data.user_id, { must_change_password: true })
+      );
 
       return {
         request_id: requestId,
@@ -160,16 +175,20 @@ export const handleAdminUsersAction = async (
       };
     }
     case 'archive': {
-      await ensureUserExists(db, data.user_id);
+      await dbAccess.withPrivilegedTransaction((db) => ensureUserExists(db, data.user_id));
       await updateAuthBan(data.user_id, BANNED_UNTIL);
-      await updateProfile(db, data.user_id, { archived_at: new Date().toISOString() });
+      await dbAccess.withPrivilegedTransaction((db) =>
+        updateProfile(db, data.user_id, { archived_at: new Date().toISOString() })
+      );
 
       return { request_id: requestId, ok: true, user_id: data.user_id, archived: true };
     }
     case 'unarchive': {
-      await ensureUserExists(db, data.user_id);
+      await dbAccess.withPrivilegedTransaction((db) => ensureUserExists(db, data.user_id));
       await updateAuthBan(data.user_id, null);
-      await updateProfile(db, data.user_id, { archived_at: null });
+      await dbAccess.withPrivilegedTransaction((db) =>
+        updateProfile(db, data.user_id, { archived_at: null })
+      );
 
       return { request_id: requestId, ok: true, user_id: data.user_id, archived: false };
     }

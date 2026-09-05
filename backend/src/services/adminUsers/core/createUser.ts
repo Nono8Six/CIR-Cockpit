@@ -1,4 +1,4 @@
-import type { DbClient } from '../../../types.ts';
+import type { AuthenticatedDbAccess } from '../../../types.ts';
 import { getSupabaseAdmin } from '../../../middleware/auth/auth.ts';
 import { httpError } from '../../../middleware/errorHandler.ts';
 import { buildDisplayName } from '../validation/validators.ts';
@@ -17,13 +17,15 @@ export const buildUserMetadata = (
 };
 
 export const createUserAccount = async (
-  db: DbClient,
+  dbAccess: AuthenticatedDbAccess,
   email: string,
   firstName: string,
   lastName: string,
   password?: string
 ): Promise<{ userId: string; state: 'created' | 'existing' }> => {
-  const existing = await getProfileByEmail(db, email);
+  const existing = await dbAccess.withPrivilegedTransaction((db) =>
+    getProfileByEmail(db, email)
+  );
   if (existing) {
     return { userId: existing.id, state: 'existing' };
   }
@@ -39,6 +41,8 @@ export const createUserAccount = async (
     throw httpError(400, 'USER_CREATE_FAILED', error?.message ?? "Impossible de creer l'utilisateur.");
   }
 
-  const profile = await ensureProfileAvailable(db, data.user.id);
+  const profile = await dbAccess.withPrivilegedTransaction((db) =>
+    ensureProfileAvailable(db, data.user.id)
+  );
   return { userId: profile.id, state: 'created' };
 };

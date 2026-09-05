@@ -1,6 +1,6 @@
 import { assertEquals } from '#test/assert';
 
-import { ADMIN_ROUTES, ALL_ROUTES, CAN_RUN_NETWORK_INTEGRATION, DATA_ROUTES, RUN_FLAG, apiBaseUrl, corsOrigin, getApi, getContext, missingEnv, postApi, readString, integrationTest } from './helpers.ts';
+import { ADMIN_ROUTES, ALL_ROUTES, CAN_RUN_NETWORK_INTEGRATION, DATA_ROUTES, RUN_FLAG, apiBaseUrl, attemptDirectPasswordFlagUpdate, corsOrigin, getApi, getContext, getIntegrationIdentities, missingEnv, postApi, readString, integrationTest } from './helpers.ts';
 
 const POST_ROUTES = [...ADMIN_ROUTES, ...DATA_ROUTES];
 
@@ -118,5 +118,20 @@ integrationTest({
     const { status, payload } = await getApi('data.searchEntitiesUnified', context.userToken, {});
     assertEquals(status, 400, 'Unexpected invalid payload status for data.searchEntitiesUnified GET');
     assertEquals(readString(payload, 'code'), 'INVALID_PAYLOAD');
+  }
+});
+
+integrationTest({
+  name: 'authenticated user cannot update must_change_password through the Data API',
+  ignore: !CAN_RUN_NETWORK_INTEGRATION,
+  fn: async () => {
+    const { user } = await getIntegrationIdentities();
+    const { status, payload } = await attemptDirectPasswordFlagUpdate(
+      user.accessToken,
+      user.userId
+    );
+
+    assertEquals(status, 403, 'Direct profiles UPDATE must be forbidden');
+    assertEquals(readString(payload, 'code'), '42501');
   }
 });

@@ -40,13 +40,11 @@ const readDbErrorCode = (error: unknown): string | undefined => {
   return readDbErrorCode(Reflect.get(error, 'cause'));
 };
 
-const withAuditActor = async <T>(
+const withTransaction = async <T>(
   db: DbClient,
-  actorId: string,
   action: (db: DbClient) => Promise<T>
 ): Promise<T> =>
   await db.transaction(async (tx) => {
-    await tx.execute(sql`select private.set_audit_actor(${actorId}::uuid)`);
     return await action(tx as unknown as DbClient);
   });
 
@@ -209,8 +207,8 @@ export const handleDataEntityContactsAction = async (
     case 'save': {
       const agencyId = await dependencies.getEntityAgencyId(db, data.entity_id);
       dependencies.ensureAgencyAccess(authContext, agencyId);
-      const contact = await withAuditActor(db, authContext.userId, (auditDb) =>
-        saveContact(auditDb, data.entity_id, data.id, data.contact)
+      const contact = await withTransaction(db, (tx) =>
+        saveContact(tx, data.entity_id, data.id, data.contact)
       );
       return { request_id: requestId, ok: true, contact };
     }
@@ -218,7 +216,7 @@ export const handleDataEntityContactsAction = async (
       const entityId = await dependencies.getContactEntityId(db, data.contact_id);
       const agencyId = await dependencies.getEntityAgencyId(db, entityId);
       dependencies.ensureAgencyAccess(authContext, agencyId);
-      await withAuditActor(db, authContext.userId, (auditDb) => deleteContact(auditDb, data.contact_id));
+      await withTransaction(db, (tx) => deleteContact(tx, data.contact_id));
       return { request_id: requestId, ok: true, contact_id: data.contact_id };
     }
     default:

@@ -1,7 +1,6 @@
 import type { MiddlewareHandler } from 'hono';
 
-import { getDbClient } from '../../../drizzle/index.ts';
-import type { AppEnv, AuthContext, DbClient } from '../../types.ts';
+import type { AppEnv, AuthContext } from '../../types.ts';
 import { httpError } from '../errorHandler.ts';
 import { getSupabaseAdmin, resetSupabaseAdminCacheForTests } from './dbClients.ts';
 import { isProfileAccessRevoked, resolveAuthContext } from './buildAuthContext.ts';
@@ -16,14 +15,11 @@ import {
 type AuthenticatedRequestContext = {
   callerId: string;
   authContext: AuthContext;
-  db: DbClient;
-  userDb: DbClient;
 };
 
 type SuperAdminRequestContext = {
   callerId: string;
   authContext: AuthContext;
-  db: DbClient;
 };
 
 export const authenticateAccessToken = async (token: string): Promise<AuthenticatedRequestContext> => {
@@ -39,16 +35,9 @@ export const authenticateAccessToken = async (token: string): Promise<Authentica
 
   const supabaseAdmin = getSupabaseAdmin();
   const authContext = await resolveAuthContext(supabaseAdmin, identity.userId);
-  const db = getDbClient();
-  if (!db) {
-    throw httpError(500, 'CONFIG_MISSING', 'Configuration Supabase manquante.');
-  }
-
   return {
     callerId: authContext.userId,
-    authContext,
-    db,
-    userDb: db
+    authContext
   };
 };
 
@@ -69,15 +58,9 @@ export const authenticateSuperAdminAccessToken = async (token: string): Promise<
     throw httpError(403, 'AUTH_FORBIDDEN', 'Acces interdit.');
   }
 
-  const db = getDbClient();
-  if (!db) {
-    throw httpError(500, 'CONFIG_MISSING', 'Configuration Supabase manquante.');
-  }
-
   return {
     callerId: authContext.userId,
-    authContext,
-    db
+    authContext
   };
 };
 
@@ -87,8 +70,6 @@ export const requireAuth: MiddlewareHandler<AppEnv> = async (c, next) => {
 
   c.set('callerId', authenticatedContext.callerId);
   c.set('authContext', authenticatedContext.authContext);
-  c.set('db', authenticatedContext.db);
-  c.set('userDb', authenticatedContext.userDb);
   await next();
 };
 
@@ -98,7 +79,6 @@ export const requireSuperAdmin: MiddlewareHandler<AppEnv> = async (c, next) => {
 
   c.set('callerId', authenticatedContext.callerId);
   c.set('authContext', authenticatedContext.authContext);
-  c.set('db', authenticatedContext.db);
   await next();
 };
 

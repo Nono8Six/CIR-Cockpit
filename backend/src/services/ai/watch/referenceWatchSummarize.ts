@@ -6,7 +6,7 @@ import {
   type PricingReferencesWatchSummarizeResponse,
 } from "../../../../../shared/schemas/ai.schema.ts";
 import { httpError } from "../../../middleware/errorHandler.ts";
-import type { AuthContext, DbClient } from "../../../types.ts";
+import type { AuthContext, AuthenticatedDbAccess, DbClient } from "../../../types.ts";
 import { resolveAssistantAccess } from "../aiAccess.ts";
 import {
   computeAiCost,
@@ -37,10 +37,7 @@ const EMPTY_USAGE: StructuredRunUsage = {
   reasoningTokens: 0,
 };
 
-export type WatchDb = {
-  userDb: DbClient;
-  serviceDb: DbClient;
-};
+export type WatchDb = AuthenticatedDbAccess;
 
 export type ReferenceWatchSummarizeDeps = {
   runtime: AgentRuntime;
@@ -112,11 +109,10 @@ async (
   requestId: string,
   input: PricingReferencesWatchSummarizeInput,
 ): Promise<PricingReferencesWatchSummarizeResponse> => {
-  const access = await deps.resolveAccess(
-    dbs.serviceDb,
-    authContext,
-    REFERENCE_WATCH_FEATURE,
-  );
+  const { access, run } = await dbs.withPrivilegedTransaction(async (db) => ({
+    access: await deps.resolveAccess(db, authContext, REFERENCE_WATCH_FEATURE),
+    run: await deps.resolveRun(db, REFERENCE_WATCH_FEATURE),
+  }));
   if (!access.allowed) {
     throw httpError(
       403,
@@ -125,23 +121,19 @@ async (
     );
   }
 
-  const run = await deps.resolveRun(dbs.serviceDb, REFERENCE_WATCH_FEATURE);
   const { client_request_id, ...selector } = input;
-  const facts = await deps.buildFacts(
-    dbs.userDb,
-    authContext,
-    requestId,
-    selector,
+  const facts = await dbs.withUserTransaction((db) =>
+    deps.buildFacts(db, authContext, requestId, selector)
   );
   const estimate = estimateWatchReservation(run.model, facts.bounds.used_bytes);
-  const reservation = await deps.reserve(dbs.serviceDb, {
+  const reservation = await dbs.withPrivilegedTransaction((db) => deps.reserve(db, {
     feature: REFERENCE_WATCH_FEATURE,
     userId: authContext.userId,
     agencyId: authContext.activeAgencyId,
     clientRequestId: client_request_id,
     estimatedTokens: estimate.tokens,
     estimatedCost: estimate.cost,
-  });
+  }));
 
   if (reservation.status === "success") {
     const cached = asCachedResponse(reservation.cachedResponse);
@@ -249,7 +241,7 @@ const executeReservedRun = async (
   } catch (error) {
     const usage = readUsage(error);
     const cost = computeAiCost(run.model, usage);
-    await persistRunOutcome(deps, dbs.serviceDb, {
+    await dbs.withPrivilegedTransaction((db) => persistRunOutcome(deps, db, {
       requestId,
       authContext,
       run,
@@ -268,7 +260,7 @@ const executeReservedRun = async (
         run_id: facts.run.run_id,
         client_request_id: clientRequestId,
       },
-    });
+    }));
     throw error;
   }
 
@@ -297,7 +289,7 @@ const executeReservedRun = async (
       used_bytes: facts.bounds.used_bytes,
     },
   });
-  await persistRunOutcome(deps, dbs.serviceDb, {
+  await dbs.withPrivilegedTransaction((db) => persistRunOutcome(deps, db, {
     requestId,
     authContext,
     run,
@@ -319,7 +311,7 @@ const executeReservedRun = async (
       client_request_id: clientRequestId,
       fact_id: validatedFactIds(generated.output),
     },
-  });
+  }));
   return response;
 };
 

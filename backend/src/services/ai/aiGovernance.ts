@@ -54,7 +54,7 @@ import {
 } from "../../../../shared/schemas/ai.schema.ts";
 import { getConfig } from "../../config.ts";
 import { httpError } from "../../middleware/errorHandler.ts";
-import type { DbClient } from "../../types.ts";
+import type { AuthenticatedDbAccess, DbClient } from "../../types.ts";
 import {
   assertCanonicalProviderEndpoint,
   providerBaseUrl,
@@ -772,12 +772,14 @@ export const deleteAiQuota = async (
 };
 
 export const testAiProvider = async (
-  db: DbClient,
+  dbAccess: AuthenticatedDbAccess,
   callerId: string,
   requestId: string,
   input: AiSettingsTestProviderInput,
 ) => {
-  const provider = await getProviderRow(db, input.provider);
+  const provider = await dbAccess.withPrivilegedTransaction((db) =>
+    getProviderRow(db, input.provider)
+  );
   if (!provider) {
     throw httpError(404, "AI_CONFIG_MISSING", "Fournisseur IA introuvable.");
   }
@@ -809,17 +811,19 @@ export const testAiProvider = async (
       : "Test fournisseur impossible.";
   }
 
-  await db
-    .update(ai_provider_configs)
-    .set({
-      last_test_status: status,
-      last_test_at: new Date().toISOString(),
-      last_error_code: status === "failed" ? "AI_PROVIDER_UNAVAILABLE" : null,
-      last_error_message: status === "failed" ? message : null,
-      updated_by: callerId,
-      updated_at: new Date().toISOString(),
-    })
-    .where(eq(ai_provider_configs.id, provider.id));
+  await dbAccess.withPrivilegedTransaction((db) =>
+    db
+      .update(ai_provider_configs)
+      .set({
+        last_test_status: status,
+        last_test_at: new Date().toISOString(),
+        last_error_code: status === "failed" ? "AI_PROVIDER_UNAVAILABLE" : null,
+        last_error_message: status === "failed" ? message : null,
+        updated_by: callerId,
+        updated_at: new Date().toISOString(),
+      })
+      .where(eq(ai_provider_configs.id, provider.id))
+  );
 
   return parseOrThrow(
     aiSettingsTestProviderResponseSchema,

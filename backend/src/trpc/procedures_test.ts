@@ -1,7 +1,7 @@
 import { test, vi } from "vitest";
 import { assertEquals, assertRejects } from "#test/assert";
 
-import type { AuthContext, DbClient } from "../types.ts";
+import type { AuthContext } from "../types.ts";
 
 const authMocks = vi.hoisted(() => ({
   authenticateAccessToken: vi.fn(),
@@ -23,7 +23,6 @@ import {
 } from "./procedures.ts";
 
 test("must_change_password blocks ordinary and super-admin procedures but allows the dedicated procedure", async () => {
-  const db = {} as DbClient;
   const authContext: AuthContext = {
     userId: "11111111-1111-4111-8111-111111111111",
     role: "super_admin",
@@ -35,13 +34,10 @@ test("must_change_password blocks ordinary and super-admin procedures but allows
   authMocks.authenticateAccessToken.mockResolvedValue({
     callerId: authContext.userId,
     authContext,
-    db,
-    userDb: db,
   });
   authMocks.authenticateSuperAdminAccessToken.mockResolvedValue({
     callerId: authContext.userId,
     authContext,
-    db,
   });
 
   const protectedRouter = router({

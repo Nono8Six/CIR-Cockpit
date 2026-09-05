@@ -2,7 +2,7 @@ import { test } from "vitest";
 import { assertEquals, assertRejects } from '#test/assert';
 
 import { changePasswordInputSchema, dataProfilePayloadSchema } from '../../../../shared/schemas/system/data.schema.ts';
-import type { AuthContext, DbClient } from '../../types.ts';
+import type { AuthContext, AuthenticatedDbAccess, DbClient } from '../../types.ts';
 import { changePassword, handleDataProfileAction } from './dataProfile.ts';
 
 const authContext: AuthContext = {
@@ -14,6 +14,11 @@ const authContext: AuthContext = {
   mustChangePassword: true
 };
 
+const privilegedAccess = (db: DbClient): AuthenticatedDbAccess => ({
+  withUserTransaction: () => Promise.reject(new Error('unexpected user transaction')),
+  withPrivilegedTransaction: (action) => action(db)
+});
+
 const readCode = (value: unknown): string | undefined => {
   if (!value || typeof value !== 'object') {
     return undefined;
@@ -24,6 +29,7 @@ const readCode = (value: unknown): string | undefined => {
 
 test('changePassword updates Supabase Auth before clearing must_change_password', async () => {
   const calls: string[] = [];
+  let authComplete = false;
 
   const db = {
     update: () => ({
@@ -39,20 +45,28 @@ test('changePassword updates Supabase Auth before clearing must_change_password'
   } as unknown as DbClient;
 
   const response = await changePassword(
-    db,
+    {
+      withUserTransaction: () => Promise.reject(new Error('unexpected user transaction')),
+      withPrivilegedTransaction: (action) => {
+        assertEquals(authComplete, true, 'No database transaction may span the Auth call');
+        calls.push('transaction');
+        return action(db);
+      }
+    },
     authContext,
     'req-1',
     { password: 'Password123!' },
     {
       updatePassword: (_userId, _password) => {
         calls.push('auth');
+        authComplete = true;
         return Promise.resolve();
       }
     }
   );
 
   assertEquals(response.ok, true);
-  assertEquals(calls, ['auth', 'profile']);
+  assertEquals(calls, ['auth', 'transaction', 'profile']);
 });
 
 test('changePassword fails closed when the profile flag cannot be cleared', async () => {
@@ -67,7 +81,7 @@ test('changePassword fails closed when the profile flag cannot be cleared', asyn
   } as unknown as DbClient;
 
   const error = await assertRejects(() => changePassword(
-    db,
+    privilegedAccess(db),
     authContext,
     'req-profile-failed',
     { password: 'Password123!' },

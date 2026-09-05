@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { profiles } from '../../../drizzle/schema.ts';
 import type { DataProfileResponse } from '../../../../shared/schemas/system/api-responses.ts';
 import type { ChangePasswordInput, DataProfilePayload } from '../../../../shared/schemas/system/data.schema.ts';
-import type { AuthContext, DbClient } from '../../types.ts';
+import type { AuthContext, AuthenticatedDbAccess, DbClient } from '../../types.ts';
 import { httpError } from '../../middleware/errorHandler.ts';
 import { ensureAgencyAccess, ensureDataRateLimit } from './dataAccess.ts';
 import type { RateLimitOptions } from '../rate-limiting/rateLimit.ts';
@@ -60,7 +60,7 @@ export const handleDataProfileAction = async (
 };
 
 export const changePassword = async (
-  db: DbClient,
+  dbAccess: AuthenticatedDbAccess,
   authContext: AuthContext,
   requestId: string | undefined,
   data: ChangePasswordInput,
@@ -69,14 +69,16 @@ export const changePassword = async (
   await dependencies.updatePassword(authContext.userId, data.password);
 
   try {
-    const rows = await db
-      .update(profiles)
-      .set({ must_change_password: false })
-      .where(eq(profiles.id, authContext.userId))
-      .returning({ id: profiles.id });
-    if (!rows[0]) {
-      throw httpError(500, 'PROFILE_UPDATE_FAILED', 'Impossible de mettre a jour le profil.');
-    }
+    await dbAccess.withPrivilegedTransaction(async (db) => {
+      const rows = await db
+        .update(profiles)
+        .set({ must_change_password: false })
+        .where(eq(profiles.id, authContext.userId))
+        .returning({ id: profiles.id });
+      if (!rows[0]) {
+        throw httpError(500, 'PROFILE_UPDATE_FAILED', 'Impossible de mettre a jour le profil.');
+      }
+    });
   } catch (error) {
     if (
       typeof error === 'object'

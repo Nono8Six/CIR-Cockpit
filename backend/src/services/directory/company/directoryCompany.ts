@@ -11,7 +11,7 @@ import {
   type CompanySearchPageRequest,
   executeCompanySearch,
 } from "../../../../../shared/search/companySearch.ts";
-import type { AuthContext, DbClient } from "../../../types.ts";
+import type { AuthContext } from "../../../types.ts";
 import { httpError } from "../../../middleware/errorHandler.ts";
 import { ensureDataRateLimit } from '../../data/dataAccess.ts';
 import {
@@ -34,7 +34,6 @@ const fetchCompanySearchPage = async (
 };
 
 export const getDirectoryCompanySearch = async (
-  _db: DbClient,
   authContext: AuthContext,
   requestId: string,
   input: DirectoryCompanySearchInput,
@@ -59,7 +58,6 @@ export const getDirectoryCompanySearch = async (
 };
 
 export const getDirectoryCompanyDetails = async (
-  _db: DbClient,
   authContext: AuthContext,
   requestId: string,
   input: DirectoryCompanyDetailsInput,

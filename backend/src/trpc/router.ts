@@ -307,13 +307,15 @@ import {
 import { summarizeReferenceWatch } from "../services/ai/watch/referenceWatchSummarize.ts";
 import { authedProcedure, passwordChangeProcedure, router, superAdminProcedure } from "./procedures.ts";
 import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
-import { selectDataEntitiesDb } from "./dataEntitiesDbSelection.ts";
+import { selectDataEntitiesAccessMode } from "./dataEntitiesDbSelection.ts";
 
 import {
-  withAuthedDualDbHandler,
   withAuthedHandler,
-  withAuthedUserAndServiceHandler,
+  withAuthedNoDbHandler,
+  withAuthedPhasedHandler,
+  withAuthedPrivilegedHandler,
   withSuperAdminHandler,
+  withSuperAdminPhasedHandler,
 } from "./procedureHelpers.ts";
 
 export const appRouter = router({
@@ -321,7 +323,7 @@ export const appRouter = router({
     list: authedProcedure
       .input(taskTypeListInputSchema)
       .output(taskTypesResponseSchema)
-      .query(withAuthedDualDbHandler(listTaskTypes, (_input, db) => db)),
+      .query(withAuthedHandler(listTaskTypes)),
     admin: superAdminProcedure
       .input(taskTypeAdminInputSchema)
       .output(taskTypeSchema)
@@ -331,62 +333,70 @@ export const appRouter = router({
     create: authedProcedure
       .input(taskCreateInputSchema)
       .output(taskCreateResponseSchema)
-      .mutation(withAuthedDualDbHandler(createTask, (_input, db) => db)),
+      .mutation(withAuthedHandler(createTask)),
     get: authedProcedure
       .input(taskGetInputSchema)
       .output(taskDetailSchema)
-      .query(withAuthedDualDbHandler(getTask, (_input, db) => db)),
+      .query(withAuthedHandler(getTask)),
     "update-content": authedProcedure
       .input(taskUpdateContentInputSchema)
       .output(taskDetailSchema)
-      .mutation(withAuthedDualDbHandler(updateTaskContent, (_input, db) => db)),
+      .mutation(withAuthedHandler(updateTaskContent)),
     "update-assignment": authedProcedure
       .input(taskAssignmentInputSchema)
       .output(taskDetailSchema)
       .mutation(
-        withAuthedDualDbHandler(updateTaskAssignment, (_input, db) => db),
+        withAuthedHandler(updateTaskAssignment),
       ),
     reschedule: authedProcedure
       .input(taskRescheduleInputSchema)
       .output(taskDetailSchema)
-      .mutation(withAuthedDualDbHandler(rescheduleTask, (_input, db) => db)),
+      .mutation(withAuthedHandler(rescheduleTask)),
     "change-priority": authedProcedure
       .input(taskPriorityChangeInputSchema)
       .output(taskDetailSchema)
       .mutation(
-        withAuthedDualDbHandler(changeTaskPriority, (_input, db) => db),
+        withAuthedHandler(changeTaskPriority),
       ),
     "change-status": authedProcedure
       .input(taskStatusChangeInputSchema)
       .output(taskDetailSchema)
-      .mutation(withAuthedDualDbHandler(changeTaskStatus, (_input, db) => db)),
+      .mutation(withAuthedHandler(changeTaskStatus)),
     "add-note": authedProcedure
       .input(taskNoteInputSchema)
       .output(taskDetailSchema)
-      .mutation(withAuthedDualDbHandler(addTaskNote, (_input, db) => db)),
+      .mutation(withAuthedHandler(addTaskNote)),
     "execute-with-activity": authedProcedure
       .input(taskExecuteWithActivityInputSchema)
       .output(taskExecutionResponseSchema)
       .mutation(
-        withAuthedDualDbHandler(executeTaskWithActivity, (_input, db) => db),
+        withAuthedHandler(executeTaskWithActivity),
       ),
     recurrence: authedProcedure
       .input(taskRecurrenceInputSchema)
       .output(taskRecurrenceResponseSchema)
       .mutation(
-        withAuthedDualDbHandler(updateTaskRecurrence, (_input, db) => db),
+        withAuthedHandler(updateTaskRecurrence),
       ),
     list: authedProcedure
       .input(taskListInputSchema)
       .output(taskListResponseSchema)
-      .query(withAuthedDualDbHandler(listTasks, (_input, db) => db)),
+      .query(withAuthedHandler(listTasks)),
   }),
   data: router({
     entities: authedProcedure
       .input(dataEntitiesPayloadSchema)
       .output(dataEntitiesRouteResponseSchema)
       .mutation(
-        withAuthedDualDbHandler(handleDataEntitiesAction, selectDataEntitiesDb),
+        withAuthedPhasedHandler((dbAccess, authContext, requestId, input) => {
+          const accessMode = selectDataEntitiesAccessMode(input, authContext);
+          const run = accessMode === "privileged"
+            ? dbAccess.withPrivilegedTransaction
+            : dbAccess.withUserTransaction;
+          return run((db) =>
+            handleDataEntitiesAction(db, authContext, requestId, input)
+          );
+        }),
       ),
     "entity-contacts": authedProcedure
       .input(dataEntityContactsPayloadSchema)
@@ -421,16 +431,16 @@ export const appRouter = router({
     profile: authedProcedure
       .input(dataProfilePayloadSchema)
       .output(dataProfileResponseSchema)
-      .mutation(withAuthedHandler(handleDataProfileAction)),
+      .mutation(withAuthedPrivilegedHandler(handleDataProfileAction)),
     changePassword: passwordChangeProcedure
       .input(changePasswordInputSchema)
       .output(dataProfileResponseSchema)
-      .mutation(withAuthedHandler(changePassword)),
+      .mutation(withAuthedPhasedHandler(changePassword)),
     searchEntitiesUnified: authedProcedure
       .input(tierV1SearchInputSchema)
       .output(tierV1SearchResponseSchema)
       .query(
-        withAuthedDualDbHandler(searchEntitiesUnified, (_input, db) => db),
+        withAuthedHandler(searchEntitiesUnified),
       ),
   }),
   cockpit: router({
@@ -451,11 +461,11 @@ export const appRouter = router({
     "audit-logs": authedProcedure
       .input(adminAuditLogsInputSchema)
       .output(adminAuditLogsResponseSchema)
-      .query(withAuthedDualDbHandler(listAdminAuditLogs, (_input, db) => db)),
+      .query(withAuthedHandler(listAdminAuditLogs)),
     users: superAdminProcedure
       .input(adminUsersPayloadSchema)
       .output(adminUsersResponseSchema)
-      .mutation(withSuperAdminHandler(handleAdminUsersAction)),
+      .mutation(withSuperAdminPhasedHandler(handleAdminUsersAction)),
     agencies: superAdminProcedure
       .input(adminAgenciesPayloadSchema)
       .output(adminAgenciesResponseSchema)
@@ -695,22 +705,7 @@ export const appRouter = router({
         summarize: authedProcedure
           .input(pricingReferencesWatchSummarizeInputSchema)
           .output(pricingReferencesWatchSummarizeResponseSchema)
-          .mutation(
-            withAuthedUserAndServiceHandler((
-              userDb,
-              serviceDb,
-              authContext,
-              requestId,
-              input,
-            ) =>
-              summarizeReferenceWatch(
-                { userDb, serviceDb },
-                authContext,
-                requestId,
-                input,
-              )
-            ),
-          ),
+          .mutation(withAuthedPhasedHandler(summarizeReferenceWatch)),
       }),
     }),
   }),
@@ -769,7 +764,7 @@ export const appRouter = router({
       testProvider: superAdminProcedure
         .input(aiSettingsTestProviderInputSchema)
         .output(aiSettingsTestProviderResponseSchema)
-        .mutation(withSuperAdminHandler(testAiProvider)),
+        .mutation(withSuperAdminPhasedHandler(testAiProvider)),
     }),
     prompts: router({
       list: superAdminProcedure
@@ -846,11 +841,11 @@ export const appRouter = router({
     "company-search": authedProcedure
       .input(directoryCompanySearchInputSchema)
       .output(directoryCompanySearchResponseSchema)
-      .query(withAuthedHandler(getDirectoryCompanySearch)),
+      .query(withAuthedNoDbHandler(getDirectoryCompanySearch)),
     "company-details": authedProcedure
       .input(directoryCompanyDetailsInputSchema)
       .output(directoryCompanyDetailsResponseSchema)
-      .query(withAuthedHandler(getDirectoryCompanyDetails)),
+      .query(withAuthedNoDbHandler(getDirectoryCompanyDetails)),
     duplicates: authedProcedure
       .input(directoryDuplicatesInputSchema)
       .output(directoryDuplicatesResponseSchema)

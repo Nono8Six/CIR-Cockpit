@@ -182,8 +182,6 @@ export const authedProcedure = t.procedure.use(async ({ ctx, next }) => {
         ...ctx,
         callerId: authenticatedContext.callerId,
         authContext: authenticatedContext.authContext,
-        db: authenticatedContext.db,
-        userDb: authenticatedContext.userDb
       }
     });
   } catch (error) {
@@ -206,8 +204,6 @@ export const passwordChangeProcedure = t.procedure.use(async ({ ctx, next }) => 
         ...ctx,
         callerId: authenticatedContext.callerId,
         authContext: authenticatedContext.authContext,
-        db: authenticatedContext.db,
-        userDb: authenticatedContext.userDb
       }
     });
   } catch (error) {
@@ -231,7 +227,6 @@ export const superAdminProcedure = t.procedure.use(async ({ ctx, next }) => {
         ...ctx,
         callerId: authenticatedContext.callerId,
         authContext: authenticatedContext.authContext,
-        db: authenticatedContext.db
       }
     });
   } catch (error) {

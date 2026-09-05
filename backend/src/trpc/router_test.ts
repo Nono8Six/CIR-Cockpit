@@ -1,5 +1,5 @@
 import { test } from "vitest";
-import { assertStrictEquals } from '#test/assert';
+import { assertEquals, assertRejects, assertStrictEquals } from '#test/assert';
 
 import {
   cockpitAgencyMembersInputSchema,
@@ -10,34 +10,36 @@ import {
   adminAuditLogsInputSchema,
   adminUsersListInputSchema
 } from '../../../shared/schemas/admin/user.schema.ts';
-import type { DbClient } from '../types.ts';
-import { selectDataEntitiesDb } from './dataEntitiesDbSelection.ts';
+import type { AuthContext } from '../types.ts';
+import { selectDataEntitiesAccessMode } from './dataEntitiesDbSelection.ts';
 
-test('selectDataEntitiesDb uses userDb for regular data actions', () => {
-  const serviceRoleDb = { marker: 'service-role' } as unknown as DbClient;
-  const userScopedDb = { marker: 'user-scoped' } as unknown as DbClient;
+const authContext: AuthContext = {
+  userId: '11111111-1111-4111-8111-111111111111',
+  role: 'tcs',
+  agencyIds: [],
+  activeAgencyId: null,
+  isSuperAdmin: false,
+  mustChangePassword: false
+};
 
-  const selectedDb = selectDataEntitiesDb({ action: 'save' }, serviceRoleDb, userScopedDb);
-
-  assertStrictEquals(selectedDb, userScopedDb);
+test('regular data entity actions use the user RLS path', () => {
+  assertEquals(selectDataEntitiesAccessMode({ action: 'save' }, authContext), 'user');
 });
 
-test('selectDataEntitiesDb keeps service-role db for reassign', () => {
-  const serviceRoleDb = { marker: 'service-role' } as unknown as DbClient;
-  const userScopedDb = { marker: 'user-scoped' } as unknown as DbClient;
-
-  const selectedDb = selectDataEntitiesDb({ action: 'reassign' }, serviceRoleDb, userScopedDb);
-
-  assertStrictEquals(selectedDb, serviceRoleDb);
+test('super-admin data entity reassign uses the privileged path', () => {
+  assertEquals(selectDataEntitiesAccessMode(
+    { action: 'reassign' },
+    { ...authContext, role: 'super_admin', isSuperAdmin: true }
+  ), 'privileged');
 });
 
-test('selectDataEntitiesDb keeps service-role db for delete', () => {
-  const serviceRoleDb = { marker: 'service-role' } as unknown as DbClient;
-  const userScopedDb = { marker: 'user-scoped' } as unknown as DbClient;
-
-  const selectedDb = selectDataEntitiesDb({ action: 'delete' }, serviceRoleDb, userScopedDb);
-
-  assertStrictEquals(selectedDb, serviceRoleDb);
+test('data entity delete and reassign reject before privileged access for a regular user', async () => {
+  for (const action of ['delete', 'reassign'] as const) {
+    const error = await assertRejects(() =>
+      Promise.resolve(selectDataEntitiesAccessMode({ action }, authContext))
+    );
+    assertEquals(Reflect.get(error, 'code'), 'AUTH_FORBIDDEN');
+  }
 });
 
 test('dataEntitiesPayloadSchema rejects unknown keys', () => {
