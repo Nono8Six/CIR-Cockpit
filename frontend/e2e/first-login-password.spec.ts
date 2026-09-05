@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
-import { deleteE2eUserByEmail, ensureE2eUser } from './helpers/backend-fixtures';
+import { archiveE2eUserByEmail, ensureE2eUser } from './helpers/backend-fixtures';
 
 const adminEmail = process.env.E2E_ADMIN_EMAIL;
 const adminPassword = process.env.E2E_ADMIN_PASSWORD;
@@ -80,13 +80,9 @@ const createFirstLoginUser = async (): Promise<RuntimeUser> => {
   return runtimeUser;
 };
 
-const deleteUserByEmail = async (email: string): Promise<void> => {
-  await deleteE2eUserByEmail(email);
-};
-
 const cleanupUserByEmail = async (email: string): Promise<void> => {
   try {
-    await deleteUserByEmail(email);
+    await archiveE2eUserByEmail(email);
   } catch (error) {
     if (error instanceof Error && /trop de requetes/i.test(error.message)) {
       return;

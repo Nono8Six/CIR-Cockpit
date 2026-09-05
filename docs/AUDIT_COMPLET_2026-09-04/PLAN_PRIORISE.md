@@ -37,7 +37,7 @@ Une route inactive ne peut plus agir et les raccourcis globaux n’ont qu’un p
 
 Prompt autonome : [PROMPT_LOT_1.md](./PROMPT_LOT_1.md).
 
-- [x] Lot 1 terminé — GO local le 4 septembre 2026.
+- [x] **Lot 1 terminé — GO le 5 septembre 2026 pour le backend Node et la Data API Supabase.** Les cinq sous-tranches applicatives sont présentes et la migration `20260905041426_revoke_authenticated_profiles_update` retire le droit `UPDATE` de `authenticated` sur `public.profiles` tout en conservant `SELECT` et les accès de `service_role`.
 
 ### Contenu
 
@@ -58,6 +58,8 @@ Prompt autonome : [PROMPT_LOT_1.md](./PROMPT_LOT_1.md).
 
 ### Bornes acquises
 
+- la clôture visée couvre le backend Node et la Data API Supabase ;
+- l'Edge Function `api` conserve l'ancien contrat `password_changed` et ne porte pas le garde `must_change_password` : ce risque runtime connu reste un prérequis du Lot 2 ;
 - la transaction RLS centrale reste au Lot 2 ;
 - la protection Supabase distante contre les mots de passe compromis reste ouverte ; aucune configuration distante n'a été modifiée ;
 - aucune décision de rétention, saga de suppression ou nouvelle architecture de sécurité ;

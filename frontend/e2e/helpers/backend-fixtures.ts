@@ -246,15 +246,22 @@ const getProfileByEmail = async (adminToken: string, email: string): Promise<Pro
   return { id, archivedAt };
 };
 
-const setPasswordChanged = async (email: string, password: string): Promise<void> => {
-  const userSession = await signIn(email, password);
-  await postTrpc('data.profile', userSession.accessToken, { action: 'password_changed' });
+const changePassword = async (
+  email: string,
+  initialPassword: string,
+  finalPassword: string
+): Promise<void> => {
+  const userSession = await signIn(email, initialPassword);
+  await postTrpc('data.changePassword', userSession.accessToken, { password: finalPassword });
 };
 
 export const ensureE2eUser = async (input: EnsureE2eUserInput): Promise<EnsureE2eUserResult> => {
   const adminSession = await signIn(getAdminEmail(), getAdminPassword());
   const agencyId = await getDefaultAgencyId(adminSession);
   const role = input.role ?? 'tcs';
+  const initialPassword = input.mustChangePassword
+    ? input.password
+    : `E2eInit#${crypto.randomUUID()}A1`;
 
   let userId = '';
   try {
@@ -265,7 +272,7 @@ export const ensureE2eUser = async (input: EnsureE2eUserInput): Promise<EnsureE2
       last_name: input.lastName,
       role,
       agency_ids: role === 'tcs' ? [agencyId] : [],
-      password: input.password
+      password: initialPassword
     });
     userId = readString(createPayload, 'user_id');
   } catch (error) {
@@ -314,12 +321,12 @@ export const ensureE2eUser = async (input: EnsureE2eUserInput): Promise<EnsureE2
     await postTrpc('admin.users', adminSession.accessToken, {
       action: 'reset_password',
       user_id: userId,
-      password: input.password
+      password: initialPassword
     });
   }
 
   if (!input.mustChangePassword) {
-    await setPasswordChanged(input.email, input.password);
+    await changePassword(input.email, initialPassword, input.password);
   }
 
   return {
@@ -330,13 +337,13 @@ export const ensureE2eUser = async (input: EnsureE2eUserInput): Promise<EnsureE2
   };
 };
 
-export const deleteE2eUserByEmail = async (email: string): Promise<void> => {
+export const archiveE2eUserByEmail = async (email: string): Promise<void> => {
   const adminSession = await signIn(getAdminEmail(), getAdminPassword());
   const profile = await getProfileByEmail(adminSession.accessToken, email);
   if (!profile) return;
 
   await postTrpc('admin.users', adminSession.accessToken, {
-    action: 'delete',
+    action: 'archive',
     user_id: profile.id
   });
 };

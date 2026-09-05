@@ -28,7 +28,9 @@ Côté utilisateur, deux risques passent avant toute retouche esthétique : des 
 ## Avancement
 
 - [x] **Lot 0 — Isolation des vues et raccourcis : GO le 4 septembre 2026.**
-- [ ] **Lot 1 — Sécurité applicative courte : prompt prêt, non exécuté.**
+- [x] **Lot 1 — Sécurité applicative courte : GO le 5 septembre 2026 pour le backend Node et la Data API Supabase.** Les cinq sous-tranches applicatives sont présentes et la migration `20260905041426_revoke_authenticated_profiles_update` retire le droit `UPDATE` de `authenticated` sur `public.profiles` tout en conservant `SELECT` et les accès de `service_role`.
+
+Ce GO porte exactement sur le backend Node et la Data API Supabase. L'Edge Function `api` active conserve l'ancien contrat `password_changed` sans le nouveau garde `must_change_password` ; elle reste un risque runtime connu et un prérequis du Lot 2, pas un élément couvert par ce GO.
 
 ## Les trois étapes
 
@@ -55,7 +57,7 @@ Le détail est dans le [plan priorisé](./PLAN_PRIORISE.md). L’ordre court est
 5. supprimer les clusters morts et réaligner le corpus documentaire ;
 6. seulement ensuite, réévaluer DBOS et la brique métier suivante.
 
-Le [plan d’exécution du Lot 0](./LOT_0_PLAN_EXECUTION.md) et son [prompt historique](./PROMPT_LOT_0.md) documentent la tranche désormais terminée. Le [prompt Lot 1](./PROMPT_LOT_1.md) est prêt à être envoyé dans une nouvelle conversation.
+Le [plan d’exécution du Lot 0](./LOT_0_PLAN_EXECUTION.md) et son [prompt historique](./PROMPT_LOT_0.md) documentent la tranche désormais terminée. Le [prompt Lot 1](./PROMPT_LOT_1.md) documente la tranche clôturée dans son périmètre Node/Data API.
 
 ## Ce qu’il ne faut pas faire
 
