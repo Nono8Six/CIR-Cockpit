@@ -17,20 +17,20 @@ CIR Cockpit n’est pas à refaire. Le socle est déjà substantiel : contrats Z
 En revanche, l’état actuel ne permet pas encore de qualifier l’ensemble de **runtime canonique, sûr et honnête**. Deux faits produit dominent :
 
 1. le backend Node utilise le même client PostgreSQL privilégié pour `db` et `userDb`, ce qui neutralise la défense RLS attendue et laisse des mutations inter-agence contournables par identifiant connu ;
-2. l’Edge Function Deno `api` v227 reçoit encore des écritures réelles alors que les documents annoncent un cutover Node sans dual-run.
+2. au snapshot initial, l’Edge Function Deno `api` v227 recevait encore des écritures de probes automatisés alors que les documents annonçaient un cutover Node sans dual-run. Elle a été retirée le 5 septembre 2026 sur autorisation explicite du PO ; l’ancien endpoint répond désormais `404`.
 
 Les deux services Windows exécutent par ailleurs le checkout modifiable en `LocalSystem`. Le PO a confirmé le 4 septembre 2026 qu’ils servent uniquement de lanceurs pour le développement local et ne constituent pas la stack finale. Ce risque hôte reste factuellement présent, mais il est accepté comme risque d’environnement local et sorti de la roadmap produit.
 
 Côté utilisateur, deux risques passent avant toute retouche esthétique : des raccourcis de vues conservées mais masquées peuvent agir hors contexte, et plusieurs écrans rendent une erreur ou une donnée partielle comme un résultat métier complet. Le Pilotage matérialise par ailleurs un pseudo-pipeline d’« affaires » depuis les Activités, alors que le modèle canonique réserve cette projection aux futurs objets Opportunité, Devis et Commande.
 
-**Décision d’audit : NO-GO pour l’Étape 5 DBOS, une nouvelle brique métier ou le retrait de l’Edge tant que les prérequis d’isolation applicative et de topologie ne sont pas réconciliés.** Ce NO-GO n’interdit pas les corrections ciblées décrites dans le plan priorisé.
+**Décision d’audit initiale : NO-GO pour l’Étape 5 DBOS, une nouvelle brique métier ou le retrait de l’Edge tant que les prérequis d’isolation applicative et de topologie ne sont pas réconciliés.** Mise à jour du 5 septembre 2026 : la condition de topologie est levée par le retrait autorisé de l'Edge `api`, mais les autres prérequis du Lot 2 restent à traiter avant DBOS ou une nouvelle brique.
 
 ## Avancement
 
 - [x] **Lot 0 — Isolation des vues et raccourcis : GO le 4 septembre 2026.**
 - [x] **Lot 1 — Sécurité applicative courte : GO le 5 septembre 2026 pour le backend Node et la Data API Supabase.** Les cinq sous-tranches applicatives sont présentes et la migration `20260905041426_revoke_authenticated_profiles_update` retire le droit `UPDATE` de `authenticated` sur `public.profiles` tout en conservant `SELECT` et les accès de `service_role`.
 
-Ce GO porte exactement sur le backend Node et la Data API Supabase. L'Edge Function `api` active conserve l'ancien contrat `password_changed` sans le nouveau garde `must_change_password` ; elle reste un risque runtime connu et un prérequis du Lot 2, pas un élément couvert par ce GO.
+Ce GO porte exactement sur le backend Node et la Data API Supabase. L'Edge Function obsolète `api`, qui conservait l'ancien contrat `password_changed` sans le nouveau garde `must_change_password`, a été retirée séparément le 5 septembre 2026. `gestion-utilisateurs` reste active et hors de ce verdict.
 
 ## Les trois étapes
 
@@ -61,7 +61,7 @@ Le [plan d’exécution du Lot 0](./LOT_0_PLAN_EXECUTION.md) et son [prompt hist
 
 ## Ce qu’il ne faut pas faire
 
-- Ne pas supprimer l’Edge Function parce que le code Deno a disparu du dépôt : son trafic récent prouve encore des consommateurs.
+- Ne pas redéployer l’ancienne Edge Function `api` : le runtime canonique est Node. Tout ancien consommateur recevant désormais `404` doit être migré vers l’API Node, sans recréer de dual-run.
 - Ne pas ajouter des policies permissives aux trois tables IA uniquement pour faire disparaître un advisor Supabase.
 - Ne pas supprimer 76 index sur le seul signal « unused » ; il faut connaître la fenêtre de statistiques et les requêtes réelles.
 - Ne pas réécrire `taskService.ts`, le routeur tRPC ou les types générés uniquement parce qu’ils sont longs.

@@ -59,13 +59,15 @@ Prompt autonome : [PROMPT_LOT_1.md](./PROMPT_LOT_1.md).
 ### Bornes acquises
 
 - la clôture visée couvre le backend Node et la Data API Supabase ;
-- l'Edge Function `api` conserve l'ancien contrat `password_changed` et ne porte pas le garde `must_change_password` : ce risque runtime connu reste un prérequis du Lot 2 ;
+- l'Edge Function obsolète `api` a été retirée le 5 septembre 2026 sur autorisation explicite du PO ; l'ancien endpoint répond désormais `404` et ne peut plus exposer le contrat `password_changed` ;
 - la transaction RLS centrale reste au Lot 2 ;
 - la protection Supabase distante contre les mots de passe compromis reste ouverte ; aucune configuration distante n'a été modifiée ;
 - aucune décision de rétention, saga de suppression ou nouvelle architecture de sécurité ;
 - aucun PoC ZIP64 synchrone, benchmark général, E2E ou matrice de tests.
 
 ## Lot 2 — Frontière données et runtime canonique
+
+**État runtime au 5 septembre 2026 :** l'Edge Function `api` v227 a été retirée après vérification des logs disponibles. Les appels observés provenaient des probes automatisés du 4 septembre ; le PO a explicitement accepté le risque résiduel d'un ancien consommateur absent de la fenêtre de 24 heures. `gestion-utilisateurs`, fonction distincte, reste active et devra être examinée séparément.
 
 ### Contenu
 
@@ -78,8 +80,11 @@ Prompt autonome : [PROMPT_LOT_1.md](./PROMPT_LOT_1.md).
 ### Décisions `À VALIDER`
 
 - rôle PostgreSQL non privilégié et mode exact avec Supavisor ;
-- consommateurs externes ou anciens postes encore attachés à l’Edge ;
-- date et mécanisme de retrait de l’Edge après zéro trafic utile observé.
+
+### Décisions closes le 5 septembre 2026
+
+- les appels observés sur l'Edge `api` provenaient des probes automatisés du 4 septembre ; le PO accepte le risque d'un ancien consommateur absent de la fenêtre de 24 heures ;
+- retrait immédiat de l'Edge `api` par suppression de la fonction distante ; tout ancien consommateur reçoit désormais `404` et doit rejoindre Node.
 
 ### Sortie
 
